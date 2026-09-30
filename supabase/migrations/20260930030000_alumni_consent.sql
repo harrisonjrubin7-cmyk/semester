@@ -100,7 +100,17 @@ begin
     new.recorded_by := (select auth.uid());
     new.recorded_at := now();
   else
-    new.recorded_by := old.recorded_by;
+    -- Who recorded a profile is a fact, kept as it was. The one change it takes
+    -- is going to null when the recorder's own account is deleted: the foreign
+    -- key's `ON DELETE SET NULL` is an UPDATE from inside its own trigger
+    -- (`pg_trigger_depth() > 1`; a person's UPDATE is depth 1), and holding
+    -- the old value there would leave the row pointing at a deleted account
+    -- and make that account impossible to delete.
+    if pg_trigger_depth() > 1 and old.recorded_by is not null and new.recorded_by is null then
+      new.recorded_by := null;
+    else
+      new.recorded_by := old.recorded_by;
+    end if;
     new.recorded_at := old.recorded_at;
   end if;
   return new;

@@ -236,6 +236,39 @@ begin
   perform pg_temp.counted('deleting the alum''s account removes their consents', n, 0);
   select count(*) into n from public.alumni_consent_history where user_id = alum;
   perform pg_temp.counted('— and the history of them', n, 0);
+
+  -- A staff member who recorded graduates leaves. Deleting their account sets
+  -- `recorded_by` to null on every profile they made; the profile trigger must
+  -- let that through, and the graduate's profile must stay.
+  declare
+    recorder uuid;
+    late_grad uuid;
+  begin
+    recorder  := pg_temp.newuser('leaving-advancement@elm-check.example', 'elm-alumni-check');
+    late_grad := pg_temp.newuser('lategrad@home-check.example', null);
+    insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+      (recorder, 'university_staff', 'school', 'elm-alumni-check', 'institution');
+    perform pg_temp.become(recorder);
+    insert into public.alumni_profiles (user_id, school_id, graduation_term)
+    values (late_grad, 'elm-alumni-check', '2026-spring');
+    reset role;
+    perform pg_temp.counted('the leaving staff member recorded a graduate',
+      (select count(*) from public.alumni_profiles where user_id = late_grad and recorded_by = recorder), 1);
+
+    delete from auth.users where id = recorder;
+    perform pg_temp.counted('their account is deleted', (select count(*) from auth.users where id = recorder), 0);
+    perform pg_temp.counted('the graduate''s profile is still there, no longer naming who recorded it',
+      (select count(*) from public.alumni_profiles where user_id = late_grad and recorded_by is null), 1);
+
+    -- The control: a person cannot null or rewrite who recorded a profile by
+    -- hand. The trigger keeps the old value on a direct update, so a direct
+    -- update changes nothing.
+    perform pg_temp.counted('a profile still naming its recorder',
+      (select count(*) from public.alumni_profiles where user_id = other_alum and recorded_by = staff), 1);
+    update public.alumni_profiles set recorded_by = null where user_id = other_alum;
+    perform pg_temp.counted('a direct update cannot erase the recorder',
+      (select count(*) from public.alumni_profiles where user_id = other_alum and recorded_by = staff), 1);
+  end;
 end $$;
 
 rollback;
