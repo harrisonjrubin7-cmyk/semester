@@ -1,3 +1,5 @@
+import { OfflineRefusal } from '../lib/offline-mode';
+import { KeepForLater } from './WaitingSends';
 import { formatDate } from '../lib/locale';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
@@ -66,6 +68,8 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
   const saved = useSavedCourses();
   const [confirm, setConfirm] = useState<'download' | 'print' | 'share' | 'remove' | null>(null);
   const [said, setSaid] = useState('');
+  // Set when a share was refused for want of a connection: the offer to keep it.
+  const [offer, setOffer] = useState<{ summary: string; payload: unknown } | null>(null);
   const [sharedAs, setSharedAs] = useState('');
   const [email, setEmail] = useState('');
   const [days, setDays] = useState<number>(30);
@@ -143,8 +147,16 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
       });
       setSaid(`Shared with ${email.trim()} until ${day(expiryFrom(days, now.getTime()))}. You can revoke it below at any time.`);
       setRefresh((n) => n + 1);
+      setOffer(null);
     } catch (e) {
       setSaid(e instanceof Error ? e.message : 'The share could not be made.');
+      // Nothing was sent, and nothing is waiting — unless the student keeps it.
+      if (e instanceof OfflineRefusal) {
+        setOffer({
+          summary: `Share “${meeting.title}” with ${email.trim()}, for ${days} days from when you send it`,
+          payload: { email: email.trim(), title: meeting.title, payload, days },
+        });
+      } else setOffer(null);
     }
   };
 
@@ -304,6 +316,7 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
         </button>
       </div>
       {said ? <p role="status" className="balance-said">{said}</p> : null}
+      {offer ? <KeepForLater kind="share" summary={offer.summary} payload={offer.payload} /> : null}
 
       <h4 className="balance-heading">Share with your advisor</h4>
       {accountId ? (
