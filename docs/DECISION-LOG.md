@@ -3260,8 +3260,9 @@ what the module would be on the site without offering it.
 - **`app/src/lib/advancement/edition.ts`** holds three parts (alumni relations,
   giving, the advancement office's console), each *planned*, each saying what
   it would do and what it still needs. Its test holds that no gift, donor,
-  pledge, giving-campaign or alumni-profile table exists, so a row cannot stay
-  "planned" once the thing lands.
+  pledge, giving-campaign or advancement table exists, so a row cannot stay
+  "planned" once the money side lands. A record of who graduated and the
+  consents they give is not money, and may land on its own.
 - **Not planned, and said so:** wealth screening and predictive donor
   scoring. DO-NOT-BUILD rule 3 refuses a ranking nobody can explain, and a
   donor's capacity to give is inferred about them, not told to the school.

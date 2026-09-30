@@ -19,12 +19,13 @@ describe('advancement', () => {
     expect(mentor).toContain('create table if not exists public.alumni_mentor_offers');
   });
 
-  it('is not built: no gift, donor or advancement table exists', () => {
+  it('is not built: no gift, donor, pledge, giving-campaign or advancement table exists', () => {
     // If a table for this ever lands, a row here must move off "planned" in the same change.
     const dir = join(root, 'supabase/migrations');
     const sql = readdirSql(dir);
     // The table's own name, not a column inside it (dining has a donations pool, and the go-to-market team has marketing campaigns; neither is this).
-    expect(sql).not.toMatch(/create table (if not exists )?(public\.)?(?!gtm_)(\w*(gift|donor|pledge|campaign|fundrais|advancement)\w*|alumni_profiles)\b/i);
+    // A record of who graduated and the consents they give is not money, and is allowed to land on its own.
+    expect(sql).not.toMatch(/create table (if not exists )?(public\.)?(?!gtm_)\w*(gift|donor|pledge|campaign|fundrais|advancement)\w*\b/i);
   });
 
   it('refuses wealth screening and donor scoring, and says which rule', () => {

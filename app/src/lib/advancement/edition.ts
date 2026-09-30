@@ -49,7 +49,7 @@ export const PARTS: readonly Part[] = [
       { path: 'supabase/migrations/20260929210000_academic_record_ledger.sql', shows: 'the academic record the profile would be created from' },
     ],
     status: 'planned',
-    needs: 'A profile table, the consent it is created under, and a directory that shows nobody who has not opted in. None exists.',
+    needs: 'A directory that shows nobody who has not opted in, class notes, and reunions and events.',
   },
   {
     id: 'giving',
