@@ -26,6 +26,7 @@ import { Today } from './screens/Today';
 import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
 import { ReadOnlyBanner } from './components/ReadOnlyBanner';
 import { AgeBanner } from './components/AgeBanner';
+import { RecoveryDialog } from './components/AccountSecurity';
 import { StatusNotice } from './components/StatusNotice';
 import { headOf, type Head } from './headers';
 import {
@@ -1281,6 +1282,7 @@ function AppFrame() {
       {banner}
       <ReadOnlyBanner />
       <AgeBanner />
+      <RecoveryDialog />
       <SyncStrip />
       <StatusNotice />
       {OFFLINE_MODE ? (
