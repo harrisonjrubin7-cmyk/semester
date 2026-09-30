@@ -20,6 +20,7 @@
  */
 
 import type { ConceptLearningState, ConceptState, LearningConcept } from './learning-loop';
+import { obj, textValue } from './device-library';
 import type { Guide, StudyCard } from './types';
 
 /** What a student may call their own standing on something they added. */
@@ -156,3 +157,34 @@ export interface MapStore {
 }
 
 export const EMPTY_MAP: MapStore = { version: 1, own: [], checks: {} };
+
+export const MAP_PREFIX = 'semester.learning-map.v1';
+
+const ANSWERS: readonly Answer[] = ['got', 'unsure', 'missed'];
+
+/** Rebuilt field by field: an unknown label or answer is refused, never trusted. */
+export function readMap(v: unknown): MapStore {
+  if (!obj(v) || v.version !== 1 || !Array.isArray(v.own) || v.own.length > 300 || !obj(v.checks)) throw new Error('Invalid learning map.');
+  if (
+    v.own.some(
+      (o) =>
+        !obj(o) ||
+        !['id', 'courseId', 'name'].every((k) => textValue(o[k], 500)) ||
+        !textValue(o.note, 4000) ||
+        !(OWN_LABELS as readonly unknown[]).includes(o.label) ||
+        typeof o.question !== 'boolean',
+    )
+  )
+    throw new Error('Invalid learning map.');
+  for (const c of Object.values(v.checks))
+    if (
+      !obj(c) ||
+      !textValue(c.at, 40) ||
+      typeof c.useInPlan !== 'boolean' ||
+      !Array.isArray(c.answers) ||
+      c.answers.length > 50 ||
+      c.answers.some((a) => !obj(a) || !textValue(a.conceptId, 500) || !(ANSWERS as readonly unknown[]).includes(a.answer))
+    )
+      throw new Error('Invalid learning map.');
+  return v as unknown as MapStore;
+}

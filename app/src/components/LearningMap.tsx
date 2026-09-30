@@ -1,20 +1,13 @@
 import {useState} from 'react';
 import {useNow,useStore} from '../state/store';
-import {useDeviceLibrary,obj,textValue} from '../lib/device-library';
+import {useDeviceLibrary} from '../lib/device-library';
 import {dateToIso} from '../lib/date';
 import {cardIdentity} from '../lib/review';
 import {courseLearningInput,learningState,type LearningAttempt} from '../lib/learning-loop';
-import {EMPTY_MAP,OWN_LABELS,STATE_WORDS,checkResult,checkWords,nextAction,pickCheck,type Answer,type CheckAnswer,type MapStore,type OwnLabel,type CheckQuestion} from '../lib/learningmap';
+import {EMPTY_MAP,MAP_PREFIX,OWN_LABELS,STATE_WORDS,checkResult,readMap,checkWords,nextAction,pickCheck,type Answer,type CheckAnswer,type OwnLabel,type CheckQuestion} from '../lib/learningmap';
 import {checkLengthFor} from '../lib/learningprefs';
 import {useLearningPrefs} from './LearningPreferences';
-const ANSWERS:Answer[]=['got','unsure','missed'];
-function readMap(v:unknown):MapStore{
- if(!obj(v)||v.version!==1||!Array.isArray(v.own)||v.own.length>300||!obj(v.checks))throw new Error('Invalid learning map.');
- if(v.own.some(o=>!obj(o)||!['id','courseId','name'].every(k=>textValue(o[k],500))||!textValue(o.note,4000)||!(OWN_LABELS as readonly unknown[]).includes(o.label)||typeof o.question!=='boolean'))throw new Error('Invalid learning map.');
- for(const c of Object.values(v.checks))if(!obj(c)||!textValue(c.at,40)||typeof c.useInPlan!=='boolean'||!Array.isArray(c.answers)||c.answers.length>50||c.answers.some(a=>!obj(a)||!textValue(a.conceptId,500)||!(ANSWERS as unknown[]).includes(a.answer)))throw new Error('Invalid learning map.');
- return v as unknown as MapStore;
-}
-export function LearningMap(){const {state,account}=useStore();return <MapBody key={`${account?.id||'device'}:${state.term}`} storageKey={`semester.learning-map.v1:${account?.id||'device'}:${state.term}`}/>;}
+export function LearningMap(){const {state,account}=useStore();return <MapBody key={`${account?.id||'device'}:${state.term}`} storageKey={`${MAP_PREFIX}:${account?.id||'device'}:${state.term}`}/>;}
 function MapBody({storageKey}:{storageKey:string}){
  const {state,dispatch,catalog}=useStore();const now=useNow();const lib=useDeviceLibrary(storageKey,readMap,EMPTY_MAP);const prefs=useLearningPrefs().value;
  const [courseId,setCourseId]=useState(catalog.courses[0]?.id||'');

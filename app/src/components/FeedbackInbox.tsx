@@ -1,15 +1,12 @@
 import {useState} from 'react';
 import {useNow,useStore} from '../state/store';
-import {useDeviceLibrary,obj,textValue,isoDay} from '../lib/device-library';
+import {useDeviceLibrary} from '../lib/device-library';
 import {download} from '../lib/deliver';
 import {dateToIso} from '../lib/date';
-import {CATEGORIES,actionsFor,nothingYet,says,taskFrom,themes,type Category,type FeedbackItem} from '../lib/feedbackloop';
-interface Inbox {version:1;items:FeedbackItem[]}
-const EMPTY:Inbox={version:1,items:[]};
-function readInbox(v:unknown):Inbox{if(!obj(v)||v.version!==1||!Array.isArray(v.items)||v.items.length>200||v.items.some(e=>!obj(e)||!['id','courseId','work','origin'].every(k=>textValue(e[k],500))||!textValue(e.comment,8000)||!textValue(e.next,8000)||!CATEGORIES.includes(e.category as Category)||!isoDay(e.filed)))throw new Error('Invalid feedback inbox.');return v as unknown as Inbox;}
-export function FeedbackInbox(){const {state,account}=useStore();return <InboxBody key={`${account?.id||'device'}:${state.term}`} storageKey={`semester.feedback-inbox.v1:${account?.id||'device'}:${state.term}`}/>;}
+import {CATEGORIES,EMPTY_INBOX,FEEDBACK_PREFIX,actionsFor,nothingYet,readInbox,says,taskFrom,themes,type Category,type FeedbackItem} from '../lib/feedbackloop';
+export function FeedbackInbox(){const {state,account}=useStore();return <InboxBody key={`${account?.id||'device'}:${state.term}`} storageKey={`${FEEDBACK_PREFIX}:${account?.id||'device'}:${state.term}`}/>;}
 function InboxBody({storageKey}:{storageKey:string}){
- const {dispatch,state,catalog}=useStore();const now=useNow();const lib=useDeviceLibrary(storageKey,readInbox,EMPTY);
+ const {dispatch,state,catalog}=useStore();const now=useNow();const lib=useDeviceLibrary(storageKey,readInbox,EMPTY_INBOX);
  const [courseId,setCourseId]=useState(catalog.courses[0]?.id||'');const [work,setWork]=useState('');const [origin,setOrigin]=useState('Pasted instructor comment');const [comment,setComment]=useState('');const [category,setCategory]=useState<Category>(CATEGORIES[0]);const [next,setNext]=useState('');const [notice,setNotice]=useState('');
  const found=themes(lib.value.items);
  /* `portal-workspace` for the same reason the journal has it: classless buttons are styled by that scope. */

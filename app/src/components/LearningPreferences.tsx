@@ -1,9 +1,8 @@
 import {useStore} from '../state/store';
-import {useDeviceLibrary,obj} from '../lib/device-library';
-import {DEFAULT_PREFS,DENSITIES,SESSIONS,type Density,type Prefs,type Session} from '../lib/learningprefs';
-function readPrefs(v:unknown):Prefs{if(!obj(v)||v.version!==1||!(SESSIONS as readonly unknown[]).includes(v.session)||!(DENSITIES as readonly unknown[]).includes(v.density)||typeof v.patterns!=='boolean')throw new Error('Invalid learning preferences.');return v as unknown as Prefs;}
+import {useDeviceLibrary} from '../lib/device-library';
+import {DEFAULT_PREFS,DENSITIES,PREFS_PREFIX,SESSIONS,readPrefs,type Density,type Session} from '../lib/learningprefs';
 /** The student's study preferences, on this device. Read by every learning panel; written only here. */
-export function useLearningPrefs(){const {account}=useStore();return useDeviceLibrary(`semester.learning-prefs.v1:${account?.id||'device'}`,readPrefs,DEFAULT_PREFS);}
+export function useLearningPrefs(){const {account}=useStore();return useDeviceLibrary(`${PREFS_PREFIX}:${account?.id||'device'}`,readPrefs,DEFAULT_PREFS);}
 const DENSITY_WORDS:Record<Density,string>={concise:'Concise — hide the evidence behind each concept',standard:'Standard — show how many records back each concept',expanded:'Expanded — list each record and where it came from'};
 export function LearningPreferences(){
  const {dispatch}=useStore();const lib=useLearningPrefs();const p=lib.value;

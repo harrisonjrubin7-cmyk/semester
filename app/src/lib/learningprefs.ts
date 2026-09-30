@@ -12,6 +12,8 @@
  * an accommodations database.
  */
 
+import { obj } from './device-library';
+
 export const SESSIONS = [5, 15, 30] as const;
 export type Session = (typeof SESSIONS)[number];
 
@@ -33,4 +35,12 @@ export const DEFAULT_PREFS: Prefs = { version: 1, session: 15, density: 'standar
 /** The Start Here Check's length for a sitting: five to ten questions, shorter for a short sitting. */
 export function checkLengthFor(session: Session): number {
   return session === 5 ? 5 : session === 15 ? 8 : 10;
+}
+
+export const PREFS_PREFIX = 'semester.learning-prefs.v1';
+
+export function readPrefs(v: unknown): Prefs {
+  if (!obj(v) || v.version !== 1 || !(SESSIONS as readonly unknown[]).includes(v.session) || !(DENSITIES as readonly unknown[]).includes(v.density) || typeof v.patterns !== 'boolean')
+    throw new Error('Invalid learning preferences.');
+  return v as unknown as Prefs;
 }
