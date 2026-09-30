@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BRIEF, CATEGORIES, FUNCTIONS, OPEN, PROJECT, READ_COUNT, READ_ON, SINCE_READING, SOURCES, TABLES, type Category } from './definerregister';
+import { BRIEF, CATEGORIES, FUNCTIONS, OPEN, PROJECT, READ_COUNT, READ_ON, READ_TABLES, SECOND_READING, SINCE_READING, SOURCES, TABLES, type Category } from './definerregister';
 
 /**
  * Holds the Security Definer and RLS remediation register to the migrations:
@@ -97,6 +97,8 @@ describe('the Security Definer and RLS remediation register', () => {
     expect(READ_COUNT).toBe(151);
     expect(exposedDefiners().length).toBe(READ_COUNT + since.length);
     expect(FUNCTIONS.length).toBe(READ_COUNT + since.length);
+    // The second reading found every one of them applied on production: 180 rows, 180 functions.
+    expect(FUNCTIONS.length).toBe(SECOND_READING.functions);
     for (const s of SINCE_READING) {
       for (const name of s.functions) expect(defs.get(name)?.file, name).toBe(s.file);
     }
@@ -127,7 +129,11 @@ describe('the Security Definer and RLS remediation register', () => {
     const sql = files().map((f) => uncommented(read(`${MIGRATIONS}/${f}`))).join('\n');
     const names = TABLES.map(([t]) => t);
     expect(names).toEqual([...names].sort());
-    expect(new Set(names).size).toBe(45);
+    expect(new Set(names).size).toBe(SECOND_READING.tables);
+    expect(READ_TABLES).toBe(45);
+    // The four that arrived between the readings are the ones with a later migration.
+    expect(names.length - READ_TABLES).toBe(4);
+    for (const t of ['private.account_ages', 'public.registration_completions', 'public.registration_holds', 'public.registration_requests']) expect(names, t).toContain(t);
     for (const [table, disposition] of TABLES) {
       const [schema, name] = table.split('.');
       const q = schema === 'public' ? `(?:public\\s*\\.\\s*)?${name}` : `private\\s*\\.\\s*${name}`;
@@ -194,7 +200,7 @@ function render(): string {
     'The architecture audit of 29 September 2026 names this register as the',
     'first artifact of the audit, "because it tells you exactly where',
     'application authority currently crosses database trust boundaries". It',
-    `read production's Supabase advisor and found **${TABLES.length} tables with row-level`,
+    `read production's Supabase advisor and found **${READ_TABLES} tables with row-level`,
     `security on and no policy** and **${READ_COUNT} \`security definer\` functions a`,
     'signed-in account can call**. Neither is a vulnerability by itself; the',
     'audit asked for a disposition for every one, and a guard so the next one',
@@ -208,7 +214,7 @@ function render(): string {
     '',
     `Production (\`${PROJECT}\`), ${READ_ON}, read-only, through the advisor and \`pg_catalog\`:`,
     '',
-    `- all ${TABLES.length} policy-less tables: no SELECT, INSERT, UPDATE or DELETE for \`anon\` or \`authenticated\`. Each is deny-by-default, not open;`,
+    `- all ${READ_TABLES} policy-less tables: no SELECT, INSERT, UPDATE or DELETE for \`anon\` or \`authenticated\`. Each is deny-by-default, not open;`,
     `- all ${READ_COUNT} functions: not executable by \`anon\` or PUBLIC, \`search_path\` pinned, no dynamic \`execute\`;`,
     '- two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot\'s price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.',
     '',
@@ -218,6 +224,14 @@ function render(): string {
           '',
         ]
       : []),
+    '## The second reading',
+    '',
+    `Production (\`${PROJECT}\`), ${SECOND_READING.on}, read-only, through the advisor and \`pg_catalog\`. Against the register above: **${SECOND_READING.tables} policy-less tables** and **${SECOND_READING.functions} \`security definer\` functions** a signed-in account can call, which is the first reading's ${READ_TABLES} and ${READ_COUNT} plus what arrived since.`,
+    '',
+    `- the ${SECOND_READING.functions} functions are exactly the ${FUNCTIONS.length} rows below, none unlisted and none listed that production lacks; none is executable by \`anon\` or PUBLIC; every \`search_path\` is pinned; none uses dynamic \`execute\`. 179 name \`auth.uid()\` or a \`private.\` gate; the one that names neither is \`kill_switch_engaged\` (DR-01);`,
+    `- all ${SECOND_READING.tables} policy-less tables hold no privilege of any kind for \`anon\` or \`authenticated\`, table or column. The ${SECOND_READING.tables - READ_TABLES} that were not in the first reading (\`private.account_ages\`, \`public.registration_completions\`, \`public.registration_holds\`, \`public.registration_requests\`) now have a disposition below. No policy was added to any of the ${SECOND_READING.tables}, and none should be;`,
+    '- the rest of that day\'s advisor findings, what was fixed and what was left, with the before and after: [`ADVISOR-RECONCILIATION-2026-09-30.md`](ADVISOR-RECONCILIATION-2026-09-30.md).',
+    '',
     '## How this page is held',
     '',
     '- The function set is derived: `definerregister.test.ts` reads every migration, takes the winning definition of each `public` function, keeps the `security definer` ones and intersects them with the allowlist in `supabase/grants.check.sql`. That set must equal the register exactly. A new definer function granted to clients is red until it has a row — the audit\'s release-gate line "new SECURITY DEFINER functions have an approved inventory entry", as a test.',
