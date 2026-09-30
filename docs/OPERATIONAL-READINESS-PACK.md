@@ -292,7 +292,7 @@ Twelve items, 9 with a document that would carry them today:
 
 ### The sign-off record
 
-Each line is a council seat. 4 of 12 seats are held (`founder` — Founder, `product` — Founder, acting, `engineering` — Founder, acting, `success` — Founder, acting), the rest vacant. Nothing is signed: holding a seat is not
+Each line is a council seat. 7 of 12 seats are held (`founder` — Founder, `product` — Founder, acting, `engineering` — Founder, acting, `privacy` — Outside counsel, `accessibility` — Founder, acting, `success` — Founder, acting, `operations` — Founder, acting), the rest vacant. Nothing is signed: holding a seat is not
 signing, and `signoffs` in [`app/src/lib/launchreadiness.ts`](../app/src/lib/launchreadiness.ts) is empty; the
 master register’s ten executive sign-offs ([`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](MASTER-LAUNCH-READINESS-REGISTER.md)) are the same people by another name.
 
@@ -302,8 +302,8 @@ master register’s ten executive sign-offs ([`docs/MASTER-LAUNCH-READINESS-REGI
 | Product | `product` | Founder, acting | — |
 | Engineering | `engineering` | Founder, acting | — |
 | Security | `security` | *vacant* | — |
-| Privacy and legal | `privacy` | *vacant* | — |
-| Accessibility | `accessibility` | *vacant* | — |
+| Privacy and legal | `privacy` | Outside counsel | — |
+| Accessibility | `accessibility` | Founder, acting | — |
 | AI governance | `product` | Founder, acting | — |
 | Operations and support | `success` | Founder, acting | — |
 | Customer implementation | `champion` | *vacant* | — |

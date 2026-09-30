@@ -19,7 +19,7 @@ the word *produced* is refused by the test until the directory does.
 | [University edtech audit: IT compliance approach and audit readiness](../expansion/University-EdTech-Audit-IT-Compliance-and-Faculty-Playbook.pdf) | The compliance operating model with named leads, the control-and-evidence register fields, the procurement room and the readiness checklists. |
 | [HECVAT cloud infrastructure mapping](../expansion/HECVAT-vs-TrustEd-Apps-Compliance-Scorecard.pdf) | The twenty cloud areas, each with a control objective, an implementation, an evidence artifact and a validation cadence. |
 
-## The operating model: seven leads, 3 held and 4 vacant
+## The operating model: seven leads, 5 held and 2 vacant
 
 The documents ask for named leads rather than a folder of policies. Each is a
 council seat from [`docs/LAUNCH-READINESS-COUNCIL.md`](../LAUNCH-READINESS-COUNCIL.md); a seat is held only once
@@ -29,8 +29,8 @@ somebody accepted it in writing, and the page reads the holder from the code.
 | --- | --- | --- | --- |
 | **Executive sponsor** | `founder` | Founder | Risk appetite, budget, major exceptions, customer trust. |
 | **Security lead** | `security` | *vacant* | Security controls, the risk register, access reviews, incident readiness, vulnerability management, technical evidence. |
-| **Privacy lead** | `privacy` | *vacant* | Data inventory, legal and contractual data-use requirements, retention, student requests, subprocessors, FERPA and DPA alignment. |
-| **Accessibility lead** | `accessibility` | *vacant* | Accessibility acceptance criteria, testing, remediation, the ACR/VPAT, accessible-content processes. |
+| **Privacy lead** | `privacy` | Outside counsel | Data inventory, legal and contractual data-use requirements, retention, student requests, subprocessors, FERPA and DPA alignment. |
+| **Accessibility lead** | `accessibility` | Founder, acting | Accessibility acceptance criteria, testing, remediation, the ACR/VPAT, accessible-content processes. |
 | **AI governance lead** | `product` | Founder, acting | AI inventory, provider approvals, evaluations, policy configuration, safety incidents, model and provider change review, transparency. |
 | **Engineering lead** | `engineering` | Founder, acting | Secure development, architecture, environments, deployment controls, monitoring, backup and recovery, remediation. |
 | **Customer trust owner** | `trust` | *vacant* | The procurement room, questionnaire responses, evidence freshness, customer-facing trust communication, contractual commitment mapping. |

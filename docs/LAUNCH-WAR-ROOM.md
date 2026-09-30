@@ -18,7 +18,7 @@ through informal messaging and memory.**
 | Readiness register | 142 rows: 3 not-started, 31 designed, 65 building, 43 tested |
 | Role launch register | 69 roles; every rung is in [`docs/ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md) |
 | Billing/contract status | no customer commitments recorded |
-| Go-live approvals | 0 of 12 seats signed; 4 of 12 seats held |
+| Go-live approvals | 0 of 12 seats signed; 7 of 12 seats held |
 | Board ownership | 9 of 13 items owned |
 
 The rest of the board is read by a person each morning from the document

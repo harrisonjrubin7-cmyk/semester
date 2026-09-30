@@ -106,7 +106,7 @@ against it, and the lowest master row behind the standard.
 
 ## The fourteen plays
 
-4 built, 9 partial, 1 not-built, 0 held. The seat is who would own the gap; 4 of 12 seats are held (`founder`, `product`, `engineering`, `success`), the rest vacant.
+4 built, 9 partial, 1 not-built, 0 held. The seat is who would own the gap; 7 of 12 seats are held (`founder`, `product`, `engineering`, `privacy`, `accessibility`, `success`, `operations`), the rest vacant.
 
 | ID | Item | Asks | Master rows (status) | Standing | Evidence | Gap | Seat |
 | --- | --- | --- | --- | --- | --- | --- | --- |

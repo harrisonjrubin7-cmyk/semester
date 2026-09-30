@@ -41,13 +41,13 @@ launch proceeds under (D-117).
 | `product` — Product lead | Golden path and its acceptance criteria | Founder, acting |
 | `engineering` — Engineering lead | Reliability, release, rollback | Founder, acting |
 | `security` — Security / vCISO | Threat model, pen-test findings, access controls | Vacant |
-| `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Vacant |
-| `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Vacant |
+| `privacy` — Privacy / legal | Terms, privacy, DPA/FERPA/COPPA posture, consent | Outside counsel |
+| `accessibility` — Accessibility lead | WCAG/VPAT status, blockers, remediation | Founder, acting |
 | `success` — Customer success | Onboarding, training, support, communication | Founder, acting |
 | `trust` — Trust & Safety | Reporting, escalation, moderation scope | Vacant |
 | `data` — Data / integration owner | Source quality, freshness, connector health | Vacant |
 | `finance` — Finance / commercial | Price floors, discount and pilot-credit approvals at the deal desk, margin, contract terms | Vacant |
-| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Vacant |
+| `operations` — Operations / SRE | Monitoring, on-call, incident readiness, support operations, release readiness | Founder, acting |
 | `champion` — Pilot institution champion | Institutional workflow and communications | Vacant; must be someone at the institution |
 
 **Why six seats read "Vacant", when `ROLLBACK.md` and `RESTORE.md` both name
@@ -86,6 +86,13 @@ to `signoffs`: there is no decision before the council yet, and a signature is
 given for a decision, not for a seat. `decide()` therefore now reads "has not
 signed" for these four and "is vacant" for the other eight, and the verdict is
 unchanged.
+
+**2026-09-30 — three more seats accepted.** On the founder's word, `privacy`
+is held by outside counsel, and `accessibility` and `operations` by the
+founder, acting. Role labels, as above. Nothing was added to `signoffs`, so
+`decide()` reads "has not signed" for seven seats and "is vacant" for five,
+and the verdict is unchanged. The accessibility seat decides WCAG and VPAT
+status, but it does not replace an independent audit; that stays owed.
 
 ## The rules `decide()` enforces
 
