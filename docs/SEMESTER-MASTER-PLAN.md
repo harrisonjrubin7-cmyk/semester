@@ -173,6 +173,7 @@ If the answer is none of the three, do not build it yet.
 
 ## Evidence and operating links
 
+- [Product Status Map](PRODUCT-STATUS-MAP.md)
 - [Master Launch Readiness Register](MASTER-LAUNCH-READINESS-REGISTER.md)
 - [Evidence Register](EVIDENCE-REGISTER.md)
 - [Trust Evidence Register](trust/EVIDENCE-REGISTER.md)

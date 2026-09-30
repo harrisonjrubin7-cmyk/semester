@@ -9,6 +9,7 @@ import {
 
 const root = join(import.meta.dirname, '../../../..');
 const DOC = 'docs/SEMESTER-MASTER-PLAN.md';
+const STATUS_MAP = 'docs/PRODUCT-STATUS-MAP.md';
 const DASHBOARD = 'ops/master-plan/index.html';
 const statusLabel = (value: string) => value.replaceAll('-', ' ');
 const esc = (value: string) => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -37,6 +38,7 @@ function markdown(): string {
     'These are sequenced, not rejected. Their primitives and activation contracts may be designed, but operational implementation waits for evidence, a design partner, specialist ownership, and funded scope.', '',
     '## Admission rule', '', `> ${ADMISSION_RULE}`, '', 'If the answer is none of the three, do not build it yet.', '',
     '## Evidence and operating links', '',
+    '- [Product Status Map](PRODUCT-STATUS-MAP.md)',
     '- [Master Launch Readiness Register](MASTER-LAUNCH-READINESS-REGISTER.md)',
     '- [Evidence Register](EVIDENCE-REGISTER.md)',
     '- [Trust Evidence Register](trust/EVIDENCE-REGISTER.md)',
@@ -46,6 +48,45 @@ function markdown(): string {
     '- [Interactive dashboard](../ops/master-plan/index.html)', '',
   ];
   return lines.join('\n').replace(/\n+$/, '\n');
+}
+
+function productStatusMap(): string {
+  const counts = stateCounts();
+  const source = (value: string): string => {
+    if (!value.startsWith('repo:')) return cell(value);
+    const path = value.slice('repo:'.length);
+    return `[\`${cell(path)}\`](../${path})`;
+  };
+  return [
+    renderedFrom('app/src/lib/governance/master-plan.ts', 'master-plan.test.ts'), '',
+    '# Product Status Map', '', controlLine(STATUS_MAP), '',
+    `**Snapshot date: ${AS_OF}.** This map reports repository catalog state. It does not prove a deployment, a tenant activation, a successful pilot, an institutional approval, or a production control.`, '',
+    `There are **${CAPABILITY_REGISTER.length} capabilities**: ${counts.verified} verified, ${counts.partial} partial, ${counts.blocked} blocked, ${counts.absent} absent, and ${counts.conflict} in conflict.`, '',
+    '## Status meanings', '',
+    '- **Verified:** the canonical source registry marks the bounded product promise verified. The cited source is still not deployment evidence.',
+    '- **Partial:** a useful slice exists, but the stated promise or operating boundary remains incomplete.',
+    '- **Blocked:** an external credential, approval, authoritative source, or operational dependency prevents completion.',
+    '- **Absent:** the capability has no implementation evidence in the canonical registry.',
+    '- **Conflict:** repository evidence disagrees and must be reconciled before a claim is made.',
+    '- **Activation:** every capability still requires an explicit tenant decision; controlled and high-risk capabilities are not approved.', '',
+    '## Capability truth', '',
+    ...table(
+      ['ID', 'Product promise', 'State', 'Disposition', 'Risk', 'Activation', 'Owner', 'Evidence pointers', 'Completion check'],
+      CAPABILITY_REGISTER.map((capability) => [
+        capability.id,
+        `${cell(capability.name)} — ${cell(capability.promise)}`,
+        capability.currentState,
+        capability.disposition,
+        capability.riskTier,
+        capability.activation,
+        cell(capability.owner),
+        capability.sources.map(source).join('<br>'),
+        cell(capability.acceptance.join('; ')),
+      ]),
+    ), '',
+    '## Claim ceiling', '',
+    'A public or institutional claim may never exceed the lowest of product state, evidence freshness, tenant activation, deployment verification, and operating approval. “Verified” in this map therefore permits a bounded product statement only; it does not permit “live,” “institution-ready,” or “system of record.”', '',
+  ].join('\n').replace(/\n+$/, '\n');
 }
 
 function dashboard(): string {
@@ -87,7 +128,7 @@ describe('Semester master plan', () => {
   });
 
   it('renders the authoritative document and dashboard', () => {
-    const outputs = [[DOC, markdown()], [DASHBOARD, dashboard()]] as const;
+    const outputs = [[DOC, markdown()], [STATUS_MAP, productStatusMap()], [DASHBOARD, dashboard()]] as const;
     for (const [path, content] of outputs) {
       if (process.env.REGISTERS === 'write') writeFileSync(join(root, path), content);
       expect(readFileSync(join(root, path), 'utf8'), `${path} is stale; run npm run registers from app/`).toBe(content);
