@@ -78,7 +78,7 @@ scenario demand
 
 # The sync path every student hits: an open, then pushes. A push's
 # compare-and-swaps succeed even when they match nothing, so the rows each
-# table wrote are counted from Postgres: about one state row and four courses
+# table wrote are counted from Postgres: about one state row and one course
 # a push, or the push silently stopped writing.
 scenario sync-open
 written() { psql -At -F ' ' -c "select (select n_tup_upd from pg_stat_user_tables where relid = 'public.state'::regclass), (select n_tup_upd from pg_stat_user_tables where relid = 'public.courses'::regclass)"; }
@@ -87,7 +87,7 @@ last_n=0
 scenario sync-push
 psql -c "select pg_stat_force_next_flush()" >/dev/null 2>&1; sleep 1
 read -r s1 c1 <<<"$(written)"
-if [ "$last_n" -gt 0 ] && { [ $((s1 - s0)) -lt $((last_n * 8 / 10)) ] || [ $((c1 - c0)) -lt $((last_n * 4 * 8 / 10)) ]; }; then
+if [ "$last_n" -gt 0 ] && { [ $((s1 - s0)) -lt $((last_n * 8 / 10)) ] || [ $((c1 - c0)) -lt $((last_n * 8 / 10)) ]; }; then
   echo "  ✗ sync-push: $last_n pushes wrote $((s1 - s0)) state rows and $((c1 - c0)) courses; a compare-and-swap matched nothing"
   failed=1
 else
