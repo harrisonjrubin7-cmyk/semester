@@ -12,7 +12,7 @@
  * goes stale. Policy written into a screen is policy that gets re-decided by
  * whoever builds the next screen, so it was written here first (D-110), where
  * a test holds it, and the console (`app/src/screens/Console.tsx`) reads it.
- * The thirteen things the prototype faked, and what replaced each — a
+ * The fourteen things the prototype faked, and what replaced each — a
  * migration, a check suite, a screen and its test — are `CAPABILITIES` below,
  * and `console.test.ts` refuses a `done` row without a test among its holders
  * or with a holder that is not in the tree.
@@ -39,7 +39,7 @@
  *   log in browser memory is not immutable — and what holds each now.
  * - **The conversion.** The five steps from prototype to control plane, each
  *   tied to the master-register rows it would move, and what exists today.
- * - **The thirteen capabilities.** What the prototype faked, what production
+ * - **The fourteen capabilities.** What the prototype faked, what production
  *   needed instead, and the files that hold each.
  * - **The views.** What the console shows, one line each, for the map.
  *
@@ -396,7 +396,7 @@ export const CONVERSION: readonly Step[] = [
   { step: 'Approval, segregation of duties and environment safeguards on every high-risk write', today: 'approval_request and approval_decision enforce this matrix in the database: self-approval refused, two people where the row says so, fresh MFA, and console_act fails closed when its audit event cannot be written', rows: ['IAM-011', 'SRE-008'] },
 ];
 
-// ── the thirteen capabilities ──────────────────────────────────────────────
+// ── the fourteen capabilities ──────────────────────────────────────────────
 
 export type CapabilityStatus = 'done' | 'partial' | 'planned' | 'not-started';
 
@@ -426,8 +426,10 @@ export interface Capability {
 
 const MIGRATION_A = 'supabase/migrations/20260929100000_console_control_plane.sql';
 const MIGRATION_B = 'supabase/migrations/20260929110000_console_approvals_and_break_glass.sql';
+const MIGRATION_C = 'supabase/migrations/20260930180000_console_command_center.sql';
 const CHECK_A = 'supabase/console-control-plane.check.sql';
 const CHECK_B = 'supabase/console-approvals.check.sql';
+const CHECK_C = 'supabase/console-command-center.check.sql';
 const SCREEN = 'app/src/screens/Console.tsx';
 const SCREEN_TEST = 'app/src/screens/console.test.tsx';
 const CLIENT = 'app/src/lib/console/client.ts';
@@ -601,6 +603,21 @@ export const CAPABILITIES: readonly Capability[] = [
     ],
   },
   {
+    id: 'command-center',
+    capability: 'Live operational command center',
+    prototype: 'A synthetic action queue whose fictional tenants, integrations, launch verdict and health cards could look production-ready',
+    replacement: 'public.console_command_center: a fail-closed exception queue over current release evidence, approvals, break-glass, integrations, support and tenant rollout; an empty scoped queue is the only green state',
+    status: 'done',
+    holders: [
+      { path: MIGRATION_C, how: 'The evidence-backed release gates, demo-aware operational unions and server-side console:operate refusal' },
+      { path: CHECK_C, how: 'A non-operator is refused, missing proof stays red, live exceptions appear, and demo tenants stay out by default' },
+      { path: CLIENT, how: 'loadCommandCenter maps the RPC without caching or browser storage' },
+      { path: CLIENT_TEST, how: 'The RPC name, demo switch and evidence boundary round-trip' },
+      { path: 'app/src/components/console/CommandCenter.tsx', how: 'The queue, severity counts, source, limitation and next safe step; GREEN only for zero rows' },
+      { path: SCREEN_TEST, how: 'A missing restore proof renders NOT GO and no evidence; an empty live response alone renders GREEN' },
+    ],
+  },
+  {
     id: 'environment',
     capability: 'Environment separation',
     prototype: 'The word “Production” in the header of a page full of invented records',
@@ -630,6 +647,7 @@ export interface View {
 
 /** The console's views, in the order the screen offers them. */
 export const VIEWS: readonly View[] = [
+  { id: 'command', view: 'Command center', shows: 'Live release-gate and operational exceptions from production tables; green only when the scoped queue is empty, with every blocker naming its source, evidence boundary and next safe step' },
   { id: 'approvals', view: 'Approvals', shows: 'Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement' },
   { id: 'break-glass', view: 'Break-glass', shows: 'Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else' },
   { id: 'audit', view: 'Audit', shows: 'The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so' },

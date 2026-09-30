@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { askToOpen } from '../../lib/learningintent';
 import { download } from '../../lib/deliver';
 import { card, type PolicySource } from '../../lib/toolkit/policy';
 import { DISCLAIMER, interpret } from '../../lib/toolkit/rubric';
@@ -20,6 +21,7 @@ export function AssignmentPanel({
   layers,
   initialTemplate,
   now,
+  onLeave,
 }: {
   library: Library;
   courseCode: string;
@@ -27,6 +29,8 @@ export function AssignmentPanel({
   /** Preselects the type; the caller keys this panel on it, so a new choice remounts rather than syncing state in an effect. */
   initialTemplate: TemplateId | null;
   now: Date;
+  /** Leave the toolkit for the Study screen it sits inside — the toolkit is a mode of Study, not a screen, so this closes it. */
+  onLeave: () => void;
 }) {
   const workspaces = library.value.workspaces;
   const [openId, setOpenId] = useState<string | null>(null);
@@ -137,6 +141,14 @@ export function AssignmentPanel({
             }
           >
             Download my notes
+          </button>
+          <button
+            onClick={() => {
+              askToOpen({ panel: 'feedback', work: open.title, courseCode: open.courseCode });
+              onLeave();
+            }}
+          >
+            File the feedback I received
           </button>
           <button
             onClick={() => {

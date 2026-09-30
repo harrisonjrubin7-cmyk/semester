@@ -1,4 +1,4 @@
--- The Workflow Builder (D-159): who may draft and who may publish a school's
+-- The Workflow Builder (D-1018): who may draft and who may publish a school's
 -- workflow definition, that whoever drafted it does not publish it, that a
 -- published version is never edited or deleted, that every write is held to
 -- the closed spec (steps, eligibility rules, the facts a rule may read), that
@@ -299,15 +299,39 @@ begin
     (select count(*) from public.workflow_versions where workflow = 'tutoring_referral' and created_by = admin), 1);
   perform pg_temp.counted('discarding it', pg_temp.touched(admin, $q$delete from public.workflow_versions where workflow = 'tutoring_referral'$q$), 1);
 
+  -- ── editing a draft makes you its drafter ─────────────────────────────
+  -- Whoever last changed what a draft says is the person who wrote it. An
+  -- account holding both capabilities (an administrator) that rewrote someone
+  -- else's draft used to leave the original name on it, and then publish it: a
+  -- second person who had reviewed nothing of what they wrote.
+  perform pg_temp.runs_clean('an editor drafts a workflow', pg_temp.draft(editor, 'advisor_approval', pg_temp.valid_def()));
+  perform pg_temp.counted('the editor is its drafter',
+    (select count(*) from public.workflow_versions where workflow = 'advisor_approval' and created_by = editor), 1);
+  perform pg_temp.runs_clean('an admin (both capabilities) rewrites the editor''s draft',
+    pg_temp.error_as(admin, $q$update public.workflow_versions set note = 'rewritten by the admin' where workflow = 'advisor_approval'$q$));
+  perform pg_temp.counted('the rewrite makes the admin its drafter',
+    (select count(*) from public.workflow_versions where workflow = 'advisor_approval' and created_by = admin), 1);
+  perform pg_temp.says('so the admin cannot publish what they wrote',
+    pg_temp.publish(admin, 'advisor_approval'), 'does not publish it');
+  perform pg_temp.runs_clean('saving the same content again is not authorship',
+    pg_temp.error_as(editor2, $q$update public.workflow_versions set note = note where workflow = 'advisor_approval'$q$));
+  perform pg_temp.counted('the admin is still its drafter',
+    (select count(*) from public.workflow_versions where workflow = 'advisor_approval' and created_by = admin), 1);
+  perform pg_temp.runs_clean('a change of note alone is a change of what the draft says',
+    pg_temp.error_as(editor2, $q$update public.workflow_versions set note = 'reviewed differently' where workflow = 'advisor_approval'$q$));
+  perform pg_temp.counted('and makes editor2 its drafter',
+    (select count(*) from public.workflow_versions where workflow = 'advisor_approval' and created_by = editor2), 1);
+  perform pg_temp.counted('the draft is discarded', pg_temp.touched(editor2, $q$delete from public.workflow_versions where workflow = 'advisor_approval'$q$), 1);
+
   -- ── the audit trail ────────────────────────────────────────────────────
   perform pg_temp.counted('a publish is recorded, draft to published, three times',
     (select count(*) from public.tenant_policy_audit_event e
       where e.tenant_id = 'wf-u' and e.entity_type = 'workflow_versions' and e.action = 'update'
         and e.old_data ->> 'state' = 'draft' and e.new_data ->> 'state' = 'published'
         and e.actor_grant_id is not null), 3);
-  perform pg_temp.counted('and each discard is recorded, the editor’s and the admin’s',
+  perform pg_temp.counted('and each discard is recorded, the editor’s, the admin’s and the authorship test’s',
     (select count(*) from public.tenant_policy_audit_event e
-      where e.tenant_id = 'wf-u' and e.entity_type = 'workflow_versions' and e.action = 'delete'), 2);
+      where e.tenant_id = 'wf-u' and e.entity_type = 'workflow_versions' and e.action = 'delete'), 3);
 
   -- ── the trigger is a lock of its own, behind row-level security ────────
   perform set_config('request.jwt.claims', '', true);

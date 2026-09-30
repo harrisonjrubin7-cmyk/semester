@@ -11,6 +11,12 @@ until the owner (Harrison Rubin) reopens it here.
 
 Status values: **Decided** · **Proposed — needs owner** · **Superseded**.
 
+**This log is closed at D-160.** Each later decision is its own file in
+[`decisions/`](decisions/README.md), named for the pull request that records
+it (`D-<pull request number>.md`), so two open pull requests can never take
+the same number or edit the same lines. The numbers here stand, and are cited
+as before.
+
 Owner approvals: D-003, D-005 and D-011 approved 27 Sep 2026 (in the
 session that opened #763). For D-005 the approval covers the recommendation
 as written: definitions and on-device counts now, and each server-collected
@@ -3363,6 +3369,17 @@ already in the tree under the design-debt register and needs no decision.
 - **The design brief's five destinations** (Today, My Path, Search, Plan, Me)
   **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
   Existing decision holds; not reopened here.
+- **Owner's answer, 30 Sep 2026.** Build the Recovery Center's first phase only,
+  with the proposed answers to its open questions: no per-plan versions, no
+  account cooling-off. The Access Simulator and the five-destination navigation
+  stay parked; the navigation still conflicts with `DO-NOT-BUILD.md` #1.
+- **What R1 built, and a correction.** A list of the drafts a device holds, the
+  restore claim on `Recovery` corrected (it said nothing could be restored while
+  `Export` restores from copies the app takes by itself), and links to that
+  restore and to `Behind`. The first version of `RECOVERY-CENTER.md` said
+  "Restart my week" was absent; it was not (`screens/Behind.tsx`), and the page
+  is corrected. A per-deadline "set aside" needs new persisted state and is left
+  as an open question.
 
 ## D-154 · The load harness covers the open and sync every student makes, and a push that loses an update fails it
 
@@ -3452,48 +3469,101 @@ edit silently won. Both were corrected, and nothing was rebuilt.
   this is proved against the store, not the wire. *Naming the other device*: no
   device identity exists, so the screen says "this device" and "the other".
 
-## D-159 · Schools define their own workflows in a Workflow Builder, the rules are deterministic, and nothing runs them yet
 
-**Decided 30 Sep 2026.** The platform brief's third "highest-leverage final
-addition" is a workflow builder and policy engine: "the policy engine should
-evaluate deterministic rules, not vague AI judgments". The owner asked for the
-briefs to be executed and chose this as the second slice, on its own branch.
+## D-156 · The fifteen cross-platform features are built in slices, each reading what the student already holds, and none acts without their review
 
-- **A definition, not a run** (`20260930231000_workflow_builder.sql`).
-  `workflow_versions` holds a school's definition of one of the brief's ten
-  workflows: ordered steps, eligibility checks, and the office it hands off
-  to. At most one draft per school and workflow; published versions 1, 2, 3 …
-  that no client edits or deletes; a rollback is a new draft. No student,
-  request or answer is stored.
-- **A closed spec, checked twice.** Step kinds, owners, eight facts and their
-  comparisons are lists; a school writes no expression. The database refuses
-  an unknown fact, a value out of range, a handoff the student has not
-  confirmed, a handoff with no named office, and a workflow that does not end
-  by completing. `lib/workflow/spec.ts` carries the same and `spec.test.ts`
-  holds them equal.
-- **A rule reads nothing the governance example prohibits.** The eight facts
-  are enrolment, an active term, a prerequisite, a hold's presence, an
-  advisor, an open deadline, credits earned and class year. No grade, balance,
-  diagnosis, disciplinary or immigration detail; a test holds the list to the
-  brief's own prohibited-fields example.
-- **Whoever drafted a definition does not publish it.** `workflow:manage`
-  drafts, `workflow:publish` publishes, `university_admin` holds both and
-  still cannot publish their own draft; a publisher alone cannot rewrite a
-  draft. Audited into `tenant_policy_audit_event` with the actor's grant.
-- **The engine has three answers.** A check passes, fails, or cannot be told
-  because the fact is unknown. Unknown is neither: the student is not offered
-  the action on a guess nor told they are ineligible on one, and is pointed to
-  the office that can check the official record. The builder's preview runs
-  this engine, so a school sees what a student would be told.
-- **Official systems keep authority.** A handoff step names an office and is a
-  pointer; nothing here writes into a system of record.
-- **A University tab, Workflows, behind `workflowBuilder`** (off by default;
-  `VITE_WORKFLOW_BUILDER`). Capability matrix +10.
-- **Checked.** `workflow-builder.check.sql`, 74 checks, each guard shown red
-  when removed and green when restored (eleven mutations, one of which first
-  survived because the test changed the wrong field of the draft at publish
-  time). The UI and engine tests were broken the same way.
-- **Not built:** workflow instances (a student going through one), staff
-  queues, SLA clocks and escalations, notifications, a visual canvas, a source
-  for the facts, and any write into an official system.
+**Proposed — needs owner.** The owner supplied a document of fifteen
+cross-platform features (My Commitments, the decision journal, What Changed,
+inbox-zero, templates, the resource guarantee, the workload contract and
+fairness engine, retrospectives, Prepare Me, handoff packs, skills transfer,
+the archive, focus modes, learning continuity) and asked for all of them. This
+records how they are being built, so the owner can correct it.
 
+- **Slices, audited first.** Each slice is checked against `origin/main` and the
+  open pull requests before it starts (CLAUDE.md). Where a module already
+  holds most of a feature, it is extended rather than duplicated:
+  `community/services.ts` for the resource guarantee, `advisor-meeting.ts`'s
+  share-payload pattern for handoff packs.
+- **Nothing is created or sent on the student's behalf.** What Changed only
+  reports and the one write is "Got it"; Prepare Me gathers, and its handoff
+  pack needs a tick per field from a fixed list per destination; suggestions
+  never become deadlines or actions until confirmed.
+- **Derived, not asserted.** Conflicts, free windows and recovery options are
+  arithmetic on stated times; a missing commute is zero; a slot with nothing
+  behind it is reported as missing. No difficulty score.
+- **Aggregates only for institutions.** Anything cohort-level (the fairness
+  engine) is aggregate and suppresses small cells; none reads an individual.
+- **Not built here, on purpose:** Focus Modes, which open PR #725 already
+  covers, and the learning-map overlap with PR #1010 for the workload contract
+  and learning continuity, until those land. Status per feature is in
+  `docs/CROSS-PLATFORM-FEATURES-REGISTER.md`.
+- **Numbering.** Open pull requests may also claim D-156; whoever merges second
+  renumbers.
+
+## D-157 · Alumni relations and fundraising are described on the site and built by no one yet
+
+**Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
+and its two pages. Following D-141's pattern for the K–12 edition, this puts
+what the module would be on the site without offering it.
+
+- **`app/src/lib/advancement/edition.ts`** holds three parts (alumni relations,
+  giving, the advancement office's console), each *planned*, each saying what
+  it would do and what it still needs. Its test holds that no gift, donor,
+  pledge, giving-campaign or advancement table exists, so a row cannot stay
+  "planned" once the money side lands. A record of who graduated and the
+  consents they give is not money, and may land on its own.
+- **Not planned, and said so:** wealth screening and predictive donor
+  scoring. DO-NOT-BUILD rule 3 refuses a ranking nobody can explain, and a
+  donor's capacity to give is inferred about them, not told to the school.
+- **Not decided here, and the pages say so:** how a gift would be paid, and a
+  price. The brief names a payment provider for recurring gifts; D-146 says no
+  money moves through Semester. Those two disagree, and it is the owner's
+  call, so neither page names a provider or a figure.
+- **Waits on counsel** for charitable-solicitation registration, state by
+  state, and for the wording of tax receipts, before the module is offered.
+- **Pages:** `/solutions/advancement/` and `/alumni/`. The site test holds
+  both to "no school uses Semester for alumni relations or fundraising" and
+  "no gift has been taken", and forbids a solicitation on either. The company
+  site (`company-site/index.html`) does not carry them yet.
+
+
+## D-160 · A security gap audit: what was closed, what was laid as a foundation, and what is left to people
+
+**Decided 30 Sep 2026.** The FERPA/LTI checklist, the runbook and the
+architecture-hardening briefs were read as evidence, not authority, against
+`main` and the open drafts. The record is
+[SECURITY-GAP-AUDIT-2026-09-30.md](SECURITY-GAP-AUDIT-2026-09-30.md). This is
+not a penetration test and claims nothing about FERPA.
+
+- **Closed, each shown red before or under a mutation:**
+  - LTI envelope: a token header that names a key (`jku`, `x5u`, `x5c`,
+    `jwk`) or an algorithm other than RS256 is refused before a key is fetched;
+    `jwtVerify` is pinned to that algorithm, the registration's issuer and
+    audience, a maximum token age and required claims; `nbf`, token age and a
+    foreign `azp` on a single audience are refused; `sub` and library errors
+    leave the logs; key-set refresh limits are pinned.
+  - Termination: SCIM deprovisioning did not revoke `role_grants`, which is
+    what `has_capability` reads, so a removed staff member kept school-scoped
+    authority. A trigger revokes that person's live school-scope grants for
+    that school; suspension revokes nothing; reactivation does not restore
+    authority; a backfill repairs people already deprovisioned.
+  - Endpoints: every edge function has `verify_jwt = false` by design, so one
+    without its own check would have been open. Each is now listed with the
+    credential it answers to, and its source must carry the evidence.
+- **A foundation for a control that did not exist:** staged roster imports
+  (per-school, server-only, closed row shape, manifest and digest validation,
+  a held-on-large-removal threshold with a second-person approver,
+  idempotent, reconcilable, reversible, refusing deletes under a legal hold).
+  There is **no OneRoster client and no live data path**; EDT-6 stays
+  NOT_STARTED and nothing may say Semester supports OneRoster.
+- **Left, and why:** the legitimate-purpose code list, `legal_basis`, the
+  meaning of a signature and retention of staged roster rows are counsel's; the
+  access-review cadence, staff export policy and JIT elevation are policy; an
+  unbound LTI registration launching with a warning is a recorded product
+  decision, not a bug; a person/alias identity table and a sweep of every RPC
+  for tenant context are larger than an unambiguous fix.
+- **Not applied to production.** The migrations are drafts. Applying
+  `20260930210000` revokes live grants of people already deprovisioned (the
+  backfill), which is the intent and is still a data change; it wants a look at
+  the affected rows first.
+- **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.

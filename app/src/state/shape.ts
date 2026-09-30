@@ -38,6 +38,7 @@ import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
+import { readSeen, type SeenMap } from '../lib/whatchanged';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
 import { readLeadDays } from '../lib/runway';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
@@ -248,6 +249,11 @@ export interface Persisted {
    */
   returned: Returned[];
   regradeWindows: Record<string, RegradeWindow>;
+  /**
+   * The last reading of each course's deadlines the student has seen, so
+   * "What changed" can say what differs from it. See `lib/whatchanged.ts`.
+   */
+  deadlineSeen: SeenMap;
   /**
    * Whether the app may look an address up, and how. Off by default and
    * off in two directions independently — see `lib/geocode.ts`. With it off
@@ -1471,6 +1477,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   progress: {},
   returned: [],
   regradeWindows: {},
+  deadlineSeen: {},
   geocode: { on: false, reverseOn: false, service: 'nominatim' },
   requirements: [],
   taken: [],
@@ -1825,6 +1832,7 @@ export function loadPersisted(): Persisted {
       progress: readProgress(saved.progress),
       returned: readReturned(saved.returned),
       regradeWindows: readWindows(saved.regradeWindows),
+      deadlineSeen: readSeen(saved.deadlineSeen),
       geocode: readGeocode(saved.geocode),
       requirements: readRequirements(saved.requirements),
       taken: readTaken(saved.taken),
@@ -2086,6 +2094,7 @@ export function pickPersisted(state: State): Persisted {
     progress: state.progress,
     returned: state.returned,
     regradeWindows: state.regradeWindows,
+    deadlineSeen: state.deadlineSeen,
     geocode: state.geocode,
     requirements: state.requirements,
     taken: state.taken,
@@ -2294,6 +2303,7 @@ export type Action =
   | { type: 'patchReturned'; id: string; patch: Partial<Returned> }
   | { type: 'unmarkReturned'; id: string }
   | { type: 'setRegradeWindow'; courseId: string; window: RegradeWindow }
+  | { type: 'seenDeadlines'; seen: SeenMap; onlyNew: boolean }
   | { type: 'setGeocode'; patch: Partial<Geocode> }
   | { type: 'addRequirement'; patch: Partial<Requirement> }
   | { type: 'patchRequirement'; id: string; patch: Partial<Requirement> }

@@ -1,7 +1,7 @@
 /**
  * The Workflow Builder: a school defines a process — its steps, who owns each,
  * and the eligibility checks a student must meet — as a draft that a second
- * person publishes as a numbered version (D-159), on the table in
+ * person publishes as a numbered version (D-1018), on the table in
  * `20260930231000_workflow_builder.sql`.
  *
  * What it shows is what the database will do. The check on a definition is

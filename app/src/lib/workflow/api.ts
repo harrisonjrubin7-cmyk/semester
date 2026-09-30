@@ -76,9 +76,9 @@ export function workflowApi(db: SupabaseClient): WorkflowApi {
     },
     async publish(draft) {
       const { data, error } = await db.from('workflow_versions')
-        .update({ state: 'published' }).eq('id', draft.id).select('id');
+        .update({ state: 'published' }).eq('id', draft.id).eq('updated_at', draft.updated_at).select('id');
       if (error) throw refusal(error, 'Could not publish.');
-      if (!data || data.length === 0) throw new Error('Your account cannot publish this draft.');
+      if (!data || data.length === 0) throw new Error('This draft changed after you opened it, or your account cannot publish it. Reload it and review what it says now.');
     },
   };
 }

@@ -1,5 +1,5 @@
 -- The Workflow Builder: how a school defines a process, and the checks a
--- student must pass for it, without anyone writing code for it (D-159).
+-- student must pass for it, without anyone writing code for it (D-1018).
 --
 -- The platform brief of 30 September asks for "a visual and API-backed system
 -- for approved workflows": trigger, eligibility check, a plain explanation for
@@ -323,6 +323,19 @@ begin
     end if;
     new.created_at := old.created_at;
     new.updated_at := now();
+    -- Whoever last changed what a draft says is the person who wrote it. The
+    -- name is otherwise pinned, which let an account holding both capabilities
+    -- rewrite somebody else's draft and then publish it: a second person who
+    -- had reviewed nothing of what they wrote. Now the rewrite makes them the
+    -- drafter, the original drafter becomes the one who may review it, and
+    -- saving the same content again changes nothing.
+    if old.state = 'draft' and new.state = 'draft' and auth.uid() is not null
+       and auth.uid() is distinct from old.created_by
+       and (new.definition is distinct from old.definition
+            or new.note is distinct from old.note
+            or new.based_on is distinct from old.based_on) then
+      new.created_by := auth.uid();
+    end if;
   end if;
 
   -- Saving a draft is drafting: publishing rights alone do not edit what they are to review.
@@ -412,6 +425,7 @@ alter table public.tenant_policy_audit_event
     'academic_record_changes', 'academic_record_subjects',
     'student_account_requests', 'student_account_settings', 'student_account_reconciliations', 'student_account_closes',
     'student_payment_plans',
+    'school_config_versions',
     'workflow_versions'
   ));
 
@@ -463,6 +477,6 @@ create trigger audit_workflow_versions after insert or update or delete on publi
 -- ── 7. Descriptions ───────────────────────────────────────────────────────
 
 comment on table public.workflow_versions is
-  'A school''s definition of one workflow (D-159): at most one draft, and published versions 1, 2, 3 … that are never edited. Checked against private.workflow_spec() on every write; published by someone who did not draft it. Holds a definition, never a student or a request.';
+  'A school''s definition of one workflow (D-1018): at most one draft, and published versions 1, 2, 3 … that are never edited. Checked against private.workflow_spec() on every write; published by someone who did not draft it. Holds a definition, never a student or a request.';
 comment on function private.workflow_spec() is
   'The closed lists a workflow definition is built from: templates, step kinds, owners, the facts a rule may read and their operators. lib/workflow/spec.ts carries the same and spec.test.ts holds them equal.';

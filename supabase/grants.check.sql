@@ -543,6 +543,12 @@ declare
     'console_audit_status()',
     'console_figures(include_demo boolean)',
 
+    -- The read-only exception queue in 20260930180000. It checks
+    -- console:operate at platform scope inside the definer function, excludes
+    -- demo tenants by default, and is negatively tested in
+    -- console-command-center.check.sql.
+    'console_command_center(include_demo boolean)',
+
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
     -- requester party, deciding checks fresh MFA, refuses self-approval and

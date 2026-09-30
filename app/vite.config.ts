@@ -680,6 +680,10 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/GetHelp.feedback.test.tsx',
+  'src/components/MomentPromptSlot.test.tsx',
+  'src/screens/behind.lifeevents.test.tsx',
+  'src/screens/whatsnew.feedback.test.tsx',
   'src/components/StudyStudio.packs.test.tsx',
   'src/lib/coursestudio.test.ts',
   'src/components/CourseStudio.test.tsx',
@@ -769,6 +773,7 @@ const MOCKS_MODULES = [
   'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
+  'src/state/persist/leaving.test.ts',
   'src/state/persist/tell.test.ts',
   'src/state/pushlater.test.tsx',
   'src/state/storetoken.test.tsx',

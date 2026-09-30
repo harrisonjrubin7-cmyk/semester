@@ -4,7 +4,7 @@ Item 3 of the platform brief of 30 September
 ([`expansion/Platform-Operating-Model-Configuration-Workflow-Governance-and-Proof.pdf`](expansion/Platform-Operating-Model-Configuration-Workflow-Governance-and-Proof.pdf)):
 *"a visual and API-backed system for approved workflows … the policy engine
 should evaluate deterministic rules, not vague AI judgments."* Decision:
-[D-159](DECISION-LOG.md).
+[D-1018](DECISION-LOG.md).
 
 ## What is built
 

@@ -50,6 +50,30 @@ publish your own.
 
 It is switched off, and nothing in the app runs these definitions yet: the tab
 says so. It holds no student and no request. Students see no difference.
+### For school staff: a Configuration tab on University (off for now)
+
+Staff with configuration rights at a school get a **Configuration** tab in
+eleven domains — academic structure, workflows, roles, branding, content, AI,
+notifications, data, features, accessibility and reporting. A change is a
+draft; a colleague who holds the publish role publishes it as a numbered
+version, and you cannot publish your own. Old versions stay, and you can start
+a new draft from any of them.
+
+It is switched off, and nothing in the app reads these settings yet: the tab
+says so. Students see no difference.
+
+Nothing to do.
+
+### On the public site: alumni relations and fundraising, described and not built
+
+Two new pages, `/solutions/advancement/` and `/alumni/`, describe what an
+alumni and advancement office could one day run in Semester: alumni relations,
+giving, and the office's own console. They say plainly that none of it is
+built, that no school uses it, that no gift has been taken and no receipt
+issued, and that no price has been set. They also say what is not planned:
+wealth screening and predictive donor scoring. The graduate page lists what a
+graduate can do today (offer to mentor, take their data with them) and asks
+for nothing.
 
 Nothing to do.
 

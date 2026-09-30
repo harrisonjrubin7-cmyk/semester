@@ -87,6 +87,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'Held, 21 of 21 on claude-opus-5: no reply carried a canary. One model, one run; a model or prompt-builder change is a reason to run it again (REDTEAM=write, app/src/ai/injection.live.test.ts).',
   },
   {
+    id: 'advisor-before-2026-09-30',
+    artifact: 'Production security and performance advisor read before the reconciliation: 49 policy-less tables, 180 signed-in-callable definer functions, four unindexed foreign keys, two tables without a primary key',
+    path: 'docs/evidence/advisors/2026-09-30-before.json',
+    produced: '2026-09-30',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['IAM-008'],
+    note: 'The before column of docs/ADVISOR-RECONCILIATION-2026-09-30.md, read-only. The after reading on production is not taken until the migration is applied, which needs separate authorization. Renewed by re-running supabase/advisor-probe.sql.',
+  },
+  {
     id: 'restore-rehearsal',
     artifact: 'Backup restore rehearsal: a logical dump restored locally, schema and row counts compared',
     path: 'docs/GO-NO-GO-CHECKLIST.md',
