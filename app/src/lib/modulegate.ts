@@ -3,6 +3,7 @@ import { cloud, cloudConfigured } from './cloud';
 import { narrowingAdmits, readNarrowing, type Narrowing } from './featurepolicy';
 import { flagDefinition } from './flags';
 import { claimedSchoolOrThrow } from './schoolclaim';
+import { forSchool, loadMyCapabilitiesOrThrow } from './capabilities';
 
 /**
  * Whether a writeback module is on for the caller's school, read the way the
@@ -64,7 +65,7 @@ interface SwitchRow {
  */
 export function decideGate(
   flag: string,
-  read: { school: string; state: string | null; switches: readonly SwitchRow[]; narrowing: Narrowing },
+  read: { school: string; state: string | null; switches: readonly SwitchRow[]; narrowing: Narrowing; exempt?: boolean },
 ): 'on' | 'off' | { stopped: string } {
   const stoppers = flagDefinition(flag)?.killSwitches ?? ['kill.writeback'];
   const hit = read.switches.find(
@@ -72,10 +73,18 @@ export function decideGate(
   );
   if (hit) return { stopped: hit.switch_key };
   if (read.state !== 'production') return 'off';
-  return narrowingAdmits(read.narrowing) ? 'on' : 'off';
+  return narrowingAdmits(read.narrowing) || read.exempt === true ? 'on' : 'off';
 }
 
-export async function readModuleGate(flag: string): Promise<ModuleGate> {
+/**
+ * `exemptCapability` mirrors a server gate that lets an office through a
+ * narrowed pilot: `private.registration_gate` admits a holder of
+ * `registration:administer` at the school whatever the role and cohort lists
+ * say, so the registrar is never shown "not open to you" for a screen whose
+ * writes the database would accept. It is read only when the narrowing
+ * refuses, and a failed read is `error`, never a guess either way.
+ */
+export async function readModuleGate(flag: string, exemptCapability?: string): Promise<ModuleGate> {
   if (!cloudConfigured) return { status: 'off' };
   const db = await cloud();
   const { data: who, error: whoError } = await db.auth.getUser();
@@ -99,11 +108,20 @@ export async function readModuleGate(flag: string): Promise<ModuleGate> {
   if (state.error || switches.error || !narrowing) {
     return { status: 'error', message: 'Could not read whether your school has this turned on.' };
   }
+  let exempt = false;
+  if (exemptCapability && !narrowingAdmits(narrowing)) {
+    try {
+      exempt = forSchool(await loadMyCapabilitiesOrThrow(), school).includes(exemptCapability);
+    } catch {
+      return { status: 'error', message: 'Could not check your staff permissions.' };
+    }
+  }
   const decided = decideGate(flag, {
     school,
     state: typeof state.data === 'string' ? state.data : null,
     switches: (switches.data ?? []) as SwitchRow[],
     narrowing,
+    exempt,
   });
   if (decided === 'on') return { status: 'on', school, userId };
   if (decided === 'off') return { status: 'off' };
@@ -111,17 +129,17 @@ export async function readModuleGate(flag: string): Promise<ModuleGate> {
 }
 
 /** The gate for one flag, read once per mount, with a retry for the error state. */
-export function useModuleGate(flag: string): ModuleGate & { retry: () => void } {
+export function useModuleGate(flag: string, exemptCapability?: string): ModuleGate & { retry: () => void } {
   const [gate, setGate] = useState<ModuleGate>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let live = true;
-    readModuleGate(flag).then(
+    readModuleGate(flag, exemptCapability).then(
       (g) => { if (live) setGate(g); },
       () => { if (live) setGate({ status: 'error', message: 'Could not read whether your school has this turned on.' }); },
     );
     return () => { live = false; };
-  }, [flag, attempt]);
+  }, [flag, exemptCapability, attempt]);
   const retry = useCallback(() => {
     setGate({ status: 'loading' });
     setAttempt((n) => n + 1);

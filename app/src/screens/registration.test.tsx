@@ -66,7 +66,7 @@ vi.mock('../state/store', () => ({
   useStore: () => ({ dispatch: mock.dispatch, say: mock.say, account: mock.user ? { id: mock.user } : null, state: {} }),
   useNow: () => new Date(),
 }));
-vi.mock('../lib/capabilities', async (orig) => ({ ...(await orig<object>()), loadMyCapabilities: mock.caps }));
+vi.mock('../lib/capabilities', async (orig) => ({ ...(await orig<object>()), loadMyCapabilitiesOrThrow: mock.caps }));
 vi.mock('../lib/registration-plan', () => ({ useRegistrationPlan: () => ({ cart: mock.cart }) }));
 vi.mock('../lib/enrollment/client', async (orig) => ({
   ...(await orig<object>()),

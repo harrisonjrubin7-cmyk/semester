@@ -7,9 +7,9 @@ import { Field } from '../components/academic/Form';
 import { StudentRegistration } from '../components/enrollment/StudentRegistration';
 import { RegistrarDesk } from '../components/enrollment/RegistrarDesk';
 import { useModuleGate } from '../lib/modulegate';
-import { loadMyCapabilities, type Grant } from '../lib/capabilities';
+import { loadMyCapabilitiesOrThrow, type Grant } from '../lib/capabilities';
 import { FLAG } from '../lib/enrollment/service';
-import { holdsRegistrar, loadTerms, type TermCalendar } from '../lib/enrollment/client';
+import { REGISTRAR_CAPABILITY, holdsRegistrar, loadTerms, type TermCalendar } from '../lib/enrollment/client';
 import { termOf } from '../lib/gradebook/client';
 
 /**
@@ -49,7 +49,7 @@ export function openingTerm(terms: readonly TermCalendar[], now: Date): TermCale
 }
 
 export function Registration() {
-  const gate = useModuleGate(FLAG);
+  const gate = useModuleGate(FLAG, REGISTRAR_CAPABILITY);
   const { dispatch } = useStore();
   if (gate.status !== 'on') {
     return (
@@ -82,7 +82,7 @@ function Desk({ school }: { school: string }) {
     let live = true;
     // A failed read is not "no capabilities": a registrar whose check failed
     // is told so and can ask again, rather than silently losing the desk.
-    loadMyCapabilities().then((g) => { if (live) setGrants(g); }, (e: unknown) => { if (live) setGrants(e instanceof Error ? e.message : 'Could not check your staff permissions.'); });
+    loadMyCapabilitiesOrThrow().then((g) => { if (live) setGrants(g); }, (e: unknown) => { if (live) setGrants(e instanceof Error ? e.message : 'Could not check your staff permissions.'); });
     return () => { live = false; };
   }, [grantReads]);
 

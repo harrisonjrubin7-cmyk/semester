@@ -18,6 +18,8 @@ const mock = vi.hoisted(() => ({
   asked: [] as unknown[],
   /** What `feature_narrowing` answers: its rows, or an error. */
   narrowing: { data: [] as unknown, error: null as { message: string } | null },
+  /** What `my_capabilities` answers. */
+  caps: { data: [] as unknown, error: null as { message: string } | null },
 }));
 
 function chain(table: string) {
@@ -39,6 +41,7 @@ vi.mock('./cloud', () => ({
     rpc: async (name: string, args: unknown) => {
       mock.asked.push([name, args]);
       if (name === 'feature_narrowing') return mock.narrowing;
+      if (name === 'my_capabilities') return mock.caps;
       return { data: mock.state, error: mock.stateError };
     },
     from: (table: string) => chain(table),
@@ -61,6 +64,7 @@ beforeEach(() => {
   mock.schoolError = null;
   mock.asked = [];
   mock.narrowing = { data: [], error: null };
+  mock.caps = { data: [], error: null };
 });
 
 describe('the decision', () => {
@@ -140,6 +144,27 @@ describe('reading it', () => {
     expect(await readModuleGate(FLAG)).toEqual({ status: 'off' });
     mock.narrowing = { data: [{ permitted_roles: [], permitted_cohorts: ['reg-pilot'], roles: [], cohorts: ['reg-pilot'] }], error: null };
     expect(await readModuleGate(FLAG)).toEqual({ status: 'on', school: 'vu', userId: 'u-1' });
+  });
+
+  it('lets the registrar through a narrowed pilot, as registration_gate does, and nobody else by the same door', async () => {
+    const REG = 'registration:administer';
+    const grant = (scope_id: string) => [{ capability: REG, scope_kind: 'school', scope_id }];
+    mock.narrowing = { data: [{ permitted_roles: [], permitted_cohorts: ['reg-pilot'], roles: [], cohorts: [] }], error: null };
+    mock.caps = { data: grant('vu'), error: null };
+    expect(await readModuleGate(FLAG, REG)).toEqual({ status: 'on', school: 'vu', userId: 'u-1' });
+    // The exemption is asked for by the screen, and only there.
+    expect(await readModuleGate(FLAG)).toEqual({ status: 'off' });
+    // Registrar at another school is no exemption here.
+    mock.caps = { data: grant('other'), error: null };
+    expect(await readModuleGate(FLAG, REG)).toEqual({ status: 'off' });
+    // A failed permission read is said, not guessed either way.
+    mock.caps = { data: null, error: { message: 'network' } };
+    expect((await readModuleGate(FLAG, REG)).status).toBe('error');
+    // Not asked at all when the narrowing already admits.
+    mock.narrowing = { data: [{ permitted_roles: [], permitted_cohorts: [], roles: [], cohorts: [] }], error: null };
+    mock.asked = [];
+    expect((await readModuleGate(FLAG, REG)).status).toBe('on');
+    expect(mock.asked.some((a) => (a as unknown[])[0] === 'my_capabilities')).toBe(false);
   });
 
   it('is off for a role the school did not name, and on for one it did', async () => {
