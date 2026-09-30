@@ -60,7 +60,7 @@ Across all 226 tracked Markdown files there are 261 dead relative links, nearly 
 | Dependencies | `npm audit --audit-level=high` in CI | Ran | 0 vulnerabilities | — |
 | Security review | `SECURITY.md`, the secret scans in CI | CI | — | **No external penetration test.** A named second operator is a Stage 3 item in `SECURITY.md` |
 | Performance | `lib/timing.ts`, the Data screen's "How fast" | Not re-run | Figures in `COMPLETION-PLAN.md` §7.1 | No SLO; no aggregate of real devices, by design |
-| Load and peak capacity | — | — | — | **Nothing exists.** No load test of PostgREST, the `claude` function or the gateway. Before a registration-week cohort: a scripted load against a Supabase preview branch at 10× the cohort's expected peak, owner engineering |
+| Load and peak capacity | `supabase/load.sh` (D-154) | Ran, in CI | Eight scenarios within budget; no lost update with two devices; capacity 2–4× the first morning of term at 10× the largest pilot ([readings](PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md#load-and-capacity)) | The database only. Still no load test of PostgREST, the `claude` function or the gateway. Before a registration-week cohort: a scripted load against a Supabase preview branch at 10× the cohort's expected peak, owner engineering |
 | Documentation review | `runbooklinks.test.ts` (new), the launch docs' own tests (phases 0–6) | Ran | 43 operational documents, no dead links | 261 dead links elsewhere, listed above |
 | Operational rehearsals | `docs/vanderbilt/incident-routing.md`, `MONITORING.md` | — | — | **No incident tabletop has been run.** One tabletop against the incident-routing document, with the pilot's champion, before the cohort launches |
 

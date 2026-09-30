@@ -38,6 +38,19 @@ it('projects a finish from the transcript hours and calls it an estimate', () =>
   expect(host.textContent).toContain('not an official degree audit');
 });
 
+it('says what kind of record the estimate is, whose it is, and where the official one is', () => {
+  act(() => root.render(<GraduationSimulator done={60} />));
+  const label = host.querySelector('[data-record="degree_audit"]')!;
+  expect(label).not.toBeNull();
+  const text = label.textContent ?? '';
+  for (const phrase of ['Degree audit', 'The registrar', 'Not verified by the record’s owner', 'Certify your progress', 'run your school’s official degree audit']) {
+    expect(text, phrase).toContain(phrase);
+  }
+  // It sits beside the estimate, before any control, so it is read first.
+  const first = host.querySelector('.graduation-simulator input, .graduation-simulator select')!;
+  expect(label.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+});
+
 it('adds a what-if scenario and compares it with the current plan', () => {
   act(() => root.render(<GraduationSimulator done={60} />));
   const pick = [...host.querySelectorAll('select')].find((s) => s.closest('label')?.textContent?.startsWith('Add a scenario'))!;

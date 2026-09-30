@@ -21,29 +21,29 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `SEMESTER_MARKET_READINESS.md`, `ops/claims/README.md`, `app/server/institution/gateway.ts`
 
-### The same note edited on two devices keeps the later edit.
+### Files you attach do not sync, and two devices can still disagree.
 
-**What does not work yet.** Lists you add to keep both sides when devices sync, but one record edited on both devices before either syncs is not merged: the later edit of it survives. Files you attach do not sync at all; they stay on the device they were added on.
+**What does not work yet.** Files you attach stay on the device they were added on: they can be tens of megabytes, and uploading them over a phone plan is not a decision the app makes for you. Everything else you type or make syncs. A note, action or other record you edit on two devices before either syncs keeps the later edit in use and offers you the other version to choose on Account. Deleting a course, note, action, appointment, document, sheet or deck on one device deletes it on the others, unless you changed it on another device, in which case the changed one stays and you are asked. Other lists (folders, equations, places and the rest) do not carry a deletion yet, so an item you delete from one of them can come back from another device.
 
-**What to do instead.** Let one device sync (the Account screen says Synced) before editing the same item on another. Keep attachments on the device you use most, or put them in Take it with you (#/export).
+**What to do instead.** Keep attachments on the device you use most, or put them in Take it with you (#/export). Check Account for a version to choose after two devices have been used offline. If something you deleted from one of the other lists comes back, delete it again.
 
-*Stated in:* `app/src/lib/cloud.ts`, `app/src/lib/merge.ts`
+*Stated in:* `app/src/lib/cloud.ts`, `app/src/lib/merge.ts`, `app/src/lib/conflicts.ts`, `app/src/lib/deletions.ts`
 
-### Offline, sharing and sending wait — nothing is queued.
+### Offline, only two things can be kept to send later, and none sends itself.
 
-**What does not work yet.** Sharing, sending something to your school, publishing, deleting your account and opening an official site are refused while you are offline, with a sentence saying nothing was sent and nothing is waiting. Everything else is saved on the device and syncs when you are back.
+**What does not work yet.** Sharing an advisor meeting and sending your course plan to your school can be kept on this device when you are offline. Neither goes by itself: when you are back online you send each one from Account, and one that waited more than three days is not sent and has to be made again. A share cut off by a dropped connection may or may not have arrived, so you check before sending it again. Where the browser will not keep saved sends, they are lost if you close the app. Publishing, deleting your account, choosing an office program and opening an official site are refused while you are offline, with a sentence saying nothing was sent and nothing is waiting. Nothing that writes to an official or financial record can be kept.
 
-**What to do instead.** Do those five things when you have a connection. The banner under the header says when you are offline and when the changes you made have gone up.
+**What to do instead.** Keep the two from the screen that was refused, then send them from Account when you are back. Do the rest when you have a connection. The banner under the header says when you are offline and when the changes you made have gone up.
 
-*Stated in:* `app/src/lib/offline-mode.ts`
+*Stated in:* `app/src/lib/offline-mode.ts`, `app/src/lib/sync/outbox.ts`, `app/src/lib/sync/classes.ts`
 
-### A course deleted offline can come back.
+### Deleting nearly a whole list at once, offline, can bring it back.
 
-**What does not work yet.** Delete a course while offline and close the app before it syncs, and the next sync brings the course back from your account.
+**What does not work yet.** A course, note, action, appointment, document, sheet or deck you delete while offline stays deleted, even if you close the app before it syncs. The exception is a safeguard: if you delete five or more of the same kind, and nearly all you had, while offline, and close the app before the next sync, the app treats that as an accident rather than a choice, because an app that lost rows by mistake would look exactly the same and would delete them from your account. They come back on the next sync.
 
-**What to do instead.** Delete it again once you are online. It is visible and takes one tap; the alternative was a course silently lost, which is why it works this way.
+**What to do instead.** Delete them again once you are online, where each deletion goes up as you make it.
 
-*Stated in:* `app/src/lib/cloud.ts`
+*Stated in:* `app/src/lib/deletions.ts`
 
 ### No multi-factor sign-in, and no sign-in through your school.
 

@@ -3364,3 +3364,91 @@ already in the tree under the design-debt register and needs no decision.
   **conflict with the seven roots on main** and with `DO-NOT-BUILD.md` #1.
   Existing decision holds; not reopened here.
 
+## D-154 · The load harness covers the open and sync every student makes, and a push that loses an update fails it
+
+**Decided 30 Sep 2026.** #974's `supabase/load.sh` loads the registration-week
+paths. Every visit and every edit take a different path: the pull, and then
+compare-and-swap pushes of the state row and four courses. That path had no
+load at all. B14 and SRE-007 still recorded that no load test existed. #996
+had built a second harness for it, at the same path; that harness is folded
+into this one rather than kept beside it.
+
+- **Three scenarios:**
+  - `sync-open`: the nine requests of an open;
+  - `sync-push`: state and four courses, by compare-and-swap;
+  - `sync-same-student`: two devices pushing at once.
+
+  Each runs as the student, on production-sized rows, against a budget about
+  ten times a quiet machine's reading, like the others.
+- **A push that writes nothing fails the run.** A compare-and-swap that
+  matches nothing still succeeds, so the rows written are counted: about one
+  state row and four courses a push. Shown red with a course
+  compare-and-swap planted to miss: 0 courses written, and a push p95 that
+  looked seven times faster.
+- **A lost update fails the run.** Each winning push must build on the one
+  before. The control, the same race without the compare-and-swap, must lose
+  some writes, and did (1,165 of 1,526).
+- **The database is settled before timing:** `VACUUM (FREEZE, ANALYZE)` and
+  `CHECKPOINT` after the seed. The #996 gate went red on a runner without
+  them, with a median of 8 ms under a p95 of 457 ms.
+- **Capacity**, from #996's rate-limited run on production's own settings:
+  the first morning of term at ten times the largest pilot held at 2–4× the
+  target. The push gives first, because every push rewrites every course.
+  This is recorded as a reading, not re-run.
+- **Not done:** PostgREST, Supavisor, GoTrue and the edge functions under
+  load, which is the preview-branch run; and journeys that do not exist yet.
+  B14 moves from owed to partial and SRE-007 from not-started to building.
+
+## D-155 · A deletion is settled against the version both devices agreed on, and two sends can be kept for the student to send
+
+**Decided 30 Sep 2026** (Prompt 7 of the Core build prompts: sync conflicts, an
+offline outbox, tombstones). Read against main first, which found the prompt's
+premise partly stale: conflict detection and the choose-a-version screen were
+already built (`lib/conflicts.ts`, `components/Review.tsx`, the base kept on the
+device), and the known limitation and the `cloud.ts` header still said the later
+edit silently won. Both were corrected, and nothing was rebuilt.
+
+- **Deletions.** A union cannot express one, so a note deleted on a phone came
+  back from the laptop every time, and a course deleted offline came back once
+  the app closed, because the list that remembered it was in memory.
+  `lib/deletions.ts` reads the base instead: in the base, missing on one side and
+  unchanged on the other is a deletion, and it stays one on both. Deleted on one
+  side and *edited* on the other keeps the edit and asks, on the same list as two
+  edits. The push names a deleted course from the base, so it survives a restart.
+- **Which lists.** Courses, notes, actions, appointments, documents, sheets and
+  decks: each has exactly one removal, an explicit delete, and a test reads the
+  reducers to hold it there. A list the app also trims by itself would spread its
+  own trimming to every device as if somebody had chosen it, so the rest wait.
+- **Never a whole list at once.** Five or more, and 80% or more of what was
+  agreed, is not believed: an app that dropped rows on load looks identical to a
+  person deleting everything, and being wrong deletes from the account. The rows
+  come back, which is what happened before, and the known limitation says so.
+- **Two sends can be kept, and none sends itself.** D-055 refused to queue
+  sharing and sending because a share that fires hours later is a surprise. That
+  reasoning stands, so what was added is a way to *keep* one, not to send it. A
+  share with an advisor and a course plan are held on the device
+  (`lib/sync/outbox.ts`, IndexedDB `semester-outbox`), dated and cancellable.
+  Coming back online makes them ready and sends nothing; the student sends each,
+  one tap; one that waited three days is never sent. Erase device clears it.
+- **Once, or flagged.** The server calls take no idempotency key, so a request
+  cut off mid-flight may or may not have landed. The entry is written `sending`
+  before the call, so a closed tab is found as *unknown*, and an unknown share is
+  checked by the student before it goes again. A course plan replaces itself at
+  the school, so it may be sent again freely.
+- **What can never be held.** Publishing, deleting an account, opening an
+  official site, and any write to an official or financial record. Every write
+  that needs a connection is in a class with a reason (`lib/sync/classes.ts`), a
+  test reads the source so a new one cannot ship unclassified, and it reads the
+  two functions a held send calls for any official or financial name.
+- **Proved.** `state/deletions.test.tsx` runs the real store against a mocked
+  account through airplane mode, a restart and a connection that flaps. Reverting
+  the store change turned 8 of its 12 red; reverting the course push alone turned
+  its test red; auto-sending on reconnect turned 9 of the panel's 18 red.
+- **Not done, and why.** *File sync*: it needs a storage bucket with row-level
+  security and an owner decision on uploading tens of megabytes over a phone plan,
+  which `cloud.ts` chose not to do silently. *Other lists' deletions* (folders,
+  equations, places and the rest). *Server-side idempotency keys.* *A real
+  browser going offline against a real project*: the smoke has no Supabase, so
+  this is proved against the store, not the wire. *Naming the other device*: no
+  device identity exists, so the screen says "this device" and "the other".
+

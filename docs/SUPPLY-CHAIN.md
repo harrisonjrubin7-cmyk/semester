@@ -19,10 +19,11 @@ workflow step from an unapproved publisher fails CI.
 | Every package under an approved or named licence | `app/src/lib/supplychain.test.ts` |
 | Every package from `registry.npmjs.org` with a sha512 integrity hash | `app/src/lib/supplychain.test.ts` |
 | Only approved third-party Actions run | `app/src/lib/supplychain.test.ts` |
+| Every Action pinned to a full commit SHA, with its release in a comment | `app/src/lib/supplychain.test.ts` |
 | An SBOM (CycloneDX) of every deploy, kept 90 days | `pages.yml` → `npm run sbom`; asserted by `supplychain.test.ts` |
 
-What is **not** held yet — Actions pinned to commit SHAs, signed build
-provenance, a supplier-compromise playbook — is tracked with the rest of the
+What is **not** held yet — signed build provenance, a
+supplier-compromise playbook — is tracked with the rest of the
 strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-REGISTER.md).
 
 ## Licence inventory

@@ -184,11 +184,11 @@ export const REGISTRY = 'https://registry.npmjs.org/';
  * why this repository trusts it with a job's token. A `uses:` line not listed
  * here fails the build. `.github/dependabot.yml` keeps the versions current.
  *
- * They are pinned to a major tag, not a commit SHA. A tag can be moved by the
- * publisher, so this trusts the publisher, not the bytes; the list is short so
- * that trust is a decision about five publishers rather than an accident.
- * Pinning to SHAs is the stronger control and is listed as open in the
- * expansion register (SUP-004).
+ * Each is pinned to a full commit SHA with its release in a trailing comment
+ * (`supplychain.test.ts` holds both). A tag can be moved by the publisher, so a
+ * tag would trust the publisher; a SHA trusts the bytes that were reviewed.
+ * Dependabot's `github-actions` ecosystem opens the bump, SHA and comment
+ * together, so the pin costs a review, not a chore.
  */
 export const ACTIONS: Record<string, { publisher: string; why: string }> = {
   'actions/checkout': { publisher: 'GitHub', why: 'Checks out the repository.' },

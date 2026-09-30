@@ -317,7 +317,7 @@ Since the reading, 29 more, from migrations not applied to production, each with
 
 ## Both briefs, item by item
 
-Read against main on 2026-09-29. `held` cites a test or check that guards it; `partial` cites what exists and names what does not; `owed` cites only prose. A01–A20 are the architecture brief's twenty priorities; B01–B15 are the audit's named artifacts and remediation items. held 7, partial 27, owed 1.
+Read against main on 2026-09-29. `held` cites a test or check that guards it; `partial` cites what exists and names what does not; `owed` cites only prose. A01–A20 are the architecture brief's twenty priorities; B01–B15 are the audit's named artifacts and remediation items. held 7, partial 28, owed 0.
 
 | ID | Item | Status | Evidence | Gap |
 | --- | --- | --- | --- | --- |
@@ -354,7 +354,7 @@ Read against main on 2026-09-29. `held` cites a test or check that guards it; `p
 | B11 | Standard audit events for login, privilege, share, export, delete, integration, AI | partial | `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql`<br>`supabase/role-grant-audit.check.sql`<br>`supabase/gateway-journal.check.sql` | Separate audit tables with no single schema; sign-ins and shares are not in a common trail. |
 | B12 | Webhook intake: signatures, idempotency, replay protection, dead letters | partial | `supabase/functions/_shared/billingwebhook.ts`<br>`app/src/lib/billing/webhook.test.ts`<br>`supabase/integration-hardening.check.sql` | Billing verifies signature, age and idempotency; no inbound integration endpoint exists yet, and billing has no dead letter. |
 | B13 | Restore drills and rollback | held | `supabase/restore.sh`<br>`RESTORE.md`<br>`ROLLBACK.md`<br>`app/src/lib/rehearsal.test.ts` | The production restore drill has not run (D-126). |
-| B14 | Load and capacity tests | owed | `docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` | None; operationalreality.ts records it as SRE-007. |
+| B14 | Load and capacity tests | partial | `supabase/load.sh`<br>`supabase/load/run.sh`<br>`supabase/load/sync-open.pgbench.sql`<br>`supabase/load/sync-push.pgbench.sql`<br>`supabase/load/sync-same-student.pgbench.sql`<br>`docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md` | A CI gate for the database: registration-week reads and plan saves, and the open and sync every student makes, each against a latency budget, with invariants after (no lost update when two devices push, no plan counted twice). The database only: PostgREST, Supavisor, GoTrue and the network are the preview-branch run still owed, and assessment and gradebook have no load because they do not exist. |
 | B15 | A quarterly architecture review | partial | `docs/operating-model/RISK-GOVERNANCE.md`<br>`docs/operating-model/OPERATING-RHYTHM.md` | A monthly review board is defined without named members; no review is recorded. This register's next review is quarterly. |
 
 ## Open

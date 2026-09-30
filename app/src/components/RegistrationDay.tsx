@@ -29,6 +29,7 @@ import {
 } from '../lib/registration-day';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { ConfirmDialog } from './ConfirmDialog';
+import { HANDOFF_STATUSES, WORDS, describe as describeHandoff, isStatus, report, startHandoff } from '../lib/handoff-status';
 
 /**
  * The registration-day tab of the registration workspace.
@@ -435,6 +436,43 @@ export function RegistrationDay({
             <p className="portal-muted">
               <SourceBadge label="student_entered" /> The address you saved. Semester is not connected to it.
             </p>
+            {data.portalUrl ? (
+              <>
+                <h4>After you leave</h4>
+                <label className="portal-check">
+                  Where your registration stands
+                  <select
+                    className="input"
+                    aria-label="Where your registration stands"
+                    value={data.handoff?.status ?? ''}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      if (!isStatus(next)) return;
+                      const at = Date.now();
+                      library.update((d) => ({ ...d, handoff: report(d.handoff ?? startHandoff('registration', at), next, at) }));
+                    }}
+                  >
+                    <option value="">Choose one…</option>
+                    {HANDOFF_STATUSES.map((id) => (
+                      <option key={id} value={id}>{WORDS[id].label}</option>
+                    ))}
+                  </select>
+                </label>
+                {data.handoff && describeHandoff(data.handoff, now.getTime()) ? (
+                  <p className="portal-muted" role="status">
+                    <SourceBadge label="student_entered" /> {describeHandoff(data.handoff, now.getTime())!.line}{' '}
+                    {describeHandoff(data.handoff, now.getTime())!.next}
+                  </p>
+                ) : (
+                  <p className="portal-muted">Only you can say how it went; Semester cannot see your school’s system.</p>
+                )}
+                {data.handoff ? (
+                  <div className="portal-actions">
+                    <button onClick={() => library.update((d) => ({ ...d, handoff: null }))}>Clear this note</button>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </>
         ) : null}
         <p className="portal-muted">
