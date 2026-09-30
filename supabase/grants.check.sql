@@ -205,6 +205,16 @@ declare
     -- function is the only way in and has to be callable by a signed-in
     -- account. See 20260921170000_schools.sql.
     'claim_school(want text)',
+    -- Course rooms limited to one university (20260930100000). Each is gated
+    -- inside its body; `school-membership.check.sql` walks the refusals.
+    'request_school_membership(want text, why text)',
+    'withdraw_school_request(req uuid)',
+    'decide_school_request(req uuid, approve boolean, why text)',
+    'leave_school()',
+    'revoke_school_membership(target uuid, why text)',
+    'school_enforcement_readiness(want text)',
+    'school_requests_for_admin(want text)',
+    'set_school_enforcement(want text, on_ boolean, acknowledge_locked_out integer)',
 
     /*
      * Community (20260928032000_community.sql). Seventeen, because every write

@@ -166,6 +166,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_appeal', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
+  ['decide_school_request', 'admin', ['private.has_capability']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
   ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
   ['dining_cancel_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
@@ -213,6 +214,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['kill_switch_engaged', 'read-helper', ['k.tenant_id is null or k.tenant_id = want_tenant']],
   ['leave_beta', 'self-service', ['private.beta_my_membership']],
   ['leave_organization', 'self-service', ['auth.uid()']],
+  ['leave_school', 'self-service', ['auth.uid()']],
   ['list_advisor_shares', 'sharing', ['auth.uid()']],
   ['list_support_shares', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['make_family_invite', 'sharing', ['auth.uid()', 'private.verified_account']],
@@ -270,14 +272,19 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
+  ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['review_break_glass', 'admin', ['auth.uid()', 'private.holds_seat']],
+  ['revoke_school_membership', 'admin', ['private.has_capability']],
   ['revoke_support_access', 'sharing', ['auth.uid()']],
   ['save_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['school_enforcement_readiness', 'admin', ['private.is_app_admin', 'private.has_capability']],
+  ['school_requests_for_admin', 'admin', ['private.has_capability']],
   ['send_help_request', 'self-service', ['auth.uid()', 'private.school_of']],
   ['set_member_capabilities', 'admin', ['private.org_can']],
   ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
+  ['set_school_enforcement', 'admin', ['private.is_app_admin']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -295,6 +302,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['volunteer_next_tasks', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_roster', 'moderation', ['private.has_capability']],
   ['withdraw_help_request', 'self-service', ['auth.uid()']],
+  ['withdraw_school_request', 'self-service', ['auth.uid()']],
 ];
 
 /**
@@ -317,6 +325,18 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
   {
     file: '20260930180000_console_command_center.sql',
     functions: ['console_command_center'],
+
+    file: '20260930100000_school_membership_enforcement.sql',
+    functions: [
+      'decide_school_request',
+      'leave_school',
+      'request_school_membership',
+      'revoke_school_membership',
+      'school_enforcement_readiness',
+      'school_requests_for_admin',
+      'set_school_enforcement',
+      'withdraw_school_request',
+    ],
   },
   {
     file: '20260929150000_minimum_age.sql',

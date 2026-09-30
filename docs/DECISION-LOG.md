@@ -3567,3 +3567,12 @@ not a penetration test and claims nothing about FERPA.
   backfill), which is the intent and is still a data change; it wants a look at
   the affected rows first.
 - **Claims.** No claim moves. Not FERPA compliant, not certified, not pilot-ready.
+
+
+## D-155 · A university's course rooms are limited to its members one school at a time, off until the operator switches it
+
+**Decided 30 Sep 2026, by the owner**, answering the G-03 question from the full-beta programme with a staged plan: auto-claim only for a verified configured domain, an explicit one-tap request otherwise, per-school enforcement **default-off for every existing school** and enabled only after migration and readiness proof, negative cross-school tests, scoped admin and audit controls, recovery for misclaims, and **no global flip**.
+
+- **Built** (`20260930100000_school_membership_enforcement.sql`): a per-school switch, membership requests decided by a holder of `tenant:configure` at that school, leave / remove / withdraw, a readiness count, and an operator-only `set_school_enforcement` that refuses to switch on until the exact locked-out count is stated.
+- **Off everywhere.** No school is enforced by this change. Switching one on is a separate operator act with its own evidence list in `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; that list is not yet met.
+- **Not done:** any real school switched on; proof on a Supabase preview branch beyond the migrations applying; staff briefing.
