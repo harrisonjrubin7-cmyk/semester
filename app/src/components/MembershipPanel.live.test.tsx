@@ -11,12 +11,15 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => {
   const tables: Record<string, unknown[]> = { commercial_prices: [], subscriptions: [] };
+  // A table named here answers with an error, as PostgREST does, not a rejection.
+  const failing = new Set<string>();
   const eqs: [string, string, unknown][] = [];
   const from = (t: string) => {
-    const q = { select: () => q, eq: (k: string, v: unknown) => (eqs.push([t, k, v]), q), then: (ok: (r: unknown) => unknown) => Promise.resolve({ data: tables[t] ?? [], error: null }).then(ok) };
+    const q = { select: () => q, eq: (k: string, v: unknown) => (eqs.push([t, k, v]), q), then: (ok: (r: unknown) => unknown) =>
+        Promise.resolve(failing.has(t) ? { data: null, error: { message: 'network' } } : { data: tables[t] ?? [], error: null }).then(ok) };
     return q;
   };
-  return { tables, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, failing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -37,6 +40,7 @@ const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', am
 beforeEach(() => {
   mock.tables.commercial_prices = [MONTH, YEAR];
   mock.tables.subscriptions = [];
+  mock.failing.clear();
   mock.eqs.length = 0;
   mock.account = { id: 'u1' };
   mock.rpc.mockReset();
@@ -190,4 +194,50 @@ it('opens with the upgrade showing when Today’s “See Plus” brought the per
   expect(button(/^Upgrade$/)!.getAttribute('aria-expanded')).toBe('true');
   expect(button(/Continue to secure checkout/)).toBeDefined();
   expect(sessionStorage.getItem('semester.open-upgrade')).toBeNull();
+});
+
+it('offers Plus to nobody it could not check: a failed subscription read is not "Free"', async () => {
+  // The catalog answers; the person's own subscription read fails. They may
+  // be paying already, so the panel neither sells Plus nor says Free.
+  mock.failing.add('subscriptions');
+  await render();
+  expect(host.textContent).toContain('could not check your membership');
+  expect(host.textContent).not.toContain('You are on Semester Free');
+  expect(host.textContent).not.toContain('Plus is $7.99 a month');
+  expect(button(/^Upgrade$/)).toBeUndefined();
+  expect(button(/Cancel membership/)).toBeUndefined();
+  expect(host.textContent).not.toContain('No payments. Semester has never charged you');
+});
+
+it('shows no price to a signed-in person until their subscription has been read', async () => {
+  // A subscriber must not see Free and an Upgrade button while the read is
+  // still on its way.
+  let release: () => void = () => {};
+  const held = new Promise<void>((r) => (release = r));
+  const from = mock.from.getMockImplementation()! as (t: string) => unknown;
+  mock.from.mockImplementation((t: string) => {
+    const q = from(t) as { then: (ok: (r: unknown) => unknown) => Promise<unknown> };
+    if (t !== 'subscriptions') return q as never;
+    // Every step of the chain returns the held query; the answer waits for release.
+    const w: Record<string, unknown> = {};
+    w.select = () => w;
+    w.eq = () => w;
+    w.then = (ok: (r: unknown) => unknown) => held.then(() => q.then(ok));
+    return w as never;
+  });
+  mock.tables.subscriptions = [{ id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-11-01T00:00:00Z', cancel_at_period_end: false, billing_accounts: { kind: 'individual', user_id: 'u1' } }];
+  try {
+    await render();
+    expect(button(/^Upgrade$/)).toBeUndefined();
+    expect(host.textContent).not.toContain('You are on Semester Free');
+    expect(host.textContent).not.toContain('Plus is $7.99 a month');
+    expect(host.textContent).toContain('Checking your plan');
+    await act(async () => {
+      release();
+      await held;
+    });
+    expect(host.textContent).toContain('You are on Semester Plus');
+  } finally {
+    mock.from.mockImplementation(from as never);
+  }
 });

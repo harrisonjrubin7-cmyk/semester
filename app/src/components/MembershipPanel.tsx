@@ -79,6 +79,15 @@ export function MembershipPanel() {
   const signedIn = cloudConfigured && !!account;
   const accountId = signedIn ? account.id : '';
   const [paidBefore, setPaidBefore] = useState(false);
+  // The account whose subscription could not be read. For that account the
+  // panel cannot tell Free from Plus, so it sells nothing and says so; it is
+  // kept by account so a switch on a shared device never inherits it.
+  const [uncheckedFor, setUncheckedFor] = useState<string | null>(null);
+  const [checkedFor, setCheckedFor] = useState<string | null>(null);
+  const unchecked = accountId !== '' && uncheckedFor === accountId;
+  // Until the read answers, a signed-in person's plan is not known either.
+  const checking = accountId !== '' && !unchecked && checkedFor !== accountId;
+  const unknown = unchecked || checking;
 
   useEffect(() => {
     if (!cloudConfigured) return;
@@ -88,8 +97,10 @@ export function MembershipPanel() {
       try {
         const db = await cloud();
         const found = await fetchPlusPrices(db);
-        if (live) setPrices(found);
-        if (!accountId) return;
+        if (!accountId) {
+          if (live) setPrices(found);
+          return;
+        }
         // Only this person's own, individual billing account.
         const read = async () => ({ data: await fetchOwnSubscriptions(db, accountId) });
         // Stripe can send the buyer back before its webhook has written the
@@ -105,7 +116,19 @@ export function MembershipPanel() {
           tries -= 1;
           if (!found && tries > 0) timer = setTimeout(() => void look().catch(() => {}), SUCCESS_POLL_MS);
         };
-        await look();
+        // The prices are shown only once the person's own subscription has
+        // been read: before that, or if the read fails, a subscriber would be
+        // shown Free and offered what they already pay for.
+        try {
+          await look();
+        } catch {
+          if (live) setUncheckedFor(accountId);
+          return;
+        }
+        if (live) {
+          setPrices(found);
+          setCheckedFor(accountId);
+        }
       } catch {
         /* No catalog, no sale: the panel falls back to saying so. */
       }
@@ -173,7 +196,11 @@ export function MembershipPanel() {
     }
   };
 
-  const statusLine = sub
+  const statusLine = unchecked
+    ? 'Nothing has changed and nothing will be charged. Try again in a moment.'
+    : checking
+    ? 'Checking your plan…'
+    : sub
     ? sub.cancelAtPeriodEnd
       ? `Cancelled. Plus stays on until ${when(sub.periodEnd)}.`
       : sub.status === 'past_due' || sub.status === 'grace'
@@ -194,11 +221,11 @@ export function MembershipPanel() {
         </p>
       )}
       <p style={{ fontSize: 'var(--type-md)', margin: '0 0 var(--sp-2)' }}>
-        You are on <strong>{current.name}</strong>.
+        {unchecked ? 'Semester could not check your membership just now.' : checking ? 'Your membership' : <>You are on <strong>{current.name}</strong>.</>}
       </p>
       <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '0 0 var(--sp-4)' }}>{statusLine}</p>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-3)' }}>
+      {!unknown && <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-3)' }}>
         {!sub && (
           <button type="button" className="btn btn-secondary" aria-expanded={said === 'upgrade'} onClick={() => toggle('upgrade')}>
             Upgrade
@@ -209,9 +236,9 @@ export function MembershipPanel() {
             Cancel membership
           </button>
         )}
-      </div>
+      </div>}
 
-      {said === 'upgrade' && !sub && (!onSale ? (
+      {said === 'upgrade' && !sub && !unknown && (!onSale ? (
         <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
           {WHY.upgrade}
         </p>
@@ -254,7 +281,7 @@ export function MembershipPanel() {
         </div>
       ))}
 
-      {said === 'cancel' && (!sub ? (
+      {said === 'cancel' && !unknown && (!sub ? (
         <p role="status" style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-4)', textWrap: 'pretty' }}>
           {WHY.cancel}
         </p>
@@ -317,7 +344,9 @@ export function MembershipPanel() {
 
       <p style={{ fontSize: 'var(--type-sm)', margin: '0 0 var(--sp-1)' }}><strong>Payment history</strong></p>
       <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: 0 }}>
-        {sub || paidBefore
+        {unknown
+          ? 'Not checked just now. Stripe emails a receipt for every payment it takes. Semester holds no card or bank details.'
+          : sub || paidBefore
           ? 'Stripe takes your payments and emails a receipt for each one. Semester holds no card or bank details.'
           : 'No payments. Semester has never charged you and holds no card or bank details.'}
       </p>
