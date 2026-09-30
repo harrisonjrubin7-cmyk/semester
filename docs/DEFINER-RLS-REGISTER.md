@@ -26,13 +26,13 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 29 more, from migrations not applied to production, each with a row below: `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 30 more, from migrations not applied to production, each with a row below: `20260930180000_console_command_center.sql` (`console_command_center`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## The second reading
 
 Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor and `pg_catalog`. Against the register above: **49 policy-less tables** and **180 `security definer` functions** a signed-in account can call, which is the first reading's 45 and 151 plus what arrived since.
 
-- the 180 functions are exactly the 180 rows below, none unlisted and none listed that production lacks; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
+- the 180 functions are exactly the register's rows below, less the 1 migration not yet applied (20260930180000_console_command_center.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
 - all 49 policy-less tables hold no privilege of any kind for `anon` or `authenticated`, table or column. The 4 that were not in the first reading (`private.account_ages`, `public.registration_completions`, `public.registration_holds`, `public.registration_requests`) now have a disposition below. No policy was added to any of the 49, and none should be;
 - the rest of that day's advisor findings, what was fixed and what was left, with the before and after: [`ADVISOR-RECONCILIATION-2026-09-30.md`](ADVISOR-RECONCILIATION-2026-09-30.md).
 
@@ -49,12 +49,12 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | --- | --- | --- |
 | self-service | 55 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 55 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 56 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 180 | |
+| **total** | 181 | |
 
 ### self-service (55)
 
@@ -140,7 +140,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (55)
+### admin (56)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -161,6 +161,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `console_act` | `auth.uid()`, `private.has_capability`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_audit_read` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
 | `console_audit_status` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
+| `console_command_center` | `auth.uid()`, `private.has_capability` | `20260930180000_console_command_center.sql` |
 | `console_figures` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_approval` | `auth.uid()`, `private.approver_party`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `dining_advance_order` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |

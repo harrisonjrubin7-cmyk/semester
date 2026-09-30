@@ -1,4 +1,4 @@
--- The production-advisor reconciliation of 30 September 2026 (D-157): that a
+-- The production-advisor reconciliation of 30 September 2026 (D-161): that a
 -- table with row-level security on and no policy is unreachable by any client
 -- role — the fact that lets the advisor's 49 notices stand as intended — that
 -- the four tenant foreign keys the advisor named are covered, that the two

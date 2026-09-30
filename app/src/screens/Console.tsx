@@ -25,6 +25,7 @@ import { Customers } from '../components/console/Customers';
 import { Figures } from '../components/console/Figures';
 import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
+import { CommandCenter } from '../components/console/CommandCenter';
 import { said, when } from '../components/console/Fields';
 
 /**
@@ -48,11 +49,12 @@ import { said, when } from '../components/console/Fields';
  * browser storage; `console.test.tsx` asserts it.
  */
 
-const BLURB = 'Approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
+const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
 
-type Tab = 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
+type Tab = 'command' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
 
 const TABS: readonly { id: Tab; label: string }[] = [
+  { id: 'command', label: 'Command center' },
   { id: 'approvals', label: 'Approvals' },
   { id: 'breakglass', label: 'Break-glass' },
   { id: 'audit', label: 'Audit' },
@@ -115,7 +117,7 @@ export function Console() {
 
 function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
   const env = environment();
-  const [tab, setTab] = useState<Tab>('approvals');
+  const [tab, setTab] = useState<Tab>('command');
   const [filter, setFilter] = useState('');
   const [scope, setScope] = useState('All');
   const [views, setViews] = useState<SavedView[]>([]);
@@ -228,6 +230,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       </div>
       <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={TABS} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
+        {tab === 'command' && <CommandCenter {...viewProps} />}
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}

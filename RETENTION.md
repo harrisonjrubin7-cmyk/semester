@@ -338,6 +338,8 @@ behind and a client that believes it succeeded.
 | `gtm_communication_events`, `gtm_conversion_events` | **with their contact or campaign; no time-based purge yet** | send decisions and funnel events, append-only. Staff read them only as counts of ten or more, through the campaign report function. The period must be set with the contact period above |
 | `gtm_campaigns`, `gtm_campaign_links`, `gtm_campaign_reviews` | **kept until the school is removed** | institutional configuration. A campaign is retired rather than deleted, so its reviews and audit trail stay readable. A staff member's account deletion clears them as owner, approver or reviewer and leaves the record; an ownerless campaign cannot be activated |
 | `migration_projects`, `migration_field_maps`, `migration_runs`, `migration_approvals` | **kept until the school is removed** | institutional record of how a domain left a retiring system (D-144). A migration is never deleted by a client; its runs and approvals are append-only, because they are the evidence a cutover was approved on. They hold counts and a file fingerprint, never a student record. A staff member's account deletion clears them as creator, recorder or approver and leaves the record |
+| `roster_import_config` | **kept until the school is removed** | a school's roster-source setting: a credential *pointer* (`vault:`, `env:`, `secret-manager:`), never a credential (D-160). Server-only |
+| `roster_import_batch`, `roster_staged_row`, `roster_snapshot`, `roster_current` | **kept until the school is removed; no time-based purge yet** | a school's roster as imported, minimised to a per-entity allowlist of keys (names, roles, course codes; no email, no grade, no date of birth). Nothing imports into it and nothing reads it yet (D-160). How long staged rows and last-known-good snapshots may be kept is a decision for counsel and the school, and is not made here |
 | `academic_record_entries`, `academic_record_changes` | **kept until the school is removed** | the school's academic record of its students (D-145): an education record the institution keeps, not the student's Semester data. The ledger is append-only and has no purge; a registrar's retention schedule for academic records is permanent for transcripts, and a shorter schedule for anything here must be set by the school before it is used for real. A staff member's account deletion clears them as proposer, decider or approver and leaves the record |
 | `academic_record_subjects` | **removed with the account** | the link that lets a student's account read their own record. The account's deletion removes it (`on delete cascade`); the school's record it pointed to stays |
 | `student_account_entries`, `student_account_requests`, `student_account_reconciliations`, `student_account_closes`, `student_account_settings` | **kept until the school is removed** | the school's financial record of its students' accounts (D-146): what was charged, paid, refunded and credited, and the reconciliations and closes it was checked by. The school's financial-records schedule governs it, and none is set yet; the ledger has no purge, and a school must set its schedule before real use. No card data is held. A staff member's account deletion clears them as requester, approver, recorder or closer and leaves the record |
@@ -437,6 +439,14 @@ record, scoped to the tenant, written by the service role and never by a
 browser; they follow the tenant, and a contract row is kept for the life of
 the school row it belongs to. None of these has a time-based sweep, and each
 is small: one row per request, decision, grant or contract, never per student.
+
+`platform_release_evidence` is the platform's dated proof for restore, legal,
+infrastructure, deployment, TLS and migration gates. It is kept until Semester
+removes it under an approved evidence-retention decision; there is no automatic
+sweep. It contains a named approver and a reference to evidence, never the
+evidence file or a secret, and clearing the recorder on account deletion leaves
+the institutional proof intact. The command center treats an expired row as a
+blocker rather than deleting it, so the history remains reviewable.
 
 **The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
 `domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)

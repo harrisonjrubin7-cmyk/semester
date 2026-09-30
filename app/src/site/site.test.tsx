@@ -4,6 +4,7 @@ import { CONTACT_EMAIL, DEFAULT_SITE, PROMISE, type SiteConfig } from './config'
 import { ROUTES, renderPage, renderSite } from './render';
 import { NOT_ON_YET } from './community';
 import { BASELINE, districtReady } from '../lib/k12/requirements';
+import { PARTS } from '../lib/advancement/edition';
 
 /**
  * The public site, as it ships: the same `renderSite` the build script
@@ -23,7 +24,7 @@ describe('every page', () => {
       '/semester-standard/', '/trust/data-and-ai-transparency/', '/platform/integrations/', '/platform/vocabulary/', '/resources/ai-governance-canvas/', '/research/', '/tools/navigation/',
       '/platform/one-operating-system/', '/platform/why-not-another-tool/',
       '/community/', '/community/ambassadors/', '/community/stories/', '/community/partners/', '/community/events/',
-      '/k-12/'];
+      '/k-12/', '/solutions/advancement/', '/alumni/'];
     expect(ROUTES.map((r) => r.path).sort()).toEqual([...want].sort());
   });
 
@@ -98,6 +99,35 @@ describe('what the site says', () => {
     expect(k12).toContain('No district or school uses Semester today.');
     expect(k12).toMatch(/Nobody under 13 may hold an account/);
     expect(k12).not.toMatch(/districts? (use|trust|rely on) Semester|schools (use|trust|rely on) Semester|now serving/i);
+  });
+
+  it('says on the advancement pages that nothing is built, no gift has been taken, and asks nobody for one', () => {
+    for (const path of ['/solutions/advancement/', '/alumni/']) {
+      const html = pages.find((p) => p.route.path === path)!.html;
+      expect(html, path).toContain('No school uses Semester for alumni relations or fundraising.');
+      expect(html, path).toContain('No gift has been taken and no receipt has been issued.');
+      expect(html, path).not.toMatch(/donate now|give now|make a gift|schools? (use|trust|rely on) Semester|now serving/i);
+      // The page names donor scoring only to refuse it.
+      expect(html, path).not.toMatch(/(we|semester) (score|rank|screen)s? (your )?(donors|alumni|prospects)/i);
+    }
+    const adv = pages.find((p) => p.route.path === '/solutions/advancement/')!.html;
+    expect(adv).toContain('Wealth screening');
+    expect(adv).toContain('No price has been set for this module.');
+    expect(adv).toContain('no money moves through Semester');
+  });
+
+  it('prints every advancement part with its status and what it still needs, as text and not in a scrolling table', () => {
+    const adv = pages.find((p) => p.route.path === '/solutions/advancement/')!.html;
+    expect((adv.match(/Status: planned\./g) ?? []).length).toBe(PARTS.length);
+    for (const p of PARTS) expect(adv, p.title).toContain(p.needs.split('.')[0].replace(/’/g, '’'));
+    expect(adv).not.toContain('site-scroll');
+  });
+
+  it('links to the advancement and graduate pages from every page', () => {
+    for (const p of pages) {
+      expect(p.html, `${p.route.path} has no link to /solutions/advancement/`).toMatch(/href="[^"]*\/solutions\/advancement\/"/);
+      expect(p.html, `${p.route.path} has no link to /alumni/`).toMatch(/href="[^"]*\/alumni\/"/);
+    }
   });
 
   it('links to the K–12 page from every page, so it can be found without its address', () => {

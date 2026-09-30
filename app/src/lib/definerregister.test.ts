@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { BRIEF, CATEGORIES, FUNCTIONS, OPEN, PROJECT, READ_COUNT, READ_ON, READ_TABLES, SECOND_READING, SINCE_READING, SOURCES, TABLES, type Category } from './definerregister';
+import { BRIEF, CATEGORIES, FUNCTIONS, NOT_YET_APPLIED, OPEN, PROJECT, READ_COUNT, READ_ON, READ_TABLES, SECOND_READING, SINCE_READING, SOURCES, TABLES, type Category } from './definerregister';
 
 /**
  * Holds the Security Definer and RLS remediation register to the migrations:
@@ -97,8 +97,12 @@ describe('the Security Definer and RLS remediation register', () => {
     expect(READ_COUNT).toBe(151);
     expect(exposedDefiners().length).toBe(READ_COUNT + since.length);
     expect(FUNCTIONS.length).toBe(READ_COUNT + since.length);
-    // The second reading found every one of them applied on production: 180 rows, 180 functions.
-    expect(FUNCTIONS.length).toBe(SECOND_READING.functions);
+    // The second reading found every one of them applied on production except
+    // the files named as not yet applied: the register's rows minus those are
+    // the 180 the advisor listed.
+    const unapplied = SINCE_READING.filter((s) => NOT_YET_APPLIED.includes(s.file)).flatMap((s) => s.functions);
+    expect(NOT_YET_APPLIED.every((f) => SINCE_READING.some((s) => s.file === f)), 'every unapplied file is a since-reading file').toBe(true);
+    expect(FUNCTIONS.length - unapplied.length).toBe(SECOND_READING.functions);
     for (const s of SINCE_READING) {
       for (const name of s.functions) expect(defs.get(name)?.file, name).toBe(s.file);
     }
@@ -228,7 +232,7 @@ function render(): string {
     '',
     `Production (\`${PROJECT}\`), ${SECOND_READING.on}, read-only, through the advisor and \`pg_catalog\`. Against the register above: **${SECOND_READING.tables} policy-less tables** and **${SECOND_READING.functions} \`security definer\` functions** a signed-in account can call, which is the first reading's ${READ_TABLES} and ${READ_COUNT} plus what arrived since.`,
     '',
-    `- the ${SECOND_READING.functions} functions are exactly the ${FUNCTIONS.length} rows below, none unlisted and none listed that production lacks; none is executable by \`anon\` or PUBLIC; every \`search_path\` is pinned; none uses dynamic \`execute\`. 179 name \`auth.uid()\` or a \`private.\` gate; the one that names neither is \`kill_switch_engaged\` (DR-01);`,
+    `- the ${SECOND_READING.functions} functions are exactly the register's rows below, less the ${NOT_YET_APPLIED.length} migration not yet applied (${NOT_YET_APPLIED.join(', ')}); none unlisted and none listed that production has; none is executable by \`anon\` or PUBLIC; every \`search_path\` is pinned; none uses dynamic \`execute\`. 179 name \`auth.uid()\` or a \`private.\` gate; the one that names neither is \`kill_switch_engaged\` (DR-01);`,
     `- all ${SECOND_READING.tables} policy-less tables hold no privilege of any kind for \`anon\` or \`authenticated\`, table or column. The ${SECOND_READING.tables - READ_TABLES} that were not in the first reading (\`private.account_ages\`, \`public.registration_completions\`, \`public.registration_holds\`, \`public.registration_requests\`) now have a disposition below. No policy was added to any of the ${SECOND_READING.tables}, and none should be;`,
     '- the rest of that day\'s advisor findings, what was fixed and what was left, with the before and after: [`ADVISOR-RECONCILIATION-2026-09-30.md`](ADVISOR-RECONCILIATION-2026-09-30.md).',
     '',

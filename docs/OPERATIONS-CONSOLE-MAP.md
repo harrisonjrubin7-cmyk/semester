@@ -31,6 +31,7 @@ Under any production write: *Production change. This will affect a live customer
 
 | View | Shows |
 | --- | --- |
+| **Command center** | Live release-gate and operational exceptions from production tables; green only when the scoped queue is empty, with every blocker naming its source, evidence boundary and next safe step |
 | **Approvals** | Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement |
 | **Break-glass** | Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else |
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
@@ -42,6 +43,17 @@ Under any production write: *Production change. This will affect a live customer
 ## What holds each view
 
 The capability behind each view, and its holders, from the same file.
+
+### Command center
+
+**Live operational command center** (done) — public.console_command_center: a fail-closed exception queue over current release evidence, approvals, break-glass, integrations, support and tenant rollout; an empty scoped queue is the only green state.
+
+- [`supabase/migrations/20260930180000_console_command_center.sql`](../supabase/migrations/20260930180000_console_command_center.sql) — The evidence-backed release gates, demo-aware operational unions and server-side console:operate refusal.
+- [`supabase/console-command-center.check.sql`](../supabase/console-command-center.check.sql) — A non-operator is refused, missing proof stays red, live exceptions appear, and demo tenants stay out by default.
+- [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadCommandCenter maps the RPC without caching or browser storage.
+- [`app/src/lib/console/client.test.ts`](../app/src/lib/console/client.test.ts) — The RPC name, demo switch and evidence boundary round-trip.
+- [`app/src/components/console/CommandCenter.tsx`](../app/src/components/console/CommandCenter.tsx) — The queue, severity counts, source, limitation and next safe step; GREEN only for zero rows.
+- [`app/src/screens/console.test.tsx`](../app/src/screens/console.test.tsx) — A missing restore proof renders NOT GO and no evidence; an empty live response alone renders GREEN.
 
 ### Approvals
 

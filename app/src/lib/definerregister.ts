@@ -73,7 +73,7 @@ export const READ_ON = '2026-09-29';
 
 /**
  * The second reading of the same project, 30 September 2026, 13:46 UTC,
- * read-only through the advisor and `pg_catalog` (D-157). The register was
+ * read-only through the advisor and `pg_catalog` (D-161). The register was
  * asked to hold, and it did: the 180 functions the advisor listed are exactly
  * the 180 rows below — the first reading's 151 and the 29 whose migrations had
  * not then been applied. The tables did not: four (`private.account_ages` and
@@ -154,6 +154,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
@@ -297,13 +298,26 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
 ];
 
 /**
+ * Migrations in `SINCE_READING` that production still lacked at
+ * `SECOND_READING.on`. Their functions have rows in `FUNCTIONS` but were not in
+ * the reading, so the reading's count is the register's rows minus these.
+ * Delete an entry when the file is applied, and the next reading's count moves.
+ */
+export const NOT_YET_APPLIED: readonly string[] = ['20260930180000_console_command_center.sql'];
+
+/**
  * Callable definer functions added by migrations that were **not** applied to
  * production on `READ_ON`, so were not in the advisor's first reading. They
  * have rows in `FUNCTIONS` like any other; they are named here so the first
  * reading stays the reading — the page says 151 and lists these beside it.
- * The second reading (`SECOND_READING`) finds every one of them applied.
+ * The second reading (`SECOND_READING`) finds every one of them applied except
+ * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260930180000_console_command_center.sql',
+    functions: ['console_command_center'],
+  },
   {
     file: '20260929150000_minimum_age.sql',
     functions: ['my_age_status', 'state_my_age'],

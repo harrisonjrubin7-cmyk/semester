@@ -291,6 +291,9 @@ export interface LaunchCheck {
   skew?: number;
 }
 
+/** The most a launch token may say it was issued ago, in seconds. `jwtVerify` is given the same number (ltiverify.ts). */
+export const MAX_TOKEN_AGE_SECONDS = 600;
+
 const RESOURCE_LINK_REQUEST = 'LtiResourceLinkRequest';
 const DEEP_LINKING_REQUEST = 'LtiDeepLinkingRequest';
 
@@ -348,6 +351,11 @@ export function checkLaunch(input: LaunchCheck): Verdict<Launch> {
     const azp = str(claims.azp);
     if (!azp) return no('no-azp', 'Multiple audiences and no azp to say which is meant.');
     if (azp !== reg.clientId) return no('wrong-azp', `Token azp ${azp} is not ${reg.clientId}.`);
+  } else if (claims.azp !== undefined && str(claims.azp) !== reg.clientId) {
+    // One audience, but the token says it was issued to somebody else. The
+    // standard requires azp only for several audiences; where it is present it
+    // must still be us, or the token was minted for another party's client.
+    return no('wrong-azp', `Token azp ${String(claims.azp)} is not ${reg.clientId}.`);
   }
 
   const exp = num(claims.exp);
@@ -357,12 +365,27 @@ export function checkLaunch(input: LaunchCheck): Verdict<Launch> {
   const iat = num(claims.iat);
   if (iat === null) return no('no-iat', 'The token carried no issued-at.');
   if (iat > now + skew) return no('future', `Token was issued at ${iat}, in the future.`);
+  // A token can be unexpired and still old: a platform that issues one-hour
+  // tokens is not vouching for an hour-old *launch*. A launch is a redirect
+  // and a POST, so a token issued long before it arrived is one that sat
+  // somewhere first. Bounded by MAX_TOKEN_AGE_SECONDS.
+  if (now - iat > MAX_TOKEN_AGE_SECONDS + skew) return no('too-old', `Token was issued at ${iat}, more than ${MAX_TOKEN_AGE_SECONDS}s ago.`);
+
+  // `nbf` is optional in the standard and refused when it says "not yet".
+  if (claims.nbf !== undefined) {
+    const nbf = num(claims.nbf);
+    if (nbf === null) return no('bad-nbf', 'The token nbf is not a number.');
+    if (nbf > now + skew) return no('not-yet', `Token is not valid before ${nbf}, now ${now}.`);
+  }
 
   /*
-   * The nonce is compared here and *spent* by the caller, and the two must not
-   * be reordered: spending first would let a token that fails a later rule
-   * burn a nonce the real launch still needs. The caller spends it only on
-   * this function returning ok.
+   * The nonce is compared here against the one the flight issued. It is
+   * *spent* by the caller **before** the token is fetched or verified
+   * (`lti/index.ts`, `spend_lti_nonce`): spending is one atomic statement and
+   * two POSTs carrying one state must not both get past it. The cost is that
+   * a POST naming a live state can use it up; the state is an unguessable
+   * UUID issued to one browser, and the alternative — check, then spend —
+   * lets a replay win the race. This function only compares.
    */
   const nonce = str(claims.nonce);
   if (!nonce) return no('no-nonce', 'The token carried no nonce.');

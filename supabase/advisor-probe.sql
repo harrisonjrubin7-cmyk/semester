@@ -1,5 +1,5 @@
 -- A read-only mirror of the four Supabase advisor lints this repository
--- reconciles against (D-157), so a before and an after can be taken on any
+-- reconciles against (D-161), so a before and an after can be taken on any
 -- database, production included, without the dashboard.
 --
 --   0008 rls_enabled_no_policy                        -> no_policy_tables
