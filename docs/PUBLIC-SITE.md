@@ -106,6 +106,19 @@ One page for the K–12 edition (D-141), printed from `lib/k12/edition.ts` and
 The site test holds the page to saying no district uses Semester, and to
 printing the baseline's answer rather than prose.
 
+## The advancement pages
+
+Two pages for alumni relations and fundraising (D-150), printed from
+`lib/advancement/edition.ts`:
+
+| Route | Says |
+|---|---|
+| `/solutions/advancement/` | *Alumni relations and fundraising.* Three parts, each *planned* with what it still needs; that no school uses it, no gift has been taken and no receipt issued; that wealth screening and predictive donor scoring are not planned; what it waits on (counsel, how a gift is paid, a price). |
+| `/alumni/` | *For graduates.* What a graduate can do today, which is not giving; what a school might add; that nothing on the page asks for a gift. |
+
+The site test holds both pages to saying nothing is built, forbids a
+solicitation, and holds the graduate page's "today" list free of giving.
+
 ## Rules the tests hold
 
 - One `<h1>`, one `<main>`, a skip link, and a unique title and description on

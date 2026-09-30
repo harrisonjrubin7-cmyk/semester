@@ -3250,3 +3250,29 @@ history, and there was none to show.
 - **Not changed.** The live in-browser checks, the incident email address, and
   the launch gate `operations-live`, which stays partial: no alert reaches a
   named person.
+
+## D-150 · Alumni relations and fundraising are described on the site and built by no one yet
+
+**Decided 30 Sep 2026.** The site to-do (S7) asks for an advancement module
+and its two pages. Following D-141's pattern for the K–12 edition, this puts
+what the module would be on the site without offering it.
+
+- **`app/src/lib/advancement/edition.ts`** holds three parts (alumni relations,
+  giving, the advancement office's console), each *planned*, each saying what
+  it would do and what it still needs. Its test holds that no gift, donor,
+  pledge, giving-campaign or alumni-profile table exists, so a row cannot stay
+  "planned" once the thing lands.
+- **Not planned, and said so:** wealth screening and predictive donor
+  scoring. DO-NOT-BUILD rule 3 refuses a ranking nobody can explain, and a
+  donor's capacity to give is inferred about them, not told to the school.
+- **Not decided here, and the pages say so:** how a gift would be paid, and a
+  price. The brief names a payment provider for recurring gifts; D-146 says no
+  money moves through Semester. Those two disagree, and it is the owner's
+  call, so neither page names a provider or a figure.
+- **Waits on counsel** for charitable-solicitation registration, state by
+  state, and for the wording of tax receipts, before the module is offered.
+- **Pages:** `/solutions/advancement/` and `/alumni/`. The site test holds
+  both to "no school uses Semester for alumni relations or fundraising" and
+  "no gift has been taken", and forbids a solicitation on either. The company
+  site (`company-site/index.html`) does not carry them yet.
+
