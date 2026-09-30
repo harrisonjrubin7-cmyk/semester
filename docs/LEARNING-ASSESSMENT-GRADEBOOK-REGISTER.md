@@ -30,7 +30,7 @@ for is marked present or absent, and the table counts them. The whole faculty
 side — the builder, the rubric engine, the gradebook, the grading workflow —
 is present only as the labelled sandbox in `app/server/institution/sandbox.ts`,
 which loads only when asked for, and every mark that rests on it says so.
-Across the register, 109 of 183 capabilities have something in the tree.
+Across the register, 117 of 183 capabilities have something in the tree.
 Assessed against `origin/main` `ff52ba4` on 28 September 2026; the supplied
 PDFs are never cited as evidence.
 
@@ -42,15 +42,15 @@ PDFs are never cited as evidence.
 | [L04](#l04) | Draft and writing workspace | Learning and study tools | 1 | tested | 9 / 12 | `LMS-004`, `AI-008` |
 | [L05](#l05) | Study Studio | Learning and study tools | 1 | tested | 13 / 16 | `AI-004`, `AI-005`, `STU-002` |
 | [L06](#l06) | Course-resource intelligence | Learning and study tools | 1 | tested | 6 / 10 | `STU-009`, `AI-004`, `TRUST-001` |
-| [L07](#l07) | Assessment builder | Assessment and grading tools | 2 | tested | 3 / 12 | `LMS-008`, `INT-007`, `INT-008` |
+| [L07](#l07) | Assessment builder | Assessment and grading tools | 2 | tested | 6 / 12 | `LMS-008`, `INT-007`, `INT-008` |
 | [L08](#l08) | Assessment delivery engine | Assessment and grading tools | 2 | tested | 8 / 15 | `LMS-008`, `LMS-009`, `LMS-010` |
-| [L09](#l09) | Rubric engine | Assessment and grading tools | 2 | tested | 4 / 14 | `LMS-006` |
-| [L10](#l10) | Gradebook | Assessment and grading tools | 2 | tested | 12 / 20 | `LMS-011`, `LMS-013`, `LMS-014`, `TRUST-004` |
+| [L09](#l09) | Rubric engine | Assessment and grading tools | 2 | tested | 6 / 14 | `LMS-006` |
+| [L10](#l10) | Gradebook | Assessment and grading tools | 2 | tested | 15 / 20 | `LMS-011`, `LMS-013`, `LMS-014`, `TRUST-004` |
 | [L11](#l11) | Grading workflow | Assessment and grading tools | 3 | tested | 8 / 13 | `LMS-012`, `LMS-013`, `INT-005` |
 | [L12](#l12) | AI in assessment and grading | AI, integrity and analytics | 4 | tested | 6 / 10 | `AI-006`, `AI-007`, `AI-009` |
 | [L13](#l13) | Academic-integrity layer | AI, integrity and analytics | 3 | tested | 9 / 12 | `AI-007`, `LMS-004` |
 | [L14](#l14) | Learning analytics, the ethical version | AI, integrity and analytics | 4 | tested | 7 / 14 | `UOS-008`, `LMS-017`, `AI-001` |
-| **total** | | | | not-started 0, designed 0, building 0, tested 14 | **109 / 183** | |
+| **total** | | | | not-started 0, designed 0, building 0, tested 14 | **117 / 183** | |
 
 ## The register
 
@@ -247,14 +247,14 @@ PDFs are never cited as evidence.
 
 **Assessment builder.** Faculty need to create assessments without a separate tool: banks, versions, tags, blueprints, pools, previews and QTI 3 in and out.
 
-*Status.* tested, 3 of 12 capabilities present; phase 2.
+*Status.* tested, 6 of 12 capabilities present; phase 2.
 
-- [ ] Question banks and reusable item libraries
-- [ ] Question versioning
+- [x] Question banks and reusable item libraries, as rules: an item is validated, reviewed and drawn only when approved (nothing stores a bank)
+- [x] Question versioning: an edit is the next version, back in draft with its review cleared
 - [ ] Tags: course, outcome, topic, difficulty, cognitive level, accessibility review
 - [ ] Shared stimuli
 - [ ] Rubrics attached to items
-- [ ] Assessment blueprints
+- [x] Assessment blueprints: slots by outcome, tag and kind, refused when the bank cannot fill one
 - [x] A seeded random draw of a practice paper, re-sittable from its code
 - [ ] Sections and rules
 - [x] Practice is always labelled practice, never an official assessment
@@ -267,8 +267,9 @@ PDFs are never cited as evidence.
 | `app/src/lib/exam.test.ts` | the paper shape, marks, the seeded draw and the clock |
 | `app/src/lib/studystudio.ts` | STUDY_FORMATS: a paper is practice, never an official assessment |
 | `docs/QTI-3-ASSESSMENT-AND-MIGRATION.md` | the interaction library against the five kinds the app has |
+| `app/src/lib/itembank.test.ts` | an item is approved only by someone other than its author; only an approved, unexpired, newest version is drawn; a test is rebuilt from its seed in any bank order; a written answer is never scored |
 
-*Gap.* Student practice only. No faculty authoring, bank, version, tag, pool, preview or QTI (LMS-008, INT-007); the QTI page says what present would mean.
+*Gap.* Rules only, in app/src/lib/itembank.ts: nothing stores an item or a bank, no screen authors one, there is no difficulty or cognitive-level tag, shared stimulus, preview or section, and no QTI (LMS-008, INT-007); the QTI page says what present would mean.
 
 #### L08
 
@@ -306,12 +307,12 @@ PDFs are never cited as evidence.
 
 **Rubric engine.** Rubrics are first-class structured data, not a PDF attachment: criteria, levels, points, outcome mapping, student-facing language, versions and calibration.
 
-*Status.* tested, 4 of 14 capabilities present; phase 2.
+*Status.* tested, 6 of 14 capabilities present; phase 2.
 
 - [x] Criterion with a name, marks out of, and what it means
-- [ ] Performance levels
+- [x] Performance levels, each with its points and its descriptor
 - [x] Points
-- [ ] Learning-outcome mapping
+- [x] Learning-outcome mapping: points and their maximum roll up to each outcome
 - [ ] Instructor annotations
 - [x] Student-facing language, published before work starts
 - [ ] Exemplars
@@ -329,21 +330,22 @@ PDFs are never cited as evidence.
 | `app/server/institution/sandbox.test.ts` | the rubric: refuses a mark the rubric cannot carry; will not accept a rubric with a box left empty |
 | `app/src/lib/toolkit/rubric.test.ts` | the student checklist and its disclaimer |
 | `app/src/lib/assignment.test.ts` | the rubric extracted from an assignment brief, with weights |
+| `app/src/lib/rubricengine.test.ts` | a rubric is scored by level per criterion; an unscored criterion, an unknown level or another version is refused; a rubric with an empty box is refused |
 
-*Gap.* Sandbox only, and no rubric table in the database (LMS-006 designed): no levels, outcomes, versions, templates or calibration.
+*Gap.* Rules only, in app/src/lib/rubricengine.ts: levels, outcome roll-up and a version a mark must match. The sandbox still holds the criteria the grading loop reads, and no rubric table exists in the database (LMS-006 designed): no stored version history, templates, exemplars or calibration.
 
 #### L10
 
 **Gradebook.** Transparent to students, powerful for instructors, and never presenting a speculative number as an official final grade.
 
-*Status.* tested, 12 of 20 capabilities present; phase 2.
+*Status.* tested, 15 of 20 capabilities present; phase 2.
 
 - [x] Assignment groups and weights
 - [x] Points, percentages and letters
 - [ ] Competency or mastery scales
 - [x] Drop-lowest rules
-- [ ] Excused work
-- [ ] Manual overrides with a reason and an audit record
+- [x] Excused work: left out of the calculation, never counted as zero
+- [x] Manual overrides with a reason and an audit record: a change after release is a new version with a kept reason
 - [x] Late-policy rules
 - [x] Missing and incomplete status
 - [x] Grade release controls
@@ -353,7 +355,7 @@ PDFs are never cited as evidence.
 - [x] Comment feedback
 - [ ] Audio or video feedback
 - [x] Export
-- [ ] Grade history
+- [x] Grade history: every version is kept and never edited
 - [x] Final-grade calculation preview: what-if, what is needed, the swing
 - [ ] Student-view preview for the instructor
 - [x] LMS sync controls: an institution-gated passback
@@ -369,8 +371,11 @@ PDFs are never cited as evidence.
 | `app/server/institution/sandbox.ts` | weight, missing and overdue status, release control; the student standing counts only released marks |
 | `app/src/lib/ltigate.test.ts` | the passback gate: kill switches, the writeback flag, an approved connection, the scope |
 | `app/src/lib/source.test.ts` | the estimated label |
+| `app/src/lib/gradebook/gradebook.test.ts` | weights and drop-lowest, excused work left out and missing counted as zero, a change after release needs a reason, no version ever edited or removed, a student sees only their own released grade |
+| `app/src/lib/gradebook/passback.test.ts` | passback sends the released version and never a newer draft, once, and stops when the gate closes |
+| `supabase/gradebook.check.sql` | the gradebook tables allowed and denied at the database |
 
-*Gap.* The student side is the student’s own records; the faculty side is the sandbox. No institutional gradebook, excused work, override with reason, anonymous mode, grade history or student-view preview (LMS-011, LMS-013, LMS-014).
+*Gap.* An instructor gradebook of record now exists (app/src/lib/gradebook and supabase/migrations/20260929310000_gradebook.sql; this register does not assert the migration is applied), beside the student’s own grades.ts. The sandbox that stood in for it is still in the tree. Not present: anonymous grading, group grading with individual adjustments, mastery scales, audio or video feedback, and a student-view preview for the instructor (LMS-011, LMS-013, LMS-014).
 
 #### L11
 
@@ -398,8 +403,9 @@ PDFs are never cited as evidence.
 | `app/server/institution/sandbox.test.ts` | runs enrol → submit → receipt → mark → release → archive; keeps the order; shows a mark to nobody until it is released; an appeal |
 | `app/src/lib/ltiags.test.ts` | the AGS score post |
 | `docs/LMS-INTEROPERABILITY-MATRIX.md` | the grade write, preview to audit, at what the AGS post has today |
+| `app/src/lib/gradebook/gradebook.test.ts` | a draft held for moderation by a second person and then released; a regrade request filed over a released grade and resolved once |
 
-*Gap.* The whole loop is the labelled sandbox, never installed unless asked for, and not wired to AGS; the AGS post is quiz scores with no preview, idempotency or reconciliation (LMS-012, LMS-013, INT-005).
+*Gap.* The grading loop now exists in the gradebook of record (draft, moderation by a second person, release, regrade request, a kept reason for every change, passback of released versions through an LmsAdapter): calibration, anonymous assignment, annotation feedback and automated checks on arrival are not present, no implementation of the LmsAdapter is in the tree, and the submission side is still the labelled sandbox (LMS-012, LMS-013, INT-005).
 
 ### AI, integrity and analytics
 

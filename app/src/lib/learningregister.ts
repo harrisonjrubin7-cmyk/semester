@@ -31,13 +31,19 @@
  * nearly every area is `tested` — the app has a great deal of the student
  * side. What the status cannot say, the capability marks do: each capability
  * the document asks for is marked present or absent, and the page counts them.
- * The whole faculty side — the builder, the rubric engine, the gradebook, the
- * grading workflow — is present only as the labelled sandbox in
- * `app/server/institution/sandbox.ts`, which loads only when asked for, and
- * every mark that rests on it says so.
+ * When this register was written the whole faculty side — the builder, the
+ * rubric engine, the gradebook, the grading workflow — was present only as the
+ * labelled sandbox in `app/server/institution/sandbox.ts`, which loads only
+ * when asked for. Since then a gradebook of record (`app/src/lib/gradebook/`)
+ * has landed, and the builder and rubric rules exist as pure libraries; every
+ * mark that still rests on the sandbox says so.
  *
  * The supplied PDFs are never cited as evidence. Assessed against
- * `origin/main` `ff52ba4` on 28 September 2026.
+ * `origin/main` `ff52ba4` on 28 September 2026; the assessment builder, rubric
+ * engine, gradebook and grading workflow (L07, L09, L10, L11) were assessed
+ * again on 30 September 2026 after the gradebook of record and the two rule
+ * libraries landed. The other areas have not been reassessed since the 28th and
+ * may be stale in the same way.
  *
  * ## The one benchmark
  *
@@ -306,12 +312,12 @@ const ROWS: readonly Row[] = [
     group: 'assessment',
     why: 'Faculty need to create assessments without a separate tool: banks, versions, tags, blueprints, pools, previews and QTI 3 in and out.',
     capabilities: [
-      no('Question banks and reusable item libraries'),
-      no('Question versioning'),
+      'Question banks and reusable item libraries, as rules: an item is validated, reviewed and drawn only when approved (nothing stores a bank)',
+      'Question versioning: an edit is the next version, back in draft with its review cleared',
       no('Tags: course, outcome, topic, difficulty, cognitive level, accessibility review'),
       no('Shared stimuli'),
       no('Rubrics attached to items'),
-      no('Assessment blueprints'),
+      'Assessment blueprints: slots by outcome, tag and kind, refused when the bank cannot fill one',
       'A seeded random draw of a practice paper, re-sittable from its code',
       no('Sections and rules'),
       'Practice is always labelled practice, never an official assessment',
@@ -324,8 +330,9 @@ const ROWS: readonly Row[] = [
       ['app/src/lib/exam.test.ts', 'the paper shape, marks, the seeded draw and the clock'],
       ['app/src/lib/studystudio.ts', 'STUDY_FORMATS: a paper is practice, never an official assessment'],
       ['docs/QTI-3-ASSESSMENT-AND-MIGRATION.md', 'the interaction library against the five kinds the app has'],
+      ['app/src/lib/itembank.test.ts', 'an item is approved only by someone other than its author; only an approved, unexpired, newest version is drawn; a test is rebuilt from its seed in any bank order; a written answer is never scored'],
     ],
-    gap: 'Student practice only. No faculty authoring, bank, version, tag, pool, preview or QTI (LMS-008, INT-007); the QTI page says what present would mean.',
+    gap: 'Rules only, in app/src/lib/itembank.ts: nothing stores an item or a bank, no screen authors one, there is no difficulty or cognitive-level tag, shared stimulus, preview or section, and no QTI (LMS-008, INT-007); the QTI page says what present would mean.',
     master: ['LMS-008', 'INT-007', 'INT-008'],
     phase: 2,
   },
@@ -368,9 +375,9 @@ const ROWS: readonly Row[] = [
     why: 'Rubrics are first-class structured data, not a PDF attachment: criteria, levels, points, outcome mapping, student-facing language, versions and calibration.',
     capabilities: [
       'Criterion with a name, marks out of, and what it means',
-      no('Performance levels'),
+      'Performance levels, each with its points and its descriptor',
       'Points',
-      no('Learning-outcome mapping'),
+      'Learning-outcome mapping: points and their maximum roll up to each outcome',
       no('Instructor annotations'),
       'Student-facing language, published before work starts',
       no('Exemplars'),
@@ -388,8 +395,9 @@ const ROWS: readonly Row[] = [
       [SANDBOX_TEST, 'the rubric: refuses a mark the rubric cannot carry; will not accept a rubric with a box left empty'],
       ['app/src/lib/toolkit/rubric.test.ts', 'the student checklist and its disclaimer'],
       ['app/src/lib/assignment.test.ts', 'the rubric extracted from an assignment brief, with weights'],
+      ['app/src/lib/rubricengine.test.ts', 'a rubric is scored by level per criterion; an unscored criterion, an unknown level or another version is refused; a rubric with an empty box is refused'],
     ],
-    gap: 'Sandbox only, and no rubric table in the database (LMS-006 designed): no levels, outcomes, versions, templates or calibration.',
+    gap: 'Rules only, in app/src/lib/rubricengine.ts: levels, outcome roll-up and a version a mark must match. The sandbox still holds the criteria the grading loop reads, and no rubric table exists in the database (LMS-006 designed): no stored version history, templates, exemplars or calibration.',
     master: ['LMS-006'],
     phase: 2,
   },
@@ -402,8 +410,8 @@ const ROWS: readonly Row[] = [
       'Points, percentages and letters',
       no('Competency or mastery scales'),
       'Drop-lowest rules',
-      no('Excused work'),
-      no('Manual overrides with a reason and an audit record'),
+      'Excused work: left out of the calculation, never counted as zero',
+      'Manual overrides with a reason and an audit record: a change after release is a new version with a kept reason',
       'Late-policy rules',
       'Missing and incomplete status',
       'Grade release controls',
@@ -413,7 +421,7 @@ const ROWS: readonly Row[] = [
       'Comment feedback',
       no('Audio or video feedback'),
       'Export',
-      no('Grade history'),
+      'Grade history: every version is kept and never edited',
       'Final-grade calculation preview: what-if, what is needed, the swing',
       no('Student-view preview for the instructor'),
       'LMS sync controls: an institution-gated passback',
@@ -429,8 +437,11 @@ const ROWS: readonly Row[] = [
       [SANDBOX, 'weight, missing and overdue status, release control; the student standing counts only released marks'],
       ['app/src/lib/ltigate.test.ts', 'the passback gate: kill switches, the writeback flag, an approved connection, the scope'],
       ['app/src/lib/source.test.ts', 'the estimated label'],
+      ['app/src/lib/gradebook/gradebook.test.ts', 'weights and drop-lowest, excused work left out and missing counted as zero, a change after release needs a reason, no version ever edited or removed, a student sees only their own released grade'],
+      ['app/src/lib/gradebook/passback.test.ts', 'passback sends the released version and never a newer draft, once, and stops when the gate closes'],
+      ['supabase/gradebook.check.sql', 'the gradebook tables allowed and denied at the database'],
     ],
-    gap: 'The student side is the student’s own records; the faculty side is the sandbox. No institutional gradebook, excused work, override with reason, anonymous mode, grade history or student-view preview (LMS-011, LMS-013, LMS-014).',
+    gap: 'An instructor gradebook of record now exists (app/src/lib/gradebook and supabase/migrations/20260929310000_gradebook.sql; this register does not assert the migration is applied), beside the student’s own grades.ts. The sandbox that stood in for it is still in the tree. Not present: anonymous grading, group grading with individual adjustments, mastery scales, audio or video feedback, and a student-view preview for the instructor (LMS-011, LMS-013, LMS-014).',
     master: ['LMS-011', 'LMS-013', 'LMS-014', 'TRUST-004'],
     phase: 2,
   },
@@ -459,8 +470,9 @@ const ROWS: readonly Row[] = [
       [SANDBOX_TEST, 'runs enrol → submit → receipt → mark → release → archive; keeps the order; shows a mark to nobody until it is released; an appeal'],
       ['app/src/lib/ltiags.test.ts', 'the AGS score post'],
       ['docs/LMS-INTEROPERABILITY-MATRIX.md', 'the grade write, preview to audit, at what the AGS post has today'],
+      ['app/src/lib/gradebook/gradebook.test.ts', 'a draft held for moderation by a second person and then released; a regrade request filed over a released grade and resolved once'],
     ],
-    gap: 'The whole loop is the labelled sandbox, never installed unless asked for, and not wired to AGS; the AGS post is quiz scores with no preview, idempotency or reconciliation (LMS-012, LMS-013, INT-005).',
+    gap: 'The grading loop now exists in the gradebook of record (draft, moderation by a second person, release, regrade request, a kept reason for every change, passback of released versions through an LmsAdapter): calibration, anonymous assignment, annotation feedback and automated checks on arrival are not present, no implementation of the LmsAdapter is in the tree, and the submission side is still the labelled sandbox (LMS-012, LMS-013, INT-005).',
     master: ['LMS-012', 'LMS-013', 'INT-005'],
     phase: 3,
   },
