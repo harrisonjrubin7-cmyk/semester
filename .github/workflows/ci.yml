@@ -515,7 +515,7 @@ jobs:
       # open connections are checked after each, and `drift.sh` fails a scenario
       # whose best window at the end is more than twice, and five milliseconds,
       # slower than its best at the start. A leak passes every window's budget
-      # and fails that (D-159).
+      # and fails that (D-1019).
       - name: Load and concurrency scenarios
         env:
           LOAD_SECONDS: '6'

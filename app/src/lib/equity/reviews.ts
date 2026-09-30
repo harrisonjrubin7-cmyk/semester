@@ -24,7 +24,7 @@
  * records say `independent: false`. The council has no equity seat; the trust
  * and safety seat is vacant. Constituting one, and deciding whether a
  * disabled-student and first-generation-student panel reads these, is a
- * governance decision this file cannot make (D-159).
+ * governance decision this file cannot make (D-1019).
  *
  * `equity.test.ts` scans the source for every exported function that matches
  * the ranking names below, fails if one is neither reviewed nor exempt, fails
@@ -101,7 +101,7 @@ export const REVIEWS: readonly Review[] = [
     control: 'Snooze, dismiss, mark wrong, ask for help; nothing is hidden, the rest is behind View all.',
     explains: 'Each term of the score is kept (`parts`) and shown by rankingLine.',
     monitoring: NO_DEMOGRAPHICS,
-    findings: [{ id: 'A-1', text: 'The confidence term is 10 for institution-verified and 7 for student-entered: a three-point edge for students whose school is connected. Small next to urgency (0 to 40), and deliberate, but it is an advantage that follows the institution, not the student.', owner: 'Product (D-159 to decide whether to keep)' }],
+    findings: [{ id: 'A-1', text: 'The confidence term is 10 for institution-verified and 7 for student-entered: a three-point edge for students whose school is connected. Small next to urgency (0 to 40), and deliberate, but it is an advantage that follows the institution, not the student.', owner: 'Product (D-1019 to decide whether to keep)' }],
   },
   {
     id: 'lib/journeys.ts#recommendJourney',
@@ -185,7 +185,7 @@ export const REVIEWS: readonly Review[] = [
     control: 'Suggested, never added: nothing enters the pipeline without the student tapping Track.',
     explains: 'Each programme states when it is usually open.',
     monitoring: NO_DEMOGRAPHICS,
-    findings: [{ id: 'F-1', text: 'The programme list is shipped data with no stated selection criteria or review of whose opportunities it omits.', owner: 'Content (D-159 to name a reviewer)' }],
+    findings: [{ id: 'F-1', text: 'The programme list is shipped data with no stated selection criteria or review of whose opportunities it omits.', owner: 'Content (D-1019 to name a reviewer)' }],
   },
   {
     id: 'lib/launchpad.ts#matchMentors',

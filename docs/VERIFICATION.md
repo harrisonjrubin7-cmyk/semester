@@ -1,6 +1,6 @@
 # Verification: what "verified" means here
 
-> Code: `app/src/lib/verify/` · Decision: D-159
+> Code: `app/src/lib/verify/` · Decision: D-1019
 
 Semester's access rules are statements about *every* input: a kill switch beats
 every other setting, a revoked share is never active again, a cell under the floor
@@ -40,7 +40,7 @@ that it searches, shrinks, and can be pointed at a rule by name.
 
 Every property here was run against the defect it exists to catch, in the source
 and not only in a copy: a planted change, a red test, then the change removed. That
-found two holes in this harness's own first draft, both recorded in D-159. The scope
+found two holes in this harness's own first draft, both recorded in D-1019. The scope
 expiry property stayed green with the check removed, because the generator almost
 never reached that step, so the draws are now biased toward contexts that do and a
 control fails if the step is never refused. The eligibility check stayed green too,
