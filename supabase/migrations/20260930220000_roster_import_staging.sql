@@ -222,6 +222,15 @@ begin
   if want_source not in ('csv', 'rest') then
     raise exception 'roster_stage: source must be csv or rest' using errcode = '22023';
   end if;
+  -- A REST source has to be one this school configured, with a credential
+  -- pointer. The table constraint refuses a bad config row; it cannot refuse
+  -- the absence of one, so the ingestion boundary does.
+  if want_source = 'rest' and not exists (
+    select 1 from private.roster_import_config c
+     where c.tenant_id = want_tenant and c.source_kind = 'rest' and c.credentials_reference is not null
+  ) then
+    raise exception 'roster_stage: a REST batch needs a configured REST source with a credential reference for this school' using errcode = '42501';
+  end if;
   if jsonb_typeof(want_manifest -> 'files') is distinct from 'array'
      or jsonb_typeof(want_rows) is distinct from 'array' then
     raise exception 'roster_stage: manifest.files and rows must be arrays' using errcode = '22023';
@@ -533,3 +542,13 @@ revoke all on function private.roster_validate(uuid) from public, anon, authenti
 revoke all on function private.roster_reconcile(uuid) from public, anon, authenticated;
 revoke all on function private.roster_promote(uuid, uuid) from public, anon, authenticated;
 revoke all on function private.roster_rollback(uuid) from public, anon, authenticated;
+
+-- The worker calls the entry points with the service key. `private` has no
+-- default function privileges (only `public` does), so the worker's access came
+-- from PUBLIC, which the revokes above removed. Grant it by name, to the one
+-- role that needs it; the helpers stay reachable only through these.
+grant execute on function private.roster_stage(text, text, jsonb, jsonb, uuid) to service_role;
+grant execute on function private.roster_validate(uuid) to service_role;
+grant execute on function private.roster_reconcile(uuid) to service_role;
+grant execute on function private.roster_promote(uuid, uuid) to service_role;
+grant execute on function private.roster_rollback(uuid) to service_role;

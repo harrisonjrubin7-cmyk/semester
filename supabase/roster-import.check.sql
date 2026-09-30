@@ -209,6 +209,22 @@ begin
     'insert into private.roster_current (tenant_id, entity, sourced_id, payload, row_hash, batch_id) values (%L, ''users'', ''x'', ''{}'', %L, %L)',
     'cedar-roster', repeat('0', 64), b3))::text, 'true');
 
+  -- ── A REST batch needs a configured source for this school ─────────────
+  perform pg_temp.answered('a REST batch with no configured source is refused',
+    pg_temp.refused(format('select private.roster_stage(%L, %L, %L::jsonb, %L::jsonb)',
+      'cedar-roster', 'rest', '{"files":[]}', '[]'))::text, 'true');
+  insert into private.roster_import_config (tenant_id, source_kind, credentials_reference)
+    values ('cedar-roster', 'rest', 'vault:cedar/oneroster-x') on conflict (tenant_id) do update
+    set source_kind = 'rest', credentials_reference = 'vault:cedar/oneroster-x';
+  perform pg_temp.answered('with a REST source and a pointer for cedar, cedar can stage a REST batch',
+    (private.roster_stage('cedar-roster', 'rest', '{"files":[],"via":"rest"}', '[]') is not null)::text, 'true');
+  perform pg_temp.answered('but the same pointer does not let north stage one (north is configured for csv)',
+    pg_temp.refused(format('select private.roster_stage(%L, %L, %L::jsonb, %L::jsonb)',
+      'north-roster', 'rest', '{"files":[],"via":"rest-north"}', '[]'))::text, 'true');
+  perform pg_temp.answered('a CSV batch needs no credential',
+    (private.roster_stage('cedar-roster', 'csv', '{"files":[],"via":"csv"}', '[]') is not null)::text, 'true');
+  delete from private.roster_import_config where tenant_id = 'cedar-roster';
+
   -- ── Credentials are a pointer, per school ──────────────────────────────
   perform pg_temp.answered('a raw secret is refused', pg_temp.refused($q$insert into private.roster_import_config (tenant_id, source_kind, credentials_reference) values ('cedar-roster', 'rest', 'sk_live_abcdef')$q$)::text, 'true');
   perform pg_temp.answered('a REST source with no reference is refused', pg_temp.refused($q$insert into private.roster_import_config (tenant_id, source_kind) values ('cedar-roster', 'rest')$q$)::text, 'true');
@@ -263,6 +279,13 @@ begin
     perform pg_temp.answered(f || ' is not executable by anon', has_function_privilege('anon', f::regprocedure, 'execute')::text, 'false');
     perform pg_temp.answered(f || ' is not executable by authenticated', has_function_privilege('authenticated', f::regprocedure, 'execute')::text, 'false');
   end loop;
+
+  -- the worker holds the service key, so it must be able to call the entry points
+  foreach f in array array['private.roster_stage(text,text,jsonb,jsonb,uuid)', 'private.roster_validate(uuid)',
+                           'private.roster_reconcile(uuid)', 'private.roster_promote(uuid,uuid)', 'private.roster_rollback(uuid)'] loop
+    perform pg_temp.answered(f || ' is executable by service_role', has_function_privilege('service_role', f::regprocedure, 'execute')::text, 'true');
+  end loop;
+  perform pg_temp.answered('service_role can reach the private schema', has_schema_privilege('service_role', 'private', 'usage')::text, 'true');
 
   -- the definer functions pin their search_path
   select count(*) into n from pg_proc p join pg_namespace s on s.oid = p.pronamespace
