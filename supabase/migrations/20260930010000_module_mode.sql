@@ -92,7 +92,7 @@ create table if not exists public.module_mode_request (
   module       text        not null check (module = any (public.core_modules())),
   to_mode      text        not null check (to_mode in ('connect', 'core')),
   reason       text        not null check (length(btrim(reason)) between 1 and 1000),
-  status       text        not null default 'pending' check (status in ('pending', 'applied')),
+  status       text        not null default 'pending' check (status in ('pending', 'applied', 'expired')),
   requested_by uuid        references auth.users (id) on delete set null,
   requested_at timestamptz not null default now(),
   expires_at   timestamptz not null default now() + interval '7 days',
@@ -222,6 +222,20 @@ begin
   if new.to_mode = 'core' and public.kill_switch_engaged('kill.core_modules', new.tenant_id) then
     raise exception 'Core modules are switched off for this school (kill.core_modules).';
   end if;
+  -- Core also needs the school's own entitlement: module.core_mode is off
+  -- until a policy row for this school puts it in sandbox or production. An
+  -- unset policy is off, so an administrator alone cannot open the door.
+  if new.to_mode = 'core'
+     and public.feature_state('module.core_mode', new.tenant_id) not in ('sandbox', 'production') then
+    raise exception 'Core modules are not enabled for this school (module.core_mode).';
+  end if;
+  -- A request past its seven days takes no more approvals, so it is closed
+  -- here, before the one-pending index looks, or it would block every
+  -- replacement for the module for good.
+  update public.module_mode_request
+     set status = 'expired'
+   where tenant_id = new.tenant_id and module = new.module
+     and status = 'pending' and expires_at <= clock_timestamp();
   new.status := 'pending';
   new.applied_at := null;
   new.requested_at := clock_timestamp();
@@ -234,7 +248,9 @@ returns trigger language plpgsql security definer set search_path = '' as $$
 declare
   r public.module_mode_request%rowtype;
 begin
-  select * into r from public.module_mode_request where id = new.request_id;
+  -- Locked, so two approvals arriving together are taken one at a time: the
+  -- second counts the first after it commits, and one of them applies it.
+  select * into r from public.module_mode_request where id = new.request_id for update;
   if r.status <> 'pending' then
     raise exception 'That request is already %.', r.status;
   end if;
@@ -246,6 +262,10 @@ begin
   end if;
   if r.to_mode = 'core' and public.kill_switch_engaged('kill.core_modules', r.tenant_id) then
     raise exception 'Core modules are switched off for this school (kill.core_modules).';
+  end if;
+  if r.to_mode = 'core'
+     and public.feature_state('module.core_mode', r.tenant_id) not in ('sandbox', 'production') then
+    raise exception 'Core modules are not enabled for this school (module.core_mode).';
   end if;
   new.decided_at := clock_timestamp();
   return new;

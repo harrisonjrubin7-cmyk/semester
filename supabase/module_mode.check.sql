@@ -154,6 +154,20 @@ end $$;
 
 do $$
 begin
+  -- The school's own entitlement: module.core_mode is off until a policy row
+  -- says otherwise, and only sandbox or production opens it.
+  perform pg_temp.refused_with('with no policy row, module.core_mode is off and Core cannot be asked for',
+    pg_temp.attempt(pg_temp.who('a'), false,
+      format($q$insert into public.module_mode_request (tenant_id, module, to_mode, reason, requested_by) values ('mm-check','lms_assignments','core','why',%L)$q$, pg_temp.who('a'))),
+    'module.core_mode');
+  insert into public.tenant_feature_policy (tenant_id, capability, state) values ('mm-check', 'module.core_mode', 'preview');
+  perform pg_temp.refused_with('preview is not enough either',
+    pg_temp.attempt(pg_temp.who('a'), false,
+      format($q$insert into public.module_mode_request (tenant_id, module, to_mode, reason, requested_by) values ('mm-check','lms_assignments','core','why',%L)$q$, pg_temp.who('a'))),
+    'module.core_mode');
+  update public.tenant_feature_policy set state = 'production' where tenant_id = 'mm-check' and capability = 'module.core_mode';
+  insert into public.tenant_feature_policy (tenant_id, capability, state) values ('mm-other', 'module.core_mode', 'sandbox');
+
   perform pg_temp.refused_with('a member who holds no capability cannot ask',
     pg_temp.attempt(pg_temp.who('member'), false,
       format($q$insert into public.module_mode_request (tenant_id, module, to_mode, reason, requested_by) values ('mm-check','lms_assignments','core','why',%L)$q$, pg_temp.who('member'))),
@@ -303,6 +317,40 @@ begin
     'expired');
   update public.module_mode_request set expires_at = now() + interval '7 days' where id = req;
   perform pg_temp.remember('req2', req::text);
+end $$;
+
+-- A request that ran out its seven days must not block its replacement.
+do $$
+declare stale uuid;
+begin
+  perform pg_temp.went_through('an administrator asks for lms_gradebook in Core',
+    pg_temp.attempt(pg_temp.who('a'), false,
+      format($q$insert into public.module_mode_request (tenant_id, module, to_mode, reason, requested_by) values ('mm-check','lms_gradebook','core','first',%L)$q$, pg_temp.who('a'))));
+  select id into stale from public.module_mode_request where module = 'lms_gradebook' and tenant_id = 'mm-check';
+  update public.module_mode_request set expires_at = now() - interval '1 minute' where id = stale;
+  perform pg_temp.went_through('after seven days a replacement request is accepted, not blocked',
+    pg_temp.attempt(pg_temp.who('b'), false,
+      format($q$insert into public.module_mode_request (tenant_id, module, to_mode, reason, requested_by) values ('mm-check','lms_gradebook','core','second',%L)$q$, pg_temp.who('b'))));
+  perform pg_temp.counted('the stale one is closed as expired',
+    (select count(*) from public.module_mode_request where id = stale and status = 'expired'), 1);
+  perform pg_temp.counted('and exactly one request is pending for the module',
+    (select count(*) from public.module_mode_request where tenant_id = 'mm-check' and module = 'lms_gradebook' and status = 'pending'), 1);
+  -- The control: an unexpired pending request still blocks a duplicate.
+  perform pg_temp.refused_with('a live pending request still blocks another',
+    pg_temp.attempt(pg_temp.who('c'), false,
+      format($q$insert into public.module_mode_request (tenant_id, module, to_mode, reason, requested_by) values ('mm-check','lms_gradebook','core','third',%L)$q$, pg_temp.who('c'))),
+    'duplicate key');
+end $$;
+
+-- Two approvals arriving together are serialised on the request row. A
+-- two-session race is not reproducible inside one rolled-back transaction, so
+-- this holds the guard to the lock the race depends on, and only that.
+do $$
+begin
+  perform pg_temp.counted('the approval guard locks the request row before it counts',
+    (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'private' and p.proname = 'guard_module_mode_approval'
+        and pg_get_functiondef(p.oid) ilike '%public.module_mode_request where id = new.request_id for update%'), 1);
 end $$;
 
 -- ── The kill switch ───────────────────────────────────────────────────────
