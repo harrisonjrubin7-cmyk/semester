@@ -312,7 +312,7 @@ export const REGISTRATION: readonly GroupedItem[] = [
   ]),
   ...grouped('Technical and resilience', 'LC-REG3', [
     ['Course search performance tested under expected peak load', 'not-started', [['docs/REGISTRATION-DAY-MODE.md', 'the peak']], 'No load test.'],
-    ['Plan save is durable and idempotent', 'tested', [['app/src/lib/conflicts.test.ts', 'a record edited on both sides; the later kept'], ['supabase/sync.check.sql', 'sync']], 'Device-first; the server copy is the sync’s.'],
+    ['Plan save is durable and idempotent', 'tested', [['app/src/lib/conflicts.test.ts', 'a record edited on both sides; the later kept'], ['app/src/state/deletions.test.tsx', 'a deletion made offline stays deleted after the app closes'], ['supabase/sync.check.sql', 'sync']], 'Device-first; the server copy is the sync’s.'],
     ['Conflict calculations have unit and end-to-end tests', 'building', [['app/src/lib/registration-day.test.ts', 'unit']], 'No end-to-end test.'],
     ['Stale SIS or catalog data visibly marked', 'building', [['app/src/lib/syncstatus.ts', 'sync state']], 'No SIS feed, so nothing to mark stale yet.'],
     ['Integration failure has official fallback behavior', 'tested', [['app/src/components/GetHelp.test.tsx', 'the official office'], ['app/src/components/OfflineBanner.test.tsx', 'offline']], 'None.'],

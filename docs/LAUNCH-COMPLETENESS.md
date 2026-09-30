@@ -250,7 +250,7 @@ All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
 | ID | Item | Standing | Evidence | Gap |
 | --- | --- | --- | --- | --- |
 | LC-REG3-01 | Course search performance tested under expected peak load | not-started | [`docs/REGISTRATION-DAY-MODE.md`](REGISTRATION-DAY-MODE.md) — the peak | No load test. |
-| LC-REG3-02 | Plan save is durable and idempotent | tested | [`app/src/lib/conflicts.test.ts`](../app/src/lib/conflicts.test.ts) — a record edited on both sides; the later kept<br>[`supabase/sync.check.sql`](../supabase/sync.check.sql) — sync | Device-first; the server copy is the sync’s. |
+| LC-REG3-02 | Plan save is durable and idempotent | tested | [`app/src/lib/conflicts.test.ts`](../app/src/lib/conflicts.test.ts) — a record edited on both sides; the later kept<br>[`app/src/state/deletions.test.tsx`](../app/src/state/deletions.test.tsx) — a deletion made offline stays deleted after the app closes<br>[`supabase/sync.check.sql`](../supabase/sync.check.sql) — sync | Device-first; the server copy is the sync’s. |
 | LC-REG3-03 | Conflict calculations have unit and end-to-end tests | building | [`app/src/lib/registration-day.test.ts`](../app/src/lib/registration-day.test.ts) — unit | No end-to-end test. |
 | LC-REG3-04 | Stale SIS or catalog data visibly marked | building | [`app/src/lib/syncstatus.ts`](../app/src/lib/syncstatus.ts) — sync state | No SIS feed, so nothing to mark stale yet. |
 | LC-REG3-05 | Integration failure has official fallback behavior | tested | [`app/src/components/GetHelp.test.tsx`](../app/src/components/GetHelp.test.tsx) — the official office<br>[`app/src/components/OfflineBanner.test.tsx`](../app/src/components/OfflineBanner.test.tsx) — offline | None. |
