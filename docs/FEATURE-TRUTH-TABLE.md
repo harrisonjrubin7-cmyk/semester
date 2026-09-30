@@ -31,7 +31,7 @@ therefore **violated by design in most student modules**; see the gap register i
 
 | Module | Status | Persistence / authority | Evidence | Main gap for full beta |
 |---|---|---|---|---|
-| Today / Action Center | LIVE (device); the Action Center itself is **off by default** (`VITE_TODAY_ACTION_CENTER`), students see the single-decision briefing | device + sync; derived from student's courses; seeded semester is the default state, but its dates no longer drive Today until claimed | `screens/Today.tsx`, `lib/actions.ts`, `lib/standing.ts` | snooze is one duration; dismiss has no reason; item freshness is "not recorded" (no per-date timestamp); snooze/dismiss/feedback stay on the device |
+| Today / Action Center | LIVE (device) | device + sync; derived from student's courses; seeded semester is the default state, but its dates no longer drive Today until claimed | `screens/Today.tsx`, `lib/actions.ts`, `lib/standing.ts` | the Action Center itself is off by default (the build flag `VITE_TODAY_ACTION_CENTER`), so students see the single-decision briefing; snooze is one duration; dismiss has no reason; item freshness is "not recorded" (no per-date timestamp); snooze/dismiss/feedback stay on the device |
 | My Path (degree, goals, scenarios) | PARTIAL | device; student-entered + catalog seed | `screens/Pathway.tsx`, `lib/degree.ts` | deterministic requirement engine tied to an institution-verified catalog; graduation/cost language |
 | Study abroad | PARTIAL | device; student-recorded approvals | `lib/abroad.ts` (no route of its own) | host-to-home credit status labels from an approved source |
 | Transfer equivalencies | PLANNED | none; register + doc only | `lib/transferhub.ts` not imported by any screen | screen, approved-equivalency data source |
