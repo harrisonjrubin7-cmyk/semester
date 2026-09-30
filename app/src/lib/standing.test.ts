@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { badge, claimed, inView, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
+import { decorateItem } from './date';
+import type { Item } from './types';
 import type { DatedItem } from './types';
 
 function item(id: string, daysAway: number, title = id): DatedItem {
@@ -182,30 +184,41 @@ describe('claimed', () => {
   });
 });
 
-describe('inView', () => {
-  it('keeps a deadline due today under Upcoming, not Past, however early in the day', () => {
-    // Its date is midnight of the day; the course page compared that with the clock.
-    const tonight = item('a', 0);
-    expect(inView(tonight, 'upcoming', {})).toBe(true);
-    expect(inView(tonight, 'past', {})).toBe(false);
+describe('which view of a course\'s assignments a deadline is in', () => {
+  // Due at 11:59 tonight, read a quarter of an hour after midnight: the case
+  // the golden path met on the last day of September, when its syllabus put
+  // Problem Set 1 on the same day it ran.
+  const now = new Date(2026, 8, 30, 0, 15);
+  const tonight = decorateItem(
+    { id: 'ps1', c: 'gold', kind: 'Problem set', title: 'Problem Set 1', month: 8, day: 30, dueTime: '11:59 PM' } as Item,
+    now,
+  );
+  const yesterday = decorateItem(
+    { id: 'old', c: 'gold', kind: 'Problem set', title: 'Old', month: 8, day: 29, dueTime: '11:59 PM' } as Item,
+    now,
+  );
+
+  it('keeps something due later today in Upcoming, not Past', () => {
+    expect(inView('upcoming', tonight, {})).toBe(true);
+    expect(inView('past', tonight, {})).toBe(false);
   });
 
-  it('moves a deadline to Past only once its day has gone', () => {
-    expect(inView(item('a', -1), 'past', {})).toBe(true);
-    expect(inView(item('a', -1), 'upcoming', {})).toBe(false);
-    expect(inView(item('a', 2), 'upcoming', {})).toBe(true);
+  it('agrees with the Overview, which counts by standing', () => {
+    expect(standingOf(tonight, {})).toBe('ahead');
+    expect(split([tonight], {}).ahead).toHaveLength(1);
   });
 
-  it('takes a finished deadline out of Upcoming and into Completed', () => {
-    expect(inView(item('a', 2), 'upcoming', { a: true })).toBe(false);
-    expect(inView(item('a', 2), 'completed', { a: true })).toBe(true);
-    expect(inView(item('a', 2), 'completed', {})).toBe(false);
-    expect(inView(item('a', -3), 'all', {})).toBe(true);
+  it('puts yesterday in Past, and anything ticked in Completed and out of Upcoming', () => {
+    expect(inView('past', yesterday, {})).toBe(true);
+    expect(inView('upcoming', yesterday, {})).toBe(false);
+    expect(inView('completed', tonight, { ps1: true })).toBe(true);
+    expect(inView('upcoming', tonight, { ps1: true })).toBe(false);
+    expect(inView('all', yesterday, {})).toBe(true);
   });
 
   it('is what the course page filters by, not the clock against midnight', () => {
     const page = readFileSync(new URL('../components/CourseHub.tsx', import.meta.url), 'utf8');
-    expect(page).toMatch(/inView\(i,filter as CourseView,state\.done\)/);
+    expect(page).toMatch(/inView\(filter as AssignmentView,i,state\.done\)/);
     expect(page).not.toMatch(/i\.date\s*(<|>=)\s*now/);
   });
 });

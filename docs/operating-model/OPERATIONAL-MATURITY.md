@@ -10,8 +10,8 @@ and each control marked with what the tree holds. A control that claims to
 exist cites a file, and the file exists; an owed control says what would
 close it. Nothing here is a promise of a date.
 
-**40 of 200 controls are in place, 76 are partial and 84 are owed.**
-Nothing at all is in place in 8 areas: Records management and legal holds; E-discovery and export defensibility; Accessibility of generated content; Minors, guardians and dual enrollment; Physical security and device management; Cost governance; Data residency; Disaster scenarios beyond technology.
+**43 of 200 controls are in place, 76 are partial and 81 are owed.**
+Nothing at all is in place in 7 areas: Records management and legal holds; E-discovery and export defensibility; Accessibility of generated content; Physical security and device management; Cost governance; Data residency; Disaster scenarios beyond technology.
 Most owed controls wait on something that does not exist yet — a company,
 a second person, billing, an assessment engine, a customer — and the note
 says which.
@@ -35,7 +35,7 @@ never a person; every seat is vacant.
 | [Accreditation and assessment evidence](#accreditation-and-assessment-evidence) | 1 | 3 | 5 | `staff` | `product` |
 | [Learning analytics ethics](#learning-analytics-ethics) | 6 | 4 | 1 | `public` | `privacy` |
 | [Accommodations across the lifecycle](#accommodations-across-the-lifecycle) | 5 | 4 | 2 | `staff` | `accessibility` |
-| [Minors, guardians and dual enrollment](#minors-guardians-and-dual-enrollment) | 0 | 3 | 7 | `staff` | `privacy` |
+| [Minors, guardians and dual enrollment](#minors-guardians-and-dual-enrollment) | 3 | 3 | 4 | `staff` | `privacy` |
 | [Digital-accessibility procurement law](#digital-accessibility-procurement-law) | 1 | 3 | 3 | `staff` | `accessibility` |
 | [Physical security and device management](#physical-security-and-device-management) | 0 | 0 | 11 | `internal` | `security` |
 | [Developer experience and engineering productivity](#developer-experience-and-engineering-productivity) | 7 | 4 | 1 | `staff` | `engineering` |
@@ -186,16 +186,16 @@ Exposure `staff` · owner `accessibility` · 5 of 11 in place.
 
 > No feature that matches, reviews or messages is open to a minor until guardian consent and the age-of-majority transition are built.
 
-Exposure `staff` · owner `privacy` · 0 of 10 in place.
+Exposure `staff` · owner `privacy` · 3 of 10 in place.
 
 | ID | Control | Status | Evidence | What it shows, or what would close it |
 | --- | --- | --- | --- | --- |
-| MN-01 | Source for minor age or status. | owed | — | No date of birth or minor flag is held. The minimum age is a [DECIDE] in the legal drafts. |
+| MN-01 | Source for minor age or status. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | Stated at sign-up or once afterwards, never changed; only the day a minor turns 18 is kept (D-139). Self-reported, so it is a stated age, not a verified one. |
 | MN-02 | Guardian consent where required. | owed | — | No guardian model. The supporter and family privacy model says it needs the minors decision before building. |
-| MN-03 | Age-of-majority transition. | owed | — | Follows MN-01: what changes on the day, and who is told. |
+| MN-03 | Age-of-majority transition. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | The restriction lifts on the 18th birthday with nothing to run. Nobody is told; the Account screen stops saying it. |
 | MN-04 | Dual-enrollment sharing rules. | owed | — | A high-school student in a university course would be a minor in an institutional tenant; no rule exists. |
 | MN-05 | Parent and supporter limited-grant model. | partial | [`docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md`](../SUPPORTER-FAMILY-PRIVACY-MODEL.md) | The model is designed: a student grants a supporter a limited view. Built for adults’ supporters, not for guardians of minors. |
-| MN-06 | Restricted career matching, reviews and messaging for minors. | owed | — | Nothing restricts these because nothing knows a user is a minor (MN-01). |
+| MN-06 | Restricted career matching, reviews and messaging for minors. | in place | [`supabase/minimum-age.check.sql`](../../supabase/minimum-age.check.sql) | A minor is not a verified student, so every policy that asks refuses; mentor requests, connections, study matching and employer opt-in refuse by trigger. Reporting and guardian sharing stay open. |
 | MN-07 | Consent renewal and expiry. | owed | — | Follows MN-02: a consent that never expires is not a consent. |
 | MN-08 | Safe communications policy. | partial | [`docs/COMMUNITY-MEDIA-SAFETY.md`](../COMMUNITY-MEDIA-SAFETY.md) | Community safety rules exist for all users. Nothing is specific to minors. |
 | MN-09 | Identity and guardian verification where necessary. | owed | — | No verification path for a guardian. |
