@@ -262,3 +262,45 @@ describe('restoring', () => {
     expect(target.length).toBe(0);
   });
 });
+
+/*
+ * The three learning stores, with something in them.
+ *
+ * The seed above uses each store's empty value, which proves a kind is taken
+ * and says nothing about whether what a student wrote comes back. These are a
+ * concept, a private question, a check answer and a filed comment, restored
+ * onto a different account's device.
+ */
+describe('the learning stores', () => {
+  const inbox = { version: 1, items: [{ id: 'f1', courseId: 'c1', work: 'Essay 1', origin: 'Marked paper', comment: 'Claims need support.', category: 'Evidence and citation', next: 'List claims first', filed: '2026-09-30' }] };
+  const map = { version: 1, own: [{ id: 'o1', courseId: 'c1', name: 'Confounders', note: 'ask in office hours', label: 'Exploring', question: true }], checks: { c1: { at: '2026-09-30', useInPlan: true, answers: [{ conceptId: 'c1:unit:0', answer: 'unsure' }] } } };
+  const prefs = { version: 1, session: 30, density: 'expanded', patterns: true };
+  const put = (account: string) => {
+    storage.setItem(`semester.feedback-inbox.v1:${account}:${TERM}`, JSON.stringify(inbox));
+    storage.setItem(`semester.learning-map.v1:${account}:${TERM}`, JSON.stringify(map));
+    storage.setItem(`semester.learning-prefs.v1:${account}`, JSON.stringify(prefs));
+  };
+
+  it('are taken, and come back whole on another account', () => {
+    put(ACCOUNT);
+    const backup = workspaceBackup(ACCOUNT, storage);
+    expect(backup.records.map((r) => r.kind).sort()).toEqual(['feedbackInbox', 'learningMap', 'learningPrefs']);
+    const fresh = new FakeStorage();
+    restoreWorkspaces(backup, 'acct-2', fresh);
+    expect(JSON.parse(fresh.getItem(`semester.feedback-inbox.v1:acct-2:${TERM}`)!)).toEqual(inbox);
+    expect(JSON.parse(fresh.getItem(`semester.learning-map.v1:acct-2:${TERM}`)!)).toEqual(map);
+    expect(JSON.parse(fresh.getItem('semester.learning-prefs.v1:acct-2')!)).toEqual(prefs);
+    expect(fresh.length).toBe(3);
+  });
+
+  it('refuse a file whose learning map carries a label nobody offers, and write nothing', () => {
+    put(ACCOUNT);
+    const backup = workspaceBackup(ACCOUNT, storage);
+    const bad = JSON.parse(JSON.stringify(backup)) as WorkspaceBackup;
+    const rec = bad.records.find((r) => r.kind === 'learningMap')!;
+    (rec.value as typeof map).own[0].label = 'Weak at statistics';
+    const fresh = new FakeStorage();
+    expect(() => restoreWorkspaces(bad, 'acct-2', fresh)).toThrow();
+    expect(fresh.length).toBe(0);
+  });
+});
