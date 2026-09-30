@@ -452,7 +452,7 @@ describe('"delete my account" really means every row', () => {
       'registration_sections',
       'registration_terms',
       'reports',
-      // The Configuration Studio's table (lib/config/api.ts, D-150): a school's
+      // The Configuration Studio's table (lib/config/api.ts, D-152): a school's
       // versioned policy settings. No person, credential or student record.
       'school_config_versions',
       'schools',

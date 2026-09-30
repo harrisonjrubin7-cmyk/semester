@@ -3277,7 +3277,7 @@ detail below is how the tree reads it, and the owner can correct any of it.
   enter any school's course room by design, and closing that would empty
   rooms for students who have not claimed a school. It waits for the owner.
 
-## D-150 · Schools configure their own Semester in a Configuration Studio, a second person publishes it, and nothing reads it yet
+## D-152 · Schools configure their own Semester in a Configuration Studio, a second person publishes it, and nothing reads it yet
 
 **Decided 30 Sep 2026.** The platform brief's first "highest-leverage final
 addition" is a no-code Configuration Studio: "one configurable codebase rather

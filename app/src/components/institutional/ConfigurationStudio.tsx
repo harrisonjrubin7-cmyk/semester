@@ -1,6 +1,6 @@
 /**
  * The Configuration Studio: a school's own settings, eleven domains, each a
- * draft that a second person publishes as a numbered version (D-150), on the
+ * draft that a second person publishes as a numbered version (D-152), on the
  * table in `20260930100000_configuration_studio.sql`.
  *
  * What it shows is what the database will do. The check on a value is
