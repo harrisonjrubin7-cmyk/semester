@@ -206,7 +206,7 @@ gates for this report. Before Milestone 1 I will re-run the gates to refresh the
 | Gap | State | Evidence |
 |---|---|---|
 | G-02 recovery screen, change password/email, sign out other devices | **done** (client) | `components/AccountSecurity.tsx`, 6 tests, guard shown red by disabling the floor. A session *list* is not built: I found no client-side listing call in supabase-js, so it needs a server function. |
-| G-03 tenant scoping | **built, off everywhere (D-154)**: per-school members-only switch, requests, admin approval, leave/remove, readiness count; 32 checks, six guards shown red | `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; its readiness evidence list is **not yet met** and no school is switched on |
+| G-03 tenant scoping | **built, off everywhere (D-155)**: per-school members-only switch, requests, admin approval, leave/remove, readiness count; 32 checks, six guards shown red | `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; its readiness evidence list is **not yet met** and no school is switched on |
 | G-04 common audit envelope | **schema + 2 producers** | `20260930000000_audit_and_subject_requests.sql`, 22 checks; guards shown red by removing the trigger, the insert clause and the immutability trigger |
 | G-05 data-subject requests | **schema only** | same migration; no screen or answering workflow yet |
 | G-06 plan/cohort flag dimensions, cohorts | **cohort and role limits landed on main** (`20260929340000_feature_cohorts.sql`, another PR); a *plan* dimension was not added — entitlements resolve plans separately | not duplicated here |

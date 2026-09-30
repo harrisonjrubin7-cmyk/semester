@@ -3577,9 +3577,9 @@ not a penetration test and claims nothing about FERPA.
 - **Off everywhere.** No school is enforced by this change. Switching one on is a separate operator act with its own evidence list in `docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md`; that list is not yet met.
 - **Not done:** any real school switched on; proof on a Supabase preview branch beyond the migrations applying; staff briefing.
 
-## D-155 · Milestone 2 runs snooze and dismiss, then term load, then sharing and audit; the readiness analysis becomes ten release gates
+## D-156 · Milestone 2 runs snooze and dismiss, then term load, then sharing and audit; the readiness analysis becomes ten release gates
 
-**Decided 30 Sep 2026, by the owner**, in the same message that approved the staged room restriction (D-154).
+**Decided 30 Sep 2026, by the owner**, in the same message that approved the staged room restriction (D-155).
 
 - **Order:** snooze presets and dismiss reasons; the term credit and workload check; the sharing and audit lifecycle. Built in that order.
 - **The term-load check is an estimate and says so.** Limits and study hours are the student's own entries; the two-hours-per-credit assumption is printed beside the number; no sentence says a load is allowed or refused. Registration Day Mode is unchanged (off by default).
