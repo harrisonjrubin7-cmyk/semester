@@ -1423,6 +1423,10 @@ export const KEPT_TABLES: KeptTable[] = [
     why: 'An approval or rejection you recorded for a migration’s cutover is part of the record of why your school retired a system. It stays with the migration, no longer attributed to you.',
   },
   {
+    table: 'school_config_versions',
+    why: 'A configuration you drafted or published for your school — its terms, workflow thresholds, AI defaults or reporting floor — is the school’s policy, not a record about you. Deleting your account removes you as the person who drafted or published it; every version stays.',
+  },
+  {
     table: 'groups',
     why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays, with no starter recorded.',
   },

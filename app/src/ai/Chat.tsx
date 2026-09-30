@@ -14,6 +14,7 @@ import { Opening } from './Opening';
 import { Applied, Holding, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
+import { MomentPromptSlot } from '../components/MomentPrompt';
 import { HelpNotice, HowItHelps } from './HelpNotice';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
@@ -283,6 +284,12 @@ export function Chat() {
                           onLetGo={talk.letGo}
                         />
                         <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
+                        {/*
+                          One optional question about the source, and only when
+                          there is a source to ask about. Off unless
+                          VITE_ME_MOMENT_FEEDBACK is set; see lib/momentfeedback.ts.
+                        */}
+                        {(talk.response || talk.used.length > 0) && <MomentPromptSlot moment="ai-answer" />}
                       </>
                     ) : undefined
                   }

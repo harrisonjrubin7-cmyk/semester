@@ -197,6 +197,59 @@ async function visible(locator, timeout = WAIT) {
   }
 }
 
+/**
+ * Wait for a completed action to be on this device's disk, not merely painted.
+ *
+ * The normal path is the `tasks` IndexedDB store. A browser that refused the
+ * database uses the older `semester.v1` localStorage copy, so the probe accepts
+ * that honest fallback too. This is a test-side acknowledgement only: it does
+ * not reach into React state, call the writer, or make an unsaved edit pass.
+ */
+async function taskIsDurable(page, title) {
+  return page.evaluate(
+    async ({ wanted, timeout }) => {
+      const local = () => {
+        try {
+          const state = JSON.parse(localStorage.getItem('semester.v1') || 'null');
+          return Array.isArray(state?.tasks) && state.tasks.some((task) => task?.title === wanted && task?.done === true);
+        } catch {
+          return false;
+        }
+      };
+      if (local()) return true;
+
+      const database = await Promise.race([
+        new Promise((resolve) => {
+          const request = indexedDB.open('semester-store');
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => resolve(null);
+          request.onblocked = () => resolve(null);
+        }),
+        new Promise((resolve) => setTimeout(() => resolve(null), Math.min(timeout, 3_000))),
+      ]);
+      if (!database || !database.objectStoreNames.contains('tasks')) return false;
+
+      const read = () => new Promise((resolve) => {
+        const request = database.transaction('tasks', 'readonly').objectStore('tasks').getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => resolve([]);
+      });
+      const until = Date.now() + timeout;
+      try {
+        while (Date.now() < until) {
+          const tasks = await read();
+          if (tasks.some((task) => task?.title === wanted && task?.done === true)) return true;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+        return false;
+      } finally {
+        database.close();
+      }
+    },
+    { wanted: title, timeout: WAIT },
+  );
+}
+
 // ── The syllabus, and the one part of adding it that is not the app's ──────
 //
 // Turning a syllabus into a course is a model call (`generateCourse` in
@@ -558,7 +611,19 @@ async function journey(label, viewport) {
     expect(struck.includes('line-through'), `the done action is not struck through (text-decoration: ${struck})`);
 
     // ── 7 · Resume here: a reload, then a second tab ───────────────────────
+    //
+    // The database writer deliberately coalesces edits for a quarter second.
+    // Reloading in the same browser turn as the click raced that contract: the
+    // new button had painted, but the persistence effect had not necessarily
+    // queued the write yet. That made this check alternate between passing
+    // and losing the action on otherwise identical CI runs.
+    //
+    // `taskIsDurable` is the acknowledgement rather than an arbitrary sleep.
+    // It reads the same object store a reload will read and waits for the exact
+    // completed action. Only then do the reload and independent tab prove they
+    // can reconstruct the state the first tab wrote.
     at(STEPS[10]);
+    expect(await taskIsDurable(page, title), 'the completed action did not reach device storage');
     await page.reload({ waitUntil: 'domcontentloaded' });
     expect(await visible(page.locator('h1', { hasText: 'Personal' })), 'a reload did not come back to Personal');
     expect(await visible(page.getByRole('button', { name: done })), 'after a reload the action is gone or no longer done');

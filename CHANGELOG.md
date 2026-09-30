@@ -36,6 +36,19 @@ Offline, you can now keep an advisor share or your course plan to send yourself
 later. They wait on Account under "Waiting for you to send", and they do not go
 by themselves, even when you are back online. One that waits three days is not
 sent and has to be made again. Files you attach still do not sync between devices.
+### For school staff: a Configuration tab on University (off for now)
+
+Staff with configuration rights at a school get a **Configuration** tab in
+eleven domains — academic structure, workflows, roles, branding, content, AI,
+notifications, data, features, accessibility and reporting. A change is a
+draft; a colleague who holds the publish role publishes it as a numbered
+version, and you cannot publish your own. Old versions stay, and you can start
+a new draft from any of them.
+
+It is switched off, and nothing in the app reads these settings yet: the tab
+says so. Students see no difference.
+
+Nothing to do.
 
 ### On the public site: alumni relations and fundraising, described and not built
 
