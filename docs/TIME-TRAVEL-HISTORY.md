@@ -78,7 +78,7 @@ returned, even if the purge that would delete it has failed.
    school holds them. Counsel decides whether, what, and for how long.
 3. **Whether there is an institutional history.** It would need its own
    retention, student access and deletion rights, and an answer to how it meets
-   a legal hold (an open pull request adds one) when a student asks for
+   a legal hold (#1012 has since merged one; whether and how it could apply to a history kept only on a student's device is exactly the open question) when a student asks for
    deletion. The owner and counsel decide; this store honours the student's
    deletion and is never held.
 4. **How a school's ceiling is set and by whom.** Through the tenant contract or
