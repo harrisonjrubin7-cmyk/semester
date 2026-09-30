@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  arrayOf, assertMachine, assertProperty, bool, command, int, oneOf, record, rng, runMachine, runProperty, subset,
+  arrayOf, assertMachine, assertMachineAsync, assertProperty, asyncCommand, bool, command, int, oneOf, record, rng, runMachine, runMachineAsync, runProperty, runPropertyAsync, subset,
 } from './property';
 
 /**
@@ -127,5 +127,43 @@ describe('the state machine runner', () => {
     });
     expect(out.ok).toBe(false);
     if (!out.ok) expect(out.minimal).toHaveLength(5);
+  });
+});
+
+describe('the asynchronous runners', () => {
+  const later = () => new Promise<void>((r) => setTimeout(r, 0));
+
+  it('find a false property and shrink it, as the synchronous one does', async () => {
+    const out = await runPropertyAsync(int(0, 1000), async (v) => { await later(); return v < 50; });
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.minimal).toBe(50);
+  });
+
+  it('pass a true property, and count a rejected promise as a failure with its message', async () => {
+    expect(await runPropertyAsync(int(0, 9), async () => { await later(); }, { runs: 40 })).toEqual({ ok: true, runs: 40 });
+    const out = await runPropertyAsync(int(0, 10), async (v) => { await later(); if (v === 4) throw new Error('four'); });
+    expect(out).toMatchObject({ ok: false, minimal: 4, error: 'four' });
+  });
+
+  it('run a machine whose steps await, find the planted bug and shrink the sequence', async () => {
+    const make = (buggy: boolean) => ({
+      init: () => ({ model: { n: 0 }, sut: { n: 0 } }),
+      commands: [
+        asyncCommand<{ n: number }, { n: number }, number>({
+          name: 'inc', args: int(1, 1),
+          step: async (m, s) => { await later(); m.n++; s.n = buggy && s.n === 2 ? 0 : s.n + 1; if (s.n !== m.n) throw new Error(`model ${m.n}, system ${s.n}`); },
+        }),
+      ],
+    });
+    await assertMachineAsync('faithful', make(false), { runs: 50 });
+    const out = await runMachineAsync(make(true), { runs: 100 });
+    expect(out.ok).toBe(false);
+    if (!out.ok) expect(out.minimal.map((s) => s.name)).toEqual(['inc', 'inc', 'inc']);
+  });
+
+  it('run cases one after another, never together, so a shared fake cannot interleave', async () => {
+    let inside = 0; let worst = 0;
+    await runPropertyAsync(int(0, 9), async () => { inside++; worst = Math.max(worst, inside); await later(); inside--; }, { runs: 30 });
+    expect(worst).toBe(1);
   });
 });

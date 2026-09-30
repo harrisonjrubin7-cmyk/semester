@@ -255,6 +255,11 @@ describe('the document', () => {
     expect(doc).toMatch(/Nothing in this repository is "formally verified"/);
   });
 
+  it('lists the billing webhook among the rules it holds, and the async runner that drives it', () => {
+    expect(doc).toContain('Billing webhook');
+    expect(doc).toContain('runMachineAsync');
+  });
+
   it('names the environment variables that search deeper and replay a failure', () => {
     expect(doc).toContain('VERIFY_RUNS');
     expect(doc).toContain('VERIFY_SEED');

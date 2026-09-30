@@ -39,7 +39,13 @@ trend and passes.
 - **A planted connection leak.** A session left open in each window failed the run at the
   third window (3 open against 0).
 - **The clean schema** showed no drift across four windows on PostgreSQL 16, as a local
-  run. CI runs PostgreSQL 17, the version the live project uses.
+  run, and then in CI on PostgreSQL 17, the version the live project uses: four windows
+  of six seconds, 16 clients, 2000 synthetic students, seven scenarios (#996's sync ones
+  included), the invariants held after every window, and no scenario drifted. The
+  noisiest, `sync-push`, ran from a best p95 of 122.6 ms in the first windows to 55.6 ms
+  in the last, which is why the comparison is of best windows and not of single ones.
+  Its lost-update control lost 5840 of 7785 writes, as it must. This was the `build` job
+  of the run on head `aa3af07`; a different runner will give different figures.
 - **The drift script itself** is tested as the shell script it is, over hand-made and
   generated series, and nine defects planted in it each went red.
 - **In process.** `stability.test.ts` runs the history, the flag evaluator and the
@@ -63,6 +69,10 @@ trend and passes.
   file-processing and OCR uploads, and AI cost and quota load. The memo asks for each;
   none exists, and none is claimed. The open-and-sync every student makes is covered by
   D-154, and runs in every soak window.
+- **A harmless stderr line.** The runner prints `echo: write error: Broken pipe` on the
+  scenarios with the most transactions. It comes from `pct()`, which was already in the
+  runner: `awk` exits once it has its percentile and `echo` loses its pipe. The figures
+  printed are right. It is noise, not a failure, and it is left alone here.
 - **Two thresholds are judgement.** The ratio of 2 and the 5 ms floor were chosen to
   pass a clean run on a shared runner and fail the planted leak. If CI proves them too
   tight or too loose, they are environment variables, and changing them is a one-line,

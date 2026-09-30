@@ -33,6 +33,7 @@ that it searches, shrinks, and can be pointed at a rule by name.
 | Small cells | No cell under the floor is shown and nothing shown is altered; a group is never left with exactly one withheld cell. |
 | Group comparison | A rate is shown only when the group, those who acted and those who did not all clear the floor; a gap is computed only when every group is shown; order does not matter. |
 | Tenant contract | It never allows what the flag evaluator refuses; no contract is invisible; it cannot open a route the floor keeps shut; outside its term everything is refused; tightening only removes access; allowed means the governing clause was met; drift agrees with the decision. |
+| Billing webhook | Through any order of deliveries, retries and injected failures: an event is recorded at most once however often it is delivered, and only as the last step; a failure half-way leaves it unrecorded so the provider's retry does the work; an invoice that arrives before its subscription is asked for again and applied once the subscription is there; each refusable request (bad, stale or missing signature, a browser, too large, not JSON, not an event, a GET, no secret) gets its own exact answer and touches nothing; nothing about the payload is logged. |
 | Evaluation history | An expired, forgotten or capped-out record is never shown; only the listed fields are stored; any requested policy is short, whole and under its ceiling; lengthening retention cannot bring back what a purge deleted. |
 
 ## A property that has never failed is not known to be one
@@ -45,6 +46,15 @@ never reached that step, so the draws are now biased toward contexts that do and
 control fails if the step is never refused. The eligibility check stayed green too,
 because a property about denial cannot see a check that is missing, so there is a
 second property that an allowed answer meant every stated gate was met.
+
+## What the harness can drive
+
+Besides plain properties there are two model-based runners, one for steps that return and
+one for steps that await (`runMachineAsync`). The second is what lets the billing webhook
+be checked against a fake of the database it depends on: the fake's idempotency key is
+atomic, failures are injected into any step before it writes, and every answer is checked
+against the books. It says what the handler does with whatever the database answers, not
+that the database answers correctly.
 
 ## Not covered
 

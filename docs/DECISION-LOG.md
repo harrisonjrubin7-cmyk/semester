@@ -3677,7 +3677,15 @@ that nobody gave.
   the first version let one noisy final window decide, which became best-against-best).
   An in-process soak holds the history, flag evaluator and contract decision bounded
   and stable through a simulated two years and tens of thousands of calls, with no
-  clock or heap reading so it cannot flake.
+  clock or heap reading so it cannot flake. The clean soak then ran in CI on
+  PostgreSQL 17 with no drift in any of seven scenarios (figures in
+  `docs/LOAD-AND-SOAK.md`).
+- **Webhook rules.** The harness gained an async model runner, and the billing webhook
+  is held to its rules through any order of deliveries, retries and injected failures
+  (`verify/webhook.test.ts`): applied at most once, recorded last, a failure left for the
+  retry, an early invoice asked again, each refusal exact and traceless, nothing logged
+  about the payload. Twelve defects planted in the handler went red; one (the method
+  check) stayed green until the refusals were required to have their exact status.
 
 **Decisions this leaves open, and whose they are.**
 

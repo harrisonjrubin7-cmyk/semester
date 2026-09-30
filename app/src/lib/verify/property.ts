@@ -200,6 +200,48 @@ export function assertProperty<T>(name: string, g: Gen<T>, prop: (v: T) => unkno
   );
 }
 
+// ── The same, for things that return promises ─────────────────────────────
+
+async function failsAsync<T>(prop: (v: T) => unknown, v: T): Promise<string | null> {
+  try {
+    return (await prop(v)) === false ? 'the property returned false' : null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
+/** `runProperty` for a property that awaits. Cases run one after another, never together, so a shared fake cannot interleave. */
+export async function runPropertyAsync<T>(g: Gen<T>, prop: (v: T) => unknown, o: Options = {}): Promise<Outcome<T>> {
+  const runs = o.runs ?? env('VERIFY_RUNS') ?? DEFAULT_RUNS;
+  const seed = o.seed ?? env('VERIFY_SEED') ?? DEFAULT_SEED;
+  const r = rng(seed);
+  for (let i = 0; i < runs; i++) {
+    const v = g.gen(r);
+    let error = await failsAsync(prop, v);
+    if (error === null) continue;
+    let minimal = v;
+    let shrinks = 0;
+    let progressed = true;
+    const cap = o.maxShrinks ?? 2000;
+    while (progressed && shrinks < cap) {
+      progressed = false;
+      for (const c of g.shrink(minimal)) {
+        shrinks++;
+        const e = await failsAsync(prop, c);
+        if (e !== null) {
+          minimal = c;
+          error = e;
+          progressed = true;
+          break;
+        }
+        if (shrinks >= cap) break;
+      }
+    }
+    return { ok: false, seed, runs: i + 1, original: v, minimal, error, shrinks };
+  }
+  return { ok: true, runs };
+}
+
 // ── Model-based sequences ─────────────────────────────────────────────────
 
 /**
@@ -266,6 +308,66 @@ export function runMachine<M, S>(m: Machine<M, S>, o: Options & { maxCommands?: 
 
 export function assertMachine<M, S>(name: string, m: Machine<M, S>, o: Options & { maxCommands?: number } = {}): void {
   const out = runMachine(m, o);
+  if (out.ok) return;
+  throw new Error(
+    `Machine "${name}" failed after ${out.runs} sequence${out.runs === 1 ? '' : 's'} (seed ${out.seed}, ${out.shrinks} shrinks).\n` +
+      `Smallest failing sequence: ${JSON.stringify(out.minimal)}\n` +
+      `Reason: ${out.error}\n` +
+      `Replay: VERIFY_SEED=${out.seed} npm test`,
+  );
+}
+
+// ── Model-based sequences, where the steps await ──────────────────────────
+
+export interface AsyncCommand<M, S> {
+  name: string;
+  args: Gen<unknown>;
+  pre?(model: M, args: unknown): boolean;
+  step(model: M, sut: S, args: unknown): void | Promise<void>;
+}
+
+export function asyncCommand<M, S, A>(c: {
+  name: string;
+  args: Gen<A>;
+  pre?(model: M, args: A): boolean;
+  step(model: M, sut: S, args: A): void | Promise<void>;
+}): AsyncCommand<M, S> {
+  return c as unknown as AsyncCommand<M, S>;
+}
+
+export interface AsyncMachine<M, S> {
+  init(): { model: M; sut: S };
+  commands: readonly AsyncCommand<M, S>[];
+  invariant?(model: M, sut: S): void | Promise<void>;
+}
+
+export async function runMachineAsync<M, S>(m: AsyncMachine<M, S>, o: Options & { maxCommands?: number } = {}): Promise<Outcome<{ name: string; args: unknown }[]>> {
+  const maxCommands = o.maxCommands ?? 20;
+  const stepGen: Gen<Step> = {
+    gen: (r) => {
+      const c = r.int(0, m.commands.length - 1);
+      return { c, a: m.commands[c]!.args.gen(r) };
+    },
+    *shrink(v) {
+      for (const a of m.commands[v.c]!.args.shrink(v.a)) yield { c: v.c, a };
+    },
+  };
+  const run = async (seq: Step[]) => {
+    const { model, sut } = m.init();
+    for (const s of seq) {
+      const cmd = m.commands[s.c]!;
+      if (cmd.pre && !cmd.pre(model, s.a)) continue;
+      await cmd.step(model, sut, s.a);
+      await m.invariant?.(model, sut);
+    }
+  };
+  const named = (seq: Step[]) => seq.map((s) => ({ name: m.commands[s.c]!.name, args: s.a }));
+  const out = await runPropertyAsync(arrayOf(stepGen, maxCommands), async (seq) => { await run(seq); }, o);
+  return out.ok ? out : { ...out, original: named(out.original), minimal: named(out.minimal) };
+}
+
+export async function assertMachineAsync<M, S>(name: string, m: AsyncMachine<M, S>, o: Options & { maxCommands?: number } = {}): Promise<void> {
+  const out = await runMachineAsync(m, o);
   if (out.ok) return;
   throw new Error(
     `Machine "${name}" failed after ${out.runs} sequence${out.runs === 1 ? '' : 's'} (seed ${out.seed}, ${out.shrinks} shrinks).\n` +
