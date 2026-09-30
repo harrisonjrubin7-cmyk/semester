@@ -396,6 +396,14 @@ supabase secrets set MONTHLY_CALL_LIMIT=60      # per account, optional
 supabase functions deploy claude
 ```
 
+**Setting the key does not switch it on.** The function serves nobody until
+the owner's five provider decisions (a legal entity, Anthropic's Commercial
+Terms accepted by it, a student-records decision, a retention setting and an
+approved audience) are recorded with evidence and `SHARED_AI_PROVIDER=on` is
+set. Until then every caller gets *"The shared key is switched off until
+Semester's agreements with its AI provider are in place"*. The checklist is
+[`docs/trust/SHARED-PROVIDER-ACTIVATION.md`](docs/trust/SHARED-PROVIDER-ACTIVATION.md).
+
 The function verifies the caller's account, meters them in the `usage` table,
 and streams Anthropic's reply straight back. The key never reaches a browser. A
 generation costs a few cents, so 60 a month per account is generous for a
