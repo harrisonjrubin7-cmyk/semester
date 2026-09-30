@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { badge, claimed, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
+import { badge, claimed, inView, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
 import type { DatedItem } from './types';
 
 function item(id: string, daysAway: number, title = id): DatedItem {
@@ -79,6 +79,28 @@ describe('split', () => {
     const given = [item('b', 4), item('a', 1)];
     split(given, {});
     expect(given.map((i) => i.id)).toEqual(['b', 'a']);
+  });
+});
+
+describe('inView', () => {
+  const items = [item('yesterday', -1), item('today', 0), item('tomorrow', 1), item('handed-in', -2)];
+  const done = { 'handed-in': true };
+  const shown = (view: string) => items.filter((i) => inView(view, i, done)).map((i) => i.id);
+
+  it('keeps something due today in Upcoming, however late in its day it is', () => {
+    // The day's midnight is behind the clock by then; the filter used to read
+    // that as past, and the course's Upcoming list emptied on the due date.
+    expect(shown('upcoming')).toEqual(['today', 'tomorrow']);
+    expect(shown('past')).toEqual(['yesterday', 'handed-in']);
+  });
+
+  it('shows in Upcoming exactly what the overview counts as ahead', () => {
+    expect(shown('upcoming')).toEqual(split(items, done).ahead.map((i) => i.id));
+  });
+
+  it('shows ticked items under Completed, and everything under All', () => {
+    expect(shown('completed')).toEqual(['handed-in']);
+    expect(shown('all')).toEqual(items.map((i) => i.id));
   });
 });
 
