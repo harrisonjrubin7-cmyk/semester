@@ -3335,3 +3335,44 @@ Connect and Core the two ways a school can run a module. This is the switch.
   restored.
 - **Not done here, on purpose:** MFA on the approving act (Prompt 6 adds
   step-up), a withdraw action for a pending request, and any Core module.
+
+## D-154 · A school records its graduates, each graduate gives or refuses three consents, and no current student's record reaches fundraising
+
+**Decided by owner 29 Sep 2026.** The owner asked for alumni relations and
+fundraising to be built out. Before a gift, a campaign or a donor portal can
+exist, two things have to: a record that someone graduated, and the
+graduate's own answer to whether the school may contact them. This is that
+foundation, and nothing in it touches money.
+
+- **Recorded by the school, answered by the graduate.** `alumni_profiles` is
+  written by staff with the new `alumni:manage` capability
+  (`university_admin`, `university_staff`), stamped with who recorded it; a
+  person cannot record themselves. `alumni_consents` holds three separate
+  answers — alumni news, fundraising contact, a directory listing — that only
+  the graduate gives, none pre-ticked, each carrying the version of the words
+  they were shown. A consent is withdrawn, never edited, and a withdrawn one
+  cannot be revived; giving it again is a new row.
+- **One answer for fundraising.** `private.fundraising_reachable(who,
+  school)` is true only with a live fundraising-contact consent to that
+  school from an account that has stated it is 18 or over (D-139). A minor
+  cannot give that consent, and one given earlier does not reach someone who
+  later says they are a minor. No policy calls it yet, so no client may.
+- **Rule 14 of DO-NOT-BUILD.** No current student's record reaches alumni
+  relations or fundraising: `donotbuild.test.ts` fails if a migration named
+  for alumni, advancement, fundraising, donors or gifts names any of the
+  thirteen current-student tables the page lists. Adding one reference to
+  `public.enrollments` to this migration turned it red.
+- **History is kept as written.** `alumni_consent_history` records every give
+  and withdraw; nobody rewrites it, and the only removal it allows is the
+  graduate's own account deletion. Retention is in `RETENTION.md`.
+- **Proved.** `supabase/alumni.check.sql` runs 34 checks against two schools,
+  staff at each, three graduates (one a minor) and a current student. Letting
+  anyone insert a consent, and dropping the age test from
+  `fundraising_reachable`, each turned it red.
+- **Not built here:** funds, campaigns, gifts, receipts, the donor portal,
+  the advancement console and any screen. Counsel has not reviewed the
+  consent wording, and charitable-solicitation registration is the owner's.
+
+- **The takeover map follows.** The advancement module in `site/modules.ts` reads
+  *in preparation* on `alumni_profiles` and `alumni_consents` (suite `alumni`),
+  and `modules.test.ts` refuses *planned* for it while `alumni_profiles` exists.

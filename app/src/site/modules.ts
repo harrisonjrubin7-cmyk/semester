@@ -98,7 +98,7 @@ export const MODULES: readonly CoreModule[] = [
     core: 'A guardian role with the parent’s rights over a minor’s record, standards-based grading and report cards.',
     status: 'planned', tables: ['guardian_links', 'report_cards'] },
   { id: 'advancement', name: 'Alumni relations and fundraising', replaces: 'Raiser’s Edge NXT, Salesforce Nonprofit, Slate Advancement',
-    today: 'Alumni mentor offers.',
+    today: 'Alumni mentor offers. A school can record its graduates, and each graduate gives or refuses three separate consents; there are no funds, gifts, receipts or donor screens, and nothing is charged.',
     core: 'Alumni profiles, campaigns, gifts with receipts, a donor portal and a gift-officer console; current students’ data is never used for outreach.',
-    status: 'planned', tables: ['alumni_profiles', 'gifts'] },
+    status: 'in-preparation', tables: ['alumni_profiles', 'alumni_consents'], suite: 'alumni' },
 ];
