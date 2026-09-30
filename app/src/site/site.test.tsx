@@ -267,3 +267,26 @@ describe('one visual language', () => {
     }
   });
 });
+
+describe('the sample university page', () => {
+  const demo = () => pages.find((p) => p.route.path === '/demo/')!.html;
+
+  it('names every role the demo has, and no view the demo does not', async () => {
+    const { PREVIEW_ROLES } = await import('../data/institutional-preview');
+    const { ROLE_WORKSPACE_TITLES } = await import('../components/institutional/role-workspace');
+    expect(Object.keys(ROLE_WORKSPACE_TITLES).sort()).toEqual([...PREVIEW_ROLES].sort());
+    const html = demo();
+    for (const title of Object.values(ROLE_WORKSPACE_TITLES)) expect(html, title).toContain(title.replace(/ workspace$/i, ''));
+    // The three the brief names that do not exist are said to be missing, not shown.
+    expect(html).toContain('Not in the sample yet: a registrar view, a gift-officer view, and a K-12 parent view.');
+    expect(html).not.toMatch(/registrar workspace|gift.officer workspace|guardian workspace/i);
+  });
+
+  it('says what stays in the browser, and offers the entry from the institutions page', () => {
+    expect(demo()).toContain('Nothing you do there is sent to Semester');
+    expect(demo()).toContain('a reset button starts it again');
+    const inst = pages.find((p) => p.route.path === '/institutions/')!.html;
+    expect(inst).toContain('Explore a sample university');
+    expect(inst).toContain('href="/demo/"');
+  });
+});

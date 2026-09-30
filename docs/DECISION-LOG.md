@@ -2888,3 +2888,44 @@ writes down what the edition is, and puts it on the site without offering it.
   `districtReady()`, and the page prints its answer. Today that is no.
 - **`/k-12/`** says no district or school uses Semester today, and the site
   test holds it there.
+
+## D-144 · The sample university says what it is, cannot be dismissed, resets in one click, and does not show a role that does not exist
+
+**Decided 30 Sep 2026** (S4 of the site brief). The demo at `/demo/` already had a
+fictional institution, twelve roles and a persona switcher. What it did not do
+was say plainly what a visitor could rely on, and the company site's customer
+portal preview showed made-up figures as if they were readings.
+
+- **The notice is permanent.** The demo bar had a *Hide* button; a visitor handed
+  the link could lose the one line that says none of it is real. It is gone.
+  The bar says *Demo environment · Sample university · Fictional data* and, always
+  visible beneath it, *Nothing you do here is sent to Semester*. That is true
+  because the demo is built with the account service blanked (`pages.yml`,
+  held by `demosplit.test.ts`); what a visitor changes stays in the browser.
+- **A reset.** *Reset the sample* erases the device the way the app's own Erase
+  does (`eraseDevice`), then reloads, even when part of the erase is refused.
+  Driven in a real browser: a key planted in local storage was gone afterwards
+  and the demo came back.
+- **Only roles that exist.** The bar and `/demo/` list the twelve roles the demo
+  has, read from the app's own workspace definitions so the page cannot drift.
+  Both say that a registrar view, a gift-officer view and a K-12 parent view are
+  planned and not in the sample. None is faked: they belong to modules that are
+  not built.
+- **The customer portal preview** on the company site is labelled *Sample data ·
+  not measured* on every section, and its health panel says in words that there
+  is no customer, no uptime figure and no production restore test, and points to
+  the real status history, once the status page keeps one. `samplecopy.test.ts` refuses an uptime figure
+  that is not captioned as a sample in its own caption; it went red on one that
+  was not.
+- **The way in.** *Explore a sample university* is the wording on the company
+  site's home and institutions pages and on the site's own institutions page.
+- **Not built, and why.** The brief asked for about forty students, eight faculty
+  and three advisors, and a guided tour. No screen in the demo reads a roster,
+  so a seed would be data nothing shows; a tour of screens that are still moving
+  would go stale in a week. Both wait for the modules that would use them. The
+  sample keeps its name, *Northstar University* (an `.example` domain), rather
+  than *Northfield*: whether *Northfield* is a real institution's name is the
+  owner's to confirm, and nothing here changes it.
+- **Found, not fixed.** `npm run smoke:institutional` fails after the routes pass,
+  waiting for text that sits inside the closed persona disclosure. It fails the
+  same way on `main` before this change, and CI does not run it.
