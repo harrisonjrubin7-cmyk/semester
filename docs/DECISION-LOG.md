@@ -11,6 +11,12 @@ until the owner (Harrison Rubin) reopens it here.
 
 Status values: **Decided** · **Proposed — needs owner** · **Superseded**.
 
+**This log is closed at D-160.** Each later decision is its own file in
+[`decisions/`](decisions/README.md), named for the pull request that records
+it (`D-<pull request number>.md`), so two open pull requests can never take
+the same number or edit the same lines. The numbers here stand, and are cited
+as before.
+
 Owner approvals: D-003, D-005 and D-011 approved 27 Sep 2026 (in the
 session that opened #763). For D-005 the approval covers the recommendation
 as written: definitions and on-device counts now, and each server-collected
