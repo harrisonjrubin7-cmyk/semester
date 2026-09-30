@@ -338,7 +338,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
     rows: [
       ['A stated minimum age and a posture on children', T, [['supabase/minimum-age.check.sql', 'under 13 refused at sign-up by the database'], ['docs/legal/TERMS-OF-SERVICE-DRAFT.md', 'at least 13']], 'Set by the owner (D-139); counsel has not reviewed it, and an age is stated, not verified.', ['F', 'P']],
       ['Guardian consent, age-aware design and strict guardian boundaries', T, [['supabase/minimum-age.check.sql', 'a minor is out of discovery, matching, messaging and employer visibility until 18']], 'Age-aware design is held; guardian consent is not built, and nothing verifies a guardian.', ['F', 'P'], ['connect:CTL-006']],
-      ['K–12 positioning, segments, module configuration, pilot and PRD', N, [], 'Absent, neither planned nor refused; the sixteen-item district baseline is the brief’s own gate.', ['F', 'P']],
+      ['K–12 positioning, segments, module configuration, pilot and PRD', T, [['app/src/lib/k12/edition.ts', 'positioning, five segments, ten modules configured for a school, the 26-week pilot'], ['app/src/lib/k12/edition.test.ts', 'held'], ['app/src/site/k12.tsx', '/k-12/, which says no district uses Semester']], 'No PRD. Offered to nobody: mayTakeDistrictData() is the sixteen-item district baseline (D-140), and it is false.', ['F', 'P']],
     ],
   },
 ];
