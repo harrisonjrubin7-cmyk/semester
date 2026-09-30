@@ -12,15 +12,22 @@ const ORDER: Record<CommandSeverity, number> = { critical: 0, high: 1, medium: 2
  */
 export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
   const [items, setItems] = useState<CommandItem[] | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
     loadCommandCenter(false).then(
-      (rows) => { if (live) setItems(rows); },
+      (rows) => {
+        if (!live) return;
+        setReadError(null);
+        setItems(rows);
+      },
       (e: unknown) => {
         if (!live) return;
+        const error = said(e, 'Could not read the command center.');
+        setReadError(error);
         setItems([]);
-        onStatus(said(e, 'Could not read the command center.'));
+        onStatus(error);
       },
     );
     return () => { live = false; };
@@ -43,9 +50,14 @@ export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
       <Notice>
         {env} truth only. Green means this live exception queue is empty; it does not mean a document, demo, pull request or verbal approval exists somewhere else.
       </Notice>
-      <SectionLabel aside={`${shown.length} open`}>Command center</SectionLabel>
+      <SectionLabel aside={readError ? 'unavailable' : `${shown.length} open`}>Command center</SectionLabel>
       {items === null && <p role="status" style={{ marginBlock: 0, color: 'var(--app-dim)' }}>Reading live operational sources…</p>}
-      {items !== null && shown.length === 0 && (
+      {readError && (
+        <p role="alert" className="portal-panel" style={{ marginBlock: 0 }}>
+          <strong>NOT GO:</strong> {readError} The live exception queue is unavailable, so green status cannot be calculated.
+        </p>
+      )}
+      {items !== null && !readError && shown.length === 0 && (
         <p role="status" className="portal-panel" style={{ marginBlock: 0 }}>
           <strong>GREEN</strong> — no open exception was returned for this scope.
         </p>
