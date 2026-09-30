@@ -24,6 +24,16 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Assignments and submissions, for schools that switch them on
+
+Nothing changes for you unless your school has moved assignments to Semester
+Core, and none has. If yours does, your instructor publishes an assignment,
+you type your answer (it is kept on this device as you type), submit it, and
+get a receipt with a code, the time, and a fingerprint of your text that you can
+check against what you wrote. Submit again and the first version is kept.
+An extension for one student has a reason. Nothing is a grade, and files cannot
+be attached yet. It shows under Grades → See your school’s assignments.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one

@@ -256,6 +256,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   registrar: () => ({ kicker: 'The dates the university sets', title: 'Term deadlines' }),
   registration: () => ({ kicker: 'Seats taken at confirm, never at review', title: 'Enrollment' }),
   gradebook: () => ({ kicker: 'The record, not the arithmetic', title: 'Gradebook' }),
+  assignments: () => ({ kicker: 'Your school’s record', title: 'Assignments' }),
   /*
    * Its own entry rather than `fromRegistry`, which would print the tab bar's
    * nine-character `short` — "Uni" — as the page's heading. The kicker is the

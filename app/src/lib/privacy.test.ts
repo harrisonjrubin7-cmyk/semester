@@ -391,6 +391,11 @@ describe('"delete my account" really means every row', () => {
       // the link, goes with the account and is in OWNED_TABLES instead.
       'academic_record_changes',
       'academic_record_entries',
+      // Assignments (lib/assignments/client.ts): a course's assignment and what
+      // happened to it. The submissions, receipts and extensions a student
+      // holds go with their account and are in OWNED_TABLES instead.
+      'assignment_events',
+      'assignments',
       'commercial_prices',
       'communities',
       'community_calibration_items',

@@ -433,6 +433,10 @@ export function Grades() {
       <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'gradebook' })}>
         See your official released grades
       </button>
+      {/* Assignments are the other half of the same course record, and show only at a school that has switched them to Core. */}
+      <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'assignments' })}>
+        See your school’s assignments
+      </button>
       <div style={{ height: 22 }} />
     </div>
   );

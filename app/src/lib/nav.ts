@@ -1050,6 +1050,11 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    */
   registration: 'calendar',
   gradebook: 'courses',
+  // Assignments are the first Core module of the learning half (D-151) and
+  // show only at a school that has switched them to Core, so like the
+  // gradebook they are nested under Courses rather than given a tile that
+  // opens onto "your school has not switched this" for everyone else.
+  assignments: 'courses',
   agreements: 'moderation',
   volunteers: 'moderation',
   volunteer: 'mine',
@@ -1135,6 +1140,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // registration; and a course's official grades, entered, released and read.
   registration: 'Enrollment',
   gradebook: 'the gradebook',
+  assignments: 'your assignments at your school',
   agreements: 'escalation agreements',
   volunteers: 'the volunteer programme',
   volunteer: 'volunteer moderation',

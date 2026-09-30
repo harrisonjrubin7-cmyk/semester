@@ -44,7 +44,7 @@ describe('the takeover map', () => {
   // check below then reads it as untouched. This ties each built module to the
   // prefix its migrations actually use, so a rename cannot hide it again.
   const BUILT_PREFIXES: Record<string, RegExp> = {
-    registration: /^registration_/, lms_gradebook: /^gradebook_/,
+    registration: /^registration_/, lms_gradebook: /^gradebook_/, lms_assignments: /^(assignments|submission)/,
     records: /^academic_record_/, student_accounts: /^student_account_/,
   };
   it('reads a module as built when its migrations create tables under the prefix it uses', () => {

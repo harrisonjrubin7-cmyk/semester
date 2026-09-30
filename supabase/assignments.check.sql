@@ -144,7 +144,7 @@ end $$;
 do $$
 declare
   prof uuid; coprof uuid; ta uuid; other_prof uuid; elsewhere uuid; next_prof uuid; untermed uuid;
-  ana uuid; ben uuid; cal uuid; conn_prof uuid; conn_stu uuid;
+  ana uuid; ben uuid; cal uuid; conn_prof uuid; conn_stu uuid; ext_only uuid;
   hw uuid; once uuid; draft uuid; old uuid; conn_hw uuid;
   ans jsonb; ans2 jsonb; n bigint; e text; sha text;
   future constant timestamptz := now() + interval '7 days';
@@ -398,6 +398,17 @@ begin
   values ('as-conn', 'ECON 1020', '2026FA', 'In Connect', future, 'published', 'fixture', now()) returning id into conn_hw;
   perform pg_temp.refused_for('a student at a Connect school submitting', conn_stu,
     format($q$select public.submissions_submit(%L, 'Hello.', 'conn-sub-key-01')$q$, conn_hw), 'has not switched');
+
+  -- ── An account that has submitted work is not untouched ────────────────────
+  -- `lti_account_untouched` decides whether a provisioned account holds
+  -- nothing a person did. A control first: somebody who has done nothing is
+  -- untouched, so the answers below are the function's and not a fixture's.
+  ext_only := pg_temp.newuser('ext@as-u.example', 'as-u');
+  perform pg_temp.said('an account that has done nothing is untouched', public.lti_account_untouched(untermed)::text, 'true');
+  perform pg_temp.said('a student who submitted work is not', public.lti_account_untouched(ben)::text, 'false');
+  insert into public.assignment_extensions (tenant_id, assignment_id, student_id, due_at, reason, operation)
+  values ('as-u', once, ext_only, now() + interval '3 days', 'fixture', 'fixture-ext');
+  perform pg_temp.said('one who was only given an extension is not', public.lti_account_untouched(ext_only)::text, 'false');
 
   -- ── The idempotency ledger ─────────────────────────────────────────────────
   perform pg_temp.counted('a caller reads their own operations only', pg_temp.seen(ana, 'select * from public.assignment_operations'), 5);

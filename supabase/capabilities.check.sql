@@ -304,7 +304,10 @@ begin
   -- integration_admin, workflow:manage, :publish and :view for university_admin,
   -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 183);
+  -- 183 before Assignments (20260930240000_assignments.sql) added three:
+  -- assignments:author and :review for faculty, and :review for
+  -- teaching_assistant.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 186);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',
