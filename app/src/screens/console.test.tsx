@@ -323,6 +323,16 @@ describe('command center', () => {
     expect(host.textContent).toContain('GREEN');
     expect(host.textContent).toContain('no open exception');
   });
+
+  it('fails closed when the live exception reader cannot be reached', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockRejectedValue(new Error('The operational source refused the read.'));
+    await render();
+    expect(host.textContent).toContain('NOT GO');
+    expect(host.textContent).toContain('The operational source refused the read.');
+    expect(host.textContent).toContain('green status cannot be calculated');
+    expect(host.textContent).not.toContain('GREEN');
+  });
 });
 
 describe('the context bar', () => {
