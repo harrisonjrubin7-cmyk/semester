@@ -51,7 +51,6 @@ import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '
 import { ControlPlane } from '../components/institutional/ControlPlane';
 import { TrustDashboard } from '../components/institutional/TrustDashboard';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
-import { ModulesPanel } from '../components/institutional/ModulesPanel';
 import { CampaignManager } from '../components/institutional/CampaignManager';
 import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
@@ -62,6 +61,7 @@ import { formatDateTime, formatTime } from '../lib/locale';
 
 // The ledgers and the Migration Center are behind flags that are off by
 // default, so their code loads only when a tab of theirs opens.
+const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel').then((m) => ({ default: m.ModulesPanel })));
 const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
 const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
 const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
@@ -830,7 +830,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'trust' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && <TrustDashboard />}
 
       {tab === 'modules' && verified.includes('tenant:configure') && (
-        <ModulesPanel school={school.id} me={account?.id ?? ''} canEdit={verified.includes('tenant:configure')} />
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <ModulesPanel school={school.id} me={account?.id ?? ''} canEdit={verified.includes('tenant:configure')} />
+        </Suspense>
       )}
 
       {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
