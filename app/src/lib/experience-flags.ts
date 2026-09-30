@@ -40,7 +40,7 @@ export interface ExperienceFlags {
    */
   migrationCenter: FeatureState;
   /**
-   * The staff Configuration Studio (lib/config, school_config_versions, D-149).
+   * The staff Configuration Studio (lib/config, school_config_versions, D-150).
    * RLS and the second-person publish rule decide what each account may do.
    */
   configurationStudio: FeatureState;

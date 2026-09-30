@@ -1,5 +1,5 @@
 -- The Configuration Studio: how a school sets its own policy without anyone
--- writing code for it (D-149).
+-- writing code for it (D-150).
 --
 -- The platform brief of 30 September asks for "one configurable codebase
 -- rather than hundreds of custom deployments" and lists eleven domains a
@@ -391,6 +391,6 @@ create trigger audit_school_config_versions after insert or update or delete on 
 -- ── 7. Descriptions ───────────────────────────────────────────────────────
 
 comment on table public.school_config_versions is
-  'A school''s configuration for one domain (D-149): at most one draft, and published versions 1, 2, 3 … that are never edited. Checked against private.config_spec() on every write; published by someone who did not draft it. Holds no person, credential or student record.';
+  'A school''s configuration for one domain (D-150): at most one draft, and published versions 1, 2, 3 … that are never edited. Checked against private.config_spec() on every write; published by someone who did not draft it. Holds no person, credential or student record.';
 comment on function private.config_spec() is
   'The closed list of settings a school may set, by domain, with each key''s type and range. lib/config/studio.ts carries the same spec and studio.test.ts holds them equal.';
