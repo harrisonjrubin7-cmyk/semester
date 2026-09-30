@@ -61,17 +61,35 @@
 
   /* ── Status ──────────────────────────────────────────────────────────────
      The app spends colour on one thing only: something that needs attention.
-     So `attention` and `danger` share the oxidised warn ink and the three
-     calm states share the accent. That is deliberate, not a gap — every
+     `attention` is the oxidised warn ink, `danger` is the error ink one rung
+     above it (`errorFor`: a redder hue, held to 6:1 where warn holds 4.5:1),
+     and the three calm states share the accent. Every
      status is also carried by a word and a glyph (`lib/status.ts`), so no
      state here is ever colour-only. */
   --status-attention: var(--app-warn);
   --status-attention-line: var(--app-warn-line);
   --status-attention-wash: var(--app-warn-wash);
-  --status-danger: var(--app-warn);
+  --status-danger: var(--app-error);
+  --status-danger-line: var(--app-error-line);
+  --status-danger-wash: var(--app-error-wash);
   --status-success: var(--app-accent);
   --status-info: var(--app-accent);
   --status-neutral: var(--app-dim);
+
+  /* ── Chart ───────────────────────────────────────────────────────────────
+     Series colours are derived per ground (`chartFor`) and held to 3:1 on
+     every surface by `lib/contrast.test.ts`; the roles below only name them.
+     A chart never leans on colour alone (`docs/DATA-VISUALIZATION-SYSTEM.md`):
+     every mark that means something also has a label, a pattern or a glyph.
+     Source roles reuse series so a chart and its `SourceBadge` agree. */
+  --chart-verified: var(--chart-2);
+  --chart-estimated: var(--chart-3);
+  --chart-stale: var(--app-error);
+  --chart-student-entered: var(--chart-4);
+  --chart-grid: var(--app-line);
+  --chart-axis: var(--app-dim);
+  --chart-label: var(--app-fg);
+  --chart-muted: var(--app-faint);
 
   /* ── Focus ───────────────────────────────────────────────────────────────
      The ring `app.css` already draws, by name. 2px outside the box keeps it

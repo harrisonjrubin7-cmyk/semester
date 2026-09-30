@@ -181,7 +181,7 @@ function HuePicker() {
               style={{
                 flex: 'none',
                 fontSize: 'var(--type-xs-plus)',
-                color: verdict.ok ? 'var(--app-dim)' : 'var(--app-warn, #d9534f)',
+                color: verdict.ok ? 'var(--app-dim)' : 'var(--app-warn)',
                 textAlign: 'right',
               }}
             >

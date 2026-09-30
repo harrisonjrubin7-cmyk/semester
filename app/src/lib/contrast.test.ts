@@ -12,7 +12,7 @@ import {
   rgbOf,
   type Check,
 } from './contrast';
-import { ACCENTS, GROUNDS, readLook, tokensFor, warnFor } from './look';
+import { ACCENTS, CHART_HUES, GROUNDS, chartFor, errorFor, readLook, tokensFor, warnFor } from './look';
 
 describe('the arithmetic', () => {
   it('reads both hex forms', () => {
@@ -603,6 +603,152 @@ describe('the warning colour, on every ground', () => {
       const [r, gr, b] = [1, 3, 5].map((i) => parseInt(warn.slice(i, i + 2), 16));
       expect(r, `${g.id}: the warm end should lead`).toBeGreaterThan(gr);
       expect(gr, `${g.id}: still a warm orange-red, not a pure red`).toBeGreaterThan(b);
+    }
+  });
+});
+
+const hueOf = (hex: string): number => {
+  const [r, g, b] = (rgbOf(hex) ?? [0, 0, 0]).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  if (d === 0) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+};
+const hueGap = (a: string, b: string) => {
+  const d = Math.abs(hueOf(a) - hueOf(b));
+  return Math.min(d, 360 - d);
+};
+const rgbDistance = (a: string, b: string) => {
+  const [x, y] = [rgbOf(a)!, rgbOf(b)!];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+};
+
+// DD-006. The error ink was the warning ink, so "possible conflict" and "this
+// failed" were one colour. It is a rung above now, and every property that
+// makes it one is held here, on every ground and every surface the ground has.
+describe('the error colour, on every ground', () => {
+  it('is legible as body text on every surface, and higher than the warning is asked to be', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const err = errorFor(g);
+      for (const surface of g.ramp) {
+        const c = contrast(err, surface);
+        if (c === null || c < 6) failures.push(`${g.id}: ${err} on ${surface} is ${c?.toFixed(2)}:1`);
+      }
+    }
+    expect(failures, 'the error rung is held to 6:1, the warning to 4.5:1').toEqual([]);
+  });
+
+  it('is never the warning colour, and is redder than it', () => {
+    for (const g of GROUNDS) {
+      expect(errorFor(g), g.id).not.toBe(warnFor(g));
+      // Hue 350 against 14: the error sits on the crimson side of the warning.
+      const e = hueOf(errorFor(g));
+      const w = hueOf(warnFor(g));
+      const eErr = e > 180 ? e - 360 : e;
+      expect(eErr, `${g.id}: error ${errorFor(g)} should lead warn ${warnFor(g)} into red`).toBeLessThan(w);
+      expect(hueGap(errorFor(g), warnFor(g)), `${g.id}: too near the warning to be a rung`).toBeGreaterThanOrEqual(12);
+    }
+  });
+
+  it('is what the shared status components draw a danger tone with', () => {
+    // A review found `unity.css` grouped `[data-tone='danger']` with attention,
+    // so the token above existed and nothing drew it. Any rule that selects the
+    // danger tone or the error panel must reach for a danger token, never the
+    // attention one.
+    const css = readFileSync(join(__dirname, '../styles/unity.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
+    const danger = rules.filter((r) => /data-tone='danger'|\.state-error\b|data-state='failed'/.test(r.sel));
+    // Layout-only rules (`.state-error` shares one with its siblings) set no
+    // status colour and are not the point; a rule that does must use danger's.
+    const painting = danger.filter((r) => /--status-/.test(r.body));
+    expect(painting.length, 'the danger rules that set a colour are there to be checked').toBeGreaterThanOrEqual(3);
+    for (const r of painting) {
+      expect(r.body, r.sel).not.toMatch(/--status-attention/);
+      expect(r.body, r.sel).toMatch(/--status-danger/);
+    }
+    // And the pair that stayed attention did not lose it.
+    const offline = rules.find((r) => r.sel === '.state-offline' && /status-attention/.test(r.body));
+    expect(offline, '.state-offline stays on the attention rung').toBeTruthy();
+  });
+
+  it('is what the danger status paints with', () => {
+    const tokens = readFileSync(join(__dirname, '../styles/tokens.css'), 'utf8');
+    expect(tokens).toMatch(/--status-danger:\s*var\(--app-error\)/);
+    expect(tokens).toMatch(/--status-attention:\s*var\(--app-warn\)/);
+    const t = tokensFor({}, false);
+    expect(t['--app-error']).toBe(errorFor(GROUNDS[0]));
+    expect(t['--app-error']).not.toBe(t['--app-warn']);
+  });
+});
+
+// The chart series. A bar or a line is a graphic, so the bar is WCAG 1.4.11's
+// 3:1 (not 4.5:1), but it is measured the way CLAUDE.md asks the faint rung to
+// be: against every surface the ground has, not the one that flatters it.
+describe('the chart series, on every ground', () => {
+  it('has five, and the stylesheet root carries all five', () => {
+    expect(CHART_HUES).toHaveLength(5);
+    for (const g of GROUNDS) {
+      const series = chartFor(g);
+      expect(series, g.id).toHaveLength(5);
+      const t = tokensFor({ ground: g.id }, false);
+      series.forEach((hex, i) => expect(t[`--chart-${i + 1}`], `${g.id} --chart-${i + 1}`).toBe(hex));
+    }
+  });
+
+  it('clears 3:1 on every surface of every ground', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      chartFor(g).forEach((hex, i) => {
+        for (const surface of g.ramp) {
+          const c = contrast(hex, surface);
+          if (c === null || c < 3) failures.push(`${g.id}: series ${i + 1} ${hex} on ${surface} is ${c?.toFixed(2)}:1`);
+        }
+      });
+    }
+    expect(failures, 'WCAG 1.4.11 asks 3:1 of a graphical object').toEqual([]);
+  });
+
+  it('keeps the five apart from each other, and from the error colour', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const series = chartFor(g);
+      for (let i = 0; i < series.length; i += 1) {
+        for (let j = i + 1; j < series.length; j += 1) {
+          if (rgbDistance(series[i], series[j]) < 60) failures.push(`${g.id}: series ${i + 1} and ${j + 1} are ${rgbDistance(series[i], series[j]).toFixed(0)} apart`);
+        }
+        // Red is the error's. A series in it would read as a failure.
+        if (hueGap(series[i], errorFor(g)) < 40) failures.push(`${g.id}: series ${i + 1} ${series[i]} reads as the error ${errorFor(g)}`);
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('gives neighbouring series different luminance, for the reader who cannot tell the hues apart', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const series = chartFor(g);
+      for (let i = 0; i + 1 < series.length; i += 1) {
+        const c = contrast(series[i], series[i + 1]);
+        if (c === null || c < 1.12) failures.push(`${g.id}: series ${i + 1} and ${i + 2} differ by ${c?.toFixed(2)}:1 in luminance`);
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('names the source roles from series, so a chart and its badge agree', () => {
+    const css = readFileSync(join(__dirname, '../styles/tokens.css'), 'utf8');
+    const role = (name: string) => new RegExp(`${name}:\\s*var\\((--[a-z0-9-]+)\\)`).exec(css)?.[1];
+    expect(role('--chart-verified')).toBe('--chart-2');
+    expect(role('--chart-estimated')).toBe('--chart-3');
+    expect(role('--chart-stale')).toBe('--app-error');
+    expect(role('--chart-student-entered')).toBe('--chart-4');
+    // Four roles, four colours, on every ground.
+    for (const g of GROUNDS) {
+      const s = chartFor(g);
+      const four = [s[1], s[2], errorFor(g), s[3]];
+      expect(new Set(four).size, g.id).toBe(4);
     }
   });
 });
