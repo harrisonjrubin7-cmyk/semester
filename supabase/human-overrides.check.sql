@@ -101,7 +101,7 @@ end $$;
 do $$
 declare
   reg uuid; reg2 uuid; prof uuid; stu uuid; other_stu uuid; admin uuid; far_reg uuid; far_prof uuid;
-  c uuid; n bigint; kept uuid; who_after uuid;
+  c uuid; n bigint; kept uuid; who_after uuid; req_id uuid; gid uuid; i integer;
 begin
   insert into public.schools (id, name, email_domains) values
     ('ov-u',     'Override University', array['ov-u.example']),
@@ -259,6 +259,42 @@ begin
     values ('ov-u', 'integration', 'sis.feed_hold', 'x', 'held', 'released', 'Feed corrected upstream again.', admin, now() - interval '1 day');
   perform pg_temp.must('a third in the window tips the same rule to recurring',
     pg_temp.seen(admin, $q$select * from public.override_patterns where rule_ref = 'sis.feed_hold' and overrides = 6 and last_90_days = 3 and recurring$q$) = 1);
+
+  -- ── break-glass access is an override too ──────────────────────────────
+  -- Built from the real tables, as the owner: the approval request the grant
+  -- points at, then the grant. The trigger has to log it without being able to
+  -- block it, so it is opened with the shortest inputs the grant table allows
+  -- (a three-character ticket, one character of evidence) and the longest scope.
+  perform set_config('request.jwt.claims', '', true);
+  insert into public.approval_request (duty_id, requester, tenant_id, target, evidence, ticket, status)
+    values ('break-glass', prof, 'ov-u', 'ov-u', 'x', 'T-1', 'executed') returning id into req_id;
+  gid := gen_random_uuid();
+  insert into public.break_glass_grant (id, request_id, subject, tenant_id, ticket, scope, expires_at, review_due)
+    values (gid, req_id, prof, 'ov-u', 'T-1',
+            'record:read ' || repeat('record:read ', 30) || 'record:read',
+            now() + interval '3 hours', now() + interval '1 day');
+  perform pg_temp.must('opening a break-glass grant logs a permission override, even with the shortest ticket and evidence and the longest scope',
+    (select count(*) from public.human_overrides where domain = 'permission' and rule_ref = 'break_glass.access') = 1);
+  perform pg_temp.must('it names the tenant, the account given access, what it replaced and what it became',
+    (select tenant_id = 'ov-u' and subject_ref = prof::text and automated_outcome like 'no access outside%'
+            and final_outcome like 'access for at most four hours: record:read%' and length(final_outcome) <= 300
+       from public.human_overrides where rule_ref = 'break_glass.access'));
+  perform pg_temp.must('it carries the ticket and the evidence as the reason, and points back at the grant',
+    (select reason like 'T-1: x%' and source_ref = gid::text from public.human_overrides where rule_ref = 'break_glass.access'));
+  perform pg_temp.must('it is a record for reviewers: not shown to the person given access',
+    not (select student_visible from public.human_overrides where rule_ref = 'break_glass.access')
+    and pg_temp.seen(prof, $q$select * from public.human_overrides where rule_ref = 'break_glass.access'$q$) = 0);
+  perform pg_temp.must('a reviewer at the school sees it, and the pattern view counts it under its own rule',
+    pg_temp.seen(admin, $q$select * from public.human_overrides where rule_ref = 'break_glass.access'$q$) = 1
+    and pg_temp.seen(admin, $q$select * from public.override_patterns where domain = 'permission' and rule_ref = 'break_glass.access' and overrides = 1 and not recurring$q$) = 1);
+  for i in 1..2 loop
+    insert into public.approval_request (duty_id, requester, tenant_id, target, evidence, ticket, status)
+      values ('break-glass', prof, 'ov-u', 'ov-u', 'Another outage', 'T-' || (i + 1), 'executed') returning id into req_id;
+    insert into public.break_glass_grant (request_id, subject, tenant_id, ticket, scope, expires_at, review_due)
+      values (req_id, prof, 'ov-u', 'T-' || (i + 1), 'record:read', now() + interval '2 hours', now() + interval '1 day');
+  end loop;
+  perform pg_temp.must('three break-glass grants at one school in ninety days make the rule recurring, whoever opened them',
+    pg_temp.seen(admin, $q$select * from public.override_patterns where rule_ref = 'break_glass.access' and overrides = 3 and recurring$q$) = 1);
 
   -- ── a school's removal takes its log with it ───────────────────────────
   perform pg_temp.grade(far_prof, far_reg, 'ECON 1010 · Fall 2026', 'B', 'ov-other', 'S900');

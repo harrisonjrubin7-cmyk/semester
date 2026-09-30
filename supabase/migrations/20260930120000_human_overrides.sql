@@ -22,12 +22,14 @@
 --      days make it **recurring** — the signal that the rule, not the case, is
 --      what needs looking at. It is visible to whoever holds `override:review`
 --      and to no one else.
---   4. **What is wired today: the academic record only.** A trigger logs every
+--   4. **What is wired today: the academic record here, and break-glass access
+--      in 20260930160000_override_break_glass.sql.** A trigger logs every
 --      ledger entry marked `override` (`private.log_record_override`), so the
 --      log cannot be skipped by a client that forgets to call it. The other
 --      domains have the direct path (`override:record`, not for the academic
---      record) and no producer yet; each is one trigger or one call away and is
---      listed as owed in `RETENTION.md` and the maturity register.
+--      record) and no producer, because no row in the schema is yet an override
+--      in those domains; each is one trigger or one call away and is listed as
+--      owed in `RETENTION.md` and the maturity register.
 --
 -- What this is not: an approval workflow (the console's two-person approvals
 -- and the ledger's approver rule stay where they are), and not a judgement of
