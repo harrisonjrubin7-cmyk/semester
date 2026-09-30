@@ -1,8 +1,8 @@
 # Semester Platform Constitution and Activation Control Plane Design
 
-**Date:** 30 September 2026  
-**Status:** Approved conversational design; implementation planning follows user review of this specification  
-**Repository:** `harrisonjrubin7-cmyk/semester`  
+**Date:** 30 September 2026
+**Status:** Approved conversational design; implementation planning follows user review of this specification
+**Repository:** `harrisonjrubin7-cmyk/semester`
 **Branch:** `codex/semester-platform-constitution`
 
 ## 1. Purpose

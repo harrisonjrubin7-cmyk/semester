@@ -126,8 +126,15 @@ export function context(d: Draw): FlagContext {
     cohorts: d.cohort ? ['pilot'] : [],
     courseRule: d.course === null ? null : { allowed: d.course },
     userEligible: d.eligible === null ? undefined : d.eligible,
+    // Test-only receipt keeps scope/eligibility properties non-vacuous after
+    // the activation gate. It grants no real tenant or capability activation.
+    activationReceipt: d.tenant === null ? null : {
+      decisionKey: 'activation:v1:property-fixture', requestId: 'property-fixture', tenantId: d.tenant,
+      capabilityId: flagDefinition(d.key)!.capabilityIds[0]!, operation: d.key,
+      policyVersion: 'test-policy', configurationVersion: 1,
+      issuedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 15 * 60_000).toISOString(),
+    },
   };
 }
 
 export const draw = favouring(rawDraw);
-
