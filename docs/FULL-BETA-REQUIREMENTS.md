@@ -218,3 +218,16 @@ gates for this report. Before Milestone 1 I will re-run the gates to refresh the
 | Truth table guard | **done**: `app/src/lib/truthtable.test.ts` holds status words to the agreed six and every named file to existence (it cannot check that a status is *true*) | mutation shown red |
 
 The Milestone 1 migration was merged to main in #1000. It was run on a disposable local Postgres 17 and in CI's disposable database. **Whether the schema deploy applied it to the production project has not been confirmed by me.**
+
+## 14. Milestone 2 progress (in flight)
+
+Audits of Today/Action Center and Plan/My Path/sharing were read-only readings of the tree.
+
+| Item | State | Evidence |
+|---|---|---|
+| G-07 sample shown as the student's own | **done for Today's decisions**: the Action Center, the briefing and the commitments list leave out unclaimed sample dates and classes until "These are mine"; with nothing of their own, Today offers "Start your semester" | `lib/standing.ts` `ownedScope`, `TodayActionCenter.test.tsx` (guard shown red by removing the filter). The first-run banner's wording ("The semester this app ships with") is unchanged: its own header records why it avoids "sample" — owner's call |
+| Freshness on items | **honest, not real**: course dates carry no per-item timestamp, so the badge now says "Update time not recorded" instead of nothing | `SourceBadge` `unknownAge`; real freshness needs a stored last-checked time (not built) |
+| Source words on commitments | done | `TodayActionCenter.tsx` |
+| Snooze presets, dismiss reason, helpful/not helpful | not started | `ActionCenter.tsx`; needs an additive `version` bump in `readActionChoices` |
+| Turn the Action Center on for students | **not done — deliberate.** It is off by default (`VITE_TODAY_ACTION_CENTER`); enabling it is a release decision and needs a DECISION-LOG entry | `lib/experience-flags.ts` |
+| Term credit/workload engine, study blocks, plan sharing, advisor-share audit, catalog-tied requirements | not started | see the M2 audit list |

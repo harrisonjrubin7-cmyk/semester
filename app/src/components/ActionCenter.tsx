@@ -247,7 +247,7 @@ function Row({
         </span>
         <span aria-hidden="true">→</span>
       </button>
-      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} onReport={() => setReporting(s.action.id)} />
+      <SourceBadge label={s.action.source.label} at={s.action.source.at} now={now} unknownAge onReport={() => setReporting(s.action.id)} />
       {reporting === s.action.id && <Report s={s} onClose={() => setReporting(null)} />}
       <Controls s={s} act={act} compact />
       <Why s={s} explain={explain} />
@@ -309,7 +309,7 @@ export function ActionCenter({
           {dueLine(top.action, now) && <p className="today-sync-status">{dueLine(top.action, now)}</p>}
           <h2 id="action-top-title">{top.action.title}</h2>
           <p>{top.action.whyItMatters}</p>
-          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} onReport={() => setReporting(top.action.id)} />
+          <SourceBadge label={top.action.source.label} at={top.action.source.at} now={now} unknownAge onReport={() => setReporting(top.action.id)} />
           {reporting === top.action.id && <Report s={top} onClose={() => setReporting(null)} />}
           <ActionButton tone="primary" onClick={() => go(top.action)}>{top.action.primary.label}</ActionButton>
           <Controls s={top} act={act} />

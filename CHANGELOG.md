@@ -63,6 +63,17 @@ for nothing.
 
 Nothing to do.
 
+### Today no longer plans around the sample semester until you say it is yours
+
+While the question under the header ("These are mine" / "Not mine") is still open,
+Today's next step, its briefing and its list of commitments leave out the shipped
+semester's assignments and classes, instead of telling you to "Prepare" someone
+else's paper. With nothing of your own yet, Today suggests starting your semester.
+Answer "These are mine" and the same dates appear as yours. Where an item has no
+recorded update time, its label now says "Update time not recorded" instead of
+saying nothing. Commitments name where each date came from (for example "Needs
+review · date not checked"). Nothing to do.
+
 ### On the public site: a page for the K–12 edition
 
 A new page, `/k-12/`, describes Semester for high school: who it would start
