@@ -53,9 +53,17 @@ import { TrustDashboard } from '../components/institutional/TrustDashboard';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import { CampaignManager } from '../components/institutional/CampaignManager';
 import { campaignsAllowed } from '../lib/gtm/manager';
+import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
+import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
+import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 import { formatDateTime, formatTime } from '../lib/locale';
 
+// The ledgers and the Migration Center are behind flags that are off by
+// default, so their code loads only when a tab of theirs opens.
+const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
+const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
+const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
 const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
 const OperationsStudio = lazy(() =>
   import('../components/institutional/OperationsStudio').then((module) => ({
@@ -162,9 +170,24 @@ const tabsFor = (verified: readonly string[]) => [
   ...(EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified)
     ? [{ id: 'campaigns' as const, label: 'Campaigns' }]
     : []),
+  // Only for an account holding a verified migration capability at this
+  // school (D-144); RLS and the stage gate decide what it may then do.
+  ...(EXPERIENCE_FLAGS.migrationCenter !== 'off' && migrationAllowed(verified)
+    ? [{ id: 'migration' as const, label: 'Migration' }]
+    : []),
+  // Only for an account holding a verified record capability at this school
+  // (D-145); the approval trigger decides what enters the ledger.
+  ...(EXPERIENCE_FLAGS.recordLedger !== 'off' && recordAllowed(verified)
+    ? [{ id: 'ledger' as const, label: 'Academic record' }]
+    : []),
+  // Only for an account holding a verified finance capability at this school
+  // (D-146); the approval trigger decides what enters the account ledger.
+  ...(EXPERIENCE_FLAGS.studentAccounts !== 'off' && financeAllowed(verified)
+    ? [{ id: 'accounts' as const, label: 'Student accounts' }]
+    : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'ledger' | 'accounts';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -806,6 +829,44 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'campaigns' && EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified) && (
         <CampaignManager tenantId={school.id} viewerId={account?.id ?? null} />
+      )}
+
+      {tab === 'migration' && EXPERIENCE_FLAGS.migrationCenter !== 'off' && migrationAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <MigrationCenter
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            manage={canManage(verified)}
+            approve={canApprove(verified)}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'ledger' && EXPERIENCE_FLAGS.recordLedger !== 'off' && recordAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <RecordLedger
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            propose={canPropose(verified)}
+            decide={canDecide(verified)}
+            override={canOverride(verified)}
+            read={canRead(verified)}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'accounts' && EXPERIENCE_FLAGS.studentAccounts !== 'off' && financeAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <StudentAccounts
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            request={canRequest(verified)}
+            approve={canApproveFinance(verified)}
+            approveHigh={canApproveHigh(verified)}
+            close={canClose(verified)}
+            read={canReadAccounts(verified)}
+          />
+        </Suspense>
       )}
 
       {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
