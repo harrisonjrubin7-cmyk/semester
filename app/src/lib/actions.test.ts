@@ -1,22 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACTION_STATUSES,
-  DISMISS_REASONS,
   EMPTY_ACTION_CHOICES,
   HISTORY_LIMIT,
   NEXT_LIMIT,
   TRANSITIONS,
-  dismissNote,
-  dismissReasonOf,
   effectiveStatus,
   rank,
   readActionChoices,
   score,
-  snoozePresets,
   transition,
   type Action,
   type Choice,
 } from './actions';
+import { DISMISS_REASONS, dismissNote, dismissReasonOf, snoozePresets } from './actionchoices';
 
 const NOW = Date.UTC(2026, 8, 27, 12);
 const DAY = 86_400_000;

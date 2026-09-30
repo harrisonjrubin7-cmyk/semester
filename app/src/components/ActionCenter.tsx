@@ -9,12 +9,8 @@ import {
   type ActionEvent,
   type Choice,
   type Scored,
-  DISMISS_REASONS,
-  dismissNote,
-  dismissReasonOf,
-  snoozePresets,
-  type SnoozePreset,
 } from '../lib/actions';
+import { DISMISS_REASONS, dismissNote, dismissReasonOf, snoozePresets, type SnoozePreset } from '../lib/actionchoices';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useNow, useStore } from '../state/store';
 import { ClarityQuestion } from './ClarityQuestion';
