@@ -1455,9 +1455,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Registration, assessment, gradebook, search, AI, and integration load tests pass targets',
     validation: 'Load reports',
     severity: 'P0',
-    status: 'not-started',
-    evidence: [{ path: 'docs/LAUNCH-READINESS-TEST-PLAN.md', shows: 'records that no load test exists' }],
-    gap: 'No load or capacity tests for any journey, no targets, no load reports.',
+    status: 'building',
+    evidence: [{ path: 'supabase/load.sh', shows: 'pgbench scenarios in CI against every migration: registration-week flags, plan saves and demand reads, and the open and sync every student makes, each against a latency budget, then invariants (D-154)' }, { path: 'docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md', shows: 'the scenarios, the readings, and a capacity reading at 10× the largest pilot on production-sized settings' }],
+    gap: 'Only the database, and only the journeys that exist: no load through PostgREST, Supavisor, GoTrue or the edge functions (the preview-branch run), and none for assessment, gradebook, search, AI or integrations.',
   },
   {
     id: 'SRE-008',

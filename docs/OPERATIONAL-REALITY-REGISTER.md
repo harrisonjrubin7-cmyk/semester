@@ -383,7 +383,7 @@ be opened. Every game day is unheld.
 
 ## 11. Capacity, performance and cost proof
 
-No load test exists for any journey, no target has been set and no report has been produced (SRE-007). The bundle size in REGISTRATION-DAY-MODE.md is a measurement, not a load test.
+One load harness exists, for the database only: supabase/load.sh runs registration-week and everyday-sync scenarios against every migration in CI, each against a latency budget, then asserts invariants, and PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md records its readings (SRE-007, D-154). Nothing loads PostgREST, GoTrue or the edge functions, and no journey that does not exist yet has a target.
 
 The load scenarios to demonstrate before marketing a complete platform, none of which has been run:
 
