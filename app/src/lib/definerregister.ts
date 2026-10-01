@@ -330,6 +330,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20261001152756_productivity_workspace.sql',
 ];
 
 /**
@@ -341,6 +342,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001152756_productivity_workspace.sql',
+    functions: ['productivity_readiness_aggregate'],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],
