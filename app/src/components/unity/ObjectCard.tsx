@@ -64,6 +64,9 @@ export function ObjectCard({
   secondary,
   source,
   openIn = [],
+  context,
+  relationships = [],
+  history = [],
   level = 3,
 }: {
   kind: ObjectKind;
@@ -75,6 +78,9 @@ export function ObjectCard({
   secondary?: CardAction;
   source?: SourceDetail;
   openIn?: OpenTarget[];
+  context?: string;
+  relationships?: string[];
+  history?: { at: string; label: string }[];
   level?: 2 | 3 | 4;
 }) {
   const heading = useId();
@@ -124,10 +130,17 @@ export function ObjectCard({
             <button
               type="button"
               className="bare link-quiet tap-y"
-              onClick={() => showSource(source)}
+              onClick={() => showSource({
+                ...source,
+                kind: KIND_SAID[kind],
+                context,
+                relationships,
+                history,
+                actions: [primary, secondary].filter((action): action is CardAction => Boolean(action)).map((action) => ({ label: action.label, run: action.run })),
+              })}
               aria-label={`Source and details for ${title}`}
             >
-              Source &amp; details
+              View details
             </button>
           )}
           <OpenIn targets={openIn} about={title} />

@@ -3,13 +3,13 @@
  *
  * Semester has covered every product domain a university runs on. What is left
  * is not another module; it is keeping the ones there coherent. The rule this
- * file holds is the frame's own: every capability belongs to one of twelve
+ * file holds is the frame's own: every capability belongs to one of eight
  * primitives, and a proposed feature that strengthens none of them is
  * deferred, merged or rejected.
  *
  * Four briefs are held here, each as data a test can check against the tree:
  *
- *   - the twelve primitives and the twelve questions a feature answers before
+ *   - the eight primitives and the twelve questions a feature answers before
  *     work starts (`PRIMITIVES`, `ADMISSION`);
  *   - the priority order P0–P5 (`PRIORITIES`);
  *   - every capability the last four briefs named, marked with what the tree
@@ -27,18 +27,14 @@
  */
 
 export const PRIMITIVE_IDS = [
-  'identity',
-  'knowledge',
-  'authority',
-  'action',
-  'learning',
-  'planning',
-  'support',
-  'communication',
-  'evidence',
-  'integration',
-  'trust',
-  'operations',
+  'identity-tenancy',
+  'permission-consent-authority',
+  'data-provenance',
+  'policy-rules',
+  'action-workflow',
+  'integration-gateway',
+  'trust-evidence',
+  'experience-accessibility',
 ] as const;
 export type PrimitiveId = (typeof PRIMITIVE_IDS)[number];
 
@@ -52,24 +48,20 @@ export interface Primitive {
 }
 
 export const PRIMITIVES: readonly Primitive[] = [
-  { id: 'identity', name: 'Identity', one: 'One account, affiliations, roles, SSO, lifecycle, consent', home: 'packages/institution/src/identity.ts' },
-  { id: 'knowledge', name: 'Knowledge', one: 'One institutional and learner knowledge graph', home: 'app/src/lib/skills-graph.ts' },
-  { id: 'authority', name: 'Authority', one: 'One source-provenance, policy and decision-explanation model', home: 'app/src/lib/source.ts' },
-  { id: 'action', name: 'Action', one: 'One Action Center, workflow engine, confirmation model and recovery path', home: 'app/src/lib/actions.ts' },
-  { id: 'learning', name: 'Learning', one: 'One objective → practice → feedback → review → evidence loop', home: 'app/src/lib/quiz-feedback.ts' },
-  { id: 'planning', name: 'Planning', one: 'One time, workload, course, requirement and scenario engine', home: 'app/src/lib/life-balance.ts' },
-  { id: 'support', name: 'Support', one: 'One no-wrong-door routing and student-led handoff model', home: 'app/src/lib/nowrongdoor.ts' },
-  { id: 'communication', name: 'Communication', one: 'One notification, inbox, preference, delivery and audit system', home: 'app/src/lib/notify.ts' },
-  { id: 'evidence', name: 'Evidence', one: 'One learner record, portfolio, credential, verification and portability model', home: 'app/src/lib/career-evidence.ts' },
-  { id: 'integration', name: 'Integration', one: 'One API gateway, connector registry, event fabric and sync/reconciliation model', home: 'app/server/institution/gateway.ts' },
-  { id: 'trust', name: 'Trust', one: 'One permissions, consent, audit, retention, security, privacy, accessibility and AI governance layer', home: 'app/src/lib/privacy.ts' },
-  { id: 'operations', name: 'Operations', one: 'One configuration, observability, release, migration, support and continuity system', home: 'app/src/lib/statusnotice.ts' },
+  { id: 'identity-tenancy', name: 'Identity and tenancy', one: 'Who the actor is and which tenant boundary applies', home: 'packages/institution/src/identity.ts' },
+  { id: 'permission-consent-authority', name: 'Permission, consent, and authority', one: 'Who may read, write, approve, share, export, or revoke for a stated purpose', home: 'app/src/lib/privacy.ts' },
+  { id: 'data-provenance', name: 'Canonical data and provenance', one: 'What a record means, where it came from, how fresh it is, and how it is corrected', home: 'app/src/lib/provenance.ts' },
+  { id: 'policy-rules', name: 'Policy and rules', one: 'Versioned institutional, course, contractual, and product constraints', home: 'packages/institution/src/policy.ts' },
+  { id: 'action-workflow', name: 'Action and workflow', one: 'Draft, review, confirmation, execution, receipt, recovery, and reconciliation', home: 'app/src/lib/actions.ts' },
+  { id: 'integration-gateway', name: 'Integration gateway', one: 'Bounded external-system contracts, health, idempotency, fallback, and revocation', home: 'app/server/institution/gateway.ts' },
+  { id: 'trust-evidence', name: 'Trust and evidence', one: 'Audit events, controls, evidence, claims, incidents, and approvals', home: 'app/src/lib/ops/evidence.ts' },
+  { id: 'experience-accessibility', name: 'Experience and accessibility', one: 'Coherent interaction patterns, accessible alternatives, errors, degraded behavior, and support routes', home: 'app/src/lib/accessmode.ts' },
 ];
 
 /** Asked and answered before work starts on any feature, workflow, screen, integration or system. */
 export const ADMISSION: readonly string[] = [
   'What student, faculty, staff or institution problem does this solve?',
-  'Which of the twelve primitives does it strengthen?',
+  'Which of the eight primitives does it strengthen?',
   'What is the source of truth?',
   'What data is needed, and what is the minimum necessary amount?',
   'Who can read, write, share, export or delete it?',
@@ -94,19 +86,20 @@ export const PRIORITIES: Record<PriorityId, string> = {
   P5: 'Expand into credentials, federation, marketplace, global, K–12, alumni and life',
 };
 
-/** The eleven parts of the constitution, each a sentence the product is held to and what holds it. */
+/** The twelve approved operating rules, each with a boundary that already exists. */
 export const PRINCIPLES: readonly { id: string; name: string; principle: string; heldBy: string }[] = [
-  { id: 'product', name: 'Product', principle: 'A feature that strengthens none of the twelve primitives is deferred, merged or rejected.', heldBy: 'docs/DO-NOT-BUILD.md' },
-  { id: 'architecture', name: 'Architecture', principle: 'A new module reuses the shared primitive rather than building a parallel one.', heldBy: 'docs/ONE-OPERATING-SYSTEM.md' },
-  { id: 'privacy', name: 'Privacy', principle: 'A department gets the minimum data its purpose needs, by consent where the student is the source.', heldBy: 'docs/MODULE-PRIVACY-MODEL.md' },
-  { id: 'accessibility', name: 'Accessibility', principle: 'Nothing ships without keyboard, screen-reader, narrow-screen and reduced-motion states.', heldBy: 'docs/DEFINITION-OF-DONE.md' },
-  { id: 'ai', name: 'AI', principle: 'No AI output is presented as official institutional information.', heldBy: 'app/src/lib/source.ts' },
-  { id: 'security', name: 'Security', principle: 'Institutional access is fail-closed, and an action that changes a record is prepared, confirmed, then committed.', heldBy: 'app/server/institution/gateway.ts' },
-  { id: 'data', name: 'Data', principle: 'Small groups are never reported, and a cohort below the floor is suppressed in the app and in the database.', heldBy: 'app/src/lib/cohortfloor.test.ts' },
-  { id: 'operational', name: 'Operational', principle: 'Every degradation says which student journeys it touches and what still works.', heldBy: 'app/src/lib/statusnotice.ts' },
-  { id: 'commercial', name: 'Commercial', principle: 'No student data is used for advertising or sponsorship targeting, and no paid placement ranks an opportunity.', heldBy: 'app/src/lib/gtm/sponsor.ts' },
-  { id: 'replacement', name: 'Replacement readiness', principle: 'Semester centralises the experience, explanation and action layer first, and replaces an authoritative system only through a governed parallel run.', heldBy: 'docs/DOMAIN-REPLACEMENT-REGISTER.md' },
-  { id: 'admission', name: 'Feature admission', principle: 'Twelve questions are answered before work starts, and the answers are the pull request’s first section.', heldBy: 'docs/PLATFORM-CONSTITUTION.md' },
+  { id: 'student-control', name: 'Student control', principle: 'Students control personal plans, drafts, sharing, and exports.', heldBy: 'app/src/lib/advisor-shares.ts' },
+  { id: 'institutional-authority', name: 'Institutional authority', principle: 'Official institutional systems remain authoritative unless an institution explicitly approves Semester for a bounded workflow.', heldBy: 'docs/DOMAIN-REPLACEMENT-REGISTER.md' },
+  { id: 'provenance', name: 'Provenance', principle: 'Meaningful facts carry source, provenance, freshness, and correction paths.', heldBy: 'app/src/lib/provenance.ts' },
+  { id: 'high-impact-actions', name: 'High-impact actions', principle: 'High-impact actions are explained, previewed, confirmed, and audited.', heldBy: 'app/src/lib/actions.ts' },
+  { id: 'ai', name: 'AI', principle: 'AI cites authorized sources, follows institutional and course policy, and does not silently make high-impact decisions.', heldBy: 'app/src/lib/source.ts' },
+  { id: 'least-privilege', name: 'Least privilege', principle: 'No person, integration, or agent receives unrestricted student-data access by default.', heldBy: 'app/src/lib/privacy.ts' },
+  { id: 'tenancy-purpose', name: 'Tenancy and purpose', principle: 'Tenant data is isolated and sensitive requests are purpose-bound.', heldBy: 'app/server/institution/gateway.ts' },
+  { id: 'accessibility', name: 'Accessibility', principle: 'Accessibility is a release criterion.', heldBy: 'docs/DEFINITION-OF-DONE.md' },
+  { id: 'failure-recovery', name: 'Failure recovery', principle: 'Failures preserve data, expose honest status, and retain an official or human fallback.', heldBy: 'app/src/lib/statusnotice.ts' },
+  { id: 'public-claims', name: 'Public claims', principle: 'Public claims cannot exceed verified maturity and current evidence.', heldBy: 'app/src/lib/ops/claims.ts' },
+  { id: 'tenant-activation', name: 'Tenant activation', principle: 'Tenant activation requires the applicable policy, approval, data map, support ownership, monitoring, and rollback path.', heldBy: 'app/src/lib/governance/config-tiers.ts' },
+  { id: 'smallest-safe-solution', name: 'Smallest safe solution', principle: 'Semester builds the smallest safe solution that improves a defined student decision or institutional workflow.', heldBy: 'docs/DO-NOT-BUILD.md' },
 ];
 
 export type CapabilityStatus = 'partial' | 'absent';
@@ -131,45 +124,45 @@ const C = (id: string, source: Source, primitive: PrimitiveId, priority: Priorit
 
 export const CAPABILITIES: readonly Capability[] = [
   // Learner-journey brief
-  C('J-01', 'journeys', 'planning', 'P1', 'partial', 'Universal learner journey engine', 'app/src/lib/pathway.ts', 'Life stages and milestone templates exist; no goal → decision → support → evidence → reflection chain, and no flow for major exploration, recovery, research, graduate school or alumni.'),
-  C('J-02', 'journeys', 'support', 'P1', 'partial', 'Life-event model', 'app/src/lib/lifeevents.ts', 'Twelve events with no field to type in, drawn on Behind behind VITE_ME_LIFE_EVENTS (off by default): optional adjustments, help routes that seed Help with nothing filled in, a plan that clears after four weeks with one follow-up. Kept on the device only, sent nowhere. Not on Today, and Behind shows it only once a term is imported.'),
-  C('J-03', 'journeys', 'operations', 'P2', 'absent', 'Student-success playbook system', null, 'No institution-configurable playbook object; `institution-ops.ts` defines metrics and `CampaignManager.tsx` sends, neither is a playbook.'),
-  C('J-04', 'journeys', 'communication', 'P1', 'partial', 'Continuous feedback and “You said, we changed”', 'app/src/lib/momentfeedback.ts', 'Two of eight moments are asked (an AI answer that has a source, a help request just sent) behind VITE_ME_MOMENT_FEEDBACK (off by default), with a daily cap, a gap, a way out and an off switch; What’s new shows the log (empty) and the controls. Answers stay on the device: no collection path to a school exists, so no aggregate is shown to anyone. Six moments are declared and not asked.'),
-  C('J-05', 'journeys', 'communication', 'P5', 'partial', 'Learning-community infrastructure', 'app/src/community/circles.ts', 'Rules and schema are strong (opt-in, capped, ended, no popularity, no open DMs); circles are not persisted and have no screen.'),
-  C('J-06', 'journeys', 'evidence', 'P5', 'partial', 'Academic portfolio and showcase', 'app/src/lib/career-evidence.ts', 'Confirmed skills, artifacts, résumé versions; no reflection step, no limited-share link, no per-item visibility column.'),
-  C('J-07', 'journeys', 'support', 'P2', 'partial', 'Relationship map (My Network)', 'app/src/lib/mentors.ts', 'Career contacts with permission state and follow-up, mentors, advisor meetings; no unified view, and DO-NOT-BUILD rule 1 forbids a new root.'),
-  C('J-08', 'journeys', 'evidence', 'P5', 'absent', 'Credential verification network', null, 'CREDENTIAL-WALLET.md is a design; no issuer model, revocation state, share model, QR verify page or schema registry.'),
-  C('J-09', 'journeys', 'knowledge', 'P3', 'absent', 'Content and knowledge strategy (layers and metadata)', null, 'Trust labels exist (`source.ts`, `where.ts`); no owner, licence, authority, expiry or locale metadata on content.'),
-  C('J-10', 'journeys', 'trust', 'P3', 'partial', 'Institution benchmarking framework', 'app/src/lib/cohortfloor.test.ts', 'The small-cohort floor holds in app and database; no opt-in cross-institution benchmark exists, and none may rank publicly.'),
-  C('J-11', 'journeys', 'operations', 'P5', 'partial', 'Platform localization and cultural adaptation', 'app/src/lib/locale.ts', 'Date, time and number formats and RTL detection; no message catalogue, no `dir`, no terminology mapping, one data region.'),
-  C('J-12', 'journeys', 'trust', 'P1', 'partial', 'AI transparency receipt', 'app/src/intelligence/Disclosure.tsx', 'Per-answer disclosure is built; no persisted per-interaction receipt with source versions and permissions used.'),
-  C('J-13', 'journeys', 'trust', 'P0', 'partial', 'Education privacy UX (Privacy Center)', 'app/src/lib/mecontrols.ts', 'Fifteen Me controls and a Privacy screen; not yet one “what Semester knows” center, and no student view of who viewed a profile.'),
-  C('J-14', 'journeys', 'trust', 'P3', 'partial', 'Ethical revenue and marketplace controls', 'app/src/lib/gtm/sponsor.ts', 'The sponsorship gate is built and tested; no per-item why/who/paid/data/hide card, and no marketplace.'),
-  C('J-15', 'journeys', 'operations', 'P3', 'partial', 'Public ethics and accountability report', 'app/src/lib/standard.ts', 'The Semester Standard is public; the annual report is owed until a year has passed.'),
+  C('J-01', 'journeys', 'action-workflow', 'P1', 'partial', 'Universal learner journey engine', 'app/src/lib/pathway.ts', 'Life stages and milestone templates exist; no goal → decision → support → evidence → reflection chain, and no flow for major exploration, recovery, research, graduate school or alumni.'),
+  C('J-02', 'journeys', 'experience-accessibility', 'P1', 'partial', 'Life-event model', 'app/src/lib/lifeevents.ts', 'Twelve events with no field to type in, drawn on Behind behind VITE_ME_LIFE_EVENTS (off by default): optional adjustments, help routes that seed Help with nothing filled in, a plan that clears after four weeks with one follow-up. Kept on the device only, sent nowhere. Not on Today, and Behind shows it only once a term is imported.'),
+  C('J-03', 'journeys', 'action-workflow', 'P2', 'absent', 'Student-success playbook system', null, 'No institution-configurable playbook object; `institution-ops.ts` defines metrics and `CampaignManager.tsx` sends, neither is a playbook.'),
+  C('J-04', 'journeys', 'experience-accessibility', 'P1', 'partial', 'Continuous feedback and “You said, we changed”', 'app/src/lib/momentfeedback.ts', 'Two of eight moments are asked (an AI answer that has a source, a help request just sent) behind VITE_ME_MOMENT_FEEDBACK (off by default), with a daily cap, a gap, a way out and an off switch; What’s new shows the log (empty) and the controls. Answers stay on the device: no collection path to a school exists, so no aggregate is shown to anyone. Six moments are declared and not asked.'),
+  C('J-05', 'journeys', 'experience-accessibility', 'P5', 'partial', 'Learning-community infrastructure', 'app/src/community/circles.ts', 'Rules and schema are strong (opt-in, capped, ended, no popularity, no open DMs); circles are not persisted and have no screen.'),
+  C('J-06', 'journeys', 'data-provenance', 'P5', 'partial', 'Academic portfolio and showcase', 'app/src/lib/career-evidence.ts', 'Confirmed skills, artifacts, résumé versions; no reflection step, no limited-share link, no per-item visibility column.'),
+  C('J-07', 'journeys', 'experience-accessibility', 'P2', 'partial', 'Relationship map (My Network)', 'app/src/lib/mentors.ts', 'Career contacts with permission state and follow-up, mentors, advisor meetings; no unified view, and DO-NOT-BUILD rule 1 forbids a new root.'),
+  C('J-08', 'journeys', 'data-provenance', 'P5', 'absent', 'Credential verification network', null, 'CREDENTIAL-WALLET.md is a design; no issuer model, revocation state, share model, QR verify page or schema registry.'),
+  C('J-09', 'journeys', 'data-provenance', 'P3', 'absent', 'Content and knowledge strategy (layers and metadata)', null, 'Trust labels exist (`source.ts`, `where.ts`); no owner, licence, authority, expiry or locale metadata on content.'),
+  C('J-10', 'journeys', 'trust-evidence', 'P3', 'partial', 'Institution benchmarking framework', 'app/src/lib/cohortfloor.test.ts', 'The small-cohort floor holds in app and database; no opt-in cross-institution benchmark exists, and none may rank publicly.'),
+  C('J-11', 'journeys', 'experience-accessibility', 'P5', 'partial', 'Platform localization and cultural adaptation', 'app/src/lib/locale.ts', 'Date, time and number formats and RTL detection; no message catalogue, no `dir`, no terminology mapping, one data region.'),
+  C('J-12', 'journeys', 'trust-evidence', 'P1', 'partial', 'AI transparency receipt', 'app/src/intelligence/Disclosure.tsx', 'Per-answer disclosure is built; no persisted per-interaction receipt with source versions and permissions used.'),
+  C('J-13', 'journeys', 'permission-consent-authority', 'P0', 'partial', 'Education privacy UX (Privacy Center)', 'app/src/lib/mecontrols.ts', 'Fifteen Me controls and a Privacy screen; not yet one “what Semester knows” center, and no student view of who viewed a profile.'),
+  C('J-14', 'journeys', 'trust-evidence', 'P3', 'partial', 'Ethical revenue and marketplace controls', 'app/src/lib/gtm/sponsor.ts', 'The sponsorship gate is built and tested; no per-item why/who/paid/data/hide card, and no marketplace.'),
+  C('J-15', 'journeys', 'trust-evidence', 'P3', 'partial', 'Public ethics and accountability report', 'app/src/lib/standard.ts', 'The Semester Standard is public; the annual report is owed until a year has passed.'),
   // Institutional-intelligence brief
-  C('I-01', 'institutional', 'knowledge', 'P2', 'partial', 'Institutional memory system', 'app/src/lib/ops/operatingsystem.ts', 'A 60-row document register with owners and review dates; no versioned policies, catalog-year snapshots or “what changed” timeline.'),
-  C('I-02', 'institutional', 'authority', 'P2', 'partial', 'Decision provenance', 'app/src/lib/provenance.ts', 'Domain records carry decided_by and rationale; no generic model with authority, policy version, evidence and appeal path.'),
-  C('I-03', 'institutional', 'operations', 'P5', 'absent', 'Education workflow marketplace', null, 'Workflow state machines exist in `packages/institution`; no installable workflow package.'),
-  C('I-04', 'institutional', 'authority', 'P1', 'partial', 'Explainability by default beyond AI', 'app/src/lib/actions.ts', 'Actions, screens, policy denials and notifications each explain; three shapes, no shared contract, no “why can I do this”.'),
-  C('I-05', 'institutional', 'authority', 'P3', 'absent', 'Semantic policy and regulation engine', null, 'No clause extraction or version diff; `policysim.ts` simulates flag and retention changes only.'),
-  C('I-06', 'institutional', 'operations', 'P2', 'partial', 'Cross-role simulation', 'app/src/components/institutional/RoleWorkspace.tsx', 'A sandbox preview with fixtures behind a build flag; production has no view-as by design.'),
-  C('I-07', 'institutional', 'operations', 'P3', 'absent', 'Workflow digital twin', null, 'Mapping simulation exists (`integration/simulate.ts`); no trigger → policy → role → notification → outcome model.'),
-  C('I-08', 'institutional', 'operations', 'P0', 'partial', 'Platform observability graph', 'app/src/lib/statusnotice.ts', 'Incidents name affected screens by hand; no service → dependency → workflow → cohort model.'),
-  C('I-09', 'institutional', 'planning', 'P1', 'partial', 'Adaptive interface engine', 'app/src/lib/accessmode.ts', 'Device, preference and role adaptation exist and are never inferred; term phase and workflow are thin, and no one engine joins them.'),
-  C('I-10', 'institutional', 'operations', 'P5', 'partial', 'Product localization and terminology engine', 'app/src/lib/vocabulary.ts', 'Semester’s own terms are owned; the per-institution dictionary (course / module / paper) is planned only.'),
-  C('I-11', 'institutional', 'action', 'P0', 'partial', 'Minimum-necessary automation framework', 'packages/institution/src/automation.ts', 'The seven-rung ladder is in the gateway contract and the commit path asks it, with its grounds, before it claims an action; eight features declare a rung in `automationrungs.ts`. Browser features other than the help request do not call it, and no action pipeline yet names who decides.'),
-  C('I-12', 'institutional', 'operations', 'P0', 'partial', 'Architecture simplification program', 'app/src/donotbuild.test.ts', 'Roots, notifiers, the locale formatter and the definer register are guarded mechanically; there is no general reuse-the-primitive guard.'),
+  C('I-01', 'institutional', 'data-provenance', 'P2', 'partial', 'Institutional memory system', 'app/src/lib/ops/operatingsystem.ts', 'A 60-row document register with owners and review dates; no versioned policies, catalog-year snapshots or “what changed” timeline.'),
+  C('I-02', 'institutional', 'data-provenance', 'P2', 'partial', 'Decision provenance', 'app/src/lib/provenance.ts', 'Domain records carry decided_by and rationale; no generic model with authority, policy version, evidence and appeal path.'),
+  C('I-03', 'institutional', 'action-workflow', 'P5', 'absent', 'Education workflow marketplace', null, 'Workflow state machines exist in `packages/institution`; no installable workflow package.'),
+  C('I-04', 'institutional', 'action-workflow', 'P1', 'partial', 'Explainability by default beyond AI', 'app/src/lib/actions.ts', 'Actions, screens, policy denials and notifications each explain; three shapes, no shared contract, no “why can I do this”.'),
+  C('I-05', 'institutional', 'policy-rules', 'P3', 'absent', 'Semantic policy and regulation engine', null, 'No clause extraction or version diff; `policysim.ts` simulates flag and retention changes only.'),
+  C('I-06', 'institutional', 'permission-consent-authority', 'P2', 'partial', 'Cross-role simulation', 'app/src/components/institutional/RoleWorkspace.tsx', 'A sandbox preview with fixtures behind a build flag; production has no view-as by design.'),
+  C('I-07', 'institutional', 'action-workflow', 'P3', 'absent', 'Workflow digital twin', null, 'Mapping simulation exists (`integration/simulate.ts`); no trigger → policy → role → notification → outcome model.'),
+  C('I-08', 'institutional', 'trust-evidence', 'P0', 'partial', 'Platform observability graph', 'app/src/lib/statusnotice.ts', 'Incidents name affected screens by hand; no service → dependency → workflow → cohort model.'),
+  C('I-09', 'institutional', 'experience-accessibility', 'P1', 'partial', 'Adaptive interface engine', 'app/src/lib/accessmode.ts', 'Device, preference and role adaptation exist and are never inferred; term phase and workflow are thin, and no one engine joins them.'),
+  C('I-10', 'institutional', 'experience-accessibility', 'P5', 'partial', 'Product localization and terminology engine', 'app/src/lib/vocabulary.ts', 'Semester’s own terms are owned; the per-institution dictionary (course / module / paper) is planned only.'),
+  C('I-11', 'institutional', 'action-workflow', 'P0', 'partial', 'Minimum-necessary automation framework', 'packages/institution/src/automation.ts', 'The seven-rung ladder is in the gateway contract and the commit path asks it, with its grounds, before it claims an action; eight features declare a rung in `automationrungs.ts`. Browser features other than the help request do not call it, and no action pipeline yet names who decides.'),
+  C('I-12', 'institutional', 'policy-rules', 'P0', 'partial', 'Architecture simplification program', 'app/src/donotbuild.test.ts', 'Roots, notifiers, the locale formatter and the definer register are guarded mechanically; there is no general reuse-the-primitive guard.'),
   // Operating functions
-  C('O-01', 'operating', 'evidence', 'P3', 'absent', 'Accreditation and program review', null, 'Maturity area `accreditation` lists the controls; no outcomes mapping, curriculum map or evidence repository.'),
-  C('O-02', 'operating', 'operations', 'P3', 'absent', 'Institutional research and survey operations', null, 'No survey builder, cohort selection or fatigue control; the cohort floor is the only part in place.'),
-  C('O-03', 'operating', 'communication', 'P3', 'partial', 'Campus events and space operations', 'app/src/screens/Activities.tsx', 'Campus activities exist; no RSVP/waitlist, room requests or capacity controls.'),
-  C('O-04', 'operating', 'communication', 'P3', 'partial', 'Student organizations and leadership', 'app/src/screens/Activities.tsx', 'Activities and a leadership record exist; no officer roles, transition checklist or budget handoff.'),
-  C('O-05', 'operating', 'communication', 'P3', 'partial', 'Institutional communications and crisis readiness', 'app/src/lib/statusnotice.ts', 'Status notices and an announcements screen; no audience targeting, acknowledgement or communication audit log.'),
-  C('O-06', 'operating', 'planning', 'P3', 'partial', 'Course materials and affordability', 'app/src/screens/Costs.tsx', 'A cost screen exists; no required-materials list, OER identification or library-reserve links.'),
-  C('O-07', 'operating', 'integration', 'P3', 'absent', 'Data warehouse and institutional BI integration', null, 'No connectors, data catalog or query audit log; the trust dashboard is aggregate-only.'),
-  C('O-08', 'operating', 'integration', 'P5', 'absent', 'Mobile ID and physical campus integration', null, 'Not built, and any build is bounded: no location tracking and no access-log browsing as a student feature.'),
-  C('O-09', 'operating', 'operations', 'P0', 'partial', 'Disaster and academic disruption planning', 'app/src/lib/governance/maturity.ts', 'Maturity area `disaster` lists the controls and offline study exists; no closure, modality-change or deadline-adjustment workflow.'),
-  C('O-10', 'operating', 'knowledge', 'P2', 'partial', 'Documentation and knowledge management', 'app/src/lib/ops/operatingsystem.ts', 'A document register with owners and review dates; no SOP library, versioned forms or staff onboarding.'),
+  C('O-01', 'operating', 'trust-evidence', 'P3', 'absent', 'Accreditation and program review', null, 'Maturity area `accreditation` lists the controls; no outcomes mapping, curriculum map or evidence repository.'),
+  C('O-02', 'operating', 'trust-evidence', 'P3', 'absent', 'Institutional research and survey operations', null, 'No survey builder, cohort selection or fatigue control; the cohort floor is the only part in place.'),
+  C('O-03', 'operating', 'action-workflow', 'P3', 'partial', 'Campus events and space operations', 'app/src/screens/Activities.tsx', 'Campus activities exist; no RSVP/waitlist, room requests or capacity controls.'),
+  C('O-04', 'operating', 'action-workflow', 'P3', 'partial', 'Student organizations and leadership', 'app/src/screens/Activities.tsx', 'Activities and a leadership record exist; no officer roles, transition checklist or budget handoff.'),
+  C('O-05', 'operating', 'experience-accessibility', 'P3', 'partial', 'Institutional communications and crisis readiness', 'app/src/lib/statusnotice.ts', 'Status notices and an announcements screen; no audience targeting, acknowledgement or communication audit log.'),
+  C('O-06', 'operating', 'data-provenance', 'P3', 'partial', 'Course materials and affordability', 'app/src/screens/Costs.tsx', 'A cost screen exists; no required-materials list, OER identification or library-reserve links.'),
+  C('O-07', 'operating', 'integration-gateway', 'P3', 'absent', 'Data warehouse and institutional BI integration', null, 'No connectors, data catalog or query audit log; the trust dashboard is aggregate-only.'),
+  C('O-08', 'operating', 'integration-gateway', 'P5', 'absent', 'Mobile ID and physical campus integration', null, 'Not built, and any build is bounded: no location tracking and no access-log browsing as a student feature.'),
+  C('O-09', 'operating', 'action-workflow', 'P0', 'partial', 'Disaster and academic disruption planning', 'app/src/lib/governance/maturity.ts', 'Maturity area `disaster` lists the controls and offline study exists; no closure, modality-change or deadline-adjustment workflow.'),
+  C('O-10', 'operating', 'data-provenance', 'P2', 'partial', 'Documentation and knowledge management', 'app/src/lib/ops/operatingsystem.ts', 'A document register with owners and review dates; no SOP library, versioned forms or staff onboarding.'),
 ];
 
 /** A department, the boundary it is held to, and the primitive that serves it first. */
