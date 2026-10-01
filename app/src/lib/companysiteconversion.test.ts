@@ -83,4 +83,17 @@ describe('the company-site conversion path', () => {
     expect(register).toContain('Still not green by repository work alone');
     expect(register).toContain('It is not a formal ACR');
   });
+
+  it('describes the two status surfaces as separately hosted without calling them disaster recovery', () => {
+    expect(site).toContain('this company-site view on Vercel and the product status page on GitHub Pages');
+    expect(site).toContain('neither substitutes for a production restore');
+    expect(site).not.toContain("This page isn't hosted separately from the site yet");
+  });
+
+  it('publishes the implemented maintenance workflow without implying email delivery', () => {
+    expect(site).toContain('checked against registration and finals exclusions');
+    expect(site).toContain('status page, in-app notices and Atom feed');
+    expect(site).toContain('Email delivery remains pending.');
+    expect(site).not.toContain('A maintenance workflow with subscriber notices is planned.');
+  });
 });

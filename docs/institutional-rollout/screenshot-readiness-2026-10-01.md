@@ -52,7 +52,7 @@ evidence that a feature is missing or operational.
 | Maintenance notices | New `app/scripts/maintenance.ts` validates windows and generates incident JSON plus Atom subscriber feed | Review institution-specific registration/finals exclusions; publish a real schedule only when maintenance is actually agreed; email delivery is not provided by Atom |
 | Customer notifications | Governance notice records and incident process exist | Configure customer contacts, subscription preferences and actual email delivery; perform a designated delivery drill |
 | Timed rollback | `ROLLBACK.md` documents the mechanism and deployment timings | Conduct and record an actual rollback exercise; normal deploy timings are not a rollback drill |
-| Independent status hosting | Static status page and feed exist | Deploy on an independent provider and verify it survives the application's hosting outage |
+| Independent status hosting | The company-site status view is live on Vercel while the product status page is live on GitHub Pages; both were reached directly on 1 October | Keep both providers and checks operational; the incident file/history still comes from GitHub, and neither surface substitutes for a production restore |
 | Native LMS and migration | Module/capability registers contain remaining work | Complete contracted course/submission/gradebook/assessment paths and rehearsed migration with reconciliation and rollback |
 | Load and disaster recovery | Rehearsal and test mechanisms exist | Representative production-scale load evidence and a real backup recovery exercise |
 | 24/7 on-call | `ROLLBACK.md` identifies a single responder | Staff a rota with more than one qualified responder and exercise escalation |
