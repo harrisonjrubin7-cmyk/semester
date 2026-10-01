@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { courseAgentPolicy, type CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
+import type { CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
 import {
   chooseModel,
   parseIntelligenceGatewayRequest,
@@ -22,9 +22,31 @@ export interface ApprovedIntelligenceSource {
   /** Used only to assemble the provider request; never returned or journaled. */
   body: string;
   courseId?: string;
+  /** Institution-approved policy binding, never a course/term asserted by a client. */
+  origin?: string;
+  policyScope?: string | null;
+  policyCourseCode?: string | null;
+  policyTerm?: string | null;
   title?: string;
   locator?: string;
   verifiedAt?: string;
+}
+
+export interface IntelligenceCourseScope {
+  courseId: string;
+  term: string;
+}
+
+function sourceScope(source: ApprovedIntelligenceSource): IntelligenceCourseScope | 'institution' | null {
+  if (!['course', 'institution', 'library', 'web'].includes(source.origin ?? '')) return null;
+  if (source.policyScope === 'institution' && source.origin !== 'course' &&
+      source.policyCourseCode == null && source.policyTerm == null) return 'institution';
+  if (source.policyScope === 'course' && typeof source.policyCourseCode === 'string' &&
+      /^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$/.test(source.policyCourseCode) &&
+      typeof source.policyTerm === 'string' && /^[0-9]{4}(FA|SP|SU)$/.test(source.policyTerm)) {
+    return { courseId: source.policyCourseCode, term: source.policyTerm };
+  }
+  return null;
 }
 
 export interface IntelligenceAuditRecord {
@@ -48,7 +70,7 @@ export interface IntelligenceRespondInput {
   identity: UniversityIdentity;
   request: IntelligenceGatewayRequest;
   tenantPolicy: TenantIntelligencePolicy;
-  coursePolicy?: CourseAgentPolicy;
+  loadCoursePolicy?: (identity: UniversityIdentity, scope: IntelligenceCourseScope) => Promise<CourseAgentPolicy>;
   approvedSources: ApprovedIntelligenceSource[];
   modelTask: ModelTask;
   generate: InstitutionModelProvider['generate'];
@@ -133,12 +155,37 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
       message: 'Every source sent to Semester Intelligence must be approved for this tenant and account.',
     });
   }
+  // Same spelling normalization as Course Studio; never a mapping from an opaque ID.
+  const selectedCourse = request.courseId?.trim().replace(/\s+/g, ' ').toUpperCase();
+  const scopes = sources.map(sourceScope);
+  if (scopes.some((scope) => scope === null)) {
+    return result(403, { code: 'source-scope-unverified', message: 'Your institution must approve a policy scope for each source before it can be used. Course sources need a verified course code and term.' });
+  }
+  const courses = [...new Map(scopes.flatMap((scope) => scope && scope !== 'institution'
+    ? [[`${scope.courseId}/${scope.term}`, scope] as const] : [])).values()];
   if ((agent === 'tutor' || agent === 'course-guide') &&
-      (!request.courseId || sources.some((source) => source.courseId !== request.courseId))) {
+      (!selectedCourse || courses.length !== 1 || scopes.includes('institution') || courses[0].courseId !== selectedCourse)) {
     return result(403, { code: 'course-scope-required', message: 'Select approved sources from one course before using this role.' });
   }
-  const coursePolicy = request.courseId ? input.coursePolicy ?? courseAgentPolicy(null) : undefined;
-  if (coursePolicy && !coursePolicy.allowedModes.includes(request.mode)) {
+  // Client fields are consistency hints only. They never select which sources'
+  // policies apply. Assistant/Advisor may combine courses; every binding is checked.
+  // Institution-only guidance ignores the UI's incidental selected course/term.
+  if (courses.length && !courses.some((scope) =>
+    (!selectedCourse || scope.courseId === selectedCourse) && (!request.term || scope.term === request.term))) {
+    return result(403, { code: 'course-scope-mismatch', message: 'The requested course and term do not match the institution-approved source scope.' });
+  }
+  const coursePolicies: CourseAgentPolicy[] = [];
+  if (courses.length) {
+    if (!input.loadCoursePolicy) {
+      return result(503, { code: 'course-policy-unavailable', message: 'The institution course policy service is unavailable.' });
+    }
+    try {
+      for (const scope of courses) coursePolicies.push(await input.loadCoursePolicy(identity, scope));
+    } catch {
+      return result(503, { code: 'course-policy-unavailable', message: 'The institution course policy could not be verified.' });
+    }
+  }
+  if (coursePolicies.some((policy) => !policy.allowedModes.includes(request.mode))) {
     return result(403, { code: 'course-mode-disabled', message: 'This support mode is not permitted by the published course policy. Use concept review or ask your instructor.' });
   }
   const allowedEvidence = new Set(sources.flatMap((source) => source.evidenceIds));
@@ -167,7 +214,7 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     question: request.question,
     mode: request.mode,
     agent,
-    coursePolicyInstruction: coursePolicy?.instruction,
+    coursePolicyInstruction: [...new Set(coursePolicies.map((policy) => policy.instruction))].join('\n') || undefined,
     sources,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
   };
@@ -331,7 +378,7 @@ export interface IntelligenceServiceConfig {
    * policy-disabled runtime, which generates nothing anyway.
    */
   killSwitch?: (identity: UniversityIdentity) => Promise<boolean>;
-  loadCoursePolicy?: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<CourseAgentPolicy>;
+  loadCoursePolicy?: IntelligenceRespondInput['loadCoursePolicy'];
   loadPolicy: (identity: UniversityIdentity) => Promise<TenantIntelligencePolicy>;
   loadApprovedSources: (identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
   modelTask: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<ModelTask>;
@@ -389,8 +436,7 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
         identity,
         request,
         tenantPolicy: await config.loadPolicy(identity),
-        coursePolicy: request.courseId && config.loadCoursePolicy
-          ? await config.loadCoursePolicy(identity, request) : undefined,
+        loadCoursePolicy: config.loadCoursePolicy,
         approvedSources: await config.loadApprovedSources(identity, request.sourceIds),
         modelTask: await config.modelTask(identity, request),
         generate: config.generate,

@@ -10,8 +10,8 @@ This implementation connects the uploaded multi-agent framework and executive-as
 | Separate authority | Shared role instructions and explicit tool allowlists; unknown tools denied; callback validation as well as advertised tool filtering |
 | Role-scoped context | Grades and attendance excluded from automatic context; non-assistant roles do not inherit screen summaries or private standing preferences |
 | Course selection | Explicit course selector for learning roles; local material/deadline lookups narrowed to the selected course |
-| Course source authorization | Institutional Tutor and Course Guide require every approved source to match the selected course before generation |
-| Institution-published course rules | Gateway reads latest course_ai_rules version for the tenant, course and term; disallowed modes refused before provider work |
+| Course source authorization | Every source needs an institution-approved policy binding; Tutor and Course Guide require one selected bound course and term |
+| Institution-published course rules | Gateway enforces the newest date-effective course_ai_rules version for every authoritative source course/term; client hints never narrow the policies checked |
 | Unknown policy | Conceptual explanation, hints and analogous practice only; draft/review not assumed permitted |
 | Academic integrity across roles | All role instructions prohibit restricted graded completion; switching roles cannot bypass a published course prohibition |
 | Student review of writes | Existing proposal/confirmation machinery retained; institutional non-assistant roles may prepare only |
@@ -40,3 +40,45 @@ The executive-assistant work on main already provides briefing, triage, deadline
 - Browser visual verification was blocked by ERR_BLOCKED_BY_CLIENT for the workspace localhost URL. Visual layout remains unverified.
 
 The learning-role course-scope regression is also checked with its server boundary temporarily removed: the guard must fail, and the boundary is restored before publishing.
+
+## Policy binding repair and activation prerequisite
+
+Source IDs such as `econ` are opaque and remain unchanged. A browser's selected
+course, term, private course record or self-reported enrollment is not authority.
+The gateway now reads `policy_scope`, `policy_course_code` and `policy_term`
+from approved source metadata. All roles enforce every course binding, including
+mixed-course Assistant/Advisor requests. Optional request course/term hints must
+jointly match a source binding when course sources are present; they never remove
+another source's restriction. Tutor/Guide still require one explicitly selected
+course and cannot satisfy it with institution-only sources.
+
+An explicit `institution` scope preserves approved non-course guidance under
+tenant policy. It cannot be assigned to a source whose origin is `course`.
+Unbound or malformed source scope is refused before generation or budget
+reservation. Only after a valid course binding has been established does a
+missing published policy permit the existing conceptual-only fallback.
+
+The additive SQL is deliberately held in
+[`proposed-migrations/20261001170000_approved_source_policy_scope.sql`](proposed-migrations/20261001170000_approved_source_policy_scope.sql),
+outside automatic migrations. Some PR integrations apply migrations to hosted
+preview databases, so opening this draft must not execute schema changes.
+It is a proposal, not evidence of a production or preview migration. Deployment
+requires separate approval to promote/apply it and institution source approvers
+to bind existing rows. There is no guessed backfill. Until then the new gateway
+cannot use those sources; it fails closed. Existing source approval permissions
+and whole-row audit behavior are unchanged. Do not deploy this gateway before
+that schema and source-configuration prerequisite is satisfied.
+
+Course-rule dates use the **server UTC calendar day**, inclusive. A null effective
+date means immediate publication. The gateway first excludes future-effective
+versions and then selects the highest eligible version. A prior effective rule
+remains in force until its replacement's date. This repair covers the institutional
+gateway; the pre-existing student-side policy display's latest-version selection
+is not changed here.
+
+Focused regression coverage is in
+`app/server/institution/intelligence-course-policy.test.ts` and
+`app/server/institution/intelligence.test.ts`. The adjacent proposed
+`approved_source_policy_scope.check.sql` checks the constraint in a disposable
+database after the proposal is applied there; it is also outside automatic CI
+migration application. It must never be run against a live tenant database.
