@@ -86,6 +86,32 @@ ERROR is not a security certification.
 Supabase documents the webhook wrapper in its
 [database webhook guide](https://supabase.com/docs/guides/database/webhooks).
 
+## Caller correction after the run
+
+Reactions and group joins now request duplicate-ignore insertion rather than
+merge-upsert. Their tables intentionally have no UPDATE policy. The real
+Supabase request builder sends `resolution=ignore-duplicates` with the same
+payloads and conflict keys. Three focused tests pass, including repeated
+requests and a real error response; removing the change makes both header
+assertions fail. These are request-level tests with intercepted transport,
+not an additional hosted-suite pass. The file is registered in the isolated
+mock-test project.
+
+## Current preview integration blocker
+
+After the repository migration was renamed, the GitHub integration reported
+`Remote migration versions not found in local migrations directory`: the
+earlier duplicate history row remains. The database/API remain usable, but
+automatic migration updates need an explicitly approved, backed-up history
+reconciliation. No record has been removed or rewritten by this work.
+
+Current main at `2d67754317a991f47baaa177105c07a7cb30591f` also contains twelve
+migration files beyond this preview's original snapshot, including guardian
+creation and a forward-repair stub. The preview lacks `schools.edition`.
+Therefore this record is not a K–12 or current-main certification. CI's merge
+tree includes those newer changes; the hosted preview has not been rebased or
+given those unrelated migrations under the narrowly scoped approval.
+
 ## Remaining blockers
 
 Several failures are missing intended client/server permissions. Others are
@@ -215,4 +241,3 @@ workspace. Socket-free PostgreSQL 17.11 checked migration SQL and ACL deltas,
 including a failing revert control, but that mode bypasses normal RLS and was
 not counted as policy verification. The hosted results above are the actual
 security-suite evidence.
-

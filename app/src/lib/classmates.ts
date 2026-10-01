@@ -503,7 +503,8 @@ export async function react(
     .from('message_reactions')
     .upsert(
       { message_id: messageId, user_id: userId, emoji, term, code },
-      { onConflict: 'message_id,user_id,emoji' },
+      // Repeating the same reaction is a no-op; this table has no UPDATE policy.
+      { onConflict: 'message_id,user_id,emoji', ignoreDuplicates: true },
     );
   if (error) throw new Error(explain(error.message));
 }
@@ -792,7 +793,11 @@ export async function setGroup(id: string, patch: Partial<Pick<GroupRow, 'name' 
 export async function joinGroup(userId: string, groupId: string): Promise<void> {
   const { error } = await (await cloud())
     .from('group_members')
-    .upsert({ group_id: groupId, user_id: userId }, { onConflict: 'group_id,user_id' });
+    .upsert(
+      { group_id: groupId, user_id: userId },
+      // A repeated join needs no UPDATE permission on membership rows.
+      { onConflict: 'group_id,user_id', ignoreDuplicates: true },
+    );
   if (error) throw new Error(explain(error.message));
 }
 
