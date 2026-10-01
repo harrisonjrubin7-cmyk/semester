@@ -1,3 +1,5 @@
+set lock_timeout = '5s';
+set statement_timeout = '30s';
 -- Bind approved source use to institution-owned course policy scope.
 -- Additive and NOT APPLIED to production by this change. Existing source IDs
 -- are opaque (for example "econ"), and neither they nor a student's selected

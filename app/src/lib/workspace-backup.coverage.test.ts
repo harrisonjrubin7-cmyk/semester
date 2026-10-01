@@ -92,6 +92,8 @@ const CALLS: Record<string, number> = {
   'screens/Nil.tsx': 1,
   'screens/Opportunities.tsx': 1,
   'screens/Pathway.tsx': 1,
+  'components/ProductivityWorkspace.tsx': 1,
+  'components/QuickAdd.tsx': 1,
   'screens/Support.tsx': 1,
   'screens/University.tsx': 1,
 };
@@ -100,6 +102,7 @@ const OTHER_MODULE = 'Added by another module and not yet in the backup. Its own
 
 /** Every store prefix: backed up, or exempt with the reason. */
 const STORES: Record<string, 'backed up' | { exempt: string }> = {
+  'semester.productivity.v1': 'backed up',
   'semester.creations.v1': 'backed up',
   'semester.athletics.v1': 'backed up',
   'semester.career.v1': 'backed up',

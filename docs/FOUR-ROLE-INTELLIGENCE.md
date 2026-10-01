@@ -58,16 +58,23 @@ Unbound or malformed source scope is refused before generation or budget
 reservation. Only after a valid course binding has been established does a
 missing published policy permit the existing conceptual-only fallback.
 
-The additive SQL is deliberately held in
-[`proposed-migrations/20261001170000_approved_source_policy_scope.sql`](proposed-migrations/20261001170000_approved_source_policy_scope.sql),
-outside automatic migrations. Some PR integrations apply migrations to hosted
-preview databases, so opening this draft must not execute schema changes.
-It is a proposal, not evidence of a production or preview migration. Deployment
-requires separate approval to promote/apply it and institution source approvers
-to bind existing rows. There is no guessed backfill. Until then the new gateway
-cannot use those sources; it fails closed. Existing source approval permissions
-and whole-row audit behavior are unchanged. Do not deploy this gateway before
-that schema and source-configuration prerequisite is satisfied.
+The additive binding migration was applied to the approved production project
+`semester` (`lzrqvlugnawcgywkhqlz`) on 1 October 2026 at 18:53 UTC and recorded as
+`20261001185348_approved_source_policy_scope`. The matching repository migration
+preserves the exact recorded SQL, including its 5-second lock timeout and
+30-second statement timeout. The historical proposal comment in that SQL records
+its original review state; this paragraph records the subsequent approved apply.
+Do not apply a second copy under a different version or repair unrelated migration
+history as part of this change.
+
+Read-only checks after application verified all three nullable text columns, the
+validated constraint, unchanged ACLs, all four existing RLS policies and the
+whole-row audit trigger. The production table contained zero approved sources and
+zero course policies, so no existing rows required mapping. Source approvers must
+explicitly configure each future source before it can generate; there is no
+guessed backfill. Applying the schema does not enable institutional AI or deploy
+the gateway. The application fix still requires a verified deployment of the
+institutional runtime; the company-site preview does not provide that evidence.
 
 Course-rule dates use the **server UTC calendar day**, inclusive. A null effective
 date means immediate publication. The gateway first excludes future-effective
@@ -78,7 +85,7 @@ is not changed here.
 
 Focused regression coverage is in
 `app/server/institution/intelligence-course-policy.test.ts` and
-`app/server/institution/intelligence.test.ts`. The adjacent proposed
-`approved_source_policy_scope.check.sql` checks the constraint in a disposable
-database after the proposal is applied there; it is also outside automatic CI
+`app/server/institution/intelligence.test.ts`. The disposable
+`proposed-migrations/approved_source_policy_scope.check.sql` checks the constraint
+after the migration is applied there; this check remains outside automatic CI
 migration application. It must never be run against a live tenant database.
