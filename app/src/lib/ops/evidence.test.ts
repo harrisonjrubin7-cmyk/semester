@@ -7,6 +7,7 @@ import { CLAIMS, STATUS_LABEL, claim, problems, type Facts } from './claims';
 import { ESCALATION } from './console';
 import { EVIDENCE, EVIDENCE_WORD_MEANING, addDays, daysBetween, evidence, evidenceState, expiredUnder, staleRows, type EvidenceRecord } from './evidence';
 import { CALENDAR } from './proofcalendar';
+import { CAPABILITY_DEFINITIONS } from '../governance/capability-governance';
 import { cell, controlLine, isIsoDate, link, renderedFrom, table } from './render';
 
 /**
@@ -45,6 +46,7 @@ const rowIds = new Set(REGISTER.map((r) => r.id));
 
 /** Facts enough for `problems()` without rendering the site: the pages are unknown, so only the register rules run. */
 const facts = (today: string, records: readonly EvidenceRecord[] = EVIDENCE): Facts => ({
+  capabilityExists: (id) => CAPABILITY_DEFINITIONS.some((capability) => capability.id === id),
   rowStatus: (id) => REGISTER.find((r) => r.id === id)?.status,
   exists: (p) => existsSync(at(p)),
   proofExists: (id) => CALENDAR.some((c) => c.id === id),
@@ -158,10 +160,12 @@ describe('the register', () => {
   });
 
   it('takes an available word away from a claim whose record has expired', () => {
+    // Exercise the expiry rule independently of the real claim's conservative status.
+    const available = { ...claim('rls'), status: 'available' as const };
     const stale: EvidenceRecord = { ...evidence('restore-rehearsal'), id: 'stale-drill', claims: ['rls'] };
     const today = addDays(stale.produced, stale.validFor); // the day it expires
-    expect(problems([claim('rls')], facts(today, [stale]))).toContain('rls is available and rests on stale-drill, which has expired.');
-    expect(problems([claim('rls')], facts(addDays(today, -1), [stale]))).toEqual([]);
+    expect(problems([available], facts(today, [stale]))).toContain('rls is available and rests on stale-drill, which has expired.');
+    expect(problems([available], facts(addDays(today, -1), [stale]))).toEqual([]);
   });
 
   it('has, today, no expired record under an available claim — or problems() names it', () => {
