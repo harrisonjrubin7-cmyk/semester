@@ -19,6 +19,54 @@
 
 /* Cinzel is declared in styles/typefaces.css, loaded by main.tsx. */
 
+/* One calm content frame for every routed workspace. Individual screens own
+   their internal layout; the shell owns readable measure and dependable air. */
+.page-frame {
+  width: min(100%, 1180px);
+  margin-inline: auto;
+  padding: var(--page-pad);
+}
+
+.deskhome-title {
+  margin: 0;
+  font: inherit;
+}
+
+.page-frame-wide {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.page-purpose {
+  max-width: 68ch;
+  margin-bottom: var(--sp-6);
+  color: var(--app-dim);
+  font-size: var(--type-base);
+  line-height: var(--leading-relaxed);
+  text-wrap: pretty;
+}
+
+.page-purpose.has-actions {
+  margin-bottom: 0;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-block: var(--sp-5) var(--sp-6);
+}
+
+.page-actions > :is(button, a) {
+  width: auto;
+}
+
+.page-end {
+  pointer-events: none;
+}
+
 :root {
   /* Ground — five steps of near-black, cooled very slightly toward blue.
      A perfectly neutral grey ramp reads as flat and a little dead on an OLED
@@ -2174,18 +2222,22 @@ a:hover {
   transform: translateY(1px);
 }
 .device .btn-primary {
-  background: var(--chrome);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--app-accent);
+  border-color: var(--app-accent);
   color: var(--chrome-ink);
   font-weight: 600;
-  text-shadow: 0 1px 0 var(--chrome-glint);
-  box-shadow: var(--glow);
+  text-shadow: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset;
 }
 .device .btn-primary:hover {
-  filter: brightness(1.1);
+  background: var(--app-accent-bright);
+  border-color: var(--app-accent-bright);
+  filter: none;
 }
 .device .btn-primary:active {
-  filter: brightness(0.94);
+  background: var(--app-accent-deep);
+  border-color: var(--app-accent-deep);
+  filter: none;
 }
 .device .btn-secondary {
   border-color: var(--app-line);
@@ -2208,6 +2260,38 @@ a:hover {
 }
 .device .btn-ghost:active {
   background: rgba(206, 211, 220, 0.2);
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-1);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--app-panel) 72%, transparent);
+}
+
+.device .segmented-option {
+  border-color: transparent;
+  background: transparent;
+  color: var(--app-dim);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.device .segmented-option:hover {
+  border-color: transparent;
+  background: var(--app-accent-wash);
+  color: var(--app-fg);
+}
+
+.device .segmented-option[aria-pressed='true'] {
+  border-color: var(--app-line);
+  background: var(--app-raise);
+  color: var(--app-fg);
+  font-weight: 600;
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
 }
 
 /*
@@ -7186,14 +7270,6 @@ section[data-drop] > .grip + * {
   text-align: center;
 }
 
-/* This shell-owned screen has no global Header, so its wordmark is the page
-   heading. Reset the browser's h1 box while leaving the lockup's own type and
-   size in charge. */
-.deskhome-heading {
-  margin: 0;
-  font: inherit;
-}
-
 /* Smaller numbers than the title-case serif this replaced, for the reason
    `.desktop-word` is: a tracked capital line occupies about a third more width
    per point, and the lockup carries the mark in front of it as well. */
@@ -7499,6 +7575,68 @@ section[data-drop] > .grip + * {
 
 .today-journey .journey-card {
   min-height: 0;
+}
+
+/* Today presents one decision first. Supporting systems stay available, but
+   they no longer arrive as equally loud full-width regions. */
+.today-guide-disclosure,
+.today-more,
+.page-frame > details:has(> summary:first-child) {
+  margin-block: var(--sp-4);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--bar-surface);
+}
+
+.today-guide-disclosure > summary,
+.today-more > summary,
+.page-frame > details:has(> summary:first-child) > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-5);
+  color: var(--app-fg);
+  cursor: pointer;
+  font-size: var(--type-sm-plus);
+  font-weight: 600;
+  list-style: none;
+}
+
+.today-guide-disclosure > summary::-webkit-details-marker,
+.today-more > summary::-webkit-details-marker,
+.page-frame > details:has(> summary:first-child) > summary::-webkit-details-marker {
+  display: none;
+}
+
+.today-guide-disclosure > summary::after,
+.today-more > summary::after,
+.page-frame > details:has(> summary:first-child) > summary::after {
+  content: '+';
+  margin-left: auto;
+  color: var(--app-accent-deep);
+  font-size: var(--type-lg);
+  font-weight: 400;
+}
+
+.today-guide-disclosure[open] > summary::after,
+.today-more[open] > summary::after,
+.page-frame > details[open]:has(> summary:first-child) > summary::after {
+  content: '−';
+}
+
+.today-guide-disclosure > .sync-strip {
+  border: 0;
+  border-top: 1px solid var(--app-line-soft);
+  background: transparent;
+}
+
+.today-more[open] {
+  padding: 0 var(--sp-5) var(--sp-5);
+}
+
+.today-more[open] > summary {
+  margin-inline: calc(-1 * var(--sp-5));
+  border-bottom: 1px solid var(--app-line-soft);
 }
 
 /* Today is a briefing before it is a feed. These three objects share the

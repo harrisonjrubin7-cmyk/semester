@@ -88,7 +88,12 @@ export function SearchHome() {
 
   return (
     <div className="deskhome">
-      <h1 className="deskhome-heading" data-page-title tabIndex={-1}>
+      <h1
+        className="deskhome-title"
+        aria-label="Semester"
+        data-page-title
+        tabIndex={-1}
+      >
         <Wordmark className="deskhome-mark" />
       </h1>
 

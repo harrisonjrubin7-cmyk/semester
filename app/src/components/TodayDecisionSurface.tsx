@@ -96,7 +96,10 @@ export function TodayDecisionSurface({
       {crunchWeek ? <CrunchWeekCard /> : null}
     </Suspense>
   ) : null;
-  const guide = student ? <TodayGuide /> : null;
+  const guide = student ? <details className="today-guide-disclosure">
+    <summary>Semester Guide suggestion</summary>
+    <TodayGuide />
+  </details> : null;
   if (actionCenter && student) {
     return (
       <>
