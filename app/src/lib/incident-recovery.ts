@@ -80,7 +80,7 @@ export const FAILOVER_RULES: readonly FailoverRule[] = [
   { signal: 'policy_engine_failure', severity: 'SEV2', automatedAction: 'switch_to_approved_fallback', studentFallback: 'AI help is limited; approved sources and human support remain available.', verification: 'Policy, consent, and restricted-assessment tests pass.' },
   { signal: 'ai_model_outage', severity: 'SEV3', automatedAction: 'switch_to_approved_fallback', studentFallback: 'AI help is temporarily limited. Your saved work and approved sources remain available.', verification: 'The approved route passes grounding, privacy, and tool-use tests.' },
   { signal: 'source_freshness_breach', severity: 'SEV3', automatedAction: 'mark_stale_or_pending', studentFallback: 'This information may be out of date. Open the official source or ask its owner.', verification: 'Freshness, ownership, link, and citation checks pass.' },
-  { signal: 'data_integrity_mismatch', severity: 'SEV1', automatedAction: 'block_write', studentFallback: 'Semester is read-only while we verify saved information.', verification: 'Checksums, ordering, sharing state, and audit sequence reconcile.' },
+  { signal: 'data_integrity_mismatch', severity: 'SEV2', automatedAction: 'block_write', studentFallback: 'Semester is read-only while we verify saved information.', verification: 'Checksums, ordering, sharing state, and audit sequence reconcile.' },
   { signal: 'official_write_timeout', severity: 'SEV2', automatedAction: 'mark_stale_or_pending', studentFallback: 'Your action was not confirmed. Check the official system; Semester will not retry it automatically.', verification: 'Exactly one intended effect is confirmed in the system of record.' },
   { signal: 'accessibility_regression', severity: 'SEV3', automatedAction: 'disable_risky_feature', studentFallback: 'Use the prior accessible path or the alternate format while this is corrected.', verification: 'The affected critical path passes keyboard and assistive-technology checks.' },
 ];
@@ -122,6 +122,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
     || !hasText(detection.signal)
     || !Number.isFinite(detection.firstObservedAt)
     || detection.firstObservedAt > now
+    || detection.firstObservedAt > record.declaredAt
     || !Array.isArray(detection.correlationIds)
     || !detection.correlationIds.some(hasText)) gaps.push('detection evidence');
   if (!hasText(record.commander)) gaps.push('named incident commander');

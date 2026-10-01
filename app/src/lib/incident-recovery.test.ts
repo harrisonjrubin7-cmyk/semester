@@ -135,4 +135,15 @@ describe('incident and recovery control contract', () => {
       'declaration time not in future', 'detection evidence', 'future next-update time',
     ]));
   });
+
+  it('rejects a first observation recorded after declaration', () => {
+    const record = {
+      id: 'INC-13', severity: 'SEV2', declaredAt: 100,
+      detection: { signal: 'monitor alert', firstObservedAt: 150, correlationIds: ['trace-13'] },
+      commander: 'Incident lead', affectedServices: ['Identity'], tenantScope: { scope: 'platform_wide' },
+      studentVisibleEffect: 'Access unavailable', privateStudentDataIncluded: false,
+      status: 'contain', nextUpdateAt: 300, verification: [],
+    } as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toContain('detection evidence');
+  });
 });
