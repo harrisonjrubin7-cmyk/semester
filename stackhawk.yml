@@ -1,0 +1,7 @@
+app:
+  applicationId: ${STACKHAWK_APPLICATION_ID}
+  host: ${APP_HOST:http://localhost:4173}
+  env: CI
+
+hawk:
+  startupTimeoutMinutes: 3
