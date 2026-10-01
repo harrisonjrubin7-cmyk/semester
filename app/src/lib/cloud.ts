@@ -1105,6 +1105,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
   // auth.users too; listed so the delete here does not depend on it.
   { table: 'graduation_scenarios', column: 'user_id' },
+  { table: 'productivity_workspace', column: 'user_id' },
   // Advisor shares (`lib/advisor-shares.ts`, Phase G), at either end: the ones
   // a student made and the ones an advisor received. Deleting them cascades to
   // their read log. `erase_account` runs the RPC before the auth user goes,

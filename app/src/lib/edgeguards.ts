@@ -56,6 +56,7 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'canvas', guard: 'user-token', evidence: USER },
   { fn: 'claude', guard: 'user-token', evidence: USER },
   { fn: 'delete-account', guard: 'user-token', evidence: USER },
+  { fn: 'productivity-sourcecheck', guard: 'user-token', evidence: USER },
   { fn: 'fetchcal', guard: 'user-token', evidence: USER },
   { fn: 'integration-tick', guard: 'scheduler-token', evidence: [/serveTick\(/] },
   {
