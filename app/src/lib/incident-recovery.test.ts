@@ -38,7 +38,7 @@ describe('incident and recovery control contract', () => {
     expect(validateIncident({
       id: 'INC-2', severity: 'SEV2', declaredAt: 100, detection: DETECTION, commander: 'Incident lead', affectedServices: ['LTI'], tenantScope: { scope: 'tenant_specific', tenantIds: ['vanderbilt'] },
       studentVisibleEffect: 'Course launch unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 200, verification: ['Valid launch succeeds; invalid token is rejected'],
-      closeOut: { measuredTimeline: '10:00–10:30 UTC', impact: 'Launch unavailable', recoveryPoint: 'No data loss', communications: ['Status update sent'], correctiveActions: [{ action: 'Add regression', owner: 'Integrations', severity: 'SEV2', dueAt: 300, requiredEvidence: 'Passing launch test' }] },
+      closeOut: { measuredTimeline: '10:00–10:30 UTC', impact: 'Launch unavailable', recoveryPoint: 'No data loss', communications: ['Status update sent'], correctiveActions: [{ action: 'Add regression', owner: 'Integrations', severity: 'SEV2', dueAt: 300, requiredEvidence: 'Passing launch test', verificationEvidence: 'CI run 3546 passed' }] },
     }, 150)).toEqual([]);
   });
 
@@ -115,8 +115,8 @@ describe('incident and recovery control contract', () => {
       closeOut: {
         measuredTimeline: '10:00–10:30 UTC', impact: 'Sign-in unavailable', recoveryPoint: 'No data loss', communications: ['Status update'],
         correctiveActions: [
-          { action: 'Add regression', owner: 'Identity', severity: 'SEV1', dueAt: 300, requiredEvidence: 'Passing test' },
-          { action: ' ', owner: '', severity: 'unknown', dueAt: Number.NaN, requiredEvidence: '' },
+          { action: 'Add regression', owner: 'Identity', severity: 'SEV1', dueAt: 300, requiredEvidence: 'Passing test', verificationEvidence: ' ' },
+          { action: ' ', owner: '', severity: 'unknown', dueAt: Number.NaN, requiredEvidence: '', verificationEvidence: '' },
         ],
       },
     } as unknown as Parameters<typeof validateIncident>[0];

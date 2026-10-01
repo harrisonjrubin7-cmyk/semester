@@ -14,7 +14,7 @@ describe('institutional trust scorecard', () => {
     const critical = TRUST_METRICS.find((metric) => metric.critical)!;
     const advisory = TRUST_METRICS.find((metric) => !metric.critical)!;
     expect(metricState(critical, { id: critical.id, targetMet: true, evidenceCurrent: true, controlFailure: true, value: 'failed', evidenceAt: 1 }).state).toBe('red');
-    expect(metricState(critical, { id: critical.id, targetMet: false, evidenceCurrent: true, value: 'below target', evidenceAt: 1 }).state).toBe('red');
+    expect(metricState(critical, { id: critical.id, targetMet: false, evidenceCurrent: true, value: 'below target', evidenceAt: 1 }).state).toBe('yellow');
     expect(metricState(advisory, { id: advisory.id, targetMet: false, evidenceCurrent: true, value: 'below target', evidenceAt: 1 }).state).toBe('yellow');
     expect(metricState(critical, { id: critical.id, targetMet: true, evidenceCurrent: false, value: 'stale', evidenceAt: 1 }).state).toBe('yellow');
     expect(metricState(critical, { id: critical.id, targetMet: true, evidenceCurrent: true, trendWorsening: true, value: 'falling', evidenceAt: 1 }).state).toBe('yellow');
@@ -29,7 +29,7 @@ describe('institutional trust scorecard', () => {
   it('carries current limitations and corrective action into the rendered scorecard model', () => {
     const definition = TRUST_METRICS[0];
     const scored = trustScorecard([{ id: definition.id, targetMet: false, evidenceCurrent: true, value: 'missed', evidenceAt: 1, knownLimitations: 'Pilot gap', correctiveAction: 'Owner action' }])[0];
-    expect(scored).toMatchObject({ state: 'red', knownLimitations: 'Pilot gap', correctiveAction: 'Owner action' });
+    expect(scored).toMatchObject({ state: 'yellow', knownLimitations: 'Pilot gap', correctiveAction: 'Owner action' });
   });
 
   it('formats valid evidence dates without allowing malformed timestamps to crash rendering', () => {

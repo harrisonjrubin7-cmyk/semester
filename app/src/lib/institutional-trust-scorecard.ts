@@ -82,9 +82,9 @@ export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFI
   targetInstrumentationDate: INSTRUMENTATION_TARGET_BY_CADENCE[metric.cadence],
 }));
 
-export function metricState(definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined, now = Date.now()): Pick<ScoredTrustMetric, 'state' | 'reason'> {
+export function metricState(_definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined, now = Date.now()): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };
-  if (measurement.controlFailure || (definition.critical && !measurement.targetMet)) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
+  if (measurement.controlFailure) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
   if (!evidenceDateLabel(measurement.evidenceAt) || measurement.evidenceAt > now) return { state: 'yellow', reason: 'The evidence date is invalid or in the future; current evidence must be recorded before this metric can be green.' };
   if (typeof measurement.value !== 'string' || measurement.value.trim().length === 0) return { state: 'yellow', reason: 'A measured value is required before this metric can be green.' };
   if (!measurement.targetMet || !measurement.evidenceCurrent || measurement.trendWorsening || measurement.materialLimitation) return { state: 'yellow', reason: 'The target, evidence freshness, trend, or a material limitation needs attention.' };

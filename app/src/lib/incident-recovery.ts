@@ -33,7 +33,7 @@ export interface IncidentCloseOutEvidence {
   impact: string;
   recoveryPoint: string;
   communications: string[];
-  correctiveActions: Array<{ action: string; owner: string; severity: IncidentSeverity; dueAt: number; requiredEvidence: string }>;
+  correctiveActions: Array<{ action: string; owner: string; severity: IncidentSeverity; dueAt: number; requiredEvidence: string; verificationEvidence: string }>;
 }
 
 export const AUTOMATION_MAY = [
@@ -154,7 +154,8 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
         && hasText(action.owner)
         && INCIDENT_SEVERITIES.includes(action.severity as IncidentSeverity)
         && Number.isFinite(action.dueAt)
-        && hasText(action.requiredEvidence))));
+        && hasText(action.requiredEvidence)
+        && hasText(action.verificationEvidence))));
     if (!complete) gaps.push('complete close-out evidence');
   }
   return gaps;
