@@ -105,6 +105,9 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
             <dd>{detail.sourceName}</dd>
           </>
         )}
+        {detail.location && <><dt>Source location</dt><dd>{detail.location}</dd></>}
+        {detail.owner && <><dt>Source owner</dt><dd>{detail.owner}</dd></>}
+        {detail.excerpt && <><dt>Supporting excerpt</dt><dd><blockquote>{detail.excerpt}</blockquote></dd></>}
         {detail.freshness && (
           <>
             <dt>Freshness</dt>

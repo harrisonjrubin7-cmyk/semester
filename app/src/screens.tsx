@@ -245,6 +245,3 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   whatsnew: WhatsNew,
   recovery: Recovery,
 };
-
-/** Quick capture loads only when the student opens it. */
-export const QuickAdd = lazy(() => import('./components/QuickAdd').then(module => ({ default: module.QuickAdd })));

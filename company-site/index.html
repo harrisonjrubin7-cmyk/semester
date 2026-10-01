@@ -2463,7 +2463,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     </div>
   </div></section>
   <section class="blk rule"><div class="wrap">
-    <div class="sec-head"><p class="eyebrow">How status and releases are run</p><h2>The operation behind this page.</h2><p class="muted">This page isn't hosted separately from the site yet; an independently hosted status page is planned. The app's own status page runs outside the app bundle so it still loads if the app fails to build.</p></div>
+    <div class="sec-head"><p class="eyebrow">How status and releases are run</p><h2>The operation behind this page.</h2><p class="muted">This status view is served by Vercel while the product status page is served by GitHub Pages, so either hosting surface can report when the other is unavailable. The product status page also runs outside the app bundle so it still loads if the app fails to build. Both views depend on public network access to run their live checks, and neither substitutes for a production restore.</p></div>
     <div class="tbl-wrap"><table>
       <caption>Status components and what each means</caption>
       <thead><tr><th scope="col">Component</th><th scope="col">What it covers</th><th scope="col">Checked here</th></tr></thead>
@@ -2476,11 +2476,11 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       </tbody></table></div>
     <div class="grid-3" style="margin-top:20px">
       <div class="tile"><h3 class="h4">Incidents</h3><p>Written templates for the first notice, updates, the resolution notice and an internal handoff record. Incidents are posted to the product status page. <span class="cs cs-av">Available now</span></p></div>
-      <div class="tile"><h3 class="h4">Maintenance</h3><p>Announced ahead on the status page, outside registration windows and finals. A maintenance workflow with subscriber notices is planned. <span class="cs cs-pl">Planned</span></p></div>
+      <div class="tile"><h3 class="h4">Maintenance</h3><p>Reviewed maintenance windows can be scheduled ahead, checked against registration and finals exclusions, and published to the status page, in-app notices and Atom feed. Email delivery remains pending. <span class="cs cs-av">Available now</span></p></div>
       <div class="tile"><h3 class="h4">Customer notifications</h3><p>Security incidents that affect people are notified by email under the incident process; subscription preferences and customer-contact notices are planned. <span class="cs cs-ip">In preparation</span></p></div>
       <div class="tile"><h3 class="h4">Release notes</h3><p>The product keeps a tester-facing changelog: what you'll see, and whether you need to do anything. Public highlights are on the <a class="link" href="#roadmap">roadmap &amp; changelog</a> and <a class="link" href="#trust-updates">trust updates</a>.</p></div>
       <div class="tile"><h3 class="h4">Rollback</h3><p>A written rollback procedure; a timed rollback test is planned. <span class="cs cs-ip">In preparation</span></p></div>
-      <div class="tile"><h3 class="h4">Independent hosting</h3><p>A status page that stays up if our hosting is down. <span class="cs cs-pl">Planned</span></p></div>
+      <div class="tile"><h3 class="h4">Independent hosting</h3><p>Redundant status views run on separate providers: this company-site view on Vercel and the product status page on GitHub Pages. <span class="cs cs-av">Available now</span></p></div>
     </div>
   </div></section>
   <section class="blk rule"><div class="wrap grid-2" style="align-items:start">

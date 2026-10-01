@@ -70,3 +70,14 @@ it('adds a what-if scenario and compares it with the current plan', () => {
   expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).scenarios).toHaveLength(1);
   expect(host.textContent).not.toMatch(/\bbehind\b|at risk|failing/i);
 });
+
+it('shows the editable assumptions behind the plan estimate', () => {
+  act(() => root.render(<GraduationSimulator done={60} />));
+  expect(host.textContent).toContain('This plan assumes');
+  expect(host.textContent).toContain('15 credits per fall or spring');
+  expect(host.textContent).toContain('Course sequencing and financial aid are not included');
+  const edit = [...host.querySelectorAll('button')].find(b => b.textContent === 'Edit assumptions');
+  expect(edit).toBeDefined();
+  act(() => edit!.click());
+  expect(document.activeElement).toBe(host.querySelector('.graduation-simulator input'));
+});
