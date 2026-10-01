@@ -253,7 +253,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
-  ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
+  ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)"]],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
@@ -330,6 +330,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20261001152756_productivity_workspace.sql',
 ];
 
 /**
@@ -341,6 +342,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001152756_productivity_workspace.sql',
+    functions: ['productivity_readiness_aggregate'],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],
@@ -424,18 +429,6 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'registration_enroll',
       'registration_withdraw',
     ],
-  },
-];
-
-/**
- * Callable definers added after the dated second advisor reading. They remain
- * part of the exact register but are not retroactively counted in that
- * historical snapshot.
- */
-export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
-  {
-    file: '20261001153124_productivity_workspace.sql',
-    functions: ['productivity_readiness_aggregate'],
   },
 ];
 
