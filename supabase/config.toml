@@ -118,3 +118,7 @@ verify_jwt = false
 # their token itself, like `claude`; see DEPLOY.md → delete-account.
 [functions.delete-account]
 verify_jwt = false
+
+# CORS preflight is unauthenticated; the function validates every POST with auth.getUser.
+[functions.productivity-sourcecheck]
+verify_jwt = false

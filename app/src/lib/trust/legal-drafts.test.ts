@@ -43,6 +43,7 @@ const NAMED_AS: Record<string, string> = {
   'Apple': 'Apple',
   'OpenStreetMap tile servers': 'OpenStreetMap tile servers',
   'Nominatim and Photon (address lookup)': 'Nominatim and Photon',
+  'Public institution source hosts': 'Public institution source hosts you check',
   'Calendar and Canvas hosts the student links': 'Calendar and Canvas hosts you link',
   'The student’s browser push service': 'browser\'s push service',
 };

@@ -72,7 +72,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
   // draw the rows; every figure comes from here.
   const { owed: o, instalments, next, paidCents: done } = useMemo(
     () => billFor(state, state.term, now),
-    [state, state.term, now],
+    [state, now],
   );
   const said = useMemo(() => todo(o, next), [o, next]);
 

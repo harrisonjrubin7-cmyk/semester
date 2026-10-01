@@ -478,6 +478,16 @@ async function journey(label, viewport) {
       expect(await visible(page.locator('main').getByText(d.title, { exact: true })), `${CODE}'s assignments do not list "${d.title}"`);
     }
     await go(page, '#/home', 'Today');
+    // First use must fetch the deferred capture chunk and focus its real field.
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.keyboard.press('q');
+    const quick = page.getByRole('dialog', { name: 'Add something quickly' });
+    expect(await visible(quick), 'first-use Quick Add did not load');
+    const quickField = quick.getByRole('textbox', { name: 'What to add' });
+    await quickField.fill('Read a chapter tomorrow');
+    expect(await quickField.inputValue() === 'Read a chapter tomorrow', 'deferred Quick Add field is not usable');
+    await page.keyboard.press('Escape');
+    await quick.waitFor({ state: 'hidden' });
 
     // ── 3 · Make something of the student's own ────────────────────────────
     at(STEPS[3]);

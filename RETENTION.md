@@ -590,3 +590,11 @@ stop a backup expiring, does not exist (`RM-02`).
    every migration applied, and a retention change that breaks a delete policy
    fails there rather than in production.
 4. `npm test` from `app/` runs the tripwire.
+
+### Decision productivity workspace
+
+| Table | Kept for | Removal |
+| --- | --- | --- |
+| `productivity_workspace` | Until the student deletes the cloud copy or deletes their account; no automatic expiry | Owner-scoped delete; foreign-key cascade when the authentication account is deleted |
+
+Cloud workspaces include private reflections and history. Sharing institution aggregate counts is opt-in, requires active membership, and is suppressed below ten consenting members. Administrators receive counts only. Device copies and exported files remain under the student's control. Source checks store no page bodies or URLs server-side.
