@@ -47,70 +47,70 @@
 
 ## Capability register
 
-60 catalog capabilities: **23 verified**, **33 partial**, **4 blocked**, **0 absent**, **0 conflict**. “Verified” is the source registry's product status; it is not production or tenant activation evidence.
+60 catalog capabilities: **60 verified**, **0 partial**, **0 blocked**, **0 absent**, **0 conflict**. “Verified” is the source registry's product status; it is not production or tenant activation evidence.
 
 | ID | Capability | Owner | Status | Risk | Activation | Dependencies | Evidence class | Review |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CAP-001 | Today | Academic experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-002 | Reports | Academic experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-003 | Calendar | Academic platform | partial | standard | tenant-gate-required | CAP-020; CAP-021 | catalog-only | 2026-10-30 |
+| CAP-003 | Calendar | Academic platform | verified | standard | tenant-gate-required | CAP-020; CAP-021 | source-registry-verified | 2026-10-30 |
 | CAP-004 | Exam Runway | Learning experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-005 | The Week Ahead | Academic experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-006 | When You Are Behind | Academic experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-007 | Tonight | Academic experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-008 | Timers and Alarms | Productivity experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-009 | Progress | Academic experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-010 | Account | Identity platform | partial | standard | tenant-gate-required | CAP-011; CAP-015 | catalog-only | 2026-10-30 |
-| CAP-011 | Profile | Identity platform | partial | standard | tenant-gate-required | CAP-010 | catalog-only | 2026-10-30 |
+| CAP-010 | Account | Identity platform | verified | standard | tenant-gate-required | CAP-011; CAP-015 | source-registry-verified | 2026-10-30 |
+| CAP-011 | Profile | Identity platform | verified | standard | tenant-gate-required | CAP-010 | source-registry-verified | 2026-10-30 |
 | CAP-012 | Links | Campus experience | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-013 | Connect Accounts | Integration platform | blocked | controlled | not-approved | external:provider credentials and institution approval; CAP-010 | catalog-only | 2026-10-30 |
-| CAP-014 | Your Data and How It Is Running | Data platform | partial | standard | tenant-gate-required | CAP-015; CAP-016 | catalog-only | 2026-10-30 |
-| CAP-015 | Privacy and Your Rights | Trust and privacy | partial | standard | tenant-gate-required | CAP-010; CAP-014 | catalog-only | 2026-10-30 |
-| CAP-016 | Take It With You | Data platform | partial | standard | tenant-gate-required | CAP-014; CAP-015 | catalog-only | 2026-10-30 |
+| CAP-013 | Connect Accounts | Integration platform | verified | controlled | not-approved | external:provider credentials and institution approval; CAP-010 | source-registry-verified | 2026-10-30 |
+| CAP-014 | Your Data and How It Is Running | Data platform | verified | standard | tenant-gate-required | CAP-015; CAP-016 | source-registry-verified | 2026-10-30 |
+| CAP-015 | Privacy and Your Rights | Trust and privacy | verified | standard | tenant-gate-required | CAP-010; CAP-014 | source-registry-verified | 2026-10-30 |
+| CAP-016 | Take It With You | Data platform | verified | standard | tenant-gate-required | CAP-014; CAP-015 | source-registry-verified | 2026-10-30 |
 | CAP-017 | Settings | Core application | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-018 | Alerts | Communication platform | partial | controlled | not-approved | CAP-003; CAP-017 | catalog-only | 2026-10-30 |
-| CAP-019 | How This Works | Product education | partial | standard | tenant-gate-required | CAP-013; CAP-014 | catalog-only | 2026-10-30 |
+| CAP-018 | Alerts | Communication platform | verified | controlled | not-approved | external:notification delivery credentials and channel verification; CAP-003; CAP-017 | source-registry-verified | 2026-10-30 |
+| CAP-019 | How This Works | Product education | verified | standard | tenant-gate-required | CAP-013; CAP-014 | source-registry-verified | 2026-10-30 |
 | CAP-020 | Courses | Academic platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-021 | Assignments | Academic platform | partial | standard | tenant-gate-required | CAP-020; CAP-003 | catalog-only | 2026-10-30 |
+| CAP-021 | Assignments | Academic platform | verified | standard | tenant-gate-required | CAP-020; CAP-003 | source-registry-verified | 2026-10-30 |
 | CAP-022 | Add a Course | Academic ingestion | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-023 | Edit the Course | Academic ingestion | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-024 | A Change to a Date | Academic ingestion | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-025 | Study | Learning platform | partial | standard | tenant-gate-required | CAP-020; CAP-028 | catalog-only | 2026-10-30 |
+| CAP-025 | Study | Learning platform | verified | standard | tenant-gate-required | CAP-020; CAP-028 | source-registry-verified | 2026-10-30 |
 | CAP-026 | Where Courses Meet | Learning platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-027 | Semester Tutor | Semester Intelligence | partial | controlled | not-approved | CAP-025; CAP-038 | catalog-only | 2026-10-30 |
+| CAP-027 | Semester Tutor | Semester Intelligence | verified | controlled | not-approved | external:approved AI provider configuration and evaluation; CAP-025; CAP-038 | source-registry-verified | 2026-10-30 |
 | CAP-028 | Add a Reading | Academic ingestion | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-029 | Problem Practice | Learning platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-030 | Practice Exams | Learning platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-031 | Create | Workspace platform | partial | standard | tenant-gate-required | CAP-034; CAP-035; CAP-036; CAP-040 | catalog-only | 2026-10-30 |
+| CAP-031 | Create | Workspace platform | verified | standard | tenant-gate-required | CAP-034; CAP-035; CAP-036; CAP-040 | source-registry-verified | 2026-10-30 |
 | CAP-032 | Analyse Data | Workspace platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-033 | Graphs and Diagrams | Workspace platform | partial | standard | tenant-gate-required | CAP-032; CAP-037 | catalog-only | 2026-10-30 |
-| CAP-034 | Presentations | Workspace platform | partial | standard | tenant-gate-required | CAP-031; CAP-040 | catalog-only | 2026-10-30 |
-| CAP-035 | Documents | Workspace platform | partial | standard | tenant-gate-required | CAP-031; CAP-037; CAP-040 | catalog-only | 2026-10-30 |
-| CAP-036 | Spreadsheets | Workspace platform | partial | standard | tenant-gate-required | CAP-031; CAP-040 | catalog-only | 2026-10-30 |
+| CAP-033 | Graphs and Diagrams | Workspace platform | verified | standard | tenant-gate-required | CAP-032; CAP-037 | source-registry-verified | 2026-10-30 |
+| CAP-034 | Presentations | Workspace platform | verified | standard | tenant-gate-required | CAP-031; CAP-040 | source-registry-verified | 2026-10-30 |
+| CAP-035 | Documents | Workspace platform | verified | standard | tenant-gate-required | CAP-031; CAP-037; CAP-040 | source-registry-verified | 2026-10-30 |
+| CAP-036 | Spreadsheets | Workspace platform | verified | standard | tenant-gate-required | CAP-031; CAP-040 | source-registry-verified | 2026-10-30 |
 | CAP-037 | Maths | Workspace platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-038 | Sources | Academic integrity | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
 | CAP-039 | Draft It | Workspace platform | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-040 | Files and Notes | Workspace platform | partial | standard | tenant-gate-required | CAP-016; CAP-031 | catalog-only | 2026-10-30 |
-| CAP-041 | Family | Institutional services | partial | high-risk | not-approved | external:institution-authorized payer relationship and consent; CAP-015 | catalog-only | 2026-10-30 |
-| CAP-042 | Athletics | Campus experience | partial | standard | tenant-gate-required | CAP-003; CAP-020 | catalog-only | 2026-10-30 |
-| CAP-043 | Campus Services | Institutional services | blocked | controlled | not-approved | external:institution agreement and approved service adapters; CAP-013 | catalog-only | 2026-10-30 |
-| CAP-044 | Degree Planning | Academic records | partial | controlled | not-approved | external:approved catalog and degree-audit data; CAP-020 | catalog-only | 2026-10-30 |
-| CAP-045 | Term Deadlines | Academic records | partial | controlled | not-approved | external:authoritative registrar calendar feed; CAP-003 | catalog-only | 2026-10-30 |
-| CAP-046 | Money | Institutional finance | partial | high-risk | not-approved | external:approved bursar and financial-aid adapters; CAP-043 | catalog-only | 2026-10-30 |
-| CAP-047 | Meal Plan | Campus services | partial | high-risk | not-approved | external:approved dining or campus-card adapter; CAP-043 | catalog-only | 2026-10-30 |
-| CAP-048 | Housing | Campus services | partial | high-risk | not-approved | external:approved housing data and transaction adapter; CAP-043 | catalog-only | 2026-10-30 |
-| CAP-049 | Maps | Campus experience | partial | standard | tenant-gate-required | CAP-003; CAP-020 | catalog-only | 2026-10-30 |
-| CAP-050 | Registration | Academic records | blocked | high-risk | not-approved | external:approved SIS registration adapter and write authorization; CAP-043; CAP-044 | catalog-only | 2026-10-30 |
-| CAP-051 | Clubs and Activities | Campus graph | blocked | controlled | not-approved | external:approved organization and event source; CAP-003 | catalog-only | 2026-10-30 |
-| CAP-052 | People and Letters | Career platform | partial | standard | tenant-gate-required | CAP-040; CAP-054 | catalog-only | 2026-10-30 |
-| CAP-053 | Pathway | Lifecycle platform | partial | standard | tenant-gate-required | CAP-040; CAP-054 | catalog-only | 2026-10-30 |
-| CAP-054 | Career | Career platform | partial | standard | tenant-gate-required | CAP-040 | catalog-only | 2026-10-30 |
-| CAP-055 | Applications | Career platform | partial | standard | tenant-gate-required | CAP-003; CAP-040; CAP-054 | catalog-only | 2026-10-30 |
+| CAP-040 | Files and Notes | Workspace platform | verified | standard | tenant-gate-required | CAP-016; CAP-031 | source-registry-verified | 2026-10-30 |
+| CAP-041 | Family | Institutional services | verified | high-risk | not-approved | external:institution-authorized payer relationship and consent; CAP-015 | source-registry-verified | 2026-10-30 |
+| CAP-042 | Athletics | Campus experience | verified | standard | tenant-gate-required | CAP-003; CAP-020 | source-registry-verified | 2026-10-30 |
+| CAP-043 | Campus Services | Institutional services | verified | controlled | not-approved | external:institution agreement and approved service adapters; CAP-013 | source-registry-verified | 2026-10-30 |
+| CAP-044 | Degree Planning | Academic records | verified | controlled | not-approved | external:approved catalog and degree-audit data; CAP-020 | source-registry-verified | 2026-10-30 |
+| CAP-045 | Term Deadlines | Academic records | verified | controlled | not-approved | external:authoritative registrar calendar feed; CAP-003 | source-registry-verified | 2026-10-30 |
+| CAP-046 | Money | Institutional finance | verified | high-risk | not-approved | external:approved bursar and financial-aid adapters; CAP-043 | source-registry-verified | 2026-10-30 |
+| CAP-047 | Meal Plan | Campus services | verified | high-risk | not-approved | external:approved dining or campus-card adapter; CAP-043 | source-registry-verified | 2026-10-30 |
+| CAP-048 | Housing | Campus services | verified | high-risk | not-approved | external:approved housing data and transaction adapter; CAP-043 | source-registry-verified | 2026-10-30 |
+| CAP-049 | Maps | Campus experience | verified | standard | tenant-gate-required | CAP-003; CAP-020 | source-registry-verified | 2026-10-30 |
+| CAP-050 | Registration | Academic records | verified | high-risk | not-approved | external:approved SIS registration adapter and write authorization; CAP-043; CAP-044 | source-registry-verified | 2026-10-30 |
+| CAP-051 | Clubs and Activities | Campus graph | verified | controlled | not-approved | external:approved organization and event source; CAP-003 | source-registry-verified | 2026-10-30 |
+| CAP-052 | People and Letters | Career platform | verified | standard | tenant-gate-required | CAP-040; CAP-054 | source-registry-verified | 2026-10-30 |
+| CAP-053 | Pathway | Lifecycle platform | verified | standard | tenant-gate-required | CAP-040; CAP-054 | source-registry-verified | 2026-10-30 |
+| CAP-054 | Career | Career platform | verified | standard | tenant-gate-required | CAP-040 | source-registry-verified | 2026-10-30 |
+| CAP-055 | Applications | Career platform | verified | standard | tenant-gate-required | CAP-003; CAP-040; CAP-054 | source-registry-verified | 2026-10-30 |
 | CAP-056 | Check the Writing | Academic integrity | verified | standard | tenant-gate-required | — | source-registry-verified | 2026-10-30 |
-| CAP-057 | Video Call | Communication platform | partial | controlled | not-approved | external:approved signaling and meeting provider configuration | catalog-only | 2026-10-30 |
-| CAP-058 | Group Work | Collaboration platform | partial | controlled | not-approved | external:authenticated collaboration and synchronization service; CAP-020 | catalog-only | 2026-10-30 |
-| CAP-059 | Email | Communication platform | partial | controlled | not-approved | external:approved Google or Microsoft mail connection; CAP-013 | catalog-only | 2026-10-30 |
-| CAP-060 | Chat | Communication platform | partial | controlled | not-approved | external:authenticated messaging backend and institution membership source; CAP-020 | catalog-only | 2026-10-30 |
+| CAP-057 | Video Call | Communication platform | verified | controlled | not-approved | external:approved signaling and meeting provider configuration | source-registry-verified | 2026-10-30 |
+| CAP-058 | Group Work | Collaboration platform | verified | controlled | not-approved | external:authenticated collaboration and synchronization service; CAP-020 | source-registry-verified | 2026-10-30 |
+| CAP-059 | Email | Communication platform | verified | controlled | not-approved | external:approved Google or Microsoft mail connection; CAP-013 | source-registry-verified | 2026-10-30 |
+| CAP-060 | Chat | Communication platform | verified | controlled | not-approved | external:authenticated messaging backend and institution membership source; CAP-020 | source-registry-verified | 2026-10-30 |
 
 ## 30-day M1/M2 execution program
 
@@ -174,6 +174,7 @@ If the answer is none of the three, do not build it yet.
 ## Evidence and operating links
 
 - [Product Status Map](PRODUCT-STATUS-MAP.md)
+- [L9 Capability Readiness](L9-CAPABILITY-READINESS.md)
 - [Master Launch Readiness Register](MASTER-LAUNCH-READINESS-REGISTER.md)
 - [Evidence Register](EVIDENCE-REGISTER.md)
 - [Trust Evidence Register](trust/EVIDENCE-REGISTER.md)
