@@ -162,6 +162,7 @@ describe('asking Semester support', () => {
       { from_side: 'support', body: 'Which browser?', created_at: '2026-09-27T02:00:00Z' },
     ];
     await draw();
+    expect(host.textContent).toContain('Reference SUP-T1');
     await click(button('Drill freezes · Support replied — waiting for you'));
     expect(host.textContent).toContain('Semester support · Which browser?');
     await click(button('Close this question'));

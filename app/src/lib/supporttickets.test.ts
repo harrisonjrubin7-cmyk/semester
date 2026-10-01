@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, toTicket } from './supporttickets';
+import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, ticketReference, toTicket } from './supporttickets';
 
 /**
  * The client half of support tickets, held to the migration it calls. The
@@ -68,6 +68,11 @@ describe('what goes with a ticket', () => {
   it('reads an unknown status or category conservatively', () => {
     const t = toTicket({ id: '1', category: 'grades', subject: 's', status: 'mystery', priority: 'urgent', created_at: 'x', first_response_due: 'y' });
     expect(t).toMatchObject({ category: 'other', status: 'open', priority: 'normal', firstRespondedAt: null });
+  });
+
+  it('makes a stable support reference without exposing anything about the student', () => {
+    expect(ticketReference('123e4567-e89b-12d3-a456-426614174000')).toBe('SUP-123E4567');
+    expect(ticketReference('')).toBe('SUP-UNKNOWN');
   });
 
   it('offers only app facts, and shapes each one before the student sees it', () => {

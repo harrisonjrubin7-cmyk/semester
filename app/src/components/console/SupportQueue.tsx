@@ -1,0 +1,161 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Notice, SectionLabel } from '../ui';
+import {
+  CATEGORY_LABELS,
+  CONTEXT_KEYS,
+  CONTEXT_LABELS,
+  STATUS_LABELS,
+  supportQueue,
+  supportReply,
+  supportThread,
+  ticketReference,
+  type SupportMessage,
+  type SupportQueueTicket,
+} from '../../lib/supporttickets';
+import { matches, said, when, type ViewProps } from './Fields';
+
+/**
+ * Semester's identity-free support desk.
+ *
+ * The queue RPC exposes no student, email, account, handle or tenant column.
+ * Opening context is limited to the app facts the student reviewed and ticked;
+ * the database still capability-gates every read and reply with
+ * `support:ticket`, independently of the operations-console gate.
+ */
+export function SupportQueue({ filter, onStatus }: ViewProps) {
+  const [tickets, setTickets] = useState<SupportQueueTicket[] | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [thread, setThread] = useState<SupportMessage[] | null>(null);
+  const [reply, setReply] = useState('');
+  const [nextStatus, setNextStatus] = useState<'open' | 'waiting_on_student' | 'resolved'>('waiting_on_student');
+  const [busy, setBusy] = useState(false);
+  const wanted = useRef<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      setTickets(await supportQueue());
+    } catch (error) {
+      setTickets([]);
+      onStatus(said(error, 'Could not read the support queue.'));
+    }
+  }, [onStatus]);
+
+  // Account-backed queue state, not render-derived state.
+  // oxlint-disable-next-line react/set-state-in-effect
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  const shown = useMemo(
+    () => (tickets ?? []).filter((ticket) => matches(
+      filter,
+      ticketReference(ticket.id),
+      ticket.subject,
+      CATEGORY_LABELS[ticket.category],
+      STATUS_LABELS[ticket.status],
+      ticket.priority,
+    )),
+    [tickets, filter],
+  );
+
+  const open = (id: string | null) => {
+    wanted.current = id;
+    setOpenId(id);
+    setThread(null);
+    setReply('');
+    if (!id) return;
+    supportThread(id).then(
+      (messages) => { if (wanted.current === id) setThread(messages); },
+      (error: unknown) => {
+        if (wanted.current === id) {
+          setThread([]);
+          onStatus(said(error, 'Could not read the support conversation.'));
+        }
+      },
+    );
+  };
+
+  const send = async () => {
+    if (!openId || !reply.trim()) return;
+    setBusy(true);
+    try {
+      await supportReply(openId, reply, nextStatus);
+      const messages = await supportThread(openId);
+      setThread(messages);
+      setReply('');
+      await refresh();
+      onStatus(`Reply recorded for ${ticketReference(openId)}.`);
+    } catch (error) {
+      onStatus(said(error, 'Could not send the support reply.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const current = tickets?.find((ticket) => ticket.id === openId) ?? null;
+
+  return (
+    <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <Notice>
+        Identity-free queue. This view receives no student name, email, account, handle or tenant. It shows only the question and app context the student chose to send.
+      </Notice>
+      <SectionLabel aside={tickets === null ? 'reading' : `${shown.length} open`}>Support queue</SectionLabel>
+      {tickets === null && <p role="status">Reading the support queue…</p>}
+      {tickets !== null && shown.length === 0 && <p role="status">No support questions match this view.</p>}
+      {shown.map((ticket) => (
+        <article key={ticket.id} className="portal-panel" aria-label={`Support ticket ${ticketReference(ticket.id)}`} style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+          <strong>{ticketReference(ticket.id)} · {ticket.subject}</strong>
+          <div style={{ color: 'var(--app-dim)' }}>
+            {CATEGORY_LABELS[ticket.category]} · {STATUS_LABELS[ticket.status]} · {ticket.priority} priority
+          </div>
+          <div>
+            First reply due {when(ticket.firstResponseDue)}{ticket.overdue ? ' · OVERDUE' : ''}
+          </div>
+          <button type="button" className="btn btn-secondary" aria-expanded={openId === ticket.id} onClick={() => open(openId === ticket.id ? null : ticket.id)}>
+            {openId === ticket.id ? 'Close conversation' : 'Open conversation'}
+          </button>
+        </article>
+      ))}
+
+      {current && (
+        <section aria-label={`Conversation ${ticketReference(current.id)}`} className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+          <h3 style={{ margin: 0 }}>{ticketReference(current.id)} · {current.subject}</h3>
+          {thread === null && <p role="status">Reading the conversation…</p>}
+          {thread?.map((message, index) => (
+            <article key={`${message.at}-${index}`} style={{ borderTop: '1px solid var(--app-line)', paddingTop: 'var(--sp-3)' }}>
+              <strong>{message.from === 'support' ? 'Semester support' : 'Student'}</strong> · {when(message.at)}
+              <p style={{ whiteSpace: 'pre-wrap' }}>{message.body}</p>
+              {message.context && Object.keys(message.context).length > 0 && (
+                <dl aria-label="Student-approved app context">
+                  {CONTEXT_KEYS.filter((key) => message.context?.[key]).map((key) => (
+                    <div key={key}>
+                      <dt>{CONTEXT_LABELS[key]}</dt>
+                      <dd>{message.context?.[key]}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </article>
+          ))}
+          <form
+            aria-label={`Reply to ${ticketReference(current.id)}`}
+            onSubmit={(event) => { event.preventDefault(); void send(); }}
+            style={{ display: 'grid', gap: 'var(--sp-3)' }}
+          >
+            <label>
+              Reply
+              <textarea className="input" required maxLength={4000} value={reply} onChange={(event) => setReply(event.target.value)} />
+            </label>
+            <label>
+              After this reply
+              <select className="input" value={nextStatus} onChange={(event) => setNextStatus(event.target.value as typeof nextStatus)}>
+                <option value="waiting_on_student">Wait for the student</option>
+                <option value="resolved">Mark resolved for the student to close</option>
+                <option value="open">Keep open with support</option>
+              </select>
+            </label>
+            <button className="btn btn-primary" disabled={busy || !reply.trim()}>Send support reply</button>
+          </form>
+        </section>
+      )}
+    </div>
+  );
+}

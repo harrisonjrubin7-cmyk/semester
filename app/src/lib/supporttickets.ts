@@ -92,6 +92,11 @@ export const STATUS_LABELS: Record<Ticket['status'], string> = {
   closed: 'Closed',
 };
 
+/** A stable, speakable reference. It identifies the ticket, never the student. */
+export function ticketReference(id: string): string {
+  return `SUP-${id.replace(/[^a-z0-9]/gi, '').slice(0, 8).toUpperCase() || 'UNKNOWN'}`;
+}
+
 export interface Ticket {
   id: string;
   category: Category;
@@ -107,6 +112,16 @@ export interface Message {
   from: 'student' | 'support';
   body: string;
   at: string;
+}
+
+/** The identity-free row shown to a support agent. */
+export interface SupportQueueTicket extends Ticket {
+  overdue: boolean;
+}
+
+/** A support-side thread row. Only the opening row can carry student-approved app context. */
+export interface SupportMessage extends Message {
+  context: Partial<Record<ContextKey, string>> | null;
 }
 
 type Row = Record<string, unknown>;
@@ -164,4 +179,43 @@ export async function closeTicket(ticketId: string): Promise<void> {
   const db = await cloud();
   const { error } = await db.rpc('close_my_ticket', { want_ticket: ticketId });
   if (error) throw fail(error, 'Could not close the question.');
+}
+
+/**
+ * The staff queue deliberately returns no student, account, email, handle or
+ * tenant field. The database capability-gates this RPC with `support:ticket`.
+ */
+export async function supportQueue(): Promise<SupportQueueTicket[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('support_ticket_queue');
+  if (error) throw fail(error, 'Could not load the support queue.');
+  return ((data ?? []) as Row[]).map((row) => ({ ...toTicket(row), overdue: row.overdue === true }));
+}
+
+export async function supportThread(ticketId: string): Promise<SupportMessage[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('support_ticket_thread', { want_ticket: ticketId });
+  if (error) throw fail(error, 'Could not load the support conversation.');
+  return ((data ?? []) as Row[]).map((row) => ({
+    from: row.from_side === 'support' ? 'support' : 'student',
+    body: String(row.body),
+    at: String(row.created_at),
+    context: row.context && typeof row.context === 'object' && !Array.isArray(row.context)
+      ? contextToSend(row.context as Partial<Record<ContextKey, string>>, new Set(CONTEXT_KEYS))
+      : null,
+  }));
+}
+
+export async function supportReply(
+  ticketId: string,
+  body: string,
+  status: 'open' | 'waiting_on_student' | 'resolved',
+): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('support_reply', {
+    want_ticket: ticketId,
+    want_body: body.trim(),
+    want_status: status,
+  });
+  if (error) throw fail(error, 'Could not send the support reply.');
 }

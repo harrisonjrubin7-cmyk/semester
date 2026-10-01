@@ -778,6 +778,7 @@ const MOCKS_MODULES = [
   'src/components/betapanel.test.tsx',
   'src/components/institutional-preview-bar.test.tsx',
   'src/components/supportticketspanel.test.tsx',
+  'src/components/console/supportqueue.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',

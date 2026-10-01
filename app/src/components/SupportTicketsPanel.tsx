@@ -14,6 +14,7 @@ import {
   myTickets,
   openTicket,
   replyToTicket,
+  ticketReference,
   type Category,
   type ContextKey,
   type Message,
@@ -231,6 +232,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
           <ul aria-label="Your questions" style={{ paddingLeft: 0, listStyle: 'none' }}>
             {tickets.map((t) => (
               <li key={t.id} className="portal-panel" style={{ marginBlock: 'var(--sp-3)' }}>
+                <div style={{ color: 'var(--app-dim)', marginBottom: 'var(--sp-2)' }}>Reference {ticketReference(t.id)}</div>
                 <button type="button" className="btn btn-secondary btn-block" aria-expanded={openId === t.id} onClick={() => show(openId === t.id ? null : t.id)}>
                   {t.subject} · {STATUS_LABELS[t.status]}
                 </button>

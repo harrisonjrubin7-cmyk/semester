@@ -77,13 +77,13 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `app/src/lib/membership.ts`, `app/src/lib/plans.ts`, `docs/DECISION-LOG.md`
 
-### Support is one address, read by a person, with no promised response time.
+### The in-app support desk is built, but it is not switched on in every environment.
 
-**What does not work yet.** There is no support desk, no ticket system you can watch, and no response time anybody has committed to. The status page checks the service from your own browser when you open it and shows the last 90 days as recorded hourly, starting the day recording began, with days before that shown as no data. It sends no notifications, and its AI and checkout rows only show that the service answered.
+**What does not work yet.** When support tickets are enabled, Help shows your questions, stable SUP references, replies and their 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. No production support UAT has been recorded, there is no notification outside the app when support replies, and no support hours or staffed coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.
 
-**What to do instead.** Write to the address below with the screen, what you were doing and what you saw. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
+**What to do instead.** If the ticket panel is available, use it and keep the SUP reference. Otherwise write to the address below. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
 
-*Stated in:* `app/src/lib/privacy.ts`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
+*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
 
 ### Your own backup is the one that has been rehearsed.
 
