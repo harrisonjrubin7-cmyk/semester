@@ -158,7 +158,7 @@ or leads go unanswered.
 
 | Secret | Function | What it does |
 | --- | --- | --- |
-| `STRIPE_SECRET_KEY` | billing-checkout, billing-cancel | Stripe secret key. Unset: checkout and cancel answer 503 |
+| `STRIPE_SECRET_KEY` (preferred), `STRIPE_API_KEY` (legacy deployed name) | billing-checkout, billing-cancel | Stripe secret key. The functions prefer the canonical name and fall back to the legacy name; if neither is set, checkout and cancel answer 503 |
 | `STRIPE_WEBHOOK_SECRET` | billing-webhook | The webhook endpoint's signing secret. Unset: webhook answers 503 |
 | `ALLOWED_ORIGIN` | billing-checkout, billing-cancel | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
 | `SITE_ORIGINS` | lead-intake | Origins to add, comma-separated. The site's own are built in (`SITE_PRODUCTION_ORIGINS`), so unset adds nothing and still serves the site |
