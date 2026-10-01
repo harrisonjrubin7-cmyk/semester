@@ -40,7 +40,8 @@ describe('what a signed transcript says', () => {
   });
   it('weights a term’s GPA by credits and ignores a grade with no credit entry', () => {
     expect(t.terms[0].gpa).toBe(3);
-    expect(t.terms[1].gpa).toBe(Math.round(((4 * 3 + 0 * 4) / 7) * 1000) / 1000);
+    // A (4.0 x 3 credits) and F (0.0 x 4 credits) over 7 graded credits.
+    expect(t.terms[1].gpa).toBe(Math.round((12 / 7) * 1000) / 1000);
     expect(t.terms[0].courses.find((c) => c.course === 'HIST 1100')?.credits).toBeNull();
   });
   it('counts credits earned (not a failed course) and adds transfer credit', () => {
