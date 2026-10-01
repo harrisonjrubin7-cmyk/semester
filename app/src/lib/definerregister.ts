@@ -118,6 +118,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['accept_family_grant', 'sharing', ['auth.uid()']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['ai_use_approve', 'admin', ['auth.uid()', "private.has_capability('ai_use:approve'"]],
+  ['ai_use_policy', 'read-helper', ['auth.uid()', "private.has_capability('ai_use:read'"]],
+  ['ai_use_propose', 'admin', ['auth.uid()', "private.has_capability('ai_use:propose'"]],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
@@ -329,6 +332,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20260930290000_ai_governance.sql',
 ];
 
 /**
@@ -340,6 +344,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260930290000_ai_governance.sql',
+    functions: ['ai_use_approve', 'ai_use_policy', 'ai_use_propose'],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],

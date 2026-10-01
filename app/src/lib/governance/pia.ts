@@ -271,6 +271,33 @@ export const ASSESSMENTS: readonly Assessment[] = [
       'Sharing: nothing reaches the payment provider from here; its settlement file is read by hand, so a missed month is not noticed by the system.',
     ],
   },
+  {
+    id: 'ai-use-policy',
+    surface: 'School AI use policy and its decision log',
+    what: 'A school says, per Core module and data class, whether AI may be used on that module’s data (default no, two administrators to turn it on), and every AI route asks a server function that answers and logs. Nothing calls it yet, and it sends nothing to a model.',
+    owner: 'privacy',
+    assessed: '2026-10-01',
+    answers: {
+      purpose: { answer: 'To give a school one place to say where AI may and may not touch its modules’ data, to refuse by construction the five kinds of data a model must never be asked about, and to keep a record of each time a route asked. Each column answers one of those questions.', evidence: [{ path: 'supabase/migrations/20260930290000_ai_governance.sql', shows: 'Three append-only tables whose columns are the proposal, the second person’s approval and the decision' }] },
+      fields: { answer: 'A proposal holds the school, a Core module, one of five permittable data classes, allowed or stopped, a reason of up to 1000 characters and who proposed. An approval holds who approved. A log line holds the school, the module and class as asked, who asked, allowed or denied, one of seven reasons, and the provider and model names as the caller wrote them. No column can hold a prompt, a response or a record. The five never classes (grades and transcript content, admissions decisions, aid amounts, disciplinary and health data) cannot be a row’s class at all.', evidence: [{ path: 'supabase/ai-use.check.sql', shows: 'The log has no column that could hold a prompt, and a never class cannot be written even by the table owner' }] },
+      default: { answer: 'No for everything. A module with no row reads denied (no_policy); the school’s own people read the policy only with an ai_use capability; a member reads none of it.', evidence: [{ path: 'supabase/ai-use.check.sql', shows: 'With no policy every module and class is denied; a member reads nothing' }] },
+      readers: { answer: 'Accounts holding ai_use:read, ai_use:propose or ai_use:approve at the school (university_admin, and the registrar to read). No one at Semester reads them: there is no service-role reader other than the decision function, which writes.', evidence: [{ path: 'supabase/ai-use.check.sql', shows: 'The registrar reads; a member and another school’s administrator read none' }] },
+      identity: { answer: 'A log line may name the account that asked, so it is identified. Nothing is aggregated or derived from it.', evidence: [{ path: 'supabase/migrations/20260930290000_ai_governance.sql', shows: 'No view, function or export reads across schools' }] },
+      ai: { answer: 'This is the control for AI, not a use of it. It calls no model and stores no prompt. It states that today no route to a model reads a Core module’s data, and a test refuses a new route that is not written down.', evidence: [{ path: 'app/src/lib/aiuse/aiuse.test.ts', shows: 'Every file that reaches a provider is in ENTRY_POINTS, and none imports a Core module’s code' }] },
+      retention: { answer: 'Not decided. RETENTION.md says so for all three tables; nothing sweeps them, and the period is for counsel and the owner.', evidence: [RETENTION, RETENTION_TEST] },
+      deletion: { answer: 'The three tables name administrators by plain account id with no foreign key, so deleting an account does not clear them. That is deliberate (who agreed is the record) and it is stated, not hidden.', evidence: [RETENTION] },
+      sharing: { answer: 'None. There is no export, link or feed of the policy or the log.', evidence: [{ path: 'supabase/ai-use.check.sql', shows: 'No signed-in account may call the decision function or write the log' }] },
+      inference: { answer: 'None. A decision is allowed or denied by a fixed order of checks from the school’s recorded answer; it ranks and scores nothing (DO-NOT-BUILD rule 3).', evidence: [NEVER_MEASURED, { path: 'app/src/lib/aiuse/aiuse.test.ts', shows: 'The decision’s order of checks, and no yes can override a never class' }] },
+      guard: { answer: 'ai-use.check.sql runs every rule as the account it concerns, including the owner trying to write a row for admissions decisions and aid amounts; aiuse.test.ts holds the TypeScript lists equal to the SQL and walks the same decision.', evidence: [{ path: 'supabase/ai-use.check.sql', shows: 'Who proposes, who approves, the never classes, the kill switch, the log and append-only' }, { path: 'app/src/lib/aiuse/aiuse.test.ts', shows: 'The lists, the decision and the entry-point register' }] },
+    },
+    rating: 'medium',
+    open: [
+      'Guard: no AI route calls ai_use_permitted yet, because none reads a Core module’s data; the policy decides nothing until one does, and whoever adds the first such route must call it.',
+      'Retention: not decided for the proposals, approvals or log; the account ids on them are not cleared by deleting an account.',
+      'Readers: applied to no production project and run only against a throwaway Postgres; no school’s counsel has read the five never classes or agreed they are the right five.',
+      'Fields: the provider and model names in the log are whatever the caller supplies; nothing verifies them.',
+    ],
+  },
 ];
 
 export interface Owed {

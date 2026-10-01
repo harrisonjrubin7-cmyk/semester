@@ -1599,6 +1599,18 @@ export const KEPT_TABLES: KeptTable[] = [
     table: 'dining_menu_items',
     why: 'What your school’s dining locations serve and what it costs. Not a record about you, and no student account writes a row.',
   },
+  {
+    table: 'ai_use_proposal',
+    why: 'A school administrator’s proposal to allow or stop AI on one Core module’s data class. A decision of the school, kept append-only. It names the administrator by account id with no foreign key, so deleting an account does not clear it: who agreed is the record.',
+  },
+  {
+    table: 'ai_use_approval',
+    why: 'The second administrator’s yes to allowing AI somewhere. Append-only, and it names the approver by account id with no foreign key, so deleting an account does not clear it.',
+  },
+  {
+    table: 'ai_use_log',
+    why: 'One line for each time an AI route asked whether AI may be used on a module’s data: who, module, kind of data, allowed or denied, and the provider and model names. Never a prompt or a response. Append-only; deleting an account does not clear the account id on a line.',
+  },
 ];
 
 /** What the `delete-account` function answers; see `_shared/deleteaccount.ts`. */

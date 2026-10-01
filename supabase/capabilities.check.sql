@@ -305,7 +305,10 @@ begin
   -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher; then guardians:manage for university_admin and
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 185);
+  -- 189 after the school AI use policy (20260930290000_ai_governance.sql) added
+  -- four: ai_use:propose, :approve and :read for university_admin and
+  -- ai_use:read for registrar.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 189);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

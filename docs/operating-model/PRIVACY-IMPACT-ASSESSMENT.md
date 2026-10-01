@@ -10,8 +10,8 @@ surfaces that have answered them, and the ones that owe an answer. R-15 in
 surface is asked the question before it ships; the eighth maturity system on the
 same page said no template, register or gate existed. This is the three.
 
-**7 surfaces have answered; 6 owe an answer.** Of the 77 answers written,
-46 cite a test that runs on every change and 31 cite code or a document only,
+**8 surfaces have answered; 6 owe an answer.** Of the 88 answers written,
+54 cite a test that runs on every change and 34 cite code or a document only,
 which is a weaker thing and is marked *written* below. No assessment has been
 reviewed by the privacy seat, which is vacant: these are the founder’s reading of
 the tree, and the seat’s first job is to read them again.
@@ -216,6 +216,31 @@ A school’s bursar and business office keep each student’s account in Semeste
 - Retention: the school sets the schedule; none is set, and the ledger keeps everything until then.
 - Readers: no one has reviewed this with a school’s bursar or auditor; the controls are the brief’s, read by the founder.
 - Sharing: nothing reaches the payment provider from here; its settlement file is read by hand, so a missed month is not noticed by the system.
+
+### School AI use policy and its decision log
+
+A school says, per Core module and data class, whether AI may be used on that module’s data (default no, two administrators to turn it on), and every AI route asks a server function that answers and logs. Nothing calls it yet, and it sends nothing to a model. Owner: **privacy** seat. Assessed 2026-10-01. Residual rating: **medium**.
+
+| Question | Answer | Shown by |
+| --- | --- | --- |
+| What does this surface do for the student, and what question does each piece of data answer? | To give a school one place to say where AI may and may not touch its modules’ data, to refuse by construction the five kinds of data a model must never be asked about, and to keep a record of each time a route asked. Each column answers one of those questions. *(written)* | `supabase/migrations/20260930290000_ai_governance.sql` — Three append-only tables whose columns are the proposal, the second person’s approval and the decision |
+| Which fields does it hold, and which of them are sensitive: grades, health, aid, disability, identity, location? | A proposal holds the school, a Core module, one of five permittable data classes, allowed or stopped, a reason of up to 1000 characters and who proposed. An approval holds who approved. A log line holds the school, the module and class as asked, who asked, allowed or denied, one of seven reasons, and the provider and model names as the caller wrote them. No column can hold a prompt, a response or a record. The five never classes (grades and transcript content, admissions decisions, aid amounts, disciplinary and health data) cannot be a row’s class at all. | `supabase/ai-use.check.sql` — The log has no column that could hold a prompt, and a never class cannot be written even by the table owner |
+| What is its default visibility? | No for everything. A module with no row reads denied (no_policy); the school’s own people read the policy only with an ai_use capability; a member reads none of it. | `supabase/ai-use.check.sql` — With no policy every module and class is denied; a member reads nothing |
+| Who at Semester or the institution can read any of it, through which function, and what do they never receive? | Accounts holding ai_use:read, ai_use:propose or ai_use:approve at the school (university_admin, and the registrar to read). No one at Semester reads them: there is no service-role reader other than the decision function, which writes. | `supabase/ai-use.check.sql` — The registrar reads; a member and another school’s administrator read none |
+| Can a reader learn who the student is from a row that was meant to be anonymous? | A log line may name the account that asked, so it is identified. Nothing is aggregated or derived from it. *(written)* | `supabase/migrations/20260930290000_ai_governance.sql` — No view, function or export reads across schools |
+| Does any of it reach a model, and if so, is it fenced as material and journaled without its body? | This is the control for AI, not a use of it. It calls no model and stores no prompt. It states that today no route to a model reads a Core module’s data, and a test refuses a new route that is not written down. | `app/src/lib/aiuse/aiuse.test.ts` — Every file that reaches a provider is in ENTRY_POINTS, and none imports a Core module’s code |
+| Which clock deletes it, and where is that clock written? | Not decided. RETENTION.md says so for all three tables; nothing sweeps them, and the period is for counsel and the owner. | `RETENTION.md` — The retention answer per table<br>`app/src/lib/retention.test.ts` — RETENTION.md is held to the schema in both directions |
+| Does account deletion empty it, and can the student take it with them? | The three tables name administrators by plain account id with no foreign key, so deleting an account does not clear them. That is deliberate (who agreed is the record) and it is stated, not hidden. *(written)* | `RETENTION.md` — The retention answer per table |
+| Is any sharing consented, revocable, and never a substitute for an institutional obligation? | None. There is no export, link or feed of the policy or the log. | `supabase/ai-use.check.sql` — No signed-in account may call the decision function or write the log |
+| Does it produce or feed a score, flag or ranking about an individual? | None. A decision is allowed or denied by a fixed order of checks from the school’s recorded answer; it ranks and scores nothing (DO-NOT-BUILD rule 3). | `app/src/lib/institution-ops.ts` — FORBIDDEN: the eight things never measured about an individual; defineMetric refuses any metric that sources one<br>`app/src/lib/aiuse/aiuse.test.ts` — The decision’s order of checks, and no yes can override a never class |
+| Which test runs on every change to hold the answers above? | ai-use.check.sql runs every rule as the account it concerns, including the owner trying to write a row for admissions decisions and aid amounts; aiuse.test.ts holds the TypeScript lists equal to the SQL and walks the same decision. | `supabase/ai-use.check.sql` — Who proposes, who approves, the never classes, the kill switch, the log and append-only<br>`app/src/lib/aiuse/aiuse.test.ts` — The lists, the decision and the entry-point register |
+
+**Open:**
+
+- Guard: no AI route calls ai_use_permitted yet, because none reads a Core module’s data; the policy decides nothing until one does, and whoever adds the first such route must call it.
+- Retention: not decided for the proposals, approvals or log; the account ids on them are not cleared by deleting an account.
+- Readers: applied to no production project and run only against a throwaway Postgres; no school’s counsel has read the five never classes or agreed they are the right five.
+- Fields: the provider and model names in the log are whatever the caller supplies; nothing verifies them.
 
 ## Owed
 
