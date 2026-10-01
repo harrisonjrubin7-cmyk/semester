@@ -20,8 +20,10 @@ import { LIMITS, type Transcript, type Verification, type VerifyStatus } from '.
 import type { Body } from './body';
 
 /** The sentence every screen that shows an issued transcript carries, next to it. */
-export const NOT_SIGNED =
-  'This is not a signed transcript. It is your school’s academic record as of a date, in a fixed text, with a SHA-256 of that text. The hash shows the text has not changed since it was issued; it does not show who issued it. Signing needs a decision about who holds a key, and Semester’s owner has not made it. Treat it as a signed transcript only if your school’s own process says so.';
+export const NOT_SIGNED_HEAD = 'This is not a signed transcript.';
+export const NOT_SIGNED_REST =
+  'It is your school’s academic record as of a date, in a fixed text, with a SHA-256 of that text. The hash shows the text has not changed since it was issued; it does not show who issued it. Signing needs a decision about who holds a key, and Semester’s owner has not made it. Treat it as a signed transcript only if your school’s own process says so.';
+export const NOT_SIGNED = `${NOT_SIGNED_HEAD} ${NOT_SIGNED_REST}`;
 
 /** What nothing has been issued means, in one sentence. */
 export const NOTHING_ISSUED = 'Nothing has been issued yet.';

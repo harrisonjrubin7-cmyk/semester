@@ -182,7 +182,7 @@ describe('what the screen says it is', () => {
   it('says it is not signed, in the body, before anything else, in every state that reads the module', async () => {
     mock.modes = [{ module: 'records', mode: 'connect', frozen: false, killed: false }];
     await render();
-    expect(host.querySelector('[data-testid="not-signed"]')?.textContent).toContain('Not a signed transcript');
+    expect(host.querySelector('[data-testid="not-signed"]')?.textContent).toContain('This is not a signed transcript.');
     expect(text()).toContain('does not show who issued it');
     expect(text()).toContain('Signing needs a decision about who holds a key');
     expect(text()).toContain('has not made it');

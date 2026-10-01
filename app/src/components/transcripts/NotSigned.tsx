@@ -1,4 +1,4 @@
-import { NOT_SIGNED } from '../../lib/transcripts/views';
+import { NOT_SIGNED_HEAD, NOT_SIGNED_REST } from '../../lib/transcripts/views';
 
 /**
  * The line that has to be on the screen, in the body text, above the thing it
@@ -23,7 +23,7 @@ export function NotSigned() {
         textWrap: 'pretty',
       }}
     >
-      <strong>Not a signed transcript.</strong> {NOT_SIGNED}
+      <strong>{NOT_SIGNED_HEAD}</strong> {NOT_SIGNED_REST}
     </p>
   );
 }

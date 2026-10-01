@@ -124,7 +124,7 @@ export function IssuedList({
                 Issued {stamp(t.issuedAt)}.
                 {t.replacedBy !== null ? ` Replaced by serial ${t.replacedBy}: ${t.replacedBecause ?? ''}` : ' Not replaced.'}
               </Sub>
-              <div style={{ overflowWrap: 'anywhere' }}>
+              <div style={{ overflowWrap: 'anywhere', fontSize: 'var(--type-sm)' }}>
                 <div>
                   Serial: <code>{t.serial}</code>
                 </div>
