@@ -88,3 +88,9 @@ billing-cancel      2  platform  2026-09-29T21:10:28Z
 billing-checkout   32  platform  2026-09-29T21:10:28Z
 billing-webhook    32  platform  2026-09-29T21:10:28Z
 lead-intake        32  platform  2026-09-29T21:10:28Z
+
+# productivity-sourcecheck first deployed through the Management API connector.
+# Its entrypoint is /tmp/user_fn_.../source/productivity-sourcecheck/index.ts,
+# so provenance is manual, not a fabricated platform/runner reading. On merge,
+# the continuous platform deploy should replace this first reading.
+productivity-sourcecheck  2  manual  2026-10-01T16:05:17Z first

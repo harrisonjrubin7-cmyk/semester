@@ -84,7 +84,7 @@ function slugs(): string[] {
  */
 function frozen(rows: Row[]): string[] {
   return rows
-    .filter((r) => r.pipeline === 'runner' && r.note !== 'first')
+    .filter((r) => ['runner', 'manual'].includes(r.pipeline) && r.note !== 'first')
     .map((r) => `${r.slug} (${r.pipeline})`);
 }
 
@@ -120,7 +120,7 @@ describe('the functions snapshot is a reading, and still reads like one', () => 
       expect(r.slug, `slug missing in: ${JSON.stringify(r)}`).toMatch(/^[a-z][a-z0-9-]*$/);
       if (r.pipeline === 'pending') expect(r.version, `a pending row has no version yet: ${r.slug}`).toBe('-');
       else expect(r.version, `version not a number for ${r.slug}`).toMatch(/^\d+$/);
-      expect(['platform', 'runner', 'pending'], `unknown pipeline for ${r.slug}`).toContain(r.pipeline);
+      expect(['platform', 'runner', 'manual', 'pending'], `unknown pipeline for ${r.slug}`).toContain(r.pipeline);
       expect(r.at, `timestamp not ISO for ${r.slug}`).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
     }
   });
@@ -145,13 +145,15 @@ describe('the functions snapshot is a reading, and still reads like one', () => 
     // A first deploy is excused only as a runner row that says so.
     expect(frozen([{ slug: 'new-fn', version: '1', pipeline: 'runner', at, note: 'first' }])).toEqual([]);
     expect(frozen([{ slug: 'new-fn', version: '1', pipeline: 'runner', at }])).toEqual(['new-fn (runner)']);
+    expect(frozen([{ slug: 'new-fn', version: '1', pipeline: 'manual', at, note: 'first' }])).toEqual([]);
+    expect(frozen([{ slug: 'new-fn', version: '1', pipeline: 'manual', at }])).toEqual(['new-fn (manual)']);
   });
 
   it('accepts no note but `first`, and `first` only on a runner row', () => {
     for (const r of reading()) {
       if (r.note === undefined) continue;
       expect(r.note, `unknown note on ${r.slug}`).toBe('first');
-      expect(r.pipeline, `${r.slug} is marked first but was not deployed by hand`).toBe('runner');
+      expect(['runner', 'manual'], `${r.slug} is marked first but was not deployed by hand`).toContain(r.pipeline);
     }
   });
 

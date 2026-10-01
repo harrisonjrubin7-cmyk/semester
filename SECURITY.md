@@ -151,6 +151,7 @@ complete rather than a selection.
 | `SUPABASE_ANON_KEY` | Injected | Nothing beyond a visitor's reach: the publishable key the app ships. `billing-cancel` pairs it with the caller's own token, so row-level security decides what it reads | — |
 | `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | Function secrets | Nothing. The public half is compiled into the page on purpose | — |
 | **`SEMESTER_APP_URL`** | Function secret | Where a validated Brightspace launch sends the student's browser, carrying a one-use session token. Not a credential itself, but a wrong value hands that token to whatever is at the address — so it is treated as one | `supabase secrets set SEMESTER_APP_URL=…`. The `lti` function has **no default** and refuses a launch while it is unset, which is the intended behaviour: a guess here is worse than an outage |
+| `PRODUCTIVITY_SOURCE_HOSTS` | Function configuration | Approved public source destinations outside .edu; no credential | Remove host entries with `supabase secrets set` to revoke future checks. Exact hostnames only; public DNS, HTTPS and bounded-read checks remain mandatory |
 | `ALLOWED_ORIGIN`, `MONTHLY_CALL_LIMIT` | Function secrets | Nothing. Limits, not credentials | `ALLOWED_ORIGIN` is a comma-separated list of extra https origins; the Pages origin is built in, `*` is ignored, an unlisted origin gets no CORS header, and localhost is answered only with `CORS_ALLOW_DEV=1` (never set on the live project). See `supabase/DEPLOY.md` |
 
 Two more that are not environment variables and are easy to forget:

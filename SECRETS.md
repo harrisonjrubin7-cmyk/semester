@@ -163,3 +163,7 @@ anything. And it is only as current as the last person to edit it, which is why
 the two lists that *can* be derived from the code are:
 [`app/src/lib/secrets.test.ts`](app/src/lib/secrets.test.ts) reads the Edge
 Functions and the workflows and fails when this file is short a name.
+
+### Productivity source hosts
+
+`PRODUCTIVITY_SOURCE_HOSTS` is optional Supabase function configuration: a comma-separated exact hostname allowlist for public institutional sources outside .edu. It carries no credential. Removing a host revokes future source checks to it; redeploy is unnecessary. `CORS_ALLOW_DEV` controls local-only CORS for this function, following the existing shared helper. Never enable it in production.
