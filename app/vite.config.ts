@@ -745,6 +745,7 @@ const MOCKS_MODULES = [
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',
+  'src/lib/governance/activation.test.ts',
   'src/state/readonly.test.tsx',
   'src/screens/Volunteer.test.tsx',
   'src/screens/Agreements.test.tsx',

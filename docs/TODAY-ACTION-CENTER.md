@@ -1,7 +1,7 @@
 # Today + Action Center: Phase B
 
-**Flag:** `today_action_center` (`VITE_TODAY_ACTION_CENTER`), off by default
-(DECISION-LOG D-012, D-013 and D-019).
+**Flag:** `today_action_center` (`VITE_TODAY_ACTION_CENTER`), production by
+default. An explicit `off` restores the earlier briefing as a rollback.
 
 **Destination:** Today (`home`). While the flag is on, students see it in
 place of the #761 briefing.
@@ -30,7 +30,7 @@ flag.
 | **Quick Actions** | Phase B | Search (palette) · Build plan (Registration) · Add course · View schedule · Prepare for advising (My Path). The order is fixed. |
 | **Context pane** (≥1180px) | Phase B | Planning status, the rest of today's classes, account-sync freshness, and a count of upcoming dates not checked against the syllabus. |
 
-**With the flag off,** Today is the #761 briefing as it shipped: path card,
+**With an explicit rollback to off,** Today is the #761 briefing as it shipped: path card,
 one Next best step with "Why am I seeing this?" and "Not now", and the
 72-hour rail. The H-2 fix is the only always-on change.
 
@@ -119,7 +119,7 @@ note's text.
 | `lib/today-center.test.ts` | The three sentences; calm words, including a guard that **every action BL-1.4 proposes** passes them; source labels; done-for-today (closed on the course, completed in the Action Center, not yesterday); calendar-day labels; commitments |
 | `components/TodayActionCenter.test.tsx` | Flag off is #761; flag on puts the Action Center inside Today with an approved sentence; ≤1 urgent card and ≤4 rows, never repeating the lead; Done → closure → Undo; sheet on a phone (seven headings, focus, Escape); drawer and pane on a desktop; no banned words |
 | `components/ActionCenter.test.tsx` (BL-1.4) | Explanation through the sheet |
-| `lib/experience-flags.test.ts` | 15 names, off by default even in preview |
+| `lib/experience-flags.test.ts` | Module names and defaults; Action Center is production by default and explicitly reversible |
 | `styles/textbuttons.test.ts` | H-2 |
 
 **Revert checks.** Each guard was shown red against a revert and green on

@@ -115,12 +115,12 @@ export const POINTS: readonly Item[] = [
     rows: ['UX-001', 'STU-001', 'STU-002', 'STU-009'],
     standing: 'partial',
     evidence: [
-      { path: 'app/src/lib/tabbar.ts', shows: 'FIVE_DESTINATIONS and their labels, behind journeyNavigation; DEFAULT_TABS otherwise' },
+      { path: 'app/src/lib/tabbar.ts', shows: 'FIVE_DESTINATIONS as the production default; journeyNavigation=off restores the legacy tabs' },
       { path: 'app/src/lib/fivedestinations.test.ts', shows: 'Holds the five to the screens they open' },
       { path: 'app/src/components/unity/ContextBar.tsx', shows: 'A context bar with title, statuses, save state and actions, placed on six surfaces' },
       { path: 'app/src/components/Command.tsx', shows: 'The command palette, on / and ⌘K' },
     ],
-    gap: 'The five destinations are a relabelled overlay behind a build flag that is off in production (D-003 approved them; not yet the default). No ContextHeader carries privacy scope, and none sits on the five destinations. The Action Center is a Today card behind its own flag.',
+    gap: 'The five destinations and Action Center are production defaults with explicit rollback flags. The shell context strip carries term, location, workflow, Continue and health; privacy scope still belongs to object-level context rather than the global strip.',
   },
   {
     id: 'BP-02',
@@ -134,7 +134,7 @@ export const POINTS: readonly Item[] = [
       { path: 'app/src/lib/today-center.ts', shows: 'planCommitments and the UNCALM wording guard' },
       { path: 'app/src/lib/since.ts', shows: '"Since you were here": ticks, feeds, announcements and sittings only' },
     ],
-    gap: 'Behind today_action_center (off). No Share control, no view-source or compare-options action on an action, no Controls section in the sheet; "what changed" does not cover the plan, path or sources; the wording guard runs on Today only.',
+    gap: 'Production default with an explicit rollback flag. No Share control or compare-options action on an action; "what changed" does not cover the plan, path or sources; the wording guard runs on Today only.',
   },
   {
     id: 'BP-03',
