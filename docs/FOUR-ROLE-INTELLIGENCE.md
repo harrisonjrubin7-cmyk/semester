@@ -86,6 +86,5 @@ is not changed here.
 Focused regression coverage is in
 `app/server/institution/intelligence-course-policy.test.ts` and
 `app/server/institution/intelligence.test.ts`. The disposable
-`proposed-migrations/approved_source_policy_scope.check.sql` checks the constraint
-after the migration is applied there; this check remains outside automatic CI
-migration application. It must never be run against a live tenant database.
+`supabase/approved-source-policy-scope.check.sql` checks the constraint after the
+migration is applied there and runs with the existing PostgreSQL policy suite. It must never be run against a live tenant database.

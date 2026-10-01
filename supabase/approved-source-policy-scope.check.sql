@@ -1,5 +1,5 @@
--- Disposable/local database only, after applying the adjacent proposed SQL.
--- Constraint coverage; existing source:approve RLS is unchanged by the proposal.
+-- Disposable/local database only, after applying the source-scope migration.
+-- Constraint coverage; existing source:approve RLS is unchanged.
 begin;
 
 insert into public.schools (id, name, email_domains)
