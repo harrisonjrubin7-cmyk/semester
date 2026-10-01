@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
 import { Field, Row } from '../components/academic/Form';
+import { AssignmentsHome } from '../components/assignments/AssignmentsHome';
 import { InstructorBook } from '../components/gradebook/InstructorBook';
 import { StudentGrades } from '../components/gradebook/StudentGrades';
 import { useModuleGate } from '../lib/modulegate';
@@ -43,12 +44,32 @@ const FLAG = 'writeback.lms_grade_passback';
 
 type View = 'teaching' | 'mine';
 
+type Section = 'grades' | 'assignments';
+
 export function Gradebook() {
+  const [section, setSection] = useState<Section>('grades');
+  return (
+    <Page blurb={BLURB}>
+      <TabList
+        label="Gradebook sections"
+        value={section}
+        onChange={setSection}
+        tabs={[
+          { id: 'grades', label: 'Grades' },
+          { id: 'assignments', label: 'Assignments' },
+        ]}
+      />
+      {section === 'assignments' ? <AssignmentsHome /> : <Grades />}
+    </Page>
+  );
+}
+
+function Grades() {
   const gate = useModuleGate(FLAG);
   const { dispatch } = useStore();
   if (gate.status !== 'on') {
     return (
-      <Page blurb={BLURB}>
+      <>
         <ModuleGateState gate={gate} what="the gradebook" off={OFF} />
         {gate.status === 'off' && (
           <button
@@ -62,14 +83,10 @@ export function Gradebook() {
             Work out your own grades
           </button>
         )}
-      </Page>
+      </>
     );
   }
-  return (
-    <Page blurb={BLURB}>
-      <Book school={gate.school} me={gate.userId} />
-    </Page>
-  );
+  return <Book school={gate.school} me={gate.userId} />;
 }
 
 function Book({ school, me }: { school: string; me: string }) {

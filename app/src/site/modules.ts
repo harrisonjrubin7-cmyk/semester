@@ -48,7 +48,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'lms_assignments', name: 'Assignments and submissions', replaces: 'Canvas, Blackboard, Brightspace, Moodle',
     today: 'Your own work and deadlines, read from the syllabus.',
     core: 'Faculty publish assignments; students submit with a receipt and no double submissions.',
-    status: 'planned', tables: ['assignments', 'submissions'] },
+    status: 'in-preparation', tables: ['assignments', 'submissions'], suite: 'assignments' },
   { id: 'lms_gradebook', name: 'Gradebook and rubrics', replaces: 'The gradebook in Canvas, Blackboard or Brightspace',
     today: 'What you record yourself, with what-if grades. A gradebook of record is built behind a school-level switch that is off for every school.',
     core: 'Weighted categories, rubrics, posting rules and a grade history nobody can edit.',

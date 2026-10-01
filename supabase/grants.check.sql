@@ -538,6 +538,17 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20261001010000_assignments.sql: assignments and submissions in Core.
+    -- Each reads auth.uid(), the caller's own school and a course-and-term
+    -- scoped assignments:* capability, and refuses unless the school runs
+    -- lms_assignments in Core. `assignments.check.sql` walks every refusal.
+    'assignment_create(want_course text, want_term text, want_title text, want_instructions text, want_points numeric, want_due timestamp with time zone, want_late_policy text, want_late_until timestamp with time zone, want_attempts integer, want_key text)',
+    'assignment_edit(want_id uuid, want_title text, want_instructions text, want_due timestamp with time zone, want_late_policy text, want_late_until timestamp with time zone, want_key text)',
+    'assignment_publish(want_id uuid, want_key text)',
+    'assignment_close(want_id uuid, want_key text)',
+    'assignment_extend(want_id uuid, want_student uuid, want_due timestamp with time zone, want_until timestamp with time zone, want_reason text, want_key text)',
+    'assignment_submit(want_id uuid, want_body text, want_files jsonb, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

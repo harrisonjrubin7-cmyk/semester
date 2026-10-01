@@ -51,11 +51,11 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `prospective_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Explore public programs, career paths, readiness tools, estimated cost/plan tools | Institutional records, other users’ data |
-| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `academic-record.check.sql`<br>`admins.check.sql`<br>`commercial-automation.check.sql`<br>`configuration-studio.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`human-overrides.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`legal-holds.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`roster-import.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql`<br>`workflow-builder.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
-| `undergraduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `dining.check.sql`<br>`gradebook.check.sql`<br>`lti-capability.check.sql`<br>`registration_transaction.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Everything a student may, scoped to an undergraduate program | Other students’ private records, unauthorized institutional data |
-| `graduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `gradebook.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Manage graduate milestones, funding and work planning, course/research workflows | Other students’ records |
+| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive`<br>`assignments:submit` | `app/src/screens/Today.tsx` | `academic-record.check.sql`<br>`admins.check.sql`<br>`assignments.check.sql`<br>`commercial-automation.check.sql`<br>`configuration-studio.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`human-overrides.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`legal-holds.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`roster-import.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql`<br>`workflow-builder.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
+| `undergraduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive`<br>`assignments:submit` | `app/src/screens/Today.tsx` | `assignments.check.sql`<br>`dining.check.sql`<br>`gradebook.check.sql`<br>`lti-capability.check.sql`<br>`registration_transaction.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Everything a student may, scoped to an undergraduate program | Other students’ private records, unauthorized institutional data |
+| `graduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive`<br>`assignments:submit` | `app/src/screens/Today.tsx` | `gradebook.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Manage graduate milestones, funding and work planning, course/research workflows | Other students’ records |
 | `admitted_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Complete pre-arrival actions, first-term planning, orientation actions, accepted mentor workflow | Current-student restricted data unless enrolled/authorized |
-| `transfer_student` | provisionable | ✓ ✓ ✓ · · · · | `lti:launch`<br>`grades:receive` | — | — | — | — | Prepare transfer evaluation request, view approved articulation rules, use estimates | Self-verify transfer credit or approve equivalencies |
+| `transfer_student` | provisionable | ✓ ✓ ✓ · · · · | `lti:launch`<br>`grades:receive`<br>`assignments:submit` | — | — | — | — | Prepare transfer evaluation request, view approved articulation rules, use estimates | Self-verify transfer credit or approve equivalencies |
 | `dual_enrollment_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Use authorized planning and shared workflows with required guardian protections | Unconsented sharing or general student network features |
 | `alumni` | provisionable | ✓ ✓ ✓ · ✓ · · | — | — | `expansion.check.sql`<br>`mentor-rosters.check.sql`<br>`minimum-age.check.sql` | — | — | Maintain selected profile, mentoring offer, alumni tools | Current student data absent explicit contact/consent |
 
@@ -63,8 +63,8 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `faculty` | secure | ✓ ✓ ✓ ✓ ✓ · · | `skill:verify`<br>`help_request:respond`<br>`lti:launch`<br>`course:publish`<br>`record:propose`<br>`grades:enter`<br>`grades:moderate`<br>`grades:release`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`advisor.check.sql`<br>`coursestudio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Build/manage course content, define course AI policy, teach, assess, grade, give feedback | Private student plans, diagnoses, unrelated records |
-| `teaching_assistant` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch`<br>`grades:enter` | `app/src/components/HelpInbox.tsx` | `gradebook.check.sql`<br>`lti-membership.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md` | Perform delegated, course-scoped grading/support duties | Unapproved grade controls or unrelated course/student data |
+| `faculty` | secure | ✓ ✓ ✓ ✓ ✓ · · | `skill:verify`<br>`help_request:respond`<br>`lti:launch`<br>`course:publish`<br>`record:propose`<br>`grades:enter`<br>`grades:moderate`<br>`grades:release`<br>`grades:export`<br>`assignments:author`<br>`assignments:extend`<br>`assignments:review` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`advisor.check.sql`<br>`assignments.check.sql`<br>`coursestudio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Build/manage course content, define course AI policy, teach, assess, grade, give feedback | Private student plans, diagnoses, unrelated records |
+| `teaching_assistant` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch`<br>`grades:enter`<br>`assignments:extend`<br>`assignments:review` | `app/src/components/HelpInbox.tsx` | `assignments.check.sql`<br>`gradebook.check.sql`<br>`lti-membership.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md` | Perform delegated, course-scoped grading/support duties | Unapproved grade controls or unrelated course/student data |
 | `academic_advisor` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond` | `app/src/components/HelpInbox.tsx` | `advisor.check.sql`<br>`help-requests.check.sql`<br>`share-audit.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md` | View only student-shared plans/agendas and authorized follow-up | Private study activity, health, billing, or unrestricted browsing |
 | `tutor` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch` | `app/src/components/HelpInbox.tsx` | `help-requests.check.sql`<br>`rolegrants.check.sql` | — | — | Manage assigned tutoring/session workflow and student-consented context | Grades, private plans, unrelated student records |
 | `learning_center_staff` | secure | ✓ ✓ ✓ ✓ ✓ · · | `resource:publish`<br>`tutoring:manage`<br>`help_request:respond` | `app/src/components/HelpInbox.tsx` | `coursestudio.check.sql`<br>`supportshares.check.sql` | — | — | Publish resources, manage tutoring availability/sessions where authorized | Grades or broad private student data |
@@ -175,12 +175,16 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | --- | --- | --- | --- |
 | `student` | `lti:launch` | — | `lti-capability.check.sql` |
 | `student` | `grades:receive` | — | — |
+| `student` | `assignments:submit` | — | — |
 | `undergraduate_student` | `lti:launch` | — | `lti-capability.check.sql` |
 | `undergraduate_student` | `grades:receive` | — | — |
+| `undergraduate_student` | `assignments:submit` | — | — |
 | `graduate_student` | `lti:launch` | — | `lti-capability.check.sql` |
 | `graduate_student` | `grades:receive` | — | — |
+| `graduate_student` | `assignments:submit` | — | — |
 | `transfer_student` | `lti:launch` | — | `lti-capability.check.sql` |
 | `transfer_student` | `grades:receive` | — | — |
+| `transfer_student` | `assignments:submit` | — | — |
 | `faculty` | `skill:verify` | — | — |
 | `faculty` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `faculty` | `lti:launch` | — | `lti-capability.check.sql` |
@@ -190,9 +194,14 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `faculty` | `grades:moderate` | — | — |
 | `faculty` | `grades:release` | — | — |
 | `faculty` | `grades:export` | — | — |
+| `faculty` | `assignments:author` | — | — |
+| `faculty` | `assignments:extend` | — | — |
+| `faculty` | `assignments:review` | — | — |
 | `teaching_assistant` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `teaching_assistant` | `lti:launch` | — | `lti-capability.check.sql` |
 | `teaching_assistant` | `grades:enter` | — | — |
+| `teaching_assistant` | `assignments:extend` | — | — |
+| `teaching_assistant` | `assignments:review` | — | — |
 | `academic_advisor` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `tutor` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `tutor` | `lti:launch` | — | `lti-capability.check.sql` |

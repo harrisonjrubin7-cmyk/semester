@@ -690,6 +690,7 @@ const MOCKS_MODULES = [
   'src/components/MembershipPanel.live.test.tsx',
   'src/components/PlusPrompt.test.tsx',
   'src/components/institutional/ModulesPanel.test.tsx',
+  'src/components/assignments/AssignmentsHome.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
   'src/components/PushTop.regday.test.tsx',
   'src/components/OfflineBanner.reconnect.test.tsx',

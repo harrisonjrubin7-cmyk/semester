@@ -1334,6 +1334,16 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'grade_entries', column: 'student_id' },
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
+  // Work you handed in, its files and receipt, and extensions granted to you
+  // (`lib/assignments/client.ts`). Each names you by a column that references
+  // `auth.users` with `on delete cascade` (`20261001010000_assignments.sql`), so
+  // they go with the account; a file's row goes with its submission. The school's
+  // own export is its copy, and the file in Storage is the school's to keep or
+  // delete under its retention schedule.
+  { table: 'submissions', column: 'student_id' },
+  { table: 'submission_receipts', column: 'student_id' },
+  { table: 'submission_files', column: null, cascadesFrom: 'submissions' },
+  { table: 'assignment_overrides', column: 'student_id' },
 ];
 
 /**
@@ -1355,6 +1365,10 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'assignments',
+    why: 'A course’s assignment, such as a problem set. The course’s, not any student’s; if you wrote one as an instructor, your name is cleared and the assignment stays.',
+  },
   {
     table: 'module_mode_request',
     why: 'A request to switch one of a school’s modules between Connect and Core is a governance record of the school, kept with its approvals. Deleting your account removes you as the person who asked; the request and what it changed stay.',
