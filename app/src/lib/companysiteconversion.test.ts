@@ -76,6 +76,11 @@ describe('the company-site conversion path', () => {
     expect(site).toContain('full server-data export; one-step account deletion; and device erase in Settings');
     expect(site).not.toContain('Full self-serve export and one-step account deletion');
     expect(site).toContain('Repository preparation complete · activation gated');
+    expect(site).toContain('Role-specific staff training guides and first-day checklists');
+    expect(site).toContain('A pilot measures and baseline worksheet');
+    expect(site).toContain('Training delivered to the named pilot staff');
+    expect(site).toContain('a real baseline collected');
+    expect(site).not.toContain('<li>Staff training material</li>');
     expect(site).toContain('Automated logical-dump restore, load and concurrency rehearsals in CI');
     expect(site).not.toContain('Load and disaster-recovery evidence');
     expect(site).not.toContain('Actions are pinned to version tags today');
@@ -95,5 +100,12 @@ describe('the company-site conversion path', () => {
     expect(site).toContain('status page, in-app notices and Atom feed');
     expect(site).toContain('Email delivery remains pending.');
     expect(site).not.toContain('A maintenance workflow with subscriber notices is planned.');
+  });
+
+  it('records status-update requests without claiming an active subscription', () => {
+    expect(site).toContain('Request incident updates by email');
+    expect(site).toContain('The request is recorded for manual setup; you are not subscribed until Semester confirms it by email.');
+    expect(site).toContain('Self-service preference management, confirmed delivery and a customer-contact drill remain pending.');
+    expect(site).not.toContain('<p class="eyebrow">Get incident updates by email</p>');
   });
 });
