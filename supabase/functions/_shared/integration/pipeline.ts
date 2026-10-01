@@ -83,6 +83,8 @@ export interface IngestStore {
   claimIdempotencyKey(connection: string, key: string): Promise<boolean>;
   /** The last source timestamp stored for this external record, if any. */
   lastSourceTimestamp(connection: string, entity: string, id: string): Promise<string | null>;
+  /** A legacy row must be fully remapped before current provenance is assigned. */
+  requiresGovernanceRemap?(connection: string, entity: string, id: string): Promise<boolean>;
   /** Map a provider person reference to a Semester account, or null. */
   resolveSubject(tenantId: string, subject: string): Promise<string | null>;
   /** Whether the account has a live consent for this purpose. */
@@ -249,7 +251,8 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       reject('timestamp_regression', 'the provider sent an older version than the one stored');
       continue;
     }
-    const unchanged = Boolean(previous && rec.updatedAt && Date.parse(rec.updatedAt) === Date.parse(previous) && !rec.deleted);
+    const remap = await store.requiresGovernanceRemap?.(connection.publicId, rec.entityType, rec.id) ?? false;
+    const unchanged = Boolean(!remap && previous && rec.updatedAt && Date.parse(rec.updatedAt) === Date.parse(previous) && !rec.deleted);
     // Reconfirmed records still refresh their persisted governance clocks.
     if (unchanged) result.unchanged += 1;
 

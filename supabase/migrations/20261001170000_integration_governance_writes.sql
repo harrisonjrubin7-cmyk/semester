@@ -10,6 +10,38 @@ alter table public.canonical_entity_references
     and not jsonb_path_exists(display, 'strict $.* ? (@.type() == "object" || @.type() == "array")')
   );
 
+-- Only complete server envelopes are eligible for clock refresh or timed purge.
+create or replace function private.integration_governance_valid(raw text)
+returns boolean language plpgsql immutable set search_path = '' as $$
+declare e jsonb; k text;
+begin
+  if raw is null or not pg_input_is_valid(raw, 'jsonb') then return false; end if;
+  e := raw::jsonb;
+  if jsonb_typeof(e) is distinct from 'object' then return false; end if;
+  foreach k in array array['sourceStandard', 'sourceOwner', 'retentionPolicyId'] loop
+    if jsonb_typeof(e -> k) is distinct from 'string' or length(trim(e ->> k)) = 0 then return false; end if;
+  end loop;
+  if jsonb_typeof(e -> 'permittedPurposes') is distinct from 'array' then return false; end if;
+  if jsonb_array_length(e -> 'permittedPurposes') = 0 or exists (
+    select 1 from jsonb_array_elements(e -> 'permittedPurposes') p(value)
+    where jsonb_typeof(p.value) is distinct from 'string' or length(trim(p.value #>> '{}')) = 0
+  ) then return false; end if;
+  if (e ->> 'aiEligibility') is distinct from 'denied_by_default'
+    or (e ->> 'writeAuthority') is distinct from 'source-system-only' then return false; end if;
+  if not coalesce(e -> 'consentPurpose' = 'null'::jsonb
+    or (jsonb_typeof(e -> 'consentPurpose') = 'string' and length(trim(e ->> 'consentPurpose')) > 0), false)
+    then return false; end if;
+  foreach k in array array['retrievedAt', 'expiresAt', 'retentionExpiresAt'] loop
+    if k = 'retentionExpiresAt' and e -> 'retentionExpiresAt' = 'null'::jsonb
+      and e ->> 'retentionPolicyId' = 'canonical:tenant-lifetime' then continue; end if;
+    if jsonb_typeof(e -> k) is distinct from 'string'
+      or (e ->> k) !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+      or not pg_input_is_valid(e ->> k, 'timestamptz') then return false; end if;
+  end loop;
+  return (e ->> 'expiresAt')::timestamptz > (e ->> 'retrievedAt')::timestamptz;
+end $$;
+revoke all on function private.integration_governance_valid(text) from public, anon, authenticated;
+
 -- Reconfirmed source revisions refresh only server metadata, never values.
 -- A deleted/replaced revision is not revived by a racing metadata refresh.
 create or replace function public.integration_refresh_governance(
@@ -20,26 +52,26 @@ declare n integer;
 begin
   update public.canonical_entity_references r
      set display = r.display || jsonb_build_object('_governance',
-           case when r.display ? '_governance' then
-             -- Keep the provenance/policy of the values actually stored. A new
-             -- adapter declaration cannot relabel an unchanged source revision.
-             -- Retention deadlines also stay fixed; only freshness is renewed.
-             ((r.display ->> '_governance')::jsonb || jsonb_build_object(
-               'retrievedAt', want_at,
-               'expiresAt', want_at + coalesce((
-                 select c.freshness_target from public.integration_connections c
-                 where c.id = want_connection and c.tenant_id = want_tenant
-               ), (
-                 ((r.display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
-                 - ((r.display ->> '_governance')::jsonb ->> 'retrievedAt')::timestamptz
-               ))))::text
-           else x.governance end),
+           -- Preserve the provenance and retention policy of the stored values.
+           ((r.display ->> '_governance')::jsonb || jsonb_build_object(
+             'retrievedAt', want_at,
+             'expiresAt', want_at + coalesce((
+               select case when extract(epoch from c.freshness_target) > 0 then
+                 make_interval(secs => greatest(60, extract(epoch from c.freshness_target))) end
+               from public.integration_connections c
+               where c.id = want_connection and c.tenant_id = want_tenant
+             ), (
+               ((r.display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
+               - ((r.display ->> '_governance')::jsonb ->> 'retrievedAt')::timestamptz
+             ))))::text),
          freshness_status = 'live', updated_at = want_at
     from jsonb_to_recordset(want_records) as x(entity text, id text, timestamp timestamptz, governance text)
    where r.tenant_id = want_tenant and r.connection_id = want_connection
      and r.source_system = want_source and r.canonical_entity_type = x.entity
      and r.source_record_id = x.id and r.source_timestamp = x.timestamp
-     and r.external_deleted_at is null;
+     and r.external_deleted_at is null
+     -- A legacy/malformed envelope is remapped by the worker, never relabeled.
+     and private.integration_governance_valid(r.display ->> '_governance');
   get diagnostics n = row_count;
   return n;
 end $$;
@@ -149,7 +181,18 @@ declare
   n_runs integer; n_errors integer; n_events integer; n_dead integer; n_snaps integer; n_refs integer;
   r public.integration_retention_runs;
 begin
-  for t in select distinct tenant_id from public.integration_connections loop
+  if private.platform_is_held() then return; end if;
+  for t in
+    select tenant_id from public.integration_connections
+    union select tenant_id from public.source_records
+    union select tenant_id from public.source_snapshots
+    union select tenant_id from public.canonical_entity_references
+    union select tenant_id from public.integration_sync_errors
+    union select tenant_id from public.integration_sync_runs
+    union select tenant_id from public.integration_webhook_events
+    union select tenant_id from public.integration_dead_letter_events
+  loop
+    if private.tenant_is_held(t) then continue; end if;
     select coalesce(array_agg(id), '{}') into held
       from public.integration_connections where tenant_id = t and legal_hold;
 
@@ -182,15 +225,12 @@ begin
 
     delete from public.canonical_entity_references
      where tenant_id = t and (connection_id is null or not (connection_id = any(held)))
+       and (subject_user_id is null or not private.account_is_held(subject_user_id))
        and (
          (external_deleted_at is not null and external_deleted_at < now() - interval '30 days')
-         or case
-           when jsonb_typeof(display -> '_governance') = 'string'
-             and pg_input_is_valid(display ->> '_governance', 'jsonb') then
-             case when pg_input_is_valid((display ->> '_governance')::jsonb ->> 'retentionExpiresAt', 'timestamptz') then
-               ((display ->> '_governance')::jsonb ->> 'retentionExpiresAt')::timestamptz <= now()
-             else false end
-           else false end
+         or case when private.integration_governance_valid(display ->> '_governance') then
+           ((display ->> '_governance')::jsonb ->> 'retentionExpiresAt')::timestamptz <= now()
+         else false end
        );
     get diagnostics n_refs = row_count;
 

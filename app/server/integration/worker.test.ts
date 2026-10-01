@@ -133,6 +133,43 @@ describe('a run', () => {
       expiresAt: new Date(later.getTime() + 30 * 60_000).toISOString() });
   });
 
+  it.each([undefined, 'legacy string', '{}', '{"retrievedAt":"bad","expiresAt":"bad"}'])
+    ('fully remaps legacy metadata before assigning current provenance: %s', async (legacy) => {
+      const t = world(); const db = fakeDb(t);
+      await runSync(db, req([SIS_FIXTURES.term]), now);
+      t.canonical_entity_references[0].display = { name: 'Old mapped value', ...(legacy === undefined ? {} : { _governance: legacy }) };
+      const corrected = { ...SIS_FIXTURES.term, fields: { ...SIS_FIXTURES.term.fields, description: 'Current mapped value' } };
+      const adapter = { ...MOCK_SIS, version: '2', sourceOfTruth: 'Current authority',
+        entities: MOCK_SIS.entities.map((e) => ({ ...e, version: 2 })) };
+      const result = await runSync(db, req([corrected], { adapter, fetchBatch: batch([corrected], 'evt-remap') }), now);
+      expect(result).toMatchObject({ result: { status: 'succeeded', updated: 1, unchanged: 0 } });
+      expect(t.canonical_entity_references[0]).toMatchObject({ source_of_truth: 'Current authority', mapping_version: 2,
+        display: { name: 'Current mapped value' } });
+      expect(JSON.parse((t.canonical_entity_references[0].display as Row)._governance as string))
+        .toMatchObject({ sourceStandard: `${adapter.id}@2`, sourceOwner: 'Current authority' });
+    });
+
+  it('still rejects an older provider timestamp when a legacy row needs remapping', async () => {
+    const t = world(); const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    t.canonical_entity_references[0].display = { name: 'Legacy value' };
+    const older = { ...SIS_FIXTURES.term, updatedAt: '2025-01-01T00:00:00Z' };
+    expect(await runSync(db, req([older], { fetchBatch: batch([older], 'evt-old') }), now))
+      .toMatchObject({ result: { status: 'failed', updated: 0, errors: [{ category: 'timestamp_regression' }] } });
+    expect(t.canonical_entity_references[0].display).toEqual({ name: 'Legacy value' });
+  });
+
+  it.each(['-01:00:00', '00:00:00', '00:00:30.500'])('validates and floors the connection freshness interval %s', async (target) => {
+    const t = world(); const db = fakeDb(t);
+    t.integration_connections[0].freshness_target = target;
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    const minutes = target === '00:00:30.500' ? 1 : MOCK_SIS.freshnessTargetMinutes;
+    expect(await runSync(db, req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') }), now))
+      .toMatchObject({ result: { status: 'succeeded', unchanged: 1 } });
+    const e = JSON.parse((t.canonical_entity_references[0].display as Row)._governance as string);
+    expect(Date.parse(e.expiresAt) - Date.parse(e.retrievedAt)).toBe(minutes * 60_000);
+  });
+
   it('preserves stored values when a corrected payload has the same source timestamp', async () => {
     const t = world();
     const db = fakeDb(t);

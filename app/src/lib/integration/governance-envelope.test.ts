@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { governanceEnvelope } from './governance-envelope';
+import { governanceEnvelope, hasGovernanceEnvelope } from './governance-envelope';
 import { MOCK_LMS, MOCK_ASSIGNMENT, memoryStore, mockBatch } from './mock-adapter';
 import { ingest } from './pipeline';
 import { validateDeclaration } from './adapter';
@@ -15,6 +15,15 @@ describe('canonical governance metadata', () => {
     expect(e.aiEligibility).toBe('denied_by_default');
     expect(e.writeAuthority).toBe('source-system-only');
     expect(governanceEnvelope(MOCK_LMS, { ...MOCK_LMS.entities[1], personal: true }, 'conn_1', now).consentPurpose).toBe('integration:conn_1');
+  });
+
+  it('recognizes only complete provenance with valid ISO clocks as refreshable', () => {
+    const e = governanceEnvelope(MOCK_LMS, MOCK_LMS.entities[1], 'conn_1', now);
+    expect(hasGovernanceEnvelope(JSON.stringify(e))).toBe(true);
+    expect(hasGovernanceEnvelope(JSON.stringify({ ...e, retentionPolicyId: 'canonical:tenant-lifetime', retentionExpiresAt: null }))).toBe(true);
+    for (const raw of [undefined, 'legacy', '{}', 'null', '[]', JSON.stringify({ ...e, retrievedAt: '1' }),
+      JSON.stringify({ ...e, retrievedAt: '2026-02-30T12:00:00Z' }), JSON.stringify({ ...e, permittedPurposes: [] }),
+      JSON.stringify({ ...e, expiresAt: e.retrievedAt }), JSON.stringify({ ...e, retentionExpiresAt: null })]) expect(hasGovernanceEnvelope(raw)).toBe(false);
   });
 
   it('does not let a provider inject authorization or unrestricted AI eligibility', async () => {

@@ -53,8 +53,11 @@ export function freshnessSentence(freshness: Freshness, source: string, at: Date
  */
 export function intervalMinutes(value: string | null): number | null {
   if (!value) return null;
-  const m = /^(?:(\d+) years? ?)?(?:(\d+) mons? ?)?(?:(\d+) days? ?)?(?:(\d+):(\d{2}):(\d{2})(?:\.\d+)?)?$/.exec(value.trim());
+  const m = /^(?:([+-]?\d+) years? ?)?(?:([+-]?\d+) mons? ?)?(?:([+-]?\d+) days? ?)?(?:([+-]?)(\d+):(\d{2}):(\d{2}(?:\.\d+)?))?$/.exec(value.trim());
   if (!m || m[0] === '') return null;
-  const [, y, mo, d, h, mi] = m.map((x) => Number(x ?? 0));
-  return ((y * 365 + mo * 30 + d) * 24 + h) * 60 + mi;
+  const [, y, mo, d, sign, h, mi, seconds] = m;
+  const total = ((Number(y ?? 0) * 365.25 + Number(mo ?? 0) * 30 + Number(d ?? 0)) * 24) * 60
+    + (sign === '-' ? -1 : 1) * (Number(h ?? 0) * 60 + Number(mi ?? 0) + Number(seconds ?? 0) / 60);
+  // Same duration conversion and one-minute floor as the database/LTI writer.
+  return Number.isFinite(total) && total > 0 ? Math.max(1, total) : null;
 }

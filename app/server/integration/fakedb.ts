@@ -113,7 +113,10 @@ export function fakeDb(tables: Tables) {
         const hit = (args.want_records as Row[]).find((x) => x.entity === row.canonical_entity_type
           && x.id === row.source_record_id && x.timestamp === row.source_timestamp);
         if (!hit) continue;
-        const prior = typeof display._governance === 'string' ? JSON.parse(display._governance) : null;
+        let prior;
+        try { prior = typeof display._governance === 'string' ? JSON.parse(display._governance) : null; } catch { continue; }
+        if (!prior || !Number.isFinite(Date.parse(prior.retrievedAt))
+          || !Number.isFinite(Date.parse(prior.expiresAt)) || Date.parse(prior.expiresAt) <= Date.parse(prior.retrievedAt)) continue;
         const connection = (tables.integration_connections ?? []).find((c) => c.id === args.want_connection
           && c.tenant_id === args.want_tenant);
         const override = intervalMinutes(String(connection?.freshness_target ?? ''));

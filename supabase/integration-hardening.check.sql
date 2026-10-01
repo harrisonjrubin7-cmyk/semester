@@ -20,8 +20,19 @@ begin
   execute 'reset role';
 end $$;
 
+create or replace function pg_temp.governance(deadline timestamptz)
+returns jsonb language sql as $$
+  select jsonb_build_object('_governance', jsonb_build_object(
+    'sourceStandard', 'test@1', 'sourceOwner', 'Registrar',
+    'permittedPurposes', jsonb_build_array('scope.sis.catalog_read'),
+    'aiEligibility', 'denied_by_default', 'writeAuthority', 'source-system-only',
+    'retrievedAt', now(), 'expiresAt', now() + interval '1 hour',
+    'retentionPolicyId', case when deadline is null then 'canonical:tenant-lifetime' else 'integration:test@1' end,
+    'retentionExpiresAt', deadline, 'consentPurpose', null)::text);
+$$;
+
 do $$
-declare live uuid; held uuid; run_old uuid; run_new uuid; src uuid; integ uuid; student uuid; n bigint; s boolean;
+declare live uuid; held uuid; run_old uuid; run_new uuid; src uuid; integ uuid; student uuid; n bigint; s boolean; orphan uuid; hold_id uuid; kind text;
 begin
   insert into public.schools (id, name, email_domains) values ('ih-u', 'Hardening University', array['ih-u.example']);
   integ := gen_random_uuid();
@@ -78,17 +89,17 @@ begin
   insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id, connection_id,
     source_system, source_record_id, source_of_truth, display)
   values ('ih-u', 'term', 'expired-live', live, 'SIS', 'g5', 'Registrar',
-           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', now() - interval '1 day')::text)),
+           pg_temp.governance(now() - interval '1 day')),
          ('ih-u', 'term', 'unexpired-live', live, 'SIS', 'g6', 'Registrar',
-           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', now() + interval '1 day')::text)),
+           pg_temp.governance(now() + interval '1 day')),
          ('ih-u', 'term', 'no-clock', live, 'LMS', 'g7', 'LMS',
-           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', null)::text)),
+           pg_temp.governance(null)),
          ('ih-u', 'term', 'legacy-metadata', live, 'SIS', 'g8', 'Registrar',
            jsonb_build_object('_governance', 'legacy non-JSON string')),
          ('ih-u', 'term', 'invalid-clock', live, 'SIS', 'g9', 'Registrar',
            jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', 'not-a-timestamp')::text)),
          ('ih-u', 'term', 'expired-held', held, 'SIS', 'g10', 'Registrar',
-           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', now() - interval '1 day')::text));
+           pg_temp.governance(now() - interval '1 day'));
 
   -- The worker is the service role, and the rows it writes take a public id
   -- from a default. Codex found on #779 that the default's function was
@@ -174,6 +185,47 @@ begin
   exception when check_violation then
     raise notice 'ok  a hold without a reason is refused';
   end;
+  -- Central holds protect expiry, independently of the old connection flag.
+  perform set_config('request.jwt.claims', '{}', true);
+  insert into public.schools (id, name, email_domains) values ('ih-orphan', 'Orphan University', array['ih-orphan.example']);
+  for kind in select unnest(array['account', 'tenant', 'platform']) loop
+    insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id, subject_user_id,
+      connection_id, source_system, source_record_id, source_of_truth, display)
+    values ('ih-u', 'enrollment', 'held-expiry', student, live, 'SIS', 'held-expiry', 'Registrar',
+      pg_temp.governance(now() - interval '1 day')),
+      ('ih-orphan', 'term', 'unheld-expiry', null, null, 'SIS', 'unheld-expiry', 'Registrar',
+      pg_temp.governance(now() - interval '1 day'));
+    insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
+    values (kind, case kind when 'account' then student::text when 'tenant' then 'ih-u' else '' end,
+      case when kind = 'platform' then null else 'ih-u' end, 'Retention test', 'rollback-only', integ) returning id into hold_id;
+    perform pg_temp.sweep();
+    select count(*) into n from public.canonical_entity_references where canonical_entity_id = 'held-expiry';
+    perform pg_temp.counted(kind || ' hold preserves expired live evidence', n, 1);
+    select count(*) into n from public.canonical_entity_references where canonical_entity_id = 'unheld-expiry';
+    perform pg_temp.counted(kind || ' hold only stops its covered scope', n, case when kind = 'platform' then 1 else 0 end);
+    update public.legal_holds set released_by = student, release_reason = 'Test matter closed' where id = hold_id;
+    perform pg_temp.sweep();
+    select count(*) into n from public.canonical_entity_references where canonical_entity_id in ('held-expiry', 'unheld-expiry');
+    perform pg_temp.counted('released ' || kind || ' hold permits retention expiry', n, 0);
+  end loop;
+  -- The last connection can be gone while references and snapshots remain.
+  insert into public.integration_connections (tenant_id, provider_domain, provider_name, connection_name)
+  values ('ih-orphan', 'sis', 'SIS', 'Last connection') returning id into orphan;
+  insert into public.source_records (tenant_id, connection_id, source_type, source_name, source_of_truth)
+  values ('ih-orphan', orphan, 'connected_institutional', 'Orphan source', 'Registrar') returning id into src;
+  insert into public.source_snapshots (tenant_id, source_record_id, snapshot_hash, retention_expires_at)
+  values ('ih-orphan', src, 'sha256:' || repeat('f', 64), now() - interval '1 day');
+  insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id, connection_id,
+    source_system, source_record_id, source_of_truth, external_deleted_at, display)
+  values ('ih-orphan', 'term', 'orphan-expiry', orphan, 'SIS', 'orphan-expiry', 'Registrar', null,
+      pg_temp.governance(now() - interval '1 day')),
+    ('ih-orphan', 'term', 'orphan-tombstone', orphan, 'SIS', 'orphan-tombstone', 'Registrar', now() - interval '40 days', '{}'::jsonb);
+  delete from public.integration_connections where id = orphan;
+  perform pg_temp.sweep();
+  select count(*) into n from public.canonical_entity_references where tenant_id = 'ih-orphan';
+  perform pg_temp.counted('expiry and tombstones are swept after the last connection is removed', n, 0);
+  select count(*) into n from public.source_snapshots where tenant_id = 'ih-orphan';
+  perform pg_temp.counted('orphan source snapshots are also swept', n, 0);
 end $$;
 
 rollback;

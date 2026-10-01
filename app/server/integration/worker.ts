@@ -28,6 +28,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateDeclaration, type AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import { ingest, type ConnectionState, type IngestResult, type IngestStore, type ProviderBatch } from '../../src/lib/integration/pipeline.ts';
+import { hasGovernanceEnvelope } from '../../src/lib/integration/governance-envelope.ts';
 import { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 import { payloadHash, redactReference, sanitizeMessage } from '../../src/lib/integration/redact.ts';
 import { afterFailure, type NextStep } from '../../src/lib/integration/retry.ts';
@@ -77,6 +78,8 @@ async function killed(db: SupabaseClient, tenant: string, publicId: string): Pro
 export function tableStore(db: SupabaseClient, connection: ConnectionRow, adapter: AdapterDeclaration): IngestStore {
   const canonicalOf = (external: string) => adapter.entities.find((e) => e.externalEntity === external)?.canonicalEntity;
   const sourceSystem = `${adapter.provider} ${adapter.product}`.trim();
+  const remap = new Set<string>();
+  const key = (entity: string, id: string) => JSON.stringify([entity, id]);
   return {
     async claimIdempotencyKey() {
       // Claimed by `runSync` itself, before the pipeline runs, so a duplicate
@@ -86,11 +89,15 @@ export function tableStore(db: SupabaseClient, connection: ConnectionRow, adapte
     async lastSourceTimestamp(_c, entity, id) {
       const type = canonicalOf(entity);
       if (!type) return null;
-      const { data } = await db.from('canonical_entity_references').select('source_timestamp')
+      const { data } = await db.from('canonical_entity_references').select('source_timestamp,display')
         .eq('tenant_id', connection.tenant_id).eq('connection_id', connection.id).eq('source_system', sourceSystem)
         .eq('source_record_id', id).eq('canonical_entity_type', type).is('external_deleted_at', null).maybeSingle();
-      return (data as { source_timestamp: string | null } | null)?.source_timestamp ?? null;
+      const stored = data as { source_timestamp: string | null; display: Record<string, unknown> } | null;
+      if (stored && !hasGovernanceEnvelope(stored.display?._governance)) remap.add(key(entity, id));
+      else remap.delete(key(entity, id));
+      return stored?.source_timestamp ?? null;
     },
+    async requiresGovernanceRemap(_c, entity, id) { return remap.has(key(entity, id)); },
     async resolveSubject(tenant, subject) {
       if (tenant !== connection.tenant_id) return null;
       const { data: identity } = await db.from('scim_external_identity').select('membership_id')

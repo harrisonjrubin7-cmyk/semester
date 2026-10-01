@@ -293,6 +293,11 @@ describe('found by the Codex review of #811', () => {
     expect(intervalMinutes('2 days')).toBe(2880);
     expect(intervalMinutes('1 day 06:30:00')).toBe(1830);
     expect(intervalMinutes('1 mon')).toBe(30 * 1440);
+    expect(intervalMinutes('00:00:30.500')).toBe(1);
+    expect(intervalMinutes('01:02:03.5')).toBeCloseTo(62 + 3.5 / 60);
+    expect(intervalMinutes('-01:30:00')).toBeNull();
+    expect(intervalMinutes('00:00:00')).toBeNull();
+    expect(intervalMinutes('-1 day +30:00:00')).toBe(360);
     expect(intervalMinutes(null)).toBeNull();
     expect(intervalMinutes('P1D')).toBeNull();
 
