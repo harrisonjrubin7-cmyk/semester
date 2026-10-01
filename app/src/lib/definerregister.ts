@@ -232,6 +232,12 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['disable_school_access', 'admin', ['private.offboarding_operator']],
   ['draft_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['edit_community_post', 'self-service', ['auth.uid()']],
+  ['event_cancel', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.has_capability', 'private.events_replay', 'private.events_live']],
+  ['event_decide', 'admin', ['private.gradebook_school', 'private.has_capability', 'private.events_replay']],
+  ['event_headcount', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.events_live', 'private.events_manager']],
+  ['event_propose', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.events_replay', 'private.has_capability']],
+  ['event_publish_direct', 'admin', ['private.gradebook_school', 'private.has_capability', 'private.events_replay']],
+  ['event_rsvp', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.events_replay', 'private.events_live']],
   ['export_my_data', 'self-service', ['auth.uid()']],
   ['follow_organization', 'self-service', ['auth.uid()']],
   ['forget_my_advisor_shares', 'self-service', ['auth.uid()']],
@@ -400,6 +406,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001060000_admissions.sql',
   '20261001070000_financial_aid.sql',
   '20261001080000_scheduling.sql',
+  '20261001090000_events.sql',
 ];
 
 /**
@@ -411,6 +418,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001090000_events.sql',
+    functions: ['event_cancel', 'event_decide', 'event_headcount', 'event_propose', 'event_publish_direct', 'event_rsvp'],
+  },
   {
     file: '20261001080000_scheduling.sql',
     functions: [

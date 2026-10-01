@@ -1374,6 +1374,13 @@ export const OWNED_TABLES: OwnedTable[] = [
   // references `auth.users` with `on delete cascade`; its history goes with it.
   { table: 'space_bookings', column: 'requester' },
   { table: 'space_booking_events', column: null, cascadesFrom: 'space_bookings' },
+  // Events you proposed, their decision and cancellation, and your RSVPs
+  // (`20261001090000_events.sql`). An event names you by a column that references
+  // `auth.users` with `on delete cascade`, and so does an RSVP.
+  { table: 'campus_events', column: 'proposer' },
+  { table: 'event_decisions', column: null, cascadesFrom: 'campus_events' },
+  { table: 'event_cancellations', column: null, cascadesFrom: 'campus_events' },
+  { table: 'event_rsvps', column: 'member' },
 ];
 
 /**
@@ -1395,6 +1402,10 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'events_operations',
+    why: 'Idempotency keys the events writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
   {
     table: 'campus_spaces',
     why: 'A room or space the school books. The school’s, not any person’s; if you created one as staff, your name is cleared and it stays.',

@@ -240,6 +240,9 @@ behind and a client that believes it succeeded.
 | `campus_spaces`, `space_events` | kept with the school; never by a person's deletion | a room or space the school books, and every change to it, old and new. Nothing is deleted; a space is retired. Staff names are cleared if their account is deleted |
 | `timetable_runs`, `timetable_publications` | kept with the school | a timetable solver run (its input, the assignment proposed, the conflicts the database found) and that a person published it. Never rewritten |
 | `scheduling_operations` | kept with the school | idempotency keys the scheduling writers spent, with what each asked and answered. Append-only |
+| `campus_events`, `event_decisions`, `event_cancellations` | account deletion of the proposer | an event a member proposed, whether a manager published or declined it and any booking that wrote, and whether it was cancelled and why. Deleting your account deletes the events you proposed; a manager's name on a decision or cancellation is cleared if their account is deleted |
+| `event_rsvps` | account deletion of the member | each version of your RSVP to an event: going, on the waitlist or cancelled. Never rewritten; deleting your account deletes them |
+| `events_operations` | kept with the school | idempotency keys the events writers spent, with what each asked and answered. Append-only |
 | `attendance_sessions` | kept with the school; never by a person's deletion | one class meeting a code can check in to, with its window and code. The course's, not any student's; if you opened one, your name is cleared and the session stays |
 | `attendance_marks` | account deletion of the student; otherwise kept with the school | every version of every attendance mark with who and why. Append-only; the latest version is the mark |
 | `attendance_failures` | account deletion of the student | a wrong attendance code tried at check-in, kept so five in ten minutes stop further tries; nothing else |

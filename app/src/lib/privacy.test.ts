@@ -459,6 +459,8 @@ describe('"delete my account" really means every row', () => {
       'dining_hours',
       'dining_locations',
       'dining_menu_items',
+      // The events writers' idempotency keys, kept with the school (D-151).
+      'events_operations',
       'feature_kill_switch',
       // A course's grading scheme and items (lib/gradebook/client.ts,
       // 20260929310000_gradebook.sql): the course's, not a student's.

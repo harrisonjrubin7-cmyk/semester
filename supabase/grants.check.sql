@@ -655,6 +655,18 @@ declare
     'timetable_run_save(want_term text, want_input jsonb, want_proposal jsonb, want_key text)',
     'timetable_publish(want_run uuid, want_key text)',
 
+    -- 20261001090000_events.sql: events and RSVPs in Core. Each reads auth.uid()
+    -- and the caller's own school, and refuses unless the school runs events in
+    -- Core; publishing, declining and cancelling another's event need
+    -- events:manage. An event is decided by someone other than who proposed it.
+    -- `events.check.sql` walks every refusal.
+    'event_propose(want_host_kind text, want_host_ref text, want_title text, want_description text, want_location text, want_space text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer, want_key text)',
+    'event_decide(want_event uuid, want_publish boolean, want_note text, want_key text)',
+    'event_publish_direct(want_host_ref text, want_title text, want_description text, want_location text, want_space text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer, want_key text)',
+    'event_cancel(want_event uuid, want_reason text, want_key text)',
+    'event_rsvp(want_event uuid, want_going boolean, want_key text)',
+    'event_headcount(want_event uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

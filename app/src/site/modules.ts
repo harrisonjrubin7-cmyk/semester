@@ -92,7 +92,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'events', name: 'Events', replaces: 'Localist, CampusGroups, Anthology Engage',
     today: 'Community sessions.',
     core: 'Events with RSVPs, hosted by communities, offices or courses.',
-    status: 'planned', tables: ['events', 'event_rsvps'] },
+    status: 'in-preparation', tables: ['campus_events', 'event_rsvps'], suite: 'events' },
   { id: 'k12', name: 'K-12 and parents', replaces: 'PowerSchool, Infinite Campus, Skyward, ParentSquare',
     today: 'Family access for college students who choose to share. A school’s staff can record a minor’s guardian, and the link stops counting at 18; there is no parent screen, no messaging and no report card yet.',
     core: 'A guardian role with the parent’s rights over a minor’s record, standards-based grading and report cards.',

@@ -18,6 +18,7 @@ const TestsHome = lazy(() => import('../components/assessments/TestsHome').then(
 const RecordsHome = lazy(() => import('../components/records/RecordsHome').then((m) => ({ default: m.RecordsHome })));
 const AdmissionsHome = lazy(() => import('../components/admissions/AdmissionsHome').then((m) => ({ default: m.AdmissionsHome })));
 const AidHome = lazy(() => import('../components/aid/AidHome').then((m) => ({ default: m.AidHome })));
+const EventsHome = lazy(() => import('../components/events/EventsHome').then((m) => ({ default: m.EventsHome })));
 const SchedulingHome = lazy(() => import('../components/scheduling/SchedulingHome').then((m) => ({ default: m.SchedulingHome })));
 const AttendanceHome = lazy(() => import('../components/attendance/AttendanceHome').then((m) => ({ default: m.AttendanceHome })));
 const AssignmentsHome = lazy(() => import('../components/assignments/AssignmentsHome').then((m) => ({ default: m.AssignmentsHome })));
@@ -55,7 +56,7 @@ const FLAG = 'writeback.lms_grade_passback';
 
 type View = 'teaching' | 'mine';
 
-type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions' | 'aid' | 'scheduling';
+type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions' | 'aid' | 'scheduling' | 'events';
 
 export function Gradebook() {
   const [section, setSection] = useState<Section>('grades');
@@ -74,11 +75,12 @@ export function Gradebook() {
           { id: 'admissions', label: 'Admissions' },
           { id: 'aid', label: 'Financial aid' },
           { id: 'scheduling', label: 'Rooms' },
+          { id: 'events', label: 'Events' },
         ]}
       />
       {section === 'grades' ? <Grades /> : (
         <Suspense fallback={<p role="status">Opening…</p>}>
-          {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : section === 'aid' ? <AidHome /> : <SchedulingHome />}
+          {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : section === 'aid' ? <AidHome /> : section === 'scheduling' ? <SchedulingHome /> : <EventsHome />}
         </Suspense>
       )}
     </Page>
