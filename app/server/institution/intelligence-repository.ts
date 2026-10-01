@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { courseAgentPolicy, type CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
+import type { IntelligenceGatewayRequest } from '../../../packages/institution/src/intelligence.ts';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
   IntelligenceFeatureState,
@@ -25,6 +27,7 @@ export interface IntelligenceRepositoryOptions {
 export interface IntelligenceRepository {
   /** Whether `kill.ai_generation` is engaged for this school or for everyone. */
   killSwitchEngaged(identity: UniversityIdentity): Promise<boolean>;
+  loadCoursePolicy(identity: UniversityIdentity, request: IntelligenceGatewayRequest): Promise<CourseAgentPolicy>;
   loadPolicy(identity: UniversityIdentity): Promise<TenantIntelligencePolicy>;
   loadApprovedSources(identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
   reserveBudget(identity: UniversityIdentity, maximumCents: number): Promise<IntelligenceBudgetReservation | null>;
@@ -137,12 +140,24 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       };
     },
 
+    async loadCoursePolicy(identity, request) {
+      if (!request.courseId || !request.term) return courseAgentPolicy(null);
+      const { data, error } = await client.from('course_ai_rules')
+        .select('blanket, uses, words, version')
+        .eq('tenant_id', identity.institutionId)
+        .eq('course_code', request.courseId)
+        .eq('term', request.term)
+        .order('version', { ascending: false }).limit(1).maybeSingle();
+      if (error) throw new Error('The published course AI policy could not be loaded.');
+      return courseAgentPolicy(data);
+    },
+
     async loadApprovedSources(identity, sourceIds) {
       if (!sourceIds.length) return [];
       const uniqueIds = [...new Set(sourceIds)];
       const metadata = await client
         .from('approved_source')
-        .select('id, authority')
+        .select('id, authority, course_id, title, citation_label, updated_at')
         .eq('tenant_id', identity.institutionId)
         .in('id', uniqueIds)
         .neq('authority', 'prohibited');
@@ -155,8 +170,13 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       });
       if (payloads.error) throw new Error('Approved source content lookup failed.');
       const rows = (payloads.data ?? []) as Array<{ source_id: unknown; body: unknown; evidence_ids: unknown }>;
+      const sourceMetadata = new Map((metadata.data ?? []).map((source) => [source.id, source]));
       return rows.map((row) => ({
         id: row.source_id as string,
+        courseId: sourceMetadata.get(row.source_id)?.course_id,
+        title: sourceMetadata.get(row.source_id)?.title,
+        locator: sourceMetadata.get(row.source_id)?.citation_label,
+        verifiedAt: sourceMetadata.get(row.source_id)?.updated_at,
         body: row.body as string,
         evidenceIds: Array.isArray(row.evidence_ids)
           ? row.evidence_ids.filter((id: unknown): id is string => typeof id === 'string')
