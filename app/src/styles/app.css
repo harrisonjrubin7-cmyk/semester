@@ -8847,6 +8847,115 @@ section[data-drop] > .grip + * {
 
 /* ── Advisor Meeting Mode (advisor_meeting_mode, Phase G) ───────────────── */
 
+.path-readiness {
+  border-top: 1px solid var(--app-line);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
+}
+
+.path-readiness-list {
+  display: grid;
+  gap: var(--sp-3);
+  list-style: none;
+  margin: var(--sp-4) 0;
+  padding: 0;
+}
+
+.path-readiness-list li {
+  align-items: center;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: space-between;
+  padding: var(--sp-4);
+}
+
+.path-readiness-list li[data-state='attention'] {
+  border-color: var(--app-warn, var(--app-line));
+}
+
+.path-readiness-list p {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin: var(--sp-1) 0 0;
+}
+
+.path-readiness-state {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+  margin-inline-start: var(--sp-2);
+}
+
+.path-readiness-systems {
+  margin-top: var(--sp-5);
+}
+
+.path-readiness-systems summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: var(--sp-3);
+}
+
+.path-readiness-systems dl {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.path-readiness-systems dl > div {
+  border-left: 2px solid var(--app-line);
+  padding-inline-start: var(--sp-3);
+}
+
+.path-readiness-systems dt {
+  font-size: var(--type-sm);
+  font-weight: 700;
+}
+
+.path-readiness-systems dd {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin: var(--sp-1) 0 0;
+}
+
+@media (max-width: 560px) {
+  .path-readiness-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.credential-wallet-list {
+  border: 0;
+  display: grid;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0;
+  padding: 0;
+}
+
+.credential-wallet-list label {
+  align-items: flex-start;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  display: flex;
+  gap: var(--sp-3);
+  min-height: 44px;
+  padding: var(--sp-4);
+}
+
+.credential-wallet-list label > span,
+.credential-wallet-list small {
+  display: block;
+}
+
+.credential-wallet-list label > span > span,
+.credential-wallet-list small {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin-top: var(--sp-1);
+}
+
 .advisor-lines,
 .advisor-share-list {
   display: grid;

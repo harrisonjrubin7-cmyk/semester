@@ -48,6 +48,7 @@ import {
 } from '../lib/skills-graph';
 import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { CareerEvidence } from '../components/CareerEvidence';
+import { CredentialWallet } from '../components/CredentialWallet';
 
 /**
  * What is open, what you have done, and who you have spoken to.
@@ -107,6 +108,7 @@ const TABS = [
   { id: 'resume' as const, label: 'Résumé' },
   { id: 'skills' as const, label: 'Skills & fit' },
   { id: 'evidence' as const, label: 'Evidence' },
+  { id: 'wallet' as const, label: 'Wallet' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
@@ -296,7 +298,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
         need approved school services this app is not connected to.
       </p>
 
-      <Segmented options={TABS.filter(({ id }) => (id !== 'skills' || careerSkillsGraph) && (id !== 'evidence' || careerEvidence))} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
+      <Segmented options={TABS.filter(({ id }) => (id !== 'skills' || careerSkillsGraph) && ((id !== 'evidence' && id !== 'wallet') || careerEvidence))} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
 
       {/*
        * Where the Applications tab used to be, as a row rather than a second
@@ -948,6 +950,8 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
           onWrite={write}
         />
       )}
+
+      {tab === 'wallet' && careerEvidence && <CredentialWallet claims={claims} />}
 
       {tab === 'skills' && careerSkillsGraph && (
         <>
