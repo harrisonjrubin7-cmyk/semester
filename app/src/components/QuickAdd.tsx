@@ -1,3 +1,5 @@
+import { useDeviceLibrary } from '../lib/device-library';
+import { EMPTY_PRODUCTIVITY, readProductivity, id } from '../lib/productivity';
 /**
  * One line, anywhere: "econ ps4 friday 5pm".
  *
@@ -65,7 +67,8 @@ import { KeepItAs } from './unity/UnityLayer';
 const COLUMN = 620;
 
 export function QuickAdd({ onClose }: { onClose: () => void }) {
-  const { catalog, dispatch } = useStore();
+  const { catalog, dispatch, account } = useStore();
+  const productivity = useDeviceLibrary(`semester.productivity.v1:${account?.id || 'device'}`, readProductivity, EMPTY_PRODUCTIVITY);
   const now = useNow();
   // Opens on what was typed into the search field when that was an add —
   // "add econ ps4 friday" there lands here as "econ ps4 friday". See
@@ -267,6 +270,11 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       />
       {/* Everything that is not a dated line — see `KeepItAs`. */}
       <KeepItAs text={text} onLeave={onClose} />
+      <button type="button" disabled={!text.trim()} onClick={() => {
+        const ok = productivity.update(old => ({ ...old, captures: [...old.captures, { id: id(), title: text.trim(), kind: 'Idea', source: 'Quick capture', reason: '', context: '', next: '', due: '', status: 'Saved for later', authorized: false }] }));
+        setSaid(ok ? 'Saved to Pathway → Decisions & productivity → Inbox.' : 'Could not save captured context.');
+      }}>Capture for later</button>
+      {productivity.error && <p role="alert">{productivity.error}</p>}
 
       {micError ? (
         <div

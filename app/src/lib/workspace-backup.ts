@@ -1,3 +1,4 @@
+import { readProductivity } from './productivity';
 import { ABROAD_PREFIX, readAbroad } from './abroad';
 import { PREFIX as JOURNAL_PREFIX, readEntries } from './journal';
 import { ACTIONS_PREFIX, readActionChoices } from './actions';
@@ -79,6 +80,7 @@ interface Definition {
 }
 
 const DEFINITIONS: Record<string, Definition> = {
+  productivity: { label: 'Decisions and productivity', prefix: 'semester.productivity.v1', scope: 'account', read: readProductivity },
   creations: {
     label: 'Forms, designs and videos',
     prefix: 'semester.creations.v1',
