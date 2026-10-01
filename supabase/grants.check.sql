@@ -591,6 +591,19 @@ declare
     'degree_exception_decide(want_exception uuid, want_approve boolean, want_note text, want_key text)',
     'degree_audit_run(want_student text, want_version uuid, want_save boolean, want_key text)',
 
+    -- 20261001050000_records_transcripts.sql: final grades, signed documents,
+    -- the disclosure log and graduation clearance in Core. Each reads auth.uid(),
+    -- the caller's own school and a school- or course-scoped capability, and
+    -- refuses unless the school runs records in Core. Opening a document by its
+    -- code (`record_document_verify`) is granted to the service role alone and
+    -- is not here. `records.check.sql` walks every refusal.
+    'term_grades_post(want_course text, want_term text, want_grades jsonb, want_key text)',
+    'term_grades_accept(want_course text, want_term text, want_key text)',
+    'record_document_issue(want_student text, want_kind text, want_recipient text, want_recipient_kind text, want_basis text, want_consent text, want_key text)',
+    'record_document_revoke(want_id uuid, want_reason text, want_key text)',
+    'record_disclosure_log(want_student text, want_recipient text, want_recipient_kind text, want_basis text, want_consent text, want_what text, want_key text)',
+    'graduation_clearance_run(want_student text, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

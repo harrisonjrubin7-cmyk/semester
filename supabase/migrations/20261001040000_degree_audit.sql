@@ -226,6 +226,10 @@ comment on table public.degree_audit_runs is 'A saved official audit result with
 create or replace function private.guard_degree_version()
 returns trigger language plpgsql set search_path = '' as $$
 begin
+  -- `ON DELETE SET NULL` of the author's account may touch a published row.
+  if (to_jsonb(new) - 'created_by') is not distinct from (to_jsonb(old) - 'created_by') and new.created_by is null then
+    return new;
+  end if;
   if old.status = 'published' then
     raise exception 'semester: a published catalog year is never edited; make a new version' using errcode = 'insufficient_privilege';
   end if;

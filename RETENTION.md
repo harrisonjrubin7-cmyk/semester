@@ -221,6 +221,12 @@ behind and a client that believes it succeeded.
 | `degree_exceptions` | kept with the school | a waiver or substitution on a student's audit, its reason, who proposed it and who decided it. Decided once, never rewritten |
 | `degree_audit_runs` | kept with the school | a saved official audit: the result, the version, the fingerprint of the ledger rows read, who ran it. Never rewritten |
 | `degree_operations` | kept with the school | idempotency keys the degree-audit writers spent, with what each asked and answered. Append-only |
+| `term_grade_posts`, `term_grade_acceptances` | kept with the school; never by a person's deletion | final grades an instructor posted for a course and term, and which ledger proposals each became. Superseded before acceptance by a new version, never edited. If you posted or accepted them, your name is cleared and they stay |
+| `record_documents`, `record_document_revocations`, `record_document_openings` | kept with the school | an issued transcript or enrollment verification with its hash, signature and verification code, any revocation, and each time a code opened it. Never rewritten; a code stops opening the document after 180 days |
+| `record_disclosures` | kept with the school | every release of a student's record to anyone but the student: who, under which exception, the consent's reference, what, and by whom. Append-only; the student reads their own |
+| `graduation_clearances` | kept with the school | the result of each graduation clearance run and what blocked it. Never rewritten |
+| `records_signing_key` | kept with the school; removed with the school | the school's HMAC key for signing issued documents, in the private schema, where no client role can read it. Made the first time a document is issued; deleting the school deletes it |
+| `records_operations` | kept with the school | idempotency keys the records writers spent, with what each asked and answered. Append-only |
 | `attendance_sessions` | kept with the school; never by a person's deletion | one class meeting a code can check in to, with its window and code. The course's, not any student's; if you opened one, your name is cleared and the session stays |
 | `attendance_marks` | account deletion of the student; otherwise kept with the school | every version of every attendance mark with who and why. Append-only; the latest version is the mark |
 | `attendance_failures` | account deletion of the student | a wrong attendance code tried at check-in, kept so five in ten minutes stop further tries; nothing else |

@@ -693,6 +693,7 @@ const MOCKS_MODULES = [
   'src/components/assignments/AssignmentsHome.test.tsx',
   'src/components/attendance/AttendanceHome.test.tsx',
   'src/components/degreeaudit/DegreeAuditHome.test.tsx',
+  'src/components/records/RecordsHome.test.tsx',
   'src/components/assessments/TestsHome.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
   'src/components/PushTop.regday.test.tsx',

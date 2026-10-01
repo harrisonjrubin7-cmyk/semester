@@ -350,6 +350,9 @@ begin
   delete from auth.users where id = adv;
   perform pg_temp.counted('the saved run survives its runner', (select count(*) from public.degree_audit_runs), 1);
   perform pg_temp.counted('and the declaration survives its declarer', (select count(*) from public.student_degrees), 1);
+  delete from auth.users where id = reg;
+  perform pg_temp.counted('a published catalog year survives the registrar who wrote it', (select count(*) from public.degree_versions where status = 'published' and created_by is null), 2);
+  perform pg_temp.counted('and so does the program', (select count(*) from public.degree_programs where created_by is null), 1);
   raise notice 'degree audit checks passed';
 end $$;
 

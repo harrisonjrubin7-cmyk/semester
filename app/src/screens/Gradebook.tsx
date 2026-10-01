@@ -5,6 +5,7 @@ import { Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
 import { Field, Row } from '../components/academic/Form';
 import { TestsHome } from '../components/assessments/TestsHome';
+import { RecordsHome } from '../components/records/RecordsHome';
 import { AttendanceHome } from '../components/attendance/AttendanceHome';
 import { AssignmentsHome } from '../components/assignments/AssignmentsHome';
 import { InstructorBook } from '../components/gradebook/InstructorBook';
@@ -46,7 +47,7 @@ const FLAG = 'writeback.lms_grade_passback';
 
 type View = 'teaching' | 'mine';
 
-type Section = 'grades' | 'assignments' | 'attendance' | 'tests';
+type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records';
 
 export function Gradebook() {
   const [section, setSection] = useState<Section>('grades');
@@ -61,9 +62,10 @@ export function Gradebook() {
           { id: 'assignments', label: 'Assignments' },
           { id: 'attendance', label: 'Attendance' },
           { id: 'tests', label: 'Tests' },
+          { id: 'records', label: 'Records' },
         ]}
       />
-      {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : <Grades />}
+      {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : <Grades />}
     </Page>
   );
 }

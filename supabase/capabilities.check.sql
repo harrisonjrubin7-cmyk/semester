@@ -318,7 +318,10 @@ begin
   -- degree:author for registrar; degree:declare and degree:propose for
   -- registrar and academic_advisor; degree:approve for registrar and dean;
   -- degree:read for registrar, academic_advisor and dean.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 217);
+  -- 217 before records (20261001050000_records_transcripts.sql) added six:
+  -- records:issue and records:accept for registrar; records:clear and
+  -- records:audit for registrar and dean.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 223);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

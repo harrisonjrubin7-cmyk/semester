@@ -232,6 +232,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['gradebook_release', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
   ['gradebook_resolve_regrade', 'admin', ['auth.uid()', 'private.gradebook_require', 'r.student_id = me']],
   ['gradebook_set_scheme', 'admin', ['auth.uid()', 'private.gradebook_require', 'private.gradebook_replay']],
+  ['graduation_clearance_run', 'admin', ['private.gradebook_school', 'private.records_require', 'private.records_replay']],
   ['gtm_activation_failures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['gtm_audience_count', 'admin', ['private.has_capability']],
   ['gtm_campaign_report', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -291,6 +292,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['record_disclosure_log', 'admin', ['private.gradebook_school', 'private.records_require', 'private.records_replay']],
+  ['record_document_issue', 'admin', ['private.gradebook_school', 'private.records_require', 'private.records_replay']],
+  ['record_document_revoke', 'admin', ['private.gradebook_school', 'private.records_require', 'private.records_replay']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['record_offboarding_notice', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
@@ -335,6 +339,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['support_reply', 'admin', ['private.support_agent']],
   ['support_ticket_queue', 'admin', ['private.support_agent']],
   ['support_ticket_thread', 'admin', ['private.support_agent']],
+  ['term_grades_accept', 'admin', ['private.gradebook_school', 'private.records_require', 'private.records_replay']],
+  ['term_grades_post', 'admin', ['private.gradebook_school', 'private.gradebook_require', 'private.subject_has_capability', 'private.records_replay']],
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -361,6 +367,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001020000_attendance.sql',
   '20261001030000_assessments.sql',
   '20261001040000_degree_audit.sql',
+  '20261001050000_records_transcripts.sql',
 ];
 
 /**
@@ -372,6 +379,13 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001050000_records_transcripts.sql',
+    functions: [
+      'graduation_clearance_run', 'record_disclosure_log', 'record_document_issue', 'record_document_revoke',
+      'term_grades_accept', 'term_grades_post',
+    ],
+  },
   {
     file: '20261001040000_degree_audit.sql',
     functions: [

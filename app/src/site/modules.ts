@@ -72,7 +72,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'records', name: 'Records and transcripts', replaces: 'The records module of your SIS; transcript ordering services',
     today: 'An academic-record ledger is built behind a school-level switch that is off for every school; no transcript is issued.',
     core: 'Final grades, signed transcripts, enrolment verification and a log of every release of a record.',
-    status: 'in-preparation', tables: ['academic_record_entries', 'academic_record_changes'], suite: 'academic-record' },
+    status: 'in-preparation', tables: ['academic_record_entries', 'record_documents', 'record_disclosures'], suite: 'records' },
   { id: 'admissions', name: 'Admissions', replaces: 'Slate, Element451, Ellucian CRM Recruit',
     today: 'Nothing.',
     core: 'An applicant portal, document checklist and decision workflow; a person decides every admission.',

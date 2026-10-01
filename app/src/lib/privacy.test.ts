@@ -440,6 +440,8 @@ describe('"delete my account" really means every row', () => {
       // 20260929310000_gradebook.sql): the course's, not a student's.
       'gradebook_items',
       'gradebook_schemes',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'graduation_clearances',
       'group_tasks',
       'groups',
       'gtm_campaign_reviews',
@@ -472,6 +474,16 @@ describe('"delete my account" really means every row', () => {
       // 20260929300000_registration_transaction.sql).
       // Part of a course's tests, kept with the course.
       'question_banks',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_disclosures',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_document_openings',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_document_revocations',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_documents',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'records_operations',
       'registration_sections',
       'registration_terms',
       'reports',
@@ -492,6 +504,10 @@ describe('"delete my account" really means every row', () => {
       'study_packs',
       'subscriptions',
       'support_access_event',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'term_grade_acceptances',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'term_grade_posts',
       // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
       // versioned workflow definitions. No person, credential or student record.
       'workflow_versions',

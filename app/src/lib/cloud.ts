@@ -1378,6 +1378,38 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'term_grade_posts',
+    why: 'Final grades an instructor posted for a course and term, awaiting the registrar. The school’s record, not any student’s; if you posted them, your name is cleared and they stay.',
+  },
+  {
+    table: 'term_grade_acceptances',
+    why: 'Which ledger proposals a posted grade became, and who accepted it. Part of the school’s record; the registrar’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'record_documents',
+    why: 'An issued transcript or enrollment verification with its signature, never rewritten. The school’s record of what it issued; the issuer’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'record_document_revocations',
+    why: 'A document the school revoked, with the reason. Part of the school’s record of what it issued; never rewritten.',
+  },
+  {
+    table: 'record_document_openings',
+    why: 'Each time a verification code opened, or failed to open, an issued document. Part of the school’s record; no person is named.',
+  },
+  {
+    table: 'record_disclosures',
+    why: 'Every release of a student’s record to anyone but the student, with the exception relied on, which the student may read. Kept with the school; never rewritten.',
+  },
+  {
+    table: 'graduation_clearances',
+    why: 'The result of a graduation clearance run and what blocked it. Part of the school’s record of the student; the runner’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'records_operations',
+    why: 'Idempotency keys the records writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
     table: 'degree_programs',
     why: 'A program a school offers. The school’s, not any student’s; if you created one as the registrar, your name is cleared and the program stays.',
   },
