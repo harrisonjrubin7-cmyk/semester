@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { courseAgentPolicy, type CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
-import type { IntelligenceGatewayRequest } from '../../../packages/institution/src/intelligence.ts';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type {
   IntelligenceFeatureState,
@@ -11,6 +10,7 @@ import type {
 import type {
   ApprovedIntelligenceSource,
   IntelligenceBudgetReservation,
+  IntelligenceCourseScope,
 } from './intelligence.ts';
 
 const STATES = new Set<IntelligenceFeatureState>(['off', 'preview', 'sandbox', 'production']);
@@ -22,12 +22,14 @@ export interface IntelligenceRepositoryOptions {
   serviceKey?: string;
   configuredModels: readonly string[];
   maxRequestCents: number;
+  /** Dates without a timezone in Course Studio take effect at the start of the UTC day. */
+  now?: () => Date;
 }
 
 export interface IntelligenceRepository {
   /** Whether `kill.ai_generation` is engaged for this school or for everyone. */
   killSwitchEngaged(identity: UniversityIdentity): Promise<boolean>;
-  loadCoursePolicy(identity: UniversityIdentity, request: IntelligenceGatewayRequest): Promise<CourseAgentPolicy>;
+  loadCoursePolicy(identity: UniversityIdentity, scope: IntelligenceCourseScope): Promise<CourseAgentPolicy>;
   loadPolicy(identity: UniversityIdentity): Promise<TenantIntelligencePolicy>;
   loadApprovedSources(identity: UniversityIdentity, sourceIds: string[]): Promise<ApprovedIntelligenceSource[]>;
   reserveBudget(identity: UniversityIdentity, maximumCents: number): Promise<IntelligenceBudgetReservation | null>;
@@ -140,13 +142,16 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       };
     },
 
-    async loadCoursePolicy(identity, request) {
-      if (!request.courseId || !request.term) return courseAgentPolicy(null);
+    async loadCoursePolicy(identity, scope) {
+      const today = (options.now?.() ?? new Date()).toISOString().slice(0, 10);
       const { data, error } = await client.from('course_ai_rules')
-        .select('blanket, uses, words, version')
+        .select('blanket, uses, words, version, effective')
         .eq('tenant_id', identity.institutionId)
-        .eq('course_code', request.courseId)
-        .eq('term', request.term)
+        .eq('course_code', scope.courseId)
+        .eq('term', scope.term)
+        // NULL is the existing publish-now choice. Filter before taking the
+        // highest version so a scheduled update cannot erase today's rule.
+        .or(`effective.is.null,effective.lte.${today}`)
         .order('version', { ascending: false }).limit(1).maybeSingle();
       if (error) throw new Error('The published course AI policy could not be loaded.');
       return courseAgentPolicy(data);
@@ -157,7 +162,7 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       const uniqueIds = [...new Set(sourceIds)];
       const metadata = await client
         .from('approved_source')
-        .select('id, authority, course_id, title, citation_label, updated_at')
+        .select('id, authority, course_id, origin, policy_scope, policy_course_code, policy_term, title, citation_label, updated_at')
         .eq('tenant_id', identity.institutionId)
         .in('id', uniqueIds)
         .neq('authority', 'prohibited');
@@ -174,6 +179,10 @@ export function createSupabaseIntelligenceRepository(options: IntelligenceReposi
       return rows.map((row) => ({
         id: row.source_id as string,
         courseId: sourceMetadata.get(row.source_id)?.course_id,
+        origin: sourceMetadata.get(row.source_id)?.origin,
+        policyScope: sourceMetadata.get(row.source_id)?.policy_scope,
+        policyCourseCode: sourceMetadata.get(row.source_id)?.policy_course_code,
+        policyTerm: sourceMetadata.get(row.source_id)?.policy_term,
         title: sourceMetadata.get(row.source_id)?.title,
         locator: sourceMetadata.get(row.source_id)?.citation_label,
         verifiedAt: sourceMetadata.get(row.source_id)?.updated_at,
