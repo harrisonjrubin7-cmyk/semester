@@ -147,7 +147,7 @@ export async function probeAll(config, fetchImpl = fetch) {
 
 // ── incidents ───────────────────────────────────────────────────────────────
 
-export const INCIDENT_STATUSES = ['investigating', 'identified', 'monitoring', 'resolved'];
+export const INCIDENT_STATUSES = ['investigating', 'identified', 'monitoring', 'resolved', 'scheduled'];
 export const INCIDENT_IMPACTS = ['down', 'partial', 'maintenance'];
 
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
