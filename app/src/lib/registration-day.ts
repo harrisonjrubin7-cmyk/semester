@@ -370,11 +370,11 @@ export function safePortalUrl(value: string): string | null {
 }
 
 /** How close the window must be before the mode appears on its own. */
-export const MODE_DAYS = 7;
+export const MODE_DAYS = 3;
 
 /**
  * Whether Registration Day Mode is showing: the student asked for it, or
- * their window opens within a week, or it opened less than a day ago. After
+ * their window opens within 72 hours, or it opened less than a day ago. After
  * that the day is over and Today goes back to being Today.
  */
 export function modeActive(data: RegistrationDayData, now: Date): boolean {

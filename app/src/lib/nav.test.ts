@@ -258,7 +258,7 @@ describe('the shelves the directory is arranged on', () => {
    * that; asserting an index against a row that no longer exists would have
    * had to be deleted rather than rewritten.
    */
-  it('keeps when you are behind on the shelf that answers the other direction', () => {
+  it('keeps Catching up on the shelf that answers the other direction', () => {
     const on = destinationsIn('Semester').map((d) => d.screen);
     expect(on).toContain('behind');
     expect(on).toContain('home');
