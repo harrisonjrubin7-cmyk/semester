@@ -1,0 +1,35 @@
+{
+  "statuses": ["offered", "accepted", "declined", "disbursed", "cancelled"],
+  "forward": {
+    "offered": ["accepted", "declined", "cancelled"],
+    "accepted": ["disbursed", "declined", "cancelled"],
+    "declined": [],
+    "disbursed": [],
+    "cancelled": []
+  },
+  "high": [
+    { "name": "under the school's threshold", "amount": 49999, "threshold": 50000, "high": false },
+    { "name": "exactly at the threshold", "amount": 50000, "threshold": 50000, "high": true },
+    { "name": "over the threshold", "amount": 250000, "threshold": 50000, "high": true },
+    { "name": "no threshold set, under D-146's default", "amount": 99999, "threshold": null, "high": false },
+    { "name": "no threshold set, at D-146's default", "amount": 100000, "threshold": null, "high": true },
+    { "name": "a small award at a high threshold", "amount": 1, "threshold": 100000000, "high": false }
+  ],
+  "approval": [
+    { "name": "a second person, who holds the capability", "high": true, "recorder": "u1", "approver": "u2", "holds": true, "problem": null },
+    { "name": "the person who recorded it", "high": true, "recorder": "u1", "approver": "u1", "holds": true, "problem": "same_person" },
+    { "name": "somebody without the capability", "high": true, "recorder": "u1", "approver": "u2", "holds": false, "problem": "no_capability" },
+    { "name": "an award that is not high", "high": false, "recorder": "u1", "approver": "u2", "holds": true, "problem": "not_high" },
+    { "name": "not high is said before the rest", "high": false, "recorder": "u1", "approver": "u1", "holds": false, "problem": "not_high" },
+    { "name": "no capability is said before the same person", "high": true, "recorder": "u1", "approver": "u1", "holds": false, "problem": "no_capability" },
+    { "name": "a recorder whose account was deleted", "high": true, "recorder": null, "approver": "u2", "holds": true, "problem": null }
+  ],
+  "disbursement": [
+    { "name": "part of an award", "award": 100000, "soFar": 0, "add": 40000, "after": "partial" },
+    { "name": "the rest of an award", "award": 100000, "soFar": 40000, "add": 60000, "after": "full" },
+    { "name": "a cent too many", "award": 100000, "soFar": 40000, "add": 60001, "after": "over" },
+    { "name": "all of it at once", "award": 100000, "soFar": 0, "add": 100000, "after": "full" },
+    { "name": "nothing", "award": 100000, "soFar": 0, "add": 0, "after": "invalid" },
+    { "name": "a negative amount", "award": 100000, "soFar": 0, "add": -5, "after": "invalid" }
+  ]
+}

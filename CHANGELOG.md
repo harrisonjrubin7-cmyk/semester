@@ -24,6 +24,18 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your school's admissions and financial-aid records, for schools that switch them on
+
+Nothing changes for you unless your school has moved admissions or financial aid
+to Semester Core, and none has. If yours does, its staff can keep the school's own
+record of each application (its status, and who recorded each change and why) and
+of each aid award and what was paid out against it. Semester decides nothing about
+anyone: a person records every admission and every award. If your school links you
+to its academic record, you can read your own aid awards and what has been paid
+out against each. Nobody who has only applied has an account here, and nobody but
+admissions staff reads an application. It is for post-secondary schools only, it
+moves no money, and it holds no Social Security number or federal aid data.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one

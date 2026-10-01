@@ -1599,6 +1599,30 @@ export const KEPT_TABLES: KeptTable[] = [
     table: 'dining_menu_items',
     why: 'What your school’s dining locations serve and what it costs. Not a record about you, and no student account writes a row.',
   },
+  {
+    table: 'admissions_applicants',
+    why: 'A school’s record of an application: its own reference for the applicant, the program, the status and who recorded each change. An applicant has no account, so it is not keyed by one. If you recorded a status as staff, your name is cleared and the record stays.',
+  },
+  {
+    table: 'admissions_status_history',
+    why: 'Every status an application has had, who recorded it and why. The school’s record: deleting your account clears your name from entries you made and leaves them.',
+  },
+  {
+    table: 'admissions_applicant_links',
+    why: 'The registrar’s link from an applicant to a student reference. The school’s record; if you made one, your name is cleared and the link stays.',
+  },
+  {
+    table: 'aid_awards',
+    why: 'An aid award your school recorded, by the school’s own student reference: the fund, the amount and where it stands. Your school’s record, not your account’s; deleting your account does not remove an award your school made, and clears the name of any staff member who recorded one.',
+  },
+  {
+    table: 'aid_award_history',
+    why: 'Every status an aid award has had, with who recorded it and why. Staff-only, and kept with the school; deleting a staff account clears who recorded an entry and leaves it.',
+  },
+  {
+    table: 'aid_disbursements',
+    why: 'What your school recorded as paid out against an aid award, and the student-account entry it matched. The school’s record: deleting an account clears who recorded it and leaves it.',
+  },
 ];
 
 /** What the `delete-account` function answers; see `_shared/deleteaccount.ts`. */

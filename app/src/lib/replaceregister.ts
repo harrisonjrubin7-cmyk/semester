@@ -214,7 +214,7 @@ export const DOMAINS: readonly Domain[] = [
   }, {
     status: 'not-started',
     evidence: [['docs/UNIVERSITY-OS-ARCHITECTURE.md', 'today’s boundary: aid determination is not replaced'], ['docs/FINANCIAL-READINESS-WORKSPACE.md', 'Semester is not the aid package']],
-    gap: 'No packaging, verification, disbursement or satisfactory-progress workflow; the brief itself says not to claim this until regulatory expertise exists.',
+    gap: 'No packaging, verification, disbursement or satisfactory-progress workflow; the brief itself says not to claim this until regulatory expertise exists. A records-only slice (supabase/admissions-aid.check.sql: a school’s own award and disbursement records, behind a switch that is off for every school and not applied to production) is built and is not a claim on this row: it determines no aid.',
   }),
   domain('housing', 'Housing', 'Status and official handoff', 'Housing application, room selection, residence life, maintenance and communications', {
     status: 'tested',

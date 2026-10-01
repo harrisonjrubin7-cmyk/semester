@@ -538,6 +538,23 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20260930270000_admissions_aid.sql: admissions records and financial-aid
+    -- records. Each checks auth.uid(), the caller's own school, that the school is
+    -- post-secondary and has switched the module (`admissions` or `financial_aid`)
+    -- to Core, and a school-scoped capability: `admissions:record` or
+    -- `admissions:decide` for the four admissions writers, `aid:record` or
+    -- `aid:approve_high` for the five aid writers. None writes to the
+    -- student-accounts ledger. `admissions-aid.check.sql` walks every refusal.
+    'admissions_applicant_add(want_cycle text, want_ref text, want_program text, want_reason text, want_key text)',
+    'admissions_status_record(want_applicant uuid, want_to text, want_reason text, want_key text)',
+    'admissions_status_correct(want_applicant uuid, want_to text, want_corrects integer, want_reason text, want_key text)',
+    'admissions_applicant_link(want_applicant uuid, want_student_ref text, want_key text)',
+    'aid_award_record(want_student_ref text, want_aid_year text, want_fund text, want_type text, want_amount_cents bigint, want_reason text, want_key text)',
+    'aid_award_approve(want_award uuid, want_note text, want_key text)',
+    'aid_status_record(want_award uuid, want_to text, want_reason text, want_key text)',
+    'aid_status_correct(want_award uuid, want_to text, want_corrects integer, want_reason text, want_key text)',
+    'aid_disbursement_record(want_award uuid, want_amount_cents bigint, want_on date, want_ledger_entry uuid, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

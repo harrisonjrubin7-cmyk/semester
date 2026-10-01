@@ -782,6 +782,11 @@ export type Screen =
   // `screens/Gradebook.tsx`.
   | 'registration'
   | 'gradebook'
+  // A school's own admissions records and financial-aid records, each behind
+  // that module's switch to Core (D-151) and off at every school. See
+  // `screens/Admissions.tsx` and `screens/Aid.tsx`.
+  | 'admissions'
+  | 'aid'
   | 'sources'
   | 'slides'
   | 'account'

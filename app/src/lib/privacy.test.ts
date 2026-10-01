@@ -391,6 +391,17 @@ describe('"delete my account" really means every row', () => {
       // the link, goes with the account and is in OWNED_TABLES instead.
       'academic_record_changes',
       'academic_record_entries',
+      // A school's admissions and aid records (lib/admissions/client.ts,
+      // lib/aid/client.ts, 20260930270000_admissions_aid.sql). The school's
+      // record of an application and of an award, keyed by its own references
+      // and not by an account; who recorded is cleared by deletion and the row
+      // stays. An applicant has no account.
+      'admissions_applicant_links',
+      'admissions_applicants',
+      'admissions_status_history',
+      'aid_award_history',
+      'aid_awards',
+      'aid_disbursements',
       'commercial_prices',
       'communities',
       'community_calibration_items',
