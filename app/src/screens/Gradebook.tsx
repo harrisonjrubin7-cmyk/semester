@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -9,6 +9,20 @@ import { StudentGrades } from '../components/gradebook/StudentGrades';
 import { useModuleGate } from '../lib/modulegate';
 import { loadMyCapabilities, type Grant } from '../lib/capabilities';
 import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } from '../lib/gradebook/client';
+
+/*
+ * The module tabs open on demand: each is a whole office's surface, and the
+ * screen's own cost to open should not carry all seven of them.
+ */
+const TestsHome = lazy(() => import('../components/assessments/TestsHome').then((m) => ({ default: m.TestsHome })));
+const RecordsHome = lazy(() => import('../components/records/RecordsHome').then((m) => ({ default: m.RecordsHome })));
+const AdmissionsHome = lazy(() => import('../components/admissions/AdmissionsHome').then((m) => ({ default: m.AdmissionsHome })));
+const AidHome = lazy(() => import('../components/aid/AidHome').then((m) => ({ default: m.AidHome })));
+const AdvancementHome = lazy(() => import('../components/advancement/AdvancementHome').then((m) => ({ default: m.AdvancementHome })));
+const EventsHome = lazy(() => import('../components/events/EventsHome').then((m) => ({ default: m.EventsHome })));
+const SchedulingHome = lazy(() => import('../components/scheduling/SchedulingHome').then((m) => ({ default: m.SchedulingHome })));
+const AttendanceHome = lazy(() => import('../components/attendance/AttendanceHome').then((m) => ({ default: m.AttendanceHome })));
+const AssignmentsHome = lazy(() => import('../components/assignments/AssignmentsHome').then((m) => ({ default: m.AssignmentsHome })));
 
 /**
  * The gradebook of record: an instructor's official grades for a course, and
@@ -43,12 +57,44 @@ const FLAG = 'writeback.lms_grade_passback';
 
 type View = 'teaching' | 'mine';
 
+type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions' | 'aid' | 'scheduling' | 'events' | 'alumni';
+
 export function Gradebook() {
+  const [section, setSection] = useState<Section>('grades');
+  return (
+    <Page blurb={BLURB}>
+      <TabList
+        label="Gradebook sections"
+        value={section}
+        onChange={setSection}
+        tabs={[
+          { id: 'grades', label: 'Grades' },
+          { id: 'assignments', label: 'Assignments' },
+          { id: 'attendance', label: 'Attendance' },
+          { id: 'tests', label: 'Tests' },
+          { id: 'records', label: 'Records' },
+          { id: 'admissions', label: 'Admissions' },
+          { id: 'aid', label: 'Financial aid' },
+          { id: 'scheduling', label: 'Rooms' },
+          { id: 'events', label: 'Events' },
+          { id: 'alumni', label: 'Alumni' },
+        ]}
+      />
+      {section === 'grades' ? <Grades /> : (
+        <Suspense fallback={<p role="status">Opening…</p>}>
+          {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : section === 'aid' ? <AidHome /> : section === 'scheduling' ? <SchedulingHome /> : section === 'events' ? <EventsHome /> : <AdvancementHome />}
+        </Suspense>
+      )}
+    </Page>
+  );
+}
+
+function Grades() {
   const gate = useModuleGate(FLAG);
   const { dispatch } = useStore();
   if (gate.status !== 'on') {
     return (
-      <Page blurb={BLURB}>
+      <>
         <ModuleGateState gate={gate} what="the gradebook" off={OFF} />
         {gate.status === 'off' && (
           <button
@@ -62,14 +108,10 @@ export function Gradebook() {
             Work out your own grades
           </button>
         )}
-      </Page>
+      </>
     );
   }
-  return (
-    <Page blurb={BLURB}>
-      <Book school={gate.school} me={gate.userId} />
-    </Page>
-  );
+  return <Book school={gate.school} me={gate.userId} />;
 }
 
 function Book({ school, me }: { school: string; me: string }) {

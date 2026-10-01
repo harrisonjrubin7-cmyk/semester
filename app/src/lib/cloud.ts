@@ -1334,6 +1334,58 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'grade_entries', column: 'student_id' },
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
+  // Work you handed in, its files and receipt, and extensions granted to you
+  // (`lib/assignments/client.ts`). Each names you by a column that references
+  // `auth.users` with `on delete cascade` (`20261001010000_assignments.sql`), so
+  // they go with the account; a file's row goes with its submission. The school's
+  // own export is its copy, and the file in Storage is the school's to keep or
+  // delete under its retention schedule.
+  { table: 'submissions', column: 'student_id' },
+  { table: 'submission_receipts', column: 'student_id' },
+  { table: 'submission_files', column: null, cascadesFrom: 'submissions' },
+  { table: 'assignment_overrides', column: 'student_id' },
+  // Your attendance marks, and the wrong codes you tried at check-in
+  // (`20261001020000_attendance.sql`). Both name you by a column that
+  // references `auth.users` with `on delete cascade`.
+  { table: 'attendance_marks', column: 'student_id' },
+  { table: 'attendance_failures', column: 'user_id' },
+  // Your test attempts, the answers in them, and any extra time granted to you
+  // (`20261001030000_assessments.sql`). Each names you by a column that
+  // references `auth.users` with `on delete cascade`; an answer goes with its
+  // attempt.
+  { table: 'assessment_attempts', column: 'student_id' },
+  { table: 'attempt_answers', column: null, cascadesFrom: 'assessment_attempts' },
+  { table: 'assessment_time_extensions', column: 'student_id' },
+  // Your application to a school's admission cycle, and everything hung on it
+  // (`20261001060000_admissions.sql`): its step history, document states, the
+  // reviewers' recommendations, any decision, your answer and a deposit. The
+  // application names you by a column that references `auth.users` with
+  // `on delete cascade`; the rest go with the application.
+  { table: 'applications', column: 'applicant' },
+  { table: 'application_events', column: null, cascadesFrom: 'applications' },
+  { table: 'application_documents', column: null, cascadesFrom: 'applications' },
+  { table: 'application_reviews', column: null, cascadesFrom: 'applications' },
+  { table: 'application_decisions', column: null, cascadesFrom: 'applications' },
+  { table: 'application_decision_releases', column: null, cascadesFrom: 'applications' },
+  { table: 'application_responses', column: null, cascadesFrom: 'applications' },
+  { table: 'application_deposits', column: null, cascadesFrom: 'applications' },
+  // Your bookings of a campus space and their step history
+  // (`20261001080000_scheduling.sql`). A booking names you by a column that
+  // references `auth.users` with `on delete cascade`; its history goes with it.
+  { table: 'space_bookings', column: 'requester' },
+  { table: 'space_booking_events', column: null, cascadesFrom: 'space_bookings' },
+  // Events you proposed, their decision and cancellation, and your RSVPs
+  // (`20261001090000_events.sql`). An event names you by a column that references
+  // `auth.users` with `on delete cascade`, and so does an RSVP.
+  { table: 'campus_events', column: 'proposer' },
+  { table: 'event_decisions', column: null, cascadesFrom: 'campus_events' },
+  { table: 'event_cancellations', column: null, cascadesFrom: 'campus_events' },
+  { table: 'event_rsvps', column: 'member' },
+  // Your alumni profile, if you opted in at graduation
+  // (`20261001100000_advancement.sql`). It names you by a column that references
+  // `auth.users` with `on delete cascade`; the school keeps its financial record
+  // of any gift, with the link to you cleared (see the donor table below).
+  { table: 'alumni_profiles', column: 'user_id' },
 ];
 
 /**
@@ -1355,6 +1407,210 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'advancement_settings',
+    why: 'The school’s legal name and receipt wording, versioned and never edited. The school’s, not any person’s; if you set it as staff, your name is cleared.',
+  },
+  {
+    table: 'advancement_funds',
+    why: 'A fund gifts are designated to. The school’s; if you created one as staff, your name is cleared.',
+  },
+  {
+    table: 'advancement_campaigns',
+    why: 'A campaign or a giving day with its goal and dates. The school’s; if you created one as staff, your name is cleared.',
+  },
+  {
+    table: 'advancement_donors',
+    why: 'A donor the school records: an alumnus who opted in, a parent, a friend or an organization. The school’s financial record; if you were an alumnus donor and delete your account, the link to you is cleared and the record stays with its gifts.',
+  },
+  {
+    table: 'advancement_gifts',
+    why: 'A gift the school recorded: who gave, how much, to which fund, when and how, by reference. The school’s financial record, never rewritten; no card or bank detail is kept.',
+  },
+  {
+    table: 'advancement_pledges',
+    why: 'A promise a donor made and its schedule. The school’s record; the staff member’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'advancement_pledge_cancellations',
+    why: 'That a pledge was cancelled and why. Part of the school’s financial record, kept with the school; never rewritten.',
+  },
+  {
+    table: 'advancement_counters',
+    why: 'The next receipt number for a school and a year. The school’s bookkeeping, not any person’s.',
+  },
+  {
+    table: 'advancement_receipts',
+    why: 'The numbered receipt issued with a gift from the school’s own wording, with a hash. The school’s financial record; never rewritten.',
+  },
+  {
+    table: 'advancement_refunds',
+    why: 'That a gift was refunded, by someone other than who recorded it, and why. The school’s financial record; never rewritten.',
+  },
+  {
+    table: 'advancement_assignments',
+    why: 'A donor assigned to a gift officer’s portfolio. The school’s working record; append-only.',
+  },
+  {
+    table: 'advancement_notes',
+    why: 'A gift officer’s contact note on a donor. The school’s working record; append-only, and the author’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'advancement_operations',
+    why: 'Idempotency keys the advancement writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'events_operations',
+    why: 'Idempotency keys the events writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'campus_spaces',
+    why: 'A room or space the school books. The school’s, not any person’s; if you created one as staff, your name is cleared and it stays.',
+  },
+  {
+    table: 'space_events',
+    why: 'Every change to a campus space, the old and the new. The school’s history of its spaces; the staff member’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'timetable_runs',
+    why: 'A timetable solver run: its input, the assignment it proposed and the conflicts the database found. The school’s planning record; never rewritten.',
+  },
+  {
+    table: 'timetable_publications',
+    why: 'That a person published a timetable run and how many sections it set. The school’s record; never rewritten.',
+  },
+  {
+    table: 'scheduling_operations',
+    why: 'Idempotency keys the scheduling writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'aid_offers',
+    why: 'A student’s aid offer for one aid year; its content is in the versions. The school’s record, not any student’s; if you created one as staff, your name is cleared.',
+  },
+  {
+    table: 'aid_offer_versions',
+    why: 'One version of an aid offer, never edited; a change is a new version. The school’s record of what it offered; the proposer’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'aid_offer_approvals',
+    why: 'That a second person approved an offer version. Part of the school’s record; the approver’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'aid_offer_responses',
+    why: 'A student’s answer to one part of an approved offer. Part of the school’s aid record; if you answered, your account reference is cleared and the answer stays.',
+  },
+  {
+    table: 'aid_disbursements',
+    why: 'A record that an amount of an accepted aid component went out for a term, by reference. Part of the school’s financial record; never rewritten.',
+  },
+  {
+    table: 'aid_sap_policies',
+    why: 'A school’s satisfactory-progress policy, versioned and never edited. The school’s, not any student’s.',
+  },
+  {
+    table: 'aid_sap_evaluations',
+    why: 'The figures a progress rule computed from a student’s academic record, with what each says against the policy. Part of the school’s aid record; never rewritten.',
+  },
+  {
+    table: 'aid_sap_determinations',
+    why: 'What a person decided about a student’s standing for an aid year, with the reason. Part of the school’s aid record; never rewritten.',
+  },
+  {
+    table: 'aid_operations',
+    why: 'Idempotency keys the aid writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'admission_cycles',
+    why: 'An admission cycle: its questions and document checklist, fixed when it opens. The school’s, not any applicant’s; if you configured one as staff, your name is cleared and it stays.',
+  },
+  {
+    table: 'admissions_operations',
+    why: 'Idempotency keys the admissions writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'term_grade_posts',
+    why: 'Final grades an instructor posted for a course and term, awaiting the registrar. The school’s record, not any student’s; if you posted them, your name is cleared and they stay.',
+  },
+  {
+    table: 'term_grade_acceptances',
+    why: 'Which ledger proposals a posted grade became, and who accepted it. Part of the school’s record; the registrar’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'record_documents',
+    why: 'An issued transcript or enrollment verification with its signature, never rewritten. The school’s record of what it issued; the issuer’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'record_document_revocations',
+    why: 'A document the school revoked, with the reason. Part of the school’s record of what it issued; never rewritten.',
+  },
+  {
+    table: 'record_document_openings',
+    why: 'Each time a verification code opened, or failed to open, an issued document. Part of the school’s record; no person is named.',
+  },
+  {
+    table: 'record_disclosures',
+    why: 'Every release of a student’s record to anyone but the student, with the exception relied on, which the student may read. Kept with the school; never rewritten.',
+  },
+  {
+    table: 'graduation_clearances',
+    why: 'The result of a graduation clearance run and what blocked it. Part of the school’s record of the student; the runner’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'records_operations',
+    why: 'Idempotency keys the records writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'degree_programs',
+    why: 'A program a school offers. The school’s, not any student’s; if you created one as the registrar, your name is cleared and the program stays.',
+  },
+  {
+    table: 'degree_versions',
+    why: 'A program’s requirements for one catalog year, never edited once published. The school’s; if you wrote one, your name is cleared and it stays.',
+  },
+  {
+    table: 'degree_groups',
+    why: 'One requirement group of a catalog year, never edited once published. The school’s, not any student’s.',
+  },
+  {
+    table: 'degree_rules',
+    why: 'One rule of a requirement group, never edited once published. The school’s, not any student’s.',
+  },
+  {
+    table: 'student_degrees',
+    why: 'Which catalog year a student is held to, with the history. Kept with the school’s record of the student, which is the school’s; if you declared one as staff, your name is cleared.',
+  },
+  {
+    table: 'degree_exceptions',
+    why: 'A waiver or substitution on a student’s degree audit, with who proposed it and who decided it. Part of the school’s record; staff names are cleared when their account is deleted.',
+  },
+  {
+    table: 'degree_audit_runs',
+    why: 'A saved official degree audit with the ledger fingerprint it read. Part of the school’s record of the student; never rewritten. If you ran it as staff, your name is cleared.',
+  },
+  {
+    table: 'degree_operations',
+    why: 'Idempotency keys the degree-audit writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
+    table: 'question_banks',
+    why: 'An instructor’s bank of questions for a course. The course’s, not any student’s; if you wrote one, your name is cleared and the bank stays.',
+  },
+  {
+    table: 'bank_items',
+    why: 'A question in a bank, with its key. The course’s, not any student’s; if you wrote one, your name is cleared and the question stays.',
+  },
+  {
+    table: 'assessments',
+    why: 'A timed test of a course. The course’s, not any student’s; if you wrote one as an instructor, your name is cleared and the test stays.',
+  },
+  {
+    table: 'attendance_sessions',
+    why: 'A class meeting a code can check in to. The course’s, not any student’s; if you opened one as an instructor, your name is cleared and the session stays.',
+  },
+  {
+    table: 'assignments',
+    why: 'A course’s assignment, such as a problem set. The course’s, not any student’s; if you wrote one as an instructor, your name is cleared and the assignment stays.',
+  },
   {
     table: 'module_mode_request',
     why: 'A request to switch one of a school’s modules between Connect and Core is a governance record of the school, kept with its approvals. Deleting your account removes you as the person who asked; the request and what it changed stay.',

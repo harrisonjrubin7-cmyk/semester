@@ -50,12 +50,12 @@ const render = async (props: { canEdit: boolean; me?: string }) => {
 };
 const button = (name: RegExp) => [...host.querySelectorAll('button')].find((b) => name.test(b.textContent ?? ''));
 
-it('lists all fourteen modules in Connect and says no Core module is built', async () => {
+it('lists all fourteen modules in Connect and says no school runs Core yet', async () => {
   await render({ canEdit: true });
   expect(host.querySelectorAll('li').length).toBe(14);
-  expect(host.textContent).toContain('No Core module is built yet');
+  expect(host.textContent).toContain('No school runs a module in Core yet');
   expect(host.textContent).toContain('Assignments and submissions');
-  expect(host.textContent).toContain('Status: Planned');
+  expect(host.textContent).toContain('Status: In preparation');
 });
 
 it('offers a request to an administrator and nothing to anyone else', async () => {

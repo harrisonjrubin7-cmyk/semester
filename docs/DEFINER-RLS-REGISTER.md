@@ -26,13 +26,13 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 51 more, from migrations not applied to production, each with a row below: `20260930234000_data_subject_request_intake.sql` (`raise_my_data_subject_request`); `20260930173030_console_command_center.sql` (`console_command_center`); `20260930200000_school_offboarding.sql` (`approve_offboarding`, `archive_school`, `authorize_school_purge`, `cancel_offboarding`, `disable_school_access`, `offboarding_preflight`, `propose_offboarding`, `record_offboarding_export`, `record_offboarding_notice`, `restore_school`, `school_purge_eligibility`, `verify_offboarding_export`); `20260930185000_school_membership_enforcement.sql` (`decide_school_request`, `leave_school`, `request_school_membership`, `revoke_school_membership`, `school_enforcement_readiness`, `school_requests_for_admin`, `set_school_enforcement`, `withdraw_school_request`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 133 more, from migrations not applied to production, each with a row below: `20261001100000_advancement.sql` (`adv_assign`, `adv_campaign_progress`, `adv_campaign_save`, `adv_donor_save`, `adv_fund_save`, `adv_gift_record`, `adv_gift_refund`, `adv_note_add`, `adv_pledge_cancel`, `adv_pledge_save`, `adv_settings_set`, `alumni_opt_in`, `alumni_preferences`); `20261001090000_events.sql` (`event_cancel`, `event_decide`, `event_headcount`, `event_propose`, `event_publish_direct`, `event_rsvp`); `20261001080000_scheduling.sql` (`space_booking_cancel`, `space_booking_decide`, `space_booking_make`, `space_booking_request`, `space_retire`, `space_save`, `timetable_publish`, `timetable_run_save`); `20261001070000_financial_aid.sql` (`aid_disburse`, `aid_offer_approve`, `aid_offer_propose`, `aid_offer_respond`, `aid_sap_determine`, `aid_sap_evaluate`, `aid_sap_policy_set`); `20261001060000_admissions.sql` (`admissions_cycle_close`, `admissions_cycle_open`, `admissions_cycle_save`, `admissions_deposit_record`, `admissions_release`, `admissions_yield`, `application_decide`, `application_document_mark`, `application_respond`, `application_review`, `application_save`, `application_start`, `application_submit`, `application_withdraw`); `20261001050000_records_transcripts.sql` (`graduation_clearance_run`, `record_disclosure_log`, `record_document_issue`, `record_document_revoke`, `term_grades_accept`, `term_grades_post`); `20261001040000_degree_audit.sql` (`degree_audit_run`, `degree_declare`, `degree_exception_decide`, `degree_exception_propose`, `degree_version_publish`, `degree_version_save`); `20261001030000_assessments.sql` (`assessment_bank_add_item`, `assessment_bank_create`, `assessment_bank_retire_item`, `assessment_close`, `assessment_create`, `assessment_finish`, `assessment_grant_time`, `assessment_items`, `assessment_publish`, `assessment_review`, `assessment_save_answer`, `assessment_start`); `20261001020000_attendance.sql` (`attendance_check_in`, `attendance_close_session`, `attendance_mark`, `attendance_open_session`); `20261001010000_assignments.sql` (`assignment_close`, `assignment_create`, `assignment_edit`, `assignment_extend`, `assignment_publish`, `assignment_submit`); `20260930234000_data_subject_request_intake.sql` (`raise_my_data_subject_request`); `20260930173030_console_command_center.sql` (`console_command_center`); `20260930200000_school_offboarding.sql` (`approve_offboarding`, `archive_school`, `authorize_school_purge`, `cancel_offboarding`, `disable_school_access`, `offboarding_preflight`, `propose_offboarding`, `record_offboarding_export`, `record_offboarding_notice`, `restore_school`, `school_purge_eligibility`, `verify_offboarding_export`); `20260930185000_school_membership_enforcement.sql` (`decide_school_request`, `leave_school`, `request_school_membership`, `revoke_school_membership`, `school_enforcement_readiness`, `school_requests_for_admin`, `set_school_enforcement`, `withdraw_school_request`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## The second reading
 
 Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor and `pg_catalog`. Against the register above: **49 policy-less tables** and **180 `security definer` functions** a signed-in account can call, which is the first reading's 45 and 151 plus what arrived since.
 
-- the 180 functions are exactly the register's rows below, less the 4 migration not yet applied (20260930173030_console_command_center.sql, 20260930185000_school_membership_enforcement.sql, 20260930200000_school_offboarding.sql, 20260930234000_data_subject_request_intake.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
+- the 180 functions are exactly the register's rows below, less the 14 migration not yet applied (20260930173030_console_command_center.sql, 20260930185000_school_membership_enforcement.sql, 20260930200000_school_offboarding.sql, 20260930234000_data_subject_request_intake.sql, 20261001010000_assignments.sql, 20261001020000_attendance.sql, 20261001030000_assessments.sql, 20261001040000_degree_audit.sql, 20261001050000_records_transcripts.sql, 20261001060000_admissions.sql, 20261001070000_financial_aid.sql, 20261001080000_scheduling.sql, 20261001090000_events.sql, 20261001100000_advancement.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
 - all 49 policy-less tables hold no privilege of any kind for `anon` or `authenticated`, table or column. The 4 that were not in the first reading (`private.account_ages`, `public.registration_completions`, `public.registration_holds`, `public.registration_requests`) now have a disposition below. No policy was added to any of the 49, and none should be;
 - the rest of that day's advisor findings, what was fixed and what was left, with the before and after: [`ADVISOR-RECONCILIATION-2026-09-30.md`](ADVISOR-RECONCILIATION-2026-09-30.md).
 
@@ -47,23 +47,40 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 59 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 83 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 73 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 131 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 202 | |
+| **total** | 284 | |
 
-### self-service (59)
+### self-service (83)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `accept_connection` | `auth.uid()` | `20260922003000_connections.sql` |
+| `adv_campaign_progress` | `private.gradebook_school` | `20261001100000_advancement.sql` |
+| `aid_offer_respond` | `auth.uid()`, `private.aid_is_subject`, `private.aid_replay` | `20261001070000_financial_aid.sql` |
+| `alumni_opt_in` | `auth.uid()`, `private.gradebook_school`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `alumni_preferences` | `auth.uid()`, `private.gradebook_school`, `private.adv_replay` | `20261001100000_advancement.sql` |
 | `appeal_community_decision` | `auth.uid()` | `20260928032000_community.sql` |
+| `application_document_mark` | `auth.uid()`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `application_respond` | `auth.uid()`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `application_save` | `auth.uid()` | `20261001060000_admissions.sql` |
+| `application_start` | `auth.uid()`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `application_submit` | `auth.uid()`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `application_withdraw` | `auth.uid()`, `private.admissions_replay` | `20261001060000_admissions.sql` |
 | `apply_to_organization` | `auth.uid()`, `private.verified_student` | `20260921230000_organizations.sql` |
 | `apply_to_volunteer` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
+| `assessment_finish` | `auth.uid()`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assessment_items` | `auth.uid()` | `20261001030000_assessments.sql` |
+| `assessment_review` | `auth.uid()` | `20261001030000_assessments.sql` |
+| `assessment_save_answer` | `auth.uid()` | `20261001030000_assessments.sql` |
+| `assessment_start` | `auth.uid()`, `private.has_capability`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assignment_submit` | `auth.uid()`, `private.has_capability`, `private.assignment_replay` | `20261001010000_assignments.sql` |
+| `attendance_check_in` | `auth.uid()`, `private.has_capability`, `private.attendance_replay` | `20261001020000_attendance.sql` |
 | `begin_community_image` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `beta_send_feedback` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
 | `block_community_author` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -76,8 +93,13 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `create_community` | `auth.uid()`, `private.has_capability`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `create_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `create_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
+| `degree_audit_run` | `auth.uid()`, `private.has_capability`, `private.degree_is_subject`, `private.degree_core_required`, `private.degree_compute` | `20261001040000_degree_audit.sql` |
 | `delete_community_post` | `auth.uid()` | `20260928032000_community.sql` |
 | `edit_community_post` | `auth.uid()` | `20260928032000_community.sql` |
+| `event_cancel` | `auth.uid()`, `private.gradebook_school`, `private.has_capability`, `private.events_replay`, `private.events_live` | `20261001090000_events.sql` |
+| `event_headcount` | `auth.uid()`, `private.gradebook_school`, `private.events_live`, `private.events_manager` | `20261001090000_events.sql` |
+| `event_propose` | `auth.uid()`, `private.gradebook_school`, `private.events_replay`, `private.has_capability` | `20261001090000_events.sql` |
+| `event_rsvp` | `auth.uid()`, `private.gradebook_school`, `private.events_replay`, `private.events_live` | `20261001090000_events.sql` |
 | `export_my_data` | `auth.uid()` | `20260930000000_audit_and_subject_requests.sql` |
 | `follow_organization` | `auth.uid()` | `20260921230000_organizations.sql` |
 | `forget_my_advisor_shares` | `auth.uid()` | `20260928310000_expansion_review_fixes.sql` |
@@ -112,6 +134,8 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
 | `request_school_membership` | `auth.uid()`, `private.verified_account` | `20260930185000_school_membership_enforcement.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
+| `space_booking_cancel` | `auth.uid()`, `private.gradebook_school`, `private.has_capability`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_booking_request` | `auth.uid()`, `private.gradebook_school`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
 | `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
@@ -144,15 +168,54 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (73)
+### admin (131)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `activate_escalation_agreement` | `auth.uid()`, `private.has_capability` | `20260928032000_community.sql` |
+| `admissions_cycle_close` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `admissions_cycle_open` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `admissions_cycle_save` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `admissions_deposit_record` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `admissions_release` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `admissions_yield` | `private.gradebook_school`, `private.admissions_require` | `20261001060000_admissions.sql` |
+| `adv_assign` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay`, `private.subject_has_capability` | `20261001100000_advancement.sql` |
+| `adv_campaign_save` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_donor_save` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_fund_save` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_gift_record` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_gift_refund` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_note_add` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay`, `private.adv_sees_donor` | `20261001100000_advancement.sql` |
+| `adv_pledge_cancel` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_pledge_save` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `adv_settings_set` | `private.gradebook_school`, `private.adv_require`, `private.adv_replay` | `20261001100000_advancement.sql` |
+| `aid_disburse` | `private.gradebook_school`, `private.aid_require`, `private.aid_replay`, `private.aid_standing` | `20261001070000_financial_aid.sql` |
+| `aid_offer_approve` | `private.gradebook_school`, `private.aid_require`, `private.aid_replay` | `20261001070000_financial_aid.sql` |
+| `aid_offer_propose` | `private.gradebook_school`, `private.aid_require`, `private.aid_replay` | `20261001070000_financial_aid.sql` |
+| `aid_sap_determine` | `private.gradebook_school`, `private.aid_require`, `private.aid_replay`, `private.aid_standing` | `20261001070000_financial_aid.sql` |
+| `aid_sap_evaluate` | `private.gradebook_school`, `private.aid_require`, `private.aid_replay`, `private.aid_sap_figures` | `20261001070000_financial_aid.sql` |
+| `aid_sap_policy_set` | `private.gradebook_school`, `private.aid_require`, `private.aid_replay` | `20261001070000_financial_aid.sql` |
 | `answer_help_request` | `auth.uid()`, `private.answers_for` | `20260927230000_help_requests.sql` |
 | `answer_mentor_request` | `auth.uid()`, `private.subject_has_capability` | `20260928110700_consent_and_moderation_narrowing.sql` |
+| `application_decide` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
+| `application_review` | `private.gradebook_school`, `private.admissions_require`, `private.admissions_replay` | `20261001060000_admissions.sql` |
 | `approve_offboarding` | `auth.uid()`, `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
 | `archive_school` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
+| `assessment_bank_add_item` | `private.assessment_require`, `private.assessment_replay`, `private.assessment_validate_item` | `20261001030000_assessments.sql` |
+| `assessment_bank_create` | `private.assessment_require`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assessment_bank_retire_item` | `private.assessment_require`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assessment_close` | `private.assessment_require`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assessment_create` | `private.assessment_require`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assessment_grant_time` | `private.assessment_require`, `private.subject_has_capability` | `20261001030000_assessments.sql` |
+| `assessment_publish` | `private.assessment_require`, `private.assessment_replay` | `20261001030000_assessments.sql` |
+| `assignment_close` | `private.gradebook_school`, `private.assignment_require`, `private.assignment_replay` | `20261001010000_assignments.sql` |
+| `assignment_create` | `auth.uid()`, `private.has_capability`, `private.assignment_replay` | `20261001010000_assignments.sql` |
+| `assignment_edit` | `private.gradebook_school`, `private.assignment_require`, `private.assignment_replay` | `20261001010000_assignments.sql` |
+| `assignment_extend` | `auth.uid()`, `private.assignment_require`, `private.subject_has_capability` | `20261001010000_assignments.sql` |
+| `assignment_publish` | `private.gradebook_school`, `private.assignment_require`, `private.assignment_replay` | `20261001010000_assignments.sql` |
+| `attendance_close_session` | `auth.uid()`, `private.has_capability`, `private.attendance_replay` | `20261001020000_attendance.sql` |
+| `attendance_mark` | `auth.uid()`, `private.has_capability`, `private.subject_has_capability` | `20261001020000_attendance.sql` |
+| `attendance_open_session` | `auth.uid()`, `private.has_capability`, `private.attendance_replay` | `20261001020000_attendance.sql` |
 | `authorize_school_purge` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `beta_add_cohort` | `private.beta_manager` | `20260928220000_private_beta.sql` |
 | `beta_create_program` | `auth.uid()`, `private.beta_manager` | `20260928220000_private_beta.sql` |
@@ -173,6 +236,11 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `console_figures` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_approval` | `auth.uid()`, `private.approver_party`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_school_request` | `private.has_capability` | `20260930185000_school_membership_enforcement.sql` |
+| `degree_declare` | `private.gradebook_school`, `private.degree_require`, `private.degree_replay` | `20261001040000_degree_audit.sql` |
+| `degree_exception_decide` | `private.gradebook_school`, `private.degree_require`, `private.degree_replay` | `20261001040000_degree_audit.sql` |
+| `degree_exception_propose` | `private.gradebook_school`, `private.degree_require`, `private.degree_replay` | `20261001040000_degree_audit.sql` |
+| `degree_version_publish` | `private.gradebook_school`, `private.degree_require`, `private.degree_replay` | `20261001040000_degree_audit.sql` |
+| `degree_version_save` | `private.gradebook_school`, `private.degree_require`, `private.degree_replay` | `20261001040000_degree_audit.sql` |
 | `dining_advance_order` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
 | `dining_disconnect_partner` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
 | `dining_order_queue` | `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
@@ -180,6 +248,8 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `dining_set_ordering` | `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
 | `disable_school_access` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `draft_office_action` | `auth.uid()`, `private.may_publish` | `20260928302000_office_action_feed.sql` |
+| `event_decide` | `private.gradebook_school`, `private.has_capability`, `private.events_replay` | `20261001090000_events.sql` |
+| `event_publish_direct` | `private.gradebook_school`, `private.has_capability`, `private.events_replay` | `20261001090000_events.sql` |
 | `gradebook_add_item` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
 | `gradebook_enter` | `auth.uid()`, `private.gradebook_require`, `private.subject_has_capability`, `want_student = me` | `20260929310000_gradebook.sql` |
 | `gradebook_export` | `private.gradebook_school`, `private.gradebook_require`, `g.status = 'released'` | `20260929310000_gradebook.sql` |
@@ -187,6 +257,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `gradebook_release` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
 | `gradebook_resolve_regrade` | `auth.uid()`, `private.gradebook_require`, `r.student_id = me` | `20260929310000_gradebook.sql` |
 | `gradebook_set_scheme` | `auth.uid()`, `private.gradebook_require`, `private.gradebook_replay` | `20260929310000_gradebook.sql` |
+| `graduation_clearance_run` | `private.gradebook_school`, `private.records_require`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
 | `gtm_activation_failures` | `auth.uid()`, `private.has_capability` | `20260928090000_gtm_foundation.sql` |
 | `gtm_audience_count` | `private.has_capability` | `20260928090000_gtm_foundation.sql` |
 | `gtm_campaign_report` | `auth.uid()`, `private.has_capability` | `20260928090000_gtm_foundation.sql` |
@@ -199,6 +270,9 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `publish_course_guidance` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_course_rules` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_study_pack` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
+| `record_disclosure_log` | `private.gradebook_school`, `private.records_require`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
+| `record_document_issue` | `private.gradebook_school`, `private.records_require`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
+| `record_document_revoke` | `private.gradebook_school`, `private.records_require`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
 | `record_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `record_offboarding_notice` | `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
 | `registrar_decide` | `auth.uid()`, `private.registration_registrar`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
@@ -217,9 +291,17 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `set_member_capabilities` | `private.org_can` | `20260921230000_organizations.sql` |
 | `set_member_standing` | `auth.uid()`, `private.org_can` | `20260921230000_organizations.sql` |
 | `set_school_enforcement` | `private.is_app_admin` | `20260930185000_school_membership_enforcement.sql` |
+| `space_booking_decide` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_booking_make` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_retire` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_save` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
 | `support_reply` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
+| `term_grades_accept` | `private.gradebook_school`, `private.records_require`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
+| `term_grades_post` | `private.gradebook_school`, `private.gradebook_require`, `private.subject_has_capability`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
+| `timetable_publish` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay`, `private.timetable_conflicts` | `20261001080000_scheduling.sql` |
+| `timetable_run_save` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay`, `private.timetable_conflicts` | `20261001080000_scheduling.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 
 ### integration (6)

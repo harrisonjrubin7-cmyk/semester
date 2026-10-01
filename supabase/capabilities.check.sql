@@ -248,7 +248,13 @@ begin
   -- 63 before 20260929000000_commercial_core added five: finance_operator,
   -- customer_success, compliance_owner, content_owner, billing_contact.
   -- 68 before 20260929330000_dining.sql added `dining_staff`.
-  perform pg_temp.counted('a signed-in account reads the sixty-nine roles', n, 69);
+  -- 69 before 20261001060000_admissions.sql added `admissions_officer` and
+  -- `admissions_director`.
+  -- 71 before 20261001070000_financial_aid.sql added `financial_aid_director`.
+  -- 72 before 20261001080000_scheduling.sql added `scheduling_officer`.
+  -- 73 before 20261001090000_events.sql added `events_manager`.
+  -- 74 before 20261001100000_advancement.sql added `advancement_officer` and `advancement_director`.
+  perform pg_temp.counted('a signed-in account reads the seventy-six roles', n, 76);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -305,7 +311,37 @@ begin
   -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher; then guardians:manage for university_admin and
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 185);
+  -- 185 before assignments (20261001010000_assignments.sql) added nine:
+  -- assignments:author for faculty; assignments:extend and :review for faculty
+  -- and teaching_assistant; assignments:submit for the four student roles.
+  -- 194 before attendance (20261001020000_attendance.sql) added six:
+  -- attendance:take for faculty and teaching_assistant; attendance:attend for
+  -- the four student roles.
+  -- 200 before assessments (20261001030000_assessments.sql) added seven:
+  -- assessments:author for faculty; assessments:review for faculty and
+  -- teaching_assistant; assessments:take for the four student roles.
+  -- 207 before the degree audit (20261001040000_degree_audit.sql) added ten:
+  -- degree:author for registrar; degree:declare and degree:propose for
+  -- registrar and academic_advisor; degree:approve for registrar and dean;
+  -- degree:read for registrar, academic_advisor and dean.
+  -- 217 before records (20261001050000_records_transcripts.sql) added six:
+  -- records:issue and records:accept for registrar; records:clear and
+  -- records:audit for registrar and dean.
+  -- 223 before admissions (20261001060000_admissions.sql) added seven:
+  -- admissions:configure, admissions:review and admissions:read for the
+  -- admissions officer and director; admissions:decide for the director.
+  -- 230 before financial aid (20261001070000_financial_aid.sql) added seven:
+  -- aid:propose, aid:disburse and aid:evaluate for the financial aid officer;
+  -- aid:approve and aid:determine for the financial aid director; aid:read for both.
+  -- 237 before scheduling (20261001080000_scheduling.sql) added five:
+  -- space:manage, space:approve and timetable:run for the scheduling officer;
+  -- timetable:publish for the scheduling officer and the registrar.
+  -- 242 before events (20261001090000_events.sql) added one:
+  -- events:manage for the events manager.
+  -- 243 before advancement (20261001100000_advancement.sql) added five:
+  -- adv:configure and adv:refund for the advancement director; adv:gift for the
+  -- advancement officer; adv:read for both.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 248);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

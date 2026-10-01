@@ -538,6 +538,155 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20261001010000_assignments.sql: assignments and submissions in Core.
+    -- Each reads auth.uid(), the caller's own school and a course-and-term
+    -- scoped assignments:* capability, and refuses unless the school runs
+    -- lms_assignments in Core. `assignments.check.sql` walks every refusal.
+    'assignment_create(want_course text, want_term text, want_title text, want_instructions text, want_points numeric, want_due timestamp with time zone, want_late_policy text, want_late_until timestamp with time zone, want_attempts integer, want_key text)',
+    'assignment_edit(want_id uuid, want_title text, want_instructions text, want_due timestamp with time zone, want_late_policy text, want_late_until timestamp with time zone, want_key text)',
+    'assignment_publish(want_id uuid, want_key text)',
+    'assignment_close(want_id uuid, want_key text)',
+    'assignment_extend(want_id uuid, want_student uuid, want_due timestamp with time zone, want_until timestamp with time zone, want_reason text, want_key text)',
+    'assignment_submit(want_id uuid, want_body text, want_files jsonb, want_key text)',
+
+    -- 20261001020000_attendance.sql: attendance in Core. Each reads auth.uid(),
+    -- the caller's own school and a course-and-term scoped attendance:*
+    -- capability, and refuses unless the school runs attendance in Core. A
+    -- wrong code at check-in is answered, not raised, so the try is kept.
+    -- `attendance.check.sql` walks every refusal.
+    'attendance_open_session(want_course text, want_term text, want_title text, want_held_on date, want_opens timestamp with time zone, want_closes timestamp with time zone, want_late_after integer, want_key text)',
+    'attendance_close_session(want_id uuid, want_key text)',
+    'attendance_mark(want_session uuid, want_student uuid, want_status text, want_note text, want_key text)',
+    'attendance_check_in(want_code text, want_key text)',
+
+    -- 20261001030000_assessments.sql: question banks and timed tests in Core.
+    -- Each reads auth.uid(), the caller's own school and a course-and-term
+    -- scoped assessments:* capability, and refuses unless the school runs
+    -- lms_assessments in Core. `assessment_items` never returns a key, and a
+    -- save past the deadline is answered, not raised. `assessments.check.sql`
+    -- walks every refusal.
+    'assessment_bank_create(want_course text, want_term text, want_title text, want_key text)',
+    'assessment_bank_add_item(want_bank uuid, want_kind text, want_stem text, want_options jsonb, want_answer_key jsonb, want_points numeric, want_key text)',
+    'assessment_bank_retire_item(want_item uuid, want_key text)',
+    'assessment_create(want_bank uuid, want_title text, want_instructions text, want_item_ids uuid[], want_pool_size integer, want_minutes integer, want_opens timestamp with time zone, want_closes timestamp with time zone, want_attempts integer, want_shuffle boolean, want_show_answers boolean, want_key text)',
+    'assessment_publish(want_id uuid, want_key text)',
+    'assessment_close(want_id uuid, want_key text)',
+    'assessment_grant_time(want_assessment uuid, want_student uuid, want_percent integer, want_reason text, want_key text)',
+    'assessment_start(want_assessment uuid, want_key text)',
+    'assessment_items(want_attempt uuid)',
+    'assessment_save_answer(want_attempt uuid, want_item uuid, want_answer jsonb)',
+    'assessment_finish(want_attempt uuid, want_key text)',
+    'assessment_review(want_attempt uuid)',
+
+    -- 20261001040000_degree_audit.sql: the official degree audit in Core. Each
+    -- reads auth.uid(), the caller's own school and a school-scoped degree:*
+    -- capability (the run also lets the student read their own), and refuses
+    -- unless the school runs degree_audit in Core. A decision is never by the
+    -- proposer; a what-if is never saved. `degree_audit.check.sql` walks every
+    -- refusal.
+    'degree_version_save(want_program text, want_name text, want_kind text, want_year integer, want_total numeric, want_min_gpa numeric, want_groups jsonb, want_key text)',
+    'degree_version_publish(want_id uuid, want_key text)',
+    'degree_declare(want_student text, want_version uuid, want_key text)',
+    'degree_exception_propose(want_student text, want_version uuid, want_position integer, want_kind text, want_course text, want_credits numeric, want_reason text, want_key text)',
+    'degree_exception_decide(want_exception uuid, want_approve boolean, want_note text, want_key text)',
+    'degree_audit_run(want_student text, want_version uuid, want_save boolean, want_key text)',
+
+    -- 20261001050000_records_transcripts.sql: final grades, signed documents,
+    -- the disclosure log and graduation clearance in Core. Each reads auth.uid(),
+    -- the caller's own school and a school- or course-scoped capability, and
+    -- refuses unless the school runs records in Core. Opening a document by its
+    -- code (`record_document_verify`) is granted to the service role alone and
+    -- is not here. `records.check.sql` walks every refusal.
+    'term_grades_post(want_course text, want_term text, want_grades jsonb, want_key text)',
+    'term_grades_accept(want_course text, want_term text, want_key text)',
+    'record_document_issue(want_student text, want_kind text, want_recipient text, want_recipient_kind text, want_basis text, want_consent text, want_key text)',
+    'record_document_revoke(want_id uuid, want_reason text, want_key text)',
+    'record_disclosure_log(want_student text, want_recipient text, want_recipient_kind text, want_basis text, want_consent text, want_what text, want_key text)',
+    'graduation_clearance_run(want_student text, want_key text)',
+
+    -- 20261001060000_admissions.sql: admissions in Core. Each reads auth.uid()
+    -- and either the caller's own school and a school-scoped admissions:*
+    -- capability, or ownership of the application it names, and refuses unless
+    -- the school runs admissions in Core. A decision is never by the reviewer
+    -- alone and never on one's own application. `admissions.check.sql` walks
+    -- every refusal.
+    'admissions_cycle_save(want_name text, want_term text, want_opens timestamp with time zone, want_closes timestamp with time zone, want_questions jsonb, want_checklist jsonb, want_key text)',
+    'admissions_cycle_open(want_cycle uuid, want_key text)',
+    'admissions_cycle_close(want_cycle uuid, want_key text)',
+    'application_start(want_cycle uuid, want_key text)',
+    'application_save(want_application uuid, want_answers jsonb)',
+    'application_submit(want_application uuid, want_key text)',
+    'application_withdraw(want_application uuid, want_key text)',
+    'application_document_mark(want_application uuid, want_doc text, want_state text, want_note text, want_key text)',
+    'application_review(want_application uuid, want_recommendation text, want_notes text, want_key text)',
+    'application_decide(want_application uuid, want_decision text, want_reason text, want_conditions text, want_key text)',
+    'admissions_release(want_cycle uuid, want_key text)',
+    'application_respond(want_application uuid, want_response text, want_key text)',
+    'admissions_deposit_record(want_application uuid, want_reference text, want_key text)',
+    'admissions_yield(want_cycle uuid)',
+
+    -- 20261001070000_financial_aid.sql: financial-aid records in Core. Each reads
+    -- auth.uid() and either the caller's own school and a school-scoped aid:*
+    -- capability, or the student's link to the record it names, and refuses
+    -- unless the school runs financial aid in Core. An offer is approved by
+    -- someone other than who proposed it, a determination by someone other than
+    -- who ran the evaluation. `financial-aid.check.sql` walks every refusal.
+    'aid_offer_propose(want_student text, want_year text, want_components jsonb, want_note text, want_key text)',
+    'aid_offer_approve(want_version uuid, want_key text)',
+    'aid_offer_respond(want_version uuid, want_component text, want_response text, want_key text)',
+    'aid_disburse(want_version uuid, want_component text, want_term text, want_amount_cents bigint, want_reference text, want_key text)',
+    'aid_sap_policy_set(want_min_gpa numeric, want_min_completion numeric, want_note text, want_key text)',
+    'aid_sap_evaluate(want_student text, want_key text)',
+    'aid_sap_determine(want_evaluation uuid, want_year text, want_determination text, want_reason text, want_key text)',
+
+    -- 20261001080000_scheduling.sql: campus spaces, bookings and timetable runs
+    -- in Core. Each reads auth.uid(), the caller's own school and, except a
+    -- member's booking request and a cancellation, a school-scoped space: or
+    -- timetable: capability, and refuses unless the school runs scheduling in
+    -- Core. A booking is decided by someone other than who requested it; a run
+    -- is published by someone other than who saved it. `scheduling.check.sql`
+    -- walks every refusal.
+    'space_save(want_code text, want_name text, want_building text, want_capacity integer, want_features text[], want_bookable boolean, want_key text)',
+    'space_retire(want_code text, want_key text)',
+    'space_booking_request(want_space text, want_purpose text, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_key text)',
+    'space_booking_decide(want_booking uuid, want_confirm boolean, want_note text, want_key text)',
+    'space_booking_make(want_space text, want_purpose text, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_key text)',
+    'space_booking_cancel(want_booking uuid, want_key text)',
+    'timetable_run_save(want_term text, want_input jsonb, want_proposal jsonb, want_key text)',
+    'timetable_publish(want_run uuid, want_key text)',
+
+    -- 20261001090000_events.sql: events and RSVPs in Core. Each reads auth.uid()
+    -- and the caller's own school, and refuses unless the school runs events in
+    -- Core; publishing, declining and cancelling another's event need
+    -- events:manage. An event is decided by someone other than who proposed it.
+    -- `events.check.sql` walks every refusal.
+    'event_propose(want_host_kind text, want_host_ref text, want_title text, want_description text, want_location text, want_space text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer, want_key text)',
+    'event_decide(want_event uuid, want_publish boolean, want_note text, want_key text)',
+    'event_publish_direct(want_host_ref text, want_title text, want_description text, want_location text, want_space text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_capacity integer, want_key text)',
+    'event_cancel(want_event uuid, want_reason text, want_key text)',
+    'event_rsvp(want_event uuid, want_going boolean, want_key text)',
+    'event_headcount(want_event uuid)',
+
+    -- 20261001100000_advancement.sql: alumni relations and fundraising records in
+    -- Core. Each reads auth.uid() and the caller's own school, and refuses unless
+    -- the school runs advancement in Core. The alumnus's own acts need a conferred
+    -- degree on their record; the office's writers need an adv:* capability. A gift
+    -- is refunded by someone other than who recorded it. `advancement.check.sql`
+    -- walks every refusal.
+    'alumni_opt_in(want_display_name text, want_class_year integer, want_key text)',
+    'alumni_preferences(want_directory boolean, want_solicitable boolean, want_opt_out boolean, want_key text)',
+    'adv_settings_set(want_legal_name text, want_statement text, want_goods_note text, want_key text)',
+    'adv_fund_save(want_code text, want_name text, want_designation text, want_key text)',
+    'adv_campaign_save(want_name text, want_kind text, want_goal_cents bigint, want_starts date, want_ends date, want_fund text, want_key text)',
+    'adv_donor_save(want_kind text, want_name text, want_email text, want_profile uuid, want_key text)',
+    'adv_gift_record(want_donor uuid, want_fund text, want_campaign uuid, want_pledge uuid, want_amount_cents bigint, want_received date, want_method text, want_reference text, want_tribute text, want_key text)',
+    'adv_gift_refund(want_gift uuid, want_reason text, want_reference text, want_key text)',
+    'adv_pledge_save(want_donor uuid, want_fund text, want_campaign uuid, want_amount_cents bigint, want_schedule text, want_installments integer, want_starts date, want_key text)',
+    'adv_pledge_cancel(want_pledge uuid, want_reason text, want_key text)',
+    'adv_assign(want_donor uuid, want_officer uuid, want_key text)',
+    'adv_note_add(want_donor uuid, want_kind text, want_note text, want_key text)',
+    'adv_campaign_progress(want_campaign uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

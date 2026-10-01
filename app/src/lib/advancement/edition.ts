@@ -1,5 +1,5 @@
 /**
- * Advancement: alumni relations and fundraising, described and not built (D-157).
+ * Advancement: alumni relations and fundraising, built behind a switch that is off (D-157, D-993).
  *
  * The brief (S7 of the 30 September site to-do) asks for an advancement module
  * so a school could run alumni relations and fundraising in Semester. Nothing
@@ -11,7 +11,9 @@
  *
  * ## The rules it keeps
  *
- * - Every row is `planned`. A row moves only when a test holds the thing.
+ * - A row is `planned` until a test holds the thing; it is `in-preparation` when its
+ *   tables and check suite are in the tree and the module's switch is off for every
+ *   school. None is certified and none is offered to a school.
  * - The page says no school uses it, no gift has been taken and no receipt has
  *   been issued. `NOTHING_IS_LIVE` is what the tests forbid the copy to contradict.
  * - Wealth screening and predictive donor scoring are not built and not planned:
@@ -22,7 +24,7 @@
  *   say so rather than name a payment provider.
  */
 
-export type Status = 'planned';
+export type Status = 'planned' | 'in-preparation';
 
 export interface Part {
   id: 'constituents' | 'giving' | 'staff';
@@ -48,8 +50,8 @@ export const PARTS: readonly Part[] = [
       { path: 'supabase/migrations/20260926150000_expansion_roles_and_features.sql', shows: 'alumni_mentor_offers: a mentoring offer, consented on both sides' },
       { path: 'supabase/migrations/20260929210000_academic_record_ledger.sql', shows: 'the academic record the profile would be created from' },
     ],
-    status: 'planned',
-    needs: 'A directory that shows nobody who has not opted in, class notes, and reunions and events.',
+    status: 'in-preparation',
+    needs: 'Class notes, and an app screen for the graduate’s opt-in and preferences. The opt-in, its protections and the directory switch are built behind a school-level switch that is off for every school.',
   },
   {
     id: 'giving',
@@ -61,8 +63,8 @@ export const PARTS: readonly Part[] = [
       'A donor portal: giving history, receipts and recurring-gift management',
     ],
     restsOn: [],
-    status: 'planned',
-    needs: 'Every table, and a decision on how a gift is paid: D-146 says no money moves through Semester. A school’s counsel must also settle charitable-solicitation registration and the wording of tax receipts.',
+    status: 'in-preparation',
+    needs: 'A decision on how a gift is paid, because D-146 says no money moves through Semester: gifts are recorded here, not processed. A school’s counsel must settle charitable-solicitation registration and the wording of tax receipts, which the school sets itself; Semester ships none.',
   },
   {
     id: 'staff',
@@ -75,8 +77,8 @@ export const PARTS: readonly Part[] = [
     restsOn: [
       { path: 'supabase/migrations/20260929220000_student_accounts.sql', shows: 'a ledger a school’s office runs, with a second approver, the pattern a gift ledger would copy' },
     ],
-    status: 'planned',
-    needs: 'The tables, the roles and a ledger that only a second person’s approval can change. None exists.',
+    status: 'in-preparation',
+    needs: 'An app console for gift entry and portfolios, and the CASE and VSE exports. The tables, the roles and a refund that only a second person can make are built behind the same switch.',
   },
 ];
 
@@ -102,7 +104,7 @@ export const NOTHING_IS_LIVE =
   'No school uses Semester for alumni relations or fundraising. No gift has been taken and no receipt has been issued.';
 
 export const POSITIONING =
-  'A school’s alumni and advancement office could run alumni relations and fundraising in the same system its students and faculty use. It is planned. None of it is built.';
+  'A school’s alumni and advancement office could run alumni relations and fundraising in the same system its students and faculty use. It is in preparation: the records are built behind a switch that is off for every school, and none of it is offered yet.';
 
 /** Prices are the owner’s decision; nothing here is one. */
 export const PRICE = 'No price has been set for this module.';

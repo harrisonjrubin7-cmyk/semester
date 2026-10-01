@@ -179,5 +179,5 @@ it('downloads the comparison as a CSV without sending it anywhere', async () => 
   });
   expect(text).toContain('planning estimate');
   expect(text).toContain('Payback month,25');
-  expect(text).toContain('Planned');
+  expect(text).toContain('In preparation');
 });

@@ -391,6 +391,64 @@ describe('"delete my account" really means every row', () => {
       // the link, goes with the account and is in OWNED_TABLES instead.
       'academic_record_changes',
       'academic_record_entries',
+      // Admissions cycles and their keys: the school's, kept with the school (D-151).
+      'admission_cycles',
+      // Admissions cycles and their keys: the school's, kept with the school (D-151).
+      'admissions_operations',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_assignments',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_campaigns',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_counters',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_donors',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_funds',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_gifts',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_notes',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_operations',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_pledge_cancellations',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_pledges',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_receipts',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_refunds',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_settings',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_disbursements',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offer_approvals',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offer_responses',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offer_versions',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offers',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_operations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_sap_determinations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_sap_evaluations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_sap_policies',
+      // A course's assignment, kept with the course (D-151).
+      // Part of a course's tests, kept with the course.
+      'assessments',
+      'assignments',
+      // A class meeting a code can check in to, kept with the course.
+      'attendance_sessions',
+      // Part of a course's tests, kept with the course.
+      'bank_items',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'campus_spaces',
       'commercial_prices',
       'communities',
       'community_calibration_items',
@@ -413,16 +471,29 @@ describe('"delete my account" really means every row', () => {
       // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
+      // The degree audit's requirements, exceptions, saved runs and keys: the
+      // school's record, kept with the school (D-151).
+      'degree_audit_runs',
+      'degree_exceptions',
+      'degree_groups',
+      'degree_operations',
+      'degree_programs',
+      'degree_rules',
+      'degree_versions',
       // A school's dining locations, hours and menus (lib/dining/client.ts,
       // 20260929330000_dining.sql): what its card office lists.
       'dining_hours',
       'dining_locations',
       'dining_menu_items',
+      // The events writers' idempotency keys, kept with the school (D-151).
+      'events_operations',
       'feature_kill_switch',
       // A course's grading scheme and items (lib/gradebook/client.ts,
       // 20260929310000_gradebook.sql): the course's, not a student's.
       'gradebook_items',
       'gradebook_schemes',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'graduation_clearances',
       'group_tasks',
       'groups',
       'gtm_campaign_reviews',
@@ -453,13 +524,29 @@ describe('"delete my account" really means every row', () => {
       'organizations',
       // A school's registration calendar and sections (lib/enrollment/client.ts,
       // 20260929300000_registration_transaction.sql).
+      // Part of a course's tests, kept with the course.
+      'question_banks',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_disclosures',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_document_openings',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_document_revocations',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'record_documents',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'records_operations',
       'registration_sections',
       'registration_terms',
       'reports',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'scheduling_operations',
       // The Configuration Studio's table (lib/config/api.ts, D-1011): a school's
       // versioned policy settings. No person, credential or student record.
       'school_config_versions',
       'schools',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'space_events',
       // Student accounts (lib/finance/api.ts, D-146): the school's financial
       // record of its students' accounts, and its reconciliations and closes.
       'student_account_closes',
@@ -467,11 +554,20 @@ describe('"delete my account" really means every row', () => {
       'student_account_reconciliations',
       'student_account_requests',
       'student_account_settings',
+      'student_degrees',
       'student_payment_plan_installments',
       'student_payment_plans',
       'study_packs',
       'subscriptions',
       'support_access_event',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'term_grade_acceptances',
+      // The school's record of what it issued, released or cleared, kept with the school (D-151).
+      'term_grade_posts',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'timetable_publications',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'timetable_runs',
       // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
       // versioned workflow definitions. No person, credential or student record.
       'workflow_versions',

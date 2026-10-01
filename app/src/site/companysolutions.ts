@@ -69,11 +69,11 @@ export function advancement(): Solution {
   return {
     crumb: 'Advancement',
     eye: 'For alumni relations and fundraising offices',
-    h: 'Alumni relations and fundraising: planned, and none of it built.',
+    h: 'Alumni relations and fundraising: in preparation, and offered to no school.',
     lede: `${NOTHING_IS_LIVE} ${ADV_POSITIONING} ${PRICE}`,
     cta: ['Tell us what your office would need first', '#contact'],
-    listHead: 'What it would do, none of it built',
-    listTitle: 'Planned. Nothing here exists yet.',
+    listHead: 'What it does and what it still needs',
+    listTitle: 'In preparation. Built behind a switch that is off; no school uses it.',
     list: PARTS.flatMap((p) => [`${p.title}: ${p.would[0]}`, ...p.would.slice(1).map((w) => `${p.title}: ${w}`)]),
     qualHead: 'What it will not do, what it waits on, and what a graduate can do today',
     qual: [

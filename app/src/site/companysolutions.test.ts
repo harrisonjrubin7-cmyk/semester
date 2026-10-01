@@ -84,7 +84,7 @@ describe('what the pages say', () => {
     expect(p.lede.startsWith('No school uses Semester for alumni relations or fundraising.')).toBe(true);
     expect(p.lede).toContain('No gift has been taken and no receipt has been issued.');
     expect(p.lede).toContain('No price has been set for this module.');
-    expect(p.h).toContain('none of it built');
+    expect(p.h).toContain('offered to no school');
   });
 
   it('refuses wealth screening and donor scoring, and lists what a graduate can do today', () => {
@@ -100,7 +100,7 @@ describe('what the pages say', () => {
     const html = read(SITE);
     expect(Object.keys(SOLUTIONS).sort()).toEqual(['advancement', 'k12']);
     expect(html).toContain('<a href="#k12"><b>K–12 (planned)</b>');
-    expect(html).toContain('<a href="#advancement"><b>Advancement (planned)</b>');
+    expect(html).toContain('<a href="#advancement"><b>Advancement (in preparation)</b>');
     expect(html.match(/<a href="#k12">K–12 \(planned\)<\/a>/g)?.length).toBeGreaterThanOrEqual(1);
     const sitemap = read('company-site/sitemap.xml');
     expect(sitemap).toContain('https://www.semester.website/k12<');

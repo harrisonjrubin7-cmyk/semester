@@ -11,7 +11,8 @@ import { NOT_BUILT, NOTHING_IS_LIVE, PARTS, POSITIONING, PRICE, TODAY, WAITS_ON 
  * The rules in `pages.tsx` hold here word for word, and one more: nothing on
  * either page says a school uses this, a gift has been taken or a receipt has
  * been issued. Each part's status is printed from `lib/advancement/edition.ts`,
- * where every row is "planned" until a test holds the thing.
+ * where a row is "planned" until a test holds the thing and "in preparation"
+ * once its tables and suite are in the tree.
  */
 
 type Page = (props: { config: SiteConfig }) => ReactNode;
@@ -33,7 +34,7 @@ export const Advancement: Page = ({ config }) => (
       {PARTS.map((p) => (
         <div key={p.id} id={`advancement-${p.id}`}>
           <h3>{p.title}</h3>
-          <p><strong>Status: planned.</strong> Not built.</p>
+          <p><strong>Status: {p.status === 'planned' ? 'planned' : 'in preparation'}.</strong> {p.status === 'planned' ? 'Not built.' : 'Built behind a switch that is off for every school; not offered to any.'}</p>
           <ul>
             {p.would.map((w) => <li key={w}>{w}</li>)}
           </ul>
@@ -72,7 +73,7 @@ export const Alumni: Page = ({ config }) => (
         {PARTS.filter((p) => p.id === 'constituents').flatMap((p) => p.would).map((w) => <li key={w}>{w}</li>)}
       </ul>
       <p className="site-small">
-        Planned, not built. An alumni directory would show only the people who opted in. For how a school’s office
+        In preparation. A graduate becomes an alumnus only by opting in, and an alumni directory shows only the people who did. For how a school’s office
         would use it, see <a href={href(config, '/solutions/advancement/')}>alumni relations and fundraising</a>.
       </p>
     </Section>

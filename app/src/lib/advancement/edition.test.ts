@@ -6,9 +6,9 @@ import { NOT_BUILT, NOTHING_IS_LIVE, PARTS, PRICE, TODAY, WAITS_ON } from './edi
 const root = join(import.meta.dirname, '../../../..');
 
 describe('advancement', () => {
-  it('has the brief’s three parts and every one is planned', () => {
+  it('has the brief’s three parts and every one is in preparation, not certified', () => {
     expect(PARTS.map((p) => p.id)).toEqual(['constituents', 'giving', 'staff']);
-    for (const p of PARTS) expect(p.status).toBe('planned');
+    for (const p of PARTS) expect(p.status).toBe('in-preparation');
   });
 
   it('rests only on files that exist, and what it names is there', () => {
@@ -19,13 +19,16 @@ describe('advancement', () => {
     expect(mentor).toContain('create table if not exists public.alumni_mentor_offers');
   });
 
-  it('is not built: no gift, donor, pledge, giving-campaign or advancement table exists', () => {
-    // If a table for this ever lands, a row here must move off "planned" in the same change.
-    const dir = join(root, 'supabase/migrations');
-    const sql = readdirSql(dir);
-    // The table's own name, not a column inside it (dining has a donations pool, and the go-to-market team has marketing campaigns; neither is this).
-    // A record of who graduated and the consents they give is not money, and is allowed to land on its own.
-    expect(sql).not.toMatch(/create table (if not exists )?(public\.)?(?!gtm_)\w*(gift|donor|pledge|campaign|fundrais|advancement)\w*\b/i);
+  it('is in preparation only because its tables and its check suite are in the tree, and holds no score', () => {
+    // The row moves off "planned" only when the tables land with their suite (DO-NOT-BUILD rule 13).
+    const sql = readFileSync(join(root, 'supabase/migrations/20261001100000_advancement.sql'), 'utf8');
+    for (const t of ['alumni_profiles', 'advancement_donors', 'advancement_gifts', 'advancement_receipts', 'advancement_refunds']) {
+      expect(sql, t).toMatch(new RegExp(`create table if not exists public\\.${t}\\b`));
+    }
+    expect(existsSync(join(root, 'supabase/advancement.check.sql'))).toBe(true);
+    // Refused, not deferred: nothing that scores, ranks or screens a donor or an alumnus.
+    expect(sql).not.toMatch(/create table (if not exists )?(public\.)?\w*(score|wealth|capacity_rating|propensity|rank)\w*\b/i);
+    expect(sql).not.toMatch(/\b(wealth_score|propensity|capacity_rating)\b/i);
   });
 
   it('refuses wealth screening and donor scoring, and says which rule', () => {
@@ -47,11 +50,3 @@ describe('advancement', () => {
     expect(NOTHING_IS_LIVE).toMatch(/No gift has been taken/);
   });
 });
-
-function readdirSql(dir: string): string {
-  const { readdirSync } = require('node:fs') as typeof import('node:fs');
-  return readdirSync(dir)
-    .filter((f) => f.endsWith('.sql'))
-    .map((f) => readFileSync(join(dir, f), 'utf8'))
-    .join('\n');
-}
