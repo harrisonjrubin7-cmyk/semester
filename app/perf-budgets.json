@@ -86,7 +86,7 @@
     "src/screens/Study.tsx": 91136,
     "src/screens/Support.tsx": 22528,
     "src/screens/TrustRoom.tsx": 11264,
-    "src/screens/University.tsx": 173056,
+    "src/screens/University.tsx": 168960,
     "src/screens/Update.tsx": 60416,
     "src/screens/Volunteer.tsx": 19456,
     "src/screens/Volunteers.tsx": 21504,
@@ -104,7 +104,7 @@
     "routes": {
       "src/screens/Search.tsx": 1027,
       "src/screens/Directory.tsx": 3329,
-      "src/screens/University.tsx": 157223,
+      "src/screens/University.tsx": 153289,
       "src/screens/Athletics.tsx": 17881,
       "src/screens/Nil.tsx": 6656,
       "src/screens/Career.tsx": 29645,
