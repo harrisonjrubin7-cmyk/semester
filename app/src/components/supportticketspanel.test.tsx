@@ -154,7 +154,7 @@ describe('asking Semester support', () => {
 
   it('shows a question and its thread, and lets the student reply or close it', async () => {
     world.tickets = [{
-      id: 't1', category: 'bug', subject: 'Drill freezes', status: 'waiting_on_student', priority: 'normal',
+      id: '123e4567-e89b-42d3-a456-426614174000', category: 'bug', subject: 'Drill freezes', status: 'waiting_on_student', priority: 'normal',
       created_at: '2026-09-27T00:00:00Z', first_response_due: '2026-09-30T00:00:00Z', first_responded_at: '2026-09-27T02:00:00Z',
     }];
     world.thread = [
@@ -162,11 +162,11 @@ describe('asking Semester support', () => {
       { from_side: 'support', body: 'Which browser?', created_at: '2026-09-27T02:00:00Z' },
     ];
     await draw();
-    expect(host.textContent).toContain('Reference SUP-T1');
+    expect(host.textContent).toContain('Reference SUP-123E-4567-E89B-42D3');
     await click(button('Drill freezes · Support replied — waiting for you'));
     expect(host.textContent).toContain('Semester support · Which browser?');
     await click(button('Close this question'));
-    expect(world.calls.find((c) => c.name === 'close_my_ticket')?.args).toEqual({ want_ticket: 't1' });
+    expect(world.calls.find((c) => c.name === 'close_my_ticket')?.args).toEqual({ want_ticket: '123e4567-e89b-42d3-a456-426614174000' });
   });
 
   it('shows the next account none of the last one’s questions, even when the old answer arrives last', async () => {
