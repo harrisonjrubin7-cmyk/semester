@@ -13,6 +13,9 @@ import {
   type Payload,
 } from '../lib/semester-packets';
 
+/** Read at the action boundary, not during render. */
+const currentTime = () => Date.now();
+
 /**
  * What would leave the device, shown before anything does.
  *
@@ -61,7 +64,7 @@ export function PacketPreview({
   };
 
   const confirm = () => {
-    const at = nowProp ?? new Date().getTime();
+    const at = nowProp ?? currentTime();
     const result = release(packet, studentConfirms(packet, at), at);
     if (result.ok) {
       onRelease(result.payload);

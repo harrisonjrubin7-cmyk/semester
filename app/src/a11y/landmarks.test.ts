@@ -38,6 +38,9 @@ function code(src: string): string {
 const FILES = tsx('src').map((f) => ({ file: f, src: code(readFileSync(f, 'utf8')) }));
 const find = (end: string) => FILES.find(({ file }) => file.endsWith(end))!;
 
+/** Workspace-owned screens for which App deliberately omits the global Header. */
+const OWN_TITLES = ['screens/Directory.tsx', 'screens/Search.tsx'] as const;
+
 /**
  * The components `main.tsx` renders *instead of* the app.
  *
@@ -82,6 +85,14 @@ const ROOTS = (() => {
  */
 const isRoot = (file: string) =>
   ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!) || /(^|[\\/])src[\\/]site[\\/]/.test(file);
+
+/**
+ * The workspace deliberately removes its shared header on these two shell
+ * surfaces (`Workspace.ownTitle` in App.tsx). Their in-screen wordmark and
+ * welcome line therefore own the single page heading instead of duplicating
+ * one supplied by the shell.
+ */
+const OWNS_SHELL_TITLE = new Set(['Directory', 'Search']);
 
 /**
  * The app draws exactly one navigation, whichever of the four is chosen —
@@ -164,14 +175,39 @@ describe('there is one h1', () => {
     expect(find('App.tsx').src, 'the screen’s name is the page’s h1').toMatch(/<h1/);
   });
 
+  it('is owned by the two workspace surfaces whose shared header is absent', () => {
+    expect([...OWNS_SHELL_TITLE].sort()).toEqual(['Directory', 'Search']);
+    expect(find('App.tsx').src).toContain("state.screen === 'search' || state.screen === 'directory'");
+  });
+
   it('is not printed again by a screen inside the shell', () => {
     const extra = FILES.filter(({ file, src }) => {
       if (file.endsWith('App.tsx')) return false;
+      if (OWN_TITLES.some((screen) => file.endsWith(screen))) return false;
       // Same exception, for the same reason.
       if (isRoot(file)) return false;
+      if (OWNS_SHELL_TITLE.has(file.replace(/\.tsx$/, '').split('/').pop()!)) return false;
       return /<h1[\s>]/.test(src);
     });
     expect(extra.map(({ file }) => file), 'a second h1 under the header’s').toEqual([]);
+  });
+
+  it('is owned by each workspace screen whose global header is absent', () => {
+    const app = find('App.tsx').src;
+    expect(app).toContain("state.screen === 'search' || state.screen === 'directory'");
+    for (const screen of OWN_TITLES) {
+      const source = find(screen).src;
+      expect(source.match(/<h1[\s>]/g), `${screen} needs one page heading`).toHaveLength(1);
+      expect(source, `${screen} needs the workspace route-focus target`).toMatch(
+        /<h1[^>]*data-page-title[^>]*tabIndex=\{-1\}/,
+      );
+    }
+  });
+
+  it('moves workspace route focus even when its global header is absent', () => {
+    const app = find('App.tsx').src;
+    expect(app).toContain("querySelector<HTMLHeadingElement>('h1[data-page-title]')");
+    expect(app).toContain('new MutationObserver');
   });
 
   it('is the only thing focus is moved to on arrival', () => {

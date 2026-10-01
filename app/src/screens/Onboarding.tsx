@@ -214,10 +214,11 @@ export function Onboarding() {
       </div>
 
       <div className="kicker">{step.k}</div>
-      <div
+      <h1
         className="chrome-text"
         style={{
           fontSize: 'calc(42px * var(--text-scale, 1))',
+          fontWeight: 'inherit',
           lineHeight: 1.04,
           letterSpacing: '-0.01em',
           marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(14px * var(--density, 1))',
@@ -225,7 +226,7 @@ export function Onboarding() {
         }}
       >
         {soft && state.onb === 0 ? welcomeLine(mine, now) : step.t}
-      </div>
+      </h1>
       <div style={{ fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
         {soft && state.onb === 0 ? welcomeLead(mine) : step.b}
       </div>

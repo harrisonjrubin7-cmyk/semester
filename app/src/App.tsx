@@ -375,6 +375,7 @@ function Header({
         */}
         <h1
           ref={heading}
+          data-page-title
           tabIndex={-1}
           className="chrome-text"
           style={{
@@ -780,6 +781,37 @@ function Workspace({
   const focusBar = useCallback(() => barBox.current?.focus(), []);
   /** The shell's own two screens, which are their own titles. See above. */
   const ownTitle = state.screen === 'search' || state.screen === 'directory';
+  const pane = useRef<HTMLDivElement>(null);
+  const wasOn = useRef(state.screen);
+
+  /*
+   * `Header` normally moves focus into a new page title. In the workspace it
+   * is deliberately absent on Search and All apps, and is unmounted while
+   * either screen is open, so its screen-change effect cannot cover the
+   * transition into or back out of those pages. Keep the route landing rule
+   * at the persistent shell level for this layout. The observer only matters
+   * when a lazy screen's chunk is still behind the Suspense fallback.
+   */
+  useEffect(() => {
+    if (wasOn.current === state.screen) return;
+    wasOn.current = state.screen;
+    const root = pane.current;
+    if (!root) return;
+
+    const focusTitle = () => {
+      const title = root.querySelector<HTMLHeadingElement>('h1[data-page-title]');
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [state.screen]);
 
   return (
     <SuggestingProvider value={suggesting}>
@@ -823,6 +855,7 @@ function Workspace({
         <div className={chrome.sidebar && !INSTITUTIONAL_PREVIEW ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
           {chrome.sidebar && !INSTITUTIONAL_PREVIEW && <Sidebar />}
           <div
+            ref={pane}
             className={
               isCanvas(state.screen)
                 ? 'device-pane deskwork-pane has-canvas'

@@ -351,7 +351,7 @@ export function Segmented<T extends string>({
   style?: CSSProperties;
 }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', ...style }}>
+    <div className="segmented" style={style}>
       {options.map((o) => {
         const on = o.id === value;
         return (
@@ -361,7 +361,7 @@ export function Segmented<T extends string>({
             // No `tap-y`, for the reason in `ChipRow` above: these clear
             // 24×24 already, and the rows stack close enough that expanding
             // them made adjacent rows fight over a 4px band.
-            className="btn"
+            className="btn segmented-option"
             onClick={() => onChange(o.id)}
             aria-pressed={on}
             style={{
@@ -370,10 +370,6 @@ export function Segmented<T extends string>({
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              background: on ? 'var(--chrome)' : 'transparent',
-              color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
-              borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
-              fontWeight: on ? 600 : 400,
             }}
           >
             {o.label}

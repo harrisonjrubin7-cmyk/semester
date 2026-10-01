@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNow } from '../state/store';
 import { dateToIso, isoToDate } from '../lib/date';
 import { formatDate } from '../lib/locale';
 import {
@@ -26,7 +27,7 @@ const shown = (iso: string) => formatDate(isoToDate(iso), { weekday: 'short', mo
  * Save plan.
  */
 export function GoalPlan({
-  now = new Date(),
+  now: nowProp,
   registrationDate = null,
   onSave,
 }: {
@@ -34,6 +35,8 @@ export function GoalPlan({
   registrationDate?: string | null;
   onSave?: (plan: Plan) => void;
 }) {
+  const clock = useNow();
+  const now = nowProp ?? clock;
   const [goal, setGoal] = useState('');
   const [by, setBy] = useState('');
   const [plan, setPlan] = useState<Plan | null>(null);

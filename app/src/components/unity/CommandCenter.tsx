@@ -115,19 +115,21 @@ export function FirstGoal() {
   const { state, dispatch } = useStore();
   const goal = goalOf(currentLook(state).goal);
   const [changing, setChanging] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   if (goal && !changing) {
     return (
-      <p className="first-goal-said hides-in-focus">
-        <span className="kicker">Your focus</span> {goal.label} ·{' '}
-        <button type="button" className="bare link-quiet tap-y" onClick={() => dispatch({ type: 'go', screen: goal.screen })}>
+      <section className="first-goal-said hides-in-focus" aria-label="Your focus">
+        <div className="first-goal-summary-copy"><span className="kicker">Your focus</span><span>{goal.label}</span></div>
+        <div className="first-goal-summary-actions">
+        <button type="button" className="btn btn-secondary" onClick={() => dispatch({ type: 'go', screen: goal.screen })}>
           {goal.first}
-        </button>{' '}
-        ·{' '}
+        </button>
         <button type="button" className="bare link-quiet tap-y" onClick={() => setChanging(true)}>
           Change
         </button>
-      </p>
+        </div>
+      </section>
     );
   }
 
@@ -137,7 +139,7 @@ export function FirstGoal() {
         What would help most today?
       </h2>
       <div className="first-goal-choices">
-        {GOALS.map((g) => (
+        {(showAll ? GOALS : GOALS.slice(0, 4)).map((g) => (
           <button
             key={g.id}
             type="button"
@@ -153,7 +155,10 @@ export function FirstGoal() {
           </button>
         ))}
       </div>
-      <p className="visibility-about">You can change this any time.</p>
+      <div className="first-goal-foot">
+        <p className="visibility-about">You can change this any time.</p>
+        {!showAll && <button type="button" className="bare link-quiet tap-y" onClick={() => setShowAll(true)}>More options</button>}
+      </div>
     </section>
   );
 }
