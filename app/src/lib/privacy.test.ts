@@ -391,6 +391,11 @@ describe('"delete my account" really means every row', () => {
       // the link, goes with the account and is in OWNED_TABLES instead.
       'academic_record_changes',
       'academic_record_entries',
+      // The school-level AI use policy and its decision log (D-1063): append-only
+      // records of the school, naming administrators by plain account id.
+      'ai_use_approval',
+      'ai_use_log',
+      'ai_use_proposal',
       'commercial_prices',
       'communities',
       'community_calibration_items',

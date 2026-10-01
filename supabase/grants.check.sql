@@ -538,6 +538,14 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20260930290000_ai_governance.sql: the school's AI use policy. Each checks
+    -- auth.uid() and an `ai_use:` capability for the school it names.
+    -- `ai_use_permitted`, the question every AI route asks, is service_role only
+    -- and is deliberately not here.
+    'ai_use_propose(want_tenant text, want_module text, want_class text, want_permitted boolean, want_reason text)',
+    'ai_use_approve(want_proposal uuid)',
+    'ai_use_policy(want_tenant text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and
