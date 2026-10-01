@@ -173,7 +173,7 @@ export function CourseCompare({
                 requirementFit: requirementFit(course, state.requirements, state.taken),
                 clashes: scheduleFit(course, cart, state.commitments),
                 prerequisites: requisites(course, state.taken, cart),
-                source: { label: 'imported', asOf: null },
+                source: { label: 'imported', asOf: importedAt },
                 uncertainty: ['Seat availability and eligibility must be confirmed by your institution.'],
               })),
               now,

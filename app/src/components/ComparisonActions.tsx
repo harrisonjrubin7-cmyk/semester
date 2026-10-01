@@ -10,6 +10,7 @@ export interface ComparisonActionsProps {
   /** Optional canonical personal plan update. Never an official transaction. */
   onChoose?: (id: string) => boolean;
   decisionId?: string;
+  decisionVersion?: string;
   accountId?: string | null;
 }
 export function ComparisonActions(props: ComparisonActionsProps) {

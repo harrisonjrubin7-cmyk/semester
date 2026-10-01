@@ -8,6 +8,7 @@ export const COMPARISON_SURFACES = {
   abroad: 'Study abroad programs',
   career: 'Career opportunities',
   productivity: 'Productivity decision',
+  rhythm: 'Work order and time scenarios',
 } as const;
 export type ComparisonSurface = keyof typeof COMPARISON_SURFACES;
 export interface ComparisonCandidate {

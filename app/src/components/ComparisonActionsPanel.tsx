@@ -7,7 +7,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import type { ComparisonActionsProps } from './ComparisonActions';
 const AdvisorMeeting = lazy(() => import('./AdvisorMeeting').then(m => ({ default: m.AdvisorMeeting })));
 
-export default function ComparisonActionsPanel({ surface, scope, title, options, onChoose, decisionId, accountId }: ComparisonActionsProps & { accountId: string | null }) {
+export default function ComparisonActionsPanel({ surface, scope, title, options, onChoose, decisionId, decisionVersion, accountId }: ComparisonActionsProps & { accountId: string | null }) {
   const work = useDeviceLibrary(`semester.productivity.v1:${accountId || 'device'}`, readProductivity, EMPTY_PRODUCTIVITY);
   const meetings = useDeviceLibrary(meetingKey(accountId), readMeetings, EMPTY_MEETINGS);
   const [notice, setNotice] = useState('');
@@ -19,11 +19,14 @@ export default function ComparisonActionsPanel({ surface, scope, title, options,
   const [meetingId, setMeetingId] = useState('');
   const history = (work.value.comparisons ?? []).filter(s => s.surface === surface && s.scope === scope);
   const save = (chosen: string | null) => {
-    if (chosen && onChoose && !onChoose(chosen)) { setNotice('The personal plan could not be updated. Nothing was snapshotted.'); return; }
     const snapshot: SavedComparison = { id: crypto.randomUUID(), surface, scope, title, at: new Date().toISOString(), chosen, options: structuredClone(options) };
-    const ok = work.update(old => ({ ...old, comparisons: [...(old.comparisons ?? []), snapshot],
-      decisions: chosen && decisionId ? old.decisions.map(d => d.id === decisionId ? { ...d, decided: true, chosen } : d) : old.decisions,
-    }));
+    const ok = work.update(old => {
+      if (decisionId && JSON.stringify(old.decisions.find(d => d.id === decisionId)) !== decisionVersion) throw new Error('Decision changed. Review the options again.');
+      return { ...old, comparisons: [...(old.comparisons ?? []), snapshot],
+        decisions: chosen && decisionId ? old.decisions.map(d => d.id === decisionId ? { ...d, decided: true, chosen } : d) : old.decisions,
+      };
+    });
+    if (ok && chosen && onChoose && !onChoose(chosen)) { setNotice('Personal choice saved. The source workspace could not be updated; review it before continuing.'); return; }
     setNotice(ok ? chosen ? `Personal choice saved: ${options.find(o => o.id === chosen)?.label}. No official action submitted.` : 'All options saved with their separate original context.' : 'Snapshot could not be saved.');
   };
   const prepare = () => {

@@ -335,9 +335,10 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
         </Notice>
       )}
 
-      {(tab === 'discover' || tab === 'skills' || tab === 'abroad') && <ComparisonActions surface="career" scope={storageKey} title="Career opportunities" onChoose={id => lib.update(old => ({ ...old, opportunities: old.opportunities.map(o => o.id === id ? { ...o, saved: true } : o) }))} options={(tab === 'abroad' ? lib.value.opportunities.filter(o => o.kind === 'Study abroad') : tab === 'skills' ? (selectedForFit ? [selectedForFit] : []) : matches).map(o => {
+      {(tab === 'discover' || tab === 'skills' || tab === 'abroad') && <ComparisonActions surface="career" scope={storageKey} title="Career opportunities" onChoose={id => lib.update(old => ({ ...old, opportunities: old.opportunities.map(o => o.id === id ? { ...o, saved: true } : o) }))} options={(tab === 'abroad' ? lib.value.opportunities.filter(o => o.kind === 'Study abroad') : tab === 'skills' ? (selectedForFit ? [selectedForFit] : []) : ordered).map(o => {
         const facts = [`Source: ${o.url || 'Not recorded'}; entered/imported listing, not verified; source date unknown`, `${o.organization} · ${o.kind} · ${o.location || 'Location unknown'} · ${o.format}`, `Deadline: ${o.deadline || 'Unknown'}; compensation: ${o.compensation || 'Unknown'}; cost: ${o.cost || 'Unknown'}; credit: ${o.credit || 'Unknown'}`, `Stated skills: ${o.skills || 'Unknown'}; requirements: ${o.requirements || 'Unknown'}`, 'Confirm details and eligibility with the official opportunity owner before applying.'];
-        return { id: o.id, label: o.title, advisorContext: facts, context: [...facts, ...appliedAssumptions(careerAssumptions(lib.value, () => false))] };
+        const fit = explainFit(o, claims);
+        return { id: o.id, label: o.title, advisorContext: facts, context: [...facts, `Term: ${o.term || 'Unknown'}; country: ${o.country || 'Unknown'}; description: ${o.description || 'Not supplied'}`, ...fit.matched.map(match => `Matched skill: ${match.skill}; evidence: ${JSON.stringify(match.evidence)}`), ...fit.missing.map(skill => `Missing skill: ${skill}`), ...fit.uncertainties, ...appliedAssumptions(careerAssumptions(lib.value, () => false))] };
       })} />}
       {tab === 'discover' && <AssumptionEditor assumptions={careerAssumptions(lib.value, patch => lib.update(old => ({ ...old, ...patch })))} />}
       {tab === 'discover' && (

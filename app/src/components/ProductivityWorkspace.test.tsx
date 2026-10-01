@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 vi.mock('../state/store', () => ({
   useStore: () => ({ account: { id: 'student-a' } }),
+  useAccountId: () => 'student-a',
 }));
 import { ProductivityWorkspace } from './ProductivityWorkspace';
 let host: HTMLDivElement;

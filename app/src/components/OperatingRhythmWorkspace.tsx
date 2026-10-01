@@ -1,3 +1,4 @@
+import { ComparisonActions } from './ComparisonActions';
 import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { useEffect, useRef, useState } from 'react';
 import { useStore, useNow } from '../state/store';
@@ -110,6 +111,7 @@ export function RhythmWorkspace({
     });
     setNotice(ok ? 'Saved on this device.' : 'Changes were not saved.');
     setCalendar(null);
+    return ok;
   };
   const field = (key: Field, label: string, type = 'text') => (
     <label className="rhythm-field" key={key}>
@@ -671,6 +673,13 @@ export function RhythmWorkspace({
                   ),
                 ]}
               />
+              {simulation.original.items.length > 0 && <ComparisonActions surface="rhythm" scope={`${scope}:${kind}:${planDate}`} title={`Work order · ${planDate}`} onChoose={id => {
+                const selected = id === 'current' ? simulation.original : simulation.batched;
+                return save({ values: { ...v, assumptions: `Available: ${available} minutes; switch buffer: ${buffer} minutes.`, milestones: selected.items.map(t => `${t.title}: ${t.minutes} minutes (${t.context})`).join('\n') } });
+              }} options={([['current', 'Current order', simulation.original], ['grouped', 'Grouped context', simulation.batched]] as const).map(([id, label, s]) => ({ id, label,
+                advisorContext: [`Source: your entered time estimates; planned minutes: ${s.total}; remaining: ${s.remaining}; context changes: ${s.switches}`, 'Official commitments and estimates need confirmation.'],
+                context: [`Source: your entered commitments and estimates; date: ${planDate}`, `Applied available time: ${available} minutes; switch buffer: ${buffer} minutes`, `Planned minutes: ${s.total}; remaining: ${s.remaining}; context changes: ${s.switches}`, ...s.items.map(t => `${t.title}: ${t.minutes} minutes (${t.context})`), 'Official commitments and estimates need confirmation.'],
+              }))} />}
               <p>
                 Assumption sensitivity: a 0 / 2 / 5 / 10 minute buffer gives grouped totals of{' '}
                 {[0, 2, 5, 10]

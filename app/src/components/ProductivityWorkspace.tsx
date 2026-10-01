@@ -660,7 +660,7 @@ function Workspace({ who }: { who: string }) {
                   onChange={(e) => patch({ revisit: e.target.value })}
                 />
               </Field>
-              {d.options.length > 0 && <ComparisonActions surface="productivity" scope={d.id} decisionId={d.id} title={d.title} options={d.options.map(o => ({ id: o.id, label: o.title, advisorContext: [`Official route: ${o.official || 'Unknown; ask the official owner'}`, ...d.criteria.map(c => `${c.label}: ${o.fits[c.id]?.fit || 'unknown'}; source: ${o.fits[c.id]?.source || 'Not recorded'}; checked: ${o.fits[c.id]?.checked || 'Unknown'}`)], context: [advisorPacket({ ...d, options: [o] })] }))} />}
+              {d.options.length > 0 && <ComparisonActions surface="productivity" scope={d.id} decisionId={d.id} decisionVersion={JSON.stringify(d)} title={d.title} options={d.options.map(o => ({ id: o.id, label: o.title, advisorContext: [`Official route: ${o.official || 'Unknown; ask the official owner'}`, ...d.criteria.map(c => `${c.label}: ${o.fits[c.id]?.fit || 'unknown'}; source: ${o.fits[c.id]?.source || 'Not recorded'}; checked: ${o.fits[c.id]?.checked || 'Unknown'}`)], context: [advisorPacket({ ...d, options: [o] })] }))} />}
               <SectionLabel>
                 Decision readiness: {readiness(d).state}
               </SectionLabel>
