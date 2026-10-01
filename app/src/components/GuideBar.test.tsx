@@ -66,6 +66,18 @@ describe('GuideBar', () => {
     expect(onAction).toHaveBeenCalledWith('snooze');
   });
 
+  it('always has the element its Why button controls, and shows it only when opened', () => {
+    // The accessibility smoke failed a closed bar whose button named an id that
+    // was not in the document at all.
+    act(() => root.render(<GuideBar model={guideBar(input())} onAction={vi.fn()} />));
+    const why = host.querySelector('button[aria-controls]') as HTMLButtonElement;
+    const panel = document.getElementById(why.getAttribute('aria-controls') as string);
+    expect(panel).not.toBeNull();
+    expect(panel?.hidden).toBe(true);
+    act(() => why.click());
+    expect(panel?.hidden).toBe(false);
+  });
+
   it('says what a choice did, politely', () => {
     act(() => root.render(<GuideBar model={guideBar(input())} confirmation="Snoozed." onAction={() => {}} />));
     expect(host.querySelector('[role="status"]')!.textContent).toBe('Snoozed.');

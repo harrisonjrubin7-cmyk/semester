@@ -48,8 +48,10 @@ export function GuideBar({
           </button>
         ),
       )}
-      {open && !model.minimal && (
-        <div id={detail} className="sync-strip-text">
+      {/* Always in the document, hidden while closed: the button's aria-controls
+          has to name something that exists, and the accessibility smoke fails a
+          reference to an element that is not there. */}
+      <div id={detail} className="sync-strip-text" hidden={!open || model.minimal}>
           {model.why && <p>{model.why}</p>}
           <p>
             <strong>What this used</strong>
@@ -67,8 +69,7 @@ export function GuideBar({
               <li key={d}>{d}</li>
             ))}
           </ul>
-        </div>
-      )}
+      </div>
       <p className="sync-strip-text" role="status">
         {confirmation ?? ''}
       </p>
