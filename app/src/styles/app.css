@@ -6860,11 +6860,11 @@ section[data-drop] > .grip + * {
   background: var(--app-accent);
 }
 
-/* Two of the four go on a phone: alerts and settings are both one row down in
-   the launcher, and the avatar and the nine dots are the two that are not. */
+/* Alerts and settings are both in the launcher on a phone. Name the controls
+   rather than their positions: the compact toolbar also carries page actions. */
 @media (max-width: 839px) {
-  .desktop-tools > :nth-child(1),
-  .desktop-tools > :nth-child(2) {
+  .desktop-tools > .desktop-alerts,
+  .desktop-tools > .desktop-settings {
     display: none;
   }
 }

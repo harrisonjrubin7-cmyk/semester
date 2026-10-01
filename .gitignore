@@ -6,6 +6,7 @@
 # uncommitted change after every test run, for the rest of time.
 node_modules/
 .vite/
+.ui-review/
 
 # Python, for the pipeline.
 __pycache__/

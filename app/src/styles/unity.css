@@ -65,10 +65,11 @@
   z-index: var(--layer-raised);
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-4);
-  min-height: 40px;
+  min-height: var(--target-primary);
   padding-block: var(--sp-2);
   padding-inline: var(--chrome-pad);
   border-bottom: 1px solid var(--app-line-soft);
@@ -84,6 +85,11 @@
   align-items: center;
   gap: var(--sp-3);
   min-width: 0;
+}
+
+.system-context-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .system-context-location {
@@ -164,7 +170,7 @@
   display: none;
 }
 
-.system-tool-trigger::before {
+.system-accessibility > .system-tool-trigger::before {
   content: 'Aa';
   color: var(--text-primary);
   font-size: var(--type-xs);
@@ -180,21 +186,31 @@
   background: var(--action-secondary);
 }
 
-.accessibility-popover,
-.decision-trail-panel {
-  position: absolute;
-  top: calc(100% + var(--sp-3));
-  right: 0;
-  z-index: var(--layer-overlay);
-  width: min(34rem, calc(100vw - (2 * var(--page-pad))));
-  max-height: min(38rem, calc(100vh - 8rem));
-  overflow: auto;
-  padding: var(--sp-6);
-  border: 1px solid var(--border-default);
-  border-radius: var(--r-lg);
-  background: var(--app-panel);
-  box-shadow: var(--elevation-floating);
+.system-tool-popover {
   color: var(--text-primary);
+}
+
+.system-tool-close {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.system-tool-close > button {
+  display: grid;
+  place-items: center;
+  width: var(--target-primary);
+  min-height: var(--target-primary);
+  border-radius: var(--shape-control);
+  color: var(--text-secondary);
+}
+
+.system-tool-close > button:hover {
+  background: var(--action-secondary);
+  color: var(--text-primary);
+}
+
+.system-tool-content {
+  padding: 0 var(--sp-4) var(--sp-4);
 }
 
 .accessibility-panel,
@@ -206,7 +222,8 @@
 
 .accessibility-panel-head {
   display: flex;
-  align-items: end;
+  align-items: start;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--sp-5);
 }
@@ -228,6 +245,34 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Keep native selection behavior, while drawing the control in Semester's palette. */
+.device select.input:not([multiple]),
+.device .system-context-term-select {
+  appearance: none;
+  min-width: 0;
+  padding-inline-end: var(--sp-9);
+  background-color: var(--surface-base);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%), linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position: calc(100% - 1rem) 50%, calc(100% - 0.75rem) 50%;
+  background-size: 0.25rem 0.25rem;
+  background-repeat: no-repeat;
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+}
+
+.device select.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (forced-colors: active) {
+  .device select.input:not([multiple]),
+  .device .system-context-term-select {
+    appearance: auto;
+    background-image: none;
+  }
+}
+
 .accessibility-selects label {
   color: var(--text-secondary);
   font-size: var(--type-sm);
@@ -242,7 +287,34 @@
 .accessibility-actions .btn {
   justify-content: flex-start;
   width: 100%;
-  min-height: 40px;
+  min-height: var(--target-primary);
+  text-transform: none;
+  letter-spacing: normal;
+  text-align: left;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-control);
+}
+
+.accessibility-actions .btn::after {
+  content: 'Off';
+  margin-inline-start: auto;
+  color: var(--text-secondary);
+  font-size: var(--type-xs);
+}
+
+.accessibility-actions .btn[aria-pressed='true']::after {
+  content: 'On';
+  color: var(--text-primary);
+}
+
+.accessibility-audio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding-block: var(--sp-3);
+  border-block: 1px solid var(--border-subtle);
 }
 
 .accessibility-actions .btn[aria-pressed='true'] {
@@ -251,8 +323,11 @@
   color: var(--text-primary);
 }
 
-.accessibility-settings-link {
+.device .accessibility-panel > .accessibility-settings-link {
   justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-primary);
 }
 
 .decision-trail-meta {
@@ -260,8 +335,10 @@
   font-size: var(--type-2xs-plus);
 }
 
-.decision-trail-panel {
-  width: min(26rem, calc(100vw - (2 * var(--page-pad))));
+.decision-trail-panel h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
 }
 
 .decision-trail-panel p {
@@ -322,12 +399,9 @@
     padding-inline: var(--sp-2);
   }
 
-  .accessibility-popover,
-  .decision-trail-panel {
-    position: fixed;
-    inset: auto var(--page-pad) calc(var(--assistant-strip) + var(--sp-3));
-    width: auto;
-    max-height: min(70vh, 38rem);
+  .accessibility-selects,
+  .accessibility-actions {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
