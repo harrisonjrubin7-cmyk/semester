@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
@@ -88,8 +88,7 @@ import { Keys } from './components/Keys';
 import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
-const QuickAddContent = lazy(() => import('./components/QuickAdd').then(module => ({default: module.QuickAdd})));
-function QuickAdd(props: {onClose: () => void}) { return <Suspense fallback={<Loading />}><QuickAddContent {...props} /></Suspense>; }
+import { DeferredQuickAdd as QuickAdd } from './components/DeferredQuickAdd';
 import { UnityLayer } from './components/unity/UnityLayer';
 import { LoadingState } from './components/unity/States';
 import { SystemContextBar } from './components/unity/SystemContextBar';
