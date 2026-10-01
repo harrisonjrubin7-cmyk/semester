@@ -80,3 +80,8 @@ Task 2: fix round 2 implementation ready (I4 canonical unchanged full-assumption
 
 Task 2: fix round 2/5 (1 addressed, 0 open — I4 canonical no-op matches preview; commits 2aac5f2d..23a78df9).
 Task 2: complete (commits f0cb1f0..23a78df9, review clean after two fix rounds; all I1/I2/I3/I4/M1 addressed). Cannot-verify boundaries resolved as explicit external acceptance limits, not asserted software evidence. No open/parked findings. Source inventory/report covers required domains and genuine unsupported calculations.
+
+Integrated current main fc0b0680 into feature as e9d8aa8595d2dc251c78e28b8881a9f24bc3cd60, exact merge tree 75a460869c19e675373aa37d77ab97f13ea9760e verified. Packaging/governance covering11 tests/2 files pass. Reviewed Task2 local commits preserved in codex/assumptions-local-reviewed-20261001; controller durable reviews/progress are additional docs only.
+Task 3: dispatched at BASE e9d8aa8595d2dc251c78e28b8881a9f24bc3cd60, no completed work redispatched.
+
+Task 3: implementer /root/ui_comparisons (gpt-6-astra high) active; inventory includes course shortlist, registration schedules, graduation time/cost scenarios, Pathway cost/material shortlist, abroad comparisons, productivity decisions/history, career opportunities/skills fit. Single-plan assumption previews are not invented comparison candidates. Shared actions must preserve durable actual option identity/context and editable opt-in AdvisorMeeting draft.
