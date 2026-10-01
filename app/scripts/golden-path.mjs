@@ -510,7 +510,12 @@ async function journey(label, viewport) {
     await day.first().click();
     await day.first().waitFor({ state: 'visible', timeout: WAIT });
     expect(await day.first().getAttribute('aria-selected') === 'true', 'the deadline day did not become selected');
-    await day.first().dblclick();
+    // The phone grid can replace the selected cell between Playwright's two
+    // synthetic pointer clicks even after selection has settled. Dispatch the
+    // browser's native bubbling event on the acknowledged selected cell so
+    // this gate exercises the application's real double-click handler without
+    // depending on the node surviving two separate automation clicks.
+    await day.first().dispatchEvent('dblclick');
     const what = page.getByRole('textbox', { name: /^what is on /i });
     expect(await visible(what), 'double-clicking the day did not offer to add something there');
     await what.fill(`Study group for ${CODE}`);
