@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel, Segmented } from '../components/ui';
 import { NotOfficial } from '../components/NotOfficial';
@@ -84,6 +84,7 @@ const ASSOCIATED: { id: Associated; label: string }[] = [
 
 function Workspace({ storageKey }: { storageKey: string }) {
   const { state, dispatch } = useStore();
+  const now = useNow();
   const lib = useDeviceLibrary(storageKey, readNil, EMPTY_NIL);
 
   const [tab, setTab] = useState<Tab>('log');
@@ -175,7 +176,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
     setSaid('Added to your actions, so it shows up on Today like everything else you owe.');
   };
 
-  const thisYear = years(lib.value.deals)[0] ?? String(new Date().getFullYear());
+  const thisYear = years(lib.value.deals)[0] ?? String(now.getFullYear());
 
   return (
     <Page>

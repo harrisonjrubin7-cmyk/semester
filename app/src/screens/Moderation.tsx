@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel } from '../components/ui';
 import { CATEGORY_TEXT } from '../components/community/ReportSheet';
@@ -120,6 +120,7 @@ const ALIASES_BUILT = () => enabled(COMMUNITY_FLAGS, 'scopedPseudonymity');
 
 function Console({ accountId }: { accountId: string }) {
   const { dispatch } = useStore();
+  const now = useNow();
   const [agreementStaff, setAgreementStaff] = useState(false);
   const [standing, setStanding] = useState<Standing | null>(null);
   const [cases, setCases] = useState<CaseRow[]>([]);
@@ -188,7 +189,7 @@ function Console({ accountId }: { accountId: string }) {
       )}
       {safetyOn(c.tenantId) && <SafetyRead caseId={c.id} />}
       {ALIASES_BUILT() && c.post?.asAlias && me && (
-        <IdentityCheck caseId={c.id} grants={identity.filter((g) => g.caseId === c.id)} me={me} now={new Date()} onDone={done} />
+        <IdentityCheck caseId={c.id} grants={identity.filter((g) => g.caseId === c.id)} me={me} now={now} onDone={done} />
       )}
     </>
   );

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel } from '../components/ui';
@@ -71,6 +71,7 @@ import { Talk } from '../components/room/Talk';
  */
 export function Classmates() {
   const { account, catalog, state, school, dispatch } = useStore();
+  const now = useNow();
   const wide = useMedia(WIDE);
   const term = termOf();
 
@@ -190,7 +191,7 @@ export function Classmates() {
       // and the name arrives once you are in the room. Better an honest line
       // than four queries for forty names to prefix it with.
       nameOf,
-      new Date(),
+      now,
       profile?.handle ?? '',
       /*
        * Your own handle, and it has to be here for the badge to work.
@@ -215,7 +216,7 @@ export function Classmates() {
        */
       profile?.handle ? [profile.handle] : [],
     );
-  }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile]);
+  }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile, now]);
 
   if (!cloudConfigured) {
     return (

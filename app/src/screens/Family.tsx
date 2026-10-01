@@ -1,6 +1,6 @@
 import { dateToIso } from '../lib/date';
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { cloudConfigured } from '../lib/cloud';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
@@ -84,6 +84,7 @@ export function Family() {
 
 function Workspace({ storageKey }: { storageKey: string }) {
   const { dispatch } = useStore();
+  const now = useNow();
   const lib = useDeviceLibrary(storageKey, readFamily, EMPTY_FAMILY);
 
   const [tab, setTab] = useState<Tab>('people');
@@ -260,9 +261,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={input}
               />
               {/* Held to the sharing rules now, so the plan says why before anyone is asked to accept it. D-037 / D4. */}
-              {endProblem(member.expires, dateToIso(new Date())) && (
+              {endProblem(member.expires, dateToIso(now)) && (
                 <span style={{ display: 'block', fontSize: 'var(--type-sm)', marginTop: 'var(--sp-2)', ...secondLine() }}>
-                  {endProblem(member.expires, dateToIso(new Date()))}
+                  {endProblem(member.expires, dateToIso(now))}
                 </span>
               )}
             </label>

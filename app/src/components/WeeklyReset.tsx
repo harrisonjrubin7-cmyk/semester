@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNow } from '../state/store';
 import { useDeviceLibrary } from '../lib/device-library';
 import { clock, dateToIso, isoToDate } from '../lib/date';
 import { formatDate } from '../lib/locale';
@@ -45,7 +46,7 @@ const dayName = (iso: string) => formatDate(isoToDate(iso), { weekday: 'long', m
  * reports the acceptance (`onAcceptBlock`); it writes no calendar itself.
  */
 export function WeeklyReset({
-  now = new Date(),
+  now,
   commitments = [],
   deadlines = [],
   unfinished = [],
@@ -61,7 +62,8 @@ export function WeeklyReset({
   /** Called with a proposal when the student accepts it, and again with `false` if they take it back. */
   onAcceptBlock?: (block: BlockProposal, accepted: boolean) => void;
 }) {
-  const week = dateToIso(weekStart(now));
+  const clockNow = useNow();
+  const week = dateToIso(weekStart(now ?? clockNow));
   const lib = useDeviceLibrary(RESET_KEY, readResets, EMPTY_RESETS);
   const record = lib.value.resets.find((r) => r.weekStart === week) ?? startReset(week);
   const [draft, setDraft] = useState<Picks>(record.picks);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
@@ -74,6 +74,7 @@ export function Gradebook() {
 
 function Book({ school, me }: { school: string; me: string }) {
   const { dispatch } = useStore();
+  const clockNow = useNow();
   const [grants, setGrants] = useState<Grant[] | null | 'error'>(null);
   const [reads, setReads] = useState(0);
   const [view, setView] = useState<View>('teaching');
@@ -123,7 +124,7 @@ function Book({ school, me }: { school: string; me: string }) {
   const both = teaching.length > 0 && taking.length > 0;
   const showing: View = both ? view : teaching.length > 0 ? 'teaching' : 'mine';
   const offerings: Offering[] = showing === 'teaching' ? teaching : taking;
-  const now = termOf(new Date());
+  const now = termOf(clockNow);
   const chosen =
     offerings.find((o) => offeringKey(o) === picked) ?? offerings.find((o) => o.term === now) ?? offerings[0];
   const key = offeringKey(chosen);

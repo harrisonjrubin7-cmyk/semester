@@ -6,7 +6,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { FAMILY_LABELS } from '../lib/family';
 import { SEEN_PREFIX, endedShares, readSeen, readShares, type ShareFrom } from '../lib/familyshare';
 import { recipientLine } from '../lib/sharing';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 
 const NOBODY: Record<string, string> = {};
@@ -21,7 +21,9 @@ const NOBODY: Record<string, string> = {};
  * copy each student confirmed, exactly; nothing is summarised, counted across
  * categories or dated by activity (design §7).
  */
-export function SharedWithYou({ today = dateToIso(new Date()) }: { today?: string }) {
+export function SharedWithYou({ today }: { today?: string }) {
+  const now = useNow();
+  const currentDay = today ?? dateToIso(now);
   const { account } = useStore();
   const seen = useDeviceLibrary(`${SEEN_PREFIX}:${account?.id || 'device'}`, readSeen, NOBODY);
   const [shares, setShares] = useState<ShareFrom[] | null>(null);
@@ -63,7 +65,7 @@ export function SharedWithYou({ today = dateToIso(new Date()) }: { today?: strin
       {shares?.map((s) => (
         <article key={s.studentId} className="shared-from" aria-labelledby={`from-${s.studentId}`}>
           <h3 id={`from-${s.studentId}`}>From {s.shownAs}</h3>
-          <p className="sharing-meta">{recipientLine({ acceptedAt: 'accepted', revokedAt: null, ends: s.ends }, today)}</p>
+          <p className="sharing-meta">{recipientLine({ acceptedAt: 'accepted', revokedAt: null, ends: s.ends }, currentDay)}</p>
           <ul className="sharing-list">
             {s.items.map((i) => (
               <li key={i.id}>
@@ -85,7 +87,7 @@ export function SharedWithYou({ today = dateToIso(new Date()) }: { today?: strin
         <article key={e.studentId} className="shared-from">
           <h3>From {e.shownAs}</h3>
           {/* D3: revoked and expired read the same, word for word. */}
-          <p className="sharing-meta">{recipientLine({ acceptedAt: null, revokedAt: 'ended', ends: '' }, today)}</p>
+          <p className="sharing-meta">{recipientLine({ acceptedAt: null, revokedAt: 'ended', ends: '' }, currentDay)}</p>
         </article>
       ))}
     </section>

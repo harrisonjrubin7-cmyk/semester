@@ -3,9 +3,11 @@ import { dateToIso } from '../lib/date';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { AUDIT, EMPTY_RHYTHM, FIELDS, HELP_SCRIPTS, PROGRESS, RESPONSES, RHYTHM_KEY, TIMEBOXES, exportDay, helpDraft, newDay, readRhythm, saveDay, type DailyPlan, type Field } from '../lib/daily-rhythm';
+import { useNow } from '../state/store';
 
-export function DailyRhythm({ accountId, now = new Date() }: { accountId: string | null; now?: Date }) {
-  return <DailyRhythmBody key={accountId || 'device'} accountId={accountId} today={dateToIso(now)} />;
+export function DailyRhythm({ accountId, now }: { accountId: string | null; now?: Date }) {
+  const clockNow = useNow();
+  return <DailyRhythmBody key={accountId || 'device'} accountId={accountId} today={dateToIso(now ?? clockNow)} />;
 }
 
 function DailyRhythmBody({ accountId, today }: { accountId: string | null; today: string }) {

@@ -2,6 +2,7 @@ import { dollars } from '../lib/cost';
 import { useId, useState } from 'react';
 import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, type CostSource } from '../lib/cost-plan';
 import { SourceBadge } from './SourceBadge';
+import { useNow } from '../state/store';
 
 const money = dollars;
 const num = (v: string) => {
@@ -24,12 +25,14 @@ const num = (v: string) => {
 export function CostPlanner({
   lines,
   onChange,
-  now = new Date(),
+  now,
 }: {
   lines: CostLine[];
   onChange: (next: CostLine[]) => void;
   now?: Date;
 }) {
+  const clockNow = useNow();
+  const current = now ?? clockNow;
   const [kind, setKind] = useState<string>(LINE_KINDS[0]);
   const headingId = useId();
   const sum = totals(lines);
@@ -47,7 +50,7 @@ export function CostPlanner({
       {lines.length ? (
         <ul className="cost-lines">
           {lines.map((l) => {
-            const old = staleness(l, now);
+            const old = staleness(l, current);
             return (
               <li key={l.id} className="cost-line">
                 <div className="portal-filter-row">
@@ -114,7 +117,7 @@ export function CostPlanner({
                   </div>
                 ) : null}
                 <p className="portal-muted">
-                  <SourceBadge label={l.source} at={l.on ? Date.parse(l.on) : undefined} now={now.getTime()} />
+                  <SourceBadge label={l.source} at={l.on ? Date.parse(l.on) : undefined} now={current.getTime()} />
                   {l.source === 'imported' && l.from ? ` ${l.from}` : ''}
                   {old ? <span className="portal-warning"> {old}</span> : null}
                 </p>
