@@ -1,5 +1,5 @@
 import { incomingCapture } from '../lib/productivity-arrival';
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { lazy, Suspense, useState, type Dispatch, type SetStateAction } from 'react';
 import { useWorkspaceSelection, useWorkspaceTabId } from '../lib/workspace-view';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -12,7 +12,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { LEARNER_KEY, learnerPathwaysOn } from '../lib/learner-pathways';
 import { LearnerPathways } from '../components/LearnerPathways';
 import { download } from '../lib/deliver';
-import { ProductivityWorkspace } from '../components/ProductivityWorkspace';
+const ProductivityWorkspace = lazy(() => import('../components/ProductivityWorkspace').then(module => ({ default: module.ProductivityWorkspace })));
 import { StudyAbroad } from '../components/StudyAbroad';
 import { abroadKey } from '../lib/abroad';
 import { fromMarkdown } from '../lib/document';
@@ -207,7 +207,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </Notice>
       )}
 
-      {tab === 'productivity' && <ProductivityWorkspace />}
+      {tab === 'productivity' && <Suspense fallback={<p role="status">Loading decisions and productivity…</p>}><ProductivityWorkspace /></Suspense>}
 
       {tab === 'home' && (
         <>

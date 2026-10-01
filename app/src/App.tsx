@@ -23,7 +23,7 @@ import { SampleMark } from './components/SampleMark';
 import { MODE_ATTR } from './components/unity/modes';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
+import { Guides, InstitutionalPreviewBar, OfflineBanner, QuickAdd, SCREENS, Springboard } from './screens';
 import { ReadOnlyBanner } from './components/ReadOnlyBanner';
 import { AgeBanner } from './components/AgeBanner';
 import { RecoveryDialog } from './components/AccountSecurity';
@@ -87,7 +87,7 @@ import { Keys } from './components/Keys';
 import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
-import { QuickAdd } from './components/QuickAdd';
+
 import { UnityLayer } from './components/unity/UnityLayer';
 import { LoadingState } from './components/unity/States';
 import { SystemContextBar } from './components/unity/SystemContextBar';
@@ -889,7 +889,7 @@ function Workspace({
         */}
         <Assistant />
         {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
-        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+        {state.quickAdd && <Suspense fallback={<Loading />}><QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} /></Suspense>}
         {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
         <UnityLayer />
         {/* The launcher and Customize, last so they stack over the body
@@ -1423,7 +1423,7 @@ function AppFrame() {
               answer: its one field was a white browser textbox out here, and
               with nothing capping it its explanation ran the full width of a
               laptop in a single line. See its own `position`. */}
-          {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+          {state.quickAdd && <Suspense fallback={<Loading />}><QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} /></Suspense>}
           {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
           <UnityLayer />
           {/*
@@ -1531,7 +1531,7 @@ function AppFrame() {
       {/* One assistant, in the shell rather than on a screen. See `ai/`. */}
       <Assistant />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-      {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+      {state.quickAdd && <Suspense fallback={<Loading />}><QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} /></Suspense>}
       {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
       <UnityLayer />
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}

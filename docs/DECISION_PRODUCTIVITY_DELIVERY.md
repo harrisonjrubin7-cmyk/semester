@@ -24,3 +24,7 @@ Cloud migration `20261001152756_productivity_workspace.sql` applied to configure
 Types/build/lint, institutional checks, export/privacy/semantic/parser tests, cloud transport tests and mounted preparation tests run from `app/`. Full normal and shuffled suites must be recorded in the PR after the final branch update. The rollout-publication tests depend on `/workspace/scratch/outputs/semester-institutional-rollout`, which is absent here; no publication evidence is fabricated.
 
 The front end remains on draft PR #1067 until review and merge. Live provider operations require the student's connected account. Live model output requires a configured assistant or institutional gateway with approved source IDs. End-to-end sign-in/provider tests have not been claimed using real student accounts.
+
+## Bundle acceptance
+
+Quick Add and the decision workspace load only when opened, preserving the existing initial-load and Pathway budgets. The Export route budget increases from 60 to 69 KiB (including the existing ten-percent measurement headroom) because private backup export now includes the validated productivity workspace parser; the measured combined route is 60.9 KiB. No initial-load or Pathway budget is raised.
