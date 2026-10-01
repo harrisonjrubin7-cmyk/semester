@@ -13,7 +13,7 @@ const OK: BeginRow = {
 };
 
 function deps(over: Partial<CheckoutDeps> = {}) {
-  const stripe = vi.fn(async () => new Response(JSON.stringify({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1' }), { status: 200 }));
+  const stripe = vi.fn(async () => new Response(JSON.stringify({ id: 'cs_test_1', livemode: false, url: 'https://checkout.stripe.com/c/pay/cs_test_1' }), { status: 200 }));
   const d = {
     stripeKey: 'sk_test_x',
     allowedOrigin: APP,
