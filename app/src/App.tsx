@@ -88,7 +88,7 @@ import { Keys } from './components/Keys';
 import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
-import { QuickAdd } from './components/QuickAdd';
+import { DeferredQuickAdd as QuickAdd } from './components/DeferredQuickAdd';
 import { UnityLayer } from './components/unity/UnityLayer';
 import { LoadingState } from './components/unity/States';
 import { SystemContextBar } from './components/unity/SystemContextBar';
