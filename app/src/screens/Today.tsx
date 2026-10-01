@@ -821,14 +821,14 @@ function TabHome() {
         <OperatingRhythm />
       </div>
       <div className="hides-in-focus">
-        {tab === 'today' && <details className="today-more">
+        <details className="today-more">
           <summary>More from Today</summary>
           <CommandCenter />
           <FlightPlanHomeSlot />
           <RecommendedJourney />
-          <TodayFeed />
-          <DailyPlanSlot />
-        </details>}
+          {tab === 'today' && <TodayFeed />}
+          {tab === 'today' && <DailyPlanSlot />}
+        </details>
 
         {tab === 'week' && <ThisWeek />}
         {tab === 'week' && <WeekHorizon />}

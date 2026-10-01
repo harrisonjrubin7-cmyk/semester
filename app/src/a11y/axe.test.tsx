@@ -237,6 +237,35 @@ describe('the probe', () => {
   }, 30_000);
 });
 
+describe('release layout regressions', () => {
+  for (const px of [1280, 390]) {
+    it(`keeps one page heading on Search and App Directory at ${px}px`, async () => {
+      width(px);
+      for (const hash of ['#/search', '#/directory']) {
+        if (root) await act(async () => root!.unmount());
+        host?.remove();
+        root = undefined;
+        host = undefined;
+        history.replaceState(null, '', '/');
+        await show(hash, { nav: 'tabs', seenOnboarding: true });
+        expect(host!.querySelectorAll('h1'), hash).toHaveLength(1);
+      }
+    }, 30_000);
+  }
+
+  it('keeps shared Today tools available from the Week tab', async () => {
+    width(1280);
+    await show('#/home', { nav: 'tabs', seenOnboarding: true });
+    const week = [...host!.querySelectorAll('button')].find(button => button.textContent === 'This week')!;
+    await act(async () => week.click());
+    expect(week.getAttribute('aria-pressed')).toBe('true');
+    const more = host!.querySelector('details.today-more');
+    expect(more).not.toBeNull();
+    expect(more?.textContent).toContain('Pinned');
+    expect(more?.textContent).toContain('More from Today');
+  }, 30_000);
+});
+
 describe('no serious or critical axe violations', () => {
   for (const hash of DESKTOP) {
     it(`${hash}, desktop`, async () => {

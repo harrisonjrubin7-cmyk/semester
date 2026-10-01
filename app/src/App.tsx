@@ -1153,6 +1153,7 @@ function AppFrame() {
    * drawn together. Here there is one call and no conditions of its own.
    */
   const chrome = chromeFor(state.nav, state.screen, wide, medium);
+  const ownTitle = state.screen === 'search' || state.screen === 'directory';
 
   /**
    * The whole look, written onto the document root.
@@ -1479,7 +1480,7 @@ function AppFrame() {
             that is 800 tall and mostly thumb.
           */}
           <TabStrip />
-          <Header />
+          {!ownTitle && <Header />}
           <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1586,7 +1587,7 @@ function AppFrame() {
         again.
       */}
       <TabStrip />
-      <Header />
+      {!ownTitle && <Header />}
       <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
