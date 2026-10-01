@@ -19,7 +19,7 @@
  * registrar's own audit.
  */
 
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -43,7 +43,6 @@ import {
   type Taken,
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
-import { GraduationSimulator } from '../components/GraduationSimulator';
 import { AdvisorMeeting } from '../components/AdvisorMeeting';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { PathSnapshotCard } from '../components/PathSnapshotCard';
@@ -58,6 +57,8 @@ import {
   termLine,
   type TermInput,
 } from '../lib/termgpa';
+
+const GraduationSimulator = lazy(() => import('../components/GraduationSimulator').then(module => ({ default: module.GraduationSimulator })));
 
 /** `advisorMeeting` defaults to the `advisor_meeting_mode` flag; tests choose. */
 export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_mode) }: { advisorMeeting?: boolean } = {}) {
@@ -122,7 +123,11 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
       {tab === 'left' ? <WhatIsLeft /> : null}
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
-      {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} /> : null}
+      {tab === 'ahead' ? (
+        <Suspense fallback={<p role="status">Loading graduation planning…</p>}>
+          <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} />
+        </Suspense>
+      ) : null}
       {tab === 'meeting' && advisorMeeting ? <AdvisorMeeting key={account?.id ?? 'device'} accountId={account?.id ?? null} /> : null}
       </>
     </Page>

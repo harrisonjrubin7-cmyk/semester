@@ -4,7 +4,7 @@ import {act} from 'react';
 import {createRoot,type Root} from 'react-dom/client';
 import {EMPTY_PATHWAY,newProgram} from '../lib/pathway';
 const view=vi.hoisted(()=>({id:'grid-tab'}));
-vi.mock('../state/store',()=>({useStore:()=>({account:{id:'test-student'},dispatch:vi.fn()})}));
+vi.mock('../state/store',()=>({useAccountId:()=> 'test-student',useStore:()=>({account:{id:'test-student'},dispatch:vi.fn()})}));
 vi.mock('../lib/browser.hook',()=>({useStrip:()=>({tabs:[{id:view.id}],at:0})}));
 import {Pathway} from './Pathway';
 let host:HTMLDivElement;

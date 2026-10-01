@@ -117,6 +117,26 @@ export function CourseCompare({
               is ranked.
             </>
           }
+          renderCards={(visibleRows) => (
+            <div className="course-compare-cards">
+              {compared.map((course, index) => (
+                <dl key={course.id} className="scenario-list" aria-label={`${course.code} section ${course.section}`}>
+                  <div>
+                    <dt>Course</dt>
+                    <dd>
+                      {course.code} · {course.section}
+                    </dd>
+                  </div>
+                  {visibleRows.map((row) => (
+                    <div key={row.id}>
+                      <dt>{row.cells[0].content}</dt>
+                      <dd>{row.cells[index + 1].content}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ))}
+            </div>
+          )}
           columns={[
             { id: 'column-0', label: 'Course' },
             ...compared.map((c) => ({ id: String(c.id), label: tableText([c.code, '·', c.section]) })),

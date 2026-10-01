@@ -25,6 +25,9 @@ export interface HumanTableProps<T> {
   rows: readonly T[];
   rowId: (row: T) => string;
   columns: readonly HumanColumn<T>[];
+  /** Optional native card renderer receives only the filtered, authorized rows. */
+  renderCards?: (rows: readonly T[]) => ReactNode;
+  summaryPrimary?: (row: T) => boolean;
   rowProps?: (row: T) => HTMLAttributes<HTMLTableRowElement> | undefined;
   tableProps?: HTMLAttributes<HTMLTableElement>;
   caption?: ReactNode;
@@ -48,6 +51,8 @@ function OwnedHumanTable<T>({
   rowId,
   columns,
   rowProps,
+  renderCards,
+  summaryPrimary,
   tableProps,
   caption,
   exportAllowed = true,
@@ -60,7 +65,7 @@ function OwnedHumanTable<T>({
     [defaultView],
   );
   const prefs = useDeviceLibrary(
-    `semester:human-tables:v1:${encodeURIComponent(owner)}:${encodeURIComponent(id)}`,
+    `semester.human-tables.v1:${encodeURIComponent(owner)}:${encodeURIComponent(id)}`,
     readTablePreferences,
     empty,
     150_000,
@@ -81,6 +86,25 @@ function OwnedHumanTable<T>({
       columns.every((c) => criteria.filters[c.id] === undefined || value(c, row) === criteria.filters[c.id]),
   );
   const draw = (column: HumanColumn<T>, row: T) => (column.render ? column.render(row) : value(column, row));
+  const fields = (row: T) => (
+    <dl>
+      {columns.map((c, i) => (
+        <div key={c.id}>
+          <dt>{c.label}</dt>
+          <dd>
+            {criteria.view === 'summary' && i > 1 && !c.summary ? (
+              <details>
+                <summary>Show {c.label}</summary>
+                {draw(c, row)}
+              </details>
+            ) : (
+              draw(c, row)
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
   return (
     <section aria-label={label} data-human-table={id}>
       <div role="group" aria-label={viewLabel ?? `${label} view`}>
@@ -191,39 +215,46 @@ function OwnedHumanTable<T>({
       <p role="status">
         {visible.length} of {rows.length} rows. Working view; not an official signed record. {message}
       </p>
-      {prefs.error && <p role="alert">{prefs.error}</p>}
+      {typeof window !== 'undefined' && prefs.error && <p role="alert">{prefs.error}</p>}
       {!visible.length ? (
         <p>No rows match this view.</p>
       ) : criteria.view === 'table' ? (
-        <div data-table-scroll><table {...tableProps} aria-label={label}>
-          <caption>{caption ?? label}</caption>
-          <thead>
-            <tr>
-              {columns.map((c) => (
-                <th key={c.id} scope="col">
-                  {c.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((row) => (
-              <tr {...rowProps?.(row)} key={rowId(row)}>
-                {columns.map((c, i) =>
-                  c.rowHeader || (i === 0 && !columns.some((col) => col.rowHeader)) ? (
-                    <th {...c.cellProps?.(row)} scope="row" key={c.id}>
-                      {draw(c, row)}
-                    </th>
-                  ) : (
-                    <td {...c.cellProps?.(row)} key={c.id}>
-                      {draw(c, row)}
-                    </td>
-                  ),
-                )}
+        <div data-table-scroll>
+          <table {...tableProps} aria-label={label}>
+            <caption>{caption ?? label}</caption>
+            <thead>
+              <tr>
+                {columns.map((c) => (
+                  <th key={c.id} scope="col">
+                    {c.label}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table></div>
+            </thead>
+            <tbody>
+              {visible.map((row) => (
+                <tr {...rowProps?.(row)} key={rowId(row)}>
+                  {columns.map((c, i) =>
+                    c.rowHeader || (i === 0 && !columns.some((col) => col.rowHeader)) ? (
+                      <th {...c.cellProps?.(row)} scope="row" key={c.id}>
+                        {draw(c, row)}
+                      </th>
+                    ) : (
+                      <td {...c.cellProps?.(row)} key={c.id}>
+                        {draw(c, row)}
+                      </td>
+                    ),
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : criteria.view === 'cards' && renderCards ? (
+        <>
+          {caption && <p>{caption}</p>}
+          {renderCards(visible)}
+        </>
       ) : (
         <>
           {caption && <p>{caption}</p>}
@@ -232,23 +263,14 @@ function OwnedHumanTable<T>({
               <li key={rowId(row)}>
                 <article aria-label={value(columns.find((c) => c.rowHeader) ?? columns[0], row)}>
                   <h3>{value(columns.find((c) => c.rowHeader) ?? columns[0], row)}</h3>
-                  <dl>
-                    {columns.map((c, i) => (
-                      <div key={c.id}>
-                        <dt>{c.label}</dt>
-                        <dd>
-                          {criteria.view === 'summary' && i > 1 && !c.summary ? (
-                            <details>
-                              <summary>Show {c.label}</summary>
-                              {draw(c, row)}
-                            </details>
-                          ) : (
-                            draw(c, row)
-                          )}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
+                  {criteria.view === 'summary' && summaryPrimary && !summaryPrimary(row) ? (
+                    <details>
+                      <summary>Show supporting detail</summary>
+                      {fields(row)}
+                    </details>
+                  ) : (
+                    fields(row)
+                  )}
                 </article>
               </li>
             ))}

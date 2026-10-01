@@ -286,7 +286,8 @@ it('keeps registration confirmation and source facts while saving and filtering 
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(search, 'source');
     search.dispatchEvent(new Event('input', { bubbles: true }));
   });
-  expect(comparison.querySelectorAll('article')).toHaveLength(1);
+  expect(comparison.querySelectorAll('article')).toHaveLength(2);
+  expect(comparison.querySelectorAll('article dt')).toHaveLength(2);
   expect(comparison.querySelector('article')?.textContent).toContain('Source and freshness');
   const viewName = comparison.querySelector('input[maxlength="80"]') as HTMLInputElement;
   await act(async () => {
@@ -298,7 +299,8 @@ it('keeps registration confirmation and source facts while saving and filtering 
   expect(comparison.textContent).toContain('Official next step');
   expect(comparison.textContent).toContain('Not known');
   await act(async () => button(/^Load Check sources$/, comparison).click());
-  expect(comparison.querySelectorAll('article')).toHaveLength(1);
+  expect(comparison.querySelectorAll('article')).toHaveLength(2);
+  expect(comparison.querySelectorAll('article dt')).toHaveLength(2);
   await open('ECON 2010');
   await act(async () => button(/^Add to cart…$/).click());
   expect(cart()).toEqual([]);

@@ -57,6 +57,7 @@ vi.mock('../lib/cloud', () => ({
   }),
 }));
 vi.mock('../state/store', () => ({
+  useAccountId: () => mock.user,
   useStore: () => ({ dispatch: mock.dispatch, say: mock.say, account: mock.user ? { id: mock.user } : null, state: {} }),
   useNow: () => new Date(),
 }));

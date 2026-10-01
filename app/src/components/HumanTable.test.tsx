@@ -110,13 +110,13 @@ it('exports only visible explicit values, neutralizes formulas, and never expose
   expect(files).toHaveLength(2);
 });
 it('keeps React controls functional when storage refuses a write and preserves malformed bytes', async () => {
-  localStorage.setItem('semester:human-tables:v1:student-a:records', 'broken');
+  localStorage.setItem('semester.human-tables.v1:student-a:records', 'broken');
   await mount();
   await click('Card view');
   expect(host.querySelectorAll('article')).toHaveLength(2);
   await click('Review b');
   expect(action).toHaveBeenCalledExactlyOnceWith('b');
-  expect(localStorage.getItem('semester:human-tables:v1:student-a:records')).toBe('broken');
+  expect(localStorage.getItem('semester.human-tables.v1:student-a:records')).toBe('broken');
   expect(host.querySelector('[role="alert"]')).not.toBeNull();
 });
 it('drops foreign content when validating preferences', () => {

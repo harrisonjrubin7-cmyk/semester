@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from '../components/HumanTable';
 import { forwardRef, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -3976,45 +3977,56 @@ function PivotCard({
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ fontSize: 'var(--type-sm)' }}>
-            <thead>
-              <tr>
-                <th scope="col">{pivotHeading(sheet.cells, pivot, pivot.by, over)}</th>
-                {read.columns.map((c, i) => (
-                  <th key={`${c}-${i}`} scope="col" style={{ textAlign: 'right' }}>
-                    {c || AGGREGATE_LABELS[pivot.how]}
-                  </th>
-                ))}
-                {read.columns.length > 1 && <th scope="col" style={{ textAlign: 'right' }}>Total</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {read.rows.map((row, r) => (
-                <tr key={`${row}-${r}`}>
-                  <th scope="row">{row}</th>
-                  {read.cells[r].map((cell, c) => (
-                    <td key={c} style={{ textAlign: 'right' }}>
-                      {shown(cell.value)}
-                    </td>
-                  ))}
-                  {read.columns.length > 1 && (
-                    <td style={{ textAlign: 'right' }}>{shown(read.rowTotals[r])}</td>
-                  )}
-                </tr>
-              ))}
-              <tr>
-                <th scope="row">Total</th>
-                {read.columnTotals.map((t, c) => (
-                  <td key={c} style={{ textAlign: 'right' }}>
-                    {shown(t)}
-                  </td>
-                ))}
-                {read.columns.length > 1 && (
-                  <td style={{ textAlign: 'right' }}>{shown(read.total)}</td>
-                )}
-              </tr>
-            </tbody>
-          </table>
+          <RecordTable
+            id={`sheet-pivot-${pivot.id}`}
+            label="Pivot summary (totals cover all source rows)"
+          caption="Pivot results. Totals describe all source rows; filtering this working view does not recalculate totals."
+            tableProps={{ className: 'table', style: { fontSize: 'var(--type-sm)' } }}
+            columns={[
+              { id: 'column-0', label: tableText(pivotHeading(sheet.cells, pivot, pivot.by, over)) },
+              ...read.columns.map((c, i) => ({ id: String(`${c}-${i}`), label: tableText(c || AGGREGATE_LABELS[pivot.how]) })),
+              ...(read.columns.length > 1 ? [{ id: 'column-2', label: 'Total' }] : []),
+            ]}
+            rows={[
+              ...read.rows.map(
+                (row, r) =>
+                  ({
+                    id: String(`${row}-${r}`),
+                    cells: [
+                      { value: tableText(row), content: <>{row}</>, header: true },
+            ...read.cells[r].map((cell) => ({
+              value: tableText(shown(cell.value)),
+              content: <>{shown(cell.value)}</>,
+              props: { style: { textAlign: 'right' as const } },
+            })),
+            ...(read.columns.length > 1
+              ? [
+                  {
+                    value: tableText(shown(read.rowTotals[r])),
+                    content: <>{shown(read.rowTotals[r])}</>,
+                    props: { style: { textAlign: 'right' as const } },
+                  },
+                ]
+              : []),
+          ],
+        }) satisfies TableRecord,
+    ),
+    {
+      id: 'total',
+      cells: [
+        { value: 'Total', content: <>Total</>, header: true },
+        ...read.columnTotals.map((t) => ({
+          value: tableText(shown(t)),
+          content: <>{shown(t)}</>,
+          props: { style: { textAlign: 'right' as const } },
+        })),
+        ...(read.columns.length > 1
+          ? [{ value: tableText(shown(read.total)), content: <>{shown(read.total)}</>, props: { style: { textAlign: 'right' as const } } }]
+          : []),
+      ],
+    } satisfies TableRecord,
+  ]}
+/>
         </div>
       )}
 

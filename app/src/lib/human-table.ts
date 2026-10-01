@@ -1,3 +1,5 @@
+import { cell as csvCell } from './gradebook/views';
+
 /** Preferences contain criteria only. Records and rendered cells never enter this shape. */
 export type HumanView = 'table' | 'cards' | 'summary';
 export interface TableCriteria {
@@ -51,7 +53,7 @@ export function safeTableCsv(rows: readonly (readonly string[])[]): string {
   return (
     rows
       .map((row) =>
-        row.map((value) => '"' + (/^[\s\u0000-\u001f]*[=+@-]/.test(value) ? "'" + value : value).replaceAll('"', '""') + '"').join(','),
+        row.map((value) => csvCell(/^[\s\p{Cc}]*[=+@-]/u.test(value) ? "'" + value : value)).join(','),
       )
       .join('\r\n') + '\r\n'
   );

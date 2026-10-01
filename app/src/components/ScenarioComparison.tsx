@@ -1,9 +1,10 @@
 import { RecordTable, tableText, type TableRecord } from './HumanTable';
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import type { Plan, Scenario } from '../lib/graduation';
 import { WIDE, useMedia } from '../lib/media';
 import { compareRows, limits } from '../lib/scenario-compare';
 import { SourceBadge } from './SourceBadge';
+import { Segmented } from './ui';
 
 /**
  * Current plan against one proposed change (DESIGN-SYSTEM-IMPROVEMENTS §4.11).
@@ -19,6 +20,7 @@ import { SourceBadge } from './SourceBadge';
  */
 export function ScenarioComparison({ plan, done, scenario }: { plan: Plan; done: number; scenario: Scenario }) {
   const wide = useMedia(WIDE);
+  const [view, setView] = useState<'current' | 'proposed'>('proposed');
   const titleId = useId();
   const rows = compareRows(plan, done, scenario);
   const changed = rows.filter((r) => r.changed);
@@ -30,12 +32,49 @@ export function ScenarioComparison({ plan, done, scenario }: { plan: Plan; done:
         <SourceBadge label="estimated" /> Planning guidance only. Not a degree audit, not a bill, and not a promise of when you finish.
       </p>
 
+      {!wide && (
+        <>
+          <h4>What changes</h4>
+          {changed.length ? (
+            <ul className="scenario-changes">
+              {changed.map((r) => (
+                <li key={r.id}>
+                  <strong>{r.label}:</strong> {r.current} → {r.proposed} <span className="portal-muted">({r.change})</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="portal-muted">Nothing changes from your current plan.</p>
+          )}
+        </>
+      )}
+
       <RecordTable
         defaultView={wide ? 'table' : 'cards'}
         id="graduation-scenario-comparison"
         label={tableText([scenario.name, 'compared with your current plan. Estimates from the numbers you entered.'])}
         tableProps={{ className: 'scenario-table' }}
         caption={<>{scenario.name} compared with your current plan. Estimates from the numbers you entered.</>}
+        renderCards={(visibleRows) => (
+          <>
+            <Segmented
+              options={[
+                { id: 'current', label: 'Current plan' },
+                { id: 'proposed', label: scenario.name },
+              ]}
+              value={view}
+              onChange={setView}
+            />
+            <dl className="scenario-list" aria-label={view === 'current' ? 'Current plan' : scenario.name}>
+              {visibleRows.map((row) => (
+                <div key={row.id}>
+                  <dt>{row.cells[0].content}</dt>
+                  <dd>{row.cells[view === 'current' ? 1 : 2].content}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
         columns={[
           { id: 'column-0', label: 'Estimate' },
           { id: 'column-1', label: 'Current plan' },
@@ -58,23 +97,6 @@ export function ScenarioComparison({ plan, done, scenario }: { plan: Plan; done:
           ),
         ]}
       />
-      {!wide && (
-        <>
-          <h4>What changes</h4>
-          {changed.length ? (
-            <ul className="scenario-changes">
-              {changed.map((r) => (
-                <li key={r.id}>
-                  <strong>{r.label}:</strong> {r.current} → {r.proposed} <span className="portal-muted">({r.change})</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="portal-muted">Nothing changes from your current plan.</p>
-          )}
-        </>
-      )}
-
       <h4>What this can’t tell you</h4>
       <ul className="scenario-limits">
         {limits(plan, scenario).map((l) => (

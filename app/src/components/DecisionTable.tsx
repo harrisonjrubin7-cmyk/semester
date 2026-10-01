@@ -11,6 +11,32 @@ export function DecisionTable({ comparison }: { comparison: Comparison }) {
         label={comparison.title}
         rows={comparison.rows}
         rowId={(row) => row.id}
+        summaryPrimary={(row) =>
+          ['requirementFit', 'scheduleImpact', 'costTime', 'sourceAndFreshness', 'officialNextStep'].includes(row.id)
+        }
+        renderCards={(visibleRows) => (
+          <ul aria-label={`${comparison.title} cards`} style={{ listStyle: 'none', padding: 0 }}>
+            {comparison.options.map((option, index) => (
+              <li key={option.id}>
+                <article aria-label={option.label}>
+                  <h3>{option.label}</h3>
+                  <dl>
+                    {visibleRows.map((row) => (
+                      <div key={row.id}>
+                        <dt>{row.label}</dt>
+                        <dd>
+                          {row.cells[index]?.lines.map((line) => (
+                            <p key={line}>{line}</p>
+                          ))}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </article>
+              </li>
+            ))}
+          </ul>
+        )}
         columns={[
           { id: 'question', label: 'Question', value: (row) => row.label, rowHeader: true, summary: true },
           ...comparison.options.map((option, i) => ({
