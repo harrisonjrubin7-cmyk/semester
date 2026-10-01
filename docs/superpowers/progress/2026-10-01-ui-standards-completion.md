@@ -75,3 +75,8 @@ Task 2: review round 0 requires changes: I1 résumé fields ignore edits; I2 fla
 Task 2: fix round 1 implementation ready (I1/I2/I3/M1 fixed pending rereview; commits 34e3357d..2aac5f2d; 387 tests/23 files/build/lint/budgets pass; remote checkpoint 7c357608ed95b3c727470209a7ce2279ab0fd40c; reviewer /root/review_assumptions_fix1).
 
 Task 2: fix round 1/5 (4 addressed, 1 open — I4 unchanged decision assumption Apply invalidates current source checks/decided despite unchanged preview; commits 34e3357d..2aac5f2d). Round 2 original implementer resumed, FIX_BASE 2aac5f2d. No ruling or waiver.
+
+Task 2: fix round 2 implementation ready (I4 canonical unchanged full-assumption no-op with guards preserved; commits 2aac5f2d..23a78df9; 45 tests/3 files/TypeScript/build/lint/budgets pass; remote151684d838e6edf09914fb96c9a4b291c0bc7283; reviewer /root/review_assumptions_fix2).
+
+Task 2: fix round 2/5 (1 addressed, 0 open — I4 canonical no-op matches preview; commits 2aac5f2d..23a78df9).
+Task 2: complete (commits f0cb1f0..23a78df9, review clean after two fix rounds; all I1/I2/I3/I4/M1 addressed). Cannot-verify boundaries resolved as explicit external acceptance limits, not asserted software evidence. No open/parked findings. Source inventory/report covers required domains and genuine unsupported calculations.
