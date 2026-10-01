@@ -244,7 +244,7 @@ function optionFor(id: OptionId, event: RecoveryEvent, plan: Plan, now: Date): R
       return {
         id,
         label: 'Add a reminder to sort this out',
-        detail: 'A task with no day, so it sits on your list until you choose when.',
+        detail: 'An action with no day, so it sits on your list until you choose when.',
         edit: placeholder(`Sort out: ${title}`, null),
       };
     case 'move_work_earlier': {
@@ -340,7 +340,7 @@ export function choose(r: Recovery, id: OptionId): Recovery {
 export function confirm(r: Recovery): Plan | null {
   if (r.resolution !== 'open' || r.chosen === null) return null;
   const option = r.steps.options.find((o) => o.id === r.chosen);
-  if (!option?.edit) return null;
+  if (!option) return null;
   return copyPlan(r.scenarioB);
 }
 
