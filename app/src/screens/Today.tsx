@@ -74,6 +74,7 @@ import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
 import { AssignmentStates } from '../components/AssignmentStates';
+import { OperatingRhythm } from '../components/OperatingRhythm';
 import { DailyRhythm } from '../components/DailyRhythm';
 import { WeeklyReset } from '../components/WeeklyReset';
 import { WeeklyReflection } from '../components/WeeklyReflection';
@@ -813,6 +814,7 @@ function TabHome() {
 
       <FirstGoal />
       <TodayDecisionSurface />
+      <OperatingRhythm />
       <div className="hides-in-focus">
         <CommandCenter />
         <FlightPlanHomeSlot />
@@ -1956,6 +1958,7 @@ function FeedHome() {
       <div style={{ padding: 'var(--page-pad)' }}>
         <FirstGoal />
         <TodayDecisionSurface />
+        <OperatingRhythm />
         <div className="hides-in-focus">
           <CommandCenter />
           <NextClassCard />
