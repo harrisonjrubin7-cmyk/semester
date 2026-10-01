@@ -3,14 +3,19 @@ import { existsSync, readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
+import { publicationMode } from './publication-input';
 
 const fallback = resolve(process.cwd(), '../../../outputs/semester-institutional-rollout');
-const supplied = process.argv.find((argument) => argument.endsWith('semester-institutional-rollout'));
+const supplied = process.env.SEMESTER_PUBLICATION_DIR || process.argv.find((argument) => argument.endsWith('semester-institutional-rollout'));
 const artifacts = supplied ? resolve(supplied) : fallback;
 const repo = resolve(process.cwd(), '..');
 const manifest = JSON.parse(readFileSync(resolve(repo, 'docs/institutional-rollout/publication-manifest.json'), 'utf8'));
 const validationPath = resolve(artifacts, 'publication-validation.json');
-const publicationSuite = spawnSync('pdftotext', ['-v']).error ? describe.skip : describe;
+// A checkout does not contain the exported publication. An explicit path is
+// strict: missing files or tools fail rather than silently turning checks off.
+const toolsAvailable = ['pdfinfo', 'pdftotext', 'unzip'].every((tool) => !spawnSync(tool, ['-v']).error);
+const publicationSuite = publicationMode(Boolean(supplied), existsSync(artifacts), toolsAvailable) === 'run'
+  ? describe : describe.skip;
 
 function sha(path: string) {
   return createHash('sha256').update(readFileSync(path)).digest('hex');
