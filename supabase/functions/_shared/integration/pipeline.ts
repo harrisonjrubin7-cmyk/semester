@@ -23,6 +23,7 @@ import type { ConflictKind, ConnectionStatus, ErrorCategory, Freshness } from '.
 import { namesNeverIngest, type AdapterDeclaration, type EntityMapping, type FieldMapping } from './adapter.ts';
 import { freshnessFromAge } from './freshness.ts';
 import { redactReference, sanitizeMessage } from './redact.ts';
+import { governanceEnvelope, type GovernanceEnvelope } from './governance-envelope.ts';
 
 export interface ExternalRecord {
   entityType: string;
@@ -70,6 +71,7 @@ export interface CanonicalReference {
   confidence: number;
   externalDeletedAt: string | null;
   values: Record<string, unknown>;
+  governance: GovernanceEnvelope;
 }
 
 export interface IngestStore {
@@ -172,6 +174,12 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
   const refuse = (message: string, category: ErrorCategory = 'scope_failure') =>
     empty('refused', received, [{ category, entityType: null, reference: 'redacted', message, retryable: false }]);
 
+  if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0 || adapter.retentionDays > 36500
+    || !Number.isFinite(adapter.freshnessTargetMinutes) || adapter.freshnessTargetMinutes <= 0 || adapter.freshnessTargetMinutes > 525600
+    || !adapter.sourceOfTruth.trim()) {
+    return refuse('Invalid adapter governance or processing clock.', 'schema_validation');
+  }
+
   // Connection gate. A mock adapter never runs against a real tenant connection.
   if (input.killSwitchEngaged) return refuse('Integration sync is stopped by a kill switch.', 'provider_unavailable');
   if (!connection.approved) return refuse('The connection is not approved.');
@@ -260,6 +268,7 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       confidence: 1,
       externalDeletedAt: rec.deleted ? now.toISOString() : null,
       values: rec.deleted ? {} : checked.values,
+      governance: governanceEnvelope(adapter, mapping, connection.publicId, now),
     });
     if (previous) result.updated += 1; else result.created += 1;
   }

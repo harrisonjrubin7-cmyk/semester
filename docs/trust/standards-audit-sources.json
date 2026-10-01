@@ -1,0 +1,25 @@
+{
+  "receivedOn": "2026-10-01",
+  "sources": [
+    {
+      "filename": "1EdTech specs vs NIST 800-53 Rev. 5 privacy contro.pdf",
+      "sha256": "1e83bf3336f1ba923b57b606bb188c7c9642e425bb0d1e0ff0f137e58a3d1d60"
+    },
+    {
+      "filename": "Audit 1EdTech specs against NIST 800-53 privacy co.pdf",
+      "sha256": "99c0983654e3419b346843ba96c8b238951b2d81200d8bb28b76863946d16de8"
+    },
+    {
+      "filename": "Build an interactive 1EdTech vs NIST 800-53 compli.pdf",
+      "sha256": "530ee7dedbd1a182d11e5d854ea00f323a30fbfbafb7b05adcfd0c10167c3202"
+    },
+    {
+      "filename": "Institutional readiness audit_ cross-reference 1Ed.pdf",
+      "sha256": "f2ce6d618006575d2ba2ce487ff09b322080f7a2c018ef9a4525442beb164db8"
+    },
+    {
+      "filename": "anything or area i have not covered to make me the.pdf",
+      "sha256": "45254ef63e180fc6c686b210e96f9da672e37e97ae6d114a8176d62bc33db803"
+    }
+  ]
+}

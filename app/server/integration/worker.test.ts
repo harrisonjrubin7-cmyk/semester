@@ -89,7 +89,12 @@ describe('a run', () => {
     expect(refs.map((x) => [x.canonical_entity_type, x.subject_user_id, x.tenant_id])).toEqual([
       ['term', null, 'vu'], ['enrollment', 'u77', 'vu'], ['registration_hold', 'u77', 'vu'],
     ]);
-    expect(refs[2].display).toEqual({ office: 'Student Accounts', blocks_registration: true, action_url: 'https://accounts.example.edu/holds' });
+    expect(refs[2].display).toMatchObject({ office: 'Student Accounts', blocks_registration: true, action_url: 'https://accounts.example.edu/holds' });
+    const display = refs[2].display as Record<string, unknown>;
+    expect(Object.values(display).every((v) => v === null || typeof v !== 'object')).toBe(true);
+    expect(JSON.parse(display._governance as string)).toMatchObject({ aiEligibility: 'denied_by_default',
+      writeAuthority: 'source-system-only', sourceOwner: MOCK_SIS.sourceOfTruth,
+      permittedPurposes: ['scope.sis.registration_hold_summary_read'], retrievedAt: NOW.toISOString(), consentPurpose: `integration:${PUB}` });
     expect(t.integration_sync_runs[0]).toMatchObject({ status: 'succeeded', records_received: 3, records_created: 3 });
     expect(t.integration_connections[0]).toMatchObject({ status: 'healthy', last_successful_sync_at: NOW.toISOString(),
       cursor_state: { watermark: '2026-09-27T12:00:00Z' } });

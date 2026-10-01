@@ -210,7 +210,10 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
         subject_user_id: r.subjectUserId, connection_id: c.id, source_system: sourceSystem,
         source_record_id: r.sourceRecordId, source_timestamp: r.sourceTimestamp, source_of_truth: r.sourceOfTruth,
         classification: r.classification, freshness_status: r.freshness, mapping_version: r.mappingVersion,
-        confidence: r.confidence, external_deleted_at: r.externalDeletedAt, display: r.values,
+        confidence: r.confidence, external_deleted_at: r.externalDeletedAt,
+        // display is a small FLAT object by SQL contract; the reserved
+        // metadata is encoded, not a nested payload or provider-controlled field.
+        display: { ...r.values, _governance: JSON.stringify(r.governance) },
         updated_at: now().toISOString(),
       })),
       // A record's identity includes its connection: two connections to the

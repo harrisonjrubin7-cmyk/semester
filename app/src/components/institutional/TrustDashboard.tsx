@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { EXPERIENCE_FLAGS, MODULE_FLAGS } from '../../lib/experience-flags';
 import { configured } from '../../lib/assistant';
 import { governs } from '../../ai/converse';
@@ -7,6 +7,8 @@ import { trustDashboard, type Integration, type TrustRow } from '../../lib/trust
 import { NOTES, visible } from '../../lib/whatsnew';
 import { useNow, useStore } from '../../state/store';
 import { SectionLabel } from '../ui';
+
+const StandardsAudit = lazy(() => import('./StandardsAudit').then((module) => ({ default: module.StandardsAudit })));
 
 /**
  * The customer trust dashboard, as a tab on the institution screen. The rows
@@ -62,6 +64,7 @@ export function TrustDashboard({ incidents: given }: { incidents?: Incident[] } 
           <Row key={r.id} row={r} />
         ))}
       </dl>
+      <Suspense fallback={<p role="status">Loading standards audit…</p>}><StandardsAudit /></Suspense>
     </section>
   );
 }
