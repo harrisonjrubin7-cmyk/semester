@@ -83,6 +83,8 @@ export const TRUST_DOCUMENTS: readonly { title: string; path: string }[] = [
   { title: 'Penetration-test plan', path: 'docs/trust/PENETRATION-TEST-PLAN.md' },
   { title: 'AI governance', path: 'docs/market-readiness/AI_GOVERNANCE.md' },
   { title: 'Incident communications', path: 'docs/operating-model/INCIDENT-COMMUNICATIONS.md' },
+  { title: 'Incident response and recovery playbook', path: 'docs/INCIDENT-RECOVERY-PLAYBOOK.md' },
+  { title: 'Institutional trust scorecard', path: 'docs/INSTITUTIONAL-TRUST-SCORECARD.md' },
 ];
 
 const DAY = 86_400_000;

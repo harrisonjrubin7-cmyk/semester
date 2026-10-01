@@ -1,5 +1,7 @@
 # Incident Response
 
+The consolidated lifecycle, proposed service tiers, fail-safe automation boundaries, service runbooks, verification requirements, and remaining operational gates are in [`../INCIDENT-RECOVERY-PLAYBOOK.md`](../INCIDENT-RECOVERY-PLAYBOOK.md). This page preserves the current operational-status boundary.
+
 **Status: `IN_PROGRESS` as an operational practice.** This document defines the
 process, public uptime monitoring can trigger it, and communication templates
 exist. No named incident owner or university contact has been configured, and
