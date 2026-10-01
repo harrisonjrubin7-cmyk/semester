@@ -127,4 +127,5 @@ tables to each other.
 | `actions/upload-pages-artifact` | GitHub | Pages deploy. |
 | `actions/deploy-pages` | GitHub | Pages deploy. |
 | `gitleaks/gitleaks-action` | Gitleaks | Secret scanning; reads the tree, writes nothing. See ci.yml. |
+| `stackhawk/hawkscan-action` | StackHawk | Runs DAST against the ephemeral local preview; receives the StackHawk API key and a read-only repository token. |
 | `supabase/setup-cli` | Supabase | Installs the CLI that deploys the Edge Functions; Supabase already holds the data. |

@@ -1,0 +1,81 @@
+name: HawkScan
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+  workflow_dispatch:
+
+concurrency:
+  group: hawkscan-${{ github.ref }}${{ github.event_name == 'push' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+# HawkScan needs no GitHub write access. Scan results live in StackHawk.
+permissions:
+  contents: read
+
+jobs:
+  hawkscan:
+    # GitHub never exposes repository secrets to a fork. Internal pull
+    # requests and main must scan or fail closed; forks wait for an internal
+    # branch before they can be scanned with the account key.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Check HawkScan configuration
+        id: config
+        env:
+          HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
+        run: |
+          if [ -n "$HAWK_API_KEY" ] && [ -n "$STACKHAWK_APPLICATION_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error title=HawkScan not configured::Add the HAWK_API_KEY Actions secret and STACKHAWK_APPLICATION_ID Actions variable, then rerun this workflow."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        if: steps.config.outputs.enabled == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        if: steps.config.outputs.enabled == 'true'
+        working-directory: app
+        run: npm ci
+
+      - name: Build scan target
+        if: steps.config.outputs.enabled == 'true'
+        working-directory: app
+        run: npm run build
+
+      - name: Start scan target
+        if: steps.config.outputs.enabled == 'true'
+        working-directory: app
+        run: |
+          npm run preview -- --host 0.0.0.0 --port 4173 --strictPort > "$RUNNER_TEMP/semester-preview.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/semester-preview.log"
+          exit 1
+
+      - name: Run HawkScan
+        if: steps.config.outputs.enabled == 'true'
+        uses: stackhawk/hawkscan-action@29a62fe1e926ea50ac87a1b64efc59b82ffd5b7d # v2.2.0
+        env:
+          STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
+          APP_HOST: http://localhost:4173
+        with:
+          apiKey: ${{ secrets.HAWK_API_KEY }}

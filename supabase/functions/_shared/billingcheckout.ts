@@ -25,6 +25,7 @@
  */
 import { strictCorsHeaders, strictOrigin } from './cors.ts';
 import { STRIPE_API, formEncode } from './stripe.ts';
+import { checkoutSessionMatches, stripeMode } from './billingmode.ts';
 
 export interface BeginRow {
   outcome: 'ok' | 'no_such_price' | 'already_subscribed';
@@ -100,7 +101,7 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   // A preflight from an allowed page succeeds even while checkout is off, so
   // the page can read the 503's sentence rather than a bare network error.
   if (req.method === 'OPTIONS') return allowed ? reply(204, null) : reply(403, null);
-  if (!deps.stripeKey) return reply(503, { error: 'Checkout is not available yet.' });
+  if (!stripeMode(deps.stripeKey)) return reply(503, { error: 'Checkout is not available yet.' });
   if (!allowed) return reply(403, { error: 'This page is not allowed to start a checkout.' });
   if (req.method !== 'POST') return reply(405, { error: 'Method not allowed.' }, { Allow: 'POST, OPTIONS' });
 
@@ -144,8 +145,8 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
       body: formEncode(sessionParams(row, returnTo(base, 'success'), returnTo(base, 'cancel'))),
     });
     if (!res.ok) return reply(502, { error: 'The payment provider did not answer. Nothing was charged.' });
-    const session = (await res.json()) as { id?: unknown; url?: unknown };
-    if (typeof session.id !== 'string' || typeof session.url !== 'string' || !session.url.startsWith('https://')) {
+    const session = (await res.json()) as { id?: unknown; url?: unknown; livemode?: unknown };
+    if (typeof session.id !== 'string' || !checkoutSessionMatches(session, deps.stripeKey)) {
       return reply(502, { error: 'The payment provider did not answer. Nothing was charged.' });
     }
     await deps.attach(row.checkout_id, session.id);

@@ -1,0 +1,31 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+const root = join(import.meta.dirname, '../../..');
+const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+
+describe('company-site production availability', () => {
+  it('publishes verified personal export and deletion, with retained-record limits', () => {
+    expect(site).toContain('["Full self-service data export","Yes","Yes","Yes","Yes","av"]');
+    expect(site).toContain('["Self-service account deletion with a receipt","av"');
+    expect(site).toContain('withheld records belonging to other people');
+    expect(site).toContain('Legal holds and retained financial records');
+    expect(site).not.toContain('the full export is in development');
+    expect(site).not.toContain('Exports the copy on your device only, not everything we hold.');
+  });
+
+  it('distinguishes deployed LTI software from an approved institutional connection', () => {
+    expect(site).not.toContain("The LTI service isn’t deployed");
+    expect(site).not.toContain("The LTI service isn't deployed");
+    expect(site).not.toContain('Canvas; not deployed to the live project');
+    expect(site).toContain('no institution has registered a platform');
+    expect(site).toContain('["LTI 1.3 launch (Canvas)","No","Optional","Yes","Yes","bt"]');
+  });
+
+  it('leaves billing and staffed support unavailable until their real activation gates pass', () => {
+    expect(site).toContain('["Paid plans (Plus) and invoicing","Yes","Yes","Yes","Yes","ip"]');
+    expect(site).toContain('["24/7 critical support","No","No","No","Yes","pl"]');
+    expect(site).toContain('318 of 318, checked October 1, 2026');
+  });
+});
