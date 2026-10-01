@@ -226,11 +226,11 @@ begin
   reset role;
   perform pg_temp.become(north_student);
   select count(*) into n from public.data_subject_request;
-  perform pg_temp.counted('the person sees their own', n, 1);
+  perform pg_temp.counted('the person sees their own', n, 2);
   reset role;
   perform pg_temp.become(north_auditor);
   select count(*) into n from public.data_subject_request;
-  perform pg_temp.counted('the school''s auditor sees that school''s requests', n, 1);
+  perform pg_temp.counted('the school''s auditor sees that school''s requests', n, 2);
   reset role;
   perform pg_temp.become(south_auditor);
   select count(*) into n from public.data_subject_request;
@@ -239,7 +239,7 @@ begin
 
   -- Account erasure takes the request with the account.
   delete from auth.users where id = north_student;
-  select count(*) into n from public.data_subject_request where id = req;
+  select count(*) into n from public.data_subject_request where subject = north_student;
   perform pg_temp.counted('deleting the account removes its requests', n, 0);
 end $$;
 

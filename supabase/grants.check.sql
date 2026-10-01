@@ -553,6 +553,12 @@ declare
     -- sibling `erase_account(uuid)` takes an account id and so is
     -- service_role only, and is not here.
     'export_my_data()',
+    -- 20260930234000_data_subject_request_intake.sql: derives both subject and
+    -- tenant from auth.uid(), accepts only the four bounded request kinds, and
+    -- returns an existing open same-kind request instead of duplicating it.
+    -- `audit-and-subject-requests.check.sql` proves the caller and tenant
+    -- boundaries and that anon cannot execute it.
+    'raise_my_data_subject_request(requested_kind text, requested_detail text)',
 
     -- The three in 20260929100000_console_control_plane.sql. Each checks
     -- `console:operate` itself and raises 42501 without it (never

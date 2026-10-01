@@ -31,10 +31,10 @@ describe('the intelligence expansion preserves the existing Semester product', (
     }
   });
 
-  it('keeps every expansion off in the ordinary production build', () => {
+  it('ships only the approved canonical navigation in the ordinary production build', () => {
     expect(experienceFlags({})).toEqual({
       semesterIntelligence: 'off',
-      journeyNavigation: 'off',
+      journeyNavigation: 'production',
       adaptiveLearning: 'off',
       careerSkillsGraph: 'off',
       multimodalCapture: 'off',

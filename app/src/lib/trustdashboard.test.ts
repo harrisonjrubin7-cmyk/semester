@@ -56,8 +56,8 @@ describe('the customer trust dashboard', () => {
       }).map((r) => [r.id, r]),
     );
     expect(rows.version.value).toBe('Build abc1234');
-    expect(rows.modules.value).toBe('2 of 17 modules on');
-    expect(rows.modules.lines).toEqual(['Offline mode', 'Course Studio']);
+    expect(rows.modules.value).toBe('3 of 17 modules on');
+    expect(rows.modules.lines).toEqual(['Action Center on Today', 'Offline mode', 'Course Studio']);
     expect(rows.integrations.lines[0]).toContain('last sync 2 h ago');
     expect(rows.support.value).toBe('3 open');
     expect(rows.maintenance.value).toBe('1 scheduled');
