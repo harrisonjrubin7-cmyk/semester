@@ -642,7 +642,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       const b = howBehind(dated, state.done, state.spent, hours);
       return {
         hero: {
-          label: 'When you are behind',
+          label: 'Catching up',
           meta: overdue ? `${overdue} overdue` : undefined,
           said: behindLine(b),
           foot: b.needed > 0 ? `${showHours(b.needed)} of work against ${showHours(b.there)}` : undefined,
