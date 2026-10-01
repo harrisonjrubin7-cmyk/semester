@@ -129,3 +129,22 @@ it('uses the local calendar day for source freshness and rejects impossible date
     ),
   ).toBe(false);
 });
+
+it('preserves an identical personal assumption while still invalidating every meaningful metadata change', () => {
+  const decision = newDecision('Choose a role');
+  const assumption = { id:'a', label:'Travel', value:'Local', owner:'student' as const, source:'Personal preference', impacts:'Options', review:false };
+  decision.assumptions = [assumption, { ...assumption, id:'other', label:'Other preference' }];
+  decision.decided = true;
+  const option = newOption('A role');
+  option.fits[decision.criteria[0].id] = { fit:'strong', explanation:'Evidence', source:'Listing', checked:'2026-10-01' };
+  decision.options = [option];
+  expect(withAssumption(decision, { ...assumption })).toBe(decision);
+  for (const patch of [{ label:'Travel range' }, { value:'Anywhere' }, { owner:'estimate' as const }, { source:'Updated source' }, { impacts:'Updated affected options' }, { review:true }]) {
+    const next = withAssumption(decision, { ...assumption, ...patch });
+    expect(next.assumptions.find(a => a.id === assumption.id)).toEqual({ ...assumption, ...patch });
+    expect(next.decided).toBe(false);
+    expect(next.options[0].fits[decision.criteria[0].id].checked).toBe('');
+  }
+  const institutional = { ...assumption, owner:'institution' as const };
+  expect(() => withAssumption({ ...decision, assumptions:[institutional] }, { ...institutional })).toThrow('Institution-owned assumptions cannot be overwritten');
+});

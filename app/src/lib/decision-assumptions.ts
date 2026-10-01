@@ -15,7 +15,7 @@ export function decisionAssumptions(decision: Decision, apply: (assumption: Assu
     owner: assumption.owner === 'institution' ? 'institution' : 'student',
     source: `${assumption.source || 'Source not recorded'} · Recorded owner: ${assumption.owner}`,
     maxLength: 2000, validate: value => value.length <= 2000,
-    outcomes: value => decisionOutcomes(value === assumption.value || assumption.owner === 'institution' ? decision : withAssumption(decision, { ...assumption, value })),
+    outcomes: value => decisionOutcomes(assumption.owner === 'institution' ? decision : withAssumption(decision, { ...assumption, value })),
     apply: value => assumption.owner === 'institution' ? false : apply({ ...assumption, value }),
   }));
 }

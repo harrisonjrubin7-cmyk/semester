@@ -192,3 +192,48 @@ All three Important reproduction paths were checked directly against canonical s
 The shared focus callback survives a row's key change without querying or reconstructing rendered controls, and native focus behavior remains covered. The cost-flag fix changes adapter availability to match the existing visible scalar controls; it does not reclassify imported cost-line records or invent cost effects. Résumé record corrections have their original direct-save behavior.
 
 No known open finding from this review remains. Existing calculator/source limitations, deliberate unsigned/signed storage separation and unclaimed independent production/assistive-technology acceptance remain as described above. This report extension is a documentation-only checkpoint after the final source checks.
+
+
+## Fix round 2/5 — I4 unchanged decision confirmation
+
+Fix base: `2aac5f2d7d5460888f982f217a02c237ccd17fe4`. Source checkpoint: `935097d70c68958d0137fb76e1518634b1d28930`. Scoped rereview accepted I1, I2, I3 and M1 but found new Important I4: an identical shared proposal previewed unchanged source checks, then Apply invalidated them. That finding supersedes the preceding round's no-open-findings statement. I4 is corrected below, pending independent rereview; no waiver is claimed.
+
+`withAssumption` now checks all recorded assumption fields after its institution-ownership guard. When ID, label, value, owner, source, impacts and review flag match the existing record, it returns the original `Decision` without clearing evidence dates, reopening the decision or reordering assumptions. A change to any meaningful field continues through the existing invalidating transformation. This shared canonical behavior serves both the native metadata editor and the shared value editor. The shared preview no longer has a separate unchanged-value shortcut; every personal preview uses `withAssumption`, matching Apply.
+
+The latest-record updater in `ProductivityWorkspace` is unchanged: it resolves and compares the current decision, rejects stale/deleted context and checks current/proposed ownership before reaching `withAssumption`. The no-op does not bypass those protections. Institution-owned canonical edits still reject before the equality return.
+
+Two actual-domain regressions (shared and native) start from a decided decision with two options and current checked evidence for every criterion. Unchanged Preview says source checks Current; unchanged Apply preserves the exact original decision, including every check date, decision status, assumption metadata and array order. Each then makes a real edit and verifies the displayed Need review result matches saved invalidation: the shared path changes the value, and the native path changes source metadata while retaining the value. The canonical regression separately checks label/value/owner/source/impacts/review changes and confirms institutional equality still throws. All prior stale/institutional integration cases remain in the passing covering set.
+
+### Exact validation
+
+Repository root:
+
+```sh
+npm exec --prefix app tsc -- -b app/tsconfig.json --pretty false
+git diff --check
+```
+
+Both exit 0; whitespace check has no output. From `app`:
+
+```sh
+npm test -- src/components/AssumptionEditor.integration.test.tsx src/components/ProductivityWorkspace.test.tsx src/lib/productivity.test.ts
+npm run build
+npm run lint
+npm run budgets
+```
+
+Results at `935097d70c68958d0137fb76e1518634b1d28930`:
+
+```text
+Test Files  3 passed (3)
+Tests       45 passed (45)
+Duration    5.40s
+Build       3423 modules transformed; built in 1.67s
+Budgets     first load 435.1 KB of 479.0 KB;
+            largest file assets/elk-276RUBZZ-DmtPYJkm.js 435.7 KB of 480.0 KB;
+            93 routes; budgets ok
+```
+
+Build/TypeScript, lint and budgets all exit 0. Lint retains 23 existing warning lines under unchanged `--max-warnings=25`; none belongs to a fix-round changed source file. Style, accessible-label and terminology checks pass. Existing npm configuration and generic Vite chunk notices remain non-failing. The source checkpoint includes four files: `app/src/lib/productivity.ts`, `app/src/lib/decision-assumptions.ts`, `app/src/lib/productivity.test.ts` and `app/src/components/AssumptionEditor.integration.test.tsx`.
+
+Self-review confirms that equality covers metadata as well as text, ownership precedes the canonical no-op, and current-record conflict checks precede that canonical call. A no-op may still pass through the library's normal serialization/event notification; the recorded decision is preserved exactly. No new persistence/calculation path, dependency, raised quality limit, production mutation, publication, helper or reviewer was introduced. The subsequent report checkpoint changes documentation only. No known open reviewed defect remains; prior genuine domain/storage limitations and independent acceptance boundaries are unchanged.

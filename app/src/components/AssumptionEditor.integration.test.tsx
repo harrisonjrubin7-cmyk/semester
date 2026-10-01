@@ -458,3 +458,33 @@ for (const route of ['shared', 'native'] as const) {
     expect(saved.assumptions[0]).toEqual({ ...decision.assumptions[0], value:'Anywhere' });
   });
 }
+
+for (const route of ['shared', 'native'] as const) {
+  it(`preserves checked evidence and a decided decision for identical ${route} assumption confirmation, then invalidates a real change`, async () => {
+    const key = 'semester.productivity.v1:device';
+    const decision = newDecision('Choose a career');
+    decision.decided = true;
+    decision.assumptions = [{ id:'personal', label:'Travel limit', value:'Local', owner:'student', source:'My preference', impacts:'Career choices', review:false }, { id:'other', label:'Other preference', value:'Recorded', owner:'student', source:'My note', impacts:'Options', review:false }];
+    decision.options = [newOption('Local role'), newOption('Research role')];
+    for (const option of decision.options) for (const criterion of decision.criteria) option.fits[criterion.id] = { fit:'strong', explanation:'Checked evidence', source:'Saved listing', checked:new Date().toISOString().slice(0,10) };
+    localStorage.setItem(key, JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions:[decision] }));
+    await act(async () => root.render(<StoreProvider><ProductivityWorkspace /></StoreProvider>));
+    await nativeSelect('Saved decisions', decision.id);
+    if (route === 'shared') { await click('Edit Travel limit'); await click('Preview Travel limit'); }
+    else await click('Edit assumption');
+    const preview = route === 'shared' ? host.querySelector('[aria-label="Preview Travel limit"]')! : button('Save to this scenario').parentElement!;
+    expect(preview.textContent).toContain('source checks Current');
+    expect(preview.textContent).not.toContain('source checks Need review');
+    await click(route === 'shared' ? 'Apply Travel limit' : 'Save to this scenario');
+    expect(JSON.parse(localStorage.getItem(key)!).decisions[0]).toEqual(decision);
+    if (route === 'shared') await propose('Travel limit', 'Anywhere');
+    else { await click('Edit assumption'); await input('Source', 'Updated personal source'); }
+    const changedPreview = route === 'shared' ? host.querySelector('[aria-label="Preview Travel limit"]')! : button('Save to this scenario').parentElement!;
+    expect(changedPreview.textContent).toContain('source checks Need review');
+    await click(route === 'shared' ? 'Apply Travel limit' : 'Save to this scenario');
+    const saved = JSON.parse(localStorage.getItem(key)!).decisions[0];
+    expect(saved.decided).toBe(false);
+    for (const option of saved.options) for (const criterion of decision.criteria) expect(option.fits[criterion.id].checked).toBe('');
+    expect(saved.assumptions.find((a: { id: string }) => a.id === 'personal')).toEqual({ ...decision.assumptions[0], ...(route === 'shared' ? { value:'Anywhere' } : { source:'Updated personal source' }) });
+  });
+}

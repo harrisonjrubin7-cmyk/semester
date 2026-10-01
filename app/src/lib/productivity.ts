@@ -366,6 +366,9 @@ export function withAssumption(d: Decision, a: Assumption): Decision {
   const before = d.assumptions.find((x) => x.id === a.id);
   if (before?.owner === 'institution')
     throw new Error('Institution-owned assumptions cannot be overwritten');
+  if (before && before.label === a.label && before.value === a.value &&
+    before.owner === a.owner && before.source === a.source &&
+    before.impacts === a.impacts && before.review === a.review) return d;
   return changedAssumptions(d, [...d.assumptions.filter((x) => x.id !== a.id), a]);
 }
 
