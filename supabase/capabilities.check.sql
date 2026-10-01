@@ -305,7 +305,9 @@ begin
   -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher; then guardians:manage for university_admin and
   -- university_staff (20260930233000_k12_guardians.sql) added two more.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 185);
+  -- 185 before transcripts (20260930260000_transcripts.sql) added three, to 188:
+  -- transcript:issue and transcript:read for registrar, transcript:read for dean.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 188);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

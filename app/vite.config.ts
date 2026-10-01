@@ -764,6 +764,8 @@ const MOCKS_MODULES = [
   'src/lib/enrollment/client.test.ts',
   'src/screens/gradebook.test.tsx',
   'src/lib/gradebook/client.test.ts',
+  'src/screens/transcripts.test.tsx',
+  'src/lib/transcripts/client.test.ts',
   'src/lib/modulegate.test.ts',
   'src/screens/dining.test.tsx',
   'src/lib/dining/client.test.ts',

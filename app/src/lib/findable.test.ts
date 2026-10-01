@@ -70,6 +70,9 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   registration:
     'Enrollment in the school’s own registration ledger, behind writeback.registration_submit and off at every school today. ' +
     'Opened at #/registration and from the Registration planner, and it says in one sentence whether the school has it on.',
+  transcripts:
+    'Transcripts a school issued from its academic record, behind the school’s switch of records to Core, which no school has made. ' +
+    'Opened at #/transcripts and from the Grades tab, and it says in one sentence how the school issues them rather than offering a tile that opens onto nothing.',
   gradebook:
     'The gradebook of record, behind writeback.lms_grade_passback and off at every school today. ' +
     'Opened at #/gradebook and from the Grades tab, and it says in one sentence whether the school has it on.',

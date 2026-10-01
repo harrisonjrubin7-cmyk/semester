@@ -31,6 +31,9 @@
 set -euo pipefail
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# Where the suites can find files that are not SQL: degree-audit.check.sql reads
+# the fixtures file the TypeScript test also reads, through a psql backtick.
+export SEMESTER_SUPABASE_DIR="$here"
 
 # Which suites, resolved here — before a cluster is built — so that a typo
 # costs nothing and is answered at once rather than after half a minute of

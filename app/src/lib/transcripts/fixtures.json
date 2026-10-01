@@ -1,0 +1,858 @@
+{
+  "canonical": [
+    {
+      "name": "an empty object",
+      "value": {},
+      "text": "{}",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "name": "an empty array",
+      "value": [],
+      "text": "[]",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "name": "an empty string",
+      "value": "",
+      "text": "\"\"",
+      "sha256": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126"
+    },
+    {
+      "name": "keys in byte order, not insertion order",
+      "value": {
+        "b": "1",
+        "a": "2",
+        "B": "3",
+        "aa": "4",
+        "": "empty key",
+        "Z": "5",
+        "_": "6"
+      },
+      "text": "{\"\":\"empty key\",\"B\":\"3\",\"Z\":\"5\",\"_\":\"6\",\"a\":\"2\",\"aa\":\"4\",\"b\":\"1\"}",
+      "sha256": "31547a40a95668f79a8356ef05ad643e94f7d48f4ea39099b1c8ee277346c6f5"
+    },
+    {
+      "name": "keys by UTF-8 bytes: an accent, U+FFFF and an emoji sort in that order, where UTF-16 would put the emoji before U+FFFF",
+      "value": {
+        "😀": "emoji",
+        "￿": "ffff",
+        "é": "accent",
+        "e": "plain"
+      },
+      "text": "{\"e\":\"plain\",\"é\":\"accent\",\"￿\":\"ffff\",\"😀\":\"emoji\"}",
+      "sha256": "5ca2ad33acf841edb717abd8182c3729dd4774cdcba6750b9a62694ee13753b2"
+    },
+    {
+      "name": "a quote and a backslash",
+      "value": "say \"hi\" \\ there",
+      "text": "\"say \\\"hi\\\" \\\\ there\"",
+      "sha256": "c3d77b6f37756bd7f7abe389765870744734f6ffc58381752d26d8d755657234"
+    },
+    {
+      "name": "the five short escapes",
+      "value": "a\bb\fc\nd\re\tf",
+      "text": "\"a\\bb\\fc\\nd\\re\\tf\"",
+      "sha256": "2d1b3a8a26a85bde82396680cd54835b32df3a9471c67233d59367a23363cefe"
+    },
+    {
+      "name": "other control characters as lower-case hex",
+      "value": "\u0001\u001f\u000b\u001a",
+      "text": "\"\\u0001\\u001f\\u000b\\u001a\"",
+      "sha256": "5bb5796b7dfd8e795cc0fe158f931a63410f10dfb9ff65ddef3ded85771f8571"
+    },
+    {
+      "name": "characters JSON does not escape: DEL, slash, U+0085, U+2028, U+2029",
+      "value": "x/  y",
+      "text": "\"x/  y\"",
+      "sha256": "3ec246d467ea90e8489df87ae8d98d5b1a25d774e8021105700f5ba89e0920e2"
+    },
+    {
+      "name": "accents, CJK and an emoji as themselves",
+      "value": "Café 日本語 😀 𝔘",
+      "text": "\"Café 日本語 😀 𝔘\"",
+      "sha256": "23aa7e65165fb35a283bd4ca50087e6907223c8a03b3db4e303e32752210c6b7"
+    },
+    {
+      "name": "combining and precomposed forms stay as written",
+      "value": [
+        "é",
+        "é"
+      ],
+      "text": "[\"é\",\"é\"]",
+      "sha256": "4f9aefe2a56dde33aa0522021cb5e8692f35b700043dbee664b3611e2b92f724"
+    },
+    {
+      "name": "a key that needs escaping, sorted by its bytes",
+      "value": {
+        "a\"b": "1",
+        "a\nb": "2",
+        "a\\b": "3",
+        "a/b": "4"
+      },
+      "text": "{\"a\\nb\":\"2\",\"a\\\"b\":\"1\",\"a/b\":\"4\",\"a\\\\b\":\"3\"}",
+      "sha256": "cc35894caeb95aa9db2ee2d608c2ef801018644b74578df5432bd051fb00c3a6"
+    },
+    {
+      "name": "arrays keep their order, objects inside them sort",
+      "value": [
+        {
+          "y": "2",
+          "x": "1"
+        },
+        "b",
+        "a",
+        [
+          [
+            "n"
+          ]
+        ]
+      ],
+      "text": "[{\"x\":\"1\",\"y\":\"2\"},\"b\",\"a\",[[\"n\"]]]",
+      "sha256": "7103a72e2391221defeb53c86c9537aea57c0c6f250513c3b3cbe19b765bead7"
+    },
+    {
+      "name": "nested objects",
+      "value": {
+        "z": {
+          "b": {
+            "d": "1",
+            "c": "2"
+          },
+          "a": []
+        },
+        "a": "0"
+      },
+      "text": "{\"a\":\"0\",\"z\":{\"a\":[],\"b\":{\"c\":\"2\",\"d\":\"1\"}}}",
+      "sha256": "bb20297804a1fca99e47ddea5f65af3baf70aab8d58f7f56a71d9bf7483e2a68"
+    },
+    {
+      "name": "a tab and a newline in a key and a value",
+      "value": {
+        "k\t1": "v\n1"
+      },
+      "text": "{\"k\\t1\":\"v\\n1\"}",
+      "sha256": "085d615a856ed986c5fa4a4607dfbce40b920caab9efb55f53001c7bb0f68a0f"
+    }
+  ],
+  "refused_canonical": [
+    {
+      "name": "a number",
+      "value": 1
+    },
+    {
+      "name": "a number inside a list",
+      "value": [
+        "a",
+        2
+      ]
+    },
+    {
+      "name": "a number as an object member",
+      "value": {
+        "a": 1.5
+      }
+    },
+    {
+      "name": "true",
+      "value": true
+    },
+    {
+      "name": "null",
+      "value": null
+    },
+    {
+      "name": "null inside an object",
+      "value": {
+        "a": null
+      }
+    }
+  ],
+  "transcripts": [
+    {
+      "name": "a record with courses, transfer credit, standing and a conferral, given out of order",
+      "head": {
+        "serial": "1",
+        "school_id": "fx-u",
+        "school_name": "Fixture University",
+        "student_ref": "S100",
+        "as_of": "2026-09-30"
+      },
+      "lines": [
+        {
+          "kind": "standing",
+          "key": "Honors",
+          "value": "Dean’s list",
+          "effective_on": "2026-02-01"
+        },
+        {
+          "kind": "conferral",
+          "key": "B.A. Economics",
+          "value": "Conferred",
+          "effective_on": "2026-05-20"
+        },
+        {
+          "kind": "credit",
+          "key": "ECON 1010 · Fall 2025",
+          "value": "3",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "enrollment",
+          "key": "HIST 1000 · Fall 2025",
+          "value": "Enrolled",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "ECON 1010 · Fall 2025",
+          "value": "A-",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "enrollment",
+          "key": "ECON 1010 · Fall 2025",
+          "value": "Enrolled",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "HIST 1000 · Fall 2025",
+          "value": "B",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "credit",
+          "key": "HIST 1000 · Fall 2025",
+          "value": "3.00",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "enrollment",
+          "key": "ECON 2010 · Spring 2026",
+          "value": "Enrolled",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "MATH 1000 · Spring 2026",
+          "value": "C+",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "credit",
+          "key": "MATH 1000 · Spring 2026",
+          "value": "4",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "credit",
+          "key": "ART 9 · Spring 2026",
+          "value": "1.5",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "transfer_credit",
+          "key": "MATH 101 · Other College",
+          "value": "3",
+          "effective_on": "2025-08-01"
+        },
+        {
+          "kind": "standing",
+          "key": "Academic standing",
+          "value": "Good standing",
+          "effective_on": "2026-01-15"
+        }
+      ],
+      "expected": {
+        "body": {
+          "format": "semester-transcript-body-1",
+          "notice": "This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.",
+          "serial": "1",
+          "school": {
+            "id": "fx-u",
+            "name": "Fixture University"
+          },
+          "student_ref": "S100",
+          "as_of": "2026-09-30",
+          "includes": [
+            "enrollment",
+            "grade",
+            "credit",
+            "transfer_credit",
+            "standing",
+            "conferral"
+          ],
+          "terms": [
+            {
+              "term": "Fall 2025",
+              "courses": [
+                {
+                  "course": "ECON 1010",
+                  "key": "ECON 1010 · Fall 2025",
+                  "enrollment": "Enrolled",
+                  "grade": "A-",
+                  "credit": "3"
+                },
+                {
+                  "course": "HIST 1000",
+                  "key": "HIST 1000 · Fall 2025",
+                  "enrollment": "Enrolled",
+                  "grade": "B",
+                  "credit": "3.00"
+                }
+              ]
+            },
+            {
+              "term": "Spring 2026",
+              "courses": [
+                {
+                  "course": "ART 9",
+                  "key": "ART 9 · Spring 2026",
+                  "enrollment": "",
+                  "grade": "",
+                  "credit": "1.5"
+                },
+                {
+                  "course": "ECON 2010",
+                  "key": "ECON 2010 · Spring 2026",
+                  "enrollment": "Enrolled",
+                  "grade": "",
+                  "credit": ""
+                },
+                {
+                  "course": "MATH 1000",
+                  "key": "MATH 1000 · Spring 2026",
+                  "enrollment": "",
+                  "grade": "C+",
+                  "credit": "4"
+                }
+              ]
+            }
+          ],
+          "transfer_credit": [
+            {
+              "key": "MATH 101 · Other College",
+              "value": "3",
+              "effective_on": "2025-08-01"
+            }
+          ],
+          "standing": [
+            {
+              "key": "Academic standing",
+              "value": "Good standing",
+              "effective_on": "2026-01-15"
+            },
+            {
+              "key": "Honors",
+              "value": "Dean’s list",
+              "effective_on": "2026-02-01"
+            }
+          ],
+          "conferrals": [
+            {
+              "key": "B.A. Economics",
+              "value": "Conferred",
+              "effective_on": "2026-05-20"
+            }
+          ]
+        },
+        "text": "{\"as_of\":\"2026-09-30\",\"conferrals\":[{\"effective_on\":\"2026-05-20\",\"key\":\"B.A. Economics\",\"value\":\"Conferred\"}],\"format\":\"semester-transcript-body-1\",\"includes\":[\"enrollment\",\"grade\",\"credit\",\"transfer_credit\",\"standing\",\"conferral\"],\"notice\":\"This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.\",\"school\":{\"id\":\"fx-u\",\"name\":\"Fixture University\"},\"serial\":\"1\",\"standing\":[{\"effective_on\":\"2026-01-15\",\"key\":\"Academic standing\",\"value\":\"Good standing\"},{\"effective_on\":\"2026-02-01\",\"key\":\"Honors\",\"value\":\"Dean’s list\"}],\"student_ref\":\"S100\",\"terms\":[{\"courses\":[{\"course\":\"ECON 1010\",\"credit\":\"3\",\"enrollment\":\"Enrolled\",\"grade\":\"A-\",\"key\":\"ECON 1010 · Fall 2025\"},{\"course\":\"HIST 1000\",\"credit\":\"3.00\",\"enrollment\":\"Enrolled\",\"grade\":\"B\",\"key\":\"HIST 1000 · Fall 2025\"}],\"term\":\"Fall 2025\"},{\"courses\":[{\"course\":\"ART 9\",\"credit\":\"1.5\",\"enrollment\":\"\",\"grade\":\"\",\"key\":\"ART 9 · Spring 2026\"},{\"course\":\"ECON 2010\",\"credit\":\"\",\"enrollment\":\"Enrolled\",\"grade\":\"\",\"key\":\"ECON 2010 · Spring 2026\"},{\"course\":\"MATH 1000\",\"credit\":\"4\",\"enrollment\":\"\",\"grade\":\"C+\",\"key\":\"MATH 1000 · Spring 2026\"}],\"term\":\"Spring 2026\"}],\"transfer_credit\":[{\"effective_on\":\"2025-08-01\",\"key\":\"MATH 101 · Other College\",\"value\":\"3\"}]}",
+        "sha256": "14fd928528c15b5e7084e7786d997a52ec97c25627dbcd1308e3695d750202f1"
+      }
+    },
+    {
+      "name": "an empty record builds a body with empty lists",
+      "head": {
+        "serial": "1",
+        "school_id": "fx-u",
+        "school_name": "Fixture University",
+        "student_ref": "S0",
+        "as_of": "2026-09-30"
+      },
+      "lines": [],
+      "expected": {
+        "body": {
+          "format": "semester-transcript-body-1",
+          "notice": "This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.",
+          "serial": "1",
+          "school": {
+            "id": "fx-u",
+            "name": "Fixture University"
+          },
+          "student_ref": "S0",
+          "as_of": "2026-09-30",
+          "includes": [
+            "enrollment",
+            "grade",
+            "credit",
+            "transfer_credit",
+            "standing",
+            "conferral"
+          ],
+          "terms": [],
+          "transfer_credit": [],
+          "standing": [],
+          "conferrals": []
+        },
+        "text": "{\"as_of\":\"2026-09-30\",\"conferrals\":[],\"format\":\"semester-transcript-body-1\",\"includes\":[\"enrollment\",\"grade\",\"credit\",\"transfer_credit\",\"standing\",\"conferral\"],\"notice\":\"This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.\",\"school\":{\"id\":\"fx-u\",\"name\":\"Fixture University\"},\"serial\":\"1\",\"standing\":[],\"student_ref\":\"S0\",\"terms\":[],\"transfer_credit\":[]}",
+        "sha256": "c489bbfdb39ce283e79ec7237eca1145ec6f730f3b621ddc8af066e7d46c0fb0"
+      }
+    },
+    {
+      "name": "keys with no term, a term holding the separator, a leading separator, and terms in byte order",
+      "head": {
+        "serial": "2",
+        "school_id": "fx-u",
+        "school_name": "Fixture University",
+        "student_ref": "S100",
+        "as_of": "2026-09-30"
+      },
+      "lines": [
+        {
+          "kind": "grade",
+          "key": "NOTERM",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "enrollment",
+          "key": "A · B · C",
+          "value": "Enrolled",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": " · X",
+          "value": "P",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Zeta · Fall",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Alpha · Fall",
+          "value": "B",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Alpha · fall",
+          "value": "C",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Beta · Été 2026",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Beta · 日本語 2026",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Beta · 😀 term",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Beta · ￿ term",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "É · Fall",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "Z · Fall",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "ECON 1010 · Fall 2024",
+          "value": "D",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "ECON 1010 · Spring 2025",
+          "value": "B+",
+          "effective_on": "2026-01-10"
+        }
+      ],
+      "expected": {
+        "body": {
+          "format": "semester-transcript-body-1",
+          "notice": "This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.",
+          "serial": "2",
+          "school": {
+            "id": "fx-u",
+            "name": "Fixture University"
+          },
+          "student_ref": "S100",
+          "as_of": "2026-09-30",
+          "includes": [
+            "enrollment",
+            "grade",
+            "credit",
+            "transfer_credit",
+            "standing",
+            "conferral"
+          ],
+          "terms": [
+            {
+              "term": "",
+              "courses": [
+                {
+                  "course": "NOTERM",
+                  "key": "NOTERM",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "B · C",
+              "courses": [
+                {
+                  "course": "A",
+                  "key": "A · B · C",
+                  "enrollment": "Enrolled",
+                  "grade": "",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "Fall",
+              "courses": [
+                {
+                  "course": "Alpha",
+                  "key": "Alpha · Fall",
+                  "enrollment": "",
+                  "grade": "B",
+                  "credit": ""
+                },
+                {
+                  "course": "Z",
+                  "key": "Z · Fall",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                },
+                {
+                  "course": "Zeta",
+                  "key": "Zeta · Fall",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                },
+                {
+                  "course": "É",
+                  "key": "É · Fall",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "Fall 2024",
+              "courses": [
+                {
+                  "course": "ECON 1010",
+                  "key": "ECON 1010 · Fall 2024",
+                  "enrollment": "",
+                  "grade": "D",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "Spring 2025",
+              "courses": [
+                {
+                  "course": "ECON 1010",
+                  "key": "ECON 1010 · Spring 2025",
+                  "enrollment": "",
+                  "grade": "B+",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "X",
+              "courses": [
+                {
+                  "course": "",
+                  "key": " · X",
+                  "enrollment": "",
+                  "grade": "P",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "fall",
+              "courses": [
+                {
+                  "course": "Alpha",
+                  "key": "Alpha · fall",
+                  "enrollment": "",
+                  "grade": "C",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "Été 2026",
+              "courses": [
+                {
+                  "course": "Beta",
+                  "key": "Beta · Été 2026",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "日本語 2026",
+              "courses": [
+                {
+                  "course": "Beta",
+                  "key": "Beta · 日本語 2026",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "￿ term",
+              "courses": [
+                {
+                  "course": "Beta",
+                  "key": "Beta · ￿ term",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                }
+              ]
+            },
+            {
+              "term": "😀 term",
+              "courses": [
+                {
+                  "course": "Beta",
+                  "key": "Beta · 😀 term",
+                  "enrollment": "",
+                  "grade": "A",
+                  "credit": ""
+                }
+              ]
+            }
+          ],
+          "transfer_credit": [],
+          "standing": [],
+          "conferrals": []
+        },
+        "text": "{\"as_of\":\"2026-09-30\",\"conferrals\":[],\"format\":\"semester-transcript-body-1\",\"includes\":[\"enrollment\",\"grade\",\"credit\",\"transfer_credit\",\"standing\",\"conferral\"],\"notice\":\"This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.\",\"school\":{\"id\":\"fx-u\",\"name\":\"Fixture University\"},\"serial\":\"2\",\"standing\":[],\"student_ref\":\"S100\",\"terms\":[{\"courses\":[{\"course\":\"NOTERM\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"NOTERM\"}],\"term\":\"\"},{\"courses\":[{\"course\":\"A\",\"credit\":\"\",\"enrollment\":\"Enrolled\",\"grade\":\"\",\"key\":\"A · B · C\"}],\"term\":\"B · C\"},{\"courses\":[{\"course\":\"Alpha\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"B\",\"key\":\"Alpha · Fall\"},{\"course\":\"Z\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"Z · Fall\"},{\"course\":\"Zeta\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"Zeta · Fall\"},{\"course\":\"É\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"É · Fall\"}],\"term\":\"Fall\"},{\"courses\":[{\"course\":\"ECON 1010\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"D\",\"key\":\"ECON 1010 · Fall 2024\"}],\"term\":\"Fall 2024\"},{\"courses\":[{\"course\":\"ECON 1010\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"B+\",\"key\":\"ECON 1010 · Spring 2025\"}],\"term\":\"Spring 2025\"},{\"courses\":[{\"course\":\"\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"P\",\"key\":\" · X\"}],\"term\":\"X\"},{\"courses\":[{\"course\":\"Alpha\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"C\",\"key\":\"Alpha · fall\"}],\"term\":\"fall\"},{\"courses\":[{\"course\":\"Beta\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"Beta · Été 2026\"}],\"term\":\"Été 2026\"},{\"courses\":[{\"course\":\"Beta\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"Beta · 日本語 2026\"}],\"term\":\"日本語 2026\"},{\"courses\":[{\"course\":\"Beta\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"Beta · ￿ term\"}],\"term\":\"￿ term\"},{\"courses\":[{\"course\":\"Beta\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\",\"key\":\"Beta · 😀 term\"}],\"term\":\"😀 term\"}],\"transfer_credit\":[]}",
+        "sha256": "ca013863949e6e389b5793a8ba1ed05648feaa4e5f125474f7f04c31938d4819"
+      }
+    },
+    {
+      "name": "text that needs escaping, in values, keys, the school name and the student reference",
+      "head": {
+        "serial": "3",
+        "school_id": "fx-u",
+        "school_name": "Café & \"Sons\" <U> \\ 日本",
+        "student_ref": "S.1-a_b",
+        "as_of": "2026-09-30"
+      },
+      "lines": [
+        {
+          "kind": "grade",
+          "key": "Q \"1\" · Fall\t2026",
+          "value": "A\n(honours)",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "standing",
+          "key": "back\\slash",
+          "value": "x\u0001yz w",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "conferral",
+          "key": "Dégree",
+          "value": "😀 Conferred \"with distinction\"",
+          "effective_on": "2026-06-01"
+        }
+      ],
+      "expected": {
+        "body": {
+          "format": "semester-transcript-body-1",
+          "notice": "This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.",
+          "serial": "3",
+          "school": {
+            "id": "fx-u",
+            "name": "Café & \"Sons\" <U> \\ 日本"
+          },
+          "student_ref": "S.1-a_b",
+          "as_of": "2026-09-30",
+          "includes": [
+            "enrollment",
+            "grade",
+            "credit",
+            "transfer_credit",
+            "standing",
+            "conferral"
+          ],
+          "terms": [
+            {
+              "term": "Fall\t2026",
+              "courses": [
+                {
+                  "course": "Q \"1\"",
+                  "key": "Q \"1\" · Fall\t2026",
+                  "enrollment": "",
+                  "grade": "A\n(honours)",
+                  "credit": ""
+                }
+              ]
+            }
+          ],
+          "transfer_credit": [],
+          "standing": [
+            {
+              "key": "back\\slash",
+              "value": "x\u0001yz w",
+              "effective_on": "2026-01-10"
+            }
+          ],
+          "conferrals": [
+            {
+              "key": "Dégree",
+              "value": "😀 Conferred \"with distinction\"",
+              "effective_on": "2026-06-01"
+            }
+          ]
+        },
+        "text": "{\"as_of\":\"2026-09-30\",\"conferrals\":[{\"effective_on\":\"2026-06-01\",\"key\":\"Dégree\",\"value\":\"😀 Conferred \\\"with distinction\\\"\"}],\"format\":\"semester-transcript-body-1\",\"includes\":[\"enrollment\",\"grade\",\"credit\",\"transfer_credit\",\"standing\",\"conferral\"],\"notice\":\"This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.\",\"school\":{\"id\":\"fx-u\",\"name\":\"Café & \\\"Sons\\\" <U> \\\\ 日本\"},\"serial\":\"3\",\"standing\":[{\"effective_on\":\"2026-01-10\",\"key\":\"back\\\\slash\",\"value\":\"x\\u0001yz w\"}],\"student_ref\":\"S.1-a_b\",\"terms\":[{\"courses\":[{\"course\":\"Q \\\"1\\\"\",\"credit\":\"\",\"enrollment\":\"\",\"grade\":\"A\\n(honours)\",\"key\":\"Q \\\"1\\\" · Fall\\t2026\"}],\"term\":\"Fall\\t2026\"}],\"transfer_credit\":[]}",
+        "sha256": "40adc760da040c0964fbdc28313744535d3153332836608ac015c00a5ca1113b"
+      }
+    },
+    {
+      "name": "a large serial is text and stays text",
+      "head": {
+        "serial": "123456789012",
+        "school_id": "fx-u",
+        "school_name": "Fixture University",
+        "student_ref": "S100",
+        "as_of": "2026-09-30"
+      },
+      "lines": [
+        {
+          "kind": "credit",
+          "key": "X 1 · T",
+          "value": "0.5",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "transfer_credit",
+          "key": "Y 2 · Elsewhere",
+          "value": "1.25",
+          "effective_on": "2024-01-01"
+        }
+      ],
+      "expected": {
+        "body": {
+          "format": "semester-transcript-body-1",
+          "notice": "This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.",
+          "serial": "123456789012",
+          "school": {
+            "id": "fx-u",
+            "name": "Fixture University"
+          },
+          "student_ref": "S100",
+          "as_of": "2026-09-30",
+          "includes": [
+            "enrollment",
+            "grade",
+            "credit",
+            "transfer_credit",
+            "standing",
+            "conferral"
+          ],
+          "terms": [
+            {
+              "term": "T",
+              "courses": [
+                {
+                  "course": "X 1",
+                  "key": "X 1 · T",
+                  "enrollment": "",
+                  "grade": "",
+                  "credit": "0.5"
+                }
+              ]
+            }
+          ],
+          "transfer_credit": [
+            {
+              "key": "Y 2 · Elsewhere",
+              "value": "1.25",
+              "effective_on": "2024-01-01"
+            }
+          ],
+          "standing": [],
+          "conferrals": []
+        },
+        "text": "{\"as_of\":\"2026-09-30\",\"conferrals\":[],\"format\":\"semester-transcript-body-1\",\"includes\":[\"enrollment\",\"grade\",\"credit\",\"transfer_credit\",\"standing\",\"conferral\"],\"notice\":\"This text is not signed. Its SHA-256 shows that it has not changed since it was issued; it does not show who issued it.\",\"school\":{\"id\":\"fx-u\",\"name\":\"Fixture University\"},\"serial\":\"123456789012\",\"standing\":[],\"student_ref\":\"S100\",\"terms\":[{\"courses\":[{\"course\":\"X 1\",\"credit\":\"0.5\",\"enrollment\":\"\",\"grade\":\"\",\"key\":\"X 1 · T\"}],\"term\":\"T\"}],\"transfer_credit\":[{\"effective_on\":\"2024-01-01\",\"key\":\"Y 2 · Elsewhere\",\"value\":\"1.25\"}]}",
+        "sha256": "f23f30b8cdcd760cd2e5876fcd823adfffe857ca8f6fb7105d899e82b280d8af"
+      }
+    }
+  ],
+  "refused_transcripts": [
+    {
+      "name": "two grade lines for one key",
+      "head": {
+        "serial": "1",
+        "school_id": "fx-u",
+        "school_name": "Fixture University",
+        "student_ref": "S100",
+        "as_of": "2026-09-30"
+      },
+      "lines": [
+        {
+          "kind": "grade",
+          "key": "X 1 · T",
+          "value": "A",
+          "effective_on": "2026-01-10"
+        },
+        {
+          "kind": "grade",
+          "key": "X 1 · T",
+          "value": "B",
+          "effective_on": "2026-01-10"
+        }
+      ]
+    }
+  ]
+}
