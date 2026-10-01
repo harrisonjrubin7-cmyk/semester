@@ -37,4 +37,10 @@ describe('institutional trust scorecard', () => {
     expect(evidenceDateLabel(Number.NaN)).toBeNull();
     expect(evidenceDateLabel(Number.POSITIVE_INFINITY)).toBeNull();
   });
+
+  it('never scores malformed evidence dates green', () => {
+    const definition = TRUST_METRICS[0];
+    expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Number.NaN }).state).toBe('yellow');
+    expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Number.POSITIVE_INFINITY }).state).toBe('yellow');
+  });
 });

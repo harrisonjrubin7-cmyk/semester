@@ -102,26 +102,48 @@ export interface IncidentRecord {
   closeOut?: IncidentCloseOutEvidence;
 }
 
+const INCIDENT_SEVERITIES: readonly IncidentSeverity[] = ['SEV1', 'SEV2', 'SEV3', 'SEV4'];
+const TENANT_SCOPES = ['platform_wide', 'tenant_specific', 'suspected_cross_tenant'] as const;
+
+function hasText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 export function validateIncident(record: IncidentRecord, now = Date.now()): string[] {
   const gaps: string[] = [];
-  if (!record.id.trim()) gaps.push('incident id');
-  if (!record.commander.trim()) gaps.push('named incident commander');
-  if (!record.affectedServices.some((service) => service.trim())) gaps.push('affected service');
-  if (!record.tenantScope || (record.tenantScope.scope !== 'platform_wide' && !record.tenantScope.tenantIds?.some((tenantId) => tenantId.trim()))) gaps.push('tenant scope');
-  if (!record.studentVisibleEffect.trim()) gaps.push('student-visible effect');
+  if (!hasText(record.id)) gaps.push('incident id');
+  const knownSeverity = INCIDENT_SEVERITIES.includes(record.severity as IncidentSeverity);
+  if (!knownSeverity) gaps.push('known incident severity');
+  if (!Number.isFinite(record.declaredAt)) gaps.push('finite declaration time');
+  if (!hasText(record.commander)) gaps.push('named incident commander');
+  if (!Array.isArray(record.affectedServices) || !record.affectedServices.some(hasText)) gaps.push('affected service');
+  const scope = record.tenantScope?.scope;
+  const knownScope = TENANT_SCOPES.includes(scope as (typeof TENANT_SCOPES)[number]);
+  const tenantIds = scope === 'platform_wide' ? [] : (record.tenantScope as { tenantIds?: unknown })?.tenantIds;
+  if (!knownScope || (scope !== 'platform_wide' && (!Array.isArray(tenantIds) || !tenantIds.some(hasText)))) gaps.push('tenant scope');
+  if (scope === 'suspected_cross_tenant' && record.severity !== 'SEV1') gaps.push('SEV1 for suspected cross-tenant scope');
+  if (!hasText(record.studentVisibleEffect)) gaps.push('student-visible effect');
   if (record.privateStudentDataIncluded !== false) gaps.push('private student data excluded');
   const knownStatus = INCIDENT_LIFECYCLE.includes(record.status as (typeof INCIDENT_LIFECYCLE)[number]);
   if (!knownStatus) gaps.push('known incident status');
   if (knownStatus && record.status !== 'close' && (!Number.isFinite(record.nextUpdateAt) || record.nextUpdateAt <= now)) gaps.push('future next-update time');
-  if (knownStatus && (record.status === 'verify' || record.status === 'close') && !record.verification.some((entry) => entry.trim())) gaps.push('recovery verification');
+  if (knownStatus && (record.status === 'verify' || record.status === 'close') && (!Array.isArray(record.verification) || !record.verification.some(hasText))) gaps.push('recovery verification');
   if (record.status === 'close') {
-    const closeOut = record.closeOut;
-    const complete = closeOut
-      && closeOut.measuredTimeline.trim()
-      && closeOut.impact.trim()
-      && closeOut.recoveryPoint.trim()
-      && closeOut.communications.some((entry) => entry.trim())
-      && closeOut.correctiveActions.some((action) => action.action.trim() && action.owner.trim() && Number.isFinite(action.dueAt) && action.requiredEvidence.trim());
+    const closeOut = record.closeOut as IncidentCloseOutEvidence | undefined;
+    const actions = closeOut?.correctiveActions;
+    const complete = Boolean(closeOut
+      && hasText(closeOut.measuredTimeline)
+      && hasText(closeOut.impact)
+      && hasText(closeOut.recoveryPoint)
+      && Array.isArray(closeOut.communications)
+      && closeOut.communications.some(hasText)
+      && Array.isArray(actions)
+      && actions.length > 0
+      && actions.every((action) => Boolean(action
+        && hasText(action.action)
+        && hasText(action.owner)
+        && Number.isFinite(action.dueAt)
+        && hasText(action.requiredEvidence))));
     if (!complete) gaps.push('complete close-out evidence');
   }
   return gaps;

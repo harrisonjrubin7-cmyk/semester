@@ -22,8 +22,15 @@ confirmed. The asymmetry is deliberate.
 ## Flow
 
 ```
-DETECT → OWN → CONTAIN → COMMUNICATE → RESOLVE → POSTMORTEM
+DETECT → CONTAIN → COMMUNICATE → RECOVER → VERIFY → CLOSE
 ```
+
+This is the consolidated lifecycle. **Own** remains a required invariant from
+detection through close rather than a separate stage. The former **Resolve**
+stage is now the explicit Recover and Verify pair. The former **Postmortem** is
+part of Close for SEV1 and SEV2; those written reviews are due within five
+working days. SEV3 and SEV4 still require complete close-out evidence, with a
+written review when impact, communication, or a missing guard warrants one.
 
 **Detect.** The hourly production smoke now detects loss of the Pages shell,
 its deployed module or stylesheet, and the production Supabase REST edge.
@@ -40,11 +47,15 @@ understand afterwards.
 **Communicate.** University contacts hear from us before they hear from their
 students, in every case where their students are affected.
 
-**Resolve.** Fix, verify, and state what verification was run.
+**Recover.** Restore the approved path or fallback without weakening a control.
 
-**Postmortem.** Blameless, written within five working days, and it must name
-the guard that would have caught it. This repository's culture is that a fix
-without a guard is half a fix.
+**Verify.** Prove the affected path, tenant boundary, data state, and fallback
+before declaring recovery.
+
+**Close.** Record the measured timeline, impact, recovery point,
+communications, and every corrective action with owner, due date, and required
+evidence. SEV1 and SEV2 receive a blameless written review within five working
+days, naming the guard that would have caught the incident.
 
 ## University-facing templates
 

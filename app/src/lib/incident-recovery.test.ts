@@ -77,4 +77,47 @@ describe('incident and recovery control contract', () => {
     expect(validateIncident(base, 200)).toContain('future next-update time');
     expect(validateIncident({ ...base, status: 'closed', nextUpdateAt: 300 } as unknown as Parameters<typeof validateIncident>[0], 200)).toContain('known incident status');
   });
+
+  it('rejects unknown severities and tenant-scope discriminants at runtime', () => {
+    const base = {
+      id: 'INC-8', severity: 'P1', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Identity'],
+      tenantScope: { scope: 'other', tenantIds: ['tenant-a'] }, studentVisibleEffect: 'Access unavailable',
+      privateStudentDataIncluded: false, status: 'contain', nextUpdateAt: 300, verification: [],
+    } as unknown as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(base, 200)).toEqual(expect.arrayContaining(['known incident severity', 'tenant scope']));
+  });
+
+  it('keeps suspected cross-tenant incidents at SEV1 until disproven', () => {
+    const record = {
+      id: 'INC-9', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Identity'],
+      tenantScope: { scope: 'suspected_cross_tenant', tenantIds: ['tenant-a'] }, studentVisibleEffect: 'Isolation under review',
+      privateStudentDataIncluded: false, status: 'contain', nextUpdateAt: 300, verification: [],
+    } as unknown as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toContain('SEV1 for suspected cross-tenant scope');
+  });
+
+  it('returns gaps for invalid declaration times and partial close-out payloads', () => {
+    const record = {
+      id: 'INC-10', severity: 'SEV1', declaredAt: Number.NaN, commander: 'Incident lead', affectedServices: ['Identity'],
+      tenantScope: { scope: 'platform_wide' }, studentVisibleEffect: 'Access unavailable', privateStudentDataIncluded: false,
+      status: 'close', nextUpdateAt: 300, verification: ['Tenant checks pass'], closeOut: { measuredTimeline: '10:00 UTC' },
+    } as unknown as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toEqual(expect.arrayContaining(['finite declaration time', 'complete close-out evidence']));
+  });
+
+  it('requires every recorded corrective action to be complete', () => {
+    const record = {
+      id: 'INC-11', severity: 'SEV1', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Identity'],
+      tenantScope: { scope: 'platform_wide' }, studentVisibleEffect: 'Access unavailable', privateStudentDataIncluded: false,
+      status: 'close', nextUpdateAt: 300, verification: ['Tenant checks pass'],
+      closeOut: {
+        measuredTimeline: '10:00–10:30 UTC', impact: 'Sign-in unavailable', recoveryPoint: 'No data loss', communications: ['Status update'],
+        correctiveActions: [
+          { action: 'Add regression', owner: 'Identity', dueAt: 300, requiredEvidence: 'Passing test' },
+          { action: ' ', owner: '', dueAt: Number.NaN, requiredEvidence: '' },
+        ],
+      },
+    } as unknown as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toContain('complete close-out evidence');
+  });
 });

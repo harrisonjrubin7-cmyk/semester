@@ -148,7 +148,7 @@ export const RECOVERY_PLANS: RecoveryPlan[] = [
     preserved: ['The original prompt, rubric, and source', 'Your notes and current plan'],
     options: [
       { label: 'Open the source and context', screen: 'study', reason: 'Review the prompt, rubric, policy, and saved notes together.' },
-      { label: 'Prepare a course question', screen: 'help', reason: 'Turn the uncertainty into a question for an instructor or TA.' },
+      { label: 'Open support options', screen: 'help', reason: 'Review human support routes and decide whom to contact.' },
       { label: 'Keep this for later', screen: 'calendar', reason: 'Leave the work visible without inventing an answer.' },
     ],
     confidence: 'needs_review',
