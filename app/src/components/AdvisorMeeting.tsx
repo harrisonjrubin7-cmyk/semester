@@ -35,7 +35,7 @@ import { hours } from '../lib/degree';
 import { download } from '../lib/deliver';
 import { record, yours } from '../lib/journal';
 import { useDeviceLibrary } from '../lib/device-library';
-import { EMPTY_GRADUATION, GRADUATION_KEY, readGraduation } from '../lib/graduation';
+import { EMPTY_GRADUATION, graduationKey, readGraduation } from '../lib/graduation';
 import { comparisonText } from '../lib/scenario-compare';
 import { useNow, useStore } from '../state/store';
 import { AdvisorSharedView } from './AdvisorSharedView';
@@ -64,7 +64,7 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
   const meetings = library.value.meetings;
   const [openId, setOpenId] = useState<string | null>(null);
   const meeting = meetings.find((m) => m.id === openId) ?? meetings[0] ?? null;
-  const graduation = useDeviceLibrary(GRADUATION_KEY, readGraduation, EMPTY_GRADUATION).value;
+  const graduation = useDeviceLibrary(graduationKey(accountId), readGraduation, EMPTY_GRADUATION).value;
   const saved = useSavedCourses();
   const [confirm, setConfirm] = useState<'download' | 'print' | 'share' | 'remove' | null>(null);
   const [said, setSaid] = useState('');

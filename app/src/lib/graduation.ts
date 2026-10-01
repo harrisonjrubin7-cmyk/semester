@@ -30,6 +30,8 @@ import { readCostLines, type CostLine } from './cost-plan';
 import { finite, obj, textValue } from './device-library';
 
 export const GRADUATION_KEY = 'semester.graduation.v1';
+/** Legacy plans belong to the unsigned device; accounts start with their own plan. */
+export const graduationKey = (account: string | null) => account && account !== 'device' ? `${GRADUATION_KEY}:${account}` : GRADUATION_KEY;
 
 export type Season = 'Spring' | 'Summer' | 'Fall';
 export const SEASONS: Season[] = ['Spring', 'Summer', 'Fall'];

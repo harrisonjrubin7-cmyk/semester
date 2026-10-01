@@ -34,6 +34,7 @@ const { GraduationSimulator } = await import('./GraduationSimulator');
 let root: Root;
 let host: HTMLDivElement;
 let wide = false;
+let currentOwner: string | null = null;
 
 const PLAN: GraduationData = {
   plan: { needed: 120, perTerm: 15, summer: 0, costPerTerm: 20_000, summerCost: 5_000, next: { season: 'Spring', year: 2027 } },
@@ -52,6 +53,7 @@ beforeEach(() => {
   host.className = 'device';
   document.body.append(host);
   root = createRoot(host);
+  currentOwner = null;
   saved.length = 0;
   removed.length = 0;
 });
@@ -62,8 +64,10 @@ afterEach(() => {
   wide = false;
 });
 
-const mount = (flags: { simulator: boolean; costs: boolean; accountId?: string | null }) =>
-  act(() => root.render(<GraduationSimulator done={60} accountId={flags.accountId ?? null} simulator={flags.simulator} costs={flags.costs} />));
+const mount = (flags: { simulator: boolean; costs: boolean; accountId?: string | null }) => {
+  currentOwner = flags.accountId ?? null;
+  act(() => root.render(<GraduationSimulator done={60} accountId={currentOwner} simulator={flags.simulator} costs={flags.costs} />));
+};
 const text = () => (host.textContent ?? '').replace(/\s+/g, ' ');
 const button = (name: RegExp) => [...host.querySelectorAll('button')].find((b) => name.test(b.textContent ?? ''));
 const choose = (preset: string) => {
@@ -73,7 +77,7 @@ const choose = (preset: string) => {
     select.dispatchEvent(new Event('change', { bubbles: true }));
   });
 };
-const stored = (): GraduationData => JSON.parse(localStorage.getItem(GRADUATION_KEY)!);
+const stored = (): GraduationData => JSON.parse(localStorage.getItem(currentOwner ? `${GRADUATION_KEY}:${currentOwner}` : GRADUATION_KEY)!);
 
 describe('with both flags off', () => {
   it('is #762’s simulator', () => {
@@ -163,6 +167,8 @@ describe('with graduation_simulator on', () => {
     await act(async () => button(/^Save to account$/)!.click());
     expect(stored().scenarios[0].cloudIds).toEqual({ 'user-1': '0b8f5e6a-1c2d-4e3f-8a9b-0c1d2e3f4a5b' });
     mount({ simulator: true, costs: false, accountId: 'user-2' });
+    expect(button(/^Save draft to your account$/)).toBeUndefined();
+    choose('minor');
     expect(text()).not.toContain('Saved to your account as an estimate.');
     expect(button(/^Remove from account$/)).toBeUndefined();
     act(() => button(/^Save draft to your account$/)!.click());
@@ -173,7 +179,7 @@ describe('with graduation_simulator on', () => {
     expect(calls.at(-1)?.[2]).toBeUndefined();
   });
 
-  it('keeps each account’s draft when two save the same scenario on one device', async () => {
+  it('keeps independent account drafts when both choose the same scenario preset', async () => {
     const cloudMod = await import('../lib/graduation-cloud');
     const original = vi.mocked(cloudMod.saveDraft).getMockImplementation()!;
     onTestFinished(() => void vi.mocked(cloudMod.saveDraft).mockImplementation(original));
@@ -186,15 +192,17 @@ describe('with graduation_simulator on', () => {
     act(() => button(/^Save draft to your account$/)!.click());
     await act(async () => button(/^Save to account$/)!.click());
     mount({ simulator: true, costs: false, accountId: 'user-2' });
+    expect(button(/^Save draft to your account$/)).toBeUndefined();
+    choose('minor');
     act(() => button(/^Save draft to your account$/)!.click());
     await act(async () => button(/^Save to account$/)!.click());
     expect(stored().scenarios[0].cloudIds).toEqual({
-      'user-1': '11111111-1111-4111-8111-111111111111',
       'user-2': '22222222-2222-4222-8222-222222222222',
     });
     // Back to the first account: its draft is still its own, and updating it
     // updates that row rather than making a second one.
     mount({ simulator: true, costs: false, accountId: 'user-1' });
+    expect(stored().scenarios[0].cloudIds).toEqual({ 'user-1': '11111111-1111-4111-8111-111111111111' });
     act(() => button(/^Update in your account$/)!.click());
     await act(async () => button(/^Save to account$/)!.click());
     expect(vi.mocked(cloudMod.saveDraft).mock.calls.at(-1)?.slice(0, 1)).toEqual(['user-1']);

@@ -26,10 +26,12 @@ const num = (v: string) => {
 export function CostPlanner({
   lines,
   onChange,
+  dependents,
   now = new Date(),
 }: {
   lines: CostLine[];
-  onChange: (next: CostLine[]) => void;
+  onChange: (next: CostLine[]) => boolean | void;
+  dependents?: (lines: CostLine[]) => string[];
   now?: Date;
 }) {
   const [kind, setKind] = useState<string>(LINE_KINDS[0]);
@@ -46,7 +48,7 @@ export function CostPlanner({
         aid and does not estimate it. Not a bill.
       </p>
 
-      <AssumptionEditor assumptions={costLineAssumptions(lines, onChange)} />
+      <AssumptionEditor assumptions={costLineAssumptions(lines, onChange, dependents)} />
       {lines.length ? (
         <ul className="cost-lines">
           {lines.map((l) => {

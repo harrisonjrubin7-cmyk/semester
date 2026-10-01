@@ -338,3 +338,30 @@ describe('the study journal', () => {
     expect(fresh.length).toBe(0);
   });
 });
+
+it('keeps graduation plans owner-scoped while preserving the legacy unsigned device plan', async () => {
+  const { EMPTY_GRADUATION, graduationKey } = await import('./graduation');
+  const storage = new FakeStorage();
+  for (const [owner, needed] of [['device', 100], ['a', 110], ['b', 120]] as const) {
+    storage.setItem(graduationKey(owner), JSON.stringify({ ...EMPTY_GRADUATION, plan: { ...EMPTY_GRADUATION.plan, needed } }));
+  }
+  for (const [owner, needed] of [['device', 100], ['a', 110], ['b', 120]] as const) {
+    const records = workspaceBackup(owner, storage).records.filter(r => r.kind === 'graduation');
+    expect(records).toHaveLength(1);
+    expect(records[0].value).toMatchObject({ plan: { needed } });
+  }
+  expect(workspaceBackup('new-account', storage).records.filter(r => r.kind === 'graduation')).toEqual([]);
+});
+
+
+it('backs up only the requested owner’s commute settings, with the unsigned legacy key retained', async () => {
+  const { lifeBalanceKey } = await import('./life-balance');
+  const storage = new FakeStorage();
+  for (const [owner, minutesEachWay] of [['device', 10], ['a', 20], ['b', 30]] as const) storage.setItem(lifeBalanceKey(owner), JSON.stringify({ commute: { days:[1], minutesEachWay } }));
+  for (const [owner, minutesEachWay] of [['device', 10], ['a', 20], ['b', 30]] as const) {
+    const records = workspaceBackup(owner, storage).records.filter(r => r.kind === 'lifeBalance');
+    expect(records).toHaveLength(1);
+    expect(records[0].value).toMatchObject({ commute:{ minutesEachWay } });
+  }
+  expect(workspaceBackup('new-account', storage).records.filter(r => r.kind === 'lifeBalance')).toEqual([]);
+});

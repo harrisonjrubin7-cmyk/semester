@@ -1,3 +1,5 @@
+import { AssumptionEditor } from '../components/AssumptionEditor';
+import { billAssumptions } from '../lib/bill-assumptions';
 /**
  * The university's statement, and the aid set against it.
  *
@@ -59,7 +61,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
   // `now` from the store rather than `new Date()` here: it is the one clock
   // every screen reads, so "overdue" changes at midnight on this screen at the
   // same moment it changes on Today.
-  const { state, dispatch } = useStore();
+  const { state, dispatch, account } = useStore();
   const now = useNow();
 
   const charges = useMemo(() => forTerm(state.charges, state.term), [state.charges, state.term]);
@@ -269,6 +271,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
       )}
 
       <SectionLabel>The plan</SectionLabel>
+      <AssumptionEditor key={`${account?.id || 'device'}:${state.term}`} assumptions={billAssumptions(state, state.term, now, setPlanTo)} />
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <select
           className="input"

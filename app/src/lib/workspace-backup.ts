@@ -5,8 +5,8 @@ import { ACTIONS_PREFIX, readActionChoices } from './actions';
 import { keepNotes, MEETING_KEY, readMeetings, withoutNotes } from './advisor-meeting';
 import { EVIDENCE_PREFIX, readEvidence } from './career-evidence';
 import { SHORTLIST_KEY, readShortlist } from './course-detail';
-import { GRADUATION_KEY, readGraduation } from './graduation';
-import { LIFE_BALANCE_KEY, readSettings as readLifeBalance } from './life-balance';
+import { GRADUATION_KEY, graduationKey, readGraduation } from './graduation';
+import { LIFE_BALANCE_KEY, lifeBalanceKey, readSettings as readLifeBalance } from './life-balance';
 import { readRegistration } from './portal-storage';
 import { REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
 import { REGISTRATION_KEY } from './registration-plan';
@@ -157,8 +157,8 @@ const DEFINITIONS: Record<string, Definition> = {
   // scenarios, and everything after them.
   registration: { label: 'Registration cart and saved schedules', prefix: REGISTRATION_KEY, scope: 'device', read: readRegistration },
   registrationDay: { label: 'Registration day plan', prefix: REGISTRATION_DAY_KEY, scope: 'device', read: readRegistrationDay },
-  graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'device', read: readGraduation },
-  lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'device', read: readLifeBalance },
+  graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'account', read: readGraduation },
+  lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'account', read: readLifeBalance },
   shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'device', read: readShortlist },
   // Per account, and without private notes: the meeting screen promises
   // those never leave the device, and a restore keeps the ones it has.
@@ -234,6 +234,8 @@ function keyFor(kind: string, term: string, account: string): string {
   if (definition.scope !== 'term' && term !== '') {
     throw new Error('A workspace in this backup carries a term it cannot have.');
   }
+  if (kind === 'graduation') return graduationKey(account);
+  if (kind === 'lifeBalance') return lifeBalanceKey(account);
   if (definition.scope === 'device') return definition.prefix;
   return definition.scope === 'term' ? `${definition.prefix}:${account}:${term}` : `${definition.prefix}:${account}`;
 }

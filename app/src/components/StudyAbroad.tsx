@@ -1,3 +1,5 @@
+import { AssumptionEditor } from './AssumptionEditor';
+import { abroadAssumptions } from '../lib/abroad-assumptions';
 import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { formatNumber } from '../lib/locale';
 import { useState } from 'react';
@@ -90,6 +92,7 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
 
         {program && (
           <>
+            <AssumptionEditor key={`${storageKey}:${program.id}`} assumptions={abroadAssumptions(plan, program, patch => setProgram(program.id, patch))} />
             <ProgramForm program={program} onChange={(patch) => setProgram(program.id, patch)} />
             <Courses
               plan={plan}

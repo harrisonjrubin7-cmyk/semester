@@ -78,7 +78,8 @@ function Workspace({ who }: { who: string }) {
     EMPTY_PRODUCTIVITY,
   );
   const [tab, setTab] = useState(incomingCapture() ? 'Connections' : 'Decide');
-  const [selected, setSelected] = useState('');
+  const [selected, chooseSelected] = useState('');
+  const setSelected = (id: string) => { setPending(null); chooseSelected(id); };
   const [capture, setCapture] = useState(emptyCapture);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');

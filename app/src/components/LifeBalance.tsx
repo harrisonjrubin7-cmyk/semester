@@ -1,3 +1,5 @@
+import { AssumptionEditor } from './AssumptionEditor';
+import { balanceAssumptions } from '../lib/balance-assumptions';
 import { clock } from '../lib/date';
 import { formatDate } from '../lib/locale';
 import { useId, useMemo, useState } from 'react';
@@ -39,7 +41,7 @@ const range = (from: number, to: number) => `${clock(from)}–${clock(to)}`;
  * calendar only after a preview and a confirmation.
  */
 export function LifeBalance({ start, crunch = false }: { start: string; crunch?: boolean }) {
-  const { dispatch } = useStore();
+  const { dispatch, account } = useStore();
   const { input, now, settings, saveSettings, error } = useLifeBalance();
   const headingId = useId();
   const week = useMemo(() => summarizeWeek(input, isoToDate(start)), [input, start]);
@@ -71,6 +73,7 @@ export function LifeBalance({ start, crunch = false }: { start: string; crunch?:
         {dayLabel(dateToIso(week.days[0].date))} to {dayLabel(dateToIso(week.days[6].date))}. Counted from your timetable,
         commitments, calendar and deadlines — <SourceBadge label="estimated" /> totals, not a measure of you.
       </p>
+      <AssumptionEditor key={`${account?.id || 'device'}:${start}`} title="Review commute assumptions" assumptions={balanceAssumptions(input, isoToDate(start), saveSettings)} />
       {error ? <p role="alert" className="balance-muted">{error}</p> : null}
 
       {nothing ? (

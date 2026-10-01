@@ -74,6 +74,7 @@ export interface Settings {
 
 export const EMPTY_SETTINGS: Settings = { commute: null };
 export const LIFE_BALANCE_KEY = 'semester.life-balance.v1';
+export const lifeBalanceKey = (account: string | null) => account && account !== 'device' ? `${LIFE_BALANCE_KEY}:${account}` : LIFE_BALANCE_KEY;
 
 /** A reader for the device store; throws on anything it did not write, so the bytes are kept. */
 export function readSettings(value: unknown): Settings {

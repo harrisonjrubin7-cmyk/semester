@@ -1,5 +1,5 @@
 import { AssumptionEditor } from './AssumptionEditor';
-import { graduationAssumptions } from '../lib/graduation-assumptions';
+import { graduationAssumptions, graduationOutcomes, scenarioAssumptions } from '../lib/graduation-assumptions';
 import { useMemo, useRef, useState } from 'react';
 import { SourceBadge } from './SourceBadge';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -15,7 +15,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import {
   EMPTY_GRADUATION,
-  GRADUATION_KEY,
+  graduationKey,
   MAX_SCENARIOS,
   PRESETS,
   SEASONS,
@@ -44,7 +44,11 @@ const num = (v: string, min: number, max: number) => {
  * (finished hours plus this term's), so the one number the student should not
  * have to type twice is not asked for again.
  */
-export function GraduationSimulator({
+export function GraduationSimulator(props: Parameters<typeof GraduationWorkspace>[0]) {
+  return <GraduationWorkspace key={props.accountId || 'device'} {...props} />;
+}
+
+function GraduationWorkspace({
   done,
   accountId = null,
   simulator = moduleOn(MODULE_FLAGS.graduation_simulator),
@@ -58,7 +62,7 @@ export function GraduationSimulator({
   /** `cost_planner` (Phase D). */
   costs?: boolean;
 }) {
-  const library = useDeviceLibrary(accountId ? `${GRADUATION_KEY}:${accountId}` : GRADUATION_KEY, readGraduation, EMPTY_GRADUATION);
+  const library = useDeviceLibrary(graduationKey(accountId), readGraduation, EMPTY_GRADUATION);
   const data = library.value;
   const plan = data.plan;
   const [status, setStatus] = useState('');
@@ -286,7 +290,7 @@ export function GraduationSimulator({
         ) : null}
       </section>
 
-      {costs ? <CostPlanner key={accountId || 'device'} lines={plan.costLines ?? []} onChange={setCostLines} /> : null}
+      {costs ? <CostPlanner key={accountId || 'device'} lines={plan.costLines ?? []} onChange={setCostLines} dependents={lines => { const cost = totals(lines); return graduationOutcomes({ ...plan, costPerTerm: cost.perTerm, summerCost: cost.summer }, done); }} /> : null}
 
       <section className="portal-panel" aria-labelledby="grad-what-if">
         <h3 id="grad-what-if">What if…</h3>
@@ -312,6 +316,7 @@ export function GraduationSimulator({
               <article key={s.id} className="portal-panel">
                 <h4>{s.name}</h4>
                 <p>{compareLine(base, p)}</p>
+                <AssumptionEditor key={`${accountId || 'device'}:${s.id}`} assumptions={scenarioAssumptions(plan, done, s, edit)} />
                 <div className="portal-filter-row">
                   <label className="portal-check">
                     Hours added or removed
