@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
+import { isAmbiguousStaticPath, staticHostHeaders } from './src/lib/previewsecurity.ts'
 import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
 
 /**
@@ -597,6 +598,28 @@ const csp = (serving: boolean) => {
 }
 
 /**
+ * Keep the production-build preview honest as a DAST target.
+ *
+ * Vite preview is a convenient static server, not a deployment host: it does
+ * not read public/_headers and its SPA fallback answers malformed asset paths
+ * with index.html. The first difference hides the headers the real static
+ * hosts enforce; the second creates relative-path-confusion findings that do
+ * not represent a valid Semester route. The preview used by CI therefore
+ * carries the host contract and refuses only impossible asset subpaths.
+ */
+const previewPathGuard = () => ({
+  name: 'preview-path-guard',
+  configurePreviewServer(server: { middlewares: { use: (handler: (req: { url?: string }, res: { statusCode: number; setHeader: (name: string, value: string) => void; end: (body: string) => void }, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, res, next) => {
+      if (!isAmbiguousStaticPath(req.url ?? '/')) return next()
+      res.statusCode = 404
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.end('Not found')
+    })
+  },
+})
+
+/**
  * The chunk graph of a production build, for `scripts/budgets.ts`.
  *
  * Which source module each chunk came from, and which chunks it imports
@@ -910,7 +933,14 @@ export default defineConfig(({ command, mode }) => {
       appleToken(),
       claudeProxy(anthropicKey),
       bundleGraph(),
+      previewPathGuard(),
     ],
+    preview: {
+      headers: staticHostHeaders(
+        readFileSync(new URL('./public/_headers', import.meta.url), 'utf8'),
+        process.env.VITE_CSP_EXTRA_CONNECT,
+      ),
+    },
     /*
      * The test suite, which had no configuration at all and was paying for it.
      *
