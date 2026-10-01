@@ -218,6 +218,41 @@ function DecisionBriefing() {
 
   return (
     <section className="today-decision-surface" aria-label="Today decision briefing">
+      <Blueprint className="today-next-action today-dominant-card">
+        <div className="today-dominant-heading">
+          <SectionLabel>Next best step</SectionLabel>
+          <button
+            type="button"
+            className="workspace-text-button hides-in-focus"
+            onClick={() => dispatch({ type: 'setLook', look: { workspaceMode: 'focused' } })}
+          >
+            Focus on this
+          </button>
+        </div>
+        {dismissed === decision.id ? (
+          <p role="status" className="today-dismissed">
+            Hidden for this visit.{' '}
+            <button type="button" className="workspace-text-button" onClick={() => setDismissed(null)}>Undo</button>
+          </p>
+        ) : (
+          <>
+            <h2>{decision.title}</h2>
+            <p>{decision.body}</p>
+            <ActionButton tone="primary" onClick={openDecision}>{decision.action}</ActionButton>
+            <div className="today-action-tools">
+              <details className="today-why">
+                <summary>Why am I seeing this?</summary>
+                <p>{decision.why}</p>
+                <p><strong>Source:</strong> {decision.source}</p>
+              </details>
+              <button type="button" className="workspace-text-button" onClick={() => setDismissed(decision.id)}>
+                Not now
+              </button>
+            </div>
+          </>
+        )}
+      </Blueprint>
+
       <Blueprint className="today-path-snapshot">
         <SectionLabel>Your path</SectionLabel>
         {/* Built from what the student typed in, so it wears the shared
@@ -259,32 +294,6 @@ function DecisionBriefing() {
         >
           Source &amp; details
         </button>
-      </Blueprint>
-
-      <Blueprint className="today-next-action">
-        <SectionLabel>Next best step</SectionLabel>
-        {dismissed === decision.id ? (
-          <p role="status" className="today-dismissed">
-            Hidden for this visit.{' '}
-            <button type="button" className="workspace-text-button" onClick={() => setDismissed(null)}>Undo</button>
-          </p>
-        ) : (
-          <>
-            <h2>{decision.title}</h2>
-            <p>{decision.body}</p>
-            <ActionButton tone="primary" onClick={openDecision}>{decision.action}</ActionButton>
-            <div className="today-action-tools">
-              <details className="today-why">
-                <summary>Why am I seeing this?</summary>
-                <p>{decision.why}</p>
-                <p><strong>Source:</strong> {decision.source}</p>
-              </details>
-              <button type="button" className="workspace-text-button" onClick={() => setDismissed(decision.id)}>
-                Not now
-              </button>
-            </div>
-          </>
-        )}
       </Blueprint>
 
       <aside className="today-near-term" aria-labelledby="today-near-term-heading">

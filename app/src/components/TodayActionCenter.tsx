@@ -182,7 +182,21 @@ export function TodayActionCenter({
   return (
     <section className={`today-action-center${wide ? ' is-wide' : ''}`} aria-label="Today">
       <div className="action-center-main">
-        <section className="action-panel" aria-labelledby="action-path-heading">
+        <section className="action-panel action-panel-primary" aria-label="Your next best step">
+          <div className="action-panel-heading">
+            <p className="action-kicker">Your focus</p>
+            <button
+              type="button"
+              className="workspace-text-button hides-in-focus"
+              onClick={() => dispatch({ type: 'setLook', look: { workspaceMode: 'focused' } })}
+            >
+              Focus on this
+            </button>
+          </div>
+          <ActionCenter actions={actions} closure={showClosure} />
+        </section>
+
+        <section className="action-panel action-panel-secondary" aria-labelledby="action-path-heading">
           <p className="action-kicker">Your path</p>
           <h2 id="action-path-heading" className="action-title">{sentence}</h2>
           <p className="action-body">
@@ -206,11 +220,7 @@ export function TodayActionCenter({
           </button>
         </section>
 
-        <section className="action-panel" aria-label="Actions">
-          <ActionCenter actions={actions} closure={showClosure} />
-        </section>
-
-        <section className="action-panel" aria-labelledby="action-commitments-heading">
+        <section className="action-panel action-panel-secondary" aria-labelledby="action-commitments-heading">
           <p className="action-kicker">Coming up</p>
           <h2 id="action-commitments-heading" className="action-title">Your commitments</h2>
           {commitments.urgent && (
@@ -248,7 +258,9 @@ export function TodayActionCenter({
           </button>
         </section>
 
-        <QuickActions />
+        <div className="hides-in-focus">
+          <QuickActions />
+        </div>
       </div>
 
       {wide && (
