@@ -19,11 +19,11 @@ Access: **Pathway → Decisions & productivity**. Global Quick Add offers **Capt
 
 ## Deployment and validation
 
-Cloud migration `20261001152756_productivity_workspace.sql` applied to configured Supabase project `lzrqvlugnawcgywkhqlz`. `productivity-sourcecheck` deployed ACTIVE with custom JWT verification on every POST (platform verification off for CORS preflight). Rollback-only SQL checks verify account isolation, stale revision rejection, deletion protection, and rejection of unauthorized aggregate access without retaining fixtures.
+Cloud migration `20261001153124_productivity_workspace.sql` is the version recorded by configured Supabase project `lzrqvlugnawcgywkhqlz`; the repository keeps that production-history version rather than a duplicate local timestamp. `productivity-sourcecheck` deployed ACTIVE with custom JWT verification on every POST (platform verification off for CORS preflight). Rollback-only SQL checks verify account isolation, stale revision rejection, deletion protection, and rejection of unauthorized aggregate access without retaining fixtures.
 
 Types/build/lint, institutional checks, export/privacy/semantic/parser tests, cloud transport tests and mounted preparation tests run from `app/`. Full normal and shuffled suites must be recorded in the PR after the final branch update. The rollout-publication tests depend on `/workspace/scratch/outputs/semester-institutional-rollout`, which is absent here; no publication evidence is fabricated.
 
-The front end remains on draft PR #1067 until review and merge. Live provider operations require the student's connected account. Live model output requires a configured assistant or institutional gateway with approved source IDs. End-to-end sign-in/provider tests have not been claimed using real student accounts.
+The front end from PR #1067 is merged into `main`; that fact alone is not evidence of a current production deployment. Live provider operations require the student's connected account. Live model output requires a configured assistant or institutional gateway with approved source IDs. End-to-end sign-in/provider tests have not been claimed using real student accounts.
 
 ## Bundle acceptance
 
