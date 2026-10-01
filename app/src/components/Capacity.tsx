@@ -32,7 +32,7 @@ function clock(minutes: number): string {
 
 export function Capacity() {
   const { state, catalog, account } = useStore();
-  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${JSON.stringify([state.floor, state.contract])}`);
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${state.courseId}:${state.guideId}:${JSON.stringify([state.floor, state.contract])}`);
   const now = useNow();
 
   const week = datedItems(catalog, now).filter(
@@ -169,7 +169,7 @@ const fromField = (v: string) => {
  */
 function Kept() {
   const { state, dispatch, account } = useStore();
-  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${JSON.stringify(state.rest)}`);
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${state.courseId}:${state.guideId}:${JSON.stringify(state.rest)}`);
   const rest = state.rest;
 
   return (

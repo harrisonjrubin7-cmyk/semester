@@ -151,7 +151,7 @@ export function WorstDay() {
  */
 export function DayBudget() {
   const { state, account } = useStore();
-  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${state.dayBudget}`);
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${state.courseId}:${state.guideId}:${state.dayBudget}`);
   const hours = state.dayBudget;
 
   const step = (delta: number) =>

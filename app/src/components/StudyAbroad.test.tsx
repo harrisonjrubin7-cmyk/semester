@@ -73,6 +73,8 @@ it('shows the course plan in full before it is copied, and sends nothing', () =>
 it('compares programs side by side without converting or adding up costs', () => {
   act(() => button(/Add a program/).click());
   set(field(/Total cost/), '18500');
+  expect(host.querySelector('[aria-label="Pending assumption change"]')).not.toBeNull();
+  act(() => button(/^Apply Study abroad cost/).click());
   set(field(/Currency/), 'eur');
   act(() => button(/Add a program/).click());
   expect(host.querySelector('table')?.textContent).toContain('18,500 EUR');

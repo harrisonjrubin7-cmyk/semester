@@ -37,7 +37,7 @@ const fromField = (v: string) => {
  */
 export function WorkWindows() {
   const { state, dispatch, account } = useStore();
-  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${JSON.stringify(state.windows)}`);
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${state.courseId}:${state.guideId}:${JSON.stringify(state.windows)}`);
   const row = useRowStyle(11);
   const windows = state.windows;
 

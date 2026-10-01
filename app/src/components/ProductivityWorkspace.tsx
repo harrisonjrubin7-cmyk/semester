@@ -88,7 +88,7 @@ function Workspace({ who }: { who: string }) {
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState('');
   const [pending, setPending] = useState<Assumption | null>(null);
-  const [resetPreview, setResetPreview] = useState<Decision | null>(null);
+  const [resetPreview, setResetPreview] = useState<{ before: string; decision: Decision } | null>(null);
   const [until, setUntil] = useState<number | null>(null);
   const [seconds, setSeconds] = useState(25 * 60);
   const [focusGoal, setFocusGoal] = useState('');
@@ -554,14 +554,20 @@ function Workspace({ who }: { who: string }) {
               <button
                 type="button"
                 onClick={() =>
-setResetPreview(withPreferences(d, lib.value.preferences))
+                  setResetPreview({ before: JSON.stringify(d), decision: withPreferences(d, lib.value.preferences) })
                 }
               >
                 Reset to saved preferences
               </button>
-              {resetPreview?.id === d.id && <>
-                <AssumptionImpact label="saved preferences" before={decisionOutcomes(d)} after={decisionOutcomes(resetPreview)} />
-                <button type="button" onClick={() => { if (patch(resetPreview)) setResetPreview(null); }}>Apply saved preferences</button>
+              {resetPreview?.decision.id === d.id && resetPreview.before === JSON.stringify(d) && <>
+                <AssumptionImpact label="saved preferences" before={decisionOutcomes(d)} after={decisionOutcomes(resetPreview.decision)} />
+                <button type="button" onClick={() => {
+                  if (save(old => ({ ...old, decisions: old.decisions.map(current => {
+                    if (current.id !== d.id) return current;
+                    if (JSON.stringify(current) !== resetPreview.before) throw new Error('Decision changed. Review saved preferences again.');
+                    return resetPreview.decision;
+                  }) }))) setResetPreview(null);
+                }}>Apply saved preferences</button>
                 <button type="button" onClick={() => setResetPreview(null)}>Cancel saved preferences</button>
               </>}
               {pending && (

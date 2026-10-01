@@ -14,7 +14,7 @@ import { LEARNER_KEY, learnerPathwaysOn } from '../lib/learner-pathways';
 import { LearnerPathways } from '../components/LearnerPathways';
 import { download } from '../lib/deliver';
 const ProductivityWorkspace = lazy(() => import('../components/ProductivityWorkspace').then(module => ({ default: module.ProductivityWorkspace })));
-import { StudyAbroad } from '../components/StudyAbroad';
+const StudyAbroad = lazy(() => import('../components/StudyAbroad').then(module => ({ default: module.StudyAbroad })));
 import { abroadKey } from '../lib/abroad';
 import { fromMarkdown } from '../lib/document';
 import {
@@ -719,7 +719,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
-      {tab === 'abroad' && <StudyAbroad storageKey={abroadKey(account?.id)} />}
+      {tab === 'abroad' && <Suspense fallback={<p role="status">Loading study abroad…</p>}><StudyAbroad storageKey={abroadKey(account?.id)} /></Suspense>}
       {tab === 'profile' && (
         <>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>

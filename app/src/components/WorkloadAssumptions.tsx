@@ -42,5 +42,5 @@ export function WorkloadAssumptions({ request, onClose }: { request?: NativeAssu
     ...catalog.courses.map(course => ({ id: `course:${course.id}:credits`, label: `${course.code} published credits`, value: course.credits, owner: 'institution' as const, source: course.source || 'Syllabus source not recorded', validate: () => false, outcomes: () => ['Official credit and sequencing decisions: Unknown — confirm with the course owner'], apply: () => false })),
   ];
   if (request) return <NativeAssumptionEditor assumptions={assumptions} request={request} onClose={onClose || (() => {})} />;
-  return <AssumptionEditor key={`${account?.id || 'device'}:${state.term}`} title="Review course and time assumptions" assumptions={assumptions} />;
+  return <AssumptionEditor key={`${account?.id || 'device'}:${state.term}:${state.courseId}:${state.guideId}`} title="Review course and time assumptions" assumptions={assumptions} />;
 }

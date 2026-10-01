@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { AssumptionAdapter } from '../lib/assumptions';
 
 /** Drafts live only in this component. Account/context keys discard them on navigation. */
@@ -19,6 +19,7 @@ function AssumptionRow({ assumption: a, initialValue, onClose }: { assumption: A
   const [draft, setDraft] = useState<string | null>(initialValue ?? null);
   const [preview, setPreview] = useState(initialValue !== undefined);
   const [error, setError] = useState('');
+  const focusDraft = useCallback((element: HTMLInputElement | HTMLSelectElement | null) => { if (initialValue !== undefined) element?.focus(); }, [initialValue]);
   const valid = draft !== null && a.validate(draft);
   return <fieldset>
     <legend>{a.label}</legend>
@@ -26,7 +27,7 @@ function AssumptionRow({ assumption: a, initialValue, onClose }: { assumption: A
     <p>Source: {a.source || 'Not recorded'}</p>
     <ul aria-label={`Current outcomes for ${a.label}`}>{a.outcomes(a.value).map((outcome, i) => <li key={i}>{outcome}</li>)}</ul>
     {draft === null ? <button type="button" disabled={a.owner === 'institution'} onClick={() => setDraft(a.value)}>Edit {a.label}</button> : <>
-      <label>Proposed {a.label}{a.options ? <select ref={element => { if (initialValue !== undefined) element?.focus(); }} className="input" aria-label={`Proposed ${a.label}`} value={draft} onChange={e => { setDraft(e.target.value); setPreview(false); setError(''); }}>{a.options.map(option => <option key={option}>{option}</option>)}</select> : <input ref={element => { if (initialValue !== undefined) element?.focus(); }} className="input" aria-label={`Proposed ${a.label}`} type={a.type || 'text'} min={a.min} max={a.max} step={a.step ?? 'any'} maxLength={a.maxLength}
+      <label>Proposed {a.label}{a.options ? <select ref={focusDraft} className="input" aria-label={`Proposed ${a.label}`} value={draft} onChange={e => { setDraft(e.target.value); setPreview(false); setError(''); }}>{a.options.map(option => <option key={option}>{option}</option>)}</select> : <input ref={focusDraft} className="input" aria-label={`Proposed ${a.label}`} type={a.type || 'text'} min={a.min} max={a.max} step={a.step ?? 'any'} maxLength={a.maxLength}
         value={draft} onChange={e => { setDraft(e.target.value); setPreview(false); setError(''); }} />}</label>
       {!valid && <p role="status">Enter a valid value{a.type === 'number' ? ` between ${a.min} and ${a.max}` : ''}.</p>}
       <button type="button" disabled={!valid} onClick={() => setPreview(true)}>Preview {a.label}</button>
@@ -57,23 +58,29 @@ export function NativeAssumptionEditor({ assumptions, request, onClose }: {
   const assumption = assumptions.find(a => a.id === request.id);
   return assumption && assumption.owner !== 'institution' ? <section className="portal-panel" aria-label="Pending assumption change">
     <p>Review this change before applying it. Your saved value is unchanged.</p>
-    <AssumptionRow key={JSON.stringify([request.token, assumption.id, assumption.value, assumption.source, assumption.owner])} assumption={assumption} initialValue={request.value} onClose={onClose} />
+    <AssumptionRow key={JSON.stringify([request.token, assumption.id, assumption.label, assumption.value, assumption.source, assumption.owner])} assumption={assumption} initialValue={request.value} onClose={onClose} />
   </section> : null;
 }
 
 export function useNativeAssumptions(assumptions: AssumptionAdapter[], scope: string) {
   const [request, setRequest] = useState<(NativeAssumptionRequest & { scope: string; before: string }) | null>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  const close = () => { setRequest(null); if (returnFocus.current?.isConnected) returnFocus.current.focus(); };
   const [previousScope, setPreviousScope] = useState(scope);
   if (scope !== previousScope) { setPreviousScope(scope); setRequest(null); }
-  const signature = (a: AssumptionAdapter) => JSON.stringify([a.id, a.value, a.source, a.owner]);
+  const signature = (a: AssumptionAdapter) => JSON.stringify([a.id, a.label, a.value, a.source, a.owner]);
   const current = assumptions.find(a => a.id === request?.id);
+  if (request?.scope === scope && (!current || request.before !== signature(current))) setRequest(null);
   const visible = request?.scope === scope && current && request.before === signature(current) ? request : null;
   return {
     edit: (id: string, value: string) => {
       const a = assumptions.find(candidate => candidate.id === id);
-      if (a && a.owner !== 'institution') setRequest(old => ({ id, value, scope, before: signature(a), token: (old?.token ?? 0) + 1 }));
+      if (a && a.owner !== 'institution') {
+        returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        setRequest(old => ({ id, value, scope, before: signature(a), token: (old?.token ?? 0) + 1 }));
+      }
     },
-    editor: visible ? <NativeAssumptionEditor assumptions={assumptions} request={visible} onClose={() => setRequest(null)} /> : null,
+    editor: visible ? <NativeAssumptionEditor assumptions={assumptions} request={visible} onClose={close} /> : null,
   };
 }
 

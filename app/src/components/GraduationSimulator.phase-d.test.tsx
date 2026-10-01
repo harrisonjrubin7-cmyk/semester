@@ -136,6 +136,9 @@ describe('with graduation_simulator on', () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(field, '9');
       field.dispatchEvent(new Event('input', { bubbles: true }));
     });
+    expect(stored().scenarios[0].abroad?.credits).toBe(12);
+    expect(host.querySelector('[aria-label="Preview Expected transfer credits"]')).not.toBeNull();
+    act(() => button(/^Apply Expected transfer credits$/)!.click());
     expect(stored().scenarios[0].abroad).toEqual({ terms: 1, credits: 9, costPerTerm: null });
     expect(text()).toContain('Transfer credit from study abroad is decided by your school');
   });
@@ -247,6 +250,9 @@ describe('with cost_planner on', () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(amount, '18000');
       amount.dispatchEvent(new Event('input', { bubbles: true }));
     });
+    expect(stored().plan.costPerTerm).toBe(20_000);
+    expect(host.querySelector('[aria-label="Preview Tuition estimate"]')?.textContent).toContain('$38,000');
+    act(() => button(/^Apply Tuition estimate$/)!.click());
     expect(stored().plan.costPerTerm).toBe(38_000);
     expect(stored().plan.costLines?.[0]).toMatchObject({ label: 'Earlier estimate', amount: 20_000, per: 'term' });
     expect(stored().plan.costLines?.at(-1)).toMatchObject({ label: 'Tuition', amount: 18_000, source: 'student_entered' });
