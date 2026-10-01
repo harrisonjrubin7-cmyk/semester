@@ -421,6 +421,8 @@ describe('"delete my account" really means every row', () => {
       'attendance_sessions',
       // Part of a course's tests, kept with the course.
       'bank_items',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'campus_spaces',
       'commercial_prices',
       'communities',
       'community_calibration_items',
@@ -509,10 +511,14 @@ describe('"delete my account" really means every row', () => {
       'registration_sections',
       'registration_terms',
       'reports',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'scheduling_operations',
       // The Configuration Studio's table (lib/config/api.ts, D-1011): a school's
       // versioned policy settings. No person, credential or student record.
       'school_config_versions',
       'schools',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'space_events',
       // Student accounts (lib/finance/api.ts, D-146): the school's financial
       // record of its students' accounts, and its reconciliations and closes.
       'student_account_closes',
@@ -530,6 +536,10 @@ describe('"delete my account" really means every row', () => {
       'term_grade_acceptances',
       // The school's record of what it issued, released or cleared, kept with the school (D-151).
       'term_grade_posts',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'timetable_publications',
+      // The school's spaces, their history and its timetable runs, kept with the school (D-151).
+      'timetable_runs',
       // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
       // versioned workflow definitions. No person, credential or student record.
       'workflow_versions',

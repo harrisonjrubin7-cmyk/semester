@@ -639,6 +639,22 @@ declare
     'aid_sap_evaluate(want_student text, want_key text)',
     'aid_sap_determine(want_evaluation uuid, want_year text, want_determination text, want_reason text, want_key text)',
 
+    -- 20261001080000_scheduling.sql: campus spaces, bookings and timetable runs
+    -- in Core. Each reads auth.uid(), the caller's own school and, except a
+    -- member's booking request and a cancellation, a school-scoped space: or
+    -- timetable: capability, and refuses unless the school runs scheduling in
+    -- Core. A booking is decided by someone other than who requested it; a run
+    -- is published by someone other than who saved it. `scheduling.check.sql`
+    -- walks every refusal.
+    'space_save(want_code text, want_name text, want_building text, want_capacity integer, want_features text[], want_bookable boolean, want_key text)',
+    'space_retire(want_code text, want_key text)',
+    'space_booking_request(want_space text, want_purpose text, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_key text)',
+    'space_booking_decide(want_booking uuid, want_confirm boolean, want_note text, want_key text)',
+    'space_booking_make(want_space text, want_purpose text, want_title text, want_starts timestamp with time zone, want_ends timestamp with time zone, want_key text)',
+    'space_booking_cancel(want_booking uuid, want_key text)',
+    'timetable_run_save(want_term text, want_input jsonb, want_proposal jsonb, want_key text)',
+    'timetable_publish(want_run uuid, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

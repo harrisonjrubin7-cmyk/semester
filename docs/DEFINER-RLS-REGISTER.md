@@ -26,13 +26,13 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 106 more, from migrations not applied to production, each with a row below: `20261001070000_financial_aid.sql` (`aid_disburse`, `aid_offer_approve`, `aid_offer_propose`, `aid_offer_respond`, `aid_sap_determine`, `aid_sap_evaluate`, `aid_sap_policy_set`); `20261001060000_admissions.sql` (`admissions_cycle_close`, `admissions_cycle_open`, `admissions_cycle_save`, `admissions_deposit_record`, `admissions_release`, `admissions_yield`, `application_decide`, `application_document_mark`, `application_respond`, `application_review`, `application_save`, `application_start`, `application_submit`, `application_withdraw`); `20261001050000_records_transcripts.sql` (`graduation_clearance_run`, `record_disclosure_log`, `record_document_issue`, `record_document_revoke`, `term_grades_accept`, `term_grades_post`); `20261001040000_degree_audit.sql` (`degree_audit_run`, `degree_declare`, `degree_exception_decide`, `degree_exception_propose`, `degree_version_publish`, `degree_version_save`); `20261001030000_assessments.sql` (`assessment_bank_add_item`, `assessment_bank_create`, `assessment_bank_retire_item`, `assessment_close`, `assessment_create`, `assessment_finish`, `assessment_grant_time`, `assessment_items`, `assessment_publish`, `assessment_review`, `assessment_save_answer`, `assessment_start`); `20261001020000_attendance.sql` (`attendance_check_in`, `attendance_close_session`, `attendance_mark`, `attendance_open_session`); `20261001010000_assignments.sql` (`assignment_close`, `assignment_create`, `assignment_edit`, `assignment_extend`, `assignment_publish`, `assignment_submit`); `20260930234000_data_subject_request_intake.sql` (`raise_my_data_subject_request`); `20260930173030_console_command_center.sql` (`console_command_center`); `20260930200000_school_offboarding.sql` (`approve_offboarding`, `archive_school`, `authorize_school_purge`, `cancel_offboarding`, `disable_school_access`, `offboarding_preflight`, `propose_offboarding`, `record_offboarding_export`, `record_offboarding_notice`, `restore_school`, `school_purge_eligibility`, `verify_offboarding_export`); `20260930185000_school_membership_enforcement.sql` (`decide_school_request`, `leave_school`, `request_school_membership`, `revoke_school_membership`, `school_enforcement_readiness`, `school_requests_for_admin`, `set_school_enforcement`, `withdraw_school_request`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 114 more, from migrations not applied to production, each with a row below: `20261001080000_scheduling.sql` (`space_booking_cancel`, `space_booking_decide`, `space_booking_make`, `space_booking_request`, `space_retire`, `space_save`, `timetable_publish`, `timetable_run_save`); `20261001070000_financial_aid.sql` (`aid_disburse`, `aid_offer_approve`, `aid_offer_propose`, `aid_offer_respond`, `aid_sap_determine`, `aid_sap_evaluate`, `aid_sap_policy_set`); `20261001060000_admissions.sql` (`admissions_cycle_close`, `admissions_cycle_open`, `admissions_cycle_save`, `admissions_deposit_record`, `admissions_release`, `admissions_yield`, `application_decide`, `application_document_mark`, `application_respond`, `application_review`, `application_save`, `application_start`, `application_submit`, `application_withdraw`); `20261001050000_records_transcripts.sql` (`graduation_clearance_run`, `record_disclosure_log`, `record_document_issue`, `record_document_revoke`, `term_grades_accept`, `term_grades_post`); `20261001040000_degree_audit.sql` (`degree_audit_run`, `degree_declare`, `degree_exception_decide`, `degree_exception_propose`, `degree_version_publish`, `degree_version_save`); `20261001030000_assessments.sql` (`assessment_bank_add_item`, `assessment_bank_create`, `assessment_bank_retire_item`, `assessment_close`, `assessment_create`, `assessment_finish`, `assessment_grant_time`, `assessment_items`, `assessment_publish`, `assessment_review`, `assessment_save_answer`, `assessment_start`); `20261001020000_attendance.sql` (`attendance_check_in`, `attendance_close_session`, `attendance_mark`, `attendance_open_session`); `20261001010000_assignments.sql` (`assignment_close`, `assignment_create`, `assignment_edit`, `assignment_extend`, `assignment_publish`, `assignment_submit`); `20260930234000_data_subject_request_intake.sql` (`raise_my_data_subject_request`); `20260930173030_console_command_center.sql` (`console_command_center`); `20260930200000_school_offboarding.sql` (`approve_offboarding`, `archive_school`, `authorize_school_purge`, `cancel_offboarding`, `disable_school_access`, `offboarding_preflight`, `propose_offboarding`, `record_offboarding_export`, `record_offboarding_notice`, `restore_school`, `school_purge_eligibility`, `verify_offboarding_export`); `20260930185000_school_membership_enforcement.sql` (`decide_school_request`, `leave_school`, `request_school_membership`, `revoke_school_membership`, `school_enforcement_readiness`, `school_requests_for_admin`, `set_school_enforcement`, `withdraw_school_request`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## The second reading
 
 Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor and `pg_catalog`. Against the register above: **49 policy-less tables** and **180 `security definer` functions** a signed-in account can call, which is the first reading's 45 and 151 plus what arrived since.
 
-- the 180 functions are exactly the register's rows below, less the 11 migration not yet applied (20260930173030_console_command_center.sql, 20260930185000_school_membership_enforcement.sql, 20260930200000_school_offboarding.sql, 20260930234000_data_subject_request_intake.sql, 20261001010000_assignments.sql, 20261001020000_attendance.sql, 20261001030000_assessments.sql, 20261001040000_degree_audit.sql, 20261001050000_records_transcripts.sql, 20261001060000_admissions.sql, 20261001070000_financial_aid.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
+- the 180 functions are exactly the register's rows below, less the 12 migration not yet applied (20260930173030_console_command_center.sql, 20260930185000_school_membership_enforcement.sql, 20260930200000_school_offboarding.sql, 20260930234000_data_subject_request_intake.sql, 20261001010000_assignments.sql, 20261001020000_attendance.sql, 20261001030000_assessments.sql, 20261001040000_degree_audit.sql, 20261001050000_records_transcripts.sql, 20261001060000_admissions.sql, 20261001070000_financial_aid.sql, 20261001080000_scheduling.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
 - all 49 policy-less tables hold no privilege of any kind for `anon` or `authenticated`, table or column. The 4 that were not in the first reading (`private.account_ages`, `public.registration_completions`, `public.registration_holds`, `public.registration_requests`) now have a disposition below. No policy was added to any of the 49, and none should be;
 - the rest of that day's advisor findings, what was fixed and what was left, with the before and after: [`ADVISOR-RECONCILIATION-2026-09-30.md`](ADVISOR-RECONCILIATION-2026-09-30.md).
 
@@ -47,16 +47,16 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 74 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 76 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 113 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 119 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 257 | |
+| **total** | 265 | |
 
-### self-service (74)
+### self-service (76)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -127,6 +127,8 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
 | `request_school_membership` | `auth.uid()`, `private.verified_account` | `20260930185000_school_membership_enforcement.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
+| `space_booking_cancel` | `auth.uid()`, `private.gradebook_school`, `private.has_capability`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_booking_request` | `auth.uid()`, `private.gradebook_school`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
 | `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
@@ -159,7 +161,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (113)
+### admin (119)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -270,11 +272,17 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 | `set_member_capabilities` | `private.org_can` | `20260921230000_organizations.sql` |
 | `set_member_standing` | `auth.uid()`, `private.org_can` | `20260921230000_organizations.sql` |
 | `set_school_enforcement` | `private.is_app_admin` | `20260930185000_school_membership_enforcement.sql` |
+| `space_booking_decide` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_booking_make` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_retire` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
+| `space_save` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay` | `20261001080000_scheduling.sql` |
 | `support_reply` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `term_grades_accept` | `private.gradebook_school`, `private.records_require`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
 | `term_grades_post` | `private.gradebook_school`, `private.gradebook_require`, `private.subject_has_capability`, `private.records_replay` | `20261001050000_records_transcripts.sql` |
+| `timetable_publish` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay`, `private.timetable_conflicts` | `20261001080000_scheduling.sql` |
+| `timetable_run_save` | `private.gradebook_school`, `private.scheduling_require`, `private.scheduling_replay`, `private.timetable_conflicts` | `20261001080000_scheduling.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 
 ### integration (6)

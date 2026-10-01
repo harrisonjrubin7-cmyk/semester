@@ -88,7 +88,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'scheduling', name: 'Timetabling and rooms', replaces: 'Ad Astra, CollegeNET Series25',
     today: 'Demand forecasts in the design documents only.',
     core: 'A timetable solver, room and space booking, and exam scheduling.',
-    status: 'planned', tables: ['rooms', 'timetable_runs'] },
+    status: 'in-preparation', tables: ['campus_spaces', 'timetable_runs'], suite: 'scheduling' },
   { id: 'events', name: 'Events', replaces: 'Localist, CampusGroups, Anthology Engage',
     today: 'Community sessions.',
     core: 'Events with RSVPs, hosted by communities, offices or courses.',

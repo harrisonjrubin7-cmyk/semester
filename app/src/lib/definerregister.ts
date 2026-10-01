@@ -352,6 +352,12 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['space_booking_cancel', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.has_capability', 'private.scheduling_replay']],
+  ['space_booking_decide', 'admin', ['private.gradebook_school', 'private.scheduling_require', 'private.scheduling_replay']],
+  ['space_booking_make', 'admin', ['private.gradebook_school', 'private.scheduling_require', 'private.scheduling_replay']],
+  ['space_booking_request', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.scheduling_replay']],
+  ['space_retire', 'admin', ['private.gradebook_school', 'private.scheduling_require', 'private.scheduling_replay']],
+  ['space_save', 'admin', ['private.gradebook_school', 'private.scheduling_require', 'private.scheduling_replay']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
@@ -362,6 +368,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['support_ticket_thread', 'admin', ['private.support_agent']],
   ['term_grades_accept', 'admin', ['private.gradebook_school', 'private.records_require', 'private.records_replay']],
   ['term_grades_post', 'admin', ['private.gradebook_school', 'private.gradebook_require', 'private.subject_has_capability', 'private.records_replay']],
+  ['timetable_publish', 'admin', ['private.gradebook_school', 'private.scheduling_require', 'private.scheduling_replay', 'private.timetable_conflicts']],
+  ['timetable_run_save', 'admin', ['private.gradebook_school', 'private.scheduling_require', 'private.scheduling_replay', 'private.timetable_conflicts']],
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -391,6 +399,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001050000_records_transcripts.sql',
   '20261001060000_admissions.sql',
   '20261001070000_financial_aid.sql',
+  '20261001080000_scheduling.sql',
 ];
 
 /**
@@ -402,6 +411,13 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001080000_scheduling.sql',
+    functions: [
+      'space_booking_cancel', 'space_booking_decide', 'space_booking_make', 'space_booking_request', 'space_retire', 'space_save',
+      'timetable_publish', 'timetable_run_save',
+    ],
+  },
   {
     file: '20261001070000_financial_aid.sql',
     functions: [

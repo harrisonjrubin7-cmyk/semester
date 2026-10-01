@@ -1369,6 +1369,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'application_decision_releases', column: null, cascadesFrom: 'applications' },
   { table: 'application_responses', column: null, cascadesFrom: 'applications' },
   { table: 'application_deposits', column: null, cascadesFrom: 'applications' },
+  // Your bookings of a campus space and their step history
+  // (`20261001080000_scheduling.sql`). A booking names you by a column that
+  // references `auth.users` with `on delete cascade`; its history goes with it.
+  { table: 'space_bookings', column: 'requester' },
+  { table: 'space_booking_events', column: null, cascadesFrom: 'space_bookings' },
 ];
 
 /**
@@ -1390,6 +1395,26 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'campus_spaces',
+    why: 'A room or space the school books. The school’s, not any person’s; if you created one as staff, your name is cleared and it stays.',
+  },
+  {
+    table: 'space_events',
+    why: 'Every change to a campus space, the old and the new. The school’s history of its spaces; the staff member’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'timetable_runs',
+    why: 'A timetable solver run: its input, the assignment it proposed and the conflicts the database found. The school’s planning record; never rewritten.',
+  },
+  {
+    table: 'timetable_publications',
+    why: 'That a person published a timetable run and how many sections it set. The school’s record; never rewritten.',
+  },
+  {
+    table: 'scheduling_operations',
+    why: 'Idempotency keys the scheduling writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
   {
     table: 'aid_offers',
     why: 'A student’s aid offer for one aid year; its content is in the versions. The school’s record, not any student’s; if you created one as staff, your name is cleared.',

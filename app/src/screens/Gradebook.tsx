@@ -1,20 +1,26 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
 import { Field, Row } from '../components/academic/Form';
-import { TestsHome } from '../components/assessments/TestsHome';
-import { RecordsHome } from '../components/records/RecordsHome';
-import { AdmissionsHome } from '../components/admissions/AdmissionsHome';
-import { AidHome } from '../components/aid/AidHome';
-import { AttendanceHome } from '../components/attendance/AttendanceHome';
-import { AssignmentsHome } from '../components/assignments/AssignmentsHome';
 import { InstructorBook } from '../components/gradebook/InstructorBook';
 import { StudentGrades } from '../components/gradebook/StudentGrades';
 import { useModuleGate } from '../lib/modulegate';
 import { loadMyCapabilities, type Grant } from '../lib/capabilities';
 import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } from '../lib/gradebook/client';
+
+/*
+ * The module tabs open on demand: each is a whole office's surface, and the
+ * screen's own cost to open should not carry all seven of them.
+ */
+const TestsHome = lazy(() => import('../components/assessments/TestsHome').then((m) => ({ default: m.TestsHome })));
+const RecordsHome = lazy(() => import('../components/records/RecordsHome').then((m) => ({ default: m.RecordsHome })));
+const AdmissionsHome = lazy(() => import('../components/admissions/AdmissionsHome').then((m) => ({ default: m.AdmissionsHome })));
+const AidHome = lazy(() => import('../components/aid/AidHome').then((m) => ({ default: m.AidHome })));
+const SchedulingHome = lazy(() => import('../components/scheduling/SchedulingHome').then((m) => ({ default: m.SchedulingHome })));
+const AttendanceHome = lazy(() => import('../components/attendance/AttendanceHome').then((m) => ({ default: m.AttendanceHome })));
+const AssignmentsHome = lazy(() => import('../components/assignments/AssignmentsHome').then((m) => ({ default: m.AssignmentsHome })));
 
 /**
  * The gradebook of record: an instructor's official grades for a course, and
@@ -49,7 +55,7 @@ const FLAG = 'writeback.lms_grade_passback';
 
 type View = 'teaching' | 'mine';
 
-type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions' | 'aid';
+type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions' | 'aid' | 'scheduling';
 
 export function Gradebook() {
   const [section, setSection] = useState<Section>('grades');
@@ -67,9 +73,14 @@ export function Gradebook() {
           { id: 'records', label: 'Records' },
           { id: 'admissions', label: 'Admissions' },
           { id: 'aid', label: 'Financial aid' },
+          { id: 'scheduling', label: 'Rooms' },
         ]}
       />
-      {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : section === 'aid' ? <AidHome /> : <Grades />}
+      {section === 'grades' ? <Grades /> : (
+        <Suspense fallback={<p role="status">Opening…</p>}>
+          {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : section === 'aid' ? <AidHome /> : <SchedulingHome />}
+        </Suspense>
+      )}
     </Page>
   );
 }
