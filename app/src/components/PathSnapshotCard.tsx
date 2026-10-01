@@ -7,6 +7,7 @@ import { useStore } from '../state/store';
 import { PathProfileForm, usePathProfile } from './PathProfileForm';
 import { SourceBadge } from './SourceBadge';
 import { SectionLabel } from './ui';
+import { RegistrationReadiness } from './RegistrationReadiness';
 
 /**
  * The Path Snapshot on My Path: status, credits, target, goals, and the
@@ -90,6 +91,7 @@ export function PathSnapshotCard() {
       ) : (
         <button type="button" className="btn btn-ghost" onClick={() => setEditing(true)}>Edit your path details</button>
       )}
+      <RegistrationReadiness />
     </section>
   );
 }

@@ -7,6 +7,7 @@ import { StatusBadge, StatusLegend } from './claims';
 import { MODULES } from './modules';
 import { STATUS_LABEL } from '../lib/ops/claims';
 import { ROLE_WORKSPACE_FUNCTIONS, ROLE_WORKSPACE_TITLES } from '../components/institutional/role-workspace';
+import { ROLLOUT_PHASES } from '../lib/institutional-package';
 import { AUTHORITIES, AVAILABILITY, BOUNDARIES, DEMO_PATHS, SERVICES, TIERS } from './platform';
 
 /*
@@ -203,17 +204,7 @@ const STUDENT_STEPS: [string, string][] = [
   ['Keep it across devices', 'Add an account when you want your work to follow you. Everything still works without one.'],
 ];
 
-const INSTITUTION_STEPS: [string, string][] = [
-  ['Discovery', 'The registration or advising moment the pilot is about, and the two or three measures that would count.'],
-  ['Scope', 'One cohort of 25 to 100 students, the modules switched on, and what stays off.'],
-  ['Security, privacy and accessibility review', 'Your reviewers read the trust packet against a named commit. What reads “no” goes out as “no”.'],
-  ['Tenant configuration', 'Your institution, its policies and its terms set up, with student-entered data first: no records change hands before an agreement exists.'],
-  ['Acceptance testing', 'The golden-path script run by your own students and staff, results signed by your champion.'],
-  ['Training', 'Advisors, faculty and support staff, with the launch kit’s materials adapted to your campus.'],
-  ['Launch', 'To the cohort, with the communications you approved.'],
-  ['Hypercare', 'A named contact, daily check-ins and a standing fix window for the first weeks.'],
-  ['Outcome review', 'The measures from discovery, read against the baseline taken before launch.'],
-];
+const INSTITUTION_STEPS: [string, string][] = ROLLOUT_PHASES.map((phase) => [phase.name, phase.outcome]);
 
 export const StartPage: Page = ({ config }) => (
   <>
@@ -226,7 +217,7 @@ export const StartPage: Page = ({ config }) => (
       </p>
     </Section>
     <Section title="For institutions" id="st-institutions">
-      <Flow steps={INSTITUTION_STEPS} label="An institution’s pilot" />
+      <Flow steps={INSTITUTION_STEPS} label="An institution’s phased adoption" />
       <p className="site-small">
         No institution has gone through this yet; the first will be the pilot, and its steps are written down before it starts.{' '}
         <a href={href(config, '/institutions/')}>What a pilot looks like</a> · <a href={mail('Semester%20pilot')}>Talk to us</a>
@@ -357,7 +348,7 @@ export const Launch: Page = ({ config }) => (
 
 export const HowWePrice: Page = ({ config }) => (
   <>
-    <Hero title="How pricing works" lead="Institutions are not sold yet, and Pro is not on sale; Plus is bought in the app. This is how the numbers will be built, so a budget can be drafted before anyone books a call." />
+    <Hero title="How pricing works" lead="Semester Institutional is one package delivered through a paid pilot and phased migration; pricing still requires an order form. Pro is not on sale, and Plus is bought in the app." />
     <Section title="Individual students" id="hp-individual">
       <p>
         A student pays for features, never for their own data. Free, Plus and Pro differ in how many plans and scenarios
@@ -367,10 +358,10 @@ export const HowWePrice: Page = ({ config }) => (
       <p><a href={href(config, '/pricing/')}>The plans and their planned prices</a></p>
     </Section>
     <Section title="Departments and institutions" id="hp-institution">
-      <p>Four things move the price, and they are the four things in the agreement:</p>
+      <p>The institution buys the full package. Four scope variables move the price and delivery plan:</p>
       <ul>
         <li>How many students are in the cohort, and later the population.</li>
-        <li>Which modules are switched on. A module that is off is not billed.</li>
+        <li>Which capabilities enter the first pilot and when the remaining capabilities phase in.</li>
         <li>Which official systems are connected, each of which is project work to set up.</li>
         <li>The support tier: who you can reach, how fast, and in which critical periods.</li>
       </ul>
@@ -380,8 +371,9 @@ export const HowWePrice: Page = ({ config }) => (
     </Section>
     <Section title="What implementation includes" id="hp-implementation">
       <p>
-        The nine steps on <a href={href(config, '/start/')}>what happens after you sign</a>: discovery through outcome
-        review, training and hypercare included. Implementation is priced once, as a project, not as a running fee.
+        The full path on <a href={href(config, '/start/')}>what happens after you sign</a>: agreement, pilot,
+        integration, parallel run, migration, cutover and expansion, with training and hypercare included.
+        Implementation is priced once, as a project, not as a running fee.
       </p>
     </Section>
     <Section title="What a support tier means" id="hp-support">
