@@ -156,6 +156,18 @@ describe('the deadline (ItemDetail)', () => {
 });
 
 describe('the course hub', () => {
+  it('includes subject-wide and free-elective requirement connections', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({schemaVersion: 6, requirements: [
+      {id: 'subject', programme: 'Major', name: 'Economics block', need: 'courses', count: 1, accepts: ['ECON'], note: ''},
+      {id: 'elective', programme: 'Degree', name: 'Free elective', need: 'courses', count: 1, accepts: [], note: ''},
+      {id: 'other', programme: 'Major', name: 'Unrelated block', need: 'courses', count: 1, accepts: ['ZZZZ'], note: ''},
+    ]}));
+    await mount(<Hub />);
+    const map = host.querySelector('[aria-label="Course relationships"]')!;
+    expect(map.textContent).toContain('Economics block');
+    expect(map.textContent).toContain('Free elective');
+    expect(map.textContent).not.toContain('Unrelated block');
+  });
   function Hub() {
     // The store settles its course pointer after the first render, as
     // `CourseDetail` allows for; this waits the same way.
@@ -175,6 +187,8 @@ describe('the course hub', () => {
     expect(text()).not.toContain('Sample course');
     expect(buttons('Continue studying →')).toHaveLength(1);
     expect(buttons('+ Add reading')).toHaveLength(1);
+    expect([...host.querySelectorAll('summary')].some(summary => summary.textContent === 'Relationship map')).toBe(true);
+    expect(host.querySelector('[aria-label="Course relationships"]')).not.toBeNull();
     await press('Continue studying →');
     expect(seen.screen).toBe('guide');
   });

@@ -9,7 +9,7 @@ describe('the system continuity strip', () => {
     expect(source).toContain('aria-label="Current semester"');
     expect(source).toContain("type: 'setTerm'");
     expect(source).toContain('canonicalDestinationFor');
-    expect(source).toContain('Continue {continuation.label}');
+    expect(source).toContain('← Back to {continuation.label}');
     expect(source).toContain('workflowForScreen');
     expect(source).toContain('syncStatusKey');
   });
