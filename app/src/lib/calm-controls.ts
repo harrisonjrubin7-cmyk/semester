@@ -199,6 +199,26 @@ export function clearMemory(settings: CalmSettings): CalmSettings {
   return { ...settings, memory: [] };
 }
 
+/** The settings as they may leave the device in a backup: the assistant's memory is the student's to keep or clear, so it stays. */
+export function withoutMemory(settings: CalmSettings): CalmSettings {
+  return clearMemory(settings);
+}
+
+/**
+ * Restored settings, keeping the memory this device already holds. A backup
+ * never carries it, so restoring one must not erase what the assistant
+ * remembers here, nor give it anything the student did not tell it on this device.
+ */
+export function keepMemory(incoming: CalmSettings, existing: unknown): CalmSettings {
+  let before: CalmSettings;
+  try {
+    before = readCalm(existing);
+  } catch {
+    return incoming;
+  }
+  return { ...incoming, memory: before.memory };
+}
+
 /** Add one remembered preference. The oldest go first once the limit is reached; blank text is ignored. */
 export function remember(settings: CalmSettings, text: string, now: number, id: string): CalmSettings {
   const t = text.trim().slice(0, MEMORY_LIMITS.text);

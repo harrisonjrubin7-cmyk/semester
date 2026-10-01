@@ -394,6 +394,24 @@ export function shareable(r: Reflection): SharedReflection | null {
   return { weekStart: r.weekStart, kind: r.kind, answers: { ...r.answers } };
 }
 
+/**
+ * A restored library, keeping the reflections this device already has.
+ *
+ * A backup never carries answers (`withoutReflections`), so restoring one must
+ * neither erase the answers on this device nor invent empty ones: the picks
+ * come from the file and the reflections stay exactly as the device holds
+ * them, or none on a device that has none.
+ */
+export function keepReflections(incoming: ResetLibrary, existing: unknown): ResetLibrary {
+  let before: ResetLibrary;
+  try {
+    before = readResets(existing);
+  } catch {
+    return { ...incoming, reflections: [] };
+  }
+  return { version: 1, resets: incoming.resets, reflections: before.reflections };
+}
+
 /** The library as it may leave the device in a backup: every reflection answer emptied. */
 export function withoutReflections(library: ResetLibrary): ResetLibrary {
   return {

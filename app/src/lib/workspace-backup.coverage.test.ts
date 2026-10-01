@@ -137,8 +137,8 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.launchpad.v1': { exempt: OTHER_MODULE },
   'semester.opportunities.v1': { exempt: OTHER_MODULE },
   'semester.guide-choices.v1': { exempt: 'Which Guide suggestions the student snoozed, passed on or hid, and until when (lib/guide-bar.ts). A display marker that expires on its own; a restored copy would only hide a suggestion that had already come back.' },
-  'semester.weekly-reset.v1': { exempt: 'The student’s weekly picks and private reflections (lib/weekly-reset.ts). Reflections are private by default and must not leave the device unasked, so this joins the backup only through `withoutReflections`, a choice that has not been made; ' + OTHER_MODULE },
-  'semester.calm.v1': { exempt: 'The student’s briefing, quiet-hours, digest and pause choices (lib/calm-controls.ts). Their own settings, so a candidate for the backup; ' + OTHER_MODULE },
+  'semester.weekly-reset.v1': 'backed up',
+  'semester.calm.v1': 'backed up',
 };
 
 describe('every device store is backed up or named', () => {
