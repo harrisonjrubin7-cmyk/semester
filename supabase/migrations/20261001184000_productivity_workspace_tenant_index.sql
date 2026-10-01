@@ -5,3 +5,4 @@
 -- 20261001171000_productivity_workspace_covering_index.sql. This later version
 -- remains statement-free so existing preview history is recognized without
 -- creating or maintaining the same index twice.
+-- It performs no schema or data change.
