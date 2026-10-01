@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
+import { agentAllows, agentInstruction } from '../../../packages/institution/src/agents';
 import { useNow, useStore } from '../state/store';
 import { ask, type ToolCall, type Turn } from '../lib/claude';
 import { provider } from '../lib/assistant';
@@ -197,7 +198,7 @@ export function useConversation(): Conversation {
    * `useState`'s signature so everything downstream is unchanged.
    */
   const live = useLive();
-  const { turns, streaming, busy, read, used, looking, locally, response, integrityMode, proposals, applied, spend, dropped } =
+  const { turns, streaming, busy, read, used, looking, locally, response, integrityMode, agent, proposals, applied, spend, dropped } =
     live;
   const setStreaming = (v: string) => setLive('streaming', v);
   const setBusy = (v: boolean) => setLive('busy', v);
@@ -430,13 +431,13 @@ export function useConversation(): Conversation {
          */
         const drawn = buildContext(
           text,
-          how.mode,
+          agent === 'assistant' ? how.mode : 'general',
           state,
           catalog,
           now,
           state.screen,
-          seen.text,
-          school.capabilities.aiOff ?? [],
+          agent === 'assistant' ? seen.text : '',
+          [...(school.capabilities.aiOff ?? []), 'grades', 'attendance', ...(agent === 'assistant' ? [] : ['screen'] as const)],
         );
         const personId = account?.id ?? 'device';
         const intelligence = assembleIntelligenceRequest({
@@ -488,6 +489,9 @@ export function useConversation(): Conversation {
             question: intelligence.question,
             mode: intelligence.context.integrityMode,
             category: how.mode,
+            agent,
+            ...(state.guideId ? { courseId: catalog.byId[state.guideId]?.code ?? state.guideId } : {}),
+            term: state.term,
             sourceIds: intelligence.context.sourceIds,
             evidenceIds: intelligence.context.evidenceIds,
             proposedActions: [],
@@ -560,10 +564,11 @@ export function useConversation(): Conversation {
 
           const said = await ask({
             about: state.screen,
+            includePreferences: agent === 'assistant',
             system: systemFor(
               how.mode,
               drawn.text,
-              tutoring(effectiveIntegrityMode(integrityMode, { allowed: limits.allowed }).effective, limits),
+              agentInstruction(agent) + '\n' + tutoring(effectiveIntegrityMode(integrityMode, { allowed: limits.allowed }).effective, limits),
             ),
             messages: sending,
             /*
@@ -599,10 +604,18 @@ export function useConversation(): Conversation {
                */
               toolsFor(
                 how.mode,
-                how.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS],
+                (how.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS]).filter((tool) => how.mode === 'app' || agentAllows(agent, tool.name)),
               ),
             onToolUse: (call) => {
+              // Validate callbacks too: an unexpected provider call cannot bypass the advertised allowlist.
+              if (how.mode === 'app' ? !toolsFor('app', TOOLS).some((tool) => tool.name === call.name) : !agentAllows(agent, call.name)) return;
               if (isLookup(call.name)) {
+                if (agent === 'tutor' || agent === 'course-guide') {
+                  const course = catalog.byId[state.guideId];
+                  // Never interpret an empty course selector as permission to search all courses.
+                  wants.push({ ...call, input: { ...call.input, course: course?.code ?? '__no_selected_course__' } });
+                  return;
+                }
                 wants.push(call);
                 return;
               }
@@ -649,7 +662,10 @@ export function useConversation(): Conversation {
            * confirmation. A card asking permission to read a number the
            * student is looking at on the next screen would protect nobody.
            */
-          const found = runLookups(wants, { state, catalog, now });
+          const courseBound = agent === 'tutor' || agent === 'course-guide';
+          const found = courseBound && !catalog.byId[state.guideId]
+            ? { results: wants.map((call) => ({ id: call.id, text: 'Select a course before reading course material or deadlines.', error: true })), used: [] as string[], saying: [] as string[] }
+            : runLookups(wants, { state, catalog, now });
           for (const u of found.used) drew.add(u);
           setUsed([...drew]);
           sending = [
@@ -734,7 +750,7 @@ export function useConversation(): Conversation {
     },
     // No `dispatch`: the one call `send` made was the search the card
     // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, systemFor, held, limits, governed, helpNow],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, account?.id, integrityMode, agent, systemFor, held, limits, governed, helpNow],
   );
 
   /*
