@@ -23,6 +23,7 @@ import { BreakGlass } from '../components/console/BreakGlass';
 import { Audit } from '../components/console/Audit';
 import { Customers } from '../components/console/Customers';
 import { Figures } from '../components/console/Figures';
+import { StandardsCrosswalk } from '../components/console/StandardsCrosswalk';
 import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
@@ -236,7 +237,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
-        {tab === 'evidence' && <Evidence {...viewProps} />}
+        {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views
             views={views}
