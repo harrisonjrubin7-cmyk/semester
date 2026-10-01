@@ -18,6 +18,7 @@ import { Applied, Locally, Proposals } from './Actions';
 import { IntelligenceDisclosure } from '../intelligence/Disclosure';
 import { HowItHelps } from './HelpNotice';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { GuideOperatingContract } from '../components/GuideOperatingContract';
 
 /**
  * The panel: the assistant once it is open, and nothing that is true before.
@@ -442,6 +443,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         : ' — nothing of its own'
                     }`}
               </button>
+              <GuideOperatingContract compact />
             </div>
 
             <div
