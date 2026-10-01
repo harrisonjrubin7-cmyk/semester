@@ -13,7 +13,7 @@ describe('global accessibility tools', () => {
     const cancel = vi.fn();
     const speak = vi.fn();
     vi.stubGlobal('speechSynthesis', {cancel, speak});
-    vi.stubGlobal('SpeechSynthesisUtterance', class { constructor(public text: string) {} });
+    vi.stubGlobal('SpeechSynthesisUtterance', class { text: string; constructor(text: string) { this.text = text; } });
     const selection = vi.spyOn(window, 'getSelection').mockReturnValue({toString: () => 'Selected course text'} as Selection);
     const host = document.createElement('div');
     const root = createRoot(host);
