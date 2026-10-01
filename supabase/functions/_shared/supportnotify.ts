@@ -2,6 +2,7 @@ import { allowOrigin, corsHeaders } from './cors.ts';
 
 export interface SupportNoticeDeps {
   allowedOrigin: string | undefined;
+  devOrigin?: string;
   resendKey: string | undefined;
   appUrl: string;
   userFromToken(token: string): Promise<string | null>;
@@ -22,8 +23,8 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
   const origin = req.headers.get('Origin');
   // Support is a first-party app flow. Keep the production Pages origin from
   // the shared built-in allowlist, while ALLOWED_ORIGIN may add deployments.
-  const allowed = allowOrigin(deps.allowedOrigin, origin);
-  const cors = corsHeaders(deps.allowedOrigin, origin);
+  const allowed = allowOrigin(deps.allowedOrigin, origin, deps.devOrigin);
+  const cors = corsHeaders(deps.allowedOrigin, origin, deps.devOrigin);
   const reply = (status: number, body: unknown) => new Response(JSON.stringify(body), {
     status,
     headers: { ...cors, 'Cache-Control': 'no-store', 'Content-Type': 'application/json' },

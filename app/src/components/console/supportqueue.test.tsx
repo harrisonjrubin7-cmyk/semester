@@ -142,6 +142,35 @@ describe('the support operations queue', () => {
     expect(mock.status).toHaveBeenLastCalledWith('Reply recorded and student notified for SUP-123E4567.');
   });
 
+  it('keeps the last-known queue and reports staleness after a committed reply', async () => {
+    mock.queue.mockResolvedValueOnce([{
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      category: 'accessibility', subject: 'Cannot reach Continue', status: 'open', priority: 'high',
+      createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null, overdue: true,
+    }]).mockRejectedValueOnce(new Error('queue unavailable'));
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'Your reply was recorded.');
+    await click(button('Send support reply'));
+    expect(host.textContent).toContain('SUP-123E4567');
+    expect(mock.status).toHaveBeenLastCalledWith(
+      'Reply recorded and student notified for SUP-123E4567. The queue could not be refreshed; retry before acting on its status.',
+    );
+  });
+
+  it('keeps reply controls unavailable until a failed conversation read is retried successfully', async () => {
+    mock.thread.mockRejectedValueOnce(new Error('read unavailable')).mockResolvedValueOnce([{
+      from: 'student', body: 'Please help.', at: '2026-10-01T10:00:00Z', context: null,
+    }]);
+    await draw();
+    await click(button('Open conversation'));
+    expect(host.textContent).toContain('Replies stay disabled');
+    expect(host.querySelector('textarea')).toBeNull();
+    await click(button('Retry conversation'));
+    expect(host.textContent).toContain('Please help.');
+    expect(host.querySelector('textarea')).not.toBeNull();
+  });
+
   it('resets the next disposition when the operator reopens a ticket', async () => {
     await draw();
     await click(button('Open conversation'));

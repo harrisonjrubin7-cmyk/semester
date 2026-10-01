@@ -8,6 +8,7 @@ const resendKey = Deno.env.get('RESEND_API_KEY');
 
 Deno.serve((req) => handleSupportNotice(req, {
   allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
+  devOrigin: Deno.env.get('CORS_ALLOW_DEV'),
   resendKey,
   // An origin has no path and ALLOWED_ORIGIN may contain several entries, so
   // it cannot be used as the application link in an email.

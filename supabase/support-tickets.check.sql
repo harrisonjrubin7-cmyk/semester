@@ -144,6 +144,15 @@ begin
   reset role;
   select count(*) into n from public.support_tickets where id = a11y and first_responded_at is not null and status = 'waiting_on_student';
   perform pg_temp.counted('a reply stamps the first response and sets the status', n, 1);
+  select count(*) into n from public.audit_event
+   where action = 'support.reply'
+     and object_kind = 'support_ticket'
+     and object_sha256 = private.role_audit_sha256(a11y::text)
+     and actor_sha256 = private.role_audit_sha256(agent::text)
+     and actor_kind = 'authenticated'
+     and correlation_id ~ '^[0-9a-f]{64}$'
+     and detail = '{"next_status":"waiting_on_student"}'::jsonb;
+  perform pg_temp.counted('a reply records its ticket, message and acting agent without support content', n, 1);
   perform pg_temp.must_refuse('support cannot close a ticket for the student', agent,
     format('select public.support_reply(%L, %L, %L)', a11y, 'closing', 'closed'));
 

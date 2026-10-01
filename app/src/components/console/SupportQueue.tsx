@@ -26,17 +26,22 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [tickets, setTickets] = useState<SupportQueueTicket[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<SupportMessage[] | null>(null);
+  const [threadFailed, setThreadFailed] = useState(false);
   const [reply, setReply] = useState('');
   const [nextStatus, setNextStatus] = useState<'open' | 'waiting_on_student' | 'resolved'>('waiting_on_student');
   const [busy, setBusy] = useState(false);
   const wanted = useRef<string | null>(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<boolean> => {
     try {
       setTickets(await supportQueue());
+      return true;
     } catch (error) {
-      setTickets([]);
+      // Keep the last-known queue visible. Replacing it with an empty list
+      // would falsely tell an operator that every open ticket disappeared.
+      setTickets((current) => current ?? []);
       onStatus(said(error, 'Could not read the support queue.'));
+      return false;
     }
   }, [onStatus]);
 
@@ -60,14 +65,20 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
     wanted.current = id;
     setOpenId(id);
     setThread(null);
+    setThreadFailed(false);
     setReply('');
     setNextStatus('waiting_on_student');
     if (!id) return;
     supportThread(id).then(
-      (messages) => { if (wanted.current === id) setThread(messages); },
+      (messages) => {
+        if (wanted.current === id) {
+          setThreadFailed(false);
+          setThread(messages);
+        }
+      },
       (error: unknown) => {
         if (wanted.current === id) {
-          setThread([]);
+          setThreadFailed(true);
           onStatus(said(error, 'Could not read the support conversation.'));
         }
       },
@@ -83,14 +94,20 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
     try {
       const delivery = await supportReply(ticketId, message, status);
       if (wanted.current === ticketId) setReply('');
-      await refresh();
-      onStatus(delivery === 'notified'
+      const queueFresh = await refresh();
+      const outcome = delivery === 'notified'
         ? `Reply recorded and student notified for ${ticketReference(ticketId)}.`
-        : `Reply recorded for ${ticketReference(ticketId)}. Email was not delivered; the reply is available in Help.`);
+        : `Reply recorded for ${ticketReference(ticketId)}. Email was not delivered; the reply is available in Help.`;
+      onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage
       // must not invite an operator to retry and send a duplicate response.
       await supportThread(ticketId).then(
-        (messages) => { if (wanted.current === ticketId) setThread(messages); },
+        (messages) => {
+          if (wanted.current === ticketId) {
+            setThreadFailed(false);
+            setThread(messages);
+          }
+        },
         () => {},
       );
     } catch (error) {
@@ -128,7 +145,13 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       {current && (
         <section aria-label={`Conversation ${ticketReference(current.id)}`} className="portal-panel" style={{ display: 'grid', gap: 'var(--sp-3)' }}>
           <h3 style={{ margin: 0 }}>{ticketReference(current.id)} · {current.subject}</h3>
-          {thread === null && <p role="status">Reading the conversation…</p>}
+          {thread === null && !threadFailed && <p role="status">Reading the conversation…</p>}
+          {threadFailed && (
+            <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+              <Notice>Conversation unavailable. Replies stay disabled until the full thread can be read.</Notice>
+              <button type="button" className="btn btn-secondary" onClick={() => open(current.id)}>Retry conversation</button>
+            </div>
+          )}
           {thread?.map((message, index) => (
             <article key={`${message.at}-${index}`} style={{ borderTop: '1px solid var(--app-line)', paddingTop: 'var(--sp-3)' }}>
               <strong>{message.from === 'support' ? 'Semester support' : 'Student'}</strong> · {when(message.at)}
@@ -145,25 +168,27 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
               )}
             </article>
           ))}
-          <form
-            aria-label={`Reply to ${ticketReference(current.id)}`}
-            onSubmit={(event) => { event.preventDefault(); privileged(send); }}
-            style={{ display: 'grid', gap: 'var(--sp-3)' }}
-          >
-            <label>
-              Reply
-              <textarea className="input" required maxLength={4000} value={reply} onChange={(event) => setReply(event.target.value)} />
-            </label>
-            <label>
-              After this reply
-              <select className="input" value={nextStatus} onChange={(event) => setNextStatus(event.target.value as typeof nextStatus)}>
-                <option value="waiting_on_student">Wait for the student</option>
-                <option value="resolved">Mark resolved for the student to close</option>
-                <option value="open">Keep open with support</option>
-              </select>
-            </label>
-            <button className="btn btn-primary" disabled={busy || !reply.trim()}>Send support reply</button>
-          </form>
+          {thread !== null && !threadFailed && (
+            <form
+              aria-label={`Reply to ${ticketReference(current.id)}`}
+              onSubmit={(event) => { event.preventDefault(); privileged(send); }}
+              style={{ display: 'grid', gap: 'var(--sp-3)' }}
+            >
+              <label>
+                Reply
+                <textarea className="input" required maxLength={4000} value={reply} onChange={(event) => setReply(event.target.value)} />
+              </label>
+              <label>
+                After this reply
+                <select className="input" value={nextStatus} onChange={(event) => setNextStatus(event.target.value as typeof nextStatus)}>
+                  <option value="waiting_on_student">Wait for the student</option>
+                  <option value="resolved">Mark resolved for the student to close</option>
+                  <option value="open">Keep open with support</option>
+                </select>
+              </label>
+              <button className="btn btn-primary" disabled={busy || !reply.trim()}>Send support reply</button>
+            </form>
+          )}
         </section>
       )}
     </div>

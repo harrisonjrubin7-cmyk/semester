@@ -57,4 +57,16 @@ describe('support reply notification', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe(origin);
   });
+
+  it('allows a loopback development origin only when the development switch is explicit', async () => {
+    const local = new Request(request().url, {
+      method: 'POST',
+      headers: { Origin: 'http://localhost:5173', Authorization: 'Bearer session', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticket_id: ticket }),
+    });
+    expect((await handleSupportNotice(local, deps({ allowedOrigin: undefined }))).status).toBe(403);
+    const response = await handleSupportNotice(local, deps({ allowedOrigin: undefined, devOrigin: '1' }));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:5173');
+  });
 });
