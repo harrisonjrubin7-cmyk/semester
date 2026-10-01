@@ -2,7 +2,7 @@
 
 Review base: `f0cb1f0aedde35e2121780b6c2aa9470a79b8271`.
 Branch: `codex/ui-standards-20261001`.
-Final source checkpoint: c711ac48617698eefcb2c5d3341701e330035d2c.
+Initial source checkpoint before independent review: c711ac48617698eefcb2c5d3341701e330035d2c. Fix-round evidence and final source checkpoint appear below.
 
 This is a reconstructed report from restored source and fresh verification. The runtime lost the earlier unpublished report at `aec20e6`; this document does not claim that report's byte identity or continued availability. The controller restored the original `1d083e5` source as connector-authored `41735e86496040ba9c199927e655e46fbe19051d`, preserving the original review base. All continuation work stayed in the restored isolated worktree. No worker publication, external message, production mutation, branch reset, dependency addition or quality-limit change occurred.
 
@@ -124,3 +124,71 @@ Concrete self-review corrections across the task:
 A new integration assertion initially used `go` to simulate selected-course navigation, but that action changes `guideId`. The test was corrected to the canonical `openCourse` action, and scope invalidation covers both `courseId` and `guideId`. The final covering run above passed.
 
 Remaining limitations are genuine calculator/source limitations, deliberate non-migration of unsigned legacy data and independent production/accessibility acceptance. The native assumption-staging concern is closed. There is no known failing required check, changed quality limit or unreported invented numeric impact.
+
+
+## Fix round 1/5 — independent review findings I1, I2, I3 and M1
+
+Fix base: `34e3357d1458a3993e88696c05d1d21d4dbf5c64`. Final fix source checkpoint: `94a68ae807e139fc48bcbb2af7ba4a8ec4ec25f2`. The independent review found three Important defects and one Minor focus defect after the initial implementation. The initial completion statements above are superseded by this correction record; no waiver or acceptance of those defects is claimed. All four findings are addressed in source and covering tests, pending the controller's independent rereview.
+
+| Finding | Correction and actual regression coverage |
+| --- | --- |
+| I1 — résumé identity controls had no matching assumption adapters | Name, profile/objective and contact use the canonical career library's narrow field update again. Target-role/location assumptions continue to stage. A test types all three identity values through their real inputs, verifies owner+term library persistence and verifies no assumption dialog opens. These are unrelated record corrections. |
+| I2 — visible flag-off cost inputs lacked adapters for an already-itemized plan | `graduationAssumptions` accepts the same `!costs || !plan.costLines?.length` condition as native input visibility. Both shared and native consumers use that condition. An already-itemized plan with `costs=false` now previews the actual `project` result, cancels without writes and applies both displayed term/summer scalar cost fields through the existing plan update. Recorded cost lines and copied provenance are retained, matching the existing flag-off scalar-estimate behavior. The test checks $8,000 projected cost, saved scalar values and unchanged cost-line records. |
+| I3 — captured whole-decision Apply could replace newer work/institutional records | Shared adapters submit only the proposed `Assumption`. Both shared and original native scenario-save paths use one `applyAssumption` function inside the canonical latest-record library update. It resolves the current decision by ID, rejects a missing or changed decision snapshot, checks current assumption ownership and proposed ownership, then calls canonical `withAssumption` on that current decision. It no longer spreads a captured whole decision over current data. Eight regressions cover shared/native Apply after concurrent goal/evidence work, an assumption becoming institutional, an added institutional entry, and deleted decisions. Each asserts exact unchanged stored bytes and the fresh-review error. |
+| M1 — shared Edit/Cancel/Apply lost keyboard focus | Any newly mounted proposed input receives focus. The shared editor retains the originating assumption ID across row value/context remounts and focuses the new Edit button after successful Apply or Cancel. Native external-control restoration is retained. A real graduation shared-path test verifies input focus, cancellation focus and return focus after an applied value causes row replacement. Existing native focus regression still passes. |
+
+The generic adapter now has an optional in-memory `context` signature. Decision adapters use the rendered canonical decision snapshot, so an observed calculator-context change discards a shared draft even if its field value is unchanged. Native decision drafts retain their starting snapshot and are discarded when the observed decision differs. Two further regressions deliver the actual library change event while shared/native previews are open, assert invalidation, then reopen and successfully apply a newly reviewed edit while retaining the updated goal. There is no new persistence store or calculator.
+
+### Fix validation
+
+Early coherent source commit `7b897671ff98b04c1460ef9160f7c645f4c94468` passed these commands:
+
+```sh
+# Repository root
+npm exec --prefix app tsc -- -b app/tsconfig.json --pretty false
+git diff --check
+# app directory
+npm test -- src/components/AssumptionEditor.integration.test.tsx src/components/ProductivityWorkspace.test.tsx src/components/GraduationSimulator.phase-d.test.tsx src/screens/career.test.tsx
+```
+
+Output: TypeScript exit 0; whitespace check exit 0/no output; `Test Files 4 passed (4)`, `Tests 64 passed (64)`. Commit `94a68ae807e139fc48bcbb2af7ba4a8ec4ec25f2` adds successful fresh-review application assertions to the shared/native context-change regressions.
+
+Final covering command from `app`:
+
+```sh
+npm test -- src/components/AssumptionEditor.integration.test.tsx src/components/WorkloadAssumptionsEntry.test.tsx src/components/GraduationSimulator.test.tsx src/components/GraduationSimulator.phase-d.test.tsx src/components/AdvisorMeeting.test.tsx src/components/ProductivityWorkspace.test.tsx src/components/StudyAbroad.test.tsx src/components/LifeBalance.test.tsx src/screens/career.test.tsx src/screens/pathway.test.tsx src/screens/pathwaygrid.test.tsx src/lib/graduation.test.ts src/lib/cost-plan.test.ts src/lib/productivity.test.ts src/lib/rest.test.ts src/lib/clash.test.ts src/lib/ahead.test.ts src/lib/workspace-backup.test.ts src/lib/bill.test.ts src/lib/degree.test.ts src/lib/abroad.test.ts src/lib/life-balance.test.ts src/lib/windows.test.ts
+```
+
+Final covering output:
+
+```text
+Test Files  23 passed (23)
+Tests       387 passed (387)
+Duration    7.77s
+```
+
+The integration file now contains 34 tests, including 13 new finding-specific cases. Final source also passed:
+
+```sh
+# app directory
+npm run build
+npm run lint
+npm run budgets
+# Repository root
+git diff --check
+```
+
+- Build: exit 0; TypeScript passed; `built in 1.75s`.
+- Lint: exit 0 under unchanged `--max-warnings=25`; 23 existing warning lines, none in a fix-round changed source file. `styles ok`, `labels ok`, `terms ok`.
+- Budgets: exit 0; `first load 435.1 KB of 479.0 KB; largest file assets/elk-276RUBZZ-DmtPYJkm.js 435.7 KB of 480.0 KB; 93 routes`; `budgets ok`.
+- Whitespace check: exit 0/no output. No dependencies or quality limits changed.
+
+The existing npm configuration, jsdom navigation and generic Vite chunk-size notices remain non-failing. No warning cleanup, production/credential/gateway mutation, publication, reviewer/helper dispatch or branch reset was performed. The controller retains independent rereview and final whole-branch CI responsibility.
+
+### Fix self-review and remaining limits
+
+All three Important reproduction paths were checked directly against canonical state updates and now have regression assertions. The decision guard intentionally rejects the entire stale proposal when any current decision context differs; it requires fresh review rather than merging a calculation confirmed against outdated evidence. Updates outside the decision continue to be retained by the functional library update. Ownership is checked against the freshly read record, and a deleted decision cannot be recreated by Apply. Native local drafts are also invalidated on observed context changes before evaluating an obsolete proposal.
+
+The shared focus callback survives a row's key change without querying or reconstructing rendered controls, and native focus behavior remains covered. The cost-flag fix changes adapter availability to match the existing visible scalar controls; it does not reclassify imported cost-line records or invent cost effects. Résumé record corrections have their original direct-save behavior.
+
+No known open finding from this review remains. Existing calculator/source limitations, deliberate unsigned/signed storage separation and unclaimed independent production/assistive-technology acceptance remain as described above. This report extension is a documentation-only checkpoint after the final source checks.

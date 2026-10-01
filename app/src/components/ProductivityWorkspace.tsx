@@ -87,12 +87,16 @@ function Workspace({ who }: { who: string }) {
   const [template, setTemplate] = useState('Advisor agenda');
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState('');
-  const [pending, setPending] = useState<Assumption | null>(null);
+  const [pendingDraft, setPending] = useState<Assumption | null>(null);
+  const [pendingBefore, setPendingBefore] = useState('');
   const [resetPreview, setResetPreview] = useState<{ before: string; decision: Decision } | null>(null);
   const [until, setUntil] = useState<number | null>(null);
   const [seconds, setSeconds] = useState(25 * 60);
   const [focusGoal, setFocusGoal] = useState('');
   const d = lib.value.decisions.find((x) => x.id === selected);
+  const pending = pendingBefore === JSON.stringify(d) ? pendingDraft : null;
+  if (pendingDraft && pendingBefore !== JSON.stringify(d)) setPending(null);
+  const beginAssumption = (assumption: Assumption) => { setPendingBefore(JSON.stringify(d)); setPending(assumption); };
   const save = (change: Parameters<typeof lib.update>[0]) => {
     const ok = lib.update(change);
     setNotice(
@@ -110,6 +114,12 @@ function Workspace({ who }: { who: string }) {
         x.id === d.id ? { ...x, ...change } : x,
       ),
     }));
+  const applyAssumption = (before: Decision, assumption: Assumption) => save(old => {
+    const current = old.decisions.find(x => x.id === before.id);
+    if (!current || JSON.stringify(current) !== JSON.stringify(before)) throw new Error('Decision changed. Review the assumption again.');
+    if (assumption.owner === 'institution' || current.assumptions.find(a => a.id === assumption.id)?.owner === 'institution') throw new Error('Institution-owned assumptions cannot be overwritten');
+    return { ...old, decisions: old.decisions.map(x => x.id === current.id ? withAssumption(current, assumption) : x) };
+  });
   useEffect(() => {
     if (until === null) return;
     const tick = () => {
@@ -171,8 +181,7 @@ function Workspace({ who }: { who: string }) {
       <button
         type="button"
         onClick={() => {
-          if (d) patch(withAssumption(d, pending));
-          setPending(null);
+          if (d && applyAssumption(d, pending)) setPending(null);
         }}
       >
         Save to this scenario
@@ -488,7 +497,7 @@ function Workspace({ who }: { who: string }) {
                 })}
               </div>
               <SectionLabel>Assumptions</SectionLabel>
-              <AssumptionEditor key={d.id} assumptions={decisionAssumptions(d, next => patch(next))} />
+              <AssumptionEditor key={d.id} assumptions={decisionAssumptions(d, assumption => applyAssumption(d, assumption))} />
               <p>
                 Institution-owned facts are read-only. If a source may be wrong,
                 flag it for review and contact its owner. Changes preview their supported fit calculations before saving.
@@ -506,7 +515,7 @@ function Workspace({ who }: { who: string }) {
                   <button
                     type="button"
                     disabled={a.owner === 'institution'}
-                    onClick={() => setPending({ ...a })}
+                    onClick={() => beginAssumption({ ...a })}
                   >
                     Edit assumption
                   </button>
@@ -538,7 +547,7 @@ function Workspace({ who }: { who: string }) {
               <button
                 type="button"
                 onClick={() =>
-                  setPending({
+                  beginAssumption({
                     id: id(),
                     label: '',
                     value: '',

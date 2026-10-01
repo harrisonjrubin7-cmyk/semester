@@ -732,7 +732,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
                 className="input"
                 maxLength={k === 'name' ? 160 : k === 'headline' ? 300 : 500}
                 value={lib.value[k]}
-                onChange={(e) => native.edit(k, e.target.value)}
+                onChange={(e) => { const value = e.target.value; lib.update(old => ({ ...old, [k]: value })); }}
                 style={input}
               />
             </label>

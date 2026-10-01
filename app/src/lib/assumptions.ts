@@ -5,6 +5,8 @@ export interface AssumptionAdapter {
   value: string;
   owner: 'student' | 'institution';
   source: string;
+  /** Changes to calculator context discard an open draft. Never persisted. */
+  context?: string;
   type?: 'number' | 'text' | 'date';
   min?: number;
   max?: number;

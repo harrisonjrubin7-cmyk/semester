@@ -80,7 +80,7 @@ function GraduationWorkspace({
       return { ...d, plan: { ...d.plan, costLines: kept, costPerTerm: t.perTerm, summerCost: t.summer } };
     });
   const native = useNativeAssumptions([
-    ...graduationAssumptions(plan, done, setPlan).map(a => ({ ...a, id: `plan:${a.id}` })),
+    ...graduationAssumptions(plan, done, setPlan, !costs || !plan.costLines?.length).map(a => ({ ...a, id: `plan:${a.id}` })),
     ...data.scenarios.flatMap(s => scenarioAssumptions(plan, done, s, patch => library.update(d => ({ ...d, scenarios: d.scenarios.map(x => x.id === s.id ? { ...x, ...patch } : x) }))).map(a => ({ ...a, id: `scenario:${s.id}:${a.id}` }))),
   ], accountId || 'device');
   const setCloudId = (id: string, cloudId: string | undefined, owner: string) =>
@@ -174,7 +174,7 @@ function GraduationWorkspace({
           <button type="button" className="btn btn-ghost" onClick={() => assumptions.current?.focus()}>Edit assumptions</button>
         </details>
         {native.editor}
-        <AssumptionEditor key={accountId || 'device'} assumptions={graduationAssumptions(plan, done, setPlan)} />
+        <AssumptionEditor key={accountId || 'device'} assumptions={graduationAssumptions(plan, done, setPlan, !costs || !plan.costLines?.length)} />
         <div className="portal-filter-row">
           <label className="portal-check">
             Hours your degree needs

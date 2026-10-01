@@ -368,3 +368,93 @@ it('previews and cancels reset-to-preferences before applying canonical source-c
   expect(JSON.parse(localStorage.getItem(key)!).decisions[0].goal).toBe('Changed in another view');
   expect(host.textContent).toContain('Decision changed. Review saved preferences again.');
 });
+
+it('keeps résumé identity correction functional without staging unrelated record fields', async () => {
+  const key = 'semester.career.v1:device:2026FA';
+  await act(async () => root.render(<StoreProvider><Career /></StoreProvider>));
+  await click('Résumé');
+  for (const [label, field, value] of [['Name', 'name', 'Alex Example'], ['Profile or objective', 'headline', 'Research assistant'], ['Contact line you want on it', 'contact', 'Contact through my portfolio']]) {
+    await nativeInput(label, value);
+    expect(JSON.parse(localStorage.getItem(key)!)[field]).toBe(value);
+    expect(host.querySelector('[aria-label="Pending assumption change"]')).toBeNull();
+  }
+});
+
+it('stages visible cost estimates when the itemized planner flag is off for an already-itemized plan', async () => {
+  const costLines: CostLine[] = [{ id:'tuition', label:'Tuition copy', amount:1000, per:'term', source:'imported', from:'Original copy', on:'2026-09-01' }];
+  localStorage.setItem(GRADUATION_KEY, JSON.stringify({ ...EMPTY_GRADUATION, plan:{ ...EMPTY_GRADUATION.plan, needed:120, perTerm:15, summer:0, costPerTerm:1000, costLines } }));
+  await act(async () => root.render(<GraduationSimulator done={60} costs={false} />));
+  const before = localStorage.getItem(GRADUATION_KEY);
+  await nativeInput('Cost per fall or spring ($)', '2000');
+  expect(pendingText()).toContain('Projected cost before aid: $8,000');
+  expect(localStorage.getItem(GRADUATION_KEY)).toBe(before);
+  await click('Cancel Cost per fall or spring'); expect(localStorage.getItem(GRADUATION_KEY)).toBe(before);
+  await nativeInput('Cost per fall or spring ($)', '2000'); await click('Apply Cost per fall or spring');
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).plan.costPerTerm).toBe(2000);
+  await nativeInput('Cost per summer ($)', '500');
+  expect(pendingText()).toContain('Projected cost before aid: $8,000');
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).plan.summerCost).toBe(0);
+  await click('Apply Cost per summer');
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).plan.summerCost).toBe(500);
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).plan.costLines).toEqual(costLines);
+});
+
+it('keeps shared editor focus on its input and returns to Edit after cancel and a value-changing apply', async () => {
+  await act(async () => root.render(<GraduationSimulator done={60} />));
+  const edit = button('Edit Fall and spring credits');
+  await act(async () => { edit.focus(); edit.click(); });
+  expect(document.activeElement?.getAttribute('aria-label')).toBe('Proposed Fall and spring credits');
+  await input('Proposed Fall and spring credits', '20');
+  await click('Cancel Fall and spring credits');
+  expect(document.activeElement).toBe(button('Edit Fall and spring credits'));
+  await propose('Fall and spring credits', '20');
+  await click('Apply Fall and spring credits');
+  expect(JSON.parse(localStorage.getItem(GRADUATION_KEY)!).plan.perTerm).toBe(20);
+  expect(document.activeElement).toBe(button('Edit Fall and spring credits'));
+});
+
+for (const route of ['shared', 'native'] as const) {
+  for (const change of ['unrelated work', 'institution ownership', 'new institution record', 'removed decision'] as const) {
+    it(`rejects ${route} assumption Apply after concurrent ${change} without overwriting the latest record`, async () => {
+      const key = 'semester.productivity.v1:device';
+      const decision = newDecision('Choose a career');
+      decision.assumptions = [{ id:'personal', label:'Travel limit', value:'Local', owner:'student', source:'My preference', impacts:'Career choices', review:false }];
+      localStorage.setItem(key, JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions:[decision] }));
+      await act(async () => root.render(<StoreProvider><ProductivityWorkspace /></StoreProvider>));
+      await nativeSelect('Saved decisions', decision.id);
+      if (route === 'shared') await propose('Travel limit', 'Anywhere');
+      else { await click('Edit assumption'); await input('Value', 'Anywhere'); }
+      const concurrent = JSON.parse(localStorage.getItem(key)!);
+      if (change === 'unrelated work') { concurrent.decisions[0].goal = 'New goal from another view'; concurrent.decisions[0].options = [newOption('New evidence option')]; }
+      if (change === 'institution ownership') concurrent.decisions[0].assumptions[0].owner = 'institution';
+      if (change === 'new institution record') concurrent.decisions[0].assumptions.push({ ...decision.assumptions[0], id:'school', owner:'institution', value:'Published requirement' });
+      if (change === 'removed decision') concurrent.decisions = [];
+      const latest = JSON.stringify(concurrent);
+      localStorage.setItem(key, latest);
+      await click(route === 'shared' ? 'Apply Travel limit' : 'Save to this scenario');
+      expect(localStorage.getItem(key)).toBe(latest);
+      expect(host.textContent).toContain('Decision changed. Review the assumption again.');
+    });
+  }
+  it(`discards an open ${route} decision assumption when its observed calculator context changes`, async () => {
+    const key = 'semester.productivity.v1:device';
+    const decision = newDecision('Choose a career');
+    decision.assumptions = [{ id:'personal', label:'Travel limit', value:'Local', owner:'student', source:'My preference', impacts:'Career choices', review:false }];
+    localStorage.setItem(key, JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions:[decision] }));
+    await act(async () => root.render(<StoreProvider><ProductivityWorkspace /></StoreProvider>));
+    await nativeSelect('Saved decisions', decision.id);
+    if (route === 'shared') await propose('Travel limit', 'Anywhere');
+    else { await click('Edit assumption'); await input('Value', 'Anywhere'); }
+    const concurrent = JSON.parse(localStorage.getItem(key)!);
+    concurrent.decisions[0].goal = 'Changed context';
+    await act(async () => { localStorage.setItem(key, JSON.stringify(concurrent)); window.dispatchEvent(new CustomEvent('semester-device-library', { detail:key })); });
+    expect(button(route === 'shared' ? 'Apply Travel limit' : 'Save to this scenario')).toBeUndefined();
+    expect(JSON.parse(localStorage.getItem(key)!).decisions[0].assumptions[0].value).toBe('Local');
+    if (route === 'shared') await propose('Travel limit', 'Anywhere');
+    else { await click('Edit assumption'); await input('Value', 'Anywhere'); }
+    await click(route === 'shared' ? 'Apply Travel limit' : 'Save to this scenario');
+    const saved = JSON.parse(localStorage.getItem(key)!).decisions[0];
+    expect(saved.goal).toBe('Changed context');
+    expect(saved.assumptions[0]).toEqual({ ...decision.assumptions[0], value:'Anywhere' });
+  });
+}

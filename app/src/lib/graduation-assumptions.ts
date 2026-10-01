@@ -12,11 +12,11 @@ export function graduationOutcomes(plan: Plan, done: number): string[] {
   ];
 }
 
-export function graduationAssumptions(plan: Plan, done: number, apply: (patch: Partial<Plan>) => boolean): AssumptionAdapter[] {
+export function graduationAssumptions(plan: Plan, done: number, apply: (patch: Partial<Plan>) => boolean, showCostEstimates = !plan.costLines?.length): AssumptionAdapter[] {
   const fields = [
     ['needed', 'Degree credits needed', 1, 400], ['perTerm', 'Fall and spring credits', 0, 30],
     ['summer', 'Summer credits', 0, 20],
-    ...(!plan.costLines?.length ? [['costPerTerm', 'Cost per fall or spring', 0, 1000000], ['summerCost', 'Cost per summer', 0, 1000000]] as const : []),
+    ...(showCostEstimates ? [['costPerTerm', 'Cost per fall or spring', 0, 1000000], ['summerCost', 'Cost per summer', 0, 1000000]] as const : []),
   ] as const;
   const adapters: AssumptionAdapter[] = fields.map(([key, label, min, max]) => numericAssumption({
     id: key, label, value: plan[key], min, max, owner: 'student',
