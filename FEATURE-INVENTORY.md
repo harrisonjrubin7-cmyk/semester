@@ -144,7 +144,7 @@ Study, Make, Campus, Life, Data**.
 | `brief` | Reports | Semester |
 | `calendar` | Calendar | Semester |
 | `ahead` | The week ahead | Semester |
-| `behind` | When you are behind | Semester |
+| `behind` | Catching up | Semester |
 | `tonight` | Tonight | Semester |
 | `me` | Progress | Semester |
 | `courses` | Courses | Courses |

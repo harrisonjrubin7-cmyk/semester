@@ -62,22 +62,10 @@ export const BANNED: readonly { id: string; match: RegExp }[] = [
  */
 export const ALLOWED: readonly { file: string; id: string; reason: string }[] = [
   {
-    file: 'lib/nav.ts',
-    id: 'you are behind',
-    reason:
-      'The name of the recovery screen ("When you are behind"), a place the student chooses to open and whose blurb says it is about moves that are not working harder. It is a title, not a statement made to someone about their own standing.',
-  },
-  {
-    file: 'lib/softtop.ts',
-    id: 'you are behind',
-    reason:
-      'The same screen name as the hero label of that recovery screen, shown only on the screen the student opened. Pre-existing; renaming it is a product decision and is not made by this guard.',
-  },
-  {
     file: 'lib/rollout-capabilities.ts',
     id: 'you are behind',
     reason:
-      'The capability register entry for that screen, "When You Are Behind". A feature name in an internal register of what ships, with a promise line that says calm recovery. Pre-existing.',
+      'The capability register entry CAP-006, "When You Are Behind", named as the supplied requirement names it. The student-facing screen is now "Catching up"; the register keeps the requirement\'s own name because the rollout documents generated from it and their traceability links use it, and it is never shown to a student.',
   },
 ];
 
