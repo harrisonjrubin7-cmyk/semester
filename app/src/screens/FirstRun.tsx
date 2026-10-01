@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { faintLine } from '../lib/dim';
 import { useStore } from '../state/store';
+import { OperatingRhythm } from '../components/OperatingRhythm';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ChevronRight, Plus } from '../components/Icons';
@@ -175,6 +176,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           </div>
         </>
       )}
+      {where === 'on today' && <OperatingRhythm />}
     </Page>
   );
 }

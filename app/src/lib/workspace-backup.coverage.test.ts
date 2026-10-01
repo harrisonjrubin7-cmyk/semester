@@ -33,6 +33,7 @@ function sources(dir: string): string[] {
 /** Files that call it, and how many times. Update this when you add one — and decide the store's backup below. */
 const CALLS: Record<string, number> = {
   'components/ActionCenter.tsx': 1,
+  'components/OperatingRhythmWorkspace.tsx': 2,
   'components/AdvisorMeeting.tsx': 2,
   'components/CampusDirectory.tsx': 4,
   'components/CalmSettings.tsx': 1,
@@ -139,6 +140,7 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.guide-choices.v1': { exempt: 'Which Guide suggestions the student snoozed, passed on or hid, and until when (lib/guide-bar.ts). A display marker that expires on its own; a restored copy would only hide a suggestion that had already come back.' },
   'semester.weekly-reset.v1': 'backed up',
   'semester.calm.v1': 'backed up',
+  'semester.operating-rhythm.v1': { exempt: 'Explicit private JSON backup and validated preview/confirm restore in OperatingRhythm. Daily and weekly backups are separate. Private notes and reflections intentionally require this dedicated export rather than entering the general workspace backup.' },
 };
 
 describe('every device store is backed up or named', () => {
