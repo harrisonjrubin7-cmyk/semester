@@ -68,7 +68,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'degree_audit', name: 'Degree audit', replaces: 'Degree Works, uAchieve, Stellic',
     today: 'A planning estimate, labelled as one.',
     core: 'The official audit, run on the server against the catalog year, with approved exceptions.',
-    status: 'planned', tables: ['programs', 'requirement_rules'] },
+    status: 'in-preparation', tables: ['degree_programs', 'degree_versions'], suite: 'degree_audit' },
   { id: 'records', name: 'Records and transcripts', replaces: 'The records module of your SIS; transcript ordering services',
     today: 'An academic-record ledger is built behind a school-level switch that is off for every school; no transcript is issued.',
     core: 'Final grades, signed transcripts, enrolment verification and a log of every release of a record.',

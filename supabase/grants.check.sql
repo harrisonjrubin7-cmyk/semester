@@ -578,6 +578,19 @@ declare
     'assessment_finish(want_attempt uuid, want_key text)',
     'assessment_review(want_attempt uuid)',
 
+    -- 20261001040000_degree_audit.sql: the official degree audit in Core. Each
+    -- reads auth.uid(), the caller's own school and a school-scoped degree:*
+    -- capability (the run also lets the student read their own), and refuses
+    -- unless the school runs degree_audit in Core. A decision is never by the
+    -- proposer; a what-if is never saved. `degree_audit.check.sql` walks every
+    -- refusal.
+    'degree_version_save(want_program text, want_name text, want_kind text, want_year integer, want_total numeric, want_min_gpa numeric, want_groups jsonb, want_key text)',
+    'degree_version_publish(want_id uuid, want_key text)',
+    'degree_declare(want_student text, want_version uuid, want_key text)',
+    'degree_exception_propose(want_student text, want_version uuid, want_position integer, want_kind text, want_course text, want_credits numeric, want_reason text, want_key text)',
+    'degree_exception_decide(want_exception uuid, want_approve boolean, want_note text, want_key text)',
+    'degree_audit_run(want_student text, want_version uuid, want_save boolean, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

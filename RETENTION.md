@@ -216,6 +216,11 @@ behind and a client that believes it succeeded.
 | `attempt_answers` | account deletion of the student (with the attempt); otherwise kept with the school | the answer given to one question of one attempt, and whether it matched the key. Frozen when the attempt ends |
 | `assessment_time_extensions` | account deletion of the student; otherwise kept with the school | extra time granted to one student on one test, as a percent, with a short reason that is not a diagnosis. Append-only |
 | `assessment_operations` | kept with the school | idempotency keys the test writers spent, with what each asked and answered. Append-only |
+| `degree_programs`, `degree_versions`, `degree_groups`, `degree_rules` | kept with the school; never by a person's deletion | a program's requirements per catalog year: groups, rules, credit and GPA floors. A published year is never edited; a correction is a new version. If you wrote one, your name is cleared and it stays |
+| `student_degrees` | kept with the school | which catalog year a student is held to, with every earlier declaration. A staff name is cleared if their account is deleted; the row stays |
+| `degree_exceptions` | kept with the school | a waiver or substitution on a student's audit, its reason, who proposed it and who decided it. Decided once, never rewritten |
+| `degree_audit_runs` | kept with the school | a saved official audit: the result, the version, the fingerprint of the ledger rows read, who ran it. Never rewritten |
+| `degree_operations` | kept with the school | idempotency keys the degree-audit writers spent, with what each asked and answered. Append-only |
 | `attendance_sessions` | kept with the school; never by a person's deletion | one class meeting a code can check in to, with its window and code. The course's, not any student's; if you opened one, your name is cleared and the session stays |
 | `attendance_marks` | account deletion of the student; otherwise kept with the school | every version of every attendance mark with who and why. Append-only; the latest version is the mark |
 | `attendance_failures` | account deletion of the student | a wrong attendance code tried at check-in, kept so five in ten minutes stop further tries; nothing else |

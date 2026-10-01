@@ -421,6 +421,15 @@ describe('"delete my account" really means every row', () => {
       // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
+      // The degree audit's requirements, exceptions, saved runs and keys: the
+      // school's record, kept with the school (D-151).
+      'degree_audit_runs',
+      'degree_exceptions',
+      'degree_groups',
+      'degree_operations',
+      'degree_programs',
+      'degree_rules',
+      'degree_versions',
       // A school's dining locations, hours and menus (lib/dining/client.ts,
       // 20260929330000_dining.sql): what its card office lists.
       'dining_hours',
@@ -477,6 +486,7 @@ describe('"delete my account" really means every row', () => {
       'student_account_reconciliations',
       'student_account_requests',
       'student_account_settings',
+      'student_degrees',
       'student_payment_plan_installments',
       'student_payment_plans',
       'study_packs',

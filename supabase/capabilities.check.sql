@@ -314,7 +314,11 @@ begin
   -- 200 before assessments (20261001030000_assessments.sql) added seven:
   -- assessments:author for faculty; assessments:review for faculty and
   -- teaching_assistant; assessments:take for the four student roles.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 207);
+  -- 207 before the degree audit (20261001040000_degree_audit.sql) added ten:
+  -- degree:author for registrar; degree:declare and degree:propose for
+  -- registrar and academic_advisor; degree:approve for registrar and dean;
+  -- degree:read for registrar, academic_advisor and dean.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 217);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

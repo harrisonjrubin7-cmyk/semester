@@ -1378,6 +1378,38 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'degree_programs',
+    why: 'A program a school offers. The school’s, not any student’s; if you created one as the registrar, your name is cleared and the program stays.',
+  },
+  {
+    table: 'degree_versions',
+    why: 'A program’s requirements for one catalog year, never edited once published. The school’s; if you wrote one, your name is cleared and it stays.',
+  },
+  {
+    table: 'degree_groups',
+    why: 'One requirement group of a catalog year, never edited once published. The school’s, not any student’s.',
+  },
+  {
+    table: 'degree_rules',
+    why: 'One rule of a requirement group, never edited once published. The school’s, not any student’s.',
+  },
+  {
+    table: 'student_degrees',
+    why: 'Which catalog year a student is held to, with the history. Kept with the school’s record of the student, which is the school’s; if you declared one as staff, your name is cleared.',
+  },
+  {
+    table: 'degree_exceptions',
+    why: 'A waiver or substitution on a student’s degree audit, with who proposed it and who decided it. Part of the school’s record; staff names are cleared when their account is deleted.',
+  },
+  {
+    table: 'degree_audit_runs',
+    why: 'A saved official degree audit with the ledger fingerprint it read. Part of the school’s record of the student; never rewritten. If you ran it as staff, your name is cleared.',
+  },
+  {
+    table: 'degree_operations',
+    why: 'Idempotency keys the degree-audit writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
     table: 'question_banks',
     why: 'An instructor’s bank of questions for a course. The course’s, not any student’s; if you wrote one, your name is cleared and the bank stays.',
   },

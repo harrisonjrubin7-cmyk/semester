@@ -193,6 +193,12 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_school_request', 'admin', ['private.has_capability']],
+  ['degree_audit_run', 'self-service', ['auth.uid()', 'private.has_capability', 'private.degree_is_subject', 'private.degree_core_required', 'private.degree_compute']],
+  ['degree_declare', 'admin', ['private.gradebook_school', 'private.degree_require', 'private.degree_replay']],
+  ['degree_exception_decide', 'admin', ['private.gradebook_school', 'private.degree_require', 'private.degree_replay']],
+  ['degree_exception_propose', 'admin', ['private.gradebook_school', 'private.degree_require', 'private.degree_replay']],
+  ['degree_version_publish', 'admin', ['private.gradebook_school', 'private.degree_require', 'private.degree_replay']],
+  ['degree_version_save', 'admin', ['private.gradebook_school', 'private.degree_require', 'private.degree_replay']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
   ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
   ['dining_cancel_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
@@ -354,6 +360,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001010000_assignments.sql',
   '20261001020000_attendance.sql',
   '20261001030000_assessments.sql',
+  '20261001040000_degree_audit.sql',
 ];
 
 /**
@@ -365,6 +372,13 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001040000_degree_audit.sql',
+    functions: [
+      'degree_audit_run', 'degree_declare', 'degree_exception_decide', 'degree_exception_propose',
+      'degree_version_publish', 'degree_version_save',
+    ],
+  },
   {
     file: '20261001030000_assessments.sql',
     functions: [
