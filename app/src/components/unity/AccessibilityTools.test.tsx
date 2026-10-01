@@ -10,9 +10,7 @@ afterEach(async () => { await act(async () => { roots.splice(0).forEach(root => 
 
 async function openTools(host: HTMLElement) {
   await act(async () => {
-    const details = host.querySelector('details')!;
-    details.open = true;
-    details.dispatchEvent(new Event('toggle'));
+    host.querySelector<HTMLButtonElement>('.system-tool-trigger')!.click();
     await import('./AccessibilityPanel');
   });
 }
@@ -29,14 +27,18 @@ describe('global accessibility tools', () => {
     roots.push(root);
     try {
       await act(async () => root.render(<AccessibilityTools look={{}} onChange={() => {}} onSettings={() => {}} />));
-      host.querySelector('summary')!.focus();
+      host.querySelector<HTMLButtonElement>('.system-tool-trigger')!.focus();
       await openTools(host);
       const panel = frame.querySelector<HTMLElement>('[role="dialog"]')!;
+      const trigger = host.querySelector<HTMLButtonElement>('.system-tool-trigger')!;
       expect(host.contains(panel)).toBe(false);
       expect(panel.parentElement).toBe(frame);
+      expect(trigger.getAttribute('aria-controls')).toBe(panel.id);
+      expect(trigger.getAttribute('aria-expanded')).toBe('true');
       await act(async () => panel.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true})));
       expect(panel.hidden).toBe(true);
-      expect(document.activeElement).toBe(host.querySelector('summary'));
+      expect(trigger.getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(trigger);
     } finally {
       await act(async () => root.unmount());
       frame.remove();
@@ -52,13 +54,13 @@ describe('global accessibility tools', () => {
     roots.push(root);
     try {
       await act(async () => root.render(<AccessibilityTools look={{}} onChange={() => {}} onSettings={() => {}} />));
-      expect(host.querySelector('summary')?.textContent).toBe('Accessibility');
-      expect(host.querySelector('button')).toBeNull();
+      expect(host.querySelector('.system-tool-trigger')?.textContent).toBe('Accessibility');
+      expect(host.querySelector('[role="dialog"]')).toBeNull();
       await openTools(host);
       const controls = host.querySelector('[aria-label="Accessibility tools"]');
       await act(async () => [...host.querySelectorAll('button')].find(button => button.textContent === 'Read aloud')!.click());
       const before = cancel.mock.calls.length;
-      await act(async () => { const details = host.querySelector('details')!; details.open = false; details.dispatchEvent(new Event('toggle')); });
+      await act(async () => host.querySelector<HTMLButtonElement>('.system-tool-trigger')!.click());
       expect(cancel.mock.calls.length).toBe(before);
       await openTools(host);
       expect(host.querySelector('[aria-label="Accessibility tools"]')).toBe(controls);
@@ -124,7 +126,7 @@ describe('global accessibility tools', () => {
     let opened = false;
     await act(async () => root.render(<AccessibilityTools look={{textSize: 'normal', access: 'chunk'}} onChange={look => patches.push(look)} onSettings={() => { opened = true; }} />));
     await openTools(host);
-    expect(host.querySelector('summary')?.textContent).toBe('Accessibility');
+    expect(host.querySelector('.system-tool-trigger')?.textContent).toBe('Accessibility');
     const text = host.querySelector<HTMLSelectElement>('[aria-label="Text size"]')!;
     await act(async () => { text.value = 'large'; text.dispatchEvent(new Event('change', {bubbles: true})); });
     expect(patches[0]).toEqual({textSize: 'large'});
