@@ -44,6 +44,7 @@ says nothing of cause or significance, and nothing feeds it today.
 | `lib/launchpad.ts#matchMentors` | Mentor matching |
 | `lib/behind.ts#triage` | What to do first in a bad week |
 | `lib/toolnow.ts#suggest` | Tools this fortnight asks for |
+| `lib/triage.ts#orderQueue` | The order of open assignments in the assignment states list |
 | `community/feed.ts#rankItem` | The community feed |
 | `community/moderation.ts#triage` | Safety triage of reports |
 | `lib/moderation.ts#ordered` | The moderators' queue order |
@@ -68,6 +69,7 @@ Nothing here changes a surface's behaviour. Each is an item with an owner.
 | C-1 | No measure of how often a safety protection is lifted on review. |
 | Q-1 | The moderators' queue is newest first within a status, so the oldest open reports are read last. |
 | CA-1 | Camera-off participants sink below camera-on ones in the call gallery. |
+| O-1 | The assignment order adds a point for institution-verified dates and removes one for dates that need review, a bounded tilt toward better-integrated institutions (the same shape as A-1). |
 
 ## Governance decisions
 

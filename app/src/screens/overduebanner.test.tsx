@@ -50,6 +50,19 @@ beforeAll(async () => {
     disconnect() {}
   };
   await loadSeed();
+  // Today loads these lazily. Left to resolve on their own they can finish
+  // after the last test, and React then logs an act() warning as the worker
+  // closes ("Closing rpc while onUserConsoleLog was pending"), which fails the
+  // run for a file whose assertions all passed. Loaded here, a mount waits for
+  // React and not for a module, as `RegistrationDayCard.test.tsx` does.
+  await Promise.all([
+    import('../components/PlusPrompt'),
+    import('../components/institutional/FlightPlanHome'),
+    import('../components/TodayActionCenter'),
+    import('../components/RegistrationDayCard'),
+    import('../components/CrunchWeekCard'),
+    import('../components/OfficeActionsToday'),
+  ]);
 });
 
 beforeEach(() => {
