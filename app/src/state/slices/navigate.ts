@@ -135,11 +135,13 @@ export function navigate(state: State, action: Action): State | null {
     case 'customize':
       return { ...state, customize: action.open };
 
-    case 'go':
-      return push(
-        { ...state, ...(action.courseId ? { guideId: action.courseId } : {}), recoveryIntent: action.recoveryIntent ?? null },
-        screenForRole(action.screen, state.role),
-      );
+    case 'go': {
+      const recoveryIntent = action.recoveryIntent ?? null;
+      let next = state;
+      if (action.courseId && action.courseId !== state.guideId) next = { ...next, guideId: action.courseId };
+      if (recoveryIntent !== state.recoveryIntent) next = { ...next, recoveryIntent };
+      return push(next, screenForRole(action.screen, state.role));
+    }
 
     /**
      * The browser went somewhere, so the app follows it there.
