@@ -174,7 +174,7 @@ const minutesOf = (now: Date) => now.getHours() * 60 + now.getMinutes();
  * See the file comment for why the channels differ.
  */
 export function allows(category: Category, settings: CalmSettings, now: Date, channel: Channel = 'notification'): boolean {
-  
+  if (category === 'scenarios' && settings.pauseScenarios) return false;
   if (category === 'career' && settings.pauseCareer) return false;
   if (category === 'study' && settings.hideStudyBlocks) return false;
   if (channel === 'surface') return true;
