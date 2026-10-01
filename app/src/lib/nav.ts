@@ -52,15 +52,15 @@ import { DEFAULT_ROLE, forRole, type Role } from './role';
  *
  * Standing was three screens and shrinking — the assistant screens moved to
  * Study and the calendar work moved to Semester, and what was left was Grades,
- * The degree and When you are behind. A shelf of three is worse than no shelf:
+ * The degree and Catching up. A shelf of three is worse than no shelf:
  * it costs a pill in the row and a tile in the grid to hold a third of what
  * every other shelf holds, and "which of these nine is it under" gets harder
  * for every shelf that exists, not just the full ones.
  *
- * Grades and When you are behind fold into Semester, where the question was
+ * Grades and Catching up fold into Semester, where the question was
  * already being asked — Reports is a Semester screen and carries the `stand`
  * tag. Semester is your term, and how it is going is part of your term. It
- * also puts The week ahead and When you are behind next to each other, which
+ * also puts The week ahead and Catching up next to each other, which
  * is where two screens that answer the same question in opposite directions
  * should always have been.
  *
@@ -569,8 +569,8 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'behind',
-    label: 'When you are behind',
-    short: 'Behind',
+    label: 'Catching up',
+    short: 'Catch up',
     blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
     keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
     group: 'Semester',

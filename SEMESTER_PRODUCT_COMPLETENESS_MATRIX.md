@@ -91,7 +91,7 @@ over the count it imports. `screen` is component-level test files.
 | `brief` Reports | **FUNCTIONAL** | device | container | 0 | delegates to `report/Day|Week|Term` |
 | `calendar` Calendar | **CONNECTED** | **server** | 14/16 | 1 | external feeds via `public.calendar_feeds`; 2,356 lines |
 | `work` Work on it | **FUNCTIONAL** | device | 7/10 | 0 | |
-| `behind` When you are behind | **CONNECTED** | device | 5/6 | 0 | reads the same record the planner does |
+| `behind` Catching up | **CONNECTED** | device | 5/6 | 0 | reads the same record the planner does |
 | `me` Progress | **FUNCTIONAL** | device | 2/3 | 0 | |
 
 ### Courses
