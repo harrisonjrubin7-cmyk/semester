@@ -76,7 +76,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'admissions', name: 'Admissions', replaces: 'Slate, Element451, Ellucian CRM Recruit',
     today: 'Nothing.',
     core: 'An applicant portal, document checklist and decision workflow; a person decides every admission.',
-    status: 'planned', tables: ['applications', 'application_decisions'] },
+    status: 'in-preparation', tables: ['applications', 'application_decisions'], suite: 'admissions' },
   { id: 'student_accounts', name: 'Student accounts', replaces: 'TouchNet, Nelnet Campus Commerce, Banner Student Accounts',
     today: 'Deadlines and the cost of a plan. A student-account ledger is built behind a school-level switch that is off for every school; no money moves through Semester.',
     core: 'A tuition ledger, payment plans and refunds; card numbers stay with the processor.',

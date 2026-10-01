@@ -391,6 +391,10 @@ describe('"delete my account" really means every row', () => {
       // the link, goes with the account and is in OWNED_TABLES instead.
       'academic_record_changes',
       'academic_record_entries',
+      // Admissions cycles and their keys: the school's, kept with the school (D-151).
+      'admission_cycles',
+      // Admissions cycles and their keys: the school's, kept with the school (D-151).
+      'admissions_operations',
       // A course's assignment, kept with the course (D-151).
       // Part of a course's tests, kept with the course.
       'assessments',

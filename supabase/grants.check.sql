@@ -604,6 +604,27 @@ declare
     'record_disclosure_log(want_student text, want_recipient text, want_recipient_kind text, want_basis text, want_consent text, want_what text, want_key text)',
     'graduation_clearance_run(want_student text, want_key text)',
 
+    -- 20261001060000_admissions.sql: admissions in Core. Each reads auth.uid()
+    -- and either the caller's own school and a school-scoped admissions:*
+    -- capability, or ownership of the application it names, and refuses unless
+    -- the school runs admissions in Core. A decision is never by the reviewer
+    -- alone and never on one's own application. `admissions.check.sql` walks
+    -- every refusal.
+    'admissions_cycle_save(want_name text, want_term text, want_opens timestamp with time zone, want_closes timestamp with time zone, want_questions jsonb, want_checklist jsonb, want_key text)',
+    'admissions_cycle_open(want_cycle uuid, want_key text)',
+    'admissions_cycle_close(want_cycle uuid, want_key text)',
+    'application_start(want_cycle uuid, want_key text)',
+    'application_save(want_application uuid, want_answers jsonb)',
+    'application_submit(want_application uuid, want_key text)',
+    'application_withdraw(want_application uuid, want_key text)',
+    'application_document_mark(want_application uuid, want_doc text, want_state text, want_note text, want_key text)',
+    'application_review(want_application uuid, want_recommendation text, want_notes text, want_key text)',
+    'application_decide(want_application uuid, want_decision text, want_reason text, want_conditions text, want_key text)',
+    'admissions_release(want_cycle uuid, want_key text)',
+    'application_respond(want_application uuid, want_response text, want_key text)',
+    'admissions_deposit_record(want_application uuid, want_reference text, want_key text)',
+    'admissions_yield(want_cycle uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

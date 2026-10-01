@@ -1356,6 +1356,19 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'assessment_attempts', column: 'student_id' },
   { table: 'attempt_answers', column: null, cascadesFrom: 'assessment_attempts' },
   { table: 'assessment_time_extensions', column: 'student_id' },
+  // Your application to a school's admission cycle, and everything hung on it
+  // (`20261001060000_admissions.sql`): its step history, document states, the
+  // reviewers' recommendations, any decision, your answer and a deposit. The
+  // application names you by a column that references `auth.users` with
+  // `on delete cascade`; the rest go with the application.
+  { table: 'applications', column: 'applicant' },
+  { table: 'application_events', column: null, cascadesFrom: 'applications' },
+  { table: 'application_documents', column: null, cascadesFrom: 'applications' },
+  { table: 'application_reviews', column: null, cascadesFrom: 'applications' },
+  { table: 'application_decisions', column: null, cascadesFrom: 'applications' },
+  { table: 'application_decision_releases', column: null, cascadesFrom: 'applications' },
+  { table: 'application_responses', column: null, cascadesFrom: 'applications' },
+  { table: 'application_deposits', column: null, cascadesFrom: 'applications' },
 ];
 
 /**
@@ -1377,6 +1390,14 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'admission_cycles',
+    why: 'An admission cycle: its questions and document checklist, fixed when it opens. The school’s, not any applicant’s; if you configured one as staff, your name is cleared and it stays.',
+  },
+  {
+    table: 'admissions_operations',
+    why: 'Idempotency keys the admissions writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
   {
     table: 'term_grade_posts',
     why: 'Final grades an instructor posted for a course and term, awaiting the registrar. The school’s record, not any student’s; if you posted them, your name is cleared and they stay.',

@@ -117,10 +117,24 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['accept_connection', 'self-service', ['auth.uid()']],
   ['accept_family_grant', 'sharing', ['auth.uid()']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['admissions_cycle_close', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['admissions_cycle_open', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['admissions_cycle_save', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['admissions_deposit_record', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['admissions_release', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['admissions_yield', 'admin', ['private.gradebook_school', 'private.admissions_require']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
+  ['application_decide', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['application_document_mark', 'self-service', ['auth.uid()', 'private.admissions_require', 'private.admissions_replay']],
+  ['application_respond', 'self-service', ['auth.uid()', 'private.admissions_replay']],
+  ['application_review', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
+  ['application_save', 'self-service', ['auth.uid()']],
+  ['application_start', 'self-service', ['auth.uid()', 'private.admissions_replay']],
+  ['application_submit', 'self-service', ['auth.uid()', 'private.admissions_replay']],
+  ['application_withdraw', 'self-service', ['auth.uid()', 'private.admissions_replay']],
   ['apply_to_organization', 'self-service', ['auth.uid()', 'private.verified_student']],
   ['apply_to_volunteer', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['approve_community_pseudonymity', 'moderation', ['private.has_capability']],
@@ -368,6 +382,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001030000_assessments.sql',
   '20261001040000_degree_audit.sql',
   '20261001050000_records_transcripts.sql',
+  '20261001060000_admissions.sql',
 ];
 
 /**
@@ -379,6 +394,14 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001060000_admissions.sql',
+    functions: [
+      'admissions_cycle_close', 'admissions_cycle_open', 'admissions_cycle_save', 'admissions_deposit_record', 'admissions_release',
+      'admissions_yield', 'application_decide', 'application_document_mark', 'application_respond', 'application_review',
+      'application_save', 'application_start', 'application_submit', 'application_withdraw',
+    ],
+  },
   {
     file: '20261001050000_records_transcripts.sql',
     functions: [
