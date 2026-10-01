@@ -72,6 +72,13 @@ describe('adapter declarations', () => {
 });
 
 describe('ingest', () => {
+  it('refuses an excessive effective freshness override before claiming the event', async () => {
+    const store = memoryStore();
+    const oversized = await run([MOCK_ASSIGNMENT], { store, connection: { ...CONN, freshnessTargetMinutes: 525601 } });
+    expect(oversized).toMatchObject({ status: 'refused', errors: [{ category: 'schema_validation' }] });
+    expect(await run([MOCK_ASSIGNMENT], { store })).toMatchObject({ status: 'succeeded', created: 1 });
+  });
+
   it('maps an assignment, transforms it, and records its provenance', async () => {
     const r = await run([MOCK_ASSIGNMENT]);
     expect(r).toMatchObject({ status: 'succeeded', received: 1, created: 1, rejected: 0 });

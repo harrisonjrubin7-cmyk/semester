@@ -159,11 +159,11 @@ describe('a run', () => {
     expect(t.canonical_entity_references[0].display).toEqual({ name: 'Legacy value' });
   });
 
-  it.each(['-01:00:00', '00:00:00', '00:00:30.500'])('validates and floors the connection freshness interval %s', async (target) => {
+  it.each(['-01:00:00', '00:00:00', '00:00:30.500', '300000 years'])('validates and floors the connection freshness interval %s', async (target) => {
     const t = world(); const db = fakeDb(t);
     t.integration_connections[0].freshness_target = target;
     await runSync(db, req([SIS_FIXTURES.term]), now);
-    const minutes = target === '00:00:30.500' ? 1 : MOCK_SIS.freshnessTargetMinutes;
+    const minutes = target === '300000 years' ? 525600 : target === '00:00:30.500' ? 1 : MOCK_SIS.freshnessTargetMinutes;
     expect(await runSync(db, req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') }), now))
       .toMatchObject({ result: { status: 'succeeded', unchanged: 1 } });
     const e = JSON.parse((t.canonical_entity_references[0].display as Row)._governance as string);

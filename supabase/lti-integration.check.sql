@@ -153,6 +153,13 @@ begin
      and (display ->> '_governance')::jsonb ->> 'writeAuthority' = 'source-system-only'
      and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz > now();
   perform pg_temp.said('direct LTI writes include governed provenance and expiry', n::text, '1');
+  update public.integration_connections set freshness_target = interval '300000 years' where id = conn;
+  perform pg_temp.said('an oversized direct LTI freshness interval is bounded', pg_temp.record('https://bound.example', 'c-bound', 'course-1'), 'recorded');
+  select count(*) into n from public.canonical_entity_references where tenant_id = 'lti-a' and connection_id = conn
+    and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz = now() + interval '365 days';
+  perform pg_temp.said('direct LTI freshness never exceeds 365 days', n::text, '1');
+  update public.integration_connections set freshness_target = null where id = conn;
+  perform pg_temp.said('restore the direct LTI freshness default', pg_temp.record('https://bound.example', 'c-bound', 'course-1'), 'recorded');
   perform pg_temp.said('an empty context is refused', pg_temp.record('https://bound.example', 'c-bound', ' '), 'no-context');
 
   -- Server-only metadata refresh and batched tombstones ----------------------
@@ -216,7 +223,7 @@ begin
   select display ->> '_governance' into envelope from public.canonical_entity_references
    where tenant_id = 'lti-a' and connection_id = conn;
   -- Negative/zero targets preserve the stored duration; sub-minute targets floor to one minute.
-  for st in select unnest(array['-1 hour', '0 seconds', '30.5 seconds']) loop
+  for st in select unnest(array['-1 hour', '0 seconds', '30.5 seconds', '300000 years']) loop
     update public.integration_connections set freshness_target = st::interval where id = conn;
     select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
       jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
@@ -224,7 +231,7 @@ begin
     select count(*) into n from public.canonical_entity_references
      where tenant_id = 'lti-a' and connection_id = conn
        and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
-         = now() + interval '3 minutes' + case when st = '30.5 seconds' then interval '1 minute' else interval '1 hour' end;
+         = now() + interval '3 minutes' + case when st = '300000 years' then interval '365 days' when st = '30.5 seconds' then interval '1 minute' else interval '1 hour' end;
     perform pg_temp.said('validated connection freshness target ' || st, n::text, '1');
     select display ->> '_governance' into envelope from public.canonical_entity_references
      where tenant_id = 'lti-a' and connection_id = conn;

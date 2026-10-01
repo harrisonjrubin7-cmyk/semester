@@ -1,3 +1,4 @@
+import { MAX_FRESHNESS_MINUTES } from './freshness.ts';
 import type { AdapterDeclaration, EntityMapping } from './adapter.ts';
 
 /** Server-generated metadata. Provider fields cannot grant AI or write authority. */
@@ -15,8 +16,8 @@ export interface GovernanceEnvelope {
 }
 
 export function governanceEnvelope(adapter: AdapterDeclaration, mapping: EntityMapping, connectionId: string, now: Date, freshnessTargetMinutes = adapter.freshnessTargetMinutes): GovernanceEnvelope & { retentionExpiresAt: string } {
-  if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0
-    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0) {
+  if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0 || adapter.retentionDays > 36500
+    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0 || freshnessTargetMinutes > MAX_FRESHNESS_MINUTES) {
     throw new Error('Governed records require valid freshness and retention clocks.');
   }
   return {

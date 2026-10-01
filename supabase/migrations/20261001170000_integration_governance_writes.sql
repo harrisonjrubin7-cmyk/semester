@@ -57,7 +57,7 @@ begin
              'retrievedAt', want_at,
              'expiresAt', want_at + coalesce((
                select case when extract(epoch from c.freshness_target) > 0 then
-                 make_interval(secs => greatest(60, extract(epoch from c.freshness_target))) end
+                 make_interval(secs => least(31536000, greatest(60, extract(epoch from c.freshness_target)))) end
                from public.integration_connections c
                where c.id = want_connection and c.tenant_id = want_tenant
              ), (
@@ -134,7 +134,8 @@ begin
     'sourceStandard', 'LTI 1.3', 'sourceOwner', 'LMS',
     'permittedPurposes', jsonb_build_array('integration.lms_lti'),
     'aiEligibility', 'denied_by_default', 'retrievedAt', now(),
-    'expiresAt', now() + greatest(coalesce(c.freshness_target, interval '1 day'), interval '1 minute'),
+    'expiresAt', now() + make_interval(secs => least(31536000, greatest(60, coalesce(
+      nullif(greatest(0, extract(epoch from c.freshness_target)), 0), 86400)))),
     'retentionPolicyId', 'canonical:tenant-lifetime', 'retentionExpiresAt', null,
     'consentPurpose', null, 'writeAuthority', 'source-system-only');
 
@@ -245,3 +246,19 @@ end $$;
 revoke all on function public.integration_retention_sweep() from public;
 revoke all on function public.integration_retention_sweep() from anon, authenticated;
 grant execute on function public.integration_retention_sweep() to service_role;
+
+
+-- A connection hold must survive attempted deletion, including tenant cascades.
+-- Release the hold explicitly before removing the connection and its hold flag.
+create or replace function private.integration_connection_hold_delete_guard()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if old.legal_hold then
+    raise exception 'Release the connection legal hold before deleting it.' using errcode = '55006';
+  end if;
+  return old;
+end $$;
+revoke all on function private.integration_connection_hold_delete_guard() from public, anon, authenticated;
+drop trigger if exists integration_connection_hold_delete_guard on public.integration_connections;
+create trigger integration_connection_hold_delete_guard before delete on public.integration_connections
+for each row execute function private.integration_connection_hold_delete_guard();

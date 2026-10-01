@@ -43,6 +43,9 @@ export function freshnessSentence(freshness: Freshness, source: string, at: Date
   return `${FRESHNESS_TEXT[freshness]} — from ${source}${when}.${official}`;
 }
 
+/** Maximum supported freshness duration: 365 days. */
+export const MAX_FRESHNESS_MINUTES = 525600;
+
 /**
  * A Postgres interval as PostgREST returns it (`IntervalStyle = postgres`):
  * `01:00:00`, `2 days`, `1 day 06:30:00`, `1 mon`. Null for anything else, so a
@@ -55,6 +58,6 @@ export function intervalMinutes(value: string | null): number | null {
   const [, y, mo, d, sign, h, mi, seconds] = m;
   const total = ((Number(y ?? 0) * 365.25 + Number(mo ?? 0) * 30 + Number(d ?? 0)) * 24) * 60
     + (sign === '-' ? -1 : 1) * (Number(h ?? 0) * 60 + Number(mi ?? 0) + Number(seconds ?? 0) / 60);
-  // Same duration conversion and one-minute floor as the database/LTI writer.
-  return Number.isFinite(total) && total > 0 ? Math.max(1, total) : null;
+  // Same duration conversion and one-minute/365-day bounds as the database/LTI writer.
+  return Number.isFinite(total) && total > 0 ? Math.min(MAX_FRESHNESS_MINUTES, Math.max(1, total)) : null;
 }

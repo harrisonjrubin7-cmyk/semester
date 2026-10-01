@@ -40,6 +40,7 @@ describe('canonical governance metadata', () => {
   it('refuses unknown retention clocks before accepting a batch', async () => {
     for (const retentionDays of [0, -1, Infinity, NaN]) expect(validateDeclaration({ ...MOCK_LMS, retentionDays }).join()).toContain('retention');
     expect(() => governanceEnvelope({ ...MOCK_LMS, retentionDays: 0 }, MOCK_LMS.entities[1], 'c', now)).toThrow();
+    expect(() => governanceEnvelope(MOCK_LMS, MOCK_LMS.entities[1], 'c', now, 525601)).toThrow();
     const r = await ingest({ adapter: { ...MOCK_LMS, retentionDays: 0 }, connection: { tenantId: 'vu', publicId: 'conn_1', status: 'healthy', approved: true, approvedScopes: MOCK_LMS.scopes, classificationCeiling: 'T1' },
       batch: mockBatch([MOCK_ASSIGNMENT]), store: memoryStore(), killSwitchEngaged: false, now });
     expect(r.status).toBe('refused');

@@ -220,6 +220,17 @@ begin
   values ('ih-orphan', 'term', 'orphan-expiry', orphan, 'SIS', 'orphan-expiry', 'Registrar', null,
       pg_temp.governance(now() - interval '1 day')),
     ('ih-orphan', 'term', 'orphan-tombstone', orphan, 'SIS', 'orphan-tombstone', 'Registrar', now() - interval '40 days', '{}'::jsonb);
+  update public.integration_connections set legal_hold = true, legal_hold_reason = 'Preserve evidence' where id = orphan;
+  begin
+    delete from public.integration_connections where id = orphan;
+    raise exception 'FAILED: deleting a held connection erased its hold';
+  exception when object_in_use then
+    raise notice 'ok  a held connection cannot be deleted';
+  end;
+  perform pg_temp.sweep();
+  select count(*) into n from public.canonical_entity_references where connection_id = orphan;
+  perform pg_temp.counted('a refused connection deletion preserves held evidence', n, 2);
+  update public.integration_connections set legal_hold = false where id = orphan;
   delete from public.integration_connections where id = orphan;
   perform pg_temp.sweep();
   select count(*) into n from public.canonical_entity_references where tenant_id = 'ih-orphan';

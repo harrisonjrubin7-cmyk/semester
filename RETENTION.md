@@ -597,3 +597,5 @@ stop a backup expiring, does not exist (`RM-02`).
 | `productivity_workspace` | Until the student deletes the cloud copy or deletes their account; no automatic expiry | Owner-scoped delete; foreign-key cascade when the authentication account is deleted |
 
 Cloud workspaces include private reflections and history. Sharing institution aggregate counts is opt-in, requires active membership, and is suppressed below ten consenting members. Administrators receive counts only. Device copies and exported files remain under the student's control. Source checks store no page bodies or URLs server-side.
+
+Connection legal holds also prevent deletion of the connection, including cascaded deletion, until the hold is explicitly released. This keeps the connection hold attached to its surviving evidence.

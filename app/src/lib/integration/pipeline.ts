@@ -18,7 +18,7 @@ import type { DataClass } from './classification.ts';
 import { withinCeiling } from './classification.ts';
 import type { ConflictKind, ConnectionStatus, ErrorCategory, Freshness } from './catalog.ts';
 import { namesNeverIngest, type AdapterDeclaration, type EntityMapping, type FieldMapping } from './adapter.ts';
-import { freshnessFromAge } from './freshness.ts';
+import { MAX_FRESHNESS_MINUTES, freshnessFromAge } from './freshness.ts';
 import { redactReference, sanitizeMessage } from './redact.ts';
 import { governanceEnvelope, type GovernanceEnvelope } from './governance-envelope.ts';
 
@@ -179,8 +179,8 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
     empty('refused', received, [{ category, entityType: null, reference: 'redacted', message, retryable: false }]);
 
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0 || adapter.retentionDays > 36500
-    || !Number.isFinite(adapter.freshnessTargetMinutes) || adapter.freshnessTargetMinutes <= 0 || adapter.freshnessTargetMinutes > 525600
-    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0
+    || !Number.isFinite(adapter.freshnessTargetMinutes) || adapter.freshnessTargetMinutes <= 0 || adapter.freshnessTargetMinutes > MAX_FRESHNESS_MINUTES
+    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0 || freshnessTargetMinutes > MAX_FRESHNESS_MINUTES
     || !adapter.sourceOfTruth.trim()) {
     return refuse('Invalid adapter governance or processing clock.', 'schema_validation');
   }
