@@ -81,9 +81,9 @@ describe('reading a plan saved before the mode existed', () => {
 
 describe('when the mode shows', () => {
   const now = new Date(2027, 3, 1, 12, 0);
-  it('shows within a week of the window, and for a day after it opens', () => {
-    expect(modeActive(data({ opensAt: '2027-04-08T11:00' }), now)).toBe(true);
-    expect(modeActive(data({ opensAt: '2027-04-09T12:01' }), now)).toBe(false);
+  it('shows within 72 hours of the window, and for a day after it opens', () => {
+    expect(modeActive(data({ opensAt: '2027-04-04T11:00' }), now)).toBe(true);
+    expect(modeActive(data({ opensAt: '2027-04-04T12:01' }), now)).toBe(false);
     expect(modeActive(data({ opensAt: '2027-03-31T13:00' }), now)).toBe(true);
     expect(modeActive(data({ opensAt: '2027-03-31T11:00' }), now)).toBe(false);
   });

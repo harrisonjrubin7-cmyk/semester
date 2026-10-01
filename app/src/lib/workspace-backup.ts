@@ -25,6 +25,8 @@ import { FEEDBACK_PREFIX, readInbox } from './feedbackloop';
 import { MAP_PREFIX, readMap } from './learningmap';
 import { PREFS_PREFIX, readPrefs } from './learningprefs';
 import { STUDY_JOURNAL_PREFIX, readJournal } from './studyjournal';
+import { RESET_KEY, keepReflections, readResets, withoutReflections } from './weekly-reset';
+import { CALM_KEY, keepMemory, readCalm, withoutMemory } from './calm-controls';
 
 /**
  * A backup for the device workspaces the main one does not reach.
@@ -170,6 +172,24 @@ const DEFINITIONS: Record<string, Definition> = {
   learningMap: { label: 'Your learning map: concepts, questions and Start Here Check', prefix: MAP_PREFIX, scope: 'term', read: readMap },
   studyJournal: { label: 'Your study journal: mistakes, what you learned and when to revisit', prefix: STUDY_JOURNAL_PREFIX, scope: 'term', read: readJournal },
   learningPrefs: { label: 'Learning preferences', prefix: PREFS_PREFIX, scope: 'account', read: readPrefs },
+  // Weekly Reset picks, without reflection answers: reflection is private by
+  // default and the file is the thing people email themselves. A restore keeps
+  // the answers this device has and never invents any.
+  weeklyReset: {
+    label: 'Weekly resets',
+    prefix: RESET_KEY,
+    scope: 'device',
+    read: (v) => withoutReflections(readResets(v)),
+    restore: (incoming, existing) => keepReflections(readResets(incoming), existing),
+  },
+  // The student's Guide settings, without what the assistant remembers.
+  calm: {
+    label: 'Guide settings',
+    prefix: CALM_KEY,
+    scope: 'device',
+    read: (v) => withoutMemory(readCalm(v)),
+    restore: (incoming, existing) => keepMemory(readCalm(incoming), existing),
+  },
 };
 
 /** Every prefix this backup covers, for the guard in `workspace-backup.coverage.test.ts`. */

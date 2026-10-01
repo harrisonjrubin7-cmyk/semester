@@ -35,6 +35,7 @@ const CALLS: Record<string, number> = {
   'components/ActionCenter.tsx': 1,
   'components/AdvisorMeeting.tsx': 2,
   'components/CampusDirectory.tsx': 4,
+  'components/CalmSettings.tsx': 1,
   'components/CareerEvidence.tsx': 1,
   'components/ClarityQuestion.tsx': 1,
   'components/CourseCompare.tsx': 1,
@@ -67,7 +68,10 @@ const CALLS: Record<string, number> = {
   'components/StudyReadiness.tsx': 1,
   'components/StudyStudio.tsx': 1,
   'components/TodayActionCenter.tsx': 1,
+  'components/TodayGuide.tsx': 2,
   'components/TrustCenter.tsx': 2,
+  'components/WeeklyReflection.tsx': 1,
+  'components/WeeklyReset.tsx': 1,
   'components/institutional/OperationsStudio.tsx': 1,
   'components/soft/SoftTopBody.tsx': 3,
   'components/toolkit/store.ts': 1,
@@ -132,6 +136,9 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.hub.v1': { exempt: OTHER_MODULE },
   'semester.launchpad.v1': { exempt: OTHER_MODULE },
   'semester.opportunities.v1': { exempt: OTHER_MODULE },
+  'semester.guide-choices.v1': { exempt: 'Which Guide suggestions the student snoozed, passed on or hid, and until when (lib/guide-bar.ts). A display marker that expires on its own; a restored copy would only hide a suggestion that had already come back.' },
+  'semester.weekly-reset.v1': 'backed up',
+  'semester.calm.v1': 'backed up',
 };
 
 describe('every device store is backed up or named', () => {

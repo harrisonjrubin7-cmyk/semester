@@ -15,6 +15,7 @@ import { Cutoffs } from '../components/Cutoffs';
 import { ScoreField } from '../components/ScoreField';
 import { Folding } from '../components/Fold';
 import { Suppose } from '../components/Suppose';
+import { OutcomeScenarios } from '../components/OutcomeScenarios';
 import { ScoreShot } from '../components/ScoreShot';
 import { configured } from '../lib/assistant';
 import { datedItems } from '../lib/select';
@@ -331,6 +332,8 @@ export function Grades() {
               source={source}
               daysToTest={nextTest}
             />
+
+            <OutcomeScenarios standing={s} code={c.code} />
 
             {/*
               Practice, beside the projection and deliberately not inside it.

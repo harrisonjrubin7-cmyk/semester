@@ -71,6 +71,12 @@ import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
+import { DeadlineHorizon } from '../components/DeadlineHorizon';
+import { AssignmentStates } from '../components/AssignmentStates';
+import { WeeklyReset } from '../components/WeeklyReset';
+import { WeeklyReflection } from '../components/WeeklyReflection';
+import { GoalPlan } from '../components/GoalPlan';
+import { fromItems } from '../lib/deadline-feed';
 
 const FlightPlanHome = lazy(() =>
   import('../components/institutional/FlightPlanHome').then((module) => ({
@@ -408,6 +414,50 @@ function OverdueBanner() {
  * about what a week is. What differs is the presentation: there a page you
  * pin up, here rows you tap to open.
  */
+/** The same deadlines, grouped by how near they are, with each one's source. */
+function WeekHorizon() {
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
+  const deadlines = useMemo(
+    () => fromItems(upcomingItems(catalog, now), state.done, (id) => courseCode(id)),
+    [catalog, now, state.done, courseCode],
+  );
+  // Effort and saved blocks are not recorded for course items, so those
+  // fields are left out rather than guessed: a state is only ever as sure as
+  // what the student and the syllabus actually said.
+  const assignments = useMemo(
+    () =>
+      deadlines.map((d) => ({
+        id: d.id,
+        course: '',
+        title: d.title,
+        due: d.due,
+        label: d.label,
+        done: d.done,
+      })),
+    [deadlines],
+  );
+  const closed = { marginTop: 'var(--sp-5)' } as const;
+  return (
+    <>
+      <DeadlineHorizon deadlines={deadlines} now={now.getTime()} />
+      <details style={closed}>
+        <summary>Assignment states</summary>
+        <AssignmentStates assignments={assignments} now={now.getTime()} />
+      </details>
+      <details style={closed}>
+        <summary>Weekly reset · about five minutes, skip any time</summary>
+        <WeeklyReset now={now} />
+        <WeeklyReflection now={now} />
+      </details>
+      <details style={closed}>
+        <summary>Turn a goal into a plan</summary>
+        <GoalPlan now={now} />
+      </details>
+    </>
+  );
+}
+
 function ThisWeek() {
   const { state, dispatch, catalog, tint, courseCode } = useStore();
   const now = useNow();
@@ -765,6 +815,7 @@ function TabHome() {
       {tab === 'today' && <TodayFeed />}
 
       {tab === 'week' && <ThisWeek />}
+      {tab === 'week' && <WeekHorizon />}
 
       {tab === 'hours' && <HoursToday />}
 
