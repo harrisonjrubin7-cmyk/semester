@@ -2,44 +2,71 @@
 
 ## Result
 
-**67 of 95 complete suites pass; 28 fail. T-2 remains partial.** No suite was
-skipped. A failed suite stops at its first exception, so its later assertions
-are not certified.
+**T-2 remains partial. The last completed full run was 67/95 suites passing.**
+After the next approved permission repair, the expanded strict catalog suite
+passes, but the full hosted fixture rerun is blocked by expired connector
+approval requests. The historical 67/95 is not a result for the new grants.
+No assertions from failed suites are certified.
 
 The full run used commit `8c46dc3725df86925caa0233b7287de4f00cf47a` from
-07:56:33 to 08:12:56 UTC: 64 passed and 31 failed. Three test-only fixes in this
-commit were subsequently rerun in full and passed: `gradebook`, `grants` and
-`scim-gateway`. The table below is the latest result of each suite.
+07:56:33 to 08:12:56 UTC: 64 passed and 31 failed. Three subsequent test-only
+fixes were rerun in full and passed: `gradebook`, `grants` and
+`scim-gateway`. The table below records that historical result of each suite.
 
 The database is the existing no-data preview `ibprwifagxqvowpanvel` for
 `claude/t2-branch-checks`. Production `lzrqvlugnawcgywkhqlz` was not queried or
 changed. Preview identity, `with_data: false`, and healthy status were checked
 before application.
 
-## Approved repair and migration record
+## Approved repairs and migration record
 
-Only these privileges were added:
-- `authenticated`: SELECT on `public.profiles`
-- `authenticated`: SELECT, INSERT, UPDATE on `public.calendar_feeds`
+The first approved repair added authenticated SELECT on profiles and
+SELECT/INSERT/UPDATE on calendar_feeds. Profile INSERT/UPDATE remains
+column-restricted; school_id, timestamps and ownership were not made writable.
 
-Both tables retain RLS. Profile INSERT/UPDATE stays column-restricted;
-school_id, timestamps and ownership are not made writable. No new DELETE,
-anon, service_role, function, sequence, policy or live default grants were
-added. Before/after ACL inspection showed the other roles and profile column
-ACLs unchanged.
+A second, separately approved repair is recorded as
+`20261001095206_explicit_current_caller_grants.sql`. It adds exactly 105
+table/column privilege atoms in 30 GRANT statements across 19 tables:
+- authenticated access used by enrollment, blocking, messages/reactions,
+  groups/membership/tasks, course/state sync and push callers
+- authenticated family-grant reads/revocation, organization/membership reads,
+  report reads/submission and school-list reads
+- anon school-list reads
+- bounded service-role identity-provider/membership reads, mapping updates,
+  and integration-sync-run SELECT/INSERT/UPDATE
 
-The GitHub integration and direct migration API raced. The same idempotent
-grant was recorded under `20261001073607` and `20261001075450`. Both preview
-history entries are retained. The repository file uses the second, already
-recorded version, which also sorts after main's then-current ledger watermark
-`20261001075026`. This is not a claim that the preview ledger exactly equals
-the repository manifest: it contains the earlier duplicate as an extra row.
-No history row was edited or removed.
+The migration's executable SQL exactly matches the approved proposal.
+Fresh before/after catalogs establish 105 additions, zero removals and zero
+unexpected changes. All 498 RLS policies and table RLS flags are unchanged,
+as are function ACLs, default privileges and sequence ACLs. The expanded
+catalog suite validates every approved privilege, exact column/CRUD limits,
+grant-option denials, RLS/policy presence, profile pins and 32 intentionally
+client-inaccessible tables. It failed on missing enrollments SELECT before
+this migration and passed afterward at 09:55 UTC.
 
-The original 142 migration versions are all present. There are now 144 preview
-ledger entries, with those two grant records. Before any future general
-`db push` or reset, review this documented history difference through the
-supported migration workflow rather than rewriting it silently.
+The earlier integration/direct-API race recorded the first repair twice.
+After separate action-time approval, a guarded transaction removed only
+redundant history row `20261001073607`, retaining `20261001075450`.
+Both complete records were backed up and matched before removal; exactly one
+row was removed. Table/column ACLs and every policy were unchanged by that
+metadata repair. Restoration of the removed record requires manual repair.
+
+The second repair used only the GitHub integration, with no competing direct
+application. It appears exactly once in the preview ledger. The original
+142 versions plus the two canonical grant migrations are present: 144 entries.
+
+## Post-repair verification limit
+
+The 95-suite rerun was started after the strict catalog pass. Its first
+fixture suite, academic-record, received `Invalid or expired requestState`;
+one retry received the same connector error. Neither is a SQL assertion
+failure or a completed suite. The batch was stopped rather than counting
+them as executed. Read-only cleanup after both attempts found zero auth users,
+zero storage objects, and no fixture function/trigger.
+
+The next step is to resume the complete fixture-suite run through an approved,
+working connector request. The remaining historical failures below may now
+advance to later assertions; they cannot be marked fixed from catalog checks.
 
 ## Method and cleanup
 
@@ -97,20 +124,18 @@ assertions fail. These are request-level tests with intercepted transport,
 not an additional hosted-suite pass. The file is registered in the isolated
 mock-test project.
 
-## Current preview integration blocker
+## Preview integration and main divergence
 
-After the repository migration was renamed, the GitHub integration reported
-`Remote migration versions not found in local migrations directory`: the
-earlier duplicate history row remains. The database/API remain usable, but
-automatic migration updates need an explicitly approved, backed-up history
-reconciliation. No record has been removed or rewritten by this work.
+The duplicate-ledger integration blocker was reconciled as described above;
+the integration successfully applied the new grant migration. No unrelated
+migration was merged into this preview.
 
-Current main at `2d67754317a991f47baaa177105c07a7cb30591f` also contains twelve
-migration files beyond this preview's original snapshot, including guardian
-creation and a forward-repair stub. The preview lacks `schools.edition`.
-Therefore this record is not a K–12 or current-main certification. CI's merge
-tree includes those newer changes; the hosted preview has not been rebased or
-given those unrelated migrations under the narrowly scoped approval.
+The earlier main snapshot `2d67754317a991f47baaa177105c07a7cb30591f`
+contains twelve migration files beyond this preview's original snapshot,
+including guardian creation and a forward-repair stub. The preview lacks
+`schools.edition`. This record is not a K–12 or current-main certification.
+CI's merge tree can include newer main changes; that is distinct from running
+those migrations on the hosted preview.
 
 ## Remaining blockers
 
@@ -128,7 +153,7 @@ The earlier drill's 57 tables without any authenticated SELECT were not 57
 grant recommendations: 32 are intentionally client-inaccessible. Another 15
 tables without table-level SELECT correctly use column grants.
 
-## Latest whole-suite results
+## Historical whole-suite results before the second grant repair
 
 | Suite | Result | First error if failed |
 | --- | --- | --- |
@@ -230,8 +255,8 @@ tables without table-level SELECT correctly use column grants.
 
 ## What is not proven
 
-This is not a penetration test. The 28 failed suites remain unresolved, their
-later blocks are untested, and this preview has no production data. Normal
+This is not a penetration test. The 28 historical failures need a full rerun;
+their later blocks are untested, and this preview has no production data. Normal
 PostgreSQL concurrency, full PostgREST caller behavior and all production
 deployment properties are separate checks. The profile conflict-upsert path
 also needs an explicit caller test; its user_id write pin was not loosened.
