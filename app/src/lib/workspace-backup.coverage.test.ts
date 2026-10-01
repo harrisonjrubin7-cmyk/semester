@@ -73,6 +73,7 @@ const CALLS: Record<string, number> = {
   'components/TrustCenter.tsx': 2,
   'components/WeeklyReflection.tsx': 1,
   'components/WeeklyReset.tsx': 1,
+  'components/DailyRhythm.tsx': 1,
   'components/institutional/OperationsStudio.tsx': 1,
   'components/soft/SoftTopBody.tsx': 3,
   'components/toolkit/store.ts': 1,
@@ -139,6 +140,7 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.opportunities.v1': { exempt: OTHER_MODULE },
   'semester.guide-choices.v1': { exempt: 'Which Guide suggestions the student snoozed, passed on or hid, and until when (lib/guide-bar.ts). A display marker that expires on its own; a restored copy would only hide a suggestion that had already come back.' },
   'semester.weekly-reset.v1': 'backed up',
+  'semester.daily-rhythm.v1': 'backed up',
   'semester.calm.v1': 'backed up',
   'semester.operating-rhythm.v1': { exempt: 'Explicit private JSON backup and validated preview/confirm restore in OperatingRhythm. Daily and weekly backups are separate. Private notes and reflections intentionally require this dedicated export rather than entering the general workspace backup.' },
 };

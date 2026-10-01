@@ -74,6 +74,7 @@ import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
 import { AssignmentStates } from '../components/AssignmentStates';
 import { OperatingRhythm } from '../components/OperatingRhythm';
+import { DailyRhythm } from '../components/DailyRhythm';
 import { WeeklyReset } from '../components/WeeklyReset';
 import { WeeklyReflection } from '../components/WeeklyReflection';
 import { GoalPlan } from '../components/GoalPlan';
@@ -818,6 +819,7 @@ function TabHome() {
         <RecommendedJourney />
 
         {tab === 'today' && <TodayFeed />}
+        {tab === 'today' && <DailyPlanSlot />}
 
         {tab === 'week' && <ThisWeek />}
         {tab === 'week' && <WeekHorizon />}
@@ -1921,6 +1923,11 @@ function HoursToday() {
 }
 
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
+function DailyPlanSlot() {
+  const { account } = useStore();
+  return <details><summary>Daily plan · one outcome and three actions</summary><DailyRhythm accountId={account?.id ?? null} /></details>;
+}
+
 function FeedHome() {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
@@ -1955,6 +1962,7 @@ function FeedHome() {
           <NextClassCard />
           <FlightPlanHomeSlot />
           <RecommendedJourney />
+          <DailyPlanSlot />
 
           <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
             {entries.map((f) => (
@@ -2095,7 +2103,7 @@ export function Today() {
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
-  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today" />;
+  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today"><DailyPlanSlot /></FirstRun>;
   return shape === 'feed' ? <FeedHome /> : <TabHome />;
 }
 
