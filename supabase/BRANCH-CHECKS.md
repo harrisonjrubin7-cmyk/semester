@@ -41,3 +41,29 @@ nobody thought to assert. A suite that depends on `check.sh`'s local stubs
 (its adult-by-default age fixture, for one) fails here for that reason. That
 is a difference in environment, not a security failure, and the record should
 say which is which.
+
+## Check table defaults locally as well
+
+The disposable harness supports two table-grant profiles:
+
+    supabase/check.sh
+    SEMESTER_CHECK_TABLE_GRANTS=explicit supabase/check.sh
+
+The first preserves legacy implicit CRUD grants so migrations still face the
+older, more permissive starting point. The second removes those implicit
+grants before migrations run, matching the observed postgres-owned table
+defaults on this PR's fresh preview. It does not emulate every hosted service
+or platform privilege. Both profiles need to pass; a local pass does not
+replace the hosted-preview run above.
+
+`explicit-client-grants.check.sql` is a catalog-only regression for the two
+confirmed profile/calendar paths. It needs no accounts or age fixture and
+runs in a read-only transaction. It preserves profile column pins and checks
+that intentionally RPC/server-only tables have no direct client read grant.
+It is not a replacement for the feature suites' cross-account RLS checks.
+
+The focused repair in `20261001073607_explicit_profiles_calendar_grants.sql`
+adds only authenticated SELECT on profiles and SELECT/INSERT/UPDATE on
+calendar_feeds. It does not close T-2: other client-table grants, service-role
+callers and whole-suite hosted execution remain unresolved. A permission
+change must be reviewed and approved before application to a hosted project.
