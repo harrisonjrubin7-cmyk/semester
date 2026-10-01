@@ -31,7 +31,7 @@ describe('support reply notification', () => {
     expect(d.send).toHaveBeenCalledWith(expect.objectContaining({
       to: 'student@example.test',
       idempotencyKey: 'support-message-1',
-      subject: '[Semester] Support replied to SUP-123E4567',
+      subject: '[Semester] Support replied to SUP-123E-4567-E89B-42D3',
     }));
     const text = vi.mocked(d.send).mock.calls[0][0].text;
     expect(text).toContain('/semester/');

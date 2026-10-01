@@ -71,7 +71,10 @@ describe('what goes with a ticket', () => {
   });
 
   it('makes a stable support reference without exposing anything about the student', () => {
-    expect(ticketReference('123e4567-e89b-12d3-a456-426614174000')).toBe('SUP-123E4567');
+    expect(ticketReference('123e4567-e89b-12d3-a456-426614174000')).toBe('SUP-123E-4567-E89B-12D3');
+    expect(ticketReference('123e4567-ffff-12d3-a456-426614174000')).not.toBe(
+      ticketReference('123e4567-e89b-12d3-a456-426614174000'),
+    );
     expect(ticketReference('')).toBe('SUP-UNKNOWN');
   });
 

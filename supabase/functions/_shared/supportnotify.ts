@@ -13,6 +13,11 @@ export interface SupportNoticeDeps {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+function reference(ticketId: string): string {
+  const token = ticketId.replace(/[^a-f0-9]/gi, '').slice(0, 16).toUpperCase();
+  return `SUP-${token.match(/.{1,4}/g)?.join('-')}`;
+}
+
 /**
  * Notify a student that support replied without exposing their identity or the
  * reply body to the staff browser. The message is deliberately generic: email
@@ -51,11 +56,11 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
 
   const target = await deps.notice(ticketId);
   if (!target) return reply(409, { error: 'No support reply is ready to notify.' });
-  const reference = `SUP-${ticketId.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  const ticketReference = reference(ticketId);
   const sent = await deps.send({
     to: target.email,
-    subject: `[Semester] Support replied to ${reference}`,
-    text: `Semester support replied to ${reference}.\n\nOpen Semester and go to Help to read the reply: ${deps.appUrl}\n\nThe reply is not included in email to keep your support conversation private.`,
+    subject: `[Semester] Support replied to ${ticketReference}`,
+    text: `Semester support replied to ${ticketReference}.\n\nOpen Semester and go to Help to read the reply: ${deps.appUrl}\n\nThe reply is not included in email to keep your support conversation private.`,
     idempotencyKey: `support-${target.messageId}`,
   });
   return sent ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });

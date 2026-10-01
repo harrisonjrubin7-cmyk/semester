@@ -29,6 +29,7 @@ import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
 import { SupportQueue } from '../components/console/SupportQueue';
 import { said, when } from '../components/console/Fields';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The operations console.
@@ -57,7 +58,7 @@ type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'custo
 
 const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'command', label: 'Command center' },
-  { id: 'support', label: 'Support' },
+  ...(EXPERIENCE_FLAGS.supportTickets === 'off' ? [] : [{ id: 'support' as const, label: 'Support' }]),
   { id: 'approvals', label: 'Approvals' },
   { id: 'breakglass', label: 'Break-glass' },
   { id: 'audit', label: 'Audit' },

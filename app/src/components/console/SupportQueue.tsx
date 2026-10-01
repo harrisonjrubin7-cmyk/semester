@@ -95,8 +95,8 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       const delivery = await supportReply(ticketId, message, status);
       if (wanted.current === ticketId) setReply('');
       const queueFresh = await refresh();
-      const outcome = delivery === 'notified'
-        ? `Reply recorded and student notified for ${ticketReference(ticketId)}.`
+      const outcome = delivery === 'accepted'
+        ? `Reply recorded for ${ticketReference(ticketId)}. Email notice accepted by the provider; delivery is not yet confirmed.`
         : `Reply recorded for ${ticketReference(ticketId)}. Email was not delivered; the reply is available in Help.`;
       onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage

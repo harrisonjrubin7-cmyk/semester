@@ -94,7 +94,8 @@ export const STATUS_LABELS: Record<Ticket['status'], string> = {
 
 /** A stable, speakable reference. It identifies the ticket, never the student. */
 export function ticketReference(id: string): string {
-  return `SUP-${id.replace(/[^a-z0-9]/gi, '').slice(0, 8).toUpperCase() || 'UNKNOWN'}`;
+  const token = id.replace(/[^a-f0-9]/gi, '').slice(0, 16).toUpperCase();
+  return token ? `SUP-${token.match(/.{1,4}/g)?.join('-')}` : 'SUP-UNKNOWN';
 }
 
 export interface Ticket {
@@ -210,7 +211,7 @@ export async function supportReply(
   ticketId: string,
   body: string,
   status: 'open' | 'waiting_on_student' | 'resolved',
-): Promise<'notified' | 'in_app_only'> {
+): Promise<'accepted' | 'in_app_only'> {
   const db = await cloud();
   const { error } = await db.rpc('support_reply', {
     want_ticket: ticketId,
@@ -221,5 +222,7 @@ export async function supportReply(
   const { error: noticeError } = await db.functions.invoke('support-reply-notify', {
     body: { ticket_id: ticketId },
   });
-  return noticeError ? 'in_app_only' : 'notified';
+  // A 2xx response proves provider acceptance, not inbox delivery. Delivery
+  // is established separately by provider events or an end-to-end receipt.
+  return noticeError ? 'in_app_only' : 'accepted';
 }

@@ -43,7 +43,7 @@ beforeEach(() => {
     at: '2026-10-01T10:00:00Z',
     context: { device_class: 'tablet', screen: '#/drill' },
   }]);
-  mock.reply.mockResolvedValue('notified');
+  mock.reply.mockResolvedValue('accepted');
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -80,7 +80,7 @@ describe('the support operations queue', () => {
   it('shows an identity-free prioritized ticket and only student-approved app context', async () => {
     await draw();
     expect(host.textContent).toContain('Identity-free queue');
-    expect(host.textContent).toContain('SUP-123E4567');
+    expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
     expect(host.textContent).toContain('OVERDUE');
     expect(host.textContent).not.toMatch(/ada@example\.edu|user-123|vanderbilt-university/i);
 
@@ -103,7 +103,9 @@ describe('the support operations queue', () => {
       'resolved',
     );
     expect(mock.queue).toHaveBeenCalledTimes(2);
-    expect(mock.status).toHaveBeenCalledWith('Reply recorded and student notified for SUP-123E4567.');
+    expect(mock.status).toHaveBeenCalledWith(
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice accepted by the provider; delivery is not yet confirmed.',
+    );
   });
 
   it('keeps an in-app reply successful when email delivery is unavailable', async () => {
@@ -113,7 +115,7 @@ describe('the support operations queue', () => {
     type(host.querySelector('textarea')!, 'The reply remains available here.');
     await click(button('Send support reply'));
     expect(mock.status).toHaveBeenCalledWith(
-      'Reply recorded for SUP-123E4567. Email was not delivered; the reply is available in Help.',
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email was not delivered; the reply is available in Help.',
     );
   });
 
@@ -139,7 +141,9 @@ describe('the support operations queue', () => {
     type(host.querySelector('textarea')!, 'Your reply was recorded.');
     await click(button('Send support reply'));
     expect(mock.reply).toHaveBeenCalledTimes(1);
-    expect(mock.status).toHaveBeenLastCalledWith('Reply recorded and student notified for SUP-123E4567.');
+    expect(mock.status).toHaveBeenLastCalledWith(
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice accepted by the provider; delivery is not yet confirmed.',
+    );
   });
 
   it('keeps the last-known queue and reports staleness after a committed reply', async () => {
@@ -152,9 +156,9 @@ describe('the support operations queue', () => {
     await click(button('Open conversation'));
     type(host.querySelector('textarea')!, 'Your reply was recorded.');
     await click(button('Send support reply'));
-    expect(host.textContent).toContain('SUP-123E4567');
+    expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
     expect(mock.status).toHaveBeenLastCalledWith(
-      'Reply recorded and student notified for SUP-123E4567. The queue could not be refreshed; retry before acting on its status.',
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice accepted by the provider; delivery is not yet confirmed. The queue could not be refreshed; retry before acting on its status.',
     );
   });
 
