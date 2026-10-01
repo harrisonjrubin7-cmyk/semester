@@ -72,6 +72,10 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
+import { AssignmentStates } from '../components/AssignmentStates';
+import { WeeklyReset } from '../components/WeeklyReset';
+import { WeeklyReflection } from '../components/WeeklyReflection';
+import { GoalPlan } from '../components/GoalPlan';
 import { fromItems } from '../lib/deadline-feed';
 
 const FlightPlanHome = lazy(() =>
@@ -418,7 +422,40 @@ function WeekHorizon() {
     () => fromItems(upcomingItems(catalog, now), state.done, (id) => courseCode(id)),
     [catalog, now, state.done, courseCode],
   );
-  return <DeadlineHorizon deadlines={deadlines} now={now.getTime()} />;
+  // Effort and saved blocks are not recorded for course items, so those
+  // fields are left out rather than guessed: a state is only ever as sure as
+  // what the student and the syllabus actually said.
+  const assignments = useMemo(
+    () =>
+      deadlines.map((d) => ({
+        id: d.id,
+        course: '',
+        title: d.title,
+        due: d.due,
+        label: d.label,
+        done: d.done,
+      })),
+    [deadlines],
+  );
+  const closed = { marginTop: 'var(--sp-5)' } as const;
+  return (
+    <>
+      <DeadlineHorizon deadlines={deadlines} now={now.getTime()} />
+      <details style={closed}>
+        <summary>Assignment states</summary>
+        <AssignmentStates assignments={assignments} now={now.getTime()} />
+      </details>
+      <details style={closed}>
+        <summary>Weekly reset · about five minutes, skip any time</summary>
+        <WeeklyReset now={now} />
+        <WeeklyReflection now={now} />
+      </details>
+      <details style={closed}>
+        <summary>Turn a goal into a plan</summary>
+        <GoalPlan now={now} />
+      </details>
+    </>
+  );
 }
 
 function ThisWeek() {
