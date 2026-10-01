@@ -108,7 +108,6 @@ const favouring = (g: Gen<Draw>): Gen<Draw> => ({
 
 export function context(d: Draw): FlagContext {
   const now = new Date(T0 + d.days * DAY);
-  const definition = flagDefinition(d.key)!;
   const tenantPolicy: Record<string, TenantPolicyRow> = {};
   for (const [k, row] of Object.entries(d.policy)) if (row) tenantPolicy[k] = row;
   return {
@@ -127,13 +126,14 @@ export function context(d: Draw): FlagContext {
     cohorts: d.cohort ? ['pilot'] : [],
     courseRule: d.course === null ? null : { allowed: d.course },
     userEligible: d.eligible === null ? undefined : d.eligible,
-    activationReceipt: definition.highRisk && d.tenant ? {
-      decisionKey: 'fixture-receipt', requestId: 'req-property', tenantId: d.tenant,
-      capabilityId: definition.capabilityIds[0]!, operation: d.key,
-      policyVersion: 'constitution-v1', configurationVersion: 1,
-      issuedAt: new Date(now.getTime() - 60_000).toISOString(),
-      expiresAt: new Date(now.getTime() + 60 * 60_000).toISOString(),
-    } : null,
+    // Test-only receipt keeps scope/eligibility properties non-vacuous after
+    // the activation gate. It grants no real tenant or capability activation.
+    activationReceipt: d.tenant === null ? null : {
+      decisionKey: 'activation:v1:property-fixture', requestId: 'property-fixture', tenantId: d.tenant,
+      capabilityId: flagDefinition(d.key)!.capabilityIds[0]!, operation: d.key,
+      policyVersion: 'test-policy', configurationVersion: 1,
+      issuedAt: now.toISOString(), expiresAt: new Date(now.getTime() + 15 * 60_000).toISOString(),
+    },
   };
 }
 

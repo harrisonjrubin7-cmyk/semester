@@ -33,7 +33,8 @@ import {
  *     numbers, so one cannot be dropped quietly.
  *
  * `docs/PLATFORM-CONSTITUTION.md` is rendered from the data; run
- * `npm run registers` from app/ to rewrite it.
+ * `REGISTERS=write pnpm exec vitest run src/lib/governance/constitution.test.ts`
+ * from app/ to rewrite it.
  */
 
 const root = join(import.meta.dirname, '../../../..');
@@ -67,9 +68,24 @@ describe('the platform constitution', () => {
 
   it('holds the principles to something that exists', () => {
     expect(PRINCIPLES).toHaveLength(12);
+    expect(PRINCIPLES.map((x) => x.principle)).toEqual([
+      'Students control personal plans, drafts, sharing, and exports.',
+      'Official institutional systems remain authoritative unless an institution explicitly approves Semester for a bounded workflow.',
+      'Meaningful facts carry source, provenance, freshness, and correction paths.',
+      'High-impact actions are explained, previewed, confirmed, and audited.',
+      'AI cites authorized sources, follows institutional and course policy, and does not silently make high-impact decisions.',
+      'No person, integration, or agent receives unrestricted student-data access by default.',
+      'Tenant data is isolated and sensitive requests are purpose-bound.',
+      'Accessibility is a release criterion.',
+      'Failures preserve data, expose honest status, and retain an official or human fallback.',
+      'Public claims cannot exceed verified maturity and current evidence.',
+      'Tenant activation requires the applicable policy, approval, data map, support ownership, monitoring, and rollback path.',
+      'Semester builds the smallest safe solution that improves a defined student decision or institutional workflow.',
+    ]);
     for (const x of PRINCIPLES) {
-      expect(x.principle.length, x.id).toBeGreaterThan(40);
-      expect(x.heldBy === DOC || exists(x.heldBy), `${x.id} is held by ${x.heldBy}, which is missing`).toBe(true);
+      expect(x.principle.length, x.id).toBeGreaterThan(20);
+      expect(exists(x.heldBy), `${x.id} is held by ${x.heldBy}, which is missing`).toBe(true);
+      if (x.heldBy === DOC) expect(['constitution', 'admission']).toContain(x.id);
     }
   });
 
@@ -82,6 +98,11 @@ describe('the platform constitution', () => {
 
   it('names each capability once, under a known primitive and priority', () => {
     const ids = CAPABILITIES.map((c) => c.id);
+    expect(ids).toEqual([
+      ...Array.from({ length: 15 }, (_, i) => `J-${String(i + 1).padStart(2, '0')}`),
+      ...Array.from({ length: 12 }, (_, i) => `I-${String(i + 1).padStart(2, '0')}`),
+      ...Array.from({ length: 10 }, (_, i) => `O-${String(i + 1).padStart(2, '0')}`),
+    ]);
     expect(new Set(ids).size).toBe(ids.length);
     for (const c of CAPABILITIES) {
       expect(PRIMITIVE_IDS, c.id).toContain(c.primitive);
@@ -149,7 +170,7 @@ describe('the platform constitution', () => {
   it(`is what ${DOC} says`, () => {
     const rendered = render();
     if (process.env.REGISTERS === 'write') writeFileSync(join(root, DOC), rendered);
-    expect(readFileSync(join(root, DOC), 'utf8'), `${DOC} is stale; run \`npm run registers\` from app/`).toBe(rendered);
+    expect(readFileSync(join(root, DOC), 'utf8'), `${DOC} is stale; run \`REGISTERS=write pnpm exec vitest run src/lib/governance/constitution.test.ts\` from app/`).toBe(rendered);
   });
 });
 
@@ -196,7 +217,7 @@ function render(): string {
     '## Capability map',
     '',
     ...table(
-      ['Id', 'Capability', 'Primitive', 'Priority', 'Status', 'Evidence', 'What exists, what would close it'],
+      ['Id', 'Capability', 'Primitive', 'Priority', 'Status', 'Evidence file', 'What exists, what would close it'],
       CAPABILITIES.map((x) => [x.id, cell(x.title), x.primitive, x.priority, x.status, x.evidence ? `\`${x.evidence}\`` : '—', cell(x.note)]),
     ),
     '',

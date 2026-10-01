@@ -3,8 +3,6 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { COUNCIL, SEATS } from '../launchreadiness';
 import { REGISTER } from '../masterregister';
-import { CAPABILITY_DEFINITIONS } from '../governance/capability-governance';
-import { projectClaim, repositoryProjectionContext } from '../governance/projections';
 import { DEFAULT_SITE } from '../../site/config';
 import { ROUTES, renderPage } from '../../site/render';
 import {
@@ -24,6 +22,9 @@ import {
   type Facts,
 } from './claims';
 import { CALENDAR } from './proofcalendar';
+import { EVIDENCE, expiredUnder } from './evidence';
+import { CAPABILITY_DEFINITIONS } from '../governance/capability-governance';
+import { projectClaim, repositoryProjectionContext } from '../governance/projections';
 import { cell, controlLine, link, renderedFrom, table } from './render';
 
 /**
@@ -52,26 +53,25 @@ const read = (p: string) => readFileSync(at(p), 'utf8');
 const DOC = 'ops/claims/README.md';
 
 const pages = new Map(ROUTES.map((r) => [r.path, renderPage(r, DEFAULT_SITE)]));
+// UTC avoids a different expiry decision across developer timezones.
+const TODAY = new Date().toISOString().slice(0, 10);
+const contexts = Object.fromEntries(CAPABILITY_DEFINITIONS.map((c) => [c.id, repositoryProjectionContext(c, EVIDENCE, TODAY, CLAIMS)]));
 const FACTS: Facts = {
+  claimProjection: (claim) => projectClaim(claim, CAPABILITY_DEFINITIONS, contexts),
+  expiredEvidence: expiredUnder(EVIDENCE, TODAY),
   rowStatus: (id) => REGISTER.find((r) => r.id === id)?.status,
   exists: (p) => existsSync(at(p)),
   proofExists: (id) => CALENDAR.some((c) => c.id === id),
   routes: ROUTES.map((r) => r.path),
   page: (route) => pages.get(route),
-  capabilityExists: (capabilityId) => CAPABILITY_DEFINITIONS.some((capability) => capability.id === capabilityId),
-  claimProjection: (claim) => projectClaim(
-    claim,
-    CAPABILITY_DEFINITIONS,
-    Object.fromEntries(CAPABILITY_DEFINITIONS.map((capability) => [capability.id, repositoryProjectionContext(capability)])),
-  ),
 };
 
 const sound: Claim = {
   id: 'fixture',
+  capabilityIds: ['CAP-001'],
   claim: 'A fixture',
   scope: 'For the test',
   status: 'available',
-  capabilityIds: ['CAP-001'],
   owner: 'engineering',
   pages: ['/'],
   audiences: ['students'],
@@ -81,11 +81,21 @@ const sound: Claim = {
 /** Facts under which `sound` is sound: the home page prints it. */
 const fixtureFacts: Facts = {
   ...FACTS,
+  claimProjection: undefined,
+  expiredEvidence: undefined,
   routes: ['/'],
   page: (route) => (route === '/' ? `<li data-claim="fixture"><span class="site-badge site-status site-status-available">Available now</span> A fixture</li>` : ''),
 };
 
 describe('the checks', () => {
+  it('rejects an unknown canonical capability and an empty binding', () => {
+    expect(problems([{ ...sound, capabilityIds: ['CAP-999'] }], fixtureFacts)).toContain('fixture binds unknown capability CAP-999.');
+    expect(problems([{ ...sound, capabilityIds: [] }], fixtureFacts)).toContain('fixture names no canonical capability.');
+  });
+
+  it('reports a supplied projection denial without replacing the other checks', () => {
+    expect(problems([sound], { ...fixtureFacts, claimProjection: () => ({ permitted: false, reason: 'tenant approval missing' }) })).toContain('fixture exceeds its capability projection: tenant approval missing.');
+  });
   it('pass a sound claim', () => {
     expect(problems([sound], fixtureFacts)).toEqual([]);
   });
@@ -105,14 +115,6 @@ describe('the checks', () => {
     expect(problems([{ ...sound, evidence: [{ path: 'app/src/nowhere.test.ts', shows: '' }] }], fixtureFacts)).toEqual(['fixture cites app/src/nowhere.test.ts, which does not exist.']);
     expect(problems([{ ...sound, proof: 'nothing' }], fixtureFacts)).toEqual(['fixture names proof nothing, which is not on the calendar.']);
     expect(problems([{ ...sound, pages: ['/nowhere/'] }], fixtureFacts)).toEqual(['fixture names page /nowhere/, which is not a route.']);
-  });
-
-  it('rejects missing and unknown canonical capability bindings', () => {
-    const known = new Set<string>(CAPABILITY_DEFINITIONS.map((capability) => capability.id));
-    expect(problems([{ ...sound, capabilityIds: [] }], fixtureFacts)).toContain('fixture has no canonical capability binding.');
-    expect(problems([{ ...sound, capabilityIds: ['CAP-999'] }], fixtureFacts)).toContain('fixture names unknown capability CAP-999.');
-    expect(sound.capabilityIds.every((capabilityId) => known.has(capabilityId))).toBe(true);
-    expect(known.has('CAP-999')).toBe(false);
   });
 
   it('catch a claim that is not yet available and names nothing that would move it', () => {
@@ -169,12 +171,10 @@ describe('the register', () => {
   });
 
   it('is owned by seats, and speaks to the four audiences', () => {
-    const capabilityIds = new Set<string>(CAPABILITY_DEFINITIONS.map((capability) => capability.id));
     for (const c of CLAIMS) {
       expect(SEATS).toContain(c.owner);
       expect(c.audiences.length, `${c.id} speaks to nobody`).toBeGreaterThan(0);
       for (const a of c.audiences) expect(AUDIENCES.map((x) => x.id)).toContain(a);
-      for (const capabilityId of c.capabilityIds) expect(capabilityIds.has(capabilityId), `${c.id}: ${capabilityId}`).toBe(true);
     }
     for (const a of AUDIENCES) expect(CLAIMS.some((c) => c.audiences.includes(a.id)), `nothing is said to ${a.id}`).toBe(true);
   });
@@ -258,13 +258,13 @@ function render(): string {
     '## The claims',
     '',
     ...table(
-      ['Id', 'Claim', 'Status', 'Capabilities', 'Owner', 'Rests on', 'Would move it', 'Evidence', 'Pages'],
+      ['Id', 'Claim', 'Status', 'Owner', 'Capabilities', 'Rests on', 'Would move it', 'Evidence', 'Pages'],
       CLAIMS.map((c) => [
         `\`${c.id}\``,
         `**${cell(c.claim)}**<br>${cell(c.scope)}`,
         STATUS_LABEL[c.status],
-        c.capabilityIds.map((id) => `\`${id}\``).join(', '),
         seat(c.owner),
+        c.capabilityIds.map((id) => `\`${id}\``).join(', '),
         c.rows.length ? c.rows.map((r) => `\`${r}\``).join(', ') : '—',
         c.proof ? `[\`${c.proof}\`](${link(DOC, 'docs/PROOF-CALENDAR.md')})` : '—',
         c.evidence.length ? c.evidence.map((e) => `${ref(e.path)} — ${cell(e.shows)}`).join('<br>') : '—',

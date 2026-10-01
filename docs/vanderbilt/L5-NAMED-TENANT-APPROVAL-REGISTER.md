@@ -45,42 +45,42 @@ Only current decisions from every required role, bound to this tenant, capabilit
 | CAP-018 | Alerts | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | notification delivery credentials and channel verification |
 | CAP-019 | How This Works | standard | approval pending | tenant-product-owner | none beyond tenant approval |
 | CAP-020 | Courses | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-021 | Assignments | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-021 | Assignments | standard | approval pending | tenant-product-owner | none beyond tenant approval |
 | CAP-022 | Add a Course | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-023 | Edit the Course | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-024 | A Change to a Date | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-023 | Edit the Course | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-024 | A Change to a Date | standard | approval pending | tenant-product-owner | none beyond tenant approval |
 | CAP-025 | Study | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-026 | Where Courses Meet | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-026 | Where Courses Meet | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-027 | Semester Tutor | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | approved AI provider configuration and evaluation |
 | CAP-028 | Add a Reading | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-029 | Problem Practice | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-030 | Practice Exams | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-029 | Problem Practice | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-030 | Practice Exams | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-031 | Create | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-032 | Analyse Data | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-032 | Analyse Data | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-033 | Graphs and Diagrams | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-034 | Presentations | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-035 | Documents | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-036 | Spreadsheets | standard | approval pending | tenant-product-owner | none beyond tenant approval |
-| CAP-037 | Maths | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-034 | Presentations | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-035 | Documents | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-036 | Spreadsheets | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-037 | Maths | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-038 | Sources | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-039 | Draft It | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-039 | Draft It | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-040 | Files and Notes | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-041 | Family | high-risk | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, tenant-privacy-owner, tenant-executive-owner, tenant-operational-owner, semester-security-owner | institution-authorized payer relationship and consent |
-| CAP-042 | Athletics | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-042 | Athletics | standard | approval pending | tenant-product-owner | none beyond tenant approval |
 | CAP-043 | Campus Services | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | institution agreement and approved service adapters |
 | CAP-044 | Degree Planning | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | approved catalog and degree-audit data |
 | CAP-045 | Term Deadlines | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | authoritative registrar calendar feed |
 | CAP-046 | Money | high-risk | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, tenant-privacy-owner, tenant-executive-owner, tenant-operational-owner, semester-security-owner | approved bursar and financial-aid adapters |
 | CAP-047 | Meal Plan | high-risk | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, tenant-privacy-owner, tenant-executive-owner, tenant-operational-owner, semester-security-owner | approved dining or campus-card adapter |
 | CAP-048 | Housing | high-risk | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, tenant-privacy-owner, tenant-executive-owner, tenant-operational-owner, semester-security-owner | approved housing data and transaction adapter |
-| CAP-049 | Maps | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
+| CAP-049 | Maps | standard | approval pending | tenant-product-owner | none beyond tenant approval |
 | CAP-050 | Registration | high-risk | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, tenant-privacy-owner, tenant-executive-owner, tenant-operational-owner, semester-security-owner | approved SIS registration adapter and write authorization |
 | CAP-051 | Clubs and Activities | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | approved organization and event source |
 | CAP-052 | People and Letters | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-053 | Pathway | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-054 | Career | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-055 | Applications | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
-| CAP-056 | Check the Writing | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-053 | Pathway | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-054 | Career | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-055 | Applications | standard | approval pending | tenant-product-owner | none beyond tenant approval |
+| CAP-056 | Check the Writing | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | none beyond tenant approval |
 | CAP-057 | Video Call | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | approved signaling and meeting provider configuration |
 | CAP-058 | Group Work | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | authenticated collaboration and synchronization service |
 | CAP-059 | Email | controlled | approval pending | tenant-product-owner, tenant-data-steward, tenant-accessibility-owner, tenant-security-owner, semester-security-owner | approved Google or Microsoft mail connection |

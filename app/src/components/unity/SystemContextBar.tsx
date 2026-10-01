@@ -1,0 +1,83 @@
+import { useMemo } from 'react';
+import { useStore } from '../../state/store';
+import { destination } from '../../lib/nav';
+import { canonicalDestinationFor, FIVE_LABELS } from '../../lib/tabbar';
+import { workflowForScreen } from '../../lib/student-workflows';
+import { statusOf, syncStatusKey } from '../../lib/status';
+import { useOffline } from './Status';
+import type { Screen } from '../../lib/types';
+
+/** Screens whose own full-canvas chrome already carries the working context. */
+const QUIET_ON = new Set<Screen>(['onboarding', 'search', 'directory', 'ask', 'mail', 'call']);
+
+/**
+ * The persistent continuity strip: one term, one canonical location, one
+ * workflow, one route back into unfinished work, and one visible health state.
+ */
+export function SystemContextBar() {
+  const { state, dispatch, terms, sync } = useStore();
+  const off = useOffline();
+  const canonical = canonicalDestinationFor(state.screen);
+  const canonicalLabel = FIVE_LABELS[canonical] ?? canonical;
+  const currentTerm = terms.find((term) => term.id === state.term) ?? terms[0];
+  const workflow = workflowForScreen(state.screen);
+  const continuation = useMemo(() => {
+    const recent = state.recent.find((screen) => screen !== state.screen && !QUIET_ON.has(screen));
+    if (!recent) return null;
+    const place = destination(recent);
+    return { screen: recent, label: place?.label ?? recent };
+  }, [state.recent, state.screen]);
+  const health = statusOf(syncStatusKey(sync.status, off));
+
+  if (QUIET_ON.has(state.screen)) return null;
+
+  return (
+    <section className="system-context pane-strip" aria-label="Semester context">
+      <div className="system-context-location">
+        {terms.length > 1 ? (
+          <select
+            className="system-context-term system-context-term-select"
+            aria-label="Current semester"
+            value={currentTerm?.id ?? state.term}
+            onChange={(event) => dispatch({ type: 'setTerm', term: event.target.value })}
+          >
+            {terms.map((term) => (
+              <option key={term.id} value={term.id}>{term.label}</option>
+            ))}
+          </select>
+        ) : (
+          <span className="system-context-term">{currentTerm?.label ?? state.term}</span>
+        )}
+        <span aria-hidden="true">/</span>
+        <button type="button" className="bare system-context-link" onClick={() => dispatch({ type: 'go', screen: canonical })}>
+          {canonicalLabel}
+        </button>
+        {state.screen !== canonical && (
+          <>
+            <span aria-hidden="true">/</span>
+            <span>{destination(state.screen)?.label ?? state.screen}</span>
+          </>
+        )}
+      </div>
+      <div className="system-context-actions">
+        {workflow && <span className="system-context-workflow">{workflow.name}</span>}
+        {continuation && (
+          <button type="button" className="bare system-context-link" onClick={() => dispatch({ type: 'go', screen: continuation.screen })}>
+            Continue {continuation.label}
+          </button>
+        )}
+        <button
+          type="button"
+          className="bare system-health"
+          data-tone={health.tone}
+          title={health.about}
+          onClick={() => dispatch({ type: 'go', screen: 'account' })}
+          aria-label={`${health.label}. Open connection and account health.`}
+        >
+          <span aria-hidden="true">{health.glyph}</span>
+          {health.label}
+        </button>
+      </div>
+    </section>
+  );
+}

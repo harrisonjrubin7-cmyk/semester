@@ -78,9 +78,22 @@ function Sheet({ label, children, initial }: { label: string; children: React.Re
 export function SourceDrawer({ detail }: { detail: SourceDetail }) {
   const origin = statusOf(detail.origin);
   return (
-    <Sheet label="Source & details">
+    <Sheet label={detail.kind ? 'Details' : 'Source & details'}>
+      {detail.kind && <div className="kicker">{detail.kind}</div>}
       <h2 className="unity-sheet-title">{detail.title}</h2>
       <dl className="source-list">
+        {detail.context && (
+          <>
+            <dt>Context</dt>
+            <dd>{detail.context}</dd>
+          </>
+        )}
+        {detail.status && (
+          <>
+            <dt>Status</dt>
+            <dd>{detail.status}</dd>
+          </>
+        )}
         <dt>Origin</dt>
         <dd>
           <StatusChip status={detail.origin} />
@@ -122,6 +135,26 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
             </dd>
           </>
         )}
+        {detail.relationships && detail.relationships.length > 0 && (
+          <>
+            <dt>Connected to</dt>
+            <dd>
+              <ul>
+                {detail.relationships.map((relationship) => <li key={relationship}>{relationship}</li>)}
+              </ul>
+            </dd>
+          </>
+        )}
+        {detail.history && detail.history.length > 0 && (
+          <>
+            <dt>Recent activity</dt>
+            <dd>
+              <ol className="object-history">
+                {detail.history.map((event) => <li key={`${event.at}:${event.label}`}><span className="nums">{event.at}</span> · {event.label}</li>)}
+              </ol>
+            </dd>
+          </>
+        )}
         {detail.limitations && (
           <>
             <dt>Limitations</dt>
@@ -132,6 +165,11 @@ export function SourceDrawer({ detail }: { detail: SourceDetail }) {
         <dd>{detail.visibility ?? 'Only you'}</dd>
       </dl>
       <div className="unity-sheet-actions">
+        {detail.actions?.map((action) => (
+          <button key={action.label} type="button" className="btn btn-secondary" onClick={action.run}>
+            {action.label}
+          </button>
+        ))}
         {detail.openSource && (
           <button type="button" className="btn btn-primary" onClick={detail.openSource.run}>
             {detail.openSource.label}

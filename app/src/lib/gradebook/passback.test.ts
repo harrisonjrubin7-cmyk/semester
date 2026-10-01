@@ -33,10 +33,11 @@ function ctx(over: Partial<FlagContext> = {}): FlagContext {
     connection: { publicId: 'lms-1', approved: true, status: 'healthy' },
     scopes: [{ key: 'scope.lms.score_publish', approved: true }],
     capabilities: [],
+    // Synthetic gate fixture, not a tenant activation or LMS authorization.
     activationReceipt: {
-      decisionKey: 'activation-v1-passback', requestId: 'req-passback', tenantId: 'gb-u', capabilityId: 'CAP-030', operation: FLAG,
-      policyVersion: 'constitution-v1', configurationVersion: 1,
-      issuedAt: new Date(new Date(AT).getTime() - 60_000).toISOString(), expiresAt: new Date(new Date(AT).getTime() + 60 * 60_000).toISOString(),
+      decisionKey: 'activation:v1:test-passback', requestId: 'test-passback', tenantId: 'gb-u',
+      capabilityId: 'CAP-020', operation: FLAG, policyVersion: 'test-policy', configurationVersion: 1,
+      issuedAt: new Date(AT).toISOString(), expiresAt: new Date(Date.parse(AT) + 15 * 60_000).toISOString(),
     },
     ...over,
   };
@@ -91,6 +92,9 @@ describe('the passback gate', () => {
 
   it('is open only with every gate open, which is the control for the two above', () => {
     expect(OPEN.allowed).toBe(true);
+    const unactivated = evaluateFlag(FLAG, ctx({ activationReceipt: null }));
+    expect(unactivated).toMatchObject({ allowed: false, step: 'activation_contract' });
+    expect(planPassback(book(), ['ps1'], unactivated, {}).sends).toEqual([]);
   });
 });
 

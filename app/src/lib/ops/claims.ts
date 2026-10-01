@@ -33,6 +33,7 @@
 
 import type { Seat } from '../launchreadiness';
 import type { Status as RegisterStatus } from '../masterregister';
+import { capabilityDefinition } from '../governance/capability-governance';
 
 export type ClaimStatus = 'available' | 'limited-beta' | 'institution-configured' | 'built-tested' | 'in-preparation' | 'planned';
 
@@ -100,6 +101,8 @@ export interface Evidence {
 }
 
 export interface Claim {
+  /** Stable canonical capabilities directly covered by this claim. */
+  capabilityIds: readonly string[];
   /** A slug; also the `data-claim` attribute the site prints beside the wording. */
   id: string;
   /** The approved wording, exactly as the site prints it. */
@@ -107,8 +110,6 @@ export interface Claim {
   /** What it covers, and what a reader might assume that it does not. */
   scope: string;
   status: ClaimStatus;
-  /** Canonical product capabilities whose readiness bounds this wording. */
-  capabilityIds: readonly string[];
   owner: Seat;
   /** Site routes on which the wording and its status label appear. */
   pages: readonly string[];
@@ -120,56 +121,14 @@ export interface Claim {
   proof?: string;
 }
 
-const CLAIM_CAPABILITY_IDS: Readonly<Record<string, readonly string[]>> = {
-  'source-labels': ['CAP-001'],
-  'local-first': ['CAP-001', 'CAP-017'],
-  'export-delete': ['CAP-016', 'CAP-040'],
-  rls: ['CAP-010', 'CAP-011'],
-  secrets: ['CAP-010'],
-  'no-payment-data': ['CAP-046'],
-  'incident-notice': ['CAP-015'],
-  'audit-log': ['CAP-014'],
-  'restore-drill': ['CAP-016', 'CAP-040'],
-  mfa: ['CAP-010'],
-  'pen-test': ['CAP-010', 'CAP-013'],
-  soc2: ['CAP-014', 'CAP-015'],
-  'a11y-site': ['CAP-019'],
-  'a11y-app': ['CAP-017'],
-  'a11y-human': ['CAP-017'],
-  vpat: ['CAP-017'],
-  'a11y-lms': ['CAP-020', 'CAP-021'],
-  sso: ['CAP-010'],
-  scim: ['CAP-011'],
-  lti: ['CAP-013', 'CAP-020'],
-  sis: ['CAP-013', 'CAP-045'],
-  'connector-health': ['CAP-013'],
-  'support-access': ['CAP-014', 'CAP-015'],
-  hecvat: ['CAP-014', 'CAP-015'],
-  'lti-advantage': ['CAP-020', 'CAP-021'],
-  oneroster: ['CAP-013', 'CAP-020'],
-  'data-contracts': ['CAP-013', 'CAP-014'],
-  caliper: ['CAP-002'],
-  qti: ['CAP-025', 'CAP-029'],
-  credentials: ['CAP-053'],
-  'no-sale': ['CAP-017'],
-  'company-addresses': ['CAP-019'],
-  'student-terms': ['CAP-015'],
-  dpa: ['CAP-015'],
-  'personal-planning': ['CAP-001', 'CAP-004', 'CAP-005', 'CAP-007'],
-  'course-studio': ['CAP-020', 'CAP-023'],
-  'grade-passback': ['CAP-020', 'CAP-021', 'CAP-030'],
-  'lms-migration': ['CAP-013', 'CAP-020'],
-  'ai-course-policy': ['CAP-027'],
-  'status-page': ['CAP-019'],
-};
-
-const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
+export const CLAIMS: readonly Claim[] = [
   // ── the product ──
   {
     id: 'source-labels',
+    capabilityIds: ['CAP-020', 'CAP-022', 'CAP-024', 'CAP-038'],
     claim: 'Every fact carries its source',
     scope: 'Institution verified, Imported, Student entered, Estimated or Needs review, on every fact the app shows. A label does not make an estimate official.',
-    status: 'available',
+    status: 'built-tested',
     owner: 'product',
     pages: ['/'],
     audiences: ['students', 'departments'],
@@ -178,9 +137,10 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'local-first',
+    capabilityIds: ['CAP-010', 'CAP-014'],
     claim: 'Your working copy lives on your device. An account is optional.',
     scope: 'Signed out, everything is in the browser’s own storage and nothing leaves it. With an account it is also kept in your account. Clearing the browser clears the copy.',
-    status: 'available',
+    status: 'in-preparation',
     owner: 'engineering',
     pages: ['/security/'],
     audiences: ['students'],
@@ -188,10 +148,11 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
       { path: 'app/src/lib/inventory.test.ts', shows: 'Every key the app writes to the browser is counted by the Data screen' },
       { path: 'RETENTION.md', shows: 'The inventory of every store and the clock that runs on it' },
     ],
-    rows: [],
+    rows: ['IAM-001'],
   },
   {
     id: 'export-delete',
+    capabilityIds: ['CAP-015', 'CAP-016'],
     claim: 'You can export everything, and delete your account, at any time, on any plan.',
     scope: 'Your account and what is in it. It does not delete what your institution holds about you in its own systems.',
     status: 'in-preparation',
@@ -202,11 +163,12 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
       { path: 'app/src/lib/plans.test.ts', shows: 'Export, deletion and saved plans are on every plan, including Free' },
       { path: 'supabase/deletion.check.sql', shows: 'Deleting the account removes its rows from every table' },
     ],
-    rows: ['SEC-008'],
+    rows: ['STU-011'],
   },
   // ── security ──
   {
     id: 'rls',
+    capabilityIds: ['CAP-010', 'CAP-011', 'CAP-014', 'CAP-040'],
     claim: 'With an account, access to every table is enforced by the database itself, and tested as a second account in every build.',
     scope: 'Row-level security on every table, exercised by the policy suites CI runs against a fresh database. No exported policy listing for reviewers yet.',
     status: 'in-preparation',
@@ -221,9 +183,10 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'secrets',
+    capabilityIds: ['CAP-010', 'CAP-013', 'CAP-027'],
     claim: 'No secret keys are shipped to the browser, and every change is scanned for leaked credentials.',
     scope: 'The browser bundle, the public folder and the entry page; and the history of every change.',
-    status: 'in-preparation',
+    status: 'planned',
     owner: 'security',
     pages: ['/security/'],
     audiences: ['reviewers'],
@@ -231,10 +194,11 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
       { path: 'app/src/lib/ops/boundaries.test.ts', shows: 'No service-role credential, and no build variable that would carry one, in anything a browser loads' },
       { path: '.github/workflows/ci.yml', shows: 'gitleaks over every change' },
     ],
-    rows: ['SEC-010'],
+    rows: ['SEC-004'],
   },
   {
     id: 'no-payment-data',
+    capabilityIds: ['CAP-010', 'CAP-046'],
     claim: 'Semester never stores payment cards, bank details or university passwords.',
     scope: 'Plus checkout (D-128) sends the person to Stripe’s own page, so the card never reaches Semester. Sign-in to an institution is by its identity provider, so its password never reaches Semester.',
     status: 'in-preparation',
@@ -245,10 +209,11 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
       { path: 'app/src/lib/plans.test.ts', shows: 'Nothing on the site or in the app collects a card; checkout hands off to Stripe' },
       { path: 'app/src/lib/ops/boundaries.test.ts', shows: 'No database driver or connection string to any institution’s system' },
     ],
-    rows: ['SEC-008'],
+    rows: ['IAM-001'],
   },
   {
     id: 'incident-notice',
+    capabilityIds: ['CAP-015', 'CAP-014'],
     claim: 'Notice within 72 hours of a confirmed exposure of your data',
     scope: 'The commitment is written. The process behind it has not been exercised, even as a tabletop.',
     status: 'in-preparation',
@@ -261,6 +226,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'audit-log',
+    capabilityIds: ['CAP-010', 'CAP-014', 'CAP-041'],
     claim: 'A tamper-evident record of every privileged action',
     scope: 'Role grants, moderation, support reads and gateway actions are audited today. A unified event schema, and an export a reviewer can verify, are not.',
     status: 'in-preparation',
@@ -272,6 +238,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'restore-drill',
+    capabilityIds: ['CAP-014', 'CAP-016'],
     claim: 'A rehearsed restore from backup',
     scope: 'A restore rehearsal passes on every change in CI. Production has never been restored, and the recovery time is unmeasured.',
     status: 'in-preparation',
@@ -284,6 +251,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'mfa',
+    capabilityIds: ['CAP-010'],
     claim: 'Multi-factor sign-in',
     scope: 'For privileged roles first, then as a student opt-in.',
     status: 'planned',
@@ -295,6 +263,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'pen-test',
+    capabilityIds: ['CAP-010', 'CAP-013', 'CAP-015', 'CAP-041'],
     claim: 'An independent penetration test',
     scope: 'No firm engaged and no test environment built. The plan says how one is scoped and how findings are registered.',
     status: 'planned',
@@ -306,6 +275,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'soc2',
+    capabilityIds: ['CAP-010', 'CAP-013', 'CAP-015', 'CAP-041'],
     claim: 'An independent audit or certification such as SOC 2',
     scope: 'Controls are mapped. None is operated over a period or evidenced, and no auditor is engaged.',
     status: 'planned',
@@ -318,6 +288,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   // ── accessibility ──
   {
     id: 'a11y-site',
+    capabilityIds: ['CAP-019'],
     claim: 'Every page of this site has one main region, a skip link, a declared language and one heading, checked on every change.',
     scope: 'Structure and links, by test. Not a human review, and not the app.',
     status: 'in-preparation',
@@ -329,9 +300,10 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'a11y-app',
+    capabilityIds: ['CAP-001', 'CAP-017', 'CAP-020', 'CAP-021', 'CAP-025', 'CAP-031'],
     claim: 'Every screen of the app is scanned for serious and critical accessibility violations on every change.',
     scope: 'axe-core over every route, desktop and phone, in CI. Automated checks find a minority of barriers; the rest need a person.',
-    status: 'available',
+    status: 'in-preparation',
     owner: 'accessibility',
     pages: ['/accessibility/'],
     audiences: ['students', 'departments', 'reviewers'],
@@ -340,6 +312,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'a11y-human',
+    capabilityIds: ['CAP-001', 'CAP-020', 'CAP-021', 'CAP-025'],
     claim: 'A review of the main student journey by a person, with a screen reader, keyboard only, at 320px and at 200% zoom',
     scope: 'Month 1 of the proof calendar. Each failure is filed against the WCAG scorecard.',
     status: 'in-preparation',
@@ -352,6 +325,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'vpat',
+    capabilityIds: ['CAP-001', 'CAP-020', 'CAP-025'],
     claim: 'A conformance report (VPAT/ACR) by a qualified evaluator',
     scope: 'Over the piloted screens, before institutional general availability. Code cannot produce it.',
     status: 'planned',
@@ -364,6 +338,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'a11y-lms',
+    capabilityIds: ['CAP-020', 'CAP-030'],
     claim: 'Accessibility of course authoring and assessments',
     scope: 'Course Studio and assessments are not released. Their keyboard, timing and accommodation behaviour is designed, not tested.',
     status: 'planned',
@@ -376,6 +351,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   // ── institutions ──
   {
     id: 'sso',
+    capabilityIds: ['CAP-010'],
     claim: 'Sign-in through your institution’s identity provider (SAML)',
     scope: 'SAML is configured for no tenant, OIDC is not offered, and nothing has been tested against a real identity provider.',
     status: 'in-preparation',
@@ -388,6 +364,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'scim',
+    capabilityIds: ['CAP-010', 'CAP-011'],
     claim: 'Automatic account provisioning (SCIM)',
     scope: 'Reachable, off by default, enabled for no tenant, and not yet run against an identity provider.',
     status: 'in-preparation',
@@ -399,6 +376,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'lti',
+    capabilityIds: ['CAP-013', 'CAP-020'],
     claim: 'Launch from your learning system (LTI 1.3)',
     scope: 'Tested against a test platform. No launch from a real institution’s learning system yet, and no 1EdTech certification.',
     status: 'planned',
@@ -413,6 +391,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'sis',
+    capabilityIds: ['CAP-013', 'CAP-050'],
     claim: 'Read-only connections to registration and student systems',
     scope: 'The framework is tested with mock adapters. No real adapter exists, nothing has been reconciled against a live source, and no institution has connected one.',
     status: 'planned',
@@ -425,6 +404,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'connector-health',
+    capabilityIds: ['CAP-013', 'CAP-014'],
     claim: 'Freshness and health of every connection, visible to your staff',
     scope: 'Behind an off-by-default flag. No alerting, and no proven fallback per connector.',
     status: 'planned',
@@ -436,6 +416,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'support-access',
+    capabilityIds: ['CAP-010', 'CAP-015'],
     claim: 'Support staff see a student’s data only under a time-limited grant the student can see',
     scope: 'Grants carry a reason and an expiry and are audited. They are not yet tied to a ticket, and the workflow has had no acceptance test with an institution.',
     status: 'in-preparation',
@@ -447,6 +428,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'hecvat',
+    capabilityIds: ['CAP-010', 'CAP-015'],
     claim: 'A completed HECVAT',
     scope: 'The readiness register answers each question with what exists. The workbook itself is not filled in or reviewed.',
     status: 'planned',
@@ -460,6 +442,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   // ── the public integration registry (/platform/integrations/, lib/interop.ts) ──
   {
     id: 'lti-advantage',
+    capabilityIds: ['CAP-013', 'CAP-020'],
     claim: 'Deep linking and grade services from your learning system (LTI Advantage)',
     scope: 'Deep linking is tested against a test platform; grade passback is gated per registration and still being built; roster membership (NRPS) is deliberately not requested. No real learning system has launched it.',
     status: 'planned',
@@ -471,6 +454,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'oneroster',
+    capabilityIds: ['CAP-013', 'CAP-020'],
     claim: 'Roster and enrollment exchange (OneRoster 1.2)',
     scope: 'Not started. The first pilot runs without rosters by design; when built, it is an authorised feed under a data contract, never an open source.',
     status: 'planned',
@@ -482,6 +466,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'data-contracts',
+    capabilityIds: ['CAP-013', 'CAP-014'],
     claim: 'Documented APIs, webhooks and versioned data contracts',
     scope: 'The contract shape and the stewardship roles exist; webhooks and files are being built; no partner has integrated against them.',
     status: 'planned',
@@ -493,6 +478,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'caliper',
+    capabilityIds: ['CAP-013', 'CAP-009'],
     claim: 'Learning-event interoperability (Caliper Analytics)',
     scope: 'No Caliper event is emitted. The aggregation and suppression rules any event would live under exist, and no event will ever become a risk score.',
     status: 'planned',
@@ -504,6 +490,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'qti',
+    capabilityIds: ['CAP-020', 'CAP-030'],
     claim: 'Portable assessments and competency frameworks (QTI, CASE)',
     scope: 'Designed, not built. Waits for assessment content and competency mapping to be real.',
     status: 'planned',
@@ -515,6 +502,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'credentials',
+    capabilityIds: ['CAP-013', 'CAP-054'],
     claim: 'Verifiable, learner-held credentials (Open Badges 3.0, CLR)',
     scope: 'Designed as the credential wallet, Tier 2, Phase 3. No badge is issued, and none will be until the achievement is real, evidence-backed, issuer-controlled and portable.',
     status: 'planned',
@@ -527,6 +515,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   // ── commercial and legal ──
   {
     id: 'no-sale',
+    capabilityIds: ['CAP-010'],
     claim: 'Plus can be bought from the Account screen, and nowhere else; Pro is not on sale',
     scope: 'Checkout and cancellation are built (D-128, D-132) and run on Stripe test keys; no live payment has been taken and the first end-to-end check is not recorded. The public site sells nothing. The refund policy is still a proposal.',
     status: 'in-preparation',
@@ -538,6 +527,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'company-addresses',
+    capabilityIds: ['CAP-019'],
     claim: 'Dedicated company addresses for support, security, privacy and accessibility',
     scope: 'They arrive with the company that owns the domain. Until then, one address read by a person, with each topic routed to a seat.',
     status: 'planned',
@@ -549,6 +539,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'student-terms',
+    capabilityIds: ['CAP-010', 'CAP-015'],
     claim: 'Terms of service and a privacy policy in force',
     scope: 'Drafts exist and are held to the subprocessor register by a test. Nothing is in force or reviewed by a lawyer, and there is no legal entity to be the party.',
     status: 'in-preparation',
@@ -563,6 +554,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'dpa',
+    capabilityIds: ['CAP-010', 'CAP-015'],
     claim: 'A data processing agreement your counsel can sign',
     scope: 'A checklist for counsel exists. No agreement language does.',
     status: 'planned',
@@ -578,9 +570,11 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   // the word, and its tier columns (who gets it) live in `site/platform.ts`.
   {
     id: 'personal-planning',
+    // Personal planning explicitly excludes CAP-050's official enrollment operation.
+    capabilityIds: ['CAP-001', 'CAP-003', 'CAP-025', 'CAP-044'],
     claim: 'Plan your term, your path and your week from what you add',
     scope: 'Today, My Path, the registration plan with backups, the calendar and the study tools, from what the student enters or imports. No account is needed, and nothing here is the registrar’s record.',
-    status: 'available',
+    status: 'in-preparation',
     owner: 'product',
     pages: ['/platform/availability/'],
     audiences: ['students', 'departments'],
@@ -592,9 +586,10 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'course-studio',
+    capabilityIds: ['CAP-020', 'CAP-027'],
     claim: 'An instructor publishes the course’s rules and guidance beside the course',
     scope: 'Course Studio: what an instructor publishes appears beside the course for its students, including the course’s AI policy. Switched on per institution; no institution has it on.',
-    status: 'built-tested',
+    status: 'in-preparation',
     owner: 'product',
     pages: ['/platform/availability/'],
     audiences: ['departments', 'institutions'],
@@ -603,9 +598,10 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'grade-passback',
+    capabilityIds: ['CAP-013', 'CAP-020'],
     claim: 'Grades written back to the institution’s learning system',
     scope: 'A score written to the learning system needs that system’s approval and a write scope Semester does not hold. The read side of LTI is built; the write side is under way.',
-    status: 'in-preparation',
+    status: 'planned',
     owner: 'data',
     pages: ['/platform/availability/'],
     audiences: ['institutions'],
@@ -614,6 +610,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'lms-migration',
+    capabilityIds: ['CAP-013', 'CAP-020'],
     claim: 'Moving courses from an existing learning system',
     scope: 'Project work with the institution — mapping, a rehearsal run, the real run, verification — never a self-serve import. No migration has been run.',
     status: 'planned',
@@ -625,6 +622,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'ai-course-policy',
+    capabilityIds: ['CAP-017', 'CAP-027'],
     claim: 'What the assistant may do, set by the student, the course and the institution',
     scope: 'A student always controls what the assistant may see. A course policy published in Course Studio is shown before the assistant answers; the institution and department layers of the policy engine are under way.',
     status: 'in-preparation',
@@ -636,6 +634,7 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
   },
   {
     id: 'status-page',
+    capabilityIds: ['CAP-014'],
     claim: 'A status page that checks Semester from your own browser',
     scope: 'Up means this browser reached it just now. There is no uptime history.',
     status: 'in-preparation',
@@ -643,15 +642,9 @@ const CLAIM_ROWS: readonly Omit<Claim, 'capabilityIds'>[] = [
     pages: ['/launch-readiness/'],
     audiences: ['students', 'departments', 'institutions'],
     evidence: [{ path: 'app/src/lib/statuspage.test.ts', shows: 'The page probes the same project the app is built against' }],
-    rows: ['SRE-008'],
+    rows: ['SRE-002'],
   },
 ];
-
-export const CLAIMS: readonly Claim[] = CLAIM_ROWS.map((row) => {
-  const capabilityIds = CLAIM_CAPABILITY_IDS[row.id];
-  if (!capabilityIds?.length) throw new Error(`No canonical capability binding for claim ${row.id}.`);
-  return { ...row, capabilityIds };
-});
 
 export function claim(id: string): Claim {
   const found = CLAIMS.find((c) => c.id === id);
@@ -730,9 +723,7 @@ export interface Facts {
   page: (route: string) => string | undefined;
   /** The evidence records under a claim that have expired (`expiredUnder` in evidence.ts); absent when the caller holds no register. */
   expiredEvidence?: (claimId: string) => readonly string[];
-  /** Capability-derived ceiling; optional for small isolated callers. */
   claimProjection?: (claim: Claim) => { permitted: boolean; reason: string };
-  capabilityExists?: (capabilityId: string) => boolean;
 }
 
 export const isTest = (path: string): boolean => /\.test\.tsx?$/.test(path) || /\.check\.sql$/.test(path);
@@ -748,13 +739,11 @@ export function problems(claims: readonly Claim[], facts: Facts): string[] {
   for (const c of claims) {
     if (seen.has(c.id)) out.push(`${c.id} appears twice.`);
     seen.add(c.id);
-    if (!/^[a-z0-9-]+$/.test(c.id)) out.push(`${c.id} is not a slug.`);
-    if (!c.capabilityIds.length) out.push(`${c.id} has no canonical capability binding.`);
-    for (const capabilityId of c.capabilityIds) {
-      if (facts.capabilityExists && !facts.capabilityExists(capabilityId)) out.push(`${c.id} names unknown capability ${capabilityId}.`);
-    }
+    if (!c.capabilityIds.length) out.push(`${c.id} names no canonical capability.`);
+    for (const id of c.capabilityIds) if (!capabilityDefinition(id)) out.push(`${c.id} binds unknown capability ${id}.`);
     const projection = facts.claimProjection?.(c);
-    if (projection && !projection.permitted) out.push(`${c.id} exceeds its capability projection: ${projection.reason}`);
+    if (projection && !projection.permitted) out.push(`${c.id} exceeds its capability projection: ${projection.reason}.`);
+    if (!/^[a-z0-9-]+$/.test(c.id)) out.push(`${c.id} is not a slug.`);
     if (/["&<>]|'/.test(c.claim)) out.push(`${c.id}: the wording carries a character the page would escape; use ’ and “ ”.`);
     if (c.status === 'available' && !c.evidence.some((e) => isTest(e.path))) out.push(`${c.id} is available and cites no test.`);
     if (c.status === 'available') for (const e of facts.expiredEvidence?.(c.id) ?? []) out.push(`${c.id} is available and rests on ${e}, which has expired.`);

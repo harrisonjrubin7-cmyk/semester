@@ -63,11 +63,6 @@ import {
 } from './client';
 
 const NOW = Date.parse('2026-09-29T17:00:00Z');
-const RECEIPT = {
-  decisionKey: 'activation-v1-dining', requestId: 'req-dining', tenantId: 'vu', capabilityId: 'CAP-047', operation: 'module.dining',
-  policyVersion: 'constitution-v1', configurationVersion: 1,
-  issuedAt: new Date(NOW - 60_000).toISOString(), expiresAt: new Date(NOW + 60 * 60_000).toISOString(),
-};
 
 beforeEach(() => {
   calls.length = 0;
@@ -88,14 +83,15 @@ describe('the gate', () => {
     expect(o.kind === 'ready' && o.context.on).toBe(false);
   });
 
-  it('is on in production, and a kill switch for the school turns it off again', async () => {
+  it('keeps production closed without an activation receipt, with kill switches still taking precedence', async () => {
     replies.set('rpc:feature_state', { data: 'production' });
     replies.set('from:feature_kill_switch', { data: [] });
-    const on = await openDining(new Date(NOW), RECEIPT);
-    expect(on.kind === 'ready' && on.context.on).toBe(true);
+    const on = await openDining(new Date(NOW));
+    expect(on.kind === 'ready' && on.context).toMatchObject({ on: false, moduleState: 'production', reason: expect.stringContaining('activation receipt') });
     replies.set('from:feature_kill_switch', { data: [{ switch_key: 'kill.writeback', tenant_id: 'vu', engaged: true }] });
-    const killed = await openDining(new Date(NOW), RECEIPT);
+    const killed = await openDining(new Date(NOW));
     expect(killed.kind === 'ready' && killed.context).toMatchObject({ on: false, moduleState: 'production' });
+    expect(killed.kind === 'ready' && killed.context.reason).toContain('kill');
   });
 
   it('reports dining:operate only when it is held over this school', async () => {
@@ -114,38 +110,31 @@ describe('the gate', () => {
     expect(calls.find((c) => c.name === 'feature_narrowing')?.args).toEqual({ want_capability: 'module.dining', want_tenant: 'vu' });
   });
 
-  it('keeps a student outside the school’s dining pilot cohort out, and lets a member in', async () => {
+  it('refuses a student outside the dining cohort before requiring activation for a member', async () => {
     replies.set('rpc:feature_state', { data: 'production' });
     narrowed({ permitted_cohorts: ['dining-pilot'] });
     const out = await openDining(new Date(NOW));
     expect(out.kind === 'ready' && out.context).toMatchObject({ on: false, moduleState: 'production' });
     expect(out.kind === 'ready' && out.context.reason).toContain('release cohort');
     narrowed({ permitted_cohorts: ['dining-pilot'], cohorts: ['dining-pilot'] });
-    const member = await openDining(new Date(NOW), RECEIPT);
-    expect(member.kind === 'ready' && member.context.on).toBe(true);
+    const member = await openDining(new Date(NOW));
+    expect(member.kind === 'ready' && member.context).toMatchObject({ on: false, reason: expect.stringContaining('activation receipt') });
   });
 
-  it('keeps a staff-only preview to staff: a student is refused, staff at the school admitted', async () => {
+  it('refuses students in a staff-only preview before requiring activation for staff', async () => {
     replies.set('rpc:feature_state', { data: 'production' });
     narrowed({ permitted_roles: ['university_staff'] });
     const student = await openDining(new Date(NOW));
     expect(student.kind === 'ready' && student.context.on).toBe(false);
     expect(student.kind === 'ready' && student.context.reason).toContain('other roles');
     narrowed({ permitted_roles: ['university_staff'], roles: ['university_staff'] });
-    const staff = await openDining(new Date(NOW), RECEIPT);
-    expect(staff.kind === 'ready' && staff.context.on).toBe(true);
+    const staff = await openDining(new Date(NOW));
+    expect(staff.kind === 'ready' && staff.context).toMatchObject({ on: false, reason: expect.stringContaining('activation receipt') });
   });
 
-  it('is open when the school names no role and no cohort — the control', async () => {
+  it('still requires activation when the school names no role and no cohort', async () => {
     replies.set('rpc:feature_state', { data: 'production' });
     narrowed({});
-    const o = await openDining(new Date(NOW), RECEIPT);
-    expect(o.kind === 'ready' && o.context.on).toBe(true);
-  });
-
-  it('fails closed without an activation receipt even when the school enabled dining', async () => {
-    replies.set('rpc:feature_state', { data: 'production' });
-    replies.set('from:feature_kill_switch', { data: [] });
     const o = await openDining(new Date(NOW));
     expect(o.kind === 'ready' && o.context).toMatchObject({ on: false, reason: expect.stringContaining('activation receipt') });
   });

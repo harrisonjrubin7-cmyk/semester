@@ -48,14 +48,14 @@ export interface Primitive {
 }
 
 export const PRIMITIVES: readonly Primitive[] = [
-  { id: 'identity-tenancy', name: 'Identity and tenancy', one: 'One account, affiliation, role, tenant-boundary, SSO and lifecycle system', home: 'packages/institution/src/identity.ts' },
-  { id: 'permission-consent-authority', name: 'Permission, consent and authority', one: 'One purpose-bound model for who may read, write, share, export, approve or revoke', home: 'app/src/lib/privacy.ts' },
-  { id: 'data-provenance', name: 'Canonical data and provenance', one: 'One model for meaning, authority, source, freshness, correction and portability', home: 'app/src/lib/source.ts' },
-  { id: 'policy-rules', name: 'Policy and rules', one: 'One versioned system for institutional, course, contractual and product constraints', home: 'app/src/lib/flags.ts' },
-  { id: 'action-workflow', name: 'Action and workflow', one: 'One draft, review, confirmation, execution, receipt, recovery and reconciliation model', home: 'app/src/lib/actions.ts' },
-  { id: 'integration-gateway', name: 'Integration gateway', one: 'One bounded connector, health, idempotency, fallback and revocation system', home: 'app/server/institution/gateway.ts' },
-  { id: 'trust-evidence', name: 'Trust and evidence', one: 'One audit, control, evidence, claim, incident, approval and continuity system', home: 'app/src/lib/trust/evidence-register.ts' },
-  { id: 'experience-accessibility', name: 'Experience and accessibility', one: 'One coherent interaction, accessible alternative, degraded state and support model', home: 'app/src/lib/accessmode.ts' },
+  { id: 'identity-tenancy', name: 'Identity and tenancy', one: 'Who the actor is and which tenant boundary applies', home: 'packages/institution/src/identity.ts' },
+  { id: 'permission-consent-authority', name: 'Permission, consent, and authority', one: 'Who may read, write, approve, share, export, or revoke for a stated purpose', home: 'app/src/lib/privacy.ts' },
+  { id: 'data-provenance', name: 'Canonical data and provenance', one: 'What a record means, where it came from, how fresh it is, and how it is corrected', home: 'app/src/lib/provenance.ts' },
+  { id: 'policy-rules', name: 'Policy and rules', one: 'Versioned institutional, course, contractual, and product constraints', home: 'packages/institution/src/policy.ts' },
+  { id: 'action-workflow', name: 'Action and workflow', one: 'Draft, review, confirmation, execution, receipt, recovery, and reconciliation', home: 'app/src/lib/actions.ts' },
+  { id: 'integration-gateway', name: 'Integration gateway', one: 'Bounded external-system contracts, health, idempotency, fallback, and revocation', home: 'app/server/institution/gateway.ts' },
+  { id: 'trust-evidence', name: 'Trust and evidence', one: 'Audit events, controls, evidence, claims, incidents, and approvals', home: 'app/src/lib/ops/evidence.ts' },
+  { id: 'experience-accessibility', name: 'Experience and accessibility', one: 'Coherent interaction patterns, accessible alternatives, errors, degraded behavior, and support routes', home: 'app/src/lib/accessmode.ts' },
 ];
 
 /** Asked and answered before work starts on any feature, workflow, screen, integration or system. */
@@ -86,19 +86,19 @@ export const PRIORITIES: Record<PriorityId, string> = {
   P5: 'Expand into credentials, federation, marketplace, global, K–12, alumni and life',
 };
 
-/** The twelve parts of the constitution, each a sentence the product is held to and what holds it. */
+/** The twelve approved operating rules, each with a boundary that already exists. */
 export const PRINCIPLES: readonly { id: string; name: string; principle: string; heldBy: string }[] = [
-  { id: 'student-control', name: 'Student control', principle: 'Students control their personal plans, drafts, sharing decisions and portable exports.', heldBy: 'app/src/lib/mecontrols.ts' },
-  { id: 'official-authority', name: 'Official authority', principle: 'Official institutional systems remain authoritative unless a school explicitly approves Semester for one bounded workflow.', heldBy: 'docs/DOMAIN-REPLACEMENT-REGISTER.md' },
-  { id: 'data-meaning', name: 'Data meaning', principle: 'Meaningful facts carry authority, source, provenance, freshness and an accessible correction route.', heldBy: 'app/src/lib/source.ts' },
-  { id: 'high-impact-action', name: 'High-impact action', principle: 'Consequential actions are explained, previewed, confirmed, recorded and recoverable.', heldBy: 'app/server/institution/gateway.ts' },
-  { id: 'ai-boundary', name: 'AI boundary', principle: 'AI cites authorized sources, follows institutional and course policy, and never silently makes a high-impact decision.', heldBy: 'app/src/intelligence/contracts.ts' },
-  { id: 'least-access', name: 'Least access', principle: 'No person, integration or agent receives unrestricted student-data access by default.', heldBy: 'docs/MODULE-PRIVACY-MODEL.md' },
-  { id: 'tenant-isolation', name: 'Tenant isolation', principle: 'Tenant data remains isolated and every sensitive request is bound to an approved purpose.', heldBy: 'supabase/access.check.sql' },
-  { id: 'accessibility', name: 'Accessibility', principle: 'Accessibility is a release criterion, including keyboard, screen-reader, narrow-screen and reduced-motion behavior.', heldBy: 'docs/DEFINITION-OF-DONE.md' },
-  { id: 'failure', name: 'Failure behavior', principle: 'Failures preserve data, expose honest status and retain an official or human fallback.', heldBy: 'app/src/lib/statusnotice.ts' },
-  { id: 'truthful-claims', name: 'Truthful claims', principle: 'Public claims never exceed verified product maturity, current evidence or tenant activation state.', heldBy: 'app/src/lib/governance/activation-control-plane.ts' },
-  { id: 'tenant-activation', name: 'Tenant activation', principle: 'Tenant activation requires applicable policy, approval, data mapping, support, monitoring and rollback.', heldBy: 'app/src/lib/governance/activation-control-plane.ts' },
+  { id: 'student-control', name: 'Student control', principle: 'Students control personal plans, drafts, sharing, and exports.', heldBy: 'app/src/lib/advisor-shares.ts' },
+  { id: 'institutional-authority', name: 'Institutional authority', principle: 'Official institutional systems remain authoritative unless an institution explicitly approves Semester for a bounded workflow.', heldBy: 'docs/DOMAIN-REPLACEMENT-REGISTER.md' },
+  { id: 'provenance', name: 'Provenance', principle: 'Meaningful facts carry source, provenance, freshness, and correction paths.', heldBy: 'app/src/lib/provenance.ts' },
+  { id: 'high-impact-actions', name: 'High-impact actions', principle: 'High-impact actions are explained, previewed, confirmed, and audited.', heldBy: 'app/src/lib/actions.ts' },
+  { id: 'ai', name: 'AI', principle: 'AI cites authorized sources, follows institutional and course policy, and does not silently make high-impact decisions.', heldBy: 'app/src/lib/source.ts' },
+  { id: 'least-privilege', name: 'Least privilege', principle: 'No person, integration, or agent receives unrestricted student-data access by default.', heldBy: 'app/src/lib/privacy.ts' },
+  { id: 'tenancy-purpose', name: 'Tenancy and purpose', principle: 'Tenant data is isolated and sensitive requests are purpose-bound.', heldBy: 'app/server/institution/gateway.ts' },
+  { id: 'accessibility', name: 'Accessibility', principle: 'Accessibility is a release criterion.', heldBy: 'docs/DEFINITION-OF-DONE.md' },
+  { id: 'failure-recovery', name: 'Failure recovery', principle: 'Failures preserve data, expose honest status, and retain an official or human fallback.', heldBy: 'app/src/lib/statusnotice.ts' },
+  { id: 'public-claims', name: 'Public claims', principle: 'Public claims cannot exceed verified maturity and current evidence.', heldBy: 'app/src/lib/ops/claims.ts' },
+  { id: 'tenant-activation', name: 'Tenant activation', principle: 'Tenant activation requires the applicable policy, approval, data map, support ownership, monitoring, and rollback path.', heldBy: 'app/src/lib/governance/config-tiers.ts' },
   { id: 'smallest-safe-solution', name: 'Smallest safe solution', principle: 'Semester builds the smallest safe solution that improves a defined student decision or institutional workflow.', heldBy: 'docs/DO-NOT-BUILD.md' },
 ];
 
@@ -126,9 +126,9 @@ export const CAPABILITIES: readonly Capability[] = [
   // Learner-journey brief
   C('J-01', 'journeys', 'action-workflow', 'P1', 'partial', 'Universal learner journey engine', 'app/src/lib/pathway.ts', 'Life stages and milestone templates exist; no goal → decision → support → evidence → reflection chain, and no flow for major exploration, recovery, research, graduate school or alumni.'),
   C('J-02', 'journeys', 'experience-accessibility', 'P1', 'partial', 'Life-event model', 'app/src/lib/lifeevents.ts', 'Twelve events with no field to type in, drawn on Behind behind VITE_ME_LIFE_EVENTS (off by default): optional adjustments, help routes that seed Help with nothing filled in, a plan that clears after four weeks with one follow-up. Kept on the device only, sent nowhere. Not on Today, and Behind shows it only once a term is imported.'),
-  C('J-03', 'journeys', 'policy-rules', 'P2', 'absent', 'Student-success playbook system', null, 'No institution-configurable playbook object; `institution-ops.ts` defines metrics and `CampaignManager.tsx` sends, neither is a playbook.'),
-  C('J-04', 'journeys', 'action-workflow', 'P1', 'partial', 'Continuous feedback and “You said, we changed”', 'app/src/lib/momentfeedback.ts', 'Two of eight moments are asked (an AI answer that has a source, a help request just sent) behind VITE_ME_MOMENT_FEEDBACK (off by default), with a daily cap, a gap, a way out and an off switch; What’s new shows the log (empty) and the controls. Answers stay on the device: no collection path to a school exists, so no aggregate is shown to anyone. Six moments are declared and not asked.'),
-  C('J-05', 'journeys', 'action-workflow', 'P5', 'partial', 'Learning-community infrastructure', 'app/src/community/circles.ts', 'Rules and schema are strong (opt-in, capped, ended, no popularity, no open DMs); circles are not persisted and have no screen.'),
+  C('J-03', 'journeys', 'action-workflow', 'P2', 'absent', 'Student-success playbook system', null, 'No institution-configurable playbook object; `institution-ops.ts` defines metrics and `CampaignManager.tsx` sends, neither is a playbook.'),
+  C('J-04', 'journeys', 'experience-accessibility', 'P1', 'partial', 'Continuous feedback and “You said, we changed”', 'app/src/lib/momentfeedback.ts', 'Two of eight moments are asked (an AI answer that has a source, a help request just sent) behind VITE_ME_MOMENT_FEEDBACK (off by default), with a daily cap, a gap, a way out and an off switch; What’s new shows the log (empty) and the controls. Answers stay on the device: no collection path to a school exists, so no aggregate is shown to anyone. Six moments are declared and not asked.'),
+  C('J-05', 'journeys', 'experience-accessibility', 'P5', 'partial', 'Learning-community infrastructure', 'app/src/community/circles.ts', 'Rules and schema are strong (opt-in, capped, ended, no popularity, no open DMs); circles are not persisted and have no screen.'),
   C('J-06', 'journeys', 'data-provenance', 'P5', 'partial', 'Academic portfolio and showcase', 'app/src/lib/career-evidence.ts', 'Confirmed skills, artifacts, résumé versions; no reflection step, no limited-share link, no per-item visibility column.'),
   C('J-07', 'journeys', 'experience-accessibility', 'P2', 'partial', 'Relationship map (My Network)', 'app/src/lib/mentors.ts', 'Career contacts with permission state and follow-up, mentors, advisor meetings; no unified view, and DO-NOT-BUILD rule 1 forbids a new root.'),
   C('J-08', 'journeys', 'data-provenance', 'P5', 'absent', 'Credential verification network', null, 'CREDENTIAL-WALLET.md is a design; no issuer model, revocation state, share model, QR verify page or schema registry.'),
@@ -143,9 +143,9 @@ export const CAPABILITIES: readonly Capability[] = [
   C('I-01', 'institutional', 'data-provenance', 'P2', 'partial', 'Institutional memory system', 'app/src/lib/ops/operatingsystem.ts', 'A 60-row document register with owners and review dates; no versioned policies, catalog-year snapshots or “what changed” timeline.'),
   C('I-02', 'institutional', 'data-provenance', 'P2', 'partial', 'Decision provenance', 'app/src/lib/provenance.ts', 'Domain records carry decided_by and rationale; no generic model with authority, policy version, evidence and appeal path.'),
   C('I-03', 'institutional', 'action-workflow', 'P5', 'absent', 'Education workflow marketplace', null, 'Workflow state machines exist in `packages/institution`; no installable workflow package.'),
-  C('I-04', 'institutional', 'permission-consent-authority', 'P1', 'partial', 'Explainability by default beyond AI', 'app/src/lib/actions.ts', 'Actions, screens, policy denials and notifications each explain; three shapes, no shared contract, no “why can I do this”.'),
+  C('I-04', 'institutional', 'action-workflow', 'P1', 'partial', 'Explainability by default beyond AI', 'app/src/lib/actions.ts', 'Actions, screens, policy denials and notifications each explain; three shapes, no shared contract, no “why can I do this”.'),
   C('I-05', 'institutional', 'policy-rules', 'P3', 'absent', 'Semantic policy and regulation engine', null, 'No clause extraction or version diff; `policysim.ts` simulates flag and retention changes only.'),
-  C('I-06', 'institutional', 'experience-accessibility', 'P2', 'partial', 'Cross-role simulation', 'app/src/components/institutional/RoleWorkspace.tsx', 'A sandbox preview with fixtures behind a build flag; production has no view-as by design.'),
+  C('I-06', 'institutional', 'permission-consent-authority', 'P2', 'partial', 'Cross-role simulation', 'app/src/components/institutional/RoleWorkspace.tsx', 'A sandbox preview with fixtures behind a build flag; production has no view-as by design.'),
   C('I-07', 'institutional', 'action-workflow', 'P3', 'absent', 'Workflow digital twin', null, 'Mapping simulation exists (`integration/simulate.ts`); no trigger → policy → role → notification → outcome model.'),
   C('I-08', 'institutional', 'trust-evidence', 'P0', 'partial', 'Platform observability graph', 'app/src/lib/statusnotice.ts', 'Incidents name affected screens by hand; no service → dependency → workflow → cohort model.'),
   C('I-09', 'institutional', 'experience-accessibility', 'P1', 'partial', 'Adaptive interface engine', 'app/src/lib/accessmode.ts', 'Device, preference and role adaptation exist and are never inferred; term phase and workflow are thin, and no one engine joins them.'),
@@ -157,12 +157,12 @@ export const CAPABILITIES: readonly Capability[] = [
   C('O-02', 'operating', 'trust-evidence', 'P3', 'absent', 'Institutional research and survey operations', null, 'No survey builder, cohort selection or fatigue control; the cohort floor is the only part in place.'),
   C('O-03', 'operating', 'action-workflow', 'P3', 'partial', 'Campus events and space operations', 'app/src/screens/Activities.tsx', 'Campus activities exist; no RSVP/waitlist, room requests or capacity controls.'),
   C('O-04', 'operating', 'action-workflow', 'P3', 'partial', 'Student organizations and leadership', 'app/src/screens/Activities.tsx', 'Activities and a leadership record exist; no officer roles, transition checklist or budget handoff.'),
-  C('O-05', 'operating', 'action-workflow', 'P3', 'partial', 'Institutional communications and crisis readiness', 'app/src/lib/statusnotice.ts', 'Status notices and an announcements screen; no audience targeting, acknowledgement or communication audit log.'),
-  C('O-06', 'operating', 'experience-accessibility', 'P3', 'partial', 'Course materials and affordability', 'app/src/screens/Costs.tsx', 'A cost screen exists; no required-materials list, OER identification or library-reserve links.'),
+  C('O-05', 'operating', 'experience-accessibility', 'P3', 'partial', 'Institutional communications and crisis readiness', 'app/src/lib/statusnotice.ts', 'Status notices and an announcements screen; no audience targeting, acknowledgement or communication audit log.'),
+  C('O-06', 'operating', 'data-provenance', 'P3', 'partial', 'Course materials and affordability', 'app/src/screens/Costs.tsx', 'A cost screen exists; no required-materials list, OER identification or library-reserve links.'),
   C('O-07', 'operating', 'integration-gateway', 'P3', 'absent', 'Data warehouse and institutional BI integration', null, 'No connectors, data catalog or query audit log; the trust dashboard is aggregate-only.'),
   C('O-08', 'operating', 'integration-gateway', 'P5', 'absent', 'Mobile ID and physical campus integration', null, 'Not built, and any build is bounded: no location tracking and no access-log browsing as a student feature.'),
-  C('O-09', 'operating', 'trust-evidence', 'P0', 'partial', 'Disaster and academic disruption planning', 'app/src/lib/governance/maturity.ts', 'Maturity area `disaster` lists the controls and offline study exists; no closure, modality-change or deadline-adjustment workflow.'),
-  C('O-10', 'operating', 'data-provenance', 'P2', 'partial', 'Documentation and knowledge management', 'app/src/lib/ops/operatingsystem.ts', 'A 60-row document register with owners and review dates; no SOP library, versioned forms or staff onboarding.'),
+  C('O-09', 'operating', 'action-workflow', 'P0', 'partial', 'Disaster and academic disruption planning', 'app/src/lib/governance/maturity.ts', 'Maturity area `disaster` lists the controls and offline study exists; no closure, modality-change or deadline-adjustment workflow.'),
+  C('O-10', 'operating', 'data-provenance', 'P2', 'partial', 'Documentation and knowledge management', 'app/src/lib/ops/operatingsystem.ts', 'A document register with owners and review dates; no SOP library, versioned forms or staff onboarding.'),
 ];
 
 /** A department, the boundary it is held to, and the primitive that serves it first. */

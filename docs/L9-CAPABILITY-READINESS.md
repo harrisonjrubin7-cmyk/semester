@@ -50,42 +50,42 @@ parallel run, deployment, operating cycle, or institution is created to improve 
 | CAP-018 | Alerts | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-019 | How This Works | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-020 | Courses | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-021 | Assignments | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-021 | Assignments | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-022 | Add a Course | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-023 | Edit the Course | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-024 | A Change to a Date | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-023 | Edit the Course | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-024 | A Change to a Date | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-025 | Study | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-026 | Where Courses Meet | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-026 | Where Courses Meet | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-027 | Semester Tutor | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-028 | Add a Reading | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-029 | Problem Practice | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-030 | Practice Exams | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-029 | Problem Practice | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-030 | Practice Exams | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-031 | Create | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-032 | Analyse Data | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-032 | Analyse Data | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-033 | Graphs and Diagrams | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-034 | Presentations | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-035 | Documents | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-036 | Spreadsheets | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-037 | Maths | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-034 | Presentations | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-035 | Documents | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-036 | Spreadsheets | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-037 | Maths | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-038 | Sources | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-039 | Draft It | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-039 | Draft It | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-040 | Files and Notes | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-041 | Family | L4 | L9 | high-risk | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-042 | Athletics | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-042 | Athletics | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-043 | Campus Services | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-044 | Degree Planning | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-045 | Term Deadlines | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-046 | Money | L4 | L9 | high-risk | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-047 | Meal Plan | L4 | L9 | high-risk | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-048 | Housing | L4 | L9 | high-risk | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-049 | Maps | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-049 | Maps | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-050 | Registration | L4 | L9 | high-risk | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-051 | Clubs and Activities | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-052 | People and Letters | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-053 | Pathway | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-054 | Career | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-055 | Applications | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
-| CAP-056 | Check the Writing | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-053 | Pathway | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-054 | Career | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-055 | Applications | L4 | L9 | standard | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
+| CAP-056 | Check the Writing | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-057 | Video Call | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-058 | Group Work | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
 | CAP-059 | Email | L4 | L9 | controlled | tenant-approval, parallel-run, bounded-live-operation, tenant-ga, repeatable-operation |
