@@ -1,3 +1,4 @@
+import { ComparisonActions } from '../components/ComparisonActions';
 import { RecordTable, tableText, type TableRecord } from '../components/HumanTable';
 import { incomingCapture } from '../lib/productivity-arrival';
 import { lazy, Suspense, useState, type Dispatch, type SetStateAction } from 'react';
@@ -641,6 +642,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </form>
       )}
 
+      {(tab === 'programs' || tab === 'compare') && <ComparisonActions surface="programs" scope="pathway-programs" title="Program shortlist and costs" options={(tab === 'compare' ? lib.value.programs.filter(p => compare.includes(p.id)) : programs).map(p => {
+        const facts = [`Source: ${p.url || 'Not recorded'}; student-entered, not verified; source date unknown`, `Period: ${p.period}; currency: ${p.currency}`, `Tuition: ${p.tuition}; living: ${p.living}; other: ${p.other}; grants: ${p.aid}; net: ${netProgramCost(p)}`, 'Estimates, not aid offers. Loans are not subtracted. Currencies are not converted. Confirm with the program and financial aid office.'];
+        return { id: p.id, label: `${p.school} · ${p.program}`, advisorContext: facts, context: [...facts, `Deadline: ${p.deadline || 'Unknown'}; requirements: ${p.requirements || 'Unknown'}`, ...p.materials.map(m => `Material: ${JSON.stringify(m)}`)] };
+      })} />}
       {tab === 'compare' && (
         <>
           <p style={{ ...body, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>

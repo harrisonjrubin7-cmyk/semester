@@ -1,3 +1,5 @@
+import { ComparisonActions } from './ComparisonActions';
+import { courseCandidate } from '../lib/comparison-candidates';
 import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { useId } from 'react';
 import {
@@ -34,10 +36,14 @@ export function CourseCompare({
   catalog,
   cart,
   onOpen,
+  importedAt = null,
+  onChoose,
 }: {
   catalog: CatalogCourse[];
   cart: CatalogCourse[];
   onOpen: (id: string) => void;
+  importedAt?: string | null;
+  onChoose?: (id: string) => boolean;
 }) {
   const { state } = useStore();
   const wide = useMedia(WIDE);
@@ -175,6 +181,11 @@ export function CourseCompare({
           />
         </details>
       )}
+      {compared.length >= 2 && <ComparisonActions surface="courses" scope="course-shortlist" title="Course shortlist" onChoose={onChoose} options={compared.map(c => {
+        const option = courseCandidate(c, importedAt);
+        const comparison = compareOptions('course', [{ id: c.id, label: option.label, requirementFit: requirementFit(c, state.requirements, state.taken), clashes: scheduleFit(c, cart, state.commitments), prerequisites: requisites(c, state.taken, cart), source: { label: 'imported', asOf: importedAt } }], now);
+        return { ...option, context: [...option.context, ...comparison.rows.map(row => `${row.label}: ${row.cells[0].lines.join('; ')}`)] };
+      })} />}
     </section>
   );
 }

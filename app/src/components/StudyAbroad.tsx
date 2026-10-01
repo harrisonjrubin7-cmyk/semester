@@ -1,3 +1,5 @@
+import { ComparisonActions } from './ComparisonActions';
+import { appliedAssumptions } from '../lib/comparison-candidates';
 import { AssumptionEditor, useNativeAssumptions } from './AssumptionEditor';
 import { abroadAssumptions } from '../lib/abroad-assumptions';
 import { RecordTable, tableText, type TableRecord } from './HumanTable';
@@ -73,6 +75,11 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
 
       <fieldset disabled={lib.blocked} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         {plan.programs.length > 1 && <Compare plan={plan} />}
+        {plan.programs.length > 0 && <ComparisonActions surface="abroad" scope="study-abroad" title="Study abroad programs" options={plan.programs.map(p => {
+          const facts = [`Source: ${p.url || 'Not recorded'}; student-entered; source date unknown`, `Host: ${p.host}; term: ${p.term || 'Unknown'}; deadline: ${p.deadline || 'Unknown'}`, `Cost: ${p.cost === null ? 'Unknown' : p.cost} ${p.currency}; not converted`, creditLine(creditPicture(plan, p.id)), 'Approvals are student records; confirm with the study abroad office and advisor.'];
+          return { id: p.id, label: p.name || 'Untitled program', advisorContext: facts, context: [...facts, approvalText(plan, p.id), ...appliedAssumptions(abroadAssumptions(plan, p, () => false))] };
+        })} />}
+
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', alignItems: 'center', marginBlock: 'var(--sp-5)' }}>
           {program && plan.programs.length > 1 && (

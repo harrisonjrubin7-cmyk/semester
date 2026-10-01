@@ -1,3 +1,5 @@
+import { ComparisonActions } from './ComparisonActions';
+import { appliedAssumptions } from '../lib/comparison-candidates';
 import { AssumptionEditor, useNativeAssumptions } from './AssumptionEditor';
 import { graduationAssumptions, graduationOutcomes, scenarioAssumptions } from '../lib/graduation-assumptions';
 import { useMemo, useRef, useState } from 'react';
@@ -9,7 +11,7 @@ import { ScenarioComparison } from './ScenarioComparison';
 import { startItemising, totals, type CostLine } from '../lib/cost-plan';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { deleteDraft, draftPreview, draftRow, saveDraft } from '../lib/graduation-cloud';
-import { MORE_PRESETS, comparisonText } from '../lib/scenario-compare';
+import { MORE_PRESETS, comparisonText, compareRows, limits } from '../lib/scenario-compare';
 import { ErrorState } from './unity/States';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
@@ -418,6 +420,11 @@ function GraduationWorkspace({
       </section>
 
       {simulator && compared ? <ScenarioComparison plan={plan} done={done} scenario={compared} /> : null}
+      {data.scenarios.length > 0 && <ComparisonActions accountId={accountId} surface="graduation" scope="graduation" title="Degree, time and cost scenarios" options={[
+        { id: 'current', label: 'Current plan', advisorContext: graduationOutcomes(plan, done), context: [...graduationOutcomes(plan, done), `Recorded completed/this-term credits: ${done}`, ...appliedAssumptions(graduationAssumptions(plan, done, setPlan, true)), ...(plan.costLines?.map(line => `Cost line: ${JSON.stringify(line)}`) ?? [])] },
+        ...data.scenarios.map(s => ({ id: s.id, label: s.name, advisorContext: [...compareRows(plan, done, s).map(row => `${row.label}: ${row.proposed}`), ...limits(plan, s)], context: [...compareRows(plan, done, s).map(row => `${row.label}: ${row.proposed}`), ...limits(plan, s), `Recorded completed/this-term credits: ${done}`, ...appliedAssumptions(graduationAssumptions(plan, done, setPlan, true)), ...appliedAssumptions(scenarioAssumptions(plan, done, s, () => false)), ...(plan.costLines?.map(line => `Cost line: ${JSON.stringify(line)}`) ?? [])] })),
+      ]} />}
+
       {simulator && !accountId ? (
         <p className="portal-muted">Scenarios are saved on this device as you type. Sign in to save drafts to your account too.</p>
       ) : null}

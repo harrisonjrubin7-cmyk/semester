@@ -1,3 +1,5 @@
+import { ComparisonActions } from './ComparisonActions';
+import { courseCandidate } from '../lib/comparison-candidates';
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from './ui';
 import { ErrorState, SuccessState } from './unity/States';
@@ -375,6 +377,7 @@ export function RegistrationDay({
               ) : (
                 <p className="portal-warning">No backup yet.</p>
               )}
+              {chosen.length > 0 && <ComparisonActions surface="backups" scope={`backups:${primary.id}`} title={`Primary and backups for ${primary.code}`} options={[primary, ...chosen.map(id => byId.get(id)).filter((c): c is CatalogCourse => !!c)].map((c, i) => { const candidate = courseCandidate(c, importedAt); return { ...candidate, context: [...candidate.context, i === 0 ? 'Current primary section' : `Backup priority: ${i}`] }; })} />}
               {chosen.length < MAX_BACKUPS ? (
                 offer.length ? (
                   <label className="portal-check">

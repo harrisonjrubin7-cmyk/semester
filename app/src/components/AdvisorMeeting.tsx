@@ -57,12 +57,12 @@ const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'n
  *
  * Nothing is shared by default, and no link-based access exists (D-016).
  */
-export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
+export function AdvisorMeeting({ accountId, initialMeetingId = null }: { accountId: string | null; initialMeetingId?: string | null }) {
   const { state, account } = useStore();
   const now = useNow();
   const library = useDeviceLibrary(meetingKey(accountId), readMeetings, EMPTY_MEETINGS);
   const meetings = library.value.meetings;
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialMeetingId);
   const meeting = meetings.find((m) => m.id === openId) ?? meetings[0] ?? null;
   const graduation = useDeviceLibrary(graduationKey(accountId), readGraduation, EMPTY_GRADUATION).value;
   const saved = useSavedCourses();

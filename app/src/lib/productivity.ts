@@ -1,3 +1,4 @@
+import { validComparison, type SavedComparison } from './comparison-actions';
 /** Student-owned planning; no registration or external sending side effects. */
 export const TRIAGE = [
   'Needs action',
@@ -53,6 +54,7 @@ export interface Decision {
   reflection: string;
   paused: boolean;
   decided: boolean;
+  chosen?: string;
 }
 export interface Capture {
   id: string;
@@ -84,6 +86,7 @@ export interface Productivity {
   drafts: Draft[];
   journal: Snapshot[];
   preferences: Assumption[];
+  comparisons?: SavedComparison[];
 }
 export const EMPTY_PRODUCTIVITY: Productivity = {
   version: 1,
@@ -219,6 +222,7 @@ export function readProductivity(value: unknown): Productivity {
     text(d.reflection) &&
     typeof d.paused === 'boolean' &&
     typeof d.decided === 'boolean' &&
+    (d.chosen === undefined || text(d.chosen)) &&
     Array.isArray(d.options) &&
     d.options.length <= 3 &&
     d.options.every(
@@ -255,6 +259,7 @@ export function readProductivity(value: unknown): Productivity {
     v.version !== 1 ||
     !Array.isArray(v.decisions) ||
     !v.decisions.every(decision) ||
+    (v.comparisons !== undefined && (!Array.isArray(v.comparisons) || !v.comparisons.every(validComparison))) ||
     !Array.isArray(v.captures) ||
     !v.captures.every(
       (c) =>
