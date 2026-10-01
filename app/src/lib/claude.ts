@@ -430,6 +430,8 @@ export interface Citation {
 }
 
 interface AskOptions {
+  /** Faculty course support must not inherit student-private standing memory. */
+  includePreferences?: boolean;
   system: string;
   messages: Turn[];
   maxTokens?: number;
@@ -898,7 +900,7 @@ export async function ask(options: AskOptions): Promise<string> {
    *
    * Empty adds nothing, not even a blank line. See `preamble`.
    */
-  const mine = preamble(held());
+  const mine = options.includePreferences === false ? '' : preamble(held());
   const system = mine ? `${options.system}\n\n${mine}` : options.system;
 
   // The one branch in the whole app that knows there are two providers.

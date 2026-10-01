@@ -1,3 +1,5 @@
+import { isSemesterAgent, type SemesterAgent } from './agents.ts';
+
 export const INTELLIGENCE_GATEWAY_VERSION = 1 as const;
 
 export type IntelligenceFeatureState = 'off' | 'preview' | 'sandbox' | 'production';
@@ -22,6 +24,9 @@ export interface IntelligenceGatewayRequest {
   question: string;
   mode: IntelligenceMode;
   category: string;
+  agent?: SemesterAgent;
+  courseId?: string;
+  term?: string;
   sourceIds: string[];
   evidenceIds: string[];
   proposedActions: IntelligenceGatewayAction[];
@@ -90,6 +95,9 @@ export function parseIntelligenceGatewayRequest(value: unknown): IntelligenceGat
     const limit = key === 'question' ? 10_000 : 200;
     if (typeof item !== 'string' || !item.trim() || item.length > limit) throw new Error(`Invalid ${key}.`);
   }
+  if (input.agent !== undefined && !isSemesterAgent(input.agent)) throw new Error('Invalid Semester agent.');
+  if (input.courseId !== undefined && (typeof input.courseId !== 'string' || !input.courseId.trim() || input.courseId.length > 200)) throw new Error('Invalid course scope.');
+  if (input.term !== undefined && (typeof input.term !== 'string' || !/^[0-9]{4}(FA|SP|SU)$/.test(input.term))) throw new Error('Invalid term scope.');
   const sourceIds = strings(input.sourceIds, 'source identifiers', 100);
   const evidenceIds = strings(input.evidenceIds, 'evidence identifiers', 200);
   if (!Array.isArray(input.proposedActions) || input.proposedActions.length > 20) {
@@ -124,6 +132,9 @@ export function parseIntelligenceGatewayRequest(value: unknown): IntelligenceGat
     question: (input.question as string).trim(),
     mode: input.mode as IntelligenceMode,
     category: input.category as string,
+    ...(input.agent !== undefined ? { agent: input.agent as SemesterAgent } : {}),
+    ...(input.courseId !== undefined ? { courseId: input.courseId as string } : {}),
+    ...(input.term !== undefined ? { term: input.term as string } : {}),
     sourceIds,
     evidenceIds,
     proposedActions: actions,

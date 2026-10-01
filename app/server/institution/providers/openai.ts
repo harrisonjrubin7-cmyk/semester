@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { agentInstruction } from '../../../../packages/institution/src/agents.ts';
 import type { InstitutionModelProvider, ProviderGenerationRequest } from './types.ts';
 import { InstitutionProviderError } from './types.ts';
 
@@ -30,6 +31,9 @@ export function inputFor(request: ProviderGenerationRequest) {
   const evidence = request.sources.map((source) => ({
     id: source.id,
     body: source.body,
+    title: source.title,
+    locator: source.locator,
+    verifiedAt: source.verifiedAt,
   }));
   return [
     {
@@ -38,10 +42,12 @@ export function inputFor(request: ProviderGenerationRequest) {
         {
           type: 'input_text',
           text:
+            agentInstruction(request.agent ?? 'assistant') + '\n' +
+            (request.coursePolicyInstruction ?? '') + '\n' +
             `You are Semester Intelligence in ${request.mode} mode. ` +
             'Use only the approved source material below. Separate direct source support from inference. ' +
             'Return only the requested JSON. Cite only source ids you actually used. ' +
-            'Do not invent citations or claim an action occurred.',
+            'Cite exact source titles and anchors when supplied. Label missing anchors and freshness honestly. Do not invent citations or claim an action occurred.',
         },
       ],
     },
