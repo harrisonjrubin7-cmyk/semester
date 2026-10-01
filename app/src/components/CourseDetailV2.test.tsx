@@ -283,7 +283,7 @@ it('keeps registration confirmation and source facts while saving and filtering 
   await act(async () => button(/^Card view$/, comparison).click());
   const search = comparison.querySelector('input[type="search"]') as HTMLInputElement;
   await act(async () => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(search, 'source');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(search, 'Source and freshness');
     search.dispatchEvent(new Event('input', { bubbles: true }));
   });
   expect(comparison.querySelectorAll('article')).toHaveLength(2);

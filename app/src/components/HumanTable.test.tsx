@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { HumanTable, HumanTableOwner, type HumanColumn } from './HumanTable';
+import { HumanTable, HumanTableOwner, RecordTable, type HumanColumn } from './HumanTable';
 import { readTablePreferences } from '../lib/human-table';
 const files: { name: string; body: string }[] = [];
 vi.mock('../lib/deliver', () => ({ download: (file: { name: string; body: string }) => files.push(file) }));
@@ -15,7 +15,7 @@ const rows = [
 ];
 const columns: HumanColumn<(typeof rows)[number]>[] = [
   { id: 'title', label: 'Title', value: (r) => r.title },
-  { id: 'status', label: 'Status', value: (r) => r.status },
+  { id: 'status', label: 'Status', value: (r) => r.status, persistFilterValues: ['Waiting', 'Not known'] },
   {
     id: 'action',
     label: 'Review',
@@ -41,7 +41,15 @@ async function mount(owner = 'student-a', shown = columns, exportAllowed = true)
   await act(async () =>
     root.render(
       <HumanTableOwner.Provider value={owner}>
-        <HumanTable id="records" label="Records" rows={rows} rowId={(r) => r.id} columns={shown} exportAllowed={exportAllowed} />
+        <HumanTable
+          id="records"
+          label="Records"
+          rows={rows}
+          rowId={(r) => r.id}
+          columns={shown}
+          exportAllowed={exportAllowed}
+          persistSearchValues={['Waiting']}
+        />
       </HumanTableOwner.Provider>,
     ),
   );
@@ -51,8 +59,9 @@ async function click(s: string) {
   await act(async () => button(s).click());
 }
 async function input(label: string, value: string) {
-  const field = [...host.querySelectorAll('label')].find((l) => l.textContent?.startsWith(label))!.querySelector('input,select') as
-    HTMLInputElement | HTMLSelectElement;
+  const field = [...host.querySelectorAll('label')]
+    .find((l) => l.textContent?.startsWith(label))!
+    .querySelector('input,select') as HTMLInputElement | HTMLSelectElement;
   await act(async () => {
     Object.getOwnPropertyDescriptor(
       field instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype,
@@ -64,7 +73,7 @@ async function input(label: string, value: string) {
 it('persists only owned criteria, restores named views, and resets immediately on an owner switch', async () => {
   await mount();
   await click('Card view');
-  await input('Search Records', 'HYPERLINK');
+  await input('Search Records', 'Waiting');
   await input('Status', JSON.stringify('Waiting'));
   await input('View name', 'Waiting review');
   await click('Save view');
@@ -77,7 +86,7 @@ it('persists only owned criteria, restores named views, and resets immediately o
   expect(host.querySelectorAll('article')).toHaveLength(1);
   const stored = localStorage.getItem(localStorage.key(0)!)!;
   expect(stored).not.toMatch(/PRIVATE|secret|cells/);
-  expect(JSON.parse(stored).current.search).toBe('HYPERLINK');
+  expect(JSON.parse(stored).current.search).toBe('Waiting');
   await mount('student-b');
   expect(host.querySelector('table')).not.toBeNull();
   expect((host.querySelector('input[type="search"]') as HTMLInputElement).value).toBe('');
@@ -126,4 +135,67 @@ it('drops foreign content when validating preferences', () => {
     records: rows,
   });
   expect(JSON.stringify(parsed)).not.toMatch(/PRIVATE|records|cells/);
+});
+
+it('keeps arbitrary search and record filters in memory, including when saving a named view', async () => {
+  await mount();
+  await input('Search Records', 'HYPERLINK');
+  await input('Title', JSON.stringify(rows[0].title));
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(1);
+  const key = 'semester.human-tables.v1:student-a:records';
+  expect(localStorage.getItem(key)).not.toContain('HYPERLINK');
+  await input('View name', 'Review later');
+  await click('Save view');
+  expect(localStorage.getItem(key)).not.toContain('HYPERLINK');
+  await click('Load Review later');
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(2);
+  expect((host.querySelector('input[type="search"]') as HTMLInputElement).value).toBe('');
+});
+it('removes legacy disallowed current and saved values from disk before showing a different dataset', async () => {
+  const key = 'semester.human-tables.v1:student-a:records';
+  const old = { view: 'cards', search: 'PRIVATE DRAFT', filters: { title: 'OLD PRIVATE ROW', status: 'Waiting' } };
+  localStorage.setItem(key, JSON.stringify({ current: old, saved: [{ name: 'Review', criteria: old }] }));
+  await mount();
+  expect(host.innerHTML).not.toMatch(/PRIVATE DRAFT|OLD PRIVATE ROW/);
+  expect(localStorage.getItem(key)).not.toMatch(/PRIVATE DRAFT|OLD PRIVATE ROW/);
+  expect(JSON.parse(localStorage.getItem(key)!).saved[0].criteria.filters).toEqual({ status: 'Waiting' });
+  await click('Load Review');
+  expect(host.querySelectorAll('article')).toHaveLength(1);
+});
+it('supports actual dynamic headings named constructor, toString and __proto__ through save, clear and reload', async () => {
+  const ids = ['constructor', 'toString', '__proto__'];
+  const render = async () =>
+    act(async () =>
+      root.render(
+        <HumanTableOwner.Provider value="student-a">
+          <RecordTable
+            id="dynamic"
+            label="Dynamic headings"
+            columns={ids.map((id) => ({ id, label: id, persistFilterValues: ['First', 'Second'] }))}
+            rows={['First', 'Second'].map((value) => ({ id: value, cells: ids.map(() => ({ value })) }))}
+          />
+        </HumanTableOwner.Provider>,
+      ),
+    );
+  await render();
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(2);
+  for (const id of ids) {
+    await input(id, JSON.stringify('First'));
+    expect(host.querySelectorAll('tbody tr')).toHaveLength(1);
+  }
+  await input('View name', 'First rows');
+  await click('Save view');
+  await click('Clear search and filters');
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(2);
+  await click('Load First rows');
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(1);
+  await act(async () => root.unmount());
+  root = createRoot(host);
+  await render();
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(1);
+  for (const select of host.querySelectorAll('select')) expect(select.value).toBe(JSON.stringify('First'));
+  const stored = JSON.parse(localStorage.getItem('semester.human-tables.v1:student-a:dynamic')!);
+  for (const id of ids) expect(Object.hasOwn(stored.current.filters, id)).toBe(true);
+  await click('Clear search and filters');
+  expect(host.querySelectorAll('tbody tr')).toHaveLength(2);
 });

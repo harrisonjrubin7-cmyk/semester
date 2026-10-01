@@ -1,9 +1,27 @@
 import './HumanTable.css';
-import { createContext, useContext, useState, useMemo, type ReactNode, type HTMLAttributes, type TdHTMLAttributes } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+  type ReactNode,
+  type HTMLAttributes,
+  type TdHTMLAttributes,
+} from 'react';
 import { useAccountId } from '../state/store';
 import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
-import { EMPTY_TABLE_PREFERENCES, readTablePreferences, safeTableCsv, type TableCriteria } from '../lib/human-table';
+import {
+  EMPTY_TABLE_PREFERENCES,
+  filterDictionary,
+  ownFilter,
+  readTablePreferences,
+  retainTablePreferences,
+  safeTableCsv,
+  type TableCriteria,
+  type TablePersistencePolicy,
+} from '../lib/human-table';
 
 /** Institutional roots supply tenant + authenticated viewer; no record IDs belong in the scope. */
 export const HumanTableOwner = createContext<string | null>(null);
@@ -14,6 +32,8 @@ export interface HumanColumn<T> {
   render?: (row: T) => ReactNode;
   cellProps?: (row: T) => TdHTMLAttributes<HTMLTableCellElement> | undefined;
   filter?: boolean;
+  /** Explicit code-defined categories safe to save; record-derived values stay in memory. */
+  persistFilterValues?: readonly string[];
   /** Keep actions/provenance in the concise view; other details remain reachable. */
   summary?: boolean;
   rowHeader?: boolean;
@@ -31,8 +51,10 @@ export interface HumanTableProps<T> {
   rowProps?: (row: T) => HTMLAttributes<HTMLTableRowElement> | undefined;
   tableProps?: HTMLAttributes<HTMLTableElement>;
   caption?: ReactNode;
-  /** Use the existing surface's export gate, independently of read permission. */
   defaultView?: TableCriteria['view'];
+  /** Exact code-defined search choices safe to save. Free text is transient by default. */
+  persistSearchValues?: readonly string[];
+  /** Use the existing surface's export gate, independently of read permission. */
   exportAllowed?: boolean;
   exportReason?: string;
 }
@@ -58,32 +80,59 @@ function OwnedHumanTable<T>({
   exportAllowed = true,
   exportReason,
   defaultView = 'table',
+  persistSearchValues = [],
   owner,
 }: HumanTableProps<T> & { owner: string }) {
   const empty = useMemo(
     () => ({ ...EMPTY_TABLE_PREFERENCES, current: { ...EMPTY_TABLE_PREFERENCES.current, view: defaultView } }),
     [defaultView],
   );
-  const prefs = useDeviceLibrary(
-    `semester.human-tables.v1:${encodeURIComponent(owner)}:${encodeURIComponent(id)}`,
-    readTablePreferences,
-    empty,
-    150_000,
-  );
+  const key = `semester.human-tables.v1:${encodeURIComponent(owner)}:${encodeURIComponent(id)}`;
+  // Adapters may recreate columns each render; keep the validator stable for the same policy.
+  const policyKey = JSON.stringify({
+    searchValues: persistSearchValues,
+    filters: columns
+      .filter((c) => c.filter !== false && c.persistFilterValues)
+      .map((c) => ({
+        id: c.id,
+        values: c.persistFilterValues,
+      })),
+  });
+  const policy = useMemo(() => JSON.parse(policyKey) as TablePersistencePolicy, [policyKey]);
+  const readPreferences = useMemo(() => (raw: unknown) => retainTablePreferences(readTablePreferences(raw), policy), [policy]);
+  const prefs = useDeviceLibrary(key, readPreferences, empty, 150_000);
+  const updatePreferences = prefs.update;
+  useEffect(() => {
+    // Migrate valid legacy preferences on disk too, including values in named views.
+    // Malformed bytes remain blocked by the existing recovery contract.
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw !== null && JSON.stringify(readPreferences(JSON.parse(raw))) !== raw) updatePreferences((old) => old);
+    } catch {
+      /* The library presents storage/read failures without destroying recovery data. */
+    }
+  }, [key, readPreferences, updatePreferences]);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
-  const [unsaved, setUnsaved] = useState<TableCriteria | null>(null);
-  const criteria = unsaved ?? prefs.value.current;
+  const [sessionCriteria, setSessionCriteria] = useState<TableCriteria | null>(null);
+  const criteria = sessionCriteria ?? prefs.value.current;
+  const retainedCriteria = retainTablePreferences({ current: criteria, saved: [] }, policy).current;
+  const hasTransientCriteria =
+    criteria.search !== retainedCriteria.search ||
+    Object.entries(criteria.filters).some(([id, value]) => ownFilter(retainedCriteria.filters, id) !== value);
   const setCriteria = (patch: Partial<TableCriteria>) => {
     const next = { ...criteria, ...patch };
-    setUnsaved(prefs.update((old) => ({ ...old, current: next })) ? null : next);
+    setSessionCriteria(next);
+    prefs.update((old) => ({ ...old, current: next }));
     setMessage('');
   };
   const value = (column: HumanColumn<T>, row: T) => String(column.value(row) ?? 'Not supplied');
   const visible = rows.filter(
     (row) =>
       columns.some((c) => value(c, row).toLocaleLowerCase().includes(criteria.search.toLocaleLowerCase())) &&
-      columns.every((c) => criteria.filters[c.id] === undefined || value(c, row) === criteria.filters[c.id]),
+      columns.every(
+        (c) => ownFilter(criteria.filters, c.id) === undefined || value(c, row) === ownFilter(criteria.filters, c.id),
+      ),
   );
   const draw = (column: HumanColumn<T>, row: T) => (column.render ? column.render(row) : value(column, row));
   const fields = (row: T) => (
@@ -124,21 +173,22 @@ function OwnedHumanTable<T>({
           .filter((c) => c.filter !== false)
           .map((c) => {
             const options = [...new Set(rows.map((row) => value(c, row)))].filter((v) => v.length <= 2000).sort();
+            const selected = ownFilter(criteria.filters, c.id);
             return (
               <label key={c.id}>
                 {c.label}
                 <select
-                  value={criteria.filters[c.id] === undefined ? '' : JSON.stringify(criteria.filters[c.id])}
+                  value={selected === undefined ? '' : JSON.stringify(selected)}
                   onChange={(e) => {
-                    const filters = { ...criteria.filters };
+                    const filters = filterDictionary(criteria.filters);
                     if (e.target.value === '') delete filters[c.id];
                     else filters[c.id] = JSON.parse(e.target.value) as string;
                     setCriteria({ filters });
                   }}
                 >
                   <option value="">All</option>
-                  {criteria.filters[c.id] !== undefined && !options.includes(criteria.filters[c.id]) && (
-                    <option value={JSON.stringify(criteria.filters[c.id])}>{criteria.filters[c.id]}</option>
+                  {selected !== undefined && !options.includes(selected) && (
+                    <option value={JSON.stringify(selected)}>Selected value is no longer present</option>
                   )}
                   {options.map((option) => (
                     <option key={option} value={JSON.stringify(option)}>
@@ -149,13 +199,21 @@ function OwnedHumanTable<T>({
               </label>
             );
           })}
-        <button type="button" onClick={() => setCriteria({ search: '', filters: {} })}>
+        <button type="button" onClick={() => setCriteria({ search: '', filters: filterDictionary() })}>
           Clear search and filters
         </button>
       </details>
       <details>
         <summary>Saved views</summary>
-        <p>View, search and filters saved on this device for this account. Record contents are not saved.</p>
+        <p>
+          {policy.searchValues.length || policy.filters.length
+            ? 'Layout and approved search/filter choices are saved on this device for this account. Other search and filter values stay in this session.'
+            : 'Saved views keep the layout on this device for this account. Search and filters stay in this session.'}{' '}
+          Use a view name without record details.
+        </p>
+        {hasTransientCriteria && (
+          <p>This search or filter contains session-only values. They will not be included in a saved view.</p>
+        )}
         <label>
           View name
           <input maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
@@ -163,7 +221,9 @@ function OwnedHumanTable<T>({
         <button
           type="button"
           disabled={
-            !name.trim() || prefs.blocked || (prefs.value.saved.length >= 20 && !prefs.value.saved.some((v) => v.name === name.trim()))
+            !name.trim() ||
+            prefs.blocked ||
+            (prefs.value.saved.length >= 20 && !prefs.value.saved.some((v) => v.name === name.trim()))
           }
           onClick={() => {
             if (
@@ -172,7 +232,9 @@ function OwnedHumanTable<T>({
                 saved: [...old.saved.filter((v) => v.name !== name.trim()), { name: name.trim(), criteria }],
               }))
             )
-              setMessage('View saved.');
+              setMessage(
+                hasTransientCriteria ? 'View saved. Session-only search and filter values were left out.' : 'View saved.',
+              );
           }}
         >
           Save view
@@ -297,6 +359,8 @@ export interface RecordColumn {
   id: string;
   label: string;
   filter?: boolean;
+  /** Explicit code-defined categories safe to save; record-derived values stay in memory. */
+  persistFilterValues?: readonly string[];
   summary?: boolean;
 }
 export function RecordTable({

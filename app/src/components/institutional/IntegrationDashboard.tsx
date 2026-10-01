@@ -17,7 +17,7 @@ import { cloud } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
 import { syncClassFor } from '../../lib/integration/catalog';
 import {
-  DIRECTION_TEXT, EMPTY_DASHBOARD, STATUS_TEXT, buildMap, conflicts, connectionFreshness, healthSummary,
+  DIRECTION_TEXT, EMPTY_DASHBOARD, MAP_DOMAINS, STATUS_TEXT, buildMap, conflicts, connectionFreshness, healthSummary,
   loadDashboard, requestReplay, setPaused, type ConnectionRow, type DashboardData, type MapNode,
 } from '../../lib/integration/dashboard';
 import { FRESHNESS_TEXT } from '../../lib/integration/freshness';
@@ -240,13 +240,15 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             ) : (
               <div className="integration-table-wrap">
                 <RecordTable
+                  exportAllowed={false}
+                  exportReason="Use Export health summary for the approved counts and states. Detailed working downloads are unavailable."
                   id="integration-domains"
                   label={'Connected domains, one row per domain'}
                   tableProps={{ className: 'integration-table' }}
                   caption={<> Connected domains, one row per domain</>}
                   columns={[
-                    { id: 'column-0', label: 'Domain' },
-                    { id: 'column-1', label: 'Status' },
+                    { id: 'column-0', label: 'Domain', persistFilterValues: MAP_DOMAINS.map((d) => d.label) },
+                    { id: 'column-1', label: 'Status', persistFilterValues: Object.values(STATUS_TEXT).map((s) => s.word) },
                     { id: 'column-2', label: 'Providers' },
                     { id: 'column-3', label: 'Direction' },
                     { id: 'column-4', label: 'Ceiling' },
@@ -311,6 +313,8 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             : (
               <div className="integration-table-wrap">
                 <RecordTable
+                exportAllowed={false}
+                exportReason="Use Export health summary for the approved counts and states. Detailed working downloads are unavailable."
                 id="integration-connections"
                 label={'Connections'}
                 tableProps={{ className: 'integration-table' }}
@@ -319,7 +323,7 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
                   { id: 'column-0', label: 'Connection' },
                   { id: 'column-1', label: 'Provider' },
                   { id: 'column-2', label: 'Domain' },
-                  { id: 'column-3', label: 'Status' },
+                  { id: 'column-3', label: 'Status', persistFilterValues: Object.values(STATUS_TEXT).map((s) => s.word) },
                   { id: 'column-4', label: 'Mode' },
                   { id: 'column-5', label: 'Direction' },
                   { id: 'column-6', label: 'Last successful sync' },
@@ -388,6 +392,8 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             : (
               <div className="integration-table-wrap">
                 <RecordTable
+                exportAllowed={false}
+                exportReason="Use Export health summary for the approved counts and states. Detailed working downloads are unavailable."
                 id="integration-mappings"
                 label={'Entity and field mappings'}
                 tableProps={{ className: 'integration-table' }}
@@ -457,6 +463,8 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             : (
               <div className="integration-table-wrap">
                 <RecordTable
+                exportAllowed={false}
+                exportReason="Use Export health summary for the approved counts and states. Detailed working downloads are unavailable."
                 id="integration-runs"
                 label={'Sync run history, newest first'}
                 tableProps={{ className: 'integration-table' }}
@@ -521,6 +529,8 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             ) : (
               <div className="integration-table-wrap">
                 <RecordTable
+                  exportAllowed={false}
+                  exportReason="Use Export health summary for the approved counts and states. Detailed working downloads are unavailable."
                   id="integration-conflicts"
                   label={'Open conflicts by kind'}
                   tableProps={{ className: 'integration-table' }}

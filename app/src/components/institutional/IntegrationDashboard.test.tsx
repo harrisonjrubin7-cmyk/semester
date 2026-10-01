@@ -7,6 +7,9 @@ import { EMPTY_DASHBOARD, MAP_DOMAINS, buildMap, healthSummary, type DashboardDa
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+const downloads = vi.hoisted(() => vi.fn());
+vi.mock('../../lib/deliver', () => ({ download: downloads }));
+
 const NOW = new Date('2026-09-27T12:00:00Z');
 
 const DATA: DashboardData = {
@@ -32,6 +35,8 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  localStorage.clear();
+  downloads.mockClear();
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
@@ -173,4 +178,43 @@ describe('the dashboard', () => {
     await mount({ load: async () => { throw new Error('permission denied'); } });
     expect(host.querySelector('[role="alert"]')?.textContent ?? host.textContent).toContain('permission denied');
   });
+});
+
+it('keeps all five working downloads disabled and exports only the established health-summary projection', async () => {
+  const data: DashboardData = {
+    ...DATA,
+    mappings: [{ connection_id: 'c1', external_entity_type: 'assignment', canonical_entity_type: 'coursework',
+      external_field: 'PRIVATE_MAPPING_TEXT', canonical_field: 'title', transform_config: {}, required: true,
+      mapping_version: 1, active: true, validation_state: 'conflict', conflict_kind: 'enum_mismatch' }],
+    runs: [{ public_id: 'run_PRIVATE_IDENTIFIER', connection_id: 'c1', trigger_type: 'manual', status: 'partial',
+      started_at: '2026-09-27T09:00:00Z', completed_at: null, records_received: 5, records_created: 0,
+      records_updated: 2, records_unchanged: 0, records_rejected: 3, errors_count: 1, retry_count: 0,
+      reconciliation_state: 'pending', cursor_after: null }],
+  };
+  await mount({ load: async () => data });
+  await click(byText('button', 'Table'));
+  const checkDownload = async (id: string) => {
+    const table = host.querySelector(`[data-human-table="${id}"]`)!;
+    expect(table).not.toBeNull();
+    for (const mode of ['Card view', 'Summary view', 'Table view']) {
+      await click([...table.querySelectorAll('button')].find((b) => b.textContent === mode));
+      const download = [...table.querySelectorAll('button')].find((b) => b.textContent === 'Download visible rows')!;
+      expect(download.disabled).toBe(true);
+      await click(download);
+      expect(downloads).not.toHaveBeenCalled();
+      expect(table.textContent).toContain('Use Export health summary');
+    }
+  };
+  await checkDownload('integration-domains');
+  for (const [tab, id] of [['Connections', 'connections'], ['Mappings', 'mappings'], ['Sync history', 'runs'], ['Conflicts', 'conflicts']]) {
+    await click(byText('[role="tab"]', tab));
+    await checkDownload(`integration-${id}`);
+  }
+  await click(byText('button', 'Export health summary'));
+  expect(downloads).toHaveBeenCalledTimes(1);
+  const file = downloads.mock.calls[0][0];
+  expect(file.mime).toBe('application/json');
+  expect(JSON.parse(file.body)).toEqual(healthSummary(data, NOW));
+  expect(file.body).not.toMatch(/run_PRIVATE_IDENTIFIER|PRIVATE_MAPPING_TEXT|Canvas \(pilot\)|workflow_state|u-owner/);
+  expect(file.body).toContain(DATA.connections[0].public_id);
 });

@@ -103,7 +103,7 @@ const OTHER_MODULE = 'Added by another module and not yet in the backup. Its own
 
 /** Every store prefix: backed up, or exempt with the reason. */
 const STORES: Record<string, 'backed up' | { exempt: string }> = {
-  'semester.human-tables.v1': { exempt: 'Owner-scoped display criteria and named views only, with no records. Device-only by design: institutional searches and tenant-scoped filters must not enter a student workspace backup or be rebound to a different institutional role. The table can clear its criteria and delete named views.' },
+  'semester.human-tables.v1': { exempt: 'Owner-scoped display criteria and named views only, with no records. Device-only by design: account/tenant-scoped categorical criteria must not enter a student workspace backup or be rebound to a different institutional role. The table can clear its criteria and delete named views.' },
   'semester.productivity.v1': 'backed up',
   'semester.creations.v1': 'backed up',
   'semester.athletics.v1': 'backed up',

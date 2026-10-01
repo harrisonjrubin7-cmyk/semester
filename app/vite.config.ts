@@ -704,6 +704,7 @@ function vercelUncovered(extra: string): string[] {
  */
 const MOCKS_MODULES = [
   'src/components/HumanTable.test.tsx',
+  'src/components/institutional/IntegrationDashboard.test.tsx',
   'src/components/gradebook/human-views.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
   'src/lib/productivity-cloud.test.ts',

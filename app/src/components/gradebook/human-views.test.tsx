@@ -6,7 +6,13 @@ import type { LoadedBook } from '../../lib/gradebook/client';
 import type { Entry } from '../../lib/gradebook/model';
 import { InstructorBook } from './InstructorBook';
 import { StudentGrades } from './StudentGrades';
-const api = vi.hoisted(() => ({ loadBook: vi.fn(), enterScore: vi.fn(), exportRows: vi.fn(), release: vi.fn(), fileRegrade: vi.fn() }));
+const api = vi.hoisted(() => ({
+  loadBook: vi.fn(),
+  enterScore: vi.fn(),
+  exportRows: vi.fn(),
+  release: vi.fn(),
+  fileRegrade: vi.fn(),
+}));
 vi.mock('../../lib/gradebook/client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../lib/gradebook/client')>()),
   ...api,
@@ -104,4 +110,53 @@ it('student cards and working exports use only that student’s released project
   await click('Ask about Quiz one');
   await click('Cancel');
   expect(api.fileRegrade).not.toHaveBeenCalled();
+});
+
+it('never stores draft-comment filters or search and removes legacy values before another authorized book loads', async () => {
+  const mount = async () =>
+    act(async () => root.render(<InstructorBook course="ECON 1010" term="2026FA" me="grader" caps={['grades:enter']} />));
+  await mount();
+  const table = host.querySelector('[data-human-table="instructor-scores"]')!;
+  const commentFilter = [...table.querySelectorAll('select')].find((select) =>
+    [...select.options].some((option) => option.textContent?.includes('PRIVATE DRAFT')),
+  )!;
+  const draftValue = [...commentFilter.options].find((option) => option.textContent?.includes('PRIVATE DRAFT'))!.value;
+  await act(async () => {
+    commentFilter.value = draftValue;
+    commentFilter.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  expect(table.querySelectorAll('tbody tr')).toHaveLength(1);
+  const setText = async (selector: string, value: string) =>
+    act(async () => {
+      const input = table.querySelector(selector) as HTMLInputElement;
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, value);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  await setText('input[type="search"]', 'PRIVATE DRAFT');
+  const stored = () =>
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith('semester.human-tables'))
+      .map((key) => localStorage.getItem(key))
+      .join('');
+  expect(stored()).not.toContain('PRIVATE DRAFT');
+  await setText('input[maxlength="80"]', 'Draft review');
+  await click('Save view');
+  expect(stored()).not.toContain('PRIVATE DRAFT');
+  const key = Object.keys(localStorage).find((key) => key.endsWith(':instructor-scores'))!;
+  // Emulate an old version that copied the actual full comment cell into both saved locations.
+  const legacy = { view: 'cards', search: 'PRIVATE DRAFT', filters: { 'column-4': JSON.parse(draftValue) } };
+  await act(async () => root.unmount());
+  localStorage.setItem(key, JSON.stringify({ current: legacy, saved: [{ name: 'Draft review', criteria: legacy }] }));
+  api.loadBook.mockResolvedValue({ ...book, entries: [entry('next', 'student-c', 'draft', 'Different authorized comment')] });
+  root = createRoot(host);
+  await mount();
+  expect(host.innerHTML).not.toContain('PRIVATE DRAFT');
+  expect(stored()).not.toContain('PRIVATE DRAFT');
+  expect(host.textContent).toContain('Different authorized comment');
+  await click('Load Draft review');
+  expect(host.innerHTML).not.toContain('PRIVATE DRAFT');
+  expect((host.querySelector('input[type="search"]') as HTMLInputElement).value).toBe('');
+  expect(button('Download visible rows').disabled).toBe(true);
+  expect(api.enterScore).not.toHaveBeenCalled();
+  expect(api.exportRows).not.toHaveBeenCalled();
 });

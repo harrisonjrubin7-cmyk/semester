@@ -1,4 +1,4 @@
-import type { Comparison } from '../lib/decision-compare';
+import { ROWS, type Comparison } from '../lib/decision-compare';
 import { HumanTable } from './HumanTable';
 
 /** Canonical comparison facts stay unranked, including unknowns and official next steps. */
@@ -10,6 +10,7 @@ export function DecisionTable({ comparison }: { comparison: Comparison }) {
         id={`decision-${comparison.kind}`}
         label={comparison.title}
         rows={comparison.rows}
+        persistSearchValues={ROWS.map((row) => row.label)}
         rowId={(row) => row.id}
         summaryPrimary={(row) =>
           ['requirementFit', 'scheduleImpact', 'costTime', 'sourceAndFreshness', 'officialNextStep'].includes(row.id)
@@ -38,7 +39,14 @@ export function DecisionTable({ comparison }: { comparison: Comparison }) {
           </ul>
         )}
         columns={[
-          { id: 'question', label: 'Question', value: (row) => row.label, rowHeader: true, summary: true },
+          {
+            id: 'question',
+            label: 'Question',
+            value: (row) => row.label,
+            persistFilterValues: ROWS.map((row) => row.label),
+            rowHeader: true,
+            summary: true,
+          },
           ...comparison.options.map((option, i) => ({
             id: option.id,
             label: option.label,

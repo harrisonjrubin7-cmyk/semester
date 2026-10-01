@@ -297,3 +297,35 @@ describe('cutover approvals', () => {
     expect(owedText()).toContain('Collect every required approval.');
   });
 });
+
+it('keeps sample identifiers transient and purges legacy searches and filters before a new sample is shown', async () => {
+  const api = fake(project({ stage: 'preview', duplicate_rule: 'reject' }), MAPS);
+  await open(api);
+  await pick(0, 'sample.csv', 'Student ID,Final Grade\n900001,A\n900002,B\n');
+  const sample = host.querySelector('[data-human-table="migration-preview"]')!;
+  const select = [...sample.querySelectorAll('select')].find((s) => [...s.options].some((o) => o.textContent === '900001'))!;
+  await act(async () => {
+    select.value = JSON.stringify('900001');
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    type(sample.querySelector('input[type="search"]') as HTMLInputElement, '900001');
+  });
+  expect(sample.querySelectorAll('tbody tr')).toHaveLength(1);
+  const key = 'semester.human-tables.v1:vu%3Auser-lead:migration-preview';
+  expect(localStorage.getItem(key)).not.toContain('900001');
+  await act(async () => type(sample.querySelector('input[maxlength="80"]') as HTMLInputElement, 'Sample review'));
+  await click([...sample.querySelectorAll('button')].find((b) => b.textContent === 'Save view'));
+  expect(localStorage.getItem(key)).not.toContain('900001');
+  await act(async () => root.unmount());
+  const legacy = { view: 'cards', search: '900001', filters: { student_ref: '900001' } };
+  localStorage.setItem(key, JSON.stringify({ current: legacy, saved: [{ name: 'Sample review', criteria: legacy }] }));
+  root = createRoot(host);
+  await open(fake(project({ stage: 'preview', duplicate_rule: 'reject' }), MAPS));
+  await pick(0, 'next.csv', 'Student ID,Final Grade\n900009,C\n');
+  expect(host.innerHTML).not.toContain('900001');
+  expect(host.textContent).toContain('900009');
+  expect(localStorage.getItem(key)).not.toContain('900001');
+  await click(button(/^Load Sample review$/));
+  expect(host.innerHTML).not.toContain('900001');
+  expect((host.querySelector('[data-human-table="migration-preview"] input[type="search"]') as HTMLInputElement).value).toBe('');
+  expect(api.recordRun).not.toHaveBeenCalled();
+});
