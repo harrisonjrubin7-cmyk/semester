@@ -21,7 +21,9 @@
  * 30 Sep 2026 four modules (registration, the gradebook, records, student
  * accounts) had tables, a check suite and a switch that is off for every
  * school, so they read `in-preparation`. None is certified, none is on for a
- * school, and the other ten are still `planned`.
+ * school, and the other ten are still `planned`. The degree audit joined them
+ * on 1 Oct 2026 (a published program run against the record ledger, kept with
+ * its date and version), which is why that count of ten is now nine.
  */
 
 import type { CoreModuleId } from '@semester/contract';
@@ -66,9 +68,9 @@ export const MODULES: readonly CoreModule[] = [
     core: 'Seat-locked enrolment, waitlist promotion, add, drop and swap, proved not to over-fill a class.',
     status: 'in-preparation', tables: ['registration_requests', 'registration_enrollments'], suite: 'registration_transaction' },
   { id: 'degree_audit', name: 'Degree audit', replaces: 'Degree Works, uAchieve, Stellic',
-    today: 'A planning estimate, labelled as one.',
+    today: 'A planning estimate, labelled as one. The school’s own audit is built in the database behind a school-level switch that is off for every school: it runs a published program against the academic-record ledger and keeps the answer.',
     core: 'The official audit, run on the server against the catalog year, with approved exceptions.',
-    status: 'planned', tables: ['programs', 'requirement_rules'] },
+    status: 'in-preparation', tables: ['degree_programs', 'degree_audits'], suite: 'degree-audit' },
   { id: 'records', name: 'Records and transcripts', replaces: 'The records module of your SIS; transcript ordering services',
     today: 'An academic-record ledger is built behind a school-level switch that is off for every school; no transcript is issued.',
     core: 'Final grades, signed transcripts, enrolment verification and a log of every release of a record.',

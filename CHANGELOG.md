@@ -24,6 +24,17 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your school's degree audit, for schools that switch it on
+
+Nothing changes for you unless your school has moved its degree audit to
+Semester Core, and none has. If yours does, you can run your school's own
+audit of its published degree program against its academic record, as of a
+date up to today, and keep the answer. Finished and in-progress courses are
+shown apart, and every course says which requirements it counted in. It is
+not a transcript and does not say a degree has been awarded. If your school has
+published no program, it says so. Your own calculator under The degree is
+unchanged. It shows under The degree → See your school's degree audit.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one

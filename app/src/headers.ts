@@ -236,6 +236,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   applying: () => ({ kicker: 'The other deadline set', title: 'Applications' }),
   behind: () => ({ kicker: 'Counted, not felt', title: 'When you are behind' }),
   degree: () => ({ kicker: 'Four years, not four months', title: 'The degree' }),
+  degreeaudit: () => ({ kicker: 'Your school’s record', title: 'Degree audit' }),
   meet: () => ({ kicker: 'Words in common, not ideas', title: 'Where courses meet' }),
   people: () => ({ kicker: 'Started late, invisibly', title: 'People and letters' }),
   brief: () => ({ kicker: 'Counted, then read', title: 'Reports' }),

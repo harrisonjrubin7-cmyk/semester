@@ -538,6 +538,18 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20260930250000_degree_audit.sql: the school's degree audit. Each checks
+    -- auth.uid(), the caller's own school, that the school has switched
+    -- `degree_audit` to Core, and a school-scoped capability: `degree:author`
+    -- for the four that write a program, and for a run `degree:audit` or the
+    -- record the school linked to the caller's own account.
+    -- `degree-audit.check.sql` walks every one of those refusals.
+    'degree_program_create(want_code text, want_title text, want_catalog_year integer, want_passing text[], want_copy_from uuid, want_key text)',
+    'degree_requirement_add(want_program uuid, want_name text, want_need text, want_count numeric, want_accepts text[], want_min_grade text, want_key text)',
+    'degree_program_publish(want_program uuid, want_key text)',
+    'degree_program_retire(want_program uuid, want_key text)',
+    'degree_audit_run(want_program uuid, want_student_ref text, want_as_of date, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

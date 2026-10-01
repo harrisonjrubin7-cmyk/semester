@@ -271,6 +271,34 @@ export const ASSESSMENTS: readonly Assessment[] = [
       'Sharing: nothing reaches the payment provider from here; its settlement file is read by hand, so a missed month is not noticed by the system.',
     ],
   },
+  {
+    id: 'degree-audit',
+    surface: 'Degree audit',
+    what: 'A school publishes a degree program for a catalog year, and the database audits one student’s academic record against it as of a date and keeps the answer, at a school that has switched the module to Core.',
+    owner: 'privacy',
+    assessed: '2026-10-01',
+    answers: {
+      purpose: { answer: 'To let a school say, from its own published requirements and its own academic record, what is finished, what is in progress and what is left for one student on one date, and to keep that answer with who asked and which version of the program it ran against. Each column answers one of those questions; the audit decides nothing about a student’s standing.', evidence: [{ path: 'supabase/migrations/20260930250000_degree_audit.sql', shows: 'Four tables whose columns are the program, its requirements, and what an audit read and found' }] },
+      fields: { answer: 'A program’s code, title, catalog year, version, the grades the school lists as passing and its requirements. An audit holds the school’s student identifier, the as-of date, who asked, a SHA-256 and a count of the ledger lines read, a verdict from a closed list of three, and a result that repeats, for that student, each course code and term, its grade and its hours from the ledger. Grades and credit are education records and sensitive. The kinds read are four, fixed in the function; there is no column for a name, aid, health or disability.', evidence: [{ path: 'app/src/lib/degreeaudit/degreeaudit.test.ts', shows: 'Every limit, state and argument name held to the migration' }, { path: 'supabase/degree-audit.check.sql', shows: 'Which ledger kinds are read, and that standing, requirement and conferral entries are not' }] },
+      default: { answer: 'The school’s record, not the student’s to share. A student reads the audits of the one record the school linked to their account through academic_record_subjects, and no other; the school’s published programs are readable by anyone at the school and drafts only by authors.', evidence: [{ path: 'supabase/degree-audit.check.sql', shows: 'A student reads their own record’s audits and not another’s; an unlinked student and a registrar at another school read none' }] },
+      readers: { answer: 'Accounts holding degree:audit at the school (registrar, dean, academic advisor) read every audit there, directly under row-level security, and may run one for any student reference at their own school. Faculty, other students and another school’s staff read none. No one at Semester reads them: there is no service-role reader and no support view.', evidence: [{ path: 'supabase/degree-audit.check.sql', shows: 'Each reader walked, and each refused one, including a student auditing another student' }] },
+      identity: { answer: 'The audit is identified on purpose: staff audit a named student by the school’s identifier. Nothing anonymous is derived from it, and no figure is aggregated across students.', evidence: [{ path: 'supabase/migrations/20260930250000_degree_audit.sql', shows: 'No view, function or export reads across students' }] },
+      ai: { answer: 'Nothing. No prompt builder reads these tables and the screen sends nothing to a model.', evidence: [{ path: 'app/src/lib/degreeaudit/client.ts', shows: 'The only calls are the three tables and the five functions; none is an AI route' }] },
+      retention: { answer: 'Kept with the school. No clock is set: how long a school keeps an audit is the school’s rule and none has been given. RETENTION.md says so for each table.', evidence: [RETENTION, RETENTION_TEST] },
+      deletion: { answer: 'Nothing here is keyed by an account except who asked, so deleting an account clears that name and leaves the program or the audit, which belong to the school’s record and are keyed by its own student identifier. A student’s own account deletion therefore does not remove audits of their record.', evidence: [{ path: 'supabase/degree-audit.check.sql', shows: 'An advisor and a registrar deleted: the audits and programs stay, no longer naming them' }, RETENTION] },
+      sharing: { answer: 'None. There is no share, link or export of an audit beyond the student’s own reading of it and the school’s staff reading it.', evidence: [{ path: 'supabase/degree-audit.check.sql', shows: 'No table accepts a write from a client, and only the school’s auditors and the linked student read an audit' }] },
+      inference: { answer: 'One per-student verdict, from a closed list of three, computed by the school’s own published rule from the school’s own record on a stated date. It is not a score, a ranking or a flag, it is never aggregated, and it says it is not a transcript and does not read conferral.', evidence: [NEVER_MEASURED, { path: 'app/src/lib/degreeaudit/degreeaudit.test.ts', shows: 'The verdict wording never says a degree is conferred, and in-progress work is never rolled into done' }] },
+      guard: { answer: 'degree-audit.check.sql runs every rule as the account it concerns; degreeaudit.test.ts and the same fixtures hold the TypeScript twin equal to the SQL function; the screen test holds who sees which half.', evidence: [{ path: 'supabase/degree-audit.check.sql', shows: 'Who authors, who audits whom, what is read, immutability, idempotency and the Core gate' }, { path: 'app/src/screens/degreeaudit.test.tsx', shows: 'The screen: the mode, no published program, one key per attempt, in-progress shown apart' }] },
+    },
+    rating: 'high',
+    open: [
+      'Readers: an academic advisor may audit and read every student’s audit at the school, with no advisee relationship; degree:audit has no narrower scope, so a school that wants advisors to see only their advisees has no way to say so yet.',
+      'Fields: an audit’s result repeats a student’s grades and hours at the time it ran. A later correction to the ledger does not change an earlier audit, which is the point of keeping it, and also means an old audit can disagree with the record today.',
+      'Retention: no clock is set for audits or programs; how long a school keeps them is the school’s rule and none has been given.',
+      'Deletion: a student who deletes their account does not remove audits of their record, because the record is the school’s; the school’s own retention rule would decide, and none exists.',
+      'Guard: applied to no production project and run only against a throwaway Postgres; no registrar has read the audit’s rules (grades as the school lists them, a repeated course counting twice, transfer credit never meeting a minimum grade) and no school has agreed that they match its own.',
+    ],
+  },
 ];
 
 export interface Owed {
