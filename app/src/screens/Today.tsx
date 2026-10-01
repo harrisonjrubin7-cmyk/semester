@@ -812,9 +812,14 @@ function TabHome() {
         />
       </div>
 
-      <FirstGoal />
-      <TodayDecisionSurface />
-      <OperatingRhythm />
+      {/* Keep briefing state when changing tabs, but put each tab's own
+          content first. Focus View still needs the briefing when it hides
+          the switcher and secondary content. */}
+      <div className="today-briefing" hidden={tab !== 'today' && state.workspaceMode !== 'focused'}>
+        <FirstGoal />
+        <TodayDecisionSurface />
+        <OperatingRhythm />
+      </div>
       <div className="hides-in-focus">
         {tab === 'today' && <details className="today-more">
           <summary>More from Today</summary>
