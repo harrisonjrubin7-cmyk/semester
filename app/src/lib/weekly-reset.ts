@@ -327,7 +327,7 @@ export function busyDays(deadlines: readonly DayDeadline[], threshold = 3): Busy
         day,
         titles,
         startEarly,
-        line: `${name} has ${word(titles.length)} deadlines. Start ${word(startEarly)} ${startEarly === 1 ? 'task' : 'tasks'} earlier?`,
+        line: `${name} has ${word(titles.length)} deadlines. Start ${word(startEarly)} ${startEarly === 1 ? 'action' : 'actions'} earlier?`,
       };
     });
 }

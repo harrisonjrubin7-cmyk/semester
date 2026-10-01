@@ -148,13 +148,13 @@ describe('busyDays', () => {
   it('names a day with three deadlines and asks, in the spec words', () => {
     // 30 September 2026 is a Wednesday.
     const [b] = busyDays(ds('2026-09-30', 3));
-    expect(b.line).toBe('Wednesday has three deadlines. Start two tasks earlier?');
+    expect(b.line).toBe('Wednesday has three deadlines. Start two actions earlier?');
     expect(b.startEarly).toBe(2);
   });
 
   it('is silent for two and singular for a threshold of two', () => {
     expect(busyDays(ds('2026-09-30', 2))).toEqual([]);
-    expect(busyDays(ds('2026-09-30', 2), 2)[0].line).toBe('Wednesday has two deadlines. Start one task earlier?');
+    expect(busyDays(ds('2026-09-30', 2), 2)[0].line).toBe('Wednesday has two deadlines. Start one action earlier?');
   });
 
   it('reports days in date order', () => {
