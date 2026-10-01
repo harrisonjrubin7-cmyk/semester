@@ -1,30 +1,29 @@
 /**
  * Semester's incident and recovery contract.
  *
- * These are proposed operating targets, not measured SLAs. An institution must
- * approve its own objectives after a business-impact analysis, and a restore
- * exercise must measure them before the product claims they are met.
+ * Objectives stay unset until an institution approves them after a business-
+ * impact analysis and a timed restore exercise measures the recovery path.
  */
 
-export type IncidentSeverity = 'P0' | 'P1' | 'P2' | 'P3';
-export type ServiceTier = 'tier0' | 'tier1' | 'tier2' | 'tier3' | 'tier4';
+export type IncidentSeverity = 'SEV1' | 'SEV2' | 'SEV3' | 'SEV4';
+export type ServiceTier = 'tier0' | 'tier1' | 'tier2' | 'tier3' | 'restricted';
 
 export interface RecoveryObjective {
   tier: ServiceTier;
   services: string[];
-  proposedRtoMinutes: number | null;
-  proposedRpoMinutes: number | null;
+  rtoMinutes: null;
+  rpoMinutes: null;
   fallback: string;
   approval: 'institution_approval_required';
   evidence: 'unmeasured';
 }
 
 export const RECOVERY_OBJECTIVES: readonly RecoveryObjective[] = [
-  { tier: 'tier0', services: ['Identity', 'Tenant isolation', 'Authorization', 'Audit integrity'], proposedRtoMinutes: 60, proposedRpoMinutes: 15, fallback: 'Fail closed; show a status and support route.', approval: 'institution_approval_required', evidence: 'unmeasured' },
-  { tier: 'tier1', services: ['Action Center', 'Student workspace', 'Context Packets', 'Source Registry'], proposedRtoMinutes: 240, proposedRpoMinutes: 60, fallback: 'Read-only saved workspace with an explicit freshness label.', approval: 'institution_approval_required', evidence: 'unmeasured' },
-  { tier: 'tier2', services: ['Course Guide', 'Tutor', 'LTI launch', 'Planning tools'], proposedRtoMinutes: 480, proposedRpoMinutes: 240, fallback: 'Official LMS links, source navigation, and static templates.', approval: 'institution_approval_required', evidence: 'unmeasured' },
-  { tier: 'tier3', services: ['Optional recommendations', 'Opportunity matching', 'Optional analytics'], proposedRtoMinutes: 4_320, proposedRpoMinutes: 1_440, fallback: 'Hide the optional feature; keep the core loop available.', approval: 'institution_approval_required', evidence: 'unmeasured' },
-  { tier: 'tier4', services: ['Experimental and pilot features'], proposedRtoMinutes: null, proposedRpoMinutes: null, fallback: 'Disable by feature flag.', approval: 'institution_approval_required', evidence: 'unmeasured' },
+  { tier: 'tier0', services: ['Public marketing', 'Public resource pages'], rtoMinutes: null, rpoMinutes: null, fallback: 'Publish status and route students to official resources.', approval: 'institution_approval_required', evidence: 'unmeasured' },
+  { tier: 'tier1', services: ['Student planning', 'Today', 'Actions', 'Resource discovery'], rtoMinutes: null, rpoMinutes: null, fallback: 'Use the saved workspace and official sources with explicit freshness labels.', approval: 'institution_approval_required', evidence: 'unmeasured' },
+  { tier: 'tier2', services: ['SSO', 'Course access', 'Assignments', 'Submissions', 'Integrations'], rtoMinutes: null, rpoMinutes: null, fallback: 'Fail closed on access and writes; use the official LMS and source links.', approval: 'institution_approval_required', evidence: 'unmeasured' },
+  { tier: 'tier3', services: ['Grading', 'Assessments', 'Payments', 'High-impact records'], rtoMinutes: null, rpoMinutes: null, fallback: 'Block the workflow and reconcile against the system of record.', approval: 'institution_approval_required', evidence: 'unmeasured' },
+  { tier: 'restricted', services: ['Basic-needs intake', 'Accommodations', 'Health and safety data'], rtoMinutes: null, rpoMinutes: null, fallback: 'Disable the route and use the institution-owned restricted process.', approval: 'institution_approval_required', evidence: 'unmeasured' },
 ];
 
 export const INCIDENT_LIFECYCLE = ['detect', 'contain', 'communicate', 'recover', 'verify', 'close'] as const;
@@ -68,14 +67,14 @@ export interface FailoverRule {
 }
 
 export const FAILOVER_RULES: readonly FailoverRule[] = [
-  { signal: 'cross_tenant_access', severity: 'P0', automatedAction: 'disable_risky_feature', studentFallback: 'This feature is temporarily unavailable while we protect account data.', verification: 'Tenant boundaries pass before the path is restored.' },
-  { signal: 'authorization_error_spike', severity: 'P1', automatedAction: 'block_write', studentFallback: 'Semester cannot confirm access right now. Use the official system or return later.', verification: 'Valid access succeeds and invalid access remains rejected.' },
-  { signal: 'policy_engine_failure', severity: 'P1', automatedAction: 'switch_to_approved_fallback', studentFallback: 'AI help is limited; approved sources and human support remain available.', verification: 'Policy, consent, and restricted-assessment tests pass.' },
-  { signal: 'ai_model_outage', severity: 'P2', automatedAction: 'switch_to_approved_fallback', studentFallback: 'AI help is temporarily limited. Your saved work and approved sources remain available.', verification: 'The approved route passes grounding, privacy, and tool-use tests.' },
-  { signal: 'source_freshness_breach', severity: 'P2', automatedAction: 'mark_stale_or_pending', studentFallback: 'This information may be out of date. Open the official source or ask its owner.', verification: 'Freshness, ownership, link, and citation checks pass.' },
-  { signal: 'data_integrity_mismatch', severity: 'P0', automatedAction: 'block_write', studentFallback: 'Semester is read-only while we verify saved information.', verification: 'Checksums, ordering, sharing state, and audit sequence reconcile.' },
-  { signal: 'official_write_timeout', severity: 'P1', automatedAction: 'mark_stale_or_pending', studentFallback: 'Your action was not confirmed. Check the official system; Semester will not retry it automatically.', verification: 'Exactly one intended effect is confirmed in the system of record.' },
-  { signal: 'accessibility_regression', severity: 'P1', automatedAction: 'disable_risky_feature', studentFallback: 'Use the prior accessible path or the alternate format while this is corrected.', verification: 'The affected critical path passes keyboard and assistive-technology checks.' },
+  { signal: 'cross_tenant_access', severity: 'SEV1', automatedAction: 'disable_risky_feature', studentFallback: 'This feature is temporarily unavailable while we protect account data.', verification: 'Tenant boundaries pass before the path is restored.' },
+  { signal: 'authorization_error_spike', severity: 'SEV2', automatedAction: 'block_write', studentFallback: 'Semester cannot confirm access right now. Use the official system or return later.', verification: 'Valid access succeeds and invalid access remains rejected.' },
+  { signal: 'policy_engine_failure', severity: 'SEV2', automatedAction: 'switch_to_approved_fallback', studentFallback: 'AI help is limited; approved sources and human support remain available.', verification: 'Policy, consent, and restricted-assessment tests pass.' },
+  { signal: 'ai_model_outage', severity: 'SEV3', automatedAction: 'switch_to_approved_fallback', studentFallback: 'AI help is temporarily limited. Your saved work and approved sources remain available.', verification: 'The approved route passes grounding, privacy, and tool-use tests.' },
+  { signal: 'source_freshness_breach', severity: 'SEV3', automatedAction: 'mark_stale_or_pending', studentFallback: 'This information may be out of date. Open the official source or ask its owner.', verification: 'Freshness, ownership, link, and citation checks pass.' },
+  { signal: 'data_integrity_mismatch', severity: 'SEV1', automatedAction: 'block_write', studentFallback: 'Semester is read-only while we verify saved information.', verification: 'Checksums, ordering, sharing state, and audit sequence reconcile.' },
+  { signal: 'official_write_timeout', severity: 'SEV2', automatedAction: 'mark_stale_or_pending', studentFallback: 'Your action was not confirmed. Check the official system; Semester will not retry it automatically.', verification: 'Exactly one intended effect is confirmed in the system of record.' },
+  { signal: 'accessibility_regression', severity: 'SEV2', automatedAction: 'disable_risky_feature', studentFallback: 'Use the prior accessible path or the alternate format while this is corrected.', verification: 'The affected critical path passes keyboard and assistive-technology checks.' },
 ];
 
 export interface IncidentRecord {
@@ -91,13 +90,13 @@ export interface IncidentRecord {
   verification: string[];
 }
 
-export function validateIncident(record: IncidentRecord): string[] {
+export function validateIncident(record: IncidentRecord, now = Date.now()): string[] {
   const gaps: string[] = [];
   if (!record.id.trim()) gaps.push('incident id');
   if (!record.commander.trim()) gaps.push('named incident commander');
   if (record.affectedServices.length === 0) gaps.push('affected service');
   if (!record.studentVisibleEffect.trim()) gaps.push('student-visible effect');
-  if (record.nextUpdateAt <= record.declaredAt) gaps.push('future next-update time');
-  if ((record.status === 'verify' || record.status === 'close') && record.verification.length === 0) gaps.push('recovery verification');
+  if (record.status !== 'close' && record.nextUpdateAt <= now) gaps.push('future next-update time');
+  if ((record.status === 'verify' || record.status === 'close') && !record.verification.some((entry) => entry.trim())) gaps.push('recovery verification');
   return gaps;
 }

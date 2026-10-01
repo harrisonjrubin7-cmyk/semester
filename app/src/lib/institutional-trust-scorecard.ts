@@ -7,6 +7,7 @@ export interface TrustMetricDefinition {
   owner: string;
   cadence: 'continuous' | 'monthly' | 'quarterly' | 'termly';
   critical: boolean;
+  targetInstrumentationDate: string;
 }
 
 export interface TrustMeasurement {
@@ -26,7 +27,7 @@ export interface ScoredTrustMetric extends TrustMetricDefinition {
   reason: string;
 }
 
-export const TRUST_METRICS: readonly TrustMetricDefinition[] = [
+const TRUST_METRIC_DEFINITIONS: readonly Omit<TrustMetricDefinition, 'targetInstrumentationDate'>[] = [
   { id: 'source-coverage', pillar: 'Source trust', metric: 'Source-backed institutional and course claims', owner: 'Source operations', cadence: 'monthly', critical: true },
   { id: 'source-freshness', pillar: 'Source freshness', metric: 'Critical sources inside owner-defined freshness SLO', owner: 'Source operations', cadence: 'continuous', critical: true },
   { id: 'share-preview', pillar: 'Student control', metric: 'Optional shares preview scope, recipient, and expiry', owner: 'Product and privacy', cadence: 'quarterly', critical: true },
@@ -43,6 +44,18 @@ export const TRUST_METRICS: readonly TrustMetricDefinition[] = [
   { id: 'student-trust', pillar: 'Student trust', metric: 'Students understand what Semester uses and why', owner: 'Student experience', cadence: 'termly', critical: false },
   { id: 'assurance-retrieval', pillar: 'Institutional assurance', metric: 'Time to retrieve current control evidence', owner: 'Security and GRC', cadence: 'quarterly', critical: false },
 ];
+
+const INSTRUMENTATION_TARGET_BY_CADENCE: Record<TrustMetricDefinition['cadence'], string> = {
+  continuous: '2026-10-15',
+  monthly: '2026-10-31',
+  quarterly: '2026-12-15',
+  termly: '2026-12-18',
+};
+
+export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFINITIONS.map((metric) => ({
+  ...metric,
+  targetInstrumentationDate: INSTRUMENTATION_TARGET_BY_CADENCE[metric.cadence],
+}));
 
 export function metricState(measurement: TrustMeasurement | undefined): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };

@@ -10620,9 +10620,10 @@ button.adband-bar {
   letter-spacing: 0.08em;
 }
 
-.trust-scorecard-row.is-green { border-left-color: var(--state-ok, #2f7d57); }
-.trust-scorecard-row.is-yellow { border-left-color: var(--state-warn, #a36c00); }
-.trust-scorecard-row.is-red { border-left-color: var(--state-danger, #b34040); }
+/* The state is spelled out beside each row; the border only repeats it. */
+.trust-scorecard-row.is-green { border-left-color: var(--status-success); }
+.trust-scorecard-row.is-yellow { border-left-color: var(--status-attention); }
+.trust-scorecard-row.is-red { border-left-color: var(--status-danger); }
 
 /* ── Integration dashboard ───────────────────────────────────────────────
  * Status is a glyph and a word; the border only repeats it, so nothing here

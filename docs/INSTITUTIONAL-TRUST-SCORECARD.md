@@ -35,6 +35,8 @@ Repository tests show that a control exists. They do not become pilot measuremen
 
 The executable catalog and state calculation are in `app/src/lib/institutional-trust-scorecard.ts`; the institution Trust Dashboard renders every metric and says when a baseline is absent.
 
+Gray rows also show the proposed instrumentation date carried by the executable catalog: continuous measures target 2026-10-15, monthly measures 2026-10-31, quarterly measures 2026-12-15, and the termly student-trust measure 2026-12-18. These are implementation targets, not evidence or institutional approval.
+
 ## Governance cadence
 
 - Continuous: safety, service, source, and integration signals.

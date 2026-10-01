@@ -13,7 +13,8 @@ describe('incident and recovery control contract', () => {
     expect(RECOVERY_OBJECTIVES).toHaveLength(5);
     expect(RECOVERY_OBJECTIVES.every((objective) => objective.approval === 'institution_approval_required')).toBe(true);
     expect(RECOVERY_OBJECTIVES.every((objective) => objective.evidence === 'unmeasured')).toBe(true);
-    expect(RECOVERY_OBJECTIVES.find((objective) => objective.tier === 'tier0')).toMatchObject({ proposedRtoMinutes: 60, proposedRpoMinutes: 15 });
+    expect(RECOVERY_OBJECTIVES.every((objective) => objective.rtoMinutes === null && objective.rpoMinutes === null)).toBe(true);
+    expect(RECOVERY_OBJECTIVES.map((objective) => objective.tier)).toEqual(['tier0', 'tier1', 'tier2', 'tier3', 'restricted']);
   });
 
   it('only automates fail-safe actions and never weakens a control to look available', () => {
@@ -29,12 +30,23 @@ describe('incident and recovery control contract', () => {
 
   it('does not allow an incident to close without a commander, next update, and verification', () => {
     expect(validateIncident({
-      id: 'INC-1', severity: 'P0', declaredAt: 100, commander: '', affectedServices: ['Identity'],
+      id: 'INC-1', severity: 'SEV1', declaredAt: 100, commander: '', affectedServices: ['Identity'],
       studentVisibleEffect: 'Sign-in unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 100, verification: [],
-    })).toEqual(['named incident commander', 'future next-update time', 'recovery verification']);
+    }, 150)).toEqual(['named incident commander', 'recovery verification']);
     expect(validateIncident({
-      id: 'INC-2', severity: 'P1', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'],
+      id: 'INC-2', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'],
       studentVisibleEffect: 'Course launch unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 200, verification: ['Valid launch succeeds; invalid token is rejected'],
-    })).toEqual([]);
+    }, 150)).toEqual([]);
+  });
+
+  it('rejects overdue updates for active incidents and blank verification evidence', () => {
+    expect(validateIncident({
+      id: 'INC-3', severity: 'SEV3', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Sources'],
+      studentVisibleEffect: 'Source stale', privateStudentDataIncluded: false, status: 'recover', nextUpdateAt: 200, verification: [],
+    }, 201)).toContain('future next-update time');
+    expect(validateIncident({
+      id: 'INC-4', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'],
+      studentVisibleEffect: 'Course launch unavailable', privateStudentDataIncluded: false, status: 'verify', nextUpdateAt: 300, verification: ['   '],
+    }, 201)).toContain('recovery verification');
   });
 });

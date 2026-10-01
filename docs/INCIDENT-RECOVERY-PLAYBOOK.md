@@ -10,12 +10,12 @@ Semester restores a verified safe state, not merely a visible interface. Private
 
 | Severity | Meaning | Required response |
 | --- | --- | --- |
-| P0 | Suspected cross-tenant exposure, systemic authorization or consent failure, widespread unsafe official write, severe integrity incident | Contain immediately; name commander; preserve evidence; begin security/privacy and institution routes |
-| P1 | Broad SSO/LTI outage, core workflow unavailable, grade/workflow integrity issue, systematic policy bypass | On-call response; safe mode; incident record; customer contact |
-| P2 | Stale source, broken service route, accessibility defect, limited AI-quality issue | Named owner; visible fallback; defined remediation target |
-| P3 | Isolated low-impact defect or enhancement | Normal product/support cycle |
+| SEV1 | Suspected cross-tenant exposure, systemic authorization or consent failure, widespread unsafe official write, or total outage | Contain immediately; name commander; preserve evidence; begin security/privacy and institution routes |
+| SEV2 | Core workflow broken for many users, including broad SSO/LTI outage or integrity failure | On-call response; safe mode; incident record; customer contact |
+| SEV3 | Degraded or partial service, stale source, accessibility defect, or limited AI-quality issue | Named owner; visible fallback; defined remediation target |
+| SEV4 | Isolated low-impact, cosmetic, or single-user defect | Normal product/support cycle |
 
-A suspected cross-tenant exposure is P0 until disproven.
+A suspected cross-tenant exposure is SEV1 until disproven. This is the same taxonomy used by `docs/market-readiness/INCIDENT_RESPONSE.md`.
 
 ## Universal lifecycle
 
@@ -24,23 +24,23 @@ A suspected cross-tenant exposure is P0 until disproven.
 3. **Communicate:** say what is affected, what remains safe, what a student can do now, and when the next update will occur. External messages are drafts until an authorized person sends them.
 4. **Recover:** restore a known-good configuration, tested replica, approved model route, or source-only/read-only fallback. Do not retry an ambiguous official write.
 5. **Verify:** prove the security, privacy, integrity, accessibility, source, and reconciliation conditions for the affected path. A healthy status check alone is insufficient.
-6. **Close:** record the measured timeline, impact, recovery point, verification, communications, and corrective actions. P0/P1 reviews occur within five business days of stabilization.
+6. **Close:** record the measured timeline, impact, recovery point, verification, communications, and corrective actions. SEV1/SEV2 reviews occur within five business days of stabilization.
 
 An incident cannot close without a named commander, a future next-update time while active, and recovery verification. The executable contract is in `app/src/lib/incident-recovery.ts`.
 
-## Proposed service tiers
+## Service tiers and unset recovery objectives
 
-These figures are design targets for business-impact analysis. They are **not an approved SLA and have not been measured in production**.
+The tiers below reuse the repository's established service catalog. RTO and RPO remain unset: Semester has not completed the timed restore exercise required to state either figure.
 
 | Tier | Services | Proposed RTO | Proposed RPO | Safe fallback |
 | --- | --- | ---: | ---: | --- |
-| 0 | Identity, tenant isolation, authorization, audit integrity | 1 hour | 15 minutes | Fail closed; status and support route |
-| 1 | Action Center, workspace, Context Packets, Source Registry | 4 hours | 1 hour | Read-only saved workspace with freshness label |
-| 2 | Course Guide, Tutor, LTI, planning tools | 8 hours | 4 hours | Official LMS/source links and static templates |
-| 3 | Optional recommendations and analytics | 72 hours | 24 hours | Hide the feature |
-| 4 | Experimental/pilot features | Best effort | Best effort | Disable by feature flag |
+| 0 | Public marketing and resource pages | Unset | Unset | Status and official-resource route |
+| 1 | Student planning, Today, actions, resource discovery | Unset | Unset | Saved workspace and official sources with freshness labels |
+| 2 | SSO, course access, assignments, submissions, integrations | Unset | Unset | Fail closed; official LMS and source links |
+| 3 | Grading, assessments, payments, high-impact records | Unset | Unset | Block and reconcile against the system of record |
+| Restricted | Basic-needs intake, accommodations, health and safety data | Unset | Unset | Institution-owned restricted process |
 
-Each institution must approve objectives after reviewing academic-calendar peaks, legal obligations, dependencies, data classification, maximum tolerable downtime, fallback, owners, and test plan. A number becomes evidence-backed only after a timed restore/failover exercise records it.
+Each institution must approve objectives after reviewing academic-calendar peaks, legal obligations, dependencies, data classification, maximum tolerable downtime, fallback, owners, and test plan. A number may be added only after a timed restore/failover exercise records it.
 
 ## Service runbooks
 

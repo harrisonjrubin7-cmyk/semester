@@ -6,6 +6,7 @@ describe('institutional trust scorecard', () => {
     expect(TRUST_METRICS).toHaveLength(15);
     expect(trustScorecard([]).every((metric) => metric.state === 'gray')).toBe(true);
     expect(trustScorecard([]).every((metric) => metric.value === 'Baseline not recorded')).toBe(true);
+    expect(trustScorecard([]).every((metric) => /^2026-\d{2}-\d{2}$/.test(metric.targetInstrumentationDate))).toBe(true);
   });
 
   it('fails controls red and stale, missed, or worsening measurements yellow', () => {
