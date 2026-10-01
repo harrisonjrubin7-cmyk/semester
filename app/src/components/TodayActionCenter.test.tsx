@@ -66,6 +66,11 @@ function Adopt() {
   return null;
 }
 
+function ModeProbe() {
+  const { state } = useStore();
+  return <output data-testid="workspace-mode">{state.workspaceMode}</output>;
+}
+
 /** Reconcile from another local tab without contacting the account. */
 function HydrateLocally() {
   const { dispatch } = useStore();
@@ -80,6 +85,7 @@ const mount = async (actionCenter: boolean, adopted = false, localHydrate = fals
         {adopted ? <Adopt /> : null}
         {localHydrate ? <HydrateLocally /> : null}
         <TodayDecisionSurface actionCenter={actionCenter} />
+        <ModeProbe />
       </StoreProvider>,
     );
   });
@@ -110,6 +116,14 @@ describe('with the flag off', () => {
     expect(text()).toContain('Why am I seeing this?');
     expect(text()).not.toContain('Your commitments');
   });
+
+  it('puts one dominant decision first and can enter Focus mode from it', async () => {
+    await mount(false);
+    const surface = host.querySelector('.today-decision-surface')!;
+    expect(surface.firstElementChild?.classList.contains('today-dominant-card')).toBe(true);
+    await click(button(/^Focus on this$/, surface.firstElementChild!));
+    expect(host.querySelector('[data-testid="workspace-mode"]')?.textContent).toBe('focused');
+  });
 });
 
 describe('with the flag on', () => {
@@ -121,6 +135,15 @@ describe('with the flag on', () => {
     expect(Object.values(STATUS_SENTENCE)).toContain(host.querySelector('#action-path-heading')?.textContent);
     expect(host.querySelector('#action-path-heading')?.closest('section')?.querySelector('[data-source="student_entered"]'))
       .not.toBeNull();
+  });
+
+  it('keeps the Action Center dominant and makes supporting panels secondary', async () => {
+    await mount(true, true);
+    const main = host.querySelector('.action-center-main')!;
+    expect(main.firstElementChild?.classList.contains('action-panel-primary')).toBe(true);
+    expect(main.querySelectorAll('.action-panel-secondary')).toHaveLength(2);
+    await click(button(/^Focus on this$/, main.firstElementChild!));
+    expect(host.querySelector('[data-testid="workspace-mode"]')?.textContent).toBe('focused');
   });
 
   it('shows at most one urgent commitment and four rows, the time first, never the item it leads with', async () => {

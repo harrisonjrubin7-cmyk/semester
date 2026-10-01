@@ -9,6 +9,11 @@ flows start and end, how status and trust are shown, and who owns all of it.
 | [INTERACTION-STANDARDS.md](INTERACTION-STANDARDS.md) | Screen families, object contracts, flows, status, states, motion and sound, preferences |
 | [GOVERNANCE.md](GOVERNANCE.md) | Owners, new-pattern approval, PR checklist, screen audit, visual regression plan, adoption metrics |
 | [DESIGN-DEBT.md](DESIGN-DEBT.md) | Every known inconsistency, with evidence and a canonical fix |
+| [LAYOUT-CONTRACT.md](LAYOUT-CONTRACT.md) | Required screen anatomy, responsive modes, content budgets and Focus View |
+| [PROGRESSIVE-DISCLOSURE-RULES.md](PROGRESSIVE-DISCLOSURE-RULES.md) | Layer 1/2/3 placement and explicit reveal triggers |
+| [STATUS-SOURCE-VISUAL-LANGUAGE.md](STATUS-SOURCE-VISUAL-LANGUAGE.md) | One visual and verbal grammar for state, certainty and provenance |
+| [RECOVERY-STATE-LIBRARY.md](RECOVERY-STATE-LIBRARY.md) | Empty, loading, saving, error, offline, permission and success contracts |
+| [SCREEN-QUALITY-CHECKLIST.md](SCREEN-QUALITY-CHECKLIST.md) | Review and regression gate for every screen and state |
 
 The visual foundations — tokens, grounds, type, spacing — are
 [`app/src/lib/look.ts`](../../app/src/lib/look.ts), described in
