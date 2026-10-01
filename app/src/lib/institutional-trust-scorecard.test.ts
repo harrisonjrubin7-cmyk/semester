@@ -23,7 +23,7 @@ describe('institutional trust scorecard', () => {
 
   it('marks only current target-meeting evidence green', () => {
     const definition = TRUST_METRICS[0];
-    expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: 1 }).state).toBe('green');
+    expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: 100 }, 200).state).toBe('green');
   });
 
   it('carries current limitations and corrective action into the rendered scorecard model', () => {
@@ -48,5 +48,20 @@ describe('institutional trust scorecard', () => {
     const definition = TRUST_METRICS[0];
     expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: 201 }, 200).state).toBe('yellow');
     expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: '   ', evidenceAt: 100 }, 200).state).toBe('yellow');
+  });
+
+  it('expires evidence by cadence and rejects non-boolean state flags', () => {
+    const monthly = TRUST_METRICS.find((metric) => metric.cadence === 'monthly')!;
+    const old = Date.UTC(2026, 0, 1);
+    const now = Date.UTC(2026, 9, 1);
+    expect(metricState(monthly, { id: monthly.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: old }, now).state).toBe('yellow');
+    expect(metricState(monthly, { id: monthly.id, targetMet: 'false', evidenceCurrent: 'false', value: 'met', evidenceAt: now } as unknown as Parameters<typeof metricState>[1], now).state).toBe('yellow');
+  });
+
+  it('falls back to catalog guidance when measurement overrides are blank', () => {
+    const definition = TRUST_METRICS[0];
+    const scored = trustScorecard([{ id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Date.now(), knownLimitations: ' ', correctiveAction: '' }])[0];
+    expect(scored.knownLimitations).toBe(definition.knownLimitations);
+    expect(scored.correctiveAction).toBe(definition.correctiveAction);
   });
 });

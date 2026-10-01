@@ -58,6 +58,13 @@ const INSTRUMENTATION_TARGET_BY_CADENCE: Record<TrustMetricDefinition['cadence']
   termly: '2026-12-18',
 };
 
+const MAX_EVIDENCE_AGE_MS: Record<TrustMetricDefinition['cadence'], number> = {
+  continuous: 24 * 60 * 60 * 1000,
+  monthly: 31 * 24 * 60 * 60 * 1000,
+  quarterly: 92 * 24 * 60 * 60 * 1000,
+  termly: 140 * 24 * 60 * 60 * 1000,
+};
+
 const METRIC_GUIDANCE: Record<string, Pick<TrustMetricDefinition, 'target' | 'knownLimitations' | 'correctiveAction'>> = {
   'source-coverage': { target: 'Every institutional and course claim is source-backed or visibly needs confirmation.', knownLimitations: 'Coverage is not a correctness or freshness measure.', correctiveAction: 'Quarantine unsupported claims, restore citations, and re-run source review.' },
   'source-freshness': { target: 'Every critical source is inside its owner-approved freshness SLO.', knownLimitations: 'Owner-approved freshness SLOs are not yet configured for every tenant.', correctiveAction: 'Mark affected claims stale, route to the official source, and refresh or escalate ownership.' },
@@ -82,11 +89,13 @@ export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFI
   targetInstrumentationDate: INSTRUMENTATION_TARGET_BY_CADENCE[metric.cadence],
 }));
 
-export function metricState(_definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined, now = Date.now()): Pick<ScoredTrustMetric, 'state' | 'reason'> {
+export function metricState(definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined, now = Date.now()): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };
+  if (typeof measurement.targetMet !== 'boolean' || typeof measurement.evidenceCurrent !== 'boolean') return { state: 'yellow', reason: 'The measurement state is invalid; target and freshness flags must be recorded explicitly.' };
   if (measurement.controlFailure) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
   if (!evidenceDateLabel(measurement.evidenceAt) || measurement.evidenceAt > now) return { state: 'yellow', reason: 'The evidence date is invalid or in the future; current evidence must be recorded before this metric can be green.' };
   if (typeof measurement.value !== 'string' || measurement.value.trim().length === 0) return { state: 'yellow', reason: 'A measured value is required before this metric can be green.' };
+  if (now - measurement.evidenceAt > MAX_EVIDENCE_AGE_MS[definition.cadence]) return { state: 'yellow', reason: `The evidence is older than the ${definition.cadence} review cadence.` };
   if (!measurement.targetMet || !measurement.evidenceCurrent || measurement.trendWorsening || measurement.materialLimitation) return { state: 'yellow', reason: 'The target, evidence freshness, trend, or a material limitation needs attention.' };
   return { state: 'green', reason: 'Target met with current evidence.' };
 }
@@ -107,8 +116,8 @@ export function trustScorecard(measurements: readonly TrustMeasurement[]): Score
       ...evaluation,
       value: measurement?.value ?? 'Baseline not recorded',
       evidenceAt: measurement?.evidenceAt ?? null,
-      knownLimitations: measurement?.knownLimitations ?? definition.knownLimitations,
-      correctiveAction: measurement?.correctiveAction ?? definition.correctiveAction,
+      knownLimitations: measurement?.knownLimitations?.trim() || definition.knownLimitations,
+      correctiveAction: measurement?.correctiveAction?.trim() || definition.correctiveAction,
     };
   });
 }
