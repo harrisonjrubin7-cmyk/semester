@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { isSemesterAgent, type SemesterAgent } from '../../../packages/institution/src/agents';
 import type { Turn } from '../lib/claude';
 import type { Local } from '../lib/localask';
 import type { Read } from '../lib/mode';
@@ -107,6 +108,7 @@ export interface Live {
   response: IntelligenceResponse | null;
   /** The student's requested academic-integrity interaction. */
   integrityMode: IntegrityMode;
+  agent: SemesterAgent;
   /** Modes returned by verified institutional policy for the active account. */
   allowedIntegrityModes: IntegrityMode[];
   /**
@@ -165,6 +167,7 @@ function empty(): Live {
     locally: null,
     response: null,
     integrityMode: 'explain',
+    agent: isSemesterAgent(open.agent) ? open.agent : 'assistant',
     allowedIntegrityModes: [],
     policyLookup: 'checking',
     policyTry: 0,
@@ -271,7 +274,7 @@ export function keepTurns(turns: Turn[]): void {
   const fitted = fit(turns);
   const threads = live.threads.map((t) =>
     t.id === live.openId
-      ? { ...t, turns: fitted.turns, at, title: titleFor(fitted.turns) }
+      ? { ...t, turns: fitted.turns, agent: live.agent, at, title: titleFor(fitted.turns) }
       : t,
   );
   live = { ...live, turns: fitted.turns, threads, dropped: fitted.dropped };
@@ -328,7 +331,7 @@ export function restoreThread(id: string): void {
   const one = unarchive(id);
   if (!one) return;
   const threads = [one, ...live.threads.filter((t) => t.id !== one.id)];
-  live = { ...live, ...cleared(), turns: one.turns, threads, openId: one.id };
+  live = { ...live, ...cleared(), turns: one.turns, agent: isSemesterAgent(one.agent) ? one.agent : 'assistant', threads, openId: one.id };
   saveThreads({ threads, openId: one.id });
   live = { ...live, threads: pruned(threads), archived: loadArchive() };
   for (const fn of watchers) fn();
@@ -369,7 +372,7 @@ export function newThread(): void {
 export function openThread(id: string): void {
   const thread = live.threads.find((t) => t.id === id);
   if (!thread || id === live.openId) return;
-  live = { ...live, ...cleared(), turns: thread.turns, openId: id };
+  live = { ...live, ...cleared(), turns: thread.turns, agent: isSemesterAgent(thread.agent) ? thread.agent : 'assistant', openId: id };
   saveThreads({ threads: live.threads, openId: id });
   for (const fn of watchers) fn();
 }
@@ -428,7 +431,7 @@ export function dropThread(id: string): void {
   }
   const next = [...rest].sort((a, b) => b.at - a.at)[0] ?? blank();
   const threads = rest.length > 0 ? rest : [next];
-  live = { ...live, ...cleared(), turns: next.turns, threads, openId: next.id };
+  live = { ...live, ...cleared(), turns: next.turns, agent: isSemesterAgent(next.agent) ? next.agent : 'assistant', threads, openId: next.id };
   saveThreads({ threads, openId: next.id });
   for (const fn of watchers) fn();
 }
