@@ -340,7 +340,7 @@ export function choose(r: Recovery, id: OptionId): Recovery {
 export function confirm(r: Recovery): Plan | null {
   if (r.resolution !== 'open' || r.chosen === null) return null;
   const option = r.steps.options.find((o) => o.id === r.chosen);
-  if (!option) return null;
+  if (!option?.edit) return null;
   return copyPlan(r.scenarioB);
 }
 
