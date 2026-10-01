@@ -82,7 +82,7 @@ const STAFF = ['moderation', 'agreements', 'volunteers', 'console'] as const;
  * with a writeback flag for the switch, reached from the Registration planner
  * and the Grades tab.
  */
-const SWITCHED = ['community', 'volunteer', 'dining', 'registration', 'gradebook'] as const;
+const SWITCHED = ['community', 'volunteer', 'dining', 'registration', 'gradebook', 'admissions', 'aid'] as const;
 
 /**
  * Pages inside the Me control surface, which lists them itself

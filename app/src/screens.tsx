@@ -128,6 +128,8 @@ const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.R
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
 const Registration = lazy(() => import('./screens/Registration').then((m) => ({ default: m.Registration })));
 const Gradebook = lazy(() => import('./screens/Gradebook').then((m) => ({ default: m.Gradebook })));
+const Admissions = lazy(() => import('./screens/Admissions').then((m) => ({ default: m.Admissions })));
+const Aid = lazy(() => import('./screens/Aid').then((m) => ({ default: m.Aid })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
@@ -238,6 +240,8 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   registrar: Registrar,
   registration: Registration,
   gradebook: Gradebook,
+  admissions: Admissions,
+  aid: Aid,
   sources: Sources,
   account: AccountScreen,
   slides: SlideDeck,

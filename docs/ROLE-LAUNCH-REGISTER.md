@@ -51,7 +51,7 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `prospective_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Explore public programs, career paths, readiness tools, estimated cost/plan tools | Institutional records, other users’ data |
-| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `academic-record.check.sql`<br>`admins.check.sql`<br>`commercial-automation.check.sql`<br>`configuration-studio.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`human-overrides.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`legal-holds.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`roster-import.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql`<br>`workflow-builder.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
+| `student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `academic-record.check.sql`<br>`admins.check.sql`<br>`admissions-aid.check.sql`<br>`commercial-automation.check.sql`<br>`configuration-studio.check.sql`<br>`console-control-plane.check.sql`<br>`deletion.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`gtm.check.sql`<br>`help-requests.check.sql`<br>`human-overrides.check.sql`<br>`integration-hardening.check.sql`<br>`intelligence-policy.check.sql`<br>`legal-holds.check.sql`<br>`lti-capability.check.sql`<br>`lti-membership.check.sql`<br>`mentor-rosters.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`retention-sweeps.check.sql`<br>`role-grant-audit.check.sql`<br>`roster-import.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql`<br>`support-access.check.sql`<br>`trust-room.check.sql`<br>`workflow-builder.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Plan, study, search, create work, connect accounts, manage privacy, selectively share | Other students’ private records, unauthorized institutional data |
 | `undergraduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `dining.check.sql`<br>`gradebook.check.sql`<br>`lti-capability.check.sql`<br>`registration_transaction.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Everything a student may, scoped to an undergraduate program | Other students’ private records, unauthorized institutional data |
 | `graduate_student` | secure | ✓ ✓ ✓ ✓ ✓ · · | `lti:launch`<br>`grades:receive` | `app/src/screens/Today.tsx` | `gradebook.check.sql` | — | `docs/launch/STUDENT-QUICK-START.md` | Manage graduate milestones, funding and work planning, course/research workflows | Other students’ records |
 | `admitted_student` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Complete pre-arrival actions, first-term planning, orientation actions, accepted mentor workflow | Current-student restricted data unless enrolled/authorized |
@@ -63,7 +63,7 @@ Two further limits on what the columns below prove:
 
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `faculty` | secure | ✓ ✓ ✓ ✓ ✓ · · | `skill:verify`<br>`help_request:respond`<br>`lti:launch`<br>`course:publish`<br>`record:propose`<br>`grades:enter`<br>`grades:moderate`<br>`grades:release`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`advisor.check.sql`<br>`coursestudio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Build/manage course content, define course AI policy, teach, assess, grade, give feedback | Private student plans, diagnoses, unrelated records |
+| `faculty` | secure | ✓ ✓ ✓ ✓ ✓ · · | `skill:verify`<br>`help_request:respond`<br>`lti:launch`<br>`course:publish`<br>`record:propose`<br>`grades:enter`<br>`grades:moderate`<br>`grades:release`<br>`grades:export` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`admissions-aid.check.sql`<br>`advisor.check.sql`<br>`coursestudio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`lti-capability.check.sql`<br>`role-grant-audit.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md`<br>`docs/launch/FIRST-DAY-CHECKLISTS.md` | Build/manage course content, define course AI policy, teach, assess, grade, give feedback | Private student plans, diagnoses, unrelated records |
 | `teaching_assistant` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch`<br>`grades:enter` | `app/src/components/HelpInbox.tsx` | `gradebook.check.sql`<br>`lti-membership.check.sql`<br>`rolegrants.check.sql` | — | `docs/FACULTY-ENABLEMENT.md` | Perform delegated, course-scoped grading/support duties | Unapproved grade controls or unrelated course/student data |
 | `academic_advisor` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond` | `app/src/components/HelpInbox.tsx` | `advisor.check.sql`<br>`help-requests.check.sql`<br>`share-audit.check.sql` | — | `docs/launch/FIRST-DAY-CHECKLISTS.md` | View only student-shared plans/agendas and authorized follow-up | Private study activity, health, billing, or unrestricted browsing |
 | `tutor` | secure | ✓ ✓ ✓ ✓ ✓ · · | `help_request:respond`<br>`lti:launch` | `app/src/components/HelpInbox.tsx` | `help-requests.check.sql`<br>`rolegrants.check.sql` | — | — | Manage assigned tutoring/session workflow and student-consented context | Grades, private plans, unrelated student records |
@@ -77,12 +77,12 @@ Two further limits on what the columns below prove:
 | Role | State | Def · Mod · Prov · Use · Sec · Sup · Appr | Capabilities | Interface | Authorization checks | Runbook | Training | Must be able to | Must never |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `disability_services_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `accommodation:verify` | — | `expansion.check.sql` | — | — | Issue/revoke functional accommodation passport | Diagnoses in Semester; unrestricted academic records |
-| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`migration:approve`<br>`migration:view`<br>`record:propose`<br>`record:approve`<br>`record:override`<br>`record:read`<br>`registration:administer`<br>`grades:export`<br>`override:record`<br>`override:review`<br>`config:publish`<br>`config:view`<br>`workflow:publish`<br>`workflow:view` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`configuration-studio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`registration_transaction.check.sql`<br>`school-offboarding.check.sql`<br>`workflow-builder.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
+| `registrar` | secure | ✓ ✓ ✓ ✓ ✓ · · | `institution_action:publish`<br>`registration_window:publish`<br>`catalog:sync`<br>`articulation:approve`<br>`demand:read`<br>`help_request:respond`<br>`migration:approve`<br>`migration:view`<br>`record:propose`<br>`record:approve`<br>`record:override`<br>`record:read`<br>`registration:administer`<br>`grades:export`<br>`override:record`<br>`override:review`<br>`config:publish`<br>`config:view`<br>`workflow:publish`<br>`workflow:view`<br>`admissions:record`<br>`admissions:decide`<br>`admissions:read` | `app/src/components/HelpInbox.tsx` | `academic-record.check.sql`<br>`admissions-aid.check.sql`<br>`configuration-studio.check.sql`<br>`demand.check.sql`<br>`expansion.check.sql`<br>`gradebook.check.sql`<br>`human-overrides.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`migration-center.check.sql`<br>`officeactions.check.sql`<br>`registration_transaction.check.sql`<br>`school-offboarding.check.sql`<br>`workflow-builder.check.sql` | — | — | Publish catalog, requirements, windows, approved articulation decisions, institutional actions | Individual private plans, AI memory, unrestricted student browsing |
 | `department_chair` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read` | — | `demand.check.sql`<br>`gradebook.check.sql` | — | — | View allowed aggregate demand/outcomes for scope | Individual records |
-| `dean` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:approve`<br>`migration:view`<br>`record:approve`<br>`record:read` | — | `academic-record.check.sql` | — | — | View allowed school-level aggregates and decisions | Individual records without explicit authorization |
+| `dean` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:approve`<br>`migration:view`<br>`record:approve`<br>`record:read`<br>`admissions:decide`<br>`admissions:read` | — | `academic-record.check.sql`<br>`admissions-aid.check.sql` | — | — | View allowed school-level aggregates and decisions | Individual records without explicit authorization |
 | `institutional_researcher` | provisionable | ✓ ✓ ✓ · ✓ · · | `demand:read`<br>`outcomes:read`<br>`migration:view`<br>`config:view`<br>`workflow:view` | — | `academic-record.check.sql`<br>`configuration-studio.check.sql`<br>`expansion.check.sql`<br>`migration-center.check.sql`<br>`workflow-builder.check.sql` | — | — | View governed, aggregate, suppressed analytics | Individual student records |
-| `financial_aid_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:read` | — | `officeactions.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited official actions/checklists | Student plans/cost scenarios unless specifically authorized |
-| `student_accounts_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:approve`<br>`finance:read` | — | `ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited billing/action prompts | Student cost plans or payment details |
+| `financial_aid_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:read`<br>`aid:record`<br>`aid:read` | — | `admissions-aid.check.sql`<br>`officeactions.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited official actions/checklists | Student plans/cost scenarios unless specifically authorized |
+| `student_accounts_officer` | provisionable | ✓ ✓ ✓ · ✓ · · | `institution_action:publish`<br>`finance:request`<br>`finance:approve`<br>`finance:read`<br>`aid:read` | — | `admissions-aid.check.sql`<br>`ledger-chains.check.sql`<br>`ledger-seals.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Publish limited billing/action prompts | Student cost plans or payment details |
 | `international_student_advisor` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish compliance actions under approved scope | Private student segments beyond approved source/need |
 | `veterans_certifying_official` | provisionable | ✓ ✓ ✓ · · · · | `institution_action:publish` | — | — | — | — | Publish certification actions under approved scope | Private plans or unrelated data |
 | `dining_staff` | provisionable | ✓ ✓ ✓ · ✓ · · | `dining:operate` | — | `dining.check.sql` | — | — | Work one school’s mobile-order queue, pause a location, read the shared-swipe pool as totals (dining:operate) | A student’s balance or plan, or who gave or used a shared swipe |
@@ -131,7 +131,7 @@ Two further limits on what the columns below prove:
 | `transfer_partner_admin` | provisionable | ✓ ✓ ✓ · ✓ · · | `articulation:propose` | — | `expansion.check.sql` | — | — | Propose equivalencies within partner scope | Approve own proposals or inspect student records |
 | `high_school_counselor` | provisionable | ✓ ✓ ✓ · · · · | — | — | — | — | — | Use public/consented dual-enrollment workflow only | Student institutional record by default |
 | `research_partner` | provisionable | ✓ ✓ ✓ · · · · | `outcomes:read` | — | — | — | — | View only approved aggregate outcomes meeting suppression thresholds | Individual student-level records |
-| `business_admin` | provisionable | ✓ ✓ ✓ · ✓ · · | `finance:approve`<br>`finance:approve_high`<br>`finance:close`<br>`finance:read` | — | `lti-capability.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Nothing yet: the role exists and holds no capability | Any student record |
+| `business_admin` | provisionable | ✓ ✓ ✓ · ✓ · · | `finance:approve`<br>`finance:approve_high`<br>`finance:close`<br>`finance:read`<br>`aid:approve_high`<br>`aid:read` | — | `admissions-aid.check.sql`<br>`lti-capability.check.sql`<br>`student-accounts.check.sql`<br>`student-payment-plans.check.sql` | — | — | Nothing yet: the role exists and holds no capability | Any student record |
 
 ## Student organizations
 
@@ -225,6 +225,9 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `registrar` | `config:view` | — | — |
 | `registrar` | `workflow:publish` | — | — |
 | `registrar` | `workflow:view` | — | — |
+| `registrar` | `admissions:record` | — | `admissions-aid.check.sql` |
+| `registrar` | `admissions:decide` | — | `admissions-aid.check.sql` |
+| `registrar` | `admissions:read` | — | — |
 | `department_chair` | `demand:read` | — | — |
 | `dean` | `demand:read` | — | — |
 | `dean` | `outcomes:read` | — | — |
@@ -232,6 +235,8 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `dean` | `migration:view` | — | — |
 | `dean` | `record:approve` | — | — |
 | `dean` | `record:read` | — | `human-overrides.check.sql` |
+| `dean` | `admissions:decide` | — | `admissions-aid.check.sql` |
+| `dean` | `admissions:read` | — | — |
 | `institutional_researcher` | `demand:read` | — | — |
 | `institutional_researcher` | `outcomes:read` | — | — |
 | `institutional_researcher` | `migration:view` | — | — |
@@ -240,10 +245,13 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `financial_aid_officer` | `institution_action:publish` | — | — |
 | `financial_aid_officer` | `finance:request` | — | — |
 | `financial_aid_officer` | `finance:read` | — | — |
+| `financial_aid_officer` | `aid:record` | — | `admissions-aid.check.sql` |
+| `financial_aid_officer` | `aid:read` | — | — |
 | `student_accounts_officer` | `institution_action:publish` | — | — |
 | `student_accounts_officer` | `finance:request` | — | — |
 | `student_accounts_officer` | `finance:approve` | — | — |
 | `student_accounts_officer` | `finance:read` | — | — |
+| `student_accounts_officer` | `aid:read` | — | — |
 | `international_student_advisor` | `institution_action:publish` | — | — |
 | `veterans_certifying_official` | `institution_action:publish` | — | — |
 | `dining_staff` | `dining:operate` | — | — |
@@ -335,6 +343,8 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `business_admin` | `finance:approve_high` | — | — |
 | `business_admin` | `finance:close` | — | — |
 | `business_admin` | `finance:read` | — | — |
+| `business_admin` | `aid:approve_high` | — | `admissions-aid.check.sql` |
+| `business_admin` | `aid:read` | — | — |
 | `organization_member` | `organization:read` | — | `capabilities.check.sql`<br>`institutional-foundation.check.sql` |
 | `organization_officer` | `organization:read` | — | `capabilities.check.sql`<br>`institutional-foundation.check.sql` |
 | `organization_officer` | `event:create` | — | `capabilities.check.sql` |

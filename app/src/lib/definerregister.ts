@@ -117,7 +117,16 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['accept_connection', 'self-service', ['auth.uid()']],
   ['accept_family_grant', 'sharing', ['auth.uid()']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['admissions_applicant_add', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['admissions_applicant_link', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['admissions_status_correct', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['admissions_status_record', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['aid_award_approve', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['aid_award_record', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['aid_disbursement_record', 'financial', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['aid_status_correct', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
+  ['aid_status_record', 'admin', ['auth.uid()', 'private.adm_aid_require', 'private.adm_aid_require_core', 'private.adm_aid_replay']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
@@ -329,6 +338,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20260930270000_admissions_aid.sql',
 ];
 
 /**
@@ -340,6 +350,13 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260930270000_admissions_aid.sql',
+    functions: [
+      'admissions_applicant_add', 'admissions_applicant_link', 'admissions_status_correct', 'admissions_status_record',
+      'aid_award_approve', 'aid_award_record', 'aid_disbursement_record', 'aid_status_correct', 'aid_status_record',
+    ],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],

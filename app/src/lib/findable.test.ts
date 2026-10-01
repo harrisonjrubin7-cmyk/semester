@@ -73,6 +73,12 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   gradebook:
     'The gradebook of record, behind writeback.lms_grade_passback and off at every school today. ' +
     'Opened at #/gradebook and from the Grades tab, and it says in one sentence whether the school has it on.',
+  admissions:
+    'A school’s own admissions records, behind the school’s switch of admissions to Core, which no school has made. ' +
+    'A staff tool opened at #/admissions; there is no tile and no link from another screen yet, and it says in one sentence how the school runs admissions.',
+  aid:
+    'A school’s own financial-aid records, and a student’s own awards, behind the school’s switch of financial_aid to Core, which no school has made. ' +
+    'Opened at #/aid; there is no tile and no link from another screen yet, and it says in one sentence how the school runs aid.',
   directory:
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +

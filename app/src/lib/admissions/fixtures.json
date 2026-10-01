@@ -1,0 +1,29 @@
+{
+  "statuses": ["submitted", "in_review", "admitted", "denied", "waitlisted", "withdrawn", "enrolled"],
+  "decisions": ["admitted", "denied", "waitlisted"],
+  "forward": {
+    "submitted": ["in_review", "withdrawn"],
+    "in_review": ["admitted", "denied", "waitlisted", "withdrawn"],
+    "waitlisted": ["admitted", "denied", "withdrawn"],
+    "admitted": ["enrolled", "withdrawn"],
+    "denied": [],
+    "withdrawn": [],
+    "enrolled": ["withdrawn"]
+  },
+  "text": [
+    { "name": "plain words", "text": "Received through the school's own portal", "refused": null },
+    { "name": "a cycle and a year", "text": "Fall 2027, round 2", "refused": null },
+    { "name": "a social security number with dashes", "text": "SSN 123-45-6789", "refused": "ssn" },
+    { "name": "a social security number with spaces", "text": "123 45 6789", "refused": "ssn" },
+    { "name": "nine digits run together", "text": "123456789", "refused": "ssn" },
+    { "name": "nine digits after a letter", "text": "S123456789", "refused": "ssn" },
+    { "name": "nine digits inside a sentence", "text": "ref 987654321 on file", "refused": "ssn" },
+    { "name": "ten digits is a phone number, not this", "text": "6155551234", "refused": null },
+    { "name": "eight digits", "text": "12345678", "refused": null },
+    { "name": "a date", "text": "2026-10-01", "refused": null },
+    { "name": "a card number", "text": "4111 1111 1111 1111", "refused": "card" },
+    { "name": "thirteen digits", "text": "1234567890123", "refused": "card" },
+    { "name": "a card and an SSN together, the card first", "text": "123-45-6789 4111111111111111", "refused": "card" },
+    { "name": "empty", "text": "", "refused": null }
+  ]
+}

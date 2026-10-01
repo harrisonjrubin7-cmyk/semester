@@ -1050,6 +1050,12 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    */
   registration: 'calendar',
   gradebook: 'courses',
+  // A school's admissions and aid records are Core modules (D-151), shown only
+  // at a school that has switched them on, and staff tools besides: nested
+  // under Me rather than given a tile that opens onto "your school has not
+  // switched this" for everyone else. Reached at `#/admissions` and `#/aid`.
+  admissions: 'me',
+  aid: 'me',
   agreements: 'moderation',
   volunteers: 'moderation',
   volunteer: 'mine',
@@ -1135,6 +1141,8 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // registration; and a course's official grades, entered, released and read.
   registration: 'Enrollment',
   gradebook: 'the gradebook',
+  admissions: 'admissions records',
+  aid: 'financial-aid records',
   agreements: 'escalation agreements',
   volunteers: 'the volunteer programme',
   volunteer: 'volunteer moderation',
