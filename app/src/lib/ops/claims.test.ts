@@ -57,6 +57,7 @@ const pages = new Map(ROUTES.map((r) => [r.path, renderPage(r, DEFAULT_SITE)]));
 const TODAY = new Date().toISOString().slice(0, 10);
 const contexts = Object.fromEntries(CAPABILITY_DEFINITIONS.map((c) => [c.id, repositoryProjectionContext(c, EVIDENCE, TODAY, CLAIMS)]));
 const FACTS: Facts = {
+  capabilityExists: (id) => CAPABILITY_DEFINITIONS.some((capability) => capability.id === id),
   claimProjection: (claim) => projectClaim(claim, CAPABILITY_DEFINITIONS, contexts),
   expiredEvidence: expiredUnder(EVIDENCE, TODAY),
   rowStatus: (id) => REGISTER.find((r) => r.id === id)?.status,
