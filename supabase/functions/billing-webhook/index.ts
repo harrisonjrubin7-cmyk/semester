@@ -28,6 +28,7 @@ async function call<T>(fn: string, args: Record<string, unknown>): Promise<T> {
 Deno.serve((req) =>
   handleBillingWebhook(req, {
     secret: Deno.env.get('STRIPE_WEBHOOK_SECRET'),
+    stripeKey: Deno.env.get('STRIPE_SECRET_KEY') ?? Deno.env.get('STRIPE_API_KEY'),
     now: () => Math.floor(Date.now() / 1000),
     completeCheckout: (checkout, subscriptionRef, customerRef) =>
       call('complete_checkout', {

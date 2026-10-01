@@ -37,10 +37,13 @@
 import {
   isoFromSeconds, mapSubscriptionStatus, sha256Hex, verifySignature, type PaymentKind, type SubscriptionStatus,
 } from './stripe.ts';
+import { stripeMode } from './billingmode.ts';
 
 export interface WebhookDeps {
   /** `STRIPE_WEBHOOK_SECRET`; unset turns the endpoint off. */
   secret: string | undefined;
+  /** Match the signing endpoint to the API environment before applying entitlements. */
+  stripeKey: string | undefined;
   /** Seconds since the epoch. */
   now(): number;
   completeCheckout(checkoutId: string, subscriptionRef: string | null, customerRef: string | null): Promise<unknown>;
@@ -78,7 +81,8 @@ function invoiceSubscription(o: Obj): string | null {
 }
 
 export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Promise<Response> {
-  if (!deps.secret) return reply(503, { error: 'Billing is not configured.' });
+  const mode = stripeMode(deps.stripeKey);
+  if (!deps.secret || !mode) return reply(503, { error: 'Billing is not configured.' });
   if (req.method !== 'POST') return reply(405, { error: 'Method not allowed.' }, { Allow: 'POST' });
   if (req.headers.get('Origin')) return reply(403, { error: 'Not a browser endpoint.' });
 
@@ -100,6 +104,7 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
   const type = str(event.type);
   const eventAt = isoFromSeconds(event.created);
   if (!eventId || !type || !eventAt) return reply(400, { error: 'Not an event.' });
+  if (event.livemode !== (mode === 'live')) return reply(400, { error: 'Wrong payment environment.' });
   const o = obj(obj(event.data).object);
 
   try {
