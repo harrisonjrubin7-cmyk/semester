@@ -60,7 +60,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'attendance', name: 'Attendance', replaces: 'PowerSchool, Infinite Campus, Skyward attendance; paper sign-in',
     today: 'Nothing.',
     core: 'Instructor check-in by code, marks with a history, and reports to guardians in the K-12 edition.',
-    status: 'planned', tables: ['attendance_sessions', 'attendance_marks'] },
+    status: 'in-preparation', tables: ['attendance_sessions', 'attendance_marks'], suite: 'attendance' },
   { id: 'registration', name: 'Registration', replaces: 'Banner, Colleague, PeopleSoft Campus Solutions, Workday Student',
     today: 'Prepares a cart, checks conflicts and hands off. A seat-locked registration ledger is built behind a school-level switch that is off for every school.',
     core: 'Seat-locked enrolment, waitlist promotion, add, drop and swap, proved not to over-fill a class.',

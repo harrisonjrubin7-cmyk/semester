@@ -251,6 +251,12 @@ const NOT_CONTENT = new Set([
    * `OWNED_TABLES` only so Delete my account removes it.
    */
   'operator_preference',
+  /*
+   * Wrong attendance codes somebody tried (20261001020000). A record that the
+   * try failed, kept so five in ten minutes stop the sixth; not anything a
+   * person made. Listed in `OWNED_TABLES` only so Delete my account removes it.
+   */
+  'attendance_failures',
 ]);
 
 /**

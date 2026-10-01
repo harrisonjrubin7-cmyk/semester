@@ -393,6 +393,8 @@ describe('"delete my account" really means every row', () => {
       'academic_record_entries',
       // A course's assignment, kept with the course (D-151).
       'assignments',
+      // A class meeting a code can check in to, kept with the course.
+      'attendance_sessions',
       'commercial_prices',
       'communities',
       'community_calibration_items',

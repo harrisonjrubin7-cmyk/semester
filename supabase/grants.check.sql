@@ -549,6 +549,16 @@ declare
     'assignment_extend(want_id uuid, want_student uuid, want_due timestamp with time zone, want_until timestamp with time zone, want_reason text, want_key text)',
     'assignment_submit(want_id uuid, want_body text, want_files jsonb, want_key text)',
 
+    -- 20261001020000_attendance.sql: attendance in Core. Each reads auth.uid(),
+    -- the caller's own school and a course-and-term scoped attendance:*
+    -- capability, and refuses unless the school runs attendance in Core. A
+    -- wrong code at check-in is answered, not raised, so the try is kept.
+    -- `attendance.check.sql` walks every refusal.
+    'attendance_open_session(want_course text, want_term text, want_title text, want_held_on date, want_opens timestamp with time zone, want_closes timestamp with time zone, want_late_after integer, want_key text)',
+    'attendance_close_session(want_id uuid, want_key text)',
+    'attendance_mark(want_session uuid, want_student uuid, want_status text, want_note text, want_key text)',
+    'attendance_check_in(want_code text, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

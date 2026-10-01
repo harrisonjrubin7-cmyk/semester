@@ -308,7 +308,10 @@ begin
   -- 185 before assignments (20261001010000_assignments.sql) added nine:
   -- assignments:author for faculty; assignments:extend and :review for faculty
   -- and teaching_assistant; assignments:submit for the four student roles.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 194);
+  -- 194 before attendance (20261001020000_attendance.sql) added six:
+  -- attendance:take for faculty and teaching_assistant; attendance:attend for
+  -- the four student roles.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 200);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

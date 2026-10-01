@@ -1344,6 +1344,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'submission_receipts', column: 'student_id' },
   { table: 'submission_files', column: null, cascadesFrom: 'submissions' },
   { table: 'assignment_overrides', column: 'student_id' },
+  // Your attendance marks, and the wrong codes you tried at check-in
+  // (`20261001020000_attendance.sql`). Both name you by a column that
+  // references `auth.users` with `on delete cascade`.
+  { table: 'attendance_marks', column: 'student_id' },
+  { table: 'attendance_failures', column: 'user_id' },
 ];
 
 /**
@@ -1365,6 +1370,10 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'attendance_sessions',
+    why: 'A class meeting a code can check in to. The course’s, not any student’s; if you opened one as an instructor, your name is cleared and the session stays.',
+  },
   {
     table: 'assignments',
     why: 'A course’s assignment, such as a problem set. The course’s, not any student’s; if you wrote one as an instructor, your name is cleared and the assignment stays.',

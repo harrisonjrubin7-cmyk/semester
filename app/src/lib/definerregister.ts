@@ -132,6 +132,10 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['assignment_extend', 'admin', ['auth.uid()', 'private.assignment_require', 'private.subject_has_capability']],
   ['assignment_publish', 'admin', ['private.gradebook_school', 'private.assignment_require', 'private.assignment_replay']],
   ['assignment_submit', 'self-service', ['auth.uid()', 'private.has_capability', 'private.assignment_replay']],
+  ['attendance_check_in', 'self-service', ['auth.uid()', 'private.has_capability', 'private.attendance_replay']],
+  ['attendance_close_session', 'admin', ['auth.uid()', 'private.has_capability', 'private.attendance_replay']],
+  ['attendance_mark', 'admin', ['auth.uid()', 'private.has_capability', 'private.subject_has_capability']],
+  ['attendance_open_session', 'admin', ['auth.uid()', 'private.has_capability', 'private.attendance_replay']],
   ['authorize_school_purge', 'admin', ['private.offboarding_operator']],
   ['available_supporters', 'read-helper', ['auth.uid()']],
   ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -336,6 +340,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
   '20261001010000_assignments.sql',
+  '20261001020000_attendance.sql',
 ];
 
 /**
@@ -347,6 +352,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001020000_attendance.sql',
+    functions: ['attendance_check_in', 'attendance_close_session', 'attendance_mark', 'attendance_open_session'],
+  },
   {
     file: '20261001010000_assignments.sql',
     functions: [
