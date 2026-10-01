@@ -1,6 +1,6 @@
 {
   "measuredOn": "2026-10-01",
-  "firstLoad": 492544,
+  "firstLoad": 490496,
   "largest": 491520,
   "route": 49152,
   "routes": {
@@ -96,7 +96,7 @@
     "src/screens/Yes.tsx": 40960
   },
   "measured": {
-    "firstLoad": 447463,
+    "firstLoad": 445516,
     "largest": {
       "file": "assets/elk-276RUBZZ-WzOn55Yk.js",
       "bytes": 446149
