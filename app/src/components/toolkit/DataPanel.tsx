@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from '../HumanTable';
 import { useState } from 'react';
 import type { Screen } from '../../lib/types';
 import { download } from '../../lib/deliver';
@@ -226,45 +227,93 @@ function ProjectView({
         <h3 id="ds-dict">2. Understand — data dictionary</h3>
         <p className="portal-muted">Types are suggestions until you confirm them.</p>
         <div className="portal-table-scroll">
-          <table>
-            <caption>Variables in {project.name}</caption>
-            <thead>
-              <tr>
-                <th scope="col">Variable</th>
-                <th scope="col">Type</th>
-                <th scope="col">Unit</th>
-                <th scope="col">Valid values</th>
-                <th scope="col">Confirmed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {project.dictionary.map((c, i) => {
-                const set = (patch: Partial<typeof c>) => save({ ...project, dictionary: project.dictionary.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
-                return (
-                  <tr key={c.name}>
-                    <th scope="row">{c.name}</th>
-                    <td>
-                      <select aria-label={`Type of ${c.name}`} value={c.type} onChange={(e) => set({ type: e.target.value as typeof c.type, confirmed: false })}>
-                        <option value="number">Number</option>
-                        <option value="category">Category</option>
-                        <option value="text">Text</option>
-                        <option value="date">Date</option>
-                      </select>
-                    </td>
-                    <td>
-                      <input aria-label={`Unit of ${c.name}`} maxLength={200} value={c.unit} onChange={(e) => set({ unit: e.target.value })} />
-                    </td>
-                    <td>
-                      <input aria-label={`Valid values of ${c.name}`} maxLength={2000} value={c.valid} onChange={(e) => set({ valid: e.target.value })} />
-                    </td>
-                    <td>
-                      <input type="checkbox" aria-label={`Confirm ${c.name}`} checked={c.confirmed} onChange={(e) => set({ confirmed: e.target.checked })} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <RecordTable
+            id="dataset-dictionary"
+            label={tableText(['Variables in', project.name])}
+            tableProps={{}}
+            caption={<> Variables in {project.name}</>}
+            exportAllowed={leaving.allowed}
+            exportReason="This dataset's export policy does not allow a download."
+            columns={[
+              { id: 'column-0', label: 'Variable' },
+              { id: 'column-1', label: 'Type' },
+              { id: 'column-2', label: 'Unit' },
+              { id: 'column-3', label: 'Valid values' },
+              { id: 'column-4', label: 'Confirmed' },
+            ]}
+            rows={[
+              ...project.dictionary.map((c, i) => {
+                const set = (patch: Partial<typeof c>) =>
+                  save({ ...project, dictionary: project.dictionary.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+                return {
+                  id: String(c.name),
+                  cells: [
+                    { value: tableText(c.name), content: <>{c.name}</>, header: true },
+                    {
+                      value: tableText(c.type),
+                      content: (
+                        <>
+                          <select
+                            aria-label={`Type of ${c.name}`}
+                            value={c.type}
+                            onChange={(e) => set({ type: e.target.value as typeof c.type, confirmed: false })}
+                          >
+                            <option value="number">Number</option>
+                            <option value="category">Category</option>
+                            <option value="text">Text</option>
+                            <option value="date">Date</option>
+                          </select>
+                        </>
+                      ),
+                      interactive: true,
+                    },
+                    {
+                      value: tableText(c.unit),
+                      content: (
+                        <>
+                          <input
+                            aria-label={`Unit of ${c.name}`}
+                            maxLength={200}
+                            value={c.unit}
+                            onChange={(e) => set({ unit: e.target.value })}
+                          />
+                        </>
+                      ),
+                      interactive: true,
+                    },
+                    {
+                      value: tableText(c.valid),
+                      content: (
+                        <>
+                          <input
+                            aria-label={`Valid values of ${c.name}`}
+                            maxLength={2000}
+                            value={c.valid}
+                            onChange={(e) => set({ valid: e.target.value })}
+                          />
+                        </>
+                      ),
+                      interactive: true,
+                    },
+                    {
+                      value: c.confirmed ? 'Confirmed' : 'Not confirmed',
+                      content: (
+                        <>
+                          <input
+                            type="checkbox"
+                            aria-label={`Confirm ${c.name}`}
+                            checked={c.confirmed}
+                            onChange={(e) => set({ confirmed: e.target.checked })}
+                          />
+                        </>
+                      ),
+                      interactive: true,
+                    },
+                  ],
+                } satisfies TableRecord;
+              }),
+            ]}
+          />
         </div>
       </section>
 
@@ -351,24 +400,41 @@ function ProjectView({
               <strong>Description for a chart of this variable:</strong> {altText(d)}
             </p>
             <div className="portal-table-scroll">
-              <table>
-                <caption>{d.column}: the numbers behind any chart</caption>
-                <tbody>
-                  {d.numeric
-                    ? (['n', 'missing', 'mean', 'sd', 'min', 'q1', 'median', 'q3', 'max'] as const).map((k) => (
-                        <tr key={k}>
-                          <th scope="row">{k}</th>
-                          <td>{show(d.numeric![k])}</td>
-                        </tr>
-                      ))
-                    : d.counts.map((c) => (
-                        <tr key={c.value}>
-                          <th scope="row">{c.value}</th>
-                          <td>{c.count}</td>
-                        </tr>
-                      ))}
-                </tbody>
-              </table>
+              <RecordTable
+                id="dataset-description"
+                label={tableText([d.column, ': the numbers behind any chart'])}
+                tableProps={{}}
+                caption={<> {d.column}: the numbers behind any chart</>}
+                exportAllowed={leaving.allowed}
+                exportReason="This dataset's export policy does not allow a download."
+                columns={[
+                  { id: 'measure', label: 'Measure' },
+                  { id: 'value', label: 'Value' },
+                ]}
+                rows={[
+                  ...(d.numeric
+                    ? (['n', 'missing', 'mean', 'sd', 'min', 'q1', 'median', 'q3', 'max'] as const).map(
+                        (k) =>
+                          ({
+                            id: String(k),
+                            cells: [
+                              { value: tableText(k), content: <>{k}</>, header: true },
+                              { value: tableText(show(d.numeric![k])), content: <>{show(d.numeric![k])}</> },
+                            ],
+                          }) satisfies TableRecord,
+                      )
+                    : d.counts.map(
+                        (c) =>
+                          ({
+                            id: String(c.value),
+                            cells: [
+                              { value: tableText(c.value), content: <>{c.value}</>, header: true },
+                              { value: tableText(c.count), content: <>{c.count}</> },
+                            ],
+                          }) satisfies TableRecord,
+                      )),
+                ]}
+              />
             </div>
             <button onClick={() => onOpen('analyse')}>Chart and model it in Analyse data</button>
           </>

@@ -130,8 +130,8 @@ describe('MyStudentAccount', () => {
     expect(pay?.getAttribute('rel')).toMatch(/noopener/);
     expect(text()).toMatch(/Vanderbilt University/);
     expect(text()).toMatch(/nobody can change it from this screen/);
-    // Nothing here pays: the only field to type into is the plan's first date.
-    expect([...host.querySelectorAll('input, textarea')].map((i) => i.getAttribute('type'))).toEqual(['date']);
+    // Table controls only change a working view; the payment form still only takes its first date.
+    expect([...host.querySelectorAll('input, textarea')].filter(i => !i.closest('[data-human-table]')).map((i) => i.getAttribute('type'))).toEqual(['date']);
   });
 
   it('gives a receipt for a payment and the statement for a month', async () => {

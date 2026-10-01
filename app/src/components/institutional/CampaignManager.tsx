@@ -1,3 +1,4 @@
+import { HumanTableOwner, RecordTable, tableText, type TableRecord } from '../HumanTable';
 /**
  * The campaign manager: a school's enrollment and adoption campaigns, from
  * draft to active, on the tables in `20260928090000_gtm_foundation.sql`.
@@ -42,7 +43,7 @@ const grid = { display: 'grid', gap: 'var(--sp-4)', marginBlock: 'var(--sp-4)' }
 const label = { display: 'grid', gap: 'var(--sp-2)', fontSize: 'var(--type-sm)' } as const;
 const errorText = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback);
 
-export function CampaignManager({ tenantId, viewerId, api }: CampaignManagerProps) {
+function CampaignManagerContent({ tenantId, viewerId, api }: CampaignManagerProps) {
   const [client, setClient] = useState<CampaignApi | null>(api ?? null);
   const [rows, setRows] = useState<CampaignRow[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -482,23 +483,32 @@ function CampaignDetail({
         <>
           <SectionLabel style={{ marginTop: 'var(--sp-6)' }}>Results</SectionLabel>
           <p style={quiet}>Counts under ten are not shown, so no one can be picked out.</p>
-          <table style={{ width: '100%', ...body }}>
-            <caption style={{ ...quiet, textAlign: 'left' }}>Results for {row.name}</caption>
-            <thead>
-              <tr>
-                <th scope="col" style={{ textAlign: 'left' }}>Measure</th>
-                <th scope="col" style={{ textAlign: 'right' }}>Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.map((r) => (
-                <tr key={r.metric}>
-                  <td>{r.metric.replace(/_/g, ' ')}</td>
-                  <td style={{ textAlign: 'right' }}>{r.value === null ? 'fewer than 10' : r.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <RecordTable
+            id="campaign-results"
+            label={tableText(['Results for', row.name])}
+            tableProps={{ style: { width: '100%', ...body } }}
+            caption={<> Results for {row.name}</>}
+            columns={[
+              { id: 'column-0', label: 'Measure' },
+              { id: 'column-1', label: 'Count' },
+            ]}
+            rows={[
+              ...report.map(
+                (r) =>
+                  ({
+                    id: String(r.metric),
+                    cells: [
+                      { value: tableText(r.metric.replace(/_/g, ' ')), content: <>{r.metric.replace(/_/g, ' ')}</> },
+                      {
+                        value: tableText(r.value === null ? 'fewer than 10' : r.value),
+                        content: <>{r.value === null ? 'fewer than 10' : r.value}</>,
+                        props: { style: { textAlign: 'right' } },
+                      },
+                    ],
+                  }) satisfies TableRecord,
+              ),
+            ]}
+          />
         </>
       )}
     </section>
@@ -717,5 +727,13 @@ function Reviews({
         </form>
       )}
     </div>
+  );
+}
+
+export function CampaignManager(props: CampaignManagerProps) {
+  return (
+    <HumanTableOwner.Provider value={`${props.tenantId}:${props.viewerId ?? 'signed-out'}`}>
+      <CampaignManagerContent key={`${props.tenantId}:${props.viewerId ?? "signed-out"}`} {...props} />
+    </HumanTableOwner.Provider>
   );
 }

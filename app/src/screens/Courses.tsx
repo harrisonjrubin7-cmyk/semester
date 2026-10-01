@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from '../components/HumanTable';
 import { WhatChanged } from '../components/WhatChanged';
 import { CourseHub } from '../components/CourseHub';
 import { WhereItStands } from '../components/WhereItStands';
@@ -606,25 +607,38 @@ function CourseInformation() {
       <Attendance courseId={course.id} />
 
       <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>How the grade is built</SectionLabel>
-      <table className="table">
-        <tbody>
-          {course.grading.map((g) => (
-            <tr key={g.what}>
-              <td style={{ fontSize: 'var(--type-base)' }}>{g.what}</td>
-              <td
-                style={{
-                  textAlign: 'right',
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: 'var(--type-lg)',
-                  width: 74,
-                }}
-              >
-                {g.pct}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <RecordTable
+          id="course-grade-breakdown"
+          label={'course grade breakdown'}
+          tableProps={{ className: 'table' }}
+          columns={[
+            { id: 'component', label: 'Grade component' },
+            { id: 'weight', label: 'Weight' },
+          ]}
+          rows={[
+            ...course.grading.map(
+              (g) =>
+                ({
+                  id: String(g.what),
+                  cells: [
+                    { value: tableText(g.what), content: <>{g.what}</>, props: { style: { fontSize: 'var(--type-base)' } } },
+                    {
+                      value: tableText(g.pct),
+                      content: <>{g.pct}</>,
+                      props: {
+                        style: {
+                          textAlign: 'right',
+                          fontFamily: 'var(--font-heading)',
+                          fontSize: 'var(--type-lg)',
+                          width: 74,
+                        },
+                      },
+                    },
+                  ],
+                }) satisfies TableRecord,
+            ),
+          ]}
+        />
 
       {/*
         * Above Still ahead, because it is the shorter list and the one that

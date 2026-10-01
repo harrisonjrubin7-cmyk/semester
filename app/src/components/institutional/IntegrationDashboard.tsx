@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from '../HumanTable';
 /**
  * The Integration Dashboard: architecture map, connections, mappings, sync
  * history and conflicts, for the staff who hold `integration:view` at their
@@ -238,27 +239,56 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
               </div>
             ) : (
               <div className="integration-table-wrap">
-                <table className="integration-table">
-                  <caption className="sr-only">Connected domains, one row per domain</caption>
-                  <thead><tr><th scope="col">Domain</th><th scope="col">Status</th><th scope="col">Providers</th>
-                    <th scope="col">Direction</th><th scope="col">Ceiling</th><th scope="col">Source of truth</th>
-                    <th scope="col">Last sync</th><th scope="col">Freshness</th><th scope="col">Errors</th></tr></thead>
-                  <tbody>
-                    {map.map((n) => (
-                      <tr key={n.domain} data-domain={n.domain}>
-                        <th scope="row">{n.label}</th>
-                        <td><Status status={n.status} /></td>
-                        <td>{n.connections.map((c) => c.provider_name).join(', ') || 'None'}</td>
-                        <td>{n.direction ? DIRECTION_TEXT[n.direction] : '—'}</td>
-                        <td>{n.ceiling}</td>
-                        <td>{n.sourceOfTruth}</td>
-                        <td>{when(n.lastSync)}</td>
-                        <td>{FRESHNESS_TEXT[n.freshness]}</td>
-                        <td>{n.openErrors}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <RecordTable
+                  id="integration-domains"
+                  label={'Connected domains, one row per domain'}
+                  tableProps={{ className: 'integration-table' }}
+                  caption={<> Connected domains, one row per domain</>}
+                  columns={[
+                    { id: 'column-0', label: 'Domain' },
+                    { id: 'column-1', label: 'Status' },
+                    { id: 'column-2', label: 'Providers' },
+                    { id: 'column-3', label: 'Direction' },
+                    { id: 'column-4', label: 'Ceiling' },
+                    { id: 'column-5', label: 'Source of truth' },
+                    { id: 'column-6', label: 'Last sync' },
+                    { id: 'column-7', label: 'Freshness' },
+                    { id: 'column-8', label: 'Errors' },
+                  ]}
+                  rows={[
+                    ...map.map(
+                      (n) =>
+                        ({
+                          id: String(n.domain),
+                          props: { 'data-domain': n.domain },
+                          cells: [
+                            { value: tableText(n.label), content: <>{n.label}</>, header: true },
+                            {
+                              value: STATUS_TEXT[n.status].word,
+                              content: (
+                                <>
+                                  <Status status={n.status} />
+                                </>
+                              ),
+                            },
+                            {
+                              value: tableText(n.connections.map((c) => c.provider_name).join(', ') || 'None'),
+                              content: <>{n.connections.map((c) => c.provider_name).join(', ') || 'None'}</>,
+                            },
+                            {
+                              value: tableText(n.direction ? DIRECTION_TEXT[n.direction] : '—'),
+                              content: <>{n.direction ? DIRECTION_TEXT[n.direction] : '—'}</>,
+                            },
+                            { value: tableText(n.ceiling), content: <>{n.ceiling}</> },
+                            { value: tableText(n.sourceOfTruth), content: <>{n.sourceOfTruth}</> },
+                            { value: tableText(when(n.lastSync)), content: <>{when(n.lastSync)}</> },
+                            { value: tableText(FRESHNESS_TEXT[n.freshness]), content: <>{FRESHNESS_TEXT[n.freshness]}</> },
+                            { value: tableText(n.openErrors), content: <>{n.openErrors}</> },
+                          ],
+                        }) satisfies TableRecord,
+                    ),
+                  ]}
+                />
               </div>
             )}
             {node && (
@@ -280,34 +310,74 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             ? <EmptyState inline title="No connections visible" body="Either this school has not connected a system yet, or your account does not hold integration:view here." />
             : (
               <div className="integration-table-wrap">
-                <table className="integration-table">
-                  <caption className="sr-only">Connections</caption>
-                  <thead><tr><th scope="col">Connection</th><th scope="col">Provider</th><th scope="col">Domain</th>
-                    <th scope="col">Status</th><th scope="col">Mode</th><th scope="col">Direction</th>
-                    <th scope="col">Last successful sync</th><th scope="col">Freshness target</th><th scope="col">Ceiling</th>
-                    <th scope="col">Scopes</th><th scope="col">Errors</th><th scope="col">Owner</th>
-                    <th scope="col">Approval</th><th scope="col">Flag</th></tr></thead>
-                  <tbody>
-                    {data.connections.map((c) => (
-                      <tr key={c.id}>
-                        <th scope="row">{c.connection_name}</th>
-                        <td>{c.provider_name}</td>
-                        <td>{c.provider_domain}</td>
-                        <td><Status status={c.status} /></td>
-                        <td>{c.sync_mode}</td>
-                        <td>{DIRECTION_TEXT[c.sync_direction]}</td>
-                        <td>{when(c.last_successful_sync_at)}</td>
-                        <td>{c.freshness_target ?? syncClassFor(c.provider_domain).target}</td>
-                        <td>{c.data_classification_ceiling}</td>
-                        <td>{data.scopes.filter((s) => s.connection_id === c.id && s.approved).length}</td>
-                        <td>{data.errors.filter((e) => e.connection_id === c.id).length}</td>
-                        <td>{c.owner_account_id ? 'Assigned' : 'Unassigned'}</td>
-                        <td>{c.approved_at ? 'Approved' : 'Not approved'}</td>
-                        <td>{c.feature_flag_key ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <RecordTable
+                id="integration-connections"
+                label={'Connections'}
+                tableProps={{ className: 'integration-table' }}
+                caption={<> Connections</>}
+                columns={[
+                  { id: 'column-0', label: 'Connection' },
+                  { id: 'column-1', label: 'Provider' },
+                  { id: 'column-2', label: 'Domain' },
+                  { id: 'column-3', label: 'Status' },
+                  { id: 'column-4', label: 'Mode' },
+                  { id: 'column-5', label: 'Direction' },
+                  { id: 'column-6', label: 'Last successful sync' },
+                  { id: 'column-7', label: 'Freshness target' },
+                  { id: 'column-8', label: 'Ceiling' },
+                  { id: 'column-9', label: 'Scopes' },
+                  { id: 'column-10', label: 'Errors' },
+                  { id: 'column-11', label: 'Owner' },
+                  { id: 'column-12', label: 'Approval' },
+                  { id: 'column-13', label: 'Flag' },
+                ]}
+                rows={[
+                  ...data.connections.map(
+                    (c) =>
+                      ({
+                        id: String(c.id),
+                        cells: [
+                          { value: tableText(c.connection_name), content: <>{c.connection_name}</>, header: true },
+                          { value: tableText(c.provider_name), content: <>{c.provider_name}</> },
+                          { value: tableText(c.provider_domain), content: <>{c.provider_domain}</> },
+                          {
+                            value: STATUS_TEXT[c.status].word,
+                            content: (
+                              <>
+                                <Status status={c.status} />
+                              </>
+                            ),
+                          },
+                          { value: tableText(c.sync_mode), content: <>{c.sync_mode}</> },
+                          { value: tableText(DIRECTION_TEXT[c.sync_direction]), content: <>{DIRECTION_TEXT[c.sync_direction]}</> },
+                          { value: tableText(when(c.last_successful_sync_at)), content: <>{when(c.last_successful_sync_at)}</> },
+                          {
+                            value: tableText(c.freshness_target ?? syncClassFor(c.provider_domain).target),
+                            content: <>{c.freshness_target ?? syncClassFor(c.provider_domain).target}</>,
+                          },
+                          { value: tableText(c.data_classification_ceiling), content: <>{c.data_classification_ceiling}</> },
+                          {
+                            value: tableText(data.scopes.filter((s) => s.connection_id === c.id && s.approved).length),
+                            content: <>{data.scopes.filter((s) => s.connection_id === c.id && s.approved).length}</>,
+                          },
+                          {
+                            value: tableText(data.errors.filter((e) => e.connection_id === c.id).length),
+                            content: <>{data.errors.filter((e) => e.connection_id === c.id).length}</>,
+                          },
+                          {
+                            value: tableText(c.owner_account_id ? 'Assigned' : 'Unassigned'),
+                            content: <>{c.owner_account_id ? 'Assigned' : 'Unassigned'}</>,
+                          },
+                          {
+                            value: tableText(c.approved_at ? 'Approved' : 'Not approved'),
+                            content: <>{c.approved_at ? 'Approved' : 'Not approved'}</>,
+                          },
+                          { value: tableText(c.feature_flag_key ?? '—'), content: <>{c.feature_flag_key ?? '—'}</> },
+                        ],
+                      }) satisfies TableRecord,
+                  ),
+                ]}
+              />
               </div>
             )
         )}
@@ -317,26 +387,66 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             ? <EmptyState inline title="No field mappings" body="Mappings appear once a connection declares how its records become Semester's canonical entities." />
             : (
               <div className="integration-table-wrap">
-                <table className="integration-table">
-                  <caption className="sr-only">Entity and field mappings</caption>
-                  <thead><tr><th scope="col">Connection</th><th scope="col">External</th><th scope="col">Canonical</th>
-                    <th scope="col">Transform</th><th scope="col">Required</th><th scope="col">Version</th>
-                    <th scope="col">Validation</th><th scope="col">Conflict</th></tr></thead>
-                  <tbody>
-                    {data.mappings.map((m, i) => (
-                      <tr key={`${m.connection_id}:${m.external_entity_type}:${m.external_field}:${m.mapping_version}:${i}`}>
-                        <td>{connectionName(m.connection_id)}</td>
-                        <th scope="row">{m.external_entity_type}.{m.external_field}</th>
-                        <td>{m.canonical_entity_type}.{m.canonical_field}</td>
-                        <td>{String(m.transform_config?.kind ?? 'none')}</td>
-                        <td>{m.required ? 'Required' : 'Optional'}</td>
-                        <td>{m.mapping_version}{m.active ? '' : ' (inactive)'}</td>
-                        <td>{m.validation_state}</td>
-                        <td>{m.conflict_kind ?? '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <RecordTable
+                id="integration-mappings"
+                label={'Entity and field mappings'}
+                tableProps={{ className: 'integration-table' }}
+                caption={<> Entity and field mappings</>}
+                columns={[
+                  { id: 'column-0', label: 'Connection' },
+                  { id: 'column-1', label: 'External' },
+                  { id: 'column-2', label: 'Canonical' },
+                  { id: 'column-3', label: 'Transform' },
+                  { id: 'column-4', label: 'Required' },
+                  { id: 'column-5', label: 'Version' },
+                  { id: 'column-6', label: 'Validation' },
+                  { id: 'column-7', label: 'Conflict' },
+                ]}
+                rows={[
+                  ...data.mappings.map(
+                    (m, i) =>
+                      ({
+                        id: String(`${m.connection_id}:${m.external_entity_type}:${m.external_field}:${m.mapping_version}:${i}`),
+                        cells: [
+                          { value: tableText(connectionName(m.connection_id)), content: <>{connectionName(m.connection_id)}</> },
+                          {
+                            value: tableText([m.external_entity_type, '.', m.external_field]),
+                            content: (
+                              <>
+                                {m.external_entity_type}.{m.external_field}
+                              </>
+                            ),
+                            header: true,
+                          },
+                          {
+                            value: tableText([m.canonical_entity_type, '.', m.canonical_field]),
+                            content: (
+                              <>
+                                {m.canonical_entity_type}.{m.canonical_field}
+                              </>
+                            ),
+                          },
+                          {
+                            value: tableText(String(m.transform_config?.kind ?? 'none')),
+                            content: <>{String(m.transform_config?.kind ?? 'none')}</>,
+                          },
+                          { value: tableText(m.required ? 'Required' : 'Optional'), content: <>{m.required ? 'Required' : 'Optional'}</> },
+                          {
+                            value: tableText([m.mapping_version, m.active ? '' : ' (inactive)']),
+                            content: (
+                              <>
+                                {m.mapping_version}
+                                {m.active ? '' : ' (inactive)'}
+                              </>
+                            ),
+                          },
+                          { value: tableText(m.validation_state), content: <>{m.validation_state}</> },
+                          { value: tableText(m.conflict_kind ?? '—'), content: <>{m.conflict_kind ?? '—'}</> },
+                        ],
+                      }) satisfies TableRecord,
+                  ),
+                ]}
+              />
               </div>
             )
         )}
@@ -346,29 +456,60 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
             ? <EmptyState inline title="No sync runs" body="Nothing has synced. A run appears here the first time an approved connection is read." />
             : (
               <div className="integration-table-wrap">
-                <table className="integration-table">
-                  <caption className="sr-only">Sync run history, newest first</caption>
-                  <thead><tr><th scope="col">Run</th><th scope="col">Connection</th><th scope="col">Trigger</th>
-                    <th scope="col">Status</th><th scope="col">Started</th><th scope="col">Ended</th>
-                    <th scope="col">Received / accepted / rejected / changed</th><th scope="col">Errors</th>
-                    <th scope="col">Retries</th><th scope="col">Reconciliation</th></tr></thead>
-                  <tbody>
-                    {data.runs.map((r) => (
-                      <tr key={r.public_id}>
-                        <th scope="row">{r.public_id}</th>
-                        <td>{connectionName(r.connection_id)}</td>
-                        <td>{r.trigger_type}</td>
-                        <td>{r.status}</td>
-                        <td>{when(r.started_at)}</td>
-                        <td>{when(r.completed_at)}</td>
-                        <td>{r.records_received} / {r.records_created + r.records_updated + r.records_unchanged} / {r.records_rejected} / {r.records_created + r.records_updated}</td>
-                        <td>{r.errors_count}</td>
-                        <td>{r.retry_count}</td>
-                        <td>{r.reconciliation_state}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <RecordTable
+                id="integration-runs"
+                label={'Sync run history, newest first'}
+                tableProps={{ className: 'integration-table' }}
+                caption={<> Sync run history, newest first</>}
+                columns={[
+                  { id: 'column-0', label: 'Run' },
+                  { id: 'column-1', label: 'Connection' },
+                  { id: 'column-2', label: 'Trigger' },
+                  { id: 'column-3', label: 'Status' },
+                  { id: 'column-4', label: 'Started' },
+                  { id: 'column-5', label: 'Ended' },
+                  { id: 'column-6', label: 'Received / accepted / rejected / changed' },
+                  { id: 'column-7', label: 'Errors' },
+                  { id: 'column-8', label: 'Retries' },
+                  { id: 'column-9', label: 'Reconciliation' },
+                ]}
+                rows={[
+                  ...data.runs.map(
+                    (r) =>
+                      ({
+                        id: String(r.public_id),
+                        cells: [
+                          { value: tableText(r.public_id), content: <>{r.public_id}</>, header: true },
+                          { value: tableText(connectionName(r.connection_id)), content: <>{connectionName(r.connection_id)}</> },
+                          { value: tableText(r.trigger_type), content: <>{r.trigger_type}</> },
+                          { value: tableText(r.status), content: <>{r.status}</> },
+                          { value: tableText(when(r.started_at)), content: <>{when(r.started_at)}</> },
+                          { value: tableText(when(r.completed_at)), content: <>{when(r.completed_at)}</> },
+                          {
+                            value: tableText([
+                              r.records_received,
+                              '/',
+                              r.records_created + r.records_updated + r.records_unchanged,
+                              '/',
+                              r.records_rejected,
+                              '/',
+                              r.records_created + r.records_updated,
+                            ]),
+                            content: (
+                              <>
+                                {r.records_received} / {r.records_created + r.records_updated + r.records_unchanged} / {r.records_rejected}{' '}
+                                / {r.records_created + r.records_updated}
+                              </>
+                            ),
+                          },
+                          { value: tableText(r.errors_count), content: <>{r.errors_count}</> },
+                          { value: tableText(r.retry_count), content: <>{r.retry_count}</> },
+                          { value: tableText(r.reconciliation_state), content: <>{r.reconciliation_state}</> },
+                        ],
+                      }) satisfies TableRecord,
+                  ),
+                ]}
+              />
               </div>
             )
         )}
@@ -379,15 +520,32 @@ export function IntegrationDashboard({ load, pause, replay, now = new Date() }: 
               <EmptyState inline title="No open conflicts" body="Type, enum, missing-field, duplicate, timestamp, transform, scope, classification, consent, rate-limit and deletion conflicts appear here." />
             ) : (
               <div className="integration-table-wrap">
-                <table className="integration-table">
-                  <caption className="sr-only">Open conflicts by kind</caption>
-                  <thead><tr><th scope="col">Kind</th><th scope="col">Count</th><th scope="col">Connections</th><th scope="col">Latest</th></tr></thead>
-                  <tbody>
-                    {groups.map((g) => (
-                      <tr key={g.kind}><th scope="row">{g.kind.replace(/_/g, ' ')}</th><td>{g.count}</td><td>{g.connections}</td><td>{when(g.latest || null)}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
+                <RecordTable
+                  id="integration-conflicts"
+                  label={'Open conflicts by kind'}
+                  tableProps={{ className: 'integration-table' }}
+                  caption={<> Open conflicts by kind</>}
+                  columns={[
+                    { id: 'column-0', label: 'Kind' },
+                    { id: 'column-1', label: 'Count' },
+                    { id: 'column-2', label: 'Connections' },
+                    { id: 'column-3', label: 'Latest' },
+                  ]}
+                  rows={[
+                    ...groups.map(
+                      (g) =>
+                        ({
+                          id: String(g.kind),
+                          cells: [
+                            { value: tableText(g.kind.replace(/_/g, ' ')), content: <>{g.kind.replace(/_/g, ' ')}</>, header: true },
+                            { value: tableText(g.count), content: <>{g.count}</> },
+                            { value: tableText(g.connections), content: <>{g.connections}</> },
+                            { value: tableText(when(g.latest || null)), content: <>{when(g.latest || null)}</> },
+                          ],
+                        }) satisfies TableRecord,
+                    ),
+                  ]}
+                />
               </div>
             )}
             {data.deadLetters.length > 0 && (

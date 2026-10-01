@@ -1,3 +1,4 @@
+import { HumanTableOwner, RecordTable, tableText, type TableRecord } from '../HumanTable';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useStore } from '../../state/store';
 import { ActionButton, EmptyState, Notice, SectionLabel } from '../ui';
@@ -86,7 +87,7 @@ interface Draft {
   reason: string;
 }
 
-export function InstructorBook({ course, term, caps, me }: { course: string; term: string; caps: Caps; me: string }) {
+function InstructorBookContent({ course, term, caps, me }: { course: string; term: string; caps: Caps; me: string }) {
   const { say } = useStore();
   const { attempt } = useAttempts();
   const [book, setBook] = useState<LoadedBook | null | string>(null);
@@ -369,80 +370,168 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
             <EmptyState inline title="No students with a grade yet" body="Add a student by their account id below. Semester checks they are enrolled in this course before it saves a score." />
           ) : (
             <div className="integration-table-wrap">
-              <table className="integration-table">
-                <caption className="sr-only">
-                  Scores for {item.title}, out of {item.pointsPossible}. One row per student.
-                </caption>
-                <thead>
-                  <tr>
-                    <th scope="col">Student</th>
-                    <th scope="col">Now</th>
-                    <th scope="col">Score of {item.pointsPossible}</th>
-                    <th scope="col">Mark</th>
-                    <th scope="col">Comment and save</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((s) => {
+              <RecordTable
+                exportAllowed={false}
+                exportReason="Use the authorized released-grade export below. Draft grades stay in this workspace."
+                id="instructor-scores"
+                label={tableText(['Scores for', item.title, ', out of', item.pointsPossible, '. One row per student.'])}
+                tableProps={{ className: 'integration-table' }}
+                caption={
+                  <>
+                    Scores for {item.title}, out of {item.pointsPossible}. One row per student.
+                  </>
+                }
+                columns={[
+                  { id: 'column-0', label: 'Student' },
+                  { id: 'column-1', label: 'Now' },
+                  { id: 'column-2', label: tableText(['Score of', item.pointsPossible]) },
+                  { id: 'column-3', label: 'Mark' },
+                  { id: 'column-4', label: 'Comment and save' },
+                ]}
+                rows={[
+                  ...students.map((s) => {
                     const cur = current(model, item.id, s);
                     const shown = latestReleased(model, item.id, s);
                     const d = draftOf(s);
                     const who = `student ${shortId(s)}`;
                     const needsReason = !!shown;
                     const canModerate = can('grades:moderate') && cur?.status === 'draft' && cur.gradedBy !== me;
-                    return (
-                      <tr key={s}>
-                        <th scope="row">{shortId(s)}</th>
-                        <td>
-                          {cur ? (
+                    return {
+                      id: String(s),
+                      cells: [
+                        { value: tableText(shortId(s)), content: <>{shortId(s)}</>, header: true },
+                        {
+                          value: tableText(
+                            cur
+                              ? tableText([
+                                  cur.score ?? '—',
+                                  cur.mark ? ` · ${MARK_SAID[cur.mark]}` : '',
+                                  tableText(STATUS_SAID[cur.status]),
+                                  shown &&
+                                    cur.status !== 'released' &&
+                                    tableText(['The student still sees', shown.score ?? MARK_SAID[shown.mark ?? 'missing'], '.']),
+                                ])
+                              : 'No grade yet',
+                          ),
+                          content: (
                             <>
-                              {cur.score ?? '—'}
-                              {cur.mark ? ` · ${MARK_SAID[cur.mark]}` : ''}
-                              <Sub>{STATUS_SAID[cur.status]}</Sub>
-                              {shown && cur.status !== 'released' && <Sub>The student still sees {shown.score ?? MARK_SAID[shown.mark ?? 'missing']}.</Sub>}
+                              {cur ? (
+                                <>
+                                  {cur.score ?? '—'}
+                                  {cur.mark ? ` · ${MARK_SAID[cur.mark]}` : ''}
+                                  <Sub>{STATUS_SAID[cur.status]}</Sub>
+                                  {shown && cur.status !== 'released' && (
+                                    <Sub>The student still sees {shown.score ?? MARK_SAID[shown.mark ?? 'missing']}.</Sub>
+                                  )}
+                                </>
+                              ) : (
+                                'No grade yet'
+                              )}
                             </>
-                          ) : (
-                            'No grade yet'
-                          )}
-                        </td>
-                        <td>
-                          <input className="input" inputMode="decimal" aria-label={`Score for ${who}`} value={d.score} onChange={(e) => setDraft(s, { score: e.target.value })} />
-                        </td>
-                        <td>
-                          <select className="input" aria-label={`Mark for ${who}`} value={d.mark} onChange={(e) => setDraft(s, { mark: e.target.value as Mark | '' })}>
-                            <option value="">None</option>
-                            {MARKS.map((m) => (
-                              <option key={m} value={m}>
-                                {MARK_SAID[m]}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td>
-                          <Stack>
-                            <input className="input" aria-label={`Comment for ${who}`} placeholder="Comment" value={d.comment} onChange={(e) => setDraft(s, { comment: e.target.value })} />
-                            {needsReason && (
-                              <input className="input" aria-label={`Reason for changing a released grade for ${who}`} placeholder="Reason for the change" value={d.reason} onChange={(e) => setDraft(s, { reason: e.target.value })} />
-                            )}
-                            <Row>
-                              {can('grades:enter') && (
-                                <button type="button" className="btn" disabled={busy || (needsReason && !d.reason.trim())} onClick={() => void saveScore(s)}>
-                                  Save draft for {shortId(s)}
-                                </button>
-                              )}
-                              {canModerate && (
-                                <button type="button" className="btn" disabled={busy} onClick={() => void write(`moderate:${item.id}:${s}:${cur!.version}`, (key) => moderate(item.id, s, key), () => `Moderated ${item.title} for ${who}.`)}>
-                                  Moderate {shortId(s)}
-                                </button>
-                              )}
-                            </Row>
-                          </Stack>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          ),
+                        },
+                        {
+                          value: tableText(d.score),
+                          content: (
+                            <>
+                              <input
+                                className="input"
+                                inputMode="decimal"
+                                aria-label={`Score for ${who}`}
+                                value={d.score}
+                                onChange={(e) => setDraft(s, { score: e.target.value })}
+                              />
+                            </>
+                          ),
+                          interactive: true,
+                        },
+                        {
+                          value: tableText(d.mark),
+                          content: (
+                            <>
+                              <select
+                                className="input"
+                                aria-label={`Mark for ${who}`}
+                                value={d.mark}
+                                onChange={(e) => setDraft(s, { mark: e.target.value as Mark | '' })}
+                              >
+                                <option value="">None</option>
+                                {MARKS.map((m) => (
+                                  <option key={m} value={m}>
+                                    {MARK_SAID[m]}
+                                  </option>
+                                ))}
+                              </select>
+                            </>
+                          ),
+                          interactive: true,
+                        },
+                        {
+                          value: tableText([
+                            d.comment,
+                            needsReason && d.reason,
+                            tableText([
+                              can('grades:enter') && tableText(['Save draft for', shortId(s)]),
+                              canModerate && tableText(['Moderate', shortId(s)]),
+                            ]),
+                          ]),
+                          content: (
+                            <>
+                              <Stack>
+                                <input
+                                  className="input"
+                                  aria-label={`Comment for ${who}`}
+                                  placeholder="Comment"
+                                  value={d.comment}
+                                  onChange={(e) => setDraft(s, { comment: e.target.value })}
+                                />
+                                {needsReason && (
+                                  <input
+                                    className="input"
+                                    aria-label={`Reason for changing a released grade for ${who}`}
+                                    placeholder="Reason for the change"
+                                    value={d.reason}
+                                    onChange={(e) => setDraft(s, { reason: e.target.value })}
+                                  />
+                                )}
+                                <Row>
+                                  {can('grades:enter') && (
+                                    <button
+                                      type="button"
+                                      className="btn"
+                                      disabled={busy || (needsReason && !d.reason.trim())}
+                                      onClick={() => void saveScore(s)}
+                                    >
+                                      Save draft for {shortId(s)}
+                                    </button>
+                                  )}
+                                  {canModerate && (
+                                    <button
+                                      type="button"
+                                      className="btn"
+                                      disabled={busy}
+                                      onClick={() =>
+                                        void write(
+                                          `moderate:${item.id}:${s}:${cur!.version}`,
+                                          (key) => moderate(item.id, s, key),
+                                          () => `Moderated ${item.title} for ${who}.`,
+                                        )
+                                      }
+                                    >
+                                      Moderate {shortId(s)}
+                                    </button>
+                                  )}
+                                </Row>
+                              </Stack>
+                            </>
+                          ),
+                          interactive: true,
+                        },
+                      ],
+                    } satisfies TableRecord;
+                  }),
+                ]}
+              />
             </div>
           )}
           {can('grades:enter') && (
@@ -555,4 +644,9 @@ export function InstructorBook({ course, term, caps, me }: { course: string; ter
       )}
     </>
   );
+}
+
+export function InstructorBook(props: Parameters<typeof InstructorBookContent>[0]) {
+  const scope = `gradebook:${props.me}:${props.course}:${props.term}`;
+  return <HumanTableOwner.Provider value={scope}><InstructorBookContent key={scope} {...props} /></HumanTableOwner.Provider>;
 }

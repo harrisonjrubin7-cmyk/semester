@@ -1,3 +1,4 @@
+import { HumanTableOwner, RecordTable, tableText, type TableRecord } from '../HumanTable';
 /**
  * Student accounts, for a school's bursar and business office, on the tables
  * in `20260929220000_student_accounts.sql`.
@@ -56,7 +57,7 @@ const localToday = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-export function StudentAccounts(props: StudentAccountsProps) {
+function StudentAccountsContent(props: StudentAccountsProps) {
   const { tenantId, api, read, approve, close } = props;
   const [client, setClient] = useState<FinanceApi | null>(api ?? null);
   const [message, setMessage] = useState('');
@@ -212,44 +213,98 @@ function Account({
             Balance {owed >= 0 ? 'owed' : 'in credit'}: <strong>{money(Math.abs(owed))}</strong>
           </p>
           <p role="status" style={quiet}>{hold.held ? `${hold.line}. ${money(hold.overdue_cents)} is more than ${settings.hold_after_days} days overdue.` : hold.line}</p>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBlock: 'var(--sp-3)' }} aria-label="Balance by age">
-            <thead>
-              <tr>
-                <th style={cell}>Current</th><th style={cell}>31–60 days</th><th style={cell}>61–90 days</th><th style={cell}>Over 90</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style={num}>{money(age.current)}</td><td style={num}>{money(age.d31_60)}</td><td style={num}>{money(age.d61_90)}</td><td style={num}>{money(age.over90)}</td>
-              </tr>
-            </tbody>
-          </table>
+          <RecordTable
+            id="account-aging"
+            label={'Balance by age'}
+            tableProps={{
+              style: { width: '100%', borderCollapse: 'collapse', marginBlock: 'var(--sp-3)' },
+              'aria-label': 'Balance by age',
+            }}
+            columns={[
+              { id: 'column-0', label: 'Current' },
+              { id: 'column-1', label: '31–60 days' },
+              { id: 'column-2', label: '61–90 days' },
+              { id: 'column-3', label: 'Over 90' },
+            ]}
+            rows={[
+              {
+                id: 'total',
+                cells: [
+                  { value: tableText(money(age.current)), content: <>{money(age.current)}</>, props: { style: num } },
+                  { value: tableText(money(age.d31_60)), content: <>{money(age.d31_60)}</>, props: { style: num } },
+                  { value: tableText(money(age.d61_90)), content: <>{money(age.d61_90)}</>, props: { style: num } },
+                  { value: tableText(money(age.over90)), content: <>{money(age.over90)}</>, props: { style: num } },
+                ],
+              } satisfies TableRecord,
+            ]}
+          />
 
           {entries.length === 0 ? (
             <EmptyState inline title="Nothing on this account" body="No entry has been approved for this student." />
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }} aria-label="Entries">
-              <thead>
-                <tr><th style={cell}>Date</th><th style={cell}>What</th><th style={cell}>Reference</th><th style={{ ...cell, textAlign: 'right' }}>Amount</th><th style={cell}><span className="sr-only">Receipt</span></th></tr>
-              </thead>
-              <tbody>
-                {entries.map((e) => (
-                  <tr key={e.id}>
-                    <td style={{ ...cell, whiteSpace: 'nowrap' }}>{e.effective_on}</td>
-                    <td style={cell}>{KIND_LABEL[e.kind]}: {e.description}{e.high_value ? ' (high-value approval)' : ''}</td>
-                    <td style={cell}>{e.provider_ref || '—'}</td>
-                    <td style={num}>{money(e.amount_cents)}</td>
-                    <td style={cell}>
-                      {e.kind === 'payment' && (
-                        <button type="button" className="bare tappable" onClick={() => download({ name: `receipt-${e.provider_ref}.txt`, body: receipt(e).join('\n') + '\n', mime: 'text/plain' })}>
-                          Receipt
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <RecordTable
+              id="account-entries"
+              label={'Entries'}
+              tableProps={{ style: { width: '100%', borderCollapse: 'collapse' }, 'aria-label': 'Entries' }}
+              columns={[
+                { id: 'column-0', label: 'Date' },
+                { id: 'column-1', label: 'What' },
+                { id: 'column-2', label: 'Reference' },
+                { id: 'column-3', label: 'Amount' },
+                { id: 'column-4', label: 'Receipt' },
+              ]}
+              rows={[
+                ...entries.map(
+                  (e) =>
+                    ({
+                      id: String(e.id),
+                      cells: [
+                        {
+                          value: tableText(e.effective_on),
+                          content: <>{e.effective_on}</>,
+                          props: { style: { ...cell, whiteSpace: 'nowrap' } },
+                        },
+                        {
+                          value: tableText([KIND_LABEL[e.kind], ':', e.description, e.high_value ? ' (high-value approval)' : '']),
+                          content: (
+                            <>
+                              {KIND_LABEL[e.kind]}: {e.description}
+                              {e.high_value ? ' (high-value approval)' : ''}
+                            </>
+                          ),
+                          props: { style: cell },
+                        },
+                        { value: tableText(e.provider_ref || '—'), content: <>{e.provider_ref || '—'}</>, props: { style: cell } },
+                        { value: tableText(money(e.amount_cents)), content: <>{money(e.amount_cents)}</>, props: { style: num } },
+                        {
+                          value: tableText(e.kind === 'payment' && 'Receipt'),
+                          content: (
+                            <>
+                              {e.kind === 'payment' && (
+                                <button
+                                  type="button"
+                                  className="bare tappable"
+                                  onClick={() =>
+                                    download({
+                                      name: `receipt-${e.provider_ref}.txt`,
+                                      body: receipt(e).join('\n') + '\n',
+                                      mime: 'text/plain',
+                                    })
+                                  }
+                                >
+                                  Receipt
+                                </button>
+                              )}
+                            </>
+                          ),
+                          props: { style: cell },
+                          interactive: true,
+                        },
+                      ],
+                    }) satisfies TableRecord,
+                ),
+              ]}
+            />
           )}
 
           <div style={grid}>
@@ -684,5 +739,13 @@ function MonthClose({
       )}
       {note && <Notice alert>{note}</Notice>}
     </section>
+  );
+}
+
+export function StudentAccounts(props: StudentAccountsProps) {
+  return (
+    <HumanTableOwner.Provider value={`${props.tenantId}:${props.viewerId ?? 'signed-out'}`}>
+      <StudentAccountsContent key={`${props.tenantId}:${props.viewerId ?? "signed-out"}`} {...props} />
+    </HumanTableOwner.Provider>
   );
 }

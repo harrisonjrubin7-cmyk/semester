@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { formatNumber } from '../lib/locale';
 import { useState } from 'react';
 import {
@@ -320,34 +321,44 @@ function Compare({ plan }: { plan: AbroadPlan }) {
         <span id="abroad-compare">Side by side</span>
       </SectionLabel>
       <div className="abroad-table-wrap">
-        <table className="abroad-table">
-          <caption className="sr-only">Programs compared</caption>
-          <thead>
-            <tr>
-              <th scope="col">Program</th>
-              <th scope="col">Term</th>
-              <th scope="col">Deadline</th>
-              <th scope="col">Cost, as you entered it</th>
-              <th scope="col">Credit you can count on</th>
-            </tr>
-          </thead>
-          <tbody>
-            {plan.programs.map((p) => {
+        <RecordTable
+          id="abroad-program-comparison"
+          label={'Programs compared'}
+          tableProps={{ className: 'abroad-table' }}
+          caption={<> Programs compared</>}
+          columns={[
+            { id: 'column-0', label: 'Program' },
+            { id: 'column-1', label: 'Term' },
+            { id: 'column-2', label: 'Deadline' },
+            { id: 'column-3', label: 'Cost, as you entered it' },
+            { id: 'column-4', label: 'Credit you can count on' },
+          ]}
+          rows={[
+            ...plan.programs.map((p) => {
               const c = creditPicture(plan, p.id);
-              return (
-                <tr key={p.id}>
-                  <th scope="row">{p.name || 'Untitled program'}</th>
-                  <td>{p.term || '—'}</td>
-                  <td>{p.deadline || '—'}</td>
-                  <td>{p.cost === null ? 'Not entered' : `${formatNumber(p.cost)} ${p.currency}`}</td>
-                  <td>
-                    {c.approved} of {c.planned}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              return {
+                id: String(p.id),
+                cells: [
+                  { value: tableText(p.name || 'Untitled program'), content: <>{p.name || 'Untitled program'}</>, header: true },
+                  { value: tableText(p.term || '—'), content: <>{p.term || '—'}</> },
+                  { value: tableText(p.deadline || '—'), content: <>{p.deadline || '—'}</> },
+                  {
+                    value: tableText(p.cost === null ? 'Not entered' : `${formatNumber(p.cost)} ${p.currency}`),
+                    content: <>{p.cost === null ? 'Not entered' : `${formatNumber(p.cost)} ${p.currency}`}</>,
+                  },
+                  {
+                    value: tableText([c.approved, 'of', c.planned]),
+                    content: (
+                      <>
+                        {c.approved} of {c.planned}
+                      </>
+                    ),
+                  },
+                ],
+              } satisfies TableRecord;
+            }),
+          ]}
+        />
       </div>
       <p style={small}>Costs stay in each program’s own currency and are not converted or added up.</p>
     </section>

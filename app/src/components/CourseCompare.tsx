@@ -1,5 +1,19 @@
+import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { useId } from 'react';
-import { EMPTY_SHORTLIST, MAX_COMPARE, SHORTLIST_KEY, liveShortlist, meetingLine, readShortlist, requirementFit, requisites, scheduleFit, toggleCompare, toggleSaved, type Shortlist } from '../lib/course-detail';
+import {
+  EMPTY_SHORTLIST,
+  MAX_COMPARE,
+  SHORTLIST_KEY,
+  liveShortlist,
+  meetingLine,
+  readShortlist,
+  requirementFit,
+  requisites,
+  scheduleFit,
+  toggleCompare,
+  toggleSaved,
+  type Shortlist,
+} from '../lib/course-detail';
 import { useDeviceLibrary } from '../lib/device-library';
 import { WIDE, useMedia } from '../lib/media';
 import type { CatalogCourse } from '../lib/registration';
@@ -16,13 +30,24 @@ import { SourceBadge } from './SourceBadge';
  * catalog and readings against the student's own records — no ranking and no
  * "best" pick.
  */
-export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCourse[]; cart: CatalogCourse[]; onOpen: (id: string) => void }) {
+export function CourseCompare({
+  catalog,
+  cart,
+  onOpen,
+}: {
+  catalog: CatalogCourse[];
+  cart: CatalogCourse[];
+  onOpen: (id: string) => void;
+}) {
   const { state } = useStore();
   const wide = useMedia(WIDE);
   const now = useNow();
   const headingId = useId();
   const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
-  const shortlist = { value: liveShortlist(library.value, catalog), update: (f: (l: Shortlist) => Shortlist) => library.update((l) => f(liveShortlist(l, catalog))) };
+  const shortlist = {
+    value: liveShortlist(library.value, catalog),
+    update: (f: (l: Shortlist) => Shortlist) => library.update((l) => f(liveShortlist(l, catalog))),
+  };
   const byId = new Map(catalog.map((c) => [c.id, c]));
   const saved = shortlist.value.saved.map((id) => byId.get(id)).filter((c): c is CatalogCourse => !!c);
   const compared = shortlist.value.compare.map((id) => byId.get(id)).filter((c): c is CatalogCourse => !!c);
@@ -36,7 +61,14 @@ export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCours
     return [
       ['Credits', String(c.credits)],
       ['Meets', meetingLine(c)],
-      ['Prerequisites', reqs.length ? `${met} of ${reqs.length} named courses in your records` : c.prerequisites ? 'Conditions only — read the course' : 'None listed'],
+      [
+        'Prerequisites',
+        reqs.length
+          ? `${met} of ${reqs.length} named courses in your records`
+          : c.prerequisites
+            ? 'Conditions only — read the course'
+            : 'None listed',
+      ],
       ['May count toward', fit.length ? fit.map((f) => f.requirement.name).join(', ') : 'Nothing you recorded'],
       ['Overlaps', clashes.length ? `${clashes.length} with your cart or commitments` : 'None found'],
       ['Seats (from the file)', c.seats === null ? 'Not given' : c.seats === 0 ? 'Reported closed' : String(c.seats)],
@@ -61,7 +93,11 @@ export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCours
               />
               Compare
             </label>
-            <button type="button" aria-label={`Unsave ${c.code} section ${c.section}`} onClick={() => shortlist.update((l) => toggleSaved(l, c.id, c.code))}>
+            <button
+              type="button"
+              aria-label={`Unsave ${c.code} section ${c.section}`}
+              onClick={() => shortlist.update((l) => toggleSaved(l, c.id, c.code))}
+            >
               Unsave
             </button>
           </li>
@@ -69,62 +105,56 @@ export function CourseCompare({ catalog, cart, onOpen }: { catalog: CatalogCours
       </ul>
       {compared.length < 2 ? (
         <p className="portal-muted">Tick two or three to compare them side by side.</p>
-      ) : wide ? (
-        <table className="scenario-table course-compare-table">
-          <caption className="portal-muted">
-            <SourceBadge label="imported" /> catalog facts and <SourceBadge label="estimated" /> readings against your records. No course is ranked.
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Course</th>
-              {compared.map((c) => (
-                <th scope="col" key={c.id}>
-                  {c.code} · {c.section}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows(compared[0]).map(([label], i) => (
-              <tr key={label}>
-                <th scope="row">{label}</th>
-                {compared.map((c) => (
-                  <td key={c.id}>{rows(c)[i][1]}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
       ) : (
-        <div className="course-compare-cards">
-          {compared.map((c) => (
-            <dl key={c.id} className="scenario-list" aria-label={`${c.code} section ${c.section}`}>
-              <div>
-                <dt>Course</dt>
-                <dd>{c.code} · {c.section}</dd>
-              </div>
-              {rows(c).map(([label, value]) => (
-                <div key={label}>
-                  <dt>{label}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-          ))}
-        </div>
+        <RecordTable
+          defaultView={wide ? 'table' : 'cards'}
+          id="course-facts-comparison"
+          label={'imported catalog facts and estimated readings against your records. No course is ranked.'}
+          tableProps={{ className: 'scenario-table course-compare-table' }}
+          caption={
+            <>
+              <SourceBadge label="imported" /> catalog facts and <SourceBadge label="estimated" /> readings against your records. No course
+              is ranked.
+            </>
+          }
+          columns={[
+            { id: 'column-0', label: 'Course' },
+            ...compared.map((c) => ({ id: String(c.id), label: tableText([c.code, '·', c.section]) })),
+          ]}
+          rows={[
+            ...rows(compared[0]).map(
+              ([label], i) =>
+                ({
+                  id: String(label),
+                  cells: [
+                    { value: tableText(label), content: <>{label}</>, header: true },
+                    ...compared.map((c) => ({ value: tableText(rows(c)[i][1]), content: <>{rows(c)[i][1]}</> })),
+                  ],
+                }) satisfies TableRecord,
+            ),
+          ]}
+        />
       )}
-      {compared.length >= 2 && <details>
-        <summary>Full decision comparison</summary>
-        <DecisionTable comparison={compareOptions('course', compared.map(course => ({
-          id: course.id,
-          label: `${course.code} · ${course.section}`,
-          requirementFit: requirementFit(course, state.requirements, state.taken),
-          clashes: scheduleFit(course, cart, state.commitments),
-          prerequisites: requisites(course, state.taken, cart),
-          source: {label: 'imported', asOf: null},
-          uncertainty: ['Seat availability and eligibility must be confirmed by your institution.'],
-        })), now)} />
-      </details>}
+      {compared.length >= 2 && (
+        <details>
+          <summary>Full decision comparison</summary>
+          <DecisionTable
+            comparison={compareOptions(
+              'course',
+              compared.map((course) => ({
+                id: course.id,
+                label: `${course.code} · ${course.section}`,
+                requirementFit: requirementFit(course, state.requirements, state.taken),
+                clashes: scheduleFit(course, cart, state.commitments),
+                prerequisites: requisites(course, state.taken, cart),
+                source: { label: 'imported', asOf: null },
+                uncertainty: ['Seat availability and eligibility must be confirmed by your institution.'],
+              })),
+              now,
+            )}
+          />
+        </details>
+      )}
     </section>
   );
 }

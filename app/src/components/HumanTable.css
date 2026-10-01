@@ -1,0 +1,44 @@
+[data-human-table] {
+  min-width: 0;
+  margin-block: var(--sp-3);
+}
+[data-human-table] > [role='group'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-block-end: var(--sp-3);
+}
+[data-human-table] > label,
+[data-human-table] > details > label {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-inline-end: var(--sp-3);
+  margin-block: var(--sp-2);
+  max-width: 100%;
+}
+[data-human-table] input,
+[data-human-table] select {
+  max-width: 100%;
+}
+[data-human-table] > details {
+  margin-block: var(--sp-3);
+}
+[data-human-table] > div[data-table-scroll] {
+  overflow-x: auto;
+}
+[data-human-table] article {
+  border: 1px solid var(--app-line);
+  padding: var(--sp-3);
+  margin-block: var(--sp-3);
+  overflow-wrap: anywhere;
+}
+[data-human-table] article dl > div {
+  margin-block: var(--sp-2);
+}
+[data-human-table] article dt {
+  font-weight: 600;
+}
+[data-human-table] article dd {
+  margin-inline-start: 0;
+}

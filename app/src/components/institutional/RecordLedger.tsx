@@ -1,3 +1,4 @@
+import { HumanTableOwner, RecordTable, tableText, type TableRecord } from '../HumanTable';
 /**
  * The academic-record ledger, for a school's registrar staff, on the tables
  * in `20260929210000_academic_record_ledger.sql`.
@@ -56,7 +57,7 @@ const localToday = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-export function RecordLedger({ tenantId, viewerId, propose, decide, override, read, api, today }: RecordLedgerProps) {
+function RecordLedgerContent({ tenantId, viewerId, propose, decide, override, read, api, today }: RecordLedgerProps) {
   const [client, setClient] = useState<RecordApi | null>(api ?? null);
   const [message, setMessage] = useState('');
   const [ref, setRef] = useState('');
@@ -223,35 +224,53 @@ function StudentRecord({
           {lines.length === 0 ? (
             <EmptyState inline title="Nothing on the record on this date" body="No entry for this student was in effect then." />
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }} aria-label={`Record of ${studentRef} as of ${on}`}>
-              <thead>
-                <tr>
-                  <th style={cell}>Kind</th>
-                  <th style={cell}>About</th>
-                  <th style={cell}>Value</th>
-                  <th style={cell}>Effective</th>
-                  <th style={cell}><span className="sr-only">History</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l) => {
+            <RecordTable
+              id="academic-record"
+              label={`Record of ${studentRef} as of ${on}`}
+              tableProps={{ style: { width: '100%', borderCollapse: 'collapse' }, 'aria-label': `Record of ${studentRef} as of ${on}` }}
+              columns={[
+                { id: 'column-0', label: 'Kind' },
+                { id: 'column-1', label: 'About' },
+                { id: 'column-2', label: 'Value' },
+                { id: 'column-3', label: 'Effective' },
+                { id: 'column-4', label: 'History' },
+              ]}
+              rows={[
+                ...lines.map((l) => {
                   const id = `${l.kind}:${l.subject_key}`;
-                  return (
-                    <tr key={id}>
-                      <td style={cell}>{KIND_LABEL[l.kind]}</td>
-                      <td style={cell}>{l.subject_key}</td>
-                      <td style={cell}>{l.value}</td>
-                      <td style={{ ...cell, whiteSpace: 'nowrap' }}>{l.effective_on}</td>
-                      <td style={cell}>
-                        <button type="button" className="bare tappable" aria-expanded={line === id} onClick={() => setLine(line === id ? null : id)}>
-                          {l.versions === 1 ? 'History' : `History (${l.versions})`}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  return {
+                    id: String(id),
+                    cells: [
+                      { value: tableText(KIND_LABEL[l.kind]), content: <>{KIND_LABEL[l.kind]}</>, props: { style: cell } },
+                      { value: tableText(l.subject_key), content: <>{l.subject_key}</>, props: { style: cell } },
+                      { value: tableText(l.value), content: <>{l.value}</>, props: { style: cell } },
+                      {
+                        value: tableText(l.effective_on),
+                        content: <>{l.effective_on}</>,
+                        props: { style: { ...cell, whiteSpace: 'nowrap' } },
+                      },
+                      {
+                        value: tableText(l.versions === 1 ? 'History' : `History (${l.versions})`),
+                        content: (
+                          <>
+                            <button
+                              type="button"
+                              className="bare tappable"
+                              aria-expanded={line === id}
+                              onClick={() => setLine(line === id ? null : id)}
+                            >
+                              {l.versions === 1 ? 'History' : `History (${l.versions})`}
+                            </button>
+                          </>
+                        ),
+                        props: { style: cell },
+                        interactive: true,
+                      },
+                    ],
+                  } satisfies TableRecord;
+                }),
+              ]}
+            />
           )}
           {picked && <History entries={history(entries, picked.kind, picked.subject_key)} name={name} />}
           <ActionButton
@@ -478,5 +497,13 @@ function Queue({
         </ul>
       )}
     </section>
+  );
+}
+
+export function RecordLedger(props: RecordLedgerProps) {
+  return (
+    <HumanTableOwner.Provider value={`${props.tenantId}:${props.viewerId ?? 'signed-out'}`}>
+      <RecordLedgerContent key={`${props.tenantId}:${props.viewerId ?? "signed-out"}`} {...props} />
+    </HumanTableOwner.Provider>
   );
 }

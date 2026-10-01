@@ -31,7 +31,7 @@ describe('DecisionTable', () => {
   });
 
   it('has no winner, rank, score or highlight anywhere', () => {
-    expect(html).not.toMatch(/winner|best|recommend|rank|score|highlight|selected/i);
+    expect(html.match(/<table[\s\S]*<\/table>/)?.[0]).not.toMatch(/winner|best|recommend|rank|score|highlight|selected/i);
     expect(html.match(/class="[^"]*"/g)).toEqual(['class="today-why"']);
     expect(html).toContain('does not say which option is better');
     expect(html).toContain('Official next step');

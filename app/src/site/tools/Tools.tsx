@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from '../../components/HumanTable';
 import { useState } from 'react';
 import { SEASONS, project, type Season, type Term } from '../../lib/graduation';
 import { CHECKLIST } from '../../lib/registration-day';
@@ -502,35 +503,54 @@ export function StackTool({ statuses = {} }: Pick<ToolProps, 'statuses'>) {
         <button type="button" className="site-button" onClick={() => { setVals(blankStack()); setEsc('0'); setIllus(false); }}>Clear all</button>
       </div>
       <div className="site-scroll">
-        <table className="site-table tool-stack">
-          <caption>Systems, and what each costs and when it could change</caption>
-          <thead>
-            <tr>
-              <th scope="col">System</th>
-              <th scope="col">Semester register</th>
-              {STACK_COLS.map(([k, label]) => <th scope="col" key={k}>{label}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {CORE_MODULES.map((m) => (
-              <tr key={m.id}>
-                <th scope="row">{m.name}<br /><span className="site-small">{m.replaces}</span></th>
-                <td>{statuses[m.id] ?? 'Planned'}</td>
-                {STACK_COLS.map(([k, label]) => (
-                  <td key={k}>
-                    <input
-                      className="tool-input"
-                      inputMode="decimal"
-                      aria-label={`${m.name}: ${label}`}
-                      value={vals[m.id][k]}
-                      onChange={(e) => set(m.id, k, e.target.value)}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <RecordTable
+          id="consolidation-inputs"
+          label={'Systems, and what each costs and when it could change'}
+          tableProps={{ className: 'site-table tool-stack' }}
+          caption={<> Systems, and what each costs and when it could change</>}
+          columns={[
+            { id: 'column-0', label: 'System' },
+            { id: 'column-1', label: 'Semester register' },
+            ...STACK_COLS.map(([k, label]) => ({ id: String(k), label: tableText(label) })),
+          ]}
+          rows={[
+            ...CORE_MODULES.map(
+              (m) =>
+                ({
+                  id: String(m.id),
+                  cells: [
+                    {
+                      value: tableText([m.name, tableText(m.replaces)]),
+                      content: (
+                        <>
+                          {m.name}
+                          <br />
+                          <span className="site-small">{m.replaces}</span>
+                        </>
+                      ),
+                      header: true,
+                    },
+                    { value: tableText(statuses[m.id] ?? 'Planned'), content: <>{statuses[m.id] ?? 'Planned'}</> },
+                    ...STACK_COLS.map(([k, label]) => ({
+                      value: tableText(vals[m.id][k]),
+                      content: (
+                        <>
+                          <input
+                            className="tool-input"
+                            inputMode="decimal"
+                            aria-label={`${m.name}: ${label}`}
+                            value={vals[m.id][k]}
+                            onChange={(e) => set(m.id, k, e.target.value)}
+                          />
+                        </>
+                      ),
+                      interactive: true,
+                    })),
+                  ],
+                }) satisfies TableRecord,
+            ),
+          ]}
+        />
       </div>
 
       <div className="tool-result" role="status" aria-live="polite">
@@ -559,37 +579,81 @@ export function StackTool({ statuses = {} }: Pick<ToolProps, 'statuses'>) {
               <li>Admin hours freed: {grouped(r.hoursTotal)} over five years (your figure).</li>
             </ul>
             <div className="site-scroll">
-              <table className="site-table">
-                <caption>Year by year</caption>
-                <thead><tr><th scope="col">Year</th><th scope="col">Current systems</th><th scope="col">With Semester</th><th scope="col">Saving</th><th scope="col">Cumulative</th></tr></thead>
-                <tbody>
-                  {r.years.map((y) => (
-                    <tr key={y.year}>
-                      <th scope="row">{y.year}</th>
-                      <td>{dollars(y.current)}</td>
-                      <td>{dollars(y.withSemester)}</td>
-                      <td>{dollars(y.saving)}</td>
-                      <td>{dollars(y.cumulative)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <RecordTable
+                id="consolidation-years"
+                label={'Year by year'}
+                tableProps={{ className: 'site-table' }}
+                caption={<> Year by year</>}
+                columns={[
+                  { id: 'column-0', label: 'Year' },
+                  { id: 'column-1', label: 'Current systems' },
+                  { id: 'column-2', label: 'With Semester' },
+                  { id: 'column-3', label: 'Saving' },
+                  { id: 'column-4', label: 'Cumulative' },
+                ]}
+                rows={[
+                  ...r.years.map(
+                    (y) =>
+                      ({
+                        id: String(y.year),
+                        cells: [
+                          { value: tableText(y.year), content: <>{y.year}</>, header: true },
+                          { value: tableText(dollars(y.current)), content: <>{dollars(y.current)}</> },
+                          { value: tableText(dollars(y.withSemester)), content: <>{dollars(y.withSemester)}</> },
+                          { value: tableText(dollars(y.saving)), content: <>{dollars(y.saving)}</> },
+                          { value: tableText(dollars(y.cumulative)), content: <>{dollars(y.cumulative)}</> },
+                        ],
+                      }) satisfies TableRecord,
+                  ),
+                ]}
+              />
             </div>
             <div className="site-scroll">
-              <table className="site-table">
-                <caption>Consolidation timeline: when each system is switched off</caption>
-                <thead><tr><th scope="col">System</th><th scope="col">Contract ends after</th><th scope="col">Replacement from</th><th scope="col">Switched off</th></tr></thead>
-                <tbody>
-                  {entered.map((x) => (
-                    <tr key={x.id}>
-                      <th scope="row">{x.name}<br /><span className="site-small">Register: {statuses[x.id] ?? 'Planned'}</span></th>
-                      <td>{x.contractEnds ? `year ${x.contractEnds}` : 'no contract'}</td>
-                      <td>{x.ready === null ? 'not entered' : `year ${x.ready}`}</td>
-                      <td>{x.switchYear === null ? `Not within ${HORIZON} years: ${x.why}` : `Year ${x.switchYear}`}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <RecordTable
+                id="consolidation-timeline"
+                label={'Consolidation timeline: when each system is switched off'}
+                tableProps={{ className: 'site-table' }}
+                caption={<> Consolidation timeline: when each system is switched off</>}
+                columns={[
+                  { id: 'column-0', label: 'System' },
+                  { id: 'column-1', label: 'Contract ends after' },
+                  { id: 'column-2', label: 'Replacement from' },
+                  { id: 'column-3', label: 'Switched off' },
+                ]}
+                rows={[
+                  ...entered.map(
+                    (x) =>
+                      ({
+                        id: String(x.id),
+                        cells: [
+                          {
+                            value: tableText([x.name, tableText(['Register:', statuses[x.id] ?? 'Planned'])]),
+                            content: (
+                              <>
+                                {x.name}
+                                <br />
+                                <span className="site-small">Register: {statuses[x.id] ?? 'Planned'}</span>
+                              </>
+                            ),
+                            header: true,
+                          },
+                          {
+                            value: tableText(x.contractEnds ? `year ${x.contractEnds}` : 'no contract'),
+                            content: <>{x.contractEnds ? `year ${x.contractEnds}` : 'no contract'}</>,
+                          },
+                          {
+                            value: tableText(x.ready === null ? 'not entered' : `year ${x.ready}`),
+                            content: <>{x.ready === null ? 'not entered' : `year ${x.ready}`}</>,
+                          },
+                          {
+                            value: tableText(x.switchYear === null ? `Not within ${HORIZON} years: ${x.why}` : `Year ${x.switchYear}`),
+                            content: <>{x.switchYear === null ? `Not within ${HORIZON} years: ${x.why}` : `Year ${x.switchYear}`}</>,
+                          },
+                        ],
+                      }) satisfies TableRecord,
+                  ),
+                ]}
+              />
             </div>
           </>
         )}

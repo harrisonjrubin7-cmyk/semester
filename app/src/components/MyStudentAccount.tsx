@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from './HumanTable';
 /**
  * The student's own account at their school, on Bill, above the figures they
  * type themselves: what the school's ledger says they owe today, how old it
@@ -157,14 +158,31 @@ function SchoolAccount({ account: a, day, payUrl, many, api, userId, onChanged }
       {v.upcoming > 0 && <p style={quiet}>{money(v.upcoming)} more is on the account for later dates, and is not owed yet.</p>}
 
       {v.owed > 0 && (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBlock: 'var(--sp-3)' }} aria-label="What you owe, by age">
-          <thead>
-            <tr><th style={num}>Up to 30 days</th><th style={num}>31–60</th><th style={num}>61–90</th><th style={num}>Over 90</th></tr>
-          </thead>
-          <tbody>
-            <tr><td style={num}>{money(v.age.current)}</td><td style={num}>{money(v.age.d31_60)}</td><td style={num}>{money(v.age.d61_90)}</td><td style={num}>{money(v.age.over90)}</td></tr>
-          </tbody>
-        </table>
+        <RecordTable
+          id="student-account-aging"
+          label={'What you owe, by age'}
+          tableProps={{
+            style: { width: '100%', borderCollapse: 'collapse', marginBlock: 'var(--sp-3)' },
+            'aria-label': 'What you owe, by age',
+          }}
+          columns={[
+            { id: 'column-0', label: 'Up to 30 days' },
+            { id: 'column-1', label: '31–60' },
+            { id: 'column-2', label: '61–90' },
+            { id: 'column-3', label: 'Over 90' },
+          ]}
+          rows={[
+            {
+              id: 'total',
+              cells: [
+                { value: tableText(money(v.age.current)), content: <>{money(v.age.current)}</>, props: { style: num } },
+                { value: tableText(money(v.age.d31_60)), content: <>{money(v.age.d31_60)}</>, props: { style: num } },
+                { value: tableText(money(v.age.d61_90)), content: <>{money(v.age.d61_90)}</>, props: { style: num } },
+                { value: tableText(money(v.age.over90)), content: <>{money(v.age.over90)}</>, props: { style: num } },
+              ],
+            } satisfies TableRecord,
+          ]}
+        />
       )}
 
       {payUrl && v.owed > 0 && (
@@ -205,33 +223,56 @@ function SchoolAccount({ account: a, day, payUrl, many, api, userId, onChanged }
 
 function Entries({ entries, label }: { entries: AccountEntry[]; label: string }) {
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 'var(--sp-4)' }} aria-label={label}>
-      <caption style={{ ...quiet, textAlign: 'left', paddingBottom: 'var(--sp-2)' }}>{label}</caption>
-      <thead>
-        <tr><th style={cell}>Date</th><th style={cell}>What</th><th style={{ ...cell, textAlign: 'right' }}>Amount</th><th style={cell}><span className="sr-only">Receipt</span></th></tr>
-      </thead>
-      <tbody>
-        {entries.map((e) => (
-          <tr key={e.id}>
-            <td style={{ ...cell, whiteSpace: 'nowrap' }}>{e.effective_on}</td>
-            <td style={cell}>{whatItIs(e)}</td>
-            <td style={num}>{money(e.amount_cents)}</td>
-            <td style={cell}>
-              {e.kind === 'payment' && (
-                <button
-                  type="button"
-                  className="bare tappable"
-                  aria-label={`Receipt for the payment of ${e.effective_on}`}
-                  onClick={() => download({ name: `receipt-${e.provider_ref || e.id}.txt`, body: receipt(e).join('\n') + '\n', mime: 'text/plain' })}
-                >
-                  Receipt
-                </button>
-              )}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <RecordTable
+      id={label === 'Posted to your account' ? 'student-posted-entries' : 'student-future-entries'}
+      label={label}
+      tableProps={{ style: { width: '100%', borderCollapse: 'collapse', marginTop: 'var(--sp-4)' }, 'aria-label': label }}
+      caption={<> {label}</>}
+      columns={[
+        { id: 'column-0', label: 'Date' },
+        { id: 'column-1', label: 'What' },
+        { id: 'column-2', label: 'Amount' },
+        { id: 'column-3', label: 'Receipt' },
+      ]}
+      rows={[
+        ...entries.map(
+          (e) =>
+            ({
+              id: String(e.id),
+              cells: [
+                { value: tableText(e.effective_on), content: <>{e.effective_on}</>, props: { style: { ...cell, whiteSpace: 'nowrap' } } },
+                { value: tableText(whatItIs(e)), content: <>{whatItIs(e)}</>, props: { style: cell } },
+                { value: tableText(money(e.amount_cents)), content: <>{money(e.amount_cents)}</>, props: { style: num } },
+                {
+                  value: tableText(e.kind === 'payment' && 'Receipt'),
+                  content: (
+                    <>
+                      {e.kind === 'payment' && (
+                        <button
+                          type="button"
+                          className="bare tappable"
+                          aria-label={`Receipt for the payment of ${e.effective_on}`}
+                          onClick={() =>
+                            download({
+                              name: `receipt-${e.provider_ref || e.id}.txt`,
+                              body: receipt(e).join('\n') + '\n',
+                              mime: 'text/plain',
+                            })
+                          }
+                        >
+                          Receipt
+                        </button>
+                      )}
+                    </>
+                  ),
+                  props: { style: cell },
+                  interactive: true,
+                },
+              ],
+            }) satisfies TableRecord,
+        ),
+      ]}
+    />
   );
 }
 
@@ -239,20 +280,37 @@ const STATE_LABEL = { paid: 'Paid', late: 'Late', due: 'Due today', upcoming: 'C
 
 function Schedule({ schedule, standing, label }: { schedule: readonly Installment[]; standing: PlanStanding | null; label: string }) {
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 'var(--sp-3)' }} aria-label={label}>
-      <thead>
-        <tr><th style={cell}>Due</th><th style={{ ...cell, textAlign: 'right' }}>Payment</th>{standing && <th style={cell}>Status</th>}</tr>
-      </thead>
-      <tbody>
-        {schedule.map((p, i) => (
-          <tr key={i}>
-            <td style={{ ...cell, whiteSpace: 'nowrap' }}>{p.due_on}</td>
-            <td style={num}>{money(p.cents)}</td>
-            {standing && <td style={cell}>{STATE_LABEL[standing.rows[i]?.state ?? 'upcoming']}</td>}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <RecordTable
+      id={`student-payment-schedule-${standing ? 'approved' : 'preview'}`}
+      label={label}
+      tableProps={{ style: { width: '100%', borderCollapse: 'collapse', marginTop: 'var(--sp-3)' }, 'aria-label': label }}
+      columns={[
+        { id: 'column-0', label: 'Due' },
+        { id: 'column-1', label: 'Payment' },
+        ...(standing ? [{ id: 'column-2', label: 'Status' }] : []),
+      ]}
+      rows={[
+        ...schedule.map(
+          (p, i) =>
+            ({
+              id: String(i),
+              cells: [
+                { value: tableText(p.due_on), content: <>{p.due_on}</>, props: { style: { ...cell, whiteSpace: 'nowrap' } } },
+                { value: tableText(money(p.cents)), content: <>{money(p.cents)}</>, props: { style: num } },
+                ...(standing
+                  ? [
+                      {
+                        value: tableText(STATE_LABEL[standing.rows[i]?.state ?? 'upcoming']),
+                        content: <>{STATE_LABEL[standing.rows[i]?.state ?? 'upcoming']}</>,
+                        props: { style: cell },
+                      },
+                    ]
+                  : []),
+              ],
+            }) satisfies TableRecord,
+        ),
+      ]}
+    />
   );
 }
 

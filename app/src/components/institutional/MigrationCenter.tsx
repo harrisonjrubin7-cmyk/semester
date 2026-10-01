@@ -1,3 +1,4 @@
+import { HumanTableOwner, RecordTable, tableText, type TableRecord } from '../HumanTable';
 /**
  * The Migration Center: a school's migrations out of the systems it is
  * retiring, stage by stage, on the tables in `20260929200000_migration_center.sql`.
@@ -49,7 +50,7 @@ const cellStyle = { textAlign: 'left', padding: 'var(--sp-2)', borderTop: '1px s
 const errorText = (e: unknown, fallback: string) => (e instanceof Error ? e.message : fallback);
 const when = (iso: string) => formatDateTime(iso, { dateStyle: 'medium', timeStyle: 'short' });
 
-export function MigrationCenter({ tenantId, viewerId, manage, approve, api }: MigrationCenterProps) {
+function MigrationCenterContent({ tenantId, viewerId, manage, approve, api }: MigrationCenterProps) {
   const [client, setClient] = useState<MigrationApi | null>(api ?? null);
   const [rows, setRows] = useState<MigrationProject[]>([]);
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -518,34 +519,69 @@ function FieldMaps({
       {maps.length === 0 ? (
         <p style={quiet}>No fields mapped yet.</p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th style={cellStyle}>Source field</th>
-              <th style={cellStyle}>Semester field</th>
-              <th style={cellStyle}>Cleaning rule</th>
-              <th style={cellStyle}>Rules</th>
-              {editable && <th style={cellStyle}><span className="sr-only">Remove</span></th>}
-            </tr>
-          </thead>
-          <tbody>
-            {maps.map((m) => (
-              <tr key={m.id ?? m.target_field}>
-                <td style={cellStyle}>{m.source_field}</td>
-                <td style={cellStyle}><code>{m.target_field}</code></td>
-                <td style={cellStyle}>{TRANSFORM_LABEL[m.transform]}</td>
-                <td style={cellStyle}>{[m.is_key && 'identifies a record', m.required && 'required'].filter(Boolean).join(', ') || '—'}</td>
-                {editable && (
-                  <td style={cellStyle}>
-                    <button type="button" className="bare tappable" disabled={busy || !m.id} onClick={() => m.id && onRemove(m.id)}>
-                      Remove {m.target_field}
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <RecordTable
+          id="migration-fields"
+          label={'migration fields'}
+          tableProps={{ style: { width: '100%', borderCollapse: 'collapse' } }}
+          columns={[
+            { id: 'column-0', label: 'Source field' },
+            { id: 'column-1', label: 'Semester field' },
+            { id: 'column-2', label: 'Cleaning rule' },
+            { id: 'column-3', label: 'Rules' },
+            ...(editable ? [{ id: 'column-4', label: 'Remove' }] : []),
+          ]}
+          rows={[
+            ...maps.map(
+              (m) =>
+                ({
+                  id: String(m.id ?? m.target_field),
+                  cells: [
+                    { value: tableText(m.source_field), content: <>{m.source_field}</>, props: { style: cellStyle } },
+                    {
+                      value: tableText(m.target_field),
+                      content: (
+                        <>
+                          <code>{m.target_field}</code>
+                        </>
+                      ),
+                      props: { style: cellStyle },
+                    },
+                    {
+                      value: tableText(TRANSFORM_LABEL[m.transform]),
+                      content: <>{TRANSFORM_LABEL[m.transform]}</>,
+                      props: { style: cellStyle },
+                    },
+                    {
+                      value: tableText([m.is_key && 'identifies a record', m.required && 'required'].filter(Boolean).join(', ') || '—'),
+                      content: <>{[m.is_key && 'identifies a record', m.required && 'required'].filter(Boolean).join(', ') || '—'}</>,
+                      props: { style: cellStyle },
+                    },
+                    ...(editable
+                      ? [
+                          {
+                            value: tableText(['Remove', m.target_field]),
+                            content: (
+                              <>
+                                <button
+                                  type="button"
+                                  className="bare tappable"
+                                  disabled={busy || !m.id}
+                                  onClick={() => m.id && onRemove(m.id)}
+                                >
+                                  Remove {m.target_field}
+                                </button>
+                              </>
+                            ),
+                            props: { style: cellStyle },
+                            interactive: true,
+                          },
+                        ]
+                      : []),
+                  ],
+                }) satisfies TableRecord,
+            ),
+          ]}
+        />
       )}
       {!editable && maps.length > 0 && <p style={quiet}>The mapping is fixed once a migration is past cleaning; go back to change it.</p>}
       {editable && (
@@ -733,16 +769,25 @@ function Listing({ title, children }: { title: string; children: ReactNode }) {
 
 function SampleTable({ p }: { p: Preview }) {
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 'var(--sp-3)' }} aria-label="First mapped rows">
-      <thead>
-        <tr>{p.headers.map((h) => <th key={h} style={cellStyle}><code>{h}</code></th>)}</tr>
-      </thead>
-      <tbody>
-        {p.rows.slice(0, 5).map((r, i) => (
-          <tr key={i}>{p.headers.map((h) => <td key={h} style={cellStyle}>{r[h]}</td>)}</tr>
-        ))}
-      </tbody>
-    </table>
+    <RecordTable
+      exportAllowed={false}
+      exportReason="Mapped samples remain in this migration review. Use the approved migration process for record exports."
+      id="migration-preview"
+      label={'First mapped rows'}
+      tableProps={{ style: { width: '100%', borderCollapse: 'collapse', marginTop: 'var(--sp-3)' }, 'aria-label': 'First mapped rows' }}
+      columns={[...p.headers.map((h) => ({ id: String(h), label: tableText(h) }))]}
+      rows={[
+        ...p.rows
+          .slice(0, 5)
+          .map(
+            (r, i) =>
+              ({
+                id: String(i),
+                cells: [...p.headers.map((h) => ({ value: tableText(r[h]), content: <>{r[h]}</>, props: { style: cellStyle } }))],
+              }) satisfies TableRecord,
+          ),
+      ]}
+    />
   );
 }
 
@@ -822,5 +867,13 @@ function Approvals({
         </form>
       ))}
     </section>
+  );
+}
+
+export function MigrationCenter(props: MigrationCenterProps) {
+  return (
+    <HumanTableOwner.Provider value={`${props.tenantId}:${props.viewerId ?? 'signed-out'}`}>
+      <MigrationCenterContent key={`${props.tenantId}:${props.viewerId ?? "signed-out"}`} {...props} />
+    </HumanTableOwner.Provider>
   );
 }

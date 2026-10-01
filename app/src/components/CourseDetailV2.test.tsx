@@ -62,7 +62,17 @@ beforeEach(() => {
       seenOnboarding: true,
       sample: false,
       courses: [],
-      requirements: [{ id: 'core', programme: 'Economics major', name: 'Core theory', need: 'courses', count: 2, accepts: ['ECON 2010', 'ECON 2020'], note: '' }],
+      requirements: [
+        {
+          id: 'core',
+          programme: 'Economics major',
+          name: 'Core theory',
+          need: 'courses',
+          count: 2,
+          accepts: ['ECON 2010', 'ECON 2020'],
+          note: '',
+        },
+      ],
       taken: [{ id: 't1', code: 'ECON 1010', title: 'Principles', term: 'Fall 2026', hours: 3, grade: 'A', current: false }],
     }),
   );
@@ -74,8 +84,21 @@ beforeEach(() => {
         importedAt: new Date().toISOString(),
         courses: [
           section({ id: 'e1', url: 'https://catalog.example.edu/econ-2010', modality: 'In person' }),
-          section({ id: 'e3', code: 'ECON 3010', title: 'Game Theory', prerequisites: 'ECON 2010', meetings: [{ days: [2], start: '13:00', end: '14:15' }] }),
-          section({ id: 'p1', code: 'PSCI 1100', title: 'Politics', department: 'PSCI', prerequisites: '', meetings: [{ days: [1], start: '09:30', end: '10:45' }] }),
+          section({
+            id: 'e3',
+            code: 'ECON 3010',
+            title: 'Game Theory',
+            prerequisites: 'ECON 2010',
+            meetings: [{ days: [2], start: '13:00', end: '14:15' }],
+          }),
+          section({
+            id: 'p1',
+            code: 'PSCI 1100',
+            title: 'Politics',
+            department: 'PSCI',
+            prerequisites: '',
+            meetings: [{ days: [1], start: '09:30', end: '10:45' }],
+          }),
         ],
       },
       cart: [],
@@ -149,11 +172,16 @@ describe('with course_detail_v2 on', () => {
       'Related future courses',
     ]);
     const badge = (title: string) =>
-      [...sheet.querySelectorAll('h3')].find((h) => h.textContent?.startsWith(title))?.querySelector('[data-source]')?.getAttribute('data-source');
+      [...sheet.querySelectorAll('h3')]
+        .find((h) => h.textContent?.startsWith(title))
+        ?.querySelector('[data-source]')
+        ?.getAttribute('data-source');
     expect(badge('Prerequisites')).toBe('imported');
     expect(badge('Requirement fit')).toBe('estimated');
     expect(badge('Description')).toBe('imported');
-    const fact = (dt: string) => [...sheet.querySelectorAll('.course-v2-facts > div')].find((d) => d.querySelector('dt')?.textContent === dt)?.querySelector('dd')?.textContent;
+    const fact = (dt: string) =>
+      [...sheet.querySelectorAll('.course-v2-facts > div')].find((d) => d.querySelector('dt')?.textContent === dt)?.querySelector('dd')
+        ?.textContent;
     expect(fact('Modality')).toBe('In person');
     expect(fact('Meets')).toBe('Mon/Wed 09:00–10:15');
     expect(text(sheet)).toContain('not live availability, and not a seat for you');
@@ -221,15 +249,61 @@ describe('with course_detail_v2 on', () => {
       await act(async () => button(/^Save$/).click());
       await act(async () => button(/^Compare$/).click());
     }
-    expect(JSON.parse(localStorage.getItem(SHORTLIST_KEY)!)).toEqual({ saved: ['e1', 'p1'], compare: ['e1', 'p1'], codes: { e1: 'ECON 2010', p1: 'PSCI 1100' } });
+    expect(JSON.parse(localStorage.getItem(SHORTLIST_KEY)!)).toEqual({
+      saved: ['e1', 'p1'],
+      compare: ['e1', 'p1'],
+      codes: { e1: 'ECON 2010', p1: 'PSCI 1100' },
+    });
     const table = host.querySelector('.course-compare-table')!;
     expect([...table.querySelectorAll('thead th')].map((th) => th.textContent)).toEqual(['Course', 'ECON 2010 · 01', 'PSCI 1100 · 01']);
     const row = (label: string) => [...table.querySelectorAll('tbody tr')].find((tr) => tr.querySelector('th')?.textContent === label)!;
-    expect([...row('Prerequisites').querySelectorAll('td')].map((td) => td.textContent)).toEqual(['1 of 2 named courses in your records', 'None listed']);
-    expect([...row('May count toward').querySelectorAll('td')].map((td) => td.textContent)).toEqual(['Core theory', 'Nothing you recorded']);
+    expect([...row('Prerequisites').querySelectorAll('td')].map((td) => td.textContent)).toEqual([
+      '1 of 2 named courses in your records',
+      'None listed',
+    ]);
+    expect([...row('May count toward').querySelectorAll('td')].map((td) => td.textContent)).toEqual([
+      'Core theory',
+      'Nothing you recorded',
+    ]);
     expect(text(table)).toContain('No course is ranked.');
     expect(host.querySelector('[aria-label="Comparison view"]')).not.toBeNull();
     await act(async () => button(/^Summary view$/).click());
     expect(host.textContent).toContain('Official next step');
   });
+});
+
+it('keeps registration confirmation and source facts while saving and filtering comparison views', async () => {
+  await mount(true);
+  for (const code of ['ECON 2010', 'PSCI 1100']) {
+    await open(code);
+    await act(async () => button(/^Save$/).click());
+    await act(async () => button(/^Compare$/).click());
+  }
+  const comparison = host.querySelector('[aria-label="Decision comparison"]')!;
+  await act(async () => button(/^Card view$/, comparison).click());
+  const search = comparison.querySelector('input[type="search"]') as HTMLInputElement;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(search, 'source');
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  expect(comparison.querySelectorAll('article')).toHaveLength(1);
+  expect(comparison.querySelector('article')?.textContent).toContain('Source and freshness');
+  const viewName = comparison.querySelector('input[maxlength="80"]') as HTMLInputElement;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(viewName, 'Check sources');
+    viewName.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await act(async () => button(/^Save view$/, comparison).click());
+  await act(async () => button(/^Clear search and filters$/, comparison).click());
+  expect(comparison.textContent).toContain('Official next step');
+  expect(comparison.textContent).toContain('Not known');
+  await act(async () => button(/^Load Check sources$/, comparison).click());
+  expect(comparison.querySelectorAll('article')).toHaveLength(1);
+  await open('ECON 2010');
+  await act(async () => button(/^Add to cart…$/).click());
+  expect(cart()).toEqual([]);
+  const confirmation = host.querySelector('[role="dialog"].dialog')!;
+  expect(confirmation.textContent).toContain('does not register you');
+  await act(async () => button(/^Cancel$/, confirmation).click());
+  expect(cart()).toEqual([]);
 });

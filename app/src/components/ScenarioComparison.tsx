@@ -1,9 +1,9 @@
-import { useId, useState } from 'react';
+import { RecordTable, tableText, type TableRecord } from './HumanTable';
+import { useId } from 'react';
 import type { Plan, Scenario } from '../lib/graduation';
 import { WIDE, useMedia } from '../lib/media';
 import { compareRows, limits } from '../lib/scenario-compare';
 import { SourceBadge } from './SourceBadge';
-import { Segmented } from './ui';
 
 /**
  * Current plan against one proposed change (DESIGN-SYSTEM-IMPROVEMENTS §4.11).
@@ -19,7 +19,6 @@ import { Segmented } from './ui';
  */
 export function ScenarioComparison({ plan, done, scenario }: { plan: Plan; done: number; scenario: Scenario }) {
   const wide = useMedia(WIDE);
-  const [view, setView] = useState<'current' | 'proposed'>('proposed');
   const titleId = useId();
   const rows = compareRows(plan, done, scenario);
   const changed = rows.filter((r) => r.changed);
@@ -28,35 +27,38 @@ export function ScenarioComparison({ plan, done, scenario }: { plan: Plan; done:
     <section className="portal-panel scenario-compare" aria-labelledby={titleId}>
       <h3 id={titleId}>{scenario.name} compared with your current plan</h3>
       <p className="portal-muted">
-        <SourceBadge label="estimated" /> Planning guidance only. Not a degree audit, not a bill, and not a promise of when
-        you finish.
+        <SourceBadge label="estimated" /> Planning guidance only. Not a degree audit, not a bill, and not a promise of when you finish.
       </p>
 
-      {wide ? (
-        <table className="scenario-table">
-          <caption className="sr-only">
-            {scenario.name} compared with your current plan. Estimates from the numbers you entered.
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Estimate</th>
-              <th scope="col">Current plan</th>
-              <th scope="col">{scenario.name}</th>
-              <th scope="col">Change</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className={r.changed ? 'is-changed' : undefined}>
-                <th scope="row">{r.label}</th>
-                <td>{r.current}</td>
-                <td>{r.proposed}</td>
-                <td>{r.change}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
+      <RecordTable
+        defaultView={wide ? 'table' : 'cards'}
+        id="graduation-scenario-comparison"
+        label={tableText([scenario.name, 'compared with your current plan. Estimates from the numbers you entered.'])}
+        tableProps={{ className: 'scenario-table' }}
+        caption={<>{scenario.name} compared with your current plan. Estimates from the numbers you entered.</>}
+        columns={[
+          { id: 'column-0', label: 'Estimate' },
+          { id: 'column-1', label: 'Current plan' },
+          { id: 'column-2', label: tableText(scenario.name) },
+          { id: 'column-3', label: 'Change' },
+        ]}
+        rows={[
+          ...rows.map(
+            (r) =>
+              ({
+                id: String(r.id),
+                props: { className: r.changed ? 'is-changed' : undefined },
+                cells: [
+                  { value: tableText(r.label), content: <>{r.label}</>, header: true },
+                  { value: tableText(r.current), content: <>{r.current}</> },
+                  { value: tableText(r.proposed), content: <>{r.proposed}</> },
+                  { value: tableText(r.change), content: <>{r.change}</> },
+                ],
+              }) satisfies TableRecord,
+          ),
+        ]}
+      />
+      {!wide && (
         <>
           <h4>What changes</h4>
           {changed.length ? (
@@ -70,22 +72,6 @@ export function ScenarioComparison({ plan, done, scenario }: { plan: Plan; done:
           ) : (
             <p className="portal-muted">Nothing changes from your current plan.</p>
           )}
-          <Segmented
-            options={[
-              { id: 'current', label: 'Current plan' },
-              { id: 'proposed', label: scenario.name },
-            ]}
-            value={view}
-            onChange={setView}
-          />
-          <dl className="scenario-list" aria-label={view === 'current' ? 'Current plan' : scenario.name}>
-            {rows.map((r) => (
-              <div key={r.id}>
-                <dt>{r.label}</dt>
-                <dd>{view === 'current' ? r.current : r.proposed}</dd>
-              </div>
-            ))}
-          </dl>
         </>
       )}
 

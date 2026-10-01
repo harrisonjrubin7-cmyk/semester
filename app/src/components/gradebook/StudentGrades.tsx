@@ -1,3 +1,4 @@
+import { HumanTableOwner, RecordTable, tableText, type TableRecord } from '../HumanTable';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { ActionButton, EmptyState, Notice, SectionLabel } from '../ui';
@@ -26,7 +27,7 @@ import type { Mark } from '../../lib/gradebook/model';
 
 const MARK_SAID: Record<Mark, string> = { late: 'Late', excused: 'Excused', incomplete: 'Incomplete', missing: 'Missing' };
 
-export function StudentGrades({ course, term, me }: { course: string; term: string; me: string }) {
+function StudentGradesContent({ course, term, me }: { course: string; term: string; me: string }) {
   const { say, dispatch } = useStore();
   const { attempt } = useAttempts();
   const [book, setBook] = useState<LoadedBook | null | string>(null);
@@ -109,39 +110,75 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
           </p>
           <SectionLabel aside={<SourceBadge label="institution_verified" at={readAt} />}>Released grades</SectionLabel>
           <div className="integration-table-wrap">
-            <table className="integration-table">
-              <caption className="sr-only">Your released grades in {course}, {term}.</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Item</th>
-                  <th scope="col">Grade</th>
-                  <th scope="col">Released</th>
-                  <th scope="col">Regrade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {view.lines.map((l) => (
-                  <tr key={l.itemId}>
-                    <th scope="row">{l.title}</th>
-                    <td>
-                      {l.score === null ? '—' : `${l.score} of ${l.pointsPossible}`}
-                      {l.mark ? ` · ${MARK_SAID[l.mark]}` : ''}
-                      {l.comment && <Sub>{l.comment}</Sub>}
-                    </td>
-                    <td>{formatDate(new Date(l.releasedAt), { month: 'short', day: 'numeric' })}</td>
-                    <td>
-                      {openOn.has(l.itemId) ? (
-                        'Asked — waiting for an answer'
-                      ) : (
-                        <button type="button" className="btn" disabled={busy} onClick={() => { setAsking(l.itemId); setSaid(null); }}>
-                          Ask about {l.title}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <RecordTable
+              id="student-grades"
+              label={tableText(['Your released grades in', course, ',', term, '.'])}
+              tableProps={{ className: 'integration-table' }}
+              caption={
+                <>
+                  {' '}
+                  Your released grades in {course}, {term}.
+                </>
+              }
+              columns={[
+                { id: 'column-0', label: 'Item' },
+                { id: 'column-1', label: 'Grade' },
+                { id: 'column-2', label: 'Released' },
+                { id: 'column-3', label: 'Regrade' },
+              ]}
+              rows={[
+                ...view.lines.map(
+                  (l) =>
+                    ({
+                      id: String(l.itemId),
+                      cells: [
+                        { value: tableText(l.title), content: <>{l.title}</>, header: true },
+                        {
+                          value: tableText([
+                            l.score === null ? '—' : `${l.score} of ${l.pointsPossible}`,
+                            l.mark ? ` · ${MARK_SAID[l.mark]}` : '',
+                            l.comment && tableText(l.comment),
+                          ]),
+                          content: (
+                            <>
+                              {l.score === null ? '—' : `${l.score} of ${l.pointsPossible}`}
+                              {l.mark ? ` · ${MARK_SAID[l.mark]}` : ''}
+                              {l.comment && <Sub>{l.comment}</Sub>}
+                            </>
+                          ),
+                        },
+                        {
+                          value: tableText(formatDate(new Date(l.releasedAt), { month: 'short', day: 'numeric' })),
+                          content: <>{formatDate(new Date(l.releasedAt), { month: 'short', day: 'numeric' })}</>,
+                        },
+                        {
+                          value: tableText(openOn.has(l.itemId) ? 'Asked — waiting for an answer' : tableText(['Ask about', l.title])),
+                          content: (
+                            <>
+                              {openOn.has(l.itemId) ? (
+                                'Asked — waiting for an answer'
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="btn"
+                                  disabled={busy}
+                                  onClick={() => {
+                                    setAsking(l.itemId);
+                                    setSaid(null);
+                                  }}
+                                >
+                                  Ask about {l.title}
+                                </button>
+                              )}
+                            </>
+                          ),
+                          interactive: true,
+                        },
+                      ],
+                    }) satisfies TableRecord,
+                ),
+              ]}
+            />
           </div>
         </>
       )}
@@ -196,4 +233,9 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
       </Row>
     </>
   );
+}
+
+export function StudentGrades(props: Parameters<typeof StudentGradesContent>[0]) {
+  const scope = `gradebook:${props.me}:${props.course}:${props.term}`;
+  return <HumanTableOwner.Provider value={scope}><StudentGradesContent key={scope} {...props} /></HumanTableOwner.Provider>;
 }

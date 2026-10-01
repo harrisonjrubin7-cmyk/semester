@@ -73,6 +73,7 @@ function fake(start: MigrationProject, maps: FieldMap[] = [], approvals: Migrati
 let host: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
+  localStorage.clear();
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
@@ -222,6 +223,13 @@ describe('the evidence', () => {
     expect(host.textContent).toContain('Row 2, final_grade: required and empty');
     expect(host.querySelector('table[aria-label="First mapped rows"]')?.textContent).toContain('B+');
 
+    const sample = host.querySelector('[data-human-table="migration-preview"]')!;
+    for (const mode of ['Card view', 'Summary view']) {
+      await act(async () => ([...sample.querySelectorAll('button')].find(b => b.textContent === mode) as HTMLButtonElement).click());
+      expect([...sample.querySelectorAll('article')].map(a => a.textContent).join(' ')).toContain('B+');
+      expect((sample.querySelector('button') as HTMLButtonElement)).toBeTruthy();
+      expect(([...sample.querySelectorAll('button')].find(b => b.textContent === 'Download visible rows') as HTMLButtonElement).disabled).toBe(true);
+    }
     await record(api);
     expect(api.recordRun).toHaveBeenCalledTimes(1);
     const [, kind, counts, sha, period] = api.recordRun.mock.calls[0];

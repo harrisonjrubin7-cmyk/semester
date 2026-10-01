@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from '../components/HumanTable';
 import { incomingCapture } from '../lib/productivity-arrival';
 import { lazy, Suspense, useState, type Dispatch, type SetStateAction } from 'react';
 import { useWorkspaceSelection, useWorkspaceTabId } from '../lib/workspace-view';
@@ -670,45 +671,49 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <p style={{ ...body, ...secondLine(), marginTop: 'var(--sp-5)' }}>Choose one or more above.</p>
           ) : (
             <div style={{ overflowX: 'auto', marginTop: 'var(--sp-6)' }}>
-              <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 'var(--type-sm)' }}>
-                <thead>
-                  <tr>
-                    {['Program', 'Period', 'Tuition', 'Living', 'Other', 'Grants', 'Net'].map((h) => (
-                      <th
-                        key={h}
-                        style={{
-                          textAlign: 'left',
-                          padding: 'var(--sp-3)',
-                          borderBottom: '1px solid var(--app-line)',
-                          whiteSpace: 'nowrap',
-                          ...secondLine(),
-                        }}
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {lib.value.programs
+              <RecordTable
+                id="pathway-program-costs"
+                label={'pathway program costs'}
+                tableProps={{ style: { borderCollapse: 'collapse', width: '100%', fontSize: 'var(--type-sm)' } }}
+                columns={[
+                  ...['Program', 'Period', 'Tuition', 'Living', 'Other', 'Grants', 'Net'].map((h) => ({
+                    id: String(h),
+                    label: tableText(h),
+                  })),
+                ]}
+                rows={[
+                  ...lib.value.programs
                     .filter((p) => compare.includes(p.id))
-                    .map((p) => (
-                      <tr key={p.id}>
-                        <th style={{ textAlign: 'left', padding: 'var(--sp-3)', fontWeight: 'inherit' }}>
-                          {p.school}
-                        </th>
-                        <td style={{ padding: 'var(--sp-3)', whiteSpace: 'nowrap' }}>
-                          {p.period} / {p.currency}
-                        </td>
-                        {([p.tuition, p.living, p.other, p.aid, netProgramCost(p)] as const).map((n, i) => (
-                          <td key={i} style={{ padding: 'var(--sp-3)', whiteSpace: 'nowrap' }}>
-                            {n.toFixed(2)}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+                    .map(
+                      (p) =>
+                        ({
+                          id: String(p.id),
+                          cells: [
+                            {
+                              value: tableText(p.school),
+                              content: <>{p.school}</>,
+                              props: { style: { textAlign: 'left', padding: 'var(--sp-3)', fontWeight: 'inherit' } },
+                              header: true,
+                            },
+                            {
+                              value: tableText([p.period, '/', p.currency]),
+                              content: (
+                                <>
+                                  {p.period} / {p.currency}
+                                </>
+                              ),
+                              props: { style: { padding: 'var(--sp-3)', whiteSpace: 'nowrap' } },
+                            },
+                            ...([p.tuition, p.living, p.other, p.aid, netProgramCost(p)] as const).map((n) => ({
+                              value: tableText(n.toFixed(2)),
+                              content: <>{n.toFixed(2)}</>,
+                              props: { style: { padding: 'var(--sp-3)', whiteSpace: 'nowrap' } },
+                            })),
+                          ],
+                        }) satisfies TableRecord,
+                    ),
+                ]}
+              />
             </div>
           )}
         </>
@@ -1121,52 +1126,49 @@ function MaterialsGrid({
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 'var(--type-sm)' }}>
-        <caption
-          style={{
-            captionSide: 'bottom',
-            textAlign: 'left',
-            paddingTop: 'var(--sp-4)',
-            ...secondLine(),
-            textWrap: 'pretty',
-          }}
-        >
-          What you recorded, for each program. An empty cell means that program has no material of that
-          title — not that it is unstarted.
-        </caption>
-        <thead>
-          <tr>
-            <th style={{ ...cell, textAlign: 'left', whiteSpace: 'nowrap', ...secondLine() }}>Program</th>
-            {titles.map((t) => (
-              <th key={t} style={{ ...cell, textAlign: 'left', ...secondLine() }}>
-                {t}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ program, cells }) => (
-            <tr key={program.id}>
-              <th style={{ ...cell, textAlign: 'left', fontWeight: 'inherit' }}>
-                <button
-                  type="button"
-                  className="bare"
-                  aria-pressed={program.id === programId}
-                  onClick={() => onPick(program)}
-                  style={{ textAlign: 'left', width: 'auto', fontSize: 'inherit' }}
-                >
-                  {program.school}
-                </button>
-              </th>
-              {cells.map((status, i) => (
-                <td key={titles[i]} style={cell}>
-                  {status}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <RecordTable
+        id="pathway-materials"
+        label={
+          'What you recorded, for each program. An empty cell means that program has no material of that title — not that it is unstarted.'
+        }
+        tableProps={{ style: { borderCollapse: 'collapse', width: '100%', fontSize: 'var(--type-sm)' } }}
+        caption={
+          <>
+            What you recorded, for each program. An empty cell means that program has no material of that title — not that it is unstarted.
+          </>
+        }
+        columns={[{ id: 'column-0', label: 'Program' }, ...titles.map((t) => ({ id: String(t), label: tableText(t) }))]}
+        rows={[
+          ...rows.map(
+            ({ program, cells }) =>
+              ({
+                id: String(program.id),
+                cells: [
+                  {
+                    value: tableText(program.school),
+                    content: (
+                      <>
+                        <button
+                          type="button"
+                          className="bare"
+                          aria-pressed={program.id === programId}
+                          onClick={() => onPick(program)}
+                          style={{ textAlign: 'left', width: 'auto', fontSize: 'inherit' }}
+                        >
+                          {program.school}
+                        </button>
+                      </>
+                    ),
+                    props: { style: { ...cell, textAlign: 'left', fontWeight: 'inherit' } },
+                    header: true,
+                    interactive: true,
+                  },
+                  ...cells.map((status) => ({ value: tableText(status), content: <>{status}</>, props: { style: cell } })),
+                ],
+              }) satisfies TableRecord,
+          ),
+        ]}
+      />
     </div>
   );
 }

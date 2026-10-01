@@ -35,32 +35,102 @@ function fake(viewer: string, holdsOverride: boolean) {
     const prior = inEffect(entries, c.kind, c.subject_key, c.effective_on);
     const override = isOverride(entries, c);
     entries.push({
-      id: `e${++n}`, tenant_id: 'vu', student_ref: c.student_ref, kind: c.kind, subject_key: c.subject_key, action: c.action, value: c.value,
-      previous_value: prior?.value ?? null, previous_entry_id: prior?.id ?? null, effective_on: c.effective_on, reason: c.reason, source: c.source,
-      change_id: c.id, proposed_by: c.proposed_by, approved_by: by, override, recorded_at: tick(),
+      id: `e${++n}`,
+      tenant_id: 'vu',
+      student_ref: c.student_ref,
+      kind: c.kind,
+      subject_key: c.subject_key,
+      action: c.action,
+      value: c.value,
+      previous_value: prior?.value ?? null,
+      previous_entry_id: prior?.id ?? null,
+      effective_on: c.effective_on,
+      reason: c.reason,
+      source: c.source,
+      change_id: c.id,
+      proposed_by: c.proposed_by,
+      approved_by: by,
+      override,
+      recorded_at: tick(),
     });
     c.status = 'approved';
     c.decided_by = by;
   };
   const make = (p: Proposal, by: string): RecordChange => {
-    const c: RecordChange = { id: `c${++n}0000000`, tenant_id: 'vu', ...p, status: 'proposed', proposed_by: by, proposed_at: tick(), decided_by: null, decided_at: null, decision_note: '' };
+    const c: RecordChange = {
+      id: `c${++n}0000000`,
+      tenant_id: 'vu',
+      ...p,
+      status: 'proposed',
+      proposed_by: by,
+      proposed_at: tick(),
+      decided_by: null,
+      decided_at: null,
+      decision_note: '',
+    };
     changes.push(c);
     return c;
   };
   // A posted grade and an enrollment, proposed by the professor and approved by the registrar.
-  approve(make({ student_ref: 'S100', kind: 'grade', subject_key: 'PSCI 2100 · Fall 2026', action: 'set', value: 'B+', effective_on: '2026-12-18', reason: 'Posted from the final roster.', source: 'faculty' }, PROF), REG);
-  approve(make({ student_ref: 'S100', kind: 'enrollment', subject_key: 'ECON 1010 · Spring 2027', action: 'set', value: 'Enrolled', effective_on: '2027-01-10', reason: 'Registered in the first window.', source: 'sis_import' }, PROF), REG);
+  approve(
+    make(
+      {
+        student_ref: 'S100',
+        kind: 'grade',
+        subject_key: 'PSCI 2100 · Fall 2026',
+        action: 'set',
+        value: 'B+',
+        effective_on: '2026-12-18',
+        reason: 'Posted from the final roster.',
+        source: 'faculty',
+      },
+      PROF,
+    ),
+    REG,
+  );
+  approve(
+    make(
+      {
+        student_ref: 'S100',
+        kind: 'enrollment',
+        subject_key: 'ECON 1010 · Spring 2027',
+        action: 'set',
+        value: 'Enrolled',
+        effective_on: '2027-01-10',
+        reason: 'Registered in the first window.',
+        source: 'sis_import',
+      },
+      PROF,
+    ),
+    REG,
+  );
   // A regrade the professor proposed, waiting.
-  make({ student_ref: 'S100', kind: 'grade', subject_key: 'PSCI 2100 · Fall 2026', action: 'set', value: 'A-', effective_on: '2027-01-20', reason: 'Regrade after appeal, minute 14.', source: 'appeal' }, PROF);
+  make(
+    {
+      student_ref: 'S100',
+      kind: 'grade',
+      subject_key: 'PSCI 2100 · Fall 2026',
+      action: 'set',
+      value: 'A-',
+      effective_on: '2027-01-20',
+      reason: 'Regrade after appeal, minute 14.',
+      source: 'appeal',
+    },
+    PROF,
+  );
 
   const api = {
-    lookup: vi.fn(async (_t: string, ref: string) => ({ entries: entries.filter((e) => e.student_ref === ref), changes: changes.filter((c) => c.student_ref === ref) })),
+    lookup: vi.fn(async (_t: string, ref: string) => ({
+      entries: entries.filter((e) => e.student_ref === ref),
+      changes: changes.filter((c) => c.student_ref === ref),
+    })),
     pending: vi.fn(async () => changes.filter((c) => c.status === 'proposed')),
     propose: vi.fn(async (_t: string, p: Proposal) => make(p, viewer).id),
     decide: vi.fn(async (id: string, status: 'approved' | 'rejected') => {
       const c = changes.find((x) => x.id === id)!;
       if (c.proposed_by === viewer) throw new Error('The person who proposed a change does not decide it.');
-      if (status === 'approved' && isOverride(entries, c) && !holdsOverride) throw new Error('Correcting a grade already on the record is a registrar override.');
+      if (status === 'approved' && isOverride(entries, c) && !holdsOverride)
+        throw new Error('Correcting a grade already on the record is a registrar override.');
       if (status === 'approved') approve(c, viewer);
       else c.status = 'rejected';
     }),
@@ -74,6 +144,7 @@ function fake(viewer: string, holdsOverride: boolean) {
 let host: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
+  localStorage.clear();
   host = document.createElement('div');
   document.body.appendChild(host);
   root = createRoot(host);
@@ -94,18 +165,26 @@ async function mount(api: RecordApi, who: Who) {
     root.render(<RecordLedger tenantId="vu" api={api} today={TODAY} {...who} />);
   });
 }
-const button = (re: RegExp) => [...host.querySelectorAll('button')].find((b) => re.test(b.textContent ?? '')) as HTMLButtonElement | undefined;
+const button = (re: RegExp) =>
+  [...host.querySelectorAll('button')].find((b) => re.test(b.textContent ?? '')) as HTMLButtonElement | undefined;
 async function click(el: HTMLElement | undefined) {
   expect(el, 'control not found').toBeTruthy();
   await act(async () => el!.click());
 }
 function type(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, value: string) {
-  const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLSelectElement ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
+  const proto =
+    el instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : el instanceof HTMLSelectElement
+        ? HTMLSelectElement.prototype
+        : HTMLInputElement.prototype;
   Object.getOwnPropertyDescriptor(proto, 'value')!.set!.call(el, value);
   el.dispatchEvent(new Event(el instanceof HTMLSelectElement ? 'change' : 'input', { bubbles: true }));
 }
 const field = (re: RegExp, within: ParentNode = host) =>
-  [...within.querySelectorAll('label')].find((l) => re.test(l.textContent ?? ''))!.querySelector('input, select, textarea') as HTMLInputElement;
+  [...within.querySelectorAll('label')]
+    .find((l) => re.test(l.textContent ?? ''))!
+    .querySelector('input, select, textarea') as HTMLInputElement;
 async function openRecord(ref = 'S100') {
   await act(async () => type(field(/Student identifier/), ref));
   await click(button(/Open the record/));
@@ -125,7 +204,14 @@ describe('reading a record', () => {
 
     await click(button(/^History/));
     const hist = host.querySelector('section[aria-label="History"]')!.textContent!;
-    for (const q of ['Who changed it?', 'Why did it change?', 'Who approved it?', 'What was the previous value?', 'Can it be corrected without deleting history?']) expect(hist).toContain(q);
+    for (const q of [
+      'Who changed it?',
+      'Why did it change?',
+      'Who approved it?',
+      'What was the previous value?',
+      'Can it be corrected without deleting history?',
+    ])
+      expect(hist).toContain(q);
     expect(hist).toContain('Another staff member');
     expect(hist).toContain('You');
     expect(hist).toContain('None — this was the first entry');
@@ -176,9 +262,17 @@ describe('proposing', () => {
     type(field(/^Reason/, form), 'Registrar correction of a transcription error.');
     await act(async () => undefined);
     await click(form.querySelector('button[type="submit"]') as HTMLButtonElement);
-    expect(api.propose).toHaveBeenCalledWith('vu', expect.objectContaining({
-      student_ref: 'S100', kind: 'grade', subject_key: 'PSCI 2100 · Fall 2026', action: 'set', value: ' A ', effective_on: '2027-01-25',
-    }));
+    expect(api.propose).toHaveBeenCalledWith(
+      'vu',
+      expect.objectContaining({
+        student_ref: 'S100',
+        kind: 'grade',
+        subject_key: 'PSCI 2100 · Fall 2026',
+        action: 'set',
+        value: ' A ',
+        effective_on: '2027-01-25',
+      }),
+    );
     expect(host.textContent).toContain('Your proposals waiting for a decision');
   });
 
@@ -221,4 +315,28 @@ describe('deciding', () => {
     expect(hist).toContain('B+');
     expect(hist).toContain('as a registrar override');
   });
+});
+
+it('keeps read-only record controls and permission boundaries through saved human views', async () => {
+  const api = fake('user-reader', false);
+  await mount(api, { viewerId: 'user-reader', read: true, propose: false, decide: false, override: false });
+  await openRecord();
+  await click(button(/^Card view$/));
+  const record = host.querySelector('[data-human-table="academic-record"]')!;
+  expect(record.querySelectorAll('article')).toHaveLength(2);
+  await act(async () => type(record.querySelector('input[type="search"]') as HTMLInputElement, 'PSCI'));
+  await click(button(/^Summary view$/));
+  await click(button(/^History/));
+  expect(host.querySelector('section[aria-label="History"]')?.textContent).toContain('Who approved it?');
+  await click(button(/^Download visible rows$/));
+  expect(downloads[0].body).toContain('PSCI 2100');
+  expect(downloads[0].body).not.toContain('ECON 1010');
+  expect(button(/^Approve$/)).toBeUndefined();
+  expect(api.decide).not.toHaveBeenCalled();
+  expect(api.propose).not.toHaveBeenCalled();
+  await mount(fake(PROF, false), professor);
+  await openRecord();
+  expect(host.querySelector('[data-human-table="academic-record"]')).toBeNull();
+  expect(host.textContent).not.toContain('B+');
+  expect(button(/^Download visible rows$/)).toBeUndefined();
 });

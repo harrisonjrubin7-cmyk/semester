@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { dateToIso } from '../lib/date';
 import { EmptyState, FilePick } from './ui';
 import { ErrorState } from './unity/States';
@@ -19,7 +20,37 @@ export function CampusDirectory({kind,onPlan}:{kind:DirectoryKind;onPlan?:(item:
  {(directory.error||selections.error)&&<ErrorState title="Could not save on this device" body={directory.error||selections.error} recover={{label:'Download recovery copy',run:()=>download({name:`Semester ${kind} recovery.json`,body:JSON.stringify({directory:directory.recovery(),selections:selections.recovery()}),mime:'application/json'})}}/>}{data&&<p className="portal-muted">{data.institution} · Imported {formatDate(data.updated)} · Details reflect the supplied directory.</p>}{message&&<p role="status" className="portal-notice">{message}{undo&&<button onClick={()=>{if(!setData(undo))return;setUndo(null);setMessage('Directory restored.');}}>Undo removal</button>}</p>}
  {!all.length?<div className="portal-empty"><div className="portal-empty-icon" aria-hidden="true">{copy.icon}</div><h3>A directory from your school belongs here</h3><p>{copy.empty}</p><FilePick block={false} multiple={false} accept=".json" onPick={files=>{if(files[0])void upload(files[0]);}}>Import directory</FilePick><button onClick={()=>download({name:`Semester ${kind} directory template.json`,body:JSON.stringify(directoryTemplate(kind),null,2),mime:'application/json'})}>Download school template</button></div>:<div className="portal-card-grid">{cards.map(item=><article key={item.id} className="portal-panel directory-card"><div className="directory-card-top"><span className="portal-tag">{item.category}</span><button className="directory-star" aria-label={`${saved.includes(item.id)?'Unsave':'Save'} ${item.name}`} aria-pressed={saved.includes(item.id)} onClick={()=>setSaved(ids=>ids.includes(item.id)?ids.filter(id=>id!==item.id):[...ids,item.id])}>{saved.includes(item.id)?'★':'☆'}</button></div><h3>{item.name}</h3>{item.starts&&<p className="directory-when">{whenLine(item)}{dated?.past.includes(item)&&' · Ended'}</p>}<p className="portal-muted">{item.location||'Location not supplied'}</p><p>{item.description||'Select the official listing for more information.'}</p><details><summary>{kind==='clubs'?'Meetings, events & membership':'View details'}</summary><dl>{Object.entries(item.details).map(([k,v])=><div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}{item.contact&&<><dt>Contact</dt><dd>{item.contact}</dd></>}</dl></details><div className="portal-actions">{onPlan&&<button className="portal-primary" onClick={()=>onPlan(item)}>{kind==='clubs'?'Add to my week':kind==='housing'?'Plan application':'Use in my plan'}</button>}{item.url&&<a className="portal-button" href={item.url} target="_blank" rel="noreferrer">Official listing ↗</a>}</div></article>)}</div>}{!!all.length&&!shown.length&&<EmptyState inline title="No entries match" body="Try another category or search."/>}
  {dated&&!!all.length&&<div className="portal-actions">{!dated.upcoming.length&&<p className="portal-muted">Nothing upcoming in this directory.</p>}{dated.past.length>0&&<button aria-pressed={past} onClick={()=>setPast(!past)}>{past?'Hide past events':`Show past events (${dated.past.length})`}</button>}</div>}
- {view==='saved'&&favorites.length>0&&<section className="portal-panel directory-comparison"><h3>Compare saved choices</h3><div className="portal-table-scroll"><table><thead><tr><th>Detail</th>{favorites.map(i=><th key={i.id}>{i.name}</th>)}</tr></thead><tbody><tr><th>Location</th>{favorites.map(i=><td key={i.id}>{i.location||'Not supplied'}</td>)}</tr>{[...new Set(favorites.flatMap(i=>Object.keys(i.details)))].map(k=><tr key={k}><th>{k}</th>{favorites.map(i=><td key={i.id}>{i.details[k]||'Not supplied'}</td>)}</tr>)}</tbody></table></div><button onClick={()=>download({name:`Semester saved ${kind}.json`,body:JSON.stringify({institution:data?.institution,status:'saved-preferences-only',items:favorites},null,2),mime:'application/json'})}>Export saved choices</button></section>}
+ {view==='saved'&&favorites.length>0&&<section className="portal-panel directory-comparison"><h3>Compare saved choices</h3><div className="portal-table-scroll"><RecordTable
+              id={`directory-${kind}-saved-comparison`}
+              label={'directory saved comparison'}
+              tableProps={{}}
+              columns={[{ id: 'column-0', label: 'Detail' }, ...favorites.map((i) => ({ id: String(i.id), label: tableText(i.name) }))]}
+              rows={[
+                {
+                  id: 'total',
+                  cells: [
+                    { value: 'Location', content: <>Location</>, header: true },
+                    ...favorites.map((i) => ({
+                      value: tableText(i.location || 'Not supplied'),
+                      content: <>{i.location || 'Not supplied'}</>,
+                    })),
+                  ],
+                } satisfies TableRecord,
+                ...[...new Set(favorites.flatMap((i) => Object.keys(i.details)))].map(
+                  (k) =>
+                    ({
+                      id: String(k),
+                      cells: [
+                        { value: tableText(k), content: <>{k}</>, header: true },
+                        ...favorites.map((i) => ({
+                          value: tableText(i.details[k] || 'Not supplied'),
+                          content: <>{i.details[k] || 'Not supplied'}</>,
+                        })),
+                      ],
+                    }) satisfies TableRecord,
+                ),
+              ]}
+            /></div><button onClick={()=>download({name:`Semester saved ${kind}.json`,body:JSON.stringify({institution:data?.institution,status:'saved-preferences-only',items:favorites},null,2),mime:'application/json'})}>Export saved choices</button></section>}
  {!!all.length&&<details className="portal-import-help"><summary>Update this directory</summary><button onClick={()=>{if(!setData(null))return;setUndo(data);setMessage('Imported directory removed. Saved choices remain available if matching entries are imported again.');}}>Remove imported directory</button><p>Import a new school file to replace the directory. Saved choices are kept for entries with the same IDs. Availability, fees and hours are supplied by the institution; this workspace does not confirm bookings or memberships.</p><button onClick={()=>download({name:`Semester ${kind} directory template.json`,body:JSON.stringify(directoryTemplate(kind),null,2),mime:'application/json'})}>Download school template</button></details>}
  </section>;
 }

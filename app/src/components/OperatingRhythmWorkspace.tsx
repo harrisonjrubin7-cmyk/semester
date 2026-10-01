@@ -1,3 +1,4 @@
+import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { useEffect, useRef, useState } from 'react';
 import { useStore, useNow } from '../state/store';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -639,32 +640,37 @@ export function RhythmWorkspace({
                   </button>
                 </fieldset>
               ))}
-              <table>
-                <caption>Planning scenario comparison</caption>
-                <thead>
-                  <tr>
-                    <th>Scenario</th>
-                    <th>Context changes</th>
-                    <th>Planned minutes</th>
-                    <th>Time remaining</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(
+              <RecordTable
+                id="planning-scenario-comparison"
+                label={'Planning scenario comparison'}
+                tableProps={{}}
+                caption={<> Planning scenario comparison</>}
+                columns={[
+                  { id: 'column-0', label: 'Scenario' },
+                  { id: 'column-1', label: 'Context changes' },
+                  { id: 'column-2', label: 'Planned minutes' },
+                  { id: 'column-3', label: 'Time remaining' },
+                ]}
+                rows={[
+                  ...(
                     [
                       ['Current order', simulation.original],
                       ['Grouped context', simulation.batched],
                     ] as const
-                  ).map(([label, s]) => (
-                    <tr key={label}>
-                      <th scope="row">{label}</th>
-                      <td>{s.switches}</td>
-                      <td>{s.total}</td>
-                      <td>{s.remaining}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  ).map(
+                    ([label, s]) =>
+                      ({
+                        id: String(label),
+                        cells: [
+                          { value: tableText(label), content: <>{label}</>, header: true },
+                          { value: tableText(s.switches), content: <>{s.switches}</> },
+                          { value: tableText(s.total), content: <>{s.total}</> },
+                          { value: tableText(s.remaining), content: <>{s.remaining}</> },
+                        ],
+                      }) satisfies TableRecord,
+                  ),
+                ]}
+              />
               <p>
                 Assumption sensitivity: a 0 / 2 / 5 / 10 minute buffer gives grouped totals of{' '}
                 {[0, 2, 5, 10]
