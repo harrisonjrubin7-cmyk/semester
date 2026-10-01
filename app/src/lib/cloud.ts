@@ -1381,6 +1381,11 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'event_decisions', column: null, cascadesFrom: 'campus_events' },
   { table: 'event_cancellations', column: null, cascadesFrom: 'campus_events' },
   { table: 'event_rsvps', column: 'member' },
+  // Your alumni profile, if you opted in at graduation
+  // (`20261001100000_advancement.sql`). It names you by a column that references
+  // `auth.users` with `on delete cascade`; the school keeps its financial record
+  // of any gift, with the link to you cleared (see the donor table below).
+  { table: 'alumni_profiles', column: 'user_id' },
 ];
 
 /**
@@ -1402,6 +1407,58 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'advancement_settings',
+    why: 'The school’s legal name and receipt wording, versioned and never edited. The school’s, not any person’s; if you set it as staff, your name is cleared.',
+  },
+  {
+    table: 'advancement_funds',
+    why: 'A fund gifts are designated to. The school’s; if you created one as staff, your name is cleared.',
+  },
+  {
+    table: 'advancement_campaigns',
+    why: 'A campaign or a giving day with its goal and dates. The school’s; if you created one as staff, your name is cleared.',
+  },
+  {
+    table: 'advancement_donors',
+    why: 'A donor the school records: an alumnus who opted in, a parent, a friend or an organization. The school’s financial record; if you were an alumnus donor and delete your account, the link to you is cleared and the record stays with its gifts.',
+  },
+  {
+    table: 'advancement_gifts',
+    why: 'A gift the school recorded: who gave, how much, to which fund, when and how, by reference. The school’s financial record, never rewritten; no card or bank detail is kept.',
+  },
+  {
+    table: 'advancement_pledges',
+    why: 'A promise a donor made and its schedule. The school’s record; the staff member’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'advancement_pledge_cancellations',
+    why: 'That a pledge was cancelled and why. Part of the school’s financial record, kept with the school; never rewritten.',
+  },
+  {
+    table: 'advancement_counters',
+    why: 'The next receipt number for a school and a year. The school’s bookkeeping, not any person’s.',
+  },
+  {
+    table: 'advancement_receipts',
+    why: 'The numbered receipt issued with a gift from the school’s own wording, with a hash. The school’s financial record; never rewritten.',
+  },
+  {
+    table: 'advancement_refunds',
+    why: 'That a gift was refunded, by someone other than who recorded it, and why. The school’s financial record; never rewritten.',
+  },
+  {
+    table: 'advancement_assignments',
+    why: 'A donor assigned to a gift officer’s portfolio. The school’s working record; append-only.',
+  },
+  {
+    table: 'advancement_notes',
+    why: 'A gift officer’s contact note on a donor. The school’s working record; append-only, and the author’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'advancement_operations',
+    why: 'Idempotency keys the advancement writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
   {
     table: 'events_operations',
     why: 'Idempotency keys the events writers spent, with what each asked and answered. Append-only, kept with the school.',

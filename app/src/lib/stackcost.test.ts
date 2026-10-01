@@ -169,7 +169,7 @@ const cut = (html: string, a: string, b: string) => html.slice(html.indexOf(a), 
 describe('the company site’s copy', () => {
   it('can tell a stale copy from a current one', () => {
     expect(calcBlock().replace('HORIZON = 5', 'HORIZON = 6')).not.toBe(cut(read(SITE), CALC_START, CALC_END));
-    expect(modBlock().replace('Planned', 'Available now')).not.toBe(cut(read(SITE), MOD_START, MOD_END));
+    expect(modBlock().replace('In preparation', 'Available now')).not.toBe(cut(read(SITE), MOD_START, MOD_END));
   });
 
   it('carries the calculator and the module list exactly as they are here', () => {

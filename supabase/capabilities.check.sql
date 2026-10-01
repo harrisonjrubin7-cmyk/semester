@@ -253,7 +253,8 @@ begin
   -- 71 before 20261001070000_financial_aid.sql added `financial_aid_director`.
   -- 72 before 20261001080000_scheduling.sql added `scheduling_officer`.
   -- 73 before 20261001090000_events.sql added `events_manager`.
-  perform pg_temp.counted('a signed-in account reads the seventy-four roles', n, 74);
+  -- 74 before 20261001100000_advancement.sql added `advancement_officer` and `advancement_director`.
+  perform pg_temp.counted('a signed-in account reads the seventy-six roles', n, 76);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -337,7 +338,10 @@ begin
   -- timetable:publish for the scheduling officer and the registrar.
   -- 242 before events (20261001090000_events.sql) added one:
   -- events:manage for the events manager.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 243);
+  -- 243 before advancement (20261001100000_advancement.sql) added five:
+  -- adv:configure and adv:refund for the advancement director; adv:gift for the
+  -- advancement officer; adv:read for both.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 248);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

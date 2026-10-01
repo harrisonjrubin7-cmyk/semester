@@ -395,6 +395,32 @@ describe('"delete my account" really means every row', () => {
       'admission_cycles',
       // Admissions cycles and their keys: the school's, kept with the school (D-151).
       'admissions_operations',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_assignments',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_campaigns',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_counters',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_donors',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_funds',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_gifts',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_notes',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_operations',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_pledge_cancellations',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_pledges',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_receipts',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_refunds',
+      // The school's advancement and financial record, kept with the school (D-151).
+      'advancement_settings',
       // The school's financial-aid record, kept with the school (D-151).
       'aid_disbursements',
       // The school's financial-aid record, kept with the school (D-151).

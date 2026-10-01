@@ -124,6 +124,17 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['admissions_release', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
   ['admissions_yield', 'admin', ['private.gradebook_school', 'private.admissions_require']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['adv_assign', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay', 'private.subject_has_capability']],
+  ['adv_campaign_progress', 'self-service', ['private.gradebook_school']],
+  ['adv_campaign_save', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_donor_save', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_fund_save', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_gift_record', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_gift_refund', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_note_add', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay', 'private.adv_sees_donor']],
+  ['adv_pledge_cancel', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_pledge_save', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
+  ['adv_settings_set', 'admin', ['private.gradebook_school', 'private.adv_require', 'private.adv_replay']],
   ['aid_disburse', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay', 'private.aid_standing']],
   ['aid_offer_approve', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay']],
   ['aid_offer_propose', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay']],
@@ -131,6 +142,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['aid_sap_determine', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay', 'private.aid_standing']],
   ['aid_sap_evaluate', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay', 'private.aid_sap_figures']],
   ['aid_sap_policy_set', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay']],
+  ['alumni_opt_in', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.adv_replay']],
+  ['alumni_preferences', 'self-service', ['auth.uid()', 'private.gradebook_school', 'private.adv_replay']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
@@ -407,6 +420,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001070000_financial_aid.sql',
   '20261001080000_scheduling.sql',
   '20261001090000_events.sql',
+  '20261001100000_advancement.sql',
 ];
 
 /**
@@ -418,6 +432,13 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001100000_advancement.sql',
+    functions: [
+      'adv_assign', 'adv_campaign_progress', 'adv_campaign_save', 'adv_donor_save', 'adv_fund_save', 'adv_gift_record', 'adv_gift_refund',
+      'adv_note_add', 'adv_pledge_cancel', 'adv_pledge_save', 'adv_settings_set', 'alumni_opt_in', 'alumni_preferences',
+    ],
+  },
   {
     file: '20261001090000_events.sql',
     functions: ['event_cancel', 'event_decide', 'event_headcount', 'event_propose', 'event_publish_direct', 'event_rsvp'],

@@ -101,7 +101,7 @@ describe('what the site says', () => {
     expect(k12).not.toMatch(/districts? (use|trust|rely on) Semester|schools (use|trust|rely on) Semester|now serving/i);
   });
 
-  it('says on the advancement pages that nothing is built, no gift has been taken, and asks nobody for one', () => {
+  it('says on the advancement pages that no school uses it, no gift has been taken, and asks nobody for one', () => {
     for (const path of ['/solutions/advancement/', '/alumni/']) {
       const html = pages.find((p) => p.route.path === path)!.html;
       expect(html, path).toContain('No school uses Semester for alumni relations or fundraising.');
@@ -118,7 +118,7 @@ describe('what the site says', () => {
 
   it('prints every advancement part with its status and what it still needs, as text and not in a scrolling table', () => {
     const adv = pages.find((p) => p.route.path === '/solutions/advancement/')!.html;
-    expect((adv.match(/Status: planned\./g) ?? []).length).toBe(PARTS.length);
+    expect((adv.match(/Status: in preparation\./g) ?? []).length).toBe(PARTS.length);
     for (const p of PARTS) expect(adv, p.title).toContain(p.needs.split('.')[0].replace(/’/g, '’'));
     expect(adv).not.toContain('site-scroll');
   });

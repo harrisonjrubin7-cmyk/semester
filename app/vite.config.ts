@@ -698,6 +698,7 @@ const MOCKS_MODULES = [
   'src/components/aid/AidHome.test.tsx',
   'src/components/scheduling/SchedulingHome.test.tsx',
   'src/components/events/EventsHome.test.tsx',
+  'src/components/advancement/AdvancementHome.test.tsx',
   'src/components/assessments/TestsHome.test.tsx',
   'src/components/unity/rollout-b.test.tsx',
   'src/components/PushTop.regday.test.tsx',

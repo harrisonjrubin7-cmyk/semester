@@ -20,8 +20,10 @@
  * A module's status is what the tree holds, not what the design says. On
  * 30 Sep 2026 four modules (registration, the gradebook, records, student
  * accounts) had tables, a check suite and a switch that is off for every
- * school, so they read `in-preparation`. None is certified, none is on for a
- * school, and the other ten are still `planned`.
+ * school, so they read `in-preparation`. None is certified and none is on for a
+ * school. By 1 Oct 2026 every module has landed its tables and suite the same way
+ * (D-993), so all fourteen read `in-preparation`; `planned` remains the word for a
+ * module whose tables have not landed.
  */
 
 import type { CoreModuleId } from '@semester/contract';
@@ -100,5 +102,5 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'advancement', name: 'Alumni relations and fundraising', replaces: 'Raiser’s Edge NXT, Salesforce Nonprofit, Slate Advancement',
     today: 'Alumni mentor offers.',
     core: 'Alumni profiles, campaigns, gifts with receipts, a donor portal and a gift-officer console; current students’ data is never used for outreach.',
-    status: 'planned', tables: ['alumni_profiles', 'gifts'] },
+    status: 'in-preparation', tables: ['alumni_profiles', 'advancement_gifts'], suite: 'advancement' },
 ];

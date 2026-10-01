@@ -667,6 +667,26 @@ declare
     'event_rsvp(want_event uuid, want_going boolean, want_key text)',
     'event_headcount(want_event uuid)',
 
+    -- 20261001100000_advancement.sql: alumni relations and fundraising records in
+    -- Core. Each reads auth.uid() and the caller's own school, and refuses unless
+    -- the school runs advancement in Core. The alumnus's own acts need a conferred
+    -- degree on their record; the office's writers need an adv:* capability. A gift
+    -- is refunded by someone other than who recorded it. `advancement.check.sql`
+    -- walks every refusal.
+    'alumni_opt_in(want_display_name text, want_class_year integer, want_key text)',
+    'alumni_preferences(want_directory boolean, want_solicitable boolean, want_opt_out boolean, want_key text)',
+    'adv_settings_set(want_legal_name text, want_statement text, want_goods_note text, want_key text)',
+    'adv_fund_save(want_code text, want_name text, want_designation text, want_key text)',
+    'adv_campaign_save(want_name text, want_kind text, want_goal_cents bigint, want_starts date, want_ends date, want_fund text, want_key text)',
+    'adv_donor_save(want_kind text, want_name text, want_email text, want_profile uuid, want_key text)',
+    'adv_gift_record(want_donor uuid, want_fund text, want_campaign uuid, want_pledge uuid, want_amount_cents bigint, want_received date, want_method text, want_reference text, want_tribute text, want_key text)',
+    'adv_gift_refund(want_gift uuid, want_reason text, want_reference text, want_key text)',
+    'adv_pledge_save(want_donor uuid, want_fund text, want_campaign uuid, want_amount_cents bigint, want_schedule text, want_installments integer, want_starts date, want_key text)',
+    'adv_pledge_cancel(want_pledge uuid, want_reason text, want_key text)',
+    'adv_assign(want_donor uuid, want_officer uuid, want_key text)',
+    'adv_note_add(want_donor uuid, want_kind text, want_note text, want_key text)',
+    'adv_campaign_progress(want_campaign uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

@@ -2,7 +2,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CLAIM_STATUSES } from '../lib/ops/claims';
+import { CLAIM_STATUSES, STATUS_LABEL } from '../lib/ops/claims';
 import { MODULES } from './modules';
 import { ROUTES, renderPage } from './render';
 import { DEFAULT_SITE } from './config';
@@ -69,7 +69,7 @@ describe('the takeover map', () => {
     const route = ROUTES.find((r) => r.path === '/platform/system-boundaries/')!;
     const html = renderPage(route, DEFAULT_SITE);
     for (const m of MODULES) expect(html, m.id).toContain(m.name);
-    expect(html).toContain('Planned');
+    for (const m of MODULES) expect(html, `${m.id}'s status word`).toContain(STATUS_LABEL[m.status]);
     expect(html).not.toMatch(/replaces (your |the )?(SIS|LMS|registrar)/i);
   });
 });

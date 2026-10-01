@@ -61,7 +61,7 @@ export function ModulesPanel({ school, me, canEdit }: { school: string; me: stri
     <section aria-label="Modules">
       <SectionLabel>Modules</SectionLabel>
       <Notice>
-        Each module runs in <strong>Connect</strong> (Semester reads your own system) or <strong>Core</strong> (Semester is the record for it). Every module is in Connect until two other administrators approve a switch, and going back deletes nothing. <strong>No Core module is built yet</strong>: today a switch changes the setting only.
+        Each module runs in <strong>Connect</strong> (Semester reads your own system) or <strong>Core</strong> (Semester is the record for it). Every module is in Connect until two other administrators approve a switch, and going back deletes nothing. <strong>No school runs a module in Core yet</strong>: the modules are built but not switched on anywhere, so today a switch changes the setting only.
       </Notice>
       {!loaded && <p className="portal-muted" role="status">Reading the settings…</p>}
       {loaded && rows === null && <p className="portal-muted">The settings could not be read, so every module shows as Connect.</p>}

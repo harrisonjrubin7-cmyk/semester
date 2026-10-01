@@ -126,7 +126,7 @@ export const SystemBoundaries: Page = ({ config }) => (
     <Hero title="System boundaries" lead="Semester runs beside your systems today and takes each one over, a module at a time, when you are ready. Here is every module, what it would replace, and how far it has got." />
     <Section title="The takeover map" id="sb-map">
       <p>
-        Each module has two modes. In <strong>Connect</strong>, which is how Semester works today, it reads from your system and prepares actions. In <strong>Core</strong>, your school switches that one module to Semester in writing and Semester becomes the record for it. Switching back never deletes anything. <strong>Nothing below is built yet</strong>; the status word is the claims register’s, and a test refuses a module that claims more than the code holds.
+        Each module has two modes. In <strong>Connect</strong>, which is how Semester works today, it reads from your system and prepares actions. In <strong>Core</strong>, your school switches that one module to Semester in writing and Semester becomes the record for it. Switching back never deletes anything. <strong>No module below is switched on for any school yet</strong>; each is built behind a switch that is off, and the status word is the claims register’s, and a test refuses a module that claims more than the code holds.
       </p>
       <div className="site-table-wrap">
         <table className="site-table">
