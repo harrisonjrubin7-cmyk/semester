@@ -75,6 +75,25 @@ describe('nothing deploys that CI has not passed', () => {
     );
   });
 
+  it.each(DEPLOYS)('%s refuses to let an older passing run roll production back', (name) => {
+    /*
+     * Pinning checkout is necessary but not sufficient. Two main commits can
+     * both pass while the older, slower CI run finishes last. Its deploy is
+     * valid in isolation and stale in sequence, so it must compare the SHA it
+     * passed with main again immediately before the mutating deploy step.
+     */
+    const text = read(name);
+    expect(text, `${name} never checks the current main tip`).toMatch(
+      /git ls-remote origin refs\/heads\/main/,
+    );
+    expect(text, `${name} does not compare main with the SHA CI passed`).toMatch(
+      /\[ "\$current" = "\$PASSED_SHA" \]/,
+    );
+    expect(text, `${name}'s deploy does not depend on the freshness result`).toMatch(
+      /if:.*steps\.current\.outputs\.deploy == 'true'/,
+    );
+  });
+
   it.each(DEPLOYS)('%s keeps a way in for a person who has decided to', (name) => {
     // The gate has to have a documented override, or the first emergency is
     // spent discovering it does not. `workflow_dispatch` is that override in
