@@ -7,6 +7,7 @@ import { CLAIMS, STATUS_LABEL, claim, problems, type Facts } from './claims';
 import { ESCALATION } from './console';
 import { EVIDENCE, EVIDENCE_WORD_MEANING, addDays, daysBetween, evidence, evidenceState, expiredUnder, staleRows, type EvidenceRecord } from './evidence';
 import { CALENDAR } from './proofcalendar';
+import { CAPABILITY_DEFINITIONS } from '../governance/capability-governance';
 import { cell, controlLine, isIsoDate, link, renderedFrom, table } from './render';
 
 /**
@@ -45,6 +46,7 @@ const rowIds = new Set(REGISTER.map((r) => r.id));
 
 /** Facts enough for `problems()` without rendering the site: the pages are unknown, so only the register rules run. */
 const facts = (today: string, records: readonly EvidenceRecord[] = EVIDENCE): Facts => ({
+  capabilityExists: (id) => CAPABILITY_DEFINITIONS.some((capability) => capability.id === id),
   rowStatus: (id) => REGISTER.find((r) => r.id === id)?.status,
   exists: (p) => existsSync(at(p)),
   proofExists: (id) => CALENDAR.some((c) => c.id === id),
