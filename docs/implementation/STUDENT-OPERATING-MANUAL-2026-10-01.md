@@ -32,4 +32,4 @@ Production TypeScript/Vite build, repository lint, full Vitest suite, targeted e
 
 ## Performance budget
 
-The Work route now costs 44.0 KB compressed to open, including the private operating workflow editor, dependency map, and export controls. Its explicit budget is raised from 41 KB to 45 KB for this delivered functionality. The first-load and largest-file limits are unchanged and pass.
+The Work route now costs 44.0 KB compressed to open, including the private operating workflow editor, dependency map, and export controls. Its recorded measurement is updated to match the built route and its budget is recalculated using the repository’s standard 8 KB minimum headroom (53 KB total). The first-load and largest-file limits are unchanged and pass.

@@ -91,7 +91,7 @@
     "src/screens/Volunteer.tsx": 19456,
     "src/screens/Volunteers.tsx": 21504,
     "src/screens/WhatsNew.tsx": 11264,
-    "src/screens/Work.tsx": 46080,
+    "src/screens/Work.tsx": 54272,
     "src/screens/Write.tsx": 62464,
     "src/screens/Yes.tsx": 40960
   },
@@ -142,7 +142,7 @@
       "src/screens/Connect.tsx": 14345,
       "src/screens/Links.tsx": 12118,
       "src/ai/Chat.tsx": 107346,
-      "src/screens/Work.tsx": 32979,
+      "src/screens/Work.tsx": 45064,
       "src/screens/Maps.tsx": 9711,
       "src/screens/Mail.tsx": 31928,
       "src/screens/Export.tsx": 53089,
