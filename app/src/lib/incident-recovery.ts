@@ -32,8 +32,10 @@ export interface IncidentCloseOutEvidence {
   measuredTimeline: string;
   impact: string;
   recoveryPoint: string;
+  stabilizedAt: number;
   communications: string[];
   correctiveActions: Array<{ action: string; owner: string; severity: IncidentSeverity; dueAt: number; requiredEvidence: string; verificationEvidence: string }>;
+  postIncidentReview?: { completedAt: number; evidence: string };
 }
 
 export const AUTOMATION_MAY = [
@@ -110,6 +112,17 @@ function hasText(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function addBusinessDays(timestamp: number, count: number): number {
+  const date = new Date(timestamp);
+  let remaining = count;
+  while (remaining > 0) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
+    if (day !== 0 && day !== 6) remaining -= 1;
+  }
+  return date.getTime();
+}
+
 export function validateIncident(record: IncidentRecord, now = Date.now()): string[] {
   const gaps: string[] = [];
   if (!hasText(record.id)) gaps.push('incident id');
@@ -141,10 +154,20 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   if (record.status === 'close') {
     const closeOut = record.closeOut as IncidentCloseOutEvidence | undefined;
     const actions = closeOut?.correctiveActions;
+    const review = closeOut?.postIncidentReview;
+    const majorReviewComplete = record.severity !== 'SEV1' && record.severity !== 'SEV2'
+      || Boolean(closeOut
+        && review
+        && Number.isFinite(closeOut.stabilizedAt)
+        && Number.isFinite(review.completedAt)
+        && review.completedAt >= closeOut.stabilizedAt
+        && review.completedAt <= addBusinessDays(closeOut.stabilizedAt, 5)
+        && hasText(review.evidence));
     const complete = Boolean(closeOut
       && hasText(closeOut.measuredTimeline)
       && hasText(closeOut.impact)
       && hasText(closeOut.recoveryPoint)
+      && Number.isFinite(closeOut.stabilizedAt)
       && Array.isArray(closeOut.communications)
       && closeOut.communications.some(hasText)
       && Array.isArray(actions)
@@ -155,7 +178,8 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
         && INCIDENT_SEVERITIES.includes(action.severity as IncidentSeverity)
         && Number.isFinite(action.dueAt)
         && hasText(action.requiredEvidence)
-        && hasText(action.verificationEvidence))));
+        && hasText(action.verificationEvidence)))
+      && majorReviewComplete);
     if (!complete) gaps.push('complete close-out evidence');
   }
   return gaps;

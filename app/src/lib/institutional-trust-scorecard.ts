@@ -92,6 +92,7 @@ export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFI
 export function metricState(definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined, now = Date.now()): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };
   if (typeof measurement.targetMet !== 'boolean' || typeof measurement.evidenceCurrent !== 'boolean') return { state: 'yellow', reason: 'The measurement state is invalid; target and freshness flags must be recorded explicitly.' };
+  if ([measurement.controlFailure, measurement.trendWorsening, measurement.materialLimitation].some((flag) => flag !== undefined && typeof flag !== 'boolean')) return { state: 'yellow', reason: 'Optional control, trend, and limitation flags must be booleans when recorded.' };
   if (measurement.controlFailure) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
   if (!evidenceDateLabel(measurement.evidenceAt) || measurement.evidenceAt > now) return { state: 'yellow', reason: 'The evidence date is invalid or in the future; current evidence must be recorded before this metric can be green.' };
   if (typeof measurement.value !== 'string' || measurement.value.trim().length === 0) return { state: 'yellow', reason: 'A measured value is required before this metric can be green.' };

@@ -56,6 +56,7 @@ describe('institutional trust scorecard', () => {
     const now = Date.UTC(2026, 9, 1);
     expect(metricState(monthly, { id: monthly.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: old }, now).state).toBe('yellow');
     expect(metricState(monthly, { id: monthly.id, targetMet: 'false', evidenceCurrent: 'false', value: 'met', evidenceAt: now } as unknown as Parameters<typeof metricState>[1], now).state).toBe('yellow');
+    expect(metricState(monthly, { id: monthly.id, targetMet: true, evidenceCurrent: true, controlFailure: 'false', value: 'met', evidenceAt: now } as unknown as Parameters<typeof metricState>[1], now).state).toBe('yellow');
   });
 
   it('falls back to catalog guidance when measurement overrides are blank', () => {
