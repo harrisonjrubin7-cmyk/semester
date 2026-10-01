@@ -124,6 +124,21 @@ assertions fail. These are request-level tests with intercepted transport,
 not an additional hosted-suite pass. The file is registered in the isolated
 mock-test project.
 
+The profile save path now uses duplicate-ignore INSERT returning user_id, then
+an owner-filtered UPDATE of only handle/about when that insert conflicts.
+It no longer requests UPDATE on pinned user_id. A missing row after the second
+request is reported as a failed save rather than silently recreating a deleted
+profile. The response/error contract and handle normalization are retained.
+
+Real SDK transport tests cover first creation, edits, simulated concurrent
+creation, a deleted/refused row, insert/update failures and network failure.
+Restoring the old merge-upsert makes six of the thirteen write tests fail;
+the corrected file passes all thirteen and the focused related set passes
+139 tests. Independent review and type/lint/gateway/build checks pass. These
+are request-level controls, not a hosted PostgREST or concurrency certification.
+Course/state sync already uses insert/data-only update paths and needed no
+source or permission change.
+
 ## Preview integration and main divergence
 
 The duplicate-ledger integration blocker was reconciled as described above;
@@ -258,8 +273,8 @@ tables without table-level SELECT correctly use column grants.
 This is not a penetration test. The 28 historical failures need a full rerun;
 their later blocks are untested, and this preview has no production data. Normal
 PostgreSQL concurrency, full PostgREST caller behavior and all production
-deployment properties are separate checks. The profile conflict-upsert path
-also needs an explicit caller test; its user_id write pin was not loosened.
+deployment properties are separate checks. The profile caller correction is transport-tested; its user_id write pin was
+not loosened, and actual hosted conflict behavior still needs the blocked rerun.
 
 The normal local harness could not open a Unix socket in the diagnostic
 workspace. Socket-free PostgreSQL 17.11 checked migration SQL and ACL deltas,
