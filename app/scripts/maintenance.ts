@@ -1,7 +1,15 @@
 import { readFile, writeFile, rename, unlink } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { incidentFeed, incidentProblems, type IncidentFile } from './status-history.mjs';
+
+// Read the canonical type union, as nav.registry.test.ts does. A second
+// manually maintained screen list would drift as new destinations arrive.
+const types = readFileSync(new URL('../src/lib/types.ts', import.meta.url), 'utf8');
+const union = /export type Screen =([\s\S]*?);\n/.exec(types);
+if (!union) throw new Error('lib/types.ts no longer declares the Screen union.');
+const screens = new Set([...union[1].matchAll(/\|\s*'([a-zA-Z0-9_-]+)'/g)].map((m) => m[1]));
 
 const iso = (value: unknown): value is string => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(value)) return false;
@@ -29,8 +37,8 @@ export function scheduleMaintenance(file: IncidentFile, input: unknown, now = ne
     if (p.from < window.until && p.until > window.from) throw new Error(`Maintenance overlaps ${window.name}.`);
   }
   if (file.incidents.some((x) => x.id === p.id)) throw new Error(`${p.id} already exists.`);
-  if (p.screens !== undefined && (!Array.isArray(p.screens) || p.screens.some((x) => typeof x !== 'string'))) {
-    throw new Error('screens must be a list of screen names.');
+  if (p.screens !== undefined && (!Array.isArray(p.screens) || p.screens.some((x) => typeof x !== 'string' || !screens.has(x)))) {
+    throw new Error('screens must name supported application screens.');
   }
   const at = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
   if (at < file.updated) throw new Error('The notice cannot precede the existing file update.');

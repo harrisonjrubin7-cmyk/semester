@@ -44,5 +44,14 @@ describe('maintenance scheduling', () => {
     expect(() => scheduleMaintenance(file, { ...plan, protectedWindows: undefined }, now)).toThrow('protectedWindows');
     expect(() => scheduleMaintenance(file, { ...plan, affects: '' }, now)).toThrow('affects');
     expect(() => scheduleMaintenance(file, { ...plan, components: ['unknown'] }, now)).toThrow();
+    expect(() => scheduleMaintenance(file, { ...plan, screens: ['calender'] }, now)).toThrow('screen');
+  });
+  it('rejects hand-authored scheduled notices without a real maintenance window', () => {
+    const result = scheduleMaintenance(file, plan, now);
+    const notice = result.incidents[0];
+    for (const until of [undefined, '2026-02-30T02:00:00Z', plan.from]) {
+      expect(incidentProblems({ ...result, incidents: [{ ...notice, until }] }).join()).toContain('scheduled');
+    }
+    expect(incidentProblems({ ...result, incidents: [{ ...notice, impact: 'partial' }] }).join()).toContain('scheduled');
   });
 });

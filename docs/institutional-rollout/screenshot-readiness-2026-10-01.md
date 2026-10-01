@@ -82,7 +82,7 @@ node scripts/maintenance.ts /absolute/path/to/reviewed-plan.json
 ```
 
 It rejects invalid/past/reversed times, duplicate IDs, protected-window
-overlaps and missing impact wording, then prepares the incident list and
+overlaps, unsupported screen names and missing impact wording, then prepares the incident list and
 matching subscriber feed for review and deployment together. It sends no
 email. Scheduled notices expire at their end; previously the recorded-file
 reader discarded that end, leaving maintenance banners open indefinitely.
@@ -94,11 +94,14 @@ reader discarded that end, leaving maintenance banners open indefinitely.
 - Baseline suite: 19,297 passed, 48 skipped, 3 publication-artifact failures.
 - After publication fix: 19,300 passed, 51 skipped; no failures. Three skips
   are the unavailable exported publication, not product tests.
-- Maintenance/status/publication targeted checks: 46 passed.
+- Maintenance/status/publication targeted checks after review: 47 passed.
 - Final shuffled suite: 19,304 passed, 51 skipped; no failures. Production
   build and lint passed again after the maintenance implementation.
 - Explicit missing publication directory produced a nonzero exit as required.
 - Maintenance regression test failed before the implementation existed.
+- The expiration test also failed against a faithful revert. Review follow-up
+  tests failed on misspelled screens and scheduled records lacking a valid
+  maintenance window, then passed with both validations restored.
 - Headless browser verification could not run: Chromium was absent, and its
   download returned an invalid archive. No browser accessibility, screen-reader
   or WCAG result is claimed for this review.
