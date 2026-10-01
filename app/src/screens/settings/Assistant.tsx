@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, Group } from '../../components/shell/Rows';
+import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { secondLine } from '../../lib/dim';
 import { checkKey, checkShared } from '../../lib/claude';
@@ -34,6 +34,7 @@ import { ActionButton, SectionLabel } from '../../components/ui';
 import { FieldMessage, fieldProps } from '../../components/FieldMessage';
 import { AboutMe } from '../../components/AboutMe';
 import { SaveState } from '../../components/unity/Status';
+import { GuideOperatingContract } from '../../components/GuideOperatingContract';
 
 /**
  * Where the answers come from, what they cost, and what leaves the device.
@@ -103,7 +104,7 @@ export function SettingsAssistant() {
   const month = total(since(spend, monthStart(new Date())));
   const courses = byCourse(spend);
   const askers = byAsker(spend);
-  const { courseCode, account } = useStore();
+  const { courseCode, account, dispatch } = useStore();
   /*
    * One row of the breakdown. Written here rather than in a component because
    * it is two spans and a gap, and `scripts/styles.mjs` counts what is worth
@@ -133,6 +134,21 @@ export function SettingsAssistant() {
     >
       {(lit) => (
         <>
+          <GuideOperatingContract />
+          <Group
+            header="Semester Guide controls"
+            footer="These are controls and records the app already provides. Opening one does not authorize Semester to act for you."
+            lit={lights('guide control today recommendations remembers activity notifications quiet sources recovery sharing export', lit)}
+          >
+            <NavRow label="What matters today" sub="Your current priorities and source-labeled next steps" onClick={() => dispatch({ type: 'go', screen: 'home' })} />
+            <NavRow label="Recent recommendations and why" sub="The activity trail and the source behind each recorded action" onClick={() => dispatch({ type: 'go', screen: 'activity' })} />
+            <NavRow label="What Semester remembers" sub="Every record the app holds on this device or account" onClick={() => dispatch({ type: 'go', screen: 'data' })} />
+            <NavRow label="Notifications and quiet hours" sub="Choose what may interrupt you and when" onClick={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
+            <NavRow label="Source health" sub="Connections, their last update and how to disconnect them" onClick={() => dispatch({ type: 'go', screen: 'connect' })} />
+            <NavRow label="Recovery plans" sub="Review a disruption without replacing the plan you already have" onClick={() => dispatch({ type: 'go', screen: 'recovery' })} />
+            <NavRow label="Shared access" sub="See and revoke what you shared, with whom and until when" onClick={() => dispatch({ type: 'go', screen: 'privacy' })} />
+            <NavRow label="Export Guide data" sub="Keep a portable copy of the records you added" onClick={() => dispatch({ type: 'go', screen: 'export' })} />
+          </Group>
           <Group
             header="Where the answers come from"
             footer={

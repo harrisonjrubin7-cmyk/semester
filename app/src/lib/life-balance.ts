@@ -417,6 +417,68 @@ export function summarizeWeek(input: Input, start: Date): Week {
 /* ── Crunch Week Forecast ─────────────────────────────────────────────── */
 
 /** How far ahead the forecast looks: from a week out, so there is time to act, to four weeks. */
+export type WorkloadPressureState = 'clear' | 'manageable' | 'tight' | 'more_than_open' | 'unknown';
+
+/** One day's due-work estimate against the time the student has left open. */
+export interface WorkloadPressureDay {
+  iso: string;
+  estimatedMinutes: number;
+  openMinutes: number;
+  balanceMinutes: number;
+  known: number;
+  unknown: number;
+  state: WorkloadPressureState;
+  /** True only when every deadline in the figure was confirmed against its source. */
+  confirmed: boolean;
+}
+
+/**
+ * Planned work pressure, never a prediction about the student.
+ *
+ * The estimate comes only from the student's own completed work, through
+ * `pace.estimate`. A kind of work they have never timed stays unknown and
+ * contributes no invented minutes. Open time comes from the same work
+ * windows, commitments, calendar and protected rest used by the week view.
+ *
+ * Work is compared on its due day. That is deliberately conservative and
+ * explainable: this does not pretend to know when the student will do it, and
+ * a study block is not silently treated as completed work. The screen can
+ * offer an earlier block, but only the student can place one.
+ */
+export function workloadPressure(input: Input, start: Date): WorkloadPressureDay[] {
+  const week = summarizeWeek(input, start);
+  const byId = new Map(input.items.map((item) => [item.id, item]));
+
+  return week.days.map((day) => {
+    const estimates = day.deadlines.map((deadline) => {
+      const item = byId.get(deadline.id);
+      return item ? estimate(input.spent, item.c, item.kind) : { minutes: 0, from: 0, basis: '' as const };
+    });
+    const known = estimates.filter((row) => row.from > 0).length;
+    const unknown = estimates.length - known;
+    const estimatedMinutes = estimates.reduce((sum, row) => sum + (row.from > 0 ? row.minutes : 0), 0);
+    const openMinutes = Math.max(0, Math.round(day.hours.open * 60));
+    const balanceMinutes = openMinutes - estimatedMinutes;
+    let state: WorkloadPressureState = 'clear';
+    if (day.deadlines.length > 0 && known === 0) state = 'unknown';
+    else if (estimatedMinutes > openMinutes / 0.7) state = 'more_than_open';
+    else if (estimatedMinutes > openMinutes) state = 'tight';
+    else if (known > 0) state = 'manageable';
+
+    return {
+      iso: day.iso,
+      estimatedMinutes,
+      openMinutes,
+      balanceMinutes,
+      known,
+      unknown,
+      state,
+      confirmed: day.deadlines.length > 0 && day.deadlines.every((deadline) => deadline.source !== 'needs_review'),
+    };
+  });
+}
+
+/** How far ahead the crunch forecast looks: from a week out, so there is time to act, to four weeks. */
 export const FORECAST_FROM_DAYS = 7;
 export const FORECAST_TO_DAYS = 28;
 /** A crunch is at least this many major deadlines inside this many days. */
