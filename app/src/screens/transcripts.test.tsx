@@ -188,6 +188,26 @@ describe('what the screen says it is', () => {
     expect(text()).toContain('has not made it');
   });
 
+  it('says it above the transcripts themselves, for a student and for a registrar at a Core school too', async () => {
+    mock.transcripts.mockResolvedValue([transcript(1)]);
+    await render();
+    const first = (): Element | null => host.querySelector('[data-testid="not-signed"]');
+    expect(first()?.textContent).toContain('This is not a signed transcript.');
+    expect(first()?.compareDocumentPosition(host.querySelector('[data-testid="hash-1"]')!) ?? 0).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    mock.caps.mockResolvedValue(REGISTRAR);
+    act(() => root.unmount());
+    root = createRoot(host);
+    await render();
+    expect(first()?.textContent).toContain('This is not a signed transcript.');
+    // And in a paused module, which still shows what was kept.
+    mock.modes = [{ module: 'records', mode: 'connect', frozen: true, killed: true }];
+    forgetModuleModes();
+    act(() => root.unmount());
+    root = createRoot(host);
+    await render();
+    expect(first()?.textContent).toContain('This is not a signed transcript.');
+  });
+
   it('never calls what it shows official, certified or authenticated, whoever is looking', async () => {
     mock.transcripts.mockResolvedValue([transcript(2, { replacedBy: 3, replacedBecause: 'The record was corrected.' }), transcript(1)]);
     mock.disclosures.mockResolvedValue([disclosure()]);
