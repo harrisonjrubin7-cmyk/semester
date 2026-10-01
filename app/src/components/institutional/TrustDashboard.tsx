@@ -119,6 +119,9 @@ function ScorecardRow({ metric }: { metric: ScoredTrustMetric }) {
       </div>
       <p>{metric.metric}</p>
       <p>{metric.value} · {metric.reason}</p>
+      <p><strong>Target:</strong> {metric.target}</p>
+      <p><strong>Known limitations:</strong> {metric.knownLimitations}</p>
+      <p><strong>Corrective action:</strong> {metric.correctiveAction}</p>
       <small>{metric.owner} · {metric.cadence}{metric.evidenceAt === null ? ` · target instrumentation ${metric.targetInstrumentationDate}` : ` · evidence ${new Date(metric.evidenceAt).toISOString().slice(0, 10)}`}</small>
     </li>
   );

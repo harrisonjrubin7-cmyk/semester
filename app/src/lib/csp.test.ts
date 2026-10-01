@@ -165,7 +165,7 @@ describe('the policy is there and says the things that make it worth having', ()
     expect(policyTag()).not.toContain("'unsafe-eval'");
   });
 
-  it('narrows load-bearing inline style exceptions to attributes and elements', () => {
+  it('documents the legacy fallback and separates inline dependencies for CSP3 browsers', () => {
     /*
      * This one looks like the thing to delete and is not, so it is pinned.
      *
@@ -180,10 +180,10 @@ describe('the policy is there and says the things that make it worth having', ()
      * Measured in a browser: with `'unsafe-inline'` the injected sheet reports
      * 59 rules; without it the same render reports no sheet at all and the
      * console carries 64 refusals. Every generated figure in every study guide
-     * draws unstyled. The scoped exceptions remain until diagrams are rendered
-     * some other way.
+     * draws unstyled. The separated exceptions remain until those styles are
+     * migrated; this test does not claim they reduce the effective allowance.
      */
-    expect(directives().get('style-src')).toEqual(["'self'"]);
+    expect(directives().get('style-src')).toEqual(["'self'", "'unsafe-inline'"]);
     expect(directives().get('style-src-attr')).toContain("'unsafe-inline'");
     expect(directives().get('style-src-elem')).toContain("'unsafe-inline'");
   });

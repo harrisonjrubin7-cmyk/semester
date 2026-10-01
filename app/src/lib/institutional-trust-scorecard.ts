@@ -8,6 +8,9 @@ export interface TrustMetricDefinition {
   cadence: 'continuous' | 'monthly' | 'quarterly' | 'termly';
   critical: boolean;
   targetInstrumentationDate: string;
+  target: string;
+  knownLimitations: string;
+  correctiveAction: string;
 }
 
 export interface TrustMeasurement {
@@ -18,6 +21,8 @@ export interface TrustMeasurement {
   trendWorsening?: boolean;
   value: string;
   evidenceAt: number;
+  knownLimitations?: string;
+  correctiveAction?: string;
 }
 
 export interface ScoredTrustMetric extends TrustMetricDefinition {
@@ -27,7 +32,7 @@ export interface ScoredTrustMetric extends TrustMetricDefinition {
   reason: string;
 }
 
-const TRUST_METRIC_DEFINITIONS: readonly Omit<TrustMetricDefinition, 'targetInstrumentationDate'>[] = [
+const TRUST_METRIC_DEFINITIONS: readonly Omit<TrustMetricDefinition, 'targetInstrumentationDate' | 'target' | 'knownLimitations' | 'correctiveAction'>[] = [
   { id: 'source-coverage', pillar: 'Source trust', metric: 'Source-backed institutional and course claims', owner: 'Source operations', cadence: 'monthly', critical: true },
   { id: 'source-freshness', pillar: 'Source freshness', metric: 'Critical sources inside owner-defined freshness SLO', owner: 'Source operations', cadence: 'continuous', critical: true },
   { id: 'share-preview', pillar: 'Student control', metric: 'Optional shares preview scope, recipient, and expiry', owner: 'Product and privacy', cadence: 'quarterly', critical: true },
@@ -52,14 +57,33 @@ const INSTRUMENTATION_TARGET_BY_CADENCE: Record<TrustMetricDefinition['cadence']
   termly: '2026-12-18',
 };
 
+const METRIC_GUIDANCE: Record<string, Pick<TrustMetricDefinition, 'target' | 'knownLimitations' | 'correctiveAction'>> = {
+  'source-coverage': { target: 'Every institutional and course claim is source-backed or visibly needs confirmation.', knownLimitations: 'Coverage is not a correctness or freshness measure.', correctiveAction: 'Quarantine unsupported claims, restore citations, and re-run source review.' },
+  'source-freshness': { target: 'Every critical source is inside its owner-approved freshness SLO.', knownLimitations: 'Owner-approved freshness SLOs are not yet configured for every tenant.', correctiveAction: 'Mark affected claims stale, route to the official source, and refresh or escalate ownership.' },
+  'share-preview': { target: 'Every optional share previews scope, recipient, and expiry before confirmation.', knownLimitations: 'A preview cannot eliminate coercion outside the product.', correctiveAction: 'Disable the affected share route until preview, confirmation, expiry, and revocation pass.' },
+  'consent-revocation': { target: 'Every revocation reaches AI, indexes, caches, and downstream use.', knownLimitations: 'Provider-side deletion timing depends on approved integration contracts.', correctiveAction: 'Stop downstream use, reconcile every copy, and retain tenant-bound evidence of completion.' },
+  'access-safety': { target: 'Zero confirmed cross-tenant or unauthorized access.', knownLimitations: 'Absence of an alert is not proof of isolation.', correctiveAction: 'Disable the path, contain scope, rotate access where required, and verify tenant boundaries.' },
+  'audit-coverage': { target: 'Every sensitive read, AI/tool call, decision, and write has a tenant-bound trace.', knownLimitations: 'Routine incident views intentionally exclude private student content.', correctiveAction: 'Block untraceable sensitive operations and restore the required audit event before re-enabling.' },
+  'assessment-safety': { target: 'Every restricted-assessment attempt is blocked or rerouted by approved policy.', knownLimitations: 'Institutions must supply current assessment policy and scope.', correctiveAction: 'Disable the affected AI route and revalidate policy, classification, and reroute behavior.' },
+  'human-control': { target: 'Every external communication and official write is previewed and explicitly confirmed.', knownLimitations: 'Confirmation does not prove the receiving system completed the action.', correctiveAction: 'Block ambiguous retries, reconcile the system of record, and restore confirmation evidence.' },
+  'ai-quality': { target: 'Meet the institution-approved source-correctness and policy-compliance target.', knownLimitations: 'No universal numerical target is approved; pilot baselines remain required.', correctiveAction: 'Limit the workflow, review failures, and obtain a tenant-approved target before green status.' },
+  'incident-response': { target: 'Meet institution-approved acknowledge, contain, recover, and close targets.', knownLimitations: 'No numerical target is approved until a timed exercise and business-impact review.', correctiveAction: 'Keep the metric non-green, run the required exercise, and close owned remediation.' },
+  'restore-tests': { target: 'Meet institution-approved RTO and RPO in a verified restore exercise.', knownLimitations: 'Repository backup checks are not production restore evidence.', correctiveAction: 'Keep recovery claims unapproved, remediate the restore path, and repeat the timed exercise.' },
+  accessibility: { target: 'Every critical workflow passes approved assistive-technology testing.', knownLimitations: 'Automated accessibility checks do not replace human assistive-technology review.', correctiveAction: 'Provide the prior accessible route, remediate the regression, and repeat human verification.' },
+  'integration-health': { target: 'LTI and SSO launches succeed and ambiguous writes reconcile safely.', knownLimitations: 'Provider availability and tenant configuration remain external dependencies.', correctiveAction: 'Fail closed, use the official system, and reconcile identity and write outcomes before recovery.' },
+  'student-trust': { target: 'Meet the institution-approved comprehension and trust target for the pilot cohort.', knownLimitations: 'No pilot baseline or institution-approved threshold is recorded yet.', correctiveAction: 'Run accessible student research, publish findings, and revise unclear data-use explanations.' },
+  'assurance-retrieval': { target: 'Retrieve current tenant-bound control evidence within the institution-approved window.', knownLimitations: 'No institution-approved retrieval window is recorded yet.', correctiveAction: 'Assign missing evidence, remove stale claims, and repeat the timed retrieval exercise.' },
+};
+
 export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFINITIONS.map((metric) => ({
   ...metric,
+  ...METRIC_GUIDANCE[metric.id],
   targetInstrumentationDate: INSTRUMENTATION_TARGET_BY_CADENCE[metric.cadence],
 }));
 
-export function metricState(measurement: TrustMeasurement | undefined): Pick<ScoredTrustMetric, 'state' | 'reason'> {
+export function metricState(definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };
-  if (measurement.controlFailure) return { state: 'red', reason: 'A control failed; evidence and remediation are required.' };
+  if (measurement.controlFailure || (definition.critical && !measurement.targetMet)) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
   if (!measurement.targetMet || !measurement.evidenceCurrent || measurement.trendWorsening) return { state: 'yellow', reason: 'The target, evidence freshness, or trend needs attention.' };
   return { state: 'green', reason: 'Target met with current evidence.' };
 }
@@ -68,7 +92,14 @@ export function trustScorecard(measurements: readonly TrustMeasurement[]): Score
   const byId = new Map(measurements.map((measurement) => [measurement.id, measurement]));
   return TRUST_METRICS.map((definition) => {
     const measurement = byId.get(definition.id);
-    const evaluation = metricState(measurement);
-    return { ...definition, ...evaluation, value: measurement?.value ?? 'Baseline not recorded', evidenceAt: measurement?.evidenceAt ?? null };
+    const evaluation = metricState(definition, measurement);
+    return {
+      ...definition,
+      ...evaluation,
+      value: measurement?.value ?? 'Baseline not recorded',
+      evidenceAt: measurement?.evidenceAt ?? null,
+      knownLimitations: measurement?.knownLimitations ?? definition.knownLimitations,
+      correctiveAction: measurement?.correctiveAction ?? definition.correctiveAction,
+    };
   });
 }

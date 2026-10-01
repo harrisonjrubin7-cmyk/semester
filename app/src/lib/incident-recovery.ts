@@ -83,6 +83,9 @@ export interface IncidentRecord {
   declaredAt: number;
   commander: string;
   affectedServices: string[];
+  tenantScope:
+    | { scope: 'platform_wide' }
+    | { scope: 'tenant_specific' | 'suspected_cross_tenant'; tenantIds: string[] };
   studentVisibleEffect: string;
   privateStudentDataIncluded: false;
   status: (typeof INCIDENT_LIFECYCLE)[number];
@@ -94,8 +97,10 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   const gaps: string[] = [];
   if (!record.id.trim()) gaps.push('incident id');
   if (!record.commander.trim()) gaps.push('named incident commander');
-  if (record.affectedServices.length === 0) gaps.push('affected service');
+  if (!record.affectedServices.some((service) => service.trim())) gaps.push('affected service');
+  if (!record.tenantScope || (record.tenantScope.scope !== 'platform_wide' && !record.tenantScope.tenantIds?.some((tenantId) => tenantId.trim()))) gaps.push('tenant scope');
   if (!record.studentVisibleEffect.trim()) gaps.push('student-visible effect');
+  if (record.privateStudentDataIncluded !== false) gaps.push('private student data excluded');
   if (record.status !== 'close' && record.nextUpdateAt <= now) gaps.push('future next-update time');
   if ((record.status === 'verify' || record.status === 'close') && !record.verification.some((entry) => entry.trim())) gaps.push('recovery verification');
   return gaps;

@@ -53,11 +53,11 @@
         script-src   'self'. The production build emits no inline script and
                      no eval — `dist/index.html` is one external module and a
                      stylesheet, nothing more.
-        style-src    'self'. Inline permission is narrowed below: style-src-attr
-                     covers React style properties and style-src-elem covers
-                     Mermaid's generated SVG <style> element. This keeps the
-                     required compatibility without granting a blanket inline
-                     exception to every kind of style load.
+        style-src    'self' and 'unsafe-inline'. Safari/iOS Safari before 16.1
+                     ignores the CSP3 directives below and falls back here, so
+                     this compatibility allowance remains until that support
+                     floor moves or the inline styles are migrated. CSP3 browsers
+                     also receive the separated dependency declarations below.
         img-src      'self', plus data: for the marker icons Leaflet inlines
                      into its CSS, blob: for anything the app renders or a
                      student photographs, and OpenStreetMap's tile servers,
@@ -98,7 +98,7 @@
                object-src 'none';
                form-action 'self';
                script-src 'self';
-               style-src 'self';
+               style-src 'self' 'unsafe-inline';
                style-src-attr 'unsafe-inline';
                style-src-elem 'self' 'unsafe-inline';
                img-src 'self' data: blob: https://*.tile.openstreetmap.org;

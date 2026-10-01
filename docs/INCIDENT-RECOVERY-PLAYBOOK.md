@@ -104,5 +104,5 @@ Collect the timeline, alerts, tickets, redacted traces, changes, communications,
 - Name the permanent incident owner, backup, and institution contacts.
 - Back up and restore-test the gateway journal.
 - Restore a production backup into an isolated project and time the complete verification path.
-- Run a P0/P1 tabletop through the real contact tree.
+- Run a SEV1/SEV2 tabletop through the real contact tree.
 - Obtain institution-specific RTO/RPO approval and record it as configuration-bound evidence.

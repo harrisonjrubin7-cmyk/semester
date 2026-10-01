@@ -30,23 +30,40 @@ describe('incident and recovery control contract', () => {
 
   it('does not allow an incident to close without a commander, next update, and verification', () => {
     expect(validateIncident({
-      id: 'INC-1', severity: 'SEV1', declaredAt: 100, commander: '', affectedServices: ['Identity'],
+      id: 'INC-1', severity: 'SEV1', declaredAt: 100, commander: '', affectedServices: ['Identity'], tenantScope: { scope: 'platform_wide' },
       studentVisibleEffect: 'Sign-in unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 100, verification: [],
     }, 150)).toEqual(['named incident commander', 'recovery verification']);
     expect(validateIncident({
-      id: 'INC-2', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'],
+      id: 'INC-2', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'], tenantScope: { scope: 'tenant_specific', tenantIds: ['vanderbilt'] },
       studentVisibleEffect: 'Course launch unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 200, verification: ['Valid launch succeeds; invalid token is rejected'],
     }, 150)).toEqual([]);
   });
 
   it('rejects overdue updates for active incidents and blank verification evidence', () => {
     expect(validateIncident({
-      id: 'INC-3', severity: 'SEV3', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Sources'],
+      id: 'INC-3', severity: 'SEV3', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Sources'], tenantScope: { scope: 'tenant_specific', tenantIds: ['vanderbilt'] },
       studentVisibleEffect: 'Source stale', privateStudentDataIncluded: false, status: 'recover', nextUpdateAt: 200, verification: [],
     }, 201)).toContain('future next-update time');
     expect(validateIncident({
-      id: 'INC-4', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'],
+      id: 'INC-4', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'], tenantScope: { scope: 'suspected_cross_tenant', tenantIds: ['vanderbilt'] },
       studentVisibleEffect: 'Course launch unavailable', privateStudentDataIncluded: false, status: 'verify', nextUpdateAt: 300, verification: ['   '],
     }, 201)).toContain('recovery verification');
+  });
+
+  it('requires tenant scope and rejects private student data at runtime', () => {
+    const record = {
+      id: 'INC-5', severity: 'SEV1', declaredAt: 100, commander: 'Incident lead', affectedServices: ['Identity'],
+      tenantScope: { scope: 'tenant_specific', tenantIds: [] }, studentVisibleEffect: 'Access unavailable',
+      privateStudentDataIncluded: true, status: 'contain', nextUpdateAt: 300, verification: [],
+    } as unknown as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toEqual(expect.arrayContaining(['tenant scope', 'private student data excluded']));
+  });
+
+  it('rejects blank-only affected service entries', () => {
+    expect(validateIncident({
+      id: 'INC-6', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['   '],
+      tenantScope: { scope: 'platform_wide' }, studentVisibleEffect: 'Service unavailable',
+      privateStudentDataIncluded: false, status: 'contain', nextUpdateAt: 300, verification: [],
+    }, 200)).toContain('affected service');
   });
 });
