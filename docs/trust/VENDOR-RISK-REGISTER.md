@@ -45,6 +45,7 @@ same split the subprocessor register makes:
 | Apple | Student-directed | The sign-in exchange the student starts | — | Not assessed (student-directed) | None — no contract (student-directed) | Student-directed | | |
 | OpenStreetMap tile servers | Student-directed | IP address and the map area viewed | — | None known — community-run service | None — usage policy only (student-directed) | Student-directed | | |
 | Nominatim and Photon (address lookup) | Student-directed | The text typed into the lookup box; position only if reverse lookup is on | — | None known — to confirm | None — usage policy only (student-directed) | Student-directed | | |
+| Public institution source hosts | Student-directed | Public URL requests for availability checks; no Semester token or student content is sent to the host | — | Not assessed (student-directed) | None — public source access (student-directed) | Student-directed | | |
 | Calendar and Canvas hosts the student links | Student-directed | The request to the address the student supplied, with their token, relayed by the `fetchcal` and `canvas` functions | — | Not assessed (student-directed) | None — no contract (student-directed) | Student-directed | | |
 | The student’s browser push service | Student-directed | An encrypted notification for the student's device | — | Not assessed (student-directed) | None — the browser vendor's service (student-directed) | Student-directed | | |
 

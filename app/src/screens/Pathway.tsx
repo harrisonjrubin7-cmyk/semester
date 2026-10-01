@@ -1,3 +1,4 @@
+import { incomingCapture } from '../lib/productivity-arrival';
 import { useState, type Dispatch, type SetStateAction } from 'react';
 import { useWorkspaceSelection, useWorkspaceTabId } from '../lib/workspace-view';
 import { useStore } from '../state/store';
@@ -130,7 +131,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
     applications each come back to their own. The applications themselves
     stay in the one shared library below.
   */
-  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', 'home') as [
+  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', incomingCapture() ? 'productivity' : 'home') as [
     Tab,
     Dispatch<SetStateAction<Tab>>,
   ];

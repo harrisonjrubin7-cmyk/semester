@@ -27,6 +27,7 @@ import { MAP_PREFIX, readMap } from './learningmap';
 import { PREFS_PREFIX, readPrefs } from './learningprefs';
 import { STUDY_JOURNAL_PREFIX, readJournal } from './studyjournal';
 import { RESET_KEY, keepReflections, readResets, withoutReflections } from './weekly-reset';
+import { RHYTHM_KEY, readRhythm } from './daily-rhythm';
 import { CALM_KEY, keepMemory, readCalm, withoutMemory } from './calm-controls';
 
 /**
@@ -80,6 +81,7 @@ interface Definition {
 }
 
 const DEFINITIONS: Record<string, Definition> = {
+  dailyRhythm: { label: 'Private daily plans and reflections', prefix: RHYTHM_KEY, scope: 'account', read: readRhythm },
   productivity: { label: 'Decisions and productivity', prefix: 'semester.productivity.v1', scope: 'account', read: readProductivity },
   creations: {
     label: 'Forms, designs and videos',

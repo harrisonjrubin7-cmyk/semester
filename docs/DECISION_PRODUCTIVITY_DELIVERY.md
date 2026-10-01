@@ -1,27 +1,26 @@
 # Decision and productivity workspace
 
-Access: **Pathway → Decisions & productivity**. The global Quick Add panel also offers **Capture for later**.
+Access: **Pathway → Decisions & productivity**. Global Quick Add offers **Capture for later**.
 
-## Delivered from the two executive-function PDFs
+## Implemented
 
-- Reusable private decisions with goal, up to three options, editable criteria and importance (0–3), evidence explanations, source anchors and checked dates.
-- Transparent weighted fit with separate evidence coverage; unknown criteria are excluded, never scored as weak. No option is automatically chosen or reordered.
-- Decision readiness checklist, official questions, revisit date, pause, recorded decision, private reflections and independent scenario snapshots.
-- Assumption ownership, scenario preview, editable student/estimate/AI/scenario inputs, read-only institution inputs, review flags and saved preferences. Changed assumptions preserve fit judgments but invalidate source checks so the student reviews them before relying on the comparison.
-- Source checks older than 30 days, future dates and missing evidence require review. This is a conservative planning freshness rule, not an institutional certification.
-- Global context capture, twelve capture types, source/context/reason/next-action/deadline fields and six-state academic inbox triage.
-- Twenty-one editable preparation templates, prepared/saved draft queue, discard controls and reviewed export. Advisor packets exclude private reflections.
-- Private knowledge search with explicit per-item authorization for source-summary inclusion and deletion controls. Search is local text search, not embeddings or an AI summary.
-- Focus timer with pause, progress capture and next-step help; weekly reset navigation and actionable decision friction.
-- Account-scoped device persistence, storage-error handling, recovery export, validated merge import, and inclusion in the existing whole-workspace backup.
-- Links to Semester's existing Calendar, Connections, Support and Opportunities modules.
+- Student-owned decisions: goals, three options, editable weighted criteria, evidence and freshness, transparent coverage, readiness, questions, pause, revisit, reflections and independent snapshots. No automatic choice.
+- Owned assumptions: scenario preview, institution inputs read-only, source-check invalidation after edits, saved preferences. Dates use the student's local calendar day and reject impossible dates.
+- Private capture and six-state inbox, 21 preparation templates, editable preparation queue, local text search, explicit source authorization, focus timer and weekly reset.
+- Account-scoped device library, damage-preserving recovery, validated merge import and whole-workspace backup.
+- **Backup:** private account-backed cloud load/review/restore/save/delete. Revision-based writes reject another device's intervening changes. Device backup is exported before replacing local data. Tenant attribution requires active membership. This is explicit synchronization, not background autosave.
+- **Connections:** assistant-generated drafts and semantic retrieval across up to 20 selected authorized captures. Exact outgoing context is reviewed first; decision reflections/history are excluded. Semantic result IDs and verbatim excerpts are checked against selected sources. Drafts stay editable and require a separate save. Personal accounts use the existing configured assistant/spend controls; configured institutions use the existing approved-source policy gateway and reject unapproved sources.
+- Reviewed packet exports as TXT, PDF and DOCX. Existing connected Google/Microsoft accounts can receive the reviewed DOCX through their existing upload route. No email is sent.
+- Reviewed weekly study blocks (1–12 weeks), appointment-conflict preview and Calendar application. Changed decision assumptions invalidate the preview. Existing class/travel conflicts still need Calendar review; this does not infer course eligibility or alter registration.
+- Revisit ICS with 24-hour and one-hour alarms; connected Google/Microsoft calendar event creation. Calendar apps control delivery of imported alarms. These are exported events, not a hosted decision-specific subscription or scheduled server push service.
+- Authenticated public source check: .edu or configured approved hosts, HTTPS only, public DNS, validated redirects, 512 KB/8-second limits. Reports availability and exact-excerpt presence without certifying policy or updating evidence automatically.
+- Optional Chrome MV3 browser capture extension: active page only, selected text on request, preview before private capture, no assistant authorization by default. Incoming context travels in the URL fragment, is scrubbed before rendering and retained only in the current browser session until saved/discarded.
+- Opt-in institution count reporting through an administrator-only aggregate RPC. Only active consenting members count; cohorts below 10 are suppressed. No student content or identities appear in the response. Account deletion cascades the cloud workspace.
 
-## Boundaries requiring separate activation or further work
+## Deployment and validation
 
-This delivery does not claim the entire PDF vision is production complete. Live source verification, institution/tenant-backed decision synchronization, semantic retrieval, AI-generated preparation, automatic schedule/forecast propagation, decision notifications, calendar feeds, PDF/DOCX packet export, browser capture extension, and institutional aggregate reporting are not implemented by this workspace. Existing provider and institutional modules must be configured and validated for their own functions. Recorded source owners and dates are student-entered context, not assertions of verified institutional data. Export is reviewed plain text or JSON; no email or registration is submitted.
+Cloud migration `20261001152756_productivity_workspace.sql` applied to configured Supabase project `lzrqvlugnawcgywkhqlz`. `productivity-sourcecheck` deployed ACTIVE with custom JWT verification on every POST (platform verification off for CORS preflight). Rollback-only SQL checks verify account isolation, stale revision rejection, deletion protection, and rejection of unauthorized aggregate access without retaining fixtures.
 
-Assumption previews identify recorded impact links and require renewed source review; they do not synthesize new course eligibility, workload or schedule evidence. Focus runs only while this workspace is mounted. Revisit dates are displayed planning dates, not scheduled notifications. The app's existing support and opportunity modules retain their explicit-interest and official-owner workflows.
+Types/build/lint, institutional checks, export/privacy/semantic/parser tests, cloud transport tests and mounted preparation tests run from `app/`. Full normal and shuffled suites must be recorded in the PR after the final branch update. The rollout-publication tests depend on `/workspace/scratch/outputs/semester-institutional-rollout`, which is absent here; no publication evidence is fabricated.
 
-## Validation
-
-Types, lint and institutional gateway checks; decision-model and mounted UI tests; backup coverage and privacy tests; regression and shuffled test runs. Browser visual review was unavailable because the environment's Chromium download returned an invalid archive. The repository's rollout-publication test depends on a separate `/workspace/scratch/outputs/semester-institutional-rollout` artifact directory absent from this checkout; no publication evidence is fabricated.
+The front end remains on draft PR #1067 until review and merge. Live provider operations require the student's connected account. Live model output requires a configured assistant or institutional gateway with approved source IDs. End-to-end sign-in/provider tests have not been claimed using real student accounts.

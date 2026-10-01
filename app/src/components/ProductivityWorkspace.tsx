@@ -1,3 +1,11 @@
+import { incomingCapture } from '../lib/productivity-arrival';
+import { ProductivityBrowserCapture } from './ProductivityBrowserCapture';
+import { ProductivitySourceCheck } from './ProductivitySourceCheck';
+import { ProductivityCloud } from './ProductivityCloud';
+import { ProductivityPreparation } from './ProductivityPreparation';
+import { packetPiece } from '../lib/productivity-tools';
+import { sendTo } from '../lib/deliver';
+import { writable } from '../lib/connect';
 import { GoTo } from './JourneyKit';
 import '../styles/productivity.css';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -67,7 +75,7 @@ function Workspace({ who }: { who: string }) {
     readProductivity,
     EMPTY_PRODUCTIVITY,
   );
-  const [tab, setTab] = useState('Decide');
+  const [tab, setTab] = useState(incomingCapture() ? 'Connections' : 'Decide');
   const [selected, setSelected] = useState('');
   const [capture, setCapture] = useState(emptyCapture);
   const [query, setQuery] = useState('');
@@ -187,9 +195,9 @@ function Workspace({ who }: { who: string }) {
   return (
     <div className="productivity-workspace">
       <p>
-        Capture, compare, prepare and reflect. Your work is private and stored
-        on this device. Export a backup before switching devices. Planning here
-        submits nothing to your institution.
+        Capture, compare, prepare and reflect. Your work is private on this
+        device. Use Backup to review and save a cloud copy across devices.
+        Planning here submits nothing to your institution.
       </p>
       <nav aria-label="Productivity workspace">
         {[
@@ -201,6 +209,7 @@ function Workspace({ who }: { who: string }) {
           'Focus',
           'Reset',
           'Backup',
+          'Connections',
         ].map((t) => (
           <button
             type="button"
@@ -1111,9 +1120,17 @@ function Workspace({ who }: { who: string }) {
             ))}
         </>
       )}
+      {tab === 'Connections' && (
+        <>
+          <ProductivityPreparation value={lib.value} decision={d} save={save} />
+          <ProductivitySourceCheck />
+          <ProductivityBrowserCapture save={save} />
+        </>
+      )}
       {tab === 'Backup' && (
         <>
           <SectionLabel>Export and deletion controls</SectionLabel>
+          <ProductivityCloud who={who} value={lib.value} replace={save} />
           <button
             type="button"
             onClick={() =>
@@ -1176,10 +1193,9 @@ function Workspace({ who }: { who: string }) {
             </button>
           )}
           <p>
-            Use each item’s Delete control to remove saved work. Institution
-            metrics and provider connections require the existing institutional
-            and integration modules; this private workspace does not publish
-            student data.
+            Use each item’s Delete control to remove saved work. Cloud deletion
+            keeps your device copy. Institution counts require explicit consent
+            and an authorized administrator.
           </p>
         </>
       )}
@@ -1203,6 +1219,35 @@ function Workspace({ who }: { who: string }) {
           >
             Export reviewed packet
           </button>
+          {(['pdf', 'docx'] as const).map((format) => (
+            <button
+              type="button"
+              key={format}
+              onClick={() =>
+                void packetPiece(preview, format)
+                  .then(download)
+                  .catch((e) => setNotice(e.message))
+              }
+            >
+              Export reviewed {format.toUpperCase()}
+            </button>
+          ))}
+          {writable().map((provider) => (
+            <button
+              type="button"
+              key={provider}
+              onClick={() =>
+                void packetPiece(preview, 'docx')
+                  .then((piece) => sendTo(provider, piece))
+                  .then(() =>
+                    setNotice(`Reviewed packet saved to ${provider}.`),
+                  )
+                  .catch((e) => setNotice(e.message))
+              }
+            >
+              Save reviewed DOCX to {provider}
+            </button>
+          ))}
           <button type="button" onClick={() => setPreview('')}>
             Close preview
           </button>

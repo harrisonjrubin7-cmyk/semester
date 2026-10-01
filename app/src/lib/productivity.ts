@@ -346,10 +346,20 @@ export function currentEvidence(
     !/^\d{4}-\d{2}-\d{2}$/.test(e.checked)
   )
     return false;
-  const checked = Date.parse(`${e.checked}T00:00:00Z`);
-  return (
-    Number.isFinite(checked) && checked <= now && now - checked <= 30 * 86400000
-  );
+  const [year, month, day] = e.checked.split('-').map(Number);
+  const parsed = new Date(`${e.checked}T12:00:00`);
+  if (
+    !Number.isFinite(parsed.getTime()) ||
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() + 1 !== month ||
+    parsed.getDate() !== day
+  )
+    return false;
+  const today = new Date(now);
+  const age =
+    Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) -
+    Date.UTC(year, month - 1, day);
+  return age >= 0 && age <= 30 * 86400000;
 }
 /** Preserve recorded fits, but require source review after changing planning inputs. */
 export function withAssumption(d: Decision, a: Assumption): Decision {

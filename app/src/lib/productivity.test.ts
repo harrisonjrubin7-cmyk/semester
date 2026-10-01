@@ -105,3 +105,27 @@ it('expires source checks and invalidates evidence when assumptions change', () 
   d.assumptions = [{ ...a, owner: 'institution' }];
   expect(() => withAssumption(d, a)).toThrow();
 });
+
+it('uses the local calendar day for source freshness and rejects impossible dates', () => {
+  const evidence = {
+    fit: 'strong' as const,
+    source: 'Registrar',
+    explanation: '',
+    checked: '2026-10-01',
+  };
+  expect(
+    currentEvidence(evidence, new Date('2026-10-01T00:30:00').getTime()),
+  ).toBe(true);
+  expect(
+    currentEvidence(
+      { ...evidence, checked: '2026-10-02' },
+      new Date('2026-10-01T23:30:00').getTime(),
+    ),
+  ).toBe(false);
+  expect(
+    currentEvidence(
+      { ...evidence, checked: '2026-02-30' },
+      new Date('2026-03-01T12:00:00').getTime(),
+    ),
+  ).toBe(false);
+});
