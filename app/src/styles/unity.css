@@ -832,9 +832,14 @@
 
 /* Focused steps the navigation and the extras back. The work, its sources,
    its save state and the way out (`.focus-bar`) all stay. */
+.fold-all {
+  display: flex;
+}
+
 :root[data-workspace='focused'] .app-tabs,
 :root[data-workspace='focused'] .shelf-nav,
 :root[data-workspace='focused'] .today-secondary-journey,
+:root[data-workspace='focused'] .fold-all,
 :root[data-workspace='focused'] .hides-in-focus {
   display: none;
 }
