@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 
+function mediaQuery(query: string): MediaQueryList | null {
+  return typeof window === 'undefined' || typeof window.matchMedia !== 'function'
+    ? null
+    : window.matchMedia(query);
+}
+
 /**
  * A media query as state.
  *
@@ -10,12 +16,11 @@ import { useEffect, useState } from 'react';
  * place and read wherever they matter.
  */
 export function useMedia(query: string): boolean {
-  const [matches, setMatches] = useState(() =>
-    typeof window === 'undefined' ? false : window.matchMedia(query).matches,
-  );
+  const [matches, setMatches] = useState(() => mediaQuery(query)?.matches ?? false);
 
   useEffect(() => {
-    const mql = window.matchMedia(query);
+    const mql = mediaQuery(query);
+    if (!mql) return;
     const onChange = () => setMatches(mql.matches);
     onChange();
     mql.addEventListener('change', onChange);
