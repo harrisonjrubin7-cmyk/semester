@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -37,5 +37,19 @@ describe('the company-site conversion path', () => {
     expect(site).toContain('const card=a.closest(".aud,.box,article,.card")');
     expect(site).toContain('if(card&&!ctas)card.appendChild(helper)');
     expect(site).not.toContain('const host=a.closest(".ctas")||a.parentElement');
+  });
+
+  it('marks published compliance evidence green without claiming certification', () => {
+    const block = site.slice(site.indexOf('const EVIDENCE_ROOT='), site.indexOf('const SHORT='));
+    const paths = [...block.matchAll(/"(docs\/[^"]+\.md)"/g)].map((match) => match[1]);
+
+    expect(paths).toHaveLength(6);
+    for (const path of paths) expect(existsSync(join(root, path)), path).toBe(true);
+    expect(block.match(/class="status st-av"/g)).toHaveLength(1);
+    expect(block).toContain('CLAIMS.map');
+    expect(block).toContain('not certified');
+    expect(block).toContain('no conformance claim');
+    expect(block).toContain('independent audit report pending');
+    expect(block).not.toMatch(/SOC 2 certified|ISO 27001 certified|FERPA certified|WCAG 2\.2 AA compliant/i);
   });
 });
