@@ -2,8 +2,8 @@
 begin;
 insert into public.invites(email,note) values ('productivity-rls-a@example.invalid','rollback-only test'),('productivity-rls-b@example.invalid','rollback-only test');
 insert into auth.users(id,email) values ('00000000-0000-4000-8000-00000000f101','productivity-rls-a@example.invalid'), ('00000000-0000-4000-8000-00000000f102','productivity-rls-b@example.invalid');
-set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f101","role":"authenticated"}',true);
+set local role authenticated;
 do $$ declare r jsonb; begin
  r:=public.save_productivity_workspace(0,'{"version":1,"decisions":[],"captures":[],"drafts":[],"journal":[],"preferences":[]}');
  if r->>'revision'<>'1' then raise exception 'initial revision failed'; end if;
