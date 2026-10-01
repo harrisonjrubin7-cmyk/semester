@@ -162,6 +162,20 @@ describe('the support operations queue', () => {
     );
   });
 
+  it('shows an initial queue outage as retryable instead of as an empty queue', async () => {
+    mock.queue.mockRejectedValueOnce(new Error('queue unavailable')).mockResolvedValueOnce([{
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      category: 'accessibility', subject: 'Cannot reach Continue', status: 'open', priority: 'high',
+      createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null, overdue: true,
+    }]);
+    await draw();
+    expect(host.textContent).toContain('Support queue unavailable');
+    expect(host.textContent).not.toContain('No support questions match');
+    await click(button('Retry support queue'));
+    expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
+    expect(host.textContent).not.toContain('Support queue unavailable');
+  });
+
   it('keeps reply controls unavailable until a failed conversation read is retried successfully', async () => {
     mock.thread.mockRejectedValueOnce(new Error('read unavailable')).mockResolvedValueOnce([{
       from: 'student', body: 'Please help.', at: '2026-10-01T10:00:00Z', context: null,

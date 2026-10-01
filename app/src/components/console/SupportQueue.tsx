@@ -24,6 +24,7 @@ import { matches, said, when, type ViewProps } from './Fields';
  */
 export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [tickets, setTickets] = useState<SupportQueueTicket[] | null>(null);
+  const [queueFailed, setQueueFailed] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<SupportMessage[] | null>(null);
   const [threadFailed, setThreadFailed] = useState(false);
@@ -35,11 +36,12 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const refresh = useCallback(async (): Promise<boolean> => {
     try {
       setTickets(await supportQueue());
+      setQueueFailed(false);
       return true;
     } catch (error) {
       // Keep the last-known queue visible. Replacing it with an empty list
       // would falsely tell an operator that every open ticket disappeared.
-      setTickets((current) => current ?? []);
+      setQueueFailed(true);
       onStatus(said(error, 'Could not read the support queue.'));
       return false;
     }
@@ -125,8 +127,14 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         Identity-free queue. This view receives no student name, email, account, handle or tenant. It shows only the question and app context the student chose to send.
       </Notice>
       <SectionLabel aside={tickets === null ? 'reading' : `${shown.length} open`}>Support queue</SectionLabel>
-      {tickets === null && <p role="status">Reading the support queue…</p>}
-      {tickets !== null && shown.length === 0 && <p role="status">No support questions match this view.</p>}
+      {queueFailed && (
+        <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+          <Notice>{tickets === null ? 'Support queue unavailable.' : 'Support queue could not be refreshed; the last-known list remains visible.'}</Notice>
+          <button type="button" className="btn btn-secondary" onClick={() => { void refresh(); }}>Retry support queue</button>
+        </div>
+      )}
+      {tickets === null && !queueFailed && <p role="status">Reading the support queue…</p>}
+      {tickets !== null && !queueFailed && shown.length === 0 && <p role="status">No support questions match this view.</p>}
       {shown.map((ticket) => (
         <article key={ticket.id} className="portal-panel" aria-label={`Support ticket ${ticketReference(ticket.id)}`} style={{ display: 'grid', gap: 'var(--sp-2)' }}>
           <strong>{ticketReference(ticket.id)} · {ticket.subject}</strong>
