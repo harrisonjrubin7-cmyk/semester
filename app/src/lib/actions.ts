@@ -89,6 +89,14 @@ export interface ActionSource {
   system: string;
   /** When the underlying fact was last updated, epoch ms. */
   at?: number | null;
+  /** Who has authority over the underlying fact. */
+  authority?: string;
+  /** Who maintains or corrects the underlying record. */
+  dataOwner?: string;
+  /** The route the student can use to correct the record. */
+  correctionRoute?: string;
+  /** What to use when Semester cannot confirm or complete the action. */
+  officialFallback?: string;
 }
 
 /** The explanation sheet. Every field is shown; none is decoration. */
@@ -346,4 +354,3 @@ export function readActionChoices(value: unknown): ActionChoices {
   }
   return { version: 1, choices };
 }
-
