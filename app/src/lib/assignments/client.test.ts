@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
- * The assignments client's contract with `20260930240000_assignments.sql`:
+ * The assignments client's contract with `20261001094000_assignments.sql`:
  * which RPC, which argument names, which columns become which fields; that a
  * course is read through row-level security in one place and other courses'
  * rows are dropped; that every writer's refusal is thrown with the server's

@@ -538,7 +538,7 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
-    -- 20260930240000_assignments.sql: assignments and submissions. Each checks
+    -- 20261001094000_assignments.sql: assignments and submissions. Each checks
     -- auth.uid(), the caller's own school, that the school has switched
     -- lms_assignments to Core, and a course-and-term capability: an author for
     -- the four that write an assignment, the roster (`grades:receive`) for a

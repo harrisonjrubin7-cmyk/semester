@@ -25,7 +25,7 @@ import {
 /**
  * Assignments' rules, worked out from rows, and held to the migration.
  *
- * `20260930240000_assignments.sql` is the authority. Two kinds of test here:
+ * `20261001094000_assignments.sql` is the authority. Two kinds of test here:
  * the pure functions on hand-built cases, and a parity block that reads the
  * migration's text and holds every limit, state and argument name in
  * `model.ts` and `client.ts` equal to it, so a screen cannot promise what the
@@ -33,7 +33,7 @@ import {
  * against a real Postgres; this file keeps the TypeScript half honest.
  */
 
-const SQL = readFileSync(join(__dirname, '..', '..', '..', '..', 'supabase', 'migrations', '20260930240000_assignments.sql'), 'utf8');
+const SQL = readFileSync(join(__dirname, '..', '..', '..', '..', 'supabase', 'migrations', '20261001094000_assignments.sql'), 'utf8');
 
 // ── Hand-built rows ────────────────────────────────────────────────────
 

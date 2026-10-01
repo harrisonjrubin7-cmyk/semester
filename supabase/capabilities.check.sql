@@ -305,7 +305,7 @@ begin
   -- workflow:publish and :view for registrar, and workflow:view for
   -- institutional_researcher; then guardians:manage for university_admin and
   -- university_staff (20260930233000_k12_guardians.sql) added two more, to 185;
-  -- and Assignments (20260930240000_assignments.sql) added three: assignments:author
+  -- and Assignments (20261001094000_assignments.sql) added three: assignments:author
   -- and :review for faculty, and :review for teaching_assistant.
   perform pg_temp.counted('and the whole matrix, including tenant controls', n, 188);
 

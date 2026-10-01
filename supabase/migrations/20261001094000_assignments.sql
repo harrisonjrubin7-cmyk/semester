@@ -861,7 +861,7 @@ begin
       ('public.registration_enrollments', 'student'),
       ('public.regrade_requests',     'student_id'),
       ('public.dining_orders',        'student'),
-      -- 20260930240000: work a student submitted, and the extensions they were given.
+      -- 20261001094000: work a student submitted, and the extensions they were given.
       ('public.submission_versions',  'student_id'),
       ('public.submission_receipts',  'student_id'),
       ('public.assignment_extensions','student_id')

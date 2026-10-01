@@ -13,7 +13,7 @@ import { termOf } from '../lib/gradebook/client';
 /**
  * Assignments: an instructor's for a course, and a student's own.
  *
- * `lib/assignments/` and `20260930240000_assignments.sql` built it — an
+ * `lib/assignments/` and `20261001094000_assignments.sql` built it — an
  * assignment that is a draft until published, versions nobody overwrites, a
  * receipt the database writes with each one, per-student extensions with a
  * reason — and this is the screen that drives it. It is the first Core module

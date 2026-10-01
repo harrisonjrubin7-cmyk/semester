@@ -2,7 +2,7 @@
  * Assignments and submissions' reads and writes, typed, over the account service.
  *
  * Every function is one RPC or one table, and
- * `supabase/migrations/20260930240000_assignments.sql` is the authority: who
+ * `supabase/migrations/20261001094000_assignments.sql` is the authority: who
  * may author, who may submit, which mode the school is in, the append-only
  * history, the receipt and idempotency are all decided there. Row-level
  * security decides what a read returns — a course's staff read drafts and

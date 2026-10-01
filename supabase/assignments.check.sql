@@ -1,7 +1,7 @@
 -- supabase/assignments.check.sql — who writes an assignment, who submits to
 -- it, what a receipt proves, and that nothing submitted is ever rewritten.
 --
--- For 20260930240000_assignments.sql. One course, ECON 1020 in 2026FA at
+-- For 20261001094000_assignments.sql. One course, ECON 1020 in 2026FA at
 -- as-u, which has switched `lms_assignments` to Core: an instructor, a
 -- second instructor, a teaching assistant, two enrolled students, a student
 -- enrolled in another course, faculty on another course, and faculty at

@@ -1339,7 +1339,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   // Every version you submitted, the receipt written with it, and any
   // extension granted to you (`lib/assignments/client.ts`). Each names you by
   // a column that references `auth.users` with `on delete cascade`
-  // (`20260930240000_assignments.sql`), so they go with the account. The
+  // (`20261001094000_assignments.sql`), so they go with the account. The
   // school's own record keeps its copy.
   { table: 'submission_versions', column: 'student_id' },
   { table: 'submission_receipts', column: 'student_id' },

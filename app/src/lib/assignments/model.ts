@@ -1,7 +1,7 @@
 /**
  * The vocabulary of assignments and submissions, typed.
  *
- * `supabase/migrations/20260930240000_assignments.sql` is the authority on
+ * `supabase/migrations/20261001094000_assignments.sql` is the authority on
  * every limit and every state here, and `assignments.test.ts` reads that file
  * and holds these constants equal to it. They exist so a screen can refuse
  * before a call — a title of 201 characters is named before it is sent — and

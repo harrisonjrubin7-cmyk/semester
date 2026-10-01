@@ -335,7 +335,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
-  '20260930240000_assignments.sql',
+  '20261001094000_assignments.sql',
 ];
 
 /**
@@ -418,7 +418,7 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
     ],
   },
   {
-    file: '20260930240000_assignments.sql',
+    file: '20261001094000_assignments.sql',
     functions: ['assignments_close', 'assignments_create', 'assignments_extend', 'assignments_publish', 'assignments_revise', 'submissions_submit'],
   },
   {
