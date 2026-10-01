@@ -84,7 +84,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'financial_aid', name: 'Financial-aid records', replaces: 'PowerFAIDS, Banner Financial Aid, Ellucian Colleague Financial Aid',
     today: 'The checklist and the next action.',
     core: 'Offer and disbursement records and satisfactory-progress tracking; every determination stays with a person.',
-    status: 'planned', tables: ['aid_offers', 'aid_disbursements'] },
+    status: 'in-preparation', tables: ['aid_offers', 'aid_disbursements'], suite: 'financial-aid' },
   { id: 'scheduling', name: 'Timetabling and rooms', replaces: 'Ad Astra, CollegeNET Series25',
     today: 'Demand forecasts in the design documents only.',
     core: 'A timetable solver, room and space booking, and exam scheduling.',

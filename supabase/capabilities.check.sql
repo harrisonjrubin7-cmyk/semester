@@ -250,7 +250,8 @@ begin
   -- 68 before 20260929330000_dining.sql added `dining_staff`.
   -- 69 before 20261001060000_admissions.sql added `admissions_officer` and
   -- `admissions_director`.
-  perform pg_temp.counted('a signed-in account reads the seventy-one roles', n, 71);
+  -- 71 before 20261001070000_financial_aid.sql added `financial_aid_director`.
+  perform pg_temp.counted('a signed-in account reads the seventy-two roles', n, 72);
   select count(*) into n from public.role_capabilities;
   -- Twenty original rows, thirty-seven expansion rows, eight from the
   -- integration control plane (four for integration_admin, three for
@@ -326,7 +327,10 @@ begin
   -- 223 before admissions (20261001060000_admissions.sql) added seven:
   -- admissions:configure, admissions:review and admissions:read for the
   -- admissions officer and director; admissions:decide for the director.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 230);
+  -- 230 before financial aid (20261001070000_financial_aid.sql) added seven:
+  -- aid:propose, aid:disburse and aid:evaluate for the financial aid officer;
+  -- aid:approve and aid:determine for the financial aid director; aid:read for both.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 237);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

@@ -625,6 +625,20 @@ declare
     'admissions_deposit_record(want_application uuid, want_reference text, want_key text)',
     'admissions_yield(want_cycle uuid)',
 
+    -- 20261001070000_financial_aid.sql: financial-aid records in Core. Each reads
+    -- auth.uid() and either the caller's own school and a school-scoped aid:*
+    -- capability, or the student's link to the record it names, and refuses
+    -- unless the school runs financial aid in Core. An offer is approved by
+    -- someone other than who proposed it, a determination by someone other than
+    -- who ran the evaluation. `financial-aid.check.sql` walks every refusal.
+    'aid_offer_propose(want_student text, want_year text, want_components jsonb, want_note text, want_key text)',
+    'aid_offer_approve(want_version uuid, want_key text)',
+    'aid_offer_respond(want_version uuid, want_component text, want_response text, want_key text)',
+    'aid_disburse(want_version uuid, want_component text, want_term text, want_amount_cents bigint, want_reference text, want_key text)',
+    'aid_sap_policy_set(want_min_gpa numeric, want_min_completion numeric, want_note text, want_key text)',
+    'aid_sap_evaluate(want_student text, want_key text)',
+    'aid_sap_determine(want_evaluation uuid, want_year text, want_determination text, want_reason text, want_key text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

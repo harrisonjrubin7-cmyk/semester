@@ -124,6 +124,13 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['admissions_release', 'admin', ['private.gradebook_school', 'private.admissions_require', 'private.admissions_replay']],
   ['admissions_yield', 'admin', ['private.gradebook_school', 'private.admissions_require']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['aid_disburse', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay', 'private.aid_standing']],
+  ['aid_offer_approve', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay']],
+  ['aid_offer_propose', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay']],
+  ['aid_offer_respond', 'self-service', ['auth.uid()', 'private.aid_is_subject', 'private.aid_replay']],
+  ['aid_sap_determine', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay', 'private.aid_standing']],
+  ['aid_sap_evaluate', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay', 'private.aid_sap_figures']],
+  ['aid_sap_policy_set', 'admin', ['private.gradebook_school', 'private.aid_require', 'private.aid_replay']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
@@ -383,6 +390,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20261001040000_degree_audit.sql',
   '20261001050000_records_transcripts.sql',
   '20261001060000_admissions.sql',
+  '20261001070000_financial_aid.sql',
 ];
 
 /**
@@ -394,6 +402,12 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001070000_financial_aid.sql',
+    functions: [
+      'aid_disburse', 'aid_offer_approve', 'aid_offer_propose', 'aid_offer_respond', 'aid_sap_determine', 'aid_sap_evaluate', 'aid_sap_policy_set',
+    ],
+  },
   {
     file: '20261001060000_admissions.sql',
     functions: [

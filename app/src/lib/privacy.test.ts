@@ -395,6 +395,24 @@ describe('"delete my account" really means every row', () => {
       'admission_cycles',
       // Admissions cycles and their keys: the school's, kept with the school (D-151).
       'admissions_operations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_disbursements',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offer_approvals',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offer_responses',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offer_versions',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_offers',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_operations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_sap_determinations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_sap_evaluations',
+      // The school's financial-aid record, kept with the school (D-151).
+      'aid_sap_policies',
       // A course's assignment, kept with the course (D-151).
       // Part of a course's tests, kept with the course.
       'assessments',

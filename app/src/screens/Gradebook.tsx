@@ -7,6 +7,7 @@ import { Field, Row } from '../components/academic/Form';
 import { TestsHome } from '../components/assessments/TestsHome';
 import { RecordsHome } from '../components/records/RecordsHome';
 import { AdmissionsHome } from '../components/admissions/AdmissionsHome';
+import { AidHome } from '../components/aid/AidHome';
 import { AttendanceHome } from '../components/attendance/AttendanceHome';
 import { AssignmentsHome } from '../components/assignments/AssignmentsHome';
 import { InstructorBook } from '../components/gradebook/InstructorBook';
@@ -48,7 +49,7 @@ const FLAG = 'writeback.lms_grade_passback';
 
 type View = 'teaching' | 'mine';
 
-type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions';
+type Section = 'grades' | 'assignments' | 'attendance' | 'tests' | 'records' | 'admissions' | 'aid';
 
 export function Gradebook() {
   const [section, setSection] = useState<Section>('grades');
@@ -65,9 +66,10 @@ export function Gradebook() {
           { id: 'tests', label: 'Tests' },
           { id: 'records', label: 'Records' },
           { id: 'admissions', label: 'Admissions' },
+          { id: 'aid', label: 'Financial aid' },
         ]}
       />
-      {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : <Grades />}
+      {section === 'assignments' ? <AssignmentsHome /> : section === 'attendance' ? <AttendanceHome /> : section === 'tests' ? <TestsHome /> : section === 'records' ? <RecordsHome /> : section === 'admissions' ? <AdmissionsHome /> : section === 'aid' ? <AidHome /> : <Grades />}
     </Page>
   );
 }

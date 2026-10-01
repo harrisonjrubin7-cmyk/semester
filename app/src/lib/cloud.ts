@@ -1391,6 +1391,42 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'aid_offers',
+    why: 'A student’s aid offer for one aid year; its content is in the versions. The school’s record, not any student’s; if you created one as staff, your name is cleared.',
+  },
+  {
+    table: 'aid_offer_versions',
+    why: 'One version of an aid offer, never edited; a change is a new version. The school’s record of what it offered; the proposer’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'aid_offer_approvals',
+    why: 'That a second person approved an offer version. Part of the school’s record; the approver’s name is cleared if their account is deleted.',
+  },
+  {
+    table: 'aid_offer_responses',
+    why: 'A student’s answer to one part of an approved offer. Part of the school’s aid record; if you answered, your account reference is cleared and the answer stays.',
+  },
+  {
+    table: 'aid_disbursements',
+    why: 'A record that an amount of an accepted aid component went out for a term, by reference. Part of the school’s financial record; never rewritten.',
+  },
+  {
+    table: 'aid_sap_policies',
+    why: 'A school’s satisfactory-progress policy, versioned and never edited. The school’s, not any student’s.',
+  },
+  {
+    table: 'aid_sap_evaluations',
+    why: 'The figures a progress rule computed from a student’s academic record, with what each says against the policy. Part of the school’s aid record; never rewritten.',
+  },
+  {
+    table: 'aid_sap_determinations',
+    why: 'What a person decided about a student’s standing for an aid year, with the reason. Part of the school’s aid record; never rewritten.',
+  },
+  {
+    table: 'aid_operations',
+    why: 'Idempotency keys the aid writers spent, with what each asked and answered. Append-only, kept with the school.',
+  },
+  {
     table: 'admission_cycles',
     why: 'An admission cycle: its questions and document checklist, fixed when it opens. The school’s, not any applicant’s; if you configured one as staff, your name is cleared and it stays.',
   },
