@@ -8121,6 +8121,28 @@ section[data-drop] > .grip + * {
   list-style: none;
 }
 
+.explain-source-details {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: var(--sp-2) var(--sp-5);
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: var(--app-raised);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.explain-source-details dt {
+  color: var(--app-dim);
+}
+
+.explain-source-details dd {
+  margin: 0;
+  color: var(--app-fg);
+}
+
 .explain-controls {
   margin-top: var(--sp-7);
   padding-top: var(--sp-5);
