@@ -54,9 +54,9 @@ afterEach(() => {
   host.remove();
 });
 
-async function draw(filter = '') {
+async function draw(filter = '', privileged: (run: () => Promise<void>) => void = (run) => void run()) {
   await act(async () => {
-    root.render(<SupportQueue env="Production" scope="All" filter={filter} onStatus={mock.status} privileged={(run) => void run()} />);
+    root.render(<SupportQueue env="Production" scope="All" filter={filter} onStatus={mock.status} privileged={privileged} />);
   });
   await act(async () => {});
 }
@@ -115,6 +115,41 @@ describe('the support operations queue', () => {
     expect(mock.status).toHaveBeenCalledWith(
       'Reply recorded for SUP-123E4567. Email was not delivered; the reply is available in Help.',
     );
+  });
+
+  it('routes the write through the console privileged-action gate', async () => {
+    let approved: (() => Promise<void>) | undefined;
+    const privileged = vi.fn((run: () => Promise<void>) => { approved = run; });
+    await draw('', privileged);
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'This requires a fresh privileged session.');
+    await click(button('Send support reply'));
+    expect(privileged).toHaveBeenCalledTimes(1);
+    expect(mock.reply).not.toHaveBeenCalled();
+    await act(async () => { await approved?.(); });
+    expect(mock.reply).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not report a committed reply as failed when the thread refresh is unavailable', async () => {
+    mock.thread.mockResolvedValueOnce([{
+      from: 'student', body: 'Please help.', at: '2026-10-01T10:00:00Z', context: null,
+    }]).mockRejectedValueOnce(new Error('read unavailable'));
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'Your reply was recorded.');
+    await click(button('Send support reply'));
+    expect(mock.reply).toHaveBeenCalledTimes(1);
+    expect(mock.status).toHaveBeenLastCalledWith('Reply recorded and student notified for SUP-123E4567.');
+  });
+
+  it('resets the next disposition when the operator reopens a ticket', async () => {
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('select')!, 'resolved');
+    expect((host.querySelector('select') as HTMLSelectElement).value).toBe('resolved');
+    await click(button('Close conversation'));
+    await click(button('Open conversation'));
+    expect((host.querySelector('select') as HTMLSelectElement).value).toBe('waiting_on_student');
   });
 
   it('uses the console filter without re-reading the database', async () => {

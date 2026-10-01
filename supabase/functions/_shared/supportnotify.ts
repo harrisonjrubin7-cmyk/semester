@@ -1,4 +1,4 @@
-import { strictCorsHeaders, strictOrigin } from './cors.ts';
+import { allowOrigin, corsHeaders } from './cors.ts';
 
 export interface SupportNoticeDeps {
   allowedOrigin: string | undefined;
@@ -20,8 +20,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
  */
 export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps): Promise<Response> {
   const origin = req.headers.get('Origin');
-  const allowed = strictOrigin(deps.allowedOrigin, origin);
-  const cors = strictCorsHeaders(deps.allowedOrigin, origin);
+  // Support is a first-party app flow. Keep the production Pages origin from
+  // the shared built-in allowlist, while ALLOWED_ORIGIN may add deployments.
+  const allowed = allowOrigin(deps.allowedOrigin, origin);
+  const cors = corsHeaders(deps.allowedOrigin, origin);
   const reply = (status: number, body: unknown) => new Response(JSON.stringify(body), {
     status,
     headers: { ...cors, 'Cache-Control': 'no-store', 'Content-Type': 'application/json' },

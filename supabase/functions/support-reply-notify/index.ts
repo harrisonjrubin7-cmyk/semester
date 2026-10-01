@@ -9,7 +9,9 @@ const resendKey = Deno.env.get('RESEND_API_KEY');
 Deno.serve((req) => handleSupportNotice(req, {
   allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
   resendKey,
-  appUrl: Deno.env.get('SUPPORT_RETURN_URL') ?? Deno.env.get('ALLOWED_ORIGIN') ?? 'https://harrisonjrubin7-cmyk.github.io/semester/',
+  // An origin has no path and ALLOWED_ORIGIN may contain several entries, so
+  // it cannot be used as the application link in an email.
+  appUrl: Deno.env.get('SUPPORT_RETURN_URL') ?? 'https://harrisonjrubin7-cmyk.github.io/semester/',
   async userFromToken(token) {
     const { data, error } = await admin.auth.getUser(token);
     return error || !data.user ? null : data.user.id;

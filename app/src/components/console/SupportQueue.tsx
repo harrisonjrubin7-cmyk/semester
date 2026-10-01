@@ -22,7 +22,7 @@ import { matches, said, when, type ViewProps } from './Fields';
  * the database still capability-gates every read and reply with
  * `support:ticket`, independently of the operations-console gate.
  */
-export function SupportQueue({ filter, onStatus }: ViewProps) {
+export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [tickets, setTickets] = useState<SupportQueueTicket[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<SupportMessage[] | null>(null);
@@ -61,6 +61,7 @@ export function SupportQueue({ filter, onStatus }: ViewProps) {
     setOpenId(id);
     setThread(null);
     setReply('');
+    setNextStatus('waiting_on_student');
     if (!id) return;
     supportThread(id).then(
       (messages) => { if (wanted.current === id) setThread(messages); },
@@ -75,16 +76,23 @@ export function SupportQueue({ filter, onStatus }: ViewProps) {
 
   const send = async () => {
     if (!openId || !reply.trim()) return;
+    const ticketId = openId;
+    const message = reply;
+    const status = nextStatus;
     setBusy(true);
     try {
-      const delivery = await supportReply(openId, reply, nextStatus);
-      const messages = await supportThread(openId);
-      setThread(messages);
-      setReply('');
+      const delivery = await supportReply(ticketId, message, status);
+      if (wanted.current === ticketId) setReply('');
       await refresh();
       onStatus(delivery === 'notified'
-        ? `Reply recorded and student notified for ${ticketReference(openId)}.`
-        : `Reply recorded for ${ticketReference(openId)}. Email was not delivered; the reply is available in Help.`);
+        ? `Reply recorded and student notified for ${ticketReference(ticketId)}.`
+        : `Reply recorded for ${ticketReference(ticketId)}. Email was not delivered; the reply is available in Help.`);
+      // The write and notification have already succeeded. A later read outage
+      // must not invite an operator to retry and send a duplicate response.
+      await supportThread(ticketId).then(
+        (messages) => { if (wanted.current === ticketId) setThread(messages); },
+        () => {},
+      );
     } catch (error) {
       onStatus(said(error, 'Could not send the support reply.'));
     } finally {
@@ -139,7 +147,7 @@ export function SupportQueue({ filter, onStatus }: ViewProps) {
           ))}
           <form
             aria-label={`Reply to ${ticketReference(current.id)}`}
-            onSubmit={(event) => { event.preventDefault(); void send(); }}
+            onSubmit={(event) => { event.preventDefault(); privileged(send); }}
             style={{ display: 'grid', gap: 'var(--sp-3)' }}
           >
             <label>

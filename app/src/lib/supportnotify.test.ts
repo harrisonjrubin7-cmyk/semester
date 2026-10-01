@@ -51,4 +51,10 @@ describe('support reply notification', () => {
     expect((await handleSupportNotice(wrong, d)).status).toBe(403);
     expect((await handleSupportNotice(request(), deps({ resendKey: undefined }))).status).toBe(503);
   });
+
+  it('keeps the production app allowed when no extra origin is configured', async () => {
+    const response = await handleSupportNotice(request(), deps({ allowedOrigin: undefined }));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe(origin);
+  });
 });
