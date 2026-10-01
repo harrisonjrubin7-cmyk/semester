@@ -222,7 +222,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `set_member_capabilities` | `private.org_can` | `20260921230000_organizations.sql` |
 | `set_member_standing` | `auth.uid()`, `private.org_can` | `20260921230000_organizations.sql` |
 | `set_school_enforcement` | `private.is_app_admin` | `20260930185000_school_membership_enforcement.sql` |
-| `support_reply` | `private.support_agent` | `20260928210000_support_tickets.sql` |
+| `support_reply` | `private.support_agent` | `20261001221500_support_reply_audit.sql` |
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
