@@ -1598,6 +1598,13 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'dining_menu_items',
     why: 'What your school’s dining locations serve and what it costs. Not a record about you, and no student account writes a row.',
+  },  {
+    table: 'degree_programs',
+    why: 'A degree program your school published for a catalog year, with its requirements. The school’s, not any student’s; if you wrote one as a registrar or dean, your name is cleared and the program stays.',
+  },
+  {
+    table: 'degree_audits',
+    why: 'An audit of a student’s record against a degree program, as of a date, kept with who asked. It is derived from the school’s academic record and keyed by the school’s own student reference, not by your account; deleting your account clears who asked and leaves the audit, as the record it was run on stays with the school.',
   },
 ];
 

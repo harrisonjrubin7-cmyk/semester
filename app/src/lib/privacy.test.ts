@@ -413,6 +413,12 @@ describe('"delete my account" really means every row', () => {
       // read these; they are course policy, kept for the class.
       'course_ai_rules',
       'course_guidance',
+      // The school's degree programs and the audits of a student's record kept
+      // against them (lib/degreeaudit/client.ts, 20260930250000_degree_audit.sql).
+      // The school's, keyed by its own student reference and not by an account;
+      // the person who wrote or asked is cleared by deletion and the row stays.
+      'degree_audits',
+      'degree_programs',
       // A school's dining locations, hours and menus (lib/dining/client.ts,
       // 20260929330000_dining.sql): what its card office lists.
       'dining_hours',

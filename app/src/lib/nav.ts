@@ -1050,6 +1050,11 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    */
   registration: 'calendar',
   gradebook: 'courses',
+  // The school's own degree audit is a Core module (D-151) shown only at a
+  // school that has switched it on, so it is nested under The degree, where the
+  // student's own calculator is, rather than given a tile that opens onto "your
+  // school has not switched this" for everyone else.
+  degreeaudit: 'degree',
   agreements: 'moderation',
   volunteers: 'moderation',
   volunteer: 'mine',
@@ -1135,6 +1140,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // registration; and a course's official grades, entered, released and read.
   registration: 'Enrollment',
   gradebook: 'the gradebook',
+  degreeaudit: 'your school’s degree audit',
   agreements: 'escalation agreements',
   volunteers: 'the volunteer programme',
   volunteer: 'volunteer moderation',

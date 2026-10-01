@@ -790,6 +790,10 @@ export type Screen =
   | 'applying'
   | 'behind'
   | 'degree'
+  // The school's own degree audit, run on the server against the school's
+  // published program and its academic record. Shown only at a school that has
+  // switched `degree_audit` to Core. See `screens/DegreeAudit.tsx`.
+  | 'degreeaudit'
   | 'people'
   | 'meet'
   | 'call'

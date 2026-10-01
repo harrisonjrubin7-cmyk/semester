@@ -1,0 +1,1811 @@
+[
+  {
+    "name": "an empty record leaves everything to find",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Core theory",
+          "need": "courses",
+          "count": 2,
+          "accepts": [
+            "ECON 1010",
+            "ECON 2010"
+          ],
+          "min_grade": null
+        },
+        {
+          "sort": 2,
+          "name": "Distribution",
+          "need": "hours",
+          "count": 6,
+          "accepts": [
+            "HIST",
+            "PSCI"
+          ],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [],
+    "expected": {
+      "inputs_text": "",
+      "result": {
+        "verdict": "incomplete",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Core theory",
+            "need": "courses",
+            "count": 2,
+            "min_grade": null,
+            "accepts": [
+              "ECON 1010",
+              "ECON 2010"
+            ],
+            "have": 0,
+            "will_have": 0,
+            "left": 2,
+            "met": false,
+            "meets_after": false,
+            "done": [],
+            "doing": [],
+            "unmet_grade": []
+          },
+          {
+            "sort": 2,
+            "name": "Distribution",
+            "need": "hours",
+            "count": 6,
+            "min_grade": null,
+            "accepts": [
+              "HIST",
+              "PSCI"
+            ],
+            "have": 0,
+            "will_have": 0,
+            "left": 6,
+            "met": false,
+            "meets_after": false,
+            "done": [],
+            "doing": [],
+            "unmet_grade": []
+          }
+        ],
+        "courses": []
+      }
+    }
+  },
+  {
+    "name": "finished work meets both requirements",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Core theory",
+          "need": "courses",
+          "count": 2,
+          "accepts": [
+            "ECON 1010",
+            "ECON 2010"
+          ],
+          "min_grade": null
+        },
+        {
+          "sort": 2,
+          "name": "Distribution",
+          "need": "hours",
+          "count": 6,
+          "accepts": [
+            "HIST",
+            "PSCI"
+          ],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "B+",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000001"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000002"
+      },
+      {
+        "kind": "grade",
+        "key": "ECON 2010 · Spring 2026",
+        "value": "A-",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000003"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 2010 · Spring 2026",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000004"
+      },
+      {
+        "kind": "grade",
+        "key": "HIST 1100 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000005"
+      },
+      {
+        "kind": "credit",
+        "key": "HIST 1100 · Fall 2025",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000006"
+      },
+      {
+        "kind": "grade",
+        "key": "PSCI 2100 · Spring 2026",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000007"
+      },
+      {
+        "kind": "credit",
+        "key": "PSCI 2100 · Spring 2026",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000008"
+      }
+    ],
+    "expected": {
+      "inputs_text": "credit\tECON 1010 · Fall 2025\t3\t2026-01-15\t00000000-0000-4000-8000-000000000002\ncredit\tECON 2010 · Spring 2026\t3\t2026-01-15\t00000000-0000-4000-8000-000000000004\ncredit\tHIST 1100 · Fall 2025\t3\t2026-01-15\t00000000-0000-4000-8000-000000000006\ncredit\tPSCI 2100 · Spring 2026\t3\t2026-01-15\t00000000-0000-4000-8000-000000000008\ngrade\tECON 1010 · Fall 2025\tB+\t2026-01-15\t00000000-0000-4000-8000-000000000001\ngrade\tECON 2010 · Spring 2026\tA-\t2026-01-15\t00000000-0000-4000-8000-000000000003\ngrade\tHIST 1100 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000005\ngrade\tPSCI 2100 · Spring 2026\tB\t2026-01-15\t00000000-0000-4000-8000-000000000007",
+      "result": {
+        "verdict": "complete",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Core theory",
+            "need": "courses",
+            "count": 2,
+            "min_grade": null,
+            "accepts": [
+              "ECON 1010",
+              "ECON 2010"
+            ],
+            "have": 2,
+            "will_have": 2,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 1010 · Fall 2025",
+                "code": "ECON 1010",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "B+",
+                "hours": 3
+              },
+              {
+                "key": "ECON 2010 · Spring 2026",
+                "code": "ECON 2010",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "A-",
+                "hours": 3
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          },
+          {
+            "sort": 2,
+            "name": "Distribution",
+            "need": "hours",
+            "count": 6,
+            "min_grade": null,
+            "accepts": [
+              "HIST",
+              "PSCI"
+            ],
+            "have": 6,
+            "will_have": 6,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "HIST 1100 · Fall 2025",
+                "code": "HIST 1100",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": 3
+              },
+              {
+                "key": "PSCI 2100 · Spring 2026",
+                "code": "PSCI 2100",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": 3
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          }
+        ],
+        "courses": [
+          {
+            "key": "ECON 1010 · Fall 2025",
+            "code": "ECON 1010",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "B+",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Core theory"
+            ]
+          },
+          {
+            "key": "ECON 2010 · Spring 2026",
+            "code": "ECON 2010",
+            "term": "Spring 2026",
+            "source": "course",
+            "grade": "A-",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Core theory"
+            ]
+          },
+          {
+            "key": "HIST 1100 · Fall 2025",
+            "code": "HIST 1100",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Distribution"
+            ]
+          },
+          {
+            "key": "PSCI 2100 · Spring 2026",
+            "code": "PSCI 2100",
+            "term": "Spring 2026",
+            "source": "course",
+            "grade": "B",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Distribution"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "a course in progress is not done, and covers the rest only if it passes",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Core theory",
+          "need": "courses",
+          "count": 2,
+          "accepts": [
+            "ECON 1010",
+            "ECON 2010"
+          ],
+          "min_grade": null
+        },
+        {
+          "sort": 2,
+          "name": "Distribution",
+          "need": "hours",
+          "count": 6,
+          "accepts": [
+            "HIST",
+            "PSCI"
+          ],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "B+",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000009"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000010"
+      },
+      {
+        "kind": "enrollment",
+        "key": "ECON 2010 · Fall 2026",
+        "value": "Enrolled",
+        "effective_on": "2026-08-20",
+        "id": "00000000-0000-4000-8000-000000000011"
+      },
+      {
+        "kind": "grade",
+        "key": "HIST 1100 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000012"
+      },
+      {
+        "kind": "credit",
+        "key": "HIST 1100 · Fall 2025",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000013"
+      },
+      {
+        "kind": "enrollment",
+        "key": "PSCI 2100 · Fall 2026",
+        "value": "Enrolled",
+        "effective_on": "2026-08-20",
+        "id": "00000000-0000-4000-8000-000000000014"
+      },
+      {
+        "kind": "credit",
+        "key": "PSCI 2100 · Fall 2026",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000015"
+      }
+    ],
+    "expected": {
+      "inputs_text": "credit\tECON 1010 · Fall 2025\t3\t2026-01-15\t00000000-0000-4000-8000-000000000010\ncredit\tHIST 1100 · Fall 2025\t3\t2026-01-15\t00000000-0000-4000-8000-000000000013\ncredit\tPSCI 2100 · Fall 2026\t3\t2026-01-15\t00000000-0000-4000-8000-000000000015\nenrollment\tECON 2010 · Fall 2026\tEnrolled\t2026-08-20\t00000000-0000-4000-8000-000000000011\nenrollment\tPSCI 2100 · Fall 2026\tEnrolled\t2026-08-20\t00000000-0000-4000-8000-000000000014\ngrade\tECON 1010 · Fall 2025\tB+\t2026-01-15\t00000000-0000-4000-8000-000000000009\ngrade\tHIST 1100 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000012",
+      "result": {
+        "verdict": "complete_if_in_progress_passes",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Core theory",
+            "need": "courses",
+            "count": 2,
+            "min_grade": null,
+            "accepts": [
+              "ECON 1010",
+              "ECON 2010"
+            ],
+            "have": 1,
+            "will_have": 2,
+            "left": 0,
+            "met": false,
+            "meets_after": true,
+            "done": [
+              {
+                "key": "ECON 1010 · Fall 2025",
+                "code": "ECON 1010",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "B+",
+                "hours": 3
+              }
+            ],
+            "doing": [
+              {
+                "key": "ECON 2010 · Fall 2026",
+                "code": "ECON 2010",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": null,
+                "hours": null
+              }
+            ],
+            "unmet_grade": []
+          },
+          {
+            "sort": 2,
+            "name": "Distribution",
+            "need": "hours",
+            "count": 6,
+            "min_grade": null,
+            "accepts": [
+              "HIST",
+              "PSCI"
+            ],
+            "have": 3,
+            "will_have": 6,
+            "left": 0,
+            "met": false,
+            "meets_after": true,
+            "done": [
+              {
+                "key": "HIST 1100 · Fall 2025",
+                "code": "HIST 1100",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": 3
+              }
+            ],
+            "doing": [
+              {
+                "key": "PSCI 2100 · Fall 2026",
+                "code": "PSCI 2100",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": null,
+                "hours": 3
+              }
+            ],
+            "unmet_grade": []
+          }
+        ],
+        "courses": [
+          {
+            "key": "ECON 1010 · Fall 2025",
+            "code": "ECON 1010",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "B+",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Core theory"
+            ]
+          },
+          {
+            "key": "ECON 2010 · Fall 2026",
+            "code": "ECON 2010",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": null,
+            "hours": null,
+            "state": "in_progress",
+            "reason": null,
+            "counted_in": [
+              "Core theory"
+            ]
+          },
+          {
+            "key": "HIST 1100 · Fall 2025",
+            "code": "HIST 1100",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Distribution"
+            ]
+          },
+          {
+            "key": "PSCI 2100 · Fall 2026",
+            "code": "PSCI 2100",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": null,
+            "hours": 3,
+            "state": "in_progress",
+            "reason": null,
+            "counted_in": [
+              "Distribution"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "one course counts in every requirement that names it, and each says so",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Major core",
+          "need": "courses",
+          "count": 2,
+          "accepts": [
+            "ECON"
+          ],
+          "min_grade": "C"
+        },
+        {
+          "sort": 2,
+          "name": "Writing",
+          "need": "courses",
+          "count": 1,
+          "accepts": [
+            "ENGL 1010",
+            "ECON 2010"
+          ],
+          "min_grade": null
+        },
+        {
+          "sort": 3,
+          "name": "Electives",
+          "need": "hours",
+          "count": 9,
+          "accepts": [],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "C-",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000016"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000017"
+      },
+      {
+        "kind": "grade",
+        "key": "ECON 2010 · Spring 2026",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000018"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 2010 · Spring 2026",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000019"
+      },
+      {
+        "kind": "enrollment",
+        "key": "ECON 3000 · Fall 2026",
+        "value": "Enrolled",
+        "effective_on": "2026-08-20",
+        "id": "00000000-0000-4000-8000-000000000020"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 3000 · Fall 2026",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000021"
+      },
+      {
+        "kind": "grade",
+        "key": "ART 1000 · Fall 2024",
+        "value": "F",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000022"
+      },
+      {
+        "kind": "credit",
+        "key": "ART 1000 · Fall 2024",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000023"
+      },
+      {
+        "kind": "transfer_credit",
+        "key": "ECON 101 · Nashville State",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000024"
+      },
+      {
+        "kind": "credit",
+        "key": "MATH 1000 · Fall 2024",
+        "value": "4",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000025"
+      }
+    ],
+    "expected": {
+      "inputs_text": "credit\tART 1000 · Fall 2024\t3\t2026-01-15\t00000000-0000-4000-8000-000000000023\ncredit\tECON 1010 · Fall 2025\t3\t2026-01-15\t00000000-0000-4000-8000-000000000017\ncredit\tECON 2010 · Spring 2026\t3\t2026-01-15\t00000000-0000-4000-8000-000000000019\ncredit\tECON 3000 · Fall 2026\t3\t2026-01-15\t00000000-0000-4000-8000-000000000021\ncredit\tMATH 1000 · Fall 2024\t4\t2026-01-15\t00000000-0000-4000-8000-000000000025\nenrollment\tECON 3000 · Fall 2026\tEnrolled\t2026-08-20\t00000000-0000-4000-8000-000000000020\ngrade\tART 1000 · Fall 2024\tF\t2026-01-15\t00000000-0000-4000-8000-000000000022\ngrade\tECON 1010 · Fall 2025\tC-\t2026-01-15\t00000000-0000-4000-8000-000000000016\ngrade\tECON 2010 · Spring 2026\tB\t2026-01-15\t00000000-0000-4000-8000-000000000018\ntransfer_credit\tECON 101 · Nashville State\t3\t2026-01-15\t00000000-0000-4000-8000-000000000024",
+      "result": {
+        "verdict": "complete_if_in_progress_passes",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Major core",
+            "need": "courses",
+            "count": 2,
+            "min_grade": "C",
+            "accepts": [
+              "ECON"
+            ],
+            "have": 1,
+            "will_have": 2,
+            "left": 0,
+            "met": false,
+            "meets_after": true,
+            "done": [
+              {
+                "key": "ECON 2010 · Spring 2026",
+                "code": "ECON 2010",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": 3
+              }
+            ],
+            "doing": [
+              {
+                "key": "ECON 3000 · Fall 2026",
+                "code": "ECON 3000",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": null,
+                "hours": 3
+              }
+            ],
+            "unmet_grade": [
+              {
+                "key": "ECON 101 · Nashville State",
+                "code": "ECON 101",
+                "term": "Nashville State",
+                "source": "transfer",
+                "grade": null,
+                "hours": 3,
+                "why": "no_grade"
+              },
+              {
+                "key": "ECON 1010 · Fall 2025",
+                "code": "ECON 1010",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "C-",
+                "hours": 3,
+                "why": "below_minimum"
+              }
+            ]
+          },
+          {
+            "sort": 2,
+            "name": "Writing",
+            "need": "courses",
+            "count": 1,
+            "min_grade": null,
+            "accepts": [
+              "ENGL 1010",
+              "ECON 2010"
+            ],
+            "have": 1,
+            "will_have": 1,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 2010 · Spring 2026",
+                "code": "ECON 2010",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": 3
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          },
+          {
+            "sort": 3,
+            "name": "Electives",
+            "need": "hours",
+            "count": 9,
+            "min_grade": null,
+            "accepts": [],
+            "have": 9,
+            "will_have": 12,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 101 · Nashville State",
+                "code": "ECON 101",
+                "term": "Nashville State",
+                "source": "transfer",
+                "grade": null,
+                "hours": 3
+              },
+              {
+                "key": "ECON 1010 · Fall 2025",
+                "code": "ECON 1010",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "C-",
+                "hours": 3
+              },
+              {
+                "key": "ECON 2010 · Spring 2026",
+                "code": "ECON 2010",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": 3
+              }
+            ],
+            "doing": [
+              {
+                "key": "ECON 3000 · Fall 2026",
+                "code": "ECON 3000",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": null,
+                "hours": 3
+              }
+            ],
+            "unmet_grade": []
+          }
+        ],
+        "courses": [
+          {
+            "key": "ART 1000 · Fall 2024",
+            "code": "ART 1000",
+            "term": "Fall 2024",
+            "source": "course",
+            "grade": "F",
+            "hours": 3,
+            "state": "not_counted",
+            "reason": "grade_not_passing",
+            "counted_in": []
+          },
+          {
+            "key": "ECON 101 · Nashville State",
+            "code": "ECON 101",
+            "term": "Nashville State",
+            "source": "transfer",
+            "grade": null,
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "ECON 1010 · Fall 2025",
+            "code": "ECON 1010",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "C-",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "ECON 2010 · Spring 2026",
+            "code": "ECON 2010",
+            "term": "Spring 2026",
+            "source": "course",
+            "grade": "B",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Major core",
+              "Writing",
+              "Electives"
+            ]
+          },
+          {
+            "key": "ECON 3000 · Fall 2026",
+            "code": "ECON 3000",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": null,
+            "hours": 3,
+            "state": "in_progress",
+            "reason": null,
+            "counted_in": [
+              "Major core",
+              "Electives"
+            ]
+          },
+          {
+            "key": "MATH 1000 · Fall 2024",
+            "code": "MATH 1000",
+            "term": "Fall 2024",
+            "source": "course",
+            "grade": null,
+            "hours": 4,
+            "state": "not_counted",
+            "reason": "no_grade_or_enrollment",
+            "counted_in": []
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "hours are summed exactly, and a course with no hours counts as a course and as none",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Electives",
+          "need": "hours",
+          "count": 9.5,
+          "accepts": [],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "ART 1000 · Fall 2025",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000026"
+      },
+      {
+        "kind": "credit",
+        "key": "ART 1000 · Fall 2025",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000027"
+      },
+      {
+        "kind": "grade",
+        "key": "MUS 1000 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000028"
+      },
+      {
+        "kind": "credit",
+        "key": "MUS 1000 · Fall 2025",
+        "value": "1.5",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000029"
+      },
+      {
+        "kind": "grade",
+        "key": "DAN 1000 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000030"
+      },
+      {
+        "kind": "grade",
+        "key": "MUS 1100 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000031"
+      },
+      {
+        "kind": "credit",
+        "key": "MUS 1100 · Fall 2025",
+        "value": "0.1",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000032"
+      },
+      {
+        "kind": "grade",
+        "key": "MUS 1200 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000033"
+      },
+      {
+        "kind": "credit",
+        "key": "MUS 1200 · Fall 2025",
+        "value": "0.2",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000034"
+      },
+      {
+        "kind": "enrollment",
+        "key": "BIO 1000 · Fall 2026",
+        "value": "Enrolled",
+        "effective_on": "2026-08-20",
+        "id": "00000000-0000-4000-8000-000000000035"
+      },
+      {
+        "kind": "credit",
+        "key": "BIO 1000 · Fall 2026",
+        "value": "4",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000036"
+      }
+    ],
+    "expected": {
+      "inputs_text": "credit\tART 1000 · Fall 2025\t3\t2026-01-15\t00000000-0000-4000-8000-000000000027\ncredit\tBIO 1000 · Fall 2026\t4\t2026-01-15\t00000000-0000-4000-8000-000000000036\ncredit\tMUS 1000 · Fall 2025\t1.5\t2026-01-15\t00000000-0000-4000-8000-000000000029\ncredit\tMUS 1100 · Fall 2025\t0.1\t2026-01-15\t00000000-0000-4000-8000-000000000032\ncredit\tMUS 1200 · Fall 2025\t0.2\t2026-01-15\t00000000-0000-4000-8000-000000000034\nenrollment\tBIO 1000 · Fall 2026\tEnrolled\t2026-08-20\t00000000-0000-4000-8000-000000000035\ngrade\tART 1000 · Fall 2025\tB\t2026-01-15\t00000000-0000-4000-8000-000000000026\ngrade\tDAN 1000 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000030\ngrade\tMUS 1000 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000028\ngrade\tMUS 1100 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000031\ngrade\tMUS 1200 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000033",
+      "result": {
+        "verdict": "incomplete",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Electives",
+            "need": "hours",
+            "count": 9.5,
+            "min_grade": null,
+            "accepts": [],
+            "have": 4.8,
+            "will_have": 8.8,
+            "left": 0.7,
+            "met": false,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ART 1000 · Fall 2025",
+                "code": "ART 1000",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "B",
+                "hours": 3
+              },
+              {
+                "key": "DAN 1000 · Fall 2025",
+                "code": "DAN 1000",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": null
+              },
+              {
+                "key": "MUS 1000 · Fall 2025",
+                "code": "MUS 1000",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": 1.5
+              },
+              {
+                "key": "MUS 1100 · Fall 2025",
+                "code": "MUS 1100",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": 0.1
+              },
+              {
+                "key": "MUS 1200 · Fall 2025",
+                "code": "MUS 1200",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": 0.2
+              }
+            ],
+            "doing": [
+              {
+                "key": "BIO 1000 · Fall 2026",
+                "code": "BIO 1000",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": null,
+                "hours": 4
+              }
+            ],
+            "unmet_grade": []
+          }
+        ],
+        "courses": [
+          {
+            "key": "ART 1000 · Fall 2025",
+            "code": "ART 1000",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "B",
+            "hours": 3,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "BIO 1000 · Fall 2026",
+            "code": "BIO 1000",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": null,
+            "hours": 4,
+            "state": "in_progress",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "DAN 1000 · Fall 2025",
+            "code": "DAN 1000",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "MUS 1000 · Fall 2025",
+            "code": "MUS 1000",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": 1.5,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "MUS 1100 · Fall 2025",
+            "code": "MUS 1100",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": 0.1,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          },
+          {
+            "key": "MUS 1200 · Fall 2025",
+            "code": "MUS 1200",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": 0.2,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Electives"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "a key the audit cannot read is listed and not counted, never guessed at",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Economics",
+          "need": "courses",
+          "count": 3,
+          "accepts": [
+            "ECON"
+          ],
+          "min_grade": null
+        },
+        {
+          "sort": 2,
+          "name": "Anything",
+          "need": "courses",
+          "count": 1,
+          "accepts": [],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "ECON 1010",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000037"
+      },
+      {
+        "kind": "grade",
+        "key": " · Fall 2026",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000038"
+      },
+      {
+        "kind": "grade",
+        "key": "econ  2010 · Fall 2026",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000039"
+      },
+      {
+        "kind": "grade",
+        "key": "ECONOMICS 1000 · Fall 2026",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000040"
+      },
+      {
+        "kind": "credit",
+        "key": "ECON 4000 · Fall 2026",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000041"
+      },
+      {
+        "kind": "transfer_credit",
+        "key": "ECON 101 · Elsewhere",
+        "value": "3.456",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000042"
+      },
+      {
+        "kind": "transfer_credit",
+        "key": " · Elsewhere",
+        "value": "3",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000043"
+      }
+    ],
+    "expected": {
+      "inputs_text": "credit\tECON 4000 · Fall 2026\t3\t2026-01-15\t00000000-0000-4000-8000-000000000041\ngrade\t · Fall 2026\tB\t2026-01-15\t00000000-0000-4000-8000-000000000038\ngrade\tECON 1010\tA\t2026-01-15\t00000000-0000-4000-8000-000000000037\ngrade\tECONOMICS 1000 · Fall 2026\tA\t2026-01-15\t00000000-0000-4000-8000-000000000040\ngrade\tecon  2010 · Fall 2026\tB\t2026-01-15\t00000000-0000-4000-8000-000000000039\ntransfer_credit\t · Elsewhere\t3\t2026-01-15\t00000000-0000-4000-8000-000000000043\ntransfer_credit\tECON 101 · Elsewhere\t3.456\t2026-01-15\t00000000-0000-4000-8000-000000000042",
+      "result": {
+        "verdict": "incomplete",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Economics",
+            "need": "courses",
+            "count": 3,
+            "min_grade": null,
+            "accepts": [
+              "ECON"
+            ],
+            "have": 2,
+            "will_have": 2,
+            "left": 1,
+            "met": false,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 1010",
+                "code": "ECON 1010",
+                "term": "",
+                "source": "course",
+                "grade": "A",
+                "hours": null
+              },
+              {
+                "key": "econ  2010 · Fall 2026",
+                "code": "ECON 2010",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": null
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          },
+          {
+            "sort": 2,
+            "name": "Anything",
+            "need": "courses",
+            "count": 1,
+            "min_grade": null,
+            "accepts": [],
+            "have": 3,
+            "will_have": 3,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 1010",
+                "code": "ECON 1010",
+                "term": "",
+                "source": "course",
+                "grade": "A",
+                "hours": null
+              },
+              {
+                "key": "ECONOMICS 1000 · Fall 2026",
+                "code": "ECONOMICS 1000",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": "A",
+                "hours": null
+              },
+              {
+                "key": "econ  2010 · Fall 2026",
+                "code": "ECON 2010",
+                "term": "Fall 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": null
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          }
+        ],
+        "courses": [
+          {
+            "key": " · Elsewhere",
+            "code": "",
+            "term": "Elsewhere",
+            "source": "transfer",
+            "grade": null,
+            "hours": 3,
+            "state": "not_counted",
+            "reason": "no_course_code",
+            "counted_in": []
+          },
+          {
+            "key": " · Fall 2026",
+            "code": "",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": "B",
+            "hours": null,
+            "state": "not_counted",
+            "reason": "no_course_code",
+            "counted_in": []
+          },
+          {
+            "key": "ECON 101 · Elsewhere",
+            "code": "ECON 101",
+            "term": "Elsewhere",
+            "source": "transfer",
+            "grade": null,
+            "hours": null,
+            "state": "not_counted",
+            "reason": "hours_unreadable",
+            "counted_in": []
+          },
+          {
+            "key": "ECON 1010",
+            "code": "ECON 1010",
+            "term": "",
+            "source": "course",
+            "grade": "A",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Economics",
+              "Anything"
+            ]
+          },
+          {
+            "key": "ECON 4000 · Fall 2026",
+            "code": "ECON 4000",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": null,
+            "hours": 3,
+            "state": "not_counted",
+            "reason": "no_grade_or_enrollment",
+            "counted_in": []
+          },
+          {
+            "key": "ECONOMICS 1000 · Fall 2026",
+            "code": "ECONOMICS 1000",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": "A",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Anything"
+            ]
+          },
+          {
+            "key": "econ  2010 · Fall 2026",
+            "code": "ECON 2010",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": "B",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Economics",
+              "Anything"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "a failed course is not counted and a retake is its own course; a repeat that passed twice counts twice",
+    "program": {
+      "passing_grades": [
+        "A",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D",
+        "D-"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Intro",
+          "need": "courses",
+          "count": 1,
+          "accepts": [
+            "ECON 1010"
+          ],
+          "min_grade": null
+        },
+        {
+          "sort": 2,
+          "name": "Theory",
+          "need": "courses",
+          "count": 2,
+          "accepts": [
+            "ECON 2010"
+          ],
+          "min_grade": null
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "ECON 1010 · Fall 2025",
+        "value": "F",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000044"
+      },
+      {
+        "kind": "grade",
+        "key": "ECON 1010 · Spring 2026",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000045"
+      },
+      {
+        "kind": "grade",
+        "key": "ECON 2010 · Fall 2025",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000046"
+      },
+      {
+        "kind": "grade",
+        "key": "ECON 2010 · Spring 2026",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000047"
+      },
+      {
+        "kind": "grade",
+        "key": "ECON 2010 · Fall 2026",
+        "value": "W",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000048"
+      }
+    ],
+    "expected": {
+      "inputs_text": "grade\tECON 1010 · Fall 2025\tF\t2026-01-15\t00000000-0000-4000-8000-000000000044\ngrade\tECON 1010 · Spring 2026\tB\t2026-01-15\t00000000-0000-4000-8000-000000000045\ngrade\tECON 2010 · Fall 2025\tB\t2026-01-15\t00000000-0000-4000-8000-000000000046\ngrade\tECON 2010 · Fall 2026\tW\t2026-01-15\t00000000-0000-4000-8000-000000000048\ngrade\tECON 2010 · Spring 2026\tA\t2026-01-15\t00000000-0000-4000-8000-000000000047",
+      "result": {
+        "verdict": "complete",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Intro",
+            "need": "courses",
+            "count": 1,
+            "min_grade": null,
+            "accepts": [
+              "ECON 1010"
+            ],
+            "have": 1,
+            "will_have": 1,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 1010 · Spring 2026",
+                "code": "ECON 1010",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "B",
+                "hours": null
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          },
+          {
+            "sort": 2,
+            "name": "Theory",
+            "need": "courses",
+            "count": 2,
+            "min_grade": null,
+            "accepts": [
+              "ECON 2010"
+            ],
+            "have": 2,
+            "will_have": 2,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "ECON 2010 · Fall 2025",
+                "code": "ECON 2010",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "B",
+                "hours": null
+              },
+              {
+                "key": "ECON 2010 · Spring 2026",
+                "code": "ECON 2010",
+                "term": "Spring 2026",
+                "source": "course",
+                "grade": "A",
+                "hours": null
+              }
+            ],
+            "doing": [],
+            "unmet_grade": []
+          }
+        ],
+        "courses": [
+          {
+            "key": "ECON 1010 · Fall 2025",
+            "code": "ECON 1010",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "F",
+            "hours": null,
+            "state": "not_counted",
+            "reason": "grade_not_passing",
+            "counted_in": []
+          },
+          {
+            "key": "ECON 1010 · Spring 2026",
+            "code": "ECON 1010",
+            "term": "Spring 2026",
+            "source": "course",
+            "grade": "B",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Intro"
+            ]
+          },
+          {
+            "key": "ECON 2010 · Fall 2025",
+            "code": "ECON 2010",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "B",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Theory"
+            ]
+          },
+          {
+            "key": "ECON 2010 · Fall 2026",
+            "code": "ECON 2010",
+            "term": "Fall 2026",
+            "source": "course",
+            "grade": "W",
+            "hours": null,
+            "state": "not_counted",
+            "reason": "grade_not_passing",
+            "counted_in": []
+          },
+          {
+            "key": "ECON 2010 · Spring 2026",
+            "code": "ECON 2010",
+            "term": "Spring 2026",
+            "source": "course",
+            "grade": "A",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Theory"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "a minimum grade is read in the order the school wrote its grades",
+    "program": {
+      "passing_grades": [
+        "A",
+        "B+",
+        "B",
+        "C",
+        "P"
+      ],
+      "requirements": [
+        {
+          "sort": 1,
+          "name": "Honours",
+          "need": "courses",
+          "count": 2,
+          "accepts": [
+            "PHIL"
+          ],
+          "min_grade": "B+"
+        }
+      ]
+    },
+    "lines": [
+      {
+        "kind": "grade",
+        "key": "PHIL 1000 · Fall 2025",
+        "value": "A",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000049"
+      },
+      {
+        "kind": "grade",
+        "key": "PHIL 1100 · Fall 2025",
+        "value": "B+",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000050"
+      },
+      {
+        "kind": "grade",
+        "key": "PHIL 1200 · Fall 2025",
+        "value": "B",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000051"
+      },
+      {
+        "kind": "grade",
+        "key": "PHIL 1300 · Fall 2025",
+        "value": "P",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000052"
+      },
+      {
+        "kind": "grade",
+        "key": "PHIL 1400 · Fall 2025",
+        "value": "A+",
+        "effective_on": "2026-01-15",
+        "id": "00000000-0000-4000-8000-000000000053"
+      }
+    ],
+    "expected": {
+      "inputs_text": "grade\tPHIL 1000 · Fall 2025\tA\t2026-01-15\t00000000-0000-4000-8000-000000000049\ngrade\tPHIL 1100 · Fall 2025\tB+\t2026-01-15\t00000000-0000-4000-8000-000000000050\ngrade\tPHIL 1200 · Fall 2025\tB\t2026-01-15\t00000000-0000-4000-8000-000000000051\ngrade\tPHIL 1300 · Fall 2025\tP\t2026-01-15\t00000000-0000-4000-8000-000000000052\ngrade\tPHIL 1400 · Fall 2025\tA+\t2026-01-15\t00000000-0000-4000-8000-000000000053",
+      "result": {
+        "verdict": "complete",
+        "requirements": [
+          {
+            "sort": 1,
+            "name": "Honours",
+            "need": "courses",
+            "count": 2,
+            "min_grade": "B+",
+            "accepts": [
+              "PHIL"
+            ],
+            "have": 2,
+            "will_have": 2,
+            "left": 0,
+            "met": true,
+            "meets_after": false,
+            "done": [
+              {
+                "key": "PHIL 1000 · Fall 2025",
+                "code": "PHIL 1000",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "A",
+                "hours": null
+              },
+              {
+                "key": "PHIL 1100 · Fall 2025",
+                "code": "PHIL 1100",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "B+",
+                "hours": null
+              }
+            ],
+            "doing": [],
+            "unmet_grade": [
+              {
+                "key": "PHIL 1200 · Fall 2025",
+                "code": "PHIL 1200",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "B",
+                "hours": null,
+                "why": "below_minimum"
+              },
+              {
+                "key": "PHIL 1300 · Fall 2025",
+                "code": "PHIL 1300",
+                "term": "Fall 2025",
+                "source": "course",
+                "grade": "P",
+                "hours": null,
+                "why": "below_minimum"
+              }
+            ]
+          }
+        ],
+        "courses": [
+          {
+            "key": "PHIL 1000 · Fall 2025",
+            "code": "PHIL 1000",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Honours"
+            ]
+          },
+          {
+            "key": "PHIL 1100 · Fall 2025",
+            "code": "PHIL 1100",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "B+",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": [
+              "Honours"
+            ]
+          },
+          {
+            "key": "PHIL 1200 · Fall 2025",
+            "code": "PHIL 1200",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "B",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": []
+          },
+          {
+            "key": "PHIL 1300 · Fall 2025",
+            "code": "PHIL 1300",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "P",
+            "hours": null,
+            "state": "done",
+            "reason": null,
+            "counted_in": []
+          },
+          {
+            "key": "PHIL 1400 · Fall 2025",
+            "code": "PHIL 1400",
+            "term": "Fall 2025",
+            "source": "course",
+            "grade": "A+",
+            "hours": null,
+            "state": "not_counted",
+            "reason": "grade_not_passing",
+            "counted_in": []
+          }
+        ]
+      }
+    }
+  }
+]

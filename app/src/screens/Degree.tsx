@@ -61,7 +61,7 @@ import {
 
 /** `advisorMeeting` defaults to the `advisor_meeting_mode` flag; tests choose. */
 export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_mode) }: { advisorMeeting?: boolean } = {}) {
-  const { state, account } = useStore();
+  const { state, account, dispatch } = useStore();
   const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead' | 'meeting'>('left');
 
   /*
@@ -102,6 +102,13 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
           that matters against the real thing.
         </div>
       </Blueprint>
+
+      {/* The school's own audit is the other half of the same question, and shows only at a school that has switched it to Core. */}
+      <div style={{ marginBlock: 'var(--sp-4)' }}>
+        <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'degreeaudit' })}>
+          See your school’s degree audit
+        </button>
+      </div>
 
       <PathSnapshotCard />
 

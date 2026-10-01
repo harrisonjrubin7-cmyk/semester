@@ -107,6 +107,7 @@ const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Pro
 const Applying = lazy(() => import('./screens/Applying').then((m) => ({ default: m.Applying })));
 const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.Behind })));
 const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
+const DegreeAudit = lazy(() => import('./screens/DegreeAudit').then((m) => ({ default: m.DegreeAudit })));
 const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
 const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
 const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
@@ -217,6 +218,7 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   applying: Applying,
   behind: Behind,
   degree: Degree,
+  degreeaudit: DegreeAudit,
   meet: Meet,
   people: People,
   brief: Reports,

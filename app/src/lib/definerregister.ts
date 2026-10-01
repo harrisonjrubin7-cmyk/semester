@@ -171,6 +171,11 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['decide_community_case', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_community_escalation', 'moderation', ['auth.uid()', 'private.has_capability']],
   ['decide_school_request', 'admin', ['private.has_capability']],
+  ['degree_audit_run', 'self-service', ['auth.uid()', "private.has_capability('degree:audit'", 'academic_record_subjects', 'private.degree_audit_require_core', 'private.degree_audit_replay']],
+  ['degree_program_create', 'admin', ['auth.uid()', 'private.degree_audit_require', 'private.degree_audit_require_core', 'private.degree_audit_replay']],
+  ['degree_program_publish', 'admin', ['auth.uid()', 'private.degree_audit_require', 'private.degree_audit_require_core', 'private.degree_audit_replay']],
+  ['degree_program_retire', 'admin', ['auth.uid()', 'private.degree_audit_require', 'private.degree_audit_require_core', 'private.degree_audit_replay']],
+  ['degree_requirement_add', 'admin', ['private.degree_audit_school', 'private.degree_audit_require', 'private.degree_audit_require_core', 'private.degree_audit_replay']],
   ['delete_community_post', 'self-service', ['auth.uid()']],
   ['dining_advance_order', 'admin', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
   ['dining_cancel_order', 'financial', ['auth.uid()', 'private.dining_caller_school', 'private.has_capability']],
@@ -329,6 +334,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20260930250000_degree_audit.sql',
 ];
 
 /**
@@ -340,6 +346,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260930250000_degree_audit.sql',
+    functions: ['degree_audit_run', 'degree_program_create', 'degree_program_publish', 'degree_program_retire', 'degree_requirement_add'],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],

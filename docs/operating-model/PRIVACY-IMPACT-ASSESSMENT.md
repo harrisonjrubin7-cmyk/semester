@@ -10,8 +10,8 @@ surfaces that have answered them, and the ones that owe an answer. R-15 in
 surface is asked the question before it ships; the eighth maturity system on the
 same page said no template, register or gate existed. This is the three.
 
-**7 surfaces have answered; 6 owe an answer.** Of the 77 answers written,
-46 cite a test that runs on every change and 31 cite code or a document only,
+**8 surfaces have answered; 6 owe an answer.** Of the 88 answers written,
+54 cite a test that runs on every change and 34 cite code or a document only,
 which is a weaker thing and is marked *written* below. No assessment has been
 reviewed by the privacy seat, which is vacant: these are the founder’s reading of
 the tree, and the seat’s first job is to read them again.
@@ -216,6 +216,32 @@ A school’s bursar and business office keep each student’s account in Semeste
 - Retention: the school sets the schedule; none is set, and the ledger keeps everything until then.
 - Readers: no one has reviewed this with a school’s bursar or auditor; the controls are the brief’s, read by the founder.
 - Sharing: nothing reaches the payment provider from here; its settlement file is read by hand, so a missed month is not noticed by the system.
+
+### Degree audit
+
+A school publishes a degree program for a catalog year, and the database audits one student’s academic record against it as of a date and keeps the answer, at a school that has switched the module to Core. Owner: **privacy** seat. Assessed 2026-10-01. Residual rating: **high**.
+
+| Question | Answer | Shown by |
+| --- | --- | --- |
+| What does this surface do for the student, and what question does each piece of data answer? | To let a school say, from its own published requirements and its own academic record, what is finished, what is in progress and what is left for one student on one date, and to keep that answer with who asked and which version of the program it ran against. Each column answers one of those questions; the audit decides nothing about a student’s standing. *(written)* | `supabase/migrations/20260930250000_degree_audit.sql` — Four tables whose columns are the program, its requirements, and what an audit read and found |
+| Which fields does it hold, and which of them are sensitive: grades, health, aid, disability, identity, location? | A program’s code, title, catalog year, version, the grades the school lists as passing and its requirements. An audit holds the school’s student identifier, the as-of date, who asked, a SHA-256 and a count of the ledger lines read, a verdict from a closed list of three, and a result that repeats, for that student, each course code and term, its grade and its hours from the ledger. Grades and credit are education records and sensitive. The kinds read are four, fixed in the function; there is no column for a name, aid, health or disability. | `app/src/lib/degreeaudit/degreeaudit.test.ts` — Every limit, state and argument name held to the migration<br>`supabase/degree-audit.check.sql` — Which ledger kinds are read, and that standing, requirement and conferral entries are not |
+| What is its default visibility? | The school’s record, not the student’s to share. A student reads the audits of the one record the school linked to their account through academic_record_subjects, and no other; the school’s published programs are readable by anyone at the school and drafts only by authors. | `supabase/degree-audit.check.sql` — A student reads their own record’s audits and not another’s; an unlinked student and a registrar at another school read none |
+| Who at Semester or the institution can read any of it, through which function, and what do they never receive? | Accounts holding degree:audit at the school (registrar, dean, academic advisor) read every audit there, directly under row-level security, and may run one for any student reference at their own school. Faculty, other students and another school’s staff read none. No one at Semester reads them: there is no service-role reader and no support view. | `supabase/degree-audit.check.sql` — Each reader walked, and each refused one, including a student auditing another student |
+| Can a reader learn who the student is from a row that was meant to be anonymous? | The audit is identified on purpose: staff audit a named student by the school’s identifier. Nothing anonymous is derived from it, and no figure is aggregated across students. *(written)* | `supabase/migrations/20260930250000_degree_audit.sql` — No view, function or export reads across students |
+| Does any of it reach a model, and if so, is it fenced as material and journaled without its body? | Nothing. No prompt builder reads these tables and the screen sends nothing to a model. *(written)* | `app/src/lib/degreeaudit/client.ts` — The only calls are the three tables and the five functions; none is an AI route |
+| Which clock deletes it, and where is that clock written? | Kept with the school. No clock is set: how long a school keeps an audit is the school’s rule and none has been given. RETENTION.md says so for each table. | `RETENTION.md` — The retention answer per table<br>`app/src/lib/retention.test.ts` — RETENTION.md is held to the schema in both directions |
+| Does account deletion empty it, and can the student take it with them? | Nothing here is keyed by an account except who asked, so deleting an account clears that name and leaves the program or the audit, which belong to the school’s record and are keyed by its own student identifier. A student’s own account deletion therefore does not remove audits of their record. | `supabase/degree-audit.check.sql` — An advisor and a registrar deleted: the audits and programs stay, no longer naming them<br>`RETENTION.md` — The retention answer per table |
+| Is any sharing consented, revocable, and never a substitute for an institutional obligation? | None. There is no share, link or export of an audit beyond the student’s own reading of it and the school’s staff reading it. | `supabase/degree-audit.check.sql` — No table accepts a write from a client, and only the school’s auditors and the linked student read an audit |
+| Does it produce or feed a score, flag or ranking about an individual? | One per-student verdict, from a closed list of three, computed by the school’s own published rule from the school’s own record on a stated date. It is not a score, a ranking or a flag, it is never aggregated, and it says it is not a transcript and does not read conferral. | `app/src/lib/institution-ops.ts` — FORBIDDEN: the eight things never measured about an individual; defineMetric refuses any metric that sources one<br>`app/src/lib/degreeaudit/degreeaudit.test.ts` — The verdict wording never says a degree is conferred, and in-progress work is never rolled into done |
+| Which test runs on every change to hold the answers above? | degree-audit.check.sql runs every rule as the account it concerns; degreeaudit.test.ts and the same fixtures hold the TypeScript twin equal to the SQL function; the screen test holds who sees which half. | `supabase/degree-audit.check.sql` — Who authors, who audits whom, what is read, immutability, idempotency and the Core gate<br>`app/src/screens/degreeaudit.test.tsx` — The screen: the mode, no published program, one key per attempt, in-progress shown apart |
+
+**Open:**
+
+- Readers: an academic advisor may audit and read every student’s audit at the school, with no advisee relationship; degree:audit has no narrower scope, so a school that wants advisors to see only their advisees has no way to say so yet.
+- Fields: an audit’s result repeats a student’s grades and hours at the time it ran. A later correction to the ledger does not change an earlier audit, which is the point of keeping it, and also means an old audit can disagree with the record today.
+- Retention: no clock is set for audits or programs; how long a school keeps them is the school’s rule and none has been given.
+- Deletion: a student who deletes their account does not remove audits of their record, because the record is the school’s; the school’s own retention rule would decide, and none exists.
+- Guard: applied to no production project and run only against a throwaway Postgres; no registrar has read the audit’s rules (grades as the school lists them, a repeated course counting twice, transfer credit never meeting a minimum grade) and no school has agreed that they match its own.
 
 ## Owed
 
