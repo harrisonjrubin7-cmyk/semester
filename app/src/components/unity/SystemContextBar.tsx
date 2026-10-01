@@ -1,10 +1,13 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../../state/store';
 import { destination } from '../../lib/nav';
 import { canonicalDestinationFor, FIVE_LABELS } from '../../lib/tabbar';
-import { workflowForScreen } from '../../lib/student-workflows';
+import { STUDENT_WORKFLOWS, workflowForScreen } from '../../lib/student-workflows';
 import { statusOf, syncStatusKey } from '../../lib/status';
 import { useOffline } from './Status';
+import { currentLook } from '../../state/shape';
+import { DecisionTrail } from './DecisionTrail';
+import { AccessibilityTools } from './AccessibilityTools';
 import type { Screen } from '../../lib/types';
 
 /** Screens whose own full-canvas chrome already carries the working context. */
@@ -20,7 +23,9 @@ export function SystemContextBar() {
   const canonical = canonicalDestinationFor(state.screen);
   const canonicalLabel = FIVE_LABELS[canonical] ?? canonical;
   const currentTerm = terms.find((term) => term.id === state.term) ?? terms[0];
-  const workflow = workflowForScreen(state.screen);
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const availableWorkflows = STUDENT_WORKFLOWS.filter(candidate => candidate.steps.some(step => step.screen === state.screen));
+  const workflow = availableWorkflows.find(candidate => candidate.id === workflowId) ?? workflowForScreen(state.screen);
   const continuation = useMemo(() => {
     const recent = state.recent.find((screen) => screen !== state.screen && !QUIET_ON.has(screen));
     if (!recent) return null;
@@ -29,7 +34,9 @@ export function SystemContextBar() {
   }, [state.recent, state.screen]);
   const health = statusOf(syncStatusKey(sync.status, off));
 
-  if (QUIET_ON.has(state.screen)) return null;
+  if (QUIET_ON.has(state.screen)) return <section className="system-context pane-strip" aria-label="Accessibility tools">
+    <AccessibilityTools look={currentLook(state)} onChange={look => dispatch({type: 'setLook', look})} onSettings={() => dispatch({type: 'go', screen: 'setLook'})} />
+  </section>;
 
   return (
     <section className="system-context pane-strip" aria-label="Semester context">
@@ -55,15 +62,16 @@ export function SystemContextBar() {
         {state.screen !== canonical && (
           <>
             <span aria-hidden="true">/</span>
-            <span>{destination(state.screen)?.label ?? state.screen}</span>
+            <span role="status" aria-live="polite">{destination(state.screen)?.label ?? state.screen}</span>
           </>
         )}
       </div>
       <div className="system-context-actions">
-        {workflow && <span className="system-context-workflow">{workflow.name}</span>}
+        <AccessibilityTools look={currentLook(state)} onChange={look => dispatch({type: 'setLook', look})} onSettings={() => dispatch({type: 'go', screen: 'setLook'})} />
+        {workflow && <div className="system-context-workflow system-context-trail">{availableWorkflows.length > 1 && <select className="input" aria-label="Current workflow" value={workflow?.id} onChange={event => setWorkflowId(event.target.value)}>{availableWorkflows.map(candidate => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}</select>}<DecisionTrail workflow={workflow} current={state.screen} onOpen={screen => { setWorkflowId(workflow.id); dispatch({type: 'go', screen}); }} /></div>}
         {continuation && (
           <button type="button" className="bare system-context-link" onClick={() => dispatch({ type: 'go', screen: continuation.screen })}>
-            Continue {continuation.label}
+            ← Back to {continuation.label}
           </button>
         )}
         <button

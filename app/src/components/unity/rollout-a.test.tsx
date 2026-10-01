@@ -175,6 +175,8 @@ describe('the course hub', () => {
     expect(text()).not.toContain('Sample course');
     expect(buttons('Continue studying →')).toHaveLength(1);
     expect(buttons('+ Add reading')).toHaveLength(1);
+    expect([...host.querySelectorAll('summary')].some(summary => summary.textContent === 'Relationship map')).toBe(true);
+    expect(host.querySelector('[aria-label="Course relationships"]')).not.toBeNull();
     await press('Continue studying →');
     expect(seen.screen).toBe('guide');
   });

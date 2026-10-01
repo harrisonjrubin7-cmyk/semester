@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Comparison } from '../lib/decision-compare';
 
 /**
@@ -9,9 +10,15 @@ import type { Comparison } from '../lib/decision-compare';
  * holds a fact, with the same weight and the same colour.
  */
 export function DecisionTable({ comparison }: { comparison: Comparison }) {
+  const [view, setView] = useState<'table' | 'cards' | 'summary'>('table');
   return (
     <section aria-label="Decision comparison" className="today-why">
-      <table>
+      <div role="group" aria-label="Comparison view">
+        <button type="button" aria-pressed={view === 'table'} onClick={() => setView('table')}>Table view</button>
+        <button type="button" aria-pressed={view === 'cards'} onClick={() => setView('cards')}>Card view</button>
+        <button type="button" aria-pressed={view === 'summary'} onClick={() => setView('summary')}>Summary view</button>
+      </div>
+      {view === 'table' ? <table>
         <caption>{comparison.title}</caption>
         <thead>
           <tr>
@@ -37,7 +44,18 @@ export function DecisionTable({ comparison }: { comparison: Comparison }) {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table> : <>
+        <h2>{comparison.title}</h2>
+        {comparison.options.map((option, index) => <article key={option.id} aria-label={option.label}>
+          <h3>{option.label}</h3>
+          <dl>{comparison.rows.map(row => <div key={row.id}>
+            <dt>{row.label}</dt>
+            <dd>{view === 'summary' && !['requirementFit', 'scheduleImpact', 'costTime', 'sourceAndFreshness', 'officialNextStep'].includes(row.id)
+              ? <details><summary>Show detail</summary>{row.cells[index]?.lines.map(line => <p key={line}>{line}</p>)}</details>
+              : row.cells[index]?.lines.map(line => <p key={line}>{line}</p>)}</dd>
+          </div>)}</dl>
+        </article>)}
+      </>}
       <p>{comparison.note}</p>
     </section>
   );

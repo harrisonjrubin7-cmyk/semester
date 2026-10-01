@@ -35,6 +35,12 @@ export interface SourceDetail {
   sourceName?: string;
   /** When the source was last checked, as the words to show. */
   freshness?: string;
+  /** Verbatim supporting text already verified by the caller. */
+  excerpt?: string;
+  /** Exact source location when recorded, such as a page or section. */
+  location?: string;
+  /** Recorded owner; omit rather than infer one. */
+  owner?: string;
   /** Other places in the app that use this. */
   usedIn?: string[];
   /** Objects this one is visibly connected to across Semester. */

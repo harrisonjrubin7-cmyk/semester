@@ -62,3 +62,24 @@ export function takeQuickAddSeed(): string {
   waiting = '';
   return was;
 }
+
+/** Navigation only: exact phrases open reviewable workflows, never execute them. */
+const NAVIGATION_COMMANDS: Readonly<Record<string, import('./types').Screen>> = {
+  'find my next deadline': 'home',
+  'open my fall plan': 'degree',
+  'open my spring plan': 'degree',
+  'prepare my advisor agenda': 'meet',
+  'prepare meeting packet': 'meet',
+  'add a study block': 'calendar',
+  'create study block': 'calendar',
+  'find tutoring': 'support',
+  'compare course options': 'degree',
+  'show my shared items': 'meet',
+  'open privacy controls': 'privacy',
+  'report incorrect information': 'support',
+};
+
+export function navigationIntent(text: string): import('./types').Screen | null {
+  const phrase = text.trim().toLowerCase().replace(/\s+/g, ' ');
+  return Object.hasOwn(NAVIGATION_COMMANDS, phrase) ? NAVIGATION_COMMANDS[phrase] : null;
+}

@@ -989,3 +989,13 @@
   padding: 0;
   list-style: none;
 }
+
+/* A disclosed trail is interactive content, including on narrow screens. */
+.system-context-workflow.system-context-trail {
+  display: block;
+  white-space: normal;
+  max-inline-size: 100%;
+}
+.system-context-trail .decision-trail {
+  overflow-wrap: anywhere;
+}
