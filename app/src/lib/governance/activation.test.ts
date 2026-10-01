@@ -127,7 +127,7 @@ describe('fail-closed activation', () => {
 
   it.each([
     { id: 'CAP-041', override: { maturity: 'L4' as const } },
-    { id: 'CAP-027', override: { maturity: 'L3' as const } },
+    { id: 'CAP-027', override: { maturity: 'L2' as const } },
     { id: 'CAP-041', override: { activationClass: 'standard' as const } },
     { id: 'CAP-041', override: { safeDefaultEligible: true } },
     { id: 'CAP-001', override: { safeDefaultEligible: false } },
