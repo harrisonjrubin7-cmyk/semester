@@ -175,6 +175,7 @@ function Office({ school, me, held }: { school: string; me: string; held: Readon
   const [reads, setReads] = useState(0);
   const [picked, setPicked] = useState('');
   const [apps, setApps] = useState<OfficeApplication[]>([]);
+  const [appsError, setAppsError] = useState('');
   const [counts, setCounts] = useState<Yield | null>(null);
   const [draft, setDraft] = useState({ name: '', term: '2027FA', opens: '', closes: '', questions: 'essay | Why this school | text | required', checklist: 'transcript | Secondary transcript | required' });
   const [draftError, setDraftError] = useState('');
@@ -192,7 +193,7 @@ function Office({ school, me, held }: { school: string; me: string; held: Readon
   useEffect(() => {
     if (picked === '') return;
     let live = true;
-    loadOfficeApplications(school, picked, me).then((a) => { if (live) setApps(a); }, () => { if (live) setApps([]); });
+    loadOfficeApplications(school, picked, me).then((a) => { if (live) { setApps(a); setAppsError(''); } }, (e: unknown) => { if (live) setAppsError(e instanceof Error ? e.message : 'The applications could not be read.'); });
     if (held.has('admissions:read')) loadYield(picked).then((y) => { if (live) setCounts(y); }, () => { if (live) setCounts(null); });
     return () => { live = false; };
   }, [school, picked, me, reads, held]);
@@ -220,6 +221,7 @@ function Office({ school, me, held }: { school: string; me: string; held: Readon
       {cycle && <Sub>Application code for applicants: <strong>{cycle.id}</strong></Sub>}
       {counts && <Sub>{counts.started} started · {counts.submitted} submitted · {counts.withdrawn} withdrawn · {counts.admitted} admitted · {counts.accepted} accepted · {counts.deposited} deposited</Sub>}
 
+      {appsError !== '' && <p role="alert">{appsError}</p>}
       {apps.length > 0 && cycle && (
         <Rows label="Applications">
           {apps.map((a) => {

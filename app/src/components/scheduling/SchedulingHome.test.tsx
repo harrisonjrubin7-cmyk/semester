@@ -18,6 +18,7 @@ const mock = vi.hoisted(() => ({
   rows: [] as unknown[] | null,
   grants: [] as unknown[],
   bookings: [] as unknown[],
+  runsFail: false,
   request: vi.fn(async () => ({})),
   decide: vi.fn(async () => ({})),
   saveRun: vi.fn(async () => ({ id: 'r1', conflicts: 0 })),
@@ -29,7 +30,7 @@ vi.mock('../../lib/scheduling/client', async (orig) => ({
   ...(await orig<typeof import('../../lib/scheduling/client')>()),
   loadSpaces: () => Promise.resolve(SPACES),
   loadBookings: () => Promise.resolve(mock.bookings),
-  loadRuns: () => Promise.resolve([]),
+  loadRuns: () => (mock.runsFail ? Promise.reject(new Error('The saved runs could not be read.')) : Promise.resolve([])),
   requestBooking: mock.request,
   decideBooking: mock.decide,
   saveRun: mock.saveRun,
@@ -131,4 +132,15 @@ it('says the first bad section line instead of proposing', async () => {
   await act(async () => button(/^Propose a timetable$/)!.click());
   expect(host.textContent).toContain('Line 1:');
   expect(host.textContent).not.toContain('The proposal');
+});
+
+it('says so when the saved runs cannot be read, rather than showing none', async () => {
+  mock.rows = [{ module: 'scheduling', mode: 'core', frozen: false, killed: false }];
+  mock.grants = OFFICER;
+  mock.runsFail = true;
+  try {
+    await render();
+    await act(async () => button(/^Timetable$/)!.click());
+    expect(host.textContent).toContain('The saved runs could not be read.');
+  } finally { mock.runsFail = false; }
 });

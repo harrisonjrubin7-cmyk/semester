@@ -20,6 +20,7 @@ const mock = vi.hoisted(() => ({
   rows: [] as unknown[] | null,
   grants: [] as unknown[],
   mine: [] as unknown[],
+  officeFail: false,
   start: vi.fn(async () => 'a1'),
   respond: vi.fn(async () => ({})),
 }));
@@ -30,7 +31,7 @@ vi.mock('../../lib/admissions/client', async (orig) => ({
   ...(await orig<typeof import('../../lib/admissions/client')>()),
   loadMyApplications: () => Promise.resolve(mock.mine),
   loadCycles: () => Promise.resolve([CYCLE]),
-  loadOfficeApplications: () => Promise.resolve([]),
+  loadOfficeApplications: () => (mock.officeFail ? Promise.reject(new Error('The applications could not be read.')) : Promise.resolve([])),
   loadYield: () => Promise.resolve({ started: 4, submitted: 3, withdrawn: 1, admitted: 1, accepted: 1, deposited: 1 }),
   startApplication: mock.start,
   respondToOffer: mock.respond,
@@ -119,4 +120,15 @@ it('shows the office only to an admissions capability, with the yield counts onl
   expect(host.textContent).toContain('Application code for applicants: c1');
   expect(host.textContent).not.toContain('Release decisions');
   expect(button(/^Save as a draft$/)).toBeDefined();
+});
+
+it('says so when the office’s applications cannot be read, rather than showing none', async () => {
+  mock.rows = [{ module: 'admissions', mode: 'core', frozen: false, killed: false }];
+  mock.grants = OFFICER;
+  mock.officeFail = true;
+  try {
+    await render();
+    await act(async () => button(/^Admissions office$/)!.click());
+    expect(host.textContent).toContain('The applications could not be read.');
+  } finally { mock.officeFail = false; }
 });

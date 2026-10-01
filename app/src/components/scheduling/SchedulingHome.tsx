@@ -277,6 +277,7 @@ function Timetable({ school, me, held }: { school: string; me: string; held: Rea
   const [reads, setReads] = useState(0);
   const { spaces } = useSpacesAndBookings(school, me, reads);
   const [runs, setRuns] = useState<RunRow[]>([]);
+  const [runsError, setRunsError] = useState('');
   const { said, busy, write } = useWrite();
   const [term, setTerm] = useState('2027SP');
   const [text, setText] = useState('ECON 1010 | 01 | 30 | Dr Rao | | MWF 09:00-09:50, MWF 10:00-10:50');
@@ -285,7 +286,7 @@ function Timetable({ school, me, held }: { school: string; me: string; held: Rea
 
   useEffect(() => {
     let live = true;
-    loadRuns(school, me).then((r) => { if (live) setRuns(r); }, () => { if (live) setRuns([]); });
+    loadRuns(school, me).then((r) => { if (live) { setRuns(r); setRunsError(''); } }, (e: unknown) => { if (live) setRunsError(e instanceof Error ? e.message : 'The saved runs could not be read.'); });
     return () => { live = false; };
   }, [school, me, reads]);
 
@@ -332,6 +333,7 @@ function Timetable({ school, me, held }: { school: string; me: string; held: Rea
           </ActionButton>
         </section>
       )}
+      {runsError !== '' && <p role="alert">{runsError}</p>}
       {runs.length > 0 && (
         <Rows label="Saved runs">
           {runs.map((r) => (
