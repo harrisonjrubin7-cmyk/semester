@@ -1,3 +1,4 @@
+import { useNativeWorkload } from './WorkloadAssumptionsEntry';
 /**
  * The days ahead that are going to hurt.
  *
@@ -149,13 +150,16 @@ export function WorstDay() {
  * exactly the week the list is empty.
  */
 export function DayBudget() {
-  const { state, dispatch } = useStore();
+  const { state, account } = useStore();
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${state.dayBudget}`);
   const hours = state.dayBudget;
 
   const step = (delta: number) =>
-    dispatch({ type: 'setDayBudget', hours: hours + delta });
+    native.edit('dayBudget', String(hours + delta));
 
   return (
+    <>
+    {native.editor}
     <div
       style={{
         display: 'flex',
@@ -192,6 +196,7 @@ export function DayBudget() {
         </button>
       </span>
     </div>
+    </>
   );
 }
 

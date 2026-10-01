@@ -1,4 +1,4 @@
-import { WorkloadAssumptionsEntry } from './WorkloadAssumptionsEntry';
+import { WorkloadAssumptionsEntry, useNativeWorkload } from './WorkloadAssumptionsEntry';
 import { useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
@@ -36,7 +36,8 @@ const fromField = (v: string) => {
  * answers to adjust is a much easier question than an empty form.
  */
 export function WorkWindows() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, account } = useStore();
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${JSON.stringify(state.windows)}`);
   const row = useRowStyle(11);
   const windows = state.windows;
 
@@ -44,6 +45,7 @@ export function WorkWindows() {
     <Folding name="WorkWindows">
       <SectionLabel>When you actually work</SectionLabel>
       <WorkloadAssumptionsEntry />
+      {native.editor}
       <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
         rather than a fact about you. Two or three windows here make every hour figure in the app
@@ -90,13 +92,7 @@ export function WorkWindows() {
                   aria-pressed={on}
                   aria-label={['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][i]}
                   onClick={() =>
-                    dispatch({
-                      type: 'patchWindow',
-                      id: w.id,
-                      patch: {
-                        days: on ? w.days.filter((x) => x !== d.day) : [...w.days, d.day],
-                      },
-                    })
+                    native.edit(`window:${w.id}:days`, (on ? w.days.filter(x => x !== d.day) : [...w.days, d.day]).join(', '))
                   }
                   style={{
                     flex: 1,
@@ -120,7 +116,7 @@ export function WorkWindows() {
               aria-label="From"
               onChange={(e) => {
                 const m = fromField(e.target.value);
-                if (m !== null) dispatch({ type: 'patchWindow', id: w.id, patch: { from: m } });
+                if (m !== null) native.edit(`window:${w.id}:from`, String(m));
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
@@ -132,7 +128,7 @@ export function WorkWindows() {
               aria-label="To"
               onChange={(e) => {
                 const m = fromField(e.target.value);
-                if (m !== null) dispatch({ type: 'patchWindow', id: w.id, patch: { to: m } });
+                if (m !== null) native.edit(`window:${w.id}:to`, String(m));
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />

@@ -366,10 +366,19 @@ export function withAssumption(d: Decision, a: Assumption): Decision {
   const before = d.assumptions.find((x) => x.id === a.id);
   if (before?.owner === 'institution')
     throw new Error('Institution-owned assumptions cannot be overwritten');
+  return changedAssumptions(d, [...d.assumptions.filter((x) => x.id !== a.id), a]);
+}
+
+/** Reset only personal assumptions; retain institution records and invalidate source checks. */
+export function withPreferences(d: Decision, preferences: Assumption[]): Decision {
+  return changedAssumptions(d, [...d.assumptions.filter(a => a.owner === 'institution'), ...preferences.map(a => ({ ...a, id: id(), owner: 'student' as const }))]);
+}
+
+function changedAssumptions(d: Decision, assumptions: Assumption[]): Decision {
   return {
     ...d,
     decided: false,
-    assumptions: [...d.assumptions.filter((x) => x.id !== a.id), a],
+    assumptions,
     options: d.options.map((o) => ({
       ...o,
       fits: Object.fromEntries(

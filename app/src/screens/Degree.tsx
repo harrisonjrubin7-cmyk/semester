@@ -1,3 +1,4 @@
+import { AssumptionImpact } from '../components/AssumptionEditor';
 /**
  * The four-year view.
  *
@@ -34,6 +35,7 @@ import {
   isCommon,
   hours,
   progressLine,
+  progress,
   programmes,
   readAccepts,
   rollup,
@@ -587,7 +589,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
 }
 
 function Rules() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, account } = useStore();
   const [programme, setProgramme] = useState('');
   const [name, setName] = useState('');
   const [count, setCount] = useState('1');
@@ -674,7 +676,7 @@ function Rules() {
           <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {state.requirements.map((r) => (
-              <RequirementRow key={r.id} requirement={r} />
+              <RequirementRow key={`${account?.id || 'device'}:${state.term}:${r.id}`} requirement={r} />
             ))}
           </div>
         </>
@@ -895,7 +897,7 @@ function TakenRow({ course: c }: { course: Taken }) {
  * different shapes of the same field.
  */
 function RequirementRow({ requirement: r }: { requirement: Requirement }) {
-  const { dispatch } = useStore();
+  const { dispatch, state } = useStore();
   const [editing, setEditing] = useState(false);
   const [programme, setProgramme] = useState(r.programme);
   const [name, setName] = useState(r.name);
@@ -903,8 +905,10 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
   const [need, setNeed] = useState<'courses' | 'hours'>(r.need);
   const [list, setList] = useState(r.accepts.join(', '));
 
+  const validCount = Number.isInteger(Number(count)) && Number(count) >= 1 && Number(count) <= 400;
+  const proposed = { ...r, programme, name, need, count: Number(count), accepts: readAccepts(list) };
   const save = () => {
-    if (!programme.trim() || !name.trim()) return;
+    if (!programme.trim() || !name.trim() || !validCount) return;
     dispatch({
       type: 'patchRequirement',
       id: r.id,
@@ -912,7 +916,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         programme: programme.trim(),
         name: name.trim(),
         need,
-        count: Number(count) || 1,
+        count: Number(count),
         accepts: readAccepts(list),
       },
     });
@@ -981,8 +985,9 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
             lineHeight: 'var(--leading-relaxed)',
           }}
         />
+        {validCount ? <AssumptionImpact label="requirement changes" before={[progressLine(progress(r, state.taken))]} after={[progressLine(progress(proposed, state.taken)), 'Official eligibility remains unconfirmed.']} /> : <p role="status">Enter a whole count between 1 and 400.</p>}
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
-          <ActionButton tone="primary" onClick={save} disabled={!programme.trim() || !name.trim()}>
+          <ActionButton tone="primary" onClick={save} disabled={!programme.trim() || !name.trim() || !validCount}>
             Save
           </ActionButton>
           <ActionButton onClick={() => setEditing(false)}>Cancel</ActionButton>

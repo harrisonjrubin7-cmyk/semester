@@ -1,4 +1,4 @@
-import { AssumptionEditor } from './AssumptionEditor';
+import { AssumptionEditor, AssumptionImpact } from './AssumptionEditor';
 import { decisionAssumptions, decisionOutcomes } from '../lib/decision-assumptions';
 import { incomingCapture } from '../lib/productivity-arrival';
 import { ProductivityBrowserCapture } from './ProductivityBrowserCapture';
@@ -30,6 +30,7 @@ import {
   readiness,
   supportedFit,
   withAssumption,
+  withPreferences,
   currentEvidence,
   type Assumption,
   type Capture,
@@ -79,7 +80,7 @@ function Workspace({ who }: { who: string }) {
   );
   const [tab, setTab] = useState(incomingCapture() ? 'Connections' : 'Decide');
   const [selected, chooseSelected] = useState('');
-  const setSelected = (id: string) => { setPending(null); chooseSelected(id); };
+  const setSelected = (id: string) => { setPending(null); setResetPreview(null); chooseSelected(id); };
   const [capture, setCapture] = useState(emptyCapture);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
@@ -87,6 +88,7 @@ function Workspace({ who }: { who: string }) {
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState('');
   const [pending, setPending] = useState<Assumption | null>(null);
+  const [resetPreview, setResetPreview] = useState<Decision | null>(null);
   const [until, setUntil] = useState<number | null>(null);
   const [seconds, setSeconds] = useState(25 * 60);
   const [focusGoal, setFocusGoal] = useState('');
@@ -552,16 +554,16 @@ function Workspace({ who }: { who: string }) {
               <button
                 type="button"
                 onClick={() =>
-                  patch({
-                    assumptions: [
-                      ...d.assumptions.filter((a) => a.owner === 'institution'),
-                      ...lib.value.preferences.map((a) => ({ ...a, id: id() })),
-                    ],
-                  })
+setResetPreview(withPreferences(d, lib.value.preferences))
                 }
               >
                 Reset to saved preferences
               </button>
+              {resetPreview?.id === d.id && <>
+                <AssumptionImpact label="saved preferences" before={decisionOutcomes(d)} after={decisionOutcomes(resetPreview)} />
+                <button type="button" onClick={() => { if (patch(resetPreview)) setResetPreview(null); }}>Apply saved preferences</button>
+                <button type="button" onClick={() => setResetPreview(null)}>Cancel saved preferences</button>
+              </>}
               {pending && (
                 <>
                   <Field label="Assumption name">

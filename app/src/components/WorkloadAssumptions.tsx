@@ -9,9 +9,9 @@ import { week } from '../lib/ahead';
 import { reducer } from '../state/reducer';
 import type { Action, State } from '../state/shape';
 import { numericAssumption, type AssumptionAdapter } from '../lib/assumptions';
-import { AssumptionEditor } from './AssumptionEditor';
+import { AssumptionEditor, NativeAssumptionEditor, type NativeAssumptionRequest } from './AssumptionEditor';
 
-export function WorkloadAssumptions() {
+export function WorkloadAssumptions({ request, onClose }: { request?: NativeAssumptionRequest; onClose?: () => void } = {}) {
   const { state, dispatch, catalog, courseCode, account } = useStore();
   const now = useNow();
   const athletics = useAthleticEvents();
@@ -41,5 +41,6 @@ export function WorkloadAssumptions() {
     ...state.rest.flatMap(r => (['from', 'to'] as const).map(key => field(`rest:${r.id}:${key}`, `${r.label || 'Protected time'} ${key} (minutes after midnight)`, r[key], 0, 1440, v => ({ type: 'patchRest', id: r.id, patch: { [key]: v } })))),
     ...catalog.courses.map(course => ({ id: `course:${course.id}:credits`, label: `${course.code} published credits`, value: course.credits, owner: 'institution' as const, source: course.source || 'Syllabus source not recorded', validate: () => false, outcomes: () => ['Official credit and sequencing decisions: Unknown — confirm with the course owner'], apply: () => false })),
   ];
+  if (request) return <NativeAssumptionEditor assumptions={assumptions} request={request} onClose={onClose || (() => {})} />;
   return <AssumptionEditor key={`${account?.id || 'device'}:${state.term}`} title="Review course and time assumptions" assumptions={assumptions} />;
 }

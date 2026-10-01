@@ -1,4 +1,4 @@
-import { AssumptionEditor } from './AssumptionEditor';
+import { AssumptionEditor, useNativeAssumptions } from './AssumptionEditor';
 import { graduationAssumptions, graduationOutcomes, scenarioAssumptions } from '../lib/graduation-assumptions';
 import { useMemo, useRef, useState } from 'react';
 import { SourceBadge } from './SourceBadge';
@@ -28,14 +28,9 @@ import {
   termLabel,
   type Plan,
   type Scenario,
-  type Season,
 } from '../lib/graduation';
 
 const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
-const num = (v: string, min: number, max: number) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min;
-};
 
 /**
  * Graduation scenarios, inside The degree.
@@ -84,6 +79,10 @@ function GraduationWorkspace({
       const t = totals(kept);
       return { ...d, plan: { ...d.plan, costLines: kept, costPerTerm: t.perTerm, summerCost: t.summer } };
     });
+  const native = useNativeAssumptions([
+    ...graduationAssumptions(plan, done, setPlan).map(a => ({ ...a, id: `plan:${a.id}` })),
+    ...data.scenarios.flatMap(s => scenarioAssumptions(plan, done, s, patch => library.update(d => ({ ...d, scenarios: d.scenarios.map(x => x.id === s.id ? { ...x, ...patch } : x) }))).map(a => ({ ...a, id: `scenario:${s.id}:${a.id}` }))),
+  ], accountId || 'device');
   const setCloudId = (id: string, cloudId: string | undefined, owner: string) =>
     library.update((d) => ({
       ...d,
@@ -174,6 +173,7 @@ function GraduationWorkspace({
           </ul>
           <button type="button" className="btn btn-ghost" onClick={() => assumptions.current?.focus()}>Edit assumptions</button>
         </details>
+        {native.editor}
         <AssumptionEditor key={accountId || 'device'} assumptions={graduationAssumptions(plan, done, setPlan)} />
         <div className="portal-filter-row">
           <label className="portal-check">
@@ -186,7 +186,7 @@ function GraduationWorkspace({
               min={1}
               max={400}
               value={plan.needed}
-              onChange={(e) => setPlan({ needed: num(e.target.value, 1, 400) })}
+              onChange={(e) => native.edit('plan:needed', e.target.value)}
             />
           </label>
           <label className="portal-check">
@@ -198,7 +198,7 @@ function GraduationWorkspace({
               min={0}
               max={30}
               value={plan.perTerm}
-              onChange={(e) => setPlan({ perTerm: num(e.target.value, 0, 30) })}
+              onChange={(e) => native.edit('plan:perTerm', e.target.value)}
             />
           </label>
           <label className="portal-check">
@@ -210,7 +210,7 @@ function GraduationWorkspace({
               min={0}
               max={20}
               value={plan.summer}
-              onChange={(e) => setPlan({ summer: num(e.target.value, 0, 20) })}
+              onChange={(e) => native.edit('plan:summer', e.target.value)}
             />
           </label>
         </div>
@@ -220,7 +220,7 @@ function GraduationWorkspace({
             <select
               className="input"
               value={plan.next.season}
-              onChange={(e) => setPlan({ next: { ...plan.next, season: e.target.value as Season } })}
+              onChange={(e) => native.edit('plan:season', e.target.value)}
             >
               {SEASONS.map((s) => (
                 <option key={s}>{s}</option>
@@ -236,7 +236,7 @@ function GraduationWorkspace({
               min={2000}
               max={2100}
               value={plan.next.year}
-              onChange={(e) => setPlan({ next: { ...plan.next, year: Math.round(num(e.target.value, 2000, 2100)) } })}
+              onChange={(e) => native.edit('plan:year', e.target.value)}
             />
           </label>
           {costs && plan.costLines?.length ? null : (
@@ -249,7 +249,7 @@ function GraduationWorkspace({
               inputMode="numeric"
               min={0}
               value={plan.costPerTerm}
-              onChange={(e) => setPlan({ costPerTerm: num(e.target.value, 0, 1_000_000) })}
+              onChange={(e) => native.edit('plan:costPerTerm', e.target.value)}
             />
           </label>
           <label className="portal-check">
@@ -260,7 +260,7 @@ function GraduationWorkspace({
               inputMode="numeric"
               min={0}
               value={plan.summerCost}
-              onChange={(e) => setPlan({ summerCost: num(e.target.value, 0, 1_000_000) })}
+              onChange={(e) => native.edit('plan:summerCost', e.target.value)}
             />
           </label>
           </>
@@ -326,7 +326,7 @@ function GraduationWorkspace({
                       min={-200}
                       max={200}
                       value={s.extra}
-                      onChange={(e) => edit({ extra: num(e.target.value, -200, 200) })}
+                      onChange={(e) => native.edit(`scenario:${s.id}:extra`, e.target.value)}
                     />
                   </label>
                   <label className="portal-check">
@@ -337,7 +337,7 @@ function GraduationWorkspace({
                       min={0}
                       max={30}
                       value={s.perTerm}
-                      onChange={(e) => edit({ perTerm: num(e.target.value, 0, 30) })}
+                      onChange={(e) => native.edit(`scenario:${s.id}:perTerm`, e.target.value)}
                     />
                   </label>
                   <label className="portal-check">
@@ -348,7 +348,7 @@ function GraduationWorkspace({
                       min={0}
                       max={20}
                       value={s.summer}
-                      onChange={(e) => edit({ summer: num(e.target.value, 0, 20) })}
+                      onChange={(e) => native.edit(`scenario:${s.id}:summer`, e.target.value)}
                     />
                   </label>
                 </div>
@@ -362,7 +362,7 @@ function GraduationWorkspace({
                         min={1}
                         max={4}
                         value={s.abroad.terms}
-                        onChange={(e) => edit({ abroad: { ...s.abroad!, terms: Math.round(num(e.target.value, 1, 4)) } })}
+                        onChange={(e) => native.edit(`scenario:${s.id}:terms`, e.target.value)}
                       />
                     </label>
                     <label className="portal-check">
@@ -373,7 +373,7 @@ function GraduationWorkspace({
                         min={0}
                         max={30}
                         value={s.abroad.credits}
-                        onChange={(e) => edit({ abroad: { ...s.abroad!, credits: num(e.target.value, 0, 30) } })}
+                        onChange={(e) => native.edit(`scenario:${s.id}:credits`, e.target.value)}
                       />
                     </label>
                     <label className="portal-check">
@@ -384,7 +384,7 @@ function GraduationWorkspace({
                         min={0}
                         value={s.abroad.costPerTerm ?? ''}
                         onChange={(e) =>
-                          edit({ abroad: { ...s.abroad!, costPerTerm: e.target.value === '' ? null : num(e.target.value, 0, 1_000_000) } })
+                          native.edit(`scenario:${s.id}:costPerTerm`, e.target.value)
                         }
                       />
                     </label>

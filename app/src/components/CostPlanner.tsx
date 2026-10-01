@@ -1,4 +1,4 @@
-import { AssumptionEditor } from './AssumptionEditor';
+import { AssumptionEditor, useNativeAssumptions } from './AssumptionEditor';
 import { costLineAssumptions } from '../lib/cost-assumptions';
 import { dollars } from '../lib/cost';
 import { useId, useState } from 'react';
@@ -6,10 +6,6 @@ import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, t
 import { SourceBadge } from './SourceBadge';
 
 const money = dollars;
-const num = (v: string) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.min(1_000_000, Math.max(0, n)) : 0;
-};
 
 /**
  * The cost planner (`cost_planner`, Phase D): what a term costs, line by
@@ -38,6 +34,7 @@ export function CostPlanner({
   const headingId = useId();
   const sum = totals(lines);
   const source = totalSource(lines);
+  const native = useNativeAssumptions(costLineAssumptions(lines, onChange, dependents), JSON.stringify(lines.map(l => l.id)));
   const edit = (id: string, patch: Partial<CostLine>) => onChange(lines.map((l) => (l.id === id ? { ...l, ...patch } : l)));
 
   return (
@@ -48,6 +45,7 @@ export function CostPlanner({
         aid and does not estimate it. Not a bill.
       </p>
 
+      {native.editor}
       <AssumptionEditor assumptions={costLineAssumptions(lines, onChange, dependents)} />
       {lines.length ? (
         <ul className="cost-lines">
@@ -73,7 +71,7 @@ export function CostPlanner({
                       inputMode="numeric"
                       min={0}
                       value={l.amount}
-                      onChange={(e) => edit(l.id, { amount: num(e.target.value) })}
+                      onChange={(e) => native.edit(l.id, e.target.value)}
                     />
                   </label>
                   <label className="portal-check">

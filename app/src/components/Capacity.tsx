@@ -1,3 +1,4 @@
+import { useNativeWorkload } from './WorkloadAssumptionsEntry';
 /**
  * Whether the week you have planned is one a human can have.
  *
@@ -30,7 +31,8 @@ function clock(minutes: number): string {
 }
 
 export function Capacity() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, catalog, account } = useStore();
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${JSON.stringify([state.floor, state.contract])}`);
   const now = useNow();
 
   const week = datedItems(catalog, now).filter(
@@ -42,13 +44,11 @@ export function Capacity() {
   const taken = takenLine(cap);
 
   const shift = (which: 'from' | 'to', by: number) =>
-    dispatch({
-      type: 'setFloor',
-      patch: { [which]: (state.floor[which] + by + 24 * 60) % (24 * 60) },
-    });
+    native.edit(which === 'from' ? 'floorFrom' : 'floorTo', String((state.floor[which] + by + 24 * 60) % (24 * 60)));
 
   return (
     <Folding name="Capacity">
+      {native.editor}
       <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Does this week fit?</SectionLabel>
       <div
         style={{
@@ -76,7 +76,7 @@ export function Capacity() {
           inputMode="numeric"
           value={state.contract.hours || ''}
           placeholder="—"
-          onChange={(e) => dispatch({ type: 'setContract', hours: Number(e.target.value) || 0 })}
+          onChange={(e) => native.edit('contract', e.target.value)}
           aria-label="Hours a week school gets"
           style={{ width: 72, height: 40, textAlign: 'center' }}
         />
@@ -92,7 +92,7 @@ export function Capacity() {
         type="button"
         className="bare tappable"
         aria-pressed={state.floor.on}
-        onClick={() => dispatch({ type: 'setFloor', patch: { on: !state.floor.on } })}
+        onClick={() => native.edit('floorOn', state.floor.on ? 'no' : 'yes')}
         style={{
           width: 'auto',
           paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
@@ -168,11 +168,13 @@ const fromField = (v: string) => {
  * different editors for one shape is how the pair drifts.
  */
 function Kept() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, account } = useStore();
+  const native = useNativeWorkload(`${account?.id || 'device'}:${state.term}:${JSON.stringify(state.rest)}`);
   const rest = state.rest;
 
   return (
     <>
+      {native.editor}
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What you keep for yourself</SectionLabel>
 
       {rest.map((r) => (
@@ -210,11 +212,7 @@ function Kept() {
                   aria-pressed={on}
                   aria-label={d.name}
                   onClick={() =>
-                    dispatch({
-                      type: 'patchRest',
-                      id: r.id,
-                      patch: { days: on ? r.days.filter((x) => x !== d.day) : [...r.days, d.day] },
-                    })
+                    native.edit(`rest:${r.id}:days`, (on ? r.days.filter(x => x !== d.day) : [...r.days, d.day]).join(', '))
                   }
                   style={{
                     flex: 1,
@@ -238,7 +236,7 @@ function Kept() {
               aria-label="From"
               onChange={(e) => {
                 const m = fromField(e.target.value);
-                if (m !== null) dispatch({ type: 'patchRest', id: r.id, patch: { from: m } });
+                if (m !== null) native.edit(`rest:${r.id}:from`, String(m));
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
@@ -252,7 +250,7 @@ function Kept() {
               aria-label="To"
               onChange={(e) => {
                 const m = fromField(e.target.value);
-                if (m !== null) dispatch({ type: 'patchRest', id: r.id, patch: { to: m } });
+                if (m !== null) native.edit(`rest:${r.id}:to`, String(m));
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />

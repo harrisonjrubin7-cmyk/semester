@@ -1,4 +1,4 @@
-import { AssumptionEditor } from '../components/AssumptionEditor';
+import { AssumptionEditor, useNativeAssumptions } from '../components/AssumptionEditor';
 import { billAssumptions } from '../lib/bill-assumptions';
 /**
  * The university's statement, and the aid set against it.
@@ -136,6 +136,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
 
   const setPlanTo = (patch: Partial<Plan>) =>
     dispatch({ type: 'setPlan', term: state.term, plan: { ...plan, ...patch } });
+  const native = useNativeAssumptions(billAssumptions(state, state.term, now, setPlanTo), `${account?.id || 'device'}:${state.term}`);
 
   return (
     <>
@@ -271,13 +272,14 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
       )}
 
       <SectionLabel>The plan</SectionLabel>
+      {native.editor}
       <AssumptionEditor key={`${account?.id || 'device'}:${state.term}`} assumptions={billAssumptions(state, state.term, now, setPlanTo)} />
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <select
           className="input"
           value={plan.parts}
           aria-label="How many instalments"
-          onChange={(e) => setPlanTo({ parts: Number(e.target.value) })}
+          onChange={(e) => native.edit('parts', e.target.value)}
           style={{ flex: 1, minWidth: 0 }}
         >
           {PARTS.map((n) => (
@@ -291,7 +293,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
           type="date"
           value={plan.first}
           aria-label={plan.parts === 1 ? 'When it is due' : 'When the first instalment is due'}
-          onChange={(e) => setPlanTo({ first: e.target.value })}
+          onChange={(e) => native.edit('first', e.target.value)}
           style={{ flex: 1, minWidth: 0 }}
         />
       </div>

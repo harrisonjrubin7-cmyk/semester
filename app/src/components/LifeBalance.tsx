@@ -1,5 +1,5 @@
-import { AssumptionEditor } from './AssumptionEditor';
-import { balanceAssumptions } from '../lib/balance-assumptions';
+import { AssumptionEditor, AssumptionImpact } from './AssumptionEditor';
+import { balanceAssumptions, balanceOutcomes } from '../lib/balance-assumptions';
 import { clock } from '../lib/date';
 import { formatDate } from '../lib/locale';
 import { useId, useMemo, useState } from 'react';
@@ -193,9 +193,10 @@ export function LifeBalance({ start, crunch = false }: { start: string; crunch?:
       {said ? <p role="status" className="balance-said">{said}</p> : null}
 
       <CommuteForm
-        key={JSON.stringify(settings.commute)}
+        key={JSON.stringify([account?.id || 'device', start, settings.commute])}
         days={settings.commute?.days ?? []}
         minutes={settings.commute?.minutesEachWay ?? 0}
+        outcomes={(days, minutes) => balanceOutcomes(input, isoToDate(start), { commute: days.length && minutes > 0 ? { days, minutesEachWay: minutes } : null })}
         onSave={(days, minutes) =>
           saveSettings({ commute: days.length && minutes > 0 ? { days, minutesEachWay: minutes } : null })
         }
@@ -363,7 +364,7 @@ function CrunchForecast({ crunches, now, onAdd }: { crunches: Crunch[]; now: Dat
   );
 }
 
-function CommuteForm({ days, minutes, onSave }: { days: number[]; minutes: number; onSave: (days: number[], minutes: number) => boolean }) {
+function CommuteForm({ days, minutes, onSave, outcomes }: { days: number[]; minutes: number; outcomes: (days: number[], minutes: number) => string[]; onSave: (days: number[], minutes: number) => boolean }) {
   const [on, setOn] = useState<number[]>(days);
   const [each, setEach] = useState(String(minutes || ''));
   const [said, setSaid] = useState('');
@@ -389,7 +390,7 @@ function CommuteForm({ days, minutes, onSave }: { days: number[]; minutes: numbe
         Minutes each way
         <input className="input" type="number" inputMode="numeric" min={0} max={240} value={each} onChange={(e) => setEach(e.target.value)} />
       </label>
-      {!valid ? <p role="alert" className="balance-muted">Enter 0 to 240 minutes.</p> : null}
+      {!valid ? <p role="alert" className="balance-muted">Enter 0 to 240 minutes.</p> : <AssumptionImpact label="commute changes" before={outcomes(days, minutes)} after={outcomes(on, each === '' ? 0 : n)} />}
       <button
         type="button"
         className="balance-button"
@@ -398,6 +399,7 @@ function CommuteForm({ days, minutes, onSave }: { days: number[]; minutes: numbe
       >
         Save commute
       </button>
+      <button type="button" className="balance-button" onClick={() => { setOn(days); setEach(String(minutes || '')); setSaid(''); }}>Cancel commute changes</button>
       {said ? <span role="status"> {said}</span> : null}
       <p className="balance-muted">Kept on this device only, and counted as hours — Semester does not know when you leave.</p>
     </details>

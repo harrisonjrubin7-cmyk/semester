@@ -1,4 +1,4 @@
-import { AssumptionEditor } from '../components/AssumptionEditor';
+import { AssumptionEditor, useNativeAssumptions } from '../components/AssumptionEditor';
 import { careerAssumptions } from '../lib/career-assumptions';
 import { useState } from 'react';
 import { useStore } from '../state/store';
@@ -160,6 +160,7 @@ export function Career({
 function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean; careerEvidence: boolean }) {
   const { state, dispatch, catalog } = useStore();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
+  const native = useNativeAssumptions(careerAssumptions(lib.value, patch => lib.update(old => ({ ...old, ...patch }))), storageKey);
   const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
 
   const [tab, setTab] = useState<Tab>('discover');
@@ -731,7 +732,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
                 className="input"
                 maxLength={k === 'name' ? 160 : k === 'headline' ? 300 : 500}
                 value={lib.value[k]}
-                onChange={(e) => lib.update((old) => ({ ...old, [k]: e.target.value }))}
+                onChange={(e) => native.edit(k, e.target.value)}
                 style={input}
               />
             </label>
@@ -748,6 +749,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
             does nothing else.
           </p>
           <AssumptionEditor assumptions={careerAssumptions(lib.value, patch => lib.update(old => ({ ...old, ...patch })))} />
+          {native.editor}
           {(['targetRoles', 'targetLocations'] as const).map((k) => (
             <label key={k} style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
@@ -757,7 +759,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
                 className="input"
                 maxLength={CAREER_LIMITS.targets}
                 value={lib.value[k]}
-                onChange={(e) => lib.update((old) => ({ ...old, [k]: e.target.value }))}
+                onChange={(e) => native.edit(k, e.target.value)}
                 style={input}
               />
             </label>

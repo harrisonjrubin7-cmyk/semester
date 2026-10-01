@@ -1,4 +1,4 @@
-import { AssumptionEditor } from './AssumptionEditor';
+import { AssumptionEditor, useNativeAssumptions } from './AssumptionEditor';
 import { abroadAssumptions } from '../lib/abroad-assumptions';
 import { RecordTable, tableText, type TableRecord } from './HumanTable';
 import { formatNumber } from '../lib/locale';
@@ -49,6 +49,7 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
 
   const setProgram = (id: string, patch: Partial<AbroadProgram>) =>
     lib.update((old) => ({ ...old, programs: old.programs.map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
+  const native = useNativeAssumptions(program ? abroadAssumptions(plan, program, patch => setProgram(program.id, patch)) : [], `${storageKey}:${program?.id || ''}`);
   const setCourse = (id: string, patch: Partial<CourseMatch>) =>
     lib.update((old) => ({ ...old, courses: old.courses.map((c) => (c.id === id ? { ...c, ...patch } : c)) }));
   const add = () => {
@@ -92,8 +93,13 @@ export function StudyAbroad({ storageKey }: { storageKey: string }) {
 
         {program && (
           <>
+            {native.editor}
             <AssumptionEditor key={`${storageKey}:${program.id}`} assumptions={abroadAssumptions(plan, program, patch => setProgram(program.id, patch))} />
-            <ProgramForm program={program} onChange={(patch) => setProgram(program.id, patch)} />
+            <ProgramForm program={program} onChange={(patch) => {
+              if (patch.credits !== undefined) native.edit('credits', String(patch.credits));
+              else if (patch.cost !== undefined) native.edit('cost', patch.cost === null ? '' : String(patch.cost));
+              else setProgram(program.id, patch);
+            }} />
             <Courses
               plan={plan}
               program={program}

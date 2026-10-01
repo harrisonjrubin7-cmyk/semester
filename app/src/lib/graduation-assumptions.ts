@@ -35,10 +35,11 @@ export function scenarioAssumptions(plan: Plan, done: number, scenario: Scenario
     return [`Estimated finish: ${result.remaining === 0 ? 'Credits complete' : result.finish ? termLabel(result.finish) : 'Unknown at this pace'}`, `Projected cost before aid: ${result.cost === null ? 'Unknown' : dollars(result.cost)}`, 'Official transfer, sequencing and aid: Unknown'];
   };
   const fields = [['extra', 'Scenario extra credits', -200, 200], ['perTerm', 'Scenario fall and spring credits', 0, 30], ['summer', 'Scenario summer credits', 0, 20]] as const;
-  const adapters = fields.map(([key, label, min, max]) => numericAssumption({ id: key, label, value: scenario[key], min, max, owner: 'student', source: `Your scenario: ${scenario.name}`, outcomes: value => outcomes({ [key]: value }), apply: value => apply({ [key]: value }) }));
+  const adapters: AssumptionAdapter[] = fields.map(([key, label, min, max]) => numericAssumption({ id: key, label, value: scenario[key], min, max, owner: 'student', source: `Your scenario: ${scenario.name}`, outcomes: value => outcomes({ [key]: value }), apply: value => apply({ [key]: value }) }));
   if (scenario.abroad) {
     const abroad = scenario.abroad;
-    for (const [key, label, min, max] of [['terms', 'Terms abroad', 1, 4], ['credits', 'Expected transfer credits', 0, 30], ['costPerTerm', 'Term abroad cost', 0, 1000000]] as const) {
+    adapters.push({ id: 'costPerTerm', label: 'Term abroad cost', value: abroad.costPerTerm === null ? '' : String(abroad.costPerTerm), type: 'number', min: 0, max: 1000000, owner: 'student', source: `Your scenario: ${scenario.name}; blank uses your normal term cost`, validate: value => !value.trim() || (Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1000000), outcomes: value => outcomes({ abroad: { ...abroad, costPerTerm: value.trim() ? Number(value) : null } }), apply: value => apply({ abroad: { ...abroad, costPerTerm: value.trim() ? Number(value) : null } }) });
+    for (const [key, label, min, max] of [['terms', 'Terms abroad', 1, 4], ['credits', 'Expected transfer credits', 0, 30]] as const) {
       if (abroad[key] === null) continue;
       adapters.push(numericAssumption({ id: key, label, value: abroad[key]!, min, max, step: key === 'terms' ? 1 : undefined, owner: 'student', source: `Your scenario: ${scenario.name}`, outcomes: value => outcomes({ abroad: { ...abroad, [key]: key === 'terms' ? Math.round(value) : value } }), apply: value => apply({ abroad: { ...abroad, [key]: key === 'terms' ? Math.round(value) : value } }) }));
     }

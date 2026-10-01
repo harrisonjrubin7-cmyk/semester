@@ -15,9 +15,9 @@ export function AssumptionEditor({ assumptions, title = 'Review planning assumpt
   </details>;
 }
 
-function AssumptionRow({ assumption: a }: { assumption: AssumptionAdapter }) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const [preview, setPreview] = useState(false);
+function AssumptionRow({ assumption: a, initialValue, onClose }: { assumption: AssumptionAdapter; initialValue?: string; onClose?: () => void }) {
+  const [draft, setDraft] = useState<string | null>(initialValue ?? null);
+  const [preview, setPreview] = useState(initialValue !== undefined);
   const [error, setError] = useState('');
   const valid = draft !== null && a.validate(draft);
   return <fieldset>
@@ -26,7 +26,7 @@ function AssumptionRow({ assumption: a }: { assumption: AssumptionAdapter }) {
     <p>Source: {a.source || 'Not recorded'}</p>
     <ul aria-label={`Current outcomes for ${a.label}`}>{a.outcomes(a.value).map((outcome, i) => <li key={i}>{outcome}</li>)}</ul>
     {draft === null ? <button type="button" disabled={a.owner === 'institution'} onClick={() => setDraft(a.value)}>Edit {a.label}</button> : <>
-      <label>Proposed {a.label}{a.options ? <select className="input" aria-label={`Proposed ${a.label}`} value={draft} onChange={e => { setDraft(e.target.value); setPreview(false); setError(''); }}>{a.options.map(option => <option key={option}>{option}</option>)}</select> : <input className="input" aria-label={`Proposed ${a.label}`} type={a.type || 'text'} min={a.min} max={a.max} step={a.step ?? 'any'} maxLength={a.maxLength}
+      <label>Proposed {a.label}{a.options ? <select ref={element => { if (initialValue !== undefined) element?.focus(); }} className="input" aria-label={`Proposed ${a.label}`} value={draft} onChange={e => { setDraft(e.target.value); setPreview(false); setError(''); }}>{a.options.map(option => <option key={option}>{option}</option>)}</select> : <input ref={element => { if (initialValue !== undefined) element?.focus(); }} className="input" aria-label={`Proposed ${a.label}`} type={a.type || 'text'} min={a.min} max={a.max} step={a.step ?? 'any'} maxLength={a.maxLength}
         value={draft} onChange={e => { setDraft(e.target.value); setPreview(false); setError(''); }} />}</label>
       {!valid && <p role="status">Enter a valid value{a.type === 'number' ? ` between ${a.min} and ${a.max}` : ''}.</p>}
       <button type="button" disabled={!valid} onClick={() => setPreview(true)}>Preview {a.label}</button>
@@ -36,11 +36,51 @@ function AssumptionRow({ assumption: a }: { assumption: AssumptionAdapter }) {
         <button type="button" onClick={() => {
           if (a.owner === 'institution' || !a.validate(draft!)) return;
           if (a.apply(draft!) === false) setError('Could not apply this change. Your original value is preserved.');
-          else { setDraft(null); setPreview(false); }
+          else { setDraft(null); setPreview(false); onClose?.(); }
         }}>Apply {a.label}</button>
       </section>}
-      <button type="button" onClick={() => { setDraft(null); setPreview(false); setError(''); }}>Cancel {a.label}</button>
+      <button type="button" onClick={() => { setDraft(null); setPreview(false); setError(''); onClose?.(); }}>Cancel {a.label}</button>
       {error && <p role="alert">{error}</p>}
     </>}
   </fieldset>;
+}
+
+
+export interface NativeAssumptionRequest { id: string; value: string; token: number }
+
+/** A native change opens the same draft/preview controls; no mutation happens here. */
+export function NativeAssumptionEditor({ assumptions, request, onClose }: {
+  assumptions: AssumptionAdapter[];
+  request: NativeAssumptionRequest;
+  onClose: () => void;
+}) {
+  const assumption = assumptions.find(a => a.id === request.id);
+  return assumption && assumption.owner !== 'institution' ? <section className="portal-panel" aria-label="Pending assumption change">
+    <p>Review this change before applying it. Your saved value is unchanged.</p>
+    <AssumptionRow key={JSON.stringify([request.token, assumption.id, assumption.value, assumption.source, assumption.owner])} assumption={assumption} initialValue={request.value} onClose={onClose} />
+  </section> : null;
+}
+
+export function useNativeAssumptions(assumptions: AssumptionAdapter[], scope: string) {
+  const [request, setRequest] = useState<(NativeAssumptionRequest & { scope: string; before: string }) | null>(null);
+  const [previousScope, setPreviousScope] = useState(scope);
+  if (scope !== previousScope) { setPreviousScope(scope); setRequest(null); }
+  const signature = (a: AssumptionAdapter) => JSON.stringify([a.id, a.value, a.source, a.owner]);
+  const current = assumptions.find(a => a.id === request?.id);
+  const visible = request?.scope === scope && current && request.before === signature(current) ? request : null;
+  return {
+    edit: (id: string, value: string) => {
+      const a = assumptions.find(candidate => candidate.id === id);
+      if (a && a.owner !== 'institution') setRequest(old => ({ id, value, scope, before: signature(a), token: (old?.token ?? 0) + 1 }));
+    },
+    editor: visible ? <NativeAssumptionEditor assumptions={assumptions} request={visible} onClose={() => setRequest(null)} /> : null,
+  };
+}
+
+/** Existing multi-field draft forms use the same before/after outcome presentation. */
+export function AssumptionImpact({ label, before, after }: { label: string; before: string[]; after: string[] }) {
+  return <section aria-label={`Preview ${label}`}>
+    <p>Current outcomes</p><ul>{before.map((line, i) => <li key={i}>{line}</li>)}</ul>
+    <p>Proposed outcomes — review before saving</p><ul>{after.map((line, i) => <li key={i}>{line}</li>)}</ul>
+  </section>;
 }
