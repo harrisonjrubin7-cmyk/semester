@@ -727,6 +727,8 @@ export function ItemDetail() {
             title: item.title,
             origin,
             sourceName: item.checked?.doc ?? item.source,
+            excerpt: item.quote || undefined,
+            location: item.checked?.page ? `Page ${item.checked.page}` : undefined,
             freshness: item.checked?.page ? `Page ${item.checked.page} of the syllabus` : undefined,
             limitations: item.movedFrom ? 'You moved this date; the syllabus says otherwise.' : undefined,
           }}

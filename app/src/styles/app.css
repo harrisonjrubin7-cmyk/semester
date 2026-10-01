@@ -3187,6 +3187,13 @@ input[type='search'].input {
  * implied. `tokensFor` already returns `none` for both shadow tokens under
  * the same preference, so this is the half that cannot be done in JS.
  */
+:root[data-contrast="more"] .surface,
+:root[data-contrast="more"] .surface-in,
+:root[data-contrast="more"] .pill-soft {
+  box-shadow: none;
+  border-color: var(--app-fg);
+}
+
 @media (prefers-contrast: more) {
   .surface,
   .surface-in,

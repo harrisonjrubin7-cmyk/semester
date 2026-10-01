@@ -71,7 +71,7 @@ import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
 import { Wordmark } from './Brand';
 import { AskIcon, ClocksIcon, Plus, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
-import { addIntent, seedQuickAdd } from '../lib/intent';
+import { addIntent, navigationIntent, seedQuickAdd } from '../lib/intent';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
 import { QuickActions } from './unity/QuickActions';
@@ -323,7 +323,9 @@ export function Command({ onClose }: { onClose: () => void }) {
 
   /** Enter in the box: an explicit add goes to the capture box, anything else is a search. */
   const submit = (query: string) => {
-    if (addIntent(query) !== null) add(query);
+    const destination = navigationIntent(query);
+    if (destination) land(destination);
+    else if (addIntent(query) !== null) add(query);
     else search(query);
   };
 
