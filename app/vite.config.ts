@@ -680,7 +680,6 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
-  'src/lib/classmates-writes.test.ts',
   'src/components/StudyStudio.packs.test.tsx',
   'src/lib/coursestudio.test.ts',
   'src/components/CourseStudio.test.tsx',
@@ -779,6 +778,7 @@ const MOCKS_MODULES = [
   'src/state/review.test.tsx',
   'src/state/deletions.test.tsx',
   'src/components/WaitingSends.test.tsx',
+  'src/lib/classmates-writes.test.ts',
 ]
 
 export default defineConfig(({ command, mode }) => {
