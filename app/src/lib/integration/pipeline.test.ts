@@ -125,11 +125,13 @@ describe('ingest', () => {
     expect(r.cursorAfter).toBeNull();
   });
 
-  it('refuses an older version than the one stored, and skips the same one', async () => {
+  it('refuses an older version than the one stored, and refreshes metadata for the same one', async () => {
     const older = await run([MOCK_ASSIGNMENT], { store: memoryStore({ timestamps: { 'assignment:9001': '2026-09-27T11:30:00Z' } }) });
     expect(older.errors[0].category).toBe('timestamp_regression');
     const same = await run([MOCK_ASSIGNMENT], { store: memoryStore({ timestamps: { 'assignment:9001': '2026-09-27T11:00:00Z' } }) });
     expect(same).toMatchObject({ unchanged: 1, created: 0, updated: 0 });
+    expect(same.references).toHaveLength(1);
+    expect(same.references[0].governance.retrievedAt).toBe(NOW.toISOString());
   });
 
   it('carries a provider deletion as a deletion, not as data', async () => {

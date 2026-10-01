@@ -81,6 +81,20 @@ describe('what the worker refuses to run', () => {
 });
 
 describe('a run', () => {
+  it('refreshes governance clocks after an unchanged record is confirmed in a new batch', async () => {
+    const t = world();
+    const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    const first = JSON.parse((t.canonical_entity_references[0].display as Record<string, string>)._governance);
+    const later = new Date(NOW.getTime() + 60_000);
+    const result = await runSync(db, req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') }), () => later);
+    expect(result).toMatchObject({ outcome: 'ran', result: { unchanged: 1, updated: 0 } });
+    const refreshed = JSON.parse((t.canonical_entity_references[0].display as Record<string, string>)._governance);
+    expect(refreshed.retrievedAt).toBe(later.toISOString());
+    expect(Date.parse(refreshed.expiresAt)).toBe(Date.parse(first.expiresAt) + 60_000);
+    expect(t.canonical_entity_references).toHaveLength(1);
+  });
+
   it('writes references with their display values, and moves the connection to healthy', async () => {
     const t = world();
     const r = await runSync(fakeDb(t), req([SIS_FIXTURES.term, SIS_FIXTURES.enrollment, SIS_FIXTURES.hold]), now);
@@ -211,7 +225,10 @@ describe('reconciliation', () => {
       providerIds: ['enr-2', 'enr-3'], runId }, now);
     expect(plan).toEqual({ stillThere: ['enr-2'], goneAtSource: ['enr-77-ECON1010'], unknownHere: ['enr-3'] });
     const gone = t.canonical_entity_references.find((x) => x.source_record_id === 'enr-77-ECON1010')!;
-    expect(gone).toMatchObject({ external_deleted_at: NOW.toISOString(), display: {}, freshness_status: 'unavailable' });
+    expect(gone).toMatchObject({ external_deleted_at: NOW.toISOString(), freshness_status: 'unavailable' });
+    const retained = gone.display as Record<string, string>;
+    expect(Object.keys(retained)).toEqual(['_governance']);
+    expect(JSON.parse(retained._governance)).toMatchObject({ aiEligibility: 'denied_by_default', writeAuthority: 'source-system-only' });
     expect(t.integration_sync_runs[0].reconciliation_state).toBe('mismatched');
     expect(t.integration_sync_errors.at(-1)).toMatchObject({ error_category: 'deletion_mismatch', severity: 'warning' });
   });

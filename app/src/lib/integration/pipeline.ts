@@ -240,10 +240,9 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       reject('timestamp_regression', 'the provider sent an older version than the one stored');
       continue;
     }
-    if (previous && rec.updatedAt && Date.parse(rec.updatedAt) === Date.parse(previous) && !rec.deleted) {
-      result.unchanged += 1;
-      continue;
-    }
+    const unchanged = Boolean(previous && rec.updatedAt && Date.parse(rec.updatedAt) === Date.parse(previous) && !rec.deleted);
+    // Reconfirmed records still refresh their persisted governance clocks.
+    if (unchanged) result.unchanged += 1;
 
     // Freshness is the age of Semester's copy, not of the provider's edit: a
     // record confirmed this minute is live however long ago it last changed.
@@ -267,7 +266,9 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       values: rec.deleted ? {} : checked.values,
       governance: governanceEnvelope(adapter, mapping, connection.publicId, now),
     });
-    if (previous) result.updated += 1; else result.created += 1;
+    if (!unchanged) {
+      if (previous) result.updated += 1; else result.created += 1;
+    }
   }
 
   if (result.rejected === received && received > 0) {

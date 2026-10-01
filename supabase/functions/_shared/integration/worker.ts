@@ -304,15 +304,18 @@ export async function reconcile(
   const c = row as { id: string; tenant_id: string; approved_at: string | null; status: string } | null;
   if (!c || !c.approved_at) return { refused: 'no approved connection' };
   const sourceSystem = `${req.adapter.provider} ${req.adapter.product}`.trim();
-  const { data: locals } = await db.from('canonical_entity_references').select('source_record_id')
+  const { data: locals } = await db.from('canonical_entity_references').select('source_record_id,display')
     .eq('tenant_id', c.tenant_id).eq('connection_id', c.id).eq('source_system', sourceSystem)
     .eq('canonical_entity_type', req.canonicalEntity).is('external_deleted_at', null);
   const plan = reconcilePlan((locals ?? []).map((l: { source_record_id: string }) => l.source_record_id), req.providerIds);
-  if (plan.goneAtSource.length) {
+  for (const local of locals ?? []) {
+    if (!plan.goneAtSource.includes(local.source_record_id)) continue;
+    const envelope = local.display?._governance;
+    const display = typeof envelope === 'string' ? { _governance: envelope } : {};
     await db.from('canonical_entity_references')
-      .update({ external_deleted_at: now().toISOString(), display: {}, freshness_status: 'unavailable', updated_at: now().toISOString() })
+      .update({ external_deleted_at: now().toISOString(), display, freshness_status: 'unavailable', updated_at: now().toISOString() })
       .eq('tenant_id', c.tenant_id).eq('connection_id', c.id).eq('source_system', sourceSystem)
-      .eq('canonical_entity_type', req.canonicalEntity).in('source_record_id', plan.goneAtSource);
+      .eq('canonical_entity_type', req.canonicalEntity).eq('source_record_id', local.source_record_id);
   }
   const state = plan.goneAtSource.length || plan.unknownHere.length ? 'mismatched' : 'matched';
   await db.from('integration_sync_runs').update({ reconciliation_state: state }).eq('id', req.runId).eq('tenant_id', c.tenant_id);
