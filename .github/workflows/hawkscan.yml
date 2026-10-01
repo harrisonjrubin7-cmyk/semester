@@ -17,6 +17,10 @@ permissions:
 
 jobs:
   hawkscan:
+    # GitHub never exposes repository secrets to a fork. Internal pull
+    # requests and main must scan or fail closed; forks wait for an internal
+    # branch before they can be scanned with the account key.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -32,8 +36,8 @@ jobs:
           if [ -n "$HAWK_API_KEY" ] && [ -n "$STACKHAWK_APPLICATION_ID" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=HawkScan not configured::Add the HAWK_API_KEY Actions secret and STACKHAWK_APPLICATION_ID Actions variable, then rerun this workflow."
+            echo "::error title=HawkScan not configured::Add the HAWK_API_KEY Actions secret and STACKHAWK_APPLICATION_ID Actions variable, then rerun this workflow."
+            exit 1
           fi
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
