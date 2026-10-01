@@ -252,3 +252,57 @@ describe('governed institution intelligence', () => {
     }
   });
 });
+
+
+describe('role-specific institution boundaries', () => {
+  it('does not let a tutor read a source from another course', async () => {
+    const generate = fixture().generate;
+    const response = await respond(fixture({
+      request: request({ agent: 'tutor', courseId: 'econ' }),
+      approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Private material', courseId: 'chem' }], generate,
+    }));
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('course-scope-required');
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it('requires a selected course for course-guide requests', async () => {
+    const generate = fixture().generate;
+    expect((await respond(fixture({ request: request({ agent: 'course-guide' }), generate }))).body.code).toBe('course-scope-required');
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it('passes the validated role and approved course scope to the provider', async () => {
+    const generate = fixture().generate;
+    const response = await respond(fixture({
+      request: request({ agent: 'tutor', courseId: 'econ' }),
+      approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity', courseId: 'econ' }], generate,
+    }));
+    expect(response.status).toBe(200);
+    expect(response.body.agent).toBe('tutor');
+    expect(generate).toHaveBeenCalledWith(expect.objectContaining({ agent: 'tutor' }), expect.any(AbortSignal));
+  });
+
+  it('refuses a consequential advisor action before invoking a provider', async () => {
+    const generate = fixture().generate;
+    const response = await respond(fixture({ request: request({ agent: 'advisor', proposedActions: [{
+      id: 'drop', label: 'Drop course', effect: 'Drop', target: 'registration', class: 'consequential', reversible: false, evidenceIds: [],
+    }] }), generate }));
+    expect(response.body.code).toBe('agent-action-refused');
+    expect(generate).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('course policy cannot be bypassed by switching agents', () => {
+  it.each(['assistant', 'advisor', 'tutor', 'course-guide'] as const)('checks %s against published course permissions before generation', async (agent) => {
+    const generate = fixture().generate;
+    const response = await respond(fixture({
+      request: request({ agent, courseId: 'ECON 101' }),
+      approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity', courseId: 'ECON 101' }],
+      coursePolicy: { allowedModes: [], instruction: 'Course AI support is prohibited.' }, generate,
+    }));
+    expect(response.body.code).toBe('course-mode-disabled');
+    expect(generate).not.toHaveBeenCalled();
+  });
+});

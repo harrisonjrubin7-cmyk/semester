@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { courseAgentPolicy, type CourseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
 import {
   chooseModel,
   parseIntelligenceGatewayRequest,
@@ -20,6 +21,10 @@ export interface ApprovedIntelligenceSource {
   evidenceIds: string[];
   /** Used only to assemble the provider request; never returned or journaled. */
   body: string;
+  courseId?: string;
+  title?: string;
+  locator?: string;
+  verifiedAt?: string;
 }
 
 export interface IntelligenceAuditRecord {
@@ -43,6 +48,7 @@ export interface IntelligenceRespondInput {
   identity: UniversityIdentity;
   request: IntelligenceGatewayRequest;
   tenantPolicy: TenantIntelligencePolicy;
+  coursePolicy?: CourseAgentPolicy;
   approvedSources: ApprovedIntelligenceSource[];
   modelTask: ModelTask;
   generate: InstitutionModelProvider['generate'];
@@ -114,6 +120,11 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     return result(403, { code: 'mode-disabled', message: 'This academic-integrity mode is not permitted.' });
   }
 
+  const agent = request.agent ?? 'assistant';
+  // Role-specific actions are preparation only; the role cannot widen institutional authority.
+  if (agent !== 'assistant' && request.proposedActions.some((action) => action.class !== 'prepare')) {
+    return result(403, { code: 'agent-action-refused', message: 'This role may prepare drafts only; it cannot change institutional records.' });
+  }
   const requestedSources = new Set(request.sourceIds);
   const sources = input.approvedSources.filter((source) => requestedSources.has(source.id));
   if (requestedSources.size === 0 || sources.length !== requestedSources.size) {
@@ -121,6 +132,14 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
       code: 'source-not-approved',
       message: 'Every source sent to Semester Intelligence must be approved for this tenant and account.',
     });
+  }
+  if ((agent === 'tutor' || agent === 'course-guide') &&
+      (!request.courseId || sources.some((source) => source.courseId !== request.courseId))) {
+    return result(403, { code: 'course-scope-required', message: 'Select approved sources from one course before using this role.' });
+  }
+  const coursePolicy = request.courseId ? input.coursePolicy ?? courseAgentPolicy(null) : undefined;
+  if (coursePolicy && !coursePolicy.allowedModes.includes(request.mode)) {
+    return result(403, { code: 'course-mode-disabled', message: 'This support mode is not permitted by the published course policy. Use concept review or ask your instructor.' });
   }
   const allowedEvidence = new Set(sources.flatMap((source) => source.evidenceIds));
   const monthlyRemaining = Math.max(
@@ -147,6 +166,8 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     model: route.model.replace(`${route.provider}:`, ''),
     question: request.question,
     mode: request.mode,
+    agent,
+    coursePolicyInstruction: coursePolicy?.instruction,
     sources,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
   };
@@ -243,11 +264,12 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     inputTokens: generated.inputTokens,
     outputTokens: generated.outputTokens,
     costCents,
-    policyDecision: `${tenantPolicy.state}:${request.mode}`,
+    policyDecision: `${tenantPolicy.state}:${agent}:${request.mode}`,
   });
   return result(200, {
     version: 1,
     text: generated.text,
+    agent,
     sourceIds: [...citedSources],
     evidenceIds,
     mode: request.mode,
@@ -309,6 +331,7 @@ export interface IntelligenceServiceConfig {
    * policy-disabled runtime, which generates nothing anyway.
    */
   killSwitch?: (identity: UniversityIdentity) => Promise<boolean>;
+  loadCoursePolicy?: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<CourseAgentPolicy>;
   loadPolicy: (identity: UniversityIdentity) => Promise<TenantIntelligencePolicy>;
   loadApprovedSources: (identity: UniversityIdentity, sourceIds: string[]) => Promise<ApprovedIntelligenceSource[]>;
   modelTask: (identity: UniversityIdentity, request: IntelligenceGatewayRequest) => Promise<ModelTask>;
@@ -366,6 +389,8 @@ export function createIntelligenceService(config: IntelligenceServiceConfig): In
         identity,
         request,
         tenantPolicy: await config.loadPolicy(identity),
+        coursePolicy: request.courseId && config.loadCoursePolicy
+          ? await config.loadCoursePolicy(identity, request) : undefined,
         approvedSources: await config.loadApprovedSources(identity, request.sourceIds),
         modelTask: await config.modelTask(identity, request),
         generate: config.generate,

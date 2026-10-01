@@ -1,3 +1,5 @@
+import { AGENTS } from '../../../packages/institution/src/agents';
+import { useLive } from './live';
 import { useAI } from './store';
 import { assemble, suggestionsFor } from './assemble';
 import { useNow, useStore } from '../state/store';
@@ -41,7 +43,13 @@ export function Opening({
   help?: HelpState;
 }) {
   const ai = useAI();
-  const suggestions = suggestionsFor(ai).slice(0, 4);
+  const { agent } = useLive();
+  const starters = {
+    advisor: ['Help me compare academic options', 'Prepare questions for my advisor', 'What needs official advisor review?'],
+    tutor: ['Ask me a guiding question about this concept', 'Give me a similar practice problem', 'Help me prepare an office-hours question'],
+    'course-guide': ['Explain this course’s AI policy', 'What are this week’s learning objectives?', 'Where can I find course support?'],
+  };
+  const suggestions = agent === 'assistant' ? suggestionsFor(ai).slice(0, 4) : starters[agent];
 
   /*
    * What it is looking at — unless the answer is this page.
@@ -93,8 +101,7 @@ export function Opening({
       </h2>
       {!seen && (
         <p className="ask-opening-lede">
-          I can explain your course material, help you practise, plan your time, or help with a
-          draft you review.
+          {AGENTS[agent].question} I use the context allowed for this role and prepare drafts you review.
         </p>
       )}
       {/*
@@ -109,17 +116,16 @@ export function Opening({
         <div className="ask-context-line">
           <span className="ask-context-kicker">Using right now</span>
           <span>
-            {seen ? 'this screen · ' : ''}
+            {agent === 'assistant' && seen ? 'this screen · ' : ''}
             {courses} {courses === 1 ? 'course' : 'courses'} · {soon}{' '}
-            {soon === 1 ? 'deadline' : 'deadlines'} in the next two weeks · your grades
+            {soon === 1 ? 'deadline' : 'deadlines'} in the next two weeks
           </span>
         </div>
         <details className="ask-context-more">
           <summary>What it can and cannot see</summary>
           <ul>
             <li>
-              It can see {seen ? 'what this screen is showing, ' : ''}your courses, deadlines and
-              grades.
+              It uses role-scoped context: planning for the Assistant, selected course material for learning roles, and approved sources at your institution. Grades and attendance are excluded from automatic context.
             </li>
             <li>It never sees your notes, your drafts or anyone in People.</li>
             <li>It is not your registrar: it cannot change your official record.</li>
