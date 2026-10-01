@@ -1,3 +1,4 @@
+import { retainIncomingCapture } from './lib/productivity-arrival';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 // The typefaces both sheets below name, declared once and served from this
@@ -28,6 +29,8 @@ import type { ProviderId } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
 import { primePersisted } from './state/shape';
 import { warm } from './lib/warm';
+
+retainIncomingCapture();
 
 /**
  * A sign-in comes back as a redirect to this same page. Redeem the code before

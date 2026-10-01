@@ -165,6 +165,13 @@ export const PARTIES: readonly Party[] = [
     evidence: ['app/src/lib/geocode.ts'],
   },
   {
+    name: 'Public institution source hosts', kind: 'student-directed',
+    purpose: 'Checking the availability of a public source and whether it contains a reviewed exact excerpt.',
+    receives: 'A request to the public source URL chosen by the student. No Semester session token, reflections, or excerpt is sent to the source host.',
+    when: 'student-opt-in', hosts: [], functions: ['productivity-sourcecheck'],
+    evidence: ['supabase/functions/productivity-sourcecheck/index.ts'],
+  },
+  {
     name: 'Calendar and Canvas hosts the student links', kind: 'student-directed',
     purpose: 'Reading a calendar feed or Canvas instance the student pasted, relayed because those hosts refuse browser requests.',
     receives: 'The request to the address the student supplied, with the token they supplied.',

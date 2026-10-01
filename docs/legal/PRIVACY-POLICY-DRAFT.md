@@ -209,3 +209,9 @@ version.
 
 harrisonjrubin7@gmail.com [DECIDE: dedicated address; postal address if
 counsel requires one].
+
+### Public source checks and private productivity work
+
+**Public institution source hosts you check** receive a public page request only when you request a source check. The check sends no Semester session token, reflections, selected excerpt, or saved student content to that host. Semester checks the excerpt in memory and does not store the page body or source URL server-side. The host receives ordinary request metadata from Semester's server.
+
+Your private productivity cloud copy includes saved decisions, captures, drafts, reflections and history. It is readable only by your own authenticated account. You can delete that cloud copy while keeping the device copy; deleting the account removes the cloud copy. Institution counts require your separate opt-in, active membership and an administrator request, and are suppressed below ten consenting members. The count response contains no names or student content. Assistant drafts and semantic search send only the context displayed for your review, to the assistant provider or institution gateway you selected. Provider retention depends on that connection's terms. Browser captures stay unauthorized for assistant use until you authorize them.
