@@ -67,5 +67,6 @@ export const EDGE_GUARDS: readonly EdgeGuard[] = [
   },
   { fn: 'lti', guard: 'flow-state', evidence: [/spend_lti_nonce/, /jwtVerify\(/, /checkHeader\(/] },
   { fn: 'push', guard: 'shared-secret', evidence: [/CRON_SECRET/, /Bearer \$\{CRON_SECRET\}/] },
+  { fn: 'support-reply-notify', guard: 'user-token', evidence: USER },
   { fn: 'trust-room', guard: 'link-token', evidence: [/handleTrustRoom\(/, /rpc\('trust_room_open'/] },
 ];

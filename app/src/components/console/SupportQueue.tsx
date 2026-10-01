@@ -77,12 +77,14 @@ export function SupportQueue({ filter, onStatus }: ViewProps) {
     if (!openId || !reply.trim()) return;
     setBusy(true);
     try {
-      await supportReply(openId, reply, nextStatus);
+      const delivery = await supportReply(openId, reply, nextStatus);
       const messages = await supportThread(openId);
       setThread(messages);
       setReply('');
       await refresh();
-      onStatus(`Reply recorded for ${ticketReference(openId)}.`);
+      onStatus(delivery === 'notified'
+        ? `Reply recorded and student notified for ${ticketReference(openId)}.`
+        : `Reply recorded for ${ticketReference(openId)}. Email was not delivered; the reply is available in Help.`);
     } catch (error) {
       onStatus(said(error, 'Could not send the support reply.'));
     } finally {

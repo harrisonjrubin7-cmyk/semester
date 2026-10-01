@@ -210,7 +210,7 @@ export async function supportReply(
   ticketId: string,
   body: string,
   status: 'open' | 'waiting_on_student' | 'resolved',
-): Promise<void> {
+): Promise<'notified' | 'in_app_only'> {
   const db = await cloud();
   const { error } = await db.rpc('support_reply', {
     want_ticket: ticketId,
@@ -218,4 +218,8 @@ export async function supportReply(
     want_status: status,
   });
   if (error) throw fail(error, 'Could not send the support reply.');
+  const { error: noticeError } = await db.functions.invoke('support-reply-notify', {
+    body: { ticket_id: ticketId },
+  });
+  return noticeError ? 'in_app_only' : 'notified';
 }

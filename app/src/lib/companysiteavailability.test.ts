@@ -48,7 +48,7 @@ describe('company-site production availability', () => {
     expect(roadmap).toContain('live-payment evidence and commercial activation remain open');
     expect(roadmap).toContain('provider credentials and live activation remain open');
     expect(roadmap).toContain('no institution platform is registered or verified');
-    expect(roadmap).toContain('production enablement, notifications and UAT remain open');
+    expect(roadmap).toContain('notification deployment, staffed production enablement and UAT remain open');
     expect(roadmap).toContain('an approved institution feed remains open');
 
     for (const path of [

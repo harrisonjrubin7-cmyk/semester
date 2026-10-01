@@ -43,7 +43,7 @@ beforeEach(() => {
     at: '2026-10-01T10:00:00Z',
     context: { device_class: 'tablet', screen: '#/drill' },
   }]);
-  mock.reply.mockResolvedValue(undefined);
+  mock.reply.mockResolvedValue('notified');
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -103,7 +103,18 @@ describe('the support operations queue', () => {
       'resolved',
     );
     expect(mock.queue).toHaveBeenCalledTimes(2);
-    expect(mock.status).toHaveBeenCalledWith('Reply recorded for SUP-123E4567.');
+    expect(mock.status).toHaveBeenCalledWith('Reply recorded and student notified for SUP-123E4567.');
+  });
+
+  it('keeps an in-app reply successful when email delivery is unavailable', async () => {
+    mock.reply.mockResolvedValue('in_app_only');
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'The reply remains available here.');
+    await click(button('Send support reply'));
+    expect(mock.status).toHaveBeenCalledWith(
+      'Reply recorded for SUP-123E4567. Email was not delivered; the reply is available in Help.',
+    );
   });
 
   it('uses the console filter without re-reading the database', async () => {

@@ -86,10 +86,10 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Resend', kind: 'subprocessor',
-    purpose: 'Emails each company-site form submission to the Semester owner. Not active until its key and the owner’s address are set.',
-    receives: 'What a visitor typed into a company-site form (name, work email, organization, role, message) and the form’s reference. No student data, and no IP address.',
-    when: 'form-sent', hosts: [], functions: ['lead-intake'],
-    evidence: ['supabase/functions/lead-intake/index.ts', 'docs/COMMERCIAL-CORE.md'],
+    purpose: 'Emails each company-site form submission to the Semester owner and sends a generic hint when support replies. Not active until its key and sender are set.',
+    receives: 'For site forms: the visitor’s submitted contact fields and reference. For support: the student’s email address, a support reference and app link, but never the reply body or approved diagnostic context. No IP address.',
+    when: 'form-sent', hosts: [], functions: ['lead-intake', 'support-reply-notify'],
+    evidence: ['supabase/functions/lead-intake/index.ts', 'supabase/functions/support-reply-notify/index.ts', 'docs/COMMERCIAL-CORE.md'],
   },
   // ── Institution-directed ─────────────────────────────────────────────────
   {
