@@ -1,3 +1,5 @@
+import { AssumptionEditor } from './AssumptionEditor';
+import { decisionAssumptions, decisionOutcomes } from '../lib/decision-assumptions';
 import { incomingCapture } from '../lib/productivity-arrival';
 import { ProductivityBrowserCapture } from './ProductivityBrowserCapture';
 import { ProductivitySourceCheck } from './ProductivitySourceCheck';
@@ -157,6 +159,7 @@ function Workspace({ who }: { who: string }) {
           'No assumption'}
       </p>
       <p>After: {pending.value}</p>
+      {d && <ul>{decisionOutcomes(withAssumption(d, pending)).map((outcome, i) => <li key={i}>{outcome}</li>)}</ul>}
       <p>
         Review these linked impacts:{' '}
         {pending.impacts ||
@@ -242,7 +245,7 @@ function Workspace({ who }: { who: string }) {
               aria-label="Saved decisions"
               className="input"
               value={selected}
-              onChange={(e) => setSelected(e.target.value)}
+              onChange={(e) => { setPending(null); setSelected(e.target.value); }}
             >
               <option value="">Choose a decision</option>
               {lib.value.decisions.map((x) => (
@@ -482,10 +485,10 @@ function Workspace({ who }: { who: string }) {
                 })}
               </div>
               <SectionLabel>Assumptions</SectionLabel>
+              <AssumptionEditor key={d.id} assumptions={decisionAssumptions(d, next => patch(next))} />
               <p>
                 Institution-owned facts are read-only. If a source may be wrong,
-                flag it for review and contact its owner. Changes preview their
-                recorded impact links before saving.
+                flag it for review and contact its owner. Changes preview their supported fit calculations before saving.
               </p>
               {d.assumptions.map((a) => (
                 <article className="productivity-card" key={a.id}>

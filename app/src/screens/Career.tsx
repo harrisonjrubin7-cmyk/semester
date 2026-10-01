@@ -1,3 +1,5 @@
+import { AssumptionEditor } from '../components/AssumptionEditor';
+import { careerAssumptions } from '../lib/career-assumptions';
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -330,6 +332,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
         </Notice>
       )}
 
+      {tab === 'discover' && <AssumptionEditor assumptions={careerAssumptions(lib.value, patch => lib.update(old => ({ ...old, ...patch })))} />}
       {tab === 'discover' && (
         <>
           <input
@@ -744,6 +747,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
             Kept on this device and shown to nobody. It orders your own saved listings on Discover, and
             does nothing else.
           </p>
+          <AssumptionEditor assumptions={careerAssumptions(lib.value, patch => lib.update(old => ({ ...old, ...patch })))} />
           {(['targetRoles', 'targetLocations'] as const).map((k) => (
             <label key={k} style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>

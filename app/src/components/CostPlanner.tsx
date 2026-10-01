@@ -1,3 +1,5 @@
+import { AssumptionEditor } from './AssumptionEditor';
+import { costLineAssumptions } from '../lib/cost-assumptions';
 import { dollars } from '../lib/cost';
 import { useId, useState } from 'react';
 import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, type CostSource } from '../lib/cost-plan';
@@ -44,6 +46,7 @@ export function CostPlanner({
         aid and does not estimate it. Not a bill.
       </p>
 
+      <AssumptionEditor assumptions={costLineAssumptions(lines, onChange)} />
       {lines.length ? (
         <ul className="cost-lines">
           {lines.map((l) => {

@@ -1,3 +1,5 @@
+import { AssumptionEditor } from '../components/AssumptionEditor';
+import { outOfPocketAssumptions } from '../lib/cost-assumptions';
 import { useMemo, useState } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
 import { ScanIsbn } from '../components/ScanIsbn';
@@ -80,7 +82,7 @@ export function Costs() {
 
 /** Books, access codes and lab fees — the half a student chooses. */
 function OutOfPocket() {
-  const { state, dispatch, catalog, courseCode } = useStore();
+  const { state, dispatch, catalog, courseCode, account } = useStore();
 
   const [what, setWhat] = useState('');
   const [amount, setAmount] = useState('');
@@ -121,6 +123,7 @@ function OutOfPocket() {
 
   return (
     <>
+      <AssumptionEditor key={`${account?.id || 'device'}:${state.term}`} assumptions={outOfPocketAssumptions(mine, (id, cents) => dispatch({ type: 'patchCost', id, patch: { cents } }))} />
       <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div

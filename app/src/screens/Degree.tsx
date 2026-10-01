@@ -58,6 +58,8 @@ import {
   type TermInput,
 } from '../lib/termgpa';
 
+const DegreeAssumptions = lazy(() => import('../components/DegreeAssumptions').then(module => ({ default: module.DegreeAssumptions })));
+
 const GraduationSimulator = lazy(() => import('../components/GraduationSimulator').then(module => ({ default: module.GraduationSimulator })));
 
 /** `advisorMeeting` defaults to the `advisor_meeting_mode` flag; tests choose. */
@@ -122,6 +124,7 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
 
       {tab === 'left' ? <WhatIsLeft /> : null}
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
+      {tab === 'rules' && <Suspense fallback={<p>Loading assumptions…</p>}><DegreeAssumptions /></Suspense>}
       {tab === 'rules' ? <Rules /> : null}
       {tab === 'ahead' ? (
         <Suspense fallback={<p role="status">Loading graduation planning…</p>}>

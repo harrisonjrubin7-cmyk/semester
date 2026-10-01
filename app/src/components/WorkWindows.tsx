@@ -1,3 +1,4 @@
+import { WorkloadAssumptionsEntry } from './WorkloadAssumptionsEntry';
 import { useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
@@ -42,6 +43,7 @@ export function WorkWindows() {
   return (
     <Folding name="WorkWindows">
       <SectionLabel>When you actually work</SectionLabel>
+      <WorkloadAssumptionsEntry />
       <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
         rather than a fact about you. Two or three windows here make every hour figure in the app

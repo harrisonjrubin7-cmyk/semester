@@ -1,3 +1,5 @@
+import { AssumptionEditor } from './AssumptionEditor';
+import { graduationAssumptions } from '../lib/graduation-assumptions';
 import { useMemo, useRef, useState } from 'react';
 import { SourceBadge } from './SourceBadge';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -56,7 +58,7 @@ export function GraduationSimulator({
   /** `cost_planner` (Phase D). */
   costs?: boolean;
 }) {
-  const library = useDeviceLibrary(GRADUATION_KEY, readGraduation, EMPTY_GRADUATION);
+  const library = useDeviceLibrary(accountId ? `${GRADUATION_KEY}:${accountId}` : GRADUATION_KEY, readGraduation, EMPTY_GRADUATION);
   const data = library.value;
   const plan = data.plan;
   const [status, setStatus] = useState('');
@@ -168,6 +170,7 @@ export function GraduationSimulator({
           </ul>
           <button type="button" className="btn btn-ghost" onClick={() => assumptions.current?.focus()}>Edit assumptions</button>
         </details>
+        <AssumptionEditor key={accountId || 'device'} assumptions={graduationAssumptions(plan, done, setPlan)} />
         <div className="portal-filter-row">
           <label className="portal-check">
             Hours your degree needs
@@ -283,7 +286,7 @@ export function GraduationSimulator({
         ) : null}
       </section>
 
-      {costs ? <CostPlanner lines={plan.costLines ?? []} onChange={setCostLines} /> : null}
+      {costs ? <CostPlanner key={accountId || 'device'} lines={plan.costLines ?? []} onChange={setCostLines} /> : null}
 
       <section className="portal-panel" aria-labelledby="grad-what-if">
         <h3 id="grad-what-if">What if…</h3>
