@@ -26,7 +26,7 @@ export interface Solution {
   h: string;
   lede: string;
   /** The last headline; the page adds the full stop. */
-  cta: [string];
+  cta: [string, string];
   /** A heading for the first list, where "What you get" would promise more than is true. */
   listHead: string;
   /** The large heading over it, where "Scoped to your workflow." would too. */
@@ -47,7 +47,7 @@ export function k12(): Solution {
     eye: 'For school districts, high schools and CTE',
     h: 'Semester for high school: described, planned and not yet taking a district’s student data.',
     lede: `${K12_NOW} ${K12_POSITIONING}`,
-    cta: ['Tell us what a district would need first'],
+    cta: ['Tell us what a district would need first', '#contact'],
     listHead: 'What it would lead with',
     listTitle: 'Described and planned. Not yet for a district.',
     list: [
@@ -71,7 +71,7 @@ export function advancement(): Solution {
     eye: 'For alumni relations and fundraising offices',
     h: 'Alumni relations and fundraising: planned, and none of it built.',
     lede: `${NOTHING_IS_LIVE} ${ADV_POSITIONING} ${PRICE}`,
-    cta: ['Tell us what your office would need first'],
+    cta: ['Tell us what your office would need first', '#contact'],
     listHead: 'What it would do, none of it built',
     listTitle: 'Planned. Nothing here exists yet.',
     list: PARTS.flatMap((p) => [`${p.title}: ${p.would[0]}`, ...p.would.slice(1).map((w) => `${p.title}: ${w}`)]),

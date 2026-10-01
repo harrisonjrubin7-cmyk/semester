@@ -142,6 +142,19 @@ describe('the site’s renderSolution', () => {
     }
   });
 
+  it('gives the hero button a real link, not the word undefined', () => {
+    for (const [key, make] of Object.entries(SOLUTIONS)) {
+      const page = make();
+      expect(page.cta[1], key).toBe('#contact');
+      const out = render(key, page as unknown as Record<string, unknown>);
+      expect(out, key).not.toContain('undefined');
+      expect(out, key).toContain(`<a class="btn btn-primary" href="#contact">${page.cta[0]}</a>`);
+    }
+    // control: the probe does see the fault when a page has the one-element shape
+    const bad = render('k12', { crumb: 'c', eye: 'e', h: 'h', lede: 'l', cta: ['c'], list: ['a'], qual: ['b'] });
+    expect(bad).toContain('href="undefined"');
+  });
+
   it('still prints the original headings for a page that sets none (nothing else changed)', () => {
     const out = render('departments', { crumb: 'Departments', eye: 'e', h: 'h', lede: 'l', cta: ['c'], list: ['one'], qual: ['two'] });
     expect(out).toContain('What you get');
