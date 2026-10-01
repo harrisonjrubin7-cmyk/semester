@@ -46,3 +46,14 @@ Task1 implementation DONE: local3798e9e report-only final, source911d519; full19
 Baseline deployment confirmed: Pages36929979768 succeeded for main8da27a2; live index-C2MpR85z.js HTTP200 contains typeofwindow.matchMedia guard, contrast token, lazy AccessibilityPanel-CuNbGgv8.js and QuickAdd-cPdY1WOI.js. MainCI all gates succeeded. Isolated table task remains under review; preliminary privacy risk is sensitive exact filter values persisted from draft/sample cells (await full finding before fix dispatch). Main8da adds concurrent landmark changes versus4825; integrate after Task1 review and before Task2 dispatch.
 
 Task1 review: spec❌/qualityNeedsFixes. I1 sensitive record-derived filter/search persistence; I2 IntegrationDashboard working export broader than healthSummary whitelist; I3 inherited/prototype column keys break filtering/rendering. Fixround1/5 dispatched original/root/ui_tables, FIX_BASE3798e9e; no adjudication/ruling. M1 dashboard scope/report optional correction in touched area. Task1 minor(deferred):M2 existing lint/build/jsdom notices documented; no task-caused failure established, finalreview must triage. Controller repeated native-table inventory search: every remaining native table is in the documented20 static/content-editor exclusions or sharedrenderer/printartifact. Independent AT/productionacceptance intentionallyunclaimed.
+
+Institutional configuration rechecked read-only after release: production lti_platform=0, tenant_sso_policy=0, integration_connections=0. No records/credentials read, no changes made. Real LMS/SSO/provider acceptance remains unavailable; frontend deployment does not close these gates.
+
+Task1 fixround1/5 implementation DONE: local2156f2a source + f5c5e96 report;188 tests/21files, build/lint/unchangedbudgets/diffcheck passed. Controller source+reports saved isolated remote9dc15d6e568e367d03e2c9bca76000c9b84e5abd atopae4d (controllerprogress/reviewdocs preserved). Fresh scoped reviewer/root/review_tables_fix1 running FIX_BASE3798→f5c5e96 on I1,I2,I3,M1; no taskcompletion yet. M2 documented existing25warnings/no fixfile warnings, deferredfinalreview.
+Post-baseline-deploy public-production smoke:HTML/module/CSS/PostgREST allHTTP200; exit0.
+
+Task1 fixround1/5 (3 Important + M1 addressed,0open; commits3798e9e..f5c5e96), scopedreview clean. Task1: complete(commits1622e40..f5c5e96,review clean). M2 existing warnings deferred finalreview; no Critical/Important or unverifiable software gap open. IndependentAT/productionRLS notclaimed; native-table inventory checked; remote tasksource tree matched before controller progress/reviewdoc additions.
+Task2: pending dispatch after safe remotealignment and mainintegration.
+
+Task 1: fix round 1/5 (3 addressed,0 open; commits3798e9e..f5c5e96).
+Task 1: complete (commits1622e40..f5c5e96,review clean).
