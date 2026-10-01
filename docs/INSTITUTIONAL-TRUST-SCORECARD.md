@@ -41,7 +41,7 @@ Gray rows also show the proposed instrumentation date carried by the executable 
 
 - Continuous: safety, service, source, and integration signals.
 - Monthly: source coverage, audit coverage, human-control and AI-quality review.
-- Quarterly: consent, incident, restore, accessibility, and assurance evidence review.
+- Quarterly: share-preview, consent, assessment-safety, incident, restore, accessibility, and assurance evidence review.
 - Termly: student/faculty trust feedback and institution-specific target review.
 
 No metric authorizes a high-risk capability by itself. Activation still requires current tenant-bound evidence, configuration-bound approval, integration health, operating controls, and a working kill switch/audit path.

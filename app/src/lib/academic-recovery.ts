@@ -147,7 +147,7 @@ export const RECOVERY_PLANS: RecoveryPlan[] = [
     affects: ['The next step for this work', 'Any plan built from an unclear instruction'],
     preserved: ['The original prompt, rubric, and source', 'Your notes and current plan'],
     options: [
-      { label: 'Open the source and context', screen: 'study', reason: 'Review the prompt, rubric, policy, and saved notes together.' },
+      { label: 'Open Study and choose the course', screen: 'study', reason: 'Go to Study, then select the relevant course materials and saved notes.' },
       { label: 'Open support options', screen: 'help', reason: 'Review human support routes and decide whom to contact.' },
       { label: 'Keep this for later', screen: 'calendar', reason: 'Leave the work visible without inventing an answer.' },
     ],
@@ -161,7 +161,7 @@ export const RECOVERY_PLANS: RecoveryPlan[] = [
     preserved: ['Your original request and selected context', 'Work you can continue independently'],
     options: [
       { label: 'Set a follow-up date', screen: 'calendar', reason: 'Keep the owner and next check visible.' },
-      { label: 'Prepare a follow-up', screen: 'help', reason: 'Draft it for your review; nothing is sent automatically.' },
+      { label: 'Open support options', screen: 'help', reason: 'Review human support routes and decide how you want to follow up; nothing is sent automatically.' },
       { label: 'Work on something independent', screen: 'home', reason: 'Return to an action that is not blocked by the response.' },
     ],
     confidence: 'confirmed_context',

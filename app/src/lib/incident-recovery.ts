@@ -33,7 +33,7 @@ export interface IncidentCloseOutEvidence {
   impact: string;
   recoveryPoint: string;
   communications: string[];
-  correctiveActions: Array<{ action: string; owner: string; dueAt: number; requiredEvidence: string }>;
+  correctiveActions: Array<{ action: string; owner: string; severity: IncidentSeverity; dueAt: number; requiredEvidence: string }>;
 }
 
 export const AUTOMATION_MAY = [
@@ -82,13 +82,14 @@ export const FAILOVER_RULES: readonly FailoverRule[] = [
   { signal: 'source_freshness_breach', severity: 'SEV3', automatedAction: 'mark_stale_or_pending', studentFallback: 'This information may be out of date. Open the official source or ask its owner.', verification: 'Freshness, ownership, link, and citation checks pass.' },
   { signal: 'data_integrity_mismatch', severity: 'SEV1', automatedAction: 'block_write', studentFallback: 'Semester is read-only while we verify saved information.', verification: 'Checksums, ordering, sharing state, and audit sequence reconcile.' },
   { signal: 'official_write_timeout', severity: 'SEV2', automatedAction: 'mark_stale_or_pending', studentFallback: 'Your action was not confirmed. Check the official system; Semester will not retry it automatically.', verification: 'Exactly one intended effect is confirmed in the system of record.' },
-  { signal: 'accessibility_regression', severity: 'SEV2', automatedAction: 'disable_risky_feature', studentFallback: 'Use the prior accessible path or the alternate format while this is corrected.', verification: 'The affected critical path passes keyboard and assistive-technology checks.' },
+  { signal: 'accessibility_regression', severity: 'SEV3', automatedAction: 'disable_risky_feature', studentFallback: 'Use the prior accessible path or the alternate format while this is corrected.', verification: 'The affected critical path passes keyboard and assistive-technology checks.' },
 ];
 
 export interface IncidentRecord {
   id: string;
   severity: IncidentSeverity;
   declaredAt: number;
+  detection: { signal: string; firstObservedAt: number; correlationIds: string[] };
   commander: string;
   affectedServices: string[];
   tenantScope:
@@ -115,6 +116,14 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   const knownSeverity = INCIDENT_SEVERITIES.includes(record.severity as IncidentSeverity);
   if (!knownSeverity) gaps.push('known incident severity');
   if (!Number.isFinite(record.declaredAt)) gaps.push('finite declaration time');
+  else if (record.declaredAt > now) gaps.push('declaration time not in future');
+  const detection = record.detection;
+  if (!detection
+    || !hasText(detection.signal)
+    || !Number.isFinite(detection.firstObservedAt)
+    || detection.firstObservedAt > now
+    || !Array.isArray(detection.correlationIds)
+    || !detection.correlationIds.some(hasText)) gaps.push('detection evidence');
   if (!hasText(record.commander)) gaps.push('named incident commander');
   if (!Array.isArray(record.affectedServices) || !record.affectedServices.some(hasText)) gaps.push('affected service');
   const scope = record.tenantScope?.scope;
@@ -126,7 +135,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   if (record.privateStudentDataIncluded !== false) gaps.push('private student data excluded');
   const knownStatus = INCIDENT_LIFECYCLE.includes(record.status as (typeof INCIDENT_LIFECYCLE)[number]);
   if (!knownStatus) gaps.push('known incident status');
-  if (knownStatus && record.status !== 'close' && (!Number.isFinite(record.nextUpdateAt) || record.nextUpdateAt <= now)) gaps.push('future next-update time');
+  if (knownStatus && record.status !== 'close' && (!Number.isFinite(record.nextUpdateAt) || record.nextUpdateAt <= now || record.nextUpdateAt <= record.declaredAt)) gaps.push('future next-update time');
   if (knownStatus && (record.status === 'verify' || record.status === 'close') && (!Array.isArray(record.verification) || !record.verification.some(hasText))) gaps.push('recovery verification');
   if (record.status === 'close') {
     const closeOut = record.closeOut as IncidentCloseOutEvidence | undefined;
@@ -142,6 +151,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
       && actions.every((action) => Boolean(action
         && hasText(action.action)
         && hasText(action.owner)
+        && INCIDENT_SEVERITIES.includes(action.severity as IncidentSeverity)
         && Number.isFinite(action.dueAt)
         && hasText(action.requiredEvidence))));
     if (!complete) gaps.push('complete close-out evidence');

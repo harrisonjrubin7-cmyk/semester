@@ -80,7 +80,22 @@ export function Behind() {
 
   const items = datedItems(catalog, now);
   const b = howBehind(items, state.done, state.spent, week);
-  const steps = triage(items, state.done, state.spent, week);
+  const triageSteps = triage(items, state.done, state.spent, week);
+  const steps = state.recoveryIntent === 'short_task' && triageSteps.length === 0
+    ? items
+      .filter((item) => !state.done[item.id])
+      .sort((a, b) => Math.abs(a.daysAway) - Math.abs(b.daysAway))
+      .map((item): Step => ({
+        id: item.id,
+        title: item.title,
+        courseId: item.c,
+        where: item.daysAway < 0 ? 'gone' : item.daysAway === 0 ? 'today' : 'fits',
+        minutes: null,
+        daysAway: item.daysAway,
+        worth: 0,
+        says: `${item.dueShort}; outside the usual one-week triage window.`,
+      }))
+    : triageSteps;
   const attendance = misses(
     catalog.courses.map((c) => c.id),
     state.attendPolicy,

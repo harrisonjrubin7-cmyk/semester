@@ -11,10 +11,10 @@ the process has not been exercised.
 
 | Sev | Means | Example |
 | --- | --- | --- |
-| **SEV1** | Data exposure, cross-tenant leak, or total outage | A policy change lets one school read another's rooms |
-| **SEV2** | Core workflow broken for many users | Calendar or courses fail to load |
-| **SEV3** | Degraded or partial | An integration is failing; the rest works |
-| **SEV4** | Minor, cosmetic, or single-user | A label is wrong |
+| **SEV1** | Suspected cross-tenant exposure, systemic authorization or consent failure, widespread unsafe official write, or total outage | A policy change lets one school read another's rooms |
+| **SEV2** | Core workflow broken for many users, including broad SSO/LTI outage or integrity failure | Calendar or courses fail to load for many users |
+| **SEV3** | Degraded or partial service, stale source, accessibility defect, or limited AI-quality issue | An integration is failing; the rest works |
+| **SEV4** | Isolated low-impact, cosmetic, or single-user defect | A label is wrong |
 
 Any suspected cross-tenant data exposure is **SEV1 until disproven**, not until
 confirmed. The asymmetry is deliberate.

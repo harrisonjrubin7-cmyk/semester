@@ -43,4 +43,10 @@ describe('institutional trust scorecard', () => {
     expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Number.NaN }).state).toBe('yellow');
     expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Number.POSITIVE_INFINITY }).state).toBe('yellow');
   });
+
+  it('never scores future evidence or a blank measured value green', () => {
+    const definition = TRUST_METRICS[0];
+    expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: 201 }, 200).state).toBe('yellow');
+    expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: '   ', evidenceAt: 100 }, 200).state).toBe('yellow');
+  });
 });
