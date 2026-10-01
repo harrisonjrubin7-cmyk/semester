@@ -7,6 +7,10 @@ import type { IntelligenceGatewayRequest, TenantIntelligencePolicy } from '../..
 import type { UniversityIdentity } from '../../../packages/institution/src/index.ts';
 import { createGateway } from './gateway.ts';
 import { ActionJournal } from './journal.ts';
+import { courseAgentPolicy } from '../../../packages/institution/src/course-agent-policy.ts';
+
+const sourceScope = { origin: 'course', policyScope: 'course', policyCourseCode: 'ECON 101', policyTerm: '2026FA' };
+const loadCoursePolicy = async () => courseAgentPolicy(null);
 
 const request = (patch: Partial<IntelligenceGatewayRequest> = {}): IntelligenceGatewayRequest => ({
   version: 1,
@@ -36,7 +40,8 @@ const fixture = (patch: Partial<IntelligenceRespondInput> = {}): IntelligenceRes
   identity: { userId: 'student-1', institutionId: 'northstar', roles: ['student'] },
   request: request(),
   tenantPolicy: policy(),
-  approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity is on the exam.' }],
+  loadCoursePolicy,
+  approvedSources: [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity is on the exam.' }],
   modelTask: { candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1.2 }] },
   generate: vi.fn().mockResolvedValue({
     text: 'Review elasticity.', citedSourceIds: ['syllabus'], inputTokens: 80, outputTokens: 20, providerRequestId: 'response-1',
@@ -165,7 +170,8 @@ describe('governed institution intelligence', () => {
     const service = createIntelligenceService({
       status: 'configured-sandbox',
       loadPolicy: async () => policy(),
-      loadApprovedSources: async () => [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
+      loadCoursePolicy,
+      loadApprovedSources: async () => [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
       modelTask: async () => ({ candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1 }] }),
       generate: async () => ({ text: 'Ready.', citedSourceIds: ['syllabus'], inputTokens: 1, outputTokens: 1, providerRequestId: 'response-2' }),
       execute,
@@ -193,7 +199,8 @@ describe('governed institution intelligence', () => {
       status: 'configured-sandbox',
       killSwitch: async () => engaged,
       loadPolicy: async () => policy(),
-      loadApprovedSources: async () => [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
+      loadCoursePolicy,
+      loadApprovedSources: async () => [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
       modelTask: async () => ({ candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1 }] }),
       generate,
       execute: async () => ({ verified: false }),
@@ -224,7 +231,8 @@ describe('governed institution intelligence', () => {
     const service = createIntelligenceService({
       status: 'policy-disabled',
       loadPolicy: async () => policy({ state: 'off' }),
-      loadApprovedSources: async () => [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'PROTECTED SOURCE BODY' }],
+      loadCoursePolicy,
+      loadApprovedSources: async () => [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'PROTECTED SOURCE BODY' }],
       modelTask: async () => ({ candidates: [] }),
       generate: vi.fn(),
       execute: async () => ({ verified: false }),
@@ -258,8 +266,8 @@ describe('role-specific institution boundaries', () => {
   it('does not let a tutor read a source from another course', async () => {
     const generate = fixture().generate;
     const response = await respond(fixture({
-      request: request({ agent: 'tutor', courseId: 'econ' }),
-      approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Private material', courseId: 'chem' }], generate,
+      request: request({ agent: 'tutor', courseId: 'ECON 101' }),
+      approvedSources: [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Private material', courseId: 'chem', policyCourseCode: 'CHEM 101' }], generate,
     }));
     expect(response.status).toBe(403);
     expect(response.body.code).toBe('course-scope-required');
@@ -275,8 +283,8 @@ describe('role-specific institution boundaries', () => {
   it('passes the validated role and approved course scope to the provider', async () => {
     const generate = fixture().generate;
     const response = await respond(fixture({
-      request: request({ agent: 'tutor', courseId: 'econ' }),
-      approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity', courseId: 'econ' }], generate,
+      request: request({ agent: 'tutor', courseId: 'ECON 101' }),
+      approvedSources: [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity', courseId: 'econ' }], generate,
     }));
     expect(response.status).toBe(200);
     expect(response.body.agent).toBe('tutor');
@@ -295,12 +303,33 @@ describe('role-specific institution boundaries', () => {
 
 
 describe('course policy cannot be bypassed by switching agents', () => {
+  it.each([undefined, async () => { throw new Error('policy store unavailable'); }])('refuses a missing or failed course-policy resolver before budget or generation', async (resolver) => {
+    const generate = vi.fn();
+    const reserveBudget = vi.fn();
+    const response = await respond(fixture({ loadCoursePolicy: resolver, generate, reserveBudget }));
+    expect(response.status).toBe(503);
+    expect(response.body.code).toBe('course-policy-unavailable');
+    expect(generate).not.toHaveBeenCalled();
+    expect(reserveBudget).not.toHaveBeenCalled();
+  });
+
+  it('refuses unbound sources through the exported boundary even with an allowed policy', async () => {
+    const generate = vi.fn();
+    const reserveBudget = vi.fn();
+    const response = await respond(fixture({
+      approvedSources: [{ id: 'syllabus', evidenceIds: [], body: 'Unbound source' }], generate, reserveBudget,
+    }));
+    expect(response.body.code).toBe('source-scope-unverified');
+    expect(generate).not.toHaveBeenCalled();
+    expect(reserveBudget).not.toHaveBeenCalled();
+  });
+
   it.each(['assistant', 'advisor', 'tutor', 'course-guide'] as const)('checks %s against published course permissions before generation', async (agent) => {
     const generate = fixture().generate;
     const response = await respond(fixture({
       request: request({ agent, courseId: 'ECON 101' }),
-      approvedSources: [{ id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity', courseId: 'ECON 101' }],
-      coursePolicy: { allowedModes: [], instruction: 'Course AI support is prohibited.' }, generate,
+      approvedSources: [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'Elasticity', courseId: 'ECON 101' }],
+      loadCoursePolicy: async () => ({ allowedModes: [], instruction: 'Course AI support is prohibited.' }), generate,
     }));
     expect(response.body.code).toBe('course-mode-disabled');
     expect(generate).not.toHaveBeenCalled();
