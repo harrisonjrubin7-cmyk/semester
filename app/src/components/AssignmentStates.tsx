@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { STATE_TEXT, queue, stateOf, type Assignment } from '../lib/triage';
+import { STATE_TEXT, orderQueue, stateOf, type Assignment } from '../lib/triage';
 
 export type AssignmentOption = 'focus' | 'reserve' | 'steps' | 'help' | 'later';
 
@@ -13,7 +13,7 @@ const OPTIONS: ReadonlyArray<readonly [AssignmentOption, string]> = [
 
 /**
  * Assignments as states a student can act on, never as scores. Open work
- * comes first in `queue()` order; waiting, blocked, deferred and finished work
+ * comes first in `orderQueue()` order; waiting, blocked, deferred and finished work
  * is folded into one closed group. The weighting behind the order is private
  * to `lib/triage.ts` and nothing numeric is drawn here.
  *
@@ -33,12 +33,20 @@ export function AssignmentStates({
   const [mounted] = useState(() => Date.now());
   const now = nowProp ?? mounted;
   if (assignments.length === 0) return <p className="today-why">No assignments are saved yet.</p>;
-  const open = queue(assignments, now);
+  const open = orderQueue(assignments, now);
   const openIds = new Set(open.map((a) => a.id));
   const rest = assignments.filter((a) => !openIds.has(a.id));
 
   return (
     <section aria-label="Assignments" data-assignment-states>
+      {open.length > 1 ? (
+        // The order is a suggestion and the student can question it: this says
+        // what it was made from, in words, with no number to read as a verdict.
+        <p className="today-why" data-order-note>
+          Ordered by how soon each is due, then what you marked important, what other work waits on it, and time you
+          have already saved. It is a suggestion, not a verdict on any of it.
+        </p>
+      ) : null}
       {open.length > 0 ? (
         <ul>
           {open.map((a) => (

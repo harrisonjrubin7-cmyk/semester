@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { queue, STATE_TEXT, STATES, stateOf, type Assignment } from './triage';
+import { orderQueue, STATE_TEXT, STATES, stateOf, type Assignment } from './triage';
 
 const now = new Date(2026, 9, 14, 9, 0).getTime();
 const h = (n: number) => now + n * 3_600_000;
@@ -53,22 +53,22 @@ describe('stateOf', () => {
   });
 });
 
-describe('queue', () => {
+describe('orderQueue', () => {
   it('offers the nearer due date first and leaves out work a student cannot act on', () => {
-    const q = queue(
+    const q = orderQueue(
       [a({ id: 'far', due: h(24 * 6) }), a({ id: 'near', due: h(4) }), a({ id: 'wait', waitingOn: 'TA' }), a({ id: 'done', done: true })],
       now,
     );
     expect(q.map((x) => x.id)).toEqual(['near', 'far']);
   });
   it("the student's own priority lifts an item, and work already scheduled lowers it", () => {
-    const q = queue(
+    const q = orderQueue(
       [a({ id: 'plain', due: h(30) }), a({ id: 'mine', due: h(30), priority: 2 }), a({ id: 'planned', due: h(30), blockMin: 50 })],
       now,
     );
     expect(q.map((x) => x.id)).toEqual(['mine', 'plain', 'planned']);
   });
   it('exposes no number', () => {
-    expect(Object.keys(queue([a()], now)[0])).not.toContain('score');
+    expect(Object.keys(orderQueue([a()], now)[0])).not.toContain('score');
   });
 });

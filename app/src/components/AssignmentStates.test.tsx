@@ -3,7 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { STATE_TEXT, queue, stateOf, type Assignment } from '../lib/triage';
+import { STATE_TEXT, orderQueue, stateOf, type Assignment } from '../lib/triage';
 import { AssignmentStates } from './AssignmentStates';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -29,10 +29,10 @@ describe('AssignmentStates', () => {
     expect(stateOf(list[0], NOW).state).toBe('ready');
   });
 
-  it('lists open work in queue() order, then the rest in a collapsed group', () => {
+  it('lists open work in orderQueue() order, then the rest in a collapsed group', () => {
     const h = html();
     const ids = [...h.matchAll(/data-assignment="([^"]+)"/g)].map((m) => m[1]);
-    const expected = queue(list, NOW).map((a) => a.id);
+    const expected = orderQueue(list, NOW).map((a) => a.id);
     expect(ids.slice(0, expected.length)).toEqual(expected);
     expect(expected.indexOf('near')).toBeLessThan(expected.indexOf('far'));
     expect(ids.slice(expected.length).sort()).toEqual(['blk', 'fin']);
@@ -74,5 +74,15 @@ describe('AssignmentStates interaction', () => {
 describe('AssignmentStates empty', () => {
   it('is calm with no assignments', () => {
     expect(renderToStaticMarkup(<AssignmentStates assignments={[]} />)).toContain('No assignments are saved yet.');
+  });
+
+  const mk = (id: string): Assignment => ({ id, course: 'ECON 101', title: id, due: NOW + DAY, label: 'institution_verified', effortMin: 45 });
+
+  it('says what the order was made from when there is an order to explain', () => {
+    const many = renderToStaticMarkup(<AssignmentStates assignments={[mk('x'), mk('y')]} now={NOW} />);
+    expect(many).toContain('Ordered by how soon each is due');
+    expect(many).toContain('not a verdict');
+    const one = renderToStaticMarkup(<AssignmentStates assignments={[mk('x')]} now={NOW} />);
+    expect(one).not.toContain('Ordered by');
   });
 });

@@ -6,7 +6,7 @@
  * effort estimate, a saved work block, a dependency), so it can always be
  * explained in plain words.
  *
- * `queue` orders assignments with a private weighting of deadline proximity,
+ * `orderQueue` orders assignments with a private weighting of deadline proximity,
  * effort against time, what it blocks, source confidence, the student's own
  * priority, work already scheduled, and a fatigue setting. The weighting is
  * deliberately not exported and the result is an order, not a number: a score
@@ -141,7 +141,7 @@ function weight(a: Assignment, now: number, fatigue: number): number {
  * states a student can act on are queued; waiting, blocked, complete and
  * deferred work is left out rather than sorted to the bottom.
  */
-export function queue(list: Assignment[], now = Date.now(), fatigue = 0): Assignment[] {
+export function orderQueue(list: Assignment[], now = Date.now(), fatigue = 0): Assignment[] {
   const open: State[] = ['ready', 'needs_time', 'needs_review'];
   return list
     .filter((a) => open.includes(stateOf(a, now).state))
