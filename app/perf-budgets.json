@@ -1,5 +1,5 @@
 {
-  "measuredOn": "2026-09-29",
+  "measuredOn": "2026-10-01",
   "firstLoad": 445440,
   "largest": 491520,
   "route": 49152,
@@ -104,7 +104,7 @@
     "routes": {
       "src/screens/Search.tsx": 1027,
       "src/screens/Directory.tsx": 3329,
-      "src/screens/University.tsx": 153289,
+      "src/screens/University.tsx": 157223,
       "src/screens/Athletics.tsx": 17881,
       "src/screens/Nil.tsx": 6656,
       "src/screens/Career.tsx": 29645,
