@@ -13,5 +13,5 @@ export function courseCandidate(c: CatalogCourse, importedAt: string | null = nu
     `Seats from file: ${c.seats === null ? 'Unknown' : c.seats}; live availability and eligibility: Unknown`,
     `Official next step: confirm with your advisor and registrar before registering.`,
   ];
-  return { id: c.id, label: `${c.code} · ${c.section}`, context: facts, advisorContext: facts };
+  return { id: c.id, label: `${c.code} · ${c.section} · ${c.term}`, context: facts, advisorContext: facts };
 }

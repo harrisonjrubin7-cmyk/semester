@@ -64,7 +64,7 @@ afterEach(async () => { await act(async () => root.unmount()); host.remove(); lo
 
 it('saves real course choices and distinct original unknown/source contexts across reload without changing the registration cart', async () => {
   setupCourses(); await mount(<RegistrationPortal courseDetail demandForecasting={false} />);
-  await click('Choose TEST 101 · 01'); await click('Save both options');
+  await click('Choose TEST 101 · 01 · Spring 2027'); await click('Save both options');
   const snapshots = stored().comparisons!;
   expect(snapshots.map(s => s.chosen)).toEqual(['a', null]);
   expect(snapshots[1].options.map(o => o.id)).toEqual(['a', 'b']);
@@ -82,12 +82,12 @@ it('cancels a course advisor preview without creating a meeting or sending; edit
   localStorage.setItem(meetingKey('alice'), JSON.stringify({ version: 1, meetings: [privateMeeting] }));
   await mount(<RegistrationPortal courseDetail demandForecasting={false} />);
   await click('Ask advisor'); expect((host.querySelector('[aria-label="Advisor draft"]') as HTMLTextAreaElement).value).toBe('');
-  await tick('Include TEST 101 · 01');
+  await tick('Include TEST 101 · 01 · Spring 2027');
   let draft = host.querySelector<HTMLTextAreaElement>('[aria-label="Advisor draft"]')!;
   expect(draft.value).toContain('TEST 101'); expect(draft.value).not.toMatch(/TEST 102|PRIVATE 999|PRIVATE MEETING NOTE|Requirement fit/);
   await click('Cancel advisor preview');
   expect(readMeetings(JSON.parse(localStorage.getItem(meetingKey('alice'))!)).meetings).toHaveLength(1);
-  await click('Ask advisor'); await tick('Include TEST 101 · 01');
+  await click('Ask advisor'); await tick('Include TEST 101 · 01 · Spring 2027');
   draft = host.querySelector<HTMLTextAreaElement>('[aria-label="Advisor draft"]')!;
   await input(draft, draft.value + '\nMy edited question'); await click('Prepare editable meeting');
   const m = readMeetings(JSON.parse(localStorage.getItem(meetingKey('alice'))!)).meetings[0];
@@ -119,10 +119,10 @@ it('keeps graduation choices in the signed-in scope and snapshots applied assump
 it('career choices retain term-scoped listing context and keep private targets and other listings out of advisor drafts', async () => {
   const key = 'semester.career.v1:alice:2026FA';
   localStorage.setItem(key, JSON.stringify({ ...EMPTY_CAREER, targetRoles: 'PRIVATE TARGET', opportunities: [{ ...newOpportunity(), id: 'job-a', title: 'Research internship', organization: 'Example lab', skills: 'Writing', url: 'https://example.edu/job' }, { ...newOpportunity(), id: 'job-b', title: 'Other job', compensation: 'Unknown stipend' }] }));
-  await mount(<Career careerSkillsGraph />); await click('Choose Research internship');
+  await mount(<Career careerSkillsGraph />); await click('Choose Research internship · Example lab');
   expect(JSON.parse(localStorage.getItem(key)!).opportunities[0].saved).toBe(true);
   const snap = stored().comparisons![0]; expect(snap.scope).toBe(key); expect(snap.chosen).toBe('job-a'); expect(JSON.stringify(snap)).toContain('PRIVATE TARGET');
-  await click('Ask advisor'); await tick('Include Research internship');
+  await click('Ask advisor'); await tick('Include Research internship · Example lab');
   const draft = () => host.querySelector<HTMLTextAreaElement>('[aria-label="Advisor draft"]')!.value;
   expect(draft()).toContain('https://example.edu/job'); expect(draft()).not.toMatch(/PRIVATE TARGET|Other job|Unknown stipend/);
   await tick('Include applied assumptions and personal planning context'); expect(draft()).toContain('PRIVATE TARGET');
@@ -246,4 +246,21 @@ it('changing the active term closes a career advisor draft and keeps the earlier
   await click('Switch comparison term');
   expect(host.querySelector('[aria-label="Advisor draft"]')).toBeNull(); expect(host.textContent).not.toContain('Fall opening');
   expect(stored().comparisons![0].scope).toBe(key); expect(localStorage.getItem(meetingKey('alice'))).toBeNull();
+});
+
+it('shows the partial-save result when the canonical career write runs out of storage after the personal snapshot succeeds', async () => {
+  const key = 'semester.career.v1:alice:2026FA';
+  localStorage.setItem(key, JSON.stringify({ ...EMPTY_CAREER, opportunities: [{ ...newOpportunity(), id: 'a', title: 'Actual opening' }] }));
+  await mount(<Career />);
+  const original = Storage.prototype.setItem;
+  const quota = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (this: Storage, storageKey: string, value: string) {
+    if (storageKey === key) throw new DOMException('Full', 'QuotaExceededError');
+    original.call(this, storageKey, value);
+  });
+  try {
+    await click('Choose Actual opening');
+    expect(stored().comparisons![0].chosen).toBe('a');
+    expect(JSON.parse(localStorage.getItem(key)!).opportunities[0].saved).toBe(false);
+    expect(host.textContent).toContain('Personal choice saved. The source workspace could not be updated');
+  } finally { quota.mockRestore(); }
 });
