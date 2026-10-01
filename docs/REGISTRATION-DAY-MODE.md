@@ -18,7 +18,7 @@ default (D-012).
 
 **When it shows.**
 
-- The window opens within **7 days**, or opened less than a day ago.
+- The window opens within **72 hours**, or opened less than a day ago.
 - Or the student ticks **Show Registration Day Mode on Today now**, for a
   pilot, a demo, or someone who wants it early.
 - Otherwise the Today card renders nothing.
