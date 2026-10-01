@@ -43,6 +43,10 @@ export const DRAFT_HOMES: Record<string, { screen: Screen; what: string; opens?:
   // after "Create study guide" and a course are chosen, so going to Study does
   // not put this draft back, and an Open that does not is worse than none.
   'study-studio': { screen: 'study', what: 'A study guide', opens: false },
+  // The field is only mounted after a course and an assignment are chosen, so
+  // opening Assignments does not put the text back; it is listed so it can be
+  // found and discarded, never to be shown as opened.
+  'assignment-submit': { screen: 'assignments', what: 'Work you were typing to submit', opens: false },
 };
 
 export interface DraftRow {

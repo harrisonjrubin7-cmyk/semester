@@ -126,6 +126,11 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['approve_community_pseudonymity', 'moderation', ['private.has_capability']],
   ['approve_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['archive_school', 'admin', ['private.offboarding_operator']],
+  ['assignments_close', 'admin', ['auth.uid()', 'private.assignments_require', 'private.assignments_require_core', 'private.assignments_replay']],
+  ['assignments_create', 'admin', ['auth.uid()', 'private.assignments_require', 'private.assignments_require_core', 'private.assignments_replay']],
+  ['assignments_extend', 'admin', ['auth.uid()', 'private.assignments_require', 'private.subject_has_capability', 'private.assignments_replay']],
+  ['assignments_publish', 'admin', ['auth.uid()', 'private.assignments_require', 'private.assignments_require_core', 'private.assignments_replay']],
+  ['assignments_revise', 'admin', ['auth.uid()', 'private.assignments_require', "a.status <> 'draft'", 'private.assignments_replay']],
   ['authorize_school_purge', 'admin', ['private.offboarding_operator']],
   ['available_supporters', 'read-helper', ['auth.uid()']],
   ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -302,6 +307,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
+  ['submissions_submit', 'self-service', ['auth.uid()', 'private.assignments_school', "private.has_capability('grades:receive'", 'private.assignments_require_core', 'private.assignments_replay']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['support_reply', 'admin', ['private.support_agent']],
@@ -329,6 +335,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20261001094000_assignments.sql',
 ];
 
 /**
@@ -409,6 +416,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
       'gradebook_resolve_regrade',
       'gradebook_set_scheme',
     ],
+  },
+  {
+    file: '20261001094000_assignments.sql',
+    functions: ['assignments_close', 'assignments_create', 'assignments_extend', 'assignments_publish', 'assignments_revise', 'submissions_submit'],
   },
   {
     file: '20260929300000_registration_transaction.sql',

@@ -1334,6 +1334,16 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'grade_entries', column: 'student_id' },
   { table: 'regrade_requests', column: 'student_id' },
   { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
+
+  // ── Assignments and submissions ─────────────────────────────────────────
+  // Every version you submitted, the receipt written with it, and any
+  // extension granted to you (`lib/assignments/client.ts`). Each names you by
+  // a column that references `auth.users` with `on delete cascade`
+  // (`20261001094000_assignments.sql`), so they go with the account. The
+  // school's own record keeps its copy.
+  { table: 'submission_versions', column: 'student_id' },
+  { table: 'submission_receipts', column: 'student_id' },
+  { table: 'assignment_extensions', column: 'student_id' },
 ];
 
 /**
@@ -1594,6 +1604,14 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'gradebook_items',
     why: 'A course’s graded items, such as a midterm. The course’s, not any student’s; if you added one as an instructor, your name is cleared and the item stays.',
+  },
+  {
+    table: 'assignments',
+    why: 'A course’s assignment, such as a problem set. The course’s, not any student’s; if you wrote one as an instructor, your name is cleared and the assignment stays.',
+  },
+  {
+    table: 'assignment_events',
+    why: 'What happened to an assignment: created, published, closed, extended. A record of the course; if you did it as an instructor, your name is cleared and the event stays.',
   },
   {
     table: 'dining_menu_items',

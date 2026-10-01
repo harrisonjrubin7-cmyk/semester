@@ -782,6 +782,10 @@ export type Screen =
   // `screens/Gradebook.tsx`.
   | 'registration'
   | 'gradebook'
+  // The first Core module of the learning half (D-151): assignments and
+  // submissions, shown only at a school that has switched them to Core. See
+  // `screens/Assignments.tsx`.
+  | 'assignments'
   | 'sources'
   | 'slides'
   | 'account'

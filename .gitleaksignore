@@ -1,0 +1,4 @@
+# A test fixture, not a credential: an idempotency key the client test passes
+# to a mocked rpc ('publish-key-0001'). The scan reads history, so editing the
+# line later would not clear it; this names the one finding by fingerprint.
+85004b7556b65c822ce7735a6baccf699d575e8e:app/src/lib/assignments/client.test.ts:generic-api-key:178

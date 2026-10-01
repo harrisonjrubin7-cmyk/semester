@@ -495,9 +495,9 @@ export const REGISTER: readonly Requirement[] = [
     requirement: 'Text/file/link/media/group submissions, attempts, late rules, extensions, receipts, version history',
     validation: 'Submission E2E/failure tests',
     severity: 'P0',
-    status: 'designed',
-    evidence: [{ path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Layer 4: student side only; gap is assignment builder, submission, receipts, grading workflow' }, { path: 'docs/trust/ENTERPRISE-READINESS.md', shows: 'Level 3 plan: submissions with autosave and receipts' }, { path: 'app/src/lib/assignment.ts', shows: 'Student assignment planner (breaks down instructions); does not accept submissions' }],
-    gap: 'No submission system at all: no text/file/link/media/group submission, attempts, late rules, extensions, receipts or version history. Needs data model, UI, server endpoints and E2E/failure tests.',
+    status: 'building',
+    evidence: [{ path: 'supabase/migrations/20261001094000_assignments.sql', shows: 'Assignments, per-student extensions, append-only submission versions and a receipt written with each; every mutation idempotent and refused unless the school has switched lms_assignments to Core' }, { path: 'supabase/assignments.check.sql', shows: '114 policy and behaviour checks across a real pair of schools: who authors, who submits, who reads, late, extensions, close, Connect, frozen and kill switch' }, { path: 'app/src/lib/assignments/client.ts', shows: 'The typed reads and writers; a refusal is the server sentence, a lost reply keeps its key' }, { path: 'app/src/screens/Assignments.tsx', shows: 'The instructor and student screens, behind the school mode' }],
+    gap: 'Text submissions only, and only at a school that has switched assignments to Core, which no school has. No file, link, media or group submission: attached files need storage, and where they live is an owner decision. Not applied to production. No grading here (the gradebook of record is separate and does not yet read an assignment), no real-browser E2E against a live Supabase project, and the roster is not readable by a client, so an extension is granted to a student who has submitted or by account id.',
   },
   {
     id: 'LMS-005',
@@ -506,8 +506,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Network outage/load tests',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'app/src/lib/draft.ts', shows: 'Debounced on-device autosave and restore for long text drafts' }, { path: 'app/src/lib/draft.test.ts', shows: 'Tests the draft autosave/restore behaviour' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Submission receipts = missing; Exam answers in memory only' }],
-    gap: 'Only local draft autosave exists. No final submission, so no idempotent submit, server timestamped receipt, or deadline enforcement; no network-outage or load tests.',
+    evidence: [{ path: 'app/src/lib/draft.ts', shows: 'Debounced on-device autosave and restore for long text drafts' }, { path: 'app/src/lib/draft.test.ts', shows: 'Tests the draft autosave/restore behaviour' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Submission receipts = missing; Exam answers in memory only' }, { path: 'supabase/assignments.check.sql', shows: 'Idempotent final submission: the same key answers the same receipt and writes nothing, a copy of the latest is refused, the receipt holds the text hash and the time the database took it, late is marked until the closing time and then refused' }, { path: 'app/src/screens/assignments.test.tsx', shows: 'A lost reply keeps the submission key so a retry is the same request; a refusal starts a new attempt; the draft comes back and clears only once a receipt is in' }],
+    gap: 'A final submission with a server-timestamped receipt, idempotency and deadline enforcement now exist for text, behind the Core switch and off at every school. Still no network-outage or load test against a live project, no file attachments, and no offline queue for a submission: a submission is refused offline rather than held, because one that fires hours later is a surprise.',
   },
   {
     id: 'LMS-006',

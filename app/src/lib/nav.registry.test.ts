@@ -80,9 +80,11 @@ const STAFF = ['moderation', 'agreements', 'volunteers', 'console'] as const;
  * offered as a tile. The
  * registration transaction and the gradebook of record are the same again,
  * with a writeback flag for the switch, reached from the Registration planner
- * and the Grades tab.
+ * and the Grades tab. Assignments are the same once more, with a school's
+ * module mode for the switch (D-151): shown only where the school has moved
+ * them to Core, reached at `#/assignments`.
  */
-const SWITCHED = ['community', 'volunteer', 'dining', 'registration', 'gradebook'] as const;
+const SWITCHED = ['community', 'volunteer', 'dining', 'registration', 'gradebook', 'assignments'] as const;
 
 /**
  * Pages inside the Me control surface, which lists them itself
