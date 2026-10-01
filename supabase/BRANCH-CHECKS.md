@@ -62,7 +62,7 @@ runs in a read-only transaction. It preserves profile column pins and checks
 that intentionally RPC/server-only tables have no direct client read grant.
 It is not a replacement for the feature suites' cross-account RLS checks.
 
-The focused repair in `20261001073607_explicit_profiles_calendar_grants.sql`
+The focused repair in `20261001075450_explicit_profiles_calendar_grants.sql`
 adds only authenticated SELECT on profiles and SELECT/INSERT/UPDATE on
 calendar_feeds. It does not close T-2: other client-table grants, service-role
 callers and whole-suite hosted execution remain unresolved. A permission
