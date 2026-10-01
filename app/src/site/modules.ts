@@ -21,7 +21,9 @@
  * 30 Sep 2026 four modules (registration, the gradebook, records, student
  * accounts) had tables, a check suite and a switch that is off for every
  * school, so they read `in-preparation`. None is certified, none is on for a
- * school, and the other ten are still `planned`.
+ * school, and the other ten are still `planned`. Records gained the issuing of
+ * a transcript and the log of its releases on 1 Oct 2026, unsigned, which
+ * leaves it `in-preparation`.
  */
 
 import type { CoreModuleId } from '@semester/contract';
@@ -70,9 +72,9 @@ export const MODULES: readonly CoreModule[] = [
     core: 'The official audit, run on the server against the catalog year, with approved exceptions.',
     status: 'planned', tables: ['programs', 'requirement_rules'] },
   { id: 'records', name: 'Records and transcripts', replaces: 'The records module of your SIS; transcript ordering services',
-    today: 'An academic-record ledger is built behind a school-level switch that is off for every school; no transcript is issued.',
+    today: 'An academic-record ledger, and the issuing of a transcript from it with a log of every release, are built behind a school-level switch that is off for every school. An issued transcript is a fixed text with a SHA-256; nothing is signed, sent or delivered.',
     core: 'Final grades, signed transcripts, enrolment verification and a log of every release of a record.',
-    status: 'in-preparation', tables: ['academic_record_entries', 'academic_record_changes'], suite: 'academic-record' },
+    status: 'in-preparation', tables: ['academic_record_entries', 'academic_record_changes', 'transcripts', 'transcript_disclosures'], suite: 'academic-record' },
   { id: 'admissions', name: 'Admissions', replaces: 'Slate, Element451, Ellucian CRM Recruit',
     today: 'Nothing.',
     core: 'An applicant portal, document checklist and decision workflow; a person decides every admission.',

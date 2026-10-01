@@ -433,6 +433,10 @@ export function Grades() {
       <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'gradebook' })}>
         See your official released grades
       </button>
+      {/* What the school issued from its own record, and who it went to. Shows its own sentence at a school that has not switched it on. */}
+      <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'transcripts' })}>
+        See the transcripts your school issued
+      </button>
       <div style={{ height: 22 }} />
     </div>
   );

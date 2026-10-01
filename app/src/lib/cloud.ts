@@ -1599,6 +1599,18 @@ export const KEPT_TABLES: KeptTable[] = [
     table: 'dining_menu_items',
     why: 'What your school’s dining locations serve and what it costs. Not a record about you, and no student account writes a row.',
   },
+  {
+    table: 'transcripts',
+    why: 'A transcript your school issued from its academic record is the school’s own record, keyed by the school’s student reference and not by your account. Deleting your account removes your link to read it here; the transcript stays with the school, and if you issued one as a registrar, it stays no longer naming you.',
+  },
+  {
+    table: 'transcript_supersessions',
+    why: 'The note that a later transcript replaced an earlier one, with the reason, is part of the school’s record of what it issued. It stays with the school, no longer attributed to you if you wrote it.',
+  },
+  {
+    table: 'transcript_disclosures',
+    why: 'The log of who a transcript was released to, and why, is a record the school may be legally required to keep. Deleting your account leaves it with the school; if you recorded a release as staff, it stays no longer naming you. How long a school keeps it is not decided.',
+  },
 ];
 
 /** What the `delete-account` function answers; see `_shared/deleteaccount.ts`. */

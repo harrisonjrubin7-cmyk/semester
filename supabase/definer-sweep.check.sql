@@ -75,6 +75,7 @@ begin
     when 'jsonb' then '''{}''::jsonb'
     when 'boolean' then 'false'
     when 'integer' then '1'
+    when 'bigint' then '1'
     when 'numeric' then '1::numeric'
     when 'timestamp with time zone' then 'now()'
     when 'date' then 'current_date'
@@ -204,7 +205,8 @@ declare
     'note_activity',               jsonb_build_object('answers', '^done$', 'why', 'marks the caller''s own day'),
     'referral_standing',           jsonb_build_object('answers', '^1 rows: ', 'why', 'the caller''s own code and counts; the leak check holds it to the caller'),
     'state_my_age',                jsonb_build_object('answers', '^"(already_stated|under_minimum_age)"$', 'why', 'states the caller''s own age, once; check.sh records the stranger as an adult who already said'),
-    'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan')
+    'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan'),
+    'transcript_verify',           jsonb_build_object('answers', '^1 rows: \{"status": "unknown"', 'why', 'a serial and hash nobody issued answer "unknown", with no school and no date; it names nothing, and needs only that the caller is signed in')
   );
 begin
   -- The victim, with something to lose.

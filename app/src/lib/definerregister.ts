@@ -307,6 +307,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['support_reply', 'admin', ['private.support_agent']],
   ['support_ticket_queue', 'admin', ['private.support_agent']],
   ['support_ticket_thread', 'admin', ['private.support_agent']],
+  ['transcript_disclose', 'admin', ['auth.uid()', 'private.transcript_require', 'private.transcript_require_core', 'private.transcript_replay']],
+  ['transcript_issue', 'admin', ['auth.uid()', 'private.transcript_require', 'private.transcript_require_core', 'private.transcript_replay']],
+  ['transcript_verify', 'self-service', ['auth.uid()', 'private.take_direct_rate_limit']],
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -329,6 +332,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20260930260000_transcripts.sql',
 ];
 
 /**
@@ -340,6 +344,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20260930260000_transcripts.sql',
+    functions: ['transcript_disclose', 'transcript_issue', 'transcript_verify'],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],

@@ -538,6 +538,17 @@ declare
     'gradebook_export(want_course text, want_term text)',
     'gradebook_queue_passback(want_item uuid, want_key text)',
 
+    -- 20260930260000_transcripts.sql: transcripts issued from the academic
+    -- record. The first two check auth.uid(), the caller's own school, that the
+    -- school has switched `records` to Core, and `transcript:issue` on it.
+    -- `transcript_verify` answers valid, superseded or unknown for any signed-in
+    -- account, counts each call against it (`take_direct_rate_limit`) and never
+    -- returns the text or the student. `transcripts.check.sql` walks every
+    -- refusal, and that anon can execute none of them.
+    'transcript_issue(want_student_ref text, want_as_of date, want_supersedes bigint, want_reason text, want_key text)',
+    'transcript_disclose(want_serial bigint, want_recipient_name text, want_recipient_kind text, want_purpose text, want_key text)',
+    'transcript_verify(want_serial bigint, want_hash text)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

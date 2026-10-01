@@ -790,6 +790,10 @@ export type Screen =
   | 'applying'
   | 'behind'
   | 'degree'
+  // The transcripts a school has issued from its academic record, who they were
+  // released to, and a check of one. Shown only at a school that has switched
+  // `records` to Core. See `screens/Transcripts.tsx`.
+  | 'transcripts'
   | 'people'
   | 'meet'
   | 'call'

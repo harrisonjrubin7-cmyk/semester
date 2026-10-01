@@ -1050,6 +1050,12 @@ const NESTED: Partial<Record<Screen, Screen>> = {
    */
   registration: 'calendar',
   gradebook: 'courses',
+  // Transcripts issued from the school's own record are a Core module (D-151)
+  // shown only at a school that has switched `records` to Core, so they are
+  // nested under Courses, where Grades is, and reached from the Grades tab
+  // rather than given a tile that opens onto "your school has not switched
+  // this" for everyone else.
+  transcripts: 'courses',
   agreements: 'moderation',
   volunteers: 'moderation',
   volunteer: 'mine',
@@ -1135,6 +1141,7 @@ const NESTED_NAMES: Partial<Record<Screen, string>> = {
   // registration; and a course's official grades, entered, released and read.
   registration: 'Enrollment',
   gradebook: 'the gradebook',
+  transcripts: 'issued transcripts',
   agreements: 'escalation agreements',
   volunteers: 'the volunteer programme',
   volunteer: 'volunteer moderation',

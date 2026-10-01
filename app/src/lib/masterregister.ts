@@ -586,8 +586,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Audit test',
     severity: 'P0',
     status: 'building',
-    evidence: [{ path: 'supabase/academic-record.check.sql', shows: 'The academic-record ledger (D-145): an append-only grade history, each change approved by someone other than its proposer and naming what it replaced' }, { path: 'docs/trust/ENTERPRISE-READINESS.md', shows: 'Level 3: registrar can audit every critical change; gradebook audit history' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Layer 6 gap: grade history' }],
-    gap: 'The ledger keeps an immutable, audited history of official grade changes; there is still no gradebook, so no release state, and no LMS grade flows into it.',
+    evidence: [{ path: 'supabase/academic-record.check.sql', shows: 'The academic-record ledger (D-145): an append-only grade history, each change approved by someone other than its proposer and naming what it replaced' }, { path: 'docs/trust/ENTERPRISE-READINESS.md', shows: 'Level 3: registrar can audit every critical change; gradebook audit history' }, { path: 'docs/LMS-LEARNING-ROADMAP.md', shows: 'Layer 6 gap: grade history' }, { path: 'supabase/transcripts.check.sql', shows: 'A transcript issued from the ledger as of a date is kept as text with a SHA-256 and never edited; every release of one is a log line nobody can edit or delete' }],
+    gap: 'The ledger keeps an immutable, audited history of official grade changes, and a registrar can now issue a transcript from it, kept as a fixed text with a SHA-256 and a log of every release, at a school that has switched records to Core, which none has, and not applied to production. Nothing is signed: a hash shows the text is unchanged, not who issued it. There is still no gradebook, so no release state, and no LMS grade flows into it.',
   },
   {
     id: 'LMS-014',

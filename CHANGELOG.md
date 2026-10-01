@@ -24,6 +24,17 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Transcripts your school issued, and who they went to, for schools that switch it on
+
+Nothing changes for you unless your school has moved its records to Semester
+Core, and none has. If yours does, you can see the transcripts it issued from
+its academic record, each with a serial and a fingerprint you can copy and give
+to someone, and the log of who each was released to and why. Anybody signed in
+can check a serial and a fingerprint someone gave them. It is not signed: the
+fingerprint shows the text has not changed since it was issued, not who issued
+it. If your school has issued none, it says so. It shows under Courses → See the
+transcripts your school issued.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one

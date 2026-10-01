@@ -472,6 +472,14 @@ describe('"delete my account" really means every row', () => {
       'study_packs',
       'subscriptions',
       'support_access_event',
+      // The transcripts a school issued from its academic record, the replacements
+      // of them and the log of every release (lib/transcripts/client.ts,
+      // 20260930260000_transcripts.sql): the school's, keyed by its own student
+      // reference and not by an account. Whoever issued, replaced or released is
+      // cleared by their account's deletion and the row stays.
+      'transcript_disclosures',
+      'transcript_supersessions',
+      'transcripts',
       // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
       // versioned workflow definitions. No person, credential or student record.
       'workflow_versions',
