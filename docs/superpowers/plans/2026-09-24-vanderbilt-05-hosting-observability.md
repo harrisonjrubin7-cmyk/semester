@@ -27,7 +27,7 @@
 
 ### Task 3: Add the Vercel gateway entry point
 
-**Files:** Create `app/api/institution/[...path].ts`, `app/vercel.json`, `app/api/institution/handler.test.ts`; modify `app/tsconfig.university.json`, `app/server/institution/.env.example`.
+**Files:** Create `app/api/institution/[...path].ts`, `app/vercel.json`, `app/server/institution/vercel-transport.test.ts`; modify `app/tsconfig.university.json`, `app/server/institution/.env.example`.
 
 - [ ] Write failing adapter tests for method, path/query, bounded body, headers, same-origin CORS, abort deadline and response streaming/body propagation.
 - [ ] Add a thin Node function that reconstructs a standards `Request`, calls the shared runtime and emits the `Response`.
