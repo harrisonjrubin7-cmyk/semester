@@ -237,10 +237,9 @@ export function tabLabel(screen: Screen): string {
  * `lib/nav.ts`'s shelves are untouched (`REGRESSION-CHECKLIST.md` §Q); only the
  * bar's five slots and their words change.
  *
- * Behind `journeyNavigation` (D-003, approved), off in a normal build, so a
- * student's own arranged bar is what they keep unless the flag is on. When it
- * is on the bar is these five, fixed — the point of the five is that they are
- * the same for everyone — and every other screen is still one tap from Me.
+ * Behind `journeyNavigation` as a rollback gate, and on in a normal build.
+ * The five are fixed — the point is that they are the same for everyone — and
+ * every contextual capability is still one tap away from its canonical home.
  */
 export const FIVE_DESTINATIONS: Screen[] = ['home', 'degree', 'search', 'calendar', 'me'];
 
@@ -274,16 +273,28 @@ const UNDER: Partial<Record<Screen, Screen>> = {
   ask: 'search',
   help: 'search',
   directory: 'search',
+  hub: 'search',
+  university: 'search',
+  people: 'search',
+  maps: 'search',
+  links: 'search',
+  opportunities: 'search',
+  support: 'search',
   runway: 'calendar',
   clocks: 'calendar',
   costs: 'calendar',
   meals: 'calendar',
   housing: 'calendar',
-  maps: 'calendar',
   activities: 'calendar',
   work: 'calendar',
   event: 'calendar',
 };
+
+/** The one canonical home used by navigation, governance and continuity UI. */
+export function canonicalDestinationFor(screen: Screen): Screen {
+  if (FIVE_DESTINATIONS.includes(screen)) return screen;
+  return UNDER[screen] ?? PINNED;
+}
 
 /** The bar to draw: the five when the flag is on, the student's own bar otherwise. */
 export function barForMode(saved: Screen[], c: Capabilities, role: Role, five: boolean): Screen[] {
@@ -301,6 +312,6 @@ export function labelForMode(screen: Screen, five: boolean): string {
 export function litForMode(screen: Screen, chosen: Screen[], five: boolean): Screen | null {
   if (!five) return litTab(screen, chosen);
   if (chosen.includes(screen)) return screen;
-  const under = UNDER[screen] ?? PINNED;
+  const under = canonicalDestinationFor(screen);
   return chosen.includes(under) ? under : null;
 }

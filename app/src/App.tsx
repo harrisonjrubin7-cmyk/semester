@@ -90,6 +90,7 @@ import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
 import { UnityLayer } from './components/unity/UnityLayer';
 import { LoadingState } from './components/unity/States';
+import { SystemContextBar } from './components/unity/SystemContextBar';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
@@ -828,6 +829,7 @@ function Workspace({
             }
           >
             {!ownTitle && <Header desk />}
+            <SystemContextBar />
             <Said />
             {/* The sample banner belongs over records, which is what it is
                 about. The search home says the same thing in its own foot
@@ -1442,6 +1444,7 @@ function AppFrame() {
           */}
           <TabStrip />
           <Header />
+          <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
               different thing on Calendar than it does on Today. Inside the
@@ -1548,6 +1551,7 @@ function AppFrame() {
       */}
       <TabStrip />
       <Header />
+      <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
       <SampleMark />

@@ -125,12 +125,14 @@ These decide what a build contains, not what a school has turned on. Values:
 ### Experience flags (`app/src/lib/experience-flags.ts`)
 
 A preview build (`VITE_INSTITUTIONAL_PREVIEW=true`) turns each of these on as
-`preview`. An explicit value overrides that.
+`preview`. An explicit value overrides that. `journeyNavigation` is the one
+exception: the canonical five-destination shell is `production` in a normal
+build, and an explicit `off` is its rollback.
 
 | Flag | Env |
 | --- | --- |
 | semesterIntelligence | `VITE_SEMESTER_INTELLIGENCE` |
-| journeyNavigation | `VITE_JOURNEY_NAVIGATION` |
+| journeyNavigation | `VITE_JOURNEY_NAVIGATION` (production default; `off` rolls back) |
 | adaptiveLearning | `VITE_ADAPTIVE_LEARNING` |
 | careerSkillsGraph | `VITE_CAREER_SKILLS_GRAPH` |
 | multimodalCapture | `VITE_MULTIMODAL_CAPTURE` |

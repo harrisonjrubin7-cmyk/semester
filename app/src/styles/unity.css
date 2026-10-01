@@ -58,6 +58,118 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Persistent system context ─────────────────────────────────────────── */
+
+.system-context {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  min-height: 40px;
+  padding-block: var(--sp-2);
+  padding-inline: var(--chrome-pad);
+  border-bottom: 1px solid var(--app-line-soft);
+  background: var(--bar-surface);
+  color: var(--text-secondary);
+  font-size: var(--type-xs);
+  line-height: var(--leading-tight);
+}
+
+.system-context-location,
+.system-context-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.system-context-location {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.system-context-term {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.system-context-term-select {
+  width: auto;
+  max-width: 16rem;
+  min-height: 32px;
+  padding: var(--sp-1) var(--sp-7) var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  background: var(--bar-surface);
+  font: inherit;
+}
+
+.system-context-link,
+.system-health {
+  width: auto;
+  min-height: 32px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  color: inherit;
+  white-space: nowrap;
+}
+
+.system-context-link:hover,
+.system-health:hover {
+  color: var(--text-primary);
+  background: var(--action-secondary);
+}
+
+.system-context-workflow {
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-pill);
+  white-space: nowrap;
+}
+
+.system-health {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.system-health[data-tone='attention'] {
+  color: var(--status-attention);
+}
+
+.system-health[data-tone='danger'] {
+  color: var(--status-danger);
+}
+
+.object-history {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding-left: var(--sp-7);
+}
+
+@media (max-width: 839px) {
+  .system-context {
+    align-items: flex-start;
+    padding-inline: var(--page-pad);
+  }
+
+  .system-context-actions {
+    margin-left: auto;
+  }
+
+  .system-context-workflow,
+  .system-context-actions > .system-context-link {
+    display: none;
+  }
+
+  .system-health {
+    padding-inline: var(--sp-2);
+  }
+}
+
 /* Tabular figures, for dates, counts, schedules and data. */
 .nums {
   font-variant-numeric: tabular-nums;
