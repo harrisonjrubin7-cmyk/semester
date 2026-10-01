@@ -1,8 +1,11 @@
 # ISO/IEC 27001 readiness assessment
 
-**Status:** Internal gap assessment published; Semester is **not ISO/IEC 27001 certified**.  
-**Assessment date:** 1 October 2026  
-**Owner:** Harrison Rubin, founder  
+**Status:** Internal gap assessment published; Semester is **not ISO/IEC 27001 certified**.
+
+**Assessment date:** 1 October 2026
+
+**Owner:** Harrison Rubin, founder
+
 **Scope:** Semester web application, company website, Supabase data plane, deployment pipeline, and documented operating controls
 
 This is a readiness assessment, not an accredited audit, certification, or

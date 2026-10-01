@@ -1,7 +1,9 @@
 # Compliance evidence index
 
-**Published:** 1 October 2026  
-**Owner:** Harrison Rubin, founder  
+**Published:** 1 October 2026
+
+**Owner:** Harrison Rubin, founder
+
 **Scope:** Semester web application, company website, and the controls documented in this repository
 
 This index makes the Trust Center's green state precise: **green means a dated,

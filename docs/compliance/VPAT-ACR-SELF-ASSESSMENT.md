@@ -1,8 +1,11 @@
 # VPAT / Accessibility Conformance Report self-assessment
 
-**Status:** Internal self-assessment published; **no formal ACR has been issued**.  
-**Assessment date:** 1 October 2026  
-**Owner:** Harrison Rubin, founder  
+**Status:** Internal self-assessment published; **no formal ACR has been issued**.
+
+**Assessment date:** 1 October 2026
+
+**Owner:** Harrison Rubin, founder
+
 **Product scope:** Semester student web application and company website
 
 This document is not a completed VPAT, an Accessibility Conformance Report, or

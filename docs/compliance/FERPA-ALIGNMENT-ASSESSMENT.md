@@ -1,8 +1,11 @@
 # FERPA alignment assessment
 
-**Status:** Technical-control assessment published; **no certification is claimed or available**.  
-**Assessment date:** 1 October 2026  
-**Owner:** Harrison Rubin, founder  
+**Status:** Technical-control assessment published; **no certification is claimed or available**.
+
+**Assessment date:** 1 October 2026
+
+**Owner:** Harrison Rubin, founder
+
 **Scope:** Education-record handling in Semester's institutional data paths
 
 FERPA obligations depend on the institution, the facts of the arrangement, and
