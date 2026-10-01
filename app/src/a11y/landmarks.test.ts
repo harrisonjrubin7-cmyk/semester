@@ -87,6 +87,14 @@ const isRoot = (file: string) =>
   ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!) || /(^|[\\/])src[\\/]site[\\/]/.test(file);
 
 /**
+ * The workspace deliberately removes its shared header on these two shell
+ * surfaces (`Workspace.ownTitle` in App.tsx). Their in-screen wordmark and
+ * welcome line therefore own the single page heading instead of duplicating
+ * one supplied by the shell.
+ */
+const OWNS_SHELL_TITLE = new Set(['Directory', 'Search']);
+
+/**
  * The app draws exactly one navigation, whichever of the four is chosen —
  * `lib/chrome.ts` is the rule and `chrome.test.ts` proves it. Two of the four
  * were not landmarks, so "one navigation" was true on screen and false to a
@@ -167,12 +175,18 @@ describe('there is one h1', () => {
     expect(find('App.tsx').src, 'the screen’s name is the page’s h1').toMatch(/<h1/);
   });
 
+  it('is owned by the two workspace surfaces whose shared header is absent', () => {
+    expect([...OWNS_SHELL_TITLE].sort()).toEqual(['Directory', 'Search']);
+    expect(find('App.tsx').src).toContain("state.screen === 'search' || state.screen === 'directory'");
+  });
+
   it('is not printed again by a screen inside the shell', () => {
     const extra = FILES.filter(({ file, src }) => {
       if (file.endsWith('App.tsx')) return false;
       if (OWN_TITLES.some((screen) => file.endsWith(screen))) return false;
       // Same exception, for the same reason.
       if (isRoot(file)) return false;
+      if (OWNS_SHELL_TITLE.has(file.replace(/\.tsx$/, '').split('/').pop()!)) return false;
       return /<h1[\s>]/.test(src);
     });
     expect(extra.map(({ file }) => file), 'a second h1 under the header’s').toEqual([]);

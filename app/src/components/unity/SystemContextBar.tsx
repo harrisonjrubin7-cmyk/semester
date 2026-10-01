@@ -83,7 +83,7 @@ export function SystemContextBar() {
           aria-label={`${health.label}. Open connection and account health.`}
         >
           <span aria-hidden="true">{health.glyph}</span>
-          {health.label}
+          <span className="system-health-label">{health.label}</span>
         </button>
       </div>
     </section>

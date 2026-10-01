@@ -264,6 +264,7 @@ describe('first-session setup', () => {
   it('asks what would help, and goes straight there', async () => {
     await mount(<FirstGoal />);
     expect(host.querySelector('h2')?.textContent).toBe('What would help most today?');
+    await press('More options');
     await press('Study for a course');
     expect(currentLook(seen).goal).toBe('study');
     expect(seen.screen).toBe('study');

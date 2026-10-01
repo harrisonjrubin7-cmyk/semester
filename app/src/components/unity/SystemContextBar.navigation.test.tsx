@@ -33,8 +33,8 @@ it('preserves advising and selected support workflow at shared destinations', as
   await press('Plan the appointment');
   expect(host.querySelector('.decision-trail summary')?.textContent).toContain('Support Routing');
 });
-it('overrides the mobile hide rule and allows the expanded trail to wrap', () => {
+it('keeps the trail compact and moves expanded detail into an overlay', () => {
   const css = readFileSync('src/styles/unity.css', 'utf8');
-  expect(css).toMatch(/\.system-context-workflow\.system-context-trail\s*\{[^}]*display:\s*block/);
-  expect(css).toMatch(/\.system-context-workflow\.system-context-trail\s*\{[^}]*white-space:\s*normal/);
+  expect(css).toMatch(/\.system-context-workflow\.system-context-trail\s*\{[^}]*display:\s*flex/);
+  expect(css).toMatch(/\.decision-trail-panel\s*\{[^}]*position:\s*absolute/);
 });
