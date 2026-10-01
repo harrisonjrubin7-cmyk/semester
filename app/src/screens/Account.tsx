@@ -97,7 +97,7 @@ export function AccountScreen() {
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Signed in</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', marginTop: 'var(--sp-3)' }}>
+          <div className="account-identity" style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', marginTop: 'var(--sp-3)' }}>
             {account.email}
           </div>
           {account.via && (

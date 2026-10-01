@@ -726,6 +726,7 @@ const MOCKS_MODULES = [
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
   'src/components/credentials.test.tsx',
+  'src/components/desk/TopBar.test.tsx',
   'src/components/referrallink.test.tsx',
   'src/components/schoolclaim.test.tsx',
   'src/components/downloads.test.tsx',

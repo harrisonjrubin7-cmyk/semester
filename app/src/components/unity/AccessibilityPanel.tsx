@@ -21,7 +21,7 @@ export default function AccessibilityPanel({ look, onChange, onSettings, context
   };
   return <div className="accessibility-panel" role="group" aria-label="Accessibility preferences">
       <div className="accessibility-panel-head">
-        <div><span className="kicker">Reading preferences</span><h2>Make Semester easier to use</h2></div>
+        <div><h2>Make Semester easier to use</h2></div>
         <span className="accessibility-panel-note">Changes apply everywhere.</span>
       </div>
       <div className="accessibility-selects">
@@ -35,10 +35,12 @@ export default function AccessibilityPanel({ look, onChange, onSettings, context
       <div className="accessibility-actions">
       <button type="button" className="btn btn-ghost" aria-pressed={reducedMotion} onClick={() => onChange({calm: reducedMotion ? 'device' : 'calm'})}>Reduced motion</button>
       <button type="button" className="btn btn-ghost" aria-pressed={hasMode(look.access, 'contrast')} onClick={() => onChange({access: toggleMode(look.access, 'contrast')})}>Increase contrast</button>
-      <button type="button" className="btn btn-ghost" onClick={read}>Read aloud</button>
-      <button type="button" className="btn btn-ghost" onClick={() => { stop.current?.(); stop.current = null; setAudioStatus('Audio stopped.'); }}>Stop audio</button>
       <button type="button" className="btn btn-ghost" aria-pressed={hasMode(look.access, 'plain')} onClick={() => onChange({access: toggleMode(look.access, 'plain')})}>Plain language</button>
       <button type="button" className="btn btn-ghost" aria-pressed={look.workspaceMode === 'focused'} onClick={() => onChange({workspaceMode: look.workspaceMode === 'focused' ? 'guided' : 'focused'})}>Focus View</button>
+      </div>
+      <div className="accessibility-audio" role="group" aria-label="Read aloud controls">
+        <button type="button" className="btn btn-secondary" onClick={read}>Read aloud</button>
+        <button type="button" className="btn btn-ghost" disabled={audioStatus !== 'Reading aloud.'} onClick={() => { stop.current?.(); stop.current = null; setAudioStatus('Audio stopped.'); }}>Stop audio</button>
       </div>
       {audioStatus && <p className="accessibility-status" role="status">{audioStatus}</p>}
       <button type="button" className="bare link-quiet accessibility-settings-link" onClick={onSettings}>All accessibility settings</button>

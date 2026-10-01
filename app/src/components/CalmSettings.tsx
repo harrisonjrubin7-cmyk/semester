@@ -66,7 +66,7 @@ export function CalmSettings() {
 
       <fieldset>
         <legend>Morning briefing</legend>
-        <label>
+        <label className="guide-setting-check">
           <input
             type="checkbox"
             checked={s.briefing.on}
@@ -74,9 +74,10 @@ export function CalmSettings() {
           />{' '}
           Send a morning briefing
         </label>
-        <label>
-          Briefing time{' '}
+        <label className="guide-setting-field">
+          <span>Briefing time</span>
           <input
+            className="input"
             type="time"
             value={toClock(s.briefing.at)}
             onChange={(e) => {
@@ -89,7 +90,7 @@ export function CalmSettings() {
 
       <fieldset>
         <legend>Quiet hours</legend>
-        <label>
+        <label className="guide-setting-check">
           <input
             type="checkbox"
             checked={s.quiet !== null}
@@ -99,9 +100,10 @@ export function CalmSettings() {
         </label>
         {s.quiet ? (
           <>
-            <label>
-              Quiet hours start{' '}
+            <label className="guide-setting-field">
+              <span>Quiet hours start</span>
               <input
+                className="input"
                 type="time"
                 value={toClock(s.quiet.from)}
                 onChange={(e) => {
@@ -110,9 +112,10 @@ export function CalmSettings() {
                 }}
               />
             </label>
-            <label>
-              Quiet hours end{' '}
+            <label className="guide-setting-field">
+              <span>Quiet hours end</span>
               <input
+                className="input"
                 type="time"
                 value={toClock(s.quiet.to)}
                 onChange={(e) => {
@@ -128,7 +131,7 @@ export function CalmSettings() {
       <fieldset>
         <legend>Digest</legend>
         {DIGESTS.map((d) => (
-          <label key={d}>
+          <label key={d} className="guide-setting-check">
             <input type="radio" name="calm-digest" checked={s.digest === d} onChange={() => set({ digest: d })} />{' '}
             {DIGEST_TEXT[d]}
           </label>
@@ -138,7 +141,7 @@ export function CalmSettings() {
       <fieldset>
         <legend>Notify me about</legend>
         {CATEGORIES.map((c) => (
-          <label key={c}>
+          <label key={c} className="guide-setting-check">
             <input
               type="checkbox"
               checked={s.categories.includes(c)}
@@ -151,15 +154,15 @@ export function CalmSettings() {
 
       <fieldset>
         <legend>Pauses</legend>
-        <label>
+        <label className="guide-setting-check">
           <input type="checkbox" checked={s.pauseScenarios} onChange={(e) => set({ pauseScenarios: e.target.checked })} />{' '}
           Pause course outcome scenarios
         </label>
-        <label>
+        <label className="guide-setting-check">
           <input type="checkbox" checked={s.pauseCareer} onChange={(e) => set({ pauseCareer: e.target.checked })} /> Pause
           career suggestions
         </label>
-        <label>
+        <label className="guide-setting-check">
           <input type="checkbox" checked={s.hideStudyBlocks} onChange={(e) => set({ hideStudyBlocks: e.target.checked })} />{' '}
           Hide suggested study blocks
         </label>
@@ -167,13 +170,13 @@ export function CalmSettings() {
 
       <fieldset>
         <legend>How much the Guide shows</legend>
-        <label>
+        <label className="guide-setting-check">
           <input type="checkbox" checked={s.minimalMode} onChange={(e) => set({ minimalMode: e.target.checked })} /> Minimal
           mode (one line everywhere)
         </label>
-        <label>
-          Planning horizon{' '}
-          <select value={s.horizon} onChange={(e) => set({ horizon: e.target.value as Horizon })}>
+        <label className="guide-setting-field">
+          <span>Planning horizon</span>
+          <select className="input" value={s.horizon} onChange={(e) => set({ horizon: e.target.value as Horizon })}>
             {HORIZONS.map((h) => (
               <option key={h} value={h}>
                 {HORIZON_TEXT[h]}

@@ -5,3 +5,9 @@ app:
 
 hawk:
   startupTimeoutMinutes: 3
+  # The route tree is rendered by React, not present in the initial HTML.
+  # This adds frontend coverage; it does not scan the separate Supabase API.
+  spider:
+    ajax: true
+    maxDurationMinutes: 4
+    ajaxBrowser: CHROME_HEADLESS
