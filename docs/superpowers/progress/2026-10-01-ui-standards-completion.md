@@ -71,3 +71,7 @@ Task 2 native-staging WIP: locale656e1a6bcc29b36274082ace8636f111beede70, compil
 Task 2: implementation complete, review active (BASE f0cb1f0 → HEAD 34e3357d; source c711ac48; 374 tests/23 files, build/lint/budgets pass; remote checkpoint b15929fdd35f8c12f106a1a50be0d3fa67688979; reviewer /root/review_assumptions). Not yet task-complete or released.
 
 Task 2: review round 0 requires changes: I1 résumé fields ignore edits; I2 flag-off itemized-plan cost controls lack adapters; I3 ordinary assumption Apply can overwrite newer decision/institutional records. M1 shared-editor focus continuity included in fix round 1. Reviewer /root/review_assumptions; original implementer /root/ui_assumptions resumed; FIX_BASE 34e3357d.
+
+Task 2: fix round 1 implementation ready (I1/I2/I3/M1 fixed pending rereview; commits 34e3357d..2aac5f2d; 387 tests/23 files/build/lint/budgets pass; remote checkpoint 7c357608ed95b3c727470209a7ce2279ab0fd40c; reviewer /root/review_assumptions_fix1).
+
+Task 2: fix round 1/5 (4 addressed, 1 open — I4 unchanged decision assumption Apply invalidates current source checks/decided despite unchanged preview; commits 34e3357d..2aac5f2d). Round 2 original implementer resumed, FIX_BASE 2aac5f2d. No ruling or waiver.
