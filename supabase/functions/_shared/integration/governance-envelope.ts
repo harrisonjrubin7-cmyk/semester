@@ -17,9 +17,9 @@ export interface GovernanceEnvelope {
   writeAuthority: 'source-system-only';
 }
 
-export function governanceEnvelope(adapter: AdapterDeclaration, mapping: EntityMapping, connectionId: string, now: Date): GovernanceEnvelope {
+export function governanceEnvelope(adapter: AdapterDeclaration, mapping: EntityMapping, connectionId: string, now: Date, freshnessTargetMinutes = adapter.freshnessTargetMinutes): GovernanceEnvelope {
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0
-    || !Number.isFinite(adapter.freshnessTargetMinutes) || adapter.freshnessTargetMinutes <= 0) {
+    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0) {
     throw new Error('Governed records require valid freshness and retention clocks.');
   }
   return {
@@ -28,7 +28,7 @@ export function governanceEnvelope(adapter: AdapterDeclaration, mapping: EntityM
     permittedPurposes: [mapping.scope],
     aiEligibility: 'denied_by_default',
     retrievedAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + adapter.freshnessTargetMinutes * 60_000).toISOString(),
+    expiresAt: new Date(now.getTime() + freshnessTargetMinutes * 60_000).toISOString(),
     retentionPolicyId: `integration:${adapter.id}@${adapter.version}`,
     retentionExpiresAt: new Date(now.getTime() + adapter.retentionDays * 86_400_000).toISOString(),
     consentPurpose: mapping.personal && adapter.consentRequired ? `integration:${connectionId}` : null,

@@ -31,6 +31,7 @@
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { validateDeclaration, type AdapterDeclaration } from './adapter.ts';
 import { ingest, type ConnectionState, type IngestResult, type IngestStore, type ProviderBatch } from './pipeline.ts';
+import { intervalMinutes } from './freshness.ts';
 import { payloadHash, redactReference, sanitizeMessage } from './redact.ts';
 import { afterFailure, type NextStep } from './retry.ts';
 import type { ConnectionStatus } from './catalog.ts';
@@ -61,6 +62,7 @@ interface ConnectionRow {
   status: ConnectionStatus;
   approved_at: string | null;
   data_classification_ceiling: DataClass;
+  freshness_target: string | null;
 }
 
 const fail = (reason: string): SyncReport => ({ outcome: 'refused', reason });
@@ -119,7 +121,7 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   if (req.adapter.mock && !req.allowMock) return fail('a mock adapter cannot run against a real connection');
 
   const { data: row, error } = await db.from('integration_connections')
-    .select('id,public_id,tenant_id,provider_domain,status,approved_at,data_classification_ceiling')
+    .select('id,public_id,tenant_id,provider_domain,status,approved_at,data_classification_ceiling,freshness_target')
     .eq('public_id', req.connectionPublicId).maybeSingle();
   if (error || !row) return fail('no such connection');
   const c = row as ConnectionRow;
@@ -194,6 +196,7 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   const connection: ConnectionState = {
     tenantId: c.tenant_id, publicId: c.public_id, status: c.status, approved: true,
     approvedScopes, classificationCeiling: c.data_classification_ceiling,
+    freshnessTargetMinutes: intervalMinutes(c.freshness_target) ?? req.adapter.freshnessTargetMinutes,
   };
   const store = tableStore(db, c, req.adapter);
   const result = duplicate
@@ -229,6 +232,7 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
       result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
         message: sanitizeMessage(refError.message), retryable: true });
       result.status = 'failed';
+      result.cursorAfter = null;
     }
   }
   if (refreshes.length) {
@@ -244,6 +248,7 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
       result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
         message: sanitizeMessage(refreshError?.message ?? 'Source revision changed during metadata refresh; retry the batch.'), retryable: true });
       result.status = 'failed';
+      result.cursorAfter = null;
     }
   }
   if (result.errors.length) {

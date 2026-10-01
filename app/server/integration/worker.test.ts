@@ -117,6 +117,22 @@ describe('a run', () => {
     expect(row.mapping_version).toBe(MOCK_SIS.entities[0].version);
   });
 
+  it('uses connection freshness overrides for imports and later metadata refreshes', async () => {
+    const t = world();
+    t.integration_connections[0].freshness_target = '01:00:00';
+    const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    const first = JSON.parse((t.canonical_entity_references[0].display as Row)._governance as string);
+    expect(Date.parse(first.expiresAt) - Date.parse(first.retrievedAt)).toBe(60 * 60_000);
+    t.integration_connections[0].freshness_target = '00:30:00';
+    const later = new Date(NOW.getTime() + 60_000);
+    expect(await runSync(db, req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') }), () => later))
+      .toMatchObject({ result: { status: 'succeeded', unchanged: 1 } });
+    const refreshed = JSON.parse((t.canonical_entity_references[0].display as Row)._governance as string);
+    expect(refreshed).toEqual({ ...first, retrievedAt: later.toISOString(),
+      expiresAt: new Date(later.getTime() + 30 * 60_000).toISOString() });
+  });
+
   it('preserves stored values when a corrected payload has the same source timestamp', async () => {
     const t = world();
     const db = fakeDb(t);
@@ -144,15 +160,27 @@ describe('a run', () => {
     expect(t.canonical_entity_references[0].display).toMatchObject({ name: 'Spring 2027' });
   });
 
-  it('makes a failed metadata refresh retryable without changing values', async () => {
+  it.each(['rpc error', 'source race'])('keeps the old cursor on a metadata refresh failure: %s', async (failure) => {
     const t = world();
     const db = fakeDb(t);
     await runSync(db, req([SIS_FIXTURES.term]), now);
-    (t as Record<string, unknown>).__fail = ['integration_refresh_governance'];
-    const request = req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') });
-    expect(await runSync(db, request, now)).toMatchObject({ result: { status: 'failed', errors: [{ retryable: true }] } });
+    const originalCursor = t.integration_connections[0].cursor_state;
+    const stored = { ...t.canonical_entity_references[0] };
+    if (failure === 'rpc error') (t as Record<string, unknown>).__fail = ['integration_refresh_governance'];
+    else vi.spyOn(db, 'rpc').mockResolvedValueOnce({ data: 0, error: null } as never);
+    const fetchBatch = async () => ({ ...mockBatch([SIS_FIXTURES.term], 'evt-2'),
+      cursorAfter: { watermark: '2026-09-28T12:00:00Z' } });
+    expect(await runSync(db, req([SIS_FIXTURES.term], { fetchBatch }), now))
+      .toMatchObject({ result: { status: 'failed', cursorAfter: null, errors: [{ retryable: true }] } });
+    expect(t.integration_connections[0].cursor_state).toEqual(originalCursor);
+    expect(t.integration_sync_runs.at(-1)?.cursor_after).toBeNull();
+    expect(t.canonical_entity_references[0]).toEqual(stored);
+    expect(t.integration_webhook_events.some((e) => e.idempotency_key === 'evt-2')).toBe(false);
     (t as Record<string, unknown>).__fail = [];
-    expect(await runSync(db, request, now)).toMatchObject({ result: { status: 'succeeded', unchanged: 1 } });
+    vi.restoreAllMocks();
+    expect(await runSync(db, req([SIS_FIXTURES.term], { fetchBatch }), now))
+      .toMatchObject({ result: { status: 'succeeded', unchanged: 1 } });
+    expect(t.integration_connections[0].cursor_state).toEqual({ watermark: '2026-09-28T12:00:00Z' });
   });
 
   it('writes references with their display values, and moves the connection to healthy', async () => {

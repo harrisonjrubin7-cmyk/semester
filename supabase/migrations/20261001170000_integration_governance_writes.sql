@@ -26,10 +26,13 @@ begin
              -- Retention deadlines also stay fixed; only freshness is renewed.
              ((r.display ->> '_governance')::jsonb || jsonb_build_object(
                'retrievedAt', want_at,
-               'expiresAt', want_at + (
+               'expiresAt', want_at + coalesce((
+                 select c.freshness_target from public.integration_connections c
+                 where c.id = want_connection and c.tenant_id = want_tenant
+               ), (
                  ((r.display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
                  - ((r.display ->> '_governance')::jsonb ->> 'retrievedAt')::timestamptz
-               )))::text
+               ))))::text
            else x.governance end),
          freshness_status = 'live', updated_at = want_at
     from jsonb_to_recordset(want_records) as x(entity text, id text, timestamp timestamptz, governance text)
@@ -130,3 +133,75 @@ end $$;
 revoke all on function public.lti_record_context(text, text, text) from public;
 revoke all on function public.lti_record_context(text, text, text) from anon, authenticated;
 grant execute on function public.lti_record_context(text, text, text) to service_role;
+
+-- The daily, hold-aware sweep enforces server-declared retention deadlines
+-- on live references as well as the existing 30-day source tombstones.
+create or replace function public.integration_retention_sweep()
+returns setof public.integration_retention_runs
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  t text;
+  held uuid[];
+  n_runs integer; n_errors integer; n_events integer; n_dead integer; n_snaps integer; n_refs integer;
+  r public.integration_retention_runs;
+begin
+  for t in select distinct tenant_id from public.integration_connections loop
+    select coalesce(array_agg(id), '{}') into held
+      from public.integration_connections where tenant_id = t and legal_hold;
+
+    delete from public.integration_sync_errors
+     where tenant_id = t and not (connection_id = any(held))
+       and coalesce(resolved_at, created_at) < now() - interval '180 days';
+    get diagnostics n_errors = row_count;
+
+    delete from public.integration_sync_runs
+     where tenant_id = t and not (connection_id = any(held))
+       and completed_at is not null and completed_at < now() - interval '180 days';
+    get diagnostics n_runs = row_count;
+
+    delete from public.integration_webhook_events
+     where tenant_id = t and not (connection_id = any(held))
+       and processed_at is not null and processed_at < now() - interval '30 days';
+    get diagnostics n_events = row_count;
+
+    delete from public.integration_dead_letter_events
+     where tenant_id = t and not (connection_id = any(held))
+       and resolved_at is not null and resolved_at < now() - interval '90 days';
+    get diagnostics n_dead = row_count;
+
+    delete from public.source_snapshots s
+     using public.source_records sr
+     where s.tenant_id = t and sr.id = s.source_record_id
+       and (sr.connection_id is null or not (sr.connection_id = any(held)))
+       and s.retention_expires_at is not null and s.retention_expires_at < now();
+    get diagnostics n_snaps = row_count;
+
+    delete from public.canonical_entity_references
+     where tenant_id = t and (connection_id is null or not (connection_id = any(held)))
+       and (
+         (external_deleted_at is not null and external_deleted_at < now() - interval '30 days')
+         or case
+           when jsonb_typeof(display -> '_governance') = 'string'
+             and pg_input_is_valid(display ->> '_governance', 'jsonb') then
+             case when pg_input_is_valid((display ->> '_governance')::jsonb ->> 'retentionExpiresAt', 'timestamptz') then
+               ((display ->> '_governance')::jsonb ->> 'retentionExpiresAt')::timestamptz <= now()
+             else false end
+           else false end
+       );
+    get diagnostics n_refs = row_count;
+
+    insert into public.integration_retention_runs
+      (tenant_id, runs_deleted, errors_deleted, events_deleted, dead_letters_deleted,
+       snapshots_deleted, references_deleted, connections_held)
+    values (t, n_runs, n_errors, n_events, n_dead, n_snaps, n_refs, coalesce(array_length(held, 1), 0))
+    returning * into r;
+    return next r;
+  end loop;
+end $$;
+revoke all on function public.integration_retention_sweep() from public;
+revoke all on function public.integration_retention_sweep() from anon, authenticated;
+grant execute on function public.integration_retention_sweep() to service_role;

@@ -7,6 +7,7 @@
  *
  * Put a table name in `tables.__fail` to make its upserts fail.
  */
+import { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type Row = Record<string, unknown>;
@@ -113,10 +114,14 @@ export function fakeDb(tables: Tables) {
           && x.id === row.source_record_id && x.timestamp === row.source_timestamp);
         if (!hit) continue;
         const prior = typeof display._governance === 'string' ? JSON.parse(display._governance) : null;
+        const connection = (tables.integration_connections ?? []).find((c) => c.id === args.want_connection
+          && c.tenant_id === args.want_tenant);
+        const override = intervalMinutes(String(connection?.freshness_target ?? ''));
         row.display = { ...display, _governance: prior ? JSON.stringify({ ...prior,
           retrievedAt: args.want_at,
           expiresAt: new Date(Date.parse(String(args.want_at))
-            + Date.parse(prior.expiresAt) - Date.parse(prior.retrievedAt)).toISOString(),
+            + (override !== null ? override * 60_000
+              : Date.parse(prior.expiresAt) - Date.parse(prior.retrievedAt))).toISOString(),
         }) : hit.governance };
         row.freshness_status = 'live';
       } else if (name === 'integration_tombstone_references') {

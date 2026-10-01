@@ -50,6 +50,8 @@ export interface ConnectionState {
   approved: boolean;
   approvedScopes: readonly string[];
   classificationCeiling: DataClass;
+  /** Effective, server-read connection override; otherwise the adapter default. */
+  freshnessTargetMinutes?: number;
 }
 
 export interface CanonicalReference {
@@ -170,11 +172,13 @@ function mapFields(mapping: EntityMapping, rec: ExternalRecord): Checked {
 export async function ingest(input: IngestInput): Promise<IngestResult> {
   const { adapter, connection, batch, store, now } = input;
   const received = batch.records.length;
+  const freshnessTargetMinutes = connection.freshnessTargetMinutes ?? adapter.freshnessTargetMinutes;
   const refuse = (message: string, category: ErrorCategory = 'scope_failure') =>
     empty('refused', received, [{ category, entityType: null, reference: 'redacted', message, retryable: false }]);
 
   if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0 || adapter.retentionDays > 36500
     || !Number.isFinite(adapter.freshnessTargetMinutes) || adapter.freshnessTargetMinutes <= 0 || adapter.freshnessTargetMinutes > 525600
+    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0
     || !adapter.sourceOfTruth.trim()) {
     return refuse('Invalid adapter governance or processing clock.', 'schema_validation');
   }
@@ -250,7 +254,7 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
     // record confirmed this minute is live however long ago it last changed.
     // It decays from here as `freshnessFromAge` is re-read against the
     // connection's last successful sync.
-    const freshness = freshnessFromAge(now, adapter.freshnessTargetMinutes, now, true);
+    const freshness = freshnessFromAge(now, freshnessTargetMinutes, now, true);
     result.references.push({
       tenantId: connection.tenantId,
       canonicalEntity: mapping.canonicalEntity,
@@ -267,7 +271,7 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       externalDeletedAt: rec.deleted ? now.toISOString() : null,
       values: rec.deleted || unchanged ? {} : checked.values,
       metadataOnly: unchanged,
-      governance: governanceEnvelope(adapter, mapping, connection.publicId, now),
+      governance: governanceEnvelope(adapter, mapping, connection.publicId, now, freshnessTargetMinutes),
     });
     if (!unchanged) {
       if (previous) result.updated += 1; else result.created += 1;

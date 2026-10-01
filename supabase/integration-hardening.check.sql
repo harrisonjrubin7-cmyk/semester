@@ -74,6 +74,22 @@ begin
          ('ih-u', 'term', 't-live', live, 'SIS', 'g3', 'Registrar', null),
          ('ih-u', 'term', 't-held', held, 'LMS', 'g4', 'LMS', now() - interval '40 days');
 
+  -- Live expiry, future expiry, null clocks, malformed legacy data and holds.
+  insert into public.canonical_entity_references (tenant_id, canonical_entity_type, canonical_entity_id, connection_id,
+    source_system, source_record_id, source_of_truth, display)
+  values ('ih-u', 'term', 'expired-live', live, 'SIS', 'g5', 'Registrar',
+           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', now() - interval '1 day')::text)),
+         ('ih-u', 'term', 'unexpired-live', live, 'SIS', 'g6', 'Registrar',
+           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', now() + interval '1 day')::text)),
+         ('ih-u', 'term', 'no-clock', live, 'LMS', 'g7', 'LMS',
+           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', null)::text)),
+         ('ih-u', 'term', 'legacy-metadata', live, 'SIS', 'g8', 'Registrar',
+           jsonb_build_object('_governance', 'legacy non-JSON string')),
+         ('ih-u', 'term', 'invalid-clock', live, 'SIS', 'g9', 'Registrar',
+           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', 'not-a-timestamp')::text)),
+         ('ih-u', 'term', 'expired-held', held, 'SIS', 'g10', 'Registrar',
+           jsonb_build_object('_governance', jsonb_build_object('retentionExpiresAt', now() - interval '1 day')::text));
+
   -- The worker is the service role, and the rows it writes take a public id
   -- from a default. Codex found on #779 that the default's function was
   -- executable only by `authenticated`, so every worker run failed opening.
@@ -119,16 +135,18 @@ begin
   select count(*) into n from public.source_snapshots where source_record_id = src;
   perform pg_temp.counted('an expired snapshot goes', n, 1);
   select count(*) into n from public.canonical_entity_references where connection_id = live;
-  perform pg_temp.counted('a reference deleted at source forty days ago goes; recent and live ones stay', n, 2);
+  perform pg_temp.counted('source tombstones and expired live references go; other live rows stay', n, 6);
+  select count(*) into n from public.canonical_entity_references where canonical_entity_id = 'expired-live';
+  perform pg_temp.counted('an expired live governance deadline is enforced', n, 0);
 
   select count(*) into n from public.integration_sync_runs where connection_id = held;
   perform pg_temp.counted('nothing old on a held connection goes: runs', n, 1);
   select count(*) into n from public.integration_webhook_events where connection_id = held;
   perform pg_temp.counted('events', n, 1);
   select count(*) into n from public.canonical_entity_references where connection_id = held;
-  perform pg_temp.counted('references', n, 1);
+  perform pg_temp.counted('references, including expired live governance', n, 2);
 
-  select count(*) into n from public.integration_retention_runs where tenant_id = 'ih-u' and connections_held = 1 and runs_deleted = 1;
+  select count(*) into n from public.integration_retention_runs where tenant_id = 'ih-u' and connections_held = 1 and runs_deleted = 1 and references_deleted = 2;
   perform pg_temp.counted('the sweep records what it did', n, 1);
 
   -- The integration admin can read the record of the sweep, nobody else's.
@@ -142,6 +160,12 @@ begin
   select count(*) into n from public.integration_retention_runs;
   execute 'reset role';
   perform pg_temp.counted('a student at the same school reads it', n, 0);
+
+  update public.integration_connections set legal_hold = false where id = held;
+  perform pg_temp.sweep();
+  select count(*) into n from public.canonical_entity_references where connection_id = held;
+  perform pg_temp.counted('releasing a hold permits expiry and tombstone deletion', n, 0);
+  update public.integration_connections set legal_hold = true where id = held;
 
   -- A hold needs its reason.
   begin

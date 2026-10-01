@@ -45,3 +45,16 @@ export function freshnessSentence(freshness: Freshness, source: string, at: Date
   const official = freshness === 'live' || freshness === 'recent' ? '' : ' Not the official current record.';
   return `${FRESHNESS_TEXT[freshness]} — from ${source}${when}.${official}`;
 }
+
+/**
+ * A Postgres interval as PostgREST returns it (`IntervalStyle = postgres`):
+ * `01:00:00`, `2 days`, `1 day 06:30:00`, `1 mon`. Null for anything else, so a
+ * value this cannot read falls back to the adapter's target rather than to 0.
+ */
+export function intervalMinutes(value: string | null): number | null {
+  if (!value) return null;
+  const m = /^(?:(\d+) years? ?)?(?:(\d+) mons? ?)?(?:(\d+) days? ?)?(?:(\d+):(\d{2}):(\d{2})(?:\.\d+)?)?$/.exec(value.trim());
+  if (!m || m[0] === '') return null;
+  const [, y, mo, d, h, mi] = m.map((x) => Number(x ?? 0));
+  return ((y * 365 + mo * 30 + d) * 24 + h) * 60 + mi;
+}
