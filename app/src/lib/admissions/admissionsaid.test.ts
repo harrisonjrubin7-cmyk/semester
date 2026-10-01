@@ -151,9 +151,9 @@ describe('the library repeats the migration, never allows more', () => {
   it('has the limits the forms name', () => {
     expect(SQL).toContain(`{0,${LIMITS.cycle - 1}}`);
     expect(SQL).toContain(`{1,${LIMITS.applicantRef}}`);
-    expect(SQL).toContain(`between 1 and ${LIMITS.program}`);
-    expect(SQL).toContain(`between ${LIMITS.reasonMin} and ${LIMITS.reasonMax}`);
-    expect(SQL).toContain(`between 1 and ${AID_LIMITS.fundName}`);
+    expect(SQL).toContain(`length(btrim(program)) >= 1 and length(btrim(program)) <= ${LIMITS.program}`);
+    expect(SQL).toContain(`length(btrim(reason)) >= ${LIMITS.reasonMin} and length(btrim(reason)) <= ${LIMITS.reasonMax}`);
+    expect(SQL).toContain(`length(btrim(fund_name)) >= 1 and length(btrim(fund_name)) <= ${AID_LIMITS.fundName}`);
     expect(SQL).toContain(`between 1 and ${AID_LIMITS.amountMaxCents}`);
     expect(AID_LIMITS.reasonMin).toBe(LIMITS.reasonMin);
   });
