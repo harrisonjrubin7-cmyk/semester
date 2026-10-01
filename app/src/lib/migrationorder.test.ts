@@ -176,6 +176,13 @@ describe('no migration is numbered in the past', () => {
    * after `access_log` existed, which is the run that closes `note_access` and
    * `read_feed`. Hence prefix rather than equality, and the direction matters:
    * the ledger name extends the file's, never the other way round.
+   *
+   * Production acquired one later collision at `20260930233000`: that row
+   * contains `data_subject_request_intake`, while the repository assigns the
+   * version to `k12_guardians`. The guardian objects were absent, so the SQL
+   * was applied forward under `20261001075026_k12_guardians_repair`. That one
+   * exception is accepted only while the repair row is also present; removing
+   * the repair from the snapshot makes this test red again.
    */
   it('and every applied file sits on the row its own content was recorded as', () => {
     const rows = new Map(ledger().map((r) => [r.version, r.name]));
@@ -185,6 +192,12 @@ describe('no migration is numbered in the past', () => {
       const slug = file.slice(15).replace(/\.sql$/, '');
       const name = rows.get(version);
       if (name === undefined) continue; // pending, and the watermark test owns it
+      if (
+        version === '20260930233000' &&
+        slug === 'k12_guardians' &&
+        name === 'data_subject_request_intake' &&
+        rows.get('20261001075026') === 'k12_guardians_repair'
+      ) continue;
       if (!name.startsWith(slug)) wrong.push(`${file} sits on a row named "${name}"`);
     }
     expect(wrong, wrong.join('; ')).toEqual([]);
