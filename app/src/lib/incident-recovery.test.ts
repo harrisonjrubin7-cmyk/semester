@@ -32,10 +32,11 @@ describe('incident and recovery control contract', () => {
     expect(validateIncident({
       id: 'INC-1', severity: 'SEV1', declaredAt: 100, commander: '', affectedServices: ['Identity'], tenantScope: { scope: 'platform_wide' },
       studentVisibleEffect: 'Sign-in unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 100, verification: [],
-    }, 150)).toEqual(['named incident commander', 'recovery verification']);
+    }, 150)).toEqual(['named incident commander', 'recovery verification', 'complete close-out evidence']);
     expect(validateIncident({
       id: 'INC-2', severity: 'SEV2', declaredAt: 100, commander: 'Incident lead', affectedServices: ['LTI'], tenantScope: { scope: 'tenant_specific', tenantIds: ['vanderbilt'] },
       studentVisibleEffect: 'Course launch unavailable', privateStudentDataIncluded: false, status: 'close', nextUpdateAt: 200, verification: ['Valid launch succeeds; invalid token is rejected'],
+      closeOut: { measuredTimeline: '10:00–10:30 UTC', impact: 'Launch unavailable', recoveryPoint: 'No data loss', communications: ['Status update sent'], correctiveActions: [{ action: 'Add regression', owner: 'Integrations', dueAt: 300, requiredEvidence: 'Passing launch test' }] },
     }, 150)).toEqual([]);
   });
 
@@ -65,5 +66,15 @@ describe('incident and recovery control contract', () => {
       tenantScope: { scope: 'platform_wide' }, studentVisibleEffect: 'Service unavailable',
       privateStudentDataIncluded: false, status: 'contain', nextUpdateAt: 300, verification: [],
     }, 200)).toContain('affected service');
+  });
+
+  it('rejects non-finite update times and unknown lifecycle statuses at runtime', () => {
+    const base = {
+      id: 'INC-7', severity: 'SEV2' as const, declaredAt: 100, commander: 'Incident lead', affectedServices: ['Identity'],
+      tenantScope: { scope: 'platform_wide' } as const, studentVisibleEffect: 'Access unavailable',
+      privateStudentDataIncluded: false as const, status: 'contain' as const, nextUpdateAt: Number.NaN, verification: [],
+    };
+    expect(validateIncident(base, 200)).toContain('future next-update time');
+    expect(validateIncident({ ...base, status: 'closed', nextUpdateAt: 300 } as unknown as Parameters<typeof validateIncident>[0], 200)).toContain('known incident status');
   });
 });

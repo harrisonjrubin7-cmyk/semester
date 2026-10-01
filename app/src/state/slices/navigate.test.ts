@@ -72,6 +72,12 @@ describe('a panel over the screen does not outlive it', () => {
     expect(run(searching(), { type: 'go', screen: 'courses' }).finder).toBe(false);
   });
 
+  it('carries an explicit recovery intent to the destination and clears it on ordinary navigation', () => {
+    const short = run(start(), { type: 'go', screen: 'behind', recoveryIntent: 'short_task' });
+    expect(short.recoveryIntent).toBe('short_task');
+    expect(run(short, { type: 'go', screen: 'calendar' }).recoveryIntent).toBeNull();
+  });
+
   it('closes when the browser moves', () => {
     expect(run(searching(), { type: 'landed', screen: 'courses' }).finder).toBe(false);
   });
@@ -142,4 +148,3 @@ describe('the overlays close on the way past', () => {
     }
   });
 });
-

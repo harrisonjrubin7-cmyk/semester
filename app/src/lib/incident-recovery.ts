@@ -28,6 +28,14 @@ export const RECOVERY_OBJECTIVES: readonly RecoveryObjective[] = [
 
 export const INCIDENT_LIFECYCLE = ['detect', 'contain', 'communicate', 'recover', 'verify', 'close'] as const;
 
+export interface IncidentCloseOutEvidence {
+  measuredTimeline: string;
+  impact: string;
+  recoveryPoint: string;
+  communications: string[];
+  correctiveActions: Array<{ action: string; owner: string; dueAt: number; requiredEvidence: string }>;
+}
+
 export const AUTOMATION_MAY = [
   'disable_risky_feature',
   'quarantine_source',
@@ -91,6 +99,7 @@ export interface IncidentRecord {
   status: (typeof INCIDENT_LIFECYCLE)[number];
   nextUpdateAt: number;
   verification: string[];
+  closeOut?: IncidentCloseOutEvidence;
 }
 
 export function validateIncident(record: IncidentRecord, now = Date.now()): string[] {
@@ -101,7 +110,19 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   if (!record.tenantScope || (record.tenantScope.scope !== 'platform_wide' && !record.tenantScope.tenantIds?.some((tenantId) => tenantId.trim()))) gaps.push('tenant scope');
   if (!record.studentVisibleEffect.trim()) gaps.push('student-visible effect');
   if (record.privateStudentDataIncluded !== false) gaps.push('private student data excluded');
-  if (record.status !== 'close' && record.nextUpdateAt <= now) gaps.push('future next-update time');
-  if ((record.status === 'verify' || record.status === 'close') && !record.verification.some((entry) => entry.trim())) gaps.push('recovery verification');
+  const knownStatus = INCIDENT_LIFECYCLE.includes(record.status as (typeof INCIDENT_LIFECYCLE)[number]);
+  if (!knownStatus) gaps.push('known incident status');
+  if (knownStatus && record.status !== 'close' && (!Number.isFinite(record.nextUpdateAt) || record.nextUpdateAt <= now)) gaps.push('future next-update time');
+  if (knownStatus && (record.status === 'verify' || record.status === 'close') && !record.verification.some((entry) => entry.trim())) gaps.push('recovery verification');
+  if (record.status === 'close') {
+    const closeOut = record.closeOut;
+    const complete = closeOut
+      && closeOut.measuredTimeline.trim()
+      && closeOut.impact.trim()
+      && closeOut.recoveryPoint.trim()
+      && closeOut.communications.some((entry) => entry.trim())
+      && closeOut.correctiveActions.some((action) => action.action.trim() && action.owner.trim() && Number.isFinite(action.dueAt) && action.requiredEvidence.trim());
+    if (!complete) gaps.push('complete close-out evidence');
+  }
   return gaps;
 }

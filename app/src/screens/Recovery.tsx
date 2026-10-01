@@ -194,7 +194,7 @@ function AcademicRecoveryGuide() {
                   className="balance-button"
                   onClick={() => {
                     setStage(nextRecoveryStage('offer', 'choose_option') ?? 'offer');
-                    dispatch({ type: 'go', screen: option.screen });
+                    dispatch({ type: 'go', screen: option.screen, recoveryIntent: option.intent });
                   }}
                 >
                   <strong>{option.label}</strong>

@@ -108,6 +108,13 @@ export function Behind() {
 
       <FlightPlanRecoverySlot />
 
+      {state.recoveryIntent === 'short_task' ? (
+        <Blueprint style={{ marginTop: 'var(--sp-4)', padding: 'var(--sp-5)' }}>
+          <div className="kicker">Your 2–25 minute start</div>
+          <p style={{ marginBottom: 0 }}>Choose one item below. The item will keep this recovery choice visible so you can timebox a first pass without changing its official requirement or due date.</p>
+        </Blueprint>
+      ) : null}
+
       {/*
         Before the deadlines, because a bad week is often not about the
         deadlines: an availability that changed, somebody to look after, a

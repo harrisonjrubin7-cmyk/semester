@@ -19,6 +19,7 @@ export interface TrustMeasurement {
   evidenceCurrent: boolean;
   controlFailure?: boolean;
   trendWorsening?: boolean;
+  materialLimitation?: boolean;
   value: string;
   evidenceAt: number;
   knownLimitations?: string;
@@ -84,8 +85,14 @@ export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFI
 export function metricState(definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };
   if (measurement.controlFailure || (definition.critical && !measurement.targetMet)) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
-  if (!measurement.targetMet || !measurement.evidenceCurrent || measurement.trendWorsening) return { state: 'yellow', reason: 'The target, evidence freshness, or trend needs attention.' };
+  if (!measurement.targetMet || !measurement.evidenceCurrent || measurement.trendWorsening || measurement.materialLimitation) return { state: 'yellow', reason: 'The target, evidence freshness, trend, or a material limitation needs attention.' };
   return { state: 'green', reason: 'Target met with current evidence.' };
+}
+
+export function evidenceDateLabel(evidenceAt: number | null): string | null {
+  if (evidenceAt === null || !Number.isFinite(evidenceAt)) return null;
+  const date = new Date(evidenceAt);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
 }
 
 export function trustScorecard(measurements: readonly TrustMeasurement[]): ScoredTrustMetric[] {

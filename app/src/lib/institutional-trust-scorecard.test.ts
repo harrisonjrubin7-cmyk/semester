@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { metricState, TRUST_METRICS, trustScorecard } from './institutional-trust-scorecard';
+import { evidenceDateLabel, metricState, TRUST_METRICS, trustScorecard } from './institutional-trust-scorecard';
 
 describe('institutional trust scorecard', () => {
   it('uses metric states instead of combining unrelated controls into a score', () => {
@@ -18,6 +18,7 @@ describe('institutional trust scorecard', () => {
     expect(metricState(advisory, { id: advisory.id, targetMet: false, evidenceCurrent: true, value: 'below target', evidenceAt: 1 }).state).toBe('yellow');
     expect(metricState(critical, { id: critical.id, targetMet: true, evidenceCurrent: false, value: 'stale', evidenceAt: 1 }).state).toBe('yellow');
     expect(metricState(critical, { id: critical.id, targetMet: true, evidenceCurrent: true, trendWorsening: true, value: 'falling', evidenceAt: 1 }).state).toBe('yellow');
+    expect(metricState(critical, { id: critical.id, targetMet: true, evidenceCurrent: true, materialLimitation: true, value: 'limited', evidenceAt: 1 }).state).toBe('yellow');
   });
 
   it('marks only current target-meeting evidence green', () => {
@@ -29,5 +30,11 @@ describe('institutional trust scorecard', () => {
     const definition = TRUST_METRICS[0];
     const scored = trustScorecard([{ id: definition.id, targetMet: false, evidenceCurrent: true, value: 'missed', evidenceAt: 1, knownLimitations: 'Pilot gap', correctiveAction: 'Owner action' }])[0];
     expect(scored).toMatchObject({ state: 'red', knownLimitations: 'Pilot gap', correctiveAction: 'Owner action' });
+  });
+
+  it('formats valid evidence dates without allowing malformed timestamps to crash rendering', () => {
+    expect(evidenceDateLabel(Date.UTC(2026, 9, 1))).toBe('2026-10-01');
+    expect(evidenceDateLabel(Number.NaN)).toBeNull();
+    expect(evidenceDateLabel(Number.POSITIVE_INFINITY)).toBeNull();
   });
 });

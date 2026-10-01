@@ -29,11 +29,13 @@ export type DisruptionKind =
   | 'need_help';
 
 export type RecoveryCategory = 'protect' | 'start' | 'clarify' | 'decide' | 'waiting' | 'ask' | 'reduce';
+export type RecoveryIntent = 'short_task';
 
 export interface RecoveryOption {
   label: string;
   screen: Screen;
   reason: string;
+  intent?: RecoveryIntent;
 }
 
 export interface RecoveryPlan {
@@ -171,7 +173,7 @@ export const RECOVERY_PLANS: RecoveryPlan[] = [
     affects: ['The size of the next step, not the importance of the work'],
     preserved: ['The full action and verified deadline', 'The option to return to the original plan'],
     options: [
-      { label: 'Start a 2–25 minute version', screen: 'behind', reason: 'Choose a small executable step without shrinking the official requirement.' },
+      { label: 'Start a 2–25 minute version', screen: 'behind', intent: 'short_task', reason: 'Choose a small executable step without shrinking the official requirement.' },
       { label: 'Move one work block', screen: 'calendar', reason: 'Choose a later window deliberately.' },
       { label: 'Ask what minimum progress helps', screen: 'help', reason: 'Use a human route when the deadline or requirement cannot move.' },
     ],

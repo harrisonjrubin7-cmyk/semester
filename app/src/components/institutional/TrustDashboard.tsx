@@ -7,7 +7,7 @@ import { trustDashboard, type Integration, type TrustRow } from '../../lib/trust
 import { NOTES, visible } from '../../lib/whatsnew';
 import { useNow, useStore } from '../../state/store';
 import { SectionLabel } from '../ui';
-import { trustScorecard, type MetricState, type ScoredTrustMetric, type TrustMeasurement } from '../../lib/institutional-trust-scorecard';
+import { evidenceDateLabel, trustScorecard, type MetricState, type ScoredTrustMetric, type TrustMeasurement } from '../../lib/institutional-trust-scorecard';
 
 /**
  * The customer trust dashboard, as a tab on the institution screen. The rows
@@ -111,6 +111,7 @@ const SCORECARD_CLASS: Record<MetricState, string> = {
 };
 
 function ScorecardRow({ metric }: { metric: ScoredTrustMetric }) {
+  const evidenceDate = evidenceDateLabel(metric.evidenceAt);
   return (
     <li className={SCORECARD_CLASS[metric.state]}>
       <div>
@@ -122,7 +123,7 @@ function ScorecardRow({ metric }: { metric: ScoredTrustMetric }) {
       <p><strong>Target:</strong> {metric.target}</p>
       <p><strong>Known limitations:</strong> {metric.knownLimitations}</p>
       <p><strong>Corrective action:</strong> {metric.correctiveAction}</p>
-      <small>{metric.owner} · {metric.cadence}{metric.evidenceAt === null ? ` · target instrumentation ${metric.targetInstrumentationDate}` : ` · evidence ${new Date(metric.evidenceAt).toISOString().slice(0, 10)}`}</small>
+      <small>{metric.owner} · {metric.cadence}{metric.evidenceAt === null ? ` · target instrumentation ${metric.targetInstrumentationDate}` : evidenceDate ? ` · evidence ${evidenceDate}` : ' · evidence date invalid'}</small>
     </li>
   );
 }

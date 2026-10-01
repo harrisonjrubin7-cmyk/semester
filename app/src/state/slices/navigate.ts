@@ -137,7 +137,7 @@ export function navigate(state: State, action: Action): State | null {
 
     case 'go':
       return push(
-        action.courseId ? { ...state, guideId: action.courseId } : state,
+        { ...state, ...(action.courseId ? { guideId: action.courseId } : {}), recoveryIntent: action.recoveryIntent ?? null },
         screenForRole(action.screen, state.role),
       );
 
