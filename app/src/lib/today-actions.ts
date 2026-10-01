@@ -57,6 +57,10 @@ export function todayActions(input: TodayActionInput): Action[] {
       source: {
         label: confirmed ? 'imported' : 'needs_review',
         system: confirmed ? 'Checked against your syllabus' : 'A course date recorded in Semester',
+        authority: 'Your instructor and the course’s official systems',
+        dataOwner: confirmed ? 'The source file you imported' : 'You, until an official source is checked',
+        correctionRoute: 'Open the assignment and check or correct its source date.',
+        officialFallback: 'Use the syllabus or learning management system before acting on the deadline.',
       },
       explanation: {
         trigger: `It is due ${item.daysAway === 0 ? 'today' : `in ${plural(item.daysAway, 'day')}`} and is not marked done.`,
@@ -80,7 +84,14 @@ export function todayActions(input: TodayActionInput): Action[] {
       whyItMatters: 'Add the requirements and courses you already know so Semester can give a qualified next step.',
       priority: 'normal',
       group: 'My Path',
-      source: { label: 'estimated', system: 'My Path, from what you entered' },
+      source: {
+        label: 'estimated',
+        system: 'My Path, from what you entered',
+        authority: 'Your registrar and academic program',
+        dataOwner: 'You maintain this planning copy',
+        correctionRoute: 'Update My Path with the requirements and courses shown on your official audit.',
+        officialFallback: 'Use your degree audit and confirm unresolved choices with an advisor.',
+      },
       explanation: {
         trigger: 'Your path record does not have enough information to estimate requirement coverage.',
         factors: ['No requirements or courses recorded yet'],
@@ -98,7 +109,14 @@ export function todayActions(input: TodayActionInput): Action[] {
       whyItMatters: `${plural(input.path.unresolved, 'recorded requirement')} still ${input.path.unresolved === 1 ? 'needs' : 'need'} a course choice.`,
       priority: 'normal',
       group: 'My Path',
-      source: { label: 'estimated', system: 'My Path, from what you entered' },
+      source: {
+        label: 'estimated',
+        system: 'My Path, from what you entered',
+        authority: 'Your registrar and academic program',
+        dataOwner: 'You maintain this planning copy',
+        correctionRoute: 'Update the requirement or course choice in My Path.',
+        officialFallback: 'Use your degree audit and confirm the choice with an advisor.',
+      },
       explanation: {
         trigger: 'Finished and current courses do not yet cover every requirement you recorded.',
         factors: [`${plural(input.path.unresolved, 'requirement')} without a course`],
@@ -118,7 +136,14 @@ export function todayActions(input: TodayActionInput): Action[] {
       whyItMatters: `${plural(input.reviewDue, 'review')} ${input.reviewDue === 1 ? 'is' : 'are'} ready for retrieval practice.`,
       priority: 'low',
       estimatedMinutes: Math.min(30, Math.max(5, Math.round(input.reviewDue / 2))),
-      source: { label: 'estimated', system: 'Your review schedule on this device' },
+      source: {
+        label: 'estimated',
+        system: 'Your review schedule on this device',
+        authority: 'Your own study record',
+        dataOwner: 'You',
+        correctionRoute: 'Complete, reschedule, or remove the review in Study.',
+        officialFallback: 'Use the course study guidance or ask your instructor what to prioritize.',
+      },
       explanation: {
         trigger: 'These cards have reached the review time the spacing schedule set.',
         factors: [plural(input.reviewDue, 'card') + ' due'],
@@ -137,7 +162,14 @@ export function todayActions(input: TodayActionInput): Action[] {
       title: 'Start your semester',
       whyItMatters: 'Add a syllabus or course so deadlines and the day plan have a source.',
       priority: 'high',
-      source: { label: 'student_entered', system: 'Your Semester workspace' },
+      source: {
+        label: 'student_entered',
+        system: 'Your Semester workspace',
+        authority: 'You choose what to add',
+        dataOwner: 'You',
+        correctionRoute: 'Add or import a course, then review its source details.',
+        officialFallback: 'Use your institution’s course schedule or ask an advisor for your current enrollment.',
+      },
       explanation: {
         trigger: 'No course or syllabus is recorded yet.',
         factors: ['No courses in this workspace'],

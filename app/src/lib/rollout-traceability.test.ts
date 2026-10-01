@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { CAPABILITIES, type EvidenceRef, type RolloutCapability } from './rollout-capabilities';
 import {
@@ -12,12 +13,13 @@ const sources = JSON.parse(
 ) as SourceRecord[];
 
 const context: TraceabilityContext = {
-  repoPaths: new Set([
-    'docs/superpowers/specs/2026-09-23-semester-institutional-rollout-design.md',
-    'app/src/lib/types.ts',
-    'app/src/lib/nav.ts',
-    'app/src/lib/nav.registry.test.ts',
-  ]),
+  repoPaths: new Set(
+    sources
+      .map((source) => source.ref)
+      .filter((ref) => ref.startsWith('repo:'))
+      .map((ref) => ref.slice('repo:'.length))
+      .filter((path) => existsSync(resolve(process.cwd(), '..', path))),
+  ),
   attachments: new Map([['Pasted text.txt', 1059]]),
   driveIds: new Set(),
 };

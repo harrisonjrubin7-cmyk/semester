@@ -71,6 +71,14 @@ export function ExplanationSheet({
           </li>
           {e.factors.map((f) => <li key={f}>{f}</li>)}
         </ul>
+        {(action.source.authority || action.source.dataOwner || action.source.correctionRoute || action.source.officialFallback) ? (
+          <dl className="explain-source-details">
+            {action.source.authority ? <><dt>Authority</dt><dd>{action.source.authority}</dd></> : null}
+            {action.source.dataOwner ? <><dt>Data owner</dt><dd>{action.source.dataOwner}</dd></> : null}
+            {action.source.correctionRoute ? <><dt>Correction route</dt><dd>{action.source.correctionRoute}</dd></> : null}
+            {action.source.officialFallback ? <><dt>Official fallback</dt><dd>{action.source.officialFallback}</dd></> : null}
+          </dl>
+        ) : null}
         <h3>What it changes</h3>
         <p>{e.expectedImpact}</p>
         <h3>What Semester can’t tell you</h3>
