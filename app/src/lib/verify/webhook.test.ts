@@ -28,7 +28,7 @@ const NOW = 1_790_000_000;
 const CHECKOUT = '3f2b8c1e-9a4d-4e7b-8c21-5d6f7a8b9c0d';
 
 const sign = (body: string, t = NOW, secret = SECRET) => `t=${t},v1=${createHmac('sha256', secret).update(`${t}.${body}`).digest('hex')}`;
-const body = (id: string, type: string, object: Record<string, unknown>) => JSON.stringify({ id, type, created: NOW - 5, data: { object } });
+const body = (id: string, type: string, object: Record<string, unknown>) => JSON.stringify({ id, type, livemode: false, created: NOW - 5, data: { object } });
 
 /** The events in play. Index 0 creates the subscription every invoice bills. */
 const EVENTS = [
@@ -55,6 +55,7 @@ function backend() {
   let failAt: FailAt = 'none';
   const maybeFail = (step: Exclude<FailAt, 'none'>) => { if (failAt === step) throw new Error(`injected failure in ${step}`); };
   const deps: WebhookDeps = {
+    stripeKey: 'sk_test_abc',
     secret: SECRET,
     now: () => NOW,
     completeCheckout: async (_c, sub) => { calls.push('complete'); maybeFail('complete'); if (sub) db.subs.add(sub); return 'ok'; },

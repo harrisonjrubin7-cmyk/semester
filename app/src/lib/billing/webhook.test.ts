@@ -15,6 +15,7 @@ function deps(over: Partial<WebhookDeps> = {}) {
   const calls: string[] = [];
   const d = {
     secret: SECRET,
+    stripeKey: 'sk_test_x',
     now: () => NOW,
     completeCheckout: vi.fn(async () => { calls.push('complete'); return 'sub-id'; }),
     syncSubscription: vi.fn(async () => { calls.push('sync'); return 'updated'; }),
@@ -26,7 +27,7 @@ function deps(over: Partial<WebhookDeps> = {}) {
 }
 
 const event = (type: string, object: Record<string, unknown>, id = 'evt_1') =>
-  JSON.stringify({ id, type, created: NOW - 5, data: { object } });
+  JSON.stringify({ id, type, livemode: false, created: NOW - 5, data: { object } });
 
 const post = (body: string, headers: Record<string, string> = {}) =>
   new Request('https://project.supabase.co/functions/v1/billing-webhook', {
