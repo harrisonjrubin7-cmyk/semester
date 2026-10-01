@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
 
-function mediaQuery(query: string): MediaQueryList | null {
-  return typeof window === 'undefined' || typeof window.matchMedia !== 'function'
-    ? null
-    : window.matchMedia(query);
-}
-
 /**
  * A media query as state.
  *
@@ -16,18 +10,21 @@ function mediaQuery(query: string): MediaQueryList | null {
  * place and read wherever they matter.
  */
 export function useMedia(query: string): boolean {
-  const [matches, setMatches] = useState(() => mediaQuery(query)?.matches ?? false);
+  const available = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+  const [matches, setMatches] = useState(() =>
+    available ? window.matchMedia(query).matches : false,
+  );
 
   useEffect(() => {
-    const mql = mediaQuery(query);
-    if (!mql) return;
+    if (!available) return;
+    const mql = window.matchMedia(query);
     const onChange = () => setMatches(mql.matches);
     onChange();
     mql.addEventListener('change', onChange);
     return () => mql.removeEventListener('change', onChange);
-  }, [query]);
+  }, [query, available]);
 
-  return matches;
+  return available && matches;
 }
 
 /**

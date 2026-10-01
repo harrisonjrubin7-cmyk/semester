@@ -1,41 +1,51 @@
 // @vitest-environment jsdom
 import { act } from 'react';
-import { createRoot } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMedia } from './media';
 
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-const originalMatchMedia = window.matchMedia;
-
-afterEach(() => {
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: originalMatchMedia,
-    writable: true,
-  });
+let root: Root;
+let host: HTMLDivElement;
+let descriptor: PropertyDescriptor | undefined;
+function Probe({ query = '(min-width: 840px)' }: { query?: string }) {
+  return <output>{String(useMedia(query))}</output>;
+}
+beforeEach(() => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+  descriptor = Object.getOwnPropertyDescriptor(window, 'matchMedia');
+  host = document.createElement('div');
+  document.body.append(host);
+  root = createRoot(host);
 });
-
-describe('useMedia', () => {
-  it('falls back to the base layout when matchMedia is unavailable', () => {
-    Object.defineProperty(window, 'matchMedia', {
-      configurable: true,
-      value: undefined,
-      writable: true,
-    });
-
-    const host = document.createElement('div');
-    const root = createRoot(host);
-
-    function Probe() {
-      return <span>{useMedia('(min-width: 1200px)') ? 'wide' : 'base'}</span>;
-    }
-
-    expect(() => {
-      act(() => root.render(<Probe />));
-    }).not.toThrow();
-    expect(host.textContent).toBe('base');
-
-    act(() => root.unmount());
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
+  if (descriptor) Object.defineProperty(window, 'matchMedia', descriptor);
+  else Reflect.deleteProperty(window, 'matchMedia');
+  vi.unstubAllGlobals();
+});
+describe('media query availability', () => {
+  it('keeps the compact layout usable when matchMedia is unavailable', () => {
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: undefined });
+    act(() => root.render(<Probe />));
+    expect(host.textContent).toBe('false');
+  });
+  it('still follows query changes and falls back if the API disappears', () => {
+    let matches = true;
+    let change: (() => void) | undefined;
+    const mql = {
+      get matches() { return matches; },
+      addEventListener: (_event: string, listener: () => void) => { change = listener; },
+      removeEventListener: vi.fn(),
+    };
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: () => mql });
+    act(() => root.render(<Probe />));
+    expect(host.textContent).toBe('true');
+    act(() => { matches = false; change?.(); });
+    expect(host.textContent).toBe('false');
+    act(() => { matches = true; change?.(); });
+    Object.defineProperty(window, 'matchMedia', { configurable: true, value: undefined });
+    act(() => root.render(<Probe query="(min-width: 1200px)" />));
+    expect(host.textContent).toBe('false');
   });
 });
