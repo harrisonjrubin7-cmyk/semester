@@ -33,7 +33,6 @@
 
 import type { Seat } from '../launchreadiness';
 import type { Status as RegisterStatus } from '../masterregister';
-import { capabilityDefinition } from '../governance/capability-governance';
 
 export type ClaimStatus = 'available' | 'limited-beta' | 'institution-configured' | 'built-tested' | 'in-preparation' | 'planned';
 
@@ -715,6 +714,8 @@ export const PROOF_RULES: readonly string[] = [
 
 /** What the checks need to know about the tree. Passed in, so a test can hand them a fixture. */
 export interface Facts {
+  /** Build-time capability registry lookup; injected so live claim surfaces do not load the governance catalog. */
+  capabilityExists: (id: string) => boolean;
   rowStatus: (id: string) => RegisterStatus | undefined;
   exists: (path: string) => boolean;
   proofExists: (id: string) => boolean;
@@ -740,7 +741,7 @@ export function problems(claims: readonly Claim[], facts: Facts): string[] {
     if (seen.has(c.id)) out.push(`${c.id} appears twice.`);
     seen.add(c.id);
     if (!c.capabilityIds.length) out.push(`${c.id} names no canonical capability.`);
-    for (const id of c.capabilityIds) if (!capabilityDefinition(id)) out.push(`${c.id} binds unknown capability ${id}.`);
+    for (const id of c.capabilityIds) if (!facts.capabilityExists(id)) out.push(`${c.id} binds unknown capability ${id}.`);
     const projection = facts.claimProjection?.(c);
     if (projection && !projection.permitted) out.push(`${c.id} exceeds its capability projection: ${projection.reason}.`);
     if (!/^[a-z0-9-]+$/.test(c.id)) out.push(`${c.id} is not a slug.`);
