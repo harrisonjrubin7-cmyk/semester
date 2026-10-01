@@ -89,7 +89,7 @@ export function tableStore(db: SupabaseClient, connection: ConnectionRow, adapte
       if (!type) return null;
       const { data } = await db.from('canonical_entity_references').select('source_timestamp')
         .eq('tenant_id', connection.tenant_id).eq('connection_id', connection.id).eq('source_system', sourceSystem)
-        .eq('source_record_id', id).eq('canonical_entity_type', type).maybeSingle();
+        .eq('source_record_id', id).eq('canonical_entity_type', type).is('external_deleted_at', null).maybeSingle();
       return (data as { source_timestamp: string | null } | null)?.source_timestamp ?? null;
     },
     async resolveSubject(tenant, subject) {
@@ -206,9 +206,11 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   if (foreign.length) throw new Error('The pipeline produced a reference for another school; nothing was written.');
 
   const sourceSystem = `${req.adapter.provider} ${req.adapter.product}`.trim();
-  if (result.references.length) {
+  const writes = result.references.filter((r) => !r.metadataOnly);
+  const refreshes = result.references.filter((r) => r.metadataOnly);
+  if (writes.length) {
     const { error: refError } = await db.from('canonical_entity_references').upsert(
-      result.references.map((r) => ({
+      writes.map((r) => ({
         tenant_id: c.tenant_id, canonical_entity_type: r.canonicalEntity, canonical_entity_id: r.canonicalId,
         subject_user_id: r.subjectUserId, connection_id: c.id, source_system: sourceSystem,
         source_record_id: r.sourceRecordId, source_timestamp: r.sourceTimestamp, source_of_truth: r.sourceOfTruth,
@@ -226,6 +228,21 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
     if (refError) {
       result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
         message: sanitizeMessage(refError.message), retryable: true });
+      result.status = 'failed';
+    }
+  }
+  if (refreshes.length) {
+    // One atomic, tenant-scoped database update. Values stay in the database;
+    // a concurrently replaced/deleted source revision cannot be refreshed.
+    const { data: refreshed, error: refreshError } = await db.rpc('integration_refresh_governance', {
+      want_tenant: c.tenant_id, want_connection: c.id, want_source: sourceSystem,
+      want_records: refreshes.map((r) => ({ entity: r.canonicalEntity, id: r.sourceRecordId,
+        timestamp: r.sourceTimestamp, governance: JSON.stringify(r.governance) })),
+      want_at: now().toISOString(),
+    });
+    if (refreshError || refreshed !== refreshes.length) {
+      result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
+        message: sanitizeMessage(refreshError?.message ?? 'Source revision changed during metadata refresh; retry the batch.'), retryable: true });
       result.status = 'failed';
     }
   }
@@ -304,18 +321,16 @@ export async function reconcile(
   const c = row as { id: string; tenant_id: string; approved_at: string | null; status: string } | null;
   if (!c || !c.approved_at) return { refused: 'no approved connection' };
   const sourceSystem = `${req.adapter.provider} ${req.adapter.product}`.trim();
-  const { data: locals } = await db.from('canonical_entity_references').select('source_record_id,display')
+  const { data: locals } = await db.from('canonical_entity_references').select('source_record_id')
     .eq('tenant_id', c.tenant_id).eq('connection_id', c.id).eq('source_system', sourceSystem)
     .eq('canonical_entity_type', req.canonicalEntity).is('external_deleted_at', null);
   const plan = reconcilePlan((locals ?? []).map((l: { source_record_id: string }) => l.source_record_id), req.providerIds);
-  for (const local of locals ?? []) {
-    if (!plan.goneAtSource.includes(local.source_record_id)) continue;
-    const envelope = local.display?._governance;
-    const display = typeof envelope === 'string' ? { _governance: envelope } : {};
-    await db.from('canonical_entity_references')
-      .update({ external_deleted_at: now().toISOString(), display, freshness_status: 'unavailable', updated_at: now().toISOString() })
-      .eq('tenant_id', c.tenant_id).eq('connection_id', c.id).eq('source_system', sourceSystem)
-      .eq('canonical_entity_type', req.canonicalEntity).eq('source_record_id', local.source_record_id);
+  if (plan.goneAtSource.length) {
+    const { error: tombstoneError } = await db.rpc('integration_tombstone_references', {
+      want_tenant: c.tenant_id, want_connection: c.id, want_source: sourceSystem,
+      want_entity: req.canonicalEntity, want_ids: plan.goneAtSource, want_at: now().toISOString(),
+    });
+    if (tombstoneError) return { refused: `could not reconcile: ${sanitizeMessage(tombstoneError.message)}` };
   }
   const state = plan.goneAtSource.length || plan.unknownHere.length ? 'mismatched' : 'matched';
   await db.from('integration_sync_runs').update({ reconciliation_state: state }).eq('id', req.runId).eq('tenant_id', c.tenant_id);

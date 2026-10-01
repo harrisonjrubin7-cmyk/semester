@@ -6,7 +6,7 @@
  * suites prove the constraints themselves; this proves the worker's scoping,
  * gating and bookkeeping.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MOCK_SIS, SIS_FIXTURES } from '../../src/lib/integration/mock-sis.ts';
 import { mockBatch } from '../../src/lib/integration/mock-adapter.ts';
 import type { ExternalRecord } from '../../src/lib/integration/pipeline.ts';
@@ -93,6 +93,44 @@ describe('a run', () => {
     expect(refreshed.retrievedAt).toBe(later.toISOString());
     expect(Date.parse(refreshed.expiresAt)).toBe(Date.parse(first.expiresAt) + 60_000);
     expect(t.canonical_entity_references).toHaveLength(1);
+  });
+
+  it('preserves stored values when a corrected payload has the same source timestamp', async () => {
+    const t = world();
+    const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    const before = { ...(t.canonical_entity_references[0].display as Row) };
+    const corrected = { ...SIS_FIXTURES.term, fields: { ...SIS_FIXTURES.term.fields, description: 'Corrected title' } };
+    const result = await runSync(db, req([corrected], { fetchBatch: batch([corrected], 'evt-2') }),
+      () => new Date(NOW.getTime() + 60_000));
+    expect(result).toMatchObject({ result: { unchanged: 1, updated: 0 } });
+    const after = t.canonical_entity_references[0].display as Row;
+    expect({ ...after, _governance: before._governance }).toEqual(before);
+    expect(after._governance).not.toEqual(before._governance);
+  });
+
+  it('imports a source record that reappears after reconciliation even with the same timestamp', async () => {
+    const t = world();
+    const db = fakeDb(t);
+    const first = await runSync(db, req([SIS_FIXTURES.term]), now);
+    await reconcile(db, { connectionPublicId: PUB, adapter: MOCK_SIS, canonicalEntity: 'term',
+      providerIds: [], runId: first.outcome === 'ran' ? first.runId : '' }, now);
+    expect(t.canonical_entity_references[0].external_deleted_at).toBe(NOW.toISOString());
+    expect(await runSync(db, req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') }), now))
+      .toMatchObject({ result: { status: 'succeeded', unchanged: 0, created: 1 } });
+    expect(t.canonical_entity_references[0].external_deleted_at).toBeNull();
+    expect(t.canonical_entity_references[0].display).toMatchObject({ name: 'Spring 2027' });
+  });
+
+  it('makes a failed metadata refresh retryable without changing values', async () => {
+    const t = world();
+    const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    (t as Record<string, unknown>).__fail = ['integration_refresh_governance'];
+    const request = req([SIS_FIXTURES.term], { fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') });
+    expect(await runSync(db, request, now)).toMatchObject({ result: { status: 'failed', errors: [{ retryable: true }] } });
+    (t as Record<string, unknown>).__fail = [];
+    expect(await runSync(db, request, now)).toMatchObject({ result: { status: 'succeeded', unchanged: 1 } });
   });
 
   it('writes references with their display values, and moves the connection to healthy', async () => {
@@ -214,6 +252,19 @@ describe('found by the Codex review of #779', () => {
 describe('reconciliation', () => {
   it('plans in both directions', () => {
     expect(reconcilePlan(['a', 'b', 'c'], ['b', 'c', 'd'])).toEqual({ stillThere: ['b', 'c'], goneAtSource: ['a'], unknownHere: ['d'] });
+  });
+
+  it('reconciles hundreds of removals in one database call and retains each envelope', async () => {
+    const t = world();
+    const db = fakeDb(t);
+    const records = Array.from({ length: 300 }, (_, n) => ({ ...SIS_FIXTURES.term, id: `term-${n}` }));
+    const run = await runSync(db, req(records), now);
+    const rpc = vi.spyOn(db, 'rpc');
+    const result = await reconcile(db, { connectionPublicId: PUB, adapter: MOCK_SIS, canonicalEntity: 'term',
+      providerIds: [], runId: run.outcome === 'ran' ? run.runId : '' }, now);
+    expect(result).toMatchObject({ goneAtSource: records.map((r) => r.id).sort() });
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(t.canonical_entity_references.every((r) => Object.keys(r.display as Row).join() === '_governance')).toBe(true);
   });
 
   it('marks what the source deleted, clears its values, and says so on the run', async () => {

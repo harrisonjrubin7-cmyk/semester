@@ -10,7 +10,7 @@ The five supplied PDFs are tracked by filename and SHA-256 in `standards-audit-s
 - The view covers 32 requirement groups, 16 education-data domains and all 65 RFP questions from the interactive-dashboard PDF.
 - Scores come from the master register. The weakest referenced control determines maturity. A mandatory control below 3 blocks its mode regardless of weighted score. Filters cannot alter release scoring or export scope.
 - The RFP CSV carries response, evidence ID/date, owner, limitation, remediation target and production applicability; answers remain blank pending review.
-- Every new integration reference receives server-generated source owner, permitted purpose, freshness expiry, retention policy/expiry, consent-purpose binding and default AI denial. The worker persists this envelope as a reserved JSON string in the existing flat display object; the database schema and tenant/subject isolation are unchanged.
+- Every new integration reference receives server-generated source owner, permitted purpose, freshness expiry, retention policy/expiry, consent-purpose binding and default AI denial. The worker persists this envelope as a reserved JSON string in the existing flat display object; tenant/subject isolation is unchanged. The provider display retains its 4 KB allowance, with a separate allowance for server governance metadata.
 - Adapter declarations reject missing/invalid retention clocks and source ownership. Provider data cannot set the envelope or map to its reserved field. Existing metadata is not retroactively invented; these clocks describe policy and do not replace live consent checks or retention sweeps.
 - Rev. 4 Appendix J privacy family labels in the PDFs are corrected to real Rev. 5 control IDs. Edu-API domain alignment is distinguished from implemented endpoint support and certification.
 
@@ -100,4 +100,13 @@ Local validation: 1,220 application test files passed; 19,308 tests passed and 4
 
 Final verification: the shuffled application suite also passed all 1,220 files and 19,308 tests (48 existing skipped). Performance budgets passed after lazy-loading the audit; first load is 428.3 KB against 435.0 KB. Removing the mandatory-blocker calculation made its negative-control test fail; the implementation was restored and retested.
 
-Publication status: automatic approval review rejected creating the public GitHub tree because explicit authorization for public disclosure was required. The remote branch was created from the unchanged baseline before that rejection, but no implementation commit or deployment was published. User approval is required to publish the reviewed source and audit changes.
+Release follow-up (2026-10-01): the user explicitly approved public source publication and deployment after CI. PR #1068 is published; merge and deployment remain gated on CI and review findings.
+
+Review corrections:
+- Reconfirmed source revisions refresh only their persisted clocks and governance metadata; provider values stay unchanged. Concurrently replaced/deleted revisions cannot be refreshed, and a reappearing source record receives a full import.
+- Reconciliation tombstones all missing references in one database call while retaining each row's own governance envelope.
+- A migration preserves the provider's 4 KB display allowance with a bounded server-metadata allowance. Flat values and never-ingest rules remain enforced.
+- Direct LTI context writes now persist source, purpose, expiry and default AI denial. Tenant-wide LTI context uses the existing tenant-lifetime retention policy, with a null time-based expiry; no new retention sweep is claimed.
+- The explicit publication command selects strict mode even without a supplied directory, so missing artifacts fail instead of being skipped.
+
+Focused regression validation: 178 tests passed, along with application/gateway type checks and lint. The publication command correctly exits nonzero when external artifacts are absent. SQL regression cases cover near-limit displays, direct LTI metadata, tenant isolation, source revision races and tombstone retention; PostgreSQL 17 validation is pending in CI.

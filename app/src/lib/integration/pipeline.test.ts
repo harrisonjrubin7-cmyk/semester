@@ -131,6 +131,7 @@ describe('ingest', () => {
     const same = await run([MOCK_ASSIGNMENT], { store: memoryStore({ timestamps: { 'assignment:9001': '2026-09-27T11:00:00Z' } }) });
     expect(same).toMatchObject({ unchanged: 1, created: 0, updated: 0 });
     expect(same.references).toHaveLength(1);
+    expect(same.references[0]).toMatchObject({ metadataOnly: true, values: {} });
     expect(same.references[0].governance.retrievedAt).toBe(NOW.toISOString());
   });
 

@@ -181,7 +181,7 @@ describe('duplicate candidates', () => {
     tenantId: 'vu', canonicalEntity: 'course_section', canonicalId: 'c1', subjectUserId: null,
     sourceSystem: 'Mock SIS Fixture 1.0', sourceRecordId: 's1', sourceTimestamp: '2026-09-27T06:00:00Z',
     sourceOfTruth: 'Registrar / SIS', classification: 'T0', freshness: 'live', mappingVersion: 1, confidence: 1,
-    externalDeletedAt: null, values: { term: '202710', course: 'ECON 1010', section: '01' },
+    externalDeletedAt: null, metadataOnly: false, values: { term: '202710', course: 'ECON 1010', section: '01' },
     governance: governanceEnvelope(MOCK_SIS, MOCK_SIS.entities[0], 'conn_1', NOW), ...over,
   });
 

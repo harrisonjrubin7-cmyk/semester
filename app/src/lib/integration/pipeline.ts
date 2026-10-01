@@ -69,6 +69,8 @@ export interface CanonicalReference {
   externalDeletedAt: string | null;
   values: Record<string, unknown>;
   governance: GovernanceEnvelope;
+  /** Refresh clocks without replacing the provider values or identity. */
+  metadataOnly: boolean;
 }
 
 export interface IngestStore {
@@ -263,7 +265,8 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       mappingVersion: mapping.version,
       confidence: 1,
       externalDeletedAt: rec.deleted ? now.toISOString() : null,
-      values: rec.deleted ? {} : checked.values,
+      values: rec.deleted || unchanged ? {} : checked.values,
+      metadataOnly: unchanged,
       governance: governanceEnvelope(adapter, mapping, connection.publicId, now),
     });
     if (!unchanged) {
