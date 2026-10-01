@@ -18,6 +18,7 @@ import { handleBillingCancel, type OwnSubscription } from '../_shared/billingcan
 
 const URL = Deno.env.get('SUPABASE_URL') ?? '';
 const ANON = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') ?? Deno.env.get('STRIPE_API_KEY');
 
 const asCaller = (token: string) =>
   createClient(URL, ANON, {
@@ -29,7 +30,7 @@ const LIVE = ['trialing', 'active', 'past_due', 'grace'];
 
 Deno.serve((req) =>
   handleBillingCancel(req, {
-    stripeKey: Deno.env.get('STRIPE_SECRET_KEY'),
+    stripeKey,
     allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
     async ownSubscription(token, subscriptionId) {
       const db = asCaller(token);
