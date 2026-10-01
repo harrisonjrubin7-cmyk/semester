@@ -65,4 +65,11 @@ describe('institutional trust scorecard', () => {
     expect(scored.knownLimitations).toBe(definition.knownLimitations);
     expect(scored.correctiveAction).toBe(definition.correctiveAction);
   });
+
+  it('normalizes malformed measurement values before rendering', () => {
+    const definition = TRUST_METRICS[0];
+    const scored = trustScorecard([{ id: definition.id, targetMet: true, evidenceCurrent: true, value: { unsafe: true }, evidenceAt: Date.now() } as unknown as Parameters<typeof trustScorecard>[0][number]])[0];
+    expect(scored.value).toBe('Invalid measurement value');
+    expect(scored.state).toBe('yellow');
+  });
 });

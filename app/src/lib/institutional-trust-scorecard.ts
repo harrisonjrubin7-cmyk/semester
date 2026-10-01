@@ -115,7 +115,9 @@ export function trustScorecard(measurements: readonly TrustMeasurement[]): Score
     return {
       ...definition,
       ...evaluation,
-      value: measurement?.value ?? 'Baseline not recorded',
+      value: typeof measurement?.value === 'string' && measurement.value.trim().length > 0
+        ? measurement.value
+        : measurement ? 'Invalid measurement value' : 'Baseline not recorded',
       evidenceAt: measurement?.evidenceAt ?? null,
       knownLimitations: measurement?.knownLimitations?.trim() || definition.knownLimitations,
       correctiveAction: measurement?.correctiveAction?.trim() || definition.correctiveAction,

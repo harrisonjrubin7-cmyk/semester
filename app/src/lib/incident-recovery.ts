@@ -161,6 +161,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
         && Number.isFinite(closeOut.stabilizedAt)
         && Number.isFinite(review.completedAt)
         && review.completedAt >= closeOut.stabilizedAt
+        && review.completedAt <= now
         && review.completedAt <= addBusinessDays(closeOut.stabilizedAt, 5)
         && hasText(review.evidence));
     const complete = Boolean(closeOut
@@ -168,6 +169,8 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
       && hasText(closeOut.impact)
       && hasText(closeOut.recoveryPoint)
       && Number.isFinite(closeOut.stabilizedAt)
+      && closeOut.stabilizedAt >= record.declaredAt
+      && closeOut.stabilizedAt <= now
       && Array.isArray(closeOut.communications)
       && closeOut.communications.some(hasText)
       && Array.isArray(actions)
