@@ -209,7 +209,9 @@ export function Directory({
   return (
     <div className="deskdir">
       <div className="deskdir-top">
-        <h2 className="deskdir-welcome chrome-text">Welcome to Semester</h2>
+        <h1 className="deskdir-welcome chrome-text" data-page-title tabIndex={-1}>
+          Welcome to Semester
+        </h1>
         <div className="deskdir-count" style={secondLine()}>
           {apps.length} apps, one semester
         </div>

@@ -7186,6 +7186,14 @@ section[data-drop] > .grip + * {
   text-align: center;
 }
 
+/* This shell-owned screen has no global Header, so its wordmark is the page
+   heading. Reset the browser's h1 box while leaving the lockup's own type and
+   size in charge. */
+.deskhome-heading {
+  margin: 0;
+  font: inherit;
+}
+
 /* Smaller numbers than the title-case serif this replaced, for the reason
    `.desktop-word` is: a tracked capital line occupies about a third more width
    per point, and the lockup carries the mark in front of it as well. */
