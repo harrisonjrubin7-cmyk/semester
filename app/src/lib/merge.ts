@@ -45,6 +45,7 @@ export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest' | 'mine';
  *   which is what "I changed it on my laptop" should mean.
  */
 export const STRATEGY: Record<string, Strategy> = {
+  operatingWorkspace: 'theirs',
   // Things you add to. Losing one of these is losing work.
   courses: 'union',
   notes: 'union',

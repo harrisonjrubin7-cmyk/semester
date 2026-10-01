@@ -257,6 +257,7 @@ export function settings(state: State, action: Action): State | null {
     case 'wipeLocalForAdopt':
       return {
         ...state,
+        operatingWorkspace: null,
         courses: [],
         notes: [],
         tasks: [],

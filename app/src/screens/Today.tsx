@@ -1,3 +1,4 @@
+import { OperatingLauncher } from '../components/OperatingLauncher';
 import { Fragment, lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -73,6 +74,7 @@ import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
 import { AssignmentStates } from '../components/AssignmentStates';
+import { OperatingRhythm } from '../components/OperatingRhythm';
 import { DailyRhythm } from '../components/DailyRhythm';
 import { WeeklyReset } from '../components/WeeklyReset';
 import { WeeklyReflection } from '../components/WeeklyReflection';
@@ -784,6 +786,7 @@ function TabHome() {
 
   return (
     <Page bottom={26}>
+      <OperatingLauncher />
       {/*
         Four tabs, not five. The fifth was Report, and it rendered the Reports
         screen inline — the same body, sharing the same `state.report` grain,
@@ -811,6 +814,7 @@ function TabHome() {
 
       <FirstGoal />
       <TodayDecisionSurface />
+      <OperatingRhythm />
       <div className="hides-in-focus">
         <CommandCenter />
         <FlightPlanHomeSlot />
@@ -1954,6 +1958,7 @@ function FeedHome() {
       <div style={{ padding: 'var(--page-pad)' }}>
         <FirstGoal />
         <TodayDecisionSurface />
+        <OperatingRhythm />
         <div className="hides-in-focus">
           <CommandCenter />
           <NextClassCard />

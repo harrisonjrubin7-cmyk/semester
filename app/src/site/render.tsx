@@ -38,7 +38,7 @@ export const ROUTES: Route[] = [
   { path: '/product/', title: 'How Semester works', description: 'Today, My Path, Search, Plan and Me: five places, each answering one question a student has.', Page: P.Product },
   { path: '/students/', title: 'Semester for students', description: 'Plan registration, prepare for advising and see the next deadline first.', Page: P.Students },
   { path: '/institutions/', title: 'Semester for institutions', description: 'A small, measured pilot that turns fragmented systems into clearer student action.', Page: P.Institutions },
-  { path: '/pricing/', title: 'Semester pricing', description: 'Free, Plus, Pro and Institution Access. During the pilot every student feature is free.', Page: P.Pricing },
+  { path: '/pricing/', title: 'Semester pricing', description: 'Free, Plus, Pro and Semester Institutional. During the pilot every student feature is free.', Page: P.Pricing },
   { path: '/tools/', title: 'Free tools from Semester', description: 'A graduation timeline calculator, schedule builder, registration checklist and advisor meeting planner.', Page: P.Tools },
   { path: '/resources/', title: 'Semester resources', description: 'Guides for registration, advising and planning a degree.', Page: P.Resources },
   { path: '/about/', title: 'About Semester', description: 'Why Semester exists and how it works with student data.', Page: P.About },

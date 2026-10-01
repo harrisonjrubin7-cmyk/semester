@@ -4,7 +4,7 @@
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
 
-149 proposals from eight strategy documents, read against this repository. **20 landed** (code and something that can fail), **99 partial**, **16 absent** (could be code; is not), **14 operational** (needs a person, a vendor or production access — a document would be claiming it).
+149 proposals from eight strategy documents, read against this repository. **20 landed** (code and something that can fail), **100 partial**, **15 absent** (could be code; is not), **14 operational** (needs a person, a vendor or production access — a document would be claiming it).
 
 A status is a claim from a reading of headers, registers and migration text, not a line-by-line audit. The test proves a cited path exists and that a *landed* row cites something that can fail; it does not prove the status.
 
@@ -172,7 +172,7 @@ A status is a claim from a reading of headers, registers and migration text, not
 | C2-06 | Regulatory-change monitoring | Operational | [`docs/operating-model/OPERATING-RHYTHM.md`](operating-model/OPERATING-RHYTHM.md) | A quarterly legal review only. Needs counsel and a watch process. |
 | C2-07 | Insider-risk safeguards | Partial | [`supabase/rolegrants.check.sql`](../supabase/rolegrants.check.sql)<br>[`supabase/console-approvals.check.sql`](../supabase/console-approvals.check.sql) | Expiring grants, two-person approval and break-glass review; no unusual-access alerting or access-review cadence. |
 | C2-08 | Chaos engineering and fault-injection discipline | Partial | [`app/scripts/killswitch-drill.mjs`](../app/scripts/killswitch-drill.mjs)<br>[`app/src/lib/integration/simulate.ts`](../app/src/lib/integration/simulate.ts) | A drill and a simulator; no harness for dropped, duplicate or out-of-order events. |
-| C2-09 | Long-term credential and cryptographic durability | Absent | — | The credential wallet is a design document; nothing issues credentials. |
+| C2-09 | Long-term credential and cryptographic durability | Partial | [`app/src/components/CredentialWallet.tsx`](../app/src/components/CredentialWallet.tsx)<br>[`app/src/lib/credential-wallet.test.ts`](../app/src/lib/credential-wallet.test.ts) | A learner-controlled, non-official wallet export exists. Nothing issues, signs, corrects or revokes institution credentials. |
 | C2-10 | An institutional exit and portability guarantee | Partial | [`docs/DATA-PORTABILITY-AND-OFFBOARDING.md`](DATA-PORTABILITY-AND-OFFBOARDING.md)<br>[`app/src/lib/erasure.test.ts`](../app/src/lib/erasure.test.ts) | Student self-export and erase are tested; no institution-level export bundle or exit text. |
 | C2-11 | A product safety review for high-impact features | Partial | [`app/src/lib/governance/edgecases.ts`](../app/src/lib/governance/edgecases.ts)<br>[`app/src/lib/governance/quality-gates.ts`](../app/src/lib/governance/quality-gates.ts) | Gates and an edge-case catalog; no cross-functional review for trigger features. |
 | C2-12 | A truth-in-product audit | Landed | [`app/src/lib/ops/claims.ts`](../app/src/lib/ops/claims.ts)<br>[`app/src/lib/ops/claims.test.ts`](../app/src/lib/ops/claims.test.ts) | Pricing and integration claims are not cross-checked against production. |
