@@ -1,0 +1,7 @@
+-- Compatibility marker for preview branches that recorded this migration
+-- version before the production migration history was recovered.
+--
+-- The canonical, replay-safe implementation is
+-- 20261001153124_productivity_workspace.sql. Keep this file statement-free so
+-- new databases execute the implementation once while Supabase can reconcile
+-- both the preview and production migration ledgers.

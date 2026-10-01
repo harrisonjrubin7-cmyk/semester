@@ -1,0 +1,7 @@
+-- Compatibility marker for preview branches that recorded this migration
+-- version before the production migration history was recovered.
+--
+-- The canonical implementation is
+-- 20261001160823_productivity_preserve_all_owned_work.sql. This marker is
+-- statement-free so fresh databases receive the complete guard exactly once
+-- and Supabase can recognize both historical version sets.
