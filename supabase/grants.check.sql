@@ -641,7 +641,13 @@ declare
     'dining_pool_summary()',
     'dining_order_queue()',
     'dining_disconnect_partner()',
-    'my_dining_balances()'
+    'my_dining_balances()',
+    -- Private, owner-scoped productivity sync and consented cohort reporting.
+    -- The save RPC derives the owner from auth.uid(); the aggregate RPC
+    -- requires an active tenant administrator and suppresses cohorts below 10.
+    -- `productivity_workspace.sql` exercises both authorization boundaries.
+    'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
+    'productivity_readiness_aggregate(p_tenant text)'
   ];
   extra text;
   missing text;
