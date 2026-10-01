@@ -67,7 +67,7 @@ const cases = [
   { hash: '#/home', width: 1440, height: 1000, expected: 'Today', module: 'Synthetic Flight Plan' },
   { hash: '#/calendar', width: 390, height: 844, expected: 'Calendar', module: 'Study plan' },
   { hash: '#/study', width: 1440, height: 1000, expected: 'Study', module: 'Sample learning evidence' },
-  { hash: '#/behind', width: 390, height: 844, expected: 'When you are behind', module: 'Sample Flight Plan recovery' },
+  { hash: '#/behind', width: 390, height: 844, expected: 'Catching up', module: 'Sample Flight Plan recovery' },
   { hash: '#/university', width: 1440, height: 1000, expected: 'University', module: 'Student workspace' },
   { hash: '#/mail', width: 390, height: 844, expected: 'Email' },
   { hash: '#/search', width: 1440, height: 1000, expected: 'Search' },
