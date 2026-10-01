@@ -157,7 +157,14 @@ export function FirstGoal() {
       </div>
       <div className="first-goal-foot">
         <p className="visibility-about">You can change this any time.</p>
-        {!showAll && <button type="button" className="bare link-quiet tap-y" onClick={() => setShowAll(true)}>More options</button>}
+        <button
+          type="button"
+          className="bare link-quiet tap-y"
+          aria-expanded={showAll}
+          onClick={() => setShowAll((shown) => !shown)}
+        >
+          {showAll ? 'Fewer options' : 'More options'}
+        </button>
       </div>
     </section>
   );
