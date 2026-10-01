@@ -63,9 +63,9 @@ export interface ExperienceFlags {
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
 
-function featureState(env: PreviewEnv, key: string, preview: boolean): FeatureState {
+function featureState(env: PreviewEnv, key: string, preview: boolean, fallback: FeatureState = 'off'): FeatureState {
   const value = env[key];
-  if (value === undefined) return preview ? 'preview' : 'off';
+  if (value === undefined) return preview ? 'preview' : fallback;
   return STATES.includes(value as FeatureState) ? (value as FeatureState) : 'off';
 }
 
@@ -73,7 +73,11 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
   const preview = institutionalPreview(env);
   return {
     semesterIntelligence: featureState(env, 'VITE_SEMESTER_INTELLIGENCE', preview),
-    journeyNavigation: featureState(env, 'VITE_JOURNEY_NAVIGATION', preview),
+    // D-003 is no longer a dormant experiment. The five destinations are the
+    // product's canonical information architecture; an explicit `off` remains
+    // available as a rollback, but a normal build now ships the one-system
+    // navigation instead of each device's legacy collection of tabs.
+    journeyNavigation: featureState(env, 'VITE_JOURNEY_NAVIGATION', preview, 'production'),
     adaptiveLearning: featureState(env, 'VITE_ADAPTIVE_LEARNING', preview),
     careerSkillsGraph: featureState(env, 'VITE_CAREER_SKILLS_GRAPH', preview),
     multimodalCapture: featureState(env, 'VITE_MULTIMODAL_CAPTURE', preview),
@@ -140,7 +144,11 @@ export type ModuleFlags = Record<ModuleFlag, FeatureState>;
 export function moduleFlags(env: PreviewEnv): ModuleFlags {
   const flags = {} as ModuleFlags;
   for (const name of MODULE_FLAG_NAMES) {
-    flags[name] = featureState(env, MODULE_FLAG_ENV[name], false);
+    // The shared Action Center is the default Today experience. It is the one
+    // action system all modules write into, not an optional product module.
+    // Keep the exact environment variable as a fail-safe rollback.
+    const fallback = name === 'today_action_center' ? 'production' : 'off';
+    flags[name] = featureState(env, MODULE_FLAG_ENV[name], false, fallback);
   }
   return flags;
 }

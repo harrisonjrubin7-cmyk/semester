@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FLAGS, KILL_SWITCHES, evaluateFlag, type FlagContext } from './flags';
+import { capabilityDefinition } from './governance/capability-governance';
+import { evaluateActivation, type ActivationReceipt } from './governance/activation';
 
 const NOW = new Date('2026-10-01T12:00:00Z');
 
@@ -30,6 +32,27 @@ const LTI_LIVE: Partial<FlagContext> = {
   connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },
   scopes: [{ key: 'scope.lms.assignment_dates_read', approved: true }],
 };
+
+const GRADE_POLICY: FlagContext['tenantPolicy'] = {
+  'integration.lms_lti': { state: 'production', permittedRoles: [], permittedCohorts: [] },
+  'writeback.lms_grade_passback': { state: 'production', permittedRoles: ['instructor'], permittedCohorts: ['pilot'] },
+};
+const GRADE_READY: Partial<FlagContext> = {
+  tenantPolicy: GRADE_POLICY,
+  connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },
+  scopes: [{ key: 'scope.lms.score_publish', approved: true }],
+  role: 'instructor', cohorts: ['pilot'], classification: 'T2',
+  courseRule: { allowed: true }, userEligible: true,
+};
+function receipt(over: Partial<ActivationReceipt> = {}): ActivationReceipt {
+  return {
+    decisionKey: 'activation:v1:test', requestId: 'request-1', tenantId: 'vu',
+    capabilityId: 'CAP-020', operation: 'writeback.lms_grade_passback',
+    policyVersion: 'policy-1', configurationVersion: 1,
+    issuedAt: '2026-10-01T11:45:00Z', expiresAt: '2026-10-01T12:15:00Z',
+    ...over,
+  };
+}
 
 describe('the registry', () => {
   it('has unique keys, each prefixed by its type', () => {
@@ -60,6 +83,24 @@ describe('the registry', () => {
   it('marks every connector, scope, write-back and safety flag high-risk', () => {
     for (const f of FLAGS.filter((x) => ['connector', 'scope', 'writeback', 'safety'].includes(x.type))) {
       expect(f.highRisk, f.key).toBe(true);
+    }
+  });
+
+  it('binds every flag to at least one canonical capability', () => {
+    for (const f of FLAGS) {
+      expect(f.capabilityIds.length, f.key).toBeGreaterThan(0);
+      for (const id of f.capabilityIds) expect(capabilityDefinition(id), `${f.key}: ${id}`).toBeDefined();
+    }
+    const minimum: Record<string, readonly string[]> = {
+      'writeback.registration_submit': ['CAP-050'],
+      'writeback.lms_grade_passback': ['CAP-020', 'CAP-021', 'CAP-030'],
+      'module.dining': ['CAP-047'],
+      'integration.degree_audit_read': ['CAP-044'],
+      'integration.erp_bursar_actions': ['CAP-046'],
+      'ops.external_ai_generation': ['CAP-027'],
+    };
+    for (const [key, ids] of Object.entries(minimum)) {
+      expect(FLAGS.find((flag) => flag.key === key)?.capabilityIds, key).toEqual(ids);
     }
   });
 
@@ -151,12 +192,12 @@ describe('evaluation', () => {
     const d = evaluateFlag('scope.lms.assignment_dates_read', ctx({
       ...LTI_LIVE, killSwitches: [{ key: 'kill.integration_sync', tenantId: null, engaged: true }] }));
     expect(d).toMatchObject({ allowed: false, step: 'kill_switch' });
-    expect(evaluateFlag('scope.lms.assignment_dates_read', ctx(LTI_LIVE)).allowed).toBe(true);
+    expect(evaluateFlag('scope.lms.assignment_dates_read', ctx({ ...LTI_LIVE, activationReceipt: receipt({ capabilityId: 'CAP-021', operation: 'scope.lms.assignment_dates_read' }) })).allowed).toBe(true);
   });
 
   it('applies a school’s kill switch only to that school', () => {
     const sw = [{ key: 'kill.integration_sync', tenantId: 'other', engaged: true }];
-    expect(evaluateFlag('scope.lms.assignment_dates_read', ctx({ ...LTI_LIVE, killSwitches: sw })).allowed).toBe(true);
+    expect(evaluateFlag('scope.lms.assignment_dates_read', ctx({ ...LTI_LIVE, activationReceipt: receipt({ capabilityId: 'CAP-021', operation: 'scope.lms.assignment_dates_read' }), killSwitches: sw })).allowed).toBe(true);
     const mine = [{ key: 'kill.integration_sync', tenantId: 'vu', engaged: true }];
     expect(evaluateFlag('scope.lms.assignment_dates_read', ctx({ ...LTI_LIVE, killSwitches: mine })).step).toBe('kill_switch');
   });
@@ -181,7 +222,7 @@ describe('evaluation', () => {
 
   it('refuses by data classification', () => {
     const on = { tenantPolicy: { 'ops.external_ai_generation': { state: 'production' as const, permittedRoles: [], permittedCohorts: [] } } };
-    expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T3' })).allowed).toBe(true);
+    expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T3', activationReceipt: receipt({ capabilityId: 'CAP-027', operation: 'ops.external_ai_generation' }) })).allowed).toBe(true);
     expect(evaluateFlag('ops.external_ai_generation', ctx({ ...on, classification: 'T4' })).step).toBe('classification');
   });
 
@@ -199,5 +240,93 @@ describe('evaluation', () => {
     const d = evaluateFlag('writeback.lms_grade_passback', ctx({
       tenantPolicy: { 'writeback.lms_grade_passback': { state: 'production', permittedRoles: [], permittedCohorts: [] } } }));
     expect(d.allowed).toBe(false);
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx(GRADE_READY)))
+      .toMatchObject({ allowed: false, step: 'activation_contract' });
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: DASHBOARD_ON, capabilities: ['integration:view'] })))
+      .toMatchObject({ allowed: true, step: 'allowed' });
+  });
+
+  it('cannot open grade passback with a real standard-capability activation', () => {
+    const capability = capabilityDefinition('CAP-020')!;
+    expect(capability).toMatchObject({ activationClass: 'standard', maturity: 'L3' });
+    const activation = evaluateActivation({
+      requestId: 'grade-request', tenantId: 'vu', actorId: 'instructor-1',
+      purpose: 'publish approved grades', capabilityId: capability.id,
+      operation: 'writeback.lms_grade_passback',
+    }, capability, {
+      now: NOW.toISOString(), policyVersion: 'policy-1',
+      configuration: {
+        id: 'config-1', tenant_id: 'vu', domain: 'features', state: 'published', version: 1,
+        settings: { default_release_stage: 'on' }, note: '', based_on: null,
+        created_by: 'author-1', published_by: 'approver-1',
+        created_at: NOW.toISOString(), updated_at: NOW.toISOString(), published_at: NOW.toISOString(),
+      },
+      requirements: (['authorization', 'entitlement'] as const).map((key) => ({
+        key, status: 'satisfied', tenantId: 'vu', references: [`ref:${key}`],
+      })),
+      killSwitchEngaged: false, existingWorkflow: false,
+    });
+    // Use the actual evaluator output, never a hand-authored receipt.
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: activation.receipt })))
+      .toMatchObject({ allowed: false, step: 'activation_contract' });
+    expect(activation).toMatchObject({ outcome: 'deny', reason: 'product_maturity_insufficient', receipt: null });
+  });
+
+  it('denies fully enabled registration submit without an activation receipt', () => {
+    const key = 'writeback.registration_submit';
+    const enabled = ctx({
+      tenantPolicy: { [key]: { state: 'production', permittedRoles: ['registrar'], permittedCohorts: ['pilot'] } },
+      connection: { publicId: 'conn_0123456789abcdef0123', approved: true, status: 'healthy' },
+      scopes: [{ key: 'scope.sis.registration_write', approved: true }],
+      capabilities: ['integration:approve'], role: 'registrar', cohorts: ['pilot'],
+      classification: 'T2', courseRule: { allowed: true }, userEligible: true,
+    });
+    expect(evaluateFlag(key, enabled)).toMatchObject({ allowed: false, step: 'activation_contract' });
+    // A synthetic scoped receipt proves every pre-existing gate was satisfied.
+    expect(evaluateFlag(key, { ...enabled, activationReceipt: receipt({ capabilityId: 'CAP-050', operation: key }) }))
+      .toMatchObject({ allowed: true, step: 'allowed' });
+    expect(evaluateFlag('release.integration_dashboard_v1', ctx({ tenantPolicy: DASHBOARD_ON, capabilities: ['integration:view'] })))
+      .toMatchObject({ allowed: true, step: 'allowed' });
+  });
+
+  it('requires a matching current receipt for the exact tenant, capability and operation', () => {
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: receipt() })))
+      .toMatchObject({ allowed: true, step: 'allowed' });
+    for (const bad of [
+      receipt({ tenantId: 'other' }), receipt({ capabilityId: 'CAP-050' }),
+      receipt({ operation: 'writeback.registration_submit' }),
+      receipt({ expiresAt: NOW.toISOString() }), receipt({ issuedAt: '2026-10-01T12:01:00Z' }),
+      receipt({ policyVersion: '   ' }), receipt({ configurationVersion: null }),
+      receipt({ configurationVersion: 0 }), receipt({ configurationVersion: 1.5 }),
+      receipt({ configurationVersion: Number.NaN }),
+    ]) {
+      expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: bad })))
+        .toMatchObject({ allowed: false, step: 'activation_contract' });
+    }
+    // Denied or unmet activation decisions carry no receipt; neither an absent
+    // value nor that null can open a high-risk product surface.
+    for (const absent of [undefined, null]) {
+      expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: absent })))
+        .toMatchObject({ allowed: false, step: 'activation_contract' });
+    }
+  });
+
+  it('rejects receipt timestamps with impossible calendar dates', () => {
+    const malformed = receipt({
+      issuedAt: '2026-09-31T11:45:00Z', expiresAt: '2026-09-31T12:15:00Z',
+    });
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...GRADE_READY, activationReceipt: malformed })))
+      .toMatchObject({ allowed: false, step: 'activation_contract' });
+  });
+
+  it('preserves every prior gate and gives the kill switch precedence', () => {
+    const active = { ...GRADE_READY, activationReceipt: receipt() };
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, killSwitches: [{ key: 'kill.writeback', tenantId: 'vu', engaged: true }] })).step).toBe('kill_switch');
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, connection: null })).step).toBe('connection');
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, scopes: [] })).step).toBe('scope');
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, role: 'student' })).step).toBe('role_policy');
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, cohorts: [] })).step).toBe('cohort_policy');
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, courseRule: { allowed: false } })).step).toBe('course_rule');
+    expect(evaluateFlag('writeback.lms_grade_passback', ctx({ ...active, userEligible: false })).step).toBe('user_eligibility');
   });
 });

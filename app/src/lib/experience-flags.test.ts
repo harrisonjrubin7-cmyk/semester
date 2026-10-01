@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { MODULE_FLAG_NAMES, experienceFlags, moduleFlags, moduleOn } from './experience-flags';
 
 describe('experience feature states', () => {
-  it('keeps every addition off unless the institutional preview or an exact feature value enables it', () => {
-    expect(experienceFlags({}).journeyNavigation).toBe('off');
+  it('ships the canonical five-destination navigation and keeps an explicit rollback', () => {
+    expect(experienceFlags({}).journeyNavigation).toBe('production');
+    expect(experienceFlags({ VITE_JOURNEY_NAVIGATION: 'off' }).journeyNavigation).toBe('off');
     expect(experienceFlags({ VITE_INSTITUTIONAL_PREVIEW: 'true' }).journeyNavigation).toBe(
       'preview',
     );
@@ -33,11 +34,15 @@ describe('feature-expansion module flags', () => {
     expect(moduleFlags({ VITE_TRUST_CENTER: 'production' }).trust_center).toBe('production');
   });
 
-  it('keeps every module off by default, including in an institutional preview', () => {
+  it('ships the shared Action Center while keeping expansion modules gated', () => {
     for (const env of [{}, { VITE_INSTITUTIONAL_PREVIEW: 'true' }]) {
       const flags = moduleFlags(env);
-      for (const name of MODULE_FLAG_NAMES) expect(flags[name]).toBe('off');
+      expect(flags.today_action_center).toBe('production');
+      for (const name of MODULE_FLAG_NAMES.filter((name) => name !== 'today_action_center')) {
+        expect(flags[name]).toBe('off');
+      }
     }
+    expect(moduleFlags({ VITE_TODAY_ACTION_CENTER: 'off' }).today_action_center).toBe('off');
   });
 
   it('refuses a value that is not a feature state', () => {
