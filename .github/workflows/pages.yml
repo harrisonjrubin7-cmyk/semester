@@ -457,5 +457,28 @@ jobs:
         with:
           path: app/dist
 
+      # CI runs for nearby merges can finish out of order. Pinning checkout to
+      # head_sha proves this artifact passed, but without this final check an
+      # older passing artifact can still publish after a newer one and roll
+      # production backwards. Check at the last possible moment, after this
+      # job has cleared the deployment concurrency queue.
+      - name: Refuse a stale release
+        id: current
+        env:
+          PASSED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -z "$PASSED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          current=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$current" = "$PASSED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Stale release::CI passed $PASSED_SHA, but main is now $current. The newer commit keeps production; this artifact will not replace it."
+          fi
+
       - uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+        if: steps.current.outputs.deploy == 'true'
         id: deployment
