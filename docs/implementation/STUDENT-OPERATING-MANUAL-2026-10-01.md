@@ -29,3 +29,7 @@ No institutional access to this private data is introduced. No inferred student 
 ## Verification
 
 Production TypeScript/Vite build, repository lint, full Vitest suite, targeted export/persistence/privacy tests and interactive component tests. CI and the existing gated Pages workflow remain the deployment authority; build success alone is not evidence of a production deployment.
+
+## Performance budget
+
+The Work route now costs 44.0 KB compressed to open, including the private operating workflow editor, dependency map, and export controls. Its explicit budget is raised from 41 KB to 45 KB for this delivered functionality. The first-load and largest-file limits are unchanged and pass.
