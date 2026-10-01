@@ -14,6 +14,14 @@ import { EMPTY_LEDGER, LEDGER_PREFIX, readLedger } from '../lib/offline-mode';
 import { SYNC_WORDS } from '../lib/syncstatus';
 import { workspaceBackup } from '../lib/workspace-backup';
 import { useNow, useStore } from '../state/store';
+import {
+  RECOVERY_PLANS,
+  nextRecoveryStage,
+  recoveryPlan,
+  type DisruptionKind,
+  type RecoveryStage,
+} from '../lib/academic-recovery';
+import { CONFIDENCE_TEXT } from '../lib/assistant-confidence';
 
 /**
  * Recovery: one place to start when something went missing.
@@ -53,7 +61,8 @@ export function Recovery() {
   const drafts = useDraftRows();
 
   return (
-    <Page blurb="Start here when something went missing or would not save. In order: is your work safe, is anything waiting to sync, a copy of this device’s libraries, how to reconnect, and how to reach a person.">
+    <Page blurb="Start here when an academic plan changes or something went missing. Review the impact without blame, keep the original plan in place, then choose a safe next step or recover device data.">
+      <AcademicRecoveryGuide />
       <Section title="Is my work safe?">
         <p style={line}>
           <strong>{words.standing}.</strong> {words.sentence}
@@ -120,6 +129,80 @@ export function Recovery() {
         <NavRow label="Ask a person" sub="Help, and Semester support where it is switched on" onClick={() => dispatch({ type: 'go', screen: 'help' })} />
       </Panel>
     </Page>
+  );
+}
+
+function AcademicRecoveryGuide() {
+  const { dispatch } = useStore();
+  const [kind, setKind] = useState<DisruptionKind | null>(null);
+  const [stage, setStage] = useState<RecoveryStage>('identify');
+  const selected = kind ? recoveryPlan(kind) : null;
+
+  const choose = (next: DisruptionKind) => {
+    setKind(next);
+    setStage(nextRecoveryStage('identify', 'choose_change') ?? 'identify');
+  };
+  const reset = () => {
+    setKind(null);
+    setStage('identify');
+  };
+
+  return (
+    <section className="academic-recovery" aria-labelledby="academic-recovery-title">
+      <div className="kicker">Recovery mode</div>
+      <h2 id="academic-recovery-title">Your plan stays in place while you review what changed.</h2>
+      {stage === 'identify' || !selected ? (
+        <>
+          <p>Choose the change you want help sorting out. Semester will show impact and no more than three options.</p>
+          <div className="academic-recovery-choices" role="group" aria-label="What changed">
+            {RECOVERY_PLANS.map((plan) => (
+              <button key={plan.kind} type="button" className="balance-button" onClick={() => choose(plan.kind)}>
+                {plan.title}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="academic-recovery-confidence">{CONFIDENCE_TEXT[selected.confidence]}</p>
+          <h3>{selected.title}</h3>
+          <div className="academic-recovery-grid">
+            <div>
+              <h4>What this may affect</h4>
+              <ul>{selected.affects.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+            <div>
+              <h4>What remains unchanged</h4>
+              <ul>{selected.preserved.map((item) => <li key={item}>{item}</li>)}</ul>
+            </div>
+          </div>
+          {stage === 'assess' ? (
+            <ActionButton onClick={() => setStage(nextRecoveryStage('assess', 'review_impact') ?? 'assess')}>
+              Review options
+            </ActionButton>
+          ) : null}
+          {stage === 'offer' ? (
+            <div className="academic-recovery-options">
+              {selected.options.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  className="balance-button"
+                  onClick={() => {
+                    setStage(nextRecoveryStage('offer', 'choose_option') ?? 'offer');
+                    dispatch({ type: 'go', screen: option.screen });
+                  }}
+                >
+                  <strong>{option.label}</strong>
+                  <span>{option.reason}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <button type="button" className="workspace-text-button" onClick={reset}>Not now</button>
+        </>
+      )}
+    </section>
   );
 }
 

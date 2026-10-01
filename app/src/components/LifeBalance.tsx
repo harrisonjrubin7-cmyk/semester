@@ -9,14 +9,17 @@ import {
   crunchForecast,
   suggestionAppointment,
   summarizeWeek,
+  workloadPressure,
   type Category,
   type Crunch,
   type Suggestion,
+  type WorkloadPressureDay,
 } from '../lib/life-balance';
 import { useLifeBalance } from '../lib/life-balance.hook';
 import { useStore } from '../state/store';
 import { ConfirmDialog } from './ConfirmDialog';
 import { SourceBadge } from './SourceBadge';
+import { CONFIDENCE_TEXT, confidenceFromSource } from '../lib/assistant-confidence';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const hours = (n: number) => `${Math.round(n * 10) / 10} h`;
@@ -40,9 +43,11 @@ export function LifeBalance({ start, crunch = false }: { start: string; crunch?:
   const { input, now, settings, saveSettings, error } = useLifeBalance();
   const headingId = useId();
   const week = useMemo(() => summarizeWeek(input, isoToDate(start)), [input, start]);
+  const pressure = useMemo(() => workloadPressure(input, isoToDate(start)), [input, start]);
   const crunches = useMemo(() => (crunch ? crunchForecast(input, now) : []), [crunch, input, now]);
   const [adding, setAdding] = useState<Suggestion | null>(null);
   const [said, setSaid] = useState('');
+  const [showForecast, setShowForecast] = useState(true);
 
   const committed = CATEGORIES.filter((c) => c !== 'open');
   const total = CATEGORIES.reduce((n, c) => n + week.hours[c], 0) || 1;
@@ -176,6 +181,8 @@ export function LifeBalance({ start, crunch = false }: { start: string; crunch?:
           ) : (
             <p className="balance-muted">No deadlines this week.</p>
           )}
+
+          <WorkloadForecast rows={pressure} visible={showForecast} onVisibleChange={setShowForecast} />
         </>
       )}
 
@@ -215,6 +222,82 @@ export function LifeBalance({ start, crunch = false }: { start: string; crunch?:
           onCancel={() => setAdding(null)}
         />
       ) : null}
+    </section>
+  );
+}
+
+const PRESSURE_LABEL: Record<WorkloadPressureDay['state'], string> = {
+  clear: 'No due work recorded',
+  manageable: 'Fits the open time shown',
+  tight: 'Little open time remains',
+  more_than_open: 'More estimated work than open time',
+  unknown: 'Effort not known yet',
+};
+
+/**
+ * Due-work pressure in plain minutes, not a score and not a prediction.
+ * Hidden on request for the visit; the underlying deadlines and calendar are
+ * unchanged. The tenant can disable the parent module entirely.
+ */
+function WorkloadForecast({
+  rows,
+  visible,
+  onVisibleChange,
+}: {
+  rows: WorkloadPressureDay[];
+  visible: boolean;
+  onVisibleChange: (visible: boolean) => void;
+}) {
+  const due = rows.filter((row) => row.state !== 'clear');
+  if (!visible) {
+    return (
+      <p className="balance-muted">
+        Workload forecast hidden for this visit.{' '}
+        <button type="button" className="workspace-text-button" onClick={() => onVisibleChange(true)}>
+          Show it
+        </button>
+      </p>
+    );
+  }
+  return (
+    <section className="balance-workload" aria-labelledby="balance-workload-heading">
+      <div className="balance-workload-head">
+        <h3 id="balance-workload-heading" className="balance-heading">Workload forecast</h3>
+        <button type="button" className="workspace-text-button" onClick={() => onVisibleChange(false)}>Hide</button>
+      </div>
+      <p className="balance-muted">
+        Planned work pressure from deadlines, your own past time estimates and the open time above. It does not predict
+        grades, ability or wellbeing.
+      </p>
+      {due.length === 0 ? (
+        <p className="balance-muted">No due work with a time estimate is recorded for this week.</p>
+      ) : (
+        <ol className="balance-workload-days">
+          {due.map((row) => (
+            <li key={row.iso} data-pressure={row.state}>
+              <span>
+                <strong>{dayLabel(row.iso)}</strong>
+                <small>{PRESSURE_LABEL[row.state]}</small>
+              </span>
+              <span className="nums">
+                {row.known > 0 ? `${row.estimatedMinutes} min estimated · ${row.openMinutes} min open` : 'No effort estimate yet'}
+                {row.unknown > 0 ? ` · ${row.unknown} unknown` : ''}
+              </span>
+              <span>
+                {CONFIDENCE_TEXT[confidenceFromSource(row.known > 0 ? 'estimated' : 'needs_review')]} ·{' '}
+                <SourceBadge label={row.confirmed ? 'imported' : 'needs_review'} />
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+      <details className="balance-more">
+        <summary>How this forecast works</summary>
+        <p className="balance-muted">
+          Semester compares work due that day with time left open that day. Estimates come only from similar work you
+          timed before; unknown work stays unknown. A study block is never added or moved without your confirmation.
+        </p>
+      </details>
     </section>
   );
 }
