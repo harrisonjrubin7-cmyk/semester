@@ -122,7 +122,10 @@ ledger snapshot so that a mis-numbered migration fails in CI
 (`app/src/lib/migrationorder.test.ts`). A Content Security Policy is enforced
 in the page and verified against a control (`app/src/lib/csp.test.ts`).
 
-SAST and DAST tooling are not yet in place.
+HawkScan DAST is configured in `.github/workflows/hawkscan.yml` against an
+ephemeral local build, so active probes do not target production data. It
+starts scanning once `HAWK_API_KEY` and `STACKHAWK_APPLICATION_ID` are set in
+GitHub Actions; until the first completed run, DAST evidence remains pending.
 
 ## 9. Infrastructure and network security
 

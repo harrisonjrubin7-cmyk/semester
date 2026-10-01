@@ -135,7 +135,7 @@ What an auditor or university security team will ask for, and where it is.
 | Quarterly privileged-access review | Absent |
 | Secrets inventory and rotation log | Inventory in `SECURITY.md`; rotation log absent |
 | PR approvals and deployment log | GitHub pull requests and Actions history |
-| Dependency, secret-scan and vulnerability reports | `.github/dependabot.yml`, `.gitleaks.toml` in CI; SAST and DAST absent |
+| Dependency, secret-scan and vulnerability reports | `.github/dependabot.yml`, `.gitleaks.toml` in CI; HawkScan local-preview DAST configured, with first-run evidence pending Actions credentials |
 | Penetration-test summary | Absent (HECVAT VULN-2) |
 | Incident response policy and tabletop | Policy in `docs/market-readiness/INCIDENT_RESPONSE.md`; tabletop absent |
 | APM dashboards and alert definitions | Definitions in `docs/trust/APM-RUNBOOK.md`; wiring absent |

@@ -93,7 +93,7 @@ function Door({
  * shy. With a key the syllabus route is better — it is the product — and a
  * second card beside it would be a choice nobody benefits from making.
  */
-export function FirstRun({ where = 'here' }: { where?: string }) {
+export function FirstRun({ where = 'here', children }: { where?: string; children?: ReactNode }) {
   const { state, dispatch } = useStore();
   const go = () => dispatch({ type: 'go', screen: 'import' });
   /*
@@ -175,6 +175,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           </div>
         </>
       )}
+      {children}
     </Page>
   );
 }
