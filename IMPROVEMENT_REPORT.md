@@ -20,9 +20,9 @@ build, lint and policy checks, focused regression tests, and institution
 TypeScript boundary pass. The complete post-change suite also passes after the
 branch was rebased onto current `origin/main`.
 
-HawkScan was invoked as required, but the scan could not start: this environment
-has neither the HawkScan CLI nor Docker and has no `HAWK_API_KEY`. DAST therefore
-remains unverified.
+HawkScan could not start locally because this environment has neither the
+HawkScan CLI nor Docker and has no `HAWK_API_KEY`. The repository's protected
+hosted HawkScan job subsequently passed on the pull request head.
 
 ## Scope and system boundary
 
@@ -101,7 +101,7 @@ a labelled diagnostic before interacting with it.
 | Real-browser phone check | Pass for inspected routes | Effective viewport 351 × 760; headings, names, route focus, and page overflow inspected |
 | Real-browser desktop check | Pass for inspected route | Effective viewport 1153 × 720; one heading and no unnamed controls |
 | Post-change full suite | Pass | 1,246 files passed, 1 skipped; 19,481 tests passed, 51 skipped |
-| HawkScan DAST | Blocked | `hawk` absent, Docker absent, and `HAWK_API_KEY` absent |
+| HawkScan DAST | Pass in protected CI | Hosted `hawkscan` job passed on pull request #1097; the local runtime remained unavailable |
 
 The first full baseline used the same locally resolved dependency set as the
 post-change checks. An earlier post-change attempt encountered broad scanner-test
@@ -111,9 +111,9 @@ recorded above.
 
 ## Remaining risks and recommended next work
 
-1. **Provision HawkScan 6+ and its API key, then run the existing DAST workflow.**
-   A configured workflow is not scan evidence. Validate coverage and findings
-   before making a security claim.
+1. **Keep hosted HawkScan coverage in the protected merge path.** The local
+   environment cannot reproduce it without the CLI and credentials, so CI is
+   the authoritative DAST gate for this release.
 2. **Continue reducing the 23 React warnings.** The warning gate now has two
    slots of headroom, but remaining render-time refs, effect-driven state, and
    two `Sheet` clock reads still deserve focused fixes rather than suppression.
