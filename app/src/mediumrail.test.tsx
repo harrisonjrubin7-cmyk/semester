@@ -109,7 +109,7 @@ describe('at medium', () => {
   it('still names every tab — the words are clipped, not removed', () => {
     // `display: none` would take the name from a screen reader. The text is
     // in the DOM and the stylesheet clips it.
-    expect(names()).toContain('Calendar');
+    expect(names()).toContain('Plan');
     expect(names().every((n) => n.length > 0)).toBe(true);
   });
 
