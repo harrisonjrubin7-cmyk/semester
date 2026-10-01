@@ -6,9 +6,9 @@ import { CORE_MODULES } from '@semester/contract';
 
 /**
  * The Modules tab shows every module, its mode and its source; offers a
- * request only to someone who may configure the school; lets a second
- * administrator approve but never the requester; and says that no Core module
- * is built. The mode itself is the database's, so the loaders are stubbed.
+ * request only to someone who may configure the school; and lets a second
+ * administrator approve but never the requester. The mode itself is the
+ * database's, so the loaders are stubbed.
  */
 const mock = vi.hoisted(() => ({
   rows: null as { module: string; mode: string; frozen: boolean; killed: boolean }[] | null,
@@ -50,10 +50,11 @@ const render = async (props: { canEdit: boolean; me?: string }) => {
 };
 const button = (name: RegExp) => [...host.querySelectorAll('button')].find((b) => name.test(b.textContent ?? ''));
 
-it('lists all fourteen modules in Connect and says no Core module is built', async () => {
+it('lists all fourteen modules in Connect and separates a built gradebook from cutover authorization', async () => {
   await render({ canEdit: true });
   expect(host.querySelectorAll('li').length).toBe(14);
-  expect(host.textContent).toContain('No Core module is built yet');
+  expect(host.textContent).toContain('native gradebook exists');
+  expect(host.textContent).toContain('no school has authorized a Core cutover');
   expect(host.textContent).toContain('Assignments and submissions');
   expect(host.textContent).toContain('Status: Planned');
 });

@@ -77,15 +77,15 @@ export const PLANS: Plan[] = [
   },
   {
     id: 'institution',
-    name: 'Institution Access',
-    forWhom: 'Students whose university provides Semester',
+    name: 'Semester Institutional',
+    forWhom: 'Universities replacing fragmented student systems and the LMS gradebook',
     price: null,
     priceStatus: 'contact',
     includes: [
-      'Sign in with your university account',
-      'Information your university has verified',
-      'Campus directory and resources',
-      'The features your university turns on',
+      'Native LMS and gradebook of record',
+      'Student planning, advising, support and pathways',
+      'SSO, LTI, OneRoster and approved SIS integrations',
+      'Pilot, phased integration, migration, training and hypercare',
     ],
   },
 ];
