@@ -1,5 +1,5 @@
 -- Private, opt-in productivity cloud copies. CAS protects edits across devices.
-create table public.productivity_workspace (
+create table if not exists public.productivity_workspace (
  user_id uuid primary key references auth.users(id) on delete cascade,
  tenant_id text references public.schools(id) on delete restrict,
  revision bigint not null default 1 check (revision > 0),
@@ -10,16 +10,20 @@ create table public.productivity_workspace (
 alter table public.productivity_workspace enable row level security;
 revoke all on public.productivity_workspace from anon, authenticated;
 grant select, insert, update, delete on public.productivity_workspace to authenticated;
+drop policy if exists "productivity owner read" on public.productivity_workspace;
 create policy "productivity owner read" on public.productivity_workspace for select to authenticated using ((select auth.uid())=user_id);
+drop policy if exists "productivity owner delete" on public.productivity_workspace;
 create policy "productivity owner delete" on public.productivity_workspace for delete to authenticated using ((select auth.uid())=user_id);
+drop policy if exists "productivity owner insert" on public.productivity_workspace;
 create policy "productivity owner insert" on public.productivity_workspace for insert to authenticated with check (
  (select auth.uid())=user_id and (tenant_id is null or exists(select 1 from public.institution_membership m where m.auth_user_id=(select auth.uid()) and m.tenant_id=productivity_workspace.tenant_id and m.status='active'))
 );
+drop policy if exists "productivity owner update" on public.productivity_workspace;
 create policy "productivity owner update" on public.productivity_workspace for update to authenticated using ((select auth.uid())=user_id) with check (
  (select auth.uid())=user_id and (tenant_id is null or exists(select 1 from public.institution_membership m where m.auth_user_id=(select auth.uid()) and m.tenant_id=productivity_workspace.tenant_id and m.status='active'))
 );
-create index productivity_workspace_tenant on public.productivity_workspace(tenant_id) where share_aggregate;
-create function public.save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text default null, p_aggregate boolean default false)
+create index if not exists productivity_workspace_tenant on public.productivity_workspace(tenant_id) where share_aggregate;
+create or replace function public.save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text default null, p_aggregate boolean default false)
 returns jsonb language plpgsql security invoker set search_path=public,pg_temp as $$
 declare row public.productivity_workspace; who uuid := auth.uid();
 begin
@@ -36,7 +40,7 @@ end $$;
 revoke all on function public.save_productivity_workspace(bigint,jsonb,text,boolean) from public,anon;
 grant execute on function public.save_productivity_workspace(bigint,jsonb,text,boolean) to authenticated;
 -- Privilege is needed only to aggregate across consenting owners. Never returns person IDs or private content.
-create function public.productivity_readiness_aggregate(p_tenant text)
+create or replace function public.productivity_readiness_aggregate(p_tenant text)
 returns jsonb language plpgsql security definer set search_path=public,pg_temp as $$
 declare owners bigint; decisions bigint; decided bigint;
 begin
