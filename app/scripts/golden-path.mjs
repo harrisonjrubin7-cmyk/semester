@@ -500,13 +500,6 @@ async function journey(label, viewport) {
       name: new RegExp(`^\\w+ ${course.first} ${MONTHS[course.month]}\\..*\\b\\d+ deadlines?\\b`),
     });
     expect(await visible(day), `the calendar does not show a deadline on ${MONTHS[course.month]} ${course.first}`);
-    // Select the date before exercising its double-click action. On a slower
-    // phone-sized CI run, asking one synthetic double-click to both change the
-    // selected date and open the composer can race the React render between
-    // its two clicks: the first click selects, the target re-renders, and the
-    // browser never delivers the paired dblclick. This still tests the real
-    // double-click handler; it only makes the prerequisite selection explicit
-    // and waits for the UI to acknowledge it, as a person's first tap would.
     await day.first().click();
     await day.first().waitFor({ state: 'visible', timeout: WAIT });
     expect(await day.first().getAttribute('aria-selected') === 'true', 'the deadline day did not become selected');
