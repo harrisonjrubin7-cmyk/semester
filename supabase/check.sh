@@ -34,8 +34,8 @@ set -euo pipefail
 # independently testable. This changes only the disposable cluster's stub.
 table_grants=${SEMESTER_CHECK_TABLE_GRANTS:-legacy}
 case "$table_grants" in
-  legacy) explicit_table_grants=0 ;;
-  explicit) explicit_table_grants=1 ;;
+  legacy) explicit_table_grants=0; catalog_grants_legacy_fixture=on ;;
+  explicit) explicit_table_grants=1; catalog_grants_legacy_fixture=off ;;
   *) echo "SEMESTER_CHECK_TABLE_GRANTS must be legacy or explicit" >&2; exit 2 ;;
 esac
 
@@ -164,7 +164,12 @@ done
 # "command not found" and read as a broken script rather than a missing
 # directory. Using the binary it already located makes the script say the same
 # thing everywhere.
-psql() { "$bindir/psql" -X -q -h "$work" -p "$port" -U postgres "$@"; }
+# Every suite runs in a fresh session. Carry the explicit fixture profile to
+# catalog guards rather than inferring it from the permissions under test.
+psql() {
+  PGOPTIONS="${PGOPTIONS:-} -c semester.catalog_grants_legacy_fixture=$catalog_grants_legacy_fixture" \
+    "$bindir/psql" -X -q -h "$work" -p "$port" -U postgres "$@"
+}
 
 echo "· the parts Supabase provides, for a plain Postgres"
 echo "· public table default grants: $table_grants"
