@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { serveInstitutionRequest } from './[...path].ts';
-import { MAX_BODY } from '../../server/institution/gateway.ts';
+import { serveInstitutionRequest } from '../../api/institution/[...path].ts';
+import { MAX_BODY } from './gateway.ts';
 
 function request(url: string, body = '', method = body ? 'POST' : 'GET'): IncomingMessage {
   return {

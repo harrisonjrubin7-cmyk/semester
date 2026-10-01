@@ -132,7 +132,7 @@ export const PROPOSALS: readonly Proposal[] = [
   // ── B2 ──────────────────────────────────────────────────────────────────
   p('B2-01', 'Explicit service boundaries', 'partial', ['app/src/lib/ops/boundaries.ts'], 'Charters list owner and source; no per-domain schema, event and fallback record.'),
   p('B2-02', 'A modular monolith first', 'partial', ['docs/architecture/0003-no-application-server.md'], 'Decided and documented; enforced by convention only, and split criteria are not written.'),
-  p('B2-03', 'A canonical API contract program', 'partial', ['packages/contract/src', 'app/api/institution/handler.test.ts'], 'A versioned gateway. No OpenAPI or schema publication and no consumer-driven contract tests.'),
+  p('B2-03', 'A canonical API contract program', 'partial', ['packages/contract/src', 'app/server/institution/vercel-transport.test.ts'], 'A versioned gateway. No OpenAPI or schema publication and no consumer-driven contract tests.'),
   p('B2-04', 'A domain event backbone', 'partial', ['packages/institution/src/events.ts'], 'Same as B1-03: no producers, no publisher job, no replay.'),
   p('B2-05', 'Serious concurrency control', 'partial', ['app/server/institution/gateway.ts', 'app/src/lib/merge.ts'], 'Gateway 409 only; no version column or If-Match on plans.'),
   p('B2-06', 'Data-quality contracts', 'partial', ['app/src/lib/governance/data-contracts.ts', 'app/src/lib/integration/quality.test.ts'], 'Owner, steward and freshness; no enforced completeness or validity rules per dataset.'),
@@ -170,7 +170,7 @@ export const PROPOSALS: readonly Proposal[] = [
   p('B3-13', 'Infrastructure and container scanning', 'absent', [], 'Nothing scans IaC or containers.'),
   p('B3-14', 'Typecheck, lint and unit tests in CI', 'landed', ['.github/workflows/ci.yml', 'app/src/lib/supplychain.test.ts'], 'None.'),
   p('B3-15', 'Database migration validation and RLS negative tests', 'landed', ['supabase/check.sh', 'supabase/rehearse.sh'], 'None.'),
-  p('B3-16', 'API contract tests', 'partial', ['app/api/institution/handler.test.ts'], 'No consumer-driven contract test per registered contract.'),
+  p('B3-16', 'API contract tests', 'partial', ['app/server/institution/vercel-transport.test.ts'], 'No consumer-driven contract test per registered contract.'),
   p('B3-17', 'End-to-end critical flow and accessibility scans', 'landed', ['app/scripts/golden-path.mjs', 'app/scripts/accessibility-smoke.mjs'], 'None.'),
   p('B3-18', 'A staging deploy before production', 'partial', ['STAGING.md'], 'Staging is described; no staging smoke gate.'),
   p('B3-19', 'Manual production approval', 'operational', ['.github/workflows/pages.yml'], 'The github-pages environment has no recorded approval rule. Needs a repository setting.'),
