@@ -617,6 +617,15 @@ declare
     'registrar_put_section(want_term text, want_course text, want_section text, want_title text, want_credits numeric, want_capacity integer, want_waitlist integer, want_meetings jsonb, want_prerequisites text[], want_requires_approval boolean)',
     'registrar_grant_override(want_student uuid, want_section uuid, want_waives text[], want_reason text, want_key text)',
     'registrar_decide(want_enrollment uuid, want_approve boolean, want_reason text, want_key text)',
+
+    -- The two productivity workspace functions recovered from production.
+    -- Saving is security invoker and can only mutate the caller's RLS-owned
+    -- row. The aggregate is security definer, but it first requires an active
+    -- admin membership for the requested tenant and returns counts only after
+    -- the consenting cohort reaches ten; it never returns workspace content.
+    'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
+    'productivity_readiness_aggregate(p_tenant text)',
+
     -- The nine in 20260929330000_dining.sql. Each takes the caller from
     -- auth.uid() and their school from profiles.school_id, never a
     -- parameter. The three that charge (placing, giving) also check the flag,

@@ -1,9 +1,13 @@
 -- Rollback-only integration checks; no persistent accounts or student data.
 begin;
+create or replace function pg_temp.become(who uuid) returns void language plpgsql as $$
+begin
+ perform set_config('request.jwt.claims',jsonb_build_object('sub',who::text,'role','authenticated')::text,true);
+ execute 'set local role authenticated';
+end $$;
 insert into public.invites(email,note) values ('productivity-rls-a@example.invalid','rollback-only test'),('productivity-rls-b@example.invalid','rollback-only test');
 insert into auth.users(id,email) values ('00000000-0000-4000-8000-00000000f101','productivity-rls-a@example.invalid'), ('00000000-0000-4000-8000-00000000f102','productivity-rls-b@example.invalid');
-select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f101","role":"authenticated"}',true);
-set local role authenticated;
+select pg_temp.become('00000000-0000-4000-8000-00000000f101');
 do $$ declare r jsonb; begin
  r:=public.save_productivity_workspace(0,'{"version":1,"decisions":[],"captures":[],"drafts":[],"journal":[],"preferences":[]}');
  if r->>'revision'<>'1' then raise exception 'initial revision failed'; end if;
@@ -12,7 +16,7 @@ do $$ declare r jsonb; begin
  begin perform public.save_productivity_workspace(1,r->'data'); raise exception 'stale write accepted'; exception when serialization_failure then null; end;
  begin perform public.productivity_readiness_aggregate('semester-test-not-a-tenant'); raise exception 'nonadmin aggregate accepted'; exception when insufficient_privilege then null; end;
 end $$;
-select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f102","role":"authenticated"}',true);
+select pg_temp.become('00000000-0000-4000-8000-00000000f102');
 do $$ begin
  if exists(select 1 from public.productivity_workspace) then raise exception 'cross-account disclosure'; end if;
  delete from public.productivity_workspace where user_id='00000000-0000-4000-8000-00000000f101';
@@ -22,8 +26,7 @@ end $$;
 reset role;
 insert into public.schools(id,name,is_demo) values('productivity-rollback-fixture','Rollback fixture',true);
 insert into public.institution_membership(tenant_id,auth_user_id,status,roles) values('productivity-rollback-fixture','00000000-0000-4000-8000-00000000f101','active',array['admin']);
-select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f102","role":"authenticated"}',true);
-set local role authenticated;
+select pg_temp.become('00000000-0000-4000-8000-00000000f102');
 do $$ begin
  begin
   perform public.save_productivity_workspace(0,'{"version":1}', 'productivity-rollback-fixture',true);
@@ -31,8 +34,7 @@ do $$ begin
  exception when insufficient_privilege then null; end;
 end $$;
 reset role;
-select set_config('request.jwt.claims','{"sub":"00000000-0000-4000-8000-00000000f101","role":"authenticated"}',true);
-set local role authenticated;
+select pg_temp.become('00000000-0000-4000-8000-00000000f101');
 do $$ declare r jsonb; begin
  r:=public.productivity_readiness_aggregate('productivity-rollback-fixture');
  if r->>'state'<>'insufficient_cohort' then raise exception 'small cohort exposed'; end if;

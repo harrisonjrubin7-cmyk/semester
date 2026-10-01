@@ -6,6 +6,15 @@ const root = join(import.meta.dirname, '../../..');
 const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
 
 describe('company-site production availability', () => {
+  it('keeps signup and billing claims behind their production activation gates', () => {
+    expect(site).toContain('sign-up may ask for an invite');
+    expect(site).toContain('Checkout is not available yet');
+    expect(site).not.toMatch(/public signup is open/i);
+    expect(site).not.toMatch(/no invitation required/i);
+    expect(site).not.toMatch(/checkout runs on (?:stripe )?test keys/i);
+    expect(site).not.toMatch(/hosted stripe checkout passed/i);
+    expect(site).not.toMatch(/plus can be bought/i);
+  });
   it('publishes verified personal export and deletion, with retained-record limits', () => {
     expect(site).toContain('["Full self-service data export","Yes","Yes","Yes","Yes","av"]');
     expect(site).toContain('["Self-service account deletion with a receipt","av"');

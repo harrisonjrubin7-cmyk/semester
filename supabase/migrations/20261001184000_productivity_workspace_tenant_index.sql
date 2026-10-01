@@ -1,0 +1,9 @@
+-- Compatibility marker for the preview branch that recorded this repair
+-- before the canonical covering-index migration merged to main.
+--
+-- The canonical implementation is
+-- 20261001171000_productivity_workspace_covering_index.sql. This later version
+-- remains statement-free so existing preview history is recognized without
+-- creating or maintaining the same index twice.
+-- It performs no schema or data change.
+-- Browser-authenticated validation trigger; no schema statement.
