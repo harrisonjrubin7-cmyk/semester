@@ -794,32 +794,36 @@ function TabHome() {
         "Week" only because a fifth tab made the switcher wrap to two lines on
         every Today view.
       */}
-      <Segmented
-        options={[
-          { id: 'today', label: 'Today' },
-          { id: 'hours', label: 'Hours' },
-          { id: 'week', label: 'This week' },
-          { id: 'done', label: 'Done' },
-        ]}
-        value={tab}
-        onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
-        style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
-      />
+      <div className="hides-in-focus">
+        <Segmented
+          options={[
+            { id: 'today', label: 'Today' },
+            { id: 'hours', label: 'Hours' },
+            { id: 'week', label: 'This week' },
+            { id: 'done', label: 'Done' },
+          ]}
+          value={tab}
+          onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
+          style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
+        />
+      </div>
 
       <FirstGoal />
       <TodayDecisionSurface />
-      <CommandCenter />
-      <FlightPlanHomeSlot />
-      <RecommendedJourney />
+      <div className="hides-in-focus">
+        <CommandCenter />
+        <FlightPlanHomeSlot />
+        <RecommendedJourney />
 
-      {tab === 'today' && <TodayFeed />}
+        {tab === 'today' && <TodayFeed />}
 
-      {tab === 'week' && <ThisWeek />}
-      {tab === 'week' && <WeekHorizon />}
+        {tab === 'week' && <ThisWeek />}
+        {tab === 'week' && <WeekHorizon />}
 
-      {tab === 'hours' && <HoursToday />}
+        {tab === 'hours' && <HoursToday />}
 
-      {tab === 'done' && <DoneToday />}
+        {tab === 'done' && <DoneToday />}
+      </div>
     </Page>
   );
 }
@@ -1226,6 +1230,7 @@ function Feed_rail() {
       style={{ display: 'flex', gap: RAIL_GAP, alignItems: 'center', padding: 'var(--sp-2) 0' }}
     >
       <div
+        className="hides-in-focus"
         style={{
           width: RAIL_GUTTER,
           flex: 'none',
@@ -1942,13 +1947,14 @@ function FeedHome() {
       <div style={{ padding: 'var(--page-pad)' }}>
         <FirstGoal />
         <TodayDecisionSurface />
-        <CommandCenter />
-        <NextClassCard />
-        <FlightPlanHomeSlot />
-        <RecommendedJourney />
+        <div className="hides-in-focus">
+          <CommandCenter />
+          <NextClassCard />
+          <FlightPlanHomeSlot />
+          <RecommendedJourney />
 
-        <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
-          {entries.map((f) => (
+          <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
+            {entries.map((f) => (
             <button
               key={f.key}
               type="button"
@@ -2042,9 +2048,10 @@ function FeedHome() {
                 <div style={{ fontSize: 'var(--type-sm)', ...secondLine(f.done || f.canceled), marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
-          ))}
+            ))}
+          </div>
+          <div style={{ height: 70 }} />
         </div>
-        <div style={{ height: 70 }} />
       </div>
     </>
   );
