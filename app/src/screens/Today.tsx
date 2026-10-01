@@ -71,6 +71,8 @@ import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
+import { DeadlineHorizon } from '../components/DeadlineHorizon';
+import { fromItems } from '../lib/deadline-feed';
 
 const FlightPlanHome = lazy(() =>
   import('../components/institutional/FlightPlanHome').then((module) => ({
@@ -408,6 +410,17 @@ function OverdueBanner() {
  * about what a week is. What differs is the presentation: there a page you
  * pin up, here rows you tap to open.
  */
+/** The same deadlines, grouped by how near they are, with each one's source. */
+function WeekHorizon() {
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
+  const deadlines = useMemo(
+    () => fromItems(upcomingItems(catalog, now), state.done, (id) => courseCode(id)),
+    [catalog, now, state.done, courseCode],
+  );
+  return <DeadlineHorizon deadlines={deadlines} now={now.getTime()} />;
+}
+
 function ThisWeek() {
   const { state, dispatch, catalog, tint, courseCode } = useStore();
   const now = useNow();
@@ -765,6 +778,7 @@ function TabHome() {
       {tab === 'today' && <TodayFeed />}
 
       {tab === 'week' && <ThisWeek />}
+      {tab === 'week' && <WeekHorizon />}
 
       {tab === 'hours' && <HoursToday />}
 
