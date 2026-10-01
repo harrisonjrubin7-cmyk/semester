@@ -35,7 +35,7 @@ export function SystemContextBar() {
   const health = statusOf(syncStatusKey(sync.status, off));
 
   if (QUIET_ON.has(state.screen)) return <section className="system-context pane-strip" aria-label="Accessibility tools">
-    <AccessibilityTools look={currentLook(state)} onChange={look => dispatch({type: 'setLook', look})} onSettings={() => dispatch({type: 'go', screen: 'setLook'})} />
+    <AccessibilityTools context={`${state.term}:${state.screen}:${state.itemId}:${state.courseId}:${state.guideId}:${state.eventId}:${state.documentId}:${state.noteId}:${state.sheetId}:${state.deckId}`} look={currentLook(state)} onChange={look => dispatch({type: 'setLook', look})} onSettings={() => dispatch({type: 'go', screen: 'setLook'})} />
   </section>;
 
   return (
@@ -67,7 +67,7 @@ export function SystemContextBar() {
         )}
       </div>
       <div className="system-context-actions">
-        <AccessibilityTools look={currentLook(state)} onChange={look => dispatch({type: 'setLook', look})} onSettings={() => dispatch({type: 'go', screen: 'setLook'})} />
+        <AccessibilityTools context={`${state.term}:${state.screen}:${state.itemId}:${state.courseId}:${state.guideId}:${state.eventId}:${state.documentId}:${state.noteId}:${state.sheetId}:${state.deckId}`} look={currentLook(state)} onChange={look => dispatch({type: 'setLook', look})} onSettings={() => dispatch({type: 'go', screen: 'setLook'})} />
         {workflow && <div className="system-context-workflow system-context-trail">{availableWorkflows.length > 1 && <select className="input" aria-label="Current workflow" value={workflow?.id} onChange={event => setWorkflowId(event.target.value)}>{availableWorkflows.map(candidate => <option key={candidate.id} value={candidate.id}>{candidate.name}</option>)}</select>}<DecisionTrail workflow={workflow} current={state.screen} onOpen={screen => { setWorkflowId(workflow.id); dispatch({type: 'go', screen}); }} /></div>}
         {continuation && (
           <button type="button" className="bare system-context-link" onClick={() => dispatch({ type: 'go', screen: continuation.screen })}>

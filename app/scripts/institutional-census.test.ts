@@ -38,7 +38,8 @@ describe('institutional census', () => {
     expect(capabilities.match(/\| CAP-\d{3} \|/g)).toHaveLength(60);
     expect(capabilities).toContain('## Phase 6');
     expect(capabilities).toContain('### External gate');
-    expect(traceability.match(/\| CAP-\d{3} \|/g)).toHaveLength(60);
+    const requirementsTable = traceability.split('## Sources to capabilities')[0];
+    expect(requirementsTable.match(/\| CAP-\d{3} \|/g)).toHaveLength(60);
     expect(traceability).toContain('## Sources to capabilities');
     expect(traceability).toContain('## Unverified and unavailable');
     expect(traceability).toContain('Shared Semester ChatGPT conversation');

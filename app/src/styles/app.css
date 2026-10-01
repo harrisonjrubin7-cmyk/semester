@@ -3187,6 +3187,13 @@ input[type='search'].input {
  * implied. `tokensFor` already returns `none` for both shadow tokens under
  * the same preference, so this is the half that cannot be done in JS.
  */
+:root[data-contrast="more"] .surface,
+:root[data-contrast="more"] .surface-in,
+:root[data-contrast="more"] .pill-soft {
+  box-shadow: none;
+  border-color: var(--app-fg);
+}
+
 @media (prefers-contrast: more) {
   .surface,
   .surface-in,
@@ -7512,6 +7519,28 @@ section[data-drop] > .grip + * {
   padding: var(--sp-5);
 }
 
+/* The default briefing has one clear visual centre. Path and schedule remain
+   in the first layer, but they no longer compete with the next decision as
+   three equal cards. DOM order follows the same priority for keyboard and
+   screen-reader users. */
+.today-dominant-card {
+  border-color: var(--app-accent);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.today-dominant-heading,
+.action-panel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.today-dominant-heading .section-label,
+.action-panel-heading .action-kicker {
+  margin: 0;
+}
+
 .today-decision-surface h2 {
   margin: var(--sp-2) 0 var(--sp-3);
   font-family: var(--font-heading);
@@ -7815,6 +7844,15 @@ section[data-drop] > .grip + * {
   border: 1px solid var(--app-line);
   border-radius: var(--r-md);
   background: var(--app-panel);
+}
+
+.action-panel-primary {
+  border-color: var(--app-accent);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.action-panel-secondary {
+  box-shadow: none;
 }
 
 .action-kicker {
@@ -9195,9 +9233,36 @@ section[data-drop] > .grip + * {
     gap: var(--sp-5);
   }
 
-  .today-near-term {
+  .today-dominant-card {
     grid-column: 1 / -1;
   }
+
+  .today-near-term {
+    grid-column: auto;
+  }
+
+  .action-center-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-panel-primary,
+  .action-center-main > .hides-in-focus {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Focus mode is a real one-task view on Today, not just a hidden tab bar.
+   Source, rationale, help and the persistent Exit focus bar remain inside the
+   dominant action. Supporting status and navigation are still one step away
+   after the student leaves focus. */
+:root[data-workspace='focused'] .today-decision-surface > :not(.today-dominant-card),
+:root[data-workspace='focused'] .today-action-center .action-panel-secondary,
+:root[data-workspace='focused'] .today-action-center .today-context {
+  display: none;
+}
+
+:root[data-workspace='focused'] .today-action-center.is-wide {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .course-mastery {

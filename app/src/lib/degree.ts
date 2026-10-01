@@ -78,7 +78,7 @@ function tidy(code: string): string {
 }
 
 /** Whether a course is one this requirement accepts. */
-export function accepts(req: Requirement, course: Taken): boolean {
+export function accepts(req: Requirement, course: Pick<Taken, 'code'>): boolean {
   if (req.accepts.length === 0) return true;
   const want = req.accepts.map(tidy);
   const has = tidy(course.code);
