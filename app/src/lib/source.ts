@@ -62,7 +62,7 @@ export const SOURCE_MEANING: Record<SourceLabel, string> = {
  * `source.test.ts` holds it to the migration; an AI answer or a web page is
  * never stored as a `source_label`, so it never needs to be one.
  */
-export const TRUST_KINDS = [...SOURCE_LABELS, 'ai_assisted', 'external'] as const;
+export const TRUST_KINDS = [...SOURCE_LABELS, 'ai_assisted', 'external', 'unavailable_stale'] as const;
 
 export type TrustKind = (typeof TRUST_KINDS)[number];
 
@@ -70,12 +70,14 @@ export const TRUST_TEXT: Record<TrustKind, string> = {
   ...SOURCE_TEXT,
   ai_assisted: 'AI-assisted',
   external: 'External',
+  unavailable_stale: 'Unavailable or stale',
 };
 
 export const TRUST_MEANING: Record<TrustKind, string> = {
   ...SOURCE_MEANING,
   ai_assisted: 'Written with Semester’s assistant. It is not an official answer — check anything you act on.',
   external: 'From a source outside your institution and outside Semester, such as a web page.',
+  unavailable_stale: 'Semester cannot confirm that this information is current. Refresh it or use the official source before relying on it.',
 };
 
 /**
@@ -86,7 +88,27 @@ export const TRUST_MEANING: Record<TrustKind, string> = {
 export function wantsAttention(label: TrustKind): boolean {
   // An AI answer is the newest thing a student might over-trust, so it is
   // styled with the estimates rather than with the records.
-  return label === 'estimated' || label === 'needs_review' || label === 'ai_assisted';
+  return label === 'estimated' || label === 'needs_review' || label === 'ai_assisted' || label === 'unavailable_stale';
+}
+
+export type FreshnessState = 'current' | 'stale' | 'unknown';
+
+/**
+ * Classify freshness only when the caller supplies the source's own rule.
+ *
+ * A transcript and a live registration feed do not go stale at the same
+ * speed, so this helper deliberately has no global default. Callers must name
+ * the maximum accepted age; a missing timestamp stays `unknown` rather than
+ * being presented as current.
+ */
+export function freshnessState(
+  at: number | null | undefined,
+  maxAgeMs: number,
+  now = Date.now(),
+): FreshnessState {
+  if (typeof at !== 'number' || !Number.isFinite(at) || at <= 0) return 'unknown';
+  if (!Number.isFinite(maxAgeMs) || maxAgeMs < 0) return 'unknown';
+  return now - at <= maxAgeMs ? 'current' : 'stale';
 }
 
 /**

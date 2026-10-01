@@ -9,7 +9,7 @@ import { goCal } from '../lib/opencal';
 import { goMine } from '../lib/openmine';
 import { fromHash } from '../lib/route';
 import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
-import { freshnessLine, SOURCE_TEXT, type SourceLabel } from '../lib/source';
+import { freshnessLine, freshnessState, SOURCE_TEXT, type SourceLabel } from '../lib/source';
 import { officeActionToAction } from '../lib/office-actions';
 import { useOfficeActions } from '../lib/office-actions.hook';
 import { registrationActions } from '../lib/registration-actions';
@@ -32,6 +32,7 @@ import { Meter } from './ui';
 
 /** How far ahead the commitment rows look. "In 9 days" is the furthest the brief's example reaches. */
 const HORIZON_DAYS = 10;
+const ACCOUNT_SYNC_FRESH_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Today with `today_action_center` on (Phase B, DECISION-LOG D-013 and D-021).
@@ -61,7 +62,7 @@ export function TodayActionCenter({
   officeActions = false,
   officeAccountId,
 }: { registrationDay?: boolean; officeActions?: boolean; officeAccountId?: string | null } = {}) {
-  const { state, dispatch, catalog, account } = useStore();
+  const { state, dispatch, catalog, account, sync } = useStore();
   const now = useNow();
   const wide = useMedia(DESKTOP);
   // The same store the Action Center writes; read here only to know what it
@@ -171,7 +172,12 @@ export function TodayActionCenter({
   };
 
   const sentence = STATUS_SENTENCE[path.state];
-  const syncLine = state.lastSync ? freshnessLine(state.lastSync.at, now.getTime()) : null;
+  // `state.lastSync` also moves when another local tab hydrates from device
+  // storage. Only the account sync state proves this device reached the
+  // account, so local reconciliation must not earn an Imported/current badge.
+  const accountSyncAt = sync.at > 0 ? sync.at : null;
+  const syncLine = accountSyncAt ? freshnessLine(accountSyncAt, now.getTime()) : null;
+  const syncHealth = freshnessState(accountSyncAt, ACCOUNT_SYNC_FRESH_MS, now.getTime());
   const unchecked = rows.filter((r) => r.source === 'needs_review').length;
   const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const classesLeft = rows.filter((r) => r.kind === 'class' && r.at >= now.getTime() && r.at < midnight + 86_400_000);
@@ -270,7 +276,17 @@ export function TodayActionCenter({
           </section>
           <section aria-labelledby="context-fresh">
             <h3 id="context-fresh">Data freshness</h3>
-            <p>{syncLine ? `Account sync: ${syncLine.toLowerCase()}` : 'No account sync recorded on this device.'}</p>
+            <div className="action-source">
+              <SourceBadge label={syncHealth === 'current' ? 'imported' : 'unavailable_stale'} />
+              <span className="action-meta">
+                {syncLine ? `Account sync: ${syncLine.toLowerCase()}` : 'No account sync recorded on this device.'}
+              </span>
+            </div>
+            {syncHealth !== 'current' ? (
+              <p>
+                Account data may be out of date. Your saved plan still works; refresh from Account when connected and use the official system for time-sensitive actions.
+              </p>
+            ) : null}
             <p>
               {unchecked === 0
                 ? 'Every upcoming course date has been checked against its source.'

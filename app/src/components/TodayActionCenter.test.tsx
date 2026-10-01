@@ -66,11 +66,19 @@ function Adopt() {
   return null;
 }
 
-const mount = async (actionCenter: boolean, adopted = false) => {
+/** Reconcile from another local tab without contacting the account. */
+function HydrateLocally() {
+  const { dispatch } = useStore();
+  useEffect(() => dispatch({ type: 'hydrate', persisted: {} }), [dispatch]);
+  return null;
+}
+
+const mount = async (actionCenter: boolean, adopted = false, localHydrate = false) => {
   await act(async () => {
     root.render(
       <StoreProvider>
         {adopted ? <Adopt /> : null}
+        {localHydrate ? <HydrateLocally /> : null}
         <TodayDecisionSurface actionCenter={actionCenter} />
       </StoreProvider>,
     );
@@ -148,6 +156,11 @@ describe('with the flag on', () => {
       'Why now?', 'Why this?', 'Based on', 'What it changes', 'What Semester can’t tell you', 'Other options', 'How it was ranked',
     ]);
     expect(document.activeElement?.textContent).toBe('Why now?');
+    const sourceDetails = dialog.querySelector('.explain-source-details');
+    expect(sourceDetails?.textContent).toContain('Authority');
+    expect(sourceDetails?.textContent).toContain('Data owner');
+    expect(sourceDetails?.textContent).toContain('Correction route');
+    expect(sourceDetails?.textContent).toContain('Official fallback');
     await act(async () => {
       dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     });
@@ -163,6 +176,24 @@ describe('with the flag on', () => {
     const drawer = host.querySelector('aside.explain-drawer')!;
     expect(drawer).not.toBeNull();
     expect(drawer.getAttribute('aria-modal')).toBeNull();
+  });
+
+  it('does not present missing account freshness as current', async () => {
+    wide = true;
+    await mount(true);
+    const context = host.querySelector('aside.today-context')!;
+    expect(context.querySelector('[data-source="unavailable_stale"]')).not.toBeNull();
+    expect(context.textContent).toContain('Your saved plan still works');
+    expect(context.textContent).toContain('use the official system for time-sensitive actions');
+  });
+
+  it('does not present a local cross-tab hydrate as an account sync', async () => {
+    wide = true;
+    await mount(true, false, true);
+    const context = host.querySelector('aside.today-context')!;
+    expect(context.querySelector('[data-source="unavailable_stale"]')).not.toBeNull();
+    expect(context.querySelector('[data-source="imported"]')).toBeNull();
+    expect(context.textContent).toContain('No account sync recorded on this device.');
   });
 
   it('says nothing Today does not say about a student', async () => {
@@ -202,4 +233,3 @@ describe('before the student says the shipped semester is theirs', () => {
     expect(text()).toContain('Prepare ');
   });
 });
-
