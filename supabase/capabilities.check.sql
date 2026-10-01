@@ -311,7 +311,10 @@ begin
   -- 194 before attendance (20261001020000_attendance.sql) added six:
   -- attendance:take for faculty and teaching_assistant; attendance:attend for
   -- the four student roles.
-  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 200);
+  -- 200 before assessments (20261001030000_assessments.sql) added seven:
+  -- assessments:author for faculty; assessments:review for faculty and
+  -- teaching_assistant; assessments:take for the four student roles.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 207);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

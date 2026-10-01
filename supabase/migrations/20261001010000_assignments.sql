@@ -235,9 +235,22 @@ for each row execute function private.refuse_assignment_record_change();
 drop trigger if exists submission_receipts_never_rewritten on public.submission_receipts;
 create trigger submission_receipts_never_rewritten before update on public.submission_receipts
 for each row execute function private.refuse_assignment_record_change();
+-- An extension is never rewritten; only the granter's name may be cleared when
+-- that person's account is deleted (`on delete set null`).
+create or replace function private.guard_assignment_override()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  if (to_jsonb(new) - 'granted_by') is distinct from (to_jsonb(old) - 'granted_by')
+     or (new.granted_by is distinct from old.granted_by and new.granted_by is not null) then
+    raise exception 'semester: submissions, receipts, files and extensions are never rewritten' using errcode = 'insufficient_privilege';
+  end if;
+  return new;
+end $$;
+revoke all on function private.guard_assignment_override() from public, anon, authenticated;
+
 drop trigger if exists assignment_overrides_never_rewritten on public.assignment_overrides;
 create trigger assignment_overrides_never_rewritten before update on public.assignment_overrides
-for each row execute function private.refuse_assignment_record_change();
+for each row execute function private.guard_assignment_override();
 
 -- ── Who reads ───────────────────────────────────────────────────────────
 

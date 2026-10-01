@@ -329,6 +329,10 @@ begin
   perform pg_temp.counted('deleting the TA clears their name, not the session',
     (select count(*) from public.attendance_sessions where id = (s1->>'id')::uuid and opened_by is null), 1);
 
+  delete from auth.users where id = prof;
+  perform pg_temp.counted('deleting the instructor who marked and closed clears their name, not the marks',
+    (select count(*) from public.attendance_marks where marked_by is null and method in ('instructor', 'close')), 2);
+
   raise notice 'attendance: all checks passed';
 end $$;
 

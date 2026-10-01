@@ -126,6 +126,18 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['approve_community_pseudonymity', 'moderation', ['private.has_capability']],
   ['approve_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['archive_school', 'admin', ['private.offboarding_operator']],
+  ['assessment_bank_add_item', 'admin', ['private.assessment_require', 'private.assessment_replay', 'private.assessment_validate_item']],
+  ['assessment_bank_create', 'admin', ['private.assessment_require', 'private.assessment_replay']],
+  ['assessment_bank_retire_item', 'admin', ['private.assessment_require', 'private.assessment_replay']],
+  ['assessment_close', 'admin', ['private.assessment_require', 'private.assessment_replay']],
+  ['assessment_create', 'admin', ['private.assessment_require', 'private.assessment_replay']],
+  ['assessment_finish', 'self-service', ['auth.uid()', 'private.assessment_replay']],
+  ['assessment_grant_time', 'admin', ['private.assessment_require', 'private.subject_has_capability']],
+  ['assessment_items', 'self-service', ['auth.uid()']],
+  ['assessment_publish', 'admin', ['private.assessment_require', 'private.assessment_replay']],
+  ['assessment_review', 'self-service', ['auth.uid()']],
+  ['assessment_save_answer', 'self-service', ['auth.uid()']],
+  ['assessment_start', 'self-service', ['auth.uid()', 'private.has_capability', 'private.assessment_replay']],
   ['assignment_close', 'admin', ['private.gradebook_school', 'private.assignment_require', 'private.assignment_replay']],
   ['assignment_create', 'admin', ['auth.uid()', 'private.has_capability', 'private.assignment_replay']],
   ['assignment_edit', 'admin', ['private.gradebook_school', 'private.assignment_require', 'private.assignment_replay']],
@@ -341,6 +353,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930234000_data_subject_request_intake.sql',
   '20261001010000_assignments.sql',
   '20261001020000_attendance.sql',
+  '20261001030000_assessments.sql',
 ];
 
 /**
@@ -352,6 +365,14 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261001030000_assessments.sql',
+    functions: [
+      'assessment_bank_add_item', 'assessment_bank_create', 'assessment_bank_retire_item', 'assessment_close',
+      'assessment_create', 'assessment_finish', 'assessment_grant_time', 'assessment_items', 'assessment_publish',
+      'assessment_review', 'assessment_save_answer', 'assessment_start',
+    ],
+  },
   {
     file: '20261001020000_attendance.sql',
     functions: ['attendance_check_in', 'attendance_close_session', 'attendance_mark', 'attendance_open_session'],

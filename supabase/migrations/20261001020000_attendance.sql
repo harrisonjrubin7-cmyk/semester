@@ -145,16 +145,22 @@ comment on table public.attendance_sessions is 'One class meeting a code can che
 comment on table public.attendance_marks is 'Every version of every mark: present, late, absent, excused. Append-only; the latest version is the mark.';
 comment on table public.attendance_failures is 'A wrong code tried at check-in, kept so five in ten minutes stop further tries.';
 
-create or replace function private.refuse_attendance_record_change()
+-- A mark is never rewritten; only the marker's name may be cleared when that
+-- person's account is deleted (`on delete set null`).
+create or replace function private.guard_attendance_mark()
 returns trigger language plpgsql set search_path = '' as $$
 begin
-  raise exception 'semester: attendance marks are never rewritten; a change is a new version' using errcode = 'insufficient_privilege';
+  if (to_jsonb(new) - 'marked_by') is distinct from (to_jsonb(old) - 'marked_by')
+     or (new.marked_by is distinct from old.marked_by and new.marked_by is not null) then
+    raise exception 'semester: attendance marks are never rewritten; a change is a new version' using errcode = 'insufficient_privilege';
+  end if;
+  return new;
 end $$;
-revoke all on function private.refuse_attendance_record_change() from public, anon, authenticated;
+revoke all on function private.guard_attendance_mark() from public, anon, authenticated;
 
 drop trigger if exists attendance_marks_never_rewritten on public.attendance_marks;
 create trigger attendance_marks_never_rewritten before update on public.attendance_marks
-for each row execute function private.refuse_attendance_record_change();
+for each row execute function private.guard_attendance_mark();
 
 -- ── Who reads ───────────────────────────────────────────────────────────
 

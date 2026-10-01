@@ -56,7 +56,7 @@ export const MODULES: readonly CoreModule[] = [
   { id: 'lms_assessments', name: 'Tests and question banks', replaces: 'Canvas and Blackboard quizzes and tests',
     today: 'Self-practice exams you build from your own material.',
     core: 'Question banks, timed attempts held on the server, accommodations and QTI import.',
-    status: 'planned', tables: ['question_banks', 'assessment_attempts'] },
+    status: 'in-preparation', tables: ['question_banks', 'assessment_attempts'], suite: 'assessments' },
   { id: 'attendance', name: 'Attendance', replaces: 'PowerSchool, Infinite Campus, Skyward attendance; paper sign-in',
     today: 'Nothing.',
     core: 'Instructor check-in by code, marks with a history, and reports to guardians in the K-12 edition.',

@@ -559,6 +559,25 @@ declare
     'attendance_mark(want_session uuid, want_student uuid, want_status text, want_note text, want_key text)',
     'attendance_check_in(want_code text, want_key text)',
 
+    -- 20261001030000_assessments.sql: question banks and timed tests in Core.
+    -- Each reads auth.uid(), the caller's own school and a course-and-term
+    -- scoped assessments:* capability, and refuses unless the school runs
+    -- lms_assessments in Core. `assessment_items` never returns a key, and a
+    -- save past the deadline is answered, not raised. `assessments.check.sql`
+    -- walks every refusal.
+    'assessment_bank_create(want_course text, want_term text, want_title text, want_key text)',
+    'assessment_bank_add_item(want_bank uuid, want_kind text, want_stem text, want_options jsonb, want_answer_key jsonb, want_points numeric, want_key text)',
+    'assessment_bank_retire_item(want_item uuid, want_key text)',
+    'assessment_create(want_bank uuid, want_title text, want_instructions text, want_item_ids uuid[], want_pool_size integer, want_minutes integer, want_opens timestamp with time zone, want_closes timestamp with time zone, want_attempts integer, want_shuffle boolean, want_show_answers boolean, want_key text)',
+    'assessment_publish(want_id uuid, want_key text)',
+    'assessment_close(want_id uuid, want_key text)',
+    'assessment_grant_time(want_assessment uuid, want_student uuid, want_percent integer, want_reason text, want_key text)',
+    'assessment_start(want_assessment uuid, want_key text)',
+    'assessment_items(want_attempt uuid)',
+    'assessment_save_answer(want_attempt uuid, want_item uuid, want_answer jsonb)',
+    'assessment_finish(want_attempt uuid, want_key text)',
+    'assessment_review(want_attempt uuid)',
+
     -- The two in 20260928310000_expansion_review_fixes.sql. Each deletes only
     -- rows naming the caller, for "Delete my account": demand contributions
     -- and consents, and advisor shares at either end. `demand.check.sql` and

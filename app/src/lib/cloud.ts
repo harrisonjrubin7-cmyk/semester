@@ -1349,6 +1349,13 @@ export const OWNED_TABLES: OwnedTable[] = [
   // references `auth.users` with `on delete cascade`.
   { table: 'attendance_marks', column: 'student_id' },
   { table: 'attendance_failures', column: 'user_id' },
+  // Your test attempts, the answers in them, and any extra time granted to you
+  // (`20261001030000_assessments.sql`). Each names you by a column that
+  // references `auth.users` with `on delete cascade`; an answer goes with its
+  // attempt.
+  { table: 'assessment_attempts', column: 'student_id' },
+  { table: 'attempt_answers', column: null, cascadesFrom: 'assessment_attempts' },
+  { table: 'assessment_time_extensions', column: 'student_id' },
 ];
 
 /**
@@ -1370,6 +1377,18 @@ export const OWNED_TABLES: OwnedTable[] = [
  * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'question_banks',
+    why: 'An instructor’s bank of questions for a course. The course’s, not any student’s; if you wrote one, your name is cleared and the bank stays.',
+  },
+  {
+    table: 'bank_items',
+    why: 'A question in a bank, with its key. The course’s, not any student’s; if you wrote one, your name is cleared and the question stays.',
+  },
+  {
+    table: 'assessments',
+    why: 'A timed test of a course. The course’s, not any student’s; if you wrote one as an instructor, your name is cleared and the test stays.',
+  },
   {
     table: 'attendance_sessions',
     why: 'A class meeting a code can check in to. The course’s, not any student’s; if you opened one as an instructor, your name is cleared and the session stays.',

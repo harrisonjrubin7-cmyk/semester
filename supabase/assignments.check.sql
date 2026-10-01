@@ -434,6 +434,10 @@ begin
   perform pg_temp.counted('deleting the instructor clears their name, not the assignment',
     (select count(*) from public.assignments where id = a1 and created_by is null), 1);
 
+  delete from auth.users where id = ta;
+  perform pg_temp.counted('deleting the TA who granted an extension clears their name, not the extension',
+    (select count(*) from public.assignment_overrides where granted_by is null), 1);
+
   raise notice 'assignments: all checks passed';
 end $$;
 

@@ -392,9 +392,13 @@ describe('"delete my account" really means every row', () => {
       'academic_record_changes',
       'academic_record_entries',
       // A course's assignment, kept with the course (D-151).
+      // Part of a course's tests, kept with the course.
+      'assessments',
       'assignments',
       // A class meeting a code can check in to, kept with the course.
       'attendance_sessions',
+      // Part of a course's tests, kept with the course.
+      'bank_items',
       'commercial_prices',
       'communities',
       'community_calibration_items',
@@ -457,6 +461,8 @@ describe('"delete my account" really means every row', () => {
       'organizations',
       // A school's registration calendar and sections (lib/enrollment/client.ts,
       // 20260929300000_registration_transaction.sql).
+      // Part of a course's tests, kept with the course.
+      'question_banks',
       'registration_sections',
       'registration_terms',
       'reports',
