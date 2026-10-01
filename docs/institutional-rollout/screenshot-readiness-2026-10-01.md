@@ -34,8 +34,8 @@ evidence that a feature is missing or operational.
 | Department admin, cohort publishing | Role and publication code exists | Run with an actual sponsor and approved cohort; capture UAT |
 | Sponsor and data scope | Pilot agreement outline exists | Named sponsor and mutually approved scope |
 | Counsel-reviewed order form | Contract outlines exist | Counsel review and executed agreement |
-| Staff training | `docs/pilot/QUICK-START.md`, `FIRST-DAY-CHECKLIST.md` | Deliver training to the pilot staff and record completion |
-| Pilot measures and baseline | Institutional rollout/pilot materials exist | Agree measures with the sponsor and collect a real baseline |
+| Staff training | Role-specific guides and first-day checklists under `docs/launch/`; indexed and structurally checked by `app/src/lib/launch/content.test.ts` | Deliver the prepared training to the named pilot staff and record the institution's sign-off |
+| Pilot measures and baseline | `docs/launch/PILOT-MEASURES-BASELINE-WORKSHEET.md` provides the scope, source, baseline, threshold and decision record | Agree the prepared measures with the sponsor and collect a real baseline |
 | SAML SSO / SCIM | Institutional source and tests | Institution-specific identity/provisioning/deprovisioning verification |
 | Canvas LTI 1.3 | Active `lti` function | Real platform registration, keys, deployment IDs and launch/role/deep-link UAT |
 | Tenant isolation | RLS enabled on all production public tables | Keep the SQL policy suites green and produce named-tenant isolation evidence |
@@ -50,7 +50,7 @@ evidence that a feature is missing or operational.
 | Course Studio authoring | Capability register lists scoped institutional work | Complete and validate the instructor-authoring release with its institution and accessibility evaluation |
 | Assessment, timing, accommodations | Scoped assessment modules exist | Institutional assessment release and keyboard/accommodation/extension validation |
 | Maintenance notices | New `app/scripts/maintenance.ts` validates windows and generates incident JSON plus Atom subscriber feed | Review institution-specific registration/finals exclusions; publish a real schedule only when maintenance is actually agreed; email delivery is not provided by Atom |
-| Customer notifications | Governance notice records and incident process exist | Configure customer contacts, subscription preferences and actual email delivery; perform a designated delivery drill |
+| Customer notifications | Governance notice records and incident process exist; the public form now records a request for manual setup without claiming that submission activates a subscription | Configure self-service preferences and confirmed email delivery; add named customer contacts and perform a designated delivery drill |
 | Timed rollback | `ROLLBACK.md` documents the mechanism and deployment timings | Conduct and record an actual rollback exercise; normal deploy timings are not a rollback drill |
 | Independent status hosting | The company-site status view is live on Vercel while the product status page is live on GitHub Pages; both were reached directly on 1 October | Keep both providers and checks operational; the incident file/history still comes from GitHub, and neither surface substitutes for a production restore |
 | Native LMS and migration | Module/capability registers contain remaining work | Complete contracted course/submission/gradebook/assessment paths and rehearsed migration with reconciliation and rollback |

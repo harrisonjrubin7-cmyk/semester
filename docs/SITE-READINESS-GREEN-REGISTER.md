@@ -19,6 +19,8 @@ This register records what Semester can truthfully mark green from repository ev
 | VPAT-style accessibility self-assessment | `docs/compliance/VPAT-ACR-SELF-ASSESSMENT.md` | A scoped self-assessment is available for review | It is not a formal ACR or third-party conformance finding |
 | Procurement responses | `docs/HIGHER-ED-RFP-RESPONSE-LIBRARY.md`; `docs/market-readiness/`; `docs/trust/` | Draft response material is published and reviewable | Counsel, insurer, auditor, and customer approvals remain separate |
 | Legal and policy drafts | `docs/legal/`; `docs/trust/SLA.md`; `docs/SUBPROCESSORS.md`; `docs/trust/DPA-CHECKLIST.md` | Named drafts, proposed terms, or registers exist | Drafts are not in-force agreements; the student-data addendum and DPA agreement still require counsel |
+| Staff pilot training package | `docs/launch/FACULTY-QUICK-START.md`; `docs/launch/ADVISOR-QUICK-START.md`; `docs/launch/ADMIN-OPERATIONS-GUIDE.md`; `docs/launch/FIRST-DAY-CHECKLISTS.md` | Role-specific written material exists and passes the launch-package checks | Delivery, attendance and customer acceptance require a named pilot |
+| Pilot measurement worksheet | `docs/launch/PILOT-MEASURES-BASELINE-WORKSHEET.md` | A fillable scope, method, baseline, threshold and decision record is ready | No measure is agreed and no baseline exists until a customer completes it |
 | Immutable CI action pins | `.github/workflows/*.yml` | Third-party workflow actions use full commit hashes | Repository ruleset activation remains a GitHub owner setting |
 | Release SBOM | `.github/workflows/pages.yml`; `app/package.json`; `app/src/lib/supplychain.test.ts` | Pages builds generate a CycloneDX SBOM and retain it for 90 days | No signed provenance statement is claimed |
 

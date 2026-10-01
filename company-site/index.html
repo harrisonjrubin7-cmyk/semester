@@ -2456,10 +2456,10 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       <div class="box"><p class="eyebrow">Incidents</p><div id="st-inc" style="margin-top:8px"><p class="muted" style="font-size:14px">Loading the incident list from the product's status page…</p></div>
         <p class="eyebrow" style="margin-top:16px">Scheduled maintenance</p><p class="muted" style="margin-top:6px;font-size:14px">None scheduled. We plan maintenance outside registration windows and finals.</p>
         <a class="link" style="display:inline-block;margin-top:14px" href="https://harrisonjrubin7-cmyk.github.io/semester/status.html" target="_blank" rel="noopener">Open the app's own status page →</a></div>
-      <form class="f box" id="st-sub" novalidate><p class="eyebrow">Get incident updates by email</p>
+      <form class="f box" id="st-sub" novalidate><p class="eyebrow">Request incident updates by email</p>
         <div class="fr"><label for="st-name">Name<input id="st-name" autocomplete="name"></label><label for="st-addr">Email<input id="st-addr" type="email" autocomplete="email"></label></div>
-        <p class="err" id="st-err" hidden></p><button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">Subscribe</button><div class="ok" id="st-ok" hidden></div>
-        <p class="fine"><a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/status-feed.xml" target="_blank" rel="noopener">Incident feed (Atom)</a>. A webhook feed is planned.</p></form>
+        <p class="err" id="st-err" hidden></p><button class="btn btn-primary btn-sm" type="submit" style="justify-self:start">Request updates</button><div class="ok" id="st-ok" hidden></div>
+        <p class="fine">The request is recorded for manual setup; you are not subscribed until Semester confirms it by email. For immediate self-service updates, use the <a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/status-feed.xml" target="_blank" rel="noopener">incident feed (Atom)</a>.</p></form>
     </div>
   </div></section>
   <section class="blk rule"><div class="wrap">
@@ -2477,7 +2477,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <div class="grid-3" style="margin-top:20px">
       <div class="tile"><h3 class="h4">Incidents</h3><p>Written templates for the first notice, updates, the resolution notice and an internal handoff record. Incidents are posted to the product status page. <span class="cs cs-av">Available now</span></p></div>
       <div class="tile"><h3 class="h4">Maintenance</h3><p>Reviewed maintenance windows can be scheduled ahead, checked against registration and finals exclusions, and published to the status page, in-app notices and Atom feed. Email delivery remains pending. <span class="cs cs-av">Available now</span></p></div>
-      <div class="tile"><h3 class="h4">Customer notifications</h3><p>Security incidents that affect people are notified by email under the incident process; subscription preferences and customer-contact notices are planned. <span class="cs cs-ip">In preparation</span></p></div>
+      <div class="tile"><h3 class="h4">Customer notifications</h3><p>Status-update requests are recorded through this page, and security incidents that affect people follow the email-notice process. Self-service preference management, confirmed delivery and a customer-contact drill remain pending. <span class="cs cs-ip">In preparation</span></p></div>
       <div class="tile"><h3 class="h4">Release notes</h3><p>The product keeps a tester-facing changelog: what you'll see, and whether you need to do anything. Public highlights are on the <a class="link" href="#roadmap">roadmap &amp; changelog</a> and <a class="link" href="#trust-updates">trust updates</a>.</p></div>
       <div class="tile"><h3 class="h4">Rollback</h3><p>A written rollback procedure; a timed rollback test is planned. <span class="cs cs-ip">In preparation</span></p></div>
       <div class="tile"><h3 class="h4">Independent hosting</h3><p>Redundant status views run on separate providers: this company-site view on Vercel and the product status page on GitHub Pages. <span class="cs cs-av">Available now</span></p></div>
@@ -3431,8 +3431,8 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <div class="box"><p class="eyebrow">Departments</p><p class="aud-q">What does our launch require?</p>
       <div class="ready" style="margin-top:14px">
         <div><h4 style="color:var(--sage)">Ready now</h4><ul><li>Students can use the app on their own, with no data from you</li><li>A written launch method and a scoping conversation</li></ul></div>
-        <div><h4 style="color:var(--sage)">Controlled evidence complete · customer use pending</h4><ul><li>Department admin role</li><li>Cohort resources and action publishing</li></ul></div>
-        <div><h4 style="color:var(--ink-dim)">Needed before a paid launch</h4><ul><li>A department sponsor and an agreed data scope</li><li>An order form reviewed by counsel</li><li>Staff training material</li><li>Agreed pilot measures and a baseline</li></ul></div>
+        <div><h4 style="color:var(--sage)">Controlled evidence complete · customer use pending</h4><ul><li>Department admin role</li><li>Cohort resources and action publishing</li><li>Role-specific staff training guides and first-day checklists</li><li>A pilot measures and baseline worksheet</li></ul></div>
+        <div><h4 style="color:var(--ink-dim)">External acceptance still needed</h4><ul><li>A department sponsor and an agreed data scope</li><li>An order form reviewed by counsel</li><li>Training delivered to the named pilot staff</li><li>Measures agreed with the sponsor and a real baseline collected</li></ul></div>
       </div></div>
     <div class="box"><p class="eyebrow">Institutions</p><p class="aud-q">What is ready now versus in configured beta?</p>
       <div class="ready" style="margin-top:14px">
@@ -5131,7 +5131,7 @@ const exampleRow = (scale = 1) => ({
   const sf2=fresh("st-sub");
   sf2.addEventListener("submit",e=>{e.preventDefault();const err=document.getElementById("st-err"),ok=document.getElementById("st-ok");
     if(!val("st-name"))return bad(err,ok,"Please add your name.");if(!EMAIL_RE.test(val("st-addr")))return bad(err,ok,"Enter a valid email.");
-    sendLead({route:"general_contact",name:val("st-name"),email:val("st-addr"),message:"Please email me about Semester status incidents.",fields:{kind:"updates-subscription",topics:"Status incidents"},form:sf2,ok,err})});
+    sendLead({after:"Your request is recorded for manual setup. You are not subscribed until Semester confirms it by email.",route:"general_contact",name:val("st-name"),email:val("st-addr"),message:"Please set up email updates about Semester status incidents.",fields:{kind:"status-update-request",topics:"Status incidents"},form:sf2,ok,err})});
 
   // updates subscription
   const uf2=fresh("up-form");
