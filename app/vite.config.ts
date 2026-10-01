@@ -730,6 +730,7 @@ const MOCKS_MODULES = [
   'src/lib/graduation-cloud.test.ts',
   'src/lib/advisor-shares.test.ts',
   'src/components/SourceLocker.test.tsx',
+  'src/components/StudentOperating.test.tsx',
   'src/components/AdvisorMeeting.test.tsx',
   'src/components/OfficeActionFeed.test.tsx',
   'src/components/DataRightsRequests.test.tsx',

@@ -1,3 +1,4 @@
+import { OperatingLauncher } from '../components/OperatingLauncher';
 import { Fragment, lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -784,6 +785,7 @@ function TabHome() {
 
   return (
     <Page bottom={26}>
+      <OperatingLauncher />
       {/*
         Four tabs, not five. The fifth was Report, and it rendered the Reports
         screen inline — the same body, sharing the same `state.report` grain,
