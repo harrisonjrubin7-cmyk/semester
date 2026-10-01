@@ -67,6 +67,7 @@ const CALLS: Record<string, number> = {
   'components/StudyReadiness.tsx': 1,
   'components/StudyStudio.tsx': 1,
   'components/TodayActionCenter.tsx': 1,
+  'components/TodayGuide.tsx': 2,
   'components/TrustCenter.tsx': 2,
   'components/institutional/OperationsStudio.tsx': 1,
   'components/soft/SoftTopBody.tsx': 3,
@@ -132,6 +133,8 @@ const STORES: Record<string, 'backed up' | { exempt: string }> = {
   'semester.hub.v1': { exempt: OTHER_MODULE },
   'semester.launchpad.v1': { exempt: OTHER_MODULE },
   'semester.opportunities.v1': { exempt: OTHER_MODULE },
+  'semester.guide-choices.v1': { exempt: 'Which Guide suggestions the student snoozed, passed on or hid, and until when (lib/guide-bar.ts). A display marker that expires on its own; a restored copy would only hide a suggestion that had already come back.' },
+  'semester.calm.v1': { exempt: 'The student’s briefing, quiet-hours, digest and pause choices (lib/calm-controls.ts). Their own settings, so a candidate for the backup; ' + OTHER_MODULE },
 };
 
 describe('every device store is backed up or named', () => {
