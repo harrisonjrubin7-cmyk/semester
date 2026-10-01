@@ -27,6 +27,7 @@ export const ACCESS_MODES = [
   { id: 'chunk', label: 'One step at a time', blurb: 'Checklists show the next step alone, with the rest folded away.' },
   { id: 'predictable', label: 'Predictable layout', blurb: 'Lists keep a fixed order instead of rearranging by what is most urgent.' },
   { id: 'sensory', label: 'Sensory-friendly first', blurb: 'Quiet, low-stimulation spaces and events are listed first.' },
+  { id: 'contrast', label: 'Increase contrast', blurb: 'Stronger text and borders across the app.' },
 ] as const;
 
 export type AccessMode = (typeof ACCESS_MODES)[number]['id'];

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { SourceBadge } from './SourceBadge';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CostPlanner } from './CostPlanner';
@@ -131,6 +131,7 @@ export function GraduationSimulator({
     setStatus(`Added “${preset.name}”.`);
   };
 
+  const assumptions = useRef<HTMLInputElement>(null);
   const text = summary(data, done);
 
   return (
@@ -156,6 +157,17 @@ export function GraduationSimulator({
           you enter — it does not know course sequencing, when classes are offered, or your financial aid.
         </p>
         <RecordLabel kind="degree_audit" />
+        <details>
+          <summary>This plan assumes</summary>
+          <ul>
+            <li>{plan.needed} total credits needed, from the numbers you entered</li>
+            <li>{plan.perTerm} credits per fall or spring</li>
+            <li>{plan.summer} credits each summer</li>
+            <li>Your next term is {termLabel(plan.next)}</li>
+            <li>Course sequencing and financial aid are not included</li>
+          </ul>
+          <button type="button" className="btn btn-ghost" onClick={() => assumptions.current?.focus()}>Edit assumptions</button>
+        </details>
         <div className="portal-filter-row">
           <label className="portal-check">
             Hours your degree needs
@@ -163,6 +175,7 @@ export function GraduationSimulator({
               className="input"
               type="number"
               inputMode="numeric"
+              ref={assumptions}
               min={1}
               max={400}
               value={plan.needed}

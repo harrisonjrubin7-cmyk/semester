@@ -103,10 +103,18 @@ Final verification: the shuffled application suite also passed all 1,220 files a
 Release follow-up (2026-10-01): the user explicitly approved public source publication and deployment after CI. PR #1068 is published; merge and deployment remain gated on CI and review findings.
 
 Review corrections:
-- Reconfirmed source revisions refresh only their persisted clocks and governance metadata; provider values stay unchanged. Concurrently replaced/deleted revisions cannot be refreshed, and a reappearing source record receives a full import.
+- Reconfirmed source revisions refresh only their retrieval and freshness clocks, using the stored freshness duration; provider values, provenance, purpose and retention deadlines stay unchanged even when an adapter declaration changes. Concurrently replaced/deleted revisions cannot be refreshed, and a reappearing source record receives a full import.
 - Reconciliation tombstones all missing references in one database call while retaining each row's own governance envelope.
 - A migration preserves the provider's 4 KB display allowance with a bounded server-metadata allowance. Flat values and never-ingest rules remain enforced.
 - Direct LTI context writes now persist source, purpose, expiry and default AI denial. Tenant-wide LTI context uses the existing tenant-lifetime retention policy, with a null time-based expiry; no new retention sweep is claimed.
 - The explicit publication command selects strict mode even without a supplied directory, so missing artifacts fail instead of being skipped.
 
 Focused regression validation: 178 tests passed, along with application/gateway type checks and lint. The publication command correctly exits nonzero when external artifacts are absent. SQL regression cases cover near-limit displays, direct LTI metadata, tenant isolation, source revision races and tombstone retention; PostgreSQL 17 validation is pending in CI.
+
+## Approved release retry
+
+HawkScan run `36893630069` and CI run `36893630341` passed for published head `f6f2d0ea81229fc82d0a7a1217604352ba120393`. The user subsequently approved publishing the final review fixes, merging and deploying after fresh CI passes.
+
+After workspace maintenance removed the earlier local checkout, the final fixes were reconstructed from the recorded changes on PR #1068 and merged with main `d51963dfe6d9701de4efe216cbe2a4ee3f00a16d`. Metadata-only refreshes now preserve stored provenance, purposes, retention deadlines and freshness duration; only retrieval/freshness clocks change. Worker and SQL regressions cover changed adapter source, purpose, version and duration. Role validation uses a small ID module so startup does not load conversation prompts and tool policies.
+
+Restored local validation: 98 focused tests passed; production build, performance budgets (431.3 KB startup), lint and institutional gateway type checks passed. The updated SQL regression awaits PostgreSQL 17 validation in fresh CI. Publication, merge and deployment will be verified on the final commit; institutional activation still requires the evidence described above.

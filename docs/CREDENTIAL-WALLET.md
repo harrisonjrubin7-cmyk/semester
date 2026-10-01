@@ -5,10 +5,10 @@ the student's own evidence, plus achievements an authorised issuer has
 verified, plus sharing and export the student controls. **It is not** a
 transcript replacement, a social profile, or an employer search engine.
 
-**Where it sits in the roadmap: Tier 2, Phase 3.** It comes after identity,
+**Where it sits in the roadmap: Tier 2, Phase 3.** Its device-local foundation
+now exists; institution issuance and recipient sharing still come after identity,
 sharing, verification, privacy, issuer governance, retention and portability
-controls are mature, not before. This page is its design. Nothing new is
-built by it, and [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-REGISTER.md)
+controls are mature, not before. [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-REGISTER.md)
 (areas `CRD`, `PRF`, `EVG`) tracks each piece.
 
 ## Most of the foundation is already here
@@ -27,6 +27,7 @@ made for the career hub.
 | Course → skill → artifact → opportunity | The skills graph, with "because of" reasons | `app/src/lib/skills-graph.ts` |
 | Employer visibility | Opt-in, **expires after 180 days** (at most 366), must be renewed; employers need `talent:search` | `talent_profiles` |
 | Viewing history | A receipt per employer view | `talent_profile_views` |
+| Learner-controlled wallet surface | Student-confirmed skills and selected artifacts, each with an authority label; selected JSON export says it is not official | `app/src/components/CredentialWallet.tsx`, `app/src/lib/credential-wallet.ts` |
 
 ## What a student sees
 
@@ -49,8 +50,8 @@ My Credentials
 
 | Item | Authority | What the student can do | Exists? |
 | --- | --- | --- | --- |
-| Student-entered skill | Student | Edit, delete, share | Yes |
-| Evidence artifact | Student-selected | Add, remove, share | Yes (device-local) |
+| Student-entered skill | Student | Edit, delete, place in a selected export | Yes |
+| Evidence artifact | Student-selected | Add, remove, place in a selected export | Yes (device-local) |
 | Verification request | Student initiates | Withdraw | Yes: edit back to `self_reported` |
 | Verified skill | Scoped verifier (faculty, career office) | Display and share; **cannot alter the issuer's claim** | Yes |
 | Institution credential (badge, certificate) | Authorised institutional issuer | Hold and share; **issuer corrects or revokes** | **No** |
@@ -63,7 +64,7 @@ Each safeguard is either held today or a gap the build must close first.
 
 | Safeguard | State |
 | --- | --- |
-| Private by default | Held: `talent_profiles.opted_in` defaults false. A portfolio item's visibility column is planned, not built |
+| Private by default | Held: the wallet is device-local and exports only checked items; `talent_profiles.opted_in` defaults false. A portfolio item's server visibility column is planned, not built |
 | No employer search without active, renewable opt-in | Held: the employer policy requires `opted_in and expires_at > now()` |
 | Student sees employer views | Held: `talent_profile_views` |
 | No claim of institution verification unless an authorised role issued it | Held for skills (scoped `skill:verify`); **no** issuer model for credentials yet |
@@ -91,10 +92,10 @@ the exact content, scope, duration and identity shown → confirm → the recipi
 sees a restricted view → every view is logged for the student → revoke at any
 time, immediately.
 
-**Export.** Select items and a format → see the official-versus-student-entered
-distinction on every item → download a machine-readable package where one is
-supported → request an institution-issued credential separately. Every export
-carries "Not an official transcript", as the career hub already requires.
+**Export.** Select items → see the authority distinction on every item →
+download a JSON package containing only those items → request an
+institution-issued credential separately. Every export carries “Not an official
+transcript or institution-issued credential.”
 
 ## Standards, in order
 

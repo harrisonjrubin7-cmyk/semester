@@ -52,6 +52,7 @@ import { ControlPlane } from '../components/institutional/ControlPlane';
 import { TrustDashboard } from '../components/institutional/TrustDashboard';
 import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
 import { CampaignManager } from '../components/institutional/CampaignManager';
+import { InstitutionalPackage } from '../components/institutional/InstitutionalPackage';
 import { campaignsAllowed } from '../lib/gtm/manager';
 import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
 import { workflowsAllowed } from '../lib/workflow/allowed';
@@ -152,6 +153,7 @@ const tabsFor = (verified: readonly string[]) => [
   { id: 'drafts' as const, label: 'Drafts' },
   { id: 'records' as const, label: 'Records' },
   { id: 'connections' as const, label: 'Connections' },
+  { id: 'package' as const, label: 'Institutional package' },
   ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
     ? [{ id: 'control' as const, label: 'Control' }, { id: 'trust' as const, label: 'Trust' }]
     : []),
@@ -205,7 +207,7 @@ const tabsFor = (verified: readonly string[]) => [
     : []),
 ];
 
-type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
@@ -821,6 +823,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <HelpInbox account={account} onInboxes={countHelp} />
         </>
       )}
+
+      {tab === 'package' && <InstitutionalPackage />}
 
       {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
         <ControlPlane

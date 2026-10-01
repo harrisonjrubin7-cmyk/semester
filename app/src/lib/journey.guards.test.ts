@@ -299,7 +299,7 @@ describe('access modes', () => {
       for (const r of reads) expect(src.slice(Math.max(0, r.index! - 20), r.index), file).toMatch(/hasMode\($/);
       expect(src, file).not.toMatch(/setLook[^}]*access/);
     }
-    expect(ACCESS_MODES).toHaveLength(4);
+    expect(ACCESS_MODES).toHaveLength(5);
   });
 });
 

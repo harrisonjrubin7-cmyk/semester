@@ -95,6 +95,28 @@ describe('a run', () => {
     expect(t.canonical_entity_references).toHaveLength(1);
   });
 
+  it('keeps stored provenance, purpose, freshness duration and retention when an adapter changes', async () => {
+    const t = world();
+    const db = fakeDb(t);
+    await runSync(db, req([SIS_FIXTURES.term]), now);
+    const row = t.canonical_entity_references[0];
+    const first = JSON.parse((row.display as Record<string, string>)._governance);
+    const later = new Date(NOW.getTime() + 60_000);
+    const adapter = { ...MOCK_SIS, version: '2',
+      sourceOfTruth: 'Replacement authority', freshnessTargetMinutes: MOCK_SIS.freshnessTargetMinutes * 2,
+      retentionDays: MOCK_SIS.retentionDays * 2,
+      entities: MOCK_SIS.entities.map((entity) => entity.externalEntity === 'term'
+        ? { ...entity, version: 2, scope: 'scope.sis.catalog_read' } : entity) };
+    expect(await runSync(db, req([SIS_FIXTURES.term], { adapter,
+      fetchBatch: batch([SIS_FIXTURES.term], 'evt-2') }), () => later))
+      .toMatchObject({ result: { status: 'succeeded', unchanged: 1, updated: 0 } });
+    const refreshed = JSON.parse((row.display as Record<string, string>)._governance);
+    expect(refreshed).toEqual({ ...first, retrievedAt: later.toISOString(),
+      expiresAt: new Date(Date.parse(first.expiresAt) + 60_000).toISOString() });
+    expect(row.source_of_truth).toBe(MOCK_SIS.sourceOfTruth);
+    expect(row.mapping_version).toBe(MOCK_SIS.entities[0].version);
+  });
+
   it('preserves stored values when a corrected payload has the same source timestamp', async () => {
     const t = world();
     const db = fakeDb(t);

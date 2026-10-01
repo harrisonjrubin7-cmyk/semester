@@ -112,7 +112,12 @@ export function fakeDb(tables: Tables) {
         const hit = (args.want_records as Row[]).find((x) => x.entity === row.canonical_entity_type
           && x.id === row.source_record_id && x.timestamp === row.source_timestamp);
         if (!hit) continue;
-        row.display = { ...display, _governance: hit.governance };
+        const prior = typeof display._governance === 'string' ? JSON.parse(display._governance) : null;
+        row.display = { ...display, _governance: prior ? JSON.stringify({ ...prior,
+          retrievedAt: args.want_at,
+          expiresAt: new Date(Date.parse(String(args.want_at))
+            + Date.parse(prior.expiresAt) - Date.parse(prior.retrievedAt)).toISOString(),
+        }) : hit.governance };
         row.freshness_status = 'live';
       } else if (name === 'integration_tombstone_references') {
         if (row.canonical_entity_type !== args.want_entity || !(args.want_ids as string[]).includes(String(row.source_record_id))) continue;

@@ -3,6 +3,7 @@ import { COUNCIL } from '../lib/launchreadiness';
 import { KNOWN_LIMITATIONS, KNOWN_LIMITATIONS_AS_OF, REPORT } from '../lib/knownlimitations';
 import { AUDIENCES, CLAIMS, PROOF_RULES, STATUS_LABEL } from '../lib/ops/claims';
 import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, priceLine } from '../lib/plans';
+import { INSTITUTIONAL_PACKAGE, ROLLOUT_PHASES } from '../lib/institutional-package';
 import { AudienceClaims, ClaimItem, ClaimList, ClaimTable, PolicyTable, StatusLegend } from './claims';
 import { CONTACT_EMAIL, PROMISE, type SiteConfig } from './config';
 import { appHref, href } from './Layout';
@@ -194,23 +195,28 @@ export const Students: Page = ({ config }) => (
 
 export const Institutions: Page = ({ config }) => (
   <>
-    <Hero title="For institutions" lead="Turn fragmented systems into clearer student action — starting with a small, measured pilot.">
+    <Hero title="Semester Institutional" lead="Replace the LMS gradebook and fragmented student systems through one package and a controlled, phased migration.">
       <p className="site-actions">
         <a className="site-button" href={href(config, '/demo/')}>Explore a sample university</a>
         <a href={href(config, '/contact/')}>Talk to us</a>
       </p>
     </Hero>
-    <Section title="What a pilot looks like" id="i-pilot">
+    <Section title="One package" id="i-package">
       <ul>
-        <li>One cohort of 25 to 100 students around a registration or advising moment.</li>
-        <li>Student-entered data first, so no records change hands before an agreement exists.</li>
-        <li>Clear measures: can students say what to do next, and are advising conversations better prepared?</li>
+        {INSTITUTIONAL_PACKAGE.includes.map((item) => <li key={item}>{item}</li>)}
       </ul>
+    </Section>
+    <Section title="Pilot to campus-wide cutover" id="i-pilot">
+      <ol>
+        {ROLLOUT_PHASES.map((phase) => <li key={phase.id}><strong>{phase.name}.</strong> {phase.outcome}</li>)}
+      </ol>
+      <p>The package removes a fragmented buying process. It does not remove security, privacy, accessibility, approval, reconciliation or rollback gates.</p>
     </Section>
     <Section title="How Semester connects" id="i-connect">
       <p>
-        Official systems stay official. Semester links to your registration, learning and billing systems rather than
-        replacing them, and any connection starts read-only, least-privilege, and under a written agreement. No
+        Semester starts beside the systems you have, read-only and least-privilege. After conformance, parallel-run and
+        migration evidence is approved, Semester can become the institution's LMS and gradebook of record. Registration,
+        finance and other official writes remain off until the institution separately authorizes each workflow. No
         institutional connection is live today.
       </p>
       <p>Each connection below carries the word the register gives it. None is running for an institution yet.</p>

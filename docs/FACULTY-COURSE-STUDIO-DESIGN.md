@@ -1,8 +1,15 @@
 # Faculty Course Studio — design
 
-**Status: decided by the owner, 27 Sep 2026.** F1–F7 (§7) were approved as
+**Status: partially superseded 1 Oct 2026 by D-1067.** F1–F7 (§7) were approved as
 recommended. Slices follow §8. Every migration still needs separate approval
 before it is applied to production.
+
+The privacy, course-scope, immutable-publishing and student-control decisions
+below still hold. The “no duplicate LMS/gradebook” product boundary does not:
+Semester Institutional now includes a native LMS and gradebook intended to
+replace the incumbent through a pilot, parallel run, migration and authorized
+cutover. This document remains the historical design for Course Studio's first
+slices; [D-1067](decisions/D-1067.md) records the newer direction.
 
 The brief (`docs/expansion/Semester-Master-Implementation-Brief-v2.md`) puts
 Faculty Course Studio in Phase 2, "Educator value", beside faculty-approved
@@ -30,9 +37,9 @@ Students in the course see all three, labelled **"Set by your instructor"**,
 with the date it was published. The AI tools they already have then follow the
 rules.
 
-**It is not:**
-- a gradebook;
-- a file host or a second LMS (packs link out to the LMS);
+**This first Course Studio slice is not:**
+- the gradebook surface (the native gradebook is implemented separately);
+- a file host or complete LMS authoring surface (packs still link out today);
 - a roster;
 - a view of any student's plan, study activity or AI use.
 

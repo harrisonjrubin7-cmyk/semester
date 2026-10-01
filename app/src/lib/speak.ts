@@ -125,6 +125,8 @@ export function speakThen(text: string, rate: number, done: (spoke: boolean) => 
       hush();
     };
   } catch {
+    speaking = null;
+    done(false);
     return () => {};
   }
 }

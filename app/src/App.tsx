@@ -21,6 +21,7 @@ import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { MODE_ATTR } from './components/unity/modes';
+import { hasMode } from './lib/accessmode';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
@@ -87,7 +88,7 @@ import { Keys } from './components/Keys';
 import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
-import { QuickAdd } from './components/QuickAdd';
+import { DeferredQuickAdd as QuickAdd } from './components/DeferredQuickAdd';
 import { UnityLayer } from './components/unity/UnityLayer';
 import { LoadingState } from './components/unity/States';
 import { SystemContextBar } from './components/unity/SystemContextBar';
@@ -1152,7 +1153,8 @@ function AppFrame() {
   // once, so everything downstream sees a ground that names real colours. See
   // `lib/look.ts`.
   const prefersDark = usePrefersDark();
-  const moreContrast = usePrefersContrast();
+  const deviceContrast = usePrefersContrast();
+  const moreContrast = deviceContrast || hasMode(state.access, 'contrast');
   const lookKey = JSON.stringify({
     ...currentLook(state),
     ground: resolveGround(state.ground, prefersDark),
@@ -1217,6 +1219,7 @@ function AppFrame() {
     // The workspace mode rides along the same way, so the stylesheet can
     // show and hide by it without any screen having to read the store.
     root.setAttribute(MODE_ATTR, workspaceModeOf((JSON.parse(lookKey) as Look).workspaceMode));
+    root.setAttribute('data-contrast', moreContrast ? 'more' : 'device');
 
     /*
      * And the other half of the browser's chrome.

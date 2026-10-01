@@ -121,6 +121,8 @@ export function migrationReport(): Migrated | null {
  * ephemeral navigation state that should reset.
  */
 export interface Persisted {
+  /** Private, student-entered planning; excluded from routine AI context. */
+  operatingWorkspace?: string | null;
   nav: NavMode;
   /**
    * Every answer you have given, keyed by card.
@@ -1349,6 +1351,7 @@ export function unseen(remote: Seen, seen: Seen | null): boolean {
 }
 
 export const DEFAULT_PERSISTED: Persisted = {
+  operatingWorkspace: null,
   /*
    * The workspace is what the app opens as: a tab strip, one search field
    * under it, and the launcher — `firstScreen` puts you on `search`, which is
@@ -2061,6 +2064,7 @@ export function pickPersisted(state: State): Persisted {
     cleared: state.cleared,
     tasks: state.tasks,
     appointments: state.appointments,
+    operatingWorkspace: state.operatingWorkspace,
     notes: state.notes,
     updates: state.updates,
     feeds: state.feeds,
@@ -2656,6 +2660,7 @@ export type Action =
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */
+  | { type: 'setOperatingWorkspace'; value: string | null }
   | { type: 'keepNote'; title: string; body: string; courseId: CourseId | null }
   | { type: 'openNote'; id: string }
   | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId' | 'itemId'>> }

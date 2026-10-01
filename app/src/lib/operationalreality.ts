@@ -190,8 +190,8 @@ const TIER_ROWS: readonly TierRow[] = [
     [['app/src/lib/governance/error-budgets.ts', 'sign_in 99.95, assignment_draft_save 99.99'], ['app/src/lib/draft.test.ts', 'drafts survive'], ['docs/market-readiness/INCIDENT_RESPONSE.md', 'SEV1–SEV4'], ['app/src/lib/syncstatus.test.ts', 'stale-data fallback']],
     'No live SSO or LMS exchange has run; fallback is tested in unit tests only.'],
   ['Tier 3', 'Grading, assessments, payments, high-impact record workflows', 'Strongest controls, change-freeze periods, reconciliation, senior approval', 'held',
-    [['docs/FACULTY-COURSE-STUDIO-DESIGN.md', 'no gradebook'], ['docs/DECISION-LOG.md', 'D-009: no billing; D-108: gradebook held'], ['app/src/lib/masterregister.ts', 'SRE-009: no academic peak calendar or change-freeze policy']],
-    'Nothing in this tier is built, by decision; the freeze calendar it would need does not exist either.'],
+    [['docs/DECISION-LOG.md', 'D-009: payments remain held'], ['docs/decisions/D-1067.md', 'gradebook direction reopened; cutover remains gated'], ['app/src/lib/masterregister.ts', 'SRE-009: no academic peak calendar or change-freeze policy']],
+    'The gradebook is built, but Tier 3 activation remains held pending a peak calendar, change-freeze policy, institutional parallel run and cutover approval; payments remain out by decision.'],
   ['Restricted', 'Basic-needs intake, accommodation workflows, health and safety data', 'Explicit institutional owner, restricted access, special privacy and safety controls', 'building',
     [['app/src/lib/ops/console.ts', 'the restricted classification: named grant, logged read'], ['docs/MODULE-PRIVACY-MODEL.md', 'no basic-needs case-manager role'], ['docs/CRISIS-RESPONSE-RUNBOOK.md', 'person-at-risk reports']],
     'A data class exists; no restricted workflow or owner does.'],
@@ -244,14 +244,9 @@ export const FACTORY: readonly Item[] = rows('OR-FACT', [
 
 // ── 7. Packaging, brand and the readiness test ──────────────────────────────
 
-/** The five packages plus services, each pointing at the launch kit modules that carry it. */
+/** One institutional package: modules phase in, but buying is not fragmented. */
 export const PACKAGES: readonly { package: string; holds: string; kitModules: readonly string[] }[] = [
-  { package: 'Semester Foundation', holds: 'Identity, Today, planning, calendar and actions, source/scope/status, resource navigation, accessibility and data controls, support routing', kitModules: ['LK-MOD-01', 'LK-MOD-02', 'LK-MOD-06'] },
-  { package: 'Semester Learning', holds: 'Native LMS and course workspace, Study Studio, work completion, assessment, feedback, gradebook, course AI policy', kitModules: ['LK-MOD-03', 'LK-MOD-04'] },
-  { package: 'Semester Student Life', holds: 'Community, clubs, events, mentorship, transfer, service navigation, basic-needs directory, communications', kitModules: ['LK-MOD-05', 'LK-MOD-06'] },
-  { package: 'Semester Pathways', holds: 'Career, opportunities, portfolio, skills evidence, credentials, alumni and employer programs', kitModules: ['LK-MOD-07'] },
-  { package: 'Semester Institutional Control Plane', holds: 'SSO, integrations, policy configuration, operations console, audit and evidence, AI control center, security, privacy and accessibility controls', kitModules: ['LK-MOD-08', 'LK-MOD-09', 'LK-MOD-10'] },
-  { package: 'Services', holds: 'Implementation, migration, training, premium support, advisory, custom integration under disciplined scope', kitModules: ['LK-MOD-12'] },
+  { package: 'Semester Institutional', holds: 'The student operating system, native LMS and gradebook, institutional control plane, SSO/LTI/OneRoster and approved SIS integrations, plus pilot, migration, training, cutover and hypercare', kitModules: ['LK-MOD-01', 'LK-MOD-02', 'LK-MOD-03', 'LK-MOD-04', 'LK-MOD-05', 'LK-MOD-06', 'LK-MOD-07', 'LK-MOD-08', 'LK-MOD-09', 'LK-MOD-10', 'LK-MOD-11', 'LK-MOD-12'] },
 ];
 
 export const BRAND: readonly { asset: string; asks: string; tree: string }[] = [

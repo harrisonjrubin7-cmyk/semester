@@ -4,8 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, plan, priceLine } from './plans';
 
 describe('the plans', () => {
-  it('are Free, Plus, Pro and Institution Access, in that order', () => {
+  it('are Free, Plus, Pro and Semester Institutional, in that order', () => {
     expect(PLANS.map((p) => p.id)).toEqual(['free', 'plus', 'pro', 'institution']);
+    expect(plan('institution').name).toBe('Semester Institutional');
   });
 
   it('sell only Plus, and only in the app: every other paid price is marked planned', () => {

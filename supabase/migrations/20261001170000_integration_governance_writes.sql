@@ -19,7 +19,18 @@ returns integer language plpgsql security definer set search_path = '' as $$
 declare n integer;
 begin
   update public.canonical_entity_references r
-     set display = r.display || jsonb_build_object('_governance', x.governance),
+     set display = r.display || jsonb_build_object('_governance',
+           case when r.display ? '_governance' then
+             -- Keep the provenance/policy of the values actually stored. A new
+             -- adapter declaration cannot relabel an unchanged source revision.
+             -- Retention deadlines also stay fixed; only freshness is renewed.
+             ((r.display ->> '_governance')::jsonb || jsonb_build_object(
+               'retrievedAt', want_at,
+               'expiresAt', want_at + (
+                 ((r.display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
+                 - ((r.display ->> '_governance')::jsonb ->> 'retrievedAt')::timestamptz
+               )))::text
+           else x.governance end),
          freshness_status = 'live', updated_at = want_at
     from jsonb_to_recordset(want_records) as x(entity text, id text, timestamp timestamptz, governance text)
    where r.tenant_id = want_tenant and r.connection_id = want_connection

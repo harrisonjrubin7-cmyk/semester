@@ -185,6 +185,24 @@ begin
   select count(*) into n from public.canonical_entity_references
    where tenant_id = 'lti-a' and display ->> 'title' = repeat('x', 3800);
   perform pg_temp.said('metadata refresh preserves stored values', n::text, '1');
+  select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp, 'governance', (envelope::jsonb || jsonb_build_object(
+        'sourceOwner', 'Replacement authority', 'sourceStandard', 'Replacement@2',
+        'permittedPurposes', jsonb_build_array('new-purpose'),
+        'retentionPolicyId', 'replacement-policy', 'retentionExpiresAt', now() + interval '10 years',
+        'retrievedAt', now() + interval '1 minute', 'expiresAt', now() + interval '10 days'))::text)),
+    now() + interval '1 minute') into refreshed;
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and connection_id = conn
+     and ((display ->> '_governance')::jsonb - 'retrievedAt' - 'expiresAt')
+       = (envelope::jsonb - 'retrievedAt' - 'expiresAt')
+     and ((display ->> '_governance')::jsonb ->> 'retrievedAt')::timestamptz = now() + interval '1 minute'
+     and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
+       = (envelope::jsonb ->> 'expiresAt')::timestamptz + interval '1 minute';
+  perform pg_temp.said('an adapter change cannot relabel unchanged values or extend retention', n::text, '1');
+  select display ->> '_governance' into envelope from public.canonical_entity_references
+   where tenant_id = 'lti-a' and connection_id = conn;
   select public.integration_tombstone_references('lti-b', conn, 'LTI 1.3 https://bound.example',
     'lms_context', array['course-1'], now()) into refreshed;
   perform pg_temp.said('a wrong tenant tombstones nothing', refreshed::text, '0');

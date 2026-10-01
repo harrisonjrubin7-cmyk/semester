@@ -726,6 +726,7 @@ export interface Restore {
  * automatically a section a restore warns you about.
  */
 export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valueType?: 'string'|'number' }[] = [
+  { key: 'operatingWorkspace', label: 'private operating workspace', array: false, valueType: 'string' },
   { key: 'courses', label: 'courses', array: true },
   { key: 'updates', label: 'added readings', array: true },
   { key: 'notes', label: 'notes', array: true },
@@ -1014,6 +1015,7 @@ export function readBackup(text: string): Restore {
 export function backupOf(state: State) {
   return {
     format: 'semester.backup.v1',
+    operatingWorkspace: state.operatingWorkspace,
     exported: new Date().toISOString(),
     courses: state.courses,
     updates: state.updates,

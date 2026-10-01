@@ -1,3 +1,4 @@
+import { StudentOperating } from '../components/StudentOperating';
 import { useMemo, useRef, useState } from 'react';
 import { faintLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
@@ -23,9 +24,10 @@ import type { CourseId } from '../lib/types';
 import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
 
-type Tab = 'plan' | 'file' | 'draft' | 'ask';
+type Tab = 'operating' | 'plan' | 'file' | 'draft' | 'ask';
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'operating', label: 'My operating manual' },
   { id: 'plan', label: 'Break it down' },
   { id: 'file', label: 'Project file' },
   { id: 'draft', label: 'Read my draft' },
@@ -69,7 +71,7 @@ export function Work() {
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);
 
-  const [tab, setTab] = useState<Tab>('plan');
+  const [tab, setTab] = useState<Tab>('operating');
   const [instructions, setInstructions] = useState('');
   const [plan, setPlan] = useState<Breakdown | null>(null);
   // The longest thing anybody types into this app that is not a note, and
@@ -152,7 +154,7 @@ export function Work() {
     setKept(true);
   };
 
-  if (!configured()) return <NeedsKey frame />;
+  if (!configured() && tab !== 'operating') return <Page><button className="bare" onClick={() => setTab('operating')}>My operating manual</button><NeedsKey /></Page>;
 
   return (
     <Page>
@@ -170,6 +172,8 @@ export function Work() {
           }}
         />
       </div>
+
+      {tab === 'operating' && <StudentOperating />}
 
       {/* ── Break it down ──────────────────────────────────────────────── */}
       {tab === 'plan' && (
