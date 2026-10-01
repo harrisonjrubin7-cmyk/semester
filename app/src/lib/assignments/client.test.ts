@@ -171,11 +171,11 @@ describe('the writers', () => {
 
   it('revises, publishes, closes and extends with their own argument names', async () => {
     await reviseAssignment('a1', draft, 'revise-key-0001');
-    await publishAssignment('a1', 'publish-key-0001');
+    await publishAssignment('a1', 'publish-0001');
     await closeAssignment('a1', 'close-key-00001');
     await extendAssignment('a1', 'ana', '2026-10-12T12:00:00Z', null, 'Hospital', 'extend-key-0001');
     expect(Object.keys(rpc('assignments_revise')!.args as object)).toEqual(['want_assignment', 'want_title', 'want_instructions', 'want_due', 'want_closes', 'want_resubmit', 'want_max_versions', 'want_key']);
-    expect(rpc('assignments_publish')?.args).toEqual({ want_assignment: 'a1', want_key: 'publish-key-0001' });
+    expect(rpc('assignments_publish')?.args).toEqual({ want_assignment: 'a1', want_key: 'publish-0001' });
     expect(rpc('assignments_close')?.args).toEqual({ want_assignment: 'a1', want_key: 'close-key-00001' });
     expect(rpc('assignments_extend')?.args).toEqual({
       want_assignment: 'a1', want_student: 'ana', want_due: '2026-10-12T12:00:00.000Z', want_closes: null, want_reason: 'Hospital', want_key: 'extend-key-0001',
