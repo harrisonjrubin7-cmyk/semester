@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { EmptyState } from './ui';
 import { Plus } from './Icons';
 import {
@@ -116,7 +116,7 @@ export function Gallery<T extends Filed>({
    * is: two calls either side of midnight would put a file under "Today" and
    * then date it yesterday, in the same list.
    */
-  const now = Date.now();
+  const now = useNow().getTime();
   const groups = grouped(mine, by, now);
 
   return (

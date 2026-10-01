@@ -47,7 +47,9 @@ async function input(label: string, text: string) {
   const parent = [...host.querySelectorAll('label')].find((x) =>
     x.textContent?.startsWith(label),
   );
-  const field = parent?.querySelector('input')!;
+  const field = parent?.querySelector('input');
+  expect(field).toBeInstanceOf(HTMLInputElement);
+  if (!(field instanceof HTMLInputElement)) throw new Error(`Missing input labelled ${label}`);
   await act(async () => {
     Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
