@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { SOURCE_LABELS, SOURCE_MEANING, SOURCE_TEXT } from '../lib/source';
+import { TRUST_KINDS, TRUST_MEANING, TRUST_TEXT } from '../lib/source';
 import { SourceBadge } from './SourceBadge';
 
 /**
@@ -25,11 +25,11 @@ afterEach(() => {
 });
 
 it('says every label in text, with its meaning for assistive technology', () => {
-  for (const label of SOURCE_LABELS) {
+  for (const label of TRUST_KINDS) {
     act(() => root.render(<SourceBadge label={label} />));
-    expect(host.textContent, label).toContain(SOURCE_TEXT[label]);
+    expect(host.textContent, label).toContain(TRUST_TEXT[label]);
     const hidden = host.querySelector('.sr-only');
-    expect(hidden?.textContent, label).toBe(SOURCE_MEANING[label]);
+    expect(hidden?.textContent, label).toBe(TRUST_MEANING[label]);
     expect(host.querySelector(`[data-source="${label}"]`), label).not.toBeNull();
   }
 });

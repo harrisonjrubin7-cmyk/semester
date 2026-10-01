@@ -9,6 +9,7 @@ import { ownedScope } from '../lib/standing';
 import { useNow, useStore } from '../state/store';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { Blueprint } from './Blueprint';
+import { TodayGuide } from './TodayGuide';
 // Loaded only when their flags are on, so a build with both off — the
 // default — does not carry them in the first download.
 const RegistrationDayCard = lazy(() => import('./RegistrationDayCard').then((m) => ({ default: m.RegistrationDayCard })));
@@ -95,9 +96,11 @@ export function TodayDecisionSurface({
       {crunchWeek ? <CrunchWeekCard /> : null}
     </Suspense>
   ) : null;
+  const guide = student ? <TodayGuide /> : null;
   if (actionCenter && student) {
     return (
       <>
+        {guide}
         {registration}
         <Suspense fallback={null}>
           <TodayActionCenter registrationDay={registrationDay} officeActions={officeActions} officeAccountId={officeAccountId} />
@@ -108,6 +111,7 @@ export function TodayDecisionSurface({
   }
   return (
     <>
+      {guide}
       {registration}
       {officeActions && student ? (
         <Suspense fallback={null}>
