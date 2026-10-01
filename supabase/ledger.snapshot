@@ -1,4 +1,4 @@
-# What production's migration ledger holds, read on 28 September 2026 (see below); first read 21 September.
+# What production's migration ledger holds, read on 1 October 2026 (see below); first read 21 September.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
 # version, then name. This is a reading, not a wish — `app/src/lib/migrationorder.test.ts`
@@ -84,6 +84,17 @@
 # (#893) still carried eleven migrations numbered `20260928130000`–`160000`,
 # pending and now below the watermark. This test, held to the 21 September
 # reading, could not see it. `MIGRATION-HISTORY.md` has the entry.
+
+# ## The reading and repair of 1 October
+#
+# The live ledger had reached `20260930234000`, but version `20260930233000`
+# was named `data_subject_request_intake`, not `k12_guardians`; both it and
+# `20260930234000` held the data-rights migration. Object-level probes confirmed
+# the data-rights function existed and every K-12 guardian object was absent.
+# The executable `20260930233000_k12_guardians.sql` was therefore applied as the
+# tracked forward repair `20261001075026_k12_guardians_repair`. The version is
+# represented by an inert file because a build from empty already runs the
+# executable SQL at its original version.
 
 20260901000100  schema
 20260901000200  classmates
@@ -180,3 +191,62 @@
 20260928210000  support_tickets
 20260928220000  private_beta
 20260928230000  direct_rate_limits
+20260928300000  untouched_graduation_drafts
+20260928301000  advisor_shares
+20260928302000  office_action_feed
+20260928303000  untouched_graduation_after_help
+20260928304000  untouched_advisor_after_help
+20260928305000  course_demand_forecasting
+20260928306000  family_invites
+20260928307000  family_shared_items
+20260928308000  support_shares
+20260928309000  course_studio
+20260928310000  expansion_review_fixes
+20260928320000  audit_correlation_and_outbox
+20260929000000  published_forms_invoker
+20260929010000  account_erasure_and_export
+20260929030000  retention_sweeps
+20260929040000  round_trip_stable_checks
+20260929050000  definer_helper_grants
+20260929070000  commercial_core
+20260929080000  commercial_automation
+20260929100000  console_control_plane
+20260929110000  console_approvals_and_break_glass
+20260929120000  gtm_pilot_problems_visibility
+20260929130000  financial_retention
+20260929131000  plus_price
+20260929140000  gtm_pilot_26_weeks
+20260929150000  minimum_age
+20260929200000  migration_center
+20260929210000  academic_record_ledger
+20260929220000  student_accounts
+20260929230000  student_payment_plans
+20260929300000  registration_transaction
+20260929310000  gradebook
+20260929330000  dining
+20260929340000  feature_cohorts
+20260929350000  plan_save_serialized
+20260929360000  account_untouched_school_domains
+20260929370000  feature_policy_narrowing
+20260930000000  audit_and_subject_requests
+20260930010000  module_mode
+20260930100000  legal_holds
+20260930110000  ledger_chains
+20260930120000  human_overrides
+20260930130000  hold_gated_sweeps
+20260930140000  erase_respects_holds
+20260930150000  ledger_chain_seals
+20260930160000  override_break_glass
+20260930170000  hold_aware_sweeps
+20260930173030  console_command_center
+20260930185000  school_membership_enforcement
+20260930190000  advisor_share_audit
+20260930200000  school_offboarding
+20260930210000  deprovision_revokes_grants
+20260930220000  roster_import_staging
+20260930230000  configuration_studio
+20260930231000  workflow_builder
+20260930232000  advisor_reconciliation
+20260930233000  data_subject_request_intake
+20260930234000  data_subject_request_intake
+20261001075026  k12_guardians_repair
