@@ -151,7 +151,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
 
   it('finds the cron-invoked Edge Functions', () => {
     const invoked = deployable().filter((d) => CRON_INVOKED.test(functionCode(d)));
-    expect(invoked.sort()).toEqual(['integration-tick', 'push']);
+    expect(invoked.sort()).toEqual(['integration-tick', 'push', 'support-reply-notify']);
   });
 });
 

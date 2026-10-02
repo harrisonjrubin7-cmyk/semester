@@ -80,6 +80,33 @@ select cron.alter_job(
   active := false
 );
 
+-- ── Support reply email outbox ───────────────────────────────────────────
+--
+-- A reply commits its generic email-notice intent to
+-- `support_notification_outbox` in the same transaction. The browser asks
+-- for an immediate delivery, while this active one-minute worker recovers a
+-- browser crash, lost connection or provider refusal. Resend's idempotency
+-- key is the message id, so overlapping immediate and scheduled attempts do
+-- not produce two notices. The existing first-party sender secret is reused;
+-- support-reply-notify accepts it only through CRON_SECRET.
+select cron.schedule(
+  'support-reply-notify',
+  '* * * * *',
+  $job$
+    select net.http_post(
+      url := 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/support-reply-notify',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'push_cron_secret'
+        )
+      ),
+      body := '{}'::jsonb,
+      timeout_milliseconds := 20000
+    );
+  $job$
+);
+
 
 -- ── Clearing out old tombstones ───────────────────────────────────────────
 --
