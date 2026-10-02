@@ -165,9 +165,20 @@ Regression files:
 | Desktop browser check | Pass: Accessibility and Workflow dialogs associated with their triggers; clean console |
 | Production accessibility smoke | Pass: 6 critical journeys at desktop and 400% reflow; skip focus, landmarks, titles, names and ARIA references verified |
 | HawkScan local DAST | Unavailable: no HawkScan 6 runtime, Docker or `HAWK_API_KEY` in this environment |
-| Hosted HawkScan | Pass on PR #1105 head `e5f0b3c`; the protected workflow reruns on the final accessibility fix before merge |
+| Hosted HawkScan | Pass on PR #1105 final head `1eeaf5c0` |
 | Search/Directory review regression | Pass: 2 files, 13 selected tests; one `h1`, shared controls retained, Back restored, and route focus verified |
 | Late review regressions | Pass: 2 files, 8 selected tests; shared actions retain their flexible spacer, Today tab content leads, and secondary disclosure state resets |
+| Post-merge review corrections | Pass: 4 files, 108 selected tests; Course Hub create targets remain 44px, Workspace Search exposes one Quick Add, and scoped custom properties cannot impersonate global spacing tokens |
+
+PR #1105 was squash-merged to `main` as `457f3c87`. Its final head
+`1eeaf5c0` passed the complete hosted check set, including HawkScan. A clean
+follow-up fixes the three actionable P2 findings posted after that final review:
+
+- Course Hub's visually quiet creation buttons retain a 44px target.
+- Workspace Search's inline `+` is the only Quick Add control in that frame.
+- The style rule recognizes spacing steps only from global `:root`
+  declarations, so a component-scoped custom property cannot validate an
+  unrelated use.
 
 The full-suite failures were timeouts only, not assertion failures, and all five
 passed unchanged with one worker. The browser's effective CSS viewport was
@@ -176,9 +187,9 @@ the actual viewport.
 
 ## Remaining known issues and risks
 
-1. **Hosted security rerun remains required on each new head.** The first PR
-   head passed HawkScan; the protected workflow must also pass after the
-   review follow-up commit before merge.
+1. **Hosted security remains a per-head gate.** PR #1105's final head passed
+   HawkScan. Any follow-up head must pass the same protected workflow before
+   merge.
 2. **22 React compiler warnings remain.** Highest-value groups are effect-driven
    state in real-time/call screens, ref reads in Green/Calendar, and manual
    memoization plus event-time clock reads in Sheet. Fix in isolated behavioral

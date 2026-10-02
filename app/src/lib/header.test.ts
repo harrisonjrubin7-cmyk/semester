@@ -230,7 +230,7 @@ describe('the header buttons a thumb has to hit', () => {
 
   it('decides the whole row in one place', () => {
     expect(src(), 'the row is one call, not five conditions').toContain(
-      'const row = headerRow({ atRoot, phone, counting, desk });',
+      "hasInlineAdd: desk && state.screen === 'search',",
     );
     // The measurement itself stays in lib/header.ts. A second caller here is
     // a second opinion about the width, which is the shape that shipped the
@@ -349,6 +349,11 @@ describe('what the header can carry', () => {
       alerts: false,
       avatar: false,
     });
+  });
+
+  it('leaves Quick Add to the workspace search home when it is already in the page', () => {
+    expect(headerRow({ ...AT_ROOT, desk: true, hasInlineAdd: true }).add).toBe(false);
+    expect(headerRow({ ...AT_ROOT, desk: true, hasInlineAdd: false }).add).toBe(true);
   });
 
   /*

@@ -229,8 +229,9 @@ function Header({
    * One fact now rather than a list: is this the workspace, whose bar carries
    * these controls. It was briefly two — the sidebar was the second, because
    * that column drew New and this header's `+` stood down for it. The column
-   * no longer draws New, so the `+` is unconditional again; `headerRow` in
-   * `lib/header.ts` has that argument. What always stays is what no other
+   * no longer draws New, so the `+` is normally present again. Search is the
+   * one exception because its field already carries the same capture action;
+   * `headerRow` in `lib/header.ts` has that argument. What always stays is what no other
    * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
@@ -287,7 +288,13 @@ function Header({
    * of the same control. `lib/header.ts` answers for all five now, and the
    * markup below asks rather than decides.
    */
-  const row = headerRow({ atRoot, phone, counting, desk });
+  const row = headerRow({
+    atRoot,
+    phone,
+    counting,
+    desk,
+    hasInlineAdd: desk && state.screen === 'search',
+  });
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
