@@ -821,7 +821,14 @@ function TabHome() {
         <OperatingRhythm />
       </div>
       <div className="hides-in-focus">
-        <details className="today-more">
+        {tab === 'week' && <ThisWeek />}
+        {tab === 'week' && <WeekHorizon />}
+
+        {tab === 'hours' && <HoursToday />}
+
+        {tab === 'done' && <DoneToday />}
+
+        <details key={tab} className="today-more">
           <summary>More from Today</summary>
           <CommandCenter />
           <FlightPlanHomeSlot />
@@ -829,13 +836,6 @@ function TabHome() {
           {tab === 'today' && <TodayFeed />}
           {tab === 'today' && <DailyPlanSlot />}
         </details>
-
-        {tab === 'week' && <ThisWeek />}
-        {tab === 'week' && <WeekHorizon />}
-
-        {tab === 'hours' && <HoursToday />}
-
-        {tab === 'done' && <DoneToday />}
       </div>
     </Page>
   );

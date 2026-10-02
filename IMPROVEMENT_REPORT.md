@@ -111,6 +111,12 @@ navigation were green at baseline.
 8. Removed the broken initial `aria-controls` relationship from the lazy global
    Accessibility tools trigger. The relationship now appears with its real
    dialog target on first open and remains stable while that panel is retained.
+9. Kept the shared header's flexible title column in place when Search or App
+   Directory owns the visible heading, so Back and global actions retain their
+   established alignment instead of jumping left.
+10. Moved each selected Today tab's content ahead of the shared “More from
+    Today” disclosure and reset that disclosure on tab changes, preventing
+    secondary content from remaining expanded above the requested view.
 
 ### P2
 
@@ -161,6 +167,7 @@ Regression files:
 | HawkScan local DAST | Unavailable: no HawkScan 6 runtime, Docker or `HAWK_API_KEY` in this environment |
 | Hosted HawkScan | Pass on PR #1105 head `e5f0b3c`; the protected workflow reruns on the final accessibility fix before merge |
 | Search/Directory review regression | Pass: 2 files, 13 selected tests; one `h1`, shared controls retained, Back restored, and route focus verified |
+| Late review regressions | Pass: 2 files, 8 selected tests; shared actions retain their flexible spacer, Today tab content leads, and secondary disclosure state resets |
 
 The full-suite failures were timeouts only, not assertion failures, and all five
 passed unchanged with one worker. The browser's effective CSS viewport was

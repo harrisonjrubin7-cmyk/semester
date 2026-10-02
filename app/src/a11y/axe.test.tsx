@@ -252,6 +252,10 @@ describe('release layout regressions', () => {
         expect(host!.querySelector('.app-header'), `${hash} keeps the shared navigation controls`).not.toBeNull();
         expect(host!.querySelector('[aria-label="Search, ask or add"]'), hash).not.toBeNull();
         expect(host!.querySelector('[aria-label="All apps"]'), hash).not.toBeNull();
+        const actions = host!.querySelector<HTMLElement>('[aria-label="Search, ask or add"]')?.parentElement;
+        const spacer = actions?.previousElementSibling as HTMLElement | null;
+        expect(spacer).not.toBeNull();
+        expect(spacer?.style.flexGrow).toBe('1');
       }
     }, 30_000);
   }
@@ -275,11 +279,16 @@ describe('release layout regressions', () => {
   it('keeps shared Today tools available from the Week tab', async () => {
     width(1280);
     await show('#/home', { nav: 'tabs', seenOnboarding: true });
+    const todayMore = host!.querySelector<HTMLDetailsElement>('details.today-more')!;
+    todayMore.open = true;
     const week = [...host!.querySelectorAll('button')].find(button => button.textContent === 'This week')!;
     await act(async () => week.click());
     expect(week.getAttribute('aria-pressed')).toBe('true');
-    const more = host!.querySelector('details.today-more');
+    const more = host!.querySelector<HTMLDetailsElement>('details.today-more');
     expect(more).not.toBeNull();
+    expect(more).not.toBe(todayMore);
+    expect(more?.open).toBe(false);
+    expect(more?.matches('.hides-in-focus > :last-child')).toBe(true);
     expect(more?.textContent).toContain('Pinned');
     expect(more?.textContent).toContain('More from Today');
   }, 30_000);

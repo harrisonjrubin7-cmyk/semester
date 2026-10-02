@@ -350,7 +350,8 @@ function Header({
         </button>
       )}
 
-      {!screenOwnsTitle && <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {!screenOwnsTitle && <>
         {upTo ? (
           <button
             type="button"
@@ -410,7 +411,8 @@ function Header({
         >
           {title}
         </h1>
-      </div>}
+        </>}
+      </div>
 
       {/*
         Always drawn, because the timer pill lives in it and a running timer is
