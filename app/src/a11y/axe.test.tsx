@@ -276,6 +276,23 @@ describe('release layout regressions', () => {
     expect(document.activeElement).toBe(host!.querySelector('h1[data-page-title]'));
   }, 30_000);
 
+  it('keeps shared controls and route focus on a titled screen in wide Workspace', async () => {
+    width(1280);
+    await show('#/home', { nav: 'workspace', seenOnboarding: true });
+    await act(async () => {
+      history.pushState(null, '', '/#/search');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    for (let waited = 0; waited < 15_000; waited += 50) {
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      });
+      if (!host!.querySelector('[aria-busy="true"]')) break;
+    }
+    expect(host!.querySelector('.app-header')).not.toBeNull();
+    expect(document.activeElement).toBe(host!.querySelector('h1[data-page-title]'));
+  }, 30_000);
+
   it('keeps shared Today tools available from the Week tab', async () => {
     width(1280);
     await show('#/home', { nav: 'tabs', seenOnboarding: true });
@@ -291,6 +308,11 @@ describe('release layout regressions', () => {
     expect(more?.matches('.hides-in-focus > :last-child')).toBe(true);
     expect(more?.textContent).toContain('Pinned');
     expect(more?.textContent).toContain('More from Today');
+    const weekHeading = [...host!.querySelectorAll('*')].find(
+      element => element.textContent === 'The next seven days',
+    );
+    expect(weekHeading).not.toBeUndefined();
+    expect(weekHeading!.compareDocumentPosition(more!) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   }, 30_000);
 });
 
