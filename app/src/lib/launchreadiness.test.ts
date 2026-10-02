@@ -64,11 +64,29 @@ describe('the launch go/no-go', () => {
       }
     });
 
-    it('never marks a gate met or partial without evidence, nor anything short of met without a gap', () => {
+    it('never marks a gate met or partial without evidence, nor anything short of met without a gap and closure authority', () => {
       for (const gate of GATES) {
         if (gate.status !== 'unmet') expect(gate.evidence.length, `${gate.id} is ${gate.status} with nothing cited`).toBeGreaterThan(0);
-        if (gate.status !== 'met') expect(gate.gap?.trim(), `${gate.id} is ${gate.status} and says nothing is missing`).toBeTruthy();
+        if (gate.status !== 'met') {
+          expect(gate.gap?.trim(), `${gate.id} is ${gate.status} and says nothing is missing`).toBeTruthy();
+          expect(gate.closure.length, `${gate.id} has no named closure authority`).toBeGreaterThan(0);
+        } else expect(gate.closure, `${gate.id} is met but still names work`).toEqual([]);
+        for (const item of gate.closure) {
+          expect(['production-authority', 'external-approval']).toContain(item.authority);
+          expect(item.action.trim(), `${gate.id} has an empty closure action`).toBeTruthy();
+        }
       }
+    });
+
+    it('surfaces only irreducible production acts or external approvals, never unfinished repository work', () => {
+      const openGates = GATES.filter((gate) => gate.status !== 'met');
+      const open = openGates.flatMap((gate) => gate.closure);
+      expect(openGates).toHaveLength(11);
+      expect(open).toHaveLength(13);
+      expect(new Set(open.map((item) => item.authority))).toEqual(new Set(['production-authority', 'external-approval']));
+      const checklist = read('docs/GO-NO-GO-CHECKLIST.md');
+      expect(checklist.replace(/\s+/g, ' ')).toContain('eleven open gates carrying thirteen live-service acts or external decisions');
+      for (const item of open) expect(checklist, `missing authority action: ${item.action}`).toContain(item.action);
     });
 
     it('holds every gate the command lists, once each, owned by a real seat', () => {
@@ -108,7 +126,7 @@ describe('the launch go/no-go', () => {
     it('shows the same status for each gate in the checklist document', () => {
       const text = read('docs/GO-NO-GO-CHECKLIST.md');
       for (const gate of GATES) {
-        const row = text.split('\n').find((line) => line.includes(`\`${gate.id}\``) && line.startsWith('|'));
+        const row = text.split('\n').find((line) => line.includes(`\`${gate.id}\``) && line.startsWith('|') && line.includes(`\`${gate.status.toUpperCase()}\``));
         expect(row, `no row for ${gate.id}`).toBeTruthy();
         expect(row, `${gate.id} is ${gate.status} in the data`).toContain(`\`${gate.status.toUpperCase()}\``);
       }

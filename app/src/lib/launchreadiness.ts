@@ -77,6 +77,23 @@ export const COUNCIL: readonly SeatDefinition[] = [
 
 export type GateStatus = 'met' | 'partial' | 'unmet';
 
+/**
+ * Who can perform the remaining act that closes a gate.
+ *
+ * `production-authority` means the repository already contains the control,
+ * but exercising or reading it requires access to a live service. An
+ * `external-approval` is a decision, acceptance, review or qualification the
+ * product team cannot manufacture in code. There is deliberately no
+ * `repository` value: if code or documentation alone can close a gap, it is
+ * work to do, not a launch blocker to hand to somebody else.
+ */
+export type ClosureAuthority = 'production-authority' | 'external-approval';
+
+export interface ClosureRequirement {
+  authority: ClosureAuthority;
+  action: string;
+}
+
 /** A repository file that shows something, and what it shows. */
 export interface Evidence {
   /** Repository-relative. A test fails if it does not exist. */
@@ -94,6 +111,8 @@ export interface Gate {
   evidence: Evidence[];
   /** What is still missing. Required unless `met`. */
   gap?: string;
+  /** The irreducible live act or outside decision still needed to close it. */
+  closure: readonly ClosureRequirement[];
   /**
    * Lines of `docs/market-readiness/GO_LIVE_CHECKLIST.md` this gate depends
    * on. While any of them is unticked the gate cannot be `met` — the two
@@ -134,6 +153,7 @@ export const GATES: readonly Gate[] = [
       },
     ],
     gap: 'Syllabus import is proved with the model reply stubbed, and account sync against a local Supabase rather than the production project. Human help is proved in a build with VITE_HUMAN_HELP on; whether the deployed build has it on is a repository variable nothing here reads. Phase 1.',
+    closure: [{ authority: 'production-authority', action: 'Run and record the source-backed import, account-resume and human-help journey against the intended production configuration.' }],
   },
   {
     id: 'no-blockers',
@@ -142,6 +162,10 @@ export const GATES: readonly Gate[] = [
     status: 'unmet',
     evidence: [{ path: GO_LIVE, shows: 'the blocking list, most of it unticked' }],
     gap: 'The go-live checklist still has unticked Blocking lines. Each is a release blocker by that document\'s own definition.',
+    closure: [
+      { authority: 'production-authority', action: 'Complete the retained-time restore measurement, named-alert exercise and Auth email-limit readback.' },
+      { authority: 'external-approval', action: 'Obtain and record the qualified accessibility audit.' },
+    ],
     goLive: [/^- \[.\] /],
   },
   {
@@ -151,6 +175,7 @@ export const GATES: readonly Gate[] = [
     status: 'partial',
     evidence: [{ path: 'STAGING.md', shows: 'preview branches build per pull request; Edge Function parity settled' }],
     gap: 'STAGING.md itself says nobody has established that a preview branch matches production.',
+    closure: [{ authority: 'production-authority', action: 'Compare the live preview branch and production fingerprints, RLS health, function versions and branch-secret readiness.' }],
   },
   {
     id: 'backup-restore',
@@ -163,6 +188,7 @@ export const GATES: readonly Gate[] = [
       { path: 'docs/evidence/restore/2026-10-02-production-physical-restore.md', shows: 'a completed physical-backup restore into a separate Supabase project; RLS, ensure_rls, table counts and gateway-journal presence checked against production' },
     ],
     gap: 'A production physical backup was restored and its core controls verified, but the dashboard view did not retain the restore start time, so RTO is unmeasured. Production had one newer public table; the gateway journal held zero rows, so non-empty journal recovery was not exercised.',
+    closure: [{ authority: 'production-authority', action: 'Run a retained-time restore drill and verify recovery of a seeded, non-empty gateway-journal sample.' }],
     goLive: [/Restore tested from backup/, /Gateway journal/],
   },
   {
@@ -177,6 +203,10 @@ export const GATES: readonly Gate[] = [
       { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'Harrison Rubin named for individual support and institutional escalation intake' },
     ],
     gap: 'The production workflow now contains a GitHub issue alert assigned to Harrison Rubin, but live delivery is not evidenced until the exercise input is dispatched and the assigned issue is observed. Institution-side contacts and a backup operator remain unassigned.',
+    closure: [
+      { authority: 'production-authority', action: 'Dispatch the armed production alert exercise and record the assigned issue delivered to Harrison Rubin.' },
+      { authority: 'external-approval', action: 'Have a backup Semester operator and the pilot institution contacts accept their routes.' },
+    ],
     goLive: [/Error monitoring live and alerting/, /Incident process with named owner/],
   },
   {
@@ -186,6 +216,7 @@ export const GATES: readonly Gate[] = [
     status: 'partial',
     evidence: [{ path: 'docs/vanderbilt/incident-routing.md', shows: 'response windows per signal and Harrison Rubin named for every Semester-side route' }],
     gap: 'Semester-side ownership is assigned. Vanderbilt IAM, AI, LMS, security/privacy and operational contacts remain institution-supplied pilot inputs; the Semester backup operator is unassigned.',
+    closure: [{ authority: 'external-approval', action: 'Record accepted Vanderbilt contacts and an accepted backup Semester operator.' }],
   },
   {
     id: 'terms-reviewed',
@@ -199,6 +230,7 @@ export const GATES: readonly Gate[] = [
       { path: 'docs/evidence/legal/2026-09-30-terms-privacy-review-attestation.md', shows: 'Harrison Rubin’s attestation that Jessica Springsteen completed review on 2026-09-30 at 13:30 America/Chicago and that Harrison approved the reviewed materials' },
     ],
     gap: 'The owner-provided review and approval are recorded, but reviewer qualification is not independently evidenced and the drafts still carry open [DECIDE] items: legal entity, liability, governing law, privacy-response timing and publication dates. They are not yet in force.',
+    closure: [{ authority: 'external-approval', action: 'Evidence reviewer qualification, resolve the legal decisions and approve the dated publication versions.' }],
   },
   {
     id: 'data-scope',
@@ -207,6 +239,7 @@ export const GATES: readonly Gate[] = [
     status: 'unmet',
     evidence: [],
     gap: 'No pilot data scope exists to approve, and no source owner has been named for any institutional content.',
+    closure: [{ authority: 'external-approval', action: 'The pilot institution and Semester must approve a bounded data scope and name the source owner for each institutional source.' }],
   },
   {
     id: 'onboarding-support',
@@ -219,6 +252,7 @@ export const GATES: readonly Gate[] = [
       { path: 'app/src/site/pages.tsx', shows: 'the accessibility support route — "Report a barrier" on /accessibility/, with escalation to the accessibility seat — which both documents point at' },
     ],
     gap: 'Only the qualified accessibility audit of the piloted workflows remains (decision 11 in docs/LAUNCH-DECISIONS.md); the go-live line for it is unticked.',
+    closure: [{ authority: 'external-approval', action: 'A qualified accessibility evaluator must audit the six piloted workflows and sign the findings or remediation disposition.' }],
     goLive: [/Accessibility audit of the piloted workflows/],
   },
   {
@@ -234,6 +268,7 @@ export const GATES: readonly Gate[] = [
       { path: 'app/src/lib/readonly.ts', shows: 'the app-wide read-only mode: VITE_READ_ONLY stops every push and shows a standing banner; SEMESTER_READ_ONLY makes the gateway refuse every write with a retryable 503; each side tested, and each guard shown red under revert' },
     ],
     gap: 'The protected Pages rollback and restoration path is proved. No kill switch or read-only mode has been engaged against production.',
+    closure: [{ authority: 'production-authority', action: 'Exercise and reverse one production kill switch or read-only mode under a communicated maintenance window.' }],
     goLive: [/Rollback tested on the production deployment path/],
   },
   {
@@ -243,6 +278,7 @@ export const GATES: readonly Gate[] = [
     status: 'partial',
     evidence: [{ path: 'docs/market-readiness/PILOT_PLAYBOOK.md', shows: 'which criteria to agree, and that stop must be a real option' }],
     gap: 'The criteria to agree are listed. Nothing has been agreed with any institution, and no baseline has been measured.',
+    closure: [{ authority: 'external-approval', action: 'A named institutional champion must agree the pilot baseline, success measures, stop conditions and decision date.' }],
   },
   {
     id: 'known-limitations',
@@ -260,6 +296,7 @@ export const GATES: readonly Gate[] = [
         shows: 'the list printed on the Help screen of the deployed app, the copy a pilot user can open; the public site prints it at /known-limitations/ from the same data',
       },
     ],
+    closure: [],
   },
 ];
 
