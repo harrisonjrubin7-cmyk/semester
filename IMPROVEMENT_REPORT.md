@@ -105,6 +105,9 @@ navigation were green at baseline.
 6. Added a component regression that loads messages on both sides of the
    opening mark, advances the parent mark, and proves the divider stays above
    the same first unread message.
+7. Preserved the shared Back and global-action header when Search or App
+   Directory owns the page heading outside Workspace. The header now omits
+   only its duplicate title, and route focus follows the screen-owned heading.
 
 ### P2
 
@@ -152,6 +155,8 @@ Regression files:
 | Phone browser check | Pass: contained dialog, no horizontal page overflow, accurate ARIA state, Escape focus return |
 | Desktop browser check | Pass: Accessibility and Workflow dialogs associated with their triggers; clean console |
 | HawkScan local DAST | Unavailable: no HawkScan 6 runtime, Docker or `HAWK_API_KEY` in this environment |
+| Hosted HawkScan | Pass on PR #1105 head `578abd6` before the review follow-up commit; the protected workflow reruns on the corrected head before merge |
+| Search/Directory review regression | Pass: 2 files, 13 selected tests; one `h1`, shared controls retained, Back restored, and route focus verified |
 
 The full-suite failures were timeouts only, not assertion failures, and all five
 passed unchanged with one worker. The browser's effective CSS viewport was
@@ -160,10 +165,9 @@ the actual viewport.
 
 ## Remaining known issues and risks
 
-1. **Hosted security gate remains required.** A meaningful local code change
-   triggered the HawkScan preflight, but this environment cannot start the scan.
-   Do not describe the branch as DAST-verified until the hosted HawkScan workflow
-   passes on this head.
+1. **Hosted security rerun remains required on each new head.** The first PR
+   head passed HawkScan; the protected workflow must also pass after the
+   review follow-up commit before merge.
 2. **22 React compiler warnings remain.** Highest-value groups are effect-driven
    state in real-time/call screens, ref reads in Green/Calendar, and manual
    memoization plus event-time clock reads in Sheet. Fix in isolated behavioral
@@ -183,12 +187,10 @@ the actual viewport.
 
 ## Suggested next improvements
 
-1. Let the hosted HawkScan gate run on the branch head and address any findings
-   before merge.
-2. Reduce the 22 React warnings in small, test-backed batches, starting with the
+1. Reduce the 22 React warnings in small, test-backed batches, starting with the
    real-time call surfaces and Sheet callbacks.
-3. Add the repository's optional scratch Playwright runtime when a future pass
+2. Add the repository's optional scratch Playwright runtime when a future pass
    needs repeatable screenshots across every breakpoint; keep it out of product
    dependencies.
-4. Profile the two largest entry chunks on a cold mobile load before deciding
+3. Profile the two largest entry chunks on a cold mobile load before deciding
    whether another split materially improves task completion.

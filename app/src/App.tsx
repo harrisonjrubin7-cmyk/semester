@@ -234,7 +234,8 @@ function Header({
    * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
-}: { desk?: boolean } = {}) {
+  screenOwnsTitle = false,
+}: { desk?: boolean; screenOwnsTitle?: boolean } = {}) {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const { kicker, title } = useHeader();
@@ -300,8 +301,25 @@ function Header({
   useEffect(() => {
     if (wasOn.current === state.screen) return;
     wasOn.current = state.screen;
-    heading.current?.focus({ preventScroll: true });
-  }, [state.screen]);
+
+    const focusTitle = () => {
+      const title = screenOwnsTitle
+        ? document.querySelector<HTMLHeadingElement>('h1[data-page-title]')
+        : heading.current;
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const shell = document.querySelector('.device');
+    if (!shell) return;
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(shell, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [screenOwnsTitle, state.screen]);
 
   return (
     // A real <header>, and the screen's name is the page's <h1>. Both were
@@ -332,7 +350,7 @@ function Header({
         </button>
       )}
 
-      <div style={{ flex: 1, minWidth: 0 }}>
+      {!screenOwnsTitle && <div style={{ flex: 1, minWidth: 0 }}>
         {upTo ? (
           <button
             type="button"
@@ -392,7 +410,7 @@ function Header({
         >
           {title}
         </h1>
-      </div>
+      </div>}
 
       {/*
         Always drawn, because the timer pill lives in it and a running timer is
@@ -1480,7 +1498,7 @@ function AppFrame() {
             that is 800 tall and mostly thumb.
           */}
           <TabStrip />
-          {!ownTitle && <Header />}
+          <Header screenOwnsTitle={ownTitle} />
           <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1587,7 +1605,7 @@ function AppFrame() {
         again.
       */}
       <TabStrip />
-      {!ownTitle && <Header />}
+      <Header screenOwnsTitle={ownTitle} />
       <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
