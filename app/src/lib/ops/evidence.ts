@@ -162,6 +162,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'Supabase marked the restore completed. RLS and ensure_rls survived and the gateway journal relation was present; production had one newer public table. The dashboard view did not expose the start timestamp, so RTO remains unmeasured and the timed-restore gate stays open.',
   },
   {
+    id: 'pages-rollback-drill-2026-10-02',
+    artifact: 'Protected GitHub Pages production rollback to the prior main release, live smoke, restoration of current main, and repeat live smoke',
+    path: 'docs/evidence/rollback/2026-10-02-pages-rollback-drill.md',
+    produced: '2026-10-02',
+    validFor: QUARTERLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-006'],
+    note: 'The tag path was correctly rejected by production environment protection. Re-running the prior successful main deployment rolled back in 1m03s; re-running current main restored it in 1m18s; the live HTML, module, stylesheet and Supabase probe passed after both transitions.',
+  },
+  {
     id: 'm1-m2-automated-verification',
     artifact: 'M1/M2 automated verification: 21 focused workflow files, 355 tests, Master Plan controls, TypeScript, lint and a production build',
     path: 'docs/evidence/m1-m2/2026-09-30-automated-verification.md',

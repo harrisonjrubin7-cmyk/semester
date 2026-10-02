@@ -227,12 +227,13 @@ export const GATES: readonly Gate[] = [
     owner: 'engineering',
     status: 'partial',
     evidence: [
-      { path: 'ROLLBACK.md', shows: 'the rollback runbook, with measured timings' },
+      { path: 'ROLLBACK.md', shows: 'the rollback runbook, corrected to the protected production path after a live exercise' },
+      { path: 'docs/evidence/rollback/2026-10-02-pages-rollback-drill.md', shows: 'Pages rolled from current main to the immediately prior main release, passed live smoke, restored current main and passed live smoke again' },
       { path: 'app/src/lib/flags.ts', shows: 'the flag registry, its evaluator, and six database-backed kill switches' },
       { path: 'docs/FEATURE-FLAG-REGISTRY.md', shows: 'each flag\'s owner and rollback, the kill-switch runbook, and the read-only mode with its engage, confirm and rollback steps' },
       { path: 'app/src/lib/readonly.ts', shows: 'the app-wide read-only mode: VITE_READ_ONLY stops every push and shows a standing banner; SEMESTER_READ_ONLY makes the gateway refuse every write with a retryable 503; each side tested, and each guard shown red under revert' },
     ],
-    gap: 'No kill switch and no read-only mode has been engaged against production, and rollback has not been tested on the production deployment path.',
+    gap: 'The protected Pages rollback and restoration path is proved. No kill switch or read-only mode has been engaged against production.',
     goLive: [/Rollback tested on the production deployment path/],
   },
   {

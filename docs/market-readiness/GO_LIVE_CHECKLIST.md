@@ -56,7 +56,10 @@ Every line requires evidence, not an opinion.
   Harrison Rubin is the Semester incident and support owner; the public
   templates remain in `INCIDENT_COMMUNICATION_TEMPLATES.md`. Institution-side
   contacts are still a per-pilot external input.
-- [ ] Rollback tested on the production deployment path
+- [x] Rollback tested on the production deployment path: Pages was rolled
+  from current main `3d87884` to prior main `7675b99`, passed the live public
+  production smoke, then restored to `3d87884` and passed again. Evidence:
+  `docs/evidence/rollback/2026-10-02-pages-rollback-drill.md`.
 - [x] No production secret in git, bundles, docs or fixtures — Gitleaks 8.28.0
   passed the current tree, all reachable history and the release-branch range;
   the production and isolated institutional bundles passed the redacting

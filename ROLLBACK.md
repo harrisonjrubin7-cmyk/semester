@@ -294,20 +294,16 @@ GitHub will — that is the lesson of 18 September and it has not changed.
    run list, and every run names the merge commit it built:
    `https://github.com/harrisonjrubin7-cmyk/semester/actions/workflows/pages.yml`
 
-2. **Run the workflow on that ref.** Actions → *Deploy to Pages* → *Run
-   workflow* → choose the branch or tag. `workflow_dispatch` exists on that
-   workflow for exactly this; without it the only way to redeploy would be an
-   empty commit, which is slower and lies about the history.
+2. **Re-run the prior successful main deployment.** Open the Pages run that
+   names the commit and choose *Re-run all jobs*. The production environment
+   permits the protected main ref; a drill on 2 October 2026 proved that a
+   `workflow_dispatch` from a tag is rejected before deployment with
+   “Tag … is not allowed to deploy to github-pages due to environment
+   protection rules.” Do not weaken that protection for a rollback.
 
-   A commit that is not the tip of a branch needs a tag first:
-
-   ```bash
-   git tag rollback-$(date +%Y%m%d-%H%M) <commit>
-   git push origin rollback-$(date +%Y%m%d-%H%M)
-   ```
-
-   The workflow file has to exist on that ref, which it does for anything
-   recent. For an older one, tag a branch that has both.
+   Re-running the prior main run retains its pinned commit and satisfies the
+   environment rule. The dated evidence is
+   `docs/evidence/rollback/2026-10-02-pages-rollback-drill.md`.
 
 3. **Wait.** Deploys do not cancel each other — `cancel-in-progress: false` —
    because an interrupted deploy can leave the site serving a partial build.
@@ -316,6 +312,11 @@ GitHub will — that is the lesson of 18 September and it has not changed.
 4. **Check the page itself**, not the green tick:
    `https://harrisonjrubin7-cmyk.github.io/semester/` — and hard-reload, because
    the service worker will otherwise hand you what you already had.
+
+5. **Restore current main the same way.** Re-run the most recent successful
+   current-main Pages deployment, wait for success, and repeat the live HTML,
+   module, stylesheet and Supabase smoke probe. A rollback drill is not closed
+   while the older release remains live.
 
 ## Rolling a function back
 
