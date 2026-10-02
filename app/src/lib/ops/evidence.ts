@@ -115,7 +115,7 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     owner: 'security',
     claims: [],
     rows: ['SEC-007', 'SRE-001'],
-    note: 'The Vercel production URL served CSP, HSTS, nosniff, referrer and permissions policies. Auth sign-in/sign-up, OTP, refresh, SMS, anonymous and Web3 values were read from the project dashboard; the disabled platform-managed email field did not expose its numeric value through the accessible output.',
+    note: 'The Vercel production URL served CSP, HSTS, nosniff, referrer and permissions policies. Auth email (2/hour), sign-in/sign-up, OTP, refresh, SMS, anonymous and Web3 values were read from the production project dashboard; no setting was changed.',
   },
   {
     id: 'terms-privacy-review-attestation-2026-09-30',

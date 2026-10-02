@@ -608,10 +608,9 @@ refreshes are 150 per five minutes (1,800/hour); OTP and magic-link token
 verifications are 30 per five minutes (360/hour); sign-ups and sign-ins are 30
 per five minutes (360/hour); SMS is 30/hour and platform-managed; anonymous
 users are 30/hour and disabled; Web3 sign-ups/sign-ins are 30 per five minutes
-and disabled; IP-address forwarding is off. The platform-managed email field
-was disabled and its numeric value was not exposed through the accessible
-dashboard output used for the reading, so this document deliberately does not
-invent it. The dated source record is
+and disabled; email sending is 2/hour and platform-managed; IP-address
+forwarding is off. The email input was redacted in the accessibility tree but
+visibly showed `2` emails/hour in the authenticated dashboard. The dated source record is
 `docs/evidence/production/2026-10-02-production-controls.md`.
 
 ## The scheduler

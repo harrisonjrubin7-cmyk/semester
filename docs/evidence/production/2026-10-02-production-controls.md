@@ -33,11 +33,11 @@ No values were changed.
 | SMS | 30/hour; platform-managed field disabled |
 | Anonymous users | 30/hour; disabled |
 | Web3 sign-ups and sign-ins | 30 per 5 minutes; disabled |
-| Email | Platform-managed field disabled; its numeric value was not exposed through the accessible dashboard output used for this record |
+| Email | 2/hour; platform-managed field disabled |
 | IP-address forwarding | off |
 
 The database write-rate-limit trigger was separately verified on fourteen
 production tables on 2026-09-29, as recorded in `supabase/DEPLOY.md`. This
-record closes the previously missing sign-in, sign-up, OTP and refresh reading.
-The release line remains explicit about the email value rather than guessing a
-number that was not observable.
+record closes the production readback for every Auth limit shown by the
+dashboard. The email input was redacted in the accessibility tree but visibly
+showed `2` emails/hour in the authenticated dashboard; no setting was changed.

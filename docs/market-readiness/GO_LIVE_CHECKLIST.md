@@ -28,8 +28,8 @@ Every line requires evidence, not an opinion.
 - [x] Append-only audit evidence records tenant-setting, future role-grant and
   current report-moderation status changes; isolation, pseudonymization and
   immutability checks pass
-- [ ] Rate limiting on the Supabase-direct paths, not just the gateway
-  - *Built, not yet live.* `supabase/migrations/20260928230000_direct_rate_limits.sql`
+- [x] Rate limiting on the Supabase-direct paths, not just the gateway
+  - `supabase/migrations/20260928230000_direct_rate_limits.sql`
     puts a per-account sliding-window limit (per form for signed-out answers)
     on the fourteen tables the browser writes to that reach other people or a
     staff queue — messages, reactions, both report queues, feedback, help and
@@ -40,12 +40,12 @@ Every line requires evidence, not an opinion.
     (communities, community_posts, community_reports, community_sessions,
     feedback, form_responses, group_tasks, groups, help_requests,
     mentor_requests, message_reactions, messages, opportunities, reports).
-    The Auth dashboard was read on 2 October 2026 and sign-in/sign-up, OTP,
-    token refresh, SMS, anonymous and Web3 values are recorded in
+    The Auth dashboard was read on 2 October 2026 and email (2/hour),
+    sign-in/sign-up, OTP, token refresh, SMS, anonymous and Web3 values are recorded in
     `supabase/DEPLOY.md` and the dated production-control evidence. The email
-    field was platform-managed and disabled, and its numeric value was not
-    exposed through the accessible dashboard output, so this line remains
-    unticked rather than guessing it.
+    field was platform-managed and disabled; the authenticated dashboard
+    visibly showed the value even though its accessibility-tree output was
+    redacted. No setting was changed.
 - [x] Data export and account deletion available to users: **Take it with you**
   downloads portable CSV, Markdown, calendar, attachment and restorable JSON
   files; specialized workspaces have a second explicit backup; **Privacy**

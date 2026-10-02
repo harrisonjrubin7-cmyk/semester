@@ -167,7 +167,7 @@ export const GATES: readonly Gate[] = [
     evidence: [{ path: GO_LIVE, shows: 'the blocking list, most of it unticked' }],
     gap: 'The go-live checklist still has unticked Blocking lines. Each is a release blocker by that document\'s own definition.',
     closure: [
-      { authority: 'production-authority', action: 'Complete the retained-time restore measurement, named-alert exercise and Auth email-limit readback.' },
+      { authority: 'production-authority', action: 'Complete the retained-time restore measurement and named-alert exercise.' },
       { authority: 'external-approval', action: 'Obtain and record the qualified accessibility audit.' },
     ],
     goLive: [/^- \[.\] /],

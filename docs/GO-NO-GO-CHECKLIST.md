@@ -37,7 +37,7 @@ each is carried next to its gate in code and tested for presence.
 | Gate | Authority | Exact closing action |
 | --- | --- | --- |
 | `golden-path` | Production authority | Run and record the source-backed import, account-resume and human-help journey against the intended production configuration. |
-| `no-blockers` | Production authority | Complete the retained-time restore measurement, named-alert exercise and Auth email-limit readback. |
+| `no-blockers` | Production authority | Complete the retained-time restore measurement and named-alert exercise. |
 | `no-blockers` | External approval | Obtain and record the qualified accessibility audit. |
 | `staging-parity` | Production authority | Compare the live preview branch and production fingerprints, RLS health, function versions and branch-secret readiness. |
 | `backup-restore` | Production authority | Run a retained-time restore drill and verify recovery of a seeded, non-empty gateway-journal sample. |
@@ -66,7 +66,7 @@ the two documents in agreement.
 | Gate | Requirement | Owner | Status | Evidence today | Still missing |
 | --- | --- | --- | --- | --- | --- |
 | `golden-path` | Golden student path passes end-to-end. | product | `PARTIAL` | Browser golden path and account-resume CI at two viewports; `release.json` build readback exposes source SHA, environment, Human Help/account state and other public-safe launch facts | Read the manifest from production and record the real source-backed import/account-resume journey; CI still stubs one model reply and uses local Supabase |
-| `no-blockers` | No P0/P1 security, privacy, accessibility, reliability, or safety blocker. | security | `UNMET` | The go-live Blocking list | Its unticked lines: timed restore, live named-person alert exercise, Auth email-limit readback and qualified accessibility audit |
+| `no-blockers` | No P0/P1 security, privacy, accessibility, reliability, or safety blocker. | security | `UNMET` | The go-live Blocking list | Its unticked lines: timed restore, live named-person alert exercise and qualified accessibility audit |
 | `staging-parity` | Staging configuration mirrors intended production configuration. | engineering | `PARTIAL` | `STAGING.md`; `supabase/compare-databases.sh`: credential-safe fingerprint, Postgres-major, RLS and event-trigger comparison; Edge Function declarations settled | An authorized operator has not run the comparator against the live pair or verified branch function versions and secrets |
 | `backup-restore` | Backup/restore tested. | engineering | `PARTIAL` | Logical rehearsal passed 2026-09-21; completed production physical restore with RLS/event-trigger/table checks; `supabase/gateway-journal-backup-drill.sh` safely seeds and verifies a non-sensitive journal marker | Run a retained-time physical restore with the new marker procedure; the prior dashboard view lacked the start timestamp and its journal was empty |
 | `operations-live` | Monitoring, alerting, incident process, status page, and support routing live. | engineering | `PARTIAL` | Hourly `production-smoke.yml`; Harrison Rubin named in the incident and support playbooks; assigned-issue alert path implemented | Dispatch the alert exercise and observe the assigned issue. Institution-side contacts and a backup operator remain unassigned |
