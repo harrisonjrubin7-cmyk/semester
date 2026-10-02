@@ -4,13 +4,13 @@
 
 This audit found **no confirmed P0 vulnerability** in the reviewed snapshot (`3d87884c`). The strongest controls are unusually evidence-oriented: SQL grants are fail-closed against an explicit RPC allowlist, RLS behavior is exercised by adversarial SQL suites, workflows pin Actions by commit, service-role code stays on server boundaries, and the production build has enforced size budgets.
 
-The repository is not institution-ready merely because those controls exist in source. The material residual risks are: an authenticated outbound-fetch endpoint with no shared rate limit and a DNS check/use gap; HawkScan not being a required branch check and scanning only the frontend; an intentionally non-blocking high/critical dependency audit; a queued community-media scanning design with no scanner function; a single-person review model; and operational gates that the repository itself still records as unmet. One confirmed internal-error disclosure in the push function was fixed during this audit.
+The repository is not institution-ready merely because those controls exist in source. The material residual risks are: an authenticated outbound-fetch endpoint with a DNS check/use gap; HawkScan not being a required branch check and scanning only the frontend; an intentionally non-blocking high/critical dependency audit; a queued community-media scanning design with no scanner function; a single-person review model; and operational gates that the repository itself still records as unmet. One confirmed internal-error disclosure in the push function was fixed during this audit, and the outbound source check now consumes a shared per-account limit before network work.
 
-The audit produced a reproducible inventory of **15 HTTP entry points, 216 authenticated PostgREST RPC operations, and 81 explicitly granted service-role operations**. See `ENDPOINT-MANIFEST.md` and `endpoint-manifest.json`.
+The audit produced a reproducible inventory of **15 HTTP entry points, 217 authenticated PostgREST RPC operations, and 81 explicitly granted service-role operations**. See `ENDPOINT-MANIFEST.md` and `endpoint-manifest.json`.
 
 ## Scope and limitations
 
-Reviewed: application frontend, company site, Vercel route, 14 Edge Functions, 165 migrations, 106 SQL check suites, RPC grants, storage policies, workflows, dependency policy, secrets policy, accessibility tests, performance budgets, retention and incident documentation, and the highest-risk integration boundaries.
+Reviewed: application frontend, company site, Vercel route, 14 Edge Functions, 166 migrations, 107 SQL check suites, RPC grants, storage policies, workflows, dependency policy, secrets policy, accessibility tests, performance budgets, retention and incident documentation, and the highest-risk integration boundaries.
 
 Verified locally: TypeScript, lint, university-server typecheck, production build, budgets, targeted security regressions, and a green baseline full Vitest suite. Post-change full-suite attempts were limited by five-second timeouts under worker concurrency; with four workers, 1,252/1,255 files passed and every residual failing test passed when replayed independently. No post-change assertion failure remained. The PostgreSQL 17 harness could not run because this host has no PostgreSQL 17 server. `npm audit` could not run because this host supplies Node but not npm. HawkScan could not run because the active environment exposes neither the HawkScan capability/runtime nor an API key. Deployment dashboards, live secrets, Supabase Auth settings, branch-ruleset application, backups, alerts, and institutional approvals were not accessible; repository files are evidence of intent, not proof of activation.
 
@@ -43,16 +43,16 @@ None confirmed.
 
 ### P1
 
-#### AUD-P1-01 — Outbound source check lacks shared rate limiting and connection pinning
+#### AUD-P1-01 — Outbound source check lacks connection pinning; shared limiting fixed
 
-- **Classification:** confirmed missing abuse control; DNS-rebinding exploitability is a hardening hypothesis.
-- **Evidence:** `supabase/functions/productivity-sourcecheck/index.ts:10-18` resolves a hostname and checks returned addresses, then `:33-45` later calls `fetch(url)`, which resolves again. `:29-32` authenticates and bounds the body, but no shared user/tenant limiter is consumed.
-- **Scenario:** a signed-in account repeatedly requests large public `.edu` pages to consume Edge Function bandwidth. A compromised or attacker-controlled eligible hostname could answer the pre-check with a public address and rebind before the fetch to target a private address.
-- **Impact:** cost/availability pressure; possible SSRF if DNS rebinding succeeds.
+- **Classification:** confirmed DNS check/use gap; DNS-rebinding exploitability is a hardening hypothesis. The confirmed missing abuse limit is fixed.
+- **Evidence:** `supabase/functions/productivity-sourcecheck/index.ts:10-18` resolves a hostname and checks returned addresses, then `:39-44` later calls `fetch(url)`, which resolves again. The new call at `:33-38` consumes a fail-closed shared allowance before DNS or fetch work. `supabase/migrations/20261002100000_productivity_source_rate_limit.sql:8-34` derives the subject from `auth.uid()` and fixes the policy at ten calls per rolling minute.
+- **Scenario:** a compromised or attacker-controlled eligible hostname could answer the pre-check with a public address and rebind before the fetch to target a private address. Repeated ordinary abuse is now bounded per account across Edge Function instances.
+- **Impact:** possible SSRF if DNS rebinding succeeds; reduced but not eliminated cost/availability pressure.
 - **Affected:** authenticated users, Edge Function capacity, internal network metadata/services.
-- **Recommendation:** require an explicit institution host allowlist for activated tenants; add a shared per-user and per-tenant limiter; connect to a validated/pinned address through a filtering egress layer; add redirect and rebinding adversarial tests.
+- **Recommendation:** require an explicit institution host allowlist for activated tenants; connect to a validated/pinned address through a filtering egress layer; add redirect and rebinding adversarial tests. Consider a tenant-wide budget in addition to the shipped per-account limit when tenant identity is available at this boundary.
 - **Owner / effort:** application security + platform; M–L.
-- **Verification:** N+1 requests yield 429 across separate instances; a host that changes from public to loopback/private is refused; redirects are revalidated; IPv4/IPv6 reserved ranges are table-tested.
+- **Verification:** source regressions prove the limiter precedes DNS/fetch and emits bounded 429/503 responses; the SQL suite proves N+1 refusal and account isolation when run on PostgreSQL 17. Still required: refuse a host that changes from public to loopback/private, and table-test reserved IPv4/IPv6 plus redirects through a live filtered-egress integration.
 
 #### AUD-P1-02 — HawkScan is not a required merge check and does not cover APIs
 
@@ -89,7 +89,18 @@ None confirmed.
 - **Owner / effort:** backend; S, completed.
 - **Verification:** targeted 13-test push suite passes; full gates listed in `CHANGELOG-AUDIT.md`.
 
-#### AUD-P2-02 — High/critical dependency audit is advisory only
+#### AUD-P2-02 — Source checker returned arbitrary runtime errors (fixed)
+
+- **Classification:** confirmed information-disclosure boundary, fixed.
+- **Evidence:** the prior catch returned `e.message` for every exception, including resolver, parser and fetch-runtime errors. `supabase/functions/productivity-sourcecheck/index.ts:5` now marks intentional public errors, and `:57-62` returns only those messages while logging only the unexpected error class.
+- **Scenario:** a malformed or failing outbound request causes the runtime or network stack to include implementation details in its exception message, which is echoed to an authenticated caller.
+- **Impact:** environmental or dependency detail disclosure that could improve SSRF probing.
+- **Affected:** authenticated source-check users and the Edge Function runtime.
+- **Recommendation:** shipped change: typed public errors and a generic fallback. Keep new validation failures inside this explicit contract.
+- **Owner / effort:** backend/AppSec; S, completed.
+- **Verification:** `app/src/lib/productivitysourcecheck.test.ts` rejects a catch-all `Error.message` response and holds the generic failure response.
+
+#### AUD-P2-03 — High/critical dependency audit is advisory only
 
 - **Classification:** confirmed supply-chain hardening gap.
 - **Evidence:** `.github/workflows/ci.yml:97-118` states the tree was clean when written but sets `continue-on-error: true` for `npm audit --audit-level=high`.
@@ -100,7 +111,7 @@ None confirmed.
 - **Owner / effort:** platform/AppSec; S–M.
 - **Verification:** a lockfile with a known high advisory blocks; an approved exception includes reachability rationale, owner, and expiry.
 
-#### AUD-P2-03 — Community-media scanner is designed but not implemented
+#### AUD-P2-04 — Community-media scanner is designed but not implemented
 
 - **Classification:** confirmed incomplete workflow; fail-closed behavior reduces severity.
 - **Evidence:** `docs/COMMUNITY-MEDIA-SAFETY.md:187-205` instructs adding a `media-scan` function; no such function exists under `supabase/functions/` or `supabase/config.toml`. The migration queues scans and exposes media only after a safe verdict.
@@ -111,7 +122,7 @@ None confirmed.
 - **Owner / effort:** trust & safety + backend/SRE; L.
 - **Verification:** malicious/polyglot files never become readable, safe images progress, failed scans remain closed, and abandoned objects are deleted.
 
-#### AUD-P2-04 — Single-person CODEOWNERS cannot provide independent review
+#### AUD-P2-05 — Single-person CODEOWNERS cannot provide independent review
 
 - **Classification:** confirmed governance limitation.
 - **Evidence:** `.github/CODEOWNERS:3-10` explicitly records one owner; security-sensitive paths at `:16-25` name the same account.
@@ -141,7 +152,7 @@ None confirmed.
 - **Evidence:** 14 functions, one Vercel route, and hundreds of RPCs previously had no single manifest. `scripts/build_endpoint_manifest.mjs` now derives the RPC surfaces and emits `endpoint-manifest.json`; `app/src/lib/endpointmanifest.test.ts` fails when an Edge Function or authenticated RPC is omitted.
 - **Impact:** reviewers previously had to rediscover the surface, increasing omission risk.
 - **Owner / effort:** AppSec/platform; M, completed.
-- **Verification:** generator reports 15 HTTP, 216 authenticated RPC, 81 explicit service operations; coverage tests pass.
+- **Verification:** generator reports 15 HTTP, 217 authenticated RPC, 81 explicit service operations; coverage tests pass.
 
 ## Human decision list
 

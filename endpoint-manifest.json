@@ -9,7 +9,7 @@
   ],
   "counts": {
     "http_entry_points": 15,
-    "authenticated_rpc_operations": 216,
+    "authenticated_rpc_operations": 217,
     "explicit_service_role_operations": 81
   },
   "http_entry_points": [
@@ -233,12 +233,12 @@
       "data_classification": "public source URL and short excerpt",
       "uses_service_role": false,
       "side_effects": "bounded outbound availability check",
-      "rate_limit_expectation": "missing_shared_limit",
-      "idempotency_or_replay": "read-only; no shared rate limit (audit finding AUD-P1-01)",
+      "rate_limit_expectation": "implemented_shared_per_account_10_per_minute",
+      "idempotency_or_replay": "shared per-account sliding limit; read-only outbound fetch",
       "audit_logging": "endpoint-specific; see source and SQL RPCs",
       "error_behavior": "bounded/generic unless noted in AUDIT-REPORT.md",
       "tests": [
-        "no dedicated handler test"
+        "app/src/lib/productivitysourcecheck.test.ts"
       ]
     },
     {
@@ -4678,6 +4678,28 @@
       "tests": [
         "supabase/grants.check.sql",
         "supabase/support-tickets.check.sql"
+      ]
+    },
+    {
+      "id": "rpc:authenticated:take_productivity_source_rate_limit()",
+      "kind": "postgrest_rpc",
+      "endpoint": "/rest/v1/rpc/take_productivity_source_rate_limit",
+      "signature": "take_productivity_source_rate_limit()",
+      "caller_type": "authenticated_browser_or_gateway",
+      "authentication": "Supabase authenticated JWT",
+      "authorization_and_tenant_resolution": "function-specific; executable grant is fail-closed by supabase/grants.check.sql and the body must derive/verify actor scope",
+      "data_classification": "function-specific",
+      "uses_service_role": false,
+      "side_effects": "function-specific; do not infer from HTTP POST",
+      "rate_limit_expectation": "required for abuse-sensitive mutations; coverage recorded in SECURITY-TEST-MATRIX.md",
+      "idempotency_or_replay": "function-specific",
+      "audit_logging": "function-specific",
+      "error_behavior": "PostgREST error envelope; clients must sanitize",
+      "source": "supabase/migrations/20261002100000_productivity_source_rate_limit.sql:8",
+      "tests": [
+        "supabase/definer-sweep.check.sql",
+        "supabase/grants.check.sql",
+        "supabase/productivity-source-rate-limit.check.sql"
       ]
     },
     {

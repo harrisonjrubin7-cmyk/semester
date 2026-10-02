@@ -36,7 +36,7 @@ const http = [
   ['integration-tick', 'scheduler_vault_token', 'database validates presented scheduler token', true, 'tenant integration configuration and records', 'integration sync/reconciliation', 'durable inbox and connection-scoped event keys', 'app/server/integration/tick.test.ts'],
   ['lead-intake', 'strict_origin_plus_abuse_controls', 'public form route allowlist', true, 'contact details and inquiry text', 'lead record and optional notification', 'database-generated reference; IP-HMAC rate limit', 'app/src/lib/billing/leadintake.test.ts'],
   ['lti', 'oidc_state_nonce_and_signed_id_token', 'issuer/audience/deployment/course role and tenant binding', true, 'LTI identity, course context and grade passback metadata', 'login, launch, link binding and score passback', 'nonce spend and platform line-item identity', 'app/src/lib/ltiserver.test.ts'],
-  ['productivity-sourcecheck', 'user_jwt', 'authenticated caller; public .edu or configured host', false, 'public source URL and short excerpt', 'bounded outbound availability check', 'read-only; no shared rate limit (audit finding AUD-P1-01)', 'no dedicated handler test'],
+  ['productivity-sourcecheck', 'user_jwt', 'authenticated caller; public .edu or configured host', false, 'public source URL and short excerpt', 'bounded outbound availability check', 'shared per-account sliding limit; read-only outbound fetch', 'app/src/lib/productivitysourcecheck.test.ts'],
   ['push', 'scheduler_bearer_secret', 'dedicated cron secret', true, 'notification text, destination and device subscription', 'send notifications and retire dead subscriptions', 'bounded oldest-first queue; provider delivery is retryable', 'app/src/lib/pushchain.test.ts'],
   ['trust-room', 'procurement_link_token', 'hashed, expiring grant scoped to named artifacts', true, 'procurement artifacts and access metadata', 'access-log read and one-minute storage URL', 'read-only token spend/access log', 'app/src/lib/trust/room-server.test.ts'],
 ].map(([name, authn, authz, serviceRole, data, effects, idempotency, tests]) => ({
@@ -50,7 +50,7 @@ const http = [
   data_classification: data,
   uses_service_role: serviceRole,
   side_effects: effects,
-  rate_limit_expectation: name === 'lead-intake' ? 'implemented' : name === 'claude' ? 'implemented_usage_quota' : name === 'productivity-sourcecheck' ? 'missing_shared_limit' : 'endpoint-specific; verify before activation',
+  rate_limit_expectation: name === 'lead-intake' ? 'implemented' : name === 'claude' ? 'implemented_usage_quota' : name === 'productivity-sourcecheck' ? 'implemented_shared_per_account_10_per_minute' : 'endpoint-specific; verify before activation',
   idempotency_or_replay: idempotency,
   audit_logging: 'endpoint-specific; see source and SQL RPCs',
   error_behavior: 'bounded/generic unless noted in AUDIT-REPORT.md',

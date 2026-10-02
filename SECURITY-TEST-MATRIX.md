@@ -22,7 +22,7 @@ Legend: **covered** means an executable negative test was found; **partial** mea
 | LTI platform | bad issuer/aud/deployment/nonce/state/role | launch/passback | generic refusal; no binding/grade | LTI unit + SQL checks | covered |
 | OAuth callback | altered state/redirect/account link | callback | refuse | Microsoft/calendar/provider tests | partial: live provider exercise absent |
 | signed-in user | DNS rebind/private redirect | source check | refuse before connection | source function address checks | gap: connection pinning/rebind test |
-| signed-in user | excessive source checks | repeated outbound fetch | shared 429 | none | gap |
+| signed-in user | excessive source checks | repeated outbound fetch | shared 429; second account unaffected | `productivity-source-rate-limit.check.sql`, `productivitysourcecheck.test.ts` | covered; PostgreSQL 17 execution pending |
 | uploader | SVG/polyglot/magic-byte mismatch/oversize | community media | pending/rejected, never readable | SQL media state checks | gap: scanner absent |
 | renderer | SVG handler/foreignObject/script/javascript/data/external URL | render | removed or text-only | diagram/creations/link tests | covered for central sinks; company-site constants reviewed statically |
 | API caller | malformed/oversized body | HTTP handler | 400/413; no side effect | handler tests | covered for most; sourcecheck dedicated test missing |
@@ -30,7 +30,7 @@ Legend: **covered** means an executable negative test was found; **partial** mea
 
 ## Required additions
 
-1. A pure handler test suite for `productivity-sourcecheck`: method/auth/body bytes, IPv4/IPv6 ranges, redirects, DNS rebinding, timeouts, content type/size, rate limits, and generic errors.
+1. Expand the source-check handler suite beyond its new limiter regressions: method/auth/body bytes, IPv4/IPv6 ranges, redirects, DNS rebinding, timeouts, content type/size, and generic errors.
 2. API-level authenticated HawkScan coverage for all 15 HTTP surfaces; current DAST scans only the frontend.
 3. Community media worker tests before activation: MIME/extension/magic bytes, decompression/pixel bombs, SVG rejection, malware verdicts, retry/dead-letter, and deletion.
 4. Restore, legal-hold, export and deletion exercises against representative backup/analytics/vendor copies.

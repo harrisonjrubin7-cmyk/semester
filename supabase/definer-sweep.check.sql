@@ -204,7 +204,8 @@ declare
     'note_activity',               jsonb_build_object('answers', '^done$', 'why', 'marks the caller''s own day'),
     'referral_standing',           jsonb_build_object('answers', '^1 rows: ', 'why', 'the caller''s own code and counts; the leak check holds it to the caller'),
     'state_my_age',                jsonb_build_object('answers', '^"(already_stated|under_minimum_age)"$', 'why', 'states the caller''s own age, once; check.sh records the stranger as an adult who already said'),
-    'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan')
+    'stop_contributing',           jsonb_build_object('answers', '^done$', 'why', 'withdraws the caller''s own course plan'),
+    'take_productivity_source_rate_limit', jsonb_build_object('answers', '^done$', 'why', 'spends one of the caller''s own server-defined source-check allowances')
   );
 begin
   -- The victim, with something to lose.

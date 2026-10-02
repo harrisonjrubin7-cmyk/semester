@@ -625,6 +625,11 @@ declare
     -- the consenting cohort reaches ten; it never returns workspace content.
     'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
     'productivity_readiness_aggregate(p_tenant text)',
+    -- The Edge Function invokes this with the signed-in caller's JWT. It
+    -- derives the subject with auth.uid() and owns the bucket, limit and
+    -- window, so a browser cannot spend another account's allowance or widen
+    -- its own.
+    'take_productivity_source_rate_limit()',
 
     -- The nine in 20260929330000_dining.sql. Each takes the caller from
     -- auth.uid() and their school from profiles.school_id, never a
@@ -647,7 +652,10 @@ declare
     -- requires an active tenant administrator and suppresses cohorts below 10.
     -- `productivity_workspace.sql` exercises both authorization boundaries.
     'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
-    'productivity_readiness_aggregate(p_tenant text)'
+    'productivity_readiness_aggregate(p_tenant text)',
+    -- `productivity-source-rate-limit.check.sql` proves per-account isolation,
+    -- the N+1 refusal and anonymous denial.
+    'take_productivity_source_rate_limit()'
   ];
   extra text;
   missing text;

@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 1 callable definer added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`). It is held to its migration body and grant declaration below and is not retroactively counted in the 30 September reading.
+The current register also includes 2 callable definer added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002100000_productivity_source_rate_limit.sql` (`take_productivity_source_rate_limit`). It is held to its migration body and grant declaration below and is not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -51,16 +51,16 @@ The current register also includes 1 callable definer added after that dated cat
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 59 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 60 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
 | admin | 74 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 203 | |
+| **total** | 204 | |
 
-### self-service (59)
+### self-service (60)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -120,6 +120,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
 | `submit_course_review` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260926150000_expansion_roles_and_features.sql` |
+| `take_productivity_source_rate_limit` | `auth.uid()`, `private.take_direct_rate_limit` | `20261002100000_productivity_source_rate_limit.sql` |
 | `volunteer_attest` | `auth.uid()` | `20260928032000_community.sql` |
 | `withdraw_help_request` | `auth.uid()` | `20260927233000_help_request_review_fixes.sql` |
 | `withdraw_school_request` | `auth.uid()` | `20260930185000_school_membership_enforcement.sql` |

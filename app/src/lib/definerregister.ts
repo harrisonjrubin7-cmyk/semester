@@ -308,6 +308,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['support_reply', 'admin', ['private.support_agent']],
   ['support_ticket_queue', 'admin', ['private.support_agent']],
   ['support_ticket_thread', 'admin', ['private.support_agent']],
+  ['take_productivity_source_rate_limit', 'self-service', ['auth.uid()', 'private.take_direct_rate_limit']],
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -436,6 +437,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261001153124_productivity_workspace.sql',
     functions: ['productivity_readiness_aggregate'],
+  },
+  {
+    file: '20261002100000_productivity_source_rate_limit.sql',
+    functions: ['take_productivity_source_rate_limit'],
   },
 ];
 

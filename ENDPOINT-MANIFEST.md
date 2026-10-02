@@ -17,14 +17,14 @@ Generated inventory: `endpoint-manifest.json` via `scripts/build_endpoint_manife
 | `integration-tick` | Vault scheduler token | connection row supplies tenant | yes | durable inbox/event keys | integration tests |
 | `lead-intake` | strict production origin | public route allowlist | yes | HMAC-IP sliding limit | `leadintake.test.ts` |
 | `lti` | OIDC state/nonce + signed token; JWT for score | issuer/audience/deployment/role/tenant checks | yes | nonce spend, idempotent line items | LTI tests/checks |
-| `productivity-sourcecheck` | user JWT | public `.edu` or configured host | no | **shared limit missing; DNS rebinding gap** | dedicated handler test missing |
+| `productivity-sourcecheck` | user JWT | public `.edu` or configured host | no | shared 10/account/minute limit; DNS rebinding gap remains | `productivitysourcecheck.test.ts`, SQL limiter check |
 | `push` | cron bearer secret | scheduler only | yes | bounded oldest-first queue | `pushchain.test.ts` |
 | `trust-room` | expiring procurement token | grant-scoped artifact | yes | read-only, one-minute URL | `room-server.test.ts` |
 | `/api/institution/[...path]` | user JWT | server-derived actor/tenant + capability | yes | shared limiter, action journal, mutation keys | gateway/transport tests |
 
 ## PostgREST and privileged SQL surface
 
-- **216 authenticated RPC signatures.** Membership comes from the allowlist in `supabase/grants.check.sql`, whose schema sweep fails on both unexpected and missing grants. Each signature is an individual object in `endpoint-manifest.json`, with definition evidence and discovered SQL tests.
+- **217 authenticated RPC signatures.** Membership comes from the allowlist in `supabase/grants.check.sql`, whose schema sweep fails on both unexpected and missing grants. Each signature is an individual object in `endpoint-manifest.json`, with definition evidence and discovered SQL tests.
 - **81 explicit service-role operations.** These are parsed from grants in migration history and listed individually. They are privileged operations, not public endpoints; the owning Edge Function, gateway, scheduler, or worker must authenticate and derive tenant/subject before calling them.
 - **Direct tables/views/storage.** The database contract is enforced by RLS/grant/storage check suites rather than represented as hundreds of synthetic URLs. `SECURITY-TEST-MATRIX.md` maps actors and adversarial cases. `supabase/grants.check.sql` additionally sweeps writable views, invoker-view status, public function grants, and private-definer grants.
 
