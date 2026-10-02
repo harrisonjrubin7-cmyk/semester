@@ -75,7 +75,7 @@ docs for a written refusal.
 | Cross-device resume | Present | `lib/cloud.ts` (local-first), `lib/merge.ts` (field-level merge) |
 | Poor network | Present | `lib/offline.ts`, `components/Fresh.tsx` |
 | Scripted end-to-end journey | Absent | The nearest are `app/scripts/accessibility-smoke.mjs` (six screens, run separately, in CI) and `app/scripts/cold-smoke.mjs` |
-| Synthetic tenant | Present | `app/src/data/institutional-preview.ts` ("cedar-coast", twelve roles); `app/scripts/institutional-preview-smoke.mjs` exists but **no workflow runs it** |
+| Synthetic tenant | Release-gated | `app/src/data/institutional-preview.ts` ("cedar-coast", twelve roles); `.github/workflows/ci.yml` builds the account-isolated preview and runs `app/scripts/institutional-preview-smoke.mjs` across seven route/viewport probes, tenant isolation and all twelve roles |
 | Invite-only access | Present | `supabase/migrations/20260921002428_invites.sql` (trigger on `auth.users`, off by default), `invites.check.sql` |
 | Feedback | Present, no triage | `20260921215800_feedback.sql`: only the author can read it, and no staff view exists |
 | Cohorts, known issues, beta flags, exit requests | Absent | Export exists (`lib/export.ts`, `screens/Export.tsx`); a beta exit request does not |

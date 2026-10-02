@@ -12,6 +12,7 @@ const port = Number(process.env.INSTITUTIONAL_SMOKE_PORT || 4180);
 const base = `http://${host}:${port}/`;
 const vite = join(appRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const expectedPreview = process.env.EXPECT_INSTITUTIONAL_PREVIEW !== 'false';
+const previewOutDir = process.env.INSTITUTIONAL_SMOKE_DIST || 'dist';
 
 if (!Number.isInteger(port) || port < 1 || port > 65_535) {
   console.error('INSTITUTIONAL_SMOKE_PORT must be an integer from 1 to 65535');
@@ -34,7 +35,17 @@ try {
   process.exit(2);
 }
 
-const server = spawn(process.execPath, [vite, 'preview', '--host', host, '--port', String(port), '--strictPort'], {
+const server = spawn(process.execPath, [
+  vite,
+  'preview',
+  '--outDir',
+  previewOutDir,
+  '--host',
+  host,
+  '--port',
+  String(port),
+  '--strictPort',
+], {
   cwd: appRoot,
   env: process.env,
   stdio: ['ignore', 'pipe', 'pipe'],

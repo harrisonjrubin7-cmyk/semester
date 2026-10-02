@@ -397,6 +397,34 @@ jobs:
           SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
         run: npm run smoke:pilot
 
+      # The production build must never inherit the sales-demo shell. This
+      # probes the same seven routes the institutional matrix uses and fails
+      # if demo navigation, fixture storage or the demo label appears.
+      - name: Keep institutional preview out of the product build
+        working-directory: app
+        env:
+          EXPECT_INSTITUTIONAL_PREVIEW: 'false'
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+        run: npm run smoke:institutional
+
+      # Build the institutional pilot separately, with account connectivity
+      # blanked exactly as it is for Pages' /demo/ artifact. Its smoke walks
+      # mobile and desktop routes, compact chrome, tenant isolation and all
+      # twelve role workspaces. A local-only script is not release evidence;
+      # this makes that contract block every merge.
+      - name: Build and walk the institutional preview
+        working-directory: app
+        env:
+          EXPECT_INSTITUTIONAL_PREVIEW: 'true'
+          INSTITUTIONAL_SMOKE_DIST: /tmp/institutional-dist
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          VITE_INSTITUTIONAL_PREVIEW: 'true'
+          VITE_SUPABASE_URL: ''
+          VITE_SUPABASE_KEY: ''
+        run: |
+          npx vite build --outDir /tmp/institutional-dist --emptyOutDir
+          npm run smoke:institutional
+
       # The same student with human help switched on. Step 7 of
       # docs/GOLDEN-PATH-TEST-SCRIPT.md — reach a person, and see exactly what
       # would be sent before anything is — sits behind `VITE_HUMAN_HELP`, which
