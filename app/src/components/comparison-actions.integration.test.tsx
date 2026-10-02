@@ -19,7 +19,9 @@ import { EMPTY_CAREER, newOpportunity } from '../lib/career';
 import { graduationKey } from '../lib/graduation';
 import { meetingKey, newMeeting, readMeetings, sharePayload } from '../lib/advisor-meeting';
 import { EMPTY_PRODUCTIVITY, newDecision, newOption, readProductivity } from '../lib/productivity';
+import { download } from '../lib/deliver';
 import { shareWithAdvisor } from '../lib/advisor-shares';
+vi.mock('../lib/deliver', async original => ({ ...await original<typeof import('../lib/deliver')>(), download: vi.fn() }));
 const identity = vi.hoisted(() => ({ owner: 'alice' as string | null }));
 vi.mock('../state/store', async original => {
   const real = await original<typeof import('../state/store')>();
@@ -263,4 +265,57 @@ it('shows the partial-save result when the canonical career write runs out of st
     expect(JSON.parse(localStorage.getItem(key)!).opportunities[0].saved).toBe(false);
     expect(host.textContent).toContain('Personal choice saved. The source workspace could not be updated');
   } finally { quota.mockRestore(); }
+});
+
+async function restorePrivate(body: string) {
+  const file = new File([body], 'private-backup.json', { type: 'application/json' });
+  Object.defineProperty(file, 'text', { value: async () => body });
+  const picker = host.querySelector<HTMLInputElement>('input[type="file"]')!;
+  Object.defineProperty(picker, 'files', { configurable: true, value: [file] });
+  await act(async () => picker.dispatchEvent(new Event('change', { bubbles: true })));
+}
+it('exports and restores actual comparison history into empty and existing workspaces, retaining existing IDs and old-backup compatibility', async () => {
+  setupCourses(); await mount(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Save both options');
+  const originals = stored().comparisons!;
+  await reload(<ProductivityWorkspace />); await click('Backup'); await click('Export private backup');
+  const exported = vi.mocked(download).mock.calls.at(-1)![0].body as string;
+  identity.owner = 'empty'; await reload(<ProductivityWorkspace />); await click('Backup'); await restorePrivate(exported);
+  expect(stored().comparisons).toEqual(originals);
+  const extra = { ...originals[0], id: 'existing', title: 'Existing history' };
+  localStorage.setItem(workKey(), JSON.stringify({ ...stored(), comparisons: [extra, { ...originals[0], title: 'Keep existing version' }] }));
+  await reload(<ProductivityWorkspace />); await click('Backup'); await restorePrivate(exported);
+  expect(stored().comparisons?.map(s => s.title)).toEqual(['Existing history', 'Keep existing version']);
+  await restorePrivate(JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions: [newDecision('Old backup decision')] }));
+  expect(stored().comparisons).toHaveLength(2); expect(stored().decisions[0].title).toBe('Old backup decision');
+});
+it('central deletion recovers capacity without changing other snapshots, other owners or unrelated work', async () => {
+  setupCourses(); await mount(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Save both options');
+  const small = stored().comparisons![0]; const large = { ...small, id: 'large', title: 'Large retained context', options: [{ ...small.options[0], context: ['x'.repeat(2_995_000)] }] };
+  const d = newDecision('Preserve decision');
+  localStorage.setItem(workKey(), JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions: [d], comparisons: [small, large] }));
+  localStorage.setItem(workKey('bob'), JSON.stringify({ ...EMPTY_PRODUCTIVITY, comparisons: [small] })); const bob = localStorage.getItem(workKey('bob'));
+  await reload(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Save both options');
+  expect(host.textContent).toContain('workspace is full'); expect(stored().comparisons).toHaveLength(2);
+  await reload(<ProductivityWorkspace />);
+  const remove = host.querySelector<HTMLButtonElement>('[aria-label^="Delete comparison snapshot Large retained context"]')!;
+  await act(async () => remove.click()); expect(stored().comparisons).toEqual([small]); expect(stored().decisions).toEqual([d]); expect(localStorage.getItem(workKey('bob'))).toBe(bob);
+  await reload(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Save both options'); expect(stored().comparisons).toHaveLength(2);
+});
+it.each(['deleted', 'edited'] as const)('keeps historical career choice but refuses a %s latest source candidate', async mode => {
+  const key = 'semester.career.v1:alice:2026FA'; const o = { ...newOpportunity(), id: 'a', title: 'Displayed opening' };
+  localStorage.setItem(key, JSON.stringify({ ...EMPTY_CAREER, opportunities: [o] })); await mount(<Career />);
+  const changed = { ...EMPTY_CAREER, opportunities: mode === 'deleted' ? [] : [{ ...o, title: 'New source title' }] };
+  localStorage.setItem(key, JSON.stringify(changed)); await click('Choose Displayed opening');
+  expect(JSON.parse(localStorage.getItem(key)!)).toEqual(changed); expect(stored().comparisons![0].options[0].label).toBe('Displayed opening');
+  expect(host.textContent).toContain('Personal choice saved. The source workspace could not be updated');
+});
+it('invalidates the live chosen option on removal and reconsideration while preserving original snapshots across reload', async () => {
+  const d = newDecision('Live lifecycle'); d.id = 'live'; d.options = [newOption('First choice'), newOption('Second choice')];
+  localStorage.setItem(workKey(), JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions: [d] })); await mount(<ProductivityWorkspace />);
+  const selectDecision = async () => { await act(async () => { const select = host.querySelector<HTMLSelectElement>('[aria-label="Saved decisions"]')!; select.value = d.id; select.dispatchEvent(new Event('change', { bubbles: true })); }); };
+  await selectDecision(); await click('Choose First choice'); await click('Remove option');
+  expect(stored().decisions[0].chosen).toBeUndefined(); expect(stored().decisions[0].decided).toBe(false);
+  await reload(<ProductivityWorkspace />); await selectDecision(); await click('Choose Second choice'); await click('Reconsider decision');
+  await reload(<ProductivityWorkspace />); expect(stored().decisions[0].chosen).toBeUndefined(); expect(stored().comparisons?.map(s => s.chosen)).toEqual(d.options.map(o => o.id));
+  expect(() => readProductivity({ ...stored(), decisions: [{ ...d, decided: true, chosen: 'removed' }] })).toThrow();
 });

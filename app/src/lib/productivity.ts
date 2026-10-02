@@ -212,7 +212,7 @@ export function readProductivity(value: unknown): Productivity {
     text(a.source) &&
     text(a.impacts) &&
     typeof a.review === 'boolean';
-  const decision = (d: Decision): boolean =>
+  const decision = (d: Decision, live = true): boolean =>
     !!d &&
     text(d.id) &&
     text(d.title) &&
@@ -222,9 +222,9 @@ export function readProductivity(value: unknown): Productivity {
     text(d.reflection) &&
     typeof d.paused === 'boolean' &&
     typeof d.decided === 'boolean' &&
-    (d.chosen === undefined || text(d.chosen)) &&
     Array.isArray(d.options) &&
     d.options.length <= 3 &&
+    (d.chosen === undefined || (text(d.chosen) && (!live || (d.decided && d.options.some(o => o.id === d.chosen))))) &&
     d.options.every(
       (o) =>
         o &&
@@ -258,7 +258,7 @@ export function readProductivity(value: unknown): Productivity {
     !v ||
     v.version !== 1 ||
     !Array.isArray(v.decisions) ||
-    !v.decisions.every(decision) ||
+    !v.decisions.every(d => decision(d)) ||
     (v.comparisons !== undefined && (!Array.isArray(v.comparisons) || !v.comparisons.every(validComparison))) ||
     !Array.isArray(v.captures) ||
     !v.captures.every(
@@ -288,7 +288,7 @@ export function readProductivity(value: unknown): Productivity {
     ) ||
     !Array.isArray(v.journal) ||
     !v.journal.every(
-      (s) => s && text(s.id) && text(s.at) && decision(s.decision),
+      (s) => s && text(s.id) && text(s.at) && decision(s.decision, false),
     ) ||
     !Array.isArray(v.preferences) ||
     !v.preferences.every(assumption)
@@ -386,6 +386,7 @@ function changedAssumptions(d: Decision, assumptions: Assumption[]): Decision {
   return {
     ...d,
     decided: false,
+    chosen: undefined,
     assumptions,
     options: d.options.map((o) => ({
       ...o,

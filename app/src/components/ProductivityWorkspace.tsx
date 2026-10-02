@@ -113,7 +113,7 @@ function Workspace({ who }: { who: string }) {
     save((old) => ({
       ...old,
       decisions: old.decisions.map((x) =>
-        x.id === d.id ? { ...x, ...change } : x,
+        x.id === d.id ? { ...x, ...change, ...((change.decided === false || change.options || change.criteria || change.goal !== undefined || change.questions !== undefined) ? { decided: false, chosen: undefined } : {}) } : x,
       ),
     }));
   const applyAssumption = (before: Decision, assumption: Assumption) => save(old => {
@@ -696,6 +696,7 @@ function Workspace({ who }: { who: string }) {
               >
                 Record my decision
               </button>
+              {d.decided && <button type="button" onClick={() => patch({ decided: false, chosen: undefined })}>Reconsider decision</button>}
               <button
                 type="button"
                 onClick={() => patch({ paused: !d.paused })}
@@ -722,7 +723,7 @@ function Workspace({ who }: { who: string }) {
               </button>
             </>
           )}
-          <ComparisonHistory snapshots={lib.value.comparisons ?? []} />
+          <ComparisonHistory snapshots={lib.value.comparisons ?? []} onDelete={snapshotId => save(old => ({ ...old, comparisons: (old.comparisons ?? []).filter(s => s.id !== snapshotId) }))} />
           <SectionLabel>Private scenario history</SectionLabel>
           {lib.value.journal.map((s) => (
             <article className="productivity-card" key={s.id}>
@@ -741,6 +742,7 @@ function Workspace({ who }: { who: string }) {
                     ...structuredClone(s.decision),
                     id: id(),
                     decided: false,
+                    chosen: undefined,
                   };
                   if (
                     save((old) => ({
@@ -1195,6 +1197,7 @@ function Workspace({ who }: { who: string }) {
                       drafts: merge(old.drafts, incoming.drafts),
                       journal: merge(old.journal, incoming.journal),
                       preferences: merge(old.preferences, incoming.preferences),
+                      comparisons: merge(old.comparisons ?? [], incoming.comparisons ?? []),
                     };
                   });
                 } catch {

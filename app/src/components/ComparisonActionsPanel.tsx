@@ -63,6 +63,6 @@ export default function ComparisonActionsPanel({ surface, scope, title, options,
       <button type="button" onClick={() => { setPreview(false); setDraft(''); setIncluded([]); }}>Cancel advisor preview</button>
     </section>}
     {meetingId && <><button type="button" onClick={() => setMeetingId('')}>Close prepared meeting</button><Suspense fallback={<p role="status">Loading meeting…</p>}><AdvisorMeeting key={meetingId} accountId={accountId} initialMeetingId={meetingId} /></Suspense></>}
-    <ComparisonHistory snapshots={history} />
+    <ComparisonHistory snapshots={history} onDelete={snapshotId => { if (work.update(old => ({ ...old, comparisons: (old.comparisons ?? []).filter(s => s.id !== snapshotId) }))) setNotice('Comparison snapshot deleted. Other work is unchanged.'); }} />
   </section>;
 }

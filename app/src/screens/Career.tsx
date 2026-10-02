@@ -267,6 +267,18 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
   });
   const selectedForFit = open ?? lib.value.opportunities[0];
   const fit = selectedForFit ? explainFit(selectedForFit, claims) : null;
+  // Called only after the immutable personal choice has saved successfully.
+  const saveComparedOpportunity = (id: string) => {
+    const displayed = lib.value.opportunities.find(o => o.id === id);
+    const ok = lib.update(old => {
+      const current = old.opportunities.find(o => o.id === id);
+      if (!displayed || !current || JSON.stringify(current) !== JSON.stringify(displayed)) throw new Error('Opportunity changed or was removed. Review its current facts before saving it.');
+      return { ...old, opportunities: old.opportunities.map(o => o.id === id ? { ...o, saved: true } : o) };
+    });
+    if (!ok) setNotice('Personal choice saved. The source workspace could not be updated; review it before continuing.');
+    return ok;
+  };
+
   const skillPlan = fit ? missingSkillPlan(fit) : [];
 
   const write = (title: string, body: string) =>
@@ -321,7 +333,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
 
       {(notice || lib.error) && (
         <Notice>
-          {lib.error || notice}
+          {notice}{notice && lib.error ? ' ' : ''}{lib.error}
           {lib.blocked && (
             <ActionButton
               onClick={() =>
@@ -335,7 +347,7 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
         </Notice>
       )}
 
-      {(tab === 'discover' || tab === 'skills' || tab === 'abroad') && <ComparisonActions surface="career" scope={storageKey} title="Career opportunities" onChoose={id => lib.update(old => ({ ...old, opportunities: old.opportunities.map(o => o.id === id ? { ...o, saved: true } : o) }))} options={(tab === 'abroad' ? lib.value.opportunities.filter(o => o.kind === 'Study abroad') : tab === 'skills' ? (selectedForFit ? [selectedForFit] : []) : ordered).map(o => {
+      {(tab === 'discover' || tab === 'skills' || tab === 'abroad') && <ComparisonActions surface="career" scope={storageKey} title="Career opportunities" onChoose={saveComparedOpportunity} options={(tab === 'abroad' ? lib.value.opportunities.filter(o => o.kind === 'Study abroad') : tab === 'skills' ? (selectedForFit ? [selectedForFit] : []) : ordered).map(o => {
         const facts = [`Source: ${o.url || 'Not recorded'}; entered/imported listing, not verified; source date unknown`, `${o.organization} · ${o.kind} · ${o.location || 'Location unknown'} · ${o.format}`, `Deadline: ${o.deadline || 'Unknown'}; compensation: ${o.compensation || 'Unknown'}; cost: ${o.cost || 'Unknown'}; credit: ${o.credit || 'Unknown'}`, `Stated skills: ${o.skills || 'Unknown'}; requirements: ${o.requirements || 'Unknown'}`, 'Confirm details and eligibility with the official opportunity owner before applying.'];
         const fit = explainFit(o, claims);
         return { id: o.id, label: `${o.title}${o.organization ? ` · ${o.organization}` : ''}`, advisorContext: facts, context: [...facts, `Term: ${o.term || 'Unknown'}; country: ${o.country || 'Unknown'}; description: ${o.description || 'Not supplied'}`, ...fit.matched.map(match => `Matched skill: ${match.skill}; evidence: ${JSON.stringify(match.evidence)}`), ...fit.missing.map(skill => `Missing skill: ${skill}`), ...fit.uncertainties, ...appliedAssumptions(careerAssumptions(lib.value, () => false))] };
