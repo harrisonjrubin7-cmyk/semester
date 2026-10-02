@@ -34,6 +34,7 @@ export const SOURCES = [
   'src/lib/integration/catalog.ts',
   'src/lib/integration/classification.ts',
   'src/lib/integration/freshness.ts',
+  'src/lib/integration/governance-envelope.ts',
   'src/lib/integration/pipeline.ts',
   'src/lib/integration/redact.ts',
   'src/lib/integration/retry.ts',

@@ -7,30 +7,28 @@
 <title>Semester · The student action platform</title>
 <meta name="description" content="Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta.">
 <link rel="canonical" href="https://www.semester.website/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 26'%3E%3Crect width='26' height='26' rx='5' fill='%23060607'/%3E%3Crect x='2' y='12' width='5' height='10' fill='%23b4b7bd'/%3E%3Crect x='10.5' y='6' width='5' height='16' fill='%23f5f5f7'/%3E%3Crect x='19' y='9' width='5' height='13' fill='%23d4af37'/%3E%3C/svg%3E">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Semester">
 <meta property="og:title" content="Semester — Make your next academic decision with confidence.">
 <meta property="og:description" content="Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta.">
 <meta property="og:url" content="https://www.semester.website/">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#060607">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&amp;family=Archivo:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<meta name="theme-color" content="#16181c">
+<link rel="stylesheet" href="/typefaces.css">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "Semester", "url": "https://www.semester.website", "email": "harrisonjrubin7@gmail.com", "founder": {"@type": "Person", "name": "Harrison Rubin"}, "sameAs": ["https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg", "https://www.instagram.com/semester_app/", "https://www.linkedin.com/company/semester-app/"], "description": "Semester is a student action platform: plan your path, prepare for registration, learn from approved sources and stay in control of your data. Private beta."}</script>
 <style>
 :root{
   color-scheme:dark;
-  --bg:#060607; --bg-soft:#0c0c0e; --surface:#121316; --surface-2:#1a1b1f;
-  --line:#2e3036; --line-soft:#1e1f23;
-  --ink:#f5f5f7; --ink-dim:#b4b7bd; --ink-faint:#86888e;
-  --brass:#d4af37; --brass-hi:#f0d77a; --brass-ink:#120f06;
+  --bg:#16181c; --bg-soft:#1f2229; --surface:#282c34; --surface-2:#333843;
+  --line:#535965; --line-soft:#3a3f49;
+  --ink:#eceef2; --ink-dim:#b4b7bf; --ink-faint:#a0a5af;
+  --brass:#d8c79a; --brass-hi:#f2e7c8; --brass-ink:#0e0f12;
   --sage:#a9c7b0; --rose:#d9a38f; --slate:#9fb0c4;
   --max:1180px;
-  --serif:'Fraunces',ui-serif,Georgia,serif;
-  --sans:'Archivo',ui-sans-serif,system-ui,-apple-system,sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:'Cinzel',ui-serif,Georgia,serif;
+  --sans:'Barlow',ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -492,20 +490,14 @@ fieldset.gq legend .k{font-family:var(--mono);font-size:11px;color:var(--brass);
 /* ================= v5 · metallic theme ================= */
 :root{
   --silver:#c8ccd2; --platinum:#e5e4e2; --steel:#9fb0c4; --gunmetal:#2a2c31;
-  --chrome:linear-gradient(180deg,#fafafa 0%,#d9dce1 30%,#9aa0a8 50%,#e3e6ea 72%,#bfc3c9 100%);
-  --gold-metal:linear-gradient(180deg,#f6e59a 0%,#e8c95c 26%,#d4af37 52%,#e9cf72 76%,#b8932a 100%);
+  --chrome:linear-gradient(172deg,#f7f8fa,#c9ced8 46%,#aeb4c0 52%,#dfe3ea 65%,#f4f6f9);
+  --gold-metal:var(--brass);
   --chrome-line:linear-gradient(90deg,rgba(229,228,226,0) 0%,rgba(229,228,226,.55) 50%,rgba(229,228,226,0) 100%);
   --sheen:linear-gradient(180deg,rgba(255,255,255,.045) 0%,rgba(255,255,255,0) 42%);
 }
 ::selection{background:rgba(212,175,55,.35);color:var(--ink)}
-/* headings: chrome text with a solid, high-contrast fallback */
-.hero h1,.page-hero h1,.final h2,.metal-h{color:var(--platinum)}
-@supports ((-webkit-background-clip:text) or (background-clip:text)){
-  .hero h1,.page-hero h1,.final h2,.metal-h{background:var(--chrome);background-size:100% 1.08em;background-repeat:repeat-y;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-  .hero h1{background-size:100% 1em}
-  .hero h1 em,.metal-h em{background:var(--gold-metal);background-size:100% 1em;background-repeat:repeat-y;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding-right:.06em}
-  .brand-word{background:var(--chrome);background-size:100% 1.3em;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--platinum)}
-}
+/* Readable solid type; metallic material is reserved for the primary action. */
+.hero h1,.page-hero h1,.final h2,.metal-h{color:var(--ink)}
 @media (forced-colors:active){.hero h1,.page-hero h1,.final h2,.metal-h,.hero h1 em,.brand-word{background:none;-webkit-text-fill-color:currentColor;color:CanvasText}}
 .hero{background:radial-gradient(900px 420px at 78% 0%,rgba(200,204,210,.08),transparent 65%),radial-gradient(700px 360px at 8% 10%,rgba(212,175,55,.06),transparent 60%)}
 /* buttons */
@@ -590,8 +582,8 @@ table.wide{min-width:1040px}
 .cs::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
 .cs-av{color:var(--sage)} .cs-lb{color:#b9cbe3} .cs-ic{color:var(--silver)} .cs-bt{color:var(--slate)} .cs-ip{color:var(--brass)} .cs-pl{color:var(--ink-dim)} .cs-ns{color:var(--rose)}
 .st-hrow{margin-top:12px}.st-hhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:5px}
-.st-bars{display:flex;gap:2px;height:26px;align-items:stretch}.st-bar{flex:1 1 0;min-width:2px;border-radius:2px;background:var(--sage)}
-.st-bar[data-state=partial]{background:var(--brass)}.st-bar[data-state=down]{background:var(--rose)}.st-bar[data-state=nodata]{background:transparent;border:1px solid var(--line-soft)}
+.st-bars{display:grid;grid-template-columns:repeat(90,minmax(0,1fr));gap:1px;height:26px;align-items:stretch}.st-bar{min-width:0;border-radius:2px;background:var(--sage)}
+.st-bar[data-state=partial]{background:var(--brass)}.st-bar[data-state=down]{background:var(--rose)}.st-bar[data-state=nodata]{background:transparent;box-shadow:inset 0 0 0 1px var(--line-soft)}
 .st-key{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--ink-dim)}.st-key span::before{content:"";display:inline-block;width:11px;height:11px;margin-right:6px;border-radius:2px;vertical-align:-1px;background:var(--sage)}
 .st-key .k-partial::before{background:var(--brass)}.st-key .k-down::before{background:var(--rose)}.st-key .k-nodata::before{background:transparent;border:1px solid var(--line-soft)}
 .cs-pl::before{background:none;border:1px solid currentColor} .cs-ns::before{border-radius:1px}
@@ -712,105 +704,124 @@ details.svc summary .sum-l{min-width:0}
 .cform .seg{flex-wrap:wrap}
 #cm-rules{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 
-/* v8 · campaign-aligned brand system */
+/* One Semester system: application typography, Graphite and Brass materials.
+   Canonical geometry: app/src/components/mark.data.ts; colors: lib/look.ts. */
 :root{
-  --signal:#86b8e6; --signal-hi:#b8d9f6; --signal-deep:#355d89;
-  --night:#07090d; --night-blue:#0b1119;
+  --signal:var(--silver); --signal-hi:var(--ink); --signal-deep:#9ca3b2;
+  --night:var(--bg); --night-blue:var(--bg-soft);
+  --heading:'Barlow Condensed',ui-sans-serif,system-ui,sans-serif;
 }
-body{
-  background:
-    radial-gradient(900px 620px at 82% 4%,rgba(53,93,137,.13),transparent 64%),
-    radial-gradient(720px 500px at 4% 34%,rgba(212,175,55,.055),transparent 68%),
-    var(--bg);
-}
-.wrap{max-width:1240px}
-.banner{position:relative;z-index:45;color:#c7cbd2;letter-spacing:.01em}
-.banner a{color:var(--brass-hi);text-underline-offset:3px}
-header.nav{box-shadow:0 1px 0 rgba(134,184,230,.12),0 18px 50px rgba(0,0,0,.2)}
-.brand-word{letter-spacing:.19em}
-
-/* The home hero borrows the campaign's cinematic dark room and the app's blue
-   focus treatment while keeping the live product screen as the proof point. */
-.hero{position:relative;isolation:isolate;overflow:hidden;padding-block:92px 82px;background:none}
-.hero::before{content:"";position:absolute;z-index:-2;inset:0;background:
-  linear-gradient(90deg,rgba(6,6,7,.99) 0%,rgba(6,7,10,.92) 43%,rgba(8,13,20,.54) 72%,rgba(6,6,7,.88) 100%),
-  radial-gradient(620px 440px at 78% 28%,rgba(134,184,230,.2),transparent 70%),
-  linear-gradient(135deg,#060607 0%,#0c141e 52%,#07080b 100%)}
-.hero::after{content:"";position:absolute;z-index:-1;width:720px;height:720px;right:-180px;top:-330px;border:1px solid rgba(134,184,230,.16);border-radius:50%;box-shadow:0 0 0 90px rgba(134,184,230,.018),0 0 0 180px rgba(134,184,230,.014);pointer-events:none}
-.hero-grid{grid-template-columns:minmax(0,1.12fr) minmax(320px,.72fr);gap:clamp(42px,7vw,96px)}
-.hero h1{font-size:clamp(48px,6.7vw,86px);max-width:11.5ch;line-height:.98;letter-spacing:-.035em}
-.hero .lede{font-size:clamp(17px,1.55vw,20px);max-width:61ch}
-.hero .eyebrow{display:flex;align-items:center;gap:10px}
-.hero .eyebrow::before{content:"";width:34px;height:2px;background:var(--signal);box-shadow:0 0 18px rgba(134,184,230,.7)}
-.hero .phone{width:min(100%,310px);max-width:none;transform:perspective(1100px) rotateY(-6deg) rotateX(1deg);border-color:rgba(134,184,230,.28);box-shadow:0 48px 120px -28px rgba(0,0,0,.95),0 0 70px rgba(53,93,137,.15)}
-.hero .phone::before,.hero .phone::after{position:absolute;z-index:2;display:block;width:190px;padding:12px 14px;border:1px solid rgba(134,184,230,.28);background:rgba(12,18,27,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 20px 55px rgba(0,0,0,.5);font:600 11px/1.45 var(--mono);letter-spacing:.035em;color:var(--signal-hi)}
-.hero .phone::before{content:"TODAY  /  ONE CLEAR NEXT STEP";left:-116px;right:auto;top:19%;text-align:left}
-.hero .phone::after{content:"SOURCE  ·  SCOPE  ·  STATUS";left:auto;right:-105px;top:auto;bottom:17%;text-align:left;color:var(--brass-hi)}
-.hero .phone .src{z-index:3;border-color:rgba(217,163,143,.45);box-shadow:0 10px 30px rgba(0,0,0,.55)}
-.hero .ctas{align-items:center}
-.app-bridge{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;margin-top:22px;padding:13px 15px;max-width:610px;border:1px solid rgba(134,184,230,.24);border-left:3px solid var(--signal);background:linear-gradient(90deg,rgba(53,93,137,.15),rgba(12,13,17,.72));box-shadow:inset 0 1px rgba(255,255,255,.035)}
-.app-bridge .pulse{grid-row:1/3;width:9px;height:9px;border-radius:50%;background:var(--sage);box-shadow:0 0 0 5px rgba(169,199,176,.09),0 0 18px rgba(169,199,176,.35)}
-.app-bridge strong{font-size:13px;color:var(--ink);line-height:1.35}
-.app-bridge span:not(.pulse){font-size:12px;color:var(--ink-faint);line-height:1.45}
-.app-bridge a{grid-row:1/3;grid-column:3;color:var(--signal-hi);font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
-.app-bridge a:hover{text-decoration:underline;text-underline-offset:3px}
-.proof-rail{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:rgba(134,184,230,.16);border:1px solid rgba(134,184,230,.2)}
-.proof-step{position:relative;min-height:154px;padding:22px 18px;background:linear-gradient(180deg,rgba(18,23,31,.97),rgba(10,12,17,.98))}
-.proof-step .k{display:block;margin-bottom:22px;color:var(--signal-hi);font-family:var(--mono);font-size:10px;letter-spacing:.12em}
-.proof-step h3{font-size:18px;line-height:1.2}
-.proof-step p{margin-top:8px;color:var(--ink-dim);font-size:13px;line-height:1.5}
-.proof-step:not(:last-child)::after{content:"\2192";position:absolute;z-index:2;right:-10px;top:24px;width:20px;text-align:center;color:var(--brass);background:var(--bg)}
-.status-map{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
-.status-col{padding:26px 24px;background:rgba(12,14,19,.94)}
-.status-col h3{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:21px}
-.status-col ul{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:11px}
-.status-col li{position:relative;padding-left:17px;color:var(--ink-dim);font-size:14px;line-height:1.45}
-.status-col li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--signal)}
-.status-col.pilot li::before{background:var(--brass)}
-.status-col.future li::before{background:var(--slate)}
-.buyer-outcome{display:grid;grid-template-columns:1.05fr .95fr;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft)}
-.buyer-outcome>div{padding:30px;background:rgba(12,14,19,.94)}
-.buyer-outcome .measure{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
-.buyer-outcome .measure span{padding:12px;border:1px solid rgba(134,184,230,.18);color:var(--ink-dim);font-size:13px}
-
-/* Match the campaign deck's structured blue/gold rhythm across marketing pages. */
-section.blk{padding-block:88px}
-.rule{position:relative}
-.rule::before{content:"";position:absolute;left:50%;top:-1px;width:min(1240px,calc(100% - 48px));height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(134,184,230,.3) 20%,rgba(212,175,55,.22) 78%,transparent)}
-.sec-head{gap:16px;margin-bottom:42px}
-.sec-head h2{font-size:clamp(34px,4vw,52px);letter-spacing:-.025em}
-.eyebrow{color:var(--signal-hi);font-family:var(--mono);font-size:11px;letter-spacing:.16em}
-.eyebrow.brass{color:var(--brass-hi)}
-.box,.mock,.onecard,.tile,.aud,.stat{border-radius:8px}
-.box,.mock,.onecard{background-color:rgba(18,19,22,.84)}
-.tile,.aud,.stat{transition:transform .2s ease,border-color .2s ease,background-color .2s ease}
-@media (hover:hover){.tile:hover,.aud:hover,.stat:hover{transform:translateY(-3px);background-color:#0d1118;box-shadow:inset 0 2px 0 var(--signal),0 22px 44px -34px rgba(134,184,230,.5)}}
-.persona button{border-radius:999px;background:rgba(12,17,24,.72)}
-.persona button:hover,.persona button[aria-pressed="true"]{border-color:var(--signal);color:var(--ink);background:rgba(53,93,137,.16)}
-.strip{background:rgba(9,13,19,.72);border-color:rgba(134,184,230,.16)}
-.strip span{position:relative;border-color:rgba(134,184,230,.13);font-family:var(--mono);font-size:12px;letter-spacing:.02em}
-.strip span::before{content:"";display:inline-block;width:6px;height:6px;margin-right:9px;border-radius:50%;background:var(--signal)}
-.strip span:nth-child(2)::before,.strip span:nth-child(5)::before{background:var(--brass)}
-.tabs button[aria-selected="true"]{color:var(--signal-hi);border-bottom-color:var(--signal)}
-.panel li::before{background:var(--signal)}
-.mock{box-shadow:inset 3px 0 0 rgba(134,184,230,.72),inset 0 1px 0 rgba(255,255,255,.06),0 26px 70px -54px rgba(134,184,230,.7)}
-.aud .who{color:var(--signal-hi)}
-.final{background:radial-gradient(600px 240px at 50% 110%,rgba(53,93,137,.22),transparent),linear-gradient(180deg,transparent,rgba(11,17,25,.58))}
-footer{background:linear-gradient(180deg,#080a0e,#050506)}
-
-@media (max-width:1020px){.hero{padding-block:72px 62px}.hero-grid{grid-template-columns:1fr}.hero h1{max-width:13ch}.hero .phone{margin-top:12px}.hero .phone::before{left:-82px}.hero .phone::after{right:-72px}}
-@media (max-width:1020px){.proof-rail{grid-template-columns:repeat(2,1fr)}.proof-step:not(:last-child)::after{display:none}.status-map,.buyer-outcome{grid-template-columns:1fr}}
-@media (max-width:620px){
-  .hero{padding-block:54px 46px}
-  .hero::after{right:-470px;top:-390px}
-  .hero h1{font-size:clamp(43px,13vw,64px)}
-  .hero .phone{width:250px;transform:none;margin-top:16px}
-  .hero .phone::before{left:-38px;top:18%;width:152px;font-size:9px;padding:9px 10px}
-  .hero .phone::after{right:-32px;bottom:16%;width:150px;font-size:9px;padding:9px 10px}
-  .app-bridge{grid-template-columns:auto 1fr}.app-bridge a{grid-column:2;grid-row:3;margin-top:3px}.app-bridge .pulse{grid-row:1/4}
-  section.blk{padding-block:64px}.rule::before{width:calc(100% - 32px)}
-}
-@media (max-width:520px){#search-btn{display:none}.nav-right{gap:4px}.nav-row{gap:8px}}
+body{margin:0;background:var(--bg);font-size:16px}
+.wrap{max-width:1200px;padding-inline:32px}
+h1{font-weight:400;letter-spacing:-.025em;line-height:1.16}
+h2,h3{font-family:var(--heading);font-weight:600;letter-spacing:0;line-height:1.2}
+.onecard .t,.mock-top .h,.step .h4,.plan .nm,.lblcard .h4,.rung .h4,.stack div,.aud-q,.smap b,.sss .sss-t,.gloss dt,.yt-chan .meta b,.vcard .thumb{font-family:var(--heading);font-weight:600}
+.manifesto li,.lessons li,.rights .rt{font-family:var(--heading);font-weight:600;line-height:1.4}
+.letter p,.quote-box p,.big-quote,.pull p{font-family:var(--sans);font-weight:400;line-height:1.65}
+.letter p{font-size:18px}
+.pull p{font-size:22px}
+.brand-word{font-family:var(--heading);font-size:21px;font-weight:600;letter-spacing:.17em;background:none;-webkit-text-fill-color:currentColor;color:var(--ink)}
+.brand{min-width:44px;min-height:44px}
+.brand-mark{display:grid;place-items:center;width:40px;height:40px;flex:none;border-radius:50%;background:var(--brass);color:var(--bg)}
+.brand-mark svg{width:17px;height:25px}
+.logo-show .brand-mark{width:64px;height:64px}
+.logo-show .brand-mark svg{width:27px;height:40px}
+.yt-av .brand-mark{width:56px;height:56px}
+.banner{background:var(--bg-soft);font-size:13px;padding:8px 16px;border-color:var(--line-soft)}
+header.nav{background:rgba(22,24,28,.96);border-bottom:1px solid var(--line-soft);box-shadow:none}
+header.nav::after{display:none}
+.nav-row{gap:20px;padding-block:16px}
+.nav-main{gap:0}
+.nav-main a{padding:12px 10px;font-size:15px;min-height:44px;border-radius:8px}
+.nav-main a[aria-current="page"]{background:var(--surface-2);box-shadow:inset 0 -2px 0 var(--brass)}
+.nav-right{gap:8px}
+.nav-right .btn{min-width:44px}
+.nav-right .txt{min-height:44px;display:inline-flex;align-items:center}
+.btn{font-family:var(--heading);font-size:16px;font-weight:600;letter-spacing:.025em;justify-content:center;min-height:44px;border-radius:10px;padding:11px 20px;white-space:normal;text-align:center;line-height:1.3}
+.btn-sm{font-size:15px;min-height:44px;padding:10px 16px}
+.btn-primary{background:var(--chrome);color:#08090c;border:1px solid #c9ced8;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.btn-primary:hover{background:#f4f6f9;filter:none}
+.btn-ghost{background:transparent;border:1px solid #737b89;color:var(--ink);box-shadow:none}
+.btn-ghost:hover{background:var(--surface-2);border-color:var(--silver)}
+.btn:focus-visible{outline:2px solid var(--brass);outline-offset:4px}
+.eyebrow{font:500 12px/1.5 var(--sans);letter-spacing:.14em;color:var(--brass);text-transform:uppercase}
+.eyebrow.brass{color:var(--brass)}
+.crumb{margin-bottom:16px;color:var(--ink-faint)}
+.lede{font-size:18px;line-height:1.65;max-width:58ch}
+.hero,.page-hero{padding-block:64px 56px;background:none}
+.hero::before,.hero::after,.hero .phone::before,.hero .phone::after,.cx::before,.cx::after,.rule::before{display:none}
+.hero-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:64px}
+.hero h1{font-size:clamp(36px,4.2vw,58px);max-width:16ch;line-height:1.16}
+.hero h1 em{font-style:normal;color:var(--brass);background:none;-webkit-text-fill-color:currentColor}
+.page-hero h1{font-size:clamp(32px,3.8vw,52px);max-width:22ch}
+.hero .lede{font-size:18px}
+.hero .eyebrow::before{display:none}
+.hero .ctas,.page-hero .ctas{margin-top:24px;align-items:center}
+.hero .phone{width:min(100%,290px);transform:none;margin-top:0;border-color:var(--line);box-shadow:0 16px 40px -24px rgba(0,0,0,.6)}
+.phone{background:var(--bg-soft);box-shadow:none}
+.phone .src{position:static;margin:12px auto 0;transform:none;display:table;white-space:normal;text-align:center}
+.app-bridge{display:grid;gap:6px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft);max-width:58ch}
+.app-bridge .pulse{display:none}
+.app-bridge strong{font-size:14px;font-weight:500}
+.app-bridge span:not(.pulse){font-size:14px;color:var(--ink-dim)}
+.app-bridge a{font-size:14px;color:var(--brass);text-underline-offset:3px}
+section.blk{padding-block:64px}
+.sec-head{gap:12px;margin-bottom:28px}
+.sec-head h2{font-size:clamp(28px,3.4vw,40px)}
+.grid-3,.grid-4{gap:16px;background:none;border:0}
+.tile,.aud,.stat{background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:12px;box-shadow:none;transition:none}
+.tile p,.aud p{font-size:16px;line-height:1.6}
+.tile:hover,.aud:hover,.stat:hover{transform:none;background:var(--bg-soft);box-shadow:none}
+.aud .who{color:var(--brass)}
+.box,.mock,.onecard,.plan,.doccard,.lblcard,details.svc,fieldset.gq{border-color:var(--line);border-radius:12px;background:var(--bg-soft);background-image:none;box-shadow:none}
+.plan.feat{border-color:var(--brass);box-shadow:none}
+.strip{background:none;border-color:var(--line-soft)}
+.strip span{font-family:var(--sans);font-size:15px;padding:16px;border-color:var(--line-soft)}
+.strip span::before{display:none}
+.tabs{gap:4px;background:var(--bg-soft);padding:4px;border:1px solid var(--line);border-radius:12px}
+.tabs button{min-height:44px;border:0;border-radius:8px;margin:0;font-family:var(--heading);font-size:17px;padding:10px 16px}
+.tabs button[aria-selected="true"]{color:var(--ink);background:var(--surface-2);border:0;box-shadow:inset 0 -2px 0 var(--brass)}
+.persona button{font-size:15px;min-height:44px;background:var(--bg-soft);padding:12px 16px;border-radius:10px}
+.persona button:hover,.persona button[aria-pressed="true"]{border-color:var(--brass);background:var(--surface);color:var(--ink)}
+.panel li::before{background:var(--brass)}
+.proof-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.proof-step{padding:20px;border:1px solid var(--line-soft);border-radius:12px;background:var(--bg-soft)}
+.proof-step .k{display:block;margin-bottom:16px;font:500 12px var(--sans);color:var(--brass)}
+.proof-step h3{font-size:22px}
+.proof-step p{font-size:15px;color:var(--ink-dim);margin-top:8px;line-height:1.6}
+.status-map{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.status-col{padding:24px;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:12px}
+.status-col h3{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;font-size:24px}
+.status-col ul{margin:20px 0 0;padding-left:20px;display:grid;gap:12px;color:var(--ink-dim)}
+.buyer-outcome{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+.buyer-outcome>div{padding:24px;background:var(--bg-soft);border:1px solid var(--line-soft);border-radius:12px}
+.buyer-outcome .measure{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.buyer-outcome .measure span{padding:12px;border:1px solid var(--line-soft);color:var(--ink-dim)}
+input,select,textarea{font-size:16px;border-radius:8px;border-color:#737b89}
+.final{background:var(--bg-soft)}
+footer{background:var(--bg-soft)}
+.search-in,.drawer-in,.dd-panel{background:var(--bg-soft);border-color:var(--line);border-radius:16px}
+.drawer-in{border-radius:16px 0 0 16px}
+.search-in input{font-size:18px}
+.src,.cs,.status{white-space:normal}
+.product-hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center}
+.product-preview{margin:0;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface);box-shadow:0 20px 64px -44px #000}
+.preview-top{display:flex;gap:12px;align-items:center;padding:16px 20px;background:var(--bg-soft);border-bottom:1px solid var(--line-soft);font-family:var(--heading);letter-spacing:.12em}
+.preview-top .preview-dot{width:8px;height:8px;border-radius:50%;background:var(--brass)}
+.preview-body{padding:28px;display:grid;gap:24px}
+.preview-title{font:400 32px var(--serif);color:var(--ink)}
+.preview-tabs{display:flex;gap:4px;border:1px solid var(--line);border-radius:10px;padding:4px;font-family:var(--heading);font-size:14px;letter-spacing:.08em}
+.preview-tabs span{flex:1;text-align:center;padding:8px 4px}
+.preview-tabs .selected{border-radius:7px;background:var(--surface-2)}
+.preview-focus{padding:20px;border:1px solid var(--brass);border-radius:12px;display:grid;gap:12px}
+.preview-focus strong{font-size:20px;font-weight:500;line-height:1.4}
+.preview-row{display:flex;justify-content:space-between;gap:12px;font-size:15px;color:var(--ink-dim)}
+.product-preview figcaption{padding:14px 20px;border-top:1px solid var(--line-soft);font-size:13px;color:var(--ink-dim);background:var(--bg-soft)}
+@media (max-width:1100px){.nav-main,.nav-right .hide-m{display:none}.menu-btn{display:inline-flex}.hero-grid,.product-hero-grid{gap:32px}}
+@media (max-width:900px){.hero-grid,.product-hero-grid{grid-template-columns:1fr}.hero h1{max-width:20ch}.product-preview{max-width:560px;width:100%}.proof-rail{grid-template-columns:1fr 1fr}.status-map,.buyer-outcome{grid-template-columns:1fr}}
+@media (max-width:600px){.wrap{padding-inline:20px}.hero,.page-hero{padding-block:40px}.hero h1,.page-hero h1{font-size:34px}.hero .phone{margin-top:12px}section.blk{padding-block:40px}.preview-body{padding:20px}.proof-rail{grid-template-columns:1fr}.ctas>*{max-width:100%}.banner{font-size:12px;line-height:1.5}.nav-row{gap:12px}.brand-word{font-size:18px}.brand-mark{width:34px;height:34px}}
+@media (max-width:420px){header.nav .brand-word{display:none}.nav-right{gap:8px}.nav-right .btn{padding:10px 12px}.hero h1,.page-hero h1{font-size:30px}.preview-tabs{font-size:12px}.preview-focus{padding:16px}.preview-row{flex-wrap:wrap}}
+@media (forced-colors:active){.brand-mark{background:Canvas;color:CanvasText;border:1px solid CanvasText}.btn-primary{background:ButtonFace;color:ButtonText}.preview-focus{border-color:CanvasText}}
 </style>
 </head>
 <body>
@@ -822,7 +833,7 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
 <header class="nav">
   <div class="wrap nav-row">
     <a class="brand" href="#home" aria-label="Semester home">
-      <svg width="24" height="24" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="12" width="5" height="10" fill="url(#sm-silver)"/><rect x="10.5" y="6" width="5" height="16" fill="url(#sm-chrome)"/><rect x="19" y="9" width="5" height="13" fill="url(#sm-gold)"/></svg>
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="128 65 256 382" fill="currentColor" focusable="false"><path d="M128 176L204 208L204 420L128 388Z"/><path d="M218 65L294 97L294 404L218 372Z"/><path d="M308 147L384 179L384 447L308 415Z"/></svg></span>
       <span class="brand-word">SEMESTER</span>
     </a>
     <nav class="nav-main" aria-label="Main">
@@ -1282,12 +1293,24 @@ footer{background:linear-gradient(180deg,#080a0e,#050506)}
 
 <!-- ================= PRODUCT ================= -->
 <div data-page="product" hidden>
-  <section class="page-hero"><div class="wrap">
+  <section class="page-hero"><div class="wrap product-hero-grid">
+    <div>
     <p class="crumb"><a href="#home">Home</a> / Product</p>
     <p class="eyebrow brass">Product</p>
     <h1>One workspace for the whole semester.</h1>
     <p class="lede">Semester connects planning, courses, study, career and campus life around one idea: show the student what matters now, and where that information came from.</p>
     <div class="ctas"><a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore a sample university</a><a class="btn btn-ghost" href="#pricing">Compare plans</a></div>
+    </div>
+    <figure class="product-preview" data-product-preview aria-label="Illustration of the Semester Today workspace">
+      <div class="preview-top"><span class="preview-dot" aria-hidden="true"></span> SEMESTER</div>
+      <div class="preview-body">
+        <div><p class="eyebrow">Your semester, in one place</p><p class="preview-title">Today</p></div>
+        <div class="preview-tabs" aria-hidden="true"><span class="selected">TODAY</span><span>HOURS</span><span>THIS WEEK</span><span>DONE</span></div>
+        <div class="preview-focus"><p class="eyebrow">Your next step</p><strong>Review your research outline.</strong><p class="muted">One clear priority, with the source close by.</p><div class="preview-row"><span>Introduction to research</span><span>Due tomorrow</span></div></div>
+        <div class="preview-row"><span>From your syllabus</span><span>You stay in control</span></div>
+      </div>
+      <figcaption>Product illustration · Illustrative demo data. <a href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore the real workspace ↗</a></figcaption>
+    </figure>
   </div></section>
   <section class="blk rule"><div class="wrap">
     <div class="sec-head"><p class="eyebrow">For students</p><h2>The student modules</h2></div>
@@ -2219,7 +2242,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     </div>
     <div>
       <p class="eyebrow">Accessibility statement</p>
-      <p style="margin-top:10px;font-family:var(--serif);font-size:20px;line-height:1.45">Semester is committed to making its website and application usable by people with disabilities. We design and test toward WCAG 2.2 AA, including keyboard operation, visible focus, semantic structure, contrast, responsive reflow, screen-reader compatibility, reduced motion, accessible forms and accessible learning workflows.</p>
+      <p style="margin-top:10px;font-size:18px;line-height:1.65">Semester is committed to making its website and application usable by people with disabilities. We design and test toward WCAG 2.2 AA, including keyboard operation, visible focus, semantic structure, contrast, responsive reflow, screen-reader compatibility, reduced motion, accessible forms and accessible learning workflows.</p>
       <p class="muted" style="margin-top:12px">Accessibility is ongoing. We keep an issue register and a remediation process, and we welcome reports of barriers below.</p>
       <div class="kv" style="margin-top:18px"><div><b>1</b><span>high-impact known issue</span></div><div><b>4</b><span>lower-impact known issues</span></div><div><b>—</b><span>last manual audit</span></div><div><b>—</b><span>response time promised (one person reads every report)</span></div></div>
     </div>
@@ -2985,10 +3008,10 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <p class="lede">For partners, press, ambassadors, institutions and our own team.</p>
   </div></section>
   <section class="blk rule" style="padding-top:40px"><div class="wrap grid-2" style="align-items:start">
-    <div class="box"><p class="eyebrow">Logo</p><div class="logo-show"><svg width="56" height="56" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="12" width="5" height="10" fill="url(#sm-silver)"/><rect x="10.5" y="6" width="5" height="16" fill="url(#sm-chrome)"/><rect x="19" y="9" width="5" height="13" fill="url(#sm-gold)"/></svg><span class="brand-word" style="font-size:28px">SEMESTER</span></div>
-      <ul class="check" style="margin-top:14px"><li>Clear space: at least the height of one bar on every side</li><li>Don't recolor, stretch or add effects</li><li>On light backgrounds, use the dark version (on request)</li></ul>
-      <p class="eyebrow" style="margin-top:18px">Palette</p><div class="swatches"><span style="background:#060607">#060607 Black</span><span style="background:#1a1b1f">#1A1B1F Graphite</span><span style="background:#c8ccd2;color:#060607">#C8CCD2 Silver</span><span style="background:#e5e4e2;color:#060607">#E5E4E2 Platinum</span><span style="background:#d4af37;color:#120f06">#D4AF37 Gold</span><span style="background:linear-gradient(180deg,#fafafa,#d9dce1 30%,#9aa0a8 50%,#e3e6ea 72%,#bfc3c9);color:#060607">Chrome</span></div>
-      <p class="eyebrow" style="margin-top:18px">Type</p><p class="muted" style="font-size:14px;margin-top:6px"><span style="font-family:var(--serif);font-size:18px;color:var(--ink)">Fraunces</span> for headlines · <span style="color:var(--ink)">Archivo</span> for text · <span style="font-family:var(--mono);color:var(--ink)">IBM Plex Mono</span> for source labels</p></div>
+    <div class="box"><p class="eyebrow">Logo</p><div class="logo-show"><span class="brand-mark" aria-hidden="true"><svg viewBox="128 65 256 382" fill="currentColor" focusable="false"><path d="M128 176L204 208L204 420L128 388Z"/><path d="M218 65L294 97L294 404L218 372Z"/><path d="M308 147L384 179L384 447L308 415Z"/></svg></span><span class="brand-word" style="font-size:28px">SEMESTER</span></div>
+      <ul class="check" style="margin-top:14px"><li>Use the same three-slab silhouette as the Semester application</li><li>Keep clear space around the mark; never stretch it or add effects</li><li>The circular badge uses Brass on a dark surface; the app also supports other appearance settings</li></ul>
+      <p class="eyebrow" style="margin-top:18px">Palette</p><div class="swatches"><span style="background:#16181c">#16181C Graphite canvas</span><span style="background:#1f2229">#1F2229 Surface</span><span style="background:#eceef2;color:#16181c">#ECEEF2 Text</span><span style="background:#d4d9e2;color:#16181c">#D4D9E2 Sterling</span><span style="background:#d8c79a;color:#0e0f12">#D8C79A Brass</span><span style="background:var(--chrome);color:#08090c">Chrome action</span></div>
+      <p class="eyebrow" style="margin-top:18px">Type</p><p class="muted" style="font-size:16px;margin-top:6px"><span style="font-family:var(--serif);font-size:18px;color:var(--ink)">Cinzel</span> for display titles · <span style="font-family:var(--heading);color:var(--ink)">Barlow Condensed</span> for headings and the wordmark · <span style="color:var(--ink)">Barlow</span> for text. These are the application's own, locally hosted typefaces.</p></div>
     <div style="display:grid;gap:16px">
       <div class="box"><p class="eyebrow">Approved descriptions</p><div id="bd-list" style="margin-top:10px"></div></div>
       <div class="box"><p class="eyebrow">Naming &amp; claims</p><ul class="check" style="margin-top:10px"><li>Write "Semester", never "SEMESTER" in text, never "the Semester app" in headlines</li><li>Product names: Today, My Path, Plan, Ask Semester, Course Studio</li><li>Screenshots must use illustrative demo data and say so</li><li>Never write "certified", "guaranteed", or outcome claims</li><li>Co-marketing needs written approval; paid relationships are always disclosed</li></ul><a class="btn btn-ghost btn-sm" style="margin-top:12px" href="#contact">Request the press kit</a></div>
@@ -3873,7 +3896,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
 
   <section class="blk rule" style="padding-top:40px"><div class="wrap" style="display:grid;gap:22px">
     <div class="yt-chan">
-      <div class="yt-av"><svg width="30" height="30" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="12" width="5" height="10" fill="url(#sm-silver)"/><rect x="10.5" y="6" width="5" height="16" fill="url(#sm-chrome)"/><rect x="19" y="9" width="5" height="13" fill="url(#sm-gold)"/></svg></div>
+      <div class="yt-av"><span class="brand-mark" aria-hidden="true"><svg viewBox="128 65 256 382" fill="currentColor" focusable="false"><path d="M128 176L204 208L204 420L128 388Z"/><path d="M218 65L294 97L294 404L218 372Z"/><path d="M308 147L384 179L384 447L308 415Z"/></svg></span></div>
       <div class="meta"><b>Semester</b><span>@Semester_app · youtube.com</span><p class="muted" style="margin-top:6px;font-size:14px">Academic planning, study tools, career steps and campus life, told plainly.</p></div>
       <div class="ctas"><a class="btn btn-yt btn-sm" href="https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg?sub_confirmation=1" target="_blank" rel="noopener">Subscribe</a><a class="btn btn-ghost btn-sm" href="https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg/videos" target="_blank" rel="noopener">All videos</a></div>
       <p class="fine" style="flex-basis:100%">Also on <a class="link" href="https://www.instagram.com/semester_app/" target="_blank" rel="noopener">Instagram @semester_app</a> and <a class="link" href="https://www.linkedin.com/company/semester-app/" target="_blank" rel="noopener">LinkedIn</a>.</p>
@@ -4005,7 +4028,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
 
 <footer><div class="wrap">
   <div class="foot">
-    <div><a class="brand" href="#home" style="padding:0"><svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="12" width="5" height="10" fill="url(#sm-silver)"/><rect x="10.5" y="6" width="5" height="16" fill="url(#sm-chrome)"/><rect x="19" y="9" width="5" height="13" fill="url(#sm-gold)"/></svg><span class="brand-word">SEMESTER</span></a><p class="fine" style="margin-top:12px;max-width:26ch">The student action platform. Built at Vanderbilt.</p><p class="fine" style="margin-top:10px;display:grid;gap:4px"><span class="sr">Follow Semester</span><a href="https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-4.8.5-4.8s0-3.2-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/></svg> YouTube · @Semester_app</a><a href="https://www.instagram.com/semester_app/" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zm0 4.7a5.1 5.1 0 1 0 0 10.2 5.1 5.1 0 0 0 0-10.2zm0 8.4a3.3 3.3 0 1 1 0-6.6 3.3 3.3 0 0 1 0 6.6zm5.3-9.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg> Instagram · @semester_app</a><a href="https://www.linkedin.com/company/semester-app/" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.4 20.5h-3.6v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.7H9.3V9h3.4v1.6h.1c.5-.9 1.6-1.8 3.4-1.8 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zM7.1 20.5H3.5V9h3.6v11.5zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg> LinkedIn · Semester</a></p><p class="fine" style="margin-top:10px">Email <a href="mailto:harrisonjrubin7@gmail.com" style="display:inline;padding:0;color:var(--brass-hi);font-size:12px">harrisonjrubin7@gmail.com</a></p></div>
+    <div><a class="brand" href="#home" style="padding:0"><span class="brand-mark" aria-hidden="true"><svg viewBox="128 65 256 382" fill="currentColor" focusable="false"><path d="M128 176L204 208L204 420L128 388Z"/><path d="M218 65L294 97L294 404L218 372Z"/><path d="M308 147L384 179L384 447L308 415Z"/></svg></span><span class="brand-word">SEMESTER</span></a><p class="fine" style="margin-top:12px;max-width:26ch">The student action platform. Built at Vanderbilt.</p><p class="fine" style="margin-top:10px;display:grid;gap:4px"><span class="sr">Follow Semester</span><a href="https://www.youtube.com/channel/UCtjKvFwHxfYxiy3-3WgdHwg" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-4.8.5-4.8s0-3.2-.5-4.8zM9.7 15.1V8.9l5.8 3.1-5.8 3.1z"/></svg> YouTube · @Semester_app</a><a href="https://www.instagram.com/semester_app/" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2c3.2 0 3.6 0 4.8.1 3.3.1 4.8 1.7 4.9 4.9.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 3.2-1.7 4.8-4.9 4.9-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-3.3-.1-4.8-1.7-4.9-4.9C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8C2.4 3.9 3.9 2.4 7.2 2.3 8.4 2.2 8.8 2.2 12 2.2zm0 4.7a5.1 5.1 0 1 0 0 10.2 5.1 5.1 0 0 0 0-10.2zm0 8.4a3.3 3.3 0 1 1 0-6.6 3.3 3.3 0 0 1 0 6.6zm5.3-9.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg> Instagram · @semester_app</a><a href="https://www.linkedin.com/company/semester-app/" target="_blank" rel="noopener" style="display:inline-flex;gap:6px;align-items:center;padding:0;color:var(--ink-dim)"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.4 20.5h-3.6v-5.6c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9v5.7H9.3V9h3.4v1.6h.1c.5-.9 1.6-1.8 3.4-1.8 3.6 0 4.3 2.4 4.3 5.5v6.2zM5.3 7.4a2.1 2.1 0 1 1 0-4.2 2.1 2.1 0 0 1 0 4.2zM7.1 20.5H3.5V9h3.6v11.5zM22.2 0H1.8C.8 0 0 .8 0 1.7v20.6c0 .9.8 1.7 1.8 1.7h20.4c1 0 1.8-.8 1.8-1.7V1.7C24 .8 23.2 0 22.2 0z"/></svg> LinkedIn · Semester</a></p><p class="fine" style="margin-top:10px">Email <a href="mailto:harrisonjrubin7@gmail.com" style="display:inline;padding:0;color:var(--brass-hi);font-size:12px">harrisonjrubin7@gmail.com</a></p></div>
     <div><h2 class="fh">Product</h2><a href="#product">Overview</a><a href="#experience">Demo (fictional data)</a><a href="#availability">What is available</a><a href="#integrations">Integrations</a><a href="#roadmap">Roadmap</a></div>
     <div><h2 class="fh">Students</h2><a href="#students">For students</a><a href="#build-my-semester">Build my semester</a><a href="#tools">Free tools</a><a href="#start">After you sign up</a><a href="#help">Help</a></div>
     <div><h2 class="fh">Institutions</h2><a href="#institutions">Overview</a><a href="#advising">Advising</a><a href="#registrars">Registration readiness</a><a href="#it">IT &amp; security</a><a href="#design-partners">Design partners</a><a href="#launch">Launch</a></div>
@@ -4119,9 +4142,20 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
   dds.forEach(b=>b.addEventListener("click",e=>{e.stopPropagation();const p=document.getElementById(b.getAttribute("aria-controls"));const o=p.hidden;closeDD(b);p.hidden=!o;b.setAttribute("aria-expanded",String(o));if(o)p.querySelector("a").focus()}));
   document.addEventListener("click",e=>{if(!e.target.closest(".dd-wrap"))closeDD()});
   // ---------- drawer ----------
+  const modalBackground=new Map();let modalScroll="";
+  function setModalBackdrop(modal,open){
+    if(open){
+      if(!modalBackground.size){modalScroll=document.body.style.overflow;
+        [...document.body.children].filter(el=>el!==modal&&!el.matches("script,style,svg,template,.drawer,.search")).forEach(el=>{modalBackground.set(el,el.inert);el.inert=true});
+      }
+      document.body.style.overflow="hidden";
+    }else if(![...document.querySelectorAll(".drawer,.search")].some(el=>!el.hidden)){
+      modalBackground.forEach((wasInert,el)=>{el.inert=wasInert});modalBackground.clear();document.body.style.overflow=modalScroll;
+    }
+  }
   const mb=document.getElementById("menu-btn"),dr=document.getElementById("drawer");
-  function openDrawer(){dr.hidden=false;mb.setAttribute("aria-expanded","true");document.getElementById("drawer-close").focus()}
-  function closeDrawer(ret=true){if(dr.hidden)return;dr.hidden=true;mb.setAttribute("aria-expanded","false");if(ret)mb.focus()}
+  function openDrawer(){if(!sd.hidden)sClose(false);dr.hidden=false;setModalBackdrop(dr,true);mb.setAttribute("aria-expanded","true");document.getElementById("drawer-close").focus()}
+  function closeDrawer(ret=true){if(dr.hidden)return;dr.hidden=true;setModalBackdrop(dr,false);mb.setAttribute("aria-expanded","false");if(ret)mb.focus()}
   mb.addEventListener("click",openDrawer);
   document.getElementById("drawer-close").addEventListener("click",()=>closeDrawer());
   dr.addEventListener("click",e=>{if(e.target===dr)closeDrawer()});
@@ -4658,8 +4692,11 @@ const exampleRow = (scale = 1) => ({
     document.getElementById("search-count").textContent=q.length?`${res.length} result${res.length===1?"":"s"} · public site content`:"Popular pages";
     document.getElementById("search-res").innerHTML=res.length?res.slice(0,12).map(x=>`<li><a href="#${x[2]}"><span class="fine">${x[3]}</span><b>${esc(x[0])}</b><span class="muted" style="font-size:13px">${esc(x[1])}</span></a></li>`).join(""):`<li class="muted" style="padding:14px 0">No matches in public site content. Try "pricing", "accessibility" or "registration". Looking for a controlled document? <a class="link" href="#procurement">Request a document</a>. Need help? <a class="link" href="#contact" data-topic="support">Ask support</a>.</li>`}
   const sd=document.getElementById("search"),sb=document.getElementById("search-btn");
-  function sOpen(){sd.hidden=false;sRun();document.getElementById("search-q").focus()}
-  function sClose(ret=true){if(sd.hidden)return;sd.hidden=true;if(ret)sb.focus()}
+  let sReturn=null;
+  function sOpen(){if(!sd.hidden)return;sReturn=!dr.hidden?mb:document.activeElement;if(!dr.hidden)closeDrawer(false);sd.hidden=false;setModalBackdrop(sd,true);sRun();document.getElementById("search-q").focus()}
+  function sClose(ret=true){if(sd.hidden)return;sd.hidden=true;setModalBackdrop(sd,false);if(ret){
+    const opener=sReturn&&sReturn.isConnected&&sReturn.getClientRects().length&&sReturn.matches("a,button,input,select,textarea,[tabindex]")?sReturn:sb.getClientRects().length?sb:mb;opener.focus();
+  }}
   sb.addEventListener("click",sOpen);document.getElementById("search-close").addEventListener("click",()=>sClose());
   sd.addEventListener("click",e=>{if(e.target===sd)sClose();if(e.target.closest("#search-res a"))sClose(false)});
   document.getElementById("search-q").addEventListener("input",sRun);

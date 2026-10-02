@@ -91,3 +91,7 @@ list.
 
 Today the first three are true, and the rest are not yet. That is the point to
 start sending this package: when they are all true, not before.
+
+## Standards and privacy implementation audit
+
+- [Standards and privacy audit](STANDARDS-PRIVACY-AUDIT.md): the interactive 1EdTech / NIST Rev. 5 matrix, education-data boundary map, RFP exports, source-document inventory and outstanding institution activation gates.

@@ -44,6 +44,7 @@ $$;
 do $$
 declare conn uuid; conn_pub text; n bigint; st text; last timestamptz;
         approver uuid := gen_random_uuid();
+        envelope text; original_stamp timestamptz; refreshed integer;
 begin
   insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
   values (approver, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
@@ -144,7 +145,125 @@ begin
      and subject_user_id is null and classification = 'T0' and source_of_truth = 'LMS'
      and freshness_status = 'live' and connection_id = conn;
   perform pg_temp.said('tenant-wide, T0, LMS as source of truth, live, on its connection', n::text, '1');
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and canonical_entity_type = 'lms_context'
+     and (display ->> '_governance')::jsonb ->> 'aiEligibility' = 'denied_by_default'
+     and (display ->> '_governance')::jsonb ->> 'sourceStandard' = 'LTI 1.3'
+     and (display ->> '_governance')::jsonb ->> 'retentionPolicyId' = 'canonical:tenant-lifetime'
+     and (display ->> '_governance')::jsonb ->> 'writeAuthority' = 'source-system-only'
+     and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz > now();
+  perform pg_temp.said('direct LTI writes include governed provenance and expiry', n::text, '1');
+  update public.integration_connections set freshness_target = interval '300000 years' where id = conn;
+  perform pg_temp.said('an oversized direct LTI freshness interval is bounded', pg_temp.record('https://bound.example', 'c-bound', 'course-1'), 'recorded');
+  select count(*) into n from public.canonical_entity_references where tenant_id = 'lti-a' and connection_id = conn
+    and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz = now() + interval '365 days';
+  perform pg_temp.said('direct LTI freshness never exceeds 365 days', n::text, '1');
+  update public.integration_connections set freshness_target = null where id = conn;
+  perform pg_temp.said('restore the direct LTI freshness default', pg_temp.record('https://bound.example', 'c-bound', 'course-1'), 'recorded');
   perform pg_temp.said('an empty context is refused', pg_temp.record('https://bound.example', 'c-bound', ' '), 'no-context');
+
+  -- Server-only metadata refresh and batched tombstones ----------------------
+  perform pg_temp.said('an account cannot refresh integration governance',
+    pg_temp.callable_by('authenticated', 'public.integration_refresh_governance(text, uuid, text, jsonb, timestamptz)')::text, 'false');
+  perform pg_temp.said('a visitor cannot tombstone integration references',
+    pg_temp.callable_by('anon', 'public.integration_tombstone_references(text, uuid, text, text, text[], timestamptz)')::text, 'false');
+  select display ->> '_governance', source_timestamp into envelope, original_stamp
+    from public.canonical_entity_references where tenant_id = 'lti-a' and connection_id = conn;
+  -- The provider's still-valid 4 KB allowance must not be consumed by metadata.
+  update public.canonical_entity_references
+     set display = jsonb_build_object('title', repeat('x', 3800), '_governance', envelope)
+   where tenant_id = 'lti-a' and connection_id = conn;
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and pg_column_size(display || '{}'::jsonb) > 4096
+     and pg_column_size(display - '_governance') <= 4096;
+  perform pg_temp.said('a near-limit provider value retains space for governance', n::text, '1');
+  select public.integration_refresh_governance('lti-b', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp, 'governance', envelope)), now()) into refreshed;
+  perform pg_temp.said('a wrong tenant refreshes nothing', refreshed::text, '0');
+  select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp - interval '1 second', 'governance', envelope)), now()) into refreshed;
+  perform pg_temp.said('a changed source revision refreshes nothing', refreshed::text, '0');
+  select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp, 'governance', envelope)), now()) into refreshed;
+  perform pg_temp.said('the confirmed source revision refreshes once', refreshed::text, '1');
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and display ->> 'title' = repeat('x', 3800);
+  perform pg_temp.said('metadata refresh preserves stored values', n::text, '1');
+  select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp, 'governance', (envelope::jsonb || jsonb_build_object(
+        'sourceOwner', 'Replacement authority', 'sourceStandard', 'Replacement@2',
+        'permittedPurposes', jsonb_build_array('new-purpose'),
+        'retentionPolicyId', 'replacement-policy', 'retentionExpiresAt', now() + interval '10 years',
+        'retrievedAt', now() + interval '1 minute', 'expiresAt', now() + interval '10 days'))::text)),
+    now() + interval '1 minute') into refreshed;
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and connection_id = conn
+     and ((display ->> '_governance')::jsonb - 'retrievedAt' - 'expiresAt')
+       = (envelope::jsonb - 'retrievedAt' - 'expiresAt')
+     and ((display ->> '_governance')::jsonb ->> 'retrievedAt')::timestamptz = now() + interval '1 minute'
+     and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
+       = (envelope::jsonb ->> 'expiresAt')::timestamptz + interval '1 minute';
+  perform pg_temp.said('an adapter change cannot relabel unchanged values or extend retention', n::text, '1');
+  select display ->> '_governance' into envelope from public.canonical_entity_references
+   where tenant_id = 'lti-a' and connection_id = conn;
+  update public.integration_connections set freshness_target = interval '1 hour' where id = conn;
+  select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp, 'governance', envelope)), now() + interval '2 minutes') into refreshed;
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and connection_id = conn
+     and ((display ->> '_governance')::jsonb - 'retrievedAt' - 'expiresAt')
+       = (envelope::jsonb - 'retrievedAt' - 'expiresAt')
+     and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz = now() + interval '62 minutes';
+  perform pg_temp.said('a connection freshness override changes only freshness clocks', n::text, '1');
+  select display ->> '_governance' into envelope from public.canonical_entity_references
+   where tenant_id = 'lti-a' and connection_id = conn;
+  -- Negative/zero targets preserve the stored duration; sub-minute targets floor to one minute.
+  for st in select unnest(array['-1 hour', '0 seconds', '30.5 seconds', '300000 years']) loop
+    update public.integration_connections set freshness_target = st::interval where id = conn;
+    select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+      jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+        'timestamp', original_stamp, 'governance', envelope)), now() + interval '3 minutes') into refreshed;
+    select count(*) into n from public.canonical_entity_references
+     where tenant_id = 'lti-a' and connection_id = conn
+       and ((display ->> '_governance')::jsonb ->> 'expiresAt')::timestamptz
+         = now() + interval '3 minutes' + case when st = '300000 years' then interval '365 days' when st = '30.5 seconds' then interval '1 minute' else interval '1 hour' end;
+    perform pg_temp.said('validated connection freshness target ' || st, n::text, '1');
+    select display ->> '_governance' into envelope from public.canonical_entity_references
+     where tenant_id = 'lti-a' and connection_id = conn;
+  end loop;
+  -- A direct refresh never attaches current provenance to legacy mapped values.
+  for st in select unnest(array[null, 'legacy string', '{}', '{"retrievedAt":"bad","expiresAt":"bad"}']) loop
+    update public.canonical_entity_references set display = jsonb_build_object('title', 'Legacy value', '_governance', st)
+     where tenant_id = 'lti-a' and connection_id = conn;
+    select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+      jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+        'timestamp', original_stamp, 'governance', envelope)), now()) into refreshed;
+    perform pg_temp.said('legacy governance is left for a full provider remap', refreshed::text, '0');
+    select count(*) into n from public.canonical_entity_references where tenant_id = 'lti-a' and connection_id = conn
+      and display = jsonb_build_object('title', 'Legacy value', '_governance', st);
+    perform pg_temp.said('legacy metadata and values were not relabeled', n::text, '1');
+  end loop;
+  update public.canonical_entity_references set display = jsonb_build_object('title', 'Restored value', '_governance', envelope)
+   where tenant_id = 'lti-a' and connection_id = conn;
+  select public.integration_tombstone_references('lti-b', conn, 'LTI 1.3 https://bound.example',
+    'lms_context', array['course-1'], now()) into refreshed;
+  perform pg_temp.said('a wrong tenant tombstones nothing', refreshed::text, '0');
+  select public.integration_tombstone_references('lti-a', conn, 'LTI 1.3 https://bound.example',
+    'lms_context', array['course-1'], now()) into refreshed;
+  perform pg_temp.said('a batch tombstone updates the source revision', refreshed::text, '1');
+  select count(*) into n from public.canonical_entity_references
+   where tenant_id = 'lti-a' and display = jsonb_build_object('_governance', envelope)
+     and external_deleted_at is not null and freshness_status = 'unavailable';
+  perform pg_temp.said('a tombstone retains only its own governance envelope', n::text, '1');
+  select public.integration_refresh_governance('lti-a', conn, 'LTI 1.3 https://bound.example',
+    jsonb_build_array(jsonb_build_object('entity', 'lms_context', 'id', 'course-1',
+      'timestamp', original_stamp, 'governance', envelope)), now()) into refreshed;
+  perform pg_temp.said('a racing refresh does not revive a tombstone', refreshed::text, '0');
 
   -- The binding itself -----------------------------------------------------
 
