@@ -4,6 +4,13 @@
   "appSourceCommit": "7675b99b151cf9450a3139520b1c8e26289976a4",
   "appDeploymentCommit": "7675b99b151cf9450a3139520b1c8e26289976a4",
   "appDeploymentRun": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/36950752026",
+  "latestDeploymentCheck": {
+    "checkedAt": "2026-10-02T13:33:00Z",
+    "commit": "3d87884cb64684054d2c27c07423af51c9c90460",
+    "run": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/36953148517",
+    "capturedScreensUnchanged": true,
+    "basis": "Today, Courses, appearance and workspace navigation source are unchanged. New styles are scoped to .standards-audit; the newer release adds standards and integration features, not changes to these captured screens."
+  },
   "captureMode": "isolated-demo",
   "sampleData": true,
   "dataSource": "The app's bundled public sample courses, adopted in a fresh local browser origin. No private student records or connected account.",
