@@ -113,7 +113,15 @@ Deno.serve(async (req) => {
     .order('send_at', { ascending: true })
     .limit(PER_RUN);
 
-  if (error) return new Response(error.message, { status: 500 });
+  if (error) {
+    // The scheduler needs to know only that this run failed. Supabase error
+    // text can name relations, columns and policy details, and the bearer that
+    // calls this endpoint is an execution credential rather than permission to
+    // inspect the database. Keep the response generic and the log free of the
+    // provider's message for the same reason.
+    console.error('push: due queue could not be read');
+    return new Response('push queue unavailable', { status: 500 });
+  }
   const rows = (due ?? []) as Row[];
   if (rows.length === 0) return Response.json({ sent: 0, devices: 0 });
 

@@ -89,6 +89,13 @@ describe('a reminder keeps its destination all the way to the phone', () => {
     expect(fn).toContain('item: row.item');
   });
 
+  it('does not return database errors to the scheduler caller', () => {
+    const fn = read('supabase/functions/push/index.ts');
+    const queueRead = fn.slice(fn.indexOf(".from('push_queue')"), fn.indexOf('const rows ='));
+    expect(queueRead).toContain("new Response('push queue unavailable', { status: 500 })");
+    expect(queueRead).not.toMatch(/new Response\([^\n]*error\.message/);
+  });
+
   it('5. reaches the notification, and its tap', () => {
     const sw = read('app/public/sw.js');
     // On the notification's data…
