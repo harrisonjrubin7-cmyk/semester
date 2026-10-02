@@ -27,6 +27,9 @@ export function ToolDisclosure({ label, triggerLabel = label, trigger, className
   };
   return <>
     <div className={className} data-open={open || undefined}>
+      {/* A lazy panel does not exist until its first opening. Expose the
+          relationship only once there is a real target, then keep it stable
+          while the mounted panel is closed. */}
       <button
         ref={setAnchor}
         type="button"
@@ -34,7 +37,7 @@ export function ToolDisclosure({ label, triggerLabel = label, trigger, className
         aria-label={triggerLabel}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-controls={panelId}
+        aria-controls={loaded ? panelId : undefined}
         onClick={toggle}
       >
         {trigger}

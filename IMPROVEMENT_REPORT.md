@@ -108,6 +108,9 @@ navigation were green at baseline.
 7. Preserved the shared Back and global-action header when Search or App
    Directory owns the page heading outside Workspace. The header now omits
    only its duplicate title, and route focus follows the screen-owned heading.
+8. Removed the broken initial `aria-controls` relationship from the lazy global
+   Accessibility tools trigger. The relationship now appears with its real
+   dialog target on first open and remains stable while that panel is retained.
 
 ### P2
 
@@ -154,8 +157,9 @@ Regression files:
 | Isolated full-suite failure rerun | Pass: all 5 files, 60 tests |
 | Phone browser check | Pass: contained dialog, no horizontal page overflow, accurate ARIA state, Escape focus return |
 | Desktop browser check | Pass: Accessibility and Workflow dialogs associated with their triggers; clean console |
+| Production accessibility smoke | Pass: 6 critical journeys at desktop and 400% reflow; skip focus, landmarks, titles, names and ARIA references verified |
 | HawkScan local DAST | Unavailable: no HawkScan 6 runtime, Docker or `HAWK_API_KEY` in this environment |
-| Hosted HawkScan | Pass on PR #1105 head `578abd6` before the review follow-up commit; the protected workflow reruns on the corrected head before merge |
+| Hosted HawkScan | Pass on PR #1105 head `e5f0b3c`; the protected workflow reruns on the final accessibility fix before merge |
 | Search/Directory review regression | Pass: 2 files, 13 selected tests; one `h1`, shared controls retained, Back restored, and route focus verified |
 
 The full-suite failures were timeouts only, not assertion failures, and all five
@@ -175,13 +179,10 @@ the actual viewport.
 3. **Large production chunks are warnings, not yet measured problems.** The
    largest diagram/parser and entry chunks should be profiled before changing
    boundaries; the expensive PDF, diagram and graph tools are already lazy.
-4. **Automated local Playwright sweeps remain unavailable.** The repository does
-   not include Playwright by design. Real-browser checks used the app browser,
-   while the existing ignored route-review evidence covers all routes.
-5. **12ui CLI was unavailable locally.** No network installation was attempted.
+4. **12ui CLI was unavailable locally.** No network installation was attempted.
    The pass therefore used Semester's established design system and existing
    route-by-route visual evidence rather than generating a replacement design.
-6. Repository implementation and successful local/browser checks do not imply
+5. Repository implementation and successful local/browser checks do not imply
    Vanderbilt approval, configured third-party credentials, staffed data-rights
    operations, or observed institutional production use.
 

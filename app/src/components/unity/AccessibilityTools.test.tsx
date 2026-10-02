@@ -54,16 +54,19 @@ describe('global accessibility tools', () => {
     roots.push(root);
     try {
       await act(async () => root.render(<AccessibilityTools look={{}} onChange={() => {}} onSettings={() => {}} />));
-      expect(host.querySelector('.system-tool-trigger')?.textContent).toBe('Accessibility');
+      const trigger = host.querySelector<HTMLButtonElement>('.system-tool-trigger')!;
+      expect(trigger.textContent).toBe('Accessibility');
+      expect(trigger.hasAttribute('aria-controls')).toBe(false);
       expect(host.querySelector('[role="dialog"]')).toBeNull();
       await openTools(host);
-      const controls = host.querySelector('[aria-label="Accessibility tools"]');
+      const controls = host.querySelector<HTMLElement>('[role="dialog"][aria-label="Accessibility tools"]');
+      expect(trigger.getAttribute('aria-controls')).toBe(controls?.id);
       await act(async () => [...host.querySelectorAll('button')].find(button => button.textContent === 'Read aloud')!.click());
       const before = cancel.mock.calls.length;
       await act(async () => host.querySelector<HTMLButtonElement>('.system-tool-trigger')!.click());
       expect(cancel.mock.calls.length).toBe(before);
       await openTools(host);
-      expect(host.querySelector('[aria-label="Accessibility tools"]')).toBe(controls);
+      expect(host.querySelector('[role="dialog"][aria-label="Accessibility tools"]')).toBe(controls);
       expect(host.querySelector('[role="status"]')?.textContent).toBe('Reading aloud.');
     } finally { selection.mockRestore(); }
   });
