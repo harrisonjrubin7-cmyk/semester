@@ -61,6 +61,7 @@ import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../l
 import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
 import type { ControlPlaneStatus } from '../lib/control-plane';
 import { formatDateTime, formatTime } from '../lib/locale';
+import { forRole } from '../lib/role';
 
 // The ledgers and the Migration Center are behind flags that are off by
 // default, so their code loads only when a tab of theirs opens.
@@ -352,7 +353,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const [tab, setTab] = useState<Tab>(() =>
     EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
   );
-  const [intent, setIntent] = useState<UniversityRole>('student');
+  const [intent, setIntent] = useState<UniversityRole>(state.role);
   const [area, setArea] = useState<UniversityArea>('courses');
 
   /*
@@ -635,6 +636,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
     });
 
   const areaName = (id: UniversityArea) => UNIVERSITY_AREAS.find(([x]) => x === id)?.[1] ?? id;
+  const localForRole = (id: UniversityArea) => {
+    const local = LOCAL[id];
+    return local && forRole(local.screen, state.role) ? local : undefined;
+  };
+  const currentLocal = localForRole(area);
 
   return (
     <Page>
@@ -763,7 +769,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <GridCard
                   key={id}
                   label={name}
-                  meta={connected ? 'Connected' : LOCAL[id] ? 'Opens here' : 'Prepare only'}
+                  meta={connected ? 'Connected' : localForRole(id) ? 'Opens here' : 'Prepare only'}
                   selected={id === area}
                   title={DRAFT_TEMPLATES[id].steps.join(' · ')}
                   onClick={() => {
@@ -779,13 +785,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
             {areaName(area)}
           </SectionLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-            {LOCAL[area] && (
+            {currentLocal && (
               <ActionButton
                 tone="primary"
-                onClick={() => dispatch({ type: 'go', screen: LOCAL[area]!.screen })}
+                onClick={() => dispatch({ type: 'go', screen: currentLocal.screen })}
                 style={{ flex: '1 1 auto' }}
               >
-                {LOCAL[area]!.label}
+                {currentLocal.label}
               </ActionButton>
             )}
             {area === 'courses' && (
