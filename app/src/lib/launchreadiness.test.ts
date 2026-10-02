@@ -89,6 +89,16 @@ describe('the launch go/no-go', () => {
       for (const item of open) expect(checklist, `missing authority action: ${item.action}`).toContain(item.action);
     });
 
+    it('offers an approvable pilot data scope without pretending the proposal is approval', () => {
+      const scope = read('docs/pilot/DATA-SCOPE-PROPOSAL.md');
+      const flat = scope.replace(/\s+/g, ' ');
+      expect(scope).toContain('**Status: `PROPOSED` — not approved and not authorization to connect data.**');
+      expect(flat).toContain('A product flag, credential or successful technical test is never approval.');
+      expect(scope).toContain('| Source system | Exact objects and fields | Purpose | System-of-record owner |');
+      expect(scope).toContain('| Semester approves this exact scope | `[NAME / ROLE]` |');
+      expect(scope).toContain('| Institution approves this exact scope and names each source owner | `[NAME / ROLE]` |');
+    });
+
     it('holds every gate the command lists, once each, owned by a real seat', () => {
       const text = read('docs/GO-NO-GO-CHECKLIST.md');
       expect(new Set(GATES.map((g) => g.id)).size).toBe(GATES.length);

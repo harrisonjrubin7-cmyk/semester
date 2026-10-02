@@ -146,10 +146,14 @@ describe('the operational readiness pack', () => {
     expect(GATE).toHaveLength(13);
     const today = GATE.map((g) => ({ required: g.required, level: areaLevel(g.rests.map(level), ceiling()) }));
     expect(verdict(today)).toBe('no-go');
-    // A required area with one row at 0 is 0 whatever the rest: the finding that made this a min.
+    // The proposed scope raises Data from absent to partial, but approval is
+    // still missing. A different required area with one row at 0 remains 0
+    // whatever the rest: the finding that made this a min.
     const data = GATE.find((g) => g.area === 'Data')!;
-    expect(data.rests.map(level)).toContain(0);
-    expect(areaLevel(data.rests.map(level), ceiling())).toBe(0);
+    expect(areaLevel(data.rests.map(level), ceiling())).toBe(1);
+    const accessibility = GATE.find((g) => g.area === 'Accessibility')!;
+    expect(accessibility.rests.map(level)).toContain(0);
+    expect(areaLevel(accessibility.rests.map(level), ceiling())).toBe(0);
     expect(Object.keys(VERDICT_MEANING)).toEqual(['go', 'go-with-conditions', 'no-go']);
     for (const r of ['yes', 'if-ai', 'if-integration'] as Required[]) expect(GATE.some((g) => g.required === r), r).toBe(true);
   });

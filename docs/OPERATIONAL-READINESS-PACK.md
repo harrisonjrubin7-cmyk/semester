@@ -253,13 +253,13 @@ None has an owner, a last-tested date or an escalation path in the pack’s sens
 | **GO WITH CONDITIONS** | No P0 risk remains. Time-bound P1 and P2 conditions have owners, target dates, mitigation, customer communication and executive acceptance. |
 | **NO-GO** | A P0 or unresolved mandatory gate exists: security or privacy breach risk, a critical accessibility failure, data-loss or grade-integrity risk, an unsupported claim, an untested recovery path, or no accountable owner. |
 
-Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 5 areas at 0, 8 at 1, 0 passing.
+Thirteen areas, each resting on rows and launch gates. **An area’s level is its lowest row**, not a median: one unmet control fails the area, because the pack says an unresolved mandatory gate is NO-GO. A required area at 0 is a failed mandatory gate; at 1 it is a condition. **Today: NO-GO** — 4 areas at 0, 9 at 1, 0 passing.
 
 | Area | Gate | Required for GO | Rests on (level) | Lowest |
 | --- | --- | --- | --- | ---: |
 | **Scope** | Enabled and excluded features are explicit. | Yes | PRG-003 (1), PRG-007 (2), gate:known-limitations (2) | 1 |
 | **Ownership** | Product, technical, operational, support, security, privacy and accessibility owners are assigned. | Yes | PRG-001 (1), gate:escalation-owners (1) | 1 |
-| **Data** | Data map, permissions, retention, source and freshness, and export and deletion behaviour are documented. | Yes | PRIV-1 (2), PRIV-2 (2), TRUST-001 (2), gate:data-scope (0) | 0 |
+| **Data** | Data map, permissions, retention, source and freshness, and export and deletion behaviour are documented. | Yes | PRIV-1 (2), PRIV-2 (2), TRUST-001 (2), gate:data-scope (1) | 1 |
 | **Security** | Authentication, tenant isolation, secrets, logging, vulnerability gates and the incident route are tested. | Yes | IAM-008 (2), SDLC-2 (2), SEC-006 (1), VULN-1 (1), IR-1 (1) | 1 |
 | **Accessibility** | Critical workflows are tested; no unresolved critical barrier; alternatives documented. | Yes | A11Y-001 (2), A11Y-3 (0), gate:no-blockers (0) | 0 |
 | **Reliability** | SLOs, monitoring, alerting, status communications, dependency health and runbooks are ready. | Yes | SRE-001 (2), SRE-002 (1), SRE-010 (1), gate:operations-live (1) | 1 |

@@ -236,9 +236,9 @@ export const GATES: readonly Gate[] = [
     id: 'data-scope',
     requirement: 'Pilot data scope/source ownership approved.',
     owner: 'data',
-    status: 'unmet',
-    evidence: [],
-    gap: 'No pilot data scope exists to approve, and no source owner has been named for any institutional content.',
+    status: 'partial',
+    evidence: [{ path: 'docs/pilot/DATA-SCOPE-PROPOSAL.md', shows: 'a narrow proposed pilot scope, default exclusions, source-owner register, change rule, exit checks and two-party approval record' }],
+    gap: 'The approvable scope now exists, but no institution, cohort or source has been named and neither Semester nor an institutional champion has approved it.',
     closure: [{ authority: 'external-approval', action: 'The pilot institution and Semester must approve a bounded data scope and name the source owner for each institutional source.' }],
   },
   {
