@@ -96,6 +96,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'The before column of docs/ADVISOR-RECONCILIATION-2026-09-30.md, read-only. The after reading on production is not taken until the migration is applied, which needs separate authorization. Renewed by re-running supabase/advisor-probe.sql.',
   },
   {
+    id: 'release-secret-verification',
+    artifact: 'Release secret verification across the current tree, reachable Git history, release range, production bundle and isolated institutional-preview bundle',
+    path: 'docs/evidence/security/2026-10-01-secret-verification.md',
+    produced: '2026-10-01',
+    validFor: QUARTERLY,
+    owner: 'security',
+    claims: [],
+    rows: ['SEC-003', 'SEC-004'],
+    note: 'Gitleaks 8.28.0 found no credential in the current tree, reachable history or release range; the redacting artifact scanner found none in either browser bundle. Provider stores and build logs were not audited. Renew on a credential-handling change and at least quarterly.',
+  },
+  {
     id: 'restore-rehearsal',
     artifact: 'Backup restore rehearsal: a logical dump restored locally, schema and row counts compared',
     path: 'docs/GO-NO-GO-CHECKLIST.md',

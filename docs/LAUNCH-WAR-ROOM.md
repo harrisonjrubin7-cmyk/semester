@@ -13,7 +13,7 @@ through informal messaging and memory.**
 
 | Line | Reads |
 | --- | --- |
-| Launch status | **NO-GO** as of 2026-09-27, for 31 reasons listed in [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) |
+| Launch status | **NO-GO** as of 2026-10-01, for 31 reasons listed in [`docs/GO-NO-GO-CHECKLIST.md`](GO-NO-GO-CHECKLIST.md) |
 | P0/P1 blockers | none recorded (0 open blockers of any severity) |
 | Readiness register | 142 rows: 2 not-started, 28 designed, 68 building, 43 tested, 1 evidenced |
 | Role launch register | 69 roles; every rung is in [`docs/ROLE-LAUNCH-REGISTER.md`](ROLE-LAUNCH-REGISTER.md) |
