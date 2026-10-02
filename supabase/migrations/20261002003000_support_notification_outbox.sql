@@ -19,10 +19,10 @@ create index if not exists support_notification_outbox_due
 
 -- The immediate operator-triggered attempt resolves one ticket while the
 -- scheduled worker scans every due row. Keep separate indexes for those two
--- access paths; leading with ticket_id also covers the ticket foreign key.
+-- access paths. This ticket-first index is deliberately not partial: deletes
+-- must also find accepted and dead-lettered rows through the foreign key.
 create index if not exists support_notification_outbox_ticket_due
-  on public.support_notification_outbox (ticket_id, next_attempt_at, queued_at)
-  where accepted_at is null and dead_lettered_at is null;
+  on public.support_notification_outbox (ticket_id, next_attempt_at, queued_at);
 
 alter table public.support_notification_outbox enable row level security;
 revoke all on table public.support_notification_outbox from public, anon, authenticated;
