@@ -151,8 +151,12 @@ export const GATES: readonly Gate[] = [
         path: 'app/scripts/account-sync.mjs',
         shows: 'resume on a second device through an account, in CI at two viewports against a local Supabase built from this repository: sign-up in the first run, an action made and finished, the server shown to hold it, a fresh second context signed in and showing it done, and a change from the second device carried back to the first',
       },
+      {
+        path: 'app/release-manifest.ts',
+        shows: 'the deployed bundle emits public release.json with its exact source SHA, environment, launch-critical feature states and service-presence booleans, never configuration values',
+      },
     ],
-    gap: 'Syllabus import is proved with the model reply stubbed, and account sync against a local Supabase rather than the production project. Human help is proved in a build with VITE_HUMAN_HELP on; whether the deployed build has it on is a repository variable nothing here reads. Phase 1.',
+    gap: 'The deployed build can now report whether Human Help and accounts are on, but the production readback and real source-backed import/account-resume journey have not been recorded. The CI import still stubs the one model reply and account sync still uses local Supabase.',
     closure: [{ authority: 'production-authority', action: 'Run and record the source-backed import, account-resume and human-help journey against the intended production configuration.' }],
   },
   {

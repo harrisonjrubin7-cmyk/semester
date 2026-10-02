@@ -8,6 +8,7 @@ import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheade
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
 import { isAmbiguousStaticPath, staticHostHeaders } from './src/lib/previewsecurity.ts'
 import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
+import { publicReleaseManifest } from './release-manifest.ts'
 
 /**
  * The dev server doubles as the OAuth token proxy.
@@ -943,6 +944,21 @@ export default defineConfig(({ command, mode }) => {
     base: process.env.VITE_BASE ?? '/',
     plugins: [
       react(),
+      {
+        name: 'public-release-manifest',
+        generateBundle() {
+          const manifest = publicReleaseManifest({
+            ...local,
+            ...process.env,
+            MODE: mode,
+          })
+          this.emitFile({
+            type: 'asset',
+            fileName: 'release.json',
+            source: `${JSON.stringify(manifest, null, 2)}\n`,
+          })
+        },
+      },
       csp(command === 'serve'),
       icsProxy(),
       canvasProxy(),

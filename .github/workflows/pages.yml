@@ -400,6 +400,9 @@ jobs:
           # e.g. /semester/ — supplied by configure-pages, so a rename of the
           # repo cannot silently break every asset path.
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/
+          # Public release.json records the exact source commit without
+          # exposing a credential or relying on workflow_run's own GITHUB_SHA.
+          SEMESTER_RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           export VITE_INSTITUTIONAL_PREVIEW=false
           npm run build
@@ -423,6 +426,7 @@ jobs:
         working-directory: app
         env:
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/demo/
+          SEMESTER_RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
           export VITE_INSTITUTIONAL_PREVIEW=true
           export VITE_SUPABASE_URL=
