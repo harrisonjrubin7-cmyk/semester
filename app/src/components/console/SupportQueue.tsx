@@ -4,7 +4,6 @@ import {
   CATEGORY_LABELS,
   CONTEXT_KEYS,
   CONTEXT_LABELS,
-  STATUS_LABELS,
   supportQueue,
   supportReply,
   supportThread,
@@ -13,6 +12,13 @@ import {
   type SupportQueueTicket,
 } from '../../lib/supporttickets';
 import { matches, said, when, type ViewProps } from './Fields';
+
+const OPERATOR_STATUS_LABELS: Record<SupportQueueTicket['status'], string> = {
+  open: 'Open with support',
+  waiting_on_student: 'Waiting for student',
+  resolved: 'Resolved; student may close',
+  closed: 'Closed by student',
+};
 
 /**
  * Semester's identity-free support desk.
@@ -57,7 +63,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       ticketReference(ticket.id),
       ticket.subject,
       CATEGORY_LABELS[ticket.category],
-      STATUS_LABELS[ticket.status],
+      OPERATOR_STATUS_LABELS[ticket.status],
       ticket.priority,
     )),
     [tickets, filter],
@@ -127,10 +133,10 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         Identity-free queue. This view receives no student name, email, account, handle or tenant. It shows only the question and app context the student chose to send.
       </Notice>
       <SectionLabel aside={tickets === null ? 'reading' : `${shown.length} open`}>Support queue</SectionLabel>
+      <button type="button" className="btn btn-secondary" onClick={() => { void refresh(); }}>Refresh support queue</button>
       {queueFailed && (
         <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
           <Notice>{tickets === null ? 'Support queue unavailable.' : 'Support queue could not be refreshed; the last-known list remains visible.'}</Notice>
-          <button type="button" className="btn btn-secondary" onClick={() => { void refresh(); }}>Retry support queue</button>
         </div>
       )}
       {tickets === null && !queueFailed && <p role="status">Reading the support queue…</p>}
@@ -139,7 +145,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         <article key={ticket.id} className="portal-panel" aria-label={`Support ticket ${ticketReference(ticket.id)}`} style={{ display: 'grid', gap: 'var(--sp-2)' }}>
           <strong>{ticketReference(ticket.id)} · {ticket.subject}</strong>
           <div style={{ color: 'var(--app-dim)' }}>
-            {CATEGORY_LABELS[ticket.category]} · {STATUS_LABELS[ticket.status]} · {ticket.priority} priority
+            {CATEGORY_LABELS[ticket.category]} · {OPERATOR_STATUS_LABELS[ticket.status]} · {ticket.priority} priority
           </div>
           <div>
             First reply due {when(ticket.firstResponseDue)}{ticket.overdue ? ' · OVERDUE' : ''}

@@ -59,6 +59,7 @@ vi.mock('../lib/cloud', () => ({
 }));
 vi.mock('../lib/capabilities', () => ({ loadMyCapabilities: mock.caps }));
 vi.mock('../lib/environment', async (orig) => ({ ...(await orig<object>()), environment: () => mock.env }));
+vi.mock('../lib/experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 vi.mock('../lib/console/client', async (orig) => ({
   ...(await orig<object>()),
   loadDuties: mock.duties,
@@ -93,6 +94,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeId: '' }];
+const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -198,6 +200,19 @@ async function render() {
   });
   await flush();
 }
+
+describe('support tab capability gate', () => {
+  it('does not offer support to console operators without support:ticket', async () => {
+    await render();
+    expect(button('Support')).toBeUndefined();
+  });
+
+  it('offers support to a platform support operator', async () => {
+    mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
+    await render();
+    expect(button('Support')).toBeDefined();
+  });
+});
 
 const buttons = () => [...host.querySelectorAll('button')];
 const button = (text: string) => buttons().find((b) => b.textContent?.trim() === text) as HTMLButtonElement | undefined;

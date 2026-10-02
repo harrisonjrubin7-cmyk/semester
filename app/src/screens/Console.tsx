@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -56,9 +56,8 @@ const BLURB = 'Live operational exceptions, approvals, break-glass, the audit ch
 
 type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
 
-const TABS: readonly { id: Tab; label: string }[] = [
+const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'command', label: 'Command center' },
-  ...(EXPERIENCE_FLAGS.supportTickets === 'off' ? [] : [{ id: 'support' as const, label: 'Support' }]),
   { id: 'approvals', label: 'Approvals' },
   { id: 'breakglass', label: 'Break-glass' },
   { id: 'audit', label: 'Audit' },
@@ -68,7 +67,7 @@ const TABS: readonly { id: Tab; label: string }[] = [
   { id: 'views', label: 'Views' },
 ];
 
-const isTab = (v: unknown): v is Tab => typeof v === 'string' && TABS.some((t) => t.id === v);
+const isTab = (tabs: readonly { id: Tab }[], v: unknown): v is Tab => typeof v === 'string' && tabs.some((t) => t.id === v);
 
 /** Preference keys, under `operator_preference`. */
 const PREF_TAB = 'console.tab';
@@ -121,6 +120,12 @@ export function Console() {
 
 function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
   const env = environment();
+  const mayAnswerSupport = grants.some((grant) => grant.capability === 'support:ticket' && grant.scopeKind === 'platform');
+  const tabs = useMemo<readonly { id: Tab; label: string }[]>(() => [
+    CORE_TABS[0],
+    ...(EXPERIENCE_FLAGS.supportTickets !== 'off' && mayAnswerSupport ? [{ id: 'support' as const, label: 'Support' }] : []),
+    ...CORE_TABS.slice(1),
+  ], [mayAnswerSupport]);
   const [tab, setTab] = useState<Tab>('command');
   const [filter, setFilter] = useState('');
   const [scope, setScope] = useState('All');
@@ -165,7 +170,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     loadPreferences().then(
       (p) => {
         if (!live) return;
-        if (isTab(p[PREF_TAB])) setTab(p[PREF_TAB]);
+        if (isTab(tabs, p[PREF_TAB])) setTab(p[PREF_TAB]);
         setViews(readViews(p[PREF_VIEWS]));
       },
       (e: unknown) => { if (live) setStatus(said(e, 'Could not load your preferences.')); },
@@ -175,7 +180,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, []);
+  }, [tabs]);
 
   const choose = (next: Tab) => {
     setTab(next);
@@ -232,7 +237,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           </button>
         )}
       </div>
-      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={TABS} />
+      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={tabs} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
         {tab === 'command' && <CommandCenter {...viewProps} />}
         {tab === 'support' && <SupportQueue {...viewProps} />}
@@ -250,7 +255,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
             onSave={(v) => keepViews([...views.filter((x) => x.name !== v.name), v], `Saved the view “${v.name}”.`)}
             onApply={(v) => {
               setFilter(v.filter);
-              if (isTab(v.tab)) choose(v.tab);
+              if (isTab(tabs, v.tab)) choose(v.tab);
             }}
             onDelete={(name) => keepViews(views.filter((x) => x.name !== name), `Deleted the view “${name}”.`)}
           />

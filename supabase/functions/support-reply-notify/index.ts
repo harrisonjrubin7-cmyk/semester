@@ -5,11 +5,14 @@ const url = Deno.env.get('SUPABASE_URL') ?? '';
 const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 const resendKey = Deno.env.get('RESEND_API_KEY');
+const supportSender = Deno.env.get('SUPPORT_NOTIFY_FROM') ?? Deno.env.get('LEAD_NOTIFY_FROM');
 
 Deno.serve((req) => handleSupportNotice(req, {
   allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
   devOrigin: Deno.env.get('CORS_ALLOW_DEV'),
-  resendKey,
+  // Resend's onboarding sender cannot deliver to arbitrary students. Treat
+  // support email as configured only when a verified sender is explicit.
+  resendKey: resendKey && supportSender ? resendKey : undefined,
   // An origin has no path and ALLOWED_ORIGIN may contain several entries, so
   // it cannot be used as the application link in an email.
   appUrl: Deno.env.get('SUPPORT_RETURN_URL') ?? 'https://harrisonjrubin7-cmyk.github.io/semester/',
@@ -38,10 +41,11 @@ Deno.serve((req) => handleSupportNotice(req, {
     return error || !user.user.email ? null : { messageId: message.id, email: user.user.email };
   },
   async send(input) {
+    if (!supportSender) return false;
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': input.idempotencyKey },
-      body: JSON.stringify({ from: Deno.env.get('SUPPORT_NOTIFY_FROM') ?? Deno.env.get('LEAD_NOTIFY_FROM') ?? 'Semester <onboarding@resend.dev>', to: [input.to], subject: input.subject, text: input.text }),
+      body: JSON.stringify({ from: supportSender, to: [input.to], subject: input.subject, text: input.text }),
     });
     return res.ok;
   },

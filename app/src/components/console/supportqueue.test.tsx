@@ -171,7 +171,7 @@ describe('the support operations queue', () => {
     await draw();
     expect(host.textContent).toContain('Support queue unavailable');
     expect(host.textContent).not.toContain('No support questions match');
-    await click(button('Retry support queue'));
+    await click(button('Refresh support queue'));
     expect(host.textContent).toContain('SUP-123E-4567-E89B-12D3');
     expect(host.textContent).not.toContain('Support queue unavailable');
   });
@@ -203,5 +203,18 @@ describe('the support operations queue', () => {
     await draw('privacy');
     expect(host.textContent).toContain('No support questions match this view.');
     expect(mock.queue).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses operator-facing disposition labels and always offers a refresh', async () => {
+    mock.queue.mockResolvedValueOnce([{
+      id: '123e4567-e89b-12d3-a456-426614174000',
+      category: 'accessibility', subject: 'Cannot reach Continue', status: 'waiting_on_student', priority: 'high',
+      createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: '2026-10-01T11:00:00Z', overdue: false,
+    }]);
+    await draw();
+    expect(host.textContent).toContain('Waiting for student');
+    expect(host.textContent).not.toContain('Support replied — waiting for you');
+    await click(button('Refresh support queue'));
+    expect(mock.queue).toHaveBeenCalledTimes(2);
   });
 });
