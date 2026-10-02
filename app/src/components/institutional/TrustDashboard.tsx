@@ -126,7 +126,7 @@ function ScorecardRow({ metric }: { metric: ScoredTrustMetric }) {
       <p><strong>Target:</strong> {metric.target}</p>
       <p><strong>Known limitations:</strong> {metric.knownLimitations}</p>
       <p><strong>Corrective action:</strong> {metric.correctiveAction}</p>
-      <small>{metric.owner} · {metric.cadence}{metric.evidenceAt === null ? ` · target instrumentation ${metric.targetInstrumentationDate}` : evidenceDate ? ` · evidence ${evidenceDate}` : ' · evidence date invalid'}</small>
+      <small>{metric.owner} · {metric.cadence}{!metric.hasMeasurement ? ` · target instrumentation ${metric.targetInstrumentationDate}` : evidenceDate ? ` · evidence ${evidenceDate}` : ' · evidence date missing or invalid'}</small>
     </li>
   );
 }

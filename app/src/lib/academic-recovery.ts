@@ -1,3 +1,4 @@
+import { forRole, type Role } from './role';
 import type { Screen } from './types';
 
 export const RECOVERY_STAGES = ['identify', 'assess', 'offer', 'continue'] as const;
@@ -194,6 +195,8 @@ export const RECOVERY_PLANS: RecoveryPlan[] = [
   },
 ];
 
-export function recoveryPlan(kind: DisruptionKind): RecoveryPlan {
-  return RECOVERY_PLANS.find((plan) => plan.kind === kind)!;
+export function recoveryPlan(kind: DisruptionKind, role?: Role): RecoveryPlan {
+  const plan = RECOVERY_PLANS.find((candidate) => candidate.kind === kind)!;
+  if (!role) return plan;
+  return { ...plan, options: plan.options.filter((option) => forRole(option.screen, role)) };
 }

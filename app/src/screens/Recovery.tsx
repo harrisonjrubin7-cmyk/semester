@@ -133,10 +133,10 @@ export function Recovery() {
 }
 
 function AcademicRecoveryGuide() {
-  const { dispatch } = useStore();
+  const { state, dispatch } = useStore();
   const [kind, setKind] = useState<DisruptionKind | null>(null);
   const [stage, setStage] = useState<RecoveryStage>('identify');
-  const selected = kind ? recoveryPlan(kind) : null;
+  const selected = kind ? recoveryPlan(kind, state.role) : null;
 
   const choose = (next: DisruptionKind) => {
     setKind(next);

@@ -132,12 +132,12 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   if (!hasText(record.id)) gaps.push('incident id');
   const knownSeverity = INCIDENT_SEVERITIES.includes(record.severity as IncidentSeverity);
   if (!knownSeverity) gaps.push('known incident severity');
-  if (!Number.isFinite(record.declaredAt)) gaps.push('finite declaration time');
+  if (!isValidTimestamp(record.declaredAt)) gaps.push('finite declaration time');
   else if (record.declaredAt > now) gaps.push('declaration time not in future');
   const detection = record.detection;
   if (!detection
     || !hasText(detection.signal)
-    || !Number.isFinite(detection.firstObservedAt)
+    || !isValidTimestamp(detection.firstObservedAt)
     || detection.firstObservedAt > now
     || detection.firstObservedAt > record.declaredAt
     || !Array.isArray(detection.correlationIds)
@@ -153,7 +153,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
   if (record.privateStudentDataIncluded !== false) gaps.push('private student data excluded');
   const knownStatus = INCIDENT_LIFECYCLE.includes(record.status as (typeof INCIDENT_LIFECYCLE)[number]);
   if (!knownStatus) gaps.push('known incident status');
-  if (knownStatus && record.status !== 'close' && (!Number.isFinite(record.nextUpdateAt) || record.nextUpdateAt <= now || record.nextUpdateAt <= record.declaredAt)) gaps.push('future next-update time');
+  if (knownStatus && record.status !== 'close' && (!isValidTimestamp(record.nextUpdateAt) || record.nextUpdateAt <= now || record.nextUpdateAt <= record.declaredAt)) gaps.push('future next-update time');
   if (knownStatus && (record.status === 'verify' || record.status === 'close') && (!Array.isArray(record.verification) || !record.verification.some(hasText))) gaps.push('recovery verification');
   if (record.status === 'close') {
     const closeOut = record.closeOut as IncidentCloseOutEvidence | undefined;
@@ -183,7 +183,8 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
         && hasText(action.action)
         && hasText(action.owner)
         && INCIDENT_SEVERITIES.includes(action.severity as IncidentSeverity)
-        && Number.isFinite(action.dueAt)
+        && isValidTimestamp(action.dueAt)
+        && action.dueAt >= record.declaredAt
         && hasText(action.requiredEvidence)
         && hasText(action.verificationEvidence)))
       && majorReviewComplete);

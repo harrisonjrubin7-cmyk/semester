@@ -363,6 +363,36 @@ export function cycles(dir: string): Problem[] {
   return out;
 }
 
+/** Spacing-token references whose named step is absent from the scale. */
+export function undefinedScaleTokens(dir: string): Problem[] {
+  const files = sheets(dir);
+  const defined = new Set<string>();
+  for (const file of files) {
+    const code = withoutComments(file.text);
+    for (const root of code.matchAll(/:root\s*\{([^}]*)\}/g)) {
+      for (const match of root[1].matchAll(/(--sp-\d+)\s*:/g)) {
+        defined.add(match[1]);
+      }
+    }
+  }
+
+  const out: Problem[] = [];
+  for (const file of files) {
+    const rel = file.path.slice(dir.length + 1);
+    const code = withoutComments(file.text);
+    for (const match of code.matchAll(/var\((--sp-\d+)\)/g)) {
+      if (defined.has(match[1])) continue;
+      out.push({
+        file: rel,
+        line: lineOf(code, match.index),
+        found: match[0],
+        says: `${match[1]} is undefined, so the browser drops the declaration that uses it. Use a defined spacing step or a calc made from defined steps.`,
+      });
+    }
+  }
+  return out;
+}
+
 /**
  * A stylesheet may not overrule the two shape-and-face settings.
  *

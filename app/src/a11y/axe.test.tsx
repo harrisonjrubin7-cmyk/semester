@@ -237,6 +237,85 @@ describe('the probe', () => {
   }, 30_000);
 });
 
+describe('release layout regressions', () => {
+  for (const px of [1280, 390]) {
+    it(`keeps one page heading on Search and App Directory at ${px}px`, async () => {
+      width(px);
+      for (const hash of ['#/search', '#/directory']) {
+        if (root) await act(async () => root!.unmount());
+        host?.remove();
+        root = undefined;
+        host = undefined;
+        history.replaceState(null, '', '/');
+        await show(hash, { nav: 'tabs', seenOnboarding: true });
+        expect(host!.querySelectorAll('h1'), hash).toHaveLength(1);
+        expect(host!.querySelector('.app-header'), `${hash} keeps the shared navigation controls`).not.toBeNull();
+        expect(host!.querySelector('[aria-label="Search, ask or add"]'), hash).not.toBeNull();
+        expect(host!.querySelector('[aria-label="All apps"]'), hash).not.toBeNull();
+        const actions = host!.querySelector<HTMLElement>('[aria-label="Search, ask or add"]')?.parentElement;
+        const spacer = actions?.previousElementSibling as HTMLElement | null;
+        expect(spacer).not.toBeNull();
+        expect(spacer?.style.flexGrow).toBe('1');
+      }
+    }, 30_000);
+  }
+
+  it('keeps Back and route focus when Search opens the App Directory outside Workspace', async () => {
+    width(390);
+    await show('#/search', { nav: 'tabs', seenOnboarding: true });
+    const explore = [...host!.querySelectorAll('button')].find(button => button.textContent?.includes('Explore all apps'))!;
+    await act(async () => explore.click());
+    for (let waited = 0; waited < 15_000; waited += 50) {
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      });
+      if (!host!.querySelector('[aria-busy="true"]')) break;
+    }
+    expect(host!.querySelectorAll('h1')).toHaveLength(1);
+    expect(host!.querySelector('[aria-label="Back"]')).not.toBeNull();
+    expect(document.activeElement).toBe(host!.querySelector('h1[data-page-title]'));
+  }, 30_000);
+
+  it('keeps shared controls and route focus on a titled screen in wide Workspace', async () => {
+    width(1280);
+    await show('#/home', { nav: 'workspace', seenOnboarding: true });
+    await act(async () => {
+      history.pushState(null, '', '/#/search');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    for (let waited = 0; waited < 15_000; waited += 50) {
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      });
+      if (!host!.querySelector('[aria-busy="true"]')) break;
+    }
+    expect(host!.querySelector('.app-header')).not.toBeNull();
+    expect(document.activeElement).toBe(host!.querySelector('h1[data-page-title]'));
+  }, 30_000);
+
+  it('keeps shared Today tools available from the Week tab', async () => {
+    width(1280);
+    await show('#/home', { nav: 'tabs', seenOnboarding: true });
+    const todayMore = host!.querySelector<HTMLDetailsElement>('details.today-more')!;
+    todayMore.open = true;
+    const week = [...host!.querySelectorAll('button')].find(button => button.textContent === 'This week')!;
+    await act(async () => week.click());
+    expect(week.getAttribute('aria-pressed')).toBe('true');
+    const more = host!.querySelector<HTMLDetailsElement>('details.today-more');
+    expect(more).not.toBeNull();
+    expect(more).not.toBe(todayMore);
+    expect(more?.open).toBe(false);
+    expect(more?.matches('.hides-in-focus > :last-child')).toBe(true);
+    expect(more?.textContent).toContain('Pinned');
+    expect(more?.textContent).toContain('More from Today');
+    const weekHeading = [...host!.querySelectorAll('*')].find(
+      element => element.textContent === 'The next seven days',
+    );
+    expect(weekHeading).not.toBeUndefined();
+    expect(weekHeading!.compareDocumentPosition(more!) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  }, 30_000);
+});
+
 describe('no serious or critical axe violations', () => {
   for (const hash of DESKTOP) {
     it(`${hash}, desktop`, async () => {

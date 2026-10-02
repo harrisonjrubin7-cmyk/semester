@@ -178,6 +178,7 @@ describe('there is one h1', () => {
   it('is owned by the two workspace surfaces whose shared header is absent', () => {
     expect([...OWNS_SHELL_TITLE].sort()).toEqual(['Directory', 'Search']);
     expect(find('App.tsx').src).toContain("state.screen === 'search' || state.screen === 'directory'");
+    expect(find('App.tsx').src).toContain('<Header screenOwnsTitle={ownTitle} />');
   });
 
   it('is not printed again by a screen inside the shell', () => {

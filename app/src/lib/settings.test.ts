@@ -151,6 +151,23 @@ describe('searching it', () => {
     }
   });
 
+  it('finds Courses by every selectable role name', () => {
+    for (const role of [
+      'student',
+      'teaching',
+      'teaching assistant',
+      'advising',
+      'administration',
+      'parent or payer',
+      'campus services',
+      'applicant',
+      'authorized family',
+      'alumni',
+    ]) {
+      expect(findSetting(role)[0]?.row.screen, role).toBe('setCourses');
+    }
+  });
+
   it('says which word it matched, so the page can light the right group', () => {
     expect(findSetting('dark')[0].matched).toBe('dark');
     expect(findSetting('colour and type')[0].matched).toBe('Colour and type');

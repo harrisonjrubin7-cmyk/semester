@@ -82,7 +82,8 @@ export function Behind() {
   const items = datedItems(catalog, now);
   const b = howBehind(items, state.done, state.spent, week);
   const triageSteps = triage(items, state.done, state.spent, week);
-  const steps = state.recoveryIntent === 'short_task' && triageSteps.length === 0
+  const shortTaskFallback = state.recoveryIntent === 'short_task' && triageSteps.length === 0;
+  const steps = shortTaskFallback
     ? items
       .filter((item) => !state.done[item.id])
       .sort((a, b) => Math.abs(a.daysAway) - Math.abs(b.daysAway))
@@ -118,7 +119,9 @@ export function Behind() {
             textWrap: 'pretty',
           }}
         >
-          {behindLine(b)}
+          {shortTaskFallback && steps.length > 0
+            ? `Showing ${steps.length} unfinished ${steps.length === 1 ? 'item' : 'items'} to choose a short first pass, including work outside the usual one-week triage window.`
+            : behindLine(b)}
         </div>
       </Blueprint>
 

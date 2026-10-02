@@ -2,6 +2,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, useEffect, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { readFileSync } from 'node:fs';
 import { StoreProvider, useStore } from '../../state/store';
 import { loadSeed } from '../../data/seed';
 import { STORAGE_KEY, type State } from '../../state/shape';
@@ -14,6 +15,7 @@ import { CourseHub } from '../CourseHub';
 import { StudyStudio } from '../StudyStudio';
 import { UnityLayer } from './UnityLayer';
 import { AIProvider } from '../../ai/store';
+import { withoutComments } from '../../styles/rules';
 
 /**
  * The shared components on the screens they were built for — the first
@@ -191,6 +193,48 @@ describe('the course hub', () => {
     expect(host.querySelector('[aria-label="Course relationships"]')).not.toBeNull();
     await press('Continue studying →');
     expect(seen.screen).toBe('guide');
+  });
+
+  it('keeps creation, upload-adjacent, and text actions visually quiet inside the portal', async () => {
+    const style = document.createElement('style');
+    style.textContent = ['app.css', 'features.css', 'tokens.css', 'unity.css']
+      .map(file => readFileSync(new URL(`../../styles/${file}`, import.meta.url), 'utf8'))
+      .flatMap(sheet => withoutComments(sheet).split('}'))
+      .map(chunk => {
+        const open = chunk.lastIndexOf('{');
+        return open < 0 ? null : [chunk.slice(0, open).trim(), chunk.slice(open + 1)] as const;
+      })
+      .filter((rule): rule is readonly [string, string] => rule !== null)
+      .filter(([selector]) =>
+        selector === '.workspace-text-button' ||
+        selector === '.portal-workspace button, .portal-button' ||
+        /\.device \.portal-workspace button(?:\.workspace-text-button|\.for-this-)/.test(selector)
+      )
+      .map(([selector, body]) => `${selector}{${body}}`)
+      .join('\n')
+      // jsdom does not resolve custom properties in shorthands. Give the
+      // portal wash its resolved colour so the real cascade remains visible.
+      .replaceAll('var(--app-accent-wash)', 'rgb(1, 2, 3)');
+    document.head.append(style);
+    host.classList.add('device');
+    try {
+      await mount(<Hub />);
+      const documentButton = buttons('Document')[0];
+      const attachButton = buttons('Attach something you already have')[0];
+      const allAssignments = buttons('View all assignments →')[0];
+      const uploadFace = [...host.querySelectorAll('label span')].find(element => element.textContent === 'Upload')!;
+      expect(documentButton.classList).toContain('for-this-new');
+      expect(getComputedStyle(documentButton).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      expect(readFileSync('src/styles/unity.css', 'utf8')).toMatch(
+        /button\.for-this-new\s*\{[^}]*min-height:\s*44px/,
+      );
+      expect(getComputedStyle(documentButton.querySelector('span')!).color).toBe(getComputedStyle(uploadFace).color);
+      expect(getComputedStyle(attachButton).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+      expect(getComputedStyle(allAssignments).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    } finally {
+      host.classList.remove('device');
+      style.remove();
+    }
   });
 });
 

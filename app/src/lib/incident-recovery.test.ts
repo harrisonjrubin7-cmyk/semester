@@ -123,6 +123,18 @@ describe('incident and recovery control contract', () => {
     expect(validateIncident(record, 200)).toContain('complete close-out evidence');
   });
 
+  it('rejects corrective-action deadlines before the incident declaration', () => {
+    const record = {
+      id: 'INC-11B', severity: 'SEV3', declaredAt: 100, detection: DETECTION, commander: 'Incident lead', affectedServices: ['Sources'],
+      tenantScope: { scope: 'platform_wide' }, studentVisibleEffect: 'Sources stale', privateStudentDataIncluded: false,
+      status: 'close', nextUpdateAt: 300, verification: ['Freshness checks pass'],
+      closeOut: {
+        measuredTimeline: 'timeline', impact: 'stale source', recoveryPoint: 'refreshed', stabilizedAt: 150, communications: ['update'],
+        correctiveActions: [{ action: 'add check', owner: 'Sources', severity: 'SEV3', dueAt: 50, requiredEvidence: 'test', verificationEvidence: 'CI passed' }],
+      },
+    } as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toContain('complete close-out evidence');
+  });
   it('rejects future declarations and incomplete detection evidence', () => {
     const record = {
       id: 'INC-12', severity: 'SEV2', declaredAt: 500,
@@ -186,5 +198,27 @@ describe('incident and recovery control contract', () => {
       },
     } as Parameters<typeof validateIncident>[0];
     expect(validateIncident(record, 200)).toContain('complete close-out evidence');
+  });
+
+  it('rejects non-representable declaration, observation, update, and action dates', () => {
+    const impossible = -Number.MAX_VALUE;
+    const record = {
+      id: 'INC-17', severity: 'SEV3', declaredAt: impossible,
+      detection: { signal: 'monitor alert', firstObservedAt: impossible, correlationIds: ['trace-17'] },
+      commander: 'Incident lead', affectedServices: ['Sources'], tenantScope: { scope: 'platform_wide' },
+      studentVisibleEffect: 'Sources stale', privateStudentDataIncluded: false,
+      status: 'close', nextUpdateAt: 300, verification: ['Freshness checks pass'],
+      closeOut: {
+        measuredTimeline: 'timeline', impact: 'stale source', recoveryPoint: 'refreshed', stabilizedAt: 150,
+        communications: ['update'], correctiveActions: [{
+          action: 'add check', owner: 'Sources', severity: 'SEV3', dueAt: impossible,
+          requiredEvidence: 'test', verificationEvidence: 'CI passed',
+        }],
+      },
+    } as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toEqual(expect.arrayContaining([
+      'finite declaration time', 'detection evidence', 'complete close-out evidence',
+    ]));
+    expect(validateIncident({ ...record, status: 'contain', nextUpdateAt: impossible }, 200)).toContain('future next-update time');
   });
 });

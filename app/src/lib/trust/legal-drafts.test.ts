@@ -9,7 +9,7 @@ import { SUPPORT } from '../privacy';
  * registers they were written from.
  *
  * They are drafts for counsel, not law in force, and two things would make
- * them dangerous before that review happens:
+ * them dangerous before qualified review and the remaining decisions happen:
  *
  *   · **The banner goes.** A draft with its "Not in force" line deleted reads
  *     like the real thing, and gets linked or sent. The banner stays until the
@@ -65,8 +65,18 @@ describe('legal drafts', () => {
     '%s still says it is not in force',
     (name) => {
       const text = read(name);
-      expect(text).toMatch(/\*\*Not in force\. Not reviewed by a lawyer\.\*\*/);
+      expect(text).toMatch(/\*\*Not in force\.(?: Not reviewed by a lawyer\.)?\*\*/);
       expect(text).toContain(SUPPORT);
+    },
+  );
+
+  it.each(['PRIVACY-POLICY-DRAFT.md', 'TERMS-OF-SERVICE-DRAFT.md'])(
+    '%s keeps the owner attestation separate from qualified legal clearance',
+    (name) => {
+      const text = read(name);
+      expect(text).toContain('Jessica Springsteen reviewed');
+      expect(text).toMatch(/does not independently establish the reviewer'?s professional\s*>?\s*qualification/i);
+      expect(text).toContain('[DECIDE]');
     },
   );
 

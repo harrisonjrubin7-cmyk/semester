@@ -96,7 +96,7 @@ export const SETTINGS: SettingsSection[] = [
         label: 'Courses',
         holds: 'What is loaded, and where you study',
         keywords:
-          'courses course remove delete sample data demo example school university college switch order rearrange import syllabus term',
+          'courses course remove delete sample data demo example school university college switch order rearrange import syllabus term role student teaching faculty teaching assistant advising advisor administration administrator parent payer parent or payer campus services staff applicant authorized family alumni',
       },
       {
         screen: 'setGrading',
