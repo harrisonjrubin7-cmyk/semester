@@ -118,6 +118,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'The Vercel production URL served CSP, HSTS, nosniff, referrer and permissions policies. Auth email (2/hour), sign-in/sign-up, OTP, refresh, SMS, anonymous and Web3 values were read from the production project dashboard; no setting was changed.',
   },
   {
+    id: 'accessibility-browser-smoke-2026-10-02',
+    artifact: 'Merged-release critical-journey accessibility smoke in installed Chrome across desktop, 200 and 400 percent reflow equivalents, and WCAG text spacing',
+    path: 'docs/evidence/accessibility/2026-10-02-critical-journey-browser-smoke.md',
+    produced: '2026-10-02',
+    validFor: QUARTERLY,
+    owner: 'accessibility',
+    claims: [],
+    rows: ['UX-003', 'A11Y-001', 'A11Y-002', 'A11Y-003', 'A11Y-004'],
+    note: 'All 24 automated browser cases passed on the current-main-integrated branch. This is regression evidence only; qualified manual assistive-technology, browser-zoom and conformance review remain open.',
+  },
+  {
     id: 'terms-privacy-review-attestation-2026-09-30',
     artifact: 'Owner attestation that Jessica Springsteen reviewed the terms and privacy materials and Harrison Rubin approved the reviewed materials',
     path: 'docs/evidence/legal/2026-09-30-terms-privacy-review-attestation.md',

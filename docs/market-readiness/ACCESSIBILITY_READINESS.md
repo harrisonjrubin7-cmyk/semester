@@ -39,6 +39,12 @@ reflow and a keyboard skip link that transfers focus to main. CI runs this
 against the same base path GitHub Pages deploys. This is regression evidence,
 not formal conformance evidence.
 
+The current-main-integrated release run is recorded in
+[`docs/evidence/accessibility/2026-10-02-critical-journey-browser-smoke.md`](../evidence/accessibility/2026-10-02-critical-journey-browser-smoke.md):
+all 24 browser cases passed in installed Chrome. That dated artifact preserves
+the exact scope and the boundary below; it does not close the qualified-audit
+gate.
+
 ## Missing
 
 - **No WCAG 2.2 AA audit** against the critical workflows as workflows —
