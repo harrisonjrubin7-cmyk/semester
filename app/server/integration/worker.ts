@@ -28,6 +28,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateDeclaration, type AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import { ingest, type ConnectionState, type IngestResult, type IngestStore, type ProviderBatch } from '../../src/lib/integration/pipeline.ts';
+import { hasGovernanceEnvelope } from '../../src/lib/integration/governance-envelope.ts';
+import { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 import { payloadHash, redactReference, sanitizeMessage } from '../../src/lib/integration/redact.ts';
 import { afterFailure, type NextStep } from '../../src/lib/integration/retry.ts';
 import type { ConnectionStatus } from '../../src/lib/integration/catalog.ts';
@@ -58,6 +60,7 @@ interface ConnectionRow {
   status: ConnectionStatus;
   approved_at: string | null;
   data_classification_ceiling: DataClass;
+  freshness_target: string | null;
 }
 
 const fail = (reason: string): SyncReport => ({ outcome: 'refused', reason });
@@ -75,6 +78,8 @@ async function killed(db: SupabaseClient, tenant: string, publicId: string): Pro
 export function tableStore(db: SupabaseClient, connection: ConnectionRow, adapter: AdapterDeclaration): IngestStore {
   const canonicalOf = (external: string) => adapter.entities.find((e) => e.externalEntity === external)?.canonicalEntity;
   const sourceSystem = `${adapter.provider} ${adapter.product}`.trim();
+  const remap = new Set<string>();
+  const key = (entity: string, id: string) => JSON.stringify([entity, id]);
   return {
     async claimIdempotencyKey() {
       // Claimed by `runSync` itself, before the pipeline runs, so a duplicate
@@ -84,11 +89,15 @@ export function tableStore(db: SupabaseClient, connection: ConnectionRow, adapte
     async lastSourceTimestamp(_c, entity, id) {
       const type = canonicalOf(entity);
       if (!type) return null;
-      const { data } = await db.from('canonical_entity_references').select('source_timestamp')
+      const { data } = await db.from('canonical_entity_references').select('source_timestamp,display')
         .eq('tenant_id', connection.tenant_id).eq('connection_id', connection.id).eq('source_system', sourceSystem)
-        .eq('source_record_id', id).eq('canonical_entity_type', type).maybeSingle();
-      return (data as { source_timestamp: string | null } | null)?.source_timestamp ?? null;
+        .eq('source_record_id', id).eq('canonical_entity_type', type).is('external_deleted_at', null).maybeSingle();
+      const stored = data as { source_timestamp: string | null; display: Record<string, unknown> } | null;
+      if (stored && !hasGovernanceEnvelope(stored.display?._governance)) remap.add(key(entity, id));
+      else remap.delete(key(entity, id));
+      return stored?.source_timestamp ?? null;
     },
+    async requiresGovernanceRemap(_c, entity, id) { return remap.has(key(entity, id)); },
     async resolveSubject(tenant, subject) {
       if (tenant !== connection.tenant_id) return null;
       const { data: identity } = await db.from('scim_external_identity').select('membership_id')
@@ -116,7 +125,7 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   if (req.adapter.mock && !req.allowMock) return fail('a mock adapter cannot run against a real connection');
 
   const { data: row, error } = await db.from('integration_connections')
-    .select('id,public_id,tenant_id,provider_domain,status,approved_at,data_classification_ceiling')
+    .select('id,public_id,tenant_id,provider_domain,status,approved_at,data_classification_ceiling,freshness_target')
     .eq('public_id', req.connectionPublicId).maybeSingle();
   if (error || !row) return fail('no such connection');
   const c = row as ConnectionRow;
@@ -191,6 +200,7 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   const connection: ConnectionState = {
     tenantId: c.tenant_id, publicId: c.public_id, status: c.status, approved: true,
     approvedScopes, classificationCeiling: c.data_classification_ceiling,
+    freshnessTargetMinutes: intervalMinutes(c.freshness_target) ?? req.adapter.freshnessTargetMinutes,
   };
   const store = tableStore(db, c, req.adapter);
   const result = duplicate
@@ -203,14 +213,19 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   if (foreign.length) throw new Error('The pipeline produced a reference for another school; nothing was written.');
 
   const sourceSystem = `${req.adapter.provider} ${req.adapter.product}`.trim();
-  if (result.references.length) {
+  const writes = result.references.filter((r) => !r.metadataOnly);
+  const refreshes = result.references.filter((r) => r.metadataOnly);
+  if (writes.length) {
     const { error: refError } = await db.from('canonical_entity_references').upsert(
-      result.references.map((r) => ({
+      writes.map((r) => ({
         tenant_id: c.tenant_id, canonical_entity_type: r.canonicalEntity, canonical_entity_id: r.canonicalId,
         subject_user_id: r.subjectUserId, connection_id: c.id, source_system: sourceSystem,
         source_record_id: r.sourceRecordId, source_timestamp: r.sourceTimestamp, source_of_truth: r.sourceOfTruth,
         classification: r.classification, freshness_status: r.freshness, mapping_version: r.mappingVersion,
-        confidence: r.confidence, external_deleted_at: r.externalDeletedAt, display: r.values,
+        confidence: r.confidence, external_deleted_at: r.externalDeletedAt,
+        // display is a small FLAT object by SQL contract; the reserved
+        // metadata is encoded, not a nested payload or provider-controlled field.
+        display: { ...r.values, _governance: JSON.stringify(r.governance) },
         updated_at: now().toISOString(),
       })),
       // A record's identity includes its connection: two connections to the
@@ -221,6 +236,23 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
       result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
         message: sanitizeMessage(refError.message), retryable: true });
       result.status = 'failed';
+      result.cursorAfter = null;
+    }
+  }
+  if (refreshes.length) {
+    // One atomic, tenant-scoped database update. Values stay in the database;
+    // a concurrently replaced/deleted source revision cannot be refreshed.
+    const { data: refreshed, error: refreshError } = await db.rpc('integration_refresh_governance', {
+      want_tenant: c.tenant_id, want_connection: c.id, want_source: sourceSystem,
+      want_records: refreshes.map((r) => ({ entity: r.canonicalEntity, id: r.sourceRecordId,
+        timestamp: r.sourceTimestamp, governance: JSON.stringify(r.governance) })),
+      want_at: now().toISOString(),
+    });
+    if (refreshError || refreshed !== refreshes.length) {
+      result.errors.push({ category: 'unknown', entityType: null, reference: 'redacted',
+        message: sanitizeMessage(refreshError?.message ?? 'Source revision changed during metadata refresh; retry the batch.'), retryable: true });
+      result.status = 'failed';
+      result.cursorAfter = null;
     }
   }
   if (result.errors.length) {
@@ -303,10 +335,11 @@ export async function reconcile(
     .eq('canonical_entity_type', req.canonicalEntity).is('external_deleted_at', null);
   const plan = reconcilePlan((locals ?? []).map((l: { source_record_id: string }) => l.source_record_id), req.providerIds);
   if (plan.goneAtSource.length) {
-    await db.from('canonical_entity_references')
-      .update({ external_deleted_at: now().toISOString(), display: {}, freshness_status: 'unavailable', updated_at: now().toISOString() })
-      .eq('tenant_id', c.tenant_id).eq('connection_id', c.id).eq('source_system', sourceSystem)
-      .eq('canonical_entity_type', req.canonicalEntity).in('source_record_id', plan.goneAtSource);
+    const { error: tombstoneError } = await db.rpc('integration_tombstone_references', {
+      want_tenant: c.tenant_id, want_connection: c.id, want_source: sourceSystem,
+      want_entity: req.canonicalEntity, want_ids: plan.goneAtSource, want_at: now().toISOString(),
+    });
+    if (tombstoneError) return { refused: `could not reconcile: ${sanitizeMessage(tombstoneError.message)}` };
   }
   const state = plan.goneAtSource.length || plan.unknownHere.length ? 'mismatched' : 'matched';
   await db.from('integration_sync_runs').update({ reconciliation_state: state }).eq('id', req.runId).eq('tenant_id', c.tenant_id);

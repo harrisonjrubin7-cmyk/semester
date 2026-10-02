@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { EXPERIENCE_FLAGS, MODULE_FLAGS } from '../../lib/experience-flags';
 import { configured } from '../../lib/assistant';
 import { governs } from '../../ai/converse';
@@ -8,6 +8,8 @@ import { NOTES, visible } from '../../lib/whatsnew';
 import { useNow, useStore } from '../../state/store';
 import { SectionLabel } from '../ui';
 import { evidenceDateLabel, trustScorecard, type MetricState, type ScoredTrustMetric, type TrustMeasurement } from '../../lib/institutional-trust-scorecard';
+
+const StandardsAudit = lazy(() => import('./StandardsAudit').then((module) => ({ default: module.StandardsAudit })));
 
 /**
  * The customer trust dashboard, as a tab on the institution screen. The rows
@@ -73,6 +75,7 @@ export function TrustDashboard({ incidents: given, measurements = [] }: { incide
           {scorecard.map((metric) => <ScorecardRow key={metric.id} metric={metric} />)}
         </ul>
       </section>
+      <Suspense fallback={<p role="status">Loading standards audit…</p>}><StandardsAudit /></Suspense>
     </section>
   );
 }
