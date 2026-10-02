@@ -1,0 +1,51 @@
+{
+  "capturedAt": "2026-10-02T01:22:54Z",
+  "captureDateLabel": "Oct 1, 2026 (America/Chicago)",
+  "appSourceCommit": "7675b99b151cf9450a3139520b1c8e26289976a4",
+  "appDeploymentCommit": "7675b99b151cf9450a3139520b1c8e26289976a4",
+  "appDeploymentRun": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/36950752026",
+  "captureMode": "isolated-demo",
+  "sampleData": true,
+  "dataSource": "The app's bundled public sample courses, adopted in a fresh local browser origin. No private student records or connected account.",
+  "build": {
+    "institutionalPreview": false,
+    "backendConnected": false,
+    "note": "Production UI build from the exact commit deployed to Pages. The successful deployment was verified after the captures were taken."
+  },
+  "theme": {
+    "ground": "Graphite",
+    "accent": "Brass",
+    "heading": "Grotesk",
+    "body": "Barlow",
+    "textSize": "Large",
+    "layout": "Drawn"
+  },
+  "nav": "Workspace",
+  "processing": "Raw browser JPEG screenshots. No retouching, generated UI, DOM alteration or hidden source-review notices.",
+  "images": [
+    {
+      "path": "/screenshots/today-desktop.jpg",
+      "screen": "Today",
+      "view": "Today",
+      "width": 1441,
+      "height": 901,
+      "sha256": "7993924ce9a9f8b48141c3f7c9639c3c673acd14b4a6cdb87b4ecada95d3b09f"
+    },
+    {
+      "path": "/screenshots/today-mobile.jpg",
+      "screen": "Today",
+      "view": "Today",
+      "width": 390,
+      "height": 845,
+      "sha256": "e13f42cb9854c1eb9fa490afd4585fe967bd20ee732a7752d24dc2973cc397cc"
+    },
+    {
+      "path": "/screenshots/courses-mobile.jpg",
+      "screen": "Courses",
+      "view": "Courses",
+      "width": 390,
+      "height": 845,
+      "sha256": "24f868cfdb30615981c12c056f5d2ea9e93fda55a84e93eec967f6a1edbfc42e"
+    }
+  ]
+}
