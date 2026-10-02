@@ -85,6 +85,14 @@ describe('what each role sees', () => {
     expect(screenForRole('degree', 'student')).toBe('degree');
   });
 
+  it('keeps the applicant transition workspace available without widening other student screens', () => {
+    expect(forRole('launchpad', 'applicant')).toBe(true);
+    expect(screenForRole('launchpad', 'applicant')).toBe('launchpad');
+    expect(hiddenFrom('applicant')).not.toContain('launchpad');
+    expect(forRole('degree', 'applicant')).toBe(false);
+    expect(forRole('launchpad', 'alumni')).toBe(false);
+  });
+
   // A screen added later and forgotten in the table stays visible rather than
   // vanishing for every role but one.
   it('shows an unnamed screen to everybody, which is the safe direction', () => {

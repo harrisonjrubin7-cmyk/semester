@@ -41,7 +41,7 @@ export function SettingsCourses() {
           <Group
             header="What you are here to do"
             footer="Not a permission. It is one device and one person, and this decides which screens are addressed to you — the same kind of thing as the university above deciding whether a meal-plan screen exists."
-            lit={lights('role student faculty teaching professor instructor advisor administrator parent payer staff who am i', lit)}
+            lit={lights('role student faculty teaching professor instructor teaching assistant advising advisor administration administrator parent payer parent or payer campus services staff applicant authorized family alumni who am i', lit)}
           >
             <CustomRow>
               <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>You are here as</SectionLabel>

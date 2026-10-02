@@ -137,7 +137,7 @@ export const ROLES: RoleInfo[] = [
     label: 'Alumni',
     blurb: 'Mentoring, lifelong learning, university services and opportunities after graduation.',
     ready: true,
-    live: 'Build a mentoring profile, plan lifelong learning and explore opportunities now.',
+    live: 'Find opt-in mentors, plan lifelong learning and explore opportunities now.',
     needs: 'Alumni-only records and services require an institution-verified alumni identity and approved service connections.',
   },
 ];
@@ -204,7 +204,12 @@ export function forRole(screen: string, role: Role | null | undefined): boolean 
   // failed, a state not yet read — gets the narrower set, never the wider:
   // a gate that grants on "don't know" is not a gate. See `find.test.ts`,
   // "search is a gate too".
-  return role === 'student' ? true : !STUDENT_ONLY_SET.has(screen);
+  if (role === 'student') return true;
+  // The applicant workspace is the prospect-to-first-term checklist. It is
+  // local and self-authored, so it stays available before an admissions
+  // connection exists; only official status and decisions remain gated.
+  if (role === 'applicant' && screen === 'launchpad') return true;
+  return !STUDENT_ONLY_SET.has(screen);
 }
 
 /** A stale bookmark or role switch cannot keep a role-inapplicable screen open. */
@@ -214,5 +219,7 @@ export function screenForRole(screen: Screen, role: Role): Screen {
 
 /** Every screen this role does not see. For the diagnostics dump and the tests. */
 export function hiddenFrom(role: Role): string[] {
-  return role === 'student' ? [] : [...STUDENT_ONLY];
+  if (role === 'student') return [];
+  if (role === 'applicant') return STUDENT_ONLY.filter((screen) => screen !== 'launchpad');
+  return [...STUDENT_ONLY];
 }
