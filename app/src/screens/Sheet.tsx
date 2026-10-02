@@ -1296,14 +1296,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    * inside it — four regexes a cell for something that changes when a rule
    * does and not when a number does.
    */
-  const rules = useMemo(() => rulesOf(sheet, INKS), [sheet]);
+  const rules = rulesOf(sheet, INKS);
   /** The names this sheet defines, and the summaries drawn under it. */
-  const names = useMemo(() => namesOf(sheet), [sheet]);
-  const pivots = useMemo(() => pivotsOf(sheet), [sheet]);
-  const ruleRanges = useMemo(
-    () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
-    [rules],
-  );
+  const names = namesOf(sheet);
+  const pivots = pivotsOf(sheet);
+  const ruleRanges = new Map(rules.map((r) => [r.range, rangeOf(r.range)]));
   /**
    * The blocks drawn as one cell, and the two questions the grid asks of them.
    *
@@ -1311,9 +1308,9 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    * `rows × cols` components and each one needs to know whether it is drawn at
    * all, which is a `Map.has` here and was a walk of every join without it.
    */
-  const joins = useMemo(() => joinsOf(sheet), [sheet]);
-  const covered = useMemo(() => coveredBy(joins), [joins]);
-  const spans = useMemo(() => spansAt(joins), [joins]);
+  const joins = joinsOf(sheet);
+  const covered = coveredBy(joins);
+  const spans = spansAt(joins);
   /** What the cells are allowed to hold, and the blocks those rules cover. */
   const checks = useMemo(() => checksOf(sheet), [sheet]);
   const checkRanges = useMemo(
@@ -1448,7 +1445,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addChart = () => {
     const where = rangeLabel(sel);
-    setCharts([...charts, suggestChart(sheet.cells, where, Date.now(), over)]);
+    setCharts([...charts, suggestChart(sheet.cells, where, now, over)]);
     say(`Chart of ${where} added under the grid.`);
   };
 
@@ -1518,7 +1515,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addPivot = () => {
     const where = many(sel) ? rangeLabel(sel) : rangeLabel(fullRange());
-    setPivots([...pivots, suggestPivot(sheet.cells, where, Date.now(), over)]);
+    setPivots([...pivots, suggestPivot(sheet.cells, where, now, over)]);
     say(`Summary of ${where} added under the grid.`);
   };
 

@@ -31,6 +31,7 @@ import {
 } from '../../lib/roomchat';
 import { Says } from './Says';
 import { Write } from './Write';
+import { useNow } from '../../state/store';
 
 /** Which of the three faces of a room is showing. */
 type Tab = 'chat' | 'files' | 'people';
@@ -119,6 +120,7 @@ export function Talk({
   onPaper: (code: string) => void;
   paperOf: (body: string) => string | null;
 }) {
+  const now = useNow();
   const [messages, setMessages] = useState<Message[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [present, setPresent] = useState<string[]>([]);
@@ -145,10 +147,12 @@ export function Talk({
    * room's key, so opening a different room is a different component with a
    * different mark rather than this one being told to forget.
    */
-  const opened = useRef(mark);
+  const [opened] = useState(mark);
 
   useEffect(() => {
     let live = true;
+    // A changed room invalidates the previous room's realtime snapshot.
+    // oxlint-disable-next-line react/set-state-in-effect
     setMessages([]);
     setReactions([]);
     setPresent([]);
@@ -222,9 +226,9 @@ export function Talk({
   );
 
   const handles = useMemo(() => people.map((p) => p.handle).filter(Boolean), [people]);
-  const days = useMemo(() => conversation(messages as Say[], new Date()), [messages]);
+  const days = useMemo(() => conversation(messages as Say[], now), [messages, now]);
   const tallies = useMemo(() => tally(reactions, me, nameOf), [reactions, me, nameOf]);
-  const seen = unread(messages as Say[], opened.current, me, myHandle, handles);
+  const seen = unread(messages as Say[], opened, me, myHandle, handles);
   const hits = useMemo(() => findSaid(messages as Say[], query), [messages, query]);
   const files = useMemo(
     () => shared(messages as Say[], nameOf, paperOf),

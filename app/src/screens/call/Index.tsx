@@ -43,9 +43,7 @@ export function Call() {
 
   /* A different call is a different everything. Leaving drops the code, and
      the stream stops with it — by way of the effect below, which owns that. */
-  useEffect(() => {
-    if (!code && live) setLive(null);
-  }, [code, live]);
+  const activeLive = code ? live : null;
 
   /*
    * One owner for the camera, and it is this screen's lifetime.
@@ -85,7 +83,7 @@ export function Call() {
     );
   }
 
-  if (!live) {
+  if (!activeLive) {
     return (
       <Green
         code={code}
@@ -104,9 +102,9 @@ export function Call() {
       key={code}
       code={code}
       title={title}
-      local={live.stream}
-      name={live.name}
-      start={live.flags}
+      local={activeLive.stream}
+      name={activeLive.name}
+      start={activeLive.flags}
       wantShare={wantShare}
       // No `shut` here: clearing `live` runs the cleanup above, which is the
       // one place the stream is stopped however the screen is left.

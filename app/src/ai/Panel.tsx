@@ -189,6 +189,8 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
 
   useEffect(() => {
     if (seed.seeded) {
+      // The seed is an external handoff into the composer, not derived display state.
+      // oxlint-disable-next-line react/set-state-in-effect
       setDraft(seed.seeded);
       seed.clear();
     }

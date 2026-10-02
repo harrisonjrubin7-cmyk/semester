@@ -100,6 +100,8 @@ export function Green({
 
   useEffect(() => {
     if (!supported()) return;
+    // Device selection synchronizes the preview with browser media hardware.
+    // oxlint-disable-next-line react/set-state-in-effect
     void start(chosen);
   }, [start, chosen]);
 
@@ -118,10 +120,7 @@ export function Green({
   }, [stream, camera]);
 
   useEffect(() => {
-    if (!stream || muted) {
-      setLevel(0);
-      return;
-    }
+    if (!stream || muted) return;
     return meter(stream, (loud) => {
       setLevel(loud);
       setHeard((was) => talk(was, loud, Date.now()));
@@ -137,7 +136,9 @@ export function Green({
    */
   const carried = useRef(false);
   const held = useRef<MediaStream | null>(null);
-  held.current = stream;
+  useEffect(() => {
+    held.current = stream;
+  }, [stream]);
   useEffect(
     () => () => {
       if (!carried.current) shut(held.current);

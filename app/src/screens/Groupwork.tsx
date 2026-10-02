@@ -169,10 +169,13 @@ export function Groupwork() {
   );
 
   useEffect(() => {
+    // These loaders synchronize this screen with the realtime group service.
+    // oxlint-disable-next-line react/set-state-in-effect
     void loadGroups();
   }, [loadGroups]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
     void loadOne(openId);
   }, [openId, loadOne]);
 

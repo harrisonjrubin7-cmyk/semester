@@ -2276,6 +2276,9 @@ function SemesterView() {
     ? weeks.map((w) => w.classes).sort((a, b) => b - a)[Math.floor(weeks.length / 2)]
     : 0;
   const teachingVaries = weeks.some((w) => w.classes !== usualWeek);
+  // The drop callback is registered before the conditional empty state; this
+  // ref keeps it pointed at the weeks produced by the current render.
+  // oxlint-disable-next-line react/refs
   weeksRef.current = weeks;
 
   return (

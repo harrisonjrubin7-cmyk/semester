@@ -81,7 +81,7 @@ export function Classmates() {
   /** Everything said in every room you are in, for the list's last lines. */
   const [said, setSaid] = useState<Record<string, Message[]>>({});
   const [marks, setMarks] = useState<Marks>(() => storedMarks());
-  const [open, setOpen] = useState('');
+  const [open, setOpen] = useState(() => typeof window === 'undefined' ? '' : new URLSearchParams(window.location.search).get('room') ?? '');
   const [adding, setAdding] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -123,6 +123,8 @@ export function Classmates() {
   }, [account, ok, term]);
 
   useEffect(() => {
+    // This is the screen's synchronization point with the room service.
+    // oxlint-disable-next-line react/set-state-in-effect
     void refresh();
   }, [refresh]);
 
@@ -140,7 +142,6 @@ export function Classmates() {
     const url = new URL(window.location.href);
     url.searchParams.delete('room');
     window.history.replaceState({}, '', url);
-    setOpen(asked);
   }, []);
 
   /*

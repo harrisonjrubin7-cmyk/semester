@@ -22,7 +22,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useModal } from '../a11y/modal';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { chime } from '../lib/chime';
 import {
   alarmDue,
@@ -61,7 +61,7 @@ export function Ringing() {
     return () => clearInterval(id);
   }, [watching]);
 
-  const now = new Date();
+  const now = useNow();
   const going = whatIsRinging(state.timers, state.alarms, now);
   const all = [...going.timers, ...going.alarms];
 
@@ -77,15 +77,15 @@ export function Ringing() {
    */
   useEffect(() => {
     for (const a of state.alarms) {
-      if (alarmDue(a, new Date())) {
-        dispatch({ type: 'patchAlarm', id: a.id, patch: startRing(a, new Date()) });
-      } else if (gaveUp(a, new Date())) {
+      if (alarmDue(a, now)) {
+        dispatch({ type: 'patchAlarm', id: a.id, patch: startRing(a, now) });
+      } else if (gaveUp(a, now)) {
         // Rang into an empty room. Marked as rung so it does not greet you
         // hours later claiming to be this morning.
-        dispatch({ type: 'patchAlarm', id: a.id, patch: rang(a, new Date()) });
+        dispatch({ type: 'patchAlarm', id: a.id, patch: rang(a, now) });
       }
     }
-  });
+  }, [state.alarms, dispatch, now]);
 
   // Sound once per thing, not once per second. The ref is the right place for
   // this: it is not state anybody renders, and making it state would restart

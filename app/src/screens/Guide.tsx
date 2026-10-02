@@ -1512,6 +1512,8 @@ function Script({
 
   useEffect(() => {
     if (!wanted) {
+      // A changed episode invalidates the previous transcript immediately.
+      // oxlint-disable-next-line react/set-state-in-effect
       setScript(null);
       return;
     }

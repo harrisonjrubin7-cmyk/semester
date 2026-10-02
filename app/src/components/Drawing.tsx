@@ -60,6 +60,8 @@ export function Drawing({ code, language }: { code: string; language: Language }
   useEffect(() => {
     if (language !== 'mermaid') return;
     const mine = ++seq.current;
+    // Changing source invalidates the previous asynchronous render immediately.
+    // oxlint-disable-next-line react/set-state-in-effect
     setTrouble('');
     setDrawn('');
     const body = cleanMermaid(code);
