@@ -368,8 +368,11 @@ export function undefinedScaleTokens(dir: string): Problem[] {
   const files = sheets(dir);
   const defined = new Set<string>();
   for (const file of files) {
-    for (const match of withoutComments(file.text).matchAll(/(--sp-\d+)\s*:/g)) {
-      defined.add(match[1]);
+    const code = withoutComments(file.text);
+    for (const root of code.matchAll(/:root\s*\{([^}]*)\}/g)) {
+      for (const match of root[1].matchAll(/(--sp-\d+)\s*:/g)) {
+        defined.add(match[1]);
+      }
     }
   }
 

@@ -274,7 +274,7 @@
  * quiet actions after that sheet in the cascade.
  */
 .device .portal-workspace button.for-this-new {
-  min-height: 0;
+  min-height: 44px;
   padding: 0;
   background: none;
   border: 0;

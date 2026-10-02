@@ -127,6 +127,18 @@ describe('what it catches', () => {
     expect(found[0].says).toContain('undefined');
   });
 
+  it('does not treat a component-scoped custom property as part of the global spacing scale', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoped-spacing-token-'));
+    mkdirSync(join(dir, 'styles'), { recursive: true });
+    writeFileSync(
+      join(dir, 'styles', 'x.css'),
+      ':root{--sp-1:2px}\n.component-a{--sp-9:18px}\n.component-b{padding:var(--sp-9)}\n',
+    );
+    expect(undefinedScaleTokens(dir).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([
+      'styles/x.css:3 var(--sp-9)',
+    ]);
+  });
+
   it('a token defined as itself, naming the token and what it costs', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cycle-'));
     mkdirSync(join(dir, 'styles'), { recursive: true });

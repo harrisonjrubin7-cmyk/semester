@@ -225,7 +225,9 @@ describe('the course hub', () => {
       const uploadFace = [...host.querySelectorAll('label span')].find(element => element.textContent === 'Upload')!;
       expect(documentButton.classList).toContain('for-this-new');
       expect(getComputedStyle(documentButton).backgroundColor).toBe('rgba(0, 0, 0, 0)');
-      expect(getComputedStyle(documentButton).minHeight).toBe('auto');
+      expect(readFileSync('src/styles/unity.css', 'utf8')).toMatch(
+        /button\.for-this-new\s*\{[^}]*min-height:\s*44px/,
+      );
       expect(getComputedStyle(documentButton.querySelector('span')!).color).toBe(getComputedStyle(uploadFace).color);
       expect(getComputedStyle(attachButton).backgroundColor).toBe('rgba(0, 0, 0, 0)');
       expect(getComputedStyle(allAssignments).backgroundColor).toBe('rgba(0, 0, 0, 0)');
