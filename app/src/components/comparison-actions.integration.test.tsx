@@ -295,9 +295,12 @@ it('exports and restores actual comparison history into empty and existing works
 });
 it('central deletion recovers capacity without changing other snapshots, other owners or unrelated work', async () => {
   setupCourses(); await mount(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Save both options');
-  const small = stored().comparisons![0]; const large = { ...small, id: 'large', title: 'Large retained context', options: [{ ...small.options[0], context: ['x'.repeat(2_995_000)] }] };
+  const small = stored().comparisons![0]; const large = { ...small, id: 'large', title: 'Large retained context', options: [{ ...small.options[0], context: [''] }] };
   const d = newDecision('Preserve decision');
-  localStorage.setItem(workKey(), JSON.stringify({ ...EMPTY_PRODUCTIVITY, decisions: [d], comparisons: [small, large] }));
+  const nearCapacity = { ...EMPTY_PRODUCTIVITY, decisions: [d], comparisons: [small, large] };
+  large.options[0].context[0] = 'x'.repeat(2_999_000 - JSON.stringify(nearCapacity).length);
+  expect(JSON.stringify(nearCapacity).length).toBe(2_999_000);
+  localStorage.setItem(workKey(), JSON.stringify(nearCapacity));
   localStorage.setItem(workKey('bob'), JSON.stringify({ ...EMPTY_PRODUCTIVITY, comparisons: [small] })); const bob = localStorage.getItem(workKey('bob'));
   await reload(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Save both options');
   expect(host.textContent).toContain('workspace is full'); expect(stored().comparisons).toHaveLength(2);

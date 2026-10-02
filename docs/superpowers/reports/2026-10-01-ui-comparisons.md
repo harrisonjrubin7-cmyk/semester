@@ -1,5 +1,7 @@
 # Task 3 — comparison choices and advisor preparation
 
+**Current status after fix round 1 (2026-10-02):** all review findings are corrected and locally verified. The original validation and shared-device-source descriptions below are historical; the fix-round addendum supersedes their ownership, restore and deletion claims. Signed accounts now use separate personal registration source keys, with no unsigned or other-account fallback.
+
 Date: 2026-10-01. Scope: the isolated UI standards branch, based on `e9d8aa8595d2dc251c78e28b8881a9f24bc3cd60`. This is local implementation and test evidence, not institutional acceptance, provider confirmation, publication, or launch approval. No helpers or reviewers were used by this worker.
 
 ## Result and shared contract
@@ -76,4 +78,119 @@ git diff --check
 2. `702af24328f23cbf1c34f1723660f82de5128239` — ninth rhythm surface, canonical plan persistence, snapshot-first failure handling, conflict checks, integration/privacy/reload coverage and lazy registration-day boundary.
 3. `11e60c4de9f921c6bdbd35a52e2d28b5429b7bd6` — clearer course term/career organisation identities and verified visible partial-save feedback.
 
-Remaining limits: snapshots are private planning history, not official decisions or automatic source-plan restoration; imported catalog seats and supplied programme/career facts stay unverified; historical import dates absent from saved schedules remain unknown; explicit advisor preparation is subject to the existing meeting length/count limits; separate source/history stores are not transactional; legacy shared-device registration source ownership is unchanged. No remote/provider acceptance is claimed. No implementation check remains failing.
+Remaining limits: snapshots are private planning history, not official decisions or automatic source-plan restoration; imported catalog seats and supplied programme/career facts stay unverified; historical import dates absent from saved schedules remain unknown; explicit advisor preparation is subject to the existing meeting length/count limits; separate source/history stores are not transactional; legacy shared-device registration source ownership was unchanged in this initial submission, but is superseded by the owner-aware correction below. No remote/provider acceptance is claimed. No implementation check remains failing.
+
+
+## Fix round 1 — independent review corrections (2026-10-02)
+
+Fix baseline: `b19fc857b143491dd8482301f53fb145021b0a87`. The full `task-3-review.md` was read; the controller confirmed that unknown-owner legacy registration sources were a real binding-specification gap. Both Important findings, both Minor findings and that ownership gap are addressed. This is a source/test correction report; independent rereview remains the controller's responsibility.
+
+### Findings resolved
+
+| Review finding | Correction and observed evidence |
+|---|---|
+| Important I1: restore omitted comparison history | The actual private backup restore control now merges optional comparison arrays by snapshot ID, preserving the existing version of an ID. The real Export private backup output is fed through the real FilePick restore handler into empty and populated owner workspaces. Tests verify distinct original contexts, existing IDs, and old backups that omit `comparisons`. |
+| Important I2: append-only history could not be removed | Both per-surface and central `ComparisonHistory` offer an explicitly labelled Delete comparison snapshot action. Central deletion remains available in Productivity when the source candidate has disappeared. A real workspace serialized to exactly 2,999,000 characters refuses the next snapshot under the unchanged 3,000,000-character limit; deleting the large snapshot centrally preserves the other snapshot, unrelated decision and another owner's bytes, then permits another real Save both. Retained records remain immutable; nothing is silently evicted. |
+| Minor M1: stale career candidate | The optional canonical update now checks candidate presence and its displayed version inside the latest source updater. Valid-but-deleted and valid-but-edited source records refuse that update while retaining the already-saved original personal choice. The parent Career notice shows the partial result alongside the source error even if the comparison panel disappears or remounts. Corrupt-source and quota outcomes remain covered. |
+| Minor M2: dangling live choice | Live decisions validate that a chosen ID belongs to a present option and accompanies `decided: true`. Editing options/criteria/goal/questions, meaningful assumption changes, explicit Reconsider decision and revisiting a legacy snapshot invalidate/clear the live choice. Identical assumption no-ops still preserve the original decision. Historical journal snapshots keep their historical data instead of being subjected to the live membership rule. Tests exercise Choose → remove chosen option → reload and Choose → reconsider → reload, reject dangling live choices, and preserve original comparison history. |
+| Owner-aware source requirement | New signed-account comparison/history/advisor actions read only that owner's registration, shortlist and registration-day source keys. No unknown-owner source work is silently copied or assigned. Tests use actual signed imports, saved shortlist selection, Save/Ask/Prepare, account switches, real schedule and backup comparisons, advising attachment resolution, path-credit readers, reminder selection and workspace backup/restore. |
+
+### Canonical personal-source policy — supersedes initial shared-device exception
+
+`app/src/lib/registration-scope.ts` is the one lightweight key policy. Existing exported constants remain compatible through re-exports, but actual source readers/writers use the helpers below:
+
+| Personal source | Signed account | Unsigned / legacy |
+|---|---|---|
+| Catalog import, personal cart and saved schedules | `registrationKey(account)` → `semester.registration.v1:<account>` | Original `semester.registration.v1` |
+| Personal shortlist and checked comparison selection | `shortlistKey(account)` → `semester.course-shortlist.v1:<account>` | Original `semester.course-shortlist.v1` |
+| Personal registration-day timing, readiness and ranked backups | `registrationDayKey(account)` → `semester.registration-day.v1:<account>` | Original `semester.registration-day.v1` |
+
+Signed accounts start with their own empty source stores and can import a catalog and create plans normally. The catalog remains inside that source workspace; no shared-catalog fallback is used to accidentally carry its colocated personal cart/plans. No data were automatically copied, migrated, deleted or reassigned. Signing out retains access to the original unsigned workspace. The RegistrationPortal workspace remounts by owner, discarding its old editor, undo buffer and prepared UI when the account changes.
+
+The initial report's claim that disclosure alone made legacy shared-device planning sources an acceptable exception is **superseded**. Signed personal sources are now isolated at the source, in addition to the already isolated comparison and advisor destination stores. Choosing from registration remains a personal history operation, not a cart mutation or official enrollment.
+
+### Affected consumers and backup inventory
+
+- `RegistrationPortal`, `CourseCompare`, `CourseDetailV2` and `RegistrationDay` read/write the matching account's source through the canonical helpers and existing validators.
+- `useRegistrationPlan` supplies those same account-scoped registration/day records to Course detail, `RegistrationReadiness`, `RegistrationDayCard`, `TodayActionCenter`, `DemandContribution` and `enrollment/StudentRegistration`. Their existing controls and official provider boundaries remain unchanged.
+- `useSavedCourses` accepts the actual meeting owner; `AdvisorMeeting` passes its account scope explicitly. Catalog resolution and shortlist IDs therefore cannot mix the provider's unsigned fixtures with a signed meeting or another account's source records.
+- `PathSnapshotCard` planned credits, `SemesterWrapped` saved-schedule recap and `TrustCenter` registration-source readouts use the same registration key policy.
+- `storedWindow(account)` reads only that account's registration-day key; unknown signed owners do not fall back to the unsigned window. In-page reminders in `state/store.tsx`, `PushTop` and `PushSwitch` pass the active account. PushTop's watched device library uses the matching key; the in-page effect includes account identity in its dependencies. Existing push/reminder tests and exact stored-window A/B/unsigned observations pass; no actual notification/provider send was performed.
+- Workspace backup definitions for registration, registrationDay and shortlist are now account-scoped. Key construction calls the same three helpers, preserving bare unsigned keys. New exports attach `sourceOwner` metadata to these three records only. Restore checks their owner before any write: same-owner restores work; cross-account or unsigned-to-signed restores fail without mutation. Older records lacking owner metadata are treated as unsigned legacy and can be restored while signed out. This prevents a generic old backup from silently assigning unknown-owner personal data to the current signed account. Other workspace restore behavior is unchanged.
+- The backup coverage census now explicitly lists ComparisonActionsPanel's two existing backed-up stores (Productivity and AdvisorMeeting). No store exemption or coverage threshold was weakened. Fixture updates explicitly create signed-owner source records instead of relying on legacy leakage; notifier source assertions now require the account argument.
+
+Explicit limits: this is separation, not an ownership inference or migration. Existing unsigned plans remain unsigned. An old unowned registration backup is intentionally refused in a signed destination; the error directs restoration to the unsigned context. New registration-source backups are bound to their recorded owner. Personal comparison-history backups still support the existing explicit private restore workflow, including backups predating comparison history. No cross-store atomicity claim has been added, and no provider acceptance has been manufactured.
+
+### Fix-round commands and results
+
+All npm commands below ran from the isolated repository root; the standalone `npx tsc -b` checkpoint command ran from `app/`.
+
+Lifecycle checkpoint:
+
+```sh
+npm --prefix app test -- src/components/comparison-actions.integration.test.tsx src/components/ProductivityWorkspace.test.tsx src/lib/productivity.test.ts
+# 3 files / 28 tests passed
+cd app
+npx tsc -b
+# passed
+```
+
+Ownership checkpoint: the amended registration/readiness/reminder/advising/backup/recap/trust group passed **18 files / 183 tests**. The extra ActionCenter/TodayActionCenter/DemandContribution/offline/registration-actions group passed **6 files / 62 tests**. These overlap the final run below and are not additive totals.
+
+Final amended covering command:
+
+```sh
+npm --prefix app test -- src/components/comparison-actions.integration.test.tsx src/components/CourseDetailV2.test.tsx src/components/GraduationSimulator.test.tsx src/components/GraduationSimulator.phase-d.test.tsx src/components/AdvisorMeeting.test.tsx src/components/StudyAbroad.test.tsx src/components/RegistrationDay.test.tsx src/components/RegistrationDay.mode.test.tsx src/components/ProductivityWorkspace.test.tsx src/components/OperatingRhythm.test.tsx src/components/AssumptionEditor.integration.test.tsx src/components/DecisionTable.test.tsx src/components/decision-human-mode.test.tsx src/screens/career.test.tsx src/screens/pathwaygrid.test.tsx src/lib/productivity.test.ts src/lib/productivity-cloud.test.ts src/lib/device-library.test.tsx src/lib/scenario-compare.test.ts src/lib/operating-rhythm.test.ts src/components/PathSnapshotCard.test.tsx src/components/RegistrationDayCard.test.tsx src/components/PushTop.regday.test.tsx src/components/pushreach.test.tsx src/components/pushstalled.test.tsx src/components/SemesterWrapped.test.tsx src/components/TrustCenter.test.tsx src/screens/registration.test.tsx src/lib/workspace-backup.test.ts src/lib/workspace-backup.private.test.ts src/lib/workspace-backup.coverage.test.ts src/lib/registration-day.mode.test.ts src/lib/pushchain.test.ts src/components/ActionCenter.test.tsx src/components/ActionCenter.help.test.tsx src/components/TodayActionCenter.test.tsx src/components/DemandContribution.test.tsx src/lib/offline-mode.test.ts src/lib/registration-actions.test.ts
+npm --prefix app run build
+npm --prefix app run budgets
+npm --prefix app run lint
+git diff --check
+```
+
+Final outcomes: **39 files / 373 tests passed**, including **21 real comparison integration cases**; TypeScript/Vite build passed; unchanged budgets passed at **435.7 KB / 479.0 KB first load**, **435.7 KB / 480.0 KB largest file**, **93 routes**; lint passed with **23 existing warnings** under the unchanged **25** maximum; style, accessible-label, terminology and diff checks passed. Existing jsdom navigation/canvas diagnostics and the Vite large-asset notice remain test/build environment notices, not claims of a real browser/provider execution. No full repository rerun, production mutation, credential change, external message, deployment, publication, branch reset or rebase was performed by this worker.
+
+Intermediate failures were corrected rather than suppressed: the capacity fixture initially exceeded jsdom's total-origin quota when it duplicated a large record into another account, so the other-owner preservation fixture became a small independent record; the final capacity test starts under the actual workspace limit. Career's pre-existing error-precedence display initially hid its new partial-result notice; it now displays both. Ownership changes exposed tests that had depended on shared unsigned registration fixtures; those now seed explicit signed-owner records. The source census was updated for the two real backed-up ComparisonActionsPanel library calls. All final checks above pass without raised limits.
+
+### Fix-round source checkpoints and exact paths
+
+- `dd6302f5adfae0a1512db39a3d42e1ebec85fc69` — restore/deletion/live-choice lifecycle and stale career guards, with actual lifecycle tests.
+- `2ef9fb3b87b96ed3587659fa7fde4f4bf9df66ee` — canonical signed personal registration sources, consumers, reminder inputs, owner-aware backup metadata/restore guards and ownership tests.
+- `10ac030f9d2a41376c2bd9de42840abc5fe8727d` — final near-capacity recovery proof beginning at 2,999,000 characters.
+
+Exact source/test paths changed since the fix baseline:
+
+```text
+app/src/components/AdvisorMeeting.test.tsx
+app/src/components/AdvisorMeeting.tsx
+app/src/components/ComparisonActionsPanel.tsx
+app/src/components/ComparisonHistory.tsx
+app/src/components/CourseCompare.tsx
+app/src/components/CourseDetailV2.tsx
+app/src/components/PathSnapshotCard.tsx
+app/src/components/ProductivityWorkspace.tsx
+app/src/components/PushSwitch.tsx
+app/src/components/PushTop.regday.test.tsx
+app/src/components/PushTop.tsx
+app/src/components/RegistrationDay.tsx
+app/src/components/RegistrationPortal.tsx
+app/src/components/SemesterWrapped.tsx
+app/src/components/TrustCenter.tsx
+app/src/components/comparison-actions.integration.test.tsx
+app/src/lib/advisor-attachments.ts
+app/src/lib/course-detail.ts
+app/src/lib/offline-mode.ts
+app/src/lib/productivity.ts
+app/src/lib/registration-day.mode.test.ts
+app/src/lib/registration-day.ts
+app/src/lib/registration-plan.ts
+app/src/lib/registration-scope.ts
+app/src/lib/registration-window.ts
+app/src/lib/workspace-backup.coverage.test.ts
+app/src/lib/workspace-backup.test.ts
+app/src/lib/workspace-backup.ts
+app/src/lib/wrapped.ts
+app/src/screens/Career.tsx
+app/src/state/store.tsx
+```
+
+The sanitized report is `docs/superpowers/reports/2026-10-01-ui-comparisons.md`; the complete local report is `.superpowers/sdd/2026-10-01-ui-standards-completion/task-3-report.md`. Both contain this same complete correction/evidence addendum. A report-only checkpoint follows the source commits. No implementation check remains failing; scoped independent rereview is pending with the controller.
