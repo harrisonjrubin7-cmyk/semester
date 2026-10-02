@@ -4,7 +4,7 @@ import { useModal } from '../a11y/modal';
 import { EMPTY_CAREER, readCareer } from '../lib/career';
 import {
   EMPTY_SHORTLIST,
-  SHORTLIST_KEY,
+  shortlistKey,
   careerDirections,
   catalogAge,
   clashLine,
@@ -69,7 +69,7 @@ export function CourseDetailV2({
   const first = useRef<HTMLHeadingElement>(null);
   const { ref: modalRef, onKeyDown: modalKeys } = useModal<HTMLDivElement>({ onClose, initial: first, on: !wide });
   const { data: day } = useRegistrationPlan();
-  const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
+  const library = useDeviceLibrary(shortlistKey(account?.id), readShortlist, EMPTY_SHORTLIST);
   // Read and changed against this catalog, so a stale or reused id counts for nothing.
   const shortlist = {
     value: liveShortlist(library.value, catalog),

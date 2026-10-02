@@ -10,7 +10,8 @@ import { formatTime } from './locale';
  */
 
 /** Where the registration-day plan lives on this device. */
-export const REGISTRATION_DAY_KEY = 'semester.registration-day.v1';
+export { REGISTRATION_DAY_KEY, registrationDayKey } from './registration-scope';
+import { registrationDayKey } from './registration-scope';
 
 export const TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
@@ -72,9 +73,9 @@ export function windowReminders(opensAt: number | null, now: Date): WindowRemind
  * in-page tick and both push fillers) all call this, so none of them can
  * forget it — `notify.registration.test.ts` checks each passes it.
  */
-export function storedWindow(): number | null {
+export function storedWindow(accountId?: string | null): number | null {
   try {
-    const raw = localStorage.getItem(REGISTRATION_DAY_KEY);
+    const raw = localStorage.getItem(registrationDayKey(accountId));
     if (!raw) return null;
     // The two fields this needs, read the way `readRegistrationDay` reads
     // them: `remind` is on unless it is exactly `false`, and a time that is

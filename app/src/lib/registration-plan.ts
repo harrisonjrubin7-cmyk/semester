@@ -1,21 +1,25 @@
+import { useAccountId } from '../state/store';
+import { registrationKey, registrationDayKey } from './registration-scope';
 import { useMemo } from 'react';
 import { useDeviceLibrary } from './device-library';
 import { EMPTY_REGISTRATION, readRegistration } from './portal-storage';
 import type { CatalogCourse } from './registration';
-import { EMPTY_REGISTRATION_DAY, REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
+import { EMPTY_REGISTRATION_DAY, readRegistrationDay } from './registration-day';
 
 /** The registration workspace's own key (`components/RegistrationPortal.tsx`). */
-export const REGISTRATION_KEY = 'semester.registration.v1';
+export { REGISTRATION_KEY, registrationKey } from './registration-scope';
 
 /**
  * The registration cart and the registration-day plan, for screens other than
  * the registration workspace — Today, and the Action Center's readiness
- * actions. Both are the same device stores the workspace writes, read through
+ * actions. Both are the same owner-scoped stores the workspace writes, read through
  * the same validators; `useDeviceLibrary` keeps every reader in step.
  */
-export function useRegistrationPlan() {
-  const registration = useDeviceLibrary(REGISTRATION_KEY, readRegistration, EMPTY_REGISTRATION);
-  const day = useDeviceLibrary(REGISTRATION_DAY_KEY, readRegistrationDay, EMPTY_REGISTRATION_DAY);
+export function useRegistrationPlan(owner?: string | null) {
+  const current = useAccountId();
+  const accountId = owner === undefined ? current : owner;
+  const registration = useDeviceLibrary(registrationKey(accountId), readRegistration, EMPTY_REGISTRATION);
+  const day = useDeviceLibrary(registrationDayKey(accountId), readRegistrationDay, EMPTY_REGISTRATION_DAY);
   const catalog: CatalogCourse[] = useMemo(() => registration.value.catalog?.courses ?? [], [registration.value.catalog]);
   const cart = useMemo(() => {
     const byId = new Map(catalog.map((c) => [c.id, c]));

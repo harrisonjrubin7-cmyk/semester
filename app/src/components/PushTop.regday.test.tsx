@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_REGISTRATION_DAY, readRegistrationDay } from '../lib/registration-day';
-import { REGISTRATION_DAY_KEY } from '../lib/registration-window';
+import { registrationDayKey } from '../lib/registration-window';
 
 /**
  * Turning the registration reminder off, or moving the time, rebuilds the
@@ -38,7 +38,7 @@ const { PushTop } = await import('./PushTop');
 let host: HTMLDivElement;
 let root: Root;
 function Switch() {
-  const lib = useDeviceLibrary(REGISTRATION_DAY_KEY, readRegistrationDay, EMPTY_REGISTRATION_DAY);
+  const lib = useDeviceLibrary(registrationDayKey('u1'), readRegistrationDay, EMPTY_REGISTRATION_DAY);
   return (
     <button type="button" onClick={() => lib.update((d) => ({ ...d, remind: false }))}>
       Switch the reminder off
@@ -48,7 +48,7 @@ function Switch() {
 
 beforeEach(() => {
   localStorage.clear();
-  localStorage.setItem(REGISTRATION_DAY_KEY, JSON.stringify({ ...EMPTY_REGISTRATION_DAY, opensAt: '2026-11-02T07:00', remind: true }));
+  localStorage.setItem(registrationDayKey('u1'), JSON.stringify({ ...EMPTY_REGISTRATION_DAY, opensAt: '2026-11-02T07:00', remind: true }));
   saved.length = 0;
   host = document.createElement('div');
   document.body.append(host);

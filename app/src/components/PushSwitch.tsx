@@ -150,7 +150,7 @@ export function PushSwitch() {
       items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
       classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
       registrar: state.registrar,
-          registrationOpens: storedWindow(),
+          registrationOpens: storedWindow(account?.id),
       /*
        * A muted course is silent here too, and so are quiet hours.
        *

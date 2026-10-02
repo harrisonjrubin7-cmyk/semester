@@ -6,7 +6,7 @@ import { EMPTY_EVIDENCE, readEvidence } from '../lib/career-evidence';
 import { download } from '../lib/deliver';
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_REGISTRATION, readRegistration } from '../lib/portal-storage';
-import { REGISTRATION_KEY } from '../lib/registration-plan';
+import { registrationKey } from '../lib/registration-plan';
 import { readTerm, termsAround } from '../lib/term';
 import { schedulesFor, wrapped, wrappedText } from '../lib/wrapped';
 import { useNow, useStore } from '../state/store';
@@ -49,7 +49,7 @@ export function SemesterWrapped() {
   const [termId, setTermId] = useState(state.term || choices[0].id);
   const term = readTerm(termId);
 
-  const registration = useDeviceLibrary(REGISTRATION_KEY, readRegistration, EMPTY_REGISTRATION).value;
+  const registration = useDeviceLibrary(registrationKey(account?.id), readRegistration, EMPTY_REGISTRATION).value;
   const meetings = useDeviceLibrary(meetingKey(account?.id), readMeetings, EMPTY_MEETINGS).value.meetings;
   const evidence = useDeviceLibrary(`semester.career-evidence.v1:${who}:${term.id}`, readEvidence, EMPTY_EVIDENCE).value;
   const career = useDeviceLibrary(`semester.career.v1:${who}:${term.id}`, readCareer, EMPTY_CAREER).value;

@@ -1,3 +1,4 @@
+import { REGISTRATION_KEY, registrationKey, registrationDayKey, shortlistKey } from './registration-scope';
 import { readProductivity } from './productivity';
 import { ABROAD_PREFIX, readAbroad } from './abroad';
 import { PREFIX as JOURNAL_PREFIX, readEntries } from './journal';
@@ -9,7 +10,6 @@ import { GRADUATION_KEY, graduationKey, readGraduation } from './graduation';
 import { LIFE_BALANCE_KEY, lifeBalanceKey, readSettings as readLifeBalance } from './life-balance';
 import { readRegistration } from './portal-storage';
 import { REGISTRATION_DAY_KEY, readRegistrationDay } from './registration-day';
-import { REGISTRATION_KEY } from './registration-plan';
 import { LOCKER_KEY, readLocker } from './source-locker';
 import { READINESS_KEY, readReadiness } from './study-readiness';
 import { readAthletics } from './athletics';
@@ -155,11 +155,11 @@ const DEFINITIONS: Record<string, Definition> = {
   // The device stores the feature expansion added (DECISION-LOG D-018, D-057).
   // Before these, Export left out a registration-day plan and graduation
   // scenarios, and everything after them.
-  registration: { label: 'Registration cart and saved schedules', prefix: REGISTRATION_KEY, scope: 'device', read: readRegistration },
-  registrationDay: { label: 'Registration day plan', prefix: REGISTRATION_DAY_KEY, scope: 'device', read: readRegistrationDay },
+  registration: { label: 'Registration cart and saved schedules', prefix: REGISTRATION_KEY, scope: 'account', read: readRegistration },
+  registrationDay: { label: 'Registration day plan', prefix: REGISTRATION_DAY_KEY, scope: 'account', read: readRegistrationDay },
   graduation: { label: 'Graduation scenarios', prefix: GRADUATION_KEY, scope: 'account', read: readGraduation },
   lifeBalance: { label: 'Life balance settings', prefix: LIFE_BALANCE_KEY, scope: 'account', read: readLifeBalance },
-  shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'device', read: readShortlist },
+  shortlist: { label: 'Course shortlist', prefix: SHORTLIST_KEY, scope: 'account', read: readShortlist },
   // Per account, and without private notes: the meeting screen promises
   // those never leave the device, and a restore keeps the ones it has.
   advisorMeeting: {
@@ -203,6 +203,8 @@ export interface WorkspaceRecord {
   kind: string;
   term: string;
   value: unknown;
+  /** Present on new registration-source backups; missing means unsigned legacy. */
+  sourceOwner?: string;
 }
 
 export interface WorkspaceBackup {
@@ -225,6 +227,8 @@ export interface WorkspaceBackup {
 const CONTROL = /[\x00-\x1f:]/;
 const validTerm = (v: unknown): v is string => textValue(v, 100) && v.length > 0 && !CONTROL.test(v);
 
+const registrationSource = (kind: string) => ['registration', 'registrationDay', 'shortlist'].includes(kind);
+
 function keyFor(kind: string, term: string, account: string): string {
   const definition = DEFINITIONS[kind];
   if (!definition) throw new Error('This backup names a workspace this version does not have.');
@@ -234,6 +238,9 @@ function keyFor(kind: string, term: string, account: string): string {
   if (definition.scope !== 'term' && term !== '') {
     throw new Error('A workspace in this backup carries a term it cannot have.');
   }
+  if (kind === 'registration') return registrationKey(account);
+  if (kind === 'registrationDay') return registrationDayKey(account);
+  if (kind === 'shortlist') return shortlistKey(account);
   if (kind === 'graduation') return graduationKey(account);
   if (kind === 'lifeBalance') return lifeBalanceKey(account);
   if (definition.scope === 'device') return definition.prefix;
@@ -277,7 +284,7 @@ export function workspaceBackup(account = 'device', storage: Storage = localStor
       if (definition.scope === 'term' && !validTerm(term)) continue;
       if (key !== keyFor(kind, term, account)) continue;
       try {
-        records.push({ kind, term, value: definition.read(JSON.parse(storage.getItem(key) as string)) });
+        records.push({ kind, term, value: definition.read(JSON.parse(storage.getItem(key) as string)), ...(registrationSource(kind) ? { sourceOwner: account } : {}) });
       } catch {
         throw new Error(
           `${definition.label}${term ? ` (${term})` : ''} could not be read, so it is not in this backup. ` +
@@ -317,7 +324,8 @@ export function readWorkspaceBackup(text: string): WorkspaceBackup {
     const key = keyFor(record.kind, record.term, 'device');
     if (seen.has(key)) throw new Error('This backup names the same workspace twice.');
     seen.add(key);
-    return { kind: record.kind, term: record.term, value: DEFINITIONS[record.kind]!.read(record.value) };
+    if (record.sourceOwner !== undefined && (!textValue(record.sourceOwner, 200) || !record.sourceOwner)) throw new Error('Registration backup owner is invalid.');
+    return { kind: record.kind, term: record.term, value: DEFINITIONS[record.kind]!.read(record.value), ...(registrationSource(record.kind) && record.sourceOwner !== undefined ? { sourceOwner: record.sourceOwner as string } : {}) };
   });
 
   return {
@@ -348,6 +356,7 @@ export function restoreWorkspaces(
 ): void {
   const checked = readWorkspaceBackup(JSON.stringify(backup));
   const entries = checked.records.map((record) => {
+    if (registrationSource(record.kind) && (record.sourceOwner ?? 'device') !== account) throw new Error('This registration backup belongs to a different account or the unsigned device. Restore it in its original account; legacy backups can be restored while signed out.');
     const key = keyFor(record.kind, record.term, account);
     const merge = DEFINITIONS[record.kind].restore;
     if (!merge) return { key, value: JSON.stringify(record.value) };

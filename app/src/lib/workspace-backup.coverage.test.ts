@@ -36,6 +36,7 @@ const CALLS: Record<string, number> = {
   'components/ActionCenter.tsx': 1,
   'components/OperatingRhythmWorkspace.tsx': 2,
   'components/AdvisorMeeting.tsx': 2,
+  'components/ComparisonActionsPanel.tsx': 2, // Existing owner-scoped Productivity and advisor meeting stores are both backed up.
   'components/CampusDirectory.tsx': 4,
   'components/CalmSettings.tsx': 1,
   'components/CareerEvidence.tsx': 1,
@@ -205,14 +206,14 @@ describe('the stores this phase added to the backup', () => {
       removeItem: (k: string) => void store.delete(k),
       clear: () => store.clear(),
     } as Storage;
-    storage.setItem('semester.registration-day.v1', JSON.stringify({ ...EMPTY_REGISTRATION_DAY, creditTarget: 15 }));
+    storage.setItem('semester.registration-day.v1:acct', JSON.stringify({ ...EMPTY_REGISTRATION_DAY, creditTarget: 15 }));
     storage.setItem('semester.advisor-meeting.v1:acct', JSON.stringify({ version: 1, meetings: [] }));
     storage.setItem('semester.career-evidence.v1:acct:2026FA', JSON.stringify({ version: 1, decisions: {}, own: [], artifacts: [], bullets: [], versions: [], interviewDone: {}, fairs: {} }));
     const backup = workspaceBackup('acct', storage);
     expect(backup.records.map((r) => r.kind).sort()).toEqual(['advisorMeeting', 'careerEvidence', 'registrationDay']);
     store.clear();
     restoreWorkspaces(backup, 'acct', storage);
-    expect(JSON.parse(storage.getItem('semester.registration-day.v1')!).creditTarget).toBe(15);
+    expect(JSON.parse(storage.getItem('semester.registration-day.v1:acct')!).creditTarget).toBe(15);
     expect(storage.getItem('semester.career-evidence.v1:acct:2026FA')).not.toBeNull();
   });
 });

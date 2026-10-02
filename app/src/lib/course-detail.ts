@@ -279,7 +279,7 @@ export function whyItMayFit(input: {
 
 /* ── The shortlist: saved courses and what is being compared ─────────────── */
 
-export const SHORTLIST_KEY = 'semester.course-shortlist.v1';
+export { SHORTLIST_KEY, shortlistKey } from './registration-scope';
 export const MAX_SAVED = 30;
 export const MAX_COMPARE = 3;
 

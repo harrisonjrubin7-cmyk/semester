@@ -1,5 +1,6 @@
+import { useAccountId } from '../state/store';
 import { useMemo } from 'react';
-import { EMPTY_SHORTLIST, SHORTLIST_KEY, liveShortlist, meetingLine, readShortlist } from './course-detail';
+import { EMPTY_SHORTLIST, shortlistKey, liveShortlist, meetingLine, readShortlist } from './course-detail';
 import { useDeviceLibrary } from './device-library';
 import { useRegistrationPlan } from './registration-plan';
 
@@ -9,9 +10,11 @@ import { useRegistrationPlan } from './registration-plan';
  * catalog, in the order they were saved. A saved id whose section is no
  * longer in the catalog is left out rather than shown half-known.
  */
-export function useSavedCourses(): { id: string; code: string; section: string; title: string; credits: number; meets: string }[] {
-  const shortlist = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST).value;
-  const { catalog } = useRegistrationPlan();
+export function useSavedCourses(owner?: string | null): { id: string; code: string; section: string; title: string; credits: number; meets: string }[] {
+  const current = useAccountId();
+  const accountId = owner === undefined ? current : owner;
+  const shortlist = useDeviceLibrary(shortlistKey(accountId), readShortlist, EMPTY_SHORTLIST).value;
+  const { catalog } = useRegistrationPlan(accountId);
   return useMemo(() => {
     const byId = new Map(catalog.map((c) => [c.id, c]));
     return liveShortlist(shortlist, catalog)

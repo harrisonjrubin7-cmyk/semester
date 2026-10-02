@@ -75,6 +75,11 @@ beforeEach(() => {
     }),
   );
   localStorage.setItem('semester.course-shortlist.v1', JSON.stringify({ saved: ['e3', 'p1'], compare: [] }));
+  // These fixtures explicitly belong to u1; legacy unsigned data is not adopted by the app.
+  for (const owner of ['u1', 'student-a']) {
+    localStorage.setItem(`semester.registration.v1:${owner}`, localStorage.getItem('semester.registration.v1')!);
+    localStorage.setItem(`semester.course-shortlist.v1:${owner}`, localStorage.getItem('semester.course-shortlist.v1')!);
+  }
   host = document.createElement('div');
   host.className = 'device';
   document.body.append(host);

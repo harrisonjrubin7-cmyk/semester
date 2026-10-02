@@ -5,7 +5,7 @@ import { useId } from 'react';
 import {
   EMPTY_SHORTLIST,
   MAX_COMPARE,
-  SHORTLIST_KEY,
+  shortlistKey,
   liveShortlist,
   meetingLine,
   readShortlist,
@@ -45,11 +45,11 @@ export function CourseCompare({
   importedAt?: string | null;
   onChoose?: (id: string) => boolean;
 }) {
-  const { state } = useStore();
+  const { state, account } = useStore();
   const wide = useMedia(WIDE);
   const now = useNow();
   const headingId = useId();
-  const library = useDeviceLibrary(SHORTLIST_KEY, readShortlist, EMPTY_SHORTLIST);
+  const library = useDeviceLibrary(shortlistKey(account?.id), readShortlist, EMPTY_SHORTLIST);
   const shortlist = {
     value: liveShortlist(library.value, catalog),
     update: (f: (l: Shortlist) => Shortlist) => library.update((l) => f(liveShortlist(l, catalog))),

@@ -19,7 +19,7 @@
 
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_REGISTRATION_DAY, readRegistrationDay } from '../lib/registration-day';
-import { REGISTRATION_DAY_KEY, storedWindow } from '../lib/registration-window';
+import { registrationDayKey, storedWindow } from '../lib/registration-window';
 import { useEffect, useRef } from 'react';
 import { useNow, useStore } from '../state/store';
 import { enrolled, lastRefill, markRefilled, needsRefill, queueFor } from '../lib/push';
@@ -38,8 +38,8 @@ export function PushTop() {
   // The registration reminder, watched: turning it off or moving the time
   // must rebuild the queue now, not at the next twice-a-day refill — or a
   // reminder the student switched off would still arrive.
-  const regday = useDeviceLibrary(REGISTRATION_DAY_KEY, readRegistrationDay, EMPTY_REGISTRATION_DAY).value;
-  const opens = regday.remind && regday.opensAt ? storedWindow() : null;
+  const regday = useDeviceLibrary(registrationDayKey(account?.id), readRegistrationDay, EMPTY_REGISTRATION_DAY).value;
+  const opens = regday.remind && regday.opensAt ? storedWindow(account?.id) : null;
   const lastOpens = useRef(opens);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export function PushTop() {
           items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
           classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
           registrar: state.registrar,
-          registrationOpens: storedWindow(),
+          registrationOpens: storedWindow(account?.id),
           // Muted courses and quiet hours, which this refill dropped on the
           // floor exactly as `PushSwitch` did. See the note there.
           muted: state.mutedCourses,

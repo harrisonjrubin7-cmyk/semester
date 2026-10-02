@@ -42,7 +42,7 @@ export interface WrappedInput {
   sessions: readonly Pick<Session, 'doneAt'>[];
   /** `state.taken`: courses on the student's own record. */
   taken: readonly Pick<Taken, 'term' | 'grade' | 'current'>[];
-  /** Saved registration schedules (`semester.registration.v1`). */
+  /** Owner-scoped saved registration schedules (unsigned legacy remains separate). */
   schedulesSaved: number;
   /** Advisor meetings prepared (`semester.advisor-meeting.v1`). */
   meetings: readonly { date: string | null; agenda: readonly unknown[] }[];

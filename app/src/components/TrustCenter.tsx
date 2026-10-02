@@ -7,7 +7,7 @@ import { clearAll as clearConversations, load as loadThreads, loadArchive } from
 import { useDeviceLibrary } from '../lib/device-library';
 import { permission } from '../lib/notify';
 import { EMPTY_REGISTRATION, readRegistration } from '../lib/portal-storage';
-import { REGISTRATION_KEY } from '../lib/registration-plan';
+import { registrationKey } from '../lib/registration-plan';
 import { SOURCE_LABELS, SOURCE_MEANING, SOURCE_TEXT } from '../lib/source';
 import { EMPTY_LOCKER, LOCKER_KEY, readLocker } from '../lib/source-locker';
 import { useNow, useStore } from '../state/store';
@@ -54,7 +54,7 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
   const { state, dispatch, account, sync, school } = useStore();
   const userId = accountId !== undefined ? accountId : (account?.id ?? null);
   const now = useNow().getTime();
-  const registration = useDeviceLibrary(REGISTRATION_KEY, readRegistration, EMPTY_REGISTRATION).value;
+  const registration = useDeviceLibrary(registrationKey(userId), readRegistration, EMPTY_REGISTRATION).value;
   const locker = useDeviceLibrary(LOCKER_KEY, readLocker, EMPTY_LOCKER).value;
   const [shares, setShares] = useState<ShareRow[] | null | 'error'>(null);
   const [round, setRound] = useState(0);

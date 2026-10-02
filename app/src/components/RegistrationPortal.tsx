@@ -15,7 +15,7 @@ const RegistrationDay=lazy(()=>import('./RegistrationDay').then(m=>({default:m.R
 import {CourseDetailV2} from './CourseDetailV2';
 import {CourseCompare} from './CourseCompare';
 import {MODULE_FLAGS,moduleOn} from '../lib/experience-flags';
-const KEY='semester.registration.v1';
+import { registrationKey } from '../lib/registration-scope';
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const meetLine=(c:CatalogCourse)=>c.meetings.map(m=>`${m.days.map(d=>DAYS[d]).join('/')} ${clock24(m.start)}–${clock24(m.end)}`).join(' · ')||'Meeting time not provided';
 /**
@@ -28,7 +28,11 @@ const meetLine=(c:CatalogCourse)=>c.meetings.map(m=>`${m.days.map(d=>DAYS[d]).jo
 const DemandContribution=lazy(()=>import('./DemandContribution').then(m=>({default:m.DemandContribution})));
 
 export function RegistrationPortal({courseDetail=moduleOn(MODULE_FLAGS.course_detail_v2),demandForecasting=moduleOn(MODULE_FLAGS.demand_forecasting)}:{courseDetail?:boolean;demandForecasting?:boolean}={}){
- const accountId=useAccountId(); const library=useDeviceLibrary(KEY,readRegistration,EMPTY_REGISTRATION);const data=library.value;const setData=library.update;const [undo,setUndo]=useState<Stored|null>(null);const [tab,setTab]=useState('catalog');const [query,setQuery]=useState('');const [term,setTerm]=useState('');const [dept,setDept]=useState('');const [openOnly,setOpenOnly]=useState(false);const [when,setWhen]=useState<When>('any');const [format,setFormat]=useState<Format>('any');const pathways=learnerPathwaysOn();const [detail,setDetail]=useState<string|null>(null);const [message,setMessage]=useState('');const [name,setName]=useState('');
+ const accountId=useAccountId();
+ return <RegistrationWorkspace key={accountId || 'device'} accountId={accountId} courseDetail={courseDetail} demandForecasting={demandForecasting}/>;
+}
+function RegistrationWorkspace({accountId,courseDetail,demandForecasting}:{accountId:string|null;courseDetail:boolean;demandForecasting:boolean}){
+ const library=useDeviceLibrary(registrationKey(accountId),readRegistration,EMPTY_REGISTRATION);const data=library.value;const setData=library.update;const [undo,setUndo]=useState<Stored|null>(null);const [tab,setTab]=useState('catalog');const [query,setQuery]=useState('');const [term,setTerm]=useState('');const [dept,setDept]=useState('');const [openOnly,setOpenOnly]=useState(false);const [when,setWhen]=useState<When>('any');const [format,setFormat]=useState<Format>('any');const pathways=learnerPathwaysOn();const [detail,setDetail]=useState<string|null>(null);const [message,setMessage]=useState('');const [name,setName]=useState('');
 
  const all=data.catalog?.courses||[],cart=all.filter(c=>data.cart.includes(c.id));const problems=conflicts(cart);const terms=[...new Set(all.map(c=>c.term))];const activeTerm=term||terms[0]||'';
  const shown=all.filter(c=>c.term===activeTerm&&(!dept||c.department===dept)&&(!openOnly||c.seats!==null&&c.seats>0)&&(!pathways||fitsSection(c,{when,format}))&&`${c.code} ${c.title} ${c.instructor} ${c.description}`.toLowerCase().includes(query.toLowerCase()));

@@ -1,3 +1,4 @@
+import { registrationKey } from '../lib/registration-scope';
 import { useMemo, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { NOT_OFFICIAL, hasPathProfile, pathCredits, pathStatus, termLine } from '../lib/path-profile';
@@ -18,9 +19,9 @@ import { RegistrationReadiness } from './RegistrationReadiness';
  * the cart is a plan the student has not submitted anywhere.
  */
 export function PathSnapshotCard() {
-  const { state } = useStore();
+  const { state, account } = useStore();
   const profile = usePathProfile();
-  const registration = useDeviceLibrary('semester.registration.v1', readRegistration, EMPTY_REGISTRATION);
+  const registration = useDeviceLibrary(registrationKey(account?.id), readRegistration, EMPTY_REGISTRATION);
   const [editing, setEditing] = useState(false);
   const p = profile.value;
 

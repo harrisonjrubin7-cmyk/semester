@@ -33,7 +33,7 @@
 import type { SourceLabel } from './source';
 import { TIME, localTime } from './registration-window';
 
-export { REGISTRATION_DAY_KEY, localTime, storedWindow, windowReminders, type WindowReminder } from './registration-window';
+export { REGISTRATION_DAY_KEY, registrationDayKey, localTime, storedWindow, windowReminders, type WindowReminder } from './registration-window';
 import { obj, textValue } from './device-library';
 import { conflicts, type CatalogCourse } from './registration';
 import { readHandoff, type Handoff } from './handoff-status';

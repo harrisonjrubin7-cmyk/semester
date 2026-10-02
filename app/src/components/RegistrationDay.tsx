@@ -1,3 +1,4 @@
+import { useAccountId } from '../state/store';
 import { ComparisonActions } from './ComparisonActions';
 import { courseCandidate } from '../lib/comparison-candidates';
 import { useEffect, useMemo, useState } from 'react';
@@ -13,7 +14,7 @@ import {
   CHECKLIST,
   EMPTY_REGISTRATION_DAY,
   MAX_BACKUPS,
-  REGISTRATION_DAY_KEY,
+  registrationDayKey,
   addBackup,
   candidates,
   clockDigits,
@@ -58,7 +59,8 @@ export function RegistrationDay({
   /** Registration Day Mode (Phase C). Off, this tab is exactly what #762 shipped. */
   mode?: boolean;
 }) {
-  const library = useDeviceLibrary(REGISTRATION_DAY_KEY, readRegistrationDay, EMPTY_REGISTRATION_DAY);
+  const accountId = useAccountId();
+  const library = useDeviceLibrary(registrationDayKey(accountId), readRegistrationDay, EMPTY_REGISTRATION_DAY);
   const data = library.value;
   const [now, setNow] = useState(() => new Date());
   const [status, setStatus] = useState('');

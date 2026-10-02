@@ -65,7 +65,7 @@ export function AdvisorMeeting({ accountId, initialMeetingId = null }: { account
   const [openId, setOpenId] = useState<string | null>(initialMeetingId);
   const meeting = meetings.find((m) => m.id === openId) ?? meetings[0] ?? null;
   const graduation = useDeviceLibrary(graduationKey(accountId), readGraduation, EMPTY_GRADUATION).value;
-  const saved = useSavedCourses();
+  const saved = useSavedCourses(accountId);
   const [confirm, setConfirm] = useState<'download' | 'print' | 'share' | 'remove' | null>(null);
   const [said, setSaid] = useState('');
   // Set when a share was refused for want of a connection: the offer to keep it.

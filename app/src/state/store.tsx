@@ -1460,7 +1460,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
           muted: state.mutedCourses,
           registrar: state.registrar,
-          registrationOpens: storedWindow(),
+          registrationOpens: storedWindow(account?.id),
           /*
            * The four lists `nextPayment` reads, named rather than passed as
            * the whole store. `Held` in `lib/bill.ts` is structural, so this
@@ -1536,7 +1536,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // so an interval holding a stale copy would go on working backwards
     // through last week's working hours, and the start date it named would be
     // a day the student had already changed their mind about.
-  }, [catalog, state.notifs, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, state.spent, state.windows, courseCode]);
+  }, [catalog, state.notifs, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, state.spent, state.windows, courseCode, account?.id]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever

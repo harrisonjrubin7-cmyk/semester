@@ -1,3 +1,8 @@
+import { useRegistrationPlan } from '../lib/registration-plan';
+import { useSavedCourses } from '../lib/advisor-attachments';
+import { PathSnapshotCard } from './PathSnapshotCard';
+import { storedWindow } from '../lib/registration-window';
+import { registrationKey, shortlistKey, registrationDayKey } from '../lib/registration-scope';
 // @vitest-environment jsdom
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -12,7 +17,7 @@ import { StudyAbroad } from './StudyAbroad';
 import { Pathway } from '../screens/Pathway';
 import { EMPTY_PATHWAY, newProgram as newPathwayProgram } from '../lib/pathway';
 import { EMPTY_ABROAD, newProgram as newAbroadProgram } from '../lib/abroad';
-import { EMPTY_REGISTRATION_DAY, REGISTRATION_DAY_KEY } from '../lib/registration-day';
+import { EMPTY_REGISTRATION_DAY } from '../lib/registration-day';
 import { Career } from '../screens/Career';
 import { ProductivityWorkspace } from './ProductivityWorkspace';
 import { EMPTY_CAREER, newOpportunity } from '../lib/career';
@@ -52,8 +57,8 @@ const mount = async (child: ReactNode) => { await act(async () => root.render(<S
 const reload = async (child: ReactNode) => { await act(async () => root.unmount()); root = createRoot(host); await mount(child); };
 const course = (id: string, code: string, seats: number | null) => ({ id, code, section: '01', title: `${code} title`, term: 'Spring 2027', department: 'TEST', credits: 3, instructor: '', location: '', description: '', prerequisites: '', seats, meetings: [] });
 const setupCourses = () => {
-  localStorage.setItem('semester.registration.v1', JSON.stringify({ catalog: { institution: 'Example University', importedAt: '2026-09-01T00:00:00Z', courses: [course('a', 'TEST 101', null), course('b', 'TEST 102', 8), course('private', 'PRIVATE 999', 4)] }, cart: [], plans: [] }));
-  localStorage.setItem('semester.course-shortlist.v1', JSON.stringify({ saved: ['a', 'b', 'private'], compare: ['a', 'b'] }));
+  localStorage.setItem(registrationKey(identity.owner), JSON.stringify({ catalog: { institution: 'Example University', importedAt: '2026-09-01T00:00:00Z', courses: [course('a', 'TEST 101', null), course('b', 'TEST 102', 8), course('private', 'PRIVATE 999', 4)] }, cart: [], plans: [] }));
+  localStorage.setItem(shortlistKey(identity.owner), JSON.stringify({ saved: ['a', 'b', 'private'], compare: ['a', 'b'] }));
 };
 beforeAll(async () => { await loadSeed(); await import('./ComparisonActionsPanel'); await import('./AdvisorMeeting'); await import('./RegistrationDay'); });
 beforeEach(() => {
@@ -73,7 +78,7 @@ it('saves real course choices and distinct original unknown/source contexts acro
   expect(snapshots[1].options[0].context.join('\n')).toContain('Seats from file: Unknown');
   expect(snapshots[1].options[1].context.join('\n')).toContain('Seats from file: 8');
   expect(JSON.stringify(snapshots)).toContain('2026-09-01'); expect(JSON.stringify(snapshots)).not.toContain('PRIVATE 999');
-  expect(JSON.parse(localStorage.getItem('semester.registration.v1')!).cart).toEqual([]);
+  expect(JSON.parse(localStorage.getItem(registrationKey(identity.owner))!).cart).toEqual([]);
   await reload(<RegistrationPortal courseDetail demandForecasting={false} />);
   expect(host.textContent).toContain('Personal choice: TEST 101 · 01'); expect(stored().comparisons).toEqual(snapshots);
   expect(shareWithAdvisor).not.toHaveBeenCalled();
@@ -148,10 +153,10 @@ it('productivity choose records the actual option, excludes private reflection, 
 });
 
 it('retains original potential schedules and registration backup order as personal snapshots', async () => {
-  setupCourses(); const key = 'semester.registration.v1'; const data = JSON.parse(localStorage.getItem(key)!);
+  setupCourses(); const key = registrationKey(identity.owner); const data = JSON.parse(localStorage.getItem(key)!);
   data.plans = [{ id: 'schedule-a', name: 'Morning plan', courses: [data.catalog.courses[0]] }, { id: 'schedule-b', name: 'Later plan', courses: [data.catalog.courses[1]] }]; data.cart = ['a'];
   localStorage.setItem(key, JSON.stringify(data));
-  localStorage.setItem(REGISTRATION_DAY_KEY, JSON.stringify({ ...EMPTY_REGISTRATION_DAY, backups: { a: ['b'] } }));
+  localStorage.setItem(registrationDayKey(identity.owner), JSON.stringify({ ...EMPTY_REGISTRATION_DAY, backups: { a: ['b'] } }));
   await mount(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Potential schedules (2)'); await click('Save both options');
   expect(stored().comparisons![0].options.map(o => o.id)).toEqual(['schedule-a', 'schedule-b']);
   await click('Choose Later plan'); expect(JSON.parse(localStorage.getItem(key)!).cart).toEqual(['a']);
@@ -318,4 +323,64 @@ it('invalidates the live chosen option on removal and reconsideration while pres
   await reload(<ProductivityWorkspace />); await selectDecision(); await click('Choose Second choice'); await click('Reconsider decision');
   await reload(<ProductivityWorkspace />); expect(stored().decisions[0].chosen).toBeUndefined(); expect(stored().comparisons?.map(s => s.chosen)).toEqual(d.options.map(o => o.id));
   expect(() => readProductivity({ ...stored(), decisions: [{ ...d, decided: true, chosen: 'removed' }] })).toThrow();
+});
+
+it('keeps legacy and A/B personal registration sources separate while new owned shortlist/advisor actions remain usable', async () => {
+  identity.owner = null; setupCourses();
+  const legacy = localStorage.getItem(registrationKey())!;
+  const legacyShortlist = localStorage.getItem(shortlistKey())!;
+  localStorage.setItem(registrationDayKey(), JSON.stringify({ ...EMPTY_REGISTRATION_DAY, backups: { a: ['b'] } }));
+  identity.owner = 'alice'; await mount(<RegistrationPortal courseDetail demandForecasting={false} />);
+  expect(host.textContent).not.toContain('TEST 101'); expect(host.textContent).not.toContain('Saved courses');
+  // Import through the actual picker into Alice's fresh personal workspace.
+  await restorePrivate(JSON.stringify(JSON.parse(legacy).catalog));
+  for (const code of ['TEST 101', 'TEST 102']) {
+    const open = [...host.querySelectorAll<HTMLButtonElement>('button.portal-course-description')].find(b => b.textContent?.includes(code))!;
+    await act(async () => open.click()); await click('Save'); await click('Compare');
+  }
+  expect(JSON.parse(localStorage.getItem(shortlistKey('alice'))!).compare).toEqual(['a', 'b']);
+  await click('Save both options'); await click('Ask advisor'); await tick('Include TEST 101 · 01 · Spring 2027'); await click('Prepare editable meeting');
+  expect(readMeetings(JSON.parse(localStorage.getItem(meetingKey('alice'))!)).meetings[0].agenda.length).toBeGreaterThan(0);
+  identity.owner = 'bob'; await mount(<RegistrationPortal courseDetail demandForecasting={false} />);
+  expect(host.textContent).not.toContain('TEST 101'); expect(host.querySelector('[aria-label="Advisor draft"]')).toBeNull();
+  expect(localStorage.getItem(workKey())).toBeNull(); expect(localStorage.getItem(meetingKey('bob'))).toBeNull();
+  // Bob can create his own real data instead of adopting Alice or the unsigned device.
+  const bobCatalog = { institution: 'Bob catalog fixture', courses: [course('bb', 'BOB 100', null), course('bc', 'BOB 200', 2)] };
+  await restorePrivate(JSON.stringify(bobCatalog));
+  for (const code of ['BOB 100', 'BOB 200']) {
+    const open = [...host.querySelectorAll<HTMLButtonElement>('button.portal-course-description')].find(b => b.textContent?.includes(code))!;
+    await act(async () => open.click()); await click('Save'); await click('Compare');
+  }
+  await click('Ask advisor'); await tick('Include BOB 100 · 01 · Spring 2027');
+  expect(host.querySelector<HTMLTextAreaElement>('[aria-label="Advisor draft"]')!.value).not.toContain('TEST 101');
+  expect(localStorage.getItem(registrationKey())).toBe(legacy); expect(localStorage.getItem(shortlistKey())).toBe(legacyShortlist);
+  identity.owner = null; await mount(<RegistrationPortal courseDetail demandForecasting={false} />); expect(host.textContent).toContain('TEST 101');
+});
+
+it('switches actual schedule, backup, advising attachment and path-credit consumers together without fallback to unsigned sources', async () => {
+  function Consumers() {
+    const plan = useRegistrationPlan(); const saved = useSavedCourses();
+    return <><output aria-label="Registration consumer data">{JSON.stringify({ cart: plan.cart.map(c => c.code), backups: plan.data.backups, saved: saved.map(c => c.code) })}</output><PathSnapshotCard /></>;
+  }
+  for (const [owner, code, credits] of [['alice', 'ALICE 100', 3], ['bob', 'BOB 100', 6], [null, 'LEGACY 100', 9]] as const) {
+    const first = { ...course('first', code, 1), credits }; const backup = course('backup', code.replace('100', '200'), 2);
+    localStorage.setItem(registrationKey(owner), JSON.stringify({ catalog: { institution: 'Owned catalog', courses: [first, backup] }, cart: ['first'], plans: [{ id: `plan-${owner}`, name: `Owned plan ${code}`, courses: [first] }] }));
+    localStorage.setItem(shortlistKey(owner), JSON.stringify({ saved: ['first'], compare: [] }));
+    localStorage.setItem(registrationDayKey(owner), JSON.stringify({ ...EMPTY_REGISTRATION_DAY, backups: { first: ['backup'] }, opensAt: owner === 'alice' ? '2027-04-01T08:00' : owner === 'bob' ? '2027-04-02T09:00' : '2027-04-03T10:00' }));
+  }
+  const unsigned = localStorage.getItem(registrationKey());
+  for (const [owner, code, credits] of [['alice', 'ALICE 100', 3], ['bob', 'BOB 100', 6]] as const) {
+    identity.owner = owner; await mount(<Consumers />);
+    const consumer = JSON.parse(host.querySelector('[aria-label="Registration consumer data"]')!.textContent!);
+    expect(consumer.cart).toEqual([code]); expect(consumer.saved).toEqual([code]); expect(consumer.backups).toEqual({ first: ['backup'] });
+    expect(host.textContent).toContain(`${credits} credits`); expect(host.textContent).not.toContain('LEGACY 100');
+    await mount(<RegistrationPortal courseDetail demandForecasting={false} />); await click('Potential schedules (1)');
+    expect(host.textContent).toContain(`Owned plan ${code}`); expect(host.textContent).not.toContain(owner === 'alice' ? 'BOB 100' : 'ALICE 100');
+    await click('Save all options'); await click('Registration day'); await click('Save both options');
+    expect(stored().comparisons!.at(-1)!.options[0].label).toContain(code);
+    await click('Ask advisor'); await tick(`Include ${code} · 01 · Spring 2027`);
+    expect(host.querySelector<HTMLTextAreaElement>('[aria-label="Advisor draft"]')!.value).toContain(code);
+  }
+  expect(storedWindow('alice')).not.toBe(storedWindow('bob')); expect(storedWindow('new-account')).toBeNull(); expect(storedWindow()).not.toBeNull();
+  expect(localStorage.getItem(registrationKey())).toBe(unsigned);
 });

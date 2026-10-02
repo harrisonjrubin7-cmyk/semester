@@ -164,7 +164,7 @@ export function useOnline(): boolean {
  */
 export const AVAILABLE_OFFLINE = [
   { what: 'Today snapshot', where: 'The saved state (`semester.v1` or IndexedDB `semester-store`): deadlines, actions, the plan' },
-  { what: 'Saved schedules', where: '`semester.registration.v1` (the cart and potential schedules)' },
+  { what: 'Saved schedules', where: '`semester.registration.v1:<account>` (personal cart and schedules; unsigned legacy keeps the unsuffixed key)' },
   { what: 'Saved degree plan', where: 'The saved state: `requirements` and `taken`' },
   { what: 'Registration checklist', where: '`semester.registration-day.v1`' },
   { what: 'Advisor agenda', where: '`semester.advisor-meeting.v1`' },

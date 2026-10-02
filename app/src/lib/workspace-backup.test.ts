@@ -365,3 +365,31 @@ it('backs up only the requested owner’s commute settings, with the unsigned le
   }
   expect(workspaceBackup('new-account', storage).records.filter(r => r.kind === 'lifeBalance')).toEqual([]);
 });
+
+it('exports registration, shortlist and backup plans only for the exact owner and restores without assigning unsigned or other-account work', async () => {
+  const { registrationKey, registrationDayKey, shortlistKey } = await import('./registration-scope');
+  const { EMPTY_REGISTRATION_DAY } = await import('./registration-day');
+  const sources = new FakeStorage();
+  for (const owner of ['device', 'a', 'b']) {
+    sources.setItem(registrationKey(owner), JSON.stringify({ catalog: null, cart: [owner], plans: [] }));
+    sources.setItem(shortlistKey(owner), JSON.stringify({ saved: [owner], compare: [] }));
+    sources.setItem(registrationDayKey(owner), JSON.stringify({ ...EMPTY_REGISTRATION_DAY, backups: { [owner]: [`${owner}-backup`] } }));
+  }
+  for (const owner of ['device', 'a', 'b']) {
+    const backup = workspaceBackup(owner, sources);
+    expect(backup.records).toHaveLength(3); expect(backup.records.every(r => r.sourceOwner === owner)).toBe(true);
+    expect((backup.records.find(r => r.kind === 'registration')!.value as { cart: string[] }).cart).toEqual([owner]);
+    const destination = new FakeStorage(); destination.setItem(registrationKey('other'), sources.getItem(registrationKey('b'))!);
+    restoreWorkspaces(backup, owner, destination);
+    expect(destination.getItem(registrationKey(owner))).toBe(sources.getItem(registrationKey(owner)));
+    expect(destination.getItem(registrationKey('other'))).toBe(sources.getItem(registrationKey('b')));
+    expect(() => restoreWorkspaces(backup, owner === 'a' ? 'b' : 'a', destination)).toThrow('different account or the unsigned device');
+  }
+  const legacy = workspaceBackup('device', sources);
+  legacy.records = legacy.records.map(({ sourceOwner: _owner, ...record }) => record);
+  const target = new FakeStorage();
+  expect(() => restoreWorkspaces(legacy, 'a', target)).toThrow('legacy backups can be restored while signed out'); expect(target.length).toBe(0);
+  restoreWorkspaces(legacy, 'device', target);
+  expect(target.getItem(registrationKey())).toBe(sources.getItem(registrationKey()));
+  expect(target.getItem(registrationKey('a'))).toBeNull();
+});
