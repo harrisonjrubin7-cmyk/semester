@@ -1,4 +1,3 @@
-sed: --: No such file or directory
 import { forRole } from './role';
 import type { Role, Screen } from './types';
 

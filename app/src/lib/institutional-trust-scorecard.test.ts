@@ -1,4 +1,3 @@
-sed: --: No such file or directory
 import { describe, expect, it } from 'vitest';
 import { evidenceDateLabel, metricState, TRUST_METRICS, trustScorecard } from './institutional-trust-scorecard';
 

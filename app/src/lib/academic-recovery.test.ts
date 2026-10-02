@@ -1,4 +1,3 @@
-sed: --: No such file or directory
 import { describe, expect, it } from 'vitest';
 import { RECOVERY_PLANS, nextRecoveryStage, recoveryPlan } from './academic-recovery';
 

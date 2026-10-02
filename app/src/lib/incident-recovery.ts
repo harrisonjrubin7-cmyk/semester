@@ -1,4 +1,3 @@
-sed: --: No such file or directory
 /**
  * Semester's incident and recovery contract.
  *
