@@ -186,6 +186,12 @@ begin
     (select count(*) from public.term_plan_courses where user_id = crowd[1] and course_code = 'ECON 1010'), 1);
   perform pg_temp.counted('as planned when it is both',
     pg_temp.seen(crowd[1], $q$select * from public.my_demand_contribution('2027SP') where course_code = 'ECON 1010' and role = 'primary'$q$), 1);
+  perform pg_temp.contribute(crowd[1], '[{"course":"ECON 1020","role":"backup","rank":4},{"course":"ECON 1020","role":"backup","rank":1},{"course":"ECON 1020","role":"primary"},{"course":"MATH 1300","role":"backup","rank":7},{"course":"MATH 1300","role":"backup","rank":2}]');
+  perform pg_temp.counted('a later primary still wins a duplicate course in the set-based write',
+    pg_temp.seen(crowd[1], $q$select * from public.my_demand_contribution('2027SP') where course_code = 'ECON 1020' and role = 'primary'$q$), 1);
+  perform pg_temp.counted('the first backup rank still wins when every duplicate is a backup',
+    pg_temp.seen(crowd[1], $q$select * from public.term_plan_courses where user_id = (select auth.uid()) and course_code = 'MATH 1300' and backup_rank = 7$q$), 1);
+  perform pg_temp.contribute(crowd[1], '[{"course":"econ1010","role":"primary"},{"course":"ECON 1020","role":"backup","rank":1}]');
   perform pg_temp.counted('at the school on the student''s profile',
     (select count(*) from public.term_plan_courses where user_id = crowd[1] and tenant_id = 'dm-u' and contributes_to_demand), 2);
   perform pg_temp.counted('with a live consent',
