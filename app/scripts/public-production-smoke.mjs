@@ -25,7 +25,38 @@ async function configuration() {
     app: (process.env.SEMESTER_PUBLIC_APP_URL || DEFAULT_APP).replace(/\/$/, ''),
     supabase: (process.env.VITE_SUPABASE_URL || committed.VITE_SUPABASE_URL || '').replace(/\/$/, ''),
     key: process.env.VITE_SUPABASE_KEY || committed.VITE_SUPABASE_KEY || '',
+    expectedReleaseSha: process.env.SEMESTER_EXPECTED_RELEASE_SHA || '',
   };
+}
+
+const SHA = /^[0-9a-f]{40}$/;
+
+/**
+ * Fail closed when the deployed bundle cannot prove that it is the intended,
+ * generally available production build. The manifest contains only public,
+ * non-secret states and booleans; release-manifest.ts owns its schema.
+ */
+export function validateProductionRelease(manifest, expectedSha = '') {
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) {
+    throw new Error('Release manifest was not a JSON object.');
+  }
+  if (expectedSha && !SHA.test(expectedSha)) {
+    throw new Error('Expected release SHA was not a 40-character lowercase Git SHA.');
+  }
+
+  const problems = [];
+  const sourceSha = manifest.source?.sha;
+  if (manifest.schemaVersion !== 1) problems.push('schema version is not 1');
+  if (!SHA.test(sourceSha ?? '')) problems.push('source SHA is missing or ambiguous');
+  if (expectedSha && sourceSha !== expectedSha) problems.push('source SHA does not match the monitored revision');
+  if (manifest.environment !== 'Production') problems.push('environment is not Production');
+  if (manifest.features?.privateBeta !== 'off') problems.push('private beta is not off');
+  if (manifest.controls?.accountService !== true) problems.push('account service is not enabled');
+  if (manifest.controls?.institutionalPreview !== false) problems.push('institutional preview is enabled');
+  if (manifest.controls?.readOnly !== false) problems.push('read-only mode is enabled');
+
+  if (problems.length) throw new Error(`Release manifest is not GA-ready: ${problems.join('; ')}.`);
+  return sourceSha;
 }
 
 async function request(label, url, init = {}) {
@@ -51,7 +82,7 @@ function asset(html, expression, label) {
 }
 
 export async function runPublicProductionSmoke() {
-  const { app, supabase, key } = await configuration();
+  const { app, supabase, key, expectedReleaseSha } = await configuration();
   if (!app.startsWith('https://')) throw new Error('The public app URL must use HTTPS.');
   if (!supabase.startsWith('https://') || !key) {
     throw new Error('Production Supabase URL and publishable key must both be configured.');
@@ -69,6 +100,18 @@ export async function runPublicProductionSmoke() {
   await request('frontend module asset', new URL(modulePath, `${app}/`).href);
   await request('frontend stylesheet asset', new URL(stylePath, `${app}/`).href);
 
+  const release = await request('release manifest', `${app}/release.json?monitor=${nonce}`, {
+    headers: { 'cache-control': 'no-cache' },
+  });
+  let releaseBody;
+  try {
+    releaseBody = await release.json();
+  } catch {
+    throw new Error('Release manifest was not valid JSON.');
+  }
+  const releaseSha = validateProductionRelease(releaseBody, expectedReleaseSha);
+  console.log(`  ok   production release identity (${releaseSha})`);
+
   const schools = await request(
     'Supabase PostgREST',
     `${supabase}/rest/v1/schools?select=id&limit=1`,
@@ -77,7 +120,7 @@ export async function runPublicProductionSmoke() {
   const body = await schools.json();
   if (!Array.isArray(body)) throw new Error('Supabase PostgREST did not return a JSON array.');
 
-  console.log('\nProduction frontend, deployed assets and Supabase API are reachable.');
+  console.log('\nProduction frontend, exact GA release identity, deployed assets and Supabase API are verified.');
 }
 
 if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {

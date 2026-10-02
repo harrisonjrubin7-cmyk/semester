@@ -118,6 +118,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'The Vercel production URL served CSP, HSTS, nosniff, referrer and permissions policies. Auth email (2/hour), sign-in/sign-up, OTP, refresh, SMS, anonymous and Web3 values were read from the production project dashboard; no setting was changed.',
   },
   {
+    id: 'production-release-readback-2026-10-02',
+    artifact: 'Live release-identity readback from the Vercel and GitHub Pages product hosts, plus the fail-closed hourly manifest gate',
+    path: 'docs/evidence/production/2026-10-02-release-manifest-readback.md',
+    produced: '2026-10-02',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-001'],
+    note: 'Both live hosts returned 404 for release.json while the local production build emitted a valid GA manifest. This is evidence of an open gate, not a pass; the hourly monitor now refuses missing, stale, beta, demo, signed-out or read-only releases.',
+  },
+  {
     id: 'accessibility-browser-smoke-2026-10-02',
     artifact: 'Merged-release critical-journey accessibility smoke in installed Chrome across desktop, 200 and 400 percent reflow equivalents, and WCAG text spacing',
     path: 'docs/evidence/accessibility/2026-10-02-critical-journey-browser-smoke.md',

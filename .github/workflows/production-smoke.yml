@@ -44,6 +44,7 @@ jobs:
         working-directory: app
         env:
           SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          SEMESTER_EXPECTED_RELEASE_SHA: ${{ github.sha }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
         run: node scripts/public-production-smoke.mjs

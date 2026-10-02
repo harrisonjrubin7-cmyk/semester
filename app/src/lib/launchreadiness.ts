@@ -155,8 +155,16 @@ export const GATES: readonly Gate[] = [
         path: 'app/release-manifest.ts',
         shows: 'the deployed bundle emits public release.json with its exact source SHA, environment, launch-critical feature states and service-presence booleans, never configuration values',
       },
+      {
+        path: 'app/scripts/public-production-smoke.mjs',
+        shows: 'the hourly monitor fails closed unless production exposes the exact monitored source with private beta off, accounts on, institutional preview off and read-only mode off',
+      },
+      {
+        path: 'docs/evidence/production/2026-10-02-release-manifest-readback.md',
+        shows: 'the first live readback: both deployed hosts returned 404 for release.json, so the production identity gate remains open rather than inferred from a local build',
+      },
     ],
-    gap: 'The deployed build can now report whether Human Help and accounts are on, but the production readback and real source-backed import/account-resume journey have not been recorded. The CI import still stubs the one model reply and account sync still uses local Supabase.',
+    gap: 'The local build emits a valid GA manifest and the monitor now enforces it, but the first live readback returned 404 on both deployed hosts. The real source-backed import/account-resume journey is also unrecorded; CI still stubs one model reply and uses local Supabase.',
     closure: [{ authority: 'production-authority', action: 'Run and record the source-backed import, account-resume and human-help journey against the intended production configuration.' }],
   },
   {
