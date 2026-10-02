@@ -753,6 +753,27 @@ describe('the chart series, on every ground', () => {
   });
 });
 
+// The keyboard ring can land on any control, so checking its colour against
+// only the page and panel is not enough. Hold it against every surface that a
+// control can be drawn on, across every selectable ground and accent.
+describe('the keyboard focus ring, on every surface', () => {
+  it('clears 3:1 everywhere the app can draw it', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      for (const a of ACCENTS) {
+        const focus = tokensFor({ accent: a.id, ground: g.id })['--app-accent-deep'];
+        for (const [i, surface] of g.ramp.entries()) {
+          const c = contrast(focus, surface);
+          if (c === null || c < 3) {
+            failures.push(`${a.id} on ${g.id} ramp ${i}: ${focus} on ${surface} is ${c?.toFixed(2)}:1`);
+          }
+        }
+      }
+    }
+    expect(failures, 'WCAG 2.4.11/1.4.11 requires a visible focus indicator').toEqual([]);
+  });
+});
+
 /*
  * The map's attribution link was told apart from the words beside it by
  * colour alone.

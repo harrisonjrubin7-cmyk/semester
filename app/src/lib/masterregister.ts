@@ -1116,8 +1116,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Focus regression suite',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/a11y/focus.test.ts', shows: 'Focus ring moved off box-shadow so no inline style suppresses it; found by tabbing 81 screens' }, { path: 'app/src/lib/contrast.test.ts', shows: 'Contrast measured across grounds' }],
-    gap: 'Nothing tests that sticky headers or the tab bar don\'t obscure focus (WCAG 2.4.11). The focus-indicator contrast isn\'t measured against every surface.',
+    evidence: [{ path: 'app/src/a11y/focus.test.ts', shows: 'Focus ring survives inline styles and carries top/bottom clearance from fixed and sticky chrome' }, { path: 'app/src/ai/focusbar.test.tsx', shows: 'Focused mode reserves its measured fixed bottom-bar inset while tabbing' }, { path: 'app/src/lib/contrast.test.ts', shows: 'Focus-indicator colour clears 3:1 across every accent, ground and surface ramp' }],
+    gap: 'The automated regression now covers focus visibility, chrome clearance and contrast. A qualified evaluator still has to confirm focus appearance and unobscured operation during the manual assistive-technology audit.',
   },
   {
     id: 'A11Y-003',

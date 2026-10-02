@@ -81,6 +81,18 @@ describe('the focus ring', () => {
     expect(ring.body).toMatch(/outline-offset:/);
   });
 
+  it('keeps keyboard focus clear of fixed and sticky chrome', () => {
+    const ring = ALL.find((r) => r.selector === '.device :focus-visible')!;
+    expect(ring.body).toContain('scroll-margin-top: var(--focus-clear-top)');
+    expect(ring.body).toContain('scroll-margin-bottom: var(--focus-clear-bottom)');
+
+    const focusedScroller = ALL.find((r) => r.selector === ":root[data-workspace='focused'] .scrollarea");
+    expect(focusedScroller, 'Focused mode needs clearance for its fixed bottom bar').toBeDefined();
+    expect(focusedScroller!.body).toContain(
+      'scroll-padding-bottom: calc(var(--focus-bar-inset, 0px) + var(--assistant-strip))',
+    );
+  });
+
   /*
    * The regression this pass actually found, stated as a rule: a control may
    * style its own focus, but it may not leave the keyboard with nothing.
