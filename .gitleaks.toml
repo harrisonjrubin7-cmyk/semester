@@ -14,8 +14,10 @@
 #                                                      vanderbilt/ECON, …
 #     generic-api-key  audio/manifest.json:141,330     b729fa308ce916c1, …
 #
-# With this file: none, on both versions named below. Each regex says which of
-# those it answers and why that string is not a credential.
+# A full-history scan also finds two retired shapes: `publish-key-0001` in a
+# client test and the product-role path `employer/alumni` in an old status
+# document. With this file: none, on both versions named below. Each regex says
+# which finding it answers and why that string is not a credential.
 #
 # ## Every exception is scoped to a value, and none to a file
 #
@@ -121,12 +123,23 @@ useDefault = true
 #      shortest real secret is a 24-byte calendar token, and the rest are JWTs
 #      and prefixed keys. Length alone is what makes it safe, and it is
 #      checked — the planted Anthropic key in that same file was reported.
+#
+#   5. **A publish-key test fixture.** `publish-key-0001` is the deliberately
+#      fake value in the assignments client test. It has no credential
+#      provider prefix and the four-digit suffix is fixed to the fixture
+#      shape; a real token elsewhere in the same file remains in scope.
+#
+#   6. **A role route written in prose.** `employer/alumni` appeared in two
+#      historical versions of `IMPLEMENTATION_STATUS.md`. It is a pair of
+#      product roles, not a credential, and the exception is the exact phrase.
 [allowlist]
-description = 'Four string shapes this repository contains that are named "key" and are not credentials. See the header.'
+description = 'Six exact string shapes this repository contains that are not credentials. See the header.'
 regexTarget = 'secret'
 regexes = [
   '''^sb_publishable_[A-Za-z0-9_-]{8,}$''',
   '''^semester\.[a-z.-]+\.v[0-9]+$''',
   '''^[a-z][a-z0-9-]*/[A-Z]{2,4}$''',
   '''^[0-9a-f]{16}$''',
+  '''^publish-key-[0-9]{4}$''',
+  '''^employer/alumni$''',
 ]

@@ -47,7 +47,11 @@ Every line requires evidence, not an opinion.
 - [ ] Accessibility audit of the piloted workflows
 - [ ] Incident process with named owner and university contact templates
 - [ ] Rollback tested on the production deployment path
-- [ ] No production secret in git, bundles, docs or fixtures — verified, not assumed
+- [x] No production secret in git, bundles, docs or fixtures — Gitleaks 8.28.0
+  passed the current tree, all reachable history and the release-branch range;
+  the production and isolated institutional bundles passed the redacting
+  artifact scanner. Measurements and reviewed false positives are recorded in
+  `docs/evidence/security/2026-10-01-secret-verification.md`.
 
 ## Required if the deployment includes it
 
