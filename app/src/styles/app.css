@@ -10572,6 +10572,59 @@ button.adband-bar {
   color: var(--app-dim);
 }
 
+.trust-scorecard {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-scorecard-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trust-scorecard-row {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-left: 4px solid var(--app-dim);
+  border-radius: var(--r-sm);
+  background: var(--app-paper);
+}
+
+.trust-scorecard-row > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.trust-scorecard-row p,
+.trust-scorecard-row small {
+  margin: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.trust-scorecard-state {
+  flex: none;
+  text-transform: uppercase;
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+}
+
+/* The state is spelled out beside each row; the border only repeats it. */
+.trust-scorecard-row.is-green { border-left-color: var(--status-success); }
+.trust-scorecard-row.is-yellow { border-left-color: var(--status-attention); }
+.trust-scorecard-row.is-red { border-left-color: var(--status-danger); }
+
 /* ── Integration dashboard ───────────────────────────────────────────────
  * Status is a glyph and a word; the border only repeats it, so nothing here
  * is carried by colour alone. Tables scroll inside their own box so the page

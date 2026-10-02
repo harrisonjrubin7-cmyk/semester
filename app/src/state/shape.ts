@@ -73,6 +73,7 @@ import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
+import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
@@ -860,6 +861,8 @@ export interface Ephemeral {
   /** Whether the one-line capture box is open. See `lib/capture.ts`. */
   quickAdd: boolean;
   screen: Screen;
+  /** Student-selected recovery context carried to the next screen only. */
+  recoveryIntent: RecoveryIntent | null;
   /** Back stack, so Back walks history rather than one remembered screen. */
   history: Screen[];
   courseId: CourseId;
@@ -1619,6 +1622,7 @@ export function initialEphemeral(): Ephemeral {
     quickAdd: false,
     undone: null,
     screen: 'home',
+    recoveryIntent: null,
     history: [],
     courseId: 'core',
     itemId: 'bus-ga1',
@@ -2224,7 +2228,7 @@ export type Action =
    * guide was last looked at. It sets `guideId` only; `courseId`, which is the
    * course *page*, is not a tool's idea of where it is.
    */
-  | { type: 'go'; screen: Screen; courseId?: CourseId }
+  | { type: 'go'; screen: Screen; courseId?: CourseId; recoveryIntent?: RecoveryIntent }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
