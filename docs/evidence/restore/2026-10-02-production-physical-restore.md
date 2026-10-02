@@ -52,4 +52,7 @@ path, but it does not demonstrate recovery of a non-empty journal.
   is a separate destructive action and is not evidence of restore quality.
 - The next drill must record the start time, target RTO, an intentionally
   non-sensitive marker before the backup point, and a non-empty gateway-journal
-  fixture if one can be created without touching a real student's data.
+  fixture. `supabase/gateway-journal-backup-drill.sh` now provides guarded
+  `seed` and `verify` phases for that exact fixture: one labelled operational
+  audit marker, tied to an explicitly supplied tenant, with no student content.
+  It has not yet been run against production or a restored project.
