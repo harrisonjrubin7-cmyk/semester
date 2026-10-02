@@ -173,8 +173,11 @@ export const GATES: readonly Gate[] = [
     requirement: 'Staging configuration mirrors intended production configuration.',
     owner: 'engineering',
     status: 'partial',
-    evidence: [{ path: 'STAGING.md', shows: 'preview branches build per pull request; Edge Function parity settled' }],
-    gap: 'STAGING.md itself says nobody has established that a preview branch matches production.',
+    evidence: [
+      { path: 'STAGING.md', shows: 'preview branches build per pull request; Edge Function declaration parity settled and the remaining live checks bounded' },
+      { path: 'supabase/compare-databases.sh', shows: 'credential-safe live comparison of schema fingerprints, Postgres major, RLS state and ensure_rls trigger' },
+    ],
+    gap: 'The fail-closed database comparator exists, but nobody with live credentials has run it against a preview branch and production or verified the branch’s function versions and secrets.',
     closure: [{ authority: 'production-authority', action: 'Compare the live preview branch and production fingerprints, RLS health, function versions and branch-secret readiness.' }],
   },
   {

@@ -144,9 +144,12 @@ is the only reason to have one.
    production's own schema deploy stayed broken for three days with no issue,
    no red tick and nothing in this repository able to tell.
 2. **Does it match production?** Run [`supabase/fingerprint.sql`](supabase/fingerprint.sql)
-   against both and compare the six numbers. **This is the step that makes it
-   staging rather than a second database**, and it is the step that has never
-   been done.
+   against both and compare the six numbers. Prefer
+   [`supabase/compare-databases.sh`](supabase/compare-databases.sh), which uses
+   named libpq services so credentials do not appear in arguments or logs and
+   also checks the Postgres major, live RLS state and `ensure_rls` trigger.
+   **This is the step that makes it staging rather than a second database**,
+   and it is the step that has never been run against the live pair.
 3. **Is row-level security actually on?** [`supabase/health.sql`](supabase/health.sql)
    blocks 4 and 5. A branch is built by applying migrations to a fresh
    database, which is exactly where the `ensure_rls` event trigger matters.
@@ -162,11 +165,12 @@ is the only reason to have one.
 
 ## Where this stands
 
-Steps 1 and 5 are arranged. **Steps 2, 3 and 4 have never been run against a
-preview branch, so "staging proven" in Stage 1's exit gate is not ticked**, and
-nothing in this repository should be read as claiming otherwise. That part is
-twenty minutes in a dashboard and a SQL editor, and it is twenty minutes
-nobody has spent.
+Steps 1 and 5 are arranged. The database half of steps 2 and 3 now has one
+fail-closed command, but **it and step 4 have never been run against a preview
+branch, so "staging proven" in Stage 1's exit gate is not ticked**, and nothing
+in this repository should be read as claiming otherwise. The remaining work
+requires credentials for the two projects plus the dashboard readback for
+Edge Function versions and branch secrets.
 
 The Edge Functions half is settled and, unusually for this document, checked:
 the branch for pull request #618 was reset, rebuilt to `FUNCTIONS_DEPLOYED`,
