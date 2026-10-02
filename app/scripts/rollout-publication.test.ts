@@ -14,7 +14,7 @@ const validationPath = resolve(artifacts, 'publication-validation.json');
 // A checkout does not contain the exported publication. An explicit path is
 // strict: missing files or tools fail rather than silently turning checks off.
 const toolsAvailable = ['pdfinfo', 'pdftotext', 'unzip'].every((tool) => !spawnSync(tool, ['-v']).error);
-const publicationSuite = publicationMode(Boolean(supplied), existsSync(artifacts), toolsAvailable) === 'run'
+const publicationSuite = publicationMode(Boolean(supplied) || process.env.SEMESTER_PUBLICATION_REQUIRED === '1', existsSync(artifacts), toolsAvailable) === 'run'
   ? describe : describe.skip;
 
 function sha(path: string) {

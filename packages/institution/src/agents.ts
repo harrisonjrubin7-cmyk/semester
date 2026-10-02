@@ -1,5 +1,6 @@
 /** Shared by the browser and authenticated gateway. New tools are denied by default. */
-export type SemesterAgent = 'assistant' | 'advisor' | 'tutor' | 'course-guide';
+import type { SemesterAgent } from './agent-ids.ts';
+export { AGENT_IDS, isSemesterAgent, type SemesterAgent } from './agent-ids.ts';
 
 export const AGENTS = {
   assistant: {
@@ -23,10 +24,6 @@ export const AGENTS = {
     tools: ['open_screen', 'search_material', 'find_deadlines'],
   },
 } as const;
-
-export function isSemesterAgent(value: unknown): value is SemesterAgent {
-  return typeof value === 'string' && Object.hasOwn(AGENTS, value);
-}
 
 export function agentAllows(agent: SemesterAgent, tool: string): boolean {
   return (AGENTS[agent].tools as readonly string[]).includes(tool);

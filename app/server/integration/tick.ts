@@ -38,6 +38,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import type { ConnectionStatus } from '../../src/lib/integration/catalog.ts';
 import type { ProviderBatch } from '../../src/lib/integration/pipeline.ts';
+import { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 import { DEFAULT_RETRY } from '../../src/lib/integration/retry.ts';
 import { runSync, type SyncReport } from './worker.ts';
 
@@ -114,18 +115,7 @@ export function adapterFor(adapters: readonly RegisteredAdapter[], c: Pick<Conne
   return hits.length === 1 ? hits[0] : null;
 }
 
-/**
- * A Postgres interval as PostgREST returns it (`IntervalStyle = postgres`):
- * `01:00:00`, `2 days`, `1 day 06:30:00`, `1 mon`. Null for anything else, so a
- * value this cannot read falls back to the adapter's target rather than to 0.
- */
-export function intervalMinutes(value: string | null): number | null {
-  if (!value) return null;
-  const m = /^(?:(\d+) years? ?)?(?:(\d+) mons? ?)?(?:(\d+) days? ?)?(?:(\d+):(\d{2}):(\d{2})(?:\.\d+)?)?$/.exec(value.trim());
-  if (!m || m[0] === '') return null;
-  const [, y, mo, d, h, mi] = m.map((x) => Number(x ?? 0));
-  return ((y * 365 + mo * 30 + d) * 24 + h) * 60 + mi;
-}
+export { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 
 /**
  * Minutes between scheduled pulls: half the freshness target, never under one
