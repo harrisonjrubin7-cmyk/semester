@@ -385,6 +385,18 @@ jobs:
           SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
         run: npm run smoke:golden
 
+      # Registration and Path have their own acceptance journey: path details,
+      # planning-only disclosure, a real section conflict, a saved backup,
+      # explainable ranking, completion and persistence. Keep it beside the
+      # broader golden path so a product-copy or interaction change cannot
+      # silently leave the institutional pilot contract behind again.
+      - name: Walk the registration and path pilot
+        working-directory: app
+        env:
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
+        run: npm run smoke:pilot
+
       # The same student with human help switched on. Step 7 of
       # docs/GOLDEN-PATH-TEST-SCRIPT.md — reach a person, and see exactly what
       # would be sent before anything is — sits behind `VITE_HUMAN_HELP`, which
