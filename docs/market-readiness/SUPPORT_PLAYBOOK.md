@@ -1,8 +1,20 @@
 # Support Playbook
 
-**Status: `IN_PROGRESS`** — the database boundary and Privacy surface now
-support a named, student-created, seven-day maximum, revocable and audited
-aggregate-only access window. Staffed channels and service levels remain.
+**Status: `IN_PROGRESS`** — **Harrison Rubin is the named support owner**. The
+database boundary and Privacy surface support a student-created, seven-day
+maximum, revocable and audited aggregate-only access window. A backup operator,
+published service levels and institution-approved channels remain.
+
+## Ownership
+
+| Responsibility | Named owner | Backup |
+| --- | --- | --- |
+| Individual-user support | Harrison Rubin | Unassigned |
+| Institutional escalation intake | Harrison Rubin | Unassigned |
+| Incident-command handoff | Harrison Rubin | Unassigned |
+
+The owner assignment is operational responsibility, not permission to inspect
+student data. Every support read still requires the bounded grant below.
 
 ## Tiers
 
@@ -33,9 +45,12 @@ unmet.
 
 ## Channels, SLAs, knowledge base
 
-None defined. A university will ask for all three in procurement.
+The product has a support/request path and the repository has response
+templates, but no institution-approved contact roster or contractual service
+level is recorded. A university will ask for both during procurement.
 
 ## Next
 
-Exercise the bounded grant with two real tenant accounts, then define staffed
-channels, service levels and the institution-approved retention schedule.
+Exercise the bounded grant with two real tenant accounts, assign a backup
+operator, then define service levels and the institution-approved retention
+schedule.

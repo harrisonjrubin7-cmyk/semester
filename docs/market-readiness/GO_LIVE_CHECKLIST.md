@@ -12,15 +12,19 @@ Every line requires evidence, not an opinion.
   identity, journal and role-audit suites). This does not certify every legacy
   direct-to-Supabase product table for multi-tenant institutional use.
 - [ ] Restore tested from backup, timed, and the restored DB passes the policy suites
-- [ ] Gateway journal backed up
+- [x] Gateway journal is on the production physical-backup path: the completed
+  1 October restore contained `private.gateway_audit`, the `ensure_rls`
+  trigger and zero public/private tables without RLS. Production held zero
+  gateway-journal rows, so recovery of a non-empty sample is not claimed.
+  Evidence: `docs/evidence/restore/2026-10-02-production-physical-restore.md`.
 - [ ] Error monitoring live and alerting to a named person
 - [x] Hourly synthetic monitoring covers the public Pages HTML, deployed
   module/stylesheet assets and production Supabase PostgREST
-- [ ] Security headers configured at the host
-  Written, not served: `app/vercel.json` and `app/public/_headers` carry the
-  set, held equal and complete by `app/src/lib/hostheaders.test.ts`. GitHub
-  Pages reads neither. Tick this when production is served from a host that
-  reads one and a probe of the live response shows the headers.
+- [x] Security headers are served by the Vercel production deployment at
+  `https://semester-shared-core.vercel.app/`: a live HTTP 200 response carried
+  CSP, HSTS, `nosniff`, referrer and permissions policies on 2 October 2026.
+  GitHub Pages remains a separate unhardened path and is not the basis for this
+  claim. Evidence: `docs/evidence/production/2026-10-02-production-controls.md`.
 - [x] Append-only audit evidence records tenant-setting, future role-grant and
   current report-moderation status changes; isolation, pseudonymization and
   immutability checks pass
@@ -36,16 +40,22 @@ Every line requires evidence, not an opinion.
     (communities, community_posts, community_reports, community_sessions,
     feedback, form_responses, group_tasks, groups, help_requests,
     mentor_requests, message_reactions, messages, opportunities, reports).
-    Still open before this is ticked: the Auth endpoint limits (sign-in,
-    sign-up, OTP, token refresh, email) read off the dashboard and recorded —
-    `supabase/DEPLOY.md` under **Rate limits**.
+    The Auth dashboard was read on 2 October 2026 and sign-in/sign-up, OTP,
+    token refresh, SMS, anonymous and Web3 values are recorded in
+    `supabase/DEPLOY.md` and the dated production-control evidence. The email
+    field was platform-managed and disabled, and its numeric value was not
+    exposed through the accessible dashboard output, so this line remains
+    unticked rather than guessing it.
 - [x] Data export and account deletion available to users: **Take it with you**
   downloads portable CSV, Markdown, calendar, attachment and restorable JSON
   files; specialized workspaces have a second explicit backup; **Privacy**
   exposes typed-confirmation cloud-account deletion and device erasure. The
   export/privacy/retention/erase suites are the release evidence.
 - [ ] Accessibility audit of the piloted workflows
-- [ ] Incident process with named owner and university contact templates
+- [x] Incident process with named owner and university contact templates:
+  Harrison Rubin is the Semester incident and support owner; the public
+  templates remain in `INCIDENT_COMMUNICATION_TEMPLATES.md`. Institution-side
+  contacts are still a per-pilot external input.
 - [ ] Rollback tested on the production deployment path
 - [x] No production secret in git, bundles, docs or fixtures — Gitleaks 8.28.0
   passed the current tree, all reachable history and the release-branch range;

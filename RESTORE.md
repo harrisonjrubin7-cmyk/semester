@@ -292,19 +292,32 @@ instead of writing to all of them. It was considered and not built (D-124,
 design does not, so the broad notice is the standing rule and `RETENTION.md`
 and the privacy-policy draft carry the exception in the same words.
 
-## After the drill, fill this in
+## Production physical-restore reading — 1–2 October 2026
 
-Nothing below is known yet, and saying so is the point of the table. A row
-with a number in it is a fact about this project; a row without one is work.
+Supabase completed a physical-backup restore into the separate project
+`semester-restore-drill-2026-10-01`. The dated evidence is
+[`docs/evidence/restore/2026-10-02-production-physical-restore.md`](docs/evidence/restore/2026-10-02-production-physical-restore.md).
+It records the backup timestamp, completion timestamp and read-only source vs
+restore controls. The source gained one public table after the backup; private
+table count, RLS coverage, the `ensure_rls` event trigger and the gateway audit
+relation survived. The gateway tables contained zero rows, so non-empty
+journal recovery remains unexercised.
+
+The dashboard view did not expose the restore start timestamp. That means this
+is real physical-restore evidence, but not a measured RTO. The blocking line
+for a *timed* restore stays open rather than deriving a duration from the
+completion time alone.
+
+## Current measured position
 
 | Question | Answer | Measured on |
 | --- | --- | --- |
-| How far back can the project be restored? | not yet measured | — |
-| Worst-case work lost (recovery point) | not yet measured | — |
-| Time to restore, start to finish (recovery time) | not yet measured | — |
-| Did the six fingerprints match? | not yet run | — |
-| Did `ensure_rls` survive? | not yet run | — |
-| Was row-level security still enforced? | not yet run | — |
+| How far back can the project be restored? | At least the daily backups visible from 25 September through 1 October; exact contractual retention not independently exported | 2 October 2026 |
+| Worst-case work lost (recovery point) | One daily backup interval on this path; production had one additional public table by verification time | 2 October 2026 |
+| Time to restore, start to finish (recovery time) | **Not measured** — completion was 1 October 2026 16:56:17 UTC, but start time was not retained | 2 October 2026 |
+| Did the six fingerprints match? | The six-fingerprint query was not retained; table/RLS/control queries were retained and show the one-table recovery-point drift | 2 October 2026 |
+| Did `ensure_rls` survive? | Yes: 1 in source and restore | 2 October 2026 |
+| Was row-level security still enforced? | Yes: zero public/private tables without RLS in source and restore | 2 October 2026 |
 
 ## Then
 

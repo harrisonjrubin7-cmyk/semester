@@ -349,4 +349,15 @@ describe('the workflow', () => {
     expect(r).toContain('cancel-in-progress: false');
     expect(r).toContain('status-record.mjs');
   });
+
+  it('delivers failed probes and an explicit drill to the named incident owner', () => {
+    const alert = job('alert');
+    expect(wf).toContain('exercise_alert:');
+    expect(alert).toContain('needs: [public, institutional]');
+    expect(alert).toContain('issues: write');
+    expect(alert).toContain("const assignee = 'harrisonjrubin7-cmyk'");
+    expect(alert).toContain('Alert drill only — no outage is being reported.');
+    expect(alert).toContain('Production smoke is red');
+    expect(alert).toContain('assignees: [assignee]');
+  });
 });

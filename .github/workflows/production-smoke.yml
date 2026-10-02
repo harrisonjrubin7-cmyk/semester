@@ -17,6 +17,12 @@ on:
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
+    inputs:
+      exercise_alert:
+        description: 'Deliver a clearly labelled test alert to the named incident owner'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -72,6 +78,115 @@ jobs:
           SEMESTER_PRODUCTION_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
           SEMESTER_PRODUCTION_GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}
         run: node scripts/production-smoke.mjs
+
+  alert:
+    if: ${{ always() }}
+    needs: [public, institutional]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          PUBLIC_RESULT: ${{ needs.public.result }}
+          INSTITUTIONAL_RESULT: ${{ needs.institutional.result }}
+          EXERCISE_ALERT: ${{ inputs.exercise_alert }}
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const assignee = 'harrisonjrubin7-cmyk';
+            const exercise = process.env.EXERCISE_ALERT === 'true';
+            const red =
+              process.env.PUBLIC_RESULT !== 'success' ||
+              process.env.INSTITUTIONAL_RESULT !== 'success';
+            const title = exercise
+              ? 'Production alert drill — Harrison Rubin'
+              : 'Production smoke is red';
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const notice = open.find((issue) => !issue.pull_request && issue.title === title);
+
+            if (exercise) {
+              const body = [
+                '**Alert drill only — no outage is being reported.**',
+                '',
+                'Named incident and support owner: **Harrison Rubin**.',
+                '',
+                `Public probe: ${process.env.PUBLIC_RESULT}`,
+                `Institutional probe: ${process.env.INSTITUTIONAL_RESULT}`,
+                '',
+                run,
+                '',
+                'This issue proves the production monitor can deliver a live, assigned',
+                'notification through the repository account used for incident response.',
+              ].join('\n');
+              if (notice) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: notice.number,
+                  body: `Alert drill repeated.\n\n${run}`,
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body,
+                  assignees: [assignee],
+                });
+              }
+              return;
+            }
+
+            if (red) {
+              const body = [
+                'Semester production smoke needs attention.',
+                '',
+                `Public probe: ${process.env.PUBLIC_RESULT}`,
+                `Institutional probe: ${process.env.INSTITUTIONAL_RESULT}`,
+                '',
+                run,
+                '',
+                'Named incident and support owner: **Harrison Rubin**.',
+              ].join('\n');
+              if (notice) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: notice.number,
+                  body: `Still red.\n\n${run}`,
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body,
+                  assignees: [assignee],
+                });
+              }
+            } else if (notice) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: notice.number,
+                body: `Green again.\n\n${run}`,
+              });
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: notice.number,
+                state: 'closed',
+              });
+            }
 
   record:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'

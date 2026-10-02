@@ -159,10 +159,11 @@ export const GATES: readonly Gate[] = [
     status: 'partial',
     evidence: [
       { path: 'supabase/restore.sh', shows: 'a logical-dump restore rehearsal, run on 2026-09-21 and passing' },
-      { path: 'RESTORE.md', shows: 'the production procedure, with every measurement still blank' },
+      { path: 'RESTORE.md', shows: 'the production procedure and current measured position' },
+      { path: 'docs/evidence/restore/2026-10-02-production-physical-restore.md', shows: 'a completed physical-backup restore into a separate Supabase project; RLS, ensure_rls, table counts and gateway-journal presence checked against production' },
     ],
-    gap: 'The production project has never been restored: recovery point, recovery time and post-restore policy checks are all unmeasured. The rehearsal runs in CI on every change, against a disposable database.',
-    goLive: [/Restore tested from backup/, /Gateway journal backed up/],
+    gap: 'A production physical backup was restored and its core controls verified, but the dashboard view did not retain the restore start time, so RTO is unmeasured. Production had one newer public table; the gateway journal held zero rows, so non-empty journal recovery was not exercised.',
+    goLive: [/Restore tested from backup/, /Gateway journal/],
   },
   {
     id: 'operations-live',
@@ -172,9 +173,10 @@ export const GATES: readonly Gate[] = [
     evidence: [
       { path: '.github/workflows/production-smoke.yml', shows: 'hourly synthetic check of the public app, its assets and PostgREST, and a job that records each hour’s result for the status page’s 90-day history' },
       { path: 'app/src/lib/statushistory.test.ts', shows: 'the history’s rules: an unchecked day is never up, uptime is checks passed over checks made, and the pages and feed are held to it' },
-      { path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'the incident process, written and never exercised' },
+      { path: 'docs/market-readiness/INCIDENT_RESPONSE.md', shows: 'the incident process with Harrison Rubin named as incident and support owner' },
+      { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'Harrison Rubin named for individual support and institutional escalation intake' },
     ],
-    gap: 'No alert reaches a named person and no support address exists that a university could be given. A public status page is live at /status.html (28 September) with an Atom incident feed and a 90-day history that begins with the first hourly record; it has no subscriber notifications yet, and is not hosted apart from the app it reports on.',
+    gap: 'The production workflow now contains a GitHub issue alert assigned to Harrison Rubin, but live delivery is not evidenced until the exercise input is dispatched and the assigned issue is observed. Institution-side contacts and a backup operator remain unassigned.',
     goLive: [/Error monitoring live and alerting/, /Incident process with named owner/],
   },
   {
@@ -182,8 +184,8 @@ export const GATES: readonly Gate[] = [
     requirement: 'Named escalation owners and response windows.',
     owner: 'success',
     status: 'partial',
-    evidence: [{ path: 'docs/vanderbilt/incident-routing.md', shows: 'response windows per signal, every owner marked unassigned' }],
-    gap: 'The response windows exist. Every owner is unassigned.',
+    evidence: [{ path: 'docs/vanderbilt/incident-routing.md', shows: 'response windows per signal and Harrison Rubin named for every Semester-side route' }],
+    gap: 'Semester-side ownership is assigned. Vanderbilt IAM, AI, LMS, security/privacy and operational contacts remain institution-supplied pilot inputs; the Semester backup operator is unassigned.',
   },
   {
     id: 'terms-reviewed',
@@ -194,8 +196,9 @@ export const GATES: readonly Gate[] = [
       { path: 'app/src/lib/privacy.ts', shows: 'the privacy disclosure written as data and tested against the code' },
       { path: 'docs/legal/PRIVACY-POLICY-DRAFT.md', shows: 'a privacy policy draft for counsel, held to the subprocessor register' },
       { path: 'docs/legal/TERMS-OF-SERVICE-DRAFT.md', shows: 'a terms of service draft for counsel, with acceptable use' },
+      { path: 'docs/evidence/legal/2026-09-30-terms-privacy-review-attestation.md', shows: 'Harrison Rubin’s attestation that Jessica Springsteen completed review on 2026-09-30 at 13:30 America/Chicago and that Harrison approved the reviewed materials' },
     ],
-    gap: 'No qualified legal or privacy review of terms, privacy notice, consent or acceptable use has been recorded. The drafts carry open [DECIDE] items: legal entity, liability, governing law; the minimum age is set at 13 (D-139) and awaits counsel.',
+    gap: 'The owner-provided review and approval are recorded, but reviewer qualification is not independently evidenced and the drafts still carry open [DECIDE] items: legal entity, liability, governing law, privacy-response timing and publication dates. They are not yet in force.',
   },
   {
     id: 'data-scope',

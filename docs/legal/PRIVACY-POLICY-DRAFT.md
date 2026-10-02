@@ -1,7 +1,12 @@
 # Semester Privacy Policy — DRAFT
 
-> **Not in force. Not reviewed by a lawyer.** This is a working draft for
-> qualified counsel to review, correct and approve. It is written from what
+> **Not in force.** Harrison Rubin attests that Jessica Springsteen reviewed
+> the terms and privacy materials on 30 September 2026 at 13:30
+> America/Chicago and that Harrison approved the reviewed materials; the dated
+> record is in `docs/evidence/legal/2026-09-30-terms-privacy-review-attestation.md`.
+> The repository does not independently establish the reviewer's professional
+> qualification, and the open `[DECIDE]` fields below prevent publication as
+> a final policy. This is still a working draft. It is written from what
 > the code does today — the in-app disclosure in
 > [`app/src/lib/privacy.ts`](../../app/src/lib/privacy.ts) and the subprocessor
 > register in

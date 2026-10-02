@@ -589,8 +589,7 @@ migration does, on the schema deploy. To confirm it did:
     select tgrelid::regclass from pg_trigger where tgname = 'zz_rate_limit' order by 1;
 
 Run against the project on 29 September 2026 through the database connector:
-fourteen rows, the fourteen tables the migration names. The Auth endpoint
-limits below are still unread.
+fourteen rows, the fourteen tables the migration names.
 
 should list fourteen tables. An account locked out by mistake is cleared with
 the service role: `delete from private.direct_rate_limit where user_id = '…';`.
@@ -602,10 +601,18 @@ a setting written there silently overrides the dashboard on the next deploy).
 They are set in the dashboard, in the Auth rate-limit settings, which in
 `config.toml` terms are `[auth.rate_limit]`'s `email_sent`, `sms_sent`,
 `token_refresh`, `token_verifications`, `sign_in_sign_ups` and
-`anonymous_users`. **Nobody has yet read them off the production project and
-recorded them here**; until someone does, the go-live line for rate limiting
-stays open. Record the reading beside the date, as the scheduler section below
-does, rather than the value somebody meant to set.
+`anonymous_users`.
+
+**Read directly from the production dashboard on 2 October 2026:** token
+refreshes are 150 per five minutes (1,800/hour); OTP and magic-link token
+verifications are 30 per five minutes (360/hour); sign-ups and sign-ins are 30
+per five minutes (360/hour); SMS is 30/hour and platform-managed; anonymous
+users are 30/hour and disabled; Web3 sign-ups/sign-ins are 30 per five minutes
+and disabled; IP-address forwarding is off. The platform-managed email field
+was disabled and its numeric value was not exposed through the accessible
+dashboard output used for the reading, so this document deliberately does not
+invent it. The dated source record is
+`docs/evidence/production/2026-10-02-production-controls.md`.
 
 ## The scheduler
 

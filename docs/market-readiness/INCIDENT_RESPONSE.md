@@ -3,9 +3,9 @@
 The consolidated lifecycle, proposed service tiers, fail-safe automation boundaries, service runbooks, verification requirements, and remaining operational gates are in [`../INCIDENT-RECOVERY-PLAYBOOK.md`](../INCIDENT-RECOVERY-PLAYBOOK.md). This page preserves the current operational-status boundary.
 
 **Status: `IN_PROGRESS` as an operational practice.** This document defines the
-process, public uptime monitoring can trigger it, and communication templates
-exist. No named incident owner or university contact has been configured, and
-the process has not been exercised.
+process, public uptime monitoring can trigger it, communication templates
+exist, and **Harrison Rubin is the named Semester incident and support owner**.
+Institution-side contacts and a backup Semester operator remain unassigned.
 
 ## Severity
 
@@ -35,10 +35,13 @@ written review when impact, communication, or a missing guard warrants one.
 **Detect.** The hourly production smoke now detects loss of the Pages shell,
 its deployed module or stylesheet, and the production Supabase REST edge.
 Gateway liveness/readiness joins it when both production URLs are configured.
-Application exceptions, workflow correctness and named-person alert delivery
-remain unmonitored, so a user report is still the only signal for those gaps.
+Application exceptions and workflow correctness remain unmonitored. The
+production-smoke workflow now owns a persistent GitHub issue alert assigned to
+Harrison Rubin when either production probe fails, plus an explicit alert-drill
+input. The dated drill record is added only after that live path is exercised.
 
-**Own.** One named person. Not a channel.
+**Own.** Harrison Rubin is the incident commander and support owner. One named
+person is not resilient staffing: the backup operator remains a launch risk.
 
 **Contain.** Prefer rollback over forward-fix for SEV1/SEV2; see `ROLLBACK.md`.
 For a suspected data exposure, containment precedes diagnosis — revoke first,
@@ -63,10 +66,10 @@ Use [`INCIDENT_COMMUNICATION_TEMPLATES.md`](./INCIDENT_COMMUNICATION_TEMPLATES.m
 The messages deliberately separate suspected impact from confirmed facts and
 include the next-update time. They are drafts, not a mailing list: a pilot
 still cannot start until the institution supplies its contacts and Semester
-assigns the named incident owner and backup.
+assigns a backup operator.
 
 ## Blocked on
 
-- Semester incident owner and backup
+- Backup Semester incident operator
 - Vanderbilt security/privacy and operational contacts
 - A tabletop exercise using the real contact route

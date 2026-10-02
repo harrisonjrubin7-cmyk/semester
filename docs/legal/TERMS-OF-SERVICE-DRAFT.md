@@ -1,12 +1,17 @@
 # Semester Terms of Service — DRAFT
 
-> **Not in force. Not reviewed by a lawyer.** A working draft for qualified
-> counsel to review, correct and approve, covering individual use. Schools and
+> **Not in force.** Harrison Rubin attests that Jessica Springsteen reviewed
+> the terms and privacy materials on 30 September 2026 at 13:30
+> America/Chicago and that Harrison approved the reviewed materials; the dated
+> record is in `docs/evidence/legal/2026-09-30-terms-privacy-review-attestation.md`.
+> The repository does not independently establish the reviewer's professional
+> qualification, and the open `[DECIDE]` fields below prevent publication as
+> final terms. This remains a working draft covering individual use. Schools and
 > departments sign a separate order form and data processing agreement, which
 > this draft does not replace. Do not publish, link from the app, or accept
 > money under it until the `terms-reviewed` gate in
 > [`GO-NO-GO-CHECKLIST.md`](../GO-NO-GO-CHECKLIST.md) records a qualified
-> review. Every `[DECIDE: …]` is a question only the owner or counsel can
+> review and resolution of the open decisions. Every `[DECIDE: …]` is a question only the owner or counsel can
 > answer.
 
 **Effective date:** [DECIDE]
