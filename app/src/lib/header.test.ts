@@ -79,12 +79,18 @@ describe('the header', () => {
     }
   });
 
-  it('keeps Today as the last resort, and only for a screen no registry knows', () => {
-    // The two shell screens and onboarding: deliberately not destinations —
-    // the workspace looking at itself, the way a new-tab page is not a
-    // bookmark — so there is no name to read and the date is honest.
+  it('gives shell-owned screens useful document titles', () => {
+    // These routes own their visible heading, but `useHeader` also drives the
+    // browser title. Falling through to Today made Search and All apps sound
+    // like the home screen to tab switchers and assistive technology.
     expect(destination('search')).toBeFalsy();
-    expect(fallbackHeader('search', MARK)).toEqual({ kicker: MARK, title: 'Today' });
+    expect(headFor('search')).toEqual({ kicker: 'Semester', title: 'Search' });
+    expect(headFor('directory')).toEqual({ kicker: 'Semester', title: 'All apps' });
+    expect(headFor('onboarding')).toEqual({ kicker: 'Semester', title: 'Welcome' });
+  });
+
+  it('keeps Today as the last resort for an unknown runtime route', () => {
+    expect(fallbackHeader('cloud' as Screen, MARK)).toEqual({ kicker: MARK, title: 'Today' });
   });
 
   /*
