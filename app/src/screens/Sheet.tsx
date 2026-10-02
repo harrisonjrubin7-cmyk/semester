@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
@@ -919,6 +919,7 @@ const EDGES = [
 ] as const;
 
 function Grid({ sheet }: { sheet: SheetModel }) {
+  const now = useNow().getTime();
   const { state, dispatch, say } = useStore();
   const [sel, setSel] = useState<Range>(() => oneCell('A1'));
   /** Which cell has the text cursor in it, so it shows its formula not its answer. */

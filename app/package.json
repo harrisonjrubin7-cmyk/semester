@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "budgets": "node scripts/budgets.ts",
-    "lint": "oxlint --max-warnings=25 src && node scripts/styles.mjs && node scripts/labels.mjs && node scripts/terms.mjs",
+    "lint": "oxlint --max-warnings=0 src && node scripts/styles.mjs && node scripts/labels.mjs && node scripts/terms.mjs",
     "lint:styles": "node scripts/styles.mjs",
     "counts": "node scripts/counts.mjs",
     "audit:screens": "node scripts/screen-audit.mjs",
