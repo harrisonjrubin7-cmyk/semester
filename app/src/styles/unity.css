@@ -243,7 +243,7 @@
 .device .system-context-term-select {
   appearance: none;
   min-width: 0;
-  padding-inline-end: var(--sp-9);
+  padding-inline-end: calc(var(--sp-7) + var(--sp-5));
   background-color: var(--surface-base);
   background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%), linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
   background-position: calc(100% - 1rem) 50%, calc(100% - 0.75rem) 50%;
@@ -264,6 +264,45 @@
     appearance: auto;
     background-image: none;
   }
+}
+
+/*
+ * Course-hub quiet actions sit inside a legacy portal scope that paints every
+ * button as a filled control. The Upload picker is a label, so only the four
+ * create buttons received that outer fill; text links received it too. Keep
+ * the shared portal defaults for ordinary controls and restore the explicit
+ * quiet actions after that sheet in the cascade.
+ */
+.device .portal-workspace button.for-this-new {
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+}
+
+.device .portal-workspace button.for-this-new:hover {
+  background: none;
+}
+
+.device .portal-workspace button.for-this-attach,
+.device .portal-workspace button.workspace-text-button {
+  min-height: 44px;
+  background: none;
+  border: 0;
+  font-size: var(--type-sm) !important;
+}
+
+.device .portal-workspace button.workspace-text-button {
+  padding: 0 var(--sp-2);
+  margin: 0 calc(var(--sp-2) * -1);
+  border-radius: var(--r-sm);
+  font: inherit;
+  color: var(--app-accent-deep);
+  letter-spacing: inherit !important;
+  text-transform: none !important;
+  line-height: inherit;
 }
 
 .accessibility-selects label {

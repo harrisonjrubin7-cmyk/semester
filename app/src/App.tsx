@@ -882,7 +882,7 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header desk />}
+            <Header desk screenOwnsTitle={ownTitle} />
             <SystemContextBar />
             <Said />
             {/* The sample banner belongs over records, which is what it is
