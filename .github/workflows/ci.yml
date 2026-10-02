@@ -582,6 +582,11 @@ jobs:
         with:
           version: latest
 
+      - name: Allow loopback CORS only for this local test stack
+        run: |
+          install -d supabase/functions
+          printf 'CORS_ALLOW_DEV=1\n' > supabase/functions/.env
+
       - name: Start a local Supabase from this repository
         run: supabase start -x studio,imgproxy,logflare,vector,supavisor,postgres-meta,storage-api
 
