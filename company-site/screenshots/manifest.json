@@ -5,11 +5,11 @@
   "appDeploymentCommit": "7675b99b151cf9450a3139520b1c8e26289976a4",
   "appDeploymentRun": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/36950752026",
   "latestDeploymentCheck": {
-    "checkedAt": "2026-10-02T13:33:00Z",
-    "commit": "3d87884cb64684054d2c27c07423af51c9c90460",
-    "run": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/36953148517",
-    "capturedScreensUnchanged": true,
-    "basis": "Today, Courses, appearance and workspace navigation source are unchanged. New styles are scoped to .standards-audit; the newer release adds standards and integration features, not changes to these captured screens."
+    "checkedAt": "2026-10-02T14:59:12Z",
+    "commit": "457f3c8770c65eb04dba581fbee49169cab50bce",
+    "run": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37019870262",
+    "capturedViewsRepresentative": true,
+    "basis": "Deployment checkout and successful publish were verified, followed by a fresh deployed Today inspection and a source diff. The closed Today tab and Courses list shown here remain representative. The newer release changes accessibility disclosure behavior, other Today tabs, and course-workspace actions outside the captured views. These remain dated raw captures, not newly taken images."
   },
   "captureMode": "isolated-demo",
   "sampleData": true,
