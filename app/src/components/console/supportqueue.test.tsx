@@ -115,7 +115,7 @@ describe('the support operations queue', () => {
     type(host.querySelector('textarea')!, 'The reply remains available here.');
     await click(button('Send support reply'));
     expect(mock.status).toHaveBeenCalledWith(
-      'Reply recorded for SUP-123E-4567-E89B-12D3. Email was not delivered; the reply is available in Help.',
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice is queued for retry; the reply is available in Help.',
     );
   });
 

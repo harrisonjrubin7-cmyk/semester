@@ -84,7 +84,7 @@ select cron.alter_job(
 --
 -- A reply commits its generic email-notice intent to
 -- `support_notification_outbox` in the same transaction. The browser asks
--- for an immediate delivery, while this active one-minute worker recovers a
+-- for an immediate delivery, while this one-minute worker recovers a
 -- browser crash, lost connection or provider refusal. Resend's idempotency
 -- key is the message id, so overlapping immediate and scheduled attempts do
 -- not produce two notices. The existing first-party sender secret is reused;
@@ -105,6 +105,13 @@ select cron.schedule(
       timeout_milliseconds := 20000
     );
   $job$
+);
+
+-- Parked until the function deployment and all sender/secret configuration
+-- are verified. Production activation is a separate, visible release step.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'support-reply-notify'),
+  active := false
 );
 
 

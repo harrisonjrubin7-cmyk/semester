@@ -140,7 +140,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const names = jobs(scheduler()).map((j) => j.name);
     expect(names.length).toBeGreaterThan(8);
     expect(names).toEqual(expect.arrayContaining(['push', 'tombstones', 'integration-sync']));
-    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan']));
+    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify']));
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

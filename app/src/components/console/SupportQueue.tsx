@@ -105,7 +105,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       const queueFresh = await refresh();
       const outcome = delivery === 'accepted'
         ? `Reply recorded for ${ticketReference(ticketId)}. Email notice accepted by the provider; delivery is not yet confirmed.`
-        : `Reply recorded for ${ticketReference(ticketId)}. Email was not delivered; the reply is available in Help.`;
+        : `Reply recorded for ${ticketReference(ticketId)}. Email notice is queued for retry; the reply is available in Help.`;
       onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage
       // must not invite an operator to retry and send a duplicate response.

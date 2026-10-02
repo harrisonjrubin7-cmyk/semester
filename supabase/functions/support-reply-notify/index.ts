@@ -10,11 +10,26 @@ const cronSecret = Deno.env.get('CRON_SECRET');
 
 interface OutboxRow { message_id: string; ticket_id: string; attempts: number }
 
+async function retry(messageId: string, attempts: number, reason: string) {
+  const nextAttempts = Math.min(8, attempts + 1);
+  const patch = nextAttempts >= 8
+    ? { attempts: nextAttempts, dead_lettered_at: new Date().toISOString(), last_error: reason }
+    : { attempts: nextAttempts, next_attempt_at: new Date(Date.now() + Math.min(60, 2 ** nextAttempts) * 60_000).toISOString(), last_error: reason };
+  await admin.from('support_notification_outbox').update(patch).eq('message_id', messageId);
+}
+
 async function target(row: OutboxRow) {
-  const { data: ticket } = await admin.from('support_tickets').select('student_id').eq('id', row.ticket_id).maybeSingle();
-  if (!ticket?.student_id) return null;
+  const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('student_id').eq('id', row.ticket_id).maybeSingle();
+  if (ticketError || !ticket?.student_id) {
+    await retry(row.message_id, row.attempts, ticketError ? 'student lookup unavailable' : 'student account unavailable');
+    return null;
+  }
   const { data: user, error } = await admin.auth.admin.getUserById(ticket.student_id);
-  return error || !user.user.email ? null : {
+  if (error || !user.user.email) {
+    await retry(row.message_id, row.attempts, error ? 'student email lookup unavailable' : 'student email unavailable');
+    return null;
+  }
+  return {
     messageId: row.message_id, ticketId: row.ticket_id, email: user.user.email, attempts: row.attempts,
   };
 }
@@ -69,10 +84,6 @@ Deno.serve((req) => handleSupportNotice(req, {
     await admin.from('support_notification_outbox').update({ accepted_at: new Date().toISOString(), last_error: null }).eq('message_id', messageId);
   },
   async failed(messageId, attempts) {
-    const nextAttempts = Math.min(8, attempts + 1);
-    const patch = nextAttempts >= 8
-      ? { attempts: nextAttempts, dead_lettered_at: new Date().toISOString(), last_error: 'provider rejected notice' }
-      : { attempts: nextAttempts, next_attempt_at: new Date(Date.now() + Math.min(60, 2 ** nextAttempts) * 60_000).toISOString(), last_error: 'provider rejected notice' };
-    await admin.from('support_notification_outbox').update(patch).eq('message_id', messageId);
+    await retry(messageId, attempts, 'provider rejected notice');
   },
 }));
