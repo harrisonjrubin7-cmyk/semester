@@ -94,27 +94,12 @@ jobs:
       # week is a step that is skimmed. High and critical are the two levels
       # that describe something exploitable.
       #
-      # ## Why it cannot fail the build, when the tree is clean today
-      #
-      # `npm audit --audit-level=high` in `app/` reports **0 vulnerabilities**
-      # as this is written, so "non-blocking until the tree is clean" is not
-      # the reason — the tree is clean, and this could be made blocking by
-      # deleting one line.
-      #
-      # The reason is that this step's input is not in the repository. An
-      # advisory published overnight turns this red on a pull request about a
-      # button, whose author did not introduce it and cannot fix it there;
-      # they either wait or learn to merge past a red check, and the second is
-      # a habit that costs more than this step is worth. Left non-blocking it
-      # is an annotation in the log of every run, which is enough to be seen
-      # and not enough to stop unrelated work.
-      #
-      # Flip it by removing `continue-on-error` — the step already exits
-      # non-zero on a finding, which is what makes that a one-line change
-      # rather than a rewrite.
+      # High and critical advisories are a release stop. Because the advisory
+      # database changes independently of a pull request, a newly red run is
+      # handled as a security incident: update, prove the dependency is
+      # unreachable and time-box an exception, or hold the release.
       - name: Audit the dependency tree
         working-directory: app
-        continue-on-error: true
         run: npm audit --audit-level=high
 
       - name: Typecheck

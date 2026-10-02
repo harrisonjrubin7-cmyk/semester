@@ -912,6 +912,17 @@ export default defineConfig(({ command, mode }) => {
   }
 
   return {
+    build: {
+      /*
+       * Vite's default warning uses raw bytes and treats every lazy leaf like
+       * first-load code. Semester's release gate instead measures gzip bytes,
+       * the first-load graph and every route independently in `pnpm budgets`.
+       * Keep this ceiling just above the largest optional renderer so Vite
+       * still reports an unexpected monolith while the stricter graph budget
+       * remains the release-blocking measure.
+       */
+      chunkSizeWarningLimit: 1500,
+    },
     /*
      * The two shared contracts. See tsconfig.app.json for why each is aliased
      * rather than copied into the clients that read it.
