@@ -1,0 +1,278 @@
+/* The same reading rhythm for sign-in, Guide preferences and import review. */
+.credentials-form {
+  display: grid;
+  gap: var(--sp-5);
+  min-width: 0;
+  margin-top: var(--sp-7);
+}
+
+.credentials-field {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.credentials-field > label,
+.guide-setting-field > span {
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.credentials-hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+  line-height: var(--leading-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.credentials-providers,
+.credentials-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+}
+
+.credentials-providers > .btn {
+  min-width: 0;
+}
+
+.credentials-links {
+  gap: var(--sp-4) var(--sp-6);
+  margin-top: var(--sp-6);
+}
+
+.credentials-links > button {
+  min-height: var(--target-primary);
+  padding-block: var(--sp-2);
+  text-align: left;
+}
+
+.account-identity {
+  overflow-wrap: anywhere;
+}
+
+/* Search gets a row of its own on a phone. Page actions stay in the toolbar,
+   not inside the field where four icons used to leave only a sliver to type. */
+@media (max-width: 839px) {
+  .deskwork > .desktop-bar {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--sp-3) var(--sp-4);
+  }
+
+  .desktop-brand {
+    min-width: var(--target-primary);
+    min-height: var(--target-primary);
+  }
+
+  .desktop-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .desktop-field {
+    min-width: 0;
+    gap: var(--sp-4);
+    padding: var(--sp-2) var(--sp-5);
+  }
+
+  .desktop-input {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: var(--target-primary);
+  }
+
+  .desktop-field > svg {
+    flex: none;
+  }
+
+  .desktop-tools {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    gap: var(--sp-2);
+    min-width: 0;
+  }
+
+  .desktop-tools > .desktop-star,
+  .desktop-tools > .desktop-ai,
+  .desktop-tools > .btn-icon,
+  .desktop-clear {
+    flex: none;
+    min-width: var(--target-primary);
+    min-height: var(--target-primary);
+  }
+
+  .desktop-tools > .desktop-star,
+  .desktop-tools > .desktop-ai,
+  .desktop-clear {
+    display: grid;
+    place-items: center;
+  }
+}
+
+[data-calm-settings] {
+  display: grid;
+  gap: var(--sp-6);
+  min-width: 0;
+}
+
+[data-calm-settings] > h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+  line-height: var(--leading-tight-plus);
+}
+
+[data-calm-settings] > p {
+  margin: 0;
+}
+
+[data-calm-settings] fieldset {
+  display: grid;
+  gap: var(--sp-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--sp-5) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+[data-calm-settings] legend {
+  padding: 0 var(--sp-3) 0 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--type-base);
+  font-weight: 600;
+}
+
+.guide-setting-check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--target-primary);
+  color: var(--text-primary);
+  font-size: var(--type-base);
+  line-height: var(--leading-normal);
+  cursor: pointer;
+}
+
+.guide-setting-check > input,
+.import-confirmation > input {
+  flex: none;
+  width: var(--sp-6);
+  height: var(--sp-6);
+  margin: 0;
+  accent-color: var(--action-primary);
+}
+
+.guide-setting-field {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  max-width: 24rem;
+}
+
+.guide-setting-field > .input {
+  min-width: 0;
+  font-size: var(--type-base);
+}
+
+[data-calm-settings] ul {
+  margin: 0;
+  padding-inline-start: var(--sp-6);
+  line-height: var(--leading-relaxed);
+  overflow-wrap: anywhere;
+}
+
+[data-calm-settings] fieldset > .btn {
+  justify-self: start;
+}
+
+.import-review-item {
+  min-width: 0;
+  padding-block: var(--sp-3);
+  overflow-wrap: anywhere;
+}
+
+.import-correction {
+  margin-block: var(--sp-2) var(--sp-3);
+}
+
+.import-correction > summary {
+  display: list-item;
+  min-height: var(--target-primary);
+  padding-block: var(--sp-3);
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  cursor: pointer;
+}
+
+.import-correction > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  padding-block: var(--sp-3) var(--sp-5);
+}
+
+.import-correction label {
+  display: grid;
+  gap: var(--sp-2);
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+}
+
+.import-correction .input {
+  min-width: 0;
+  font-size: var(--type-base);
+}
+
+.import-evidence-note {
+  margin-block: var(--sp-3);
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+  line-height: var(--leading-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.import-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  min-height: var(--target-primary);
+  margin-top: var(--sp-7);
+  padding: var(--sp-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-control);
+  background: var(--surface-base);
+  color: var(--text-primary);
+  font-size: var(--type-base);
+  line-height: var(--leading-relaxed);
+  cursor: pointer;
+}
+
+.import-confirmation > input {
+  margin-top: var(--sp-1);
+}
+
+.import-confirmation > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .import-correction > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .guide-setting-field {
+    max-width: none;
+  }
+}

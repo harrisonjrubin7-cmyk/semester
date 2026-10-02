@@ -153,6 +153,15 @@ export function Credentials({
   const ready =
     Boolean(email.trim()) &&
     (mode === 'up' ? password.length >= MADE_FLOOR && Boolean(bornOn) : password.length > 0);
+  const readiness = !email.trim()
+    ? 'Enter your email address to continue.'
+    : mode === 'up' && password.length < MADE_FLOOR
+      ? `Choose a password with at least ${MADE_FLOOR} characters.`
+      : !password
+        ? 'Enter your password to continue.'
+        : mode === 'up' && !bornOn
+          ? 'Add your date of birth to continue.'
+          : '';
 
   const run = async (fn: () => Promise<string | void>) => {
     setBusy(true);
@@ -209,49 +218,51 @@ export function Credentials({
         for a submittable form with named fields, so filling this had to be done
         by hand. It also means Enter submits and an iOS keyboard shows Go.
 
-        The labels are visually hidden rather than absent — the placeholder says
-        the same words, and a placeholder disappears the moment somebody starts
-        typing, which is exactly when a label is needed.
+        Labels stay visible after typing. Password guidance stays below the
+        field, so the requirement is still readable when autofill is used.
       */}
       <form
+        className="credentials-form"
         onSubmit={(e) => {
           e.preventDefault();
           if (busy || !ready) return;
           void submit();
         }}
       >
-        <label className="sr-only" htmlFor="account-email">
-          Email
-        </label>
-        <input
-          className="input"
-          id="account-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          placeholder="you@vanderbilt.edu"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-7)' }}
-        />
-        <label className="sr-only" htmlFor="account-password">
-          Password
-        </label>
-        <input
-          className="input"
-          id="account-password"
-          name="password"
-          type="password"
-          autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
-          placeholder={mode === 'in' ? 'Password' : `Password — at least ${MADE_FLOOR} characters`}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' }}
-        />
+        <div className="credentials-field">
+          <label htmlFor="account-email">Email address</label>
+          <input
+            className="input"
+            id="account-email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            placeholder="you@vanderbilt.edu"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ fontSize: 'var(--type-md)' }}
+          />
+        </div>
+        <div className="credentials-field">
+          <label htmlFor="account-password">Password</label>
+          <input
+            className="input"
+            id="account-password"
+            name="password"
+            type="password"
+            autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
+            aria-describedby={mode === 'up' ? 'account-password-hint' : undefined}
+            placeholder={mode === 'in' ? 'Password' : `Password — at least ${MADE_FLOOR} characters`}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ fontSize: 'var(--type-md)' }}
+          />
+          {mode === 'up' && <p id="account-password-hint" className="credentials-hint">Use at least {MADE_FLOOR} characters.</p>}
+        </div>
         {mode === 'up' && (
-          <>
-            <label htmlFor="account-born" style={{ display: 'block', marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)' }}>
+          <div className="credentials-field">
+            <label htmlFor="account-born">
               Date of birth — you need to be at least {MINIMUM_AGE}
             </label>
             <input
@@ -263,21 +274,24 @@ export function Credentials({
               max={todayIso()}
               value={bornOn}
               onChange={(e) => setBornOn(e.target.value)}
-              style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-2)' }}
+              style={{ fontSize: 'var(--type-md)' }}
             />
-          </>
+          </div>
         )}
+
+        {readiness && <p id="account-readiness" className="credentials-hint">{readiness}</p>}
 
         <button
           type="submit"
           className="btn btn-primary btn-block"
           disabled={busy || !ready}
+          aria-describedby={readiness ? 'account-readiness' : undefined}
           style={{
-            height: 50,
+            minHeight: 50,
             fontSize: 'var(--type-lg)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            marginTop: 'calc(14px * var(--density, 1))',
+            marginTop: 0,
           }}
         >
           {busy ? 'Working…' : mode === 'in' ? 'Sign in' : 'Create the account'}
@@ -303,7 +317,7 @@ export function Credentials({
       )}
 
       {shown.length > 0 && (
-        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+        <div className="credentials-providers">
           {shown.map((p) => (
             <button
               key={p}
@@ -312,8 +326,8 @@ export function Credentials({
               disabled={busy}
               onClick={() => void run(() => leaving(signInWith, p))}
               style={{
-                flex: 1,
-                height: 42,
+                flex: '1 1 8rem',
+                minHeight: 44,
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
@@ -364,7 +378,7 @@ export function Credentials({
           overlay reaching sideways would have each claiming the other's
           space, and the one later in the DOM would quietly win the overlap.
           Measured 102×19: the size of the words, not of a thumb. */}
-      <div style={{ display: 'flex', gap: 'calc(14px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
+      <div className="credentials-links">
         {/*
           Changing your mind clears what the other mode said.
 

@@ -14,6 +14,7 @@ import './styles/features.css';
 // components built on it — see `styles/tokens.css` and `styles/unity.css`.
 import './styles/tokens.css';
 import './styles/unity.css';
+import './styles/form-usability.css';
 import App from './App';
 import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';

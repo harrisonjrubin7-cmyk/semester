@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNow } from '../../state/store';
 import type { CoursePolicy, Screen } from '../../lib/types';
 import { download } from '../../lib/deliver';
 import { BOUNDARIES, entitle, SUBJECTS, subjectOf, toolsFor, UNIVERSAL, type Subject } from '../../lib/toolkit/catalog';
@@ -43,7 +44,7 @@ export function Toolkit({
   onOpen,
   onClose,
   flags = TOOLKIT_FLAGS,
-  now = new Date(),
+  now: nowProp,
   published,
 }: {
   courses: readonly ToolkitCourse[];
@@ -56,6 +57,8 @@ export function Toolkit({
   /** What instructors published for these courses (Course Studio), keyed by normalised code. */
   published?: Record<string, CoursePublication>;
 }) {
+  const clock = useNow();
+  const now = nowProp ?? clock;
   const library = useToolkit(accountId);
   const dataLibrary = useToolkitData(accountId);
   const store = library.value;

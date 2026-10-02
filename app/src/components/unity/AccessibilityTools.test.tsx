@@ -18,6 +18,30 @@ async function openTools(host: HTMLElement) {
 }
 
 describe('global accessibility tools', () => {
+  it('opens outside the clipped page and closes with Escape, returning focus', async () => {
+    const frame = document.createElement('div');
+    frame.className = 'device';
+    const host = document.createElement('div');
+    host.style.overflow = 'hidden';
+    frame.append(host);
+    document.body.append(frame);
+    const root = createRoot(host);
+    roots.push(root);
+    try {
+      await act(async () => root.render(<AccessibilityTools look={{}} onChange={() => {}} onSettings={() => {}} />));
+      host.querySelector('summary')!.focus();
+      await openTools(host);
+      const panel = frame.querySelector<HTMLElement>('[role="dialog"]')!;
+      expect(host.contains(panel)).toBe(false);
+      expect(panel.parentElement).toBe(frame);
+      await act(async () => panel.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true})));
+      expect(panel.hidden).toBe(true);
+      expect(document.activeElement).toBe(host.querySelector('summary'));
+    } finally {
+      await act(async () => root.unmount());
+      frame.remove();
+    }
+  });
   it('loads controls only on opening and retains narration while closed', async () => {
     const cancel = vi.fn();
     vi.stubGlobal('speechSynthesis', {cancel, speak: vi.fn()});

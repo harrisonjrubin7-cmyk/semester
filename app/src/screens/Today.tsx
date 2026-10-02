@@ -812,16 +812,23 @@ function TabHome() {
         />
       </div>
 
-      <FirstGoal />
-      <TodayDecisionSurface />
-      <OperatingRhythm />
+      {/* Keep briefing state when changing tabs, but put each tab's own
+          content first. Focus View still needs the briefing when it hides
+          the switcher and secondary content. */}
+      <div className="today-briefing" hidden={tab !== 'today' && state.workspaceMode !== 'focused'}>
+        <FirstGoal />
+        <TodayDecisionSurface />
+        <OperatingRhythm />
+      </div>
       <div className="hides-in-focus">
-        <CommandCenter />
-        <FlightPlanHomeSlot />
-        <RecommendedJourney />
-
-        {tab === 'today' && <TodayFeed />}
-        {tab === 'today' && <DailyPlanSlot />}
+        {tab === 'today' && <details className="today-more">
+          <summary>More from Today</summary>
+          <CommandCenter />
+          <FlightPlanHomeSlot />
+          <RecommendedJourney />
+          <TodayFeed />
+          <DailyPlanSlot />
+        </details>}
 
         {tab === 'week' && <ThisWeek />}
         {tab === 'week' && <WeekHorizon />}
@@ -1960,11 +1967,14 @@ function FeedHome() {
         <TodayDecisionSurface />
         <OperatingRhythm />
         <div className="hides-in-focus">
-          <CommandCenter />
-          <NextClassCard />
-          <FlightPlanHomeSlot />
-          <RecommendedJourney />
-          <DailyPlanSlot />
+          <details className="today-more">
+            <summary>More from Today</summary>
+            <CommandCenter />
+            <NextClassCard />
+            <FlightPlanHomeSlot />
+            <RecommendedJourney />
+            <DailyPlanSlot />
+          </details>
 
           <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
             {entries.map((f) => (

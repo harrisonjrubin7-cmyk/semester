@@ -19,20 +19,30 @@ export default function AccessibilityPanel({ look, onChange, onSettings, context
     setAudioStatus('Reading aloud.');
     stop.current = speakThen(text, 1, spoke => setAudioStatus(spoke ? 'Reading finished.' : 'No audio played. Check your browser voice and sound settings.'));
   };
-  return <div className="portal-panel" role="group" aria-label="Accessibility tools">
+  return <div className="accessibility-panel" role="group" aria-label="Accessibility preferences">
+      <div className="accessibility-panel-head">
+        <div><h2>Make Semester easier to use</h2></div>
+        <span className="accessibility-panel-note">Changes apply everywhere.</span>
+      </div>
+      <div className="accessibility-selects">
       <label>Text size <select className="input" aria-label="Text size" value={look.textSize ?? 'normal'} onChange={e => onChange({textSize: e.target.value})}>
         <option value="normal">Standard</option><option value="large">Large</option>
       </select></label>
       <label>Reading spacing <select className="input" aria-label="Reading spacing" value={look.lineHeight ?? 'normal'} onChange={e => onChange({lineHeight: e.target.value})}>
         <option value="normal">Standard</option><option value="airy">More space</option>
       </select></label>
+      </div>
+      <div className="accessibility-actions">
       <button type="button" className="btn btn-ghost" aria-pressed={reducedMotion} onClick={() => onChange({calm: reducedMotion ? 'device' : 'calm'})}>Reduced motion</button>
       <button type="button" className="btn btn-ghost" aria-pressed={hasMode(look.access, 'contrast')} onClick={() => onChange({access: toggleMode(look.access, 'contrast')})}>Increase contrast</button>
-      <button type="button" className="btn btn-ghost" onClick={read}>Read aloud</button>
-      <button type="button" className="btn btn-ghost" onClick={() => { stop.current?.(); stop.current = null; setAudioStatus('Audio stopped.'); }}>Stop audio</button>
-      {audioStatus && <p role="status">{audioStatus}</p>}
       <button type="button" className="btn btn-ghost" aria-pressed={hasMode(look.access, 'plain')} onClick={() => onChange({access: toggleMode(look.access, 'plain')})}>Plain language</button>
       <button type="button" className="btn btn-ghost" aria-pressed={look.workspaceMode === 'focused'} onClick={() => onChange({workspaceMode: look.workspaceMode === 'focused' ? 'guided' : 'focused'})}>Focus View</button>
-      <button type="button" className="btn btn-ghost" onClick={onSettings}>All accessibility settings</button>
+      </div>
+      <div className="accessibility-audio" role="group" aria-label="Read aloud controls">
+        <button type="button" className="btn btn-secondary" onClick={read}>Read aloud</button>
+        <button type="button" className="btn btn-ghost" disabled={audioStatus !== 'Reading aloud.'} onClick={() => { stop.current?.(); stop.current = null; setAudioStatus('Audio stopped.'); }}>Stop audio</button>
+      </div>
+      {audioStatus && <p className="accessibility-status" role="status">{audioStatus}</p>}
+      <button type="button" className="bare link-quiet accessibility-settings-link" onClick={onSettings}>All accessibility settings</button>
     </div>;
 }

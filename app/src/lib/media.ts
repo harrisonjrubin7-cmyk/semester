@@ -10,19 +10,21 @@ import { useEffect, useState } from 'react';
  * place and read wherever they matter.
  */
 export function useMedia(query: string): boolean {
+  const available = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
   const [matches, setMatches] = useState(() =>
-    typeof window === 'undefined' ? false : window.matchMedia(query).matches,
+    available ? window.matchMedia(query).matches : false,
   );
 
   useEffect(() => {
+    if (!available) return;
     const mql = window.matchMedia(query);
     const onChange = () => setMatches(mql.matches);
     onChange();
     mql.addEventListener('change', onChange);
     return () => mql.removeEventListener('change', onChange);
-  }, [query]);
+  }, [query, available]);
 
-  return matches;
+  return available && matches;
 }
 
 /**

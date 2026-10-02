@@ -1098,6 +1098,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'state', column: 'user_id' },
   { table: 'notes', column: 'user_id' },
   { table: 'tasks', column: 'user_id' },
+  // The student's private productivity workspace. The database also cascades
+  // it from auth.users, but listing it here keeps explicit erasure complete
+  // even when account deletion is exercised before the auth row is removed.
+  { table: 'productivity_workspace', column: 'user_id' },
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },

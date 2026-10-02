@@ -295,6 +295,50 @@ describe('every time after that', () => {
 });
 
 describe('what it refuses to send', () => {
+  it('keeps field labels and password guidance visible after typing', async () => {
+    await showAnswered(<Credentials />, []);
+    type(email(), 'you@vanderbilt.edu');
+    type(password(), 'a-real-password');
+    for (const id of ['account-email', 'account-password']) {
+      const label = host.querySelector(`label[for="${id}"]`)!;
+      expect(label.textContent?.trim()).toBeTruthy();
+      expect(label.classList.contains('sr-only')).toBe(false);
+    }
+    const hint = host.querySelector('#account-password-hint');
+    expect(hint?.textContent).toMatch(/at least \d+ characters/);
+    expect(password().getAttribute('aria-describedby')).toBe(hint?.id);
+  });
+
+  it('explains each missing requirement until the create-account action is ready', async () => {
+    await showAnswered(<Credentials />, []);
+    const guidance = () => host.querySelector('#account-readiness')?.textContent;
+    expect(guidance()).toBe('Enter your email address to continue.');
+    expect(submit().getAttribute('aria-describedby')).toBe('account-readiness');
+    type(email(), 'you@vanderbilt.edu');
+    expect(guidance()).toMatch(/Choose a password with at least \d+ characters/);
+    type(password(), 'short');
+    expect(submit().disabled).toBe(true);
+    expect(guidance()).toMatch(/Choose a password/);
+    type(password(), 'a-real-password');
+    expect(guidance()).toBe('Add your date of birth to continue.');
+    type(born()!, '2000-01-01');
+    expect(submit().disabled).toBe(false);
+    expect(guidance()).toBeUndefined();
+    expect(submit().getAttribute('aria-describedby')).toBeNull();
+    expect(signUp).not.toHaveBeenCalled();
+  });
+
+  it('explains sign-in readiness without adding a new password floor', async () => {
+    registered = true;
+    await showAnswered(<Credentials />, []);
+    type(email(), 'you@vanderbilt.edu');
+    expect(host.querySelector('#account-readiness')?.textContent).toBe('Enter your password to continue.');
+    type(password(), 'x');
+    expect(submit().disabled).toBe(false);
+    expect(host.querySelector('#account-readiness')).toBeNull();
+    expect(host.querySelector('#account-password-hint')).toBeNull();
+  });
+
   it('will not submit without an address', () => {
     show(<Credentials />);
     type(password(), 'a-real-password');

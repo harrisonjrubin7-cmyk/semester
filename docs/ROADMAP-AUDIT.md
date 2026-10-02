@@ -78,7 +78,7 @@ A status is a claim from a reading of headers, registers and migration text, not
 | --- | --- | --- | --- | --- |
 | B2-01 | Explicit service boundaries | Partial | [`app/src/lib/ops/boundaries.ts`](../app/src/lib/ops/boundaries.ts) | Charters list owner and source; no per-domain schema, event and fallback record. |
 | B2-02 | A modular monolith first | Partial | [`docs/architecture/0003-no-application-server.md`](architecture/0003-no-application-server.md) | Decided and documented; enforced by convention only, and split criteria are not written. |
-| B2-03 | A canonical API contract program | Partial | [`packages/contract/src`](../packages/contract/src)<br>[`app/api/institution/handler.test.ts`](../app/api/institution/handler.test.ts) | A versioned gateway. No OpenAPI or schema publication and no consumer-driven contract tests. |
+| B2-03 | A canonical API contract program | Partial | [`packages/contract/src`](../packages/contract/src)<br>[`app/server/institution/vercel-transport.test.ts`](../app/server/institution/vercel-transport.test.ts) | A versioned gateway. No OpenAPI or schema publication and no consumer-driven contract tests. |
 | B2-04 | A domain event backbone | Partial | [`packages/institution/src/events.ts`](../packages/institution/src/events.ts) | Same as B1-03: no producers, no publisher job, no replay. |
 | B2-05 | Serious concurrency control | Partial | [`app/server/institution/gateway.ts`](../app/server/institution/gateway.ts)<br>[`app/src/lib/merge.ts`](../app/src/lib/merge.ts) | Gateway 409 only; no version column or If-Match on plans. |
 | B2-06 | Data-quality contracts | Partial | [`app/src/lib/governance/data-contracts.ts`](../app/src/lib/governance/data-contracts.ts)<br>[`app/src/lib/integration/quality.test.ts`](../app/src/lib/integration/quality.test.ts) | Owner, steward and freshness; no enforced completeness or validity rules per dataset. |
@@ -119,7 +119,7 @@ A status is a claim from a reading of headers, registers and migration text, not
 | B3-13 | Infrastructure and container scanning | Absent | — | Nothing scans IaC or containers. |
 | B3-14 | Typecheck, lint and unit tests in CI | Landed | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)<br>[`app/src/lib/supplychain.test.ts`](../app/src/lib/supplychain.test.ts) | None. |
 | B3-15 | Database migration validation and RLS negative tests | Landed | [`supabase/check.sh`](../supabase/check.sh)<br>[`supabase/rehearse.sh`](../supabase/rehearse.sh) | None. |
-| B3-16 | API contract tests | Partial | [`app/api/institution/handler.test.ts`](../app/api/institution/handler.test.ts) | No consumer-driven contract test per registered contract. |
+| B3-16 | API contract tests | Partial | [`app/server/institution/vercel-transport.test.ts`](../app/server/institution/vercel-transport.test.ts) | No consumer-driven contract test per registered contract. |
 | B3-17 | End-to-end critical flow and accessibility scans | Landed | [`app/scripts/golden-path.mjs`](../app/scripts/golden-path.mjs)<br>[`app/scripts/accessibility-smoke.mjs`](../app/scripts/accessibility-smoke.mjs) | None. |
 | B3-18 | A staging deploy before production | Partial | [`STAGING.md`](../STAGING.md) | Staging is described; no staging smoke gate. |
 | B3-19 | Manual production approval | Operational | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | The github-pages environment has no recorded approval rule. Needs a repository setting. |

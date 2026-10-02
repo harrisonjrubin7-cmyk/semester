@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../../state/store';
-import { destination } from '../../lib/nav';
+import { screenName } from '../../lib/nav';
 import { canonicalDestinationFor, FIVE_LABELS } from '../../lib/tabbar';
 import { STUDENT_WORKFLOWS, workflowForScreen } from '../../lib/student-workflows';
 import { statusOf, syncStatusKey } from '../../lib/status';
@@ -29,8 +29,7 @@ export function SystemContextBar() {
   const continuation = useMemo(() => {
     const recent = state.recent.find((screen) => screen !== state.screen && !QUIET_ON.has(screen));
     if (!recent) return null;
-    const place = destination(recent);
-    return { screen: recent, label: place?.label ?? recent };
+    return { screen: recent, label: screenName(recent) };
   }, [state.recent, state.screen]);
   const health = statusOf(syncStatusKey(sync.status, off));
 
@@ -62,7 +61,7 @@ export function SystemContextBar() {
         {state.screen !== canonical && (
           <>
             <span aria-hidden="true">/</span>
-            <span role="status" aria-live="polite">{destination(state.screen)?.label ?? state.screen}</span>
+            <span role="status" aria-live="polite">{screenName(state.screen)}</span>
           </>
         )}
       </div>
@@ -83,7 +82,7 @@ export function SystemContextBar() {
           aria-label={`${health.label}. Open connection and account health.`}
         >
           <span aria-hidden="true">{health.glyph}</span>
-          {health.label}
+          <span className="system-health-label">{health.label}</span>
         </button>
       </div>
     </section>

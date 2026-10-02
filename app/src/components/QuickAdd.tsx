@@ -229,14 +229,14 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             className={listening ? 'btn btn-primary' : 'btn btn-secondary'}
             onClick={listen}
             aria-pressed={listening}
-            style={{ width: 'auto', height: 30, fontSize: 'var(--type-xs)', paddingInline: 'var(--sp-6)' }}
+            style={{ width: 'auto', minHeight: 44, height: 'auto', fontSize: 'var(--type-xs)', paddingInline: 'var(--sp-6)' }}
           >
             {listening ? 'Stop' : 'Say it'}
           </button>
         ) : null}
         <button
           type="button"
-          className="bare"
+          className="bare tap-y"
           onClick={onClose}
           style={{ width: 'auto', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
@@ -270,10 +270,10 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       />
       {/* Everything that is not a dated line — see `KeepItAs`. */}
       <KeepItAs text={text} onLeave={onClose} />
-      <button type="button" disabled={!text.trim()} onClick={() => {
+      <ActionButton tone="ghost" spacing="0" style={{width: 'auto', marginTop: 'var(--sp-3)', textTransform: 'none'}} disabled={!text.trim()} onClick={() => {
         const ok = productivity.update(old => ({ ...old, captures: [...old.captures, { id: id(), title: text.trim(), kind: 'Idea', source: 'Quick capture', reason: '', context: '', next: '', due: '', status: 'Saved for later', authorized: false }] }));
         setSaid(ok ? 'Saved to Pathway → Decisions & productivity → Inbox.' : 'Could not save captured context.');
-      }}>Capture for later</button>
+      }}>Capture for later</ActionButton>
       {productivity.error && <p role="alert">{productivity.error}</p>}
 
       {micError ? (

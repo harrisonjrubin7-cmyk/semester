@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNow } from '../state/store';
 import { useDeviceLibrary } from '../lib/device-library';
 import { dateToIso, isoToDate } from '../lib/date';
 import { formatDate } from '../lib/locale';
@@ -30,7 +31,7 @@ export const PRIVATE_LINE = 'Private to you';
  * `shareable`, which the student has just been shown.
  */
 export function WeeklyReflection({
-  now = new Date(),
+  now: nowProp,
   kind = 'week',
   onShare,
 }: {
@@ -39,6 +40,8 @@ export function WeeklyReflection({
   /** Called with the shown copy when the student presses the share button. Omit it and nothing can leave. */
   onShare?: (copy: SharedReflection) => void;
 }) {
+  const clock = useNow();
+  const now = nowProp ?? clock;
   const week = dateToIso(weekStart(now));
   const lib = useDeviceLibrary(RESET_KEY, readResets, EMPTY_RESETS);
   const saved = lib.value.reflections.find((r) => r.weekStart === week && r.kind === kind) ?? startReflection(week, kind);

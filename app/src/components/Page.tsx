@@ -173,46 +173,25 @@ export function Page({
 
   return (
     <Inside.Provider value>
-    <div className={className} style={{ padding: wide ? '0' : 'var(--page-pad)', ...style }}>
+    <div
+      className={['page-frame', wide ? 'page-frame-wide' : '', className ?? ''].filter(Boolean).join(' ')}
+      style={style}
+    >
       {said != null && said !== false && (
-        <div
-          style={{
-            fontSize: 'var(--type-sm)',
-            color: 'var(--app-dim)',
-            lineHeight: 'var(--leading-relaxed)',
-            textWrap: 'pretty',
-            /*
-             * The gap under it used to belong to the search field that sat
-             * between the blurb and the screen. With the field gone the blurb
-             * holds it open itself. Not when there are `actions`: those carry
-             * the same margin on top, and two of them read as a missing
-             * section rather than as breathing room.
-             */
-            marginBottom: actions === undefined ? 'var(--sp-6)' : 0,
-            ...side,
-          }}
-        >
+        <div className={`page-purpose${actions === undefined ? '' : ' has-actions'}`} style={side}>
           {said}
         </div>
       )}
 
       {actions !== undefined && (
-        <div
-          style={{
-            display: 'flex',
-            gap: 'var(--sp-4)',
-            flexWrap: 'wrap',
-            marginTop: 'var(--sp-6)',
-            ...side,
-          }}
-        >
+        <div className="page-actions" style={side}>
           {actions}
         </div>
       )}
 
       {body}
 
-      <div style={{ height: bottom }} />
+      <div className="page-end" style={{ height: bottom }} />
     </div>
     </Inside.Provider>
   );

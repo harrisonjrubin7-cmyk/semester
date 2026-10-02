@@ -23,6 +23,7 @@ for a row whose file has stopped asking.
 | `components/Command.tsx` | Larger palette | Same palette, smaller type | Parity |
 | `components/Keys.tsx` | Shortcuts and the `?` sheet | **Fixed in this change**: listens wherever there is a fine pointer too; a touch-only phone has visible controls for every shortcut | Parity |
 | `components/QuickAdd.tsx` | Fixed to the window | Fixed to the column | Parity |
+| `components/desk/TopBar.tsx` | Full search prompt; bookmark and Intelligence beside the field | Shorter search prompt with the same accessible name and suggestions. Below 840px search has a full-width row; bookmark and Intelligence move beside All apps and Profile. Alerts and Settings remain in the launcher. | Parity |
 | `screens/Calendar.tsx` | Seven-day week | Three-day view; arrows step through every day; Month and Agenda identical | Parity (presentation) |
 | `screens/Classmates.tsx` | List beside conversation | List in place of it, one tap back | Parity |
 | `screens/Mail.tsx` | Folder rail, toolbar pager, reading pane | Folders button, **pager row under the toolbar (fixed in this change)**, message replaces list | Parity |
