@@ -15,6 +15,7 @@ baselines.
 | `src/lib/chrome.test.ts` | Exactly one navigation per width, navigation and screen, and none on full-screen screens. |
 | `src/lib/tiers.test.ts` | `lib/media.ts` and `styles/app.css` agree on the breakpoints. |
 | `src/lib/contrast.test.ts` | Text contrast on every ground and surface. |
+| `scripts/accessibility-smoke.mjs` | Six critical journeys at desktop, 200%/400% reflow equivalents and WCAG 1.4.12 text spacing. |
 | `src/rootunmount.test.ts` | Tests unmount what they mount. Required for any new jsdom test here. |
 
 Both behavioural guards added with this plan were checked the way
@@ -51,9 +52,9 @@ rectangle is a failure to launch, not a dark theme.
 
 ## Not covered yet
 
-- Automated reflow at 320px across all screens (a Playwright sweep that fails
-  on `scrollWidth > clientWidth`) would turn check 1 into a test. It needs the
-  dev server in CI, which the browser smoke job already starts.
+- Automated reflow currently covers the six release-critical journeys, not
+  every screen. Expanding the browser smoke's route inventory would turn the
+  rest of check 1 into a test.
 - Offline, Queued and Conflict are covered in jsdom by
   `state/syncstates.test.tsx`. By hand: with devtools set to Offline, add a
   task and check the Settings row reads "Queued to sync", then go back online

@@ -6,11 +6,13 @@
  * real browser, including the deployed base path. Static source guards remain
  * valuable; this catches the integration failures they cannot: a skip link
  * that does not move focus, a route with two mains, a broken ARIA reference,
- * an unnamed visible control, or a page that overflows at the 320 CSS-pixel
- * reflow viewport used to represent 400% zoom from a 1280-pixel baseline.
+ * an unnamed visible control, or a page that overflows at the 640/320
+ * CSS-pixel reflow viewports used to represent 200%/400% zoom from a
+ * 1280-pixel baseline. A fourth pass applies WCAG 1.4.12's text-spacing
+ * overrides and repeats the same integration checks.
  *
- * Exit 0 only after every journey and both viewports were measured. Exit 1 on
- * a finding and 2 when the instrument itself could not run.
+ * Exit 0 only after every journey and test case were measured. Exit 1 on a
+ * finding and 2 when the instrument itself could not run.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -28,6 +30,12 @@ const JOURNEYS = [
   ['Assignments', '#/work'],
   ['Registration', '#/yes'],
   ['Degree', '#/degree'],
+];
+const CASES = [
+  { viewport: { width: 1280, height: 900 }, label: 'desktop' },
+  { viewport: { width: 640, height: 900 }, label: '200% reflow equivalent' },
+  { viewport: { width: 320, height: 900 }, label: '400% reflow' },
+  { viewport: { width: 1280, height: 900 }, label: 'text spacing', textSpacing: true },
 ];
 
 function schema() {
@@ -78,7 +86,7 @@ async function contextFor(viewport) {
   return context;
 }
 
-async function inspect(journey, hash, viewport, label) {
+async function inspect(journey, hash, { viewport, label, textSpacing = false }) {
   const context = await contextFor(viewport);
   const errors = [];
   try {
@@ -87,6 +95,18 @@ async function inspect(journey, hash, viewport, label) {
     await page.goto(`${BASE.replace(/\/$/, '/')}${hash}`, { waitUntil: 'domcontentloaded' });
     await page.locator('h1').waitFor({ state: 'visible', timeout: 15_000 });
     await page.waitForTimeout(SETTLE);
+
+    if (textSpacing) {
+      await page.addStyleTag({ content: `
+        .device * {
+          line-height: 1.5 !important;
+          letter-spacing: 0.12em !important;
+          word-spacing: 0.16em !important;
+        }
+        .device p { margin-block-end: 2em !important; }
+      ` });
+      await page.waitForTimeout(50);
+    }
 
     const result = await page.evaluate(() => {
       const visible = (element) => {
@@ -182,19 +202,18 @@ async function inspect(journey, hash, viewport, label) {
 
 try {
   for (const [journey, hash] of JOURNEYS) {
-    await inspect(journey, hash, { width: 1280, height: 900 }, 'desktop');
-    await inspect(journey, hash, { width: 320, height: 900 }, '400% reflow');
+    for (const testCase of CASES) await inspect(journey, hash, testCase);
   }
 } finally {
   await browser.close();
 }
 
-if (measured !== JOURNEYS.length * 2) {
-  console.error(`accessibility smoke measured ${measured}/${JOURNEYS.length * 2} cases`);
+if (measured !== JOURNEYS.length * CASES.length) {
+  console.error(`accessibility smoke measured ${measured}/${JOURNEYS.length * CASES.length} cases`);
   process.exit(2);
 }
 if (findings.length) {
   console.error(`accessibility smoke found ${findings.length} issue(s):\n${findings.map((item) => `- ${item}`).join('\n')}`);
   process.exit(1);
 }
-console.log(`accessibility smoke ok — ${JOURNEYS.length} critical journeys at desktop and 400% reflow; skip focus, landmarks, titles, names and ARIA references verified`);
+console.log(`accessibility smoke ok — ${JOURNEYS.length} critical journeys at desktop, 200%/400% reflow and WCAG text spacing; skip focus, landmarks, titles, names and ARIA references verified`);
