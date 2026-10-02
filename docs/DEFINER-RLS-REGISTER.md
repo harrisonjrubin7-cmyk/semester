@@ -76,7 +76,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `claim_referral` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `claim_school` | `auth.uid()` | `20260930185000_school_membership_enforcement.sql` |
 | `close_my_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
-| `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20260929350000_plan_save_serialized.sql` |
+| `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20261002091500_set_based_course_plan_contribution.sql` |
 | `create_community` | `auth.uid()`, `private.has_capability`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `create_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `create_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
