@@ -359,7 +359,11 @@ async function journey(label, viewport) {
         return original(blob);
       };
     });
-    await other.getByRole('button', { name: /^download my account data$/i }).click();
+    const exportButton = other
+      .getByRole('button', { name: /^download my account data$/i })
+      .filter({ visible: true });
+    expect((await exportButton.count()) === 1, 'the Privacy screen did not expose exactly one visible account export action');
+    await exportButton.click();
     expect(await visible(other.getByText(/saved .* with rows from/i)), 'the Privacy screen did not confirm the account export');
     const exported = await other.evaluate(async (timeout) => {
       const capture = window.__semesterExportCapture;
