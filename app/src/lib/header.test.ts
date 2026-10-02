@@ -79,12 +79,18 @@ describe('the header', () => {
     }
   });
 
-  it('keeps Today as the last resort, and only for a screen no registry knows', () => {
-    // The two shell screens and onboarding: deliberately not destinations —
-    // the workspace looking at itself, the way a new-tab page is not a
-    // bookmark — so there is no name to read and the date is honest.
+  it('gives shell-owned screens useful document titles', () => {
+    // These routes own their visible heading, but `useHeader` also drives the
+    // browser title. Falling through to Today made Search and All apps sound
+    // like the home screen to tab switchers and assistive technology.
     expect(destination('search')).toBeFalsy();
-    expect(fallbackHeader('search', MARK)).toEqual({ kicker: MARK, title: 'Today' });
+    expect(headFor('search')).toEqual({ kicker: 'Semester', title: 'Search' });
+    expect(headFor('directory')).toEqual({ kicker: 'Semester', title: 'All apps' });
+    expect(headFor('onboarding')).toEqual({ kicker: 'Semester', title: 'Welcome' });
+  });
+
+  it('keeps Today as the last resort for an unknown runtime route', () => {
+    expect(fallbackHeader('cloud' as Screen, MARK)).toEqual({ kicker: MARK, title: 'Today' });
   });
 
   /*
@@ -224,7 +230,7 @@ describe('the header buttons a thumb has to hit', () => {
 
   it('decides the whole row in one place', () => {
     expect(src(), 'the row is one call, not five conditions').toContain(
-      'const row = headerRow({ atRoot, phone, counting, desk });',
+      "hasInlineAdd: desk && state.screen === 'search',",
     );
     // The measurement itself stays in lib/header.ts. A second caller here is
     // a second opinion about the width, which is the shape that shipped the
@@ -343,6 +349,11 @@ describe('what the header can carry', () => {
       alerts: false,
       avatar: false,
     });
+  });
+
+  it('leaves Quick Add to the workspace search home when it is already in the page', () => {
+    expect(headerRow({ ...AT_ROOT, desk: true, hasInlineAdd: true }).add).toBe(false);
+    expect(headerRow({ ...AT_ROOT, desk: true, hasInlineAdd: false }).add).toBe(true);
   });
 
   /*

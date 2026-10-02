@@ -18,20 +18,21 @@ describe('the roles the app admits to', () => {
     expect(roleOf('student').ready).toBe(true);
   });
 
-  it('offers only the two it can actually serve', () => {
-    expect(pickable().map((r) => r.id)).toEqual(['student', 'faculty']);
+  it('offers every built role', () => {
+    expect(pickable().map((r) => r.id)).toEqual(ROLES.map((r) => r.id));
   });
 
   /*
-   * The line this file is drawn on. A role that reads only its own data works
-   * today because that is the shape the whole app has; a role that reads
-   * somebody else's needs a server, an identity on both sides and an
-   * authorisation model, and the app has none of the three. Offering one
-   * anyway would be a screen that looks right and holds only what you typed
-   * into it.
+   * Every role has a useful local workspace, while connected records remain
+   * explicit about the verified relationship they require. The picker changes
+   * presentation; it never manufactures that relationship.
    */
-  it('says what each unready role is waiting on, rather than hiding it', () => {
-    for (const r of ROLES.filter((r) => !r.ready)) {
+  it('ships each role live and explains both immediate and connected access', () => {
+    for (const r of ROLES) {
+      expect(r.ready, r.id).toBe(true);
+      expect(r.live.length, r.id).toBeGreaterThan(30);
+    }
+    for (const r of ROLES.filter((r) => r.id !== 'student')) {
       expect(r.needs.length, r.id).toBeGreaterThan(30);
     }
   });
@@ -82,6 +83,14 @@ describe('what each role sees', () => {
     expect(screenForRole('degree', 'faculty')).toBe('home');
     expect(screenForRole('write', 'faculty')).toBe('write');
     expect(screenForRole('degree', 'student')).toBe('degree');
+  });
+
+  it('keeps the applicant transition workspace available without widening other student screens', () => {
+    expect(forRole('launchpad', 'applicant')).toBe(true);
+    expect(screenForRole('launchpad', 'applicant')).toBe('launchpad');
+    expect(hiddenFrom('applicant')).not.toContain('launchpad');
+    expect(forRole('degree', 'applicant')).toBe(false);
+    expect(forRole('launchpad', 'alumni')).toBe(false);
   });
 
   // A screen added later and forgotten in the table stays visible rather than

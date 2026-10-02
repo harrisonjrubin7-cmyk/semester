@@ -66,7 +66,7 @@
  * is, and the label says which one.
  */
 
-import { useEffect, useLayoutEffect, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useModal } from '../a11y/modal';
 import { secondLine } from '../lib/dim';
@@ -88,6 +88,7 @@ export function Popover({
   width = 232,
   open = true,
   className,
+  id,
   anchor,
   onClose,
   children,
@@ -100,8 +101,10 @@ export function Popover({
   /** Keep stateful tools mounted while closed (for example, read-aloud). */
   open?: boolean;
   className?: string;
+  /** Associates a trigger's `aria-controls` with this panel. */
+  id?: string;
   /** The opener handles its own toggle; do not dismiss on its pointerdown. */
-  anchor?: RefObject<HTMLElement | null>;
+  anchor?: HTMLElement | null;
   onClose: () => void;
   children: ReactNode;
 }) {
@@ -147,7 +150,7 @@ export function Popover({
   useEffect(() => {
     if (!open) return;
     const away = (e: PointerEvent) => {
-      if (box.current && e.target instanceof Node && !box.current.contains(e.target) && !anchor?.current?.contains(e.target)) onClose();
+      if (box.current && e.target instanceof Node && !box.current.contains(e.target) && !anchor?.contains(e.target)) onClose();
     };
     window.addEventListener('pointerdown', away, true);
     const scroll = (e: Event) => {
@@ -163,6 +166,7 @@ export function Popover({
   const panel = (
     <div
       ref={box}
+      id={id}
       className={className}
       hidden={!open}
       role="dialog"
