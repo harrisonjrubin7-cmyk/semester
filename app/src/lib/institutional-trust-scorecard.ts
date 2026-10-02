@@ -1,3 +1,4 @@
+sed: --: No such file or directory
 export type MetricState = 'green' | 'yellow' | 'red' | 'gray';
 
 export interface TrustMetricDefinition {
@@ -28,6 +29,7 @@ export interface TrustMeasurement {
 
 export interface ScoredTrustMetric extends TrustMetricDefinition {
   state: MetricState;
+  hasMeasurement: boolean;
   value: string;
   evidenceAt: number | null;
   reason: string;
@@ -116,6 +118,7 @@ export function trustScorecard(measurements: readonly TrustMeasurement[]): Score
     return {
       ...definition,
       ...evaluation,
+      hasMeasurement: measurement !== undefined,
       value: typeof measurement?.value === 'string' && measurement.value.trim().length > 0
         ? measurement.value
         : measurement ? 'Invalid measurement value' : 'Baseline not recorded',

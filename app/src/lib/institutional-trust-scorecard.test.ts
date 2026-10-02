@@ -1,3 +1,4 @@
+sed: --: No such file or directory
 import { describe, expect, it } from 'vitest';
 import { evidenceDateLabel, metricState, TRUST_METRICS, trustScorecard } from './institutional-trust-scorecard';
 
@@ -5,6 +6,7 @@ describe('institutional trust scorecard', () => {
   it('uses metric states instead of combining unrelated controls into a score', () => {
     expect(TRUST_METRICS).toHaveLength(15);
     expect(trustScorecard([]).every((metric) => metric.state === 'gray')).toBe(true);
+    expect(trustScorecard([]).every((metric) => metric.hasMeasurement === false)).toBe(true);
     expect(trustScorecard([]).every((metric) => metric.value === 'Baseline not recorded')).toBe(true);
     expect(trustScorecard([]).every((metric) => /^2026-\d{2}-\d{2}$/.test(metric.targetInstrumentationDate))).toBe(true);
     expect(trustScorecard([]).every((metric) => metric.target && metric.knownLimitations && metric.correctiveAction)).toBe(true);
@@ -42,6 +44,14 @@ describe('institutional trust scorecard', () => {
     const definition = TRUST_METRICS[0];
     expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Number.NaN }).state).toBe('yellow');
     expect(metricState(definition, { id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Number.POSITIVE_INFINITY }).state).toBe('yellow');
+  });
+
+  it('keeps a measurement with missing evidence distinct from an uninstrumented metric', () => {
+    const definition = TRUST_METRICS[0];
+    const scored = trustScorecard([{
+      id: definition.id, targetMet: true, evidenceCurrent: false, value: 'measured', evidenceAt: null,
+    } as unknown as Parameters<typeof trustScorecard>[0][number]])[0];
+    expect(scored).toMatchObject({ state: 'yellow', hasMeasurement: true, evidenceAt: null });
   });
 
   it('never scores future evidence or a blank measured value green', () => {

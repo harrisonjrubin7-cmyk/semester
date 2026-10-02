@@ -1,3 +1,4 @@
+sed: --: No such file or directory
 /**
  * Semester's incident and recovery contract.
  *
@@ -184,6 +185,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
         && hasText(action.owner)
         && INCIDENT_SEVERITIES.includes(action.severity as IncidentSeverity)
         && isValidTimestamp(action.dueAt)
+        && action.dueAt >= record.declaredAt
         && hasText(action.requiredEvidence)
         && hasText(action.verificationEvidence)))
       && majorReviewComplete);

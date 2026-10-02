@@ -1,3 +1,4 @@
+sed: --: No such file or directory
 import { describe, expect, it } from 'vitest';
 import { RECOVERY_PLANS, nextRecoveryStage, recoveryPlan } from './academic-recovery';
 
@@ -30,5 +31,13 @@ describe('academic recovery', () => {
     }
     expect(recoveryPlan('waiting_on').options.some((option) => /nothing is sent automatically/i.test(option.reason))).toBe(true);
     expect(recoveryPlan('need_help').preserved.join(' ')).toMatch(/private plan/i);
+  });
+
+  it('does not offer faculty recovery routes that role gating redirects away from', () => {
+    for (const kind of ['missed_action', 'urgent_overload', 'time_constrained'] as const) {
+      const plan = recoveryPlan(kind, 'faculty');
+      expect(plan.options.length).toBeGreaterThan(0);
+      expect(plan.options.some((option) => option.screen === 'behind')).toBe(false);
+    }
   });
 });

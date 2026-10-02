@@ -1,3 +1,4 @@
+sed: --: No such file or directory
 import { describe, expect, it } from 'vitest';
 import {
   AUTOMATION_MAY,
@@ -120,6 +121,19 @@ describe('incident and recovery control contract', () => {
         ], postIncidentReview: { completedAt: 160, evidence: 'Review PIR-11 approved' },
       },
     } as unknown as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toContain('complete close-out evidence');
+  });
+
+  it('rejects corrective-action deadlines before the incident declaration', () => {
+    const record = {
+      id: 'INC-11B', severity: 'SEV3', declaredAt: 100, detection: DETECTION, commander: 'Incident lead', affectedServices: ['Sources'],
+      tenantScope: { scope: 'platform_wide' }, studentVisibleEffect: 'Sources stale', privateStudentDataIncluded: false,
+      status: 'close', nextUpdateAt: 300, verification: ['Freshness checks pass'],
+      closeOut: {
+        measuredTimeline: 'timeline', impact: 'stale source', recoveryPoint: 'refreshed', stabilizedAt: 150, communications: ['update'],
+        correctiveActions: [{ action: 'add check', owner: 'Sources', severity: 'SEV3', dueAt: 50, requiredEvidence: 'test', verificationEvidence: 'CI passed' }],
+      },
+    } as Parameters<typeof validateIncident>[0];
     expect(validateIncident(record, 200)).toContain('complete close-out evidence');
   });
 

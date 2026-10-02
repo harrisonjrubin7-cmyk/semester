@@ -1,3 +1,4 @@
+sed: --: No such file or directory
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { EXPERIENCE_FLAGS, MODULE_FLAGS } from '../../lib/experience-flags';
 import { configured } from '../../lib/assistant';
@@ -126,7 +127,7 @@ function ScorecardRow({ metric }: { metric: ScoredTrustMetric }) {
       <p><strong>Target:</strong> {metric.target}</p>
       <p><strong>Known limitations:</strong> {metric.knownLimitations}</p>
       <p><strong>Corrective action:</strong> {metric.correctiveAction}</p>
-      <small>{metric.owner} · {metric.cadence}{metric.evidenceAt === null ? ` · target instrumentation ${metric.targetInstrumentationDate}` : evidenceDate ? ` · evidence ${evidenceDate}` : ' · evidence date invalid'}</small>
+      <small>{metric.owner} · {metric.cadence}{!metric.hasMeasurement ? ` · target instrumentation ${metric.targetInstrumentationDate}` : evidenceDate ? ` · evidence ${evidenceDate}` : ' · evidence date missing or invalid'}</small>
     </li>
   );
 }
