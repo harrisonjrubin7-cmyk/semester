@@ -30,8 +30,8 @@
  *   5. **Sign in there**, through `#/login`, and see the action — still done.
  *   6. **And back the other way.** The second device makes an action of its
  *      own; the server holds it; the first device, reloaded, shows it.
- *   7. **Export the account** from the second device and inspect the actual
- *      downloaded JSON for both actions.
+ *   7. **Export the account** from the second device and inspect the exact
+ *      JSON blob the download helper hands to the browser for both actions.
  *   8. **Delete the account** through the Privacy screen, observe the Edge
  *      Function's complete-erasure receipt, and prove the old session no
  *      longer identifies a user.
@@ -69,7 +69,7 @@
  * on a finding, and 2 when the instrument itself could not run — never 0 for
  * a run that measured nothing.
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { randomBytes } from 'node:crypto';
 
@@ -340,16 +340,42 @@ async function journey(label, viewport) {
     // ── 8 · The account export contains what both devices made ────────────
     at(STEPS[8]);
     await go(other, '#/privacy', 'Privacy');
-    const downloadReady = other.waitForEvent('download', { timeout: WAIT });
+    // Capture the exact Blob passed to URL.createObjectURL. Waiting for a
+    // native browser `download` event is fragile here: the button changes its
+    // accessible name while its asynchronous RPC is in flight, and a pending
+    // Playwright event promise can reject before the click action settles.
+    // The product path is still exercised end to end — Privacy calls the real
+    // RPC, `download()` creates the Blob and clicks its anchor — while the
+    // verifier reads the payload before browser/OS download handling can make
+    // the test runner's filesystem part of the result.
+    await other.evaluate(() => {
+      const original = URL.createObjectURL.bind(URL);
+      Object.defineProperty(window, '__semesterExportCapture', {
+        configurable: true,
+        value: { blob: null, original },
+      });
+      URL.createObjectURL = (blob) => {
+        window.__semesterExportCapture.blob = blob;
+        return original(blob);
+      };
+    });
     await other.getByRole('button', { name: /^download my account data$/i }).click();
-    const download = await downloadReady;
-    const downloadPath = await download.path();
-    expect(Boolean(downloadPath), 'the account export download had no readable file');
-    const exported = readFileSync(downloadPath, 'utf8');
+    expect(await visible(other.getByText(/saved .* with rows from/i)), 'the Privacy screen did not confirm the account export');
+    const exported = await other.evaluate(async (timeout) => {
+      const capture = window.__semesterExportCapture;
+      const until = Date.now() + timeout;
+      while (!capture?.blob && Date.now() < until) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      const body = capture?.blob ? await capture.blob.text() : '';
+      if (capture?.original) URL.createObjectURL = capture.original;
+      delete window.__semesterExportCapture;
+      return body;
+    }, WAIT);
+    expect(Boolean(exported), 'the account export produced no readable JSON blob');
     expect(exported.includes(title), 'the account export did not contain the first device action');
     expect(exported.includes(reply), 'the account export did not contain the second device action');
     expect(exported.includes(email), 'the account export did not identify the account it belongs to');
-    expect(await visible(other.getByText(/saved .* with rows from/i)), 'the Privacy screen did not confirm the account export');
 
     // ── 9 · Complete server-side deletion and local sign-out ──────────────
     at(STEPS[9]);
