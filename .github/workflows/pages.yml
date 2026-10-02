@@ -430,6 +430,13 @@ jobs:
           npx vite build --outDir dist-demo
           mv dist-demo dist/demo
 
+      # Scan after both builds and before anything is uploaded. Gitleaks sees
+      # repository files; this sees values supplied only at build time. It
+      # reports rule names and artifact paths, never the matched credential.
+      - name: Scan the deploy artifact for secrets
+        working-directory: app
+        run: npm run scan:bundle-secrets
+
       # A software bill of materials for exactly what this deploy ships: the
       # production dependencies of the lockfile `npm ci` just installed, as
       # CycloneDX. It is kept with the run for 90 days, so "were we running

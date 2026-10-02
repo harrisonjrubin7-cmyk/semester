@@ -264,6 +264,13 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
         run: npm run build
 
+      # Source scanning cannot see values injected while Vite builds. Scan
+      # the exact browser artifact as a second boundary, redacting findings to
+      # rule names and paths so a credential is never copied into the log.
+      - name: Scan the browser bundle for secrets
+        working-directory: app
+        run: npm run scan:bundle-secrets
+
       # The performance budgets, against the build just made. The first load,
       # each screen's cost to open and the largest single file, in gzip bytes,
       # each held to app/perf-budgets.json (set from a measurement, plus ten
