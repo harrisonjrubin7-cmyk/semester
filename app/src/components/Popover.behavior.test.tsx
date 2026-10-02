@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, useRef, useState } from 'react';
+import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Popover, type Corner } from './Popover';
@@ -63,9 +63,9 @@ function Example({ corner, width = 544, initiallyOpen = true, onClose }: {
   onClose: () => void;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
-  const anchor = useRef<HTMLButtonElement>(null);
+  const [anchor, setAnchor] = useState<HTMLButtonElement | null>(null);
   return <>
-    <button type="button" ref={anchor} onClick={() => setOpen(!open)}>Reading tools</button>
+    <button type="button" ref={setAnchor} onClick={() => setOpen(!open)}>Reading tools</button>
     <Popover label="Reading preferences" corner={corner} width={width} open={open} anchor={anchor} onClose={() => { onClose(); setOpen(false); }}>
       <Counter />
     </Popover>

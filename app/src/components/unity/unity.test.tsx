@@ -272,6 +272,16 @@ describe('first-session setup', () => {
     await press('Change');
     expect(text()).toContain('What would help most today?');
   });
+
+  it('keeps keyboard focus on the goal disclosure after revealing more choices', async () => {
+    await mount(<FirstGoal />);
+    const more = button('More options');
+    more.focus();
+    await act(async () => more.click());
+    expect(document.activeElement).toBe(more);
+    expect(more.getAttribute('aria-expanded')).toBe('true');
+    expect(text()).toContain('Study for a course');
+  });
 });
 
 describe('About this screen', () => {

@@ -234,7 +234,8 @@ function Header({
    * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
-}: { desk?: boolean } = {}) {
+  screenOwnsTitle = false,
+}: { desk?: boolean; screenOwnsTitle?: boolean } = {}) {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const { kicker, title } = useHeader();
@@ -300,8 +301,25 @@ function Header({
   useEffect(() => {
     if (wasOn.current === state.screen) return;
     wasOn.current = state.screen;
-    heading.current?.focus({ preventScroll: true });
-  }, [state.screen]);
+
+    const focusTitle = () => {
+      const title = screenOwnsTitle
+        ? document.querySelector<HTMLHeadingElement>('h1[data-page-title]')
+        : heading.current;
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const shell = document.querySelector('.device');
+    if (!shell) return;
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(shell, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [screenOwnsTitle, state.screen]);
 
   return (
     // A real <header>, and the screen's name is the page's <h1>. Both were
@@ -333,6 +351,7 @@ function Header({
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
+        {!screenOwnsTitle && <>
         {upTo ? (
           <button
             type="button"
@@ -392,6 +411,7 @@ function Header({
         >
           {title}
         </h1>
+        </>}
       </div>
 
       {/*
@@ -862,7 +882,7 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header desk />}
+            <Header desk screenOwnsTitle={ownTitle} />
             <SystemContextBar />
             <Said />
             {/* The sample banner belongs over records, which is what it is
@@ -1153,6 +1173,7 @@ function AppFrame() {
    * drawn together. Here there is one call and no conditions of its own.
    */
   const chrome = chromeFor(state.nav, state.screen, wide, medium);
+  const ownTitle = state.screen === 'search' || state.screen === 'directory';
 
   /**
    * The whole look, written onto the document root.
@@ -1479,7 +1500,7 @@ function AppFrame() {
             that is 800 tall and mostly thumb.
           */}
           <TabStrip />
-          <Header />
+          <Header screenOwnsTitle={ownTitle} />
           <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1586,7 +1607,7 @@ function AppFrame() {
         again.
       */}
       <TabStrip />
-      <Header />
+      <Header screenOwnsTitle={ownTitle} />
       <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
