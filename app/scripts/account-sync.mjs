@@ -30,6 +30,11 @@
  *   5. **Sign in there**, through `#/login`, and see the action — still done.
  *   6. **And back the other way.** The second device makes an action of its
  *      own; the server holds it; the first device, reloaded, shows it.
+ *   7. **Export the account** from the second device and inspect the actual
+ *      downloaded JSON for both actions.
+ *   8. **Delete the account** through the Privacy screen, observe the Edge
+ *      Function's complete-erasure receipt, and prove the old session no
+ *      longer identifies a user.
  *
  * Both viewports, each with its own account, and any uncaught page error is a
  * finding, as in the golden path.
@@ -64,7 +69,7 @@
  * on a finding, and 2 when the instrument itself could not run — never 0 for
  * a run that measured nothing.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { randomBytes } from 'node:crypto';
 
@@ -95,6 +100,8 @@ const STEPS = [
   'the second device adds one',
   'the server holds that too',
   'the first device, reloaded, shows it',
+  'download the account export and inspect it',
+  'delete the account and invalidate the old session',
 ];
 
 let chromium;
@@ -329,6 +336,47 @@ async function journey(label, viewport) {
     await go(page, '#/mine', 'Personal');
     expect(await visible(page.getByRole('button', { name: open(reply) }), SETTLE), 'the first device, reloaded, does not show the second device\'s action');
     expect(await visible(page.getByRole('button', { name: done(title) })), 'the first device lost its own finished action after the reload');
+
+    // ── 8 · The account export contains what both devices made ────────────
+    at(STEPS[8]);
+    await go(other, '#/privacy', 'Privacy');
+    const downloadReady = other.waitForEvent('download', { timeout: WAIT });
+    await other.getByRole('button', { name: /^download my account data$/i }).click();
+    const download = await downloadReady;
+    const downloadPath = await download.path();
+    expect(Boolean(downloadPath), 'the account export download had no readable file');
+    const exported = readFileSync(downloadPath, 'utf8');
+    expect(exported.includes(title), 'the account export did not contain the first device action');
+    expect(exported.includes(reply), 'the account export did not contain the second device action');
+    expect(exported.includes(email), 'the account export did not identify the account it belongs to');
+    expect(await visible(other.getByText(/saved .* with rows from/i)), 'the Privacy screen did not confirm the account export');
+
+    // ── 9 · Complete server-side deletion and local sign-out ──────────────
+    at(STEPS[9]);
+    const oldSession = await other.evaluate(() => JSON.parse(localStorage.getItem('semester.auth') || 'null'));
+    expect(Boolean(oldSession?.access_token), 'the signed-in device had no session before deletion');
+    await other.getByRole('button', { name: /^delete my account$/i }).click();
+    const deletion = other.getByRole('dialog', { name: 'Delete your account' });
+    expect(await visible(deletion), 'the destructive account confirmation did not open');
+    await deletion.getByRole('textbox').fill('DELETE');
+    const receiptReady = other.waitForResponse(
+      (response) => response.request().method() === 'POST' && new URL(response.url()).pathname.endsWith('/functions/v1/delete-account'),
+      { timeout: WAIT },
+    );
+    await deletion.getByRole('button', { name: /^delete it$/i }).click();
+    const receipt = await receiptReady;
+    const receiptBody = await receipt.json().catch(() => ({}));
+    expect(receipt.ok(), `the delete-account function answered ${receipt.status()}`);
+    expect(receiptBody?.erased === true, 'the delete-account receipt did not confirm data erasure');
+    expect(receiptBody?.signInRemoved === true, 'the delete-account receipt did not confirm sign-in removal');
+    expect(await visible(other.getByText(/you are signed out/i)), 'the Privacy screen did not confirm local sign-out');
+    const staleSession = await other.evaluate(async ({ origin, key, token }) => {
+      const response = await fetch(`${origin}/auth/v1/user`, {
+        headers: { apikey: key, Authorization: `Bearer ${token}` },
+      });
+      return { ok: response.ok, status: response.status };
+    }, { ...second.service, token: oldSession.access_token });
+    expect(!staleSession.ok && staleSession.status >= 400, 'the deleted account\'s old session still identifies a user');
 
     walked += 1;
   } catch (error) {

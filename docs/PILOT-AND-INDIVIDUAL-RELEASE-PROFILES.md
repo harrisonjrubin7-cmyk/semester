@@ -1,0 +1,74 @@
+# Pilot and individual release profiles
+
+<!-- Rendered from app/src/lib/governance/release-profiles.ts by release-profiles.test.ts. Edit the data, then run `npm run registers` from app/. -->
+
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
+
+These executable profiles define the next honest release targets: broad individual use and a bounded institutional pilot.
+They do not rename repository completion as deployment, tenant approval, certification, or live operation.
+
+## Current repository decision
+
+| Profile | Technical candidate | Rollout | Still required |
+| --- | --- | --- | --- |
+| individual-scale | ready | held | deployed-exact-sha, production-smoke, support-route-live, rollback-current |
+| institutional-pilot | ready | held | deployed-exact-sha, production-smoke, support-route-live, rollback-current, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, pilot-cohort-consent, pilot-support-roster |
+
+The repository currently satisfies the technical evidence contract for both profiles. Rollout remains held because runtime
+and named-tenant activation records do not live in source code and have not been supplied to this evaluator.
+
+## Scope and boundaries
+
+### individual-scale
+
+**Audience:** Individuals using device-first or self-service accounts without institutional activation
+
+**Default:** available after production release gates
+
+**Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-044`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
+
+**Allowed:** personal planning; source-aware course organization; study and creation; export; account deletion
+
+**Forbidden:** official registration; official grading; institutional record writes; financial aid; payments; payroll; general ledger
+
+**Claim boundary:** Ready for broad individual use only after exact-SHA deployment and production gates pass; no institutional connection, certification, or system-of-record claim.
+
+**Fallback:** Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.
+
+### institutional-pilot
+
+**Audience:** A named, bounded student cohort using Path and registration-readiness planning
+
+**Default:** off
+
+**Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
+
+**Allowed:** Path planning; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff
+
+**Forbidden:** enroll; waitlist; drop; withdraw; write to SIS; certify degree progress; act as system of record
+
+**Claim boundary:** Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, deployment, and approval records.
+
+**Fallback:** Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.
+
+## Technical evidence contract
+
+| Gate | Repository reference |
+| --- | --- |
+| build-and-regression | repo:.github/workflows/ci.yml |
+| real-account-lifecycle | repo:app/scripts/account-sync.mjs |
+| tenant-isolation-negative-authorization | repo:supabase/rls-coverage.check.sql |
+| critical-accessibility-journeys | repo:app/scripts/accessibility-smoke.mjs |
+| source-freshness-and-fallback | repo:app/src/lib/integration/quality.test.ts |
+| privacy-export-deletion | repo:supabase/deletion.check.sql |
+| observability-and-support | repo:docs/RUNBOOKS.md |
+| rollback-and-restore-rehearsal | repo:supabase/restore.sh |
+| kill-switch-and-degraded-mode | repo:app/scripts/killswitch-drill.mjs |
+| claim-and-scope-review | repo:docs/PRODUCT-STATUS-MAP.md |
+
+## Activation boundary
+
+- Individual scale still needs an exact deployed SHA, production smoke, a live support route, and current rollback evidence.
+- An institutional pilot additionally needs a named agreement, data owner, cohort consent, tenant accessibility/security/privacy reviews, and a staffed support roster.
+- CAP-050 is admitted only for search, comparison, validation, and official-system handoff. Enrollment, waitlist, drop, withdrawal, and SIS writes remain prohibited.
+- No profile activates financial aid, payments, payroll, general ledger, official grading, certification, or system-of-record authority.
