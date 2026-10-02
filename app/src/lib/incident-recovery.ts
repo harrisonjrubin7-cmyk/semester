@@ -112,6 +112,10 @@ function hasText(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+function isValidTimestamp(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && !Number.isNaN(new Date(value).getTime());
+}
+
 function addBusinessDays(timestamp: number, count: number): number {
   const date = new Date(timestamp);
   let remaining = count;
@@ -158,8 +162,8 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
     const majorReviewComplete = record.severity !== 'SEV1' && record.severity !== 'SEV2'
       || Boolean(closeOut
         && review
-        && Number.isFinite(closeOut.stabilizedAt)
-        && Number.isFinite(review.completedAt)
+        && isValidTimestamp(closeOut.stabilizedAt)
+        && isValidTimestamp(review.completedAt)
         && review.completedAt >= closeOut.stabilizedAt
         && review.completedAt <= now
         && review.completedAt <= addBusinessDays(closeOut.stabilizedAt, 5)
@@ -168,7 +172,7 @@ export function validateIncident(record: IncidentRecord, now = Date.now()): stri
       && hasText(closeOut.measuredTimeline)
       && hasText(closeOut.impact)
       && hasText(closeOut.recoveryPoint)
-      && Number.isFinite(closeOut.stabilizedAt)
+      && isValidTimestamp(closeOut.stabilizedAt)
       && closeOut.stabilizedAt >= record.declaredAt
       && closeOut.stabilizedAt <= now
       && Array.isArray(closeOut.communications)

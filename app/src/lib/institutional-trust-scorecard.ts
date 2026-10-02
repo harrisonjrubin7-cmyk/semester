@@ -91,9 +91,10 @@ export const TRUST_METRICS: readonly TrustMetricDefinition[] = TRUST_METRIC_DEFI
 
 export function metricState(definition: TrustMetricDefinition, measurement: TrustMeasurement | undefined, now = Date.now()): Pick<ScoredTrustMetric, 'state' | 'reason'> {
   if (!measurement) return { state: 'gray', reason: 'Not yet instrumented; the owner must record a baseline and evidence date.' };
+  if (measurement.controlFailure !== undefined && typeof measurement.controlFailure !== 'boolean') return { state: 'yellow', reason: 'The control-failure flag must be a boolean when recorded.' };
+  if (measurement.controlFailure === true) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
   if (typeof measurement.targetMet !== 'boolean' || typeof measurement.evidenceCurrent !== 'boolean') return { state: 'yellow', reason: 'The measurement state is invalid; target and freshness flags must be recorded explicitly.' };
-  if ([measurement.controlFailure, measurement.trendWorsening, measurement.materialLimitation].some((flag) => flag !== undefined && typeof flag !== 'boolean')) return { state: 'yellow', reason: 'Optional control, trend, and limitation flags must be booleans when recorded.' };
-  if (measurement.controlFailure) return { state: 'red', reason: 'A required control or authorization gate failed; evidence and remediation are required.' };
+  if ([measurement.trendWorsening, measurement.materialLimitation].some((flag) => flag !== undefined && typeof flag !== 'boolean')) return { state: 'yellow', reason: 'Optional trend and limitation flags must be booleans when recorded.' };
   if (!evidenceDateLabel(measurement.evidenceAt) || measurement.evidenceAt > now) return { state: 'yellow', reason: 'The evidence date is invalid or in the future; current evidence must be recorded before this metric can be green.' };
   if (typeof measurement.value !== 'string' || measurement.value.trim().length === 0) return { state: 'yellow', reason: 'A measured value is required before this metric can be green.' };
   if (now - measurement.evidenceAt > MAX_EVIDENCE_AGE_MS[definition.cadence]) return { state: 'yellow', reason: `The evidence is older than the ${definition.cadence} review cadence.` };
@@ -119,8 +120,12 @@ export function trustScorecard(measurements: readonly TrustMeasurement[]): Score
         ? measurement.value
         : measurement ? 'Invalid measurement value' : 'Baseline not recorded',
       evidenceAt: measurement?.evidenceAt ?? null,
-      knownLimitations: measurement?.knownLimitations?.trim() || definition.knownLimitations,
-      correctiveAction: measurement?.correctiveAction?.trim() || definition.correctiveAction,
+      knownLimitations: typeof measurement?.knownLimitations === 'string' && measurement.knownLimitations.trim().length > 0
+        ? measurement.knownLimitations.trim()
+        : definition.knownLimitations,
+      correctiveAction: typeof measurement?.correctiveAction === 'string' && measurement.correctiveAction.trim().length > 0
+        ? measurement.correctiveAction.trim()
+        : definition.correctiveAction,
     };
   });
 }

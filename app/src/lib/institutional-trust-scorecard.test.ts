@@ -66,6 +66,25 @@ describe('institutional trust scorecard', () => {
     expect(scored.correctiveAction).toBe(definition.correctiveAction);
   });
 
+  it('falls back to catalog guidance when imported overrides are not strings', () => {
+    const definition = TRUST_METRICS[0];
+    const scored = trustScorecard([{
+      id: definition.id, targetMet: true, evidenceCurrent: true, value: 'met', evidenceAt: Date.now(),
+      knownLimitations: { unsafe: true }, correctiveAction: ['unsafe'],
+    } as unknown as Parameters<typeof trustScorecard>[0][number]])[0];
+    expect(scored.knownLimitations).toBe(definition.knownLimitations);
+    expect(scored.correctiveAction).toBe(definition.correctiveAction);
+  });
+
+  it('keeps an explicit control failure red even when auxiliary fields are malformed', () => {
+    const definition = TRUST_METRICS[0];
+    const state = metricState(definition, {
+      id: definition.id, controlFailure: true, targetMet: 'unknown', evidenceCurrent: null,
+      trendWorsening: 'unknown', value: 'failed', evidenceAt: Number.NaN,
+    } as unknown as Parameters<typeof metricState>[1]);
+    expect(state.state).toBe('red');
+  });
+
   it('normalizes malformed measurement values before rendering', () => {
     const definition = TRUST_METRICS[0];
     const scored = trustScorecard([{ id: definition.id, targetMet: true, evidenceCurrent: true, value: { unsafe: true }, evidenceAt: Date.now() } as unknown as Parameters<typeof trustScorecard>[0][number]])[0];

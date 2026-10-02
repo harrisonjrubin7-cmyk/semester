@@ -171,4 +171,20 @@ describe('incident and recovery control contract', () => {
     } as Parameters<typeof validateIncident>[0];
     expect(validateIncident(record, 200)).toContain('complete close-out evidence');
   });
+
+  it('rejects finite timestamps outside the JavaScript date range without hanging', () => {
+    const record = {
+      id: 'INC-16', severity: 'SEV1', declaredAt: 100, detection: DETECTION,
+      commander: 'Incident lead', affectedServices: ['Identity'], tenantScope: { scope: 'platform_wide' },
+      studentVisibleEffect: 'Access unavailable', privateStudentDataIncluded: false,
+      status: 'close', nextUpdateAt: 300, verification: ['Access checks pass'],
+      closeOut: {
+        measuredTimeline: 'timeline', impact: 'access unavailable', recoveryPoint: 'no data loss',
+        stabilizedAt: -Number.MAX_VALUE, communications: ['update'],
+        correctiveActions: [{ action: 'add check', owner: 'Identity', severity: 'SEV1', dueAt: 600, requiredEvidence: 'test', verificationEvidence: 'CI passed' }],
+        postIncidentReview: { completedAt: 160, evidence: 'PIR complete' },
+      },
+    } as Parameters<typeof validateIncident>[0];
+    expect(validateIncident(record, 200)).toContain('complete close-out evidence');
+  });
 });
