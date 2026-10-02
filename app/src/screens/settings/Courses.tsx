@@ -9,7 +9,7 @@ import { SEED_SUMMARY } from '../../data/seed';
 import { CourseRow } from '../Me';
 import { DESTINATIONS } from '../../lib/nav';
 import { hiddenFor } from '../../lib/school';
-import { ROLES, hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
+import { hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
 
 /**
  * Who you are to the app, and what it is holding.
@@ -29,6 +29,7 @@ export function SettingsCourses() {
   const { state, dispatch, school } = useStore();
   const hidden = hiddenFor(school.capabilities);
   const byRole = hiddenFrom(state.role);
+  const role = roleOf(state.role);
 
   return (
     <SettingsPage
@@ -45,7 +46,7 @@ export function SettingsCourses() {
             <CustomRow>
               <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>You are here as</SectionLabel>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
-                {roleOf(state.role).blurb}
+                {role.blurb}
               </div>
               <select
                 className="input"
@@ -71,25 +72,21 @@ export function SettingsCourses() {
                 </div>
               )}
 
-              {/*
-                Shown rather than hidden. Somebody who came looking for the
-                advising side deserves to know it is understood and missing;
-                leaving it out entirely reads as an app that has never heard
-                of advisors, and a role that is offered and then holds only
-                what you typed into it would be the confident wrong thing
-                this app refuses everywhere else.
-              */}
               <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
-                Not yet
+                Live now
               </SectionLabel>
-              {ROLES.filter((r) => !r.ready).map((r) => (
-                <div key={r.id} style={{ marginBottom: 'var(--sp-4)' }}>
-                  <div style={{ fontSize: 'var(--type-base)' }}>{r.label}</div>
-                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
-                    {r.needs}
+              <div style={{ fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                {role.live}
+              </div>
+
+              {role.needs && (
+                <div style={{ borderTop: '1px solid var(--app-line)', marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-4)' }}>
+                  <SectionLabel style={{ margin: 0 }}>Connected access</SectionLabel>
+                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                    {role.needs} Choosing this role does not grant that access.
                   </div>
                 </div>
-              ))}
+              )}
             </CustomRow>
           </Group>
 
