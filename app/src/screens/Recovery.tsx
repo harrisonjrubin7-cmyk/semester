@@ -133,10 +133,10 @@ export function Recovery() {
 }
 
 function AcademicRecoveryGuide() {
-  const { dispatch } = useStore();
+  const { state, dispatch } = useStore();
   const [kind, setKind] = useState<DisruptionKind | null>(null);
   const [stage, setStage] = useState<RecoveryStage>('identify');
-  const selected = kind ? recoveryPlan(kind) : null;
+  const selected = kind ? recoveryPlan(kind, state.role) : null;
 
   const choose = (next: DisruptionKind) => {
     setKind(next);
@@ -150,10 +150,13 @@ function AcademicRecoveryGuide() {
   return (
     <section className="academic-recovery" aria-labelledby="academic-recovery-title">
       <div className="kicker">Recovery mode</div>
-      <h2 id="academic-recovery-title">Your plan stays in place while you review what changed.</h2>
+      <h2 id="academic-recovery-title">Your plan can change. Let’s make the next step workable.</h2>
+      <p className="academic-recovery-confidence">
+        Semester will not notify faculty, advisors, or staff because you use Recovery Mode. Your plan stays private unless you choose what to share.
+      </p>
       {stage === 'identify' || !selected ? (
         <>
-          <p>Choose the change you want help sorting out. Semester will show impact and no more than three options.</p>
+          <p>Choose what would help most. Semester will show the impact and no more than three options; nothing changes merely because you review them.</p>
           <div className="academic-recovery-choices" role="group" aria-label="What changed">
             {RECOVERY_PLANS.map((plan) => (
               <button key={plan.kind} type="button" className="balance-button" onClick={() => choose(plan.kind)}>
@@ -165,6 +168,7 @@ function AcademicRecoveryGuide() {
       ) : (
         <>
           <p className="academic-recovery-confidence">{CONFIDENCE_TEXT[selected.confidence]}</p>
+          <p className="kicker">{selected.category}</p>
           <h3>{selected.title}</h3>
           <div className="academic-recovery-grid">
             <div>
@@ -190,7 +194,7 @@ function AcademicRecoveryGuide() {
                   className="balance-button"
                   onClick={() => {
                     setStage(nextRecoveryStage('offer', 'choose_option') ?? 'offer');
-                    dispatch({ type: 'go', screen: option.screen });
+                    dispatch({ type: 'go', screen: option.screen, recoveryIntent: option.intent });
                   }}
                 >
                   <strong>{option.label}</strong>

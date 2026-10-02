@@ -147,7 +147,7 @@ export function behindLine(b: Behind): string {
 }
 
 /** Where each piece of work stands, once the arithmetic is done. */
-export type Standing = 'gone' | 'today' | 'fits' | 'tight';
+export type Standing = 'gone' | 'today' | 'fits' | 'tight' | 'available';
 
 export interface Step {
   id: string;
