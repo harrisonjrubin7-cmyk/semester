@@ -50,16 +50,15 @@ export interface SeatDefinition {
 }
 
 /*
- * Four seats held since 2026-09-28, on the founder's instruction (decision 1 in
- * `docs/LAUNCH-DECISIONS.md`): the founder seat, and product, engineering and
- * customer success held by the same person, acting, until someone else
- * accepts each — which the council document allows at pilot scale. Role
- * labels, as the document requires; never an address. Holding a seat is not
- * signing: `signoffs` stays empty until there is a decision to sign for, so
- * `decide()` now says "has not signed" for these four rather than "is vacant".
- *
- * Three more on 2026-09-30, on the founder's word: privacy / legal by outside
- * counsel, and accessibility and operations by the founder, acting.
+ * Seven seats are held. Four were accepted on 2026-09-28 on the founder's
+ * instruction (decision 1 in `docs/LAUNCH-DECISIONS.md`): the founder seat,
+ * and product, engineering and customer success held by the same person,
+ * acting, until someone else accepts each — which the council document allows
+ * at pilot scale. Three more were accepted on 2026-09-30: privacy / legal by
+ * outside counsel, and accessibility and operations by the founder, acting.
+ * Role labels, as the document requires; never an address. Holding a seat is
+ * not signing: `signoffs` stays empty until there is a decision to sign for,
+ * so `decide()` says "has not signed" for these seven rather than "is vacant".
  */
 export const COUNCIL: readonly SeatDefinition[] = [
   { seat: 'founder', title: 'Founder / CEO', decides: 'Risk acceptance, customer commitment, commercial launch', holder: 'Founder' },
@@ -106,9 +105,9 @@ export interface Gate {
 const GO_LIVE = 'docs/market-readiness/GO_LIVE_CHECKLIST.md';
 
 /**
- * The twelve go/no-go requirements, audited against `origin/main` at
- * `1dd79cd` on 2026-09-27 and moved on 2026-09-28. `docs/LAUNCH-READINESS-AUDIT.md`
- * has the long form.
+ * The twelve go/no-go requirements, initially audited on 2026-09-27 and
+ * re-audited against the release tree on 2026-10-01.
+ * `docs/LAUNCH-READINESS-AUDIT.md` has the long form.
  *
  * One is `met` (`known-limitations`, the one that asked only for something to
  * be published). The other eleven are not, and that is the finding, not a
@@ -422,5 +421,5 @@ export const CURRENT: LaunchState = {
   signoffs: [],
   blockers: [],
   acceptances: [],
-  on: '2026-09-27',
+  on: '2026-10-01',
 };

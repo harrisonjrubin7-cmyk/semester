@@ -9,13 +9,14 @@ that does not exist, and when a gate is marked met while a
 [`GO_LIVE_CHECKLIST.md`](market-readiness/GO_LIVE_CHECKLIST.md) line it
 depends on is unticked.
 
-**Current verdict: `NO-GO`.** Audited against `origin/main` at `1dd79cd`,
-2026-09-27, and moved on 2026-09-28. One gate is met (`known-limitations`),
-nine are partial and two are unmet. Four council seats are held (founder, and
-product, engineering and customer success held by the founder, acting) and
-none has signed; eight are vacant, the `finance` and `operations` seats among them
-since 29 September (D-118, D-120). `decide()` gives 31 reasons: the
-met gate and four "is vacant" lines became four "has not signed" lines.
+**Current verdict: `NO-GO`.** Re-audited against the current release tree on
+2026-10-01. One gate is met (`known-limitations`), nine are partial and two are
+unmet. Seven council seats are held (founder; product, engineering, customer
+success, accessibility and operations held by the founder, acting; and
+privacy/legal held by outside counsel) and none has signed. Five are vacant:
+security, trust, data, finance and the institutional champion. `decide()` gives
+31 reasons: eleven open gates, eight unsatisfied launch conditions, seven
+unsigned held seats and five vacant seats.
 
 ## How this relates to the go-live checklist
 
@@ -58,11 +59,13 @@ the two documents in agreement.
 | One measurable pilot outcome | `pilot-outcome` | No |
 | One repeatable implementation path | `staging-parity`, `backup-restore` | No |
 
-The beta part rests on flags and known limitations and not on cohort tooling,
-because beta cohorts, invitations and feedback are Phase 1 work that has not
-been built. The existing invite gate
-(`supabase/migrations/20260921002428_invites.sql`) controls sign-up. It does not
-run a beta program. When Phase 1 lands, add its gate to that part.
+The beta part still rests on flags and known limitations because those gates
+measure controlled operation, not merely the presence of cohort tooling. The
+repository now includes private-beta programs, capped cohort kinds,
+invitations, memberships, known issues, feedback and exit requests
+(`supabase/migrations/20260928220000_private_beta.sql` and
+`app/src/lib/beta.ts`). No live cohort has been created, staffed or observed,
+so this implementation evidence does not raise the operational gate.
 
 ## Changing a status
 
