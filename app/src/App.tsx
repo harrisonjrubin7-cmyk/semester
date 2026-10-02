@@ -870,7 +870,7 @@ function Workspace({
                 line — "Sample semester · 4 courses" — so the labelling is
                 kept where the reference keeps it rather than dropped, and the
                 front door is not a banner and a wordmark. */}
-            {!ownTitle && <SampleMark />}
+            {!ownTitle && !INSTITUTIONAL_PREVIEW && <SampleMark />}
             <Replaced />
             <Undone />
             {trouble}
@@ -1491,7 +1491,7 @@ function AppFrame() {
           {/* Under the header rather than above it, and inside the pane rather
               than beside it: `.desk` is a two-column grid, and a bare element
               at its root takes the rail's column. */}
-          <SampleMark />
+          {!INSTITUTIONAL_PREVIEW && <SampleMark />}
           {/*
             The sync banner and the undo toast, in the pane for that same
             reason — and they were the two that were still outside it.
@@ -1590,7 +1590,7 @@ function AppFrame() {
       <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
-      <SampleMark />
+      {!INSTITUTIONAL_PREVIEW && <SampleMark />}
       {trouble}
       <InstitutionalNavigation />
       {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}

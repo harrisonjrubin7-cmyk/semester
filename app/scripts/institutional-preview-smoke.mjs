@@ -47,6 +47,13 @@ async function waitForServer() {
   const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     if (server.exitCode !== null) throw new Error(`preview server exited early\n${serverOutput}`);
+    // Do not accept an older process that happens to own this port. The child
+    // must first announce its own listener; otherwise a bind failure can race
+    // the fetch below and make the wrong build look ready.
+    if (!serverOutput.includes('Local:')) {
+      await new Promise((done) => setTimeout(done, 100));
+      continue;
+    }
     try {
       const response = await fetch(base);
       if (response.ok) return;
@@ -56,6 +63,18 @@ async function waitForServer() {
     await new Promise((done) => setTimeout(done, 100));
   }
   throw new Error(`preview server did not answer ${base}\n${serverOutput}`);
+}
+
+async function waitForVisibleMatch(locator, label, timeout = 30_000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const count = await locator.count();
+    for (let index = 0; index < count; index += 1) {
+      if (await locator.nth(index).isVisible()) return locator.nth(index);
+    }
+    await new Promise((done) => setTimeout(done, 100));
+  }
+  throw new Error(`timed out waiting for visible ${label}`);
 }
 
 const schemaSource = readFileSync(join(appRoot, 'src', 'lib', 'migrate.ts'), 'utf8');
@@ -129,7 +148,18 @@ try {
       if (expectedPreview) {
         await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
         await page.getByText('Demo environment', { exact: false }).first().waitFor({ state: 'visible' });
-        if (probe.module) await page.getByText(probe.module, { exact: false }).first().waitFor({ state: 'visible' });
+        if (probe.hash === '#/home') {
+          const moreFromToday = await waitForVisibleMatch(
+            page.locator('details.today-more > summary'),
+            'More from Today disclosure',
+          );
+          await moreFromToday.click();
+        }
+        if (probe.module) {
+          // Responsive shells can retain a hidden copy of a module. Require
+          // any visible match instead of binding the smoke to DOM order.
+          await waitForVisibleMatch(page.getByText(probe.module, { exact: false }), probe.module);
+        }
         const workspace = page.locator('details.institutional-workspace-disclosure');
         await workspace.locator('summary').click();
         await workspace.locator('[aria-label="Current journey"]').waitFor({ state: 'visible' });
@@ -187,6 +217,8 @@ try {
           bar: height('.desktop-bar'),
           primary: height('.institutional-primary-nav'),
           workspace: height('.institutional-workspace-disclosure > summary'),
+          tabs: height('.deskstrip'),
+          header: height('.app-header'),
           mainTop,
           targetMinimum: Math.min(...targets),
           overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -198,7 +230,10 @@ try {
       if (chrome.mainTop > 320) findings.push(`compact chrome: page content starts at ${chrome.mainTop}px`);
       if (chrome.targetMinimum < 44) findings.push(`compact chrome: navigation target shrank to ${chrome.targetMinimum}px`);
       if (chrome.overflow > 0) findings.push(`compact chrome: page overflows horizontally by ${chrome.overflow}px`);
-      console.log(`PASS compact workspace chrome main=${chrome.mainTop}px target=${chrome.targetMinimum}px`);
+      console.log(
+        `PASS compact workspace chrome main=${chrome.mainTop}px target=${chrome.targetMinimum}px ` +
+        `tabs=${chrome.tabs}px bar=${chrome.bar}px primary=${chrome.primary}px workspace=${chrome.workspace}px header=${chrome.header}px`,
+      );
     } finally {
       await compactContext.close();
     }
@@ -219,13 +254,16 @@ try {
       const previewControls = page.locator('aside[aria-label="Demo environment"]');
       await previewControls.locator('summary').click();
       await previewControls.locator('select').nth(0).selectOption('cedar-coast');
-      await page.getByText('Cedar Coast College', { exact: false }).first().waitFor();
+      const previewDisclosure = previewControls.locator('details');
+      if ((await previewDisclosure.getAttribute('open')) === null) {
+        await previewControls.locator('summary').click();
+      }
+      await waitForVisibleMatch(page.getByText('Cedar Coast College', { exact: false }), 'Cedar Coast College');
       if (await page.getByText('Help with Evidence & sampling practice', { exact: false }).count()) {
         findings.push('context isolation: Northstar draft leaked into Cedar Coast');
       }
 
       await page.goto(`${base}#/university`, { waitUntil: 'domcontentloaded' });
-      const previewDisclosure = previewControls.locator('details');
       for (const [role, title, applicableFunction] of roleWorkspaces) {
         // Changing person intentionally remounts the tenant-scoped preview and
         // closes this disclosure. Re-open it for the next role rather than
@@ -236,7 +274,10 @@ try {
         const roleSelect = previewControls.locator('select').nth(1);
         await roleSelect.selectOption(`cedar-coast-${role}`);
         await page.getByText(title, { exact: true }).waitFor();
-        await page.getByText(applicableFunction, { exact: true }).waitFor();
+        await waitForVisibleMatch(
+          page.getByText(applicableFunction, { exact: true }),
+          `${role} applicable function`,
+        );
         const visibleRoleHeadings = await page.locator('section[aria-label*="workspace for"] .section-label').allTextContents();
         if (visibleRoleHeadings.length !== 1 || visibleRoleHeadings[0]?.trim() !== title) {
           findings.push(`role workspace ${role}: visible headings were ${JSON.stringify(visibleRoleHeadings)}`);

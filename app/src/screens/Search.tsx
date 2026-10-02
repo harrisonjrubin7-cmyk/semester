@@ -88,14 +88,22 @@ export function SearchHome() {
 
   return (
     <div className="deskhome">
-      <h1
-        className="deskhome-title"
-        aria-label="Semester"
-        data-page-title
-        tabIndex={-1}
-      >
-        <Wordmark className="deskhome-mark" />
-      </h1>
+      {state.nav === 'workspace' ? (
+        <h1
+          className="deskhome-title"
+          aria-label="Semester"
+          data-page-title
+          tabIndex={-1}
+        >
+          <Wordmark className="deskhome-mark" />
+        </h1>
+      ) : (
+        // The tab and rail shells already name this screen with their own
+        // h1. Keep the visual wordmark without creating a second page title.
+        <div className="deskhome-title" aria-hidden="true">
+          <Wordmark className="deskhome-mark" />
+        </div>
+      )}
 
       {/*
         Hidden rather than dimmed — see the note at the top of this file. The
