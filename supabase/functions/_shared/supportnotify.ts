@@ -4,11 +4,22 @@ export interface SupportNoticeDeps {
   allowedOrigin: string | undefined;
   devOrigin?: string;
   resendKey: string | undefined;
+  cronSecret?: string;
   appUrl: string;
   userFromToken(token: string): Promise<string | null>;
   mayAnswer(userId: string): Promise<boolean>;
-  notice(ticketId: string): Promise<{ messageId: string; email: string } | null>;
+  notice(ticketId: string): Promise<SupportNoticeTarget | null>;
+  pending(): Promise<SupportNoticeTarget[]>;
   send(input: { to: string; subject: string; text: string; idempotencyKey: string }): Promise<boolean>;
+  accepted(messageId: string): Promise<void>;
+  failed(messageId: string, attempts: number): Promise<void>;
+}
+
+export interface SupportNoticeTarget {
+  messageId: string;
+  ticketId: string;
+  email: string;
+  attempts: number;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -35,12 +46,24 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
     headers: { ...cors, 'Cache-Control': 'no-store', 'Content-Type': 'application/json' },
   });
 
+  const bearer = /^Bearer\s+(.+)$/i.exec(req.headers.get('Authorization') ?? '')?.[1]?.trim();
+  if (req.method === 'POST' && deps.cronSecret && bearer === deps.cronSecret) {
+    if (!deps.resendKey) return reply(503, { error: 'Support email is not configured.' });
+    const pending = await deps.pending();
+    let accepted = 0;
+    for (const target of pending) {
+      const sent = await sendTarget(deps, target);
+      if (sent) accepted += 1;
+    }
+    return reply(200, { processed: pending.length, accepted });
+  }
+
   if (req.method === 'OPTIONS') return allowed ? new Response(null, { status: 204, headers: cors }) : new Response(null, { status: 403 });
   if (!allowed) return reply(403, { error: 'This page is not allowed to send support notices.' });
   if (req.method !== 'POST') return reply(405, { error: 'Method not allowed.' });
   if (!deps.resendKey) return reply(503, { error: 'Support email is not configured.' });
 
-  const token = /^Bearer\s+(.+)$/i.exec(req.headers.get('Authorization') ?? '')?.[1]?.trim();
+  const token = bearer;
   if (!token) return reply(401, { error: 'Sign in as support.' });
   const user = await deps.userFromToken(token);
   if (!user || !(await deps.mayAnswer(user))) return reply(403, { error: 'Support access is required.' });
@@ -56,12 +79,19 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
 
   const target = await deps.notice(ticketId);
   if (!target) return reply(409, { error: 'No support reply is ready to notify.' });
-  const ticketReference = reference(ticketId);
+  const sent = await sendTarget(deps, target);
+  return sent ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });
+}
+
+async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<boolean> {
+  const ticketReference = reference(target.ticketId);
   const sent = await deps.send({
     to: target.email,
     subject: `[Semester] Support replied to ${ticketReference}`,
     text: `Semester support replied to ${ticketReference}.\n\nOpen Semester and go to Help to read the reply: ${deps.appUrl}\n\nThe reply is not included in email to keep your support conversation private.`,
     idempotencyKey: `support-${target.messageId}`,
   });
-  return sent ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });
+  if (sent) await deps.accepted(target.messageId);
+  else await deps.failed(target.messageId, target.attempts);
+  return sent;
 }

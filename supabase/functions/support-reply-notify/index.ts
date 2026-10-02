@@ -6,6 +6,18 @@ const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
 const resendKey = Deno.env.get('RESEND_API_KEY');
 const supportSender = Deno.env.get('SUPPORT_NOTIFY_FROM') ?? Deno.env.get('LEAD_NOTIFY_FROM');
+const cronSecret = Deno.env.get('CRON_SECRET');
+
+interface OutboxRow { message_id: string; ticket_id: string; attempts: number }
+
+async function target(row: OutboxRow) {
+  const { data: ticket } = await admin.from('support_tickets').select('student_id').eq('id', row.ticket_id).maybeSingle();
+  if (!ticket?.student_id) return null;
+  const { data: user, error } = await admin.auth.admin.getUserById(ticket.student_id);
+  return error || !user.user.email ? null : {
+    messageId: row.message_id, ticketId: row.ticket_id, email: user.user.email, attempts: row.attempts,
+  };
+}
 
 Deno.serve((req) => handleSupportNotice(req, {
   allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
@@ -13,6 +25,7 @@ Deno.serve((req) => handleSupportNotice(req, {
   // Resend's onboarding sender cannot deliver to arbitrary students. Treat
   // support email as configured only when a verified sender is explicit.
   resendKey: resendKey && supportSender ? resendKey : undefined,
+  cronSecret,
   // An origin has no path and ALLOWED_ORIGIN may contain several entries, so
   // it cannot be used as the application link in an email.
   appUrl: Deno.env.get('SUPPORT_RETURN_URL') ?? 'https://harrisonjrubin7-cmyk.github.io/semester/',
@@ -31,14 +44,17 @@ Deno.serve((req) => handleSupportNotice(req, {
     return Boolean(data?.length);
   },
   async notice(ticketId) {
-    const [{ data: ticket }, { data: messages }] = await Promise.all([
-      admin.from('support_tickets').select('student_id').eq('id', ticketId).maybeSingle(),
-      admin.from('support_ticket_messages').select('id,from_side').eq('ticket_id', ticketId).order('created_at', { ascending: false }).limit(1),
-    ]);
-    const message = messages?.[0];
-    if (!ticket?.student_id || !message || message.from_side !== 'support') return null;
-    const { data: user, error } = await admin.auth.admin.getUserById(ticket.student_id);
-    return error || !user.user.email ? null : { messageId: message.id, email: user.user.email };
+    const { data } = await admin.from('support_notification_outbox').select('message_id,ticket_id,attempts')
+      .eq('ticket_id', ticketId).is('accepted_at', null).is('dead_lettered_at', null)
+      .lte('next_attempt_at', new Date().toISOString()).order('queued_at', { ascending: true }).limit(1).maybeSingle();
+    return data ? target(data as OutboxRow) : null;
+  },
+  async pending() {
+    const { data } = await admin.from('support_notification_outbox').select('message_id,ticket_id,attempts')
+      .is('accepted_at', null).is('dead_lettered_at', null).lte('next_attempt_at', new Date().toISOString())
+      .order('queued_at', { ascending: true }).limit(100);
+    const rows = await Promise.all(((data ?? []) as OutboxRow[]).map(target));
+    return rows.filter((row): row is NonNullable<typeof row> => row !== null);
   },
   async send(input) {
     if (!supportSender) return false;
@@ -48,5 +64,15 @@ Deno.serve((req) => handleSupportNotice(req, {
       body: JSON.stringify({ from: supportSender, to: [input.to], subject: input.subject, text: input.text }),
     });
     return res.ok;
+  },
+  async accepted(messageId) {
+    await admin.from('support_notification_outbox').update({ accepted_at: new Date().toISOString(), last_error: null }).eq('message_id', messageId);
+  },
+  async failed(messageId, attempts) {
+    const nextAttempts = Math.min(8, attempts + 1);
+    const patch = nextAttempts >= 8
+      ? { attempts: nextAttempts, dead_lettered_at: new Date().toISOString(), last_error: 'provider rejected notice' }
+      : { attempts: nextAttempts, next_attempt_at: new Date(Date.now() + Math.min(60, 2 ** nextAttempts) * 60_000).toISOString(), last_error: 'provider rejected notice' };
+    await admin.from('support_notification_outbox').update(patch).eq('message_id', messageId);
   },
 }));

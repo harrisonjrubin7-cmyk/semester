@@ -11,8 +11,11 @@ function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
     appUrl: `${origin}/semester/`,
     userFromToken: vi.fn().mockResolvedValue('agent'),
     mayAnswer: vi.fn().mockResolvedValue(true),
-    notice: vi.fn().mockResolvedValue({ messageId: 'message-1', email: 'student@example.test' }),
+    notice: vi.fn().mockResolvedValue({ messageId: 'message-1', ticketId: ticket, email: 'student@example.test', attempts: 0 }),
+    pending: vi.fn().mockResolvedValue([]),
     send: vi.fn().mockResolvedValue(true),
+    accepted: vi.fn().mockResolvedValue(undefined),
+    failed: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
@@ -36,6 +39,27 @@ describe('support reply notification', () => {
     const text = vi.mocked(d.send).mock.calls[0][0].text;
     expect(text).toContain('/semester/');
     expect(text).not.toContain('agent');
+    expect(d.accepted).toHaveBeenCalledWith('message-1');
+  });
+
+  it('drains durable pending notices for the authenticated scheduler', async () => {
+    const d = deps({
+      cronSecret: 'cron-secret',
+      pending: vi.fn().mockResolvedValue([{ messageId: 'message-2', ticketId: ticket, email: 'student@example.test', attempts: 1 }]),
+    });
+    const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
+    const response = await handleSupportNotice(cron, d);
+    expect(response.status).toBe(200);
+    expect(d.send).toHaveBeenCalledTimes(1);
+    expect(d.accepted).toHaveBeenCalledWith('message-2');
+  });
+
+  it('leaves rejected notices in the outbox with a retry attempt', async () => {
+    const d = deps({ send: vi.fn().mockResolvedValue(false) });
+    const response = await handleSupportNotice(request(), d);
+    expect(response.status).toBe(502);
+    expect(d.failed).toHaveBeenCalledWith('message-1', 0);
+    expect(d.accepted).not.toHaveBeenCalled();
   });
 
   it('refuses callers without the support capability before looking up a ticket', async () => {

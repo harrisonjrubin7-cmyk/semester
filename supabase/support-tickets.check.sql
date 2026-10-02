@@ -151,8 +151,11 @@ begin
      and actor_sha256 = private.role_audit_sha256(agent::text)
      and actor_kind = 'authenticated'
      and correlation_id ~ '^[0-9a-f]{64}$'
-     and detail = '{"next_status":"waiting_on_student"}'::jsonb;
+     and detail = '{"next_status":"waiting_on_student","notification_queued":true}'::jsonb;
   perform pg_temp.counted('a reply records its ticket, message and acting agent without support content', n, 1);
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.counted('the reply commits a durable notification intent in the same transaction', n, 1);
   perform pg_temp.must_refuse('support cannot close a ticket for the student', agent,
     format('select public.support_reply(%L, %L, %L)', a11y, 'closing', 'closed'));
 
