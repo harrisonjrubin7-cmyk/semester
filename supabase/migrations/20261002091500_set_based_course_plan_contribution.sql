@@ -60,23 +60,24 @@ begin
   -- A primary wins when the same course appears as both. Otherwise the first
   -- occurrence wins, matching the former loop's insert-then-continue behavior.
   with requested as (
-    select value ->> 'code' as code,
-           value ->> 'kind' as kind,
-           (value ->> 'rank')::integer as rank_value,
+    select value ->> 'code' as requested_code,
+           value ->> 'kind' as requested_kind,
+           (value ->> 'rank')::integer as requested_rank,
            ordinality as position
       from jsonb_array_elements(cleaned) with ordinality
   ), chosen as (
-    select distinct on (code) code, kind, rank_value
-      from requested
-     order by code, (kind = 'primary') desc, position
+    select distinct on (r.requested_code)
+           r.requested_code, r.requested_kind, r.requested_rank
+      from requested r
+     order by r.requested_code, (r.requested_kind = 'primary') desc, r.position
   )
   insert into public.term_plan_courses
     (user_id, tenant_id, term_code, course_code, status, backup_rank, contributes_to_demand)
-  select me, school, trim(want_term), code,
-         case when kind = 'primary' then 'planned' else 'backup' end,
-         case when kind = 'backup' then rank_value end,
+  select me, school, trim(want_term), c.requested_code,
+         case when c.requested_kind = 'primary' then 'planned' else 'backup' end,
+         case when c.requested_kind = 'backup' then c.requested_rank end,
          true
-    from chosen;
+    from chosen c;
   get diagnostics n = row_count;
 
   insert into public.demand_consents (user_id, tenant_id, term_code, consented_at, revoked_at)
