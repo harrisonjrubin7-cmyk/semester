@@ -100,4 +100,10 @@ describe('institutional trust scorecard', () => {
     expect(scored.value).toBe('Invalid measurement value');
     expect(scored.state).toBe('yellow');
   });
+
+  it('ignores null imported entries instead of taking down the scorecard', () => {
+    const scored = trustScorecard([null] as unknown as Parameters<typeof trustScorecard>[0]);
+    expect(scored).toHaveLength(TRUST_METRICS.length);
+    expect(scored.every((metric) => metric.state === 'gray')).toBe(true);
+  });
 });

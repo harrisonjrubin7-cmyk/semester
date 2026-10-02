@@ -110,7 +110,12 @@ export function evidenceDateLabel(evidenceAt: number | null): string | null {
 }
 
 export function trustScorecard(measurements: readonly TrustMeasurement[]): ScoredTrustMetric[] {
-  const byId = new Map(measurements.map((measurement) => [measurement.id, measurement]));
+  const byId = new Map<string, TrustMeasurement>();
+  for (const measurement of measurements) {
+    if (measurement && typeof measurement === 'object' && typeof measurement.id === 'string') {
+      byId.set(measurement.id, measurement);
+    }
+  }
   return TRUST_METRICS.map((definition) => {
     const measurement = byId.get(definition.id);
     const evaluation = metricState(definition, measurement);
