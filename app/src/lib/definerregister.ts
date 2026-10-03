@@ -160,6 +160,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -442,6 +443,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261002003000_support_notification_outbox.sql',
     functions: ['my_support_email_notices'],
+  },
+  {
+    file: '20261003040000_console_scoped_tenant_access.sql',
+    functions: ['console_tenant_access'],
   },
   {
     file: '20261003120000_support_notification_consent_boundary.sql',

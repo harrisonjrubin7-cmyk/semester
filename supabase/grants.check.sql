@@ -581,6 +581,13 @@ declare
     -- console-command-center.check.sql.
     'console_command_center(include_demo boolean)',
 
+    -- The bounded tenant access inventory in 20261003040000. The tenant and
+    -- optional subject are filters, not authority: the function checks a live
+    -- platform or exact-tenant capability before reading. Demo inclusion has
+    -- the separate tenant:implement gate. Its feature suite attempts no grant,
+    -- wrong tenant, expired grant, cross-tenant subject and demo escalation.
+    'console_tenant_access(want_tenant text, want_subject uuid, after_granted_at timestamp with time zone, after_id uuid, want_limit integer, include_demo boolean)',
+
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
     -- requester party, deciding checks fresh MFA, refuses self-approval and
