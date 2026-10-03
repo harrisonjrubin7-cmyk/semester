@@ -121,10 +121,10 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 106 | `docs/trust/ASSET-INVENTORY.md` | EXACT PRESENT | canonical reconciliation schema across technical, data, provider, identity and business assets; repository discovery is not represented as complete live inventory |
 | 107 | `docs/trust/THREAT-MODEL.md` | EXACT PRESENT | canonical cross-model threat register; repository analysis remains distinct from target testing and independent validation |
 | 108 | `docs/trust/RISK-TREATMENT-PLAN.md` | EXACT PRESENT | canonical treatment/acceptance control; material open risks, unnamed seats, absent game days and external assurance remain explicit blockers |
-| 109 | `docs/trust/SECURITY-QUESTIONNAIRE.md` | CANDIDATE SOURCE | `docs/market-readiness/INFORMATION-SECURITY-QUESTIONNAIRE.md` (filename similarity 0.70; substantive review required) |
-| 110 | `docs/trust/HECVAT-READINESS-MATRIX.md` | CANDIDATE SOURCE | `docs/market-readiness/HECVAT_READINESS.md` (filename similarity 0.70; substantive review required) |
-| 111 | `docs/trust/NIST-800-53-READINESS-MATRIX.md` | CANDIDATE SOURCE | `docs/market-readiness/PILOT-READINESS-MATRIX.md` (filename similarity 0.46; substantive review required) |
-| 112 | `docs/trust/EDUCATION-PRIVACY-READINESS-MATRIX.md` | CANDIDATE SOURCE | `docs/market-readiness/PRIVACY_READINESS.md` (filename similarity 0.54; substantive review required) |
+| 109 | `docs/trust/SECURITY-QUESTIONNAIRE.md` | EXACT PRESENT | canonical controlled response framework; evidence-linked materials remain distinct from buyer-specific answers and approvals |
+| 110 | `docs/trust/HECVAT-READINESS-MATRIX.md` | EXACT PRESENT | canonical HECVAT readiness summary; assessment preparation is explicitly not certification, completion, or buyer acceptance |
+| 111 | `docs/trust/NIST-800-53-READINESS-MATRIX.md` | EXACT PRESENT | canonical selective family mapping; applicability awaits buyer boundary, baseline, tailoring, parameters and assessment |
+| 112 | `docs/trust/EDUCATION-PRIVACY-READINESS-MATRIX.md` | EXACT PRESENT | canonical education-privacy readiness map; legal roles, applicability, compliance and institution approval remain external determinations |
 | 113 | `docs/trust/AI-GOVERNANCE-PROGRAM.md` | EXACT PRESENT | `docs/market-readiness/AI-GOVERNANCE-PROGRAM.md` |
 | 114 | `docs/trust/AI-SYSTEM-INVENTORY.md` | NO CLOSE SOURCE | — |
 | 115 | `docs/trust/AI-RISK-ASSESSMENT.md` | NO CLOSE SOURCE | — |
