@@ -99,14 +99,6 @@ function printFindings(findings, write = console.log) {
   }
 }
 
-function valueShape(value, depth = 0) {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return depth >= 4 ? 'array' : `array<${value.length ? valueShape(value[0], depth + 1) : 'empty'}>`;
-  if (typeof value !== 'object') return typeof value;
-  if (depth >= 4) return 'object';
-  return `{${Object.keys(value).sort().map(key => `${safeText(key)}:${valueShape(value[key], depth + 1)}`).join(',')}}`;
-}
-
 export function findingHash(finding) {
   return /^[a-f\d]{64}$/i.test(finding?.findingHash ?? '') ? finding.findingHash : null;
 }
@@ -115,6 +107,29 @@ export function findingHashes(finding) {
   const hashes = [findingHash(finding), ...(finding?.paths ?? []).map(path => path?.finding_hash)]
     .filter(hash => /^[a-f\d]{64}$/i.test(hash ?? ''));
   return [...new Set(hashes)];
+}
+
+export function findingsFromEvidence(report) {
+  if (Array.isArray(report?.findings)) return report.findings;
+  if (report?.finding && typeof report.finding === 'object') return [report.finding];
+  if (report?.plugin_id && Array.isArray(report.paths)) return [report];
+  throw new Error('Finding evidence used an unsupported schema');
+}
+
+export function findingPluginIds(report) {
+  const ids = findingsFromEvidence(report).map(finding => String(finding?.plugin_id ?? ''));
+  if (!ids.length || ids.some(id => !/^[a-z\d._:-]{1,128}$/i.test(id))) throw new Error('Finding evidence did not include a safe plugin identifier');
+  return [...new Set(ids)];
+}
+
+export function assertCompleteFindingEvidence(finding) {
+  const plugin = String(finding?.plugin_id ?? 'unknown');
+  if (!Number.isInteger(finding?.total_paths) || finding.total_paths < 1 || !Array.isArray(finding.paths) || finding.paths.length !== finding.total_paths) {
+    throw new Error(`Incomplete finding evidence for plugin ${safeText(plugin)}`);
+  }
+  if (finding.paths.some(path => !/^[a-f\d]{64}$/i.test(path?.finding_hash ?? ''))) {
+    throw new Error(`Missing triage hash for plugin ${safeText(plugin)}`);
+  }
 }
 
 function printResult(result) {
@@ -137,12 +152,14 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       for (const warning of report.warnings ?? []) console.error(`StackHawk | Scan warning category: ${safeText(warning.category)}`);
       console.log(scanId(report));
     }
+    else if (process.argv[2] === 'plugin-ids') {
+      findingPluginIds(report).forEach(id => console.log(id));
+    }
     else if (process.argv[2] === 'hashes') {
-      if (!Array.isArray(report.findings)) throw new Error('Full finding evidence was not returned');
-      console.log(`StackHawk | Full finding evidence: ${report.findings.length} findings`);
-      report.findings.forEach((finding, index) => console.log(`StackHawk | Finding schema ${index + 1}: ${valueShape(finding)}`));
-      printFindings(report.findings);
-      if (report.findings.some(finding => !findingHashes(finding).length || finding.paths?.some(path => !/^[a-f\d]{64}$/i.test(path?.finding_hash ?? '')))) throw new Error('A finding path did not include its triage hash');
+      const findings = findingsFromEvidence(report);
+      findings.forEach(assertCompleteFindingEvidence);
+      console.log(`StackHawk | Complete finding evidence: ${findings.length} findings`);
+      printFindings(findings);
     }
     else if (process.argv[2] === 'verify') {
       const uris = parseJson(readFileSync(process.argv[4], 'utf8'));
@@ -153,7 +170,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`StackHawk | URI schema: ${Array.isArray(uris) ? 'array' : safeText(Object.keys(uris ?? {}).join(', '))}; records=${Array.isArray(list) ? list.length : 'unsupported'}; first record=${list?.[0] && typeof list[0] === 'object' ? safeText(Object.keys(list[0]).join(', ')) : typeof list?.[0]}`);
       printResult(result);
       if (result.gaps.length) process.exitCode = 1;
-    } else throw new Error('Use id, hashes or verify with scan evidence files');
+    } else throw new Error('Use id, plugin-ids, hashes or verify with scan evidence files');
   } catch (error) {
     console.error(`StackHawk | Evidence unavailable: ${safeText(error.message)}`);
     process.exitCode = 1;
