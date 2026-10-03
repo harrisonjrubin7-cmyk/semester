@@ -219,6 +219,11 @@ describe('pilot and individual release profiles', () => {
       ...evidence[launchIndex], launchState: { ...readyLaunchState(), on: '2026-10-03' },
     });
     expect(evaluateReleaseProfile(profile.id, futureDecision, AS_OF, target).rolloutStatus).toBe('held');
+    const malformedDecision = evidence.with(launchIndex, {
+      ...evidence[launchIndex], launchState: { on: AS_OF } as LaunchState,
+    });
+    expect(() => evaluateReleaseProfile(profile.id, malformedDecision, AS_OF, target)).not.toThrow();
+    expect(evaluateReleaseProfile(profile.id, malformedDecision, AS_OF, target).rolloutStatus).toBe('held');
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {
@@ -262,6 +267,14 @@ describe('pilot and individual release profiles', () => {
     expect(evaluateReleaseProfile(profile.id, [...technical(target), malformedCheckedAt], AS_OF, target).technicalStatus).toBe('not-ready');
     const timestamped = technical(target).map((item) => ({ ...item, checkedAt: '2026-10-02T10:00:00Z' }));
     expect(evaluateReleaseProfile(profile.id, timestamped, AS_OF, target).technicalStatus).toBe('ready');
+    const offsetTimestamped = technical(target).map((item) => ({
+      ...item, checkedAt: '2026-10-02T05:00:00-05:00', expiresAt: '2026-11-01T00:00:00.123456+00:00',
+    }));
+    expect(evaluateReleaseProfile(profile.id, offsetTimestamped, AS_OF, target).technicalStatus).toBe('ready');
+    const invalidOffset = technical(target).map((item, index) => index === 0
+      ? { ...item, checkedAt: '2026-10-02T05:00:00+24:00' }
+      : item);
+    expect(evaluateReleaseProfile(profile.id, invalidOffset, AS_OF, target).technicalStatus).toBe('not-ready');
   });
 
   it('binds every activation and dependency record to one exact release target', () => {

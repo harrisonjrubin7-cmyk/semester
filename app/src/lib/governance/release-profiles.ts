@@ -249,15 +249,19 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
   if (!SECURE_REFERENCE.test(item.reference)) return false;
   if (item.gate === 'canonical-launch-decision') {
     if (!item.launchState) return false;
-    const launchDate = evidenceTime(item.launchState.on);
-    const checked = evidenceTime(item.checkedAt);
-    if (launchDate === null || checked === null || launchDate > checked || launchDate > decisionTime) return false;
-    const decision = decide(item.launchState);
-    if (decision.verdict === 'no-go') return false;
-    if (decision.conditions.some((condition) => {
-      const expiry = evidenceTime(condition.expires, true);
-      return expiry === null || expiry <= decisionTime;
-    })) return false;
+    try {
+      const launchDate = evidenceTime(item.launchState.on);
+      const checked = evidenceTime(item.checkedAt);
+      if (launchDate === null || checked === null || launchDate > checked || launchDate > decisionTime) return false;
+      const decision = decide(item.launchState);
+      if (decision.verdict === 'no-go') return false;
+      if (decision.conditions.some((condition) => {
+        const expiry = evidenceTime(condition.expires, true);
+        return expiry === null || expiry <= decisionTime;
+      })) return false;
+    } catch {
+      return false;
+    }
   }
   const required = item.gate.startsWith('dependency:')
     ? ['product-owner', 'security-owner'] as const
@@ -273,17 +277,33 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
     && subjects.size === required.length;
 }
 
-/** Parse date-only or UTC ISO evidence without relying on string ordering. */
+/** Parse date-only or ISO evidence with an explicit UTC offset without relying on string ordering. */
 function evidenceTime(value: string, endOfDate = false): number | null {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const stamp = Date.parse(`${value}T${endOfDate ? '23:59:59.999' : '00:00:00.000'}Z`);
     return Number.isFinite(stamp) && new Date(stamp).toISOString().slice(0, 10) === value ? stamp : null;
   }
-  const match = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/);
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/);
   if (!match) return null;
-  const stamp = Date.parse(value);
-  const normalized = `${match[1]}.${(match[2] ?? '').padEnd(3, '0')}Z`;
-  return Number.isFinite(stamp) && new Date(stamp).toISOString() === normalized ? stamp : null;
+  const [, yearText, monthText, dayText, hourText, minuteText, secondText, fraction = '', zone] = match;
+  const [year, month, day, hour, minute, second] = [
+    yearText, monthText, dayText, hourText, minuteText, secondText,
+  ].map(Number);
+  const millisecond = Number(fraction.slice(0, 3).padEnd(3, '0'));
+  if (hour > 23 || minute > 59 || second > 59) return null;
+  const localStamp = Date.UTC(year, month - 1, day, hour, minute, second, millisecond);
+  const local = new Date(localStamp);
+  if (local.getUTCFullYear() !== year || local.getUTCMonth() !== month - 1 || local.getUTCDate() !== day
+    || local.getUTCHours() !== hour || local.getUTCMinutes() !== minute || local.getUTCSeconds() !== second) return null;
+  let offsetMinutes = 0;
+  if (zone !== 'Z') {
+    const offsetHours = Number(zone.slice(1, 3));
+    const offsetRemainder = Number(zone.slice(4, 6));
+    if (offsetHours > 23 || offsetRemainder > 59) return null;
+    offsetMinutes = (offsetHours * 60 + offsetRemainder) * (zone[0] === '+' ? 1 : -1);
+  }
+  const stamp = localStamp - offsetMinutes * 60_000;
+  return Number.isFinite(stamp) ? stamp : null;
 }
 
 function counts(
