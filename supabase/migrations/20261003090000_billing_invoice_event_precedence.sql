@@ -12,6 +12,9 @@ alter table public.subscriptions
   add column if not exists billing_issue_invoice_id uuid
     references public.invoices (id) on delete set null;
 
+create index if not exists subscriptions_by_billing_issue_invoice
+  on public.subscriptions (billing_issue_invoice_id);
+
 alter table public.payment_events drop constraint if exists payment_events_kind_check;
 alter table public.payment_events add constraint payment_events_kind_check
   check (kind in ('payment_succeeded', 'payment_failed', 'address_required', 'refund', 'chargeback', 'other'));
