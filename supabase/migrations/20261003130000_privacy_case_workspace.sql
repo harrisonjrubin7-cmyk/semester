@@ -12,7 +12,7 @@ alter table public.data_subject_request
   add column verification_basis text
     check (verification_basis is null or length(trim(verification_basis)) between 3 and 200),
   add column verification_evidence text
-    check (verification_evidence is null or length(trim(verification_evidence)) between 3 and 500),
+    check (verification_evidence is null or verification_evidence ~ '^[A-Za-z0-9._:/-]{3,200}$'),
   add constraint data_subject_request_assignment_pair
     check ((assigned_to is null) = (assigned_at is null)),
   add constraint data_subject_request_verification_complete

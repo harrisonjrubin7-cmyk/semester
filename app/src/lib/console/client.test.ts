@@ -66,6 +66,11 @@ import {
   loadFigures,
   loadCommandCenter,
   loadTenantOperations,
+  loadPrivacyRequests,
+  claimPrivacyRequest,
+  readPrivacyRequestDetail,
+  verifyPrivacyRequest,
+  resolvePrivacyRequest,
   loadPreferences,
   mfaFresh,
   mfaLevel,
@@ -338,6 +343,78 @@ describe('tenant operations', () => {
 
     replies.set('rpc:console_tenant_operations', { error: { message: 'console:operate at platform scope is required.' } });
     await expect(loadTenantOperations()).rejects.toThrow('console:operate at platform scope is required.');
+  });
+});
+
+describe('privacy request workspace', () => {
+  it('maps the metadata-only queue without inventing an approval or owner', async () => {
+    replies.set('rpc:console_privacy_requests', {
+      data: [{
+        request_id: 'request-1', request_ref: 'DSR-1234567890', tenant_id: 'vu',
+        tenant_name: 'Vanderbilt University', is_demo: false, kind: 'erasure',
+        requested_by: 'self', status: 'received', received_at: '2026-10-01T10:00:00Z',
+        due_at: '2026-10-31T10:00:00Z', overdue: false, identity_state: 'unverified',
+        assigned_to: null, assigned_at: null, assigned_to_me: false, hold_state: 'clear',
+        affected_stores: ['account records', 'audit history'], deletion_approval_id: null,
+        deletion_approval_status: null, classification: 'restricted',
+        provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+      }],
+    });
+
+    const [request] = await loadPrivacyRequests();
+    expect(request).toEqual({
+      requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
+      tenantName: 'Vanderbilt University', isDemo: false, kind: 'erasure',
+      requestedBy: 'self', status: 'received', receivedAt: '2026-10-01T10:00:00Z',
+      dueAt: '2026-10-31T10:00:00Z', overdue: false, identityState: 'unverified',
+      assignedTo: null, assignedAt: null, assignedToMe: false, holdState: 'clear',
+      affectedStores: ['account records', 'audit history'], deletionApprovalId: null,
+      deletionApprovalStatus: null, classification: 'restricted',
+      provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+    });
+    expect(last()).toMatchObject({ kind: 'rpc', name: 'console_privacy_requests', args: { include_demo: false } });
+  });
+
+  it('passes explicit demo intent and preserves a server refusal', async () => {
+    replies.set('rpc:console_privacy_requests', { data: [] });
+    await loadPrivacyRequests(true);
+    expect(last()).toMatchObject({ args: { include_demo: true } });
+    replies.set('rpc:console_privacy_requests', { error: { message: 'data_request:handle over an exact school is required.' } });
+    await expect(loadPrivacyRequests()).rejects.toThrow('data_request:handle over an exact school is required.');
+  });
+
+  it('uses the exact audited lifecycle RPC contracts', async () => {
+    replies.set('rpc:claim_privacy_request', { data: 'verifying' });
+    await expect(claimPrivacyRequest('request-1')).resolves.toBe('verifying');
+    expect(last()).toMatchObject({ name: 'claim_privacy_request', args: { want_request: 'request-1' } });
+
+    replies.set('rpc:read_privacy_request_detail', { data: [{
+      request_ref: 'DSR-1234567890', subject_reference: 'ab'.repeat(32), kind: 'export',
+      requested_by: 'self', detail: 'Send my export.', tenant_id: 'vu', verified_at: null,
+      resolution: '', resolution_evidence: null, completion_certificate_id: null,
+    }] });
+    await expect(readPrivacyRequestDetail('request-1')).resolves.toMatchObject({
+      requestRef: 'DSR-1234567890', subjectReference: 'ab'.repeat(32), detail: 'Send my export.',
+    });
+    expect(last()).toMatchObject({ name: 'read_privacy_request_detail', args: { want_request: 'request-1' } });
+
+    replies.set('rpc:verify_privacy_request', { data: 'in_progress' });
+    await expect(verifyPrivacyRequest('request-1', 'signed-in account holder', 'case://verify-1')).resolves.toBe('in_progress');
+    expect(last()).toMatchObject({ name: 'verify_privacy_request', args: {
+      want_request: 'request-1', want_basis: 'signed-in account holder', want_evidence: 'case://verify-1',
+    } });
+
+    replies.set('rpc:resolve_privacy_request', { data: { status: 'completed', certificate_id: 'certificate-1' } });
+    await expect(resolvePrivacyRequest('request-1', 'completed', 'Export delivered.', 'case://export-1', null))
+      .resolves.toEqual({ status: 'completed', certificateId: 'certificate-1' });
+    expect(last()).toMatchObject({ name: 'resolve_privacy_request', args: {
+      want_request: 'request-1', want_outcome: 'completed', want_resolution: 'Export delivered.',
+      want_evidence: 'case://export-1', want_approval: null,
+    } });
+
+    replies.set('rpc:resolve_privacy_request', { data: { status: 'unknown', certificate_id: null } });
+    await expect(resolvePrivacyRequest('request-1', 'refused', 'Request refused.', 'case://refusal-1', null))
+      .rejects.toThrow('unexpected resolution status');
   });
 });
 

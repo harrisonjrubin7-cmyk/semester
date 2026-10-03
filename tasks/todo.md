@@ -149,14 +149,16 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 **Description:** Operate access, export, correction, and deletion requests with identity verification, legal-hold awareness, approvals, evidence, and completion certificates.
 
 **Acceptance criteria:**
-- [ ] Legal holds block destructive completion.
-- [ ] Request identity, deadlines, stores, owners, and evidence are explicit.
-- [ ] High-risk actions use the existing approval and audit-first path.
+- [x] Legal holds block destructive completion.
+- [x] Request identity state, deadlines, stores, owners, approval state, evidence references, and certificate state are explicit without exposing subject identity in the queue.
+- [x] High-risk actions use fresh MFA, the existing exact-request deletion approval, and audit-first server functions.
 
 **Verification:**
-- [ ] SQL tests cover wrong role, wrong tenant, active hold, failed audit, and successful completion.
-- [ ] UI tests cover each lifecycle state and overdue routing.
-- [ ] Data-rights runbook matches the implemented flow.
+- [x] Focused PostgreSQL 17 tests cover wrong role, expired grant, wrong tenant, stale MFA, ownership, active hold, failed-audit rollback, exact executed approval, immutable certificates, and successful completion.
+- [x] Focused UI tests cover received, verifying, in-progress, completed and refused states; overdue routing; denial; explicit detail access; verification; approval; hold refusal; and certified completion.
+- [x] The data-rights runbook matches the implemented claim, audited detail, verification, approval, hold, resolution, and certificate flow.
+
+**Evidence boundary:** the signed-out browser route fails closed and the focused component tests exercise the authenticated workspace. No synthetic operator session or live Supabase deployment was used, so authenticated browser behavior and deployment remain unclaimed.
 
 **Dependencies:** B1
 **Files likely touched:** data-rights RPC migration/check, client adapter/test, workspace/test

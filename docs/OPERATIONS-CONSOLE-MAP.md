@@ -35,6 +35,7 @@ Under any production write: *Production change. This will affect a live customer
 | **Approvals** | Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement |
 | **Break-glass** | Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else |
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
+| **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
 | **Customers** | Tenants, commitments and contracts, each record with its classification and why the operator can see it |
 | **Figures** | Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing |
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |
@@ -87,6 +88,17 @@ The capability behind each view, and its holders, from the same file.
 - [`supabase/scheduler.sql`](../supabase/scheduler.sql) — The console-audit-integrity job at 03:23 seals yesterday and verifies the chain.
 - [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadAudit and auditStatus.
 - [`app/src/screens/Console.tsx`](../app/src/screens/Console.tsx) — The Audit view shows the chain status and says that every read is itself logged.
+
+### Privacy requests
+
+**Privacy and data-rights operations** (done) — an identity-minimized queue over `public.data_subject_request`, available only when the operator has both the platform console shell and a live `data_request:handle` grant for an exact school. Sensitive detail is never loaded with the queue.
+
+- [`supabase/migrations/20261003130000_privacy_case_workspace.sql`](../supabase/migrations/20261003130000_privacy_case_workspace.sql) — Metadata-only queue, exact-school authorization, demo separation, assignment fields, legal-hold state and deletion-approval state.
+- [`supabase/migrations/20261003131000_privacy_case_actions.sql`](../supabase/migrations/20261003131000_privacy_case_actions.sql) — Fresh-MFA claim, audited detail read, identity verification, resolution, live-hold and exact executed-approval enforcement, and immutable completion certificates.
+- [`supabase/privacy-case-workspace.check.sql`](../supabase/privacy-case-workspace.check.sql) and [`supabase/privacy-case-actions.check.sql`](../supabase/privacy-case-actions.check.sql) — Wrong-role, expired-grant, wrong-tenant, stale-MFA, ownership, failed-audit, live-hold, approval, certificate and audit-first paths.
+- [`app/src/components/console/PrivacyRequests.tsx`](../app/src/components/console/PrivacyRequests.tsx) — Metadata queue, explicit claim/detail/verification/approval/resolution controls, overdue and hold states, and fail-closed loading, denial and error behavior.
+- [`app/src/components/console/PrivacyRequests.test.tsx`](../app/src/components/console/PrivacyRequests.test.tsx) — Metadata-only rendering, overdue routing, denial, claim, detail, verification, deletion approval, held refusal, completed erasure and terminal read-only states.
+- [`docs/DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md) — The operated procedure and quarterly rehearsal boundary.
 
 ### Customers
 

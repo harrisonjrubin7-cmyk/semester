@@ -56,6 +56,7 @@ declare
   other_steward uuid;
   outsider uuid;
   export_request uuid;
+  audit_failure_request uuid;
   erase_request uuid;
   held_request uuid;
   approval uuid := gen_random_uuid();
@@ -85,6 +86,8 @@ begin
   insert into public.data_subject_request (subject, tenant_id, kind, detail) values
     (student, 'privacy-action', 'export', 'Please provide the account export.') returning id into export_request;
   insert into public.data_subject_request (subject, tenant_id, kind, detail) values
+    (student, 'privacy-action', 'correction', 'Correct the account name.') returning id into audit_failure_request;
+  insert into public.data_subject_request (subject, tenant_id, kind, detail) values
     (student, 'privacy-action', 'erasure', 'Delete eligible account data.') returning id into erase_request;
   insert into public.data_subject_request (subject, tenant_id, kind, detail) values
     (held_student, 'privacy-action', 'erasure', 'Delete held account data.') returning id into held_request;
@@ -97,6 +100,28 @@ begin
   if not pg_temp.refused(outsider, format('select public.claim_privacy_request(%L)', export_request), true) then
     raise exception 'FAILED: wrong-tenant steward claimed the request';
   end if;
+
+  begin
+    revoke insert on table private.console_audit_event from semester_audit_writer;
+    if has_table_privilege('semester_audit_writer', 'private.console_audit_event', 'insert') then
+      raise exception 'FAILED: the audit writer still held INSERT during the failure probe';
+    end if;
+    if not pg_temp.refused(steward, format(
+      'select public.claim_privacy_request(%L)', audit_failure_request
+    ), true) then raise exception 'FAILED: a claim survived a failed audit write'; end if;
+    select count(*) into n from public.data_subject_request
+     where id = audit_failure_request and assigned_to is null and assigned_at is null and status = 'received';
+    perform pg_temp.counted('failed audit writes leave the privacy request unchanged', n, 1);
+    select count(*) into n from private.console_audit_event where target = audit_failure_request::text;
+    perform pg_temp.counted('failed audit writes leave no partial privacy audit event', n, 0);
+    raise exception using errcode = 'P0001', message = 'control:restore-audit-writer';
+  exception when raise_exception then
+    if sqlerrm <> 'control:restore-audit-writer' then raise; end if;
+  end;
+  if not has_table_privilege('semester_audit_writer', 'private.console_audit_event', 'insert') then
+    raise exception 'FAILED: the audit writer privilege was not restored after the failure probe';
+  end if;
+
   perform pg_temp.become(steward, true);
   perform public.claim_privacy_request(export_request);
   reset role;
@@ -121,6 +146,11 @@ begin
     'select public.verify_privacy_request(%L, %L, %L)',
     export_request, 'x', 'case://export-1'
   ), true) then raise exception 'FAILED: short verification basis was accepted'; end if;
+  if not pg_temp.refused(steward, format(
+    'select public.verify_privacy_request(%L, %L, %L)',
+    export_request, 'signed-in account holder', 'case://contains private prose'
+  ), true) then raise exception 'FAILED: free-text verification evidence was accepted'; end if;
+  raise notice 'ok  verification evidence is an opaque reference, not free text';
   perform pg_temp.become(steward, true);
   perform public.verify_privacy_request(export_request, 'signed-in account holder', 'case://export-1');
   reset role;

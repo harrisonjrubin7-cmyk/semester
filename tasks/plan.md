@@ -53,7 +53,7 @@ Current-main reconciliation
 
 - [x] B1: Tenant and pilot operations read workspace.
 - [x] B2: Support case workspace with metadata-first diagnosis.
-- [ ] B3: Privacy/data-rights request workspace.
+- [x] B3: Privacy/data-rights request workspace.
 - [ ] B4: Integration health and sync-exception workspace.
 - [ ] B5: Release and incident workspace.
 - [ ] B6: Implementation and success-plan workspace.

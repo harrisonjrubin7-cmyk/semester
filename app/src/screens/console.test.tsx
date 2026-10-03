@@ -38,6 +38,11 @@ const mock = vi.hoisted(() => ({
   command: vi.fn(),
   customers: vi.fn(),
   tenantOperations: vi.fn(),
+  privacyRequests: vi.fn(),
+  claimPrivacy: vi.fn(),
+  privacyDetail: vi.fn(),
+  verifyPrivacy: vi.fn(),
+  resolvePrivacy: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
   mfa: vi.fn(),
@@ -79,6 +84,11 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadCommandCenter: mock.command,
   loadCustomers: mock.customers,
   loadTenantOperations: mock.tenantOperations,
+  loadPrivacyRequests: mock.privacyRequests,
+  claimPrivacyRequest: mock.claimPrivacy,
+  readPrivacyRequestDetail: mock.privacyDetail,
+  verifyPrivacyRequest: mock.verifyPrivacy,
+  resolvePrivacyRequest: mock.resolvePrivacy,
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
   mfaLevel: mock.mfa,
@@ -100,6 +110,7 @@ let root: Root;
 const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeId: '' }];
 const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
 const IMPLEMENTATION_PLATFORM = [...PLATFORM, { capability: 'tenant:implement', scopeKind: 'school', scopeId: 'vu' }];
+const PRIVACY_PLATFORM = [...PLATFORM, { capability: 'data_request:handle', scopeKind: 'school', scopeId: 'vu' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -182,6 +193,23 @@ beforeEach(() => {
     limitation: 'State is not approval evidence.',
     visibilityReason: 'Live tenant:implement grant at exact school scope.',
   }]);
+  mock.privacyRequests.mockResolvedValue([{
+    requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
+    tenantName: 'Vanderbilt University', isDemo: false, kind: 'export', requestedBy: 'self',
+    status: 'received', receivedAt: '2026-10-01T10:00:00Z', dueAt: '2026-10-31T10:00:00Z',
+    overdue: false, identityState: 'unverified', assignedTo: null, assignedAt: null,
+    assignedToMe: false, holdState: 'clear', affectedStores: ['account-scoped server records'],
+    deletionApprovalId: null, deletionApprovalStatus: null, classification: 'restricted',
+    provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+  }]);
+  mock.claimPrivacy.mockResolvedValue('verifying');
+  mock.privacyDetail.mockResolvedValue({
+    requestRef: 'DSR-1234567890', subjectReference: 'ab'.repeat(32), kind: 'export',
+    requestedBy: 'self', detail: 'Provide my export.', tenantId: 'vu', verifiedAt: null,
+    resolution: '', resolutionEvidence: null, completionCertificateId: null,
+  });
+  mock.verifyPrivacy.mockResolvedValue('in_progress');
+  mock.resolvePrivacy.mockResolvedValue({ status: 'completed', certificateId: 'certificate-1' });
   // Existing view tests exercise Approvals first; production defaults to the
   // Command center when no server-side preference exists.
   mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
@@ -240,6 +268,23 @@ describe('tenant operations capability gate', () => {
     expect(mock.tenantOperations).toHaveBeenCalledWith(false);
     expect(host.textContent).toContain('Vanderbilt University');
     expect(host.textContent).toContain('Live tenant:implement grant at exact school scope.');
+  });
+});
+
+describe('privacy request capability gate', () => {
+  it('does not offer privacy requests to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Privacy requests')).toBeUndefined();
+  });
+
+  it('offers and loads the identity-minimized queue for an exact-school data-rights grant', async () => {
+    mock.caps.mockResolvedValue(PRIVACY_PLATFORM);
+    await render();
+    await press('Privacy requests');
+    expect(mock.privacyRequests).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('DSR-1234567890');
+    expect(host.textContent).toContain('Metadata only.');
+    expect(mock.privacyDetail).not.toHaveBeenCalled();
   });
 });
 

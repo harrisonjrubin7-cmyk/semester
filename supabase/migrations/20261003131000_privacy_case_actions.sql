@@ -163,8 +163,8 @@ declare
 begin
   perform private.assert_fresh_mfa();
   if length(trim(coalesce(want_basis, ''))) not between 3 and 200
-     or length(trim(coalesce(want_evidence, ''))) not between 3 and 500 then
-    raise exception 'Verification basis and evidence reference are required.' using errcode = '22023';
+     or coalesce(want_evidence, '') !~ '^[A-Za-z0-9._:/-]{3,200}$' then
+    raise exception 'Verification basis and an opaque evidence reference are required.' using errcode = '22023';
   end if;
   select * into item from public.data_subject_request r where r.id = want_request for update;
   if not found or not private.privacy_case_allowed(item.tenant_id)

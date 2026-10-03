@@ -19,7 +19,7 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'customers', 'figures', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'customers', 'figures', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
   });
@@ -43,7 +43,7 @@ describe('console workspace registry', () => {
     expect(visibleConsoleWorkspaces([grant('console:operate')]).map(({ id }) => id)).not.toContain('support');
     expect(visibleConsoleWorkspaces([grant('console:operate'), grant('support:ticket')]).map(({ id }) => id)).not.toContain('tenant-operations');
     expect(visibleConsoleWorkspaces([
-      grant('console:operate'), grant('support:ticket'), grant('tenant:implement', 'school', 'vu'),
+      grant('console:operate'), grant('support:ticket'), grant('tenant:implement', 'school', 'vu'), grant('data_request:handle', 'school', 'vu'),
     ])).toEqual(CONSOLE_WORKSPACES);
     expect(visibleConsoleWorkspaces([grant('console:operate', 'school', 'vu')])).toEqual([]);
   });
@@ -53,6 +53,13 @@ describe('console workspace registry', () => {
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', 'vu')])).toBe(true);
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'platform')])).toBe(false);
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', '')])).toBe(false);
+  });
+
+  it('discovers privacy requests only from a non-empty exact-school data-rights grant', () => {
+    const privacy = CONSOLE_WORKSPACES.find(({ id }) => id === 'privacy')!;
+    expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'school', 'vu')])).toBe(true);
+    expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'platform')])).toBe(false);
+    expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'school', '')])).toBe(false);
   });
 
   it('validates saved workspace ids against the visible registry', () => {
