@@ -88,7 +88,7 @@
 
 ## Phase 5 — Engineering operations
 
-- [ ] E01: engineering documents 1–5.
+- [x] E01: engineering documents 1–5; added controlled system, application, data, integration, and environment/configuration architecture artifacts with Harrison Rubin accountable, repository evidence mapped, and target/customer/backup proof kept explicit on 2026-10-03.
 - [ ] E02: engineering documents 6–10.
 - [ ] E03: engineering documents 11–15.
 - [ ] E04: engineering documents 16–20.

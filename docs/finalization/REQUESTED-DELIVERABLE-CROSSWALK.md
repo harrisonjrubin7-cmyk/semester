@@ -144,11 +144,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 129 | `docs/product-design/PERFORMANCE-BUDGETS.md` | EXACT PRESENT | canonical summary of enforced gzip ceilings and unmeasured experience targets; bundle gates are not Core Web Vitals or capacity proof |
 | 130 | `docs/product-design/UI-CONSISTENCY-MATRIX.md` | EXACT PRESENT | canonical pattern/adoption matrix preserving existing Semester primitives; route-wide adoption and human coherence evidence remain partial |
 | 131 | `docs/product-design/PRODUCT-COPY-AND-VOICE-GUIDE.md` | EXACT PRESENT | canonical calm, plain-language and evidence-bounded product voice; automated guards remain distinct from route-wide comprehension, localization and customer approval |
-| 132 | `docs/engineering-operations/SYSTEM-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/ARCHITECTURE.md` (filename similarity 0.58; substantive review required) |
-| 133 | `docs/engineering-operations/APPLICATION-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/ARCHITECTURE.md` (filename similarity 0.55; substantive review required) |
-| 134 | `docs/engineering-operations/DATA-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/ARCHITECTURE.md` (filename similarity 0.60; substantive review required) |
-| 135 | `docs/engineering-operations/INTEGRATION-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/integration-architecture.md` (filename similarity 1.00; substantive review required) |
-| 136 | `docs/engineering-operations/ENVIRONMENT-AND-CONFIGURATION-MANAGEMENT.md` | NO CLOSE SOURCE | — |
+| 132 | `docs/engineering-operations/SYSTEM-ARCHITECTURE.md` | EXACT PRESENT | canonical current system/trust-boundary map; public smoke and repository controls remain distinct from target operation and customer acceptance |
+| 133 | `docs/engineering-operations/APPLICATION-ARCHITECTURE.md` | EXACT PRESENT | canonical React/local-first application layers and change contract; route-wide device, recovery and UAT evidence remain open |
+| 134 | `docs/engineering-operations/DATA-ARCHITECTURE.md` | EXACT PRESENT | canonical device/cloud/provider data and authority layers; target inventory, lifecycle operation, legal and customer decisions remain open |
+| 135 | `docs/engineering-operations/INTEGRATION-ARCHITECTURE.md` | EXACT PRESENT | canonical adapter, policy, readback and activation-stage model; named-provider and institutional production acceptance remain absent |
+| 136 | `docs/engineering-operations/ENVIRONMENT-AND-CONFIGURATION-MANAGEMENT.md` | EXACT PRESENT | canonical environment classes and public/secret/flag/release controls; complete target inventory and configuration readback remain partial |
 | 137 | `docs/engineering-operations/DEPLOYMENT-AND-RELEASE-RUNBOOK.md` | NO CLOSE SOURCE | — |
 | 138 | `docs/engineering-operations/CI-CD-STANDARDS.md` | NO CLOSE SOURCE | — |
 | 139 | `docs/engineering-operations/TEST-STRATEGY.md` | NO CLOSE SOURCE | — |
