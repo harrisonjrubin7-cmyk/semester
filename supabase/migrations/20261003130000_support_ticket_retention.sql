@@ -151,6 +151,13 @@ begin
   if who is null then
     raise exception 'sign in first' using errcode = 'insufficient_privilege';
   end if;
+  -- Membership changes update this same row. Hold it through the decision and
+  -- deletion so claim_school/leave_school cannot move the account into or out
+  -- of a held tenant after account_is_held has read its school_id.
+  perform 1
+    from public.profiles p
+   where p.user_id = who
+     for update of p;
   -- Hold placement and release write legal_holds and therefore wait for this
   -- transaction. Recheck only after taking the lock, then keep it through the
   -- deletion so a new hold cannot slip into the check/delete boundary.

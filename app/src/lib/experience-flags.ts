@@ -71,6 +71,11 @@ function featureState(env: PreviewEnv, key: string, preview: boolean, fallback: 
   return STATES.includes(value as FeatureState) ? (value as FeatureState) : 'off';
 }
 
+/** Exact opt-in for controls whose release gate is recorded as a boolean. */
+function booleanFeatureState(env: PreviewEnv, key: string): FeatureState {
+  return env[key] === 'true' ? 'production' : 'off';
+}
+
 export function experienceFlags(env: PreviewEnv): ExperienceFlags {
   const preview = institutionalPreview(env);
   return {
@@ -89,7 +94,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     institutionalOperations: featureState(env, 'VITE_INSTITUTIONAL_OPERATIONS', preview),
     privateBeta: featureState(env, 'VITE_PRIVATE_BETA', false),
     supportTickets: featureState(env, 'VITE_SUPPORT_TICKETS', false),
-    supportEmailNotices: featureState(env, 'VITE_SUPPORT_EMAIL_NOTICES', false),
+    supportEmailNotices: booleanFeatureState(env, 'VITE_SUPPORT_EMAIL_NOTICES'),
     campaignManager: featureState(env, 'VITE_CAMPAIGN_MANAGER', preview),
     migrationCenter: featureState(env, 'VITE_MIGRATION_CENTER', preview),
     workflowBuilder: featureState(env, 'VITE_WORKFLOW_BUILDER', preview),

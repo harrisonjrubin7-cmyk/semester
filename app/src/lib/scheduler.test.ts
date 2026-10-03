@@ -180,6 +180,19 @@ describe('the probes read the files rather than reporting an empty tree', () => 
       expect(lock).toBeLessThan(tenantHoldCheck);
       expect(lock).toBeLessThan(deletion);
     }
+
+    const directStart = migration.indexOf(
+      'create or replace function public.forget_my_support_tickets()',
+    );
+    const directEnd = migration.indexOf('end $$;', directStart);
+    const directBody = migration.slice(directStart, directEnd);
+    const profileLock = directBody.indexOf('from public.profiles p');
+    const membershipHoldCheck = directBody.indexOf('private.account_is_held');
+    const directDeletion = directBody.indexOf('delete from public.support_tickets');
+    expect(profileLock).toBeGreaterThanOrEqual(0);
+    expect(directBody.slice(profileLock, membershipHoldCheck)).toMatch(/for update of p/);
+    expect(profileLock).toBeLessThan(membershipHoldCheck);
+    expect(profileLock).toBeLessThan(directDeletion);
   });
 
   it('snapshots only a signed deployment tenant and locks membership through ticket creation', () => {
