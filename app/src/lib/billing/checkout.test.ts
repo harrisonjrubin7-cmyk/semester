@@ -101,6 +101,7 @@ describe('billing checkout', () => {
     expect(form.get('client_reference_id')).toBe(CHECKOUT);
     expect(form.get('line_items[0][price_data][unit_amount]')).toBe('799');
     expect(form.get('line_items[0][price_data][recurring][interval]')).toBe('month');
+    expect(form.get('automatic_tax[enabled]')).toBe('true');
     expect(form.get('customer_email')).toBe('ana@example.edu');
     expect(form.get('success_url')).toBe(`${APP}/?checkout=success`);
     // No card field is ever part of what Semester sends.

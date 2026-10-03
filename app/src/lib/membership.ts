@@ -52,6 +52,11 @@ export function cancelEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
   return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-cancel` : '';
 }
 
+/** The hosted receipt and invoice portal function's address, or ''. */
+export function portalEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
+  return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-portal` : '';
+}
+
 /** "$7.99", "$59", "$30.50" — in the catalog's currency, US dollars as written today. */
 export function money(cents: number, currency = 'usd'): string {
   const n = cents / 100;
@@ -161,6 +166,45 @@ export async function startCheckout(
 }
 
 export type Cancelled = { kind: 'cancelled'; endsAt: string } | { kind: 'refused'; said: string };
+export type Portal = { kind: 'redirect'; url: string } | { kind: 'refused'; said: string };
+
+/**
+ * Open Stripe's short-lived customer portal for receipts, invoices and the
+ * payment method. The endpoint resolves the Stripe customer from the caller's
+ * authenticated individual billing account; the browser never supplies it.
+ */
+export async function openBillingPortal(
+  token: string,
+  fetcher: Fetch = fetch,
+  endpoint = portalEndpoint(),
+  key = env.VITE_SUPABASE_KEY ?? '',
+): Promise<Portal> {
+  const fallback = 'Billing history could not be opened. Try again.';
+  if (!endpoint) return { kind: 'refused', said: fallback };
+  let res: Response;
+  try {
+    res = await fetcher(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, ...(key ? { apikey: key } : {}) },
+      body: '{}',
+      cache: 'no-store',
+      credentials: 'omit',
+    });
+  } catch {
+    return { kind: 'refused', said: fallback };
+  }
+  let body: Record<string, unknown> | null = null;
+  try {
+    const value: unknown = await res.json();
+    body = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  } catch {
+    body = null;
+  }
+  if (res.ok && body && typeof body.url === 'string' && body.url.startsWith('https://billing.stripe.com/')) {
+    return { kind: 'redirect', url: body.url };
+  }
+  return { kind: 'refused', said: body && typeof body.error === 'string' && body.error ? body.error : fallback };
+}
 
 /**
  * Ask `billing-cancel` to end Plus at the close of the paid period. It tells

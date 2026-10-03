@@ -83,6 +83,11 @@ export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: stri
     }],
     metadata: { semester_checkout_id: row.checkout_id },
     subscription_data: { metadata: { semester_checkout_id: row.checkout_id } },
+    // Stripe Checkout collects the location it needs and carries the tax
+    // result onto the subscription and its invoices. Collection still follows
+    // the merchant account's reviewed registrations; this does not invent one.
+    // Source: https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-automatic_tax
+    automatic_tax: { enabled: true },
     success_url: successUrl,
     cancel_url: cancelUrl,
   };

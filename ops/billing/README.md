@@ -23,10 +23,15 @@ node ops/billing/activate-live.mjs --apply
 ```
 
 The first command checks the merchant account and webhook without changing them.
-The second creates or updates exactly this project's live webhook, stores the
-credentials in Supabase, and checks the deployed signature, authentication and
-CORS boundaries. It does not create a checkout, charge a card or manufacture a
-successful payment. Other secrets and other webhook endpoints are preserved.
+The second creates or updates exactly this project's live webhook, enables the
+default Stripe billing portal's invoice history and payment-method controls,
+stores the credentials in Supabase, and checks the deployed signature,
+authentication and CORS boundaries. It refuses to activate until Stripe Tax
+reports an active setup, and reports the number of active tax registrations so
+the owner and counsel can reconcile it with the approved nexus decision. It
+does not create a checkout, register the business for tax, charge a card or
+manufacture a successful payment. Other secrets, portal features and webhook
+endpoints are preserved.
 If secret configuration fails after webhook creation, retrieve the new endpoint's
 signing secret in the Stripe dashboard and rerun with `STRIPE_WEBHOOK_SECRET`.
 

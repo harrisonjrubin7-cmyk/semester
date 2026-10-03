@@ -10,6 +10,7 @@ import {
   fetchOwnSubscriptions,
   fetchPlusPrices,
   hasPaidBefore,
+  openBillingPortal,
   priceWords,
   takeOpenUpgrade,
   startCheckout,
@@ -198,6 +199,27 @@ export function MembershipPanel() {
     }
   };
 
+  const billingHistory = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const token = (await currentSession())?.access_token;
+      if (!token) {
+        setError('Sign in again to view billing history.');
+        return;
+      }
+      const r = await openBillingPortal(token);
+      if (r.kind === 'redirect') {
+        window.location.assign(r.url);
+        return;
+      }
+      setError(r.said);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const statusLine = unchecked
     ? 'Nothing has changed and nothing will be charged. Try again in a moment.'
     : checking
@@ -352,6 +374,11 @@ export function MembershipPanel() {
           ? 'Stripe takes your payments and emails a receipt for each one. Semester holds no card or bank details.'
           : 'No payments. Semester has never charged you and holds no card or bank details.'}
       </p>
+      {!unknown && (sub || paidBefore) && (
+        <button type="button" className="btn btn-ghost" aria-busy={busy} onClick={() => void billingHistory()} style={{ marginTop: 'var(--sp-3)' }}>
+          {busy ? 'Opening billing history…' : 'Receipts, invoices and payment method'}
+        </button>
+      )}
     </section>
   );
 }

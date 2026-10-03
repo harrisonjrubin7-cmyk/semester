@@ -45,6 +45,17 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   const account = await stripe('account');
   if (!account.id || account.charges_enabled !== true || account.details_submitted !== true)
     throw new Error('Stripe account onboarding is incomplete or live charges are disabled. No settings changed.');
+  const tax = await stripe('tax/settings');
+  if (apply && tax.status !== 'active')
+    throw new Error('Stripe Tax setup is not active. No settings changed and checkout remains unavailable.');
+  const registrations = await stripe('tax/registrations?status=active&limit=100');
+  if (!Array.isArray(registrations.data)) throw new Error('Stripe returned an invalid tax registration list.');
+
+  const portalPage = await stripe('billing_portal/configurations?limit=100');
+  if (!Array.isArray(portalPage.data)) throw new Error('Stripe returned an invalid billing portal configuration list.');
+  let portal = portalPage.data.find(item => item?.is_default === true && item?.active === true);
+  let portalReady = portal?.features?.invoice_history?.enabled === true &&
+    portal?.features?.payment_method_update?.enabled === true;
 
   // Follow pagination; never mistake page one for the complete endpoint list.
   let matches = [], cursor;
@@ -63,7 +74,9 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     throw new Error('Set STRIPE_WEBHOOK_SECRET from the existing live endpoint; its secret cannot be retrieved through the API. No settings changed.');
   const completeEvents = endpoint && (endpoint.enabled_events?.includes('*') || EVENTS.every(event => endpoint.enabled_events?.includes(event)));
   if (!apply) return { state: 'checked', project: c.project, chargesEnabled: true,
-    webhookExists: !!endpoint, requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
+    taxReady: tax.status === 'active', activeTaxRegistrations: registrations.data.length,
+    portalConfigured: portalReady, webhookExists: !!endpoint,
+    requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
 
   const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
   if (!endpoint) {
@@ -79,6 +92,20 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     const body = new URLSearchParams();
     [...new Set([...endpoint.enabled_events, ...EVENTS])].forEach((event, i) => body.set(`enabled_events[${i}]`, event));
     await stripe(`webhook_endpoints/${encodeURIComponent(endpoint.id)}`, { method: 'POST', headers, body });
+  }
+  if (!portalReady) {
+    const body = new URLSearchParams({
+      'features[invoice_history][enabled]': 'true',
+      'features[payment_method_update][enabled]': 'true',
+      default_return_url: c.returnUrl,
+    });
+    portal = await stripe(
+      portal?.id ? `billing_portal/configurations/${encodeURIComponent(portal.id)}` : 'billing_portal/configurations',
+      { method: 'POST', headers, body },
+    );
+    portalReady = portal?.active === true && portal?.features?.invoice_history?.enabled === true &&
+      portal?.features?.payment_method_update?.enabled === true;
+    if (!portalReady) throw new Error('Stripe did not return a usable billing portal configuration. Project secrets were not changed.');
   }
   await request(`https://api.supabase.com/v1/projects/${c.project}/secrets`, {
     method: 'POST', headers: { Authorization: `Bearer ${c.accessToken}`, 'Content-Type': 'application/json' },
@@ -104,7 +131,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   }
   if (!verified) throw new Error('Secrets were configured, but the deployed webhook did not verify the signing key. Check deployment; do not advertise live billing yet.');
   for (const origin of c.origins) {
-    for (const name of ['billing-checkout', 'billing-cancel']) {
+    for (const name of ['billing-checkout', 'billing-cancel', 'billing-portal']) {
       const res = await send(`https://${c.project}.supabase.co/functions/v1/${name}`, {
         method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
         headers: { Origin: origin, 'Content-Type': 'application/json' },
@@ -114,7 +141,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     }
   }
   return { state: 'configured', project: c.project, chargesEnabled: true,
-    webhookVerified: true, originsVerified: true, paymentsVerified: false,
+    taxReady: true, activeTaxRegistrations: registrations.data.length,
+    portalConfigured: true, webhookVerified: true, originsVerified: true, paymentsVerified: false,
     remaining: 'Complete one owner-approved checkout, receipt, entitlement and cancellation lifecycle before marking billing available.' };
 }
 

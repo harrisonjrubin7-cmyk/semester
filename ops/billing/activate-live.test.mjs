@@ -28,11 +28,25 @@ test('a check is read-only and never claims payment verification', async () => {
   const calls = [];
   const result = await activateLive(env, { fetch: async (url, init) => {
     calls.push(init.method || 'GET');
-    return response(url.endsWith('/account') ? { id: 'acct_1', charges_enabled: true, details_submitted: true } : { data: [], has_more: false });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active' });
+    return response({ data: [], has_more: false });
   } });
-  assert.deepEqual(calls, ['GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET']);
   assert.equal(result.state, 'checked');
+  assert.equal(result.taxReady, true);
+  assert.equal(result.portalConfigured, false);
   assert.equal(result.paymentsVerified, false);
+});
+
+test('apply refuses an incomplete Stripe Tax setup before any mutation', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push(init.method || 'GET');
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    return response({ status: 'pending' });
+  } }), /Stripe Tax setup is not active/);
+  assert.deepEqual(calls, ['GET', 'GET']);
 });
 
 test('existing endpoints require their signing secret and pagination cannot create duplicates', async () => {
@@ -40,11 +54,13 @@ test('existing endpoints require their signing secret and pagination cannot crea
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active' });
+    if (url.includes('/tax/registrations') || url.includes('/billing_portal/configurations')) return response({ data: [], has_more: false });
     if (!url.includes('starting_after')) return response({ data: [{ id: 'we_other', url: 'https://other.example' }], has_more: true });
     return response({ data: [{ id: 'we_semester', url: 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-webhook',
       livemode: true, status: 'enabled', enabled_events: EVENTS }], has_more: false });
   } }), /cannot be retrieved/);
-  assert.deepEqual(calls, ['GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
 });
 
 test('activates one endpoint, writes secrets only to Supabase, probes without charging', async () => {
@@ -52,6 +68,11 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   const result = await activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push({ url, method: init.method || 'GET', body: init.body });
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active' });
+    if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
+    if (url.includes('/billing_portal/configurations?')) return response({ data: [], has_more: false });
+    if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_1', active: true,
+      features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true } } });
     if (url.includes('webhook_endpoints?')) return response({ data: [], has_more: false });
     if (url.endsWith('/webhook_endpoints')) return response({ id: 'we_semester', secret: 'whsec_abc', livemode: true, status: 'enabled' });
     if (url.endsWith('/secrets')) return response([]);
@@ -59,6 +80,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     return response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN });
   } });
   assert.equal(result.state, 'configured');
+  assert.equal(result.taxReady, true);
+  assert.equal(result.portalConfigured, true);
   assert.equal(result.paymentsVerified, false);
   const stored = JSON.parse(calls.find(call => call.url.endsWith('/secrets')).body);
   assert.deepEqual(stored.map(secret => secret.name), ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'ALLOWED_ORIGIN', 'CHECKOUT_RETURN_URL']);

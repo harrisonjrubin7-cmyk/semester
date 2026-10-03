@@ -21,7 +21,7 @@ const mock = vi.hoisted(() => {
         (throwing.has(t) ? Promise.reject(new Error('fetch failed')) : Promise.resolve(failing.has(t) ? { data: null, error: { message: 'network' } } : { data: tables[t] ?? [], error: null })).then(ok, no) };
     return q;
   };
-  return { tables, failing, throwing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), account: { id: 'u1' } as { id: string } | null };
+  return { tables, failing, throwing, eqs, rpc: vi.fn(), from: vi.fn(from), start: vi.fn(), cancel: vi.fn(), portal: vi.fn(), account: { id: 'u1' } as { id: string } | null };
 });
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
@@ -29,7 +29,7 @@ vi.mock('../lib/cloud', () => ({
   currentSession: () => Promise.resolve({ access_token: 'tok' }),
 }));
 vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account, dispatch: () => {} }) }));
-vi.mock('../lib/membership', async (real) => ({ ...(await real<typeof import('../lib/membership')>()), startCheckout: mock.start, cancelMembership: mock.cancel }));
+vi.mock('../lib/membership', async (real) => ({ ...(await real<typeof import('../lib/membership')>()), startCheckout: mock.start, cancelMembership: mock.cancel, openBillingPortal: mock.portal }));
 const { MembershipPanel } = await import('./MembershipPanel');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -49,6 +49,7 @@ beforeEach(() => {
   mock.rpc.mockReset();
   mock.start.mockReset();
   mock.cancel.mockReset();
+  mock.portal.mockReset();
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -134,6 +135,21 @@ it('shows Plus when paid, and cancels it from the same place', async () => {
   expect(mock.rpc).not.toHaveBeenCalled();
   expect(host.textContent).toMatch(/Cancelled\. You keep Plus until .*you will not be charged again/);
   expect(button(/Cancel membership/)).toBeUndefined();
+});
+
+it('opens hosted receipts and invoices for a current or former subscriber', async () => {
+  const go = vi.fn();
+  vi.stubGlobal('location', { ...window.location, search: '', assign: go });
+  try {
+    mock.tables.subscriptions = [{ id: 's0', plan_code: 'plus', status: 'ended', current_period_end: '2026-08-29T12:00:00Z' }];
+    mock.portal.mockResolvedValue({ kind: 'redirect', url: 'https://billing.stripe.com/p/session/live_1' });
+    await render();
+    await act(async () => button(/Receipts, invoices and payment method/)!.click());
+    expect(mock.portal).toHaveBeenCalledWith('tok');
+    expect(go).toHaveBeenCalledWith('https://billing.stripe.com/p/session/live_1');
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
 
 it('uses only real, named buttons, none disabled', async () => {

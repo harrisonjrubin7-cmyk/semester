@@ -9,6 +9,8 @@ import {
   currentSubscription,
   hasPaidBefore,
   money,
+  openBillingPortal,
+  portalEndpoint,
   plusPrices,
   priceWords,
   startCheckout,
@@ -118,5 +120,24 @@ describe('cancelling', () => {
     const down = vi.fn(async () => { throw new TypeError('network'); });
     expect((await cancelMembership('tok', 's1', down, END)).kind).toBe('refused');
     expect((await cancelMembership('tok', 's1', refused, '')).kind).toBe('refused');
+  });
+});
+
+describe('billing history', () => {
+  const END = portalEndpoint('https://lzrqvlugnawcgywkhqlz.supabase.co/');
+
+  it('opens only the Stripe-hosted portal returned for the signed-in account', async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ url: 'https://billing.stripe.com/p/session/live_1' }), { status: 200 }));
+    expect(await openBillingPortal('tok', fetcher, END, 'anon')).toEqual({ kind: 'redirect', url: 'https://billing.stripe.com/p/session/live_1' });
+    const [url, init] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-portal');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+  });
+
+  it('passes refusals through and rejects arbitrary redirects', async () => {
+    const refused = vi.fn(async () => new Response(JSON.stringify({ error: 'There is no billing history for this account.' }), { status: 404 }));
+    expect(await openBillingPortal('tok', refused, END)).toEqual({ kind: 'refused', said: 'There is no billing history for this account.' });
+    const odd = vi.fn(async () => new Response(JSON.stringify({ url: 'https://evil.example' }), { status: 200 }));
+    expect((await openBillingPortal('tok', odd, END)).kind).toBe('refused');
   });
 });
