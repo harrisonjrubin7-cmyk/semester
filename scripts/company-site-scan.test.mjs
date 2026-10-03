@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { evaluate, expectedResponses, findingHash, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { evaluate, expectedResponses, findingHash, findingHashes, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path, root), 'utf8') : '';
@@ -286,6 +286,7 @@ test('finding hashes are exposed only when they are valid triage identifiers', (
   assert.equal(findingHash({ findingHash: hash }), hash);
   assert.equal(findingHash({ findingHash: 'not-a-hash' }), null);
   assert.equal(findingHash({}), null);
+  assert.deepEqual(findingHashes({ paths: [{ finding_hash: hash }, { finding_hash: hash }, { finding_hash: 'bad' }] }), [hash]);
 });
 
 test('empty coverage and missing changed assets cannot clear the company gate', () => {

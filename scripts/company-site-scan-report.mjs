@@ -89,9 +89,13 @@ export function evaluate(report, uris, routes = expectedRoutes(), evidence = {})
 
 function printFindings(findings, write = console.log) {
   for (const finding of findings) {
-    const paths = (finding.paths ?? []).map(path => `${safeText(path.method)} ${safeText(String(path.path).split('?')[0])} [${safeText(path.status)}]`);
-    const hash = findingHash(finding);
-    write(`StackHawk | Finding: ${safeText(finding.severity)} ${safeText(finding.name)}; triage-hash=${hash ?? 'unavailable'}; ${paths.join(', ')}`);
+    const paths = (finding.paths ?? []).map(path => {
+      const uri = path.path ?? path.uri;
+      const pathname = typeof uri === 'string' ? new URL(uri, host).pathname : 'undefined';
+      return `${safeText(path.method)} ${safeText(pathname)} [${safeText(path.status)}]`;
+    });
+    const hashes = findingHashes(finding);
+    write(`StackHawk | Finding: ${safeText(finding.severity)} ${safeText(finding.name ?? finding.plugin_name)}; triage-hashes=${hashes.length ? hashes.join(',') : 'unavailable'}; ${paths.join(', ')}`);
   }
 }
 
@@ -105,6 +109,12 @@ function valueShape(value, depth = 0) {
 
 export function findingHash(finding) {
   return /^[a-f\d]{64}$/i.test(finding?.findingHash ?? '') ? finding.findingHash : null;
+}
+
+export function findingHashes(finding) {
+  const hashes = [findingHash(finding), ...(finding?.paths ?? []).map(path => path?.finding_hash)]
+    .filter(hash => /^[a-f\d]{64}$/i.test(hash ?? ''));
+  return [...new Set(hashes)];
 }
 
 function printResult(result) {
@@ -132,7 +142,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`StackHawk | Full finding evidence: ${report.findings.length} findings`);
       report.findings.forEach((finding, index) => console.log(`StackHawk | Finding schema ${index + 1}: ${valueShape(finding)}`));
       printFindings(report.findings);
-      if (report.findings.some(finding => !findingHash(finding))) throw new Error('A finding did not include its triage hash');
+      if (report.findings.some(finding => !findingHashes(finding).length || finding.paths?.some(path => !/^[a-f\d]{64}$/i.test(path?.finding_hash ?? '')))) throw new Error('A finding path did not include its triage hash');
     }
     else if (process.argv[2] === 'verify') {
       const uris = parseJson(readFileSync(process.argv[4], 'utf8'));
