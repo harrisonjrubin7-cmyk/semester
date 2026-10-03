@@ -184,6 +184,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
     expect(migration).toMatch(/add column if not exists tenant_id text/);
     expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id,/);
+    expect(migration).toMatch(/t\.status in \('resolved', 'closed'\)[\s\S]*?t\.tenant_id is null/);
     expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
   });
 

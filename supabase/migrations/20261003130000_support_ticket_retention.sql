@@ -1,7 +1,9 @@
--- Support questions are operational records, not permanent profiles.
--- Resolved and student-closed tickets are retained for 180 days after their
--- last activity, then removed with their messages and notification intents.
--- An active account, tenant or platform legal hold always wins.
+-- Individual-beta support questions are operational records, not permanent
+-- profiles. Resolved and student-closed tickets without a tenant association
+-- are retained for 180 days after their last activity, then removed with their
+-- messages and notification intents. Tenant-associated tickets remain outside
+-- this sweep until an institution-specific contract rule is configured. An
+-- active account, tenant or platform legal hold always wins.
 
 -- A tenant hold protects the record, not merely the student's current profile.
 -- Keep the ticket's tenant at creation time so leaving a school cannot detach
@@ -78,6 +80,7 @@ begin
   lock table public.legal_holds in share mode;
   delete from public.support_tickets t
    where t.status in ('resolved', 'closed')
+     and t.tenant_id is null
      and t.updated_at < now() - interval '180 days'
      and not private.account_is_held(t.student_id)
      and not (t.tenant_id is not null and private.tenant_is_held(t.tenant_id));
@@ -89,7 +92,7 @@ revoke all on function private.sweep_support_ticket_retention() from public, ano
 grant execute on function private.sweep_support_ticket_retention() to service_role;
 
 comment on function private.sweep_support_ticket_retention() is
-  'Deletes resolved or closed support tickets after 180 days unless an active legal hold applies; messages and notification intents cascade.';
+  'Deletes individual-beta resolved or closed support tickets after 180 days unless an active legal hold applies; tenant-associated tickets await a configured institutional contract rule.';
 
 -- A direct self-service deletion is still a deletion and therefore must obey
 -- the same hold as the scheduled sweep. Account erasure already checks holds,

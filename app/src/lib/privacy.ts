@@ -228,7 +228,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'How long anything is kept',
     body:
-      'Your courses, deadlines, notes, plans and other study work stay until you delete them, and no archive is kept after you delete your account. Nothing is used to train anything. Support questions are the one content exception: after a ticket is resolved or closed and has no new activity for 180 days, its question and replies are deleted unless a legal hold requires preservation. Two records about your use also age out: the log of who has read your rows keeps ninety days, and the record of which days you opened the app keeps a little over a year.',
+      'Your courses, deadlines, notes, plans and other study work stay until you delete them, and no archive is kept after you delete your account. Nothing is used to train anything. Individual-beta support questions that are not associated with a school deployment are the one content exception: after a ticket is resolved or closed and has no new activity for 180 days, its question and replies are deleted unless a legal hold requires preservation. A ticket associated with a school deployment follows that school’s contract instead; no automatic school-ticket purge runs until that rule is configured. Two records about your use also age out: the log of who has read your rows keeps ninety days, and the record of which days you opened the app keeps a little over a year.',
   },
   {
     heading: 'Who has read your rows, and how you can see it',
