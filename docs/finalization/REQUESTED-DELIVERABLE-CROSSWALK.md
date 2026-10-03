@@ -69,11 +69,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 54 | `docs/legal-drafts/SUBPROCESSOR-LIST-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical provider schedule; code dependencies and published terms are not represented as active or executed commitments |
 | 55 | `docs/legal-drafts/SECURITY-INCIDENT-NOTIFICATION-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical notification draft; no 24/7, fixed deadline, recovery, or practiced-operation claim is made |
 | 56 | `docs/legal-drafts/ACCESSIBILITY-ROADMAP-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical scoped roadmap; self-assessment remains YELLOW and formal conformance remains RED |
-| 57 | `docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/AI-USE-POLICY-DRAFT.md` (filename similarity 0.47; substantive review required) |
-| 58 | `docs/legal-drafts/CONFIDENTIALITY-NDA-MUTUAL-DRAFT.md` | NO CLOSE SOURCE | — |
-| 59 | `docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md` | NO CLOSE SOURCE | — |
-| 60 | `docs/legal-drafts/PROFESSIONAL-SERVICES-TERMS-DRAFT.md` | NO CLOSE SOURCE | — |
-| 61 | `docs/legal-drafts/INSTITUTIONAL-PILOT-PROPOSAL-TEMPLATE-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/PILOT-PROPOSAL-TEMPLATE.md` (filename similarity 0.68; substantive review required) |
+| 57 | `docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical scoped AI terms exhibit; use cases, data, providers, models, evaluation and activation remain approval-gated |
+| 58 | `docs/legal-drafts/CONFIDENTIALITY-NDA-MUTUAL-DRAFT.md` | EXACT PRESENT | canonical mutual confidentiality template; no disclosure, data access, trust-room access or AI use is authorized by the draft |
+| 59 | `docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical time-bounded evaluation template; no production, research, payment, institutional-data or commercial authorization is implied |
+| 60 | `docs/legal-drafts/PROFESSIONAL-SERVICES-TERMS-DRAFT.md` | EXACT PRESENT | canonical services framework; scope, staffing, fees, acceptance, IP and risk terms require an executed agreement and SOW |
+| 61 | `docs/legal-drafts/INSTITUTIONAL-PILOT-PROPOSAL-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical discussion proposal; pricing, scope, controls, customer acceptance, contract and paid-pilot activation remain open |
 | 62 | `docs/legal-drafts/PROCUREMENT-RESPONSE-COVER-LETTER-DRAFT.md` | NO CLOSE SOURCE | — |
 | 63 | `docs/legal-drafts/RFP-RESPONSE-CONTENT-LIBRARY.md` | CANDIDATE SOURCE | `docs/HIGHER-ED-RFP-RESPONSE-LIBRARY.md` (filename similarity 0.56; substantive review required) |
 | 64 | `docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md` | NO CLOSE SOURCE | — |
