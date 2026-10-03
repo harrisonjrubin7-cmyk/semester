@@ -8,7 +8,7 @@
 
 1. Land on a use-case page: registration, first week, workload, deadlines or degree planning.
 2. Start locally/manual-first with plain-language permissions.
-3. Reach setup-only activation: one approved course/calendar source; then measure first win separately when the student reaches Today, understands one relevant recommended reversible action and intentionally completes, schedules, snoozes or defers it.
+3. Reach setup-only activation: one approved course/calendar source; then measure first win separately when the student reaches Today, understands one relevant recommended reversible action and its source/limitations, knows the relevant help route, and intentionally completes, schedules, snoozes or defers it.
 4. Return through the ethical loop: capture → organize → plan → act → reflect → improve.
 5. Invite or share only an intentionally selected, privacy-safe object—not a transcript, grades or private plan.
 

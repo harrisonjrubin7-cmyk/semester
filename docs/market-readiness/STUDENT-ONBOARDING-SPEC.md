@@ -19,9 +19,9 @@ Each step needs loading, empty, validation, service error, offline/degraded, bac
 
 ## Activation and first-win events
 
-`student_activated` fires once per approved account/device rule when the student completes the approved minimum setup, currently adding or importing at least one course or calendar source. Invitation delivery, account creation, login and sample-data exploration do not count.
+`student_activated` fires once per approved account/device rule when the student completes the approved minimum setup, currently adding or importing at least one course or calendar source. Invitation delivery, account creation, login and sample-data exploration do not count. This proposed event is not the existing `ANALYTICS.md` / `supabase/analytics.sql` “activation” report, which currently requires both a course and a `studied` mark. That legacy report must remain labeled as its own course-plus-study funnel and must not be published as this setup-only activation rate. The new event and query remain unavailable until implemented, versioned and sample-validated.
 
-`student_first_win` fires separately after activation when the student reaches Today, understands one relevant prioritized reversible action and intentionally completes, schedules, snoozes or defers it. A full first-week plan is not an extra gate. Store only event/version, event time, approved tenant/cohort, setup method and coarse decision outcome—never task titles or course content. Validate both events against representative samples before accepting either metric, and report activation-to-first-win loss.
+`student_first_win` fires separately after activation when the student reaches Today, understands one relevant prioritized reversible action, can identify its source and limitations, knows where to get relevant human/non-AI help, and intentionally completes, schedules, snoozes or defers it. A full first-week plan is not an extra gate. Store only event/version, event time, approved tenant/cohort, setup method, coarse comprehension/help checks and coarse decision outcome—never task titles or course content. Validate both events against representative samples before accepting either metric, and report activation-to-first-win loss.
 
 ## Acceptance
 
