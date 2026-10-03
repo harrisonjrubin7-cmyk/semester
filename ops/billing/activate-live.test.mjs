@@ -25,6 +25,13 @@ test('an incomplete merchant account makes no mutations', async () => {
   assert.deepEqual(calls, ['GET']);
 });
 
+test('an empty Stripe success response stays a controlled provider error', async () => {
+  await assert.rejects(activateLive(env, {
+    apply: true,
+    fetch: async () => new Response(null, { status: 200 }),
+  }), /Stripe returned an unreadable response/);
+});
+
 test('a check is read-only and never claims payment verification', async () => {
   const calls = [];
   const result = await activateLive(env, { fetch: async (url, init) => {

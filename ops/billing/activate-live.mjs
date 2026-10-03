@@ -39,17 +39,17 @@ export function configuration(env) {
 
 export async function activateLive(env, { apply = false, fetch: send = globalThis.fetch } = {}) {
   const c = configuration(env);
-  async function request(url, init, label) {
+  async function request(url, init, label, { allowEmpty = false } = {}) {
     let res;
     try { res = await send(url, { ...init, signal: AbortSignal.timeout(20_000), redirect: 'error' }); }
     catch { throw new Error(`${label} could not connect. No provider payload was logged.`); }
     if (!res.ok) throw new Error(`${label} refused the request (HTTP ${res.status}).`);
     let body;
     try { body = await res.text(); } catch { throw new Error(`${label} returned an unreadable response.`); }
-    // Supabase's secret-management endpoint can acknowledge a successful
-    // write with an empty 2xx response. Accept that explicit success while
-    // continuing to reject malformed non-empty provider payloads.
-    if (!body.trim()) return null;
+    if (!body.trim()) {
+      if (allowEmpty) return null;
+      throw new Error(`${label} returned an unreadable response.`);
+    }
     try { return JSON.parse(body); } catch { throw new Error(`${label} returned an unreadable response.`); }
   }
   const stripe = (path, init = {}) => request(`https://api.stripe.com/v1/${path}`, {
@@ -206,7 +206,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   const secretHeaders = { Authorization: `Bearer ${c.accessToken}`, 'Content-Type': 'application/json' };
   const writeProjectSecrets = (values, label) => request(secretUrl, {
     method: 'POST', headers: secretHeaders, body: JSON.stringify(values),
-  }, label);
+  }, label, { allowEmpty: true });
 
   // Close checkout before expiring or rescanning sessions. This is the first
   // mutation and it is fail-safe: any later error leaves purchases disabled.
