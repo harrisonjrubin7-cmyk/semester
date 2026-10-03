@@ -40,6 +40,8 @@ export interface BeginRow {
 }
 
 export interface CheckoutDeps {
+  /** Explicit operations gate; only the literal production value `true` opens checkout. */
+  liveEnabled: boolean;
   /** `STRIPE_SECRET_KEY`; unset turns checkout off. */
   stripeKey: string | undefined;
   /** Owner/accountant-approved Stripe Tax code for Semester Plus software. */
@@ -135,6 +137,7 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   // A preflight from an allowed page succeeds even while checkout is off, so
   // the page can read the 503's sentence rather than a bare network error.
   if (req.method === 'OPTIONS') return allowed ? reply(204, null) : reply(403, null);
+  if (deps.liveEnabled !== true) return reply(503, { error: 'Checkout is not available yet.' });
   const taxCode = deps.taxCode;
   if (!stripeMode(deps.stripeKey) || !taxCode || !/^txcd_[0-9]{8}$/.test(taxCode)) {
     return reply(503, { error: 'Checkout is not available yet.' });

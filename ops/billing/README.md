@@ -27,10 +27,12 @@ node ops/billing/activate-live.mjs --apply
 
 The first command checks the merchant account, default tax behavior, every page
 of active tax registrations, portal configuration, and webhook without changing them.
-The second creates or updates exactly this project's live webhook, enables the
+The second first closes checkout with the `BILLING_LIVE_ENABLED` operations
+gate, creates or updates exactly this project's live webhook, enables the
 default Stripe billing portal's invoice history and payment-method controls,
-stores the credentials and the exact portal configuration id in Supabase, and checks the deployed signature,
-authentication and CORS boundaries. It refuses to activate until Stripe Tax
+stores the credentials and the exact portal configuration id in Supabase,
+rescans legacy sessions while checkout is quiesced, and only then opens the
+gate after checking the deployed signature, authentication and CORS boundaries. It refuses to activate until Stripe Tax
 reports an active setup, and reports the number of active tax registrations so
 the owner and counsel can reconcile it with the approved nexus decision. It
 does not create a checkout, register the business for tax, charge a card or

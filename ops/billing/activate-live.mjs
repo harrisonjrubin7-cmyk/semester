@@ -64,6 +64,26 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     } while (sessionCursor);
     return sessions;
   }
+  async function staleActiveSubscriptions(sessions) {
+    const subscriptions = [];
+    for (const session of sessions.filter(item =>
+      item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item))) {
+      const subscriptionRef = typeof session?.subscription === 'string' ? session.subscription : session?.subscription?.id;
+      if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionRef || '')) continue;
+      const subscription = await stripe(
+        `subscriptions/${encodeURIComponent(subscriptionRef)}?expand[]=items.data.price.product`,
+      );
+      const ended = ['canceled', 'incomplete_expired'].includes(subscription?.status);
+      const items = subscription?.items?.data;
+      const productsAreCurrent = Array.isArray(items) && items.length > 0 &&
+        items.every(item => item?.price?.product?.tax_code === c.taxCode);
+      const migrated = subscription?.metadata?.semester_tax_contract === 'plus-v2' &&
+        subscription?.metadata?.semester_tax_code === c.taxCode &&
+        subscription?.automatic_tax?.enabled === true && productsAreCurrent;
+      if (!ended && !migrated) subscriptions.push(subscriptionRef);
+    }
+    return subscriptions;
+  }
   const account = await stripe('account');
   if (!account.id || account.charges_enabled !== true || account.details_submitted !== true)
     throw new Error('Stripe account onboarding is incomplete or live charges are disabled. No settings changed.');
@@ -101,24 +121,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   // expiration cannot repair the resulting subscription, so detect any live
   // subscription whose Checkout tax contract or product classification is
   // stale and stop for an explicit provider-side migration.
-  const completedLegacySessions = (await checkoutSessions('complete')).filter(item =>
-    item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item));
-  const legacyActiveSubscriptions = [];
-  for (const session of completedLegacySessions) {
-    const subscriptionRef = typeof session?.subscription === 'string' ? session.subscription : session?.subscription?.id;
-    if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionRef || '')) continue;
-    const subscription = await stripe(
-      `subscriptions/${encodeURIComponent(subscriptionRef)}?expand[]=items.data.price.product`,
-    );
-    const ended = ['canceled', 'incomplete_expired'].includes(subscription?.status);
-    const items = subscription?.items?.data;
-    const productsAreCurrent = Array.isArray(items) && items.length > 0 &&
-      items.every(item => item?.price?.product?.tax_code === c.taxCode);
-    const migrated = subscription?.metadata?.semester_tax_contract === 'plus-v2' &&
-      subscription?.metadata?.semester_tax_code === c.taxCode &&
-      subscription?.automatic_tax?.enabled === true && productsAreCurrent;
-    if (!ended && !migrated) legacyActiveSubscriptions.push(subscriptionRef);
-  }
+  const legacyActiveSubscriptions = await staleActiveSubscriptions(await checkoutSessions('complete'));
   if (apply && legacyActiveSubscriptions.length > 0)
     throw new Error('An active Semester subscription uses an older tax contract. Migrate it in Stripe before activation; no settings changed.');
 
@@ -180,13 +183,41 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   } catch {
     throw new Error('The deployed tax-aware checkout could not be verified. No settings changed.');
   }
-  if (checkoutContract.status !== 204 ||
-      checkoutContract.headers.get('X-Semester-Billing-Contract') !== 'plus-v2' ||
-      checkoutContract.headers.get('Access-Control-Allow-Origin') !== c.origins[0])
+  const contractStatusIsSafe = checkoutContract.status === 403 ||
+    (checkoutContract.status === 204 &&
+     checkoutContract.headers.get('Access-Control-Allow-Origin') === c.origins[0]);
+  if (!contractStatusIsSafe || checkoutContract.headers.get('X-Semester-Billing-Contract') !== 'plus-v2')
     throw new Error('Deploy the plus-v2 tax-aware checkout before activation. No settings changed.');
 
+  const secretUrl = `https://api.supabase.com/v1/projects/${c.project}/secrets`;
+  const secretHeaders = { Authorization: `Bearer ${c.accessToken}`, 'Content-Type': 'application/json' };
+  const writeProjectSecrets = (values, label) => request(secretUrl, {
+    method: 'POST', headers: secretHeaders, body: JSON.stringify(values),
+  }, label);
+
+  // Close checkout before expiring or rescanning sessions. This is the first
+  // mutation and it is fail-safe: any later error leaves purchases disabled.
+  // It also makes tax-code rotation atomic from the customer's perspective.
+  await writeProjectSecrets([{ name: 'BILLING_LIVE_ENABLED', value: 'false' }], 'Supabase checkout quiescence');
+  let checkoutQuiesced = false;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const res = await send(`https://${c.project}.supabase.co/functions/v1/billing-checkout`, {
+      method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
+      headers: { Origin: c.origins[0], 'Content-Type': 'application/json' },
+    });
+    if (res.status === 503 && res.headers.get('X-Semester-Billing-Contract') === 'plus-v2') {
+      checkoutQuiesced = true;
+      break;
+    }
+    if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  if (!checkoutQuiesced)
+    throw new Error('Checkout could not be disabled before activation. No billing settings were published.');
+
   const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
-  for (const session of legacySessions) {
+  const sessionsToExpire = (await checkoutSessions('open')).filter(item =>
+    item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item));
+  for (const session of sessionsToExpire) {
     if (!/^cs_(?:live|test)_[A-Za-z0-9]+$/.test(session?.id || ''))
       throw new Error('Stripe returned an invalid legacy Checkout Session. No settings changed.');
     const expired = await stripe(`checkout/sessions/${encodeURIComponent(session.id)}/expire`, { method: 'POST', headers });
@@ -196,6 +227,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   if ((await checkoutSessions('open')).some(item =>
     item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item)))
     throw new Error('A legacy untaxed Checkout Session is still open. Checkout remains unavailable.');
+  if ((await staleActiveSubscriptions(await checkoutSessions('complete'))).length > 0)
+    throw new Error('An active Semester subscription uses an older tax contract. Migrate it in Stripe; checkout remains unavailable.');
 
   // Configure and validate the portal before creating a webhook. Stripe only
   // returns a new endpoint's signing secret once; no later setup failure may
@@ -258,17 +291,15 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     [...new Set([...endpoint.enabled_events, ...EVENTS])].forEach((event, i) => body.set(`enabled_events[${i}]`, event));
     await stripe(`webhook_endpoints/${encodeURIComponent(endpoint.id)}`, { method: 'POST', headers, body });
   }
-  await request(`https://api.supabase.com/v1/projects/${c.project}/secrets`, {
-    method: 'POST', headers: { Authorization: `Bearer ${c.accessToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify([
+  await writeProjectSecrets([
       { name: 'STRIPE_SECRET_KEY', value: c.stripeKey },
       { name: 'STRIPE_WEBHOOK_SECRET', value: c.webhookSecret },
       { name: 'ALLOWED_ORIGIN', value: c.origins.join(',') },
       { name: 'CHECKOUT_RETURN_URL', value: c.returnUrl },
       { name: 'STRIPE_PORTAL_CONFIGURATION_ID', value: portal.id },
       { name: 'STRIPE_PRODUCT_TAX_CODE', value: c.taxCode },
-    ]),
-  }, 'Supabase secret configuration');
+      { name: 'BILLING_LIVE_ENABLED', value: 'false' },
+    ], 'Supabase secret configuration');
 
   // Signed malformed input validates the deployed signing key without creating
   // an invoice, subscription, checkout, or synthetic financial event.
@@ -283,13 +314,30 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (!verified) throw new Error('Secrets were configured, but the deployed webhook did not verify the signing key. Check deployment; do not advertise live billing yet.');
+
+  // The provider inventory is now stable because checkout is confirmed off.
+  // Recheck immediately before the only write that can make purchases live.
+  if ((await checkoutSessions('open')).some(item =>
+    item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item)) ||
+      (await staleActiveSubscriptions(await checkoutSessions('complete'))).length > 0)
+    throw new Error('A stale tax contract appeared during activation. Checkout remains unavailable.');
+  await writeProjectSecrets([{ name: 'BILLING_LIVE_ENABLED', value: 'true' }], 'Supabase checkout enablement');
+
   for (const origin of c.origins) {
     for (const name of ['billing-checkout', 'billing-cancel', 'billing-portal']) {
-      const res = await send(`https://${c.project}.supabase.co/functions/v1/${name}`, {
-        method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
-        headers: { Origin: origin, 'Content-Type': 'application/json' },
-      });
-      if (res.status !== 401 || res.headers.get('Access-Control-Allow-Origin') !== origin)
+      let ready = false;
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const res = await send(`https://${c.project}.supabase.co/functions/v1/${name}`, {
+          method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
+          headers: { Origin: origin, 'Content-Type': 'application/json' },
+        });
+        if (res.status === 401 && res.headers.get('Access-Control-Allow-Origin') === origin) {
+          ready = true;
+          break;
+        }
+        if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      if (!ready)
         throw new Error(`Secrets were configured, but ${name} did not pass authentication/CORS verification. Do not advertise live billing yet.`);
     }
   }
@@ -297,7 +345,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     taxReady: true, taxBehaviorConfigured: true, productTaxCodeConfigured: true,
     activeTaxRegistrations: registrations.length,
     portalConfigured: true, webhookVerified: true, originsVerified: true,
-    expiredLegacyCheckoutSessions: legacySessions.length, paymentsVerified: false,
+    expiredLegacyCheckoutSessions: sessionsToExpire.length, paymentsVerified: false,
     remaining: 'Complete one owner-approved checkout, receipt, entitlement and cancellation lifecycle before marking billing available.' };
 }
 

@@ -113,8 +113,13 @@ test('a portal setup failure cannot create a webhook whose one-time secret would
     if (url.includes('/tax/registrations') || url.includes('/checkout/sessions?') ||
         url.includes('/billing_portal/configurations?') || url.includes('webhook_endpoints?'))
       return response({ data: [], has_more: false });
-    if (url.endsWith('/billing-checkout') && init.method === 'OPTIONS') return new Response(null, { status: 204,
-      headers: { 'X-Semester-Billing-Contract': 'plus-v2', 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN } });
+    // A new origin is not allowed until activation publishes it. The deployed
+    // contract header must still let the safe 403 preflight prove code version.
+    if (url.endsWith('/billing-checkout') && init.method === 'OPTIONS') return new Response(null, { status: 403,
+      headers: { 'X-Semester-Billing-Contract': 'plus-v2' } });
+    if (url.endsWith('/secrets')) return response([]);
+    if (url.endsWith('/billing-checkout') && init.method === 'POST') return response(
+      { error: 'Checkout is not available yet.' }, 503, { 'X-Semester-Billing-Contract': 'plus-v2' });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_bad', active: false, features: {} });
     throw new Error(`unexpected call to ${url}`);
   } }), /usable billing portal/);
@@ -185,6 +190,7 @@ test('existing endpoints require their signing secret and pagination cannot crea
 test('activates one endpoint, writes secrets only to Supabase, probes without charging', async () => {
   const calls = [];
   let legacyOpen = true;
+  let checkoutEnabled = true;
   const result = await activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push({ url, method: init.method || 'GET', body: init.body });
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
@@ -210,8 +216,18 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     }, 400);
     if (url.includes('webhook_endpoints?')) return response({ data: [], has_more: false });
     if (url.endsWith('/webhook_endpoints')) return response({ id: 'we_semester', secret: 'whsec_abc', livemode: true, status: 'enabled' });
-    if (url.endsWith('/secrets')) return response([]);
+    if (url.endsWith('/secrets')) {
+      const secrets = JSON.parse(init.body);
+      const gate = secrets.find(secret => secret.name === 'BILLING_LIVE_ENABLED');
+      if (gate) checkoutEnabled = gate.value === 'true';
+      return response([]);
+    }
     if (url.endsWith('/billing-webhook')) return response({ error: 'Not an event.' }, 400);
+    if (url.endsWith('/billing-checkout') && init.method === 'POST') return checkoutEnabled
+      ? response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
+        'X-Semester-Billing-Contract': 'plus-v2' })
+      : response({ error: 'Checkout is not available yet.' }, 503, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
+        'X-Semester-Billing-Contract': 'plus-v2' });
     return response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN });
   } });
   assert.equal(result.state, 'configured');
@@ -219,13 +235,16 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(result.portalConfigured, true);
   assert.equal(result.expiredLegacyCheckoutSessions, 1);
   assert.equal(result.paymentsVerified, false);
-  const stored = JSON.parse(calls.find(call => call.url.endsWith('/secrets')).body);
+  const secretWrites = calls.filter(call => call.url.endsWith('/secrets'));
+  const stored = JSON.parse(secretWrites.find(call => call.body.includes('STRIPE_SECRET_KEY')).body);
   assert.deepEqual(stored.map(secret => secret.name), [
     'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'ALLOWED_ORIGIN',
-    'CHECKOUT_RETURN_URL', 'STRIPE_PORTAL_CONFIGURATION_ID', 'STRIPE_PRODUCT_TAX_CODE',
+    'CHECKOUT_RETURN_URL', 'STRIPE_PORTAL_CONFIGURATION_ID', 'STRIPE_PRODUCT_TAX_CODE', 'BILLING_LIVE_ENABLED',
   ]);
   assert.equal(stored.find(secret => secret.name === 'STRIPE_PORTAL_CONFIGURATION_ID').value, 'bpc_1');
   assert.equal(stored.find(secret => secret.name === 'STRIPE_PRODUCT_TAX_CODE').value, env.STRIPE_PRODUCT_TAX_CODE);
+  assert.equal(stored.find(secret => secret.name === 'BILLING_LIVE_ENABLED').value, 'false');
+  assert.equal(JSON.parse(secretWrites.at(-1).body)[0].value, 'true');
   const portalBody = new URLSearchParams(calls.find(call => call.url.endsWith('/billing_portal/configurations')).body);
   assert.equal(portalBody.get('metadata[semester_product]'), 'semester');
   assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');
@@ -235,7 +254,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     calls.findIndex(call => call.url.endsWith('/webhook_endpoints')));
   const expiration = calls.find(call => call.url.endsWith('/checkout/sessions/cs_live_legacy/expire'));
   assert.equal(expiration.method, 'POST');
-  assert.ok(calls.indexOf(expiration) < calls.findIndex(call => call.url.endsWith('/secrets')));
+  assert.ok(calls.indexOf(expiration) < calls.findIndex(call =>
+    call.url.endsWith('/secrets') && call.body.includes('STRIPE_SECRET_KEY')));
   assert.equal(calls.some(call => /payment_intents/.test(call.url)), false);
   assert.equal(JSON.stringify(result).includes('whsec_'), false);
   assert.equal(JSON.stringify(result).includes('sk_live_'), false);

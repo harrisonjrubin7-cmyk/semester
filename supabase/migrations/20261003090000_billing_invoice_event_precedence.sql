@@ -6,6 +6,33 @@ alter table public.invoices
     check (provider_snapshot_rank between 0 and 2),
   add column if not exists provider_snapshot_at timestamptz;
 
+-- Existing invoices can already contain a payment-stage event. Seed their
+-- precedence before the v3 webhook is enabled so a delayed finalization
+-- failure cannot overwrite the newer, finalized subtotal and tax snapshot.
+-- `received_at` is the only historical event time retained by Semester; rank
+-- remains authoritative across stages, while the timestamp orders peers.
+with prior as (
+  select
+    invoice_id,
+    max(received_at) as latest_received_at,
+    case
+      when bool_or(kind = 'payment_succeeded') then 2
+      when bool_or(kind = 'payment_failed') then 1
+      else 0
+    end::smallint as snapshot_rank
+  from public.payment_events
+  where invoice_id is not null
+  group by invoice_id
+)
+update public.invoices i
+   set provider_snapshot_rank = greatest(i.provider_snapshot_rank, prior.snapshot_rank),
+       provider_snapshot_at = case
+         when i.provider_snapshot_at is null then prior.latest_received_at
+         else greatest(i.provider_snapshot_at, prior.latest_received_at)
+       end
+  from prior
+ where i.id = prior.invoice_id;
+
 create or replace function public.apply_invoice_payment_event_v3(
   want_provider text,
   want_event_id text,

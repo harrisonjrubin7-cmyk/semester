@@ -15,6 +15,7 @@ const OK: BeginRow = {
 function deps(over: Partial<CheckoutDeps> = {}) {
   const stripe = vi.fn(async () => new Response(JSON.stringify({ id: 'cs_test_1', livemode: false, url: 'https://checkout.stripe.com/c/pay/cs_test_1' }), { status: 200 }));
   const d = {
+    liveEnabled: true,
     stripeKey: 'sk_test_x',
     taxCode: 'txcd_10103000',
     allowedOrigin: APP,
@@ -40,6 +41,14 @@ const GOOD = { price_id: PRICE, consent: true, consent_text_version: 'plus-v2' }
 afterEach(() => vi.restoreAllMocks());
 
 describe('billing checkout', () => {
+  it('stays off behind the explicit operations gate even when live credentials exist', async () => {
+    const d = deps({ liveEnabled: false, stripeKey: 'sk_live_x' });
+    const res = await handleBillingCheckout(post(GOOD), d);
+    expect(res.status).toBe(503);
+    expect(d.begin).not.toHaveBeenCalled();
+    expect(d.fetch).not.toHaveBeenCalled();
+  });
+
   it('is off, with a plain sentence, until the provider key is set', async () => {
     const d = deps({ stripeKey: undefined });
     const res = await handleBillingCheckout(post(GOOD), d);
