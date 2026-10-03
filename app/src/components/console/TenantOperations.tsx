@@ -97,7 +97,7 @@ export function TenantOperations({
       </div>
 
       {error && (
-        <Notice>
+        <Notice alert>
           {denied
             ? 'Access denied. Tenant operations requires both the platform console shell and a live implementation grant for an exact school.'
             : 'Tenant operations could not be loaded. No records are shown.'}
