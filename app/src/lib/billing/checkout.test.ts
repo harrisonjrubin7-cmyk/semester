@@ -106,7 +106,9 @@ describe('billing checkout', () => {
     expect(form.get('line_items[0][price_data][product_data][tax_code]')).toBe('txcd_10103000');
     expect(form.get('automatic_tax[enabled]')).toBe('true');
     expect(form.get('metadata[semester_tax_contract]')).toBe('plus-v2');
+    expect(form.get('metadata[semester_tax_code]')).toBe('txcd_10103000');
     expect(form.get('subscription_data[metadata][semester_tax_contract]')).toBe('plus-v2');
+    expect(form.get('subscription_data[metadata][semester_tax_code]')).toBe('txcd_10103000');
     expect(form.get('customer_email')).toBe('ana@example.edu');
     expect(form.has('customer_update[address]')).toBe(false);
     expect(form.get('success_url')).toBe(`${APP}/?checkout=success`);

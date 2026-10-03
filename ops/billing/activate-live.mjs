@@ -46,14 +46,16 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   const stripe = (path, init = {}) => request(`https://api.stripe.com/v1/${path}`, {
     ...init, headers: { Authorization: `Bearer ${c.stripeKey}`, ...init.headers },
   }, 'Stripe');
-  async function legacyCheckoutSessions() {
+  const semesterSessionIsCurrent = item => item?.metadata?.semester_checkout_id &&
+    item?.metadata?.semester_tax_contract === 'plus-v2' &&
+    item?.metadata?.semester_tax_code === c.taxCode;
+  async function checkoutSessions(status) {
     const sessions = [];
     let sessionCursor;
     do {
-      const page = await stripe(`checkout/sessions?status=open&limit=100${sessionCursor ? `&starting_after=${encodeURIComponent(sessionCursor)}` : ''}`);
+      const page = await stripe(`checkout/sessions?status=${status}&limit=100${sessionCursor ? `&starting_after=${encodeURIComponent(sessionCursor)}` : ''}`);
       if (!Array.isArray(page.data)) throw new Error('Stripe returned an invalid Checkout Session list.');
-      sessions.push(...page.data.filter(item =>
-        item?.metadata?.semester_checkout_id && item?.metadata?.semester_tax_contract !== 'plus-v2'));
+      sessions.push(...page.data);
       sessionCursor = page.has_more === true ? page.data.at(-1)?.id : undefined;
       if (page.has_more === true && !sessionCursor) throw new Error('Stripe returned invalid Checkout Session pagination.');
     } while (sessionCursor);
@@ -89,7 +91,28 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   // until Stripe expires it. Inventory every open page before activation;
   // --apply invalidates those links and verifies none remain before secrets
   // can make the new checkout available.
-  const legacySessions = await legacyCheckoutSessions();
+  const legacySessions = (await checkoutSessions('open')).filter(item =>
+    item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item));
+
+  // An old page may already have completed before activation starts. Open-page
+  // expiration cannot repair the resulting subscription, so detect any live
+  // subscription whose Checkout tax contract or product classification is
+  // stale and stop for an explicit provider-side migration.
+  const completedLegacySessions = (await checkoutSessions('complete')).filter(item =>
+    item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item));
+  const legacyActiveSubscriptions = [];
+  for (const session of completedLegacySessions) {
+    const subscriptionRef = typeof session?.subscription === 'string' ? session.subscription : session?.subscription?.id;
+    if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionRef || '')) continue;
+    const subscription = await stripe(`subscriptions/${encodeURIComponent(subscriptionRef)}`);
+    const ended = ['canceled', 'incomplete_expired'].includes(subscription?.status);
+    const migrated = subscription?.metadata?.semester_tax_contract === 'plus-v2' &&
+      subscription?.metadata?.semester_tax_code === c.taxCode &&
+      subscription?.automatic_tax?.enabled === true;
+    if (!ended && !migrated) legacyActiveSubscriptions.push(subscriptionRef);
+  }
+  if (apply && legacyActiveSubscriptions.length > 0)
+    throw new Error('An active Semester subscription uses an older tax contract. Migrate it in Stripe before activation; no settings changed.');
 
   // API-created portal configurations are non-default. Tag Semester's one and
   // page through active configurations so a retry updates it instead of
@@ -133,6 +156,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     activeTaxRegistrations: registrations.length,
     portalConfigured: portalReady, webhookExists: !!endpoint,
     legacyOpenCheckoutSessions: legacySessions.length,
+    legacyActiveSubscriptions: legacyActiveSubscriptions.length,
     requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
 
   const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
@@ -143,7 +167,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     if (expired?.id !== session.id || expired?.status !== 'expired')
       throw new Error('Stripe did not confirm expiration of a legacy Checkout Session. Checkout remains unavailable.');
   }
-  if ((await legacyCheckoutSessions()).length > 0)
+  if ((await checkoutSessions('open')).some(item =>
+    item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item)))
     throw new Error('A legacy untaxed Checkout Session is still open. Checkout remains unavailable.');
 
   // Configure and validate the portal before creating a webhook. Stripe only
@@ -171,6 +196,27 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   }
   if (!/^bpc_[A-Za-z0-9]+$/.test(portal?.id || ''))
     throw new Error('Stripe did not return a usable billing portal configuration id. Project secrets were not changed.');
+
+  // A restricted key may allow configuration reads but deny portal-session
+  // creation. An intentionally nonexistent customer must reach Stripe's
+  // resource lookup (400 resource_missing); a permission response proves the
+  // key cannot support the signed-in portal before it is published.
+  let portalProbe;
+  try {
+    portalProbe = await send('https://api.stripe.com/v1/billing_portal/sessions', {
+      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(20_000),
+      headers: { Authorization: `Bearer ${c.stripeKey}`, ...headers },
+      body: new URLSearchParams({
+        customer: 'cus_semester_permission_probe_not_real', configuration: portal.id, return_url: c.returnUrl,
+      }),
+    });
+  } catch {
+    throw new Error('Stripe portal write permission could not be verified. Project secrets were not changed.');
+  }
+  const portalProbeBody = await portalProbe.json().catch(() => ({}));
+  if (portalProbe.status !== 400 || portalProbeBody?.error?.code !== 'resource_missing' ||
+      portalProbeBody?.error?.param !== 'customer')
+    throw new Error('STRIPE_SECRET_KEY cannot create billing portal sessions. Project secrets were not changed.');
 
   if (!endpoint) {
     const body = new URLSearchParams({ url: c.webhookUrl, description: 'Semester subscription lifecycle' });

@@ -96,9 +96,15 @@ export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: stri
     // The contract marker lets the activation gate distinguish current,
     // tax-aware sessions from older open links that must be expired before
     // billing can be enabled.
-    metadata: { semester_checkout_id: row.checkout_id, semester_tax_contract: TAX_CONSENT_VERSION },
+    metadata: {
+      semester_checkout_id: row.checkout_id,
+      semester_tax_contract: TAX_CONSENT_VERSION,
+      semester_tax_code: taxCode,
+    },
     subscription_data: { metadata: {
-      semester_checkout_id: row.checkout_id, semester_tax_contract: TAX_CONSENT_VERSION,
+      semester_checkout_id: row.checkout_id,
+      semester_tax_contract: TAX_CONSENT_VERSION,
+      semester_tax_code: taxCode,
     } },
     // Stripe Checkout collects the location it needs and carries the tax
     // result onto the subscription and its invoices. Collection still follows

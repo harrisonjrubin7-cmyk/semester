@@ -34,7 +34,7 @@ test('a check is read-only and never claims payment verification', async () => {
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     return response({ data: [], has_more: false });
   } });
-  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
   assert.equal(result.state, 'checked');
   assert.equal(result.taxReady, true);
   assert.equal(result.portalConfigured, false);
@@ -119,6 +119,41 @@ test('a portal setup failure cannot create a webhook whose one-time secret would
   assert.equal(calls.some(call => call.method === 'POST' && call.url.endsWith('/webhook_endpoints')), false);
 });
 
+test('blocks a completed legacy checkout while its subscription still uses the old tax contract', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/tax/registrations') || url.includes('status=open')) return response({ data: [], has_more: false });
+    if (url.includes('status=complete')) return response({ data: [{ id: 'cs_live_old', subscription: 'sub_old',
+      metadata: { semester_checkout_id: 'old', semester_tax_contract: 'plus-v1' } }], has_more: false });
+    if (url.endsWith('/subscriptions/sub_old')) return response({ id: 'sub_old', status: 'active', automatic_tax: { enabled: false }, metadata: {} });
+    throw new Error(`unexpected call to ${url}`);
+  } }), /older tax contract/);
+  assert.equal(calls.some(call => call.method === 'POST'), false);
+});
+
+test('a read-only restricted key cannot be published for portal use', async () => {
+  const calls = [];
+  await assert.rejects(activateLive({ ...env, STRIPE_SECRET_KEY: 'rk_live_readonly' }, { apply: true, fetch: async (url, init) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/tax/registrations') || url.includes('/checkout/sessions?') || url.includes('webhook_endpoints?'))
+      return response({ data: [], has_more: false });
+    if (url.includes('/billing_portal/configurations?')) return response({ data: [{ id: 'bpc_semester', active: true,
+      metadata: { semester_product: 'semester' }, features: { invoice_history: { enabled: true },
+        payment_method_update: { enabled: true }, customer_update: { enabled: true, allowed_updates: ['address'] } } }], has_more: false });
+    if (url.endsWith('/billing_portal/sessions')) return response({ error: { type: 'invalid_request_error' } }, 403);
+    throw new Error(`unexpected call to ${url}`);
+  } }), /cannot create billing portal sessions/);
+  assert.equal(calls.some(call => call.url.endsWith('/webhook_endpoints') && call.method === 'POST'), false);
+  assert.equal(calls.some(call => call.url.endsWith('/secrets')), false);
+});
+
 test('existing endpoints require their signing secret and pagination cannot create duplicates', async () => {
   const calls = [];
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
@@ -132,7 +167,7 @@ test('existing endpoints require their signing secret and pagination cannot crea
     return response({ data: [{ id: 'we_semester', url: 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-webhook',
       livemode: true, status: 'enabled', enabled_events: EVENTS }], has_more: false });
   } }), /cannot be retrieved/);
-  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
 });
 
 test('activates one endpoint, writes secrets only to Supabase, probes without charging', async () => {
@@ -144,8 +179,10 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
-    if (url.includes('/checkout/sessions?')) return response({ data: legacyOpen ? [{ id: 'cs_live_legacy',
-      metadata: { semester_checkout_id: 'old-checkout' }, status: 'open' }] : [], has_more: false });
+    if (url.includes('status=open')) return response({ data: legacyOpen ? [{ id: 'cs_live_legacy',
+      metadata: { semester_checkout_id: 'old-checkout', semester_tax_contract: 'plus-v2',
+        semester_tax_code: 'txcd_99999999' }, status: 'open' }] : [], has_more: false });
+    if (url.includes('status=complete')) return response({ data: [], has_more: false });
     if (url.endsWith('/checkout/sessions/cs_live_legacy/expire')) {
       legacyOpen = false;
       return response({ id: 'cs_live_legacy', status: 'expired' });
@@ -154,6 +191,9 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_1', active: true,
       features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true },
         customer_update: { enabled: true, allowed_updates: ['address'] } } });
+    if (url.endsWith('/billing_portal/sessions')) return response({
+      error: { code: 'resource_missing', param: 'customer' },
+    }, 400);
     if (url.includes('webhook_endpoints?')) return response({ data: [], has_more: false });
     if (url.endsWith('/webhook_endpoints')) return response({ id: 'we_semester', secret: 'whsec_abc', livemode: true, status: 'enabled' });
     if (url.endsWith('/secrets')) return response([]);
