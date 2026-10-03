@@ -84,7 +84,7 @@ const dependency = (name: string, target: ReleaseTarget): ReleaseEvidence => ({
 });
 const technical = (target: ReleaseTarget): ReleaseEvidence[] => REPOSITORY_RELEASE_EVIDENCE.map((item) => ({
   ...item,
-  reference: `${item.reference}?run=exact-sha`,
+  reference: `github-actions://harrisonjrubin7-cmyk/semester/runs/37137770928/gates/${item.gate}?sha=${target.deployedSha}`,
   sourceSha: target.deployedSha,
 }));
 
@@ -273,6 +273,18 @@ describe('pilot and individual release profiles', () => {
       : item);
     expect(() => evaluateReleaseProfile(profile.id, malformedReference, AS_OF, target)).not.toThrow();
     expect(evaluateReleaseProfile(profile.id, malformedReference, AS_OF, target).technicalStatus).toBe('not-ready');
+    const unverifiedReference = technical(target).map((item, index) => index === 0
+      ? { ...item, reference: 'x' }
+      : item);
+    expect(evaluateReleaseProfile(profile.id, unverifiedReference, AS_OF, target).technicalStatus).toBe('not-ready');
+    const wrongGateReference = technical(target).map((item, index) => index === 0
+      ? { ...item, reference: `github-actions://harrisonjrubin7-cmyk/semester/runs/37137770928/gates/security-scan?sha=${target.deployedSha}` }
+      : item);
+    expect(evaluateReleaseProfile(profile.id, wrongGateReference, AS_OF, target).technicalStatus).toBe('not-ready');
+    const wrongShaReference = technical(target).map((item, index) => index === 0
+      ? { ...item, reference: `github-actions://harrisonjrubin7-cmyk/semester/runs/37137770928/gates/${item.gate}?sha=${'0'.repeat(40)}` }
+      : item);
+    expect(evaluateReleaseProfile(profile.id, wrongShaReference, AS_OF, target).technicalStatus).toBe('not-ready');
     const malformedTarget = { ...target, configurationVersion: null as unknown as string };
     expect(() => evaluateReleaseProfile(profile.id, technical(malformedTarget), AS_OF, malformedTarget)).not.toThrow();
     expect(evaluateReleaseProfile(profile.id, technical(malformedTarget), AS_OF, malformedTarget).targetBound).toBe(false);

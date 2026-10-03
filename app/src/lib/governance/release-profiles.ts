@@ -233,6 +233,7 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
 
 const SHA = /^[0-9a-f]{40}$/;
 const SECURE_REFERENCE = /^(trust-room|vault|ticket):\/\/[^\s]+$/;
+const TECHNICAL_REFERENCE = /^github-actions:\/\/harrisonjrubin7-cmyk\/semester\/runs\/([1-9]\d*)\/gates\/([a-z-]+)\?sha=([0-9a-f]{40})$/;
 const isNonBlankString = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApproverRole[]>> = {
   'deployed-exact-sha': ['operations-owner', 'security-owner'],
@@ -256,7 +257,11 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
 };
 
 function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boolean {
-  if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) return isNonBlankString(item.reference);
+  if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) {
+    if (typeof item.reference !== 'string' || typeof item.sourceSha !== 'string') return false;
+    const match = TECHNICAL_REFERENCE.exec(item.reference);
+    return Boolean(match && match[2] === item.gate && match[3] === item.sourceSha);
+  }
   if (typeof item.reference !== 'string' || !SECURE_REFERENCE.test(item.reference)) return false;
   if (item.gate === 'canonical-launch-decision') {
     if (!item.launchState) return false;
