@@ -17,6 +17,14 @@ describe('the company site and application share one identity', () => {
       .toBe(readFileSync(join(root, 'app/public/icon.svg'), 'utf8'));
   });
 
+  it('loads the shipped brand stylesheet from the public document head', () => {
+    const head = site.slice(0, site.indexOf('</head>'));
+    const stylesheetLink = /<link\b(?=[^>]*\brel="stylesheet")(?=[^>]*\bhref="\/site\.css")[^>]*>/;
+    expect(stylesheetLink.test(head)).toBe(true);
+    // Control: CSS on disk must not clear the guard if the page stops loading it.
+    expect(stylesheetLink.test(head.replace('href="/site.css"', 'href="/missing.css"'))).toBe(false);
+  });
+
   it('uses the application typography and restrained material palette', () => {
     for (const token of ["--serif:'Cinzel'", "--sans:'Barlow'", '--brass:#d8c79a']) {
       expect(styles.includes(token)).toBe(true);
