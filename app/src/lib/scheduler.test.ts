@@ -140,7 +140,41 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const names = jobs(scheduler()).map((j) => j.name);
     expect(names.length).toBeGreaterThan(8);
     expect(names).toEqual(expect.arrayContaining(['push', 'tombstones', 'integration-sync']));
-    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify']));
+    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan']));
+  });
+
+  it('explicitly reactivates live jobs whose named schedule may preserve an older parked state', () => {
+    const sql = scheduler();
+    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-reply-notify'[\s\S]*?active\s*:=\s*true/);
+    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
+  });
+
+  it('installs the credential-free support retention job with its migration', () => {
+    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    expect(migration).toMatch(/cron\.schedule\([\s\S]*?'support-ticket-retention'/);
+    expect(migration).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
+  });
+
+  it('serializes support-ticket deletion with legal-hold writes', () => {
+    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    const functions = [
+      'create or replace function private.sweep_support_ticket_retention()',
+      'create or replace function public.forget_my_support_tickets()',
+    ];
+    for (const signature of functions) {
+      const start = migration.indexOf(signature);
+      const end = migration.indexOf('end $$;', start);
+      const body = migration.slice(start, end);
+      const lock = body.indexOf('lock table public.legal_holds in share mode;');
+      const holdCheck = body.indexOf('private.account_is_held');
+      const deletion = body.indexOf('delete from public.support_tickets');
+      expect(start).toBeGreaterThanOrEqual(0);
+      expect(lock).toBeGreaterThanOrEqual(0);
+      expect(holdCheck).toBeGreaterThanOrEqual(0);
+      expect(deletion).toBeGreaterThanOrEqual(0);
+      expect(lock).toBeLessThan(holdCheck);
+      expect(lock).toBeLessThan(deletion);
+    }
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

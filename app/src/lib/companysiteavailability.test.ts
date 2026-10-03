@@ -43,7 +43,7 @@ describe('company-site production availability', () => {
 
   it('holds every previously non-green roadmap card to code-complete status without erasing its external gate', () => {
     const roadmap = site.slice(site.indexOf('const RM='), site.indexOf('document.getElementById("roadmap-cols")'));
-    expect(site).toContain('Last updated October 1, 2026');
+    expect(site).toContain('Last updated October 3, 2026');
     expect(roadmap).toContain('["Built & tested, evidence pending","dev"');
     expect(roadmap).toContain('["Built & tested, activation gated","ex"');
     expect(roadmap).not.toContain('["In active development"');
@@ -51,8 +51,13 @@ describe('company-site production availability', () => {
     expect(roadmap).toContain('live-payment evidence and commercial activation remain open');
     expect(roadmap).toContain('provider credentials and live activation remain open');
     expect(roadmap).toContain('no institution platform is registered or verified');
-    expect(roadmap).toContain('notification deployment, staffed production enablement and UAT remain open');
+    expect(roadmap).toContain('Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT October 3, 2026');
+    expect(roadmap).toContain('Outlook inbox receipt is still pending, so email delivery is not green yet');
     expect(roadmap).toContain('an approved institution feed remains open');
+    const evidencePending = roadmap.slice(roadmap.indexOf('["Built & tested, evidence pending"'), roadmap.indexOf('["Built & tested, activation gated"'));
+    const activationGated = roadmap.slice(roadmap.indexOf('["Built & tested, activation gated"'));
+    expect(evidencePending).toContain('Email reply notifications');
+    expect(activationGated).not.toContain('Email reply notifications');
 
     for (const path of [
       'app/src/lib/captions.test.ts',

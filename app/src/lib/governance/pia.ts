@@ -95,7 +95,7 @@ export const ASSESSMENTS: readonly Assessment[] = [
     surface: 'Support tickets',
     what: 'A student asks Semester’s own support for help from inside the app, and support answers in the same thread.',
     owner: 'success',
-    assessed: '2026-09-29',
+    assessed: '2026-10-03',
     answers: {
       purpose: { answer: 'To answer the student. The data answers one question: what is this student stuck on. Nothing about tickets is aggregated, and the queue carries no identity to aggregate by.', evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'The tables and the functions that are the only way in' }, { path: 'docs/PRODUCT-ANALYTICS-DATA-ETHICS.md', shows: 'Support tickets are not analytics' }] },
       fields: { answer: 'The category, the words the student wrote, the app details they ticked from a closed list of six (version, device class, screen, signed in, sync state, offline), the timings, and the replies. A grade or a diagnosis cannot ride along: the context keys are a closed list checked in SQL.', evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'private.support_context_ok allows six keys, all about the app' }, { path: 'app/src/lib/supporttickets.test.ts', shows: 'The app’s list is held to the database’s' }] },
@@ -103,7 +103,7 @@ export const ASSESSMENTS: readonly Assessment[] = [
       readers: { answer: 'A support_agent, through the queue and thread functions, which return a ticket’s category, words, ticked context and timings and never an account id, address or name. If the agent needs the student’s data to help, that is a separate student-granted support_access_grant.', evidence: [{ path: 'supabase/support-tickets.check.sql', shows: 'The agent reads the queue and the thread without the asker’s identity' }, { path: 'supabase/support-access.check.sql', shows: 'A support read of student data needs a live grant and is recorded' }] },
       identity: { answer: 'No. The staff functions’ return types are read by the check and any identity-shaped column fails it. What the student types into the body is theirs to type.', evidence: [{ path: 'supabase/support-tickets.check.sql', shows: 'Return types read; an identity-shaped column fails' }] },
       ai: { answer: 'Nothing. A ticket goes to the database and to the people who answer it; no prompt builder reads one.', evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'The functions are the only way in or out' }] },
-      retention: { answer: 'Account deletion, through forget_my_support_tickets(); messages go with their ticket. There is no time-based purge of closed tickets yet, and RETENTION.md says the period must be set before a production launch opens them.', evidence: [RETENTION, RETENTION_TEST] },
+      retention: { answer: 'Resolved or student-closed tickets and their messages are deleted 180 days after last activity; an active account, tenant or platform legal hold blocks both the scheduled sweep and direct self-service ticket deletion. Account deletion remains available when no hold applies.', evidence: [RETENTION, RETENTION_TEST, { path: 'supabase/migrations/20261003130000_support_ticket_retention.sql', shows: 'The 180-day sweep, hold-aware direct deletion and deployment-safe schedule' }, { path: 'supabase/support-retention.check.sql', shows: 'The retention boundary and both legal-hold deletion paths are exercised' }] },
       deletion: { answer: 'Deletion empties it. The thread is readable in the app; it is not part of the student’s export, which covers courses, notes, deadlines and the account file.', evidence: [DELETION_TEST, { path: 'app/src/lib/export.ts', shows: 'What the export covers' }] },
       sharing: { answer: 'None. Nothing in a ticket is shared with anyone but the agent answering it.', evidence: [{ path: 'supabase/support-tickets.check.sql', shows: 'A second student reads nothing of another’s ticket' }] },
       inference: { answer: 'None. Priority and the first-response target are computed from the category, which is a queue order, not a score about the student.', evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'Priority from the category; accessibility and privacy one business day' }] },
@@ -111,8 +111,7 @@ export const ASSESSMENTS: readonly Assessment[] = [
     },
     rating: 'low',
     open: [
-      'Retention: no time-based purge of closed tickets exists; the period must be set before production opens them (RETENTION.md).',
-      'Readers: nobody owns the queue yet, so “read by support staff” names a role with no person in it (#935).',
+      'Deletion: the ticket thread is readable in Help but is not yet included in the downloadable account export.',
     ],
   },
   {

@@ -93,7 +93,7 @@ The current register also includes 3 callable definers added after that dated ca
 | `forget_my_organizations` | `auth.uid()` | `20260921234500_organization_succession.sql` |
 | `forget_my_support_access` | `auth.uid()` | `20260925103000_support_access.sql` |
 | `forget_my_support_shares` | `auth.uid()` | `20260928308000_support_shares.sql` |
-| `forget_my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |
+| `forget_my_support_tickets` | `auth.uid()` | `20261003130000_support_ticket_retention.sql` |
 | `gradebook_file_regrade` | `auth.uid()`, `private.gradebook_school`, `g.student_id = me and g.status = 'released'` | `20260929310000_gradebook.sql` |
 | `join_beta` | `auth.uid()`, `private.beta_my_membership`, `private.beta_confirmed_email` | `20260928220000_private_beta.sql` |
 | `join_community` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |

@@ -25,7 +25,13 @@ reading:
     billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
     billing-webhook   ACTIVE, v32, verify_jwt off   platform
     lead-intake       ACTIVE, v32, verify_jwt off   platform
-    support-reply-notify PENDING, live evidence absent; merge/deploy, activate the `support-reply-notify` scheduler job, and receipt UAT required
+    support-reply-notify ACTIVE, v5, verify_jwt off platform; production job HTTP 200 and provider acceptance verified 3 October 2026; Outlook inbox receipt remains pending
+
+The same release defines `support-ticket-retention`, daily at 05:43 UTC, to
+remove resolved or closed tickets after 180 days unless a legal hold applies.
+The migration installs and explicitly activates that credential-free job when
+pg_cron is present. It is not listed as live until a post-deploy read of
+`cron.job` and its first successful execution are recorded.
 
     productivity-sourcecheck ACTIVE, v2, verify_jwt off   manual (first deploy)
 

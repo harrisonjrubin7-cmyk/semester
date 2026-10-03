@@ -250,7 +250,7 @@ export const GATES: readonly Gate[] = [
       { path: 'SEMESTER_MARKET_READINESS.md', shows: 'the internal scorecard, including how it has been wrong' },
       {
         path: 'docs/pilot/KNOWN-LIMITATIONS.md',
-        shows: 'the same limitations for pilot users, dated 2026-09-28, each with what to do instead, how to report, and the file that states it — rendered from app/src/lib/knownlimitations.ts and held to it by pilotdocs.test.ts',
+        shows: 'the same limitations for pilot users, dated 2026-10-03, each with what to do instead, how to report, and the file that states it — rendered from app/src/lib/knownlimitations.ts and held to it by pilotdocs.test.ts',
       },
       {
         path: 'app/src/components/KnownLimitations.tsx',

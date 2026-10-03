@@ -97,4 +97,7 @@ lead-intake        32  platform  2026-09-29T21:10:28Z
 # so provenance is manual, not a fabricated platform/runner reading. On merge,
 # the continuous platform deploy should replace this first reading.
 productivity-sourcecheck  2  manual  2026-10-01T16:05:17Z first
-support-reply-notify      -  pending 2026-10-01T20:00:00Z
+# Dashboard reading on 3 October: deployment count 5, updated with the full
+# platform function set. The dashboard exposed the deploy time to minute
+# precision (14:22 UTC) rather than seconds.
+support-reply-notify      5  platform 2026-10-03T14:22:00Z

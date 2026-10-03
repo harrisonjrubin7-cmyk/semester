@@ -34,7 +34,7 @@ export interface Limitation {
 }
 
 /** The date of the last time somebody read every entry against its sources. */
-export const KNOWN_LIMITATIONS_AS_OF = '2026-09-28';
+export const KNOWN_LIMITATIONS_AS_OF = '2026-10-03';
 
 export const KNOWN_LIMITATIONS: readonly Limitation[] = [
   {
@@ -95,10 +95,10 @@ export const KNOWN_LIMITATIONS: readonly Limitation[] = [
   },
   {
     id: 'support-one-address',
-    title: 'The in-app support desk is built, but it is not switched on in every environment.',
-    what: 'When support tickets are enabled, Help shows your questions, stable SUP references, replies and their 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. A generic account-email notice can be sent after a staff reply only when you opt in for that question and where the support notification service and verified sender are configured. Notices are capped at three per question in 24 hours, and turning them off cancels notices still waiting to send; the reply remains available in Help if email is delayed or unavailable. No production support UAT has been recorded, and no support hours or staffed coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.',
+    title: 'The beta support desk is live, but email receipt and formal coverage are incomplete.',
+    what: 'Help shows your questions, stable SUP references, replies and their 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT on October 3, 2026, and the founder staffs the current beta queue. A generic account-email notice can be sent after a staff reply only when you opt in for that question. The production sender and scheduled delivery are live; provider acceptance, recipient-tenant quarantine and recipient release were verified, but Outlook inbox receipt remains pending, so email delivery is not yet green. Notices are capped at three per question in 24 hours, and turning them off cancels notices still waiting to send; the reply remains available in Help if email is delayed or unavailable. Resolved and closed tickets are deleted 180 days after their last activity unless a legal hold applies. Support still uses the founder’s personal Gmail address, and no support hours or 24/7 coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.',
     instead: 'If the ticket panel is available, use it and keep the SUP reference. Otherwise write to the address below. For “is it down?”, open the status page from Help; Up means your browser reached it just now.',
-    sources: ['app/src/lib/supporttickets.ts', 'app/src/components/console/SupportQueue.tsx', 'docs/GO-NO-GO-CHECKLIST.md', 'app/public/status.html'],
+    sources: ['app/src/lib/supporttickets.ts', 'app/src/components/console/SupportQueue.tsx', 'docs/launch-readiness/2026-10-03-support-production-uat.md', 'supabase/migrations/20261003130000_support_ticket_retention.sql', 'docs/GO-NO-GO-CHECKLIST.md', 'app/public/status.html'],
   },
   {
     id: 'backup',
