@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { evaluate, expectedResponses, findingHash, findingHashes, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { assertCompleteFindingEvidence, evaluate, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path, root), 'utf8') : '';
@@ -35,7 +35,10 @@ test('the company scan uses an isolated HTTPS target and its own configuration',
   assert.match(companyJob, /APP_HOST: https:\/\/localhost:4186/);
   assert.match(companyJob, /configurationFiles: stackhawk-company-site\.yml/);
   assert.match(companyJob, /hawk op scan get "\$scan_id" --detail full --format json/);
+  assert.match(companyJob, /company-site-scan-report\.mjs plugin-ids/);
+  assert.match(companyJob, /hawk op scan get "\$scan_id" --plugin-id "\$plugin_id" --format json/);
   assert.match(companyJob, /company-site-scan-report\.mjs hashes/);
+  assert.doesNotMatch(companyJob, /hawk op scan get --help/);
 });
 
 test('the company configuration does not reuse the app environment or suppress findings', () => {
@@ -334,6 +337,28 @@ test('finding hashes are exposed only when they are valid triage identifiers', (
   assert.equal(findingHash({ findingHash: 'not-a-hash' }), null);
   assert.equal(findingHash({}), null);
   assert.deepEqual(findingHashes({ paths: [{ finding_hash: hash }, { finding_hash: hash }, { finding_hash: 'bad' }] }), [hash]);
+});
+
+test('triage evidence is collected per plugin and rejects CLI path truncation', () => {
+  const firstHash = 'a'.repeat(64);
+  const secondHash = 'b'.repeat(64);
+  const csrf = {
+    plugin_id: '10202',
+    plugin_name: 'Anti CSRF Tokens Scanner',
+    total_paths: 2,
+    paths: [
+      { method: 'GET', uri: '/', status: 'UNKNOWN', finding_hash: firstHash },
+      { method: 'GET', uri: '/academy', status: 'UNKNOWN', finding_hash: secondHash },
+    ],
+  };
+  assert.deepEqual(findingPluginIds({ findings: [csrf, { ...csrf, plugin_id: '10032' }, csrf] }), ['10202', '10032']);
+  assert.deepEqual(findingsFromEvidence(csrf), [csrf], 'plugin detail is a single finding');
+  assert.deepEqual(findingsFromEvidence({ finding: csrf }), [csrf], 'plugin detail may use a finding envelope');
+  assert.doesNotThrow(() => assertCompleteFindingEvidence(csrf));
+  assert.throws(() => assertCompleteFindingEvidence({ ...csrf, total_paths: 3 }), /incomplete.*10202/i);
+  assert.throws(() => assertCompleteFindingEvidence({ ...csrf, total_paths: 2, paths: csrf.paths.slice(0, 1) }), /incomplete.*10202/i);
+  assert.throws(() => assertCompleteFindingEvidence({ ...csrf, paths: [{ ...csrf.paths[0], finding_hash: 'redacted' }, csrf.paths[1]] }), /triage hash.*10202/i);
+  assert.throws(() => findingPluginIds({ findings: [{ ...csrf, plugin_id: '../unsafe' }] }), /plugin identifier/i);
 });
 
 test('empty coverage and missing changed assets cannot clear the company gate', () => {
