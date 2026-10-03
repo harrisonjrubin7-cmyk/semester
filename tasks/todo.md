@@ -96,23 +96,29 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 - [x] HawkScan DAST passes or the missing runtime/key is recorded as a blocking unverified gate.
 - [ ] Human review confirms the workspace and scope contracts before Phase B.
 
-## B1: Tenant and pilot operations read workspace
+## B1: Tenant and pilot operations read workspace — complete
 
 **Description:** Deliver one end-to-end read workspace over existing tenant, rollout, GTM pilot, entitlement, contract, integration, support, and readiness facts.
 
 **Acceptance criteria:**
-- [ ] Operators see only tenants allowed by their grants.
-- [ ] Each record shows classification, provenance, owner, freshness, and why it is visible.
-- [ ] No arbitrary student content is queried or rendered.
+- [x] Operators see only tenants allowed by their grants.
+- [x] Each record shows classification, provenance, owner, freshness, and why it is visible.
+- [x] No arbitrary student content is queried or rendered.
 
 **Verification:**
-- [ ] Cross-tenant and demo-boundary SQL tests pass.
-- [ ] Client adapter and UI tests cover loading, empty, stale, denied, and error states.
-- [ ] Manual keyboard and responsive review passes.
+- [x] The 14-assertion `console-tenant-operations` SQL check covers shell-only, tenant-only, expired, exact-tenant, cross-tenant, demo, aggregate-support, grants, search-path, and content-boundary cases; the related grants and definer checks also pass.
+- [x] Client adapter, workspace registry, component, screen, and accessibility tests cover loading, empty, stale, missing/invalid/future freshness, denied, generic error, scope/filter, capability gating, and failure announcements.
+- [x] Manual keyboard and responsive review passes at 1,440×900 and 390×844. Tab order reaches the demo opt-in then refresh action; focus is visible; the narrow view remains single-column without horizontal clipping. The review caught and fixed the refresh-control contrast regression.
+- [x] Full frontend regression passes: 1,263 files, 19,691 tests passed, 48 intentionally skipped. TypeScript, focused lint, and the production build pass.
+- [ ] Full `supabase/check.sh`: B1 and related policy suites pass, but the command remains red on the unchanged `financial-retention.check.sql` and `ledger-seals.check.sql` failures that reproduce on the baseline.
 
 **Dependencies:** A4
 **Files likely touched:** one migration, one SQL check, one client module/test, one workspace component/test
 **Estimated scope:** Medium; split backend and UI if more than five files
+
+**Security verification:** HawkScan v6.5.0 scan `1cf46015-fbfc-4ade-93a8-fb140157c181` passed against exact UI commit `91e8f6ec` on 2026-10-03. It reported no NEW findings; the same three Medium `style-src unsafe-inline` paths remain human Risk Accepted. The quality gate observed 45 served URIs, Ajax Spider coverage, 1,505 requests, zero timeouts, one isolated connection failure, and no auth-wall or all-4xx condition. The scan covers the built SPA surface, not an authenticated privileged session; direct PostgreSQL policy tests hold the RPC authorization and content boundaries.
+
+**Dependency audit note:** no dependency changed. A fresh package audit could not be executed with the bundled runtime because the app has `package-lock.json` rather than a pnpm lockfile and that runtime does not include the npm CLI; no audit pass is claimed.
 
 ## B2: Support case workspace
 

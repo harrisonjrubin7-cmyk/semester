@@ -51,7 +51,7 @@ Current-main reconciliation
 
 ### Phase B — Pilot operating backbone
 
-- [ ] B1: Tenant and pilot operations read workspace.
+- [x] B1: Tenant and pilot operations read workspace.
 - [ ] B2: Support case workspace with metadata-first diagnosis.
 - [ ] B3: Privacy/data-rights request workspace.
 - [ ] B4: Integration health and sync-exception workspace.
