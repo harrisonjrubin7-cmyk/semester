@@ -11,7 +11,7 @@
 | Approval authority | Founder/authorized governing body |
 | Dependencies | service inventory, owner/back-up matrix, vendor inventory, disaster recovery, incident response, crisis communications |
 
-## Objective
+## Purpose and objective
 
 Maintain safe minimum operations, protect people and data, communicate accurately, and recover or wind down responsibly during staff loss, cyber/privacy incident, vendor failure, regional disruption, financial distress, facility/device loss or other material interruption.
 

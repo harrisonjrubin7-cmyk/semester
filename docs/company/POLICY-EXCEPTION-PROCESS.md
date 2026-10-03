@@ -11,7 +11,7 @@
 | Approval authority | Policy owner plus risk/domain authority; founder/governing authority where required |
 | Dependencies | policy inventory, risk register, authority matrix, evidence register, incident process |
 
-## Principle
+## Purpose and principle
 
 An exception is a temporary, explicit decision—not an undocumented workaround. It cannot authorize unlawful conduct, deceptive claims, unknown customer/data authority, hidden accessibility exclusion, unsupported high-impact AI, or bypass of a required outside approval.
 

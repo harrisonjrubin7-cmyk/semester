@@ -5,10 +5,15 @@
 | Control | Draft value |
 | --- | --- |
 | Version | 0.1 |
+| Effective date | `[TO BE APPROVED]` |
 | Owner | Incident communications lead |
 | Review frequency | Quarterly and after each exercise/incident |
 | Approval authority | Incident commander plus required legal/privacy/security/customer authority |
 | Dependencies | incident response, continuity plan, contract and notification register, verified facts |
+
+## Purpose
+
+Provide an approval-controlled structure for accurate, timely, audience-specific crisis communications without speculation, unsupported legal conclusions, false recovery promises, or disclosure beyond verified authority.
 
 ## Communication record
 

@@ -11,7 +11,7 @@
 | Approval authority | Founder/authorized governing body; domain authority for treatment acceptance |
 | Dependencies | annual plan, evidence register, incident/vendor/legal queues, owner matrix |
 
-## Method
+## Purpose and method
 
 Rate likelihood and impact from 1–5 using approved definitions. Inherent score precedes controls; residual score reflects evidenced controls only. Label evidence **DESIGNED**, **IMPLEMENTED**, **OPERATED**, **INDEPENDENTLY REVIEWED**, or **ACCEPTED**. Missing evidence cannot reduce residual risk.
 
