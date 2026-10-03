@@ -2,6 +2,10 @@
 
 # Semester legal review intake template — draft
 
+## Plain-language summary
+
+This template gives qualified reviewers the facts, evidence, scope, and decision needed for a legal review. Submitting it does not create privilege, supply missing authority, approve the proposal, or permit publication, signature, payment, processing, or activation.
+
 ## Request record
 
 - **Requester/owner/backup:** `[TBD]`
@@ -29,6 +33,10 @@ Describe the exact proposal, current behavior, desired outcome, users, data, sys
 | critical | unlawful/unauthorized processing, safety risk, signature/payment without authority, material misrepresentation | stop affected action; escalate immediately |
 | high | institutional data, minors, incident, high-impact AI, nonstandard liability/IP/security/privacy/accessibility term | qualified review before commitment |
 | standard | approved-template use within unchanged facts and scope | confirm version/authority and retain approval evidence |
+
+## Product-behavior and evidence mapping
+
+Repository links can establish documented design or implementation at a named revision. The intake must separately identify deployment, operation, customer/institution, professional, contractual, company, jurisdiction, age, and ownership evidence and mark anything absent as unresolved.
 
 ## Required output and blockers
 

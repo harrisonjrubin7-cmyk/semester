@@ -6,6 +6,10 @@
 - **Approval authority:** qualified counsel and accountable company owners
 - **System of record:** `[CONTROLLED CALENDAR/REGISTER TO BE APPROVED]`
 
+## Plain-language summary
+
+This calendar would turn confirmed obligations into owned, evidenced deadlines and reviews. It does not determine which law, filing, contract term, jurisdiction, or date applies and does not prove completion.
+
 ## Purpose
 
 This calendar prevents legal, contractual, privacy, security, accessibility, corporate, tax, insurance, employment, IP, and customer obligations from depending on memory. It is a template and does not establish which laws apply or prove that any filing, review, renewal, notice, or obligation has been completed.
@@ -28,6 +32,14 @@ This calendar prevents legal, contractual, privacy, security, accessibility, cor
 - Contract renewals/nonrenewals, price/term notices, SLAs, reporting, audit rights, deliverables, credits, and offboarding.
 - IP assignments, licenses, open-source notices, domains, trademarks, takedowns, and content permissions.
 - AI inventories, provider/model/terms changes, evaluations, notices, approvals, and incident reviews.
+
+## Product-behavior and evidence mapping
+
+| Evidence source | What it supports | Limitation |
+| --- | --- | --- |
+| repository policies, tests and dates | candidate triggers and technical dependencies | not a legal applicability or deadline determination |
+| executed contracts and customer records | obligations for the named parties/scope | must be abstracted into an owned calendar entry |
+| counsel, accountant, broker or regulator records | professional/external determination within its scope | record effective date, jurisdiction, assumptions and expiry |
 
 ## Control rules and blockers
 

@@ -5,6 +5,10 @@
 - **Owner:** Legal coordinator with the accountable claim owner
 - **Applies to:** product, website, sales, procurement, contracts, demos, press, social, grants, hiring, investor, support, status, and in-product language
 
+## Plain-language summary
+
+Every material claim must stay within what current evidence proves for the exact product, environment, audience, period, and scope. This policy does not make a claim true or approved; it defines the record and reviewers required before use.
+
 ## Rule
 
 No material claim may be published, submitted, demonstrated as fact, incorporated into an agreement, or repeated after its evidence expires unless the accountable owner and required specialists approve the exact wording, scope, audience, channel, evidence, limitations, and review period.

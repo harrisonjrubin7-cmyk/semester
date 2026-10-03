@@ -2,6 +2,10 @@
 
 # Semester marketing claim review matrix — draft
 
+## Plain-language summary
+
+This matrix identifies the evidence and reviewers needed for common marketing claims. It does not approve any campaign, audience, targeting data, consent, price, customer reference, or product claim.
+
 ## Review matrix
 
 | Claim class | Required evidence | Required reviewers | Current default |
@@ -24,6 +28,14 @@ Is the ordinary audience takeaway true? Are qualifications prominent, understand
 
 Record exact copy/creative, landing page or destination, audience, targeting data, channel/vendor, consent/legal basis, substantiation, required disclosures, accessibility review, approvers, launch/expiry, monitoring, variants, and takedown owner. A claim approved for one context is not automatically approved for another.
 
+## Product-behavior and evidence mapping
+
+Code and tests may support a narrowly worded implementation claim at a named revision. Marketing also requires current deployment and availability evidence, audience-appropriate qualifications, legal/channel authority, operating support, and—where claimed—independent, customer, financial, or outcome evidence.
+
 ## Current motion boundaries
 
 Controlled individual beta may be described only with accurate beta limitations. Design-partner discovery, demos, evidence review, and scoping may be marketed without implying activation or customer status. Broad paid acquisition, paid institutional pilots, and broad enterprise sales remain **RED / NO-GO**.
+
+## Publication blockers
+
+Exact copy and audience; current substantiation; qualified legal and specialist review; approved consent/targeting/vendor/data use; accessible prominent disclosures; rights-holder permission; product and support readiness; pricing authority; channel compliance; expiry and monitoring; and a working takedown/correction owner.
