@@ -9,6 +9,8 @@ app:
 hawk:
   startupTimeoutMinutes: 3
   failureThreshold: low
+  config:
+    - pscans.maxAlertsPerRule=0
   spider:
     ajax: true
     maxDurationMinutes: 4

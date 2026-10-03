@@ -49,6 +49,7 @@ test('the company configuration does not reuse the app environment or suppress f
   assert.match(config, /env: CompanySiteCI/);
   assert.match(config, /ajax: true/);
   assert.match(config, /failureThreshold: low/);
+  assert.match(config, /pscans\.maxAlertsPerRule=0/);
   assert.doesNotMatch(config, /excludePaths|excludePlugins/);
   for (const path of companyAssets) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
   for (const path of capturePaths) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
