@@ -14,10 +14,10 @@ Before activation, the customer and Semester must approve the eligible populatio
 | Measure | Required definition | Current state |
 | --- | --- | --- |
 | eligible cohort activation | consented participants completing approved setup / eligible invited population | **[BASELINE, TARGET, OWNER, SOURCE REQUIRED]**; invitation is not activation |
-| first win | participant who completed approved minimum setup then validates the approved first-week plan and intentionally completes, schedules, snoozes or defers at least one prioritized reversible Today/This Week action | proposed definition aligned to the product specification; each decision outcome must remain distinguishable; target event and sample QA unaccepted |
+| first win | participant who completed approved minimum setup, reaches Today, understands one relevant prioritized reversible action and intentionally completes, schedules, snoozes or defers it | proposed definition aligned to the product specification; a full first-week plan is not an extra gate; each decision outcome must remain distinguishable; target event and sample QA unaccepted |
 | meaningful weekly planning | participant completes an approved planning action; raw login excluded | proposed aggregate; field source unaccepted |
 | approved readiness progress | approved non-authoritative checklist progress | not proof of official registration or eligibility |
-| time to first value | consented start to validated first win, excluding test/support accounts | unmeasured |
+| time to first value | consented start to validated first win within a fixed observation window; incomplete attempts remain censored and their count/share is reported beside the completion-time distribution | unmeasured; exclude test/support and invalid attempts only |
 | reliability/recovery | successful core attempts plus user-safe recovery under approved SLI | objective only; no achieved SLA/uptime |
 | support burden | volume/severity, staffed-hours response and unresolved age | channel/hours/targets/owners unapproved |
 | trust/usefulness | approved survey/interview on clarity, agency, source visibility and friction | self-reported, non-causal |

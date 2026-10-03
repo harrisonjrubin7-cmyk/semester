@@ -13,8 +13,8 @@ Every implemented metric must add: metric/event version, purpose/decision, eligi
 | --- | --- | --- |
 | eligible cohort | participants meeting frozen pilot eligibility and invitation rules | approved roster/cohort required; not repository counts |
 | activation rate | approved minimum-setup completions / eligible invited population | invitation delivery/login alone excluded; field event unaccepted |
-| first-win rate | participants who validate the approved first-week plan and intentionally complete, schedule, snooze or defer at least one prioritized reversible action / participants completing approved minimum setup | decision outcomes must be versioned and reported separately; report setup-to-first-win loss; QA required |
-| time to first value | elapsed consented start to first win among valid completions; distribution, not only mean | exclude tests/support; timestamps unaccepted |
+| first-win rate | participants who reach Today, understand one relevant prioritized reversible action and intentionally complete, schedule, snooze or defer it / participants completing approved minimum setup | a full first-week plan is not an extra gate; decision outcomes must be versioned and reported separately; report setup-to-first-win loss; QA required |
+| time to first value | elapsed consented start to first win within a fixed observation window; report completion-time distribution plus incomplete attempts as censored, with censored count/share | exclude tests/support and invalid attempts; timestamps and censoring policy unaccepted |
 | Weekly Prepared Action Rate | eligible activated participants completing a weekly plan and ≥1 self-selected relevant next action / eligible activated participants in week | proposed north star; privacy-safe field source absent |
 | meaningful retention | prior eligible activated participants with an approved useful action in later window / prior eligible activated participants | raw return/login excluded; cohort/window required |
 | support burden | cases by severity plus staffed-hours acknowledgement/resolution and unresolved age per approved population | staffed support system/hours absent |

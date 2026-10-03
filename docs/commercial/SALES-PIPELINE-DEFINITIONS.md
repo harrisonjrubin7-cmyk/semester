@@ -33,7 +33,7 @@ This document uses the exact controlled vocabulary in `app/src/lib/gtm/stages.ts
 
 There is no separate `closed_won` or `implementation_pending` value in the implemented model. `contracted` is the successful commercial decision; `implementation` begins delivery after an accepted handoff. The later `live`, `renewal` and `expansion` states preserve one governed GTM lifecycle. None by itself proves activation, delivery acceptance, billing, cash collection, recognized revenue or enterprise readiness.
 
-Movement requires the exit evidence; never advance to improve a forecast. Regress when facts change. Record stage-entered time, next action/date, owner, amount/currency/status, probability source, scope, risk, decision date and evidence links. Any amount, probability or close date without authority is labeled **assumption** and excluded from actual revenue/customer claims.
+Movement requires the exit evidence; never advance to improve a forecast. The implemented transition helper does not permit backward moves. When required evidence later fails, pause the account, record the correction and block forward movement; close the opportunity when the decision is no longer valid, and create a fresh `target_account` only if a later authorized motion begins. Record stage-entered time, next action/date, owner, amount/currency/status, probability source, scope, risk, decision date and evidence links. Any amount, probability or close date without authority is labeled **assumption** and excluded from actual revenue/customer claims.
 
 ## Forecast and hygiene
 

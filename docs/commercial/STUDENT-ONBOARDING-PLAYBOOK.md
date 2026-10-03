@@ -26,7 +26,7 @@ Every step requires loading/empty/validation/service-error/offline/degraded/back
 
 ## Measurement and stop rules
 
-Activation requires approved minimum setup once per eligible participant/account/device rule. First win is measured separately after activation and requires the approved first-week plan plus an intentional complete, schedule, snooze or defer decision on one reversible next action. Preserve those outcomes as separate coarse values rather than collapsing them into completion. Record only approved coarse flags, timestamp and tenant/cohort/setup method—never course/task content. Freeze both denominators, report setup-to-first-win loss, exclude tests/support, suppress small cells and validate a sample. Stop rollout for critical accessibility/privacy/security/rights failure, misleading authority, unsafe recommendation, data loss or unstaffed support.
+Activation requires approved minimum setup once per eligible participant/account/device rule. First win is measured separately after activation and requires reaching Today, understanding one relevant reversible next action and intentionally completing, scheduling, snoozing or deferring it; a full first-week plan is not an extra gate. Preserve those outcomes as separate coarse values rather than collapsing them into completion. Record only approved coarse flags, timestamp and tenant/cohort/setup method—never course/task content. Freeze both denominators, report setup-to-first-win loss, exclude tests/support, suppress small cells and validate a sample. Stop rollout for critical accessibility/privacy/security/rights failure, misleading authority, unsafe recommendation, data loss or unstaffed support.
 
 ## Evidence state
 
