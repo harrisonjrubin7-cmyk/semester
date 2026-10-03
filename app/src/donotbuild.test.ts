@@ -63,3 +63,28 @@ describe('rule 10: no advertising or tracking SDK', () => {
     expect(found).toEqual([]);
   });
 });
+
+describe('rule 14: no current student\'s record reaches alumni relations or fundraising', () => {
+  const MIGRATIONS = join(APP, '..', 'supabase', 'migrations');
+  const advancement = (name: string) => /alumni|advancement|fundrais|donor|gift/.test(name);
+  const tables = () => block('student-tables').split('\n').map((l) => l.trim()).filter(Boolean);
+  const reaches = (sql: string) =>
+    tables().filter((t) => new RegExp(`\\bpublic\\.${t}\\b|\\b(from|join|references)\\s+${t}\\b`, 'i').test(sql));
+
+  it('finds the advancement migrations it is holding', () => {
+    expect(readdirSync(MIGRATIONS).filter(advancement).length).toBeGreaterThan(0);
+  });
+
+  it('names no current-student table in any of them', () => {
+    const found = readdirSync(MIGRATIONS)
+      .filter(advancement)
+      .flatMap((f) => reaches(readFileSync(join(MIGRATIONS, f), 'utf8')).map((t) => `${f}: ${t}`));
+    expect(found).toEqual([]);
+  });
+
+  it('would see one if it were written', () => {
+    expect(reaches('select 1 from public.enrollments e')).toEqual(['enrollments']);
+    expect(reaches('create policy p on public.gifts using (exists (select 1 from student_context))')).toEqual(['student_context']);
+    expect(reaches('alumni_profiles references public.schools')).toEqual([]);
+  });
+});
