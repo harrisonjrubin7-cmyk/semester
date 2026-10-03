@@ -87,6 +87,11 @@ export const RELEASE_APPROVER_ROLES = [
 export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
 export type ReleaseProfileId = 'individual-scale' | 'institutional-pilot';
 
+interface ReleaseApproval {
+  role: ReleaseApproverRole;
+  subjectRef: string;
+}
+
 export interface ReleaseProfile {
   readonly id: ReleaseProfileId;
   readonly audience: string;
@@ -228,6 +233,7 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
 
 const SHA = /^[0-9a-f]{40}$/;
 const SECURE_REFERENCE = /^(trust-room|vault|ticket):\/\/[^\s]+$/;
+const isNonBlankString = (value: unknown): value is string => typeof value === 'string' && value.trim().length > 0;
 const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApproverRole[]>> = {
   'deployed-exact-sha': ['operations-owner', 'security-owner'],
   'production-smoke': ['operations-owner'],
@@ -250,8 +256,8 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
 };
 
 function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boolean {
-  if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) return item.reference.trim().length > 0;
-  if (!SECURE_REFERENCE.test(item.reference)) return false;
+  if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) return isNonBlankString(item.reference);
+  if (typeof item.reference !== 'string' || !SECURE_REFERENCE.test(item.reference)) return false;
   if (item.gate === 'canonical-launch-decision') {
     if (!item.launchState) return false;
     try {
@@ -272,8 +278,15 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
   const required = item.gate.startsWith('dependency:')
     ? ['product-owner', 'security-owner'] as const
     : APPROVERS_BY_GATE[item.gate as ActivationGate];
-  const approvals = item.approvals ?? [];
-  if (approvals.some((approval) => approval.subjectRef.trim().length === 0)) return false;
+  const rawApprovals: readonly unknown[] = Array.isArray(item.approvals) ? item.approvals : [];
+  if (!rawApprovals.every((approval): approval is ReleaseApproval => Boolean(
+    approval
+    && typeof approval === 'object'
+    && typeof (approval as Partial<ReleaseApproval>).role === 'string'
+    && (RELEASE_APPROVER_ROLES as readonly string[]).includes((approval as Partial<ReleaseApproval>).role ?? '')
+    && isNonBlankString((approval as Partial<ReleaseApproval>).subjectRef),
+  ))) return false;
+  const approvals = rawApprovals;
   const requiredSet = new Set<ReleaseApproverRole>(required);
   const requiredApprovals = approvals.filter((approval) => requiredSet.has(approval.role));
   const supplied = new Set(requiredApprovals.map((approval) => approval.role));
@@ -361,15 +374,17 @@ export function evaluateReleaseProfile(
   const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
   const targetBound = Boolean(target
     && target.environment === expectedEnvironment
+    && typeof target.deployedSha === 'string'
     && SHA.test(target.deployedSha)
-    && target.deployedSha.trim()
-    && target.configurationVersion.trim()
+    && isNonBlankString(target.configurationVersion)
     && (profile.id === 'institutional-pilot'
-      ? (target.tenantId?.trim() && target.cohortId?.trim() && target.registrationWriteback === 'disabled')
+      ? (isNonBlankString(target.tenantId)
+        && isNonBlankString(target.cohortId)
+        && target.registrationWriteback === 'disabled')
       : target.tenantId === undefined
         && target.cohortId === undefined
         && target.registrationWriteback === undefined));
-  const technicalTargetBound = Boolean(target && SHA.test(target.deployedSha));
+  const technicalTargetBound = Boolean(target && typeof target.deployedSha === 'string' && SHA.test(target.deployedSha));
   const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !technicalTargetBound
     || !counts(evidence, gate, asOf, undefined, target?.deployedSha));
   const missingActivation = profile.requiredActivationGates.filter((gate) => !targetBound || !counts(evidence, gate, asOf, target));

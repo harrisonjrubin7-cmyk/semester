@@ -173,6 +173,17 @@ describe('pilot and individual release profiles', () => {
       ...evidence[agreementIndex], approvals: [{ role: 'executive-owner', subjectRef: 'executive-owner-subject' }],
     });
     expect(evaluateReleaseProfile(profile.id, missingRole, AS_OF, target).rolloutStatus).toBe('held');
+    for (const approvals of [
+      [null],
+      [{ role: 'executive-owner', subjectRef: null }],
+      { role: 'executive-owner', subjectRef: 'not-an-array' },
+    ]) {
+      const malformedApproval = evidence.with(agreementIndex, {
+        ...evidence[agreementIndex], approvals: approvals as unknown as ReleaseEvidence['approvals'],
+      });
+      expect(() => evaluateReleaseProfile(profile.id, malformedApproval, AS_OF, target)).not.toThrow();
+      expect(evaluateReleaseProfile(profile.id, malformedApproval, AS_OF, target).rolloutStatus).toBe('held');
+    }
     const sameApprover = evidence.with(agreementIndex, {
       ...evidence[agreementIndex],
       approvals: [
@@ -257,6 +268,14 @@ describe('pilot and individual release profiles', () => {
     expect(evaluateReleaseProfile(profile.id, malformed, AS_OF, target).technicalStatus).toBe('not-ready');
     const impossible = technical(target).map((item, index) => index === 0 ? { ...item, expiresAt: '2026-02-30' } : item);
     expect(evaluateReleaseProfile(profile.id, impossible, AS_OF, target).technicalStatus).toBe('not-ready');
+    const malformedReference = technical(target).map((item, index) => index === 0
+      ? { ...item, reference: null as unknown as string }
+      : item);
+    expect(() => evaluateReleaseProfile(profile.id, malformedReference, AS_OF, target)).not.toThrow();
+    expect(evaluateReleaseProfile(profile.id, malformedReference, AS_OF, target).technicalStatus).toBe('not-ready');
+    const malformedTarget = { ...target, configurationVersion: null as unknown as string };
+    expect(() => evaluateReleaseProfile(profile.id, technical(malformedTarget), AS_OF, malformedTarget)).not.toThrow();
+    expect(evaluateReleaseProfile(profile.id, technical(malformedTarget), AS_OF, malformedTarget).targetBound).toBe(false);
   });
 
   it('rejects future-dated evidence and lets the latest denial override an older current record', () => {
