@@ -8,7 +8,7 @@ The complete 60-row operational inventory is in [capability-inventory.md](capabi
 
 ## Required operational schema
 
-Each capability must expose: ID/name/plane, roles, routes, native baseline, connected mode, repository maturity, runtime exposure (`live`, `connected`, `pilot`, `early_access`, `institution_controlled`, `planned_but_not_exposed`), entitlement, tenant/cohort configuration, authority/source/provenance, classification, web/PWA/native/offline/AI support, analytics, support/SLO, owner seats, rollback/offboarding, sign-offs, evidence references and expiry.
+Each capability must expose: ID/name/plane, roles, routes, native baseline, connected mode, repository maturity, runtime exposure (`live`, `connected`, `pilot`, `early_access`, `institution_controlled`, `hidden`, `retired`), entitlement, tenant/cohort configuration, authority/source/provenance, classification, web/PWA/native/offline/AI support, analytics, support/SLO, owner seats, rollback/offboarding, sign-offs, evidence references and expiry.
 
 Runtime exposure is independent from repository maturity. `L4` source can remain unexposed; `live` requires current evidence and real human owners.
 
@@ -40,4 +40,4 @@ Runtime exposure is independent from repository maturity. `L4` source can remain
 | Ownership | Seat placeholders | Named humans accepting duties |
 | Measurement | Taxonomies/tests | Production baselines and valid outcomes |
 
-Phase B must extend the existing typed registry rather than create a parallel truth source. Every route, navigation item, marketing claim, AI tool and tenant control resolves the same exposure decision; missing or expired evidence fails closed.
+Phase B extends the existing typed registry rather than creating a parallel truth source. The first executable slice is `app/src/lib/governance/capability-exposure.ts`: it joins capability maturity, release-profile scope, exact target binding, tenant/cohort authorization, connection health, native fallback, AI availability, kill-switch state and the eight operational evidence categories into the seven canonical exposure states: `live`, `connected`, `pilot`, `early_access`, `institution_controlled`, `hidden`, and `retired`. It also indexes every registered route and fails closed when scope or evidence is missing. Navigation, marketing, AI and tenant-control callers must use this resolver instead of inferring availability from route presence or repository maturity.
