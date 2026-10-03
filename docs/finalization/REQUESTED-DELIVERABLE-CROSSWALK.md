@@ -19,11 +19,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 4 | `docs/company/FOUNDER-DECISION-LOG-TEMPLATE.md` | EXACT PRESENT | canonical company-decision template; formal consents and technical ADRs remain separate |
 | 5 | `docs/company/BOARD-OR-ADVISOR-UPDATE-TEMPLATE.md` | EXACT PRESENT | canonical update template; no board/advisor body is asserted |
 | 6 | `docs/company/ANNUAL-OPERATING-PLAN.md` | EXACT PRESENT | canonical planning framework; targets and financial inputs remain unapproved |
-| 7 | `docs/company/QUARTERLY-OPERATING-REVIEW.md` | NO CLOSE SOURCE | — |
-| 8 | `docs/company/BUDGET-AND-CASH-RUNWAY-TEMPLATE.md` | NO CLOSE SOURCE | — |
-| 9 | `docs/company/FINANCIAL-CONTROLS.md` | NO CLOSE SOURCE | — |
-| 10 | `docs/company/EXPENSE-APPROVAL-POLICY.md` | NO CLOSE SOURCE | — |
-| 11 | `docs/company/PROCUREMENT-AND-VENDOR-MANAGEMENT-POLICY.md` | NO CLOSE SOURCE | — |
+| 7 | `docs/company/QUARTERLY-OPERATING-REVIEW.md` | EXACT PRESENT | canonical decision-oriented quarterly review template |
+| 8 | `docs/company/BUDGET-AND-CASH-RUNWAY-TEMPLATE.md` | EXACT PRESENT | canonical forecast template; no financial values are asserted |
+| 9 | `docs/company/FINANCIAL-CONTROLS.md` | EXACT PRESENT | canonical control draft; operation requires external records and acceptance |
+| 10 | `docs/company/EXPENSE-APPROVAL-POLICY.md` | EXACT PRESENT | canonical policy draft; thresholds remain unapproved |
+| 11 | `docs/company/PROCUREMENT-AND-VENDOR-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical policy draft; vendor assessments remain unverified |
 | 12 | `docs/company/VENDOR-RISK-ASSESSMENT-TEMPLATE.md` | CANDIDATE SOURCE | `docs/trust/VENDOR-RISK-REGISTER.md` (filename similarity 0.53; substantive review required) |
 | 13 | `docs/company/VENDOR-INVENTORY-TEMPLATE.md` | NO CLOSE SOURCE | — |
 | 14 | `docs/company/INSURANCE-READINESS-CHECKLIST.md` | CANDIDATE SOURCE | `docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md` (filename similarity 0.60; substantive review required) |
