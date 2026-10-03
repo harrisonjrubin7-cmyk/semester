@@ -9,7 +9,7 @@ Before launch, the sponsor and Semester must record a baseline, target, owner, s
 | Measure | Definition | Source | Owner | Cadence | Caveat |
 | --- | --- | --- | --- | --- | --- |
 | Eligible cohort activated | consented participants who complete required setup / eligible invited cohort | approved roster + activation event | customer champion | weekly | distinguish invitation delivery from product activation |
-| First win | activated students who leave with at least one prioritized Today/This Week action after minimum setup | proposed event taxonomy + UAT sample | product owner | weekly | event requires target-environment validation before use |
+| First win | participants who complete approved minimum setup, confirm the first-week plan and intentionally complete, schedule, snooze or defer at least one prioritized reversible Today/This Week action | proposed `student_first_win` event + UAT sample | product owner | weekly | denominator is setup-only activation; outcomes remain separate; event requires target-environment validation before use |
 | Weekly planning engagement | activated students completing a meaningful planning action in the week | privacy-reviewed aggregate event | product + privacy | weekly | raw logins do not count |
 | Registration/readiness checklist progress | completion of approved, non-authoritative readiness steps | checklist aggregate | customer champion | weekly | not proof of official registration or eligibility |
 | Time to first value | elapsed time from consented start to first win | event timestamps | product owner | weekly | exclude support/testing accounts |

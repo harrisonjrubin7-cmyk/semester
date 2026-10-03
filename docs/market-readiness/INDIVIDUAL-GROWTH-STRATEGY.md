@@ -8,7 +8,7 @@
 
 1. Land on a use-case page: registration, first week, workload, deadlines or degree planning.
 2. Start locally/manual-first with plain-language permissions.
-3. Reach activation: one course/calendar source, a confirmed first-week plan and one completed recommended action.
+3. Reach setup-only activation: one approved course/calendar source; then measure first win separately when the student confirms a first-week plan and intentionally completes, schedules, snoozes or defers one recommended reversible action.
 4. Return through the ethical loop: capture → organize → plan → act → reflect → improve.
 5. Invite or share only an intentionally selected, privacy-safe object—not a transcript, grades or private plan.
 

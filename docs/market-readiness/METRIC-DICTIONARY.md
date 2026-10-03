@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | eligible cohort | people validly included in the signed cohort at the measurement cutoff | staff, tests, withdrawn/ineligible people | customer-approved source required |
 | activated student | eligible student who completes consent/notice and minimum required setup | invitation/open/login only | proposed |
-| first win | activated student who creates a usable prioritized Today/This Week action after minimum setup | demo/sample data; staff-assisted test account | proposed; production validation required |
+| first win | setup-activated student who confirms the first-week plan and intentionally completes, schedules, snoozes or defers a usable prioritized reversible Today/This Week action | proposed `student_first_win` event; demo/sample data and staff-assisted test accounts are not field evidence | proposed; target-environment and sample validation required |
 | meaningful engagement | approved workflow completion such as planning, task prioritization, checklist progress, or support discovery | passive page view or raw login | proposed |
 | weekly engaged student | activated student with at least one meaningful engagement in the reporting week | support/staff/test activity | proposed |
 | time to first value | elapsed time from consented start to first win | time before invitation delivery; paused/invalid attempts | proposed |
