@@ -96,11 +96,26 @@ test('reuses the tagged non-default Semester portal configuration', async () => 
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
     if (url.includes('/billing_portal/configurations')) return response({ data: [{ id: 'bpc_semester', active: true,
       is_default: false, metadata: { semester_product: 'semester' }, features: { invoice_history: { enabled: true },
-        payment_method_update: { enabled: true }, customer_update: { enabled: true, allowed_updates: ['address'] } } }], has_more: false });
+        payment_method_update: { enabled: true }, customer_update: { enabled: true, allowed_updates: ['address'] },
+        subscription_update: { enabled: false }, subscription_cancel: { enabled: false } } }], has_more: false });
     return response({ data: [], has_more: false });
   } });
   assert.equal(result.portalConfigured, true);
   assert.equal(calls.some(call => call.method === 'POST'), false);
+});
+
+test('does not accept a portal that can change or cancel the Semester subscription', async () => {
+  const result = await activateLive(env, { fetch: async (url) => {
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/billing_portal/configurations')) return response({ data: [{ id: 'bpc_unsafe', active: true,
+      metadata: { semester_product: 'semester' }, features: { invoice_history: { enabled: true },
+        payment_method_update: { enabled: true }, customer_update: { enabled: true, allowed_updates: ['address'] },
+        subscription_update: { enabled: true }, subscription_cancel: { enabled: true } } }], has_more: false });
+    return response({ data: [], has_more: false });
+  } });
+  assert.equal(result.portalConfigured, false);
 });
 
 test('a portal setup failure cannot create a webhook whose one-time secret would be lost', async () => {
@@ -231,7 +246,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     if (url.includes('/billing_portal/configurations?')) return response({ data: [], has_more: false });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_1', active: true,
       features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true },
-        customer_update: { enabled: true, allowed_updates: ['address'] } } });
+        customer_update: { enabled: true, allowed_updates: ['address'] },
+        subscription_update: { enabled: false }, subscription_cancel: { enabled: false } } });
     if (url.endsWith('/billing_portal/sessions')) return response({
       error: { code: 'resource_missing', param: 'customer' },
     }, 400);
@@ -285,6 +301,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(portalBody.get('metadata[semester_product]'), 'semester');
   assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');
   assert.equal(portalBody.get('features[customer_update][allowed_updates][0]'), 'address');
+  assert.equal(portalBody.get('features[subscription_update][enabled]'), 'false');
+  assert.equal(portalBody.get('features[subscription_cancel][enabled]'), 'false');
   assert.equal(calls.filter(call => call.url.endsWith('/webhook_endpoints')).length, 1);
   assert.ok(calls.findIndex(call => call.url.endsWith('/billing_portal/configurations')) <
     calls.findIndex(call => call.url.endsWith('/webhook_endpoints')));

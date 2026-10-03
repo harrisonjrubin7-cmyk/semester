@@ -227,10 +227,12 @@ export function MembershipPanel() {
     : sub
     ? sub.cancelAtPeriodEnd
       ? `Cancelled. Plus stays on until ${when(sub.periodEnd)}.`
-      : sub.billingIssue === 'address_required'
-        ? 'Stripe needs your current billing address to calculate tax. Open billing history below and update your address; your card has not failed.'
       : sub.status === 'past_due' || sub.status === 'grace'
-        ? 'Your last payment did not go through. Stripe will try again; update your card from the link in Stripe’s email.'
+        ? sub.billingIssue === 'address_required'
+          ? 'Your last payment did not go through, and another invoice needs your current billing address. Update your card from Stripe’s email, then open billing history below to update your address.'
+          : 'Your last payment did not go through. Stripe will try again; update your card from the link in Stripe’s email.'
+        : sub.billingIssue === 'address_required'
+          ? 'Stripe needs your current billing address to calculate tax. Open billing history below and update your address; your card has not failed.'
         : `Renews on ${when(sub.periodEnd)}.`
     : onSale
       ? `Plus is ${prices.map(priceWords).join(' or ')}. Free stays free.`

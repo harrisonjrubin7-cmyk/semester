@@ -146,7 +146,9 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   let portalReady = portal?.features?.invoice_history?.enabled === true &&
     portal?.features?.payment_method_update?.enabled === true &&
     portal?.features?.customer_update?.enabled === true &&
-    portal?.features?.customer_update?.allowed_updates?.includes('address');
+    portal?.features?.customer_update?.allowed_updates?.includes('address') &&
+    portal?.features?.subscription_update?.enabled === false &&
+    portal?.features?.subscription_cancel?.enabled === false;
 
   // Follow pagination; never mistake page one for the complete endpoint list.
   let matches = [], cursor;
@@ -240,6 +242,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
       'features[invoice_history][enabled]': 'true',
       'features[payment_method_update][enabled]': 'true',
       'features[customer_update][enabled]': 'true',
+      'features[subscription_update][enabled]': 'false',
+      'features[subscription_cancel][enabled]': 'false',
       'metadata[semester_product]': 'semester',
       default_return_url: c.returnUrl,
     });
@@ -252,7 +256,9 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     portalReady = portal?.active === true && portal?.features?.invoice_history?.enabled === true &&
       portal?.features?.payment_method_update?.enabled === true &&
       portal?.features?.customer_update?.enabled === true &&
-      portal?.features?.customer_update?.allowed_updates?.includes('address');
+      portal?.features?.customer_update?.allowed_updates?.includes('address') &&
+      portal?.features?.subscription_update?.enabled === false &&
+      portal?.features?.subscription_cancel?.enabled === false;
     if (!portalReady) throw new Error('Stripe did not return a usable billing portal configuration. Project secrets were not changed.');
   }
   if (!/^bpc_[A-Za-z0-9]+$/.test(portal?.id || ''))

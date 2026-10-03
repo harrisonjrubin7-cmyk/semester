@@ -79,7 +79,7 @@ describe('the billing webhook', () => {
     expect(res.status).toBe(200);
     expect(calls).toEqual(['invoice']);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'payment_failed', 'sub_1', 'in_1', 799, 0, 'usd', expect.any(String), expect.any(String),
+      'evt_1', 'payment_failed', 'sub_1', 'in_1', 'open', 799, 0, 'usd', expect.any(String), expect.any(String),
       new Date((NOW - 5) * 1000).toISOString(), 1, 799, createHash('sha256').update(body).digest('hex'));
     expect(d.applyEvent).not.toHaveBeenCalled();
   });
@@ -94,7 +94,7 @@ describe('the billing webhook', () => {
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'address_required', 'sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String),
+      'evt_1', 'address_required', 'sub_1', 'in_tax', 'draft', 750, 65, 'usd', expect.any(String), expect.any(String),
       expect.any(String), 0, 815, expect.any(String));
   });
 
@@ -106,7 +106,7 @@ describe('the billing webhook', () => {
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'payment_succeeded', 'sub_1', 'in_paid', 799, 65, 'usd', expect.any(String), expect.any(String),
+      'evt_1', 'payment_succeeded', 'sub_1', 'in_paid', 'paid', 799, 65, 'usd', expect.any(String), expect.any(String),
       expect.any(String), 2, 864, expect.any(String));
   });
 
@@ -119,7 +119,7 @@ describe('the billing webhook', () => {
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'other', 'sub_1', 'in_tax_outage', 799, 0, 'usd', expect.any(String), expect.any(String),
+      'evt_1', 'other', 'sub_1', 'in_tax_outage', 'draft', 799, 0, 'usd', expect.any(String), expect.any(String),
       expect.any(String), 0, 799, expect.any(String));
   });
 

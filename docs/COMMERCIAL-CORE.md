@@ -84,7 +84,9 @@ role's alone; nothing is callable by a visitor or a signed-in account.
    `upsert_provider_invoice_v2` (subtotal and tax separately) then
    `apply_payment_event`; a missing tax address is kept distinct from a card
    failure, leaves access active, and asks the student to update their address
-   in Stripe without opening dunning. Refunds and disputes are applied by kind. `apply_payment_event`
+   in Stripe without opening dunning. The issue is tied to that invoice, so an
+   unrelated invoice cannot clear it. Failed finalization remains `draft` until
+   a later provider event advances it. Refunds and disputes are applied by kind. `apply_payment_event`
    runs last and is the idempotency key, so a half-applied event is finished by
    the provider's retry. An invoice event that arrives before the checkout
    event that creates its subscription is answered 500 with nothing recorded,

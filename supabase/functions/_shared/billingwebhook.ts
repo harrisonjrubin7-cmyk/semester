@@ -54,6 +54,7 @@ export interface WebhookDeps {
   ): Promise<unknown>;
   applyInvoiceEvent(
     eventId: string, kind: PaymentKind, subscriptionRef: string, invoiceRef: string,
+    invoiceStatus: 'draft' | 'open' | 'paid',
     subtotalCents: number | null, taxCents: number | null, currency: string | null,
     issuedAt: string | null, dueAt: string | null, snapshotAt: string, snapshotRank: number,
     amountCents: number | null, sha256: string,
@@ -160,6 +161,7 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
       // The database uses this lifecycle rank before event time when deciding
       // whether the snapshot may replace stored invoice amounts.
       const snapshotRank = paid ? 2 : type === 'invoice.payment_failed' ? 1 : 0;
+      const invoiceStatus = finalizationFailed ? 'draft' : paid ? 'paid' : 'open';
       amount = num(paid ? o.amount_paid : o.amount_due);
       const sub = invoiceSubscription(o);
       const id = str(o.id);
@@ -168,7 +170,7 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
         const subtotal = num(o.total_excluding_tax) ?? num(o.subtotal_excluding_tax) ??
           num(o.subtotal) ?? Math.max((num(o.amount_due) ?? 0) - tax, 0);
         const outcome = await deps.applyInvoiceEvent(
-          eventId, kind, sub, id, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
+          eventId, kind, sub, id, invoiceStatus, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
           isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created), eventAt, snapshotRank, amount, sha,
         );
         if (outcome === 'not_ready') {

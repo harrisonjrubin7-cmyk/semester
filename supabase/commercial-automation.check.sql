@@ -100,7 +100,7 @@ begin
      or not pg_temp.refused($q$select public.upsert_provider_invoice('sub_x', 'in_x', 1, 'usd', now(), now())$q$)
      or not pg_temp.refused($q$select public.upsert_provider_invoice_v2('sub_x', 'in_x', 1, 0, 'usd', now(), now())$q$)
      or not pg_temp.refused($q$select public.apply_invoice_payment_event_v2('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 1, 0, 'usd', now(), now(), 1, repeat('a', 64))$q$)
-     or not pg_temp.refused($q$select public.apply_invoice_payment_event_v3('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 1, 0, 'usd', now(), now(), now(), 0::smallint, 1, repeat('a', 64))$q$)
+     or not pg_temp.refused($q$select public.apply_invoice_payment_event_v3('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 'draft', 1, 0, 'usd', now(), now(), now(), 0::smallint, 1, repeat('a', 64))$q$)
      or not pg_temp.refused($q$select public.sync_provider_subscription('sub_x', 'active', null, null, false, now())$q$) then
     raise exception 'FAILED: a signed-in account called a service-only commercial function';
   end if;
@@ -261,16 +261,25 @@ begin
   perform pg_temp.answered('a recovered provider invoice refreshes subtotal and tax separately',
     (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '825:75');
   select public.apply_invoice_payment_event_v3('stripe', 'evt_snapshot_new', 'other', 'sub_test_1', 'in_test_1',
-    900, 90, 'USD', base, base, base + interval '2 minutes', 1::smallint, 990, repeat('7', 64)) into t;
+    'open', 900, 90, 'USD', base, base, base + interval '2 minutes', 1::smallint, 990, repeat('7', 64)) into t;
   select public.apply_invoice_payment_event_v3('stripe', 'evt_snapshot_late_old', 'other', 'sub_test_1', 'in_test_1',
-    1, 0, 'USD', base, base, base + interval '3 minutes', 0::smallint, 1, repeat('8', 64)) into t;
+    'draft', 1, 0, 'USD', base, base, base + interval '3 minutes', 0::smallint, 1, repeat('8', 64)) into t;
   perform pg_temp.answered('a late finalization snapshot cannot replace a newer payment-stage snapshot',
     (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '900:90');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_draft_status', 'other', 'sub_test_1', 'in_status_test',
+    'draft', 799, 0, 'USD', base, base, base, 0::smallint, 799, repeat('3', 64)) into t;
+  perform pg_temp.answered('a failed-finalization snapshot remains a draft',
+    (select status from public.invoices where provider_ref = 'in_status_test'), 'draft');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_open_status', 'other', 'sub_test_1', 'in_status_test',
+    'open', 799, 0, 'USD', base, base, base + interval '1 minute', 1::smallint, 799, repeat('4', 64)) into t;
+  perform pg_temp.answered('a later provider snapshot advances the draft to open',
+    (select status from public.invoices where provider_ref = 'in_status_test'), 'open');
   select public.upsert_provider_invoice_v2('sub_nobody', 'in_test_2', 799, 0, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 
   -- ── Dunning ─────────────────────────────────────────────────────────────
-  select public.apply_payment_event('stripe', 'evt_address_needed', 'address_required', inv, 864, repeat('a', 64)) into t;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_address_needed', 864, 65, 'usd', base, base) into inv2;
+  select public.apply_payment_event('stripe', 'evt_address_needed', 'address_required', inv2, 864, repeat('a', 64)) into t;
   perform pg_temp.answered('missing tax location has its own remediation state', t, 'address_required');
   perform pg_temp.answered('without calling the card failed',
     (select status || ':' || billing_issue from public.subscriptions where id = ana_sub), 'active:address_required');
@@ -278,8 +287,8 @@ begin
     (select count(*) from public.dunning_cases where subscription_id = ana_sub and status = 'open'), 0);
   select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 864, repeat('e', 64)) into t;
   perform pg_temp.answered('a failed renewal opens dunning', t, 'dunning');
-  perform pg_temp.answered('and clears the address-only issue',
-    (select billing_issue from public.subscriptions where id = ana_sub), null);
+  perform pg_temp.answered('and preserves an address issue on a different invoice',
+    (select billing_issue from public.subscriptions where id = ana_sub), 'address_required');
   select public.run_dunning(base + interval '1 day') into j;
   perform pg_temp.answered('a day later, nothing is due', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');
   select public.run_dunning(base + interval '4 days') into j;
@@ -319,6 +328,11 @@ begin
   perform pg_temp.counted('as recovered, with the recovery on record', n, 1);
   perform pg_temp.answered('and the subscription is active again',
     (select status from public.subscriptions where id = ana_sub), 'active');
+  perform pg_temp.answered('while a different invoice still needs an address',
+    (select billing_issue from public.subscriptions where id = ana_sub), 'address_required');
+  select public.apply_payment_event('stripe', 'evt_address_ok', 'payment_succeeded', inv2, 864, repeat('6', 64)) into t;
+  perform pg_temp.answered('paying the affected invoice clears its address issue',
+    (select billing_issue from public.subscriptions where id = ana_sub), null);
 
   select public.apply_payment_event('stripe', 'evt_auto_late_fail', 'payment_failed', inv, 799, repeat('9', 64)) into t;
   perform pg_temp.answered('a failure reported for an invoice already paid is only recorded', t, 'recorded');

@@ -8,7 +8,9 @@ alter table public.invoices
 
 alter table public.subscriptions
   add column if not exists billing_issue text
-    check (billing_issue is null or billing_issue = 'address_required');
+    check (billing_issue is null or billing_issue = 'address_required'),
+  add column if not exists billing_issue_invoice_id uuid
+    references public.invoices (id) on delete set null;
 
 alter table public.payment_events drop constraint if exists payment_events_kind_check;
 alter table public.payment_events add constraint payment_events_kind_check
@@ -43,8 +45,8 @@ update public.invoices i
 
 -- Missing tax location is customer action, not a declined payment. Preserve a
 -- distinct issue for the Account screen without opening dunning or removing
--- entitlements. A real failure clears that issue and follows ordinary dunning;
--- a later payment clears either condition and restores the subscription.
+-- entitlements. Only the affected invoice can clear that issue; an unrelated
+-- success or failure must not hide it. Real payment failures still use dunning.
 create or replace function public.apply_payment_event(
   want_provider text, want_event_id text, want_kind text, want_invoice uuid,
   want_amount_cents bigint, want_payload_sha256 text, grace interval default interval '14 days'
@@ -72,7 +74,7 @@ begin
 
   if want_kind = 'address_required' and inv.subscription_id is not null and inv.status <> 'paid' then
     update public.subscriptions
-       set billing_issue = 'address_required', updated_at = now()
+       set billing_issue = 'address_required', billing_issue_invoice_id = inv.id, updated_at = now()
      where id = inv.subscription_id and status in ('trialing', 'active');
     return 'address_required';
   elsif want_kind = 'payment_succeeded' then
@@ -80,7 +82,8 @@ begin
     if inv.subscription_id is not null then
       update public.subscriptions
          set status = case when status in ('past_due', 'grace') then 'active' else status end,
-             billing_issue = null,
+             billing_issue = case when billing_issue_invoice_id = inv.id then null else billing_issue end,
+             billing_issue_invoice_id = case when billing_issue_invoice_id = inv.id then null else billing_issue_invoice_id end,
              updated_at = now()
        where id = inv.subscription_id;
       with recovered as (
@@ -100,7 +103,8 @@ begin
   elsif want_kind = 'payment_failed' and inv.subscription_id is not null and inv.status <> 'paid' then
     update public.subscriptions
        set status = case when status in ('active', 'trialing', 'grace') then 'past_due' else status end,
-           billing_issue = null,
+           billing_issue = case when billing_issue_invoice_id = inv.id then null else billing_issue end,
+           billing_issue_invoice_id = case when billing_issue_invoice_id = inv.id then null else billing_issue_invoice_id end,
            updated_at = now()
      where id = inv.subscription_id and status in ('active', 'trialing', 'past_due', 'grace');
     insert into public.dunning_cases (subscription_id, invoice_id, grace_ends_at)
@@ -130,6 +134,7 @@ create or replace function public.apply_invoice_payment_event_v3(
   want_kind text,
   want_subscription_ref text,
   want_invoice_ref text,
+  want_invoice_status text,
   want_subtotal_cents bigint,
   want_tax_cents bigint,
   want_currency text,
@@ -153,7 +158,8 @@ declare
   snapshot_at timestamptz;
   replace_snapshot boolean;
 begin
-  if want_snapshot_at is null or want_snapshot_rank not between 0 and 2 then
+  if want_snapshot_at is null or want_snapshot_rank not between 0 and 2 or
+      want_invoice_status not in ('draft', 'open', 'paid') then
     raise exception 'invalid provider invoice snapshot precedence';
   end if;
 
@@ -174,7 +180,8 @@ begin
     end if;
     update public.invoices
        set provider_snapshot_rank = want_snapshot_rank,
-           provider_snapshot_at = want_snapshot_at
+           provider_snapshot_at = want_snapshot_at,
+           status = want_invoice_status
      where id = invoice_id;
   else
     replace_snapshot := invoice_status <> 'paid' and (
@@ -189,7 +196,8 @@ begin
       );
       update public.invoices
          set provider_snapshot_rank = want_snapshot_rank,
-             provider_snapshot_at = want_snapshot_at
+             provider_snapshot_at = want_snapshot_at,
+             status = want_invoice_status
        where id = invoice_id;
     end if;
   end if;
@@ -201,15 +209,15 @@ begin
 end $$;
 
 revoke all on function public.apply_invoice_payment_event_v3(
-  text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz,
+  text, text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz,
   timestamptz, smallint, bigint, text, interval
 ) from public, anon, authenticated;
 grant execute on function public.apply_invoice_payment_event_v3(
-  text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz,
+  text, text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz,
   timestamptz, smallint, bigint, text, interval
 ) to service_role;
 
 comment on function public.apply_invoice_payment_event_v3(
-  text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz,
+  text, text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz,
   timestamptz, smallint, bigint, text, interval
 ) is 'Atomically records an invoice event while preventing stale or earlier-lifecycle snapshots from replacing newer financial amounts.';

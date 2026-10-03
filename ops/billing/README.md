@@ -30,6 +30,7 @@ of active tax registrations, portal configuration, and webhook without changing 
 The second first closes checkout with the `BILLING_LIVE_ENABLED` operations
 gate, creates or updates exactly this project's live webhook, enables the
 default Stripe billing portal's invoice history and payment-method controls,
+explicitly disables portal-side subscription changes and cancellation,
 stores the credentials and the exact portal configuration id in Supabase,
 rescans legacy sessions while checkout is quiesced, and only then opens the
 gate after checking the deployed signature, invoice-event database path,
