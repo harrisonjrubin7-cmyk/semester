@@ -74,10 +74,10 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 59 | `docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical time-bounded evaluation template; no production, research, payment, institutional-data or commercial authorization is implied |
 | 60 | `docs/legal-drafts/PROFESSIONAL-SERVICES-TERMS-DRAFT.md` | EXACT PRESENT | canonical services framework; scope, staffing, fees, acceptance, IP and risk terms require an executed agreement and SOW |
 | 61 | `docs/legal-drafts/INSTITUTIONAL-PILOT-PROPOSAL-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical discussion proposal; pricing, scope, controls, customer acceptance, contract and paid-pilot activation remain open |
-| 62 | `docs/legal-drafts/PROCUREMENT-RESPONSE-COVER-LETTER-DRAFT.md` | NO CLOSE SOURCE | — |
-| 63 | `docs/legal-drafts/RFP-RESPONSE-CONTENT-LIBRARY.md` | CANDIDATE SOURCE | `docs/HIGHER-ED-RFP-RESPONSE-LIBRARY.md` (filename similarity 0.56; substantive review required) |
-| 64 | `docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md` | NO CLOSE SOURCE | — |
-| 65 | `docs/legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md` | NO CLOSE SOURCE | — |
+| 62 | `docs/legal-drafts/PROCUREMENT-RESPONSE-COVER-LETTER-DRAFT.md` | EXACT PRESENT | canonical response cover template; discovery/evidence review is separated from offer, execution, payment, and activation |
+| 63 | `docs/legal-drafts/RFP-RESPONSE-CONTENT-LIBRARY.md` | EXACT PRESENT | controlled index to the technical library; every reused answer requires current evidence, claim, confidentiality, and approval review |
+| 64 | `docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md` | EXACT PRESENT | canonical negotiation control; no draft, repository evidence, or proposed deal default grants binding authority |
+| 65 | `docs/legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md` | EXACT PRESENT | canonical risk-based approval matrix; accepted language does not complete required operational or technical work |
 | 66 | `docs/legal-drafts/LEGAL-COMPLIANCE-CALENDAR.md` | NO CLOSE SOURCE | — |
 | 67 | `docs/legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md` | CANDIDATE SOURCE | `docs/launch-readiness/LEGAL_REVIEW_REQUIRED.md` (filename similarity 0.51; substantive review required) |
 | 68 | `docs/legal-drafts/LEGAL-CLAIMS-APPROVAL-POLICY.md` | NO CLOSE SOURCE | — |

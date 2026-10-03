@@ -54,7 +54,7 @@
 - [x] L06: institutional legal documents 26–30; created evidence-bounded student-data, security, service-level, support, and acceptable-use exhibits with exact disclaimer, schedules, behavior mappings, and signature/activation blockers on 2026-10-03.
 - [x] L07: institutional legal documents 31–35; added evidence-bounded responsibility, data lifecycle, subprocessor, incident-notification, and accessibility-roadmap exhibits with exact disclaimer and signature/activation blockers on 2026-10-03.
 - [x] L08: institutional legal documents 36–40; added evidence-bounded AI-use terms, mutual NDA, evaluation agreement, professional-services terms, and institutional pilot proposal drafts with exact disclaimer, decision schedules, behavior mappings, and signature/activation blockers on 2026-10-03.
-- [ ] L09: institutional legal documents 41–44.
+- [x] L09: institutional legal documents 41–44; added procurement-cover, controlled RFP library, negotiation, and contract-deviation drafts with exact disclaimer, truthful-status controls, approval routing, and signature/activation blockers on 2026-10-03.
 - [ ] L10: internal legal governance documents 45–49.
 - [ ] L11: internal legal governance documents 50–54.
 - [ ] L12: internal legal governance documents 55–56 plus `LEGAL-TRUTH-MAPPING.md`.
