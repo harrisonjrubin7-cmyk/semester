@@ -4741,6 +4741,54 @@ section[data-drop] > .grip + * {
   background: var(--app-line);
 }
 
+/* A horizontal row only announces that it moves when it actually clips.
+   Native touch, wheel and focus scrolling stay on the viewport; these controls
+   make that movement discoverable without covering the row's last item. */
+.overflow-cue {
+  min-width: 0;
+}
+
+.overflow-cue__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.overflow-cue__button {
+  display: grid;
+  place-items: center;
+  width: var(--target-compact);
+  min-width: var(--target-compact);
+  height: var(--target-compact);
+  padding: 0;
+  color: var(--app-fg);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.overflow-cue__button:hover:not(:disabled) {
+  border-color: var(--app-accent-deep);
+  background: var(--app-accent-wash);
+}
+
+.overflow-cue__button:disabled {
+  color: var(--app-faint);
+  background: transparent;
+  cursor: default;
+}
+
+.overflow-cue__viewport {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overflow-cue__viewport {
+    scroll-behavior: auto;
+  }
+}
+
 /* ── The shelf a file screen opens on ─────────────────────────────────────
    "Start a new document" across the top, everything you already have below
    it under Today / Previous 7 days / Previous 30 days / Earlier. Drawn by

@@ -4,6 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { TabList } from './ui';
 
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
 /**
  * The keyboard, actually pressed.
  *
@@ -21,6 +23,7 @@ import { TabList } from './ui';
 let host: HTMLDivElement;
 let root: Root;
 let chosen: string[];
+const originalMatchMedia = window.matchMedia;
 
 function draw(value: string) {
   act(() => {
@@ -48,6 +51,14 @@ function press(key: string) {
   });
 }
 
+function size(strip: HTMLElement, clientWidth: number, scrollWidth: number) {
+  Object.defineProperties(strip, {
+    clientWidth: { configurable: true, value: clientWidth },
+    scrollWidth: { configurable: true, value: scrollWidth },
+  });
+  act(() => window.dispatchEvent(new Event('resize')));
+}
+
 beforeEach(() => {
   chosen = [];
   host = document.createElement('div');
@@ -58,6 +69,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  window.matchMedia = originalMatchMedia;
 });
 
 it('gives the strip one tab stop, not one per tab', () => {
@@ -109,4 +121,53 @@ it('leaves keys that are not its own alone', () => {
   press('a');
   press('Enter');
   expect(chosen).toEqual([]);
+});
+
+it('offers named overflow controls only when the tab strip needs them', () => {
+  draw('one');
+  const strip = host.querySelector<HTMLElement>('[role="tablist"]')!;
+
+  size(strip, 300, 300);
+  expect(host.querySelector('[aria-label="Scroll Three things right"]')).toBe(null);
+
+  size(strip, 300, 600);
+  const back = host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things left"]')!;
+  const forward = host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things right"]')!;
+  expect(back).not.toBe(null);
+  expect(forward).not.toBe(null);
+  expect(back.disabled).toBe(true);
+  expect(forward.disabled).toBe(false);
+});
+
+it('scrolls with reduced motion and disables the control at the reached end', () => {
+  window.matchMedia = ((query: string) => ({
+    matches: query === '(prefers-reduced-motion: reduce)',
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    onchange: null,
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+  draw('one');
+  const strip = host.querySelector<HTMLElement>('[role="tablist"]')!;
+  size(strip, 300, 600);
+  const calls: ScrollToOptions[] = [];
+  Object.defineProperty(strip, 'scrollBy', {
+    configurable: true,
+    value: (options: ScrollToOptions) => {
+      calls.push(options);
+      strip.scrollLeft = 300;
+      strip.dispatchEvent(new Event('scroll'));
+    },
+  });
+
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things right"]')!.click();
+  });
+
+  expect(calls).toEqual([{ left: 255, behavior: 'auto' }]);
+  expect(host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things right"]')!.disabled).toBe(true);
+  expect(host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things left"]')!.disabled).toBe(false);
 });
