@@ -107,12 +107,9 @@ select cron.schedule(
   $job$
 );
 
--- Parked until the function deployment and all sender/secret configuration
--- are verified. Production activation is a separate, visible release step.
-select cron.alter_job(
-  (select jobid from cron.job where jobname = 'support-reply-notify'),
-  active := false
-);
+-- Production activation and the sender/secret configuration were verified on
+-- 3 October 2026. Keep this job active when scheduler.sql is reapplied; the
+-- recipient mailbox receipt remains a separate evidence gate.
 
 
 -- ── Clearing out old tombstones ───────────────────────────────────────────
@@ -161,6 +158,17 @@ select cron.schedule(
   'tombstones',
   '17 4 * * 0',
   $job$select public.sweep_tombstones('90 days')$job$
+);
+
+-- ── Support ticket retention ─────────────────────────────────────────────
+--
+-- Resolved and student-closed tickets age out after 180 days. The sweep
+-- preserves every ticket whose account is under an active legal hold; child
+-- messages and notification intents follow the ticket by foreign-key cascade.
+select cron.schedule(
+  'support-ticket-retention',
+  '43 5 * * *',
+  $job$select private.sweep_support_ticket_retention()$job$
 );
 
 -- AI provider reservations expire after five minutes inside the budget

@@ -2,7 +2,7 @@
 
 <!-- Rendered from app/src/lib/knownlimitations.ts by pilotdocs.test.ts. Edit the data, then run `REGISTERS=write npx vitest run src/lib/pilotdocs.test.ts` from app/. -->
 
-**As of 2026-09-28.** What does not work yet, what to do instead, and how to
+**As of 2026-10-03.** What does not work yet, what to do instead, and how to
 report something. Every item names the file in this repository that states it;
 nothing here is a plan or a guess. The same list is printed on the public site
 at `/known-limitations/` and on the Help screen in the app, from the same data.
@@ -77,13 +77,13 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `app/src/lib/membership.ts`, `app/src/lib/plans.ts`, `docs/DECISION-LOG.md`
 
-### The in-app support desk is built, but it is not switched on in every environment.
+### The beta support desk is live, but email receipt and formal coverage are incomplete.
 
-**What does not work yet.** Help shows your questions, stable SUP references, replies and their 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT on October 3, 2026, and the founder staffs the current beta queue. A generic account-email notice can be sent after a staff reply only when you opt in for that question. The production sender and scheduled delivery are live; provider acceptance, recipient-tenant quarantine and recipient release were verified, but Outlook inbox receipt remains pending, so email delivery is not yet green. Notices are capped at three per question in 24 hours, and turning them off cancels notices still waiting to send; the reply remains available in Help if email is delayed or unavailable. No support hours or 24/7 coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.
+**What does not work yet.** Help shows your questions, stable SUP references, replies and their 24-hour or 72-hour first-response target. Authorized staff answer through an identity-free queue. Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT on October 3, 2026, and the founder staffs the current beta queue. A generic account-email notice can be sent after a staff reply only when you opt in for that question. The production sender and scheduled delivery are live; provider acceptance, recipient-tenant quarantine and recipient release were verified, but Outlook inbox receipt remains pending, so email delivery is not yet green. Notices are capped at three per question in 24 hours, and turning them off cancels notices still waiting to send; the reply remains available in Help if email is delayed or unavailable. Resolved and closed tickets are deleted 180 days after their last activity unless a legal hold applies. Support still uses the founder’s personal Gmail address, and no support hours or 24/7 coverage are promised. The status page checks the service from your own browser and its AI and checkout rows only show that the service answered.
 
 **What to do instead.** If the ticket panel is available, use it and keep the SUP reference. Otherwise write to the address below. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
 
-*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
+*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/launch-readiness/2026-10-03-support-production-uat.md`, `supabase/migrations/20261003130000_support_ticket_retention.sql`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
 
 ### Your own backup is the one that has been rehearsed.
 

@@ -51,6 +51,10 @@ describe('company-site production availability', () => {
     expect(roadmap).toContain('Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT October 3, 2026');
     expect(roadmap).toContain('Outlook inbox receipt is still pending, so email delivery is not green yet');
     expect(roadmap).toContain('an approved institution feed remains open');
+    const evidencePending = roadmap.slice(roadmap.indexOf('["Built & tested, evidence pending"'), roadmap.indexOf('["Built & tested, activation gated"'));
+    const activationGated = roadmap.slice(roadmap.indexOf('["Built & tested, activation gated"'));
+    expect(evidencePending).toContain('Email reply notifications');
+    expect(activationGated).not.toContain('Email reply notifications');
 
     for (const path of [
       'app/src/lib/captions.test.ts',
