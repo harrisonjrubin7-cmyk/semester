@@ -15,6 +15,7 @@ const asCaller = (token: string) =>
 Deno.serve((req) =>
   handleBillingPortal(req, {
     stripeKey,
+    portalConfigurationId: Deno.env.get('STRIPE_PORTAL_CONFIGURATION_ID'),
     allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
     returnUrl: Deno.env.get('CHECKOUT_RETURN_URL'),
     async customerForToken(token) {

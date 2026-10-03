@@ -29,7 +29,7 @@ test('a check is read-only and never claims payment verification', async () => {
   const result = await activateLive(env, { fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
-    if (url.endsWith('/tax/settings')) return response({ status: 'active' });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     return response({ data: [], has_more: false });
   } });
   assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET']);
@@ -45,8 +45,30 @@ test('apply refuses an incomplete Stripe Tax setup before any mutation', async (
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
     return response({ status: 'pending' });
-  } }), /Stripe Tax setup is not active/);
+  } }), /Stripe Tax must be active/);
   assert.deepEqual(calls, ['GET', 'GET']);
+});
+
+test('apply refuses active Stripe Tax without a reviewed default tax behavior', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push(init.method || 'GET');
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    return response({ status: 'active', defaults: { tax_behavior: null } });
+  } }), /default tax behavior/);
+  assert.deepEqual(calls, ['GET', 'GET']);
+});
+
+test('counts every page of active tax registrations', async () => {
+  const result = await activateLive(env, { fetch: async (url) => {
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'inclusive' } });
+    if (url.includes('/tax/registrations') && !url.includes('starting_after'))
+      return response({ data: [{ id: 'txr_1' }], has_more: true });
+    if (url.includes('/tax/registrations')) return response({ data: [{ id: 'txr_2' }], has_more: false });
+    return response({ data: [], has_more: false });
+  } });
+  assert.equal(result.activeTaxRegistrations, 2);
 });
 
 test('existing endpoints require their signing secret and pagination cannot create duplicates', async () => {
@@ -54,7 +76,7 @@ test('existing endpoints require their signing secret and pagination cannot crea
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
-    if (url.endsWith('/tax/settings')) return response({ status: 'active' });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations') || url.includes('/billing_portal/configurations')) return response({ data: [], has_more: false });
     if (!url.includes('starting_after')) return response({ data: [{ id: 'we_other', url: 'https://other.example' }], has_more: true });
     return response({ data: [{ id: 'we_semester', url: 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-webhook',
@@ -68,7 +90,7 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   const result = await activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push({ url, method: init.method || 'GET', body: init.body });
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
-    if (url.endsWith('/tax/settings')) return response({ status: 'active' });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
     if (url.includes('/billing_portal/configurations?')) return response({ data: [], has_more: false });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_1', active: true,
@@ -84,7 +106,11 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(result.portalConfigured, true);
   assert.equal(result.paymentsVerified, false);
   const stored = JSON.parse(calls.find(call => call.url.endsWith('/secrets')).body);
-  assert.deepEqual(stored.map(secret => secret.name), ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'ALLOWED_ORIGIN', 'CHECKOUT_RETURN_URL']);
+  assert.deepEqual(stored.map(secret => secret.name), [
+    'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'ALLOWED_ORIGIN',
+    'CHECKOUT_RETURN_URL', 'STRIPE_PORTAL_CONFIGURATION_ID',
+  ]);
+  assert.equal(stored.find(secret => secret.name === 'STRIPE_PORTAL_CONFIGURATION_ID').value, 'bpc_1');
   assert.equal(calls.filter(call => call.url.endsWith('/webhook_endpoints')).length, 1);
   assert.equal(calls.some(call => /checkout\/sessions|payment_intents/.test(call.url)), false);
   assert.equal(JSON.stringify(result).includes('whsec_'), false);

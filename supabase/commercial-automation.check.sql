@@ -98,6 +98,7 @@ begin
      or not pg_temp.refused($q$select * from public.begin_checkout(gen_random_uuid(), gen_random_uuid(), 'plus-v1')$q$)
      or not pg_temp.refused($q$select public.complete_checkout(gen_random_uuid(), 'sub_x', 'cus_x', null)$q$)
      or not pg_temp.refused($q$select public.upsert_provider_invoice('sub_x', 'in_x', 1, 'usd', now(), now())$q$)
+     or not pg_temp.refused($q$select public.upsert_provider_invoice_v2('sub_x', 'in_x', 1, 0, 'usd', now(), now())$q$)
      or not pg_temp.refused($q$select public.sync_provider_subscription('sub_x', 'active', null, null, false, now())$q$) then
     raise exception 'FAILED: a signed-in account called a service-only commercial function';
   end if;
@@ -252,14 +253,16 @@ begin
   select public.sync_provider_subscription('sub_nobody', 'active', null, null, false, base) into t;
   perform pg_temp.answered('an unknown subscription is reported, not invented', t, 'unknown');
 
-  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 799, 'USD', base, base) into inv;
-  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 799, 'USD', base, base) into inv2;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 799, 65, 'USD', base, base) into inv;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 799, 65, 'USD', base, base) into inv2;
   perform pg_temp.answered('a provider invoice is recorded once', (inv = inv2)::text, 'true');
-  select public.upsert_provider_invoice('sub_nobody', 'in_test_2', 799, 'usd', base, base) into inv2;
+  perform pg_temp.answered('provider tax is kept outside subtotal',
+    (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '799:65');
+  select public.upsert_provider_invoice_v2('sub_nobody', 'in_test_2', 799, 0, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 
   -- ── Dunning ─────────────────────────────────────────────────────────────
-  select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 799, repeat('e', 64)) into t;
+  select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 864, repeat('e', 64)) into t;
   perform pg_temp.answered('a failed renewal opens dunning', t, 'dunning');
   select public.run_dunning(base + interval '1 day') into j;
   perform pg_temp.answered('a day later, nothing is due', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');

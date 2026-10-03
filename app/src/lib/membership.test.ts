@@ -39,6 +39,7 @@ describe('consent', () => {
   it('names amount, interval, renewal and the way to cancel', () => {
     const t = consentText(plusPrices([MONTH])[0]);
     expect(t).toContain('$7.99 a month');
+    expect(t).toMatch(/applicable sales tax shown before purchase/);
     expect(t).toMatch(/renewing every month until I cancel/);
     expect(t).toMatch(/cancel any time from my Account screen/);
   });

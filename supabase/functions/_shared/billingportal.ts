@@ -8,11 +8,12 @@
  *
  * Source: https://docs.stripe.com/customer-management/integrate-customer-portal#redirect
  */
-import { strictCorsHeaders, strictOrigin } from './cors.ts';
+import { allowedOrigins, strictCorsHeaders, strictOrigin } from './cors.ts';
 import { STRIPE_API, formEncode } from './stripe.ts';
 
 export interface PortalDeps {
   stripeKey: string | undefined;
+  portalConfigurationId: string | undefined;
   allowedOrigin: string | undefined;
   returnUrl: string | undefined;
   customerForToken(token: string): Promise<string | null>;
@@ -20,6 +21,7 @@ export interface PortalDeps {
 }
 
 const CUSTOMER = /^cus_[A-Za-z0-9]{6,120}$/;
+const PORTAL_CONFIGURATION = /^bpc_[A-Za-z0-9]{6,120}$/;
 
 export async function handleBillingPortal(req: Request, deps: PortalDeps): Promise<Response> {
   const origin = req.headers.get('Origin');
@@ -32,7 +34,10 @@ export async function handleBillingPortal(req: Request, deps: PortalDeps): Promi
     });
 
   if (req.method === 'OPTIONS') return allowed ? reply(204, null) : reply(403, null);
-  if (!deps.stripeKey) return reply(503, { error: 'Billing history is not available yet.' });
+  if (!deps.stripeKey || !deps.returnUrl || !deps.portalConfigurationId ||
+      !PORTAL_CONFIGURATION.test(deps.portalConfigurationId)) {
+    return reply(503, { error: 'Billing history is not available yet.' });
+  }
   if (!allowed) return reply(403, { error: 'This page is not allowed to open billing history.' });
   if (req.method !== 'POST') return reply(405, { error: 'Method not allowed.' }, { Allow: 'POST, OPTIONS' });
 
@@ -42,9 +47,9 @@ export async function handleBillingPortal(req: Request, deps: PortalDeps): Promi
   try {
     const customer = await deps.customerForToken(token);
     if (!customer || !CUSTOMER.test(customer)) return reply(404, { error: 'There is no billing history for this account.' });
-    const returnUrl = deps.returnUrl || `${allowed}/`;
+    const returnUrl = deps.returnUrl;
     const u = new URL(returnUrl);
-    if (u.protocol !== 'https:' || u.username || u.password || u.origin !== allowed) {
+    if (u.protocol !== 'https:' || u.username || u.password || !allowedOrigins(deps.allowedOrigin).includes(u.origin)) {
       return reply(503, { error: 'Billing history is not configured safely.' });
     }
     const res = await deps.fetch(`${STRIPE_API}/billing_portal/sessions`, {
@@ -53,7 +58,7 @@ export async function handleBillingPortal(req: Request, deps: PortalDeps): Promi
         Authorization: `Bearer ${deps.stripeKey}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: formEncode({ customer, return_url: returnUrl }),
+      body: formEncode({ customer, configuration: deps.portalConfigurationId, return_url: returnUrl }),
     });
     if (!res.ok) return reply(502, { error: 'Billing history could not be opened. Try again.' });
     const session = (await res.json()) as { url?: unknown; livemode?: unknown };

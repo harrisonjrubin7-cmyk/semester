@@ -5,7 +5,8 @@ import { pathToFileURL } from 'node:url';
 export const EVENTS = [
   'checkout.session.completed', 'customer.subscription.created',
   'customer.subscription.updated', 'customer.subscription.deleted',
-  'invoice.paid', 'invoice.payment_failed', 'charge.refunded', 'charge.dispute.created',
+  'invoice.paid', 'invoice.payment_failed', 'invoice.finalization_failed',
+  'charge.refunded', 'charge.dispute.created',
 ];
 const DEFAULT_PROJECT = 'lzrqvlugnawcgywkhqlz';
 const DEFAULT_RETURN = 'https://harrisonjrubin7-cmyk.github.io/semester/#/account';
@@ -46,14 +47,26 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   if (!account.id || account.charges_enabled !== true || account.details_submitted !== true)
     throw new Error('Stripe account onboarding is incomplete or live charges are disabled. No settings changed.');
   const tax = await stripe('tax/settings');
-  if (apply && tax.status !== 'active')
-    throw new Error('Stripe Tax setup is not active. No settings changed and checkout remains unavailable.');
-  const registrations = await stripe('tax/registrations?status=active&limit=100');
-  if (!Array.isArray(registrations.data)) throw new Error('Stripe returned an invalid tax registration list.');
+  const taxBehavior = tax?.defaults?.tax_behavior;
+  const taxReady = tax.status === 'active' && ['exclusive', 'inclusive', 'inferred_by_currency'].includes(taxBehavior);
+  if (apply && !taxReady)
+    throw new Error('Stripe Tax must be active with a default tax behavior. No settings changed and checkout remains unavailable.');
 
-  const portalPage = await stripe('billing_portal/configurations?limit=100');
+  // Tax registration lists are cursor-paginated just like webhook endpoints.
+  // Count every active registration before asking the owner/counsel to reconcile it.
+  const registrations = [];
+  let registrationCursor;
+  do {
+    const page = await stripe(`tax/registrations?status=active&limit=100${registrationCursor ? `&starting_after=${encodeURIComponent(registrationCursor)}` : ''}`);
+    if (!Array.isArray(page.data)) throw new Error('Stripe returned an invalid tax registration list.');
+    registrations.push(...page.data);
+    registrationCursor = page.has_more === true ? page.data.at(-1)?.id : undefined;
+    if (page.has_more === true && !registrationCursor) throw new Error('Stripe returned invalid tax registration pagination.');
+  } while (registrationCursor);
+
+  const portalPage = await stripe('billing_portal/configurations?is_default=true&active=true&limit=1');
   if (!Array.isArray(portalPage.data)) throw new Error('Stripe returned an invalid billing portal configuration list.');
-  let portal = portalPage.data.find(item => item?.is_default === true && item?.active === true);
+  let portal = portalPage.data[0];
   let portalReady = portal?.features?.invoice_history?.enabled === true &&
     portal?.features?.payment_method_update?.enabled === true;
 
@@ -74,7 +87,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     throw new Error('Set STRIPE_WEBHOOK_SECRET from the existing live endpoint; its secret cannot be retrieved through the API. No settings changed.');
   const completeEvents = endpoint && (endpoint.enabled_events?.includes('*') || EVENTS.every(event => endpoint.enabled_events?.includes(event)));
   if (!apply) return { state: 'checked', project: c.project, chargesEnabled: true,
-    taxReady: tax.status === 'active', activeTaxRegistrations: registrations.data.length,
+    taxReady, taxBehaviorConfigured: !!taxBehavior, activeTaxRegistrations: registrations.length,
     portalConfigured: portalReady, webhookExists: !!endpoint,
     requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
 
@@ -107,6 +120,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
       portal?.features?.payment_method_update?.enabled === true;
     if (!portalReady) throw new Error('Stripe did not return a usable billing portal configuration. Project secrets were not changed.');
   }
+  if (!/^bpc_[A-Za-z0-9]+$/.test(portal?.id || ''))
+    throw new Error('Stripe did not return a usable billing portal configuration id. Project secrets were not changed.');
   await request(`https://api.supabase.com/v1/projects/${c.project}/secrets`, {
     method: 'POST', headers: { Authorization: `Bearer ${c.accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify([
@@ -114,6 +129,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
       { name: 'STRIPE_WEBHOOK_SECRET', value: c.webhookSecret },
       { name: 'ALLOWED_ORIGIN', value: c.origins.join(',') },
       { name: 'CHECKOUT_RETURN_URL', value: c.returnUrl },
+      { name: 'STRIPE_PORTAL_CONFIGURATION_ID', value: portal.id },
     ]),
   }, 'Supabase secret configuration');
 
@@ -141,7 +157,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     }
   }
   return { state: 'configured', project: c.project, chargesEnabled: true,
-    taxReady: true, activeTaxRegistrations: registrations.data.length,
+    taxReady: true, taxBehaviorConfigured: true, activeTaxRegistrations: registrations.length,
     portalConfigured: true, webhookVerified: true, originsVerified: true, paymentsVerified: false,
     remaining: 'Complete one owner-approved checkout, receipt, entitlement and cancellation lifecycle before marking billing available.' };
 }

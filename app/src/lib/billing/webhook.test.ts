@@ -78,9 +78,21 @@ describe('the billing webhook', () => {
     const res = await handleBillingWebhook(post(body), d);
     expect(res.status).toBe(200);
     expect(calls).toEqual(['invoice', 'apply']);
-    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_1', 799, 'usd', expect.any(String), expect.any(String));
+    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_1', 799, 0, 'usd', expect.any(String), expect.any(String));
     expect(d.applyEvent).toHaveBeenCalledWith(
       'evt_1', 'payment_failed', 'inv-uuid', 799, createHash('sha256').update(body).digest('hex'));
+  });
+
+  it('stores invoice tax separately and remediates finalization failures', async () => {
+    const { d } = deps();
+    const body = event('invoice.finalization_failed', {
+      id: 'in_tax', subscription: 'sub_1', amount_due: 864, subtotal_excluding_tax: 799,
+      total_taxes: [{ amount: 65 }], currency: 'usd', created: NOW - 60,
+      automatic_tax: { status: 'requires_location_inputs' },
+    });
+    expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
+    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_tax', 799, 65, 'usd', expect.any(String), expect.any(String));
+    expect(d.applyEvent).toHaveBeenCalledWith('evt_1', 'payment_failed', 'inv-uuid', 864, expect.any(String));
   });
 
   it('turns a completed checkout into a subscription, by the checkout id it carries', async () => {

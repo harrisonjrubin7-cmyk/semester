@@ -8,8 +8,9 @@
  *
  *   checkout.session.completed      complete_checkout → an active subscription
  *   customer.subscription.*         sync_provider_subscription (newer events only)
- *   invoice.paid / payment_succeeded upsert_provider_invoice, then payment_succeeded
- *   invoice.payment_failed          upsert_provider_invoice, then payment_failed → dunning
+ *   invoice.paid / payment_succeeded upsert_provider_invoice_v2, then payment_succeeded
+ *   invoice.payment_failed          upsert_provider_invoice_v2, then payment_failed → dunning
+ *   invoice.finalization_failed     recorded with its tax/location failure → dunning
  *   charge.refunded                 refund
  *   charge.dispute.created          chargeback
  *   anything else                   recorded as `other`
@@ -52,7 +53,7 @@ export interface WebhookDeps {
     cancelAtPeriodEnd: boolean | null, eventAt: string,
   ): Promise<unknown>;
   upsertInvoice(
-    subscriptionRef: string, invoiceRef: string, amountCents: number | null, currency: string | null,
+    subscriptionRef: string, invoiceRef: string, subtotalCents: number | null, taxCents: number | null, currency: string | null,
     issuedAt: string | null, dueAt: string | null,
   ): Promise<string | null>;
   applyEvent(eventId: string, kind: PaymentKind, invoiceId: string | null, amountCents: number | null, sha256: string): Promise<string>;
@@ -78,6 +79,15 @@ const ref = (v: unknown): string | null => str(v) ?? str(obj(v).id);
 /** The subscription an invoice bills, wherever this API version keeps it. */
 function invoiceSubscription(o: Obj): string | null {
   return ref(o.subscription) ?? ref(obj(obj(o.parent).subscription_details).subscription);
+}
+
+/** Tax total across current and older Stripe invoice response shapes. */
+function invoiceTax(o: Obj): number {
+  for (const key of ['total_taxes', 'total_tax_amounts']) {
+    const rows = o[key];
+    if (Array.isArray(rows)) return rows.reduce((sum, row) => sum + (num(obj(row).amount) ?? 0), 0);
+  }
+  return num(o.tax) ?? 0;
 }
 
 export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Promise<Response> {
@@ -132,15 +142,19 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
           eventAt,
         );
       }
-    } else if (type === 'invoice.paid' || type === 'invoice.payment_succeeded' || type === 'invoice.payment_failed') {
-      const failed = type === 'invoice.payment_failed';
+    } else if (type === 'invoice.paid' || type === 'invoice.payment_succeeded' ||
+               type === 'invoice.payment_failed' || type === 'invoice.finalization_failed') {
+      const failed = type === 'invoice.payment_failed' || type === 'invoice.finalization_failed';
       kind = failed ? 'payment_failed' : 'payment_succeeded';
       amount = num(failed ? o.amount_due : o.amount_paid);
       const sub = invoiceSubscription(o);
       const id = str(o.id);
       if (sub && id) {
+        const tax = invoiceTax(o);
+        const subtotal = num(o.subtotal_excluding_tax) ?? num(o.total_excluding_tax) ??
+          num(o.subtotal) ?? Math.max((num(o.amount_due) ?? 0) - tax, 0);
         invoiceId = await deps.upsertInvoice(
-          sub, id, num(o.amount_due), str(o.currency), isoFromSeconds(o.created),
+          sub, id, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
           isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created),
         );
         if (invoiceId === null) {

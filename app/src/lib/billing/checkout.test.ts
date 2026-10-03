@@ -34,7 +34,7 @@ const post = (body: unknown, headers: Record<string, string> = {}) =>
     body: typeof body === 'string' ? body : JSON.stringify(body),
   });
 
-const GOOD = { price_id: PRICE, consent: true, consent_text_version: 'plus-v1' };
+const GOOD = { price_id: PRICE, consent: true, consent_text_version: 'plus-v2' };
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -89,7 +89,7 @@ describe('billing checkout', () => {
     const res = await handleBillingCheckout(post(GOOD), d);
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ url: 'https://checkout.stripe.com/c/pay/cs_test_1', checkout_id: CHECKOUT });
-    expect(d.begin).toHaveBeenCalledWith('user-1', PRICE, 'plus-v1');
+    expect(d.begin).toHaveBeenCalledWith('user-1', PRICE, 'plus-v2');
     expect(vi.mocked(d.begin!).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(d.fetch!).mock.invocationCallOrder[0]);
     const [url, init] = vi.mocked(d.fetch!).mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://api.stripe.com/v1/checkout/sessions');

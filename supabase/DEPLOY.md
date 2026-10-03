@@ -467,8 +467,10 @@ functions that charge nobody:
     STRIPE_WEBHOOK_SECRET   billing-webhook    the endpoint's signing secret (whsec_…)
     ALLOWED_ORIGIN          billing-checkout,  the app's origin(s), read strictly: unset or * allows nobody
                             billing-cancel, billing-portal
-    CHECKOUT_RETURN_URL     billing-checkout,  optional; where Stripe returns the student (default: the calling origin)
-                            billing-portal
+    CHECKOUT_RETURN_URL     billing-checkout,  where Stripe returns the student; required by billing-portal
+                            billing-portal      so subpath deployments cannot fall back to the origin root
+    STRIPE_PORTAL_CONFIGURATION_ID
+                            billing-portal     active bpc_… configuration selected by the activation tool
 
 **`verify_jwt` is off on all four.** Stripe has no Supabase token: the webhook's
 credential is the `Stripe-Signature` HMAC over the raw body, checked before the
@@ -487,7 +489,7 @@ The webhook endpoint to register in Stripe (Developers → Webhooks) is
 `https://<project-ref>.supabase.co/functions/v1/billing-webhook`, with
 `checkout.session.completed`, `customer.subscription.updated`,
 `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
-`charge.refunded` and `charge.dispute.created`.
+`invoice.finalization_failed`, `charge.refunded` and `charge.dispute.created`.
 
 **Live since #942's merge**, and `billing-cancel` since #971's. Each went up
 with a `pending` row in `functions.snapshot`, like trust-room did. The checkout

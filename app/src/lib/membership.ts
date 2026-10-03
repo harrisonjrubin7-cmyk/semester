@@ -21,7 +21,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 
 /** The wording a person agrees to, and the version recorded with it. Change one, change both. */
-export const CONSENT_VERSION = 'plus-v1';
+export const CONSENT_VERSION = 'plus-v2';
 
 export interface PlusPrice {
   id: string;
@@ -75,7 +75,8 @@ export function priceWords(p: PlusPrice): string {
  */
 export function consentText(p: PlusPrice): string {
   return (
-    `I agree to be charged ${priceWords(p)} for Semester Plus, renewing every ${p.interval} ` +
+    `I agree to be charged ${priceWords(p)}, plus any applicable sales tax shown before purchase, ` +
+    `for Semester Plus, renewing every ${p.interval} ` +
     `until I cancel. I can cancel any time from my Account screen, and it stops at the end of the ${p.interval} I have paid for.`
   );
 }

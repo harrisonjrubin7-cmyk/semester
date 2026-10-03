@@ -79,7 +79,8 @@ role's alone; nothing is callable by a visitor or a signed-in account.
    it, hashes the body, and applies the event: `checkout.session.completed` →
    `complete_checkout`; `customer.subscription.*` → `sync_provider_subscription`
    (an older event never overwrites a newer one); `invoice.paid` /
-   `invoice.payment_failed` → `upsert_provider_invoice` then
+   `invoice.payment_failed` / `invoice.finalization_failed` →
+   `upsert_provider_invoice_v2` (subtotal and tax separately) then
    `apply_payment_event`; refunds and disputes by kind. `apply_payment_event`
    runs last and is the idempotency key, so a half-applied event is finished by
    the provider's retry. An invoice event that arrives before the checkout
@@ -165,13 +166,14 @@ or leads go unanswered.
 | `RESEND_API_KEY` | lead-intake | Resend key; with `LEAD_NOTIFY_EMAIL`, every lead is emailed |
 | `LEAD_NOTIFY_EMAIL` | lead-intake | The owner's inbox: set it to `harrisonjrubin7@gmail.com`. Configuration, never code |
 | `LEAD_NOTIFY_FROM` | lead-intake | Optional: a verified Resend sender (default Resend's onboarding sender, which only delivers to the Resend account's own address) |
-| `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | Optional: where Stripe returns the student (default: the calling origin) |
+| `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | App route where Stripe returns the student. Activation supplies the production Account route; the portal refuses to fall back to an origin root |
+| `STRIPE_PORTAL_CONFIGURATION_ID` | billing-portal | Active `bpc_…` configuration created or selected by the activation tool; sessions always name it explicitly |
 | `LEAD_IP_SALT` | lead-intake | Optional: the key the IP address is hashed with (default: the service key) |
 
 The Stripe webhook to register (Developers → Webhooks) is
 `https://<project-ref>.supabase.co/functions/v1/billing-webhook` with
 `checkout.session.completed`, `customer.subscription.updated`,
-`customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
+`customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `invoice.finalization_failed`,
 `charge.refunded` and `charge.dispute.created`. The two jobs are in
 `supabase/scheduler.sql`, applied by hand like the rest of that file.
 
@@ -187,7 +189,8 @@ Before the first live charge, what was open is closed:
   on the Account screen.
 - **The financial-retention period is seven years** after the end of the year
   a record was made (D-132), enforced by `purge_financial_records()` — below.
-  The consent wording the app sends is versioned `plus-v1`.
+  The consent wording the app sends is versioned `plus-v2`; it names applicable
+  sales tax shown before purchase as well as the recurring catalog price.
 
 ## Financial retention
 

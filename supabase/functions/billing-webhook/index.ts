@@ -39,9 +39,10 @@ Deno.serve((req) =>
         want_ref: ref, want_status: status, want_period_start: start, want_period_end: end,
         want_cancel_at_period_end: cancelAtPeriodEnd, want_event_at: eventAt,
       }),
-    upsertInvoice: (subscriptionRef, invoiceRef, amount, currency, issuedAt, dueAt) =>
-      call<string | null>('upsert_provider_invoice', {
-        want_subscription_ref: subscriptionRef, want_invoice_ref: invoiceRef, want_amount_cents: amount,
+    upsertInvoice: (subscriptionRef, invoiceRef, subtotal, tax, currency, issuedAt, dueAt) =>
+      call<string | null>('upsert_provider_invoice_v2', {
+        want_subscription_ref: subscriptionRef, want_invoice_ref: invoiceRef,
+        want_subtotal_cents: subtotal, want_tax_cents: tax,
         want_currency: currency, want_issued_at: issuedAt, want_due_at: dueAt,
       }),
     applyEvent: (eventId, kind, invoiceId, amount, sha) =>

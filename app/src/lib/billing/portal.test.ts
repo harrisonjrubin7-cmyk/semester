@@ -6,6 +6,7 @@ const APP = 'https://semester.example';
 function deps(over: Partial<PortalDeps> = {}): PortalDeps {
   return {
     stripeKey: 'sk_test_x',
+    portalConfigurationId: 'bpc_123456',
     allowedOrigin: APP,
     returnUrl: `${APP}/account`,
     customerForToken: vi.fn(async (token) => token === 'good-token' ? 'cus_123456' : null),
@@ -43,6 +44,7 @@ describe('billing portal', () => {
     expect(url).toBe('https://api.stripe.com/v1/billing_portal/sessions');
     const form = new URLSearchParams(init.body as string);
     expect(form.get('customer')).toBe('cus_123456');
+    expect(form.get('configuration')).toBe('bpc_123456');
     expect(form.get('return_url')).toBe(`${APP}/account`);
   });
 
@@ -52,5 +54,16 @@ describe('billing portal', () => {
     const unsafe = deps({ returnUrl: 'https://evil.example/account' });
     expect((await handleBillingPortal(post(), unsafe)).status).toBe(503);
     expect(unsafe.fetch).not.toHaveBeenCalled();
+  });
+
+  it('requires a configured app return path and accepts it from any allowed origin', async () => {
+    const missing = deps({ returnUrl: undefined });
+    expect((await handleBillingPortal(post(), missing)).status).toBe(503);
+    expect(missing.fetch).not.toHaveBeenCalled();
+    const secondary = deps({
+      allowedOrigin: `${APP},https://account.semester.example`,
+      returnUrl: 'https://account.semester.example/semester/#/account',
+    });
+    expect((await handleBillingPortal(post(), secondary)).status).toBe(200);
   });
 });

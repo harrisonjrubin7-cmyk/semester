@@ -12,7 +12,8 @@ from a secure local environment or a CI secret store. Do not paste keys into cha
 commit them, or put them in any `VITE_` variable. `ALLOWED_ORIGIN` is the full
 comma-separated list of existing allowed app origins; preserve other origins when
 setting it. The production app origin is `https://harrisonjrubin7-cmyk.github.io`.
-Optional: `SUPABASE_PROJECT_REF`, `CHECKOUT_RETURN_URL`, and the existing live
+Optional: `SUPABASE_PROJECT_REF`, `CHECKOUT_RETURN_URL` (the activation tool
+defaults it to the production Account route), and the existing live
 `STRIPE_WEBHOOK_SECRET` if this project already has a Stripe webhook endpoint.
 
 Run from the repository root:
@@ -22,10 +23,11 @@ node ops/billing/activate-live.mjs
 node ops/billing/activate-live.mjs --apply
 ```
 
-The first command checks the merchant account and webhook without changing them.
+The first command checks the merchant account, default tax behavior, every page
+of active tax registrations, portal configuration, and webhook without changing them.
 The second creates or updates exactly this project's live webhook, enables the
 default Stripe billing portal's invoice history and payment-method controls,
-stores the credentials in Supabase, and checks the deployed signature,
+stores the credentials and the exact portal configuration id in Supabase, and checks the deployed signature,
 authentication and CORS boundaries. It refuses to activate until Stripe Tax
 reports an active setup, and reports the number of active tax registrations so
 the owner and counsel can reconcile it with the approved nexus decision. It

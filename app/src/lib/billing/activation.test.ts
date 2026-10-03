@@ -32,7 +32,7 @@ describe('payment environment boundaries', () => {
     };
     const res = await handleBillingCheckout(new Request('https://project.example', { method: 'POST',
       headers: { Origin: 'https://semester.example', Authorization: 'Bearer token' },
-      body: JSON.stringify({ price_id: '0b1c2d3e-4f50-4617-8829-3a4b5c6d7e8f', consent: true, consent_text_version: 'plus-v1' }),
+      body: JSON.stringify({ price_id: '0b1c2d3e-4f50-4617-8829-3a4b5c6d7e8f', consent: true, consent_text_version: 'plus-v2' }),
     }), deps);
     expect(res.status).toBe(502);
     expect(deps.attach).not.toHaveBeenCalled();
