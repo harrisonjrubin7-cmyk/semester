@@ -69,11 +69,11 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `docs/legal/TERMS-OF-SERVICE-DRAFT.md`, `docs/legal/PRIVACY-POLICY-DRAFT.md`, `app/src/lib/privacy.ts`
 
-### Plus can be bought in the app, but checkout is new and has taken no live payment.
+### Individual paid acquisition is held; Plus and Pro are not on sale.
 
-**What does not work yet.** Plus can be bought and cancelled from the Account screen, at the price the screen shows. The card is typed into Stripe’s page and never reaches Semester. Checkout runs on Stripe test keys, and its first end-to-end check has not been recorded. Pro is not on sale, nothing can be bought on the public site, and during the pilot every student feature is free.
+**What does not work yet.** The checkout and cancellation implementation exists, but new checkout is disabled while pricing, legal, tax, accessibility, security, support and operational approvals remain open. Existing subscribers retain cancellation and billing-history access. During controlled validation, every feature a student can use is free.
 
-**What to do instead.** Nothing to do. Buy only from the Account screen: if another page asks you to pay for Semester, it is not Semester. Write to support about any charge you do not recognise.
+**What to do instead.** Do not enter payment information for Semester. Use Free during controlled validation. Existing subscribers can use Account to cancel or open billing history and should contact support about any unrecognized charge.
 
 *Stated in:* `app/src/lib/membership.ts`, `app/src/lib/plans.ts`, `docs/DECISION-LOG.md`
 

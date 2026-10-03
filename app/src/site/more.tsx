@@ -348,7 +348,7 @@ export const Launch: Page = ({ config }) => (
 
 export const HowWePrice: Page = ({ config }) => (
   <>
-    <Hero title="How pricing works" lead="Semester Institutional is one package delivered through a paid pilot and phased migration; pricing still requires an order form. Pro is not on sale, and Plus is bought in the app." />
+    <Hero title="How pricing works" lead="Semester Institutional is a proposed package delivered only after a separately approved paid pilot and phased implementation. Individual paid plans are planned, not on sale." />
     <Section title="Individual students" id="hp-individual">
       <p>
         A student pays for features, never for their own data. Free, Plus and Pro differ in how many plans and scenarios
