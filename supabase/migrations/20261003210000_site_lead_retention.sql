@@ -47,6 +47,10 @@ create index if not exists site_leads_unconverted_retention
     and converted_at is null
     and converted_billing_account_id is null;
 
+create index if not exists site_leads_converted_billing_account
+  on public.site_leads (converted_billing_account_id)
+  where converted_billing_account_id is not null;
+
 -- The trigger is prospective by construction. Columns added above default to
 -- null and no UPDATE touches old rows; only an INSERT after this migration can
 -- receive the category. Caller-provided retention/conversion values are

@@ -601,6 +601,7 @@ describe('institutional setup intake retention is prospective and not activated'
     expect(migration).toMatch(/before insert on public\.site_leads/);
     expect(migration).toMatch(/new\.route_key = 'plan_institution_launch'/);
     expect(migration).toMatch(/new\.purge_after := new\.created_at \+ interval '90 days'/);
+    expect(migration).toMatch(/on public\.site_leads \(converted_billing_account_id\)[\s\S]*where converted_billing_account_id is not null/);
     expect(migration).not.toMatch(/update\s+public\.site_leads\s+set\s+retention_class/i);
   });
 
