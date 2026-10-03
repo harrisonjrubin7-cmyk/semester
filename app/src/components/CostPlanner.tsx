@@ -2,6 +2,7 @@ import { dollars } from '../lib/cost';
 import { useId, useState } from 'react';
 import { LINE_KINDS, MAX_LINES, staleness, totalSource, totals, type CostLine, type CostSource } from '../lib/cost-plan';
 import { SourceBadge } from './SourceBadge';
+import { useNow } from '../state/store';
 
 const money = dollars;
 const num = (v: string) => {
@@ -30,8 +31,8 @@ export function CostPlanner({
   onChange: (next: CostLine[]) => void;
   now?: Date;
 }) {
-  const [currentNow] = useState(() => new Date());
-  const now = suppliedNow ?? currentNow;
+  const currentTime = useNow();
+  const now = suppliedNow ?? currentTime;
   const [kind, setKind] = useState<string>(LINE_KINDS[0]);
   const headingId = useId();
   const sum = totals(lines);

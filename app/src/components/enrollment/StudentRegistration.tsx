@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { ActionButton, EmptyState, Notice, SectionLabel } from '../ui';
 import { SourceBadge } from '../SourceBadge';
 import { Result, RowItem, Rows, Row, Sub, type Said } from '../academic/Form';
@@ -98,7 +98,7 @@ function landingSaid(s: LiveSection): string {
 const CONFIRM_LABEL = { seat: 'Confirm enrollment', waitlist: 'Join the waitlist', approval: 'Send the request', full: '' } as const;
 
 export function StudentRegistration({ term, calendar }: { term: string; calendar: TermCalendar | null }) {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const { say } = useStore();
   const plan = useRegistrationPlan();
   const { attempt } = useAttempts();

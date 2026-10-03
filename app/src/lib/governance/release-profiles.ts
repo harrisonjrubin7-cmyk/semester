@@ -72,6 +72,9 @@ export const BASE_ACTIVATION_GATES = [
 export const VALIDATION_ACTIVATION_GATES = [
   ...BASE_ACTIVATION_GATES,
   'participant-terms-and-consent',
+  'qualified-legal-public-policy-approval',
+  'representative-user-acceptance',
+  'target-account-lifecycle-acceptance',
   'validation-support-roster',
   'validation-outcome-agreed',
   'qualified-accessibility-conformance',
@@ -104,12 +107,23 @@ export const PAID_ASSURANCE_GATES = [
   'target-dast-clean-rescan',
   'independent-security-assurance',
   'qualified-accessibility-conformance',
+  'target-restore-rehearsal',
+  'target-incident-alert-drill',
+  'target-data-rights-rehearsal',
+  'target-access-revocation-rehearsal',
+  'target-offboarding-rehearsal',
+  'production-provider-approval',
 ] as const;
 
 export const ENTERPRISE_ACTIVATION_GATES = [
+  'broad-enterprise-sale-decision',
   'repeatable-multi-customer-deployments',
   'capacity-and-error-budget-accepted',
   'reference-and-claims-permission',
+] as const;
+
+export const BROAD_INDIVIDUAL_ACTIVATION_GATES = [
+  'broad-individual-rollout-approval',
 ] as const;
 
 export const ACTIVATION_GATES = [
@@ -119,6 +133,7 @@ export const ACTIVATION_GATES = [
     ...COMMERCIAL_ACTIVATION_GATES,
     ...PAID_ASSURANCE_GATES,
     ...ENTERPRISE_ACTIVATION_GATES,
+    ...BROAD_INDIVIDUAL_ACTIVATION_GATES,
   ]),
 ] as const;
 
@@ -136,6 +151,8 @@ export const RELEASE_APPROVER_ROLES = [
   'engineering-owner',
   'trust-owner',
   'finance-owner',
+  'legal-owner',
+  'participant-representative',
 ] as const;
 export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
 export type ReleaseProfileId =
@@ -245,12 +262,15 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     targetKind: 'public-individual',
     capabilityIds: CORE_INDIVIDUAL_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: ['deployed-exact-sha', 'production-smoke', 'support-route-live', 'rollback-current', 'kill-switch-clear'],
+    requiredActivationGates: [
+      ...VALIDATION_ACTIVATION_GATES,
+      ...BROAD_INDIVIDUAL_ACTIVATION_GATES,
+    ],
     requiredDependencies: unsatisfiedCapabilityDependencies(CORE_INDIVIDUAL_CAPABILITIES),
-    defaultOff: false,
+    defaultOff: true,
     allowedOperations: ['personal planning', 'source-aware course organization', 'study and creation', 'export', 'account deletion'],
     forbiddenOperations: ['official registration', 'official grading', 'institutional record writes', 'financial aid', 'payments', 'payroll', 'general ledger'],
-    claimBoundary: 'Ready for broad individual use only after exact-SHA deployment and production gates pass; no institutional connection, certification, or system-of-record claim.',
+    claimBoundary: 'Broad individual rollout remains held until the invitation-validation controls and a separate broad-rollout approval are current; no institutional connection, certification, or system-of-record claim.',
     authorizedClaim: 'Authorized for broad individual use on the evaluated production target; no institutional connection, certification, or system-of-record claim.',
     fallback: 'Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.',
   }),
@@ -408,6 +428,9 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'rollback-current': ['operations-owner', 'security-owner'],
   'kill-switch-clear': ['operations-owner', 'security-owner'],
   'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
+  'qualified-legal-public-policy-approval': ['legal-owner', 'privacy-owner'],
+  'representative-user-acceptance': ['participant-representative', 'product-owner'],
+  'target-account-lifecycle-acceptance': ['participant-representative', 'privacy-owner', 'operations-owner'],
   'validation-support-roster': ['support-owner', 'operations-owner'],
   'validation-outcome-agreed': ['product-owner', 'trust-owner'],
   'validation-launch-decision': [
@@ -430,12 +453,26 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'design-partner-activation-and-measured-closeout': [
     'pilot-champion', 'product-owner', 'trust-owner', 'finance-owner',
   ],
-  'counsel-approved-commercial-paper': ['executive-owner', 'privacy-owner'],
+  'broad-individual-rollout-approval': [
+    'executive-owner', 'legal-owner', 'product-owner', 'security-owner',
+    'privacy-owner', 'accessibility-owner', 'support-owner', 'operations-owner',
+  ],
+  'counsel-approved-commercial-paper': ['executive-owner', 'legal-owner', 'privacy-owner'],
   'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
   'insurance-decision-current': ['executive-owner', 'finance-owner'],
-  'customer-purchase-and-billing-authorization': ['executive-owner', 'finance-owner'],
+  'customer-purchase-and-billing-authorization': ['pilot-champion', 'executive-owner', 'finance-owner'],
   'target-dast-clean-rescan': ['security-owner', 'operations-owner'],
+  'target-restore-rehearsal': ['operations-owner', 'security-owner'],
+  'target-incident-alert-drill': ['operations-owner', 'security-owner', 'support-owner'],
+  'target-data-rights-rehearsal': ['privacy-owner', 'operations-owner'],
+  'target-access-revocation-rehearsal': ['security-owner', 'operations-owner'],
+  'target-offboarding-rehearsal': ['pilot-champion', 'privacy-owner', 'operations-owner'],
+  'production-provider-approval': ['legal-owner', 'privacy-owner', 'security-owner', 'data-owner'],
+  'broad-enterprise-sale-decision': [
+    'pilot-champion', 'executive-owner', 'legal-owner', 'finance-owner',
+    'product-owner', 'security-owner', 'privacy-owner', 'accessibility-owner',
+  ],
   'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
   'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
   'independent-security-assurance': ['security-owner', 'trust-owner'],

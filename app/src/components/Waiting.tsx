@@ -52,7 +52,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { cloudConfigured } from '../lib/cloud';
 import { across, eligible, myProfile, myRooms, roomsFor, termOf, type Message } from '../lib/classmates';
 import { bucket, listed, type Say } from '../lib/roomchat';
@@ -60,6 +60,7 @@ import { marks as storedMarks } from '../lib/roomprefs';
 import { waiting, waitingLine, waitingRoom } from '../lib/waiting';
 
 export function Waiting() {
+  const now = useNow();
   const { state, dispatch, catalog, account, school } = useStore();
   const [now] = useState(() => new Date());
   const [said, setSaid] = useState<Record<string, Message[]>>({});

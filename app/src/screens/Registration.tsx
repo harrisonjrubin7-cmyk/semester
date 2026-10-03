@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { EmptyState, Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
@@ -71,7 +71,7 @@ export function Registration() {
 }
 
 function Desk({ school }: { school: string }) {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const [grants, setGrants] = useState<Grant[] | null | string>(null);
   const [grantReads, setGrantReads] = useState(0);
   const [terms, setTerms] = useState<TermCalendar[] | null | string>(null);
