@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { handleSupportNotice, type SupportNoticeDeps } from '../../../supabase/functions/_shared/supportnotify';
 
 const origin = 'https://harrisonjrubin7-cmyk.github.io';
@@ -31,6 +33,11 @@ const request = (body: unknown = { message_id: message }) => new Request('https:
 });
 
 describe('support reply notification', () => {
+  it('keeps Resend unavailable until the explicit vendor-approval switch is true', () => {
+    const entry = readFileSync(join(process.cwd(), '../supabase/functions/support-reply-notify/index.ts'), 'utf8');
+    expect(entry).toMatch(/SUPPORT_NOTIFY_VENDOR_APPROVED'\) === 'true'/);
+    expect(entry).toMatch(/resendKey: supportVendorApproved && resendKey && supportSender \? resendKey : undefined/);
+  });
   it('sends a generic, idempotent hint without the reply body', async () => {
     const d = deps();
     const response = await handleSupportNotice(request(), d);

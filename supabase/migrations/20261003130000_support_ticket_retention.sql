@@ -16,6 +16,15 @@ alter table public.support_tickets
   add column if not exists tenant_id text,
   add column if not exists retention_classified boolean not null default false;
 
+-- Bound the daily sweep to rows it can actually remove. Signed-deployment
+-- and unclassified legacy tickets are outside this partial index, so their
+-- growth cannot lengthen the legal-hold lock window.
+create index if not exists support_tickets_retention_due
+  on public.support_tickets (updated_at, student_id)
+  where retention_classified
+    and tenant_id is null
+    and status in ('resolved', 'closed');
+
 -- Do not infer a historical tenant from today's profile or today's contract
 -- state. Older tickets predate the durable snapshot, and the membership audit
 -- does not prove every revocation/move interval. They therefore stay
@@ -81,6 +90,22 @@ begin
     coalesce(want_email_notice, false)
   ) returning id into made;
   return made;
+end $$;
+
+-- The delivery mechanics passed UAT, but Resend's vendor review and executed
+-- terms/DPA are not on file. Park the production worker until that gate is
+-- recorded and SUPPORT_NOTIFY_VENDOR_APPROVED is enabled on the function.
+do $$
+begin
+  if to_regproc('cron.alter_job') is not null then
+    execute $cron$
+      select cron.alter_job(
+        (select jobid from cron.job where jobname = 'support-reply-notify'),
+        active := false
+      )
+      where exists (select 1 from cron.job where jobname = 'support-reply-notify')
+    $cron$;
+  end if;
 end $$;
 
 revoke all on function public.open_support_ticket(text, text, text, jsonb, boolean) from public, anon;

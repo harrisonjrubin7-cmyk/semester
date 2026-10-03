@@ -140,12 +140,12 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const names = jobs(scheduler()).map((j) => j.name);
     expect(names.length).toBeGreaterThan(8);
     expect(names).toEqual(expect.arrayContaining(['push', 'tombstones', 'integration-sync']));
-    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan']));
+    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify']));
   });
 
-  it('explicitly reactivates live jobs whose named schedule may preserve an older parked state', () => {
+  it('parks vendor-gated support email and reactivates the credential-free retention clock', () => {
     const sql = scheduler();
-    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-reply-notify'[\s\S]*?active\s*:=\s*true/);
+    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-reply-notify'[\s\S]*?active\s*:=\s*false/);
     expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
   });
 
@@ -153,6 +153,8 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
     expect(migration).toMatch(/cron\.schedule\([\s\S]*?'support-ticket-retention'/);
     expect(migration).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
+    expect(migration).toMatch(/create index if not exists support_tickets_retention_due[\s\S]*?where retention_classified[\s\S]*?tenant_id is null/);
+    expect(migration).toMatch(/jobname = 'support-reply-notify'[\s\S]*?active := false/);
   });
 
   it('serializes support-ticket deletion with legal-hold writes', () => {

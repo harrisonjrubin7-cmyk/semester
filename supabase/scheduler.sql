@@ -107,14 +107,13 @@ select cron.schedule(
   $job$
 );
 
--- Production activation and the sender/secret configuration were verified on
--- 3 October 2026. Keep this job active when scheduler.sql is reapplied; the
--- recipient mailbox receipt remains a separate evidence gate. cron.schedule
--- preserves an existing named job's active flag, so explicitly undo any
--- earlier parked state after updating the job definition.
+-- Delivery mechanics and sender configuration were exercised on 3 October
+-- 2026, but Resend's vendor review and executed terms/DPA are not on file.
+-- Keep the worker parked until that approval is recorded and the function's
+-- SUPPORT_NOTIFY_VENDOR_APPROVED switch is enabled.
 select cron.alter_job(
   (select jobid from cron.job where jobname = 'support-reply-notify'),
-  active := true
+  active := false
 );
 
 

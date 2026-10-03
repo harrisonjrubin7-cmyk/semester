@@ -169,7 +169,7 @@ with expected(jobname, parked) as (values
   ('lti-nonce',                     false),
   ('media-scan',                    true),
   ('push',                          true),
-  ('support-reply-notify',          false),
+  ('support-reply-notify',          true),
   ('support-ticket-retention',      false),
   ('tombstones',                    false)
 )

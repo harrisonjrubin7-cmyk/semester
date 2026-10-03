@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { lines as handoffLines, withHandoff, type Handoff } from '../lib/tickethandoff';
 import type { Account } from '../lib/cloud';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import {
   CATEGORIES,
   CATEGORY_LABELS,
@@ -54,6 +55,7 @@ export function SupportTicketsPanel({
 }
 
 function AccountTickets({ context, handoff }: { context: Record<ContextKey, string>; handoff: Handoff | null }) {
+  const emailNoticesAvailable = EXPERIENCE_FLAGS.supportEmailNotices !== 'off';
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -210,12 +212,16 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
           ) : null}
           <fieldset style={{ border: 0, padding: 0 }}>
             <legend>When support replies (optional)</legend>
-            <label style={{ display: 'block' }}>
+            {emailNoticesAvailable ? <label style={{ display: 'block' }}>
               <input type="checkbox" checked={emailNotice} onChange={() => setEmailNotice((value) => !value)} />
               {' '}Email me a generic notice. The reply itself stays in Semester.
-            </label>
+            </label> : <p style={{ color: 'var(--app-dim)', margin: 0 }}>
+              Email notices are unavailable while the email provider review and terms are incomplete. Replies stay in Help.
+            </p>}
             <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>
-              Off by default. At most three notices per question in 24 hours. You can turn it off anytime.
+              {emailNoticesAvailable
+                ? 'Off by default. At most three notices per question in 24 hours. You can turn it off anytime.'
+                : 'No account email is sent while this gate is closed.'}
             </p>
           </fieldset>
           <button className="btn btn-primary btn-block" disabled={!subject.trim() || !body.trim() || composed.length > BODY_LIMIT}>Check before sending</button>
@@ -270,7 +276,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
             <input
               type="checkbox"
               checked={current.emailNoticeEnabled}
-              disabled={busy}
+              disabled={busy || (!emailNoticesAvailable && !current.emailNoticeEnabled)}
               onChange={(event) => {
                 const enabled = event.currentTarget.checked;
                 run(
@@ -287,7 +293,13 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
               }}
             />
             {' '}Email me a generic notice when support replies
-            <span style={{ display: 'block', color: 'var(--app-dim)' }}>At most three notices in 24 hours. Turn off anytime; replies remain here.</span>
+            <span style={{ display: 'block', color: 'var(--app-dim)' }}>
+              {emailNoticesAvailable
+                ? 'At most three notices in 24 hours. Turn off anytime; replies remain here.'
+                : current.emailNoticeEnabled
+                  ? 'Email delivery is gated. You can turn this saved preference off; replies remain here.'
+                  : 'Unavailable until the email provider review and terms are complete; replies remain here.'}
+            </span>
           </label>
           {thread.map((m, i) => (
             <p key={i} className="portal-panel">

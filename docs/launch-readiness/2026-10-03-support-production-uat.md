@@ -1,6 +1,12 @@
 # Support production UAT — 2026-10-03
 
-Status: **partially passed; email inbox receipt pending**
+Status: **in-app path passed; email path governance-gated and inbox receipt pending**
+
+Current activation boundary: this record proves delivery mechanics exercised
+on the date above. It is not current authorization to process student data
+through Resend. The scheduled worker, deployed function and app UI are gated
+until the Resend vendor review, executed terms/DPA, owner and explicit
+activation decision are recorded. Outlook inbox receipt also remains pending.
 
 Production evidence recorded against deployed commit `a1504691a60af3499803d0e9fd38fa1cb4ea7ec9`:
 
@@ -12,6 +18,6 @@ Production evidence recorded against deployed commit `a1504691a60af3499803d0e9fd
 - Microsoft Defender recorded the exact recipient, sender and subject, quarantined it under the institution’s anti-spam policy, and then recorded recipient release to the inbox.
 - Outlook search, Focused, Other and Junk did not yet show the released message at the time of this record.
 
-Verdict: the staffed in-app ticket and reply path passed production UAT. The email path is deployed and reached the recipient tenant, but it must remain non-green until the released message is visible in the mailbox client. This record does not establish published support hours, a 24/7 rota or contractual service levels.
+Verdict: the staffed in-app ticket and reply path passed production UAT. The email path reached the recipient tenant during this controlled exercise, but it is now parked and must remain non-green until vendor governance is complete and the released message is visible in the mailbox client. This record does not establish published support hours, a 24/7 rota or contractual service levels.
 
-Repository follow-through in this release keeps the verified notification job active when `supabase/scheduler.sql` is reapplied and adds a daily 180-day retention sweep for creation-time-classified individual-beta resolved or closed tickets that have no signed deployment association, with legal-hold protection. School-domain membership alone stays on the individual-beta clock. Tickets opened under a currently effective signed institutional order form remain outside that sweep until an institution-specific contract rule is configured. Tickets created before the durable classifier remain outside automated and direct deletion until their historical authority is verified; the migration does not infer history from a current profile or an unbounded terminated contract. The production UAT did not create a dedicated support-domain address: the published fallback remains `harrisonjrubin7@gmail.com`.
+Repository follow-through in this release parks the notification worker and requires an explicit vendor-approval switch before the deployed function can use Resend. It also adds a daily 180-day retention sweep for creation-time-classified individual-beta resolved or closed tickets that have no signed deployment association, with legal-hold protection and a partial due-row index. School-domain membership alone stays on the individual-beta clock. Tickets opened under a currently effective signed institutional order form remain outside that sweep until an institution-specific contract rule is configured. Tickets created before the durable classifier remain outside automated and ticket-only deletion until their historical authority is verified; the migration does not infer history from a current profile or an unbounded terminated contract, while hold-cleared whole-account erasure still removes them. The production UAT did not create a dedicated support-domain address: the published fallback remains `harrisonjrubin7@gmail.com`.

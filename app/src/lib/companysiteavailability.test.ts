@@ -45,9 +45,12 @@ describe('company-site production availability', () => {
     expect(site).toContain('"Support questions":["The category, question, approved app details, replies and notification delivery state"');
     expect(site).toContain('<th scope="row">Support questions</th>');
     expect(site).toContain('New individual-beta tickets are classified when opened and deleted with their replies 180 days after resolution or closure');
-    expect(site).toContain('Tickets created before the durable classification field are preserved until their historical authority is verified');
+    expect(site).toContain('Tickets created before the durable classification field stay outside timed and ticket-only deletion until their historical authority is verified');
     expect(site).toContain('pre-classification legacy tickets stay outside that sweep');
-    expect(site).toContain('legacy tickets require evidence review for ticket-only deletion but leave with hold-cleared whole-account erasure');
+    expect(site).toContain('ticket-only deletion is not exposed in the app');
+    expect(site).toContain('hold-cleared whole-account erasure still removes them');
+    expect(site).toContain('<td>Resend</td>');
+    expect(site).toContain('Support path inactive pending approval');
   });
 
   it('holds every previously non-green roadmap card to code-complete status without erasing its external gate', () => {
@@ -61,12 +64,13 @@ describe('company-site production availability', () => {
     expect(roadmap).toContain('provider credentials and live activation remain open');
     expect(roadmap).toContain('no institution platform is registered or verified');
     expect(roadmap).toContain('Production ticket creation, staff reply, Help-thread receipt and resolution passed UAT October 3, 2026');
-    expect(roadmap).toContain('Outlook inbox receipt is still pending, so email delivery is not green yet');
+    expect(roadmap).toContain('worker, function and app control are parked until Resend vendor review');
+    expect(roadmap).toContain('Outlook inbox receipt remains pending');
     expect(roadmap).toContain('an approved institution feed remains open');
     const evidencePending = roadmap.slice(roadmap.indexOf('["Built & tested, evidence pending"'), roadmap.indexOf('["Built & tested, activation gated"'));
     const activationGated = roadmap.slice(roadmap.indexOf('["Built & tested, activation gated"'));
-    expect(evidencePending).toContain('Email reply notifications');
-    expect(activationGated).not.toContain('Email reply notifications');
+    expect(evidencePending).not.toContain('Email reply notifications');
+    expect(activationGated).toContain('Email reply notifications');
 
     for (const path of [
       'app/src/lib/captions.test.ts',
