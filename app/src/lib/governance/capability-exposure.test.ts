@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS } from '../nav';
+import { DESTINATIONS, offered } from '../nav';
+import { NO_SCHOOL } from '../school';
 import { CAPABILITY_DEFINITIONS } from './capability-governance';
 import {
   CAPABILITY_EXPOSURE_STATES,
   CAPABILITY_EXPOSURE_INDEX,
   OPERATIONAL_READINESS_CHECKS,
   ROUTE_EXPOSURE_INDEX,
+  navigationExposureGate,
   resolveCapabilityExposure,
   validateCapabilityExposureIndex,
   type CapabilityExposureContext,
@@ -189,6 +191,20 @@ describe('capability exposure resolver', () => {
       publicClaim: null,
     });
     expect(resolveCapabilityExposure('CAP-001', context({ surface: 'ai', aiAvailable: true })).visible).toBe(true);
+  });
+
+  it('gates the navigation registry with navigation decisions and fails closed otherwise', () => {
+    const navigationDecision = resolveCapabilityExposure('CAP-001', context({ surface: 'navigation' }));
+    const gate = navigationExposureGate([navigationDecision]);
+
+    expect(gate('home')).toBe(true);
+    expect(gate('brief')).toBe(false);
+    expect(gate('not-a-route')).toBe(false);
+    expect(offered(NO_SCHOOL.capabilities, 'student', gate).map((item) => item.screen)).toEqual(['home']);
+
+    const marketingDecision = resolveCapabilityExposure('CAP-001', context({ surface: 'marketing' }));
+    expect(navigationExposureGate([marketingDecision])('home')).toBe(false);
+    expect(navigationExposureGate([navigationDecision, navigationDecision])('home')).toBe(false);
   });
 
   it('does not mutate the canonical capability definitions while resolving', () => {

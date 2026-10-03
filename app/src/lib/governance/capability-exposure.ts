@@ -56,6 +56,7 @@ export interface CapabilityExposureContext {
 
 export interface CapabilityExposureDecision {
   capabilityId: string;
+  surface: ExposureSurface;
   status: CapabilityExposureStatus;
   visible: boolean;
   publicClaim: string | null;
@@ -176,11 +177,44 @@ function decision(
     : null;
   return {
     capabilityId,
+    surface,
     status,
     visible,
     publicClaim,
     reason,
     routes: capability ? [...capability.destinations] : [],
+  };
+}
+
+/**
+ * Convert capability decisions into the one predicate navigation consumes.
+ *
+ * A route can implement more than one capability, so one authorized
+ * navigation capability is enough to keep that route discoverable. Missing
+ * decisions, decisions resolved for another surface, duplicate decisions, and
+ * unknown routes all fail closed. The browser must receive these decisions
+ * from the trusted governance boundary; it must not reconstruct their inputs.
+ */
+export function navigationExposureGate(
+  decisions: readonly CapabilityExposureDecision[],
+): (route: string) => boolean {
+  const byCapability = new Map<string, CapabilityExposureDecision>();
+  const duplicates = new Set<string>();
+
+  for (const item of decisions) {
+    if (byCapability.has(item.capabilityId)) duplicates.add(item.capabilityId);
+    byCapability.set(item.capabilityId, item);
+  }
+
+  const byRoute = new Map(ROUTE_EXPOSURE_INDEX.map((item) => [item.route, item.capabilityIds]));
+  return (route: string): boolean => {
+    const capabilityIds = byRoute.get(route);
+    if (!capabilityIds?.length) return false;
+    return capabilityIds.some((capabilityId) => {
+      if (duplicates.has(capabilityId)) return false;
+      const item = byCapability.get(capabilityId);
+      return item?.surface === 'navigation' && item.visible === true;
+    });
   };
 }
 
