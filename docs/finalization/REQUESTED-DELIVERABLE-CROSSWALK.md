@@ -149,11 +149,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 134 | `docs/engineering-operations/DATA-ARCHITECTURE.md` | EXACT PRESENT | canonical device/cloud/provider data and authority layers; target inventory, lifecycle operation, legal and customer decisions remain open |
 | 135 | `docs/engineering-operations/INTEGRATION-ARCHITECTURE.md` | EXACT PRESENT | canonical adapter, policy, readback and activation-stage model; named-provider and institutional production acceptance remain absent |
 | 136 | `docs/engineering-operations/ENVIRONMENT-AND-CONFIGURATION-MANAGEMENT.md` | EXACT PRESENT | canonical environment classes and public/secret/flag/release controls; complete target inventory and configuration readback remain partial |
-| 137 | `docs/engineering-operations/DEPLOYMENT-AND-RELEASE-RUNBOOK.md` | NO CLOSE SOURCE | — |
-| 138 | `docs/engineering-operations/CI-CD-STANDARDS.md` | NO CLOSE SOURCE | — |
-| 139 | `docs/engineering-operations/TEST-STRATEGY.md` | NO CLOSE SOURCE | — |
-| 140 | `docs/engineering-operations/TEST-COVERAGE-MATRIX.md` | CANDIDATE SOURCE | `docs/ai-toolkit/DEVICE-TEST-MATRIX.md` (filename similarity 0.52; substantive review required) |
-| 141 | `docs/engineering-operations/CRITICAL-FLOW-TEST-PLAN.md` | CANDIDATE SOURCE | `docs/INTEGRATION-TEST-PLAN.md` (filename similarity 0.47; substantive review required) |
+| 137 | `docs/engineering-operations/DEPLOYMENT-AND-RELEASE-RUNBOOK.md` | EXACT PRESENT | canonical immutable-candidate, deploy/readback, stop and rollback sequence; production recovery and institutional cutover remain unexercised |
+| 138 | `docs/engineering-operations/CI-CD-STANDARDS.md` | EXACT PRESENT | canonical pipeline, evidence and exception controls; exact candidate aggregate, DAST and artifact provenance remain open |
+| 139 | `docs/engineering-operations/TEST-STRATEGY.md` | EXACT PRESENT | canonical layered risk-based evidence ladder; automated coverage remains distinct from human, target and external assurance |
+| 140 | `docs/engineering-operations/TEST-COVERAGE-MATRIX.md` | EXACT PRESENT | canonical coverage/gap map across product, data, operations, security and commercial claims; current aggregate and external evidence remain open |
+| 141 | `docs/engineering-operations/CRITICAL-FLOW-TEST-PLAN.md` | EXACT PRESENT | canonical CF-01–CF-10 journey/boundary plan with motion-specific priorities; complete target/customer acceptance remains open |
 | 142 | `docs/engineering-operations/OBSERVABILITY-PLAN.md` | CANDIDATE SOURCE | `tasks/plan.md` (filename similarity 0.46; substantive review required) |
 | 143 | `docs/engineering-operations/SLO-SLI-DRAFT.md` | NO CLOSE SOURCE | — |
 | 144 | `docs/engineering-operations/ERROR-BUDGET-DRAFT.md` | NO CLOSE SOURCE | — |
