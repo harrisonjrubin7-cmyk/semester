@@ -352,6 +352,8 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
     ],
   };
   assert.deepEqual(findingPluginIds({ findings: [csrf, { ...csrf, plugin_id: '10032' }, csrf] }), ['10202', '10032']);
+  assert.deepEqual(findingPluginIds({ findings: [] }), [], 'an explicit clean findings list needs no plugin detail requests');
+  assert.throws(() => findingPluginIds({}), /unsupported schema/i, 'missing finding evidence still fails closed');
   assert.deepEqual(findingsFromEvidence(csrf), [csrf], 'plugin detail is a single finding');
   assert.deepEqual(findingsFromEvidence({ finding: csrf }), [csrf], 'plugin detail may use a finding envelope');
   assert.doesNotThrow(() => assertCompleteFindingEvidence(csrf));
@@ -366,7 +368,7 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
   assert.deepEqual(
     evidenceDiagnostics({
       alert: { pluginId: 'secret-value', uriCount: 2 },
-      applicationScanAlertUris: [{ findingHash: 'secret-hash', method: 'GET', uri: '/private' }],
+      applicationScanAlertUris: [{ findingHash: 'secret-hash', method: 'GET', uri: '/private', scan: { id: 'secret-scan' } }],
       nextPageToken: 'secret-token',
       totalCount: 2,
     }),
@@ -375,6 +377,7 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
       'applicationScanAlertUris=array(1;item=object(findingHash,method,uri))',
       'nextPageToken=string',
       'totalCount=number',
+      'applicationScanAlertUris[0].scan=object(id:string)',
     ],
   );
   assert.throws(() => findingPluginIds({ vulnerabilities: [csrf] }), /unsupported schema: object\(vulnerabilities:array\(1;item=object\(/i);

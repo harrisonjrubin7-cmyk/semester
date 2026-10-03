@@ -136,9 +136,14 @@ export function evidenceShape(value) {
 
 export function evidenceDiagnostics(report) {
   if (!report || typeof report !== 'object' || Array.isArray(report)) return [];
-  return ['alert', 'applicationScanAlertUris', 'nextPageToken', 'totalCount']
+  const lines = ['alert', 'applicationScanAlertUris', 'findings', 'nextPageToken', 'totalCount']
     .filter(key => key in report)
     .map(key => `${key}=${evidenceShape(report[key])}`);
+  if (Array.isArray(report.findings?.[0]?.paths)) lines.push(`findings[0].paths=${evidenceShape(report.findings[0].paths)}`);
+  if (report.applicationScanAlertUris?.[0]?.scan && typeof report.applicationScanAlertUris[0].scan === 'object') {
+    lines.push(`applicationScanAlertUris[0].scan=${evidenceShape(report.applicationScanAlertUris[0].scan)}`);
+  }
+  return lines;
 }
 
 export function findingsFromEvidence(report) {
@@ -150,7 +155,7 @@ export function findingsFromEvidence(report) {
 
 export function findingPluginIds(report) {
   const ids = findingsFromEvidence(report).map(finding => String(finding?.plugin_id ?? ''));
-  if (!ids.length || ids.some(id => !/^[a-z\d._:-]{1,128}$/i.test(id))) throw new Error('Finding evidence did not include a safe plugin identifier');
+  if (ids.some(id => !/^[a-z\d._:-]{1,128}$/i.test(id))) throw new Error('Finding evidence did not include a safe plugin identifier');
   return [...new Set(ids)];
 }
 
@@ -185,6 +190,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(scanId(report));
     }
     else if (process.argv[2] === 'plugin-ids') {
+      evidenceDiagnostics(report).forEach(shape => console.error(`StackHawk | Finding evidence shape: ${shape}`));
       findingPluginIds(report).forEach(id => console.log(id));
     }
     else if (process.argv[2] === 'hashes') {
