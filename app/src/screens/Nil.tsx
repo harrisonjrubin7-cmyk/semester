@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel, Segmented } from '../components/ui';
 import { NotOfficial } from '../components/NotOfficial';
@@ -83,6 +83,7 @@ const ASSOCIATED: { id: Associated; label: string }[] = [
 ];
 
 function Workspace({ storageKey }: { storageKey: string }) {
+  const now = useNow();
   const { state, dispatch } = useStore();
   const [now] = useState(() => new Date());
   const lib = useDeviceLibrary(storageKey, readNil, EMPTY_NIL);

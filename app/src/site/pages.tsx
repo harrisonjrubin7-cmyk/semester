@@ -236,11 +236,11 @@ const COMMERCIAL_TERMS: [string, string][] = [
   ['Billing period', 'Monthly or yearly, as shown. No other period.'],
   ['Tax', 'Determined for your location before anything is sold; the price shown is before tax.'],
   ['Free trial', 'Not decided. Everything a student can use is free during the pilot, which is more than a trial.'],
-  ['Upgrading', 'Plus, from the Account screen in the app: the price is shown first and you tick a consent before Stripe is asked. Pro is not on sale.'],
+  ['Upgrading', 'Individual paid acquisition is held. Plus and Pro are planned, not on sale, until the required product, legal, privacy, accessibility, security and operational approvals are current.'],
   ['Cancelling', 'From the same screen. Cancelling stops the renewal at Stripe, Plus lasts to the end of the period you paid for, and everything you built stays.'],
   ['What stays available', 'Everything on Free, always, and every plan you saved.'],
   ['Refunds', 'The policy is a proposal: it is published on the legal page before a live payment is taken, not after.'],
-  ['Receipts and invoices', 'Stripe sends the receipt for a Plus payment. Nothing else has been charged.'],
+  ['Receipts and invoices', 'Existing subscribers retain billing-history access. New individual checkout is disabled.'],
   ['Institution-sponsored access', 'If your university provides Semester, you sign in with your university account and pay nothing.'],
 ];
 
@@ -263,9 +263,9 @@ export const Pricing: Page = ({ config }) => (
       <ul>
         {ALWAYS_INCLUDED.map((i) => <li key={i}>{i}</li>)}
       </ul>
-      <p>Nothing you built on a free plan is taken away. Nothing can be bought on this site. Plus is bought from the Account screen in the app, on Stripe’s own page, and no card details reach Semester.</p>
+      <p>Nothing you built on a free plan is taken away. Individual paid plans are planned, not on sale. New checkout is disabled while the required approvals remain open.</p>
     </Section>
-    <Section title="Buying Semester Plus" id="pr-terms">
+    <Section title="Planned individual plans" id="pr-terms">
       <ClaimList ids={['no-sale']} />
       <dl className="site-legend">
         {COMMERCIAL_TERMS.map(([term, detail]) => (

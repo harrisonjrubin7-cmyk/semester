@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
 import { ActionButton } from './ui';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -44,6 +43,7 @@ import { money } from '../lib/cost';
  * logged, with no rate applied to it.
  */
 export function NilTaxNote() {
+  const now = useNow();
   const { account, dispatch } = useStore();
   const [now] = useState(() => new Date());
   const nil = useDeviceLibrary(nilKey(account?.id), readNil, EMPTY_NIL);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
@@ -62,7 +62,7 @@ import { GuideOperatingContract } from '../../components/GuideOperatingContract'
  * that hunt now ends on this page rather than on a screen about calendars.
  */
 export function SettingsAssistant() {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const [config, setConfig] = useState(settings());
   const [saved, setSaved] = useState(false);
   const [checking, setChecking] = useState(false);

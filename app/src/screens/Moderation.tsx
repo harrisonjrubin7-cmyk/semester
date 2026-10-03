@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel } from '../components/ui';
 import { CATEGORY_TEXT } from '../components/community/ReportSheet';
@@ -119,7 +119,7 @@ const SAFETY_BUILT = () => enabled(COMMUNITY_FLAGS, 'accountSafetyState');
 const ALIASES_BUILT = () => enabled(COMMUNITY_FLAGS, 'scopedPseudonymity');
 
 function Console({ accountId }: { accountId: string }) {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const { dispatch } = useStore();
   const [agreementStaff, setAgreementStaff] = useState(false);
   const [standing, setStanding] = useState<Standing | null>(null);

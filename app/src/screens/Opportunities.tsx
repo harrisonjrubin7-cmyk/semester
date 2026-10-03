@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { SectionLabel, TabList } from '../components/ui';
 import { Card, Checklist, GoTo, Never, OfficeDoor } from '../components/JourneyKit';
@@ -95,7 +95,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
 }
 
 function List({ lib, onAdd, onOpen, onTrack }: { lib: OpportunityLibrary; onAdd: (k: Kind) => void; onOpen: (id: string) => void; onTrack: (o: Opportunity) => void }) {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const [kind, setKind] = useState<Kind | 'all'>('all');
   const today = dateToIso(now);
   const soon = deadlines(lib.items, today).slice(0, 3);

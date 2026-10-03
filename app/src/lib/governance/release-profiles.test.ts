@@ -60,6 +60,9 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'rollback-current': ['operations-owner', 'security-owner'],
   'kill-switch-clear': ['operations-owner', 'security-owner'],
   'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
+  'qualified-legal-public-policy-approval': ['legal-owner', 'privacy-owner'],
+  'representative-user-acceptance': ['participant-representative', 'product-owner'],
+  'target-account-lifecycle-acceptance': ['participant-representative', 'privacy-owner', 'operations-owner'],
   'validation-support-roster': ['support-owner', 'operations-owner'],
   'validation-outcome-agreed': ['product-owner', 'trust-owner'],
   'qualified-accessibility-conformance': ['accessibility-owner', 'trust-owner'],
@@ -83,12 +86,26 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'design-partner-activation-and-measured-closeout': [
     'pilot-champion', 'product-owner', 'trust-owner', 'finance-owner',
   ],
-  'counsel-approved-commercial-paper': ['executive-owner', 'privacy-owner'],
+  'broad-individual-rollout-approval': [
+    'executive-owner', 'legal-owner', 'product-owner', 'security-owner',
+    'privacy-owner', 'accessibility-owner', 'support-owner', 'operations-owner',
+  ],
+  'counsel-approved-commercial-paper': ['executive-owner', 'legal-owner', 'privacy-owner'],
   'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
   'insurance-decision-current': ['executive-owner', 'finance-owner'],
-  'customer-purchase-and-billing-authorization': ['executive-owner', 'finance-owner'],
+  'customer-purchase-and-billing-authorization': ['pilot-champion', 'executive-owner', 'finance-owner'],
   'target-dast-clean-rescan': ['security-owner', 'operations-owner'],
+  'target-restore-rehearsal': ['operations-owner', 'security-owner'],
+  'target-incident-alert-drill': ['operations-owner', 'security-owner', 'support-owner'],
+  'target-data-rights-rehearsal': ['privacy-owner', 'operations-owner'],
+  'target-access-revocation-rehearsal': ['security-owner', 'operations-owner'],
+  'target-offboarding-rehearsal': ['pilot-champion', 'privacy-owner', 'operations-owner'],
+  'production-provider-approval': ['legal-owner', 'privacy-owner', 'security-owner', 'data-owner'],
+  'broad-enterprise-sale-decision': [
+    'pilot-champion', 'executive-owner', 'legal-owner', 'finance-owner',
+    'product-owner', 'security-owner', 'privacy-owner', 'accessibility-owner',
+  ],
   'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
   'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
   'independent-security-assurance': ['security-owner', 'trust-owner'],
@@ -186,6 +203,8 @@ describe('pilot and individual release profiles', () => {
     expect(paidManual.requiredDependencies).toEqual([]);
     expect(PAID_ASSURANCE_GATES).toEqual([
       'target-dast-clean-rescan', 'independent-security-assurance', 'qualified-accessibility-conformance',
+      'target-restore-rehearsal', 'target-incident-alert-drill', 'target-data-rights-rehearsal',
+      'target-access-revocation-rehearsal', 'target-offboarding-rehearsal', 'production-provider-approval',
     ]);
     expect(COMMERCIAL_ACTIVATION_GATES).toContain('design-partner-activation-and-measured-closeout');
     expect(paidManual.allowedOperations.join(' ')).toMatch(/manual/i);
@@ -900,11 +919,11 @@ function render(): string {
     ])), '',
     '## Activation boundary', '',
     '- This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.',
-    '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
-    '- Invitation-only unpaid validation additionally requires one named cohort, participant terms and consent, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.',
+    '- Broad individual rollout remains held behind every invitation-validation gate plus a separate broad-rollout decision; the current product checkout hold independently disables new paid acquisition.',
+    '- Invitation-only unpaid validation requires one named cohort, participant terms and consent, qualified legal/public-policy approval, representative-user acceptance, target account-lifecycle acceptance, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.',
     '- Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
-    '- A paid pilot additionally requires an approved design-partner activation and measured closeout, a clean target-bound DAST rescan, independent security assurance, qualified accessibility conformance, counsel-approved commercial paper, pricing and signing authority, tax/accounting/payment controls, a current insurance decision, and customer purchase and billing authorization.',
-    '- A broad enterprise sale additionally requires repeated customer deployments, accepted capacity and error budgets, independent security assurance, qualified accessibility conformance, and claim-specific reference permission.',
+    '- A paid pilot additionally requires an approved design-partner activation and measured closeout; target-bound DAST, restore, incident/alert, data-rights, access-revocation and offboarding exercises; independent security assurance; qualified accessibility conformance; approved production providers; counsel-approved commercial paper; pricing and signing authority; tax/accounting/payment controls; a current insurance decision; and customer-side purchase and billing authorization.',
+    '- A broad enterprise sale additionally requires a separate broad-sale decision, repeated customer deployments, accepted capacity and error budgets, and claim-specific reference permission.',
     '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
     '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant, cohort and explicit manual or connected data mode. Mixed-target evidence fails closed.',

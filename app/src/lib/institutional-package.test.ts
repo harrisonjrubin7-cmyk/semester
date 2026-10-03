@@ -8,8 +8,8 @@ describe('Semester Institutional', () => {
     expect(offer).toMatch(/gradebook capabilities/);
     expect(offer).toMatch(/off until separately approved/);
     expect(offer).not.toMatch(/Native LMS|gradebook of record/);
-    expect(offer).toMatch(/SSO/);
-    expect(offer).toMatch(/OneRoster/);
+    expect(offer).toMatch(/Approved institutional connections/);
+    expect(offer).not.toMatch(/OneRoster/);
     expect(offer).toMatch(/credential wallet/);
     expect(offer).toMatch(/institutional analytics/);
     expect(offer).toMatch(/official-system write workflows/);

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
@@ -86,7 +86,7 @@ export function Agreements() {
 }
 
 function Manager({ accountId }: { accountId: string }) {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);

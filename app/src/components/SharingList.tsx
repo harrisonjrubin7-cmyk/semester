@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../lib/family';
 import { checkSupporterPlan } from '../lib/sharing';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 
 /**
@@ -19,8 +19,8 @@ import { SectionLabel } from './ui';
  * asked to accept it.
  */
 export function SharingList({ today: suppliedToday }: { today?: string }) {
-  const [now] = useState(() => new Date());
-  const today = suppliedToday ?? dateToIso(now);
+  const currentTime = useNow();
+  const today = suppliedToday ?? dateToIso(currentTime);
   const { account, dispatch } = useStore();
   const family = useDeviceLibrary(`semester.family.v1:${account?.id || 'device'}`, readFamily, EMPTY_FAMILY);
   const rows = family.value.members.map((m) => ({ member: m, check: checkSupporterPlan(m, family.value.items, today) }));

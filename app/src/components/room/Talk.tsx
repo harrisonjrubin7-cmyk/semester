@@ -20,6 +20,7 @@ import {
   type Profile,
   type Reaction,
 } from '../../lib/classmates';
+import { useNow } from '../../state/store';
 import {
   clockAt,
   conversation,
@@ -119,7 +120,7 @@ export function Talk({
   onPaper: (code: string) => void;
   paperOf: (body: string) => string | null;
 }) {
-  const [now] = useState(() => new Date());
+  const now = useNow();
   const [messages, setMessages] = useState<Message[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [present, setPresent] = useState<string[]>([]);

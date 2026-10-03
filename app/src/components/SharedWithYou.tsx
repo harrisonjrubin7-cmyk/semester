@@ -6,7 +6,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { FAMILY_LABELS } from '../lib/family';
 import { SEEN_PREFIX, endedShares, readSeen, readShares, type ShareFrom } from '../lib/familyshare';
 import { recipientLine } from '../lib/sharing';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 
 const NOBODY: Record<string, string> = {};
@@ -22,8 +22,8 @@ const NOBODY: Record<string, string> = {};
  * categories or dated by activity (design §7).
  */
 export function SharedWithYou({ today: suppliedToday }: { today?: string }) {
-  const [now] = useState(() => new Date());
-  const today = suppliedToday ?? dateToIso(now);
+  const currentTime = useNow();
+  const today = suppliedToday ?? dateToIso(currentTime);
   const { account } = useStore();
   const seen = useDeviceLibrary(`${SEEN_PREFIX}:${account?.id || 'device'}`, readSeen, NOBODY);
   const [shares, setShares] = useState<ShareFrom[] | null>(null);

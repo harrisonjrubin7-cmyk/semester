@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
@@ -73,7 +73,7 @@ export function Gradebook() {
 }
 
 function Book({ school, me }: { school: string; me: string }) {
-  const [currentTime] = useState(() => new Date());
+  const currentTime = useNow();
   const { dispatch } = useStore();
   const [grants, setGrants] = useState<Grant[] | null | 'error'>(null);
   const [reads, setReads] = useState(0);
