@@ -168,6 +168,7 @@ or leads go unanswered.
 | `LEAD_NOTIFY_FROM` | lead-intake | Optional: a verified Resend sender (default Resend's onboarding sender, which only delivers to the Resend account's own address) |
 | `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | App route where Stripe returns the student. Activation supplies the production Account route; the portal refuses to fall back to an origin root |
 | `STRIPE_PORTAL_CONFIGURATION_ID` | billing-portal | Active `bpc_…` configuration created or selected by the activation tool; sessions always name it explicitly |
+| `STRIPE_PRODUCT_TAX_CODE` | billing-checkout | Owner/accountant-approved `txcd_…` classification for Semester Plus software; sent on every inline Stripe Product and required before checkout opens |
 | `LEAD_IP_SALT` | lead-intake | Optional: the key the IP address is hashed with (default: the service key) |
 
 The Stripe webhook to register (Developers → Webhooks) is

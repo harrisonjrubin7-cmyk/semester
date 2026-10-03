@@ -14,9 +14,12 @@ const DEFAULT_RETURN = 'https://harrisonjrubin7-cmyk.github.io/semester/#/accoun
 export function configuration(env) {
   const project = env.SUPABASE_PROJECT_REF || DEFAULT_PROJECT;
   const stripeKey = env.STRIPE_SECRET_KEY;
+  const taxCode = env.STRIPE_PRODUCT_TAX_CODE;
   const accessToken = env.SUPABASE_ACCESS_TOKEN;
   if (!/^[a-z]{20}$/.test(project)) throw new Error('Invalid SUPABASE_PROJECT_REF.');
   if (!/^(sk|rk)_live_[A-Za-z0-9]+$/.test(stripeKey || '')) throw new Error('A live STRIPE_SECRET_KEY is required.');
+  if (!/^txcd_[0-9]{8}$/.test(taxCode || ''))
+    throw new Error('An owner-approved STRIPE_PRODUCT_TAX_CODE is required.');
   if (!accessToken) throw new Error('SUPABASE_ACCESS_TOKEN is required.');
   const origins = (env.ALLOWED_ORIGIN || '').split(',').map(x => x.trim()).filter(Boolean);
   if (!origins.length || origins.some(origin => {
@@ -27,7 +30,7 @@ export function configuration(env) {
   const u = new URL(returnUrl);
   if (u.protocol !== 'https:' || u.username || u.password || !origins.includes(u.origin)) throw new Error('CHECKOUT_RETURN_URL must belong to ALLOWED_ORIGIN.');
   if (env.STRIPE_WEBHOOK_SECRET && !/^whsec_[A-Za-z0-9]+$/.test(env.STRIPE_WEBHOOK_SECRET)) throw new Error('Invalid STRIPE_WEBHOOK_SECRET.');
-  return { project, stripeKey, accessToken, origins, returnUrl, webhookSecret: env.STRIPE_WEBHOOK_SECRET,
+  return { project, stripeKey, taxCode, accessToken, origins, returnUrl, webhookSecret: env.STRIPE_WEBHOOK_SECRET,
     webhookUrl: `https://${project}.supabase.co/functions/v1/billing-webhook` };
 }
 
@@ -68,7 +71,9 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   if (!Array.isArray(portalPage.data)) throw new Error('Stripe returned an invalid billing portal configuration list.');
   let portal = portalPage.data[0];
   let portalReady = portal?.features?.invoice_history?.enabled === true &&
-    portal?.features?.payment_method_update?.enabled === true;
+    portal?.features?.payment_method_update?.enabled === true &&
+    portal?.features?.customer_update?.enabled === true &&
+    portal?.features?.customer_update?.allowed_updates?.includes('address');
 
   // Follow pagination; never mistake page one for the complete endpoint list.
   let matches = [], cursor;
@@ -87,7 +92,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     throw new Error('Set STRIPE_WEBHOOK_SECRET from the existing live endpoint; its secret cannot be retrieved through the API. No settings changed.');
   const completeEvents = endpoint && (endpoint.enabled_events?.includes('*') || EVENTS.every(event => endpoint.enabled_events?.includes(event)));
   if (!apply) return { state: 'checked', project: c.project, chargesEnabled: true,
-    taxReady, taxBehaviorConfigured: !!taxBehavior, activeTaxRegistrations: registrations.length,
+    taxReady, taxBehaviorConfigured: !!taxBehavior, productTaxCodeConfigured: true,
+    activeTaxRegistrations: registrations.length,
     portalConfigured: portalReady, webhookExists: !!endpoint,
     requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
 
@@ -110,14 +116,19 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     const body = new URLSearchParams({
       'features[invoice_history][enabled]': 'true',
       'features[payment_method_update][enabled]': 'true',
+      'features[customer_update][enabled]': 'true',
       default_return_url: c.returnUrl,
     });
+    const customerUpdates = new Set([...(portal?.features?.customer_update?.allowed_updates ?? []), 'address']);
+    [...customerUpdates].forEach((value, i) => body.set(`features[customer_update][allowed_updates][${i}]`, value));
     portal = await stripe(
       portal?.id ? `billing_portal/configurations/${encodeURIComponent(portal.id)}` : 'billing_portal/configurations',
       { method: 'POST', headers, body },
     );
     portalReady = portal?.active === true && portal?.features?.invoice_history?.enabled === true &&
-      portal?.features?.payment_method_update?.enabled === true;
+      portal?.features?.payment_method_update?.enabled === true &&
+      portal?.features?.customer_update?.enabled === true &&
+      portal?.features?.customer_update?.allowed_updates?.includes('address');
     if (!portalReady) throw new Error('Stripe did not return a usable billing portal configuration. Project secrets were not changed.');
   }
   if (!/^bpc_[A-Za-z0-9]+$/.test(portal?.id || ''))
@@ -130,6 +141,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
       { name: 'ALLOWED_ORIGIN', value: c.origins.join(',') },
       { name: 'CHECKOUT_RETURN_URL', value: c.returnUrl },
       { name: 'STRIPE_PORTAL_CONFIGURATION_ID', value: portal.id },
+      { name: 'STRIPE_PRODUCT_TAX_CODE', value: c.taxCode },
     ]),
   }, 'Supabase secret configuration');
 
@@ -157,7 +169,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     }
   }
   return { state: 'configured', project: c.project, chargesEnabled: true,
-    taxReady: true, taxBehaviorConfigured: true, activeTaxRegistrations: registrations.length,
+    taxReady: true, taxBehaviorConfigured: true, productTaxCodeConfigured: true,
+    activeTaxRegistrations: registrations.length,
     portalConfigured: true, webhookVerified: true, originsVerified: true, paymentsVerified: false,
     remaining: 'Complete one owner-approved checkout, receipt, entitlement and cancellation lifecycle before marking billing available.' };
 }

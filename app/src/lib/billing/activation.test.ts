@@ -23,7 +23,8 @@ describe('payment environment boundaries', () => {
 
   it('never attaches a test checkout to a live billing account', async () => {
     const deps: CheckoutDeps = {
-      stripeKey: 'sk_live_abc', allowedOrigin: 'https://semester.example', returnUrl: undefined,
+      stripeKey: 'sk_live_abc', taxCode: 'txcd_10103000',
+      allowedOrigin: 'https://semester.example', returnUrl: undefined,
       userFromToken: async () => 'user',
       begin: async () => ({ outcome: 'ok', checkout_id: 'checkout', billing_account_id: 'acct', customer_ref: null,
         email: 'test@example.edu', plan_name: 'Plus', amount_cents: 799, currency: 'usd', billing_interval: 'month' }),

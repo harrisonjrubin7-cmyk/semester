@@ -42,6 +42,8 @@ export interface BeginRow {
 export interface CheckoutDeps {
   /** `STRIPE_SECRET_KEY`; unset turns checkout off. */
   stripeKey: string | undefined;
+  /** Owner/accountant-approved Stripe Tax code for Semester Plus software. */
+  taxCode: string | undefined;
   /** `ALLOWED_ORIGIN`, read strictly. */
   allowedOrigin: string | undefined;
   /** `CHECKOUT_RETURN_URL`, where Stripe sends the person back; defaults to the calling origin. */
@@ -68,7 +70,7 @@ export function returnTo(base: string, outcome: 'success' | 'cancel'): string {
 }
 
 /** The Checkout Session parameters, as Stripe's form API reads them. */
-export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: string): Record<string, unknown> {
+export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: string, taxCode: string): Record<string, unknown> {
   return {
     mode: 'subscription',
     client_reference_id: row.checkout_id,
@@ -85,7 +87,10 @@ export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: stri
         currency: row.currency,
         unit_amount: row.amount_cents,
         recurring: { interval: row.billing_interval },
-        product_data: { name: `Semester ${row.plan_name}` },
+        // Name the reviewed software classification on every inline product;
+        // never inherit an unrelated account default.
+        // Source: https://docs.stripe.com/tax/tax-codes
+        product_data: { name: `Semester ${row.plan_name}`, tax_code: taxCode },
       },
     }],
     metadata: { semester_checkout_id: row.checkout_id },
@@ -113,7 +118,10 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   // A preflight from an allowed page succeeds even while checkout is off, so
   // the page can read the 503's sentence rather than a bare network error.
   if (req.method === 'OPTIONS') return allowed ? reply(204, null) : reply(403, null);
-  if (!stripeMode(deps.stripeKey)) return reply(503, { error: 'Checkout is not available yet.' });
+  const taxCode = deps.taxCode;
+  if (!stripeMode(deps.stripeKey) || !taxCode || !/^txcd_[0-9]{8}$/.test(taxCode)) {
+    return reply(503, { error: 'Checkout is not available yet.' });
+  }
   if (!allowed) return reply(403, { error: 'This page is not allowed to start a checkout.' });
   if (req.method !== 'POST') return reply(405, { error: 'Method not allowed.' }, { Allow: 'POST, OPTIONS' });
 
@@ -154,7 +162,7 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
         // One session per checkout row, however often the button is pressed.
         'Idempotency-Key': `checkout-${row.checkout_id}`,
       },
-      body: formEncode(sessionParams(row, returnTo(base, 'success'), returnTo(base, 'cancel'))),
+      body: formEncode(sessionParams(row, returnTo(base, 'success'), returnTo(base, 'cancel'), taxCode)),
     });
     if (!res.ok) return reply(502, { error: 'The payment provider did not answer. Nothing was charged.' });
     const session = (await res.json()) as { id?: unknown; url?: unknown; livemode?: unknown };

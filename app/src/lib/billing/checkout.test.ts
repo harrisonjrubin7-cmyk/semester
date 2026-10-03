@@ -16,6 +16,7 @@ function deps(over: Partial<CheckoutDeps> = {}) {
   const stripe = vi.fn(async () => new Response(JSON.stringify({ id: 'cs_test_1', livemode: false, url: 'https://checkout.stripe.com/c/pay/cs_test_1' }), { status: 200 }));
   const d = {
     stripeKey: 'sk_test_x',
+    taxCode: 'txcd_10103000',
     allowedOrigin: APP,
     returnUrl: undefined,
     userFromToken: vi.fn(async (t: string) => (t === 'good-token' ? 'user-1' : null)),
@@ -102,6 +103,7 @@ describe('billing checkout', () => {
     expect(form.get('client_reference_id')).toBe(CHECKOUT);
     expect(form.get('line_items[0][price_data][unit_amount]')).toBe('799');
     expect(form.get('line_items[0][price_data][recurring][interval]')).toBe('month');
+    expect(form.get('line_items[0][price_data][product_data][tax_code]')).toBe('txcd_10103000');
     expect(form.get('automatic_tax[enabled]')).toBe('true');
     expect(form.get('customer_email')).toBe('ana@example.edu');
     expect(form.has('customer_update[address]')).toBe(false);
@@ -109,6 +111,14 @@ describe('billing checkout', () => {
     // No card field is ever part of what Semester sends.
     expect([...form.keys()].some((k) => /card|cvc|number/i.test(k))).toBe(false);
     expect(d.attach).toHaveBeenCalledWith(CHECKOUT, 'cs_test_1');
+  });
+
+  it('stays off until an owner-approved Stripe Tax product code is configured', async () => {
+    const d = deps({ taxCode: undefined });
+    const res = await handleBillingCheckout(post(GOOD), d);
+    expect(res.status).toBe(503);
+    expect(d.begin).not.toHaveBeenCalled();
+    expect(d.fetch).not.toHaveBeenCalled();
   });
 
   it('lets automatic tax refresh an existing customer address on re-subscribe', async () => {

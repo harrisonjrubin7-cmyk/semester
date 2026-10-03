@@ -18,9 +18,15 @@ as $$
 declare
   s public.subscriptions;
   found_id uuid;
+  found_status text;
 begin
-  select id into found_id from public.invoices where provider_ref = want_invoice_ref;
+  select id, status into found_id, found_status from public.invoices where provider_ref = want_invoice_ref;
   if found_id is not null then
+    -- Provider events may arrive out of order. Once the paid snapshot has won,
+    -- a late finalization-failure snapshot must not replace its amounts.
+    if found_status = 'paid' then
+      return found_id;
+    end if;
     -- A failed automatic-tax finalization can create the draft first. When
     -- Stripe later succeeds, refresh that same row from the newer invoice
     -- snapshot rather than preserving the draft's incomplete amounts.

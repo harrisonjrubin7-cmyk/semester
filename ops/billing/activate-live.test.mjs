@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { activateLive, configuration, EVENTS } from './activate-live.mjs';
 
 const env = { STRIPE_SECRET_KEY: 'sk_live_abc', SUPABASE_ACCESS_TOKEN: 'access-token',
-  ALLOWED_ORIGIN: 'https://harrisonjrubin7-cmyk.github.io' };
+  STRIPE_PRODUCT_TAX_CODE: 'txcd_10103000', ALLOWED_ORIGIN: 'https://harrisonjrubin7-cmyk.github.io' };
 const response = (body, status = 200, headers) => new Response(JSON.stringify(body), { status, headers });
 
 test('refuses test keys and unsafe origins without calling any provider', async () => {
   for (const overrides of [{ STRIPE_SECRET_KEY: 'sk_test_abc' }, { ALLOWED_ORIGIN: '*' },
-    { ALLOWED_ORIGIN: 'https://app.example/path' }, { CHECKOUT_RETURN_URL: 'https://evil.example/' }]) {
+    { STRIPE_PRODUCT_TAX_CODE: '' }, { ALLOWED_ORIGIN: 'https://app.example/path' },
+    { CHECKOUT_RETURN_URL: 'https://evil.example/' }]) {
     let calls = 0;
     await assert.rejects(activateLive({ ...env, ...overrides }, { apply: true, fetch: async () => { calls++; return response({}); } }));
     assert.equal(calls, 0);
@@ -94,7 +95,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
     if (url.includes('/billing_portal/configurations?')) return response({ data: [], has_more: false });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_1', active: true,
-      features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true } } });
+      features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true },
+        customer_update: { enabled: true, allowed_updates: ['address'] } } });
     if (url.includes('webhook_endpoints?')) return response({ data: [], has_more: false });
     if (url.endsWith('/webhook_endpoints')) return response({ id: 'we_semester', secret: 'whsec_abc', livemode: true, status: 'enabled' });
     if (url.endsWith('/secrets')) return response([]);
@@ -108,9 +110,13 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   const stored = JSON.parse(calls.find(call => call.url.endsWith('/secrets')).body);
   assert.deepEqual(stored.map(secret => secret.name), [
     'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET', 'ALLOWED_ORIGIN',
-    'CHECKOUT_RETURN_URL', 'STRIPE_PORTAL_CONFIGURATION_ID',
+    'CHECKOUT_RETURN_URL', 'STRIPE_PORTAL_CONFIGURATION_ID', 'STRIPE_PRODUCT_TAX_CODE',
   ]);
   assert.equal(stored.find(secret => secret.name === 'STRIPE_PORTAL_CONFIGURATION_ID').value, 'bpc_1');
+  assert.equal(stored.find(secret => secret.name === 'STRIPE_PRODUCT_TAX_CODE').value, env.STRIPE_PRODUCT_TAX_CODE);
+  const portalBody = new URLSearchParams(calls.find(call => call.url.endsWith('/billing_portal/configurations')).body);
+  assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');
+  assert.equal(portalBody.get('features[customer_update][allowed_updates][0]'), 'address');
   assert.equal(calls.filter(call => call.url.endsWith('/webhook_endpoints')).length, 1);
   assert.equal(calls.some(call => /checkout\/sessions|payment_intents/.test(call.url)), false);
   assert.equal(JSON.stringify(result).includes('whsec_'), false);

@@ -159,7 +159,7 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
       const id = str(o.id);
       if (sub && id) {
         const tax = invoiceTax(o);
-        const subtotal = num(o.subtotal_excluding_tax) ?? num(o.total_excluding_tax) ??
+        const subtotal = num(o.total_excluding_tax) ?? num(o.subtotal_excluding_tax) ??
           num(o.subtotal) ?? Math.max((num(o.amount_due) ?? 0) - tax, 0);
         invoiceId = await deps.upsertInvoice(
           sub, id, subtotal, tax, str(o.currency), isoFromSeconds(o.created),

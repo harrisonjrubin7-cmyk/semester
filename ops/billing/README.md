@@ -7,7 +7,9 @@ already have deployed endpoints. Production checked on 2026-10-01 answered
 The owner confirmed legal and independent reviews complete on 2026-10-01.
 That confirmation does not supply payment credentials or verify a payment.
 
-Load `STRIPE_SECRET_KEY` (live mode), `SUPABASE_ACCESS_TOKEN`, and `ALLOWED_ORIGIN`
+Load `STRIPE_SECRET_KEY` (live mode), `STRIPE_PRODUCT_TAX_CODE` (the
+owner/accountant-approved `txcd_…` software classification),
+`SUPABASE_ACCESS_TOKEN`, and `ALLOWED_ORIGIN`
 from a secure local environment or a CI secret store. Do not paste keys into chat,
 commit them, or put them in any `VITE_` variable. `ALLOWED_ORIGIN` is the full
 comma-separated list of existing allowed app origins; preserve other origins when

@@ -471,6 +471,7 @@ functions that charge nobody:
                             billing-portal      so subpath deployments cannot fall back to the origin root
     STRIPE_PORTAL_CONFIGURATION_ID
                             billing-portal     active bpc_… configuration selected by the activation tool
+    STRIPE_PRODUCT_TAX_CODE billing-checkout   owner/accountant-approved txcd_… software classification
 
 **`verify_jwt` is off on all four.** Stripe has no Supabase token: the webhook's
 credential is the `Stripe-Signature` HMAC over the raw body, checked before the
