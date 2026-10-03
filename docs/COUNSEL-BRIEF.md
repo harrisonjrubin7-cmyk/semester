@@ -64,6 +64,32 @@ These two modules are on `main`, off behind flags, with no money moving through 
 
 Until evidence exists, counsel should confirm the wording never implies: SOC 2, FERPA certification, HIPAA, PCI, HECVAT, pen-test completion, or accessibility conformance (`docs/RELEASE-GATES.md`, "Do-not-claim boundaries"); that a members-only room protects any school; or a response time for a rights request.
 
+## H. Advancement and fundraising (D-157; not built, nothing taken)
+
+No school uses Semester for alumni relations or fundraising, and no gift has been taken. These are the questions that must be answered before the giving half is offered. The payment-provider question is the owner's, not counsel's (`docs/OWNER-DECISIONS-OPEN.md`, item 2).
+
+| # | Question | What the repo assumes | Unblocks |
+| --- | --- | --- | --- |
+| H1 | Charitable-solicitation registration: which states require a registration or exemption before a school's gift page, or Semester on its behalf, solicits there? Who must register: the school, Semester, or both? | Not modelled; the site says the module "waits on counsel's review" | Offering the giving half to any school |
+| H2 | Tax receipts and acknowledgements: what wording, quid-pro-quo disclosure and timing are required, and who is the issuer when the school is the charity? | Not modelled; receipts would be "generated for the school" | A gift receipt, in any state |
+| H3 | Donor and alumni data: which of it is an education record (FERPA), which is directory information, and what consent does a graduate give for the alumni directory and for being solicited? | Alumni profile created at graduation "with the graduate's own consent"; directory shows only people who opted in | The alumni profile and directory |
+| H4 | Wealth screening and predictive donor scoring are **not planned** (DO-NOT-BUILD rule 3). Does counsel want that written into the customer terms as a commitment? | Refused in code and on both pages | The wording of the advancement terms |
+
+## I. Assignments, submissions and student files (D-1047)
+
+The assignments module is built, off at every school, and not applied to production. It holds coursework text, extensions and their reasons, and receipts.
+
+| # | Question | What the repo assumes | Unblocks |
+| --- | --- | --- | --- |
+| I1 | Is a student's submitted work, with its timestamps and receipt, an education record Semester may hold as the school's service provider, and on what contractual footing? | The school is the data owner; Semester reads nothing; a teaching assistant reads the whole course (a stated open item in the PIA) | A school switching `lms_assignments` to Core |
+| I2 | Uploaded files (not built; `docs/OWNER-DECISIONS-OPEN.md`, item 1): same question, plus retention and where the bucket may be hosted. | Text only | File submissions |
+| I3 | Retention: how long are submissions and receipts kept, and what happens to a receipt when a student deletes their account (it is deleted with the account today, which the PIA lists as an open item)? | No retention clock; account deletion removes a student's versions, receipts and extensions | A retention figure in `RETENTION.md` |
+| I4 | Receipts as evidence: is a SHA-256 receipt the database writes in the same transaction something a school may rely on in an academic-integrity or grade dispute? | Described as a receipt, never as proof of authorship | The wording on the receipt screen |
+
+## J. The K–12 and advancement pages on the company site
+
+The two pages describe planned products and state that no district or school uses them. Counsel should confirm the wording never implies a certification, a school using it, a price, or an ability to take a district's student data (the 16-item baseline in D-140 is 11 short). The pages are held to that by `app/src/site/companysolutions.test.ts`; counsel's reading is what that test cannot supply.
+
 ## Suggested order
 
-A1–A3 and C1 first (they unblock built work). Then D's effective dates. Then B1 and E1, which decide two large open designs.
+A1–A3 and C1 first (they unblock built work). Then D's effective dates. Then B1 and E1, which decide two large open designs. **I1** next, because it gates built code a school could switch on; **H1** before any gift is taken, which today means before the giving half is built at all.

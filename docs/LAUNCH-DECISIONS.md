@@ -7,6 +7,8 @@ gates, verdict `NO-GO`), and the technical list is
 [`GO_LIVE_CHECKLIST.md`](market-readiness/GO_LIVE_CHECKLIST.md). This page
 adds no gates of its own. It says who has to act for each one to move.
 
+The four decisions that block built or planned modules (file storage, a gift payment provider against D-146, prices, and counsel) are laid out with their options in [`OWNER-DECISIONS-OPEN.md`](OWNER-DECISIONS-OPEN.md).
+
 "Owner" below means Harrison Rubin, the founder, unless a row says otherwise.
 One person can hold several seats at pilot scale. The council doc allows that,
 but security, privacy and accessibility each need someone qualified, even if
