@@ -49,11 +49,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 34 | `docs/legal-drafts/SUPPORT-AND-ESCALATION-POLICY-DRAFT.md` | EXACT PRESENT | canonical controlled policy; support activation remains RED until staffing, routing, targets, and drills are evidenced |
 | 35 | `docs/legal-drafts/REFUND-CANCELLATION-AND-RENEWAL-POLICY-DRAFT.md` | EXACT PRESENT | controlled review index and requirements; prices, windows, notices, and remedies remain unapproved |
 | 36 | `docs/legal-drafts/SUBSCRIPTION-BILLING-DISCLOSURE-DRAFT.md` | EXACT PRESENT | canonical disclosure template; live billing and broad paid acquisition remain RED pending legal, finance, product, and support evidence |
-| 37 | `docs/legal-drafts/MOBILE-APP-TERMS-ADDENDUM-DRAFT.md` | NO CLOSE SOURCE | — |
-| 38 | `docs/legal-drafts/MARKETING-COMMUNICATIONS-CONSENT-DRAFT.md` | NO CLOSE SOURCE | — |
-| 39 | `docs/legal-drafts/TESTIMONIAL-AND-CASE-STUDY-CONSENT-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/CASE-STUDY-TEMPLATE.md` (filename similarity 0.48; substantive review required) |
-| 40 | `docs/legal-drafts/BETA-TERMS-AND-FEEDBACK-AGREEMENT-DRAFT.md` | NO CLOSE SOURCE | — |
-| 41 | `docs/legal-drafts/STATUS-PAGE-AND-SERVICE-COMMUNICATIONS-POLICY-DRAFT.md` | NO CLOSE SOURCE | — |
+| 37 | `docs/legal-drafts/MOBILE-APP-TERMS-ADDENDUM-DRAFT.md` | EXACT PRESENT | canonical dormant draft; presently evidenced web/PWA distribution does not establish native or store applicability |
+| 38 | `docs/legal-drafts/MARKETING-COMMUNICATIONS-CONSENT-DRAFT.md` | EXACT PRESENT | canonical consent draft; no campaign, channel, vendor, or operating consent evidence is asserted |
+| 39 | `docs/legal-drafts/TESTIMONIAL-AND-CASE-STUDY-CONSENT-DRAFT.md` | EXACT PRESENT | canonical rights and substantiation draft; current customer, outcome, reference, and permission claims remain prohibited |
+| 40 | `docs/legal-drafts/BETA-TERMS-AND-FEEDBACK-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical beta schedule draft; individual beta does not authorize institution data or activation |
+| 41 | `docs/legal-drafts/STATUS-PAGE-AND-SERVICE-COMMUNICATIONS-POLICY-DRAFT.md` | EXACT PRESENT | canonical communications draft; no uptime, response, notification, or live-operations claim is made |
 | 42 | `docs/legal-drafts/MASTER-SUBSCRIPTION-AGREEMENT-DRAFT.md` | NO CLOSE SOURCE | — |
 | 43 | `docs/legal-drafts/ORDER-FORM-TEMPLATE-DRAFT.md` | NO CLOSE SOURCE | — |
 | 44 | `docs/legal-drafts/PILOT-AGREEMENT-DRAFT.md` | CANDIDATE SOURCE | `docs/trust/PILOT-AGREEMENT-OUTLINE.md` (filename similarity 0.70; substantive review required) |
