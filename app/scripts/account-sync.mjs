@@ -64,7 +64,8 @@
  *   VITE_SUPABASE_KEY="$(supabase status -o json | jq -r .PUBLISHABLE_KEY)" \
  *     npx vite build --outDir /tmp/sync-dist
  *   npx vite preview --outDir /tmp/sync-dist --port 4174 &
- *   SMOKE_URL=http://localhost:4174/ SMOKE_PLAYWRIGHT=… npm run smoke:sync
+ *   SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')" \
+ *     SMOKE_URL=http://localhost:4174/ SMOKE_PLAYWRIGHT=… npm run smoke:sync
  *
  * Exit 0 only when every step at both viewports was walked and passed. Exit 1
  * on a finding, and 2 when the instrument itself could not run — never 0 for
@@ -73,9 +74,11 @@
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { randomBytes } from 'node:crypto';
+import { ProofUnavailable, proveDeletedAccountAbsent, tryDeletedAccountStateWrite } from './account-sync-proof.mjs';
 
 const BASE = (process.env.SMOKE_URL || 'http://localhost:4174/').replace(/\/?$/, '/');
 const CHROME = process.env.SMOKE_CHROME || '/opt/pw-browsers/chromium';
+const LOCAL_SERVICE_KEY = process.env.SMOKE_SUPABASE_SERVICE_KEY || '';
 /** How long a single expectation may take to come true. */
 const WAIT = Number(process.env.SMOKE_WAIT || 15_000);
 /**
@@ -120,6 +123,10 @@ try {
   if (!response.ok) throw new Error(String(response.status));
 } catch (error) {
   console.error(`Nothing is serving ${BASE}: ${String(error).slice(0, 120)}`);
+  process.exit(2);
+}
+if (!LOCAL_SERVICE_KEY) {
+  console.error('Set SMOKE_SUPABASE_SERVICE_KEY to the ephemeral service key printed by the local Supabase stack.');
   process.exit(2);
 }
 
@@ -455,26 +462,30 @@ async function journey(label, viewport) {
       return { ok: response.ok, status: response.status };
     }, { ...second.service, token: oldSession.access_token });
     expect(!staleSession.ok && staleSession.status >= 400, 'the deleted account\'s old session still identifies a user');
-    const staleApplicationWrite = await other.evaluate(async ({ origin, key, token }) => {
-      const response = await fetch(`${origin}/functions/v1/delete-account`, {
-        method: 'POST',
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ confirm: 'DELETE' }),
+    let staleApplicationWrite;
+    let privilegedAbsence;
+    try {
+      staleApplicationWrite = await tryDeletedAccountStateWrite({
+        origin: second.service.origin,
+        publicKey: second.service.key,
+        staleToken: oldSession.access_token,
+        userId: oldSession.user.id,
       });
-      const body = await response.json().catch(() => ({}));
-      return { ok: response.ok, status: response.status, body };
-    }, { ...second.service, token: oldSession.access_token });
+      privilegedAbsence = await proveDeletedAccountAbsent({
+        origin: second.service.origin,
+        serviceKey: LOCAL_SERVICE_KEY,
+        userId: oldSession.user.id,
+      });
+    } catch (error) {
+      if (error instanceof ProofUnavailable) throw new Unrunnable(error.message);
+      throw error;
+    }
     expect(
-      !staleApplicationWrite.ok
-        && staleApplicationWrite.status === 401
-        && staleApplicationWrite.body?.erased === false
-        && staleApplicationWrite.body?.signInRemoved === false,
-      `the deleted account's old access token did not receive an authentication denial (${JSON.stringify(staleApplicationWrite)})`,
+      staleApplicationWrite.denied,
+      `the deleted account's old access token recreated protected application state (status ${staleApplicationWrite.status})`,
     );
+    expect(privilegedAbsence.authUserAbsent, 'the deleted account is still present in the local auth service');
+    expect(privilegedAbsence.stateAbsent, 'the deleted account still has a protected application state row');
 
     walked += 1;
   } catch (error) {
