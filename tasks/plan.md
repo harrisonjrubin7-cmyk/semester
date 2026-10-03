@@ -38,7 +38,7 @@ Current-main reconciliation
 
 ### Phase A — Foundation and safety
 
-- [x] A1: Reconcile current main with Command Center fail-closed fixes.
+- [ ] A1: Reconcile current main with Command Center fail-closed fixes — implementation verified; HawkScan gate blocked by missing runtime and credentials.
 - [ ] A2: Add a capability-aware console workspace registry.
 - [ ] A3: Establish the scoped RPC and negative-policy-test template.
 - [ ] A4: Add a five-layer readiness/evidence registry.

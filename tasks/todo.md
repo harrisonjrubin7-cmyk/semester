@@ -2,7 +2,7 @@
 
 This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focused vertical slices. Do not start implementation until the plan and target baseline are reviewed.
 
-## A1: Reconcile current main with Command Center fail-closed fixes — complete
+## A1: Reconcile current main with Command Center fail-closed fixes — implementation verified; security gate blocked
 
 **Description:** Move the existing read-error and filtered-status hardening onto a baseline containing current `origin/main`, without carrying unrelated stale-branch history.
 
@@ -19,6 +19,8 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 **Dependencies:** None
 **Files likely touched:** `app/src/components/console/CommandCenter.tsx`, `app/src/screens/console.test.tsx`
 **Estimated scope:** Small
+
+**Security verification:** HawkScan preflight on 2026-10-03 found no `hawk` CLI, no Docker fallback, and no `HAWK_API_KEY`. A1 remains open until the required DAST scan and any remediation/rescan loop complete.
 
 ## A2: Add a capability-aware console workspace registry
 
