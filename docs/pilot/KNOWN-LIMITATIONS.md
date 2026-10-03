@@ -101,13 +101,13 @@ either direction, that is a bug: report it the same way.
 
 *Stated in:* `SEMESTER_MARKET_READINESS.md`
 
-### Ask Semester does not cite its sources.
+### Not every Ask Semester answer has a source to cite.
 
-**What does not work yet.** Answers do not say which reading or syllabus line they came from, and which model answers is a setting rather than chosen for the question asked. When the assistant cannot help it says why.
+**What does not work yet.** When Ask Semester uses saved course material, its answer details show the source title, locator and excerpt. Answers based on general knowledge have no citation; the “How to read this answer” section labels them “No source” and says what needs the official record or a person. The model is selected in Settings rather than chosen independently for each question.
 
-**What to do instead.** Check any date, rule or grade weighting against the syllabus on the course screen (#/courses) before acting on it.
+**What to do instead.** Open the answer details and check the cited excerpt. If the answer says “No source”, or if a date, rule or grade weighting matters, confirm it against the syllabus on the course screen (#/courses) or the official record before acting on it.
 
-*Stated in:* `SEMESTER_MARKET_READINESS.md`
+*Stated in:* `app/src/intelligence/Disclosure.tsx`, `app/src/ai/converse.ts`, `app/src/ai/quality.ts`
 
 ### During maintenance the app may be read-only.
 

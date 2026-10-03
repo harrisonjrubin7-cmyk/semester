@@ -52,7 +52,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { cloudConfigured } from '../lib/cloud';
 import { across, eligible, myProfile, myRooms, roomsFor, termOf, type Message } from '../lib/classmates';
 import { bucket, listed, type Say } from '../lib/roomchat';
@@ -60,13 +60,14 @@ import { marks as storedMarks } from '../lib/roomprefs';
 import { waiting, waitingLine, waitingRoom } from '../lib/waiting';
 
 export function Waiting() {
+  const now = useNow();
   const { state, dispatch, catalog, account, school } = useStore();
   const [said, setSaid] = useState<Record<string, Message[]>>({});
   const [rooms, setRooms] = useState<string[]>([]);
   const [handle, setHandle] = useState('');
   const [ready, setReady] = useState(false);
 
-  const term = termOf(new Date());
+  const term = termOf(now);
   const ok = cloudConfigured && !!account && eligible(account?.email, school);
 
   useEffect(() => {
@@ -116,7 +117,7 @@ export function Waiting() {
         // rows, so it never shows who said what and loading forty profiles to
         // prefix a line nobody reads would be four queries for nothing.
         () => '',
-        new Date(),
+        now,
         handle,
         /*
          * Your own handle, and it has to be here.
@@ -135,7 +136,7 @@ export function Waiting() {
         handle ? [handle] : [],
       ),
     );
-  }, [account, state.schoolId, catalog.courses, rooms, said, handle]);
+  }, [account, state.schoolId, catalog.courses, rooms, said, handle, now]);
 
   const line = waitingLine(w);
   if (!ok || !ready || line === '') return null;

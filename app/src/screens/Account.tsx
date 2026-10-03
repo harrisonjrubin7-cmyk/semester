@@ -210,14 +210,10 @@ export function AccountScreen() {
         <SectionLabel>How conflicts resolve</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
-          Write a note on the laptop and another on your phone while it is offline, and you end up
-          with both; tick one box here and a different one there, and both stay ticked. Settings
-          are the exception, and deliberately so — your colours are whatever you last chose,
-          wherever you chose it.
+          Notes and checked actions from both devices are kept. Settings use the latest choice.
         </div>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
-          What still does not merge is the same note edited on both: the later edit is the one that
-          survives. The app would rather say so than pretend.
+          If the same note is edited on both devices, the later edit wins.
         </div>
 
         {/* Between what the account does and leaving it: the one thing on

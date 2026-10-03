@@ -58,6 +58,14 @@ describe('known limitations', () => {
     expect(REPORT.address).toBe(SUPPORT);
   });
 
+  it('describes Ask citations as conditional instead of absent', () => {
+    const limitation = KNOWN_LIMITATIONS.find((item) => item.id === 'ai-no-citations');
+    expect(limitation?.title).toMatch(/not every/i);
+    expect(limitation?.what).toMatch(/source title, locator and excerpt/i);
+    expect(limitation?.what).toMatch(/“No source”/);
+    expect(limitation?.sources).toContain('app/src/intelligence/Disclosure.tsx');
+  });
+
   it('names a real screen in every address it gives', () => {
     // The control: a word the parser accepts and the registry does not.
     expect(fromHash('#/nosuch')?.screen).toBe('nosuch');
