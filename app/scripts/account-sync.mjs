@@ -385,7 +385,11 @@ async function journey(label, viewport) {
     at(STEPS[9]);
     const oldSession = await other.evaluate(() => JSON.parse(localStorage.getItem('semester.auth') || 'null'));
     expect(Boolean(oldSession?.access_token), 'the signed-in device had no session before deletion');
-    await other.getByRole('button', { name: /^delete my account$/i }).click();
+    const deleteButton = other
+      .getByRole('button', { name: /^delete my account$/i })
+      .filter({ visible: true });
+    expect((await deleteButton.count()) === 1, 'the Privacy screen did not expose exactly one visible account deletion action');
+    await deleteButton.click();
     const deletion = other.getByRole('dialog', { name: 'Delete your account' });
     expect(await visible(deletion), 'the destructive account confirmation did not open');
     await deletion.getByRole('textbox').fill('DELETE');
