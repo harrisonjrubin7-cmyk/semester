@@ -9,7 +9,7 @@
  */
 
 import { CAPABILITIES } from '../rollout-capabilities';
-import { decide, type LaunchState } from '../launchreadiness';
+import { decide, type Condition, type LaunchState, type Verdict } from '../launchreadiness';
 
 export const TECHNICAL_RELEASE_GATES = [
   'build-and-regression',
@@ -33,6 +33,8 @@ export interface ReleaseTarget {
   configurationVersion: string;
   tenantId?: string;
   cohortId?: string;
+  /** Registration submission policy for this exact configuration. Pilots require disabled. */
+  registrationWriteback?: 'disabled' | 'sandbox' | 'production';
 }
 
 export interface ReleaseEvidence {
@@ -209,6 +211,8 @@ export interface ReleaseProfileDecision {
   missingActivation: readonly ActivationGate[];
   missingDependencies: readonly string[];
   targetBound: boolean;
+  launchVerdict: 'not-applicable' | 'go' | 'go-with-conditions' | null;
+  launchConditions: readonly Condition[];
   claim: string;
 }
 
@@ -218,7 +222,8 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
     && actual.deployedSha === expected.deployedSha
     && actual.configurationVersion === expected.configurationVersion
     && actual.tenantId === expected.tenantId
-    && actual.cohortId === expected.cohortId);
+    && actual.cohortId === expected.cohortId
+    && actual.registrationWriteback === expected.registrationWriteback);
 }
 
 const SHA = /^[0-9a-f]{40}$/;
@@ -256,8 +261,9 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
       const decision = decide(item.launchState);
       if (decision.verdict === 'no-go') return false;
       if (decision.conditions.some((condition) => {
-        const expiry = evidenceTime(condition.expires, true);
-        return expiry === null || expiry <= decisionTime;
+        const expiry = evidenceTime(condition.expires);
+        const evaluationDate = new Date(decisionTime).toISOString().slice(0, 10);
+        return expiry === null || condition.expires <= evaluationDate;
       })) return false;
     } catch {
       return false;
@@ -278,7 +284,8 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
 }
 
 /** Parse date-only or ISO evidence with an explicit UTC offset without relying on string ordering. */
-function evidenceTime(value: string, endOfDate = false): number | null {
+function evidenceTime(value: unknown, endOfDate = false): number | null {
+  if (typeof value !== 'string') return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const stamp = Date.parse(`${value}T${endOfDate ? '23:59:59.999' : '00:00:00.000'}Z`);
     return Number.isFinite(stamp) && new Date(stamp).toISOString().slice(0, 10) === value ? stamp : null;
@@ -306,6 +313,34 @@ function evidenceTime(value: string, endOfDate = false): number | null {
   return Number.isFinite(stamp) ? stamp : null;
 }
 
+function latestCurrentEvidence(
+  evidence: readonly ReleaseEvidence[],
+  gate: ReleaseEvidence['gate'],
+  asOf: string,
+  target?: ReleaseTarget,
+  sourceSha?: string,
+): readonly ReleaseEvidence[] {
+  const decisionTime = evidenceTime(asOf, true);
+  if (decisionTime === null) return [];
+  const matching = evidence
+    .filter((item) => item.gate === gate
+      && (!target || sameTarget(item.target, target))
+      && (!sourceSha || (SHA.test(item.sourceSha ?? '') && item.sourceSha === sourceSha)))
+    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt, true) }));
+  if (matching.some(({ checked }) => checked === null)) return [];
+  const eligible = matching
+    .filter(({ checked }) => checked !== null && checked <= decisionTime)
+    .sort((a, b) => (b.checked ?? 0) - (a.checked ?? 0));
+  if (eligible.length === 0) return [];
+  const latestDate = eligible[0].checked;
+  const latest = eligible.filter(({ checked }) => checked === latestDate);
+  return latest.every(({ item, expires }) => item.status === 'current'
+    && hasApprovalProvenance(item, decisionTime)
+    && (expires ?? -1) >= decisionTime)
+    ? latest.map(({ item }) => item)
+    : [];
+}
+
 function counts(
   evidence: readonly ReleaseEvidence[],
   gate: ReleaseEvidence['gate'],
@@ -313,23 +348,7 @@ function counts(
   target?: ReleaseTarget,
   sourceSha?: string,
 ): boolean {
-  const decisionTime = evidenceTime(asOf, true);
-  if (decisionTime === null) return false;
-  const matching = evidence
-    .filter((item) => item.gate === gate
-      && (!target || sameTarget(item.target, target))
-      && (!sourceSha || (SHA.test(item.sourceSha ?? '') && item.sourceSha === sourceSha)))
-    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt, true) }));
-  if (matching.some(({ checked }) => checked === null)) return false;
-  const eligible = matching
-    .filter(({ checked }) => checked !== null && checked <= decisionTime)
-    .sort((a, b) => (b.checked ?? 0) - (a.checked ?? 0));
-  if (eligible.length === 0) return false;
-  const latestDate = eligible[0].checked;
-  const latest = eligible.filter(({ checked }) => checked === latestDate);
-  return latest.every(({ item, expires }) => item.status === 'current'
-    && hasApprovalProvenance(item, decisionTime)
-    && (expires ?? -1) >= decisionTime);
+  return latestCurrentEvidence(evidence, gate, asOf, target, sourceSha).length > 0;
 }
 
 export function evaluateReleaseProfile(
@@ -346,8 +365,10 @@ export function evaluateReleaseProfile(
     && target.deployedSha.trim()
     && target.configurationVersion.trim()
     && (profile.id === 'institutional-pilot'
-      ? (target.tenantId?.trim() && target.cohortId?.trim())
-      : target.tenantId === undefined && target.cohortId === undefined));
+      ? (target.tenantId?.trim() && target.cohortId?.trim() && target.registrationWriteback === 'disabled')
+      : target.tenantId === undefined
+        && target.cohortId === undefined
+        && target.registrationWriteback === undefined));
   const technicalTargetBound = Boolean(target && SHA.test(target.deployedSha));
   const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !technicalTargetBound
     || !counts(evidence, gate, asOf, undefined, target?.deployedSha));
@@ -361,6 +382,24 @@ export function evaluateReleaseProfile(
     && missingDependencies.length === 0
     ? 'authorized'
     : 'held';
+  const launchOutcomes: Verdict[] = profile.id === 'institutional-pilot' && targetBound
+    ? latestCurrentEvidence(evidence, 'canonical-launch-decision', asOf, target)
+      .flatMap((item) => {
+        try {
+          return item.launchState ? [decide(item.launchState)] : [];
+        } catch {
+          return [];
+        }
+      })
+    : [];
+  const launchConditions = launchOutcomes.flatMap((outcome) => outcome.conditions);
+  const launchVerdict = profile.id === 'individual-scale'
+    ? 'not-applicable'
+    : launchOutcomes.length === 0
+      ? null
+      : launchConditions.length > 0
+        ? 'go-with-conditions'
+        : 'go';
   return {
     profileId: profile.id,
     technicalStatus,
@@ -369,8 +408,14 @@ export function evaluateReleaseProfile(
     missingActivation,
     missingDependencies,
     targetBound,
+    launchVerdict,
+    launchConditions,
     claim: rolloutStatus === 'authorized'
-      ? profile.authorizedClaim
+      ? launchVerdict === 'go-with-conditions'
+        ? `${profile.authorizedClaim} Authorized with conditions: ${launchConditions
+          .map((condition) => `${condition.blocker} through ${condition.expires} — ${condition.disclosure}`)
+          .join('; ')}.`
+        : profile.authorizedClaim
       : technicalStatus === 'ready'
         ? `Technical release candidate; rollout is held pending: ${[
           ...(targetBound ? [] : ['a complete deployment target']),

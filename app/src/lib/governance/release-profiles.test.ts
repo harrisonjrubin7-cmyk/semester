@@ -25,6 +25,7 @@ const TARGETS: Record<ReleaseProfileId, ReleaseTarget> = {
   'individual-scale': { environment: 'production', deployedSha: SOURCE_SHA, configurationVersion: 'individual-v1' },
   'institutional-pilot': {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
+    registrationWriteback: 'disabled',
   },
 };
 const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly ReleaseApproverRole[]> = {
@@ -224,6 +225,23 @@ describe('pilot and individual release profiles', () => {
     });
     expect(() => evaluateReleaseProfile(profile.id, malformedDecision, AS_OF, target)).not.toThrow();
     expect(evaluateReleaseProfile(profile.id, malformedDecision, AS_OF, target).rolloutStatus).toBe('held');
+    const currentConditional = evidence.with(launchIndex, {
+      ...evidence[launchIndex],
+      launchState: {
+        ...readyLaunchState(),
+        on: '2026-09-30',
+        blockers: [{ id: 'risk-2', severity: 'P2', summary: 'Bounded accepted risk' }],
+        acceptances: [{
+          blocker: 'risk-2', by: 'founder', reason: 'bounded pilot', disclosure: 'Pilot users receive this notice.', expires: '2026-11-01',
+        }],
+      },
+    });
+    expect(evaluateReleaseProfile(profile.id, currentConditional, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go-with-conditions',
+      launchConditions: [expect.objectContaining({ blocker: 'risk-2', expires: '2026-11-01' })],
+      claim: expect.stringMatching(/authorized with conditions.*pilot users receive this notice/i),
+    });
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {
@@ -322,6 +340,28 @@ describe('pilot and individual release profiles', () => {
     expect(evaluateReleaseProfile(individual.id, evidence, AS_OF, {
       ...target, deployedSha: target.deployedSha.toUpperCase(),
     })).toMatchObject({ targetBound: false, technicalStatus: 'not-ready', rolloutStatus: 'held' });
+    const individualWriteEnabled = { ...target, registrationWriteback: 'production' as const };
+    const individualWriteEvidence = [
+      ...technical(individualWriteEnabled),
+      ...individual.requiredActivationGates.map((gate) => runtime(gate, individualWriteEnabled)),
+      ...individual.requiredDependencies.map((item) => dependency(item, individualWriteEnabled)),
+    ];
+    expect(evaluateReleaseProfile(individual.id, individualWriteEvidence, AS_OF, individualWriteEnabled)).toMatchObject({
+      targetBound: false,
+      rolloutStatus: 'held',
+    });
+    const pilot = RELEASE_PROFILES['institutional-pilot'];
+    const pilotTarget = TARGETS[pilot.id];
+    const writeEnabled = { ...pilotTarget, registrationWriteback: 'production' as const };
+    const pilotEvidence = [
+      ...technical(writeEnabled),
+      ...pilot.requiredActivationGates.map((gate) => runtime(gate, writeEnabled)),
+      ...pilot.requiredDependencies.map((item) => dependency(item, writeEnabled)),
+    ];
+    expect(evaluateReleaseProfile(pilot.id, pilotEvidence, AS_OF, writeEnabled)).toMatchObject({
+      targetBound: false,
+      rolloutStatus: 'held',
+    });
   });
 
   it('keeps exact-SHA technical readiness separate from activation target completeness', () => {
