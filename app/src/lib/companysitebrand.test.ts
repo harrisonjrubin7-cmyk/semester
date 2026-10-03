@@ -28,7 +28,7 @@ describe('the company site and application share one identity', () => {
     const product = site.slice(site.indexOf('data-page="product"'), site.indexOf('<!-- ================= STUDENTS'));
     expect(product.includes('class="wrap product-hero-grid"')).toBe(true);
     expect(product.includes('data-product-preview')).toBe(true);
-    expect(product.includes('Illustrative demo data')).toBe(true);
+    expect(product.includes('Public fictional-data demo')).toBe(true);
     // Control: the existing conversion and authoritative-system boundary stay visible.
     expect(product.includes('Explore a sample university')).toBe(true);
     expect(product.includes('It does not make official academic decisions with AI.')).toBe(true);
