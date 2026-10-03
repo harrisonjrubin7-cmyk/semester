@@ -142,6 +142,21 @@ describe('the company site shows captured current application screens', () => {
     }
   });
 
+  it('names the Today mobile hero accurately and keeps full-size links responsive', () => {
+    const hero = page.querySelector<HTMLImageElement>('[data-page="home"] .hero img[src="/screenshots/today-mobile.jpg"]');
+    expect(hero?.getAttribute('alt')).toMatch(/Semester Today mobile/i);
+    expect(hero?.getAttribute('alt')).not.toMatch(/Semester Home mobile/i);
+
+    const links = [...page.querySelectorAll<HTMLAnchorElement>('a[data-responsive-capture-link]')];
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link.dataset.desktop).toBe('/screenshots/today-desktop.jpg');
+      expect(link.dataset.mobile).toBe('/screenshots/today-mobile.jpg');
+    }
+    expect(site).toContain('responsiveCaptureLinks');
+    expect(site).toContain('xpMobile.addEventListener("change",responsiveCaptureLinks)');
+  });
+
   it('reserves the matching desktop and phone proportions instead of stretching either capture', () => {
     const responsive = [...page.querySelectorAll<HTMLPictureElement>('picture[data-capture-pair]')];
     expect(responsive.length).toBeGreaterThanOrEqual(4);

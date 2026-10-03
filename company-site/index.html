@@ -1064,7 +1064,7 @@ footer{background:var(--bg-soft)}
         <p style="margin-top:12px"><a class="link" href="#experience">Demo — fictional data, no sign-in →</a> &nbsp; <a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore a sample university (fictional data) ↗</a> &nbsp; <a class="link" href="#institutions">Semester for institutions →</a></p>
         <p class="trustline">Private by design · Source-aware · Built for accessibility</p>
       </div>
-      <figure class="phone cx"><img src="/screenshots/today-mobile.jpg" alt="Semester Home mobile showing current navigation, sample courses and a next action" width="390" height="845" loading="eager" decoding="async"><figcaption>Current app · Captured Oct 3, 2026 · Public fictional-data demo. <a href="/screenshots/today-mobile.jpg" target="_blank" rel="noopener">View full-size ↗</a></figcaption></figure>
+      <figure class="phone cx"><img src="/screenshots/today-mobile.jpg" alt="Semester Today mobile showing current navigation, sample courses and a next action" width="390" height="845" loading="eager" decoding="async"><figcaption>Current app · Captured Oct 3, 2026 · Public fictional-data demo. <a href="/screenshots/today-mobile.jpg" target="_blank" rel="noopener">View full-size ↗</a></figcaption></figure>
     </div>
   </section>
 
@@ -1314,7 +1314,7 @@ footer{background:var(--bg-soft)}
     </div>
     <figure class="product-preview" data-product-preview aria-label="Current Semester Today screenshot">
       <picture data-capture-pair><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today with current navigation, sample courses, progress and next actions" width="1440" height="900" loading="eager" decoding="async"></picture>
-      <figcaption>Current app · Captured Oct 3, 2026 · Public fictional-data demo. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
+      <figcaption>Current app · Captured Oct 3, 2026 · Public fictional-data demo. <a href="/screenshots/today-desktop.jpg" data-responsive-capture-link data-desktop="/screenshots/today-desktop.jpg" data-mobile="/screenshots/today-mobile.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
     </figure>
   </div></section>
   <section class="blk rule"><div class="wrap">
@@ -3879,7 +3879,7 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
       <p class="muted" style="margin-top:12px">Scattered information becomes one clear next step, with verified facts kept separate from estimates.</p></div>
     <figure class="product-preview" aria-label="Current Semester Today screenshot">
       <picture data-capture-pair><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today showing current public sample courses and student-controlled planning actions" width="1440" height="900" loading="lazy" decoding="async"></picture>
-      <figcaption>Current app · Captured Oct 3, 2026 · Public fictional-data demo, no connected account. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
+      <figcaption>Current app · Captured Oct 3, 2026 · Public fictional-data demo, no connected account. <a href="/screenshots/today-desktop.jpg" data-responsive-capture-link data-desktop="/screenshots/today-desktop.jpg" data-mobile="/screenshots/today-mobile.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
     </figure>
   </div></section>
   <section class="blk rule"><div class="wrap">
@@ -4252,11 +4252,14 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     const last=xpStep===xpSteps.length-1;document.getElementById("xp-next").hidden=last;
     document.getElementById("xp-end").hidden=!last;
   }
+  function responsiveCaptureLinks(){document.querySelectorAll("[data-responsive-capture-link]").forEach(link=>{link.href=xpMobile.matches?link.dataset.mobile:link.dataset.desktop})}
   document.getElementById("xp-list").addEventListener("click",e=>{const b=e.target.closest("button");if(b){xpStep=+b.dataset.i;xpRender()}});
   document.getElementById("xp-prev").addEventListener("click",()=>{if(xpStep>0){xpStep--;xpRender()}});
   document.getElementById("xp-next").addEventListener("click",()=>{xpStep++;xpRender();document.getElementById("xp-next").hidden?document.getElementById("xp-cta").focus():0});
   document.getElementById("xp-restart").addEventListener("click",()=>{xpStep=0;xpRender()});
   xpMobile.addEventListener("change",xpRender);
+  xpMobile.addEventListener("change",responsiveCaptureLinks);
+  responsiveCaptureLinks();
   xpRender();
 
   // ---------- build my semester ----------
