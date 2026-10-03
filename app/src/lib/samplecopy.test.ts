@@ -14,7 +14,8 @@ import { describe, expect, it } from 'vitest';
  */
 
 const root = join(import.meta.dirname, '../../..');
-const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+const siteHtml = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+const site = `${siteHtml}\n${readFileSync(join(root, 'company-site/site.js'), 'utf8')}`;
 
 /** The health panel of the portal preview, as the page carries it. */
 const health = () => {
@@ -54,8 +55,8 @@ describe('the portal preview’s figures', () => {
 describe('the way into the sample university', () => {
   it('is offered by that name on the company site’s product, institutions and home pages', () => {
     const at = (page: string) => {
-      const i = site.indexOf(`data-page="${page}"`);
-      return site.slice(i, site.indexOf('<!-- =====', i));
+      const i = siteHtml.indexOf(`data-page="${page}"`);
+      return siteHtml.slice(i, siteHtml.indexOf('<!-- =====', i));
     };
     for (const page of ['home', 'institutions']) expect(at(page), page).toContain('Explore a sample university');
     expect(site).not.toContain('See Semester in action');
