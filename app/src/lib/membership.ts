@@ -21,7 +21,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 
 /** The wording a person agrees to, and the version recorded with it. Change one, change both. */
-export const CONSENT_VERSION = 'plus-v1';
+export const CONSENT_VERSION = 'plus-v2';
 
 export interface PlusPrice {
   id: string;
@@ -36,6 +36,7 @@ export interface Subscription {
   status: 'trialing' | 'active' | 'past_due' | 'grace' | 'canceled' | 'ended';
   periodEnd: string;
   cancelAtPeriodEnd: boolean;
+  billingIssue: 'address_required' | null;
 }
 
 export type Started = { kind: 'redirect'; url: string } | { kind: 'refused'; said: string };
@@ -50,6 +51,11 @@ export function checkoutEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
 /** The cancel function's address, or ''. */
 export function cancelEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
   return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-cancel` : '';
+}
+
+/** The hosted receipt and invoice portal function's address, or ''. */
+export function portalEndpoint(base = env.VITE_SUPABASE_URL ?? ''): string {
+  return base ? `${base.replace(/\/$/, '')}/functions/v1/billing-portal` : '';
 }
 
 /** "$7.99", "$59", "$30.50" — in the catalog's currency, US dollars as written today. */
@@ -70,7 +76,8 @@ export function priceWords(p: PlusPrice): string {
  */
 export function consentText(p: PlusPrice): string {
   return (
-    `I agree to be charged ${priceWords(p)} for Semester Plus, renewing every ${p.interval} ` +
+    `I agree to be charged ${priceWords(p)}, plus any applicable sales tax shown before purchase, ` +
+    `for Semester Plus, renewing every ${p.interval} ` +
     `until I cancel. I can cancel any time from my Account screen, and it stops at the end of the ${p.interval} I have paid for.`
   );
 }
@@ -102,6 +109,7 @@ export function currentSubscription(rows: unknown): Subscription | null {
       status: r.status as Subscription['status'],
       periodEnd: typeof r.current_period_end === 'string' ? r.current_period_end : '',
       cancelAtPeriodEnd: r.cancel_at_period_end === true,
+      billingIssue: r.billing_issue === 'address_required' ? 'address_required' : null,
     };
   }
   return null;
@@ -161,6 +169,45 @@ export async function startCheckout(
 }
 
 export type Cancelled = { kind: 'cancelled'; endsAt: string } | { kind: 'refused'; said: string };
+export type Portal = { kind: 'redirect'; url: string } | { kind: 'refused'; said: string };
+
+/**
+ * Open Stripe's short-lived customer portal for receipts, invoices and the
+ * payment method. The endpoint resolves the Stripe customer from the caller's
+ * authenticated individual billing account; the browser never supplies it.
+ */
+export async function openBillingPortal(
+  token: string,
+  fetcher: Fetch = fetch,
+  endpoint = portalEndpoint(),
+  key = env.VITE_SUPABASE_KEY ?? '',
+): Promise<Portal> {
+  const fallback = 'Billing history could not be opened. Try again.';
+  if (!endpoint) return { kind: 'refused', said: fallback };
+  let res: Response;
+  try {
+    res = await fetcher(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, ...(key ? { apikey: key } : {}) },
+      body: '{}',
+      cache: 'no-store',
+      credentials: 'omit',
+    });
+  } catch {
+    return { kind: 'refused', said: fallback };
+  }
+  let body: Record<string, unknown> | null = null;
+  try {
+    const value: unknown = await res.json();
+    body = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  } catch {
+    body = null;
+  }
+  if (res.ok && body && typeof body.url === 'string' && body.url.startsWith('https://billing.stripe.com/')) {
+    return { kind: 'redirect', url: body.url };
+  }
+  return { kind: 'refused', said: body && typeof body.error === 'string' && body.error ? body.error : fallback };
+}
 
 /**
  * Ask `billing-cancel` to end Plus at the close of the paid period. It tells
@@ -228,7 +275,7 @@ export async function fetchPlusPrices(db: Db): Promise<PlusPrice[]> {
 export async function fetchOwnSubscriptions(db: Db, accountId: string): Promise<unknown> {
   const { data, error } = await db
     .from('subscriptions')
-    .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
+    .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_issue, billing_accounts!inner(kind, user_id)')
     .eq('billing_accounts.kind', 'individual')
     .eq('billing_accounts.user_id', accountId);
   if (error) throw new Error('subscription read failed');

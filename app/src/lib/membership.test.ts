@@ -9,11 +9,13 @@ import {
   currentSubscription,
   hasPaidBefore,
   money,
+  openBillingPortal,
+  portalEndpoint,
   plusPrices,
   priceWords,
   startCheckout,
 } from './membership';
-import { CONSENT_VERSION as SERVER_SHAPE } from '../../../supabase/functions/_shared/billingcheckout';
+import { TAX_CONSENT_VERSION as SERVER_VERSION } from '../../../supabase/functions/_shared/billingcheckout';
 
 const MONTH = { id: '6d5749ba-47da-4545-86d6-bb89461adac6', plan_code: 'plus', amount_cents: 799, currency: 'usd', billing_interval: 'month' };
 const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', amount_cents: 5900, currency: 'usd', billing_interval: 'year' };
@@ -37,12 +39,13 @@ describe('consent', () => {
   it('names amount, interval, renewal and the way to cancel', () => {
     const t = consentText(plusPrices([MONTH])[0]);
     expect(t).toContain('$7.99 a month');
+    expect(t).toMatch(/applicable sales tax shown before purchase/);
     expect(t).toMatch(/renewing every month until I cancel/);
     expect(t).toMatch(/cancel any time from my Account screen/);
   });
 
   it('sends a version the server accepts', () => {
-    expect(SERVER_SHAPE.test(CONSENT_VERSION)).toBe(true);
+    expect(CONSENT_VERSION).toBe(SERVER_VERSION);
   });
 });
 
@@ -52,9 +55,16 @@ describe('the subscription', () => {
       { id: 'a', plan_code: 'plus', status: 'ended', current_period_end: '2026-01-01T00:00:00Z' },
       { id: 'b', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T00:00:00Z', cancel_at_period_end: false },
     ];
-    expect(currentSubscription(rows)).toEqual({ id: 'b', plan: 'plus', status: 'active', periodEnd: '2026-10-29T00:00:00Z', cancelAtPeriodEnd: false });
+    expect(currentSubscription(rows)).toEqual({ id: 'b', plan: 'plus', status: 'active', periodEnd: '2026-10-29T00:00:00Z', cancelAtPeriodEnd: false, billingIssue: null });
     expect(currentSubscription([rows[0]])).toBeNull();
     expect(currentSubscription(undefined)).toBeNull();
+  });
+
+  it('preserves a missing billing-address issue for distinct remediation', () => {
+    expect(currentSubscription([{
+      id: 'b', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T00:00:00Z',
+      cancel_at_period_end: false, billing_issue: 'address_required',
+    }])?.billingIssue).toBe('address_required');
   });
 
   it('remembers a paid plan that has ended', () => {
@@ -118,5 +128,24 @@ describe('cancelling', () => {
     const down = vi.fn(async () => { throw new TypeError('network'); });
     expect((await cancelMembership('tok', 's1', down, END)).kind).toBe('refused');
     expect((await cancelMembership('tok', 's1', refused, '')).kind).toBe('refused');
+  });
+});
+
+describe('billing history', () => {
+  const END = portalEndpoint('https://lzrqvlugnawcgywkhqlz.supabase.co/');
+
+  it('opens only the Stripe-hosted portal returned for the signed-in account', async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ url: 'https://billing.stripe.com/p/session/live_1' }), { status: 200 }));
+    expect(await openBillingPortal('tok', fetcher, END, 'anon')).toEqual({ kind: 'redirect', url: 'https://billing.stripe.com/p/session/live_1' });
+    const [url, init] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-portal');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok');
+  });
+
+  it('passes refusals through and rejects arbitrary redirects', async () => {
+    const refused = vi.fn(async () => new Response(JSON.stringify({ error: 'There is no billing history for this account.' }), { status: 404 }));
+    expect(await openBillingPortal('tok', refused, END)).toEqual({ kind: 'refused', said: 'There is no billing history for this account.' });
+    const odd = vi.fn(async () => new Response(JSON.stringify({ url: 'https://evil.example' }), { status: 200 }));
+    expect((await openBillingPortal('tok', odd, END)).kind).toBe('refused');
   });
 });
