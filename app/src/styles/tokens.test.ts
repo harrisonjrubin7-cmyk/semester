@@ -48,7 +48,7 @@ describe('the semantic token layer', () => {
   const everywhere = new Set([...defined(APP), ...defined(INDUSTRY), ...defined(TOKENS), ...runtime]);
 
   it('has the families the brief names', () => {
-    for (const family of ['--surface-', '--text-', '--border-', '--action-', '--status-', '--focus-', '--target-', '--duration-', '--motion-', '--layer-', '--elevation-', '--shape-', '--layout-']) {
+    for (const family of ['--surface-', '--text-', '--border-', '--brand-', '--action-', '--status-', '--state-', '--data-', '--focus-', '--target-', '--control-', '--type-role-', '--duration-', '--motion-', '--layer-', '--elevation-', '--shape-', '--layout-']) {
       expect([...defs.keys()].some((k) => k.startsWith(family)), family).toBe(true);
     }
   });

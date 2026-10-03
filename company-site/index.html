@@ -710,6 +710,12 @@ details.svc summary .sum-l{min-width:0}
   --signal:var(--silver); --signal-hi:var(--ink); --signal-deep:#9ca3b2;
   --night:var(--bg); --night-blue:var(--bg-soft);
   --heading:'Barlow Condensed',ui-sans-serif,system-ui,sans-serif;
+  --brand-canvas:var(--bg); --brand-surface:var(--bg-soft);
+  --brand-ink:var(--ink); --brand-muted:var(--ink-dim);
+  --brand-accent:var(--brass); --brand-focus:var(--brass);
+  --brand-reading:68ch; --brand-operational:1200px;
+  --brand-control-radius:8px; --brand-surface-radius:12px;
+  --brand-motion-fast:140ms; --brand-motion-standard:200ms;
 }
 body{margin:0;background:var(--bg);font-size:16px;overflow-x:clip}
 .wrap{max-width:1200px;padding-inline:32px}
@@ -728,7 +734,7 @@ h2,h3{font-family:var(--heading);font-weight:600;letter-spacing:0;line-height:1.
 .logo-show .brand-mark svg{width:27px;height:40px}
 .yt-av .brand-mark{width:56px;height:56px}
 .banner{background:var(--bg-soft);font-size:13px;padding:8px 16px;border-color:var(--line-soft)}
-header.nav{background:rgba(22,24,28,.96);border-bottom:1px solid var(--line-soft);box-shadow:none}
+header.nav{background:rgba(22,24,28,.97);border-bottom:1px solid var(--line-soft);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 header.nav::after{display:none}
 .nav-row{gap:20px;padding-block:16px}
 .nav-main{gap:0}
@@ -739,8 +745,8 @@ header.nav::after{display:none}
 .nav-right .txt{min-height:44px;display:inline-flex;align-items:center}
 .btn{font-family:var(--heading);font-size:16px;font-weight:600;letter-spacing:.025em;justify-content:center;min-height:44px;border-radius:10px;padding:11px 20px;white-space:normal;text-align:center;line-height:1.3}
 .btn-sm{font-size:15px;min-height:44px;padding:10px 16px}
-.btn-primary{background:var(--chrome);color:#08090c;border:1px solid #c9ced8;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
-.btn-primary:hover{background:#f4f6f9;filter:none}
+.btn-primary{background:var(--brand-accent);color:var(--brass-ink);border:1px solid var(--brass-hi);box-shadow:none}
+.btn-primary:hover{background:var(--brass-hi);filter:none}
 .btn-ghost{background:transparent;border:1px solid #737b89;color:var(--ink);box-shadow:none}
 .btn-ghost:hover{background:var(--surface-2);border-color:var(--silver)}
 .btn:focus-visible{outline:2px solid var(--brass);outline-offset:4px}
@@ -784,8 +790,10 @@ section.blk{padding-block:64px}
 .persona button{font-size:15px;min-height:44px;background:var(--bg-soft);padding:12px 16px;border-radius:10px}
 .persona button:hover,.persona button[aria-pressed="true"]{border-color:var(--brass);background:var(--surface);color:var(--ink)}
 .panel li::before{background:var(--brass)}
-.proof-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
-.proof-step{padding:20px;border:1px solid var(--line-soft);border-radius:12px;background:var(--bg-soft)}
+.proof-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-block:1px solid var(--line-soft)}
+.proof-step{padding:22px 20px;border:0;border-right:1px solid var(--line-soft);border-radius:0;background:transparent}
+.proof-step:nth-child(4n),.proof-step:last-child{border-right:0}
+.proof-step:nth-child(n+5){border-top:1px solid var(--line-soft)}
 .proof-step .k{display:block;margin-bottom:16px;font:500 12px var(--sans);color:var(--brass)}
 .proof-step h3{font-size:22px}
 .proof-step p{font-size:15px;color:var(--ink-dim);margin-top:8px;line-height:1.6}
@@ -800,8 +808,8 @@ section.blk{padding-block:64px}
 input,select,textarea{font-size:16px;border-radius:8px;border-color:#737b89}
 .final{background:var(--bg-soft)}
 footer{background:var(--bg-soft)}
-.search-in,.drawer-in,.dd-panel{background:var(--bg-soft);border-color:var(--line);border-radius:16px}
-.drawer-in{border-radius:16px 0 0 16px}
+.search-in,.drawer-in,.dd-panel{background:var(--bg-soft);border-color:var(--line);border-radius:var(--brand-surface-radius)}
+.drawer-in{border-radius:var(--brand-surface-radius) 0 0 var(--brand-surface-radius)}
 .search-in input{font-size:18px}
 .src,.cs,.status{white-space:normal}
 .product-hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center}
@@ -818,8 +826,8 @@ footer{background:var(--bg-soft)}
 .preview-row{display:flex;justify-content:space-between;gap:12px;font-size:15px;color:var(--ink-dim)}
 .product-preview figcaption{padding:14px 20px;border-top:1px solid var(--line-soft);font-size:13px;color:var(--ink-dim);background:var(--bg-soft)}
 @media (max-width:1100px){.nav-main,.nav-right .hide-m{display:none}.menu-btn{display:inline-flex}.hero-grid,.product-hero-grid{gap:32px}}
-@media (max-width:900px){.hero-grid,.product-hero-grid{grid-template-columns:1fr}.hero h1{max-width:20ch}.product-preview{max-width:560px;width:100%}.proof-rail{grid-template-columns:1fr 1fr}.status-map,.buyer-outcome{grid-template-columns:1fr}}
-@media (max-width:600px){.wrap{padding-inline:20px}.hero,.page-hero{padding-block:40px}.hero h1,.page-hero h1{font-size:34px}.hero .phone{margin-top:12px}section.blk{padding-block:40px}.preview-body{padding:20px}.proof-rail{grid-template-columns:1fr}.ctas>*{max-width:100%}.banner{font-size:12px;line-height:1.5}.nav-row{gap:12px}.brand-word{font-size:18px}.brand-mark{width:34px;height:34px}}
+@media (max-width:900px){.hero-grid,.product-hero-grid{grid-template-columns:1fr}.hero h1{max-width:20ch}.product-preview{max-width:560px;width:100%}.proof-rail{grid-template-columns:1fr 1fr}.proof-step:nth-child(odd){border-right:1px solid var(--line-soft)}.proof-step:nth-child(even){border-right:0}.proof-step:nth-child(n+3){border-top:1px solid var(--line-soft)}.status-map,.buyer-outcome{grid-template-columns:1fr}}
+@media (max-width:600px){.wrap{padding-inline:20px}.hero,.page-hero{padding-block:40px}.hero h1,.page-hero h1{font-size:34px}.hero .phone{margin-top:12px}section.blk{padding-block:40px}.preview-body{padding:20px}.proof-rail{grid-template-columns:1fr}.proof-step,.proof-step:nth-child(odd),.proof-step:nth-child(even){border-top:0;border-right:0;border-bottom:1px solid var(--line-soft)}.proof-step:last-child{border-bottom:0}.ctas>*{max-width:100%}.banner{font-size:12px;line-height:1.5}.nav-row{gap:12px}.brand-word{font-size:18px}.brand-mark{width:34px;height:34px}}
 @media (max-width:420px){header.nav .brand-word{display:none}.nav-right{gap:8px}.nav-right .btn{padding:10px 12px}.hero h1,.page-hero h1{font-size:30px}.preview-tabs{font-size:12px}.preview-focus{padding:16px}.preview-row{flex-wrap:wrap}}
 @media (forced-colors:active){.brand-mark{background:Canvas;color:CanvasText;border:1px solid CanvasText}.btn-primary{background:ButtonFace;color:ButtonText}.preview-focus{border-color:CanvasText}}
 </style>
@@ -1035,7 +1043,7 @@ footer{background:var(--bg-soft)}
     <div class="wrap hero-grid">
       <div>
         <p class="eyebrow brass">Your next step, made clear</p>
-        <h1>Make your next academic decision <em>with confidence.</em></h1>
+        <h1>Turn your semester into <em>one clear next step.</em></h1>
         <p class="lede">Semester brings your plan, course options, deadlines, trusted learning materials and support pathways into one place—so you can understand what matters and take the next step.</p>
         <div class="ctas">
           <a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Start planning free →</a>

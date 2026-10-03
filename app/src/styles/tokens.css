@@ -35,9 +35,14 @@
      because shadows barely read on it; light grounds use the same ramp. */
   --surface-sunken: var(--app-void);
   --surface-canvas: var(--app-bg);
+  --surface-plain: var(--app-bg);
   --surface-base: var(--app-panel);
+  --surface-quiet: var(--app-panel);
   --surface-raised: var(--app-hero);
+  --surface-feature: var(--app-hero);
   --surface-overlay: var(--app-raise);
+  --surface-modal: var(--app-raise);
+  --surface-critical: var(--app-error-wash);
 
   /* ── Text ────────────────────────────────────────────────────────────── */
   --text-primary: var(--app-fg);
@@ -46,12 +51,27 @@
      every ground; use it for metadata, never for anything a student must read
      to act. */
   --text-tertiary: var(--app-faint);
+  --text-disabled: var(--app-faint);
   --text-on-action: var(--chrome-ink);
 
   /* ── Border ──────────────────────────────────────────────────────────── */
   --border-subtle: var(--app-line-soft);
+  --border-hairline: var(--app-line-soft);
   --border-default: var(--app-line);
   --border-strong: var(--app-accent-deep);
+
+  /* ── Shared brand vocabulary ───────────────────────────────────────────
+     These six names are also declared by the company site. The values stay
+     native to each surface: the application still follows the selected
+     ground and accent, while the public site keeps its fixed editorial
+     palette. Shared names let composition and documentation agree without
+     pretending the marketing canvas and a student workspace are identical. */
+  --brand-canvas: var(--surface-canvas);
+  --brand-surface: var(--surface-base);
+  --brand-ink: var(--text-primary);
+  --brand-muted: var(--text-secondary);
+  --brand-accent: var(--action-primary);
+  --brand-focus: var(--focus-color);
 
   /* ── Action ──────────────────────────────────────────────────────────────
      One call-to-action colour, and it is the ground's metal. */
@@ -76,6 +96,16 @@
   --status-info: var(--app-accent);
   --status-neutral: var(--app-dim);
 
+  /* State roles name the treatment as well as the colour. Critical state is
+     never represented by one of these values alone; the shared components
+     pair it with text and a glyph. */
+  --state-disabled-text: var(--text-disabled);
+  --state-disabled-surface: var(--surface-sunken);
+  --state-readonly-surface: var(--surface-quiet);
+  --state-locked-border: var(--border-strong);
+  --state-preview-surface: var(--action-secondary);
+  --state-destructive-text: var(--status-danger);
+
   /* ── Chart ───────────────────────────────────────────────────────────────
      Series colours are derived per ground (`chartFor`) and held to 3:1 on
      every surface by `lib/contrast.test.ts`; the roles below only name them.
@@ -90,6 +120,11 @@
   --chart-axis: var(--app-dim);
   --chart-label: var(--app-fg);
   --chart-muted: var(--app-faint);
+  --data-series-1: var(--chart-1);
+  --data-series-2: var(--chart-2);
+  --data-series-3: var(--chart-3);
+  --data-series-4: var(--chart-4);
+  --data-series-5: var(--chart-5);
 
   /* ── Focus ───────────────────────────────────────────────────────────────
      The ring `app.css` already draws, by name. 2px outside the box keeps it
@@ -109,6 +144,24 @@
   --target-compact: 32px;
   --target-icon: 40px;
   --target-primary: 44px;
+  --control-height-compact: var(--target-compact);
+  --control-height-standard: var(--target-primary);
+
+  /* ── Typography roles ─────────────────────────────────────────────────
+     The primitive type scale remains in app.css because it responds to the
+     reader's Text size setting. These are the finite jobs product UI and
+     documentation should ask for. */
+  --font-editorial: var(--font-heading);
+  --font-product: var(--font-body);
+  --type-role-display: var(--type-xl);
+  --type-role-page: var(--type-display-lg);
+  --type-role-section: var(--type-display-sm);
+  --type-role-body: var(--type-base);
+  --type-role-compact: var(--type-sm);
+  --type-role-label: var(--type-xs);
+  --type-role-numeric: var(--type-display);
+  --type-role-control: var(--type-sm-plus);
+  --type-role-caption: var(--type-xs);
 
   /* ── Motion ──────────────────────────────────────────────────────────────
      Durations by the job they do. `--fast` (130ms) is the app's existing
@@ -164,6 +217,7 @@
   /* ── Layout ──────────────────────────────────────────────────────────── */
   --layout-reading: var(--reading-width, 66ch);
   --layout-measure: var(--measure, 100%);
+  --layout-operational: 1180px;
   --layout-gutter: var(--page-pad, 18px);
 
   /* ── Component tokens ────────────────────────────────────────────────── */
