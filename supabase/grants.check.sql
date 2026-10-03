@@ -596,6 +596,11 @@ declare
     -- demos by default and never accepts a tenant id from the caller.
     'console_tenant_operations(include_demo boolean)',
 
+    -- Identity-minimized privacy queue. It requires the platform console
+    -- shell, derives tenants from exact-school data_request:handle grants and
+    -- keeps subject ids and request content out of its result.
+    'console_privacy_requests(include_demo boolean)',
+
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
     -- requester party, deciding checks fresh MFA, refuses self-approval and

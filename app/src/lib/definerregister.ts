@@ -161,6 +161,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_privacy_requests', 'admin', ['auth.uid()', 'private.account_is_held', 'private.has_capability']],
   ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
@@ -440,6 +441,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261003130000_privacy_case_workspace.sql',
+    functions: ['console_privacy_requests'],
+  },
   {
     file: '20261001153124_productivity_workspace.sql',
     functions: ['productivity_readiness_aggregate'],
