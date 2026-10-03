@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
@@ -50,10 +50,9 @@ test('the company scan cannot cancel an unrelated queued scan', () => {
   assert.doesNotMatch(companyJob, /group:\s*hawkscan-company-site\s*(?:\n|$)/);
 });
 
-test('the scan target reuses the complete production policy without a partial second CSP', () => {
+test('the scan target preserves production headers without dropping its isolation policy', () => {
   const source = read('scripts/company-site-scan-server.mjs');
   assert.match(source, /vercel\.json/);
-  assert.doesNotMatch(source, /setHeader\(['"]Content-Security-Policy['"]/);
   assert.doesNotMatch(source, /unsafe-inline.*replace|delete.*Content-Security-Policy/);
 });
 
@@ -94,6 +93,52 @@ const fetchTarget = (server, path, { method = 'GET', ca } = {}) => new Promise((
   req.end();
 });
 
+test('a complete independent policy isolates live connections, submissions and frames', async t => {
+  const server = createCompanySiteScanServer();
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const page = await fetchTarget(server, '/');
+  const published = JSON.parse(read('company-site/vercel.json')).headers.flatMap(rule => rule.headers)
+    .find(header => header.key === 'Content-Security-Policy').value;
+  const policies = page.headers['content-security-policy'].split(', ');
+  assert.equal(policies.length, 2, 'production policy alone allows live services');
+  assert.equal(policies[0], published, 'retain the exact published policy');
+  const directives = policy => {
+    const entries = policy.split(';').map(part => part.trim()).filter(Boolean)
+      .map(part => { const [name, ...values] = part.split(/\s+/); return [name, values.join(' ')]; });
+    assert.equal(new Set(entries.map(([name]) => name)).size, entries.length, 'no duplicate directives');
+    return new Map(entries);
+  };
+  const production = directives(published);
+  const isolated = directives(policies[1]);
+  const boundaries = { 'connect-src': "'self'", 'form-action': "'self'", 'frame-src': "'none'" };
+  assert.deepEqual([...isolated.keys()].sort(), [...production.keys()].sort(), 'no partial fallback policy');
+  for (const [name, values] of production) assert.equal(isolated.get(name), boundaries[name] ?? values, name);
+  // Control: the fixture really includes live destinations, so a lone copy of
+  // the production header cannot satisfy these isolation assertions.
+  assert.match(production.get('connect-src'), /https:\/\//);
+  assert.notEqual(production.get('connect-src'), boundaries['connect-src']);
+  assert.notEqual(production.get('frame-src'), boundaries['frame-src']);
+});
+
+test('ambiguous or incomplete isolation policies fail before the scan target starts', t => {
+  const fixture = mkdtempSync(join(tmpdir(), 'semester-scan-policy-'));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  const cases = [
+    [config => { config.headers[0].headers = config.headers[0].headers.filter(header => header.key !== 'Content-Security-Policy'); }, /One production CSP/],
+    [config => { config.headers[0].headers.push({ ...config.headers[0].headers[0] }); }, /One production CSP/],
+    [config => { config.headers[0].headers[0].value += ", default-src 'self'"; }, /One production CSP/],
+    [config => { config.headers[0].headers[0].value += "; connect-src 'self'"; }, /Ambiguous production CSP/],
+    [config => { config.headers[0].headers[0].value = config.headers[0].headers[0].value.replace(/form-action[^;]+; /, ''); }, /Incomplete production CSP/],
+  ];
+  for (const [mutate, error] of cases) {
+    const config = JSON.parse(read('company-site/vercel.json'));
+    mutate(config);
+    writeFileSync(join(fixture, 'vercel.json'), JSON.stringify(config));
+    assert.throws(() => createCompanySiteScanServer({ root: fixture }), error);
+  }
+});
+
 test('runtime target preserves production headers and byte-exact screenshots', async t => {
   const server = createCompanySiteScanServer();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -104,7 +149,9 @@ test('runtime target preserves production headers and byte-exact screenshots', a
   const published = JSON.parse(read('company-site/vercel.json')).headers.flatMap(rule => rule.headers);
   for (const header of published) {
     const actual = page.headers[header.key.toLowerCase()];
-    assert.equal(actual, header.value);
+    if (header.key.toLowerCase() === 'content-security-policy') {
+      assert.equal(actual.split(', ')[0], header.value);
+    } else assert.equal(actual, header.value);
   }
   for (const path of capturePaths) {
     const image = await fetchTarget(server, path);

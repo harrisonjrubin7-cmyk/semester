@@ -9,14 +9,27 @@ const siteRoot = fileURLToPath(new URL('../company-site/', import.meta.url));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.woff2': 'font/woff2', '.xml': 'application/xml', '.txt': 'text/plain', '.json': 'application/json' };
 const receiptPaths = new Set(['/', '/product', '/students', '/personal-academic-os', '/site.css', '/site.js', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])]);
 
-// Test-only adapter, never deployed. The published policy already restricts
-// connections, form submissions and frames to the static test target. Serve it
-// byte-for-byte: a second partial CSP is independently evaluated by browsers and
-// security scanners, where omitted fallback directives appear unrestricted.
+// Test-only adapter, never deployed. Keep the original production policy and
+// intersect it with a complete policy that blocks browser connections, form
+// submissions and frames to live services. Copy every other directive so a
+// scanner evaluating either policy independently sees the same protections.
 export function createCompanySiteScanServer({ root = siteRoot, tls, onResponse } = {}) {
   const directory = realpathSync(root);
   const config = JSON.parse(readFileSync(resolve(directory, 'vercel.json'), 'utf8'));
   const headers = config.headers.flatMap(rule => rule.headers);
+  const policies = headers.filter(header => header.key.toLowerCase() === 'content-security-policy');
+  if (policies.length !== 1 || typeof policies[0].value !== 'string') throw new Error('One production CSP is required');
+  const productionPolicy = policies[0].value;
+  if (productionPolicy.includes(',')) throw new Error('One production CSP is required, not a policy list');
+  const boundaries = new Map([['connect-src', "'self'"], ['form-action', "'self'"], ['frame-src', "'none'"]]);
+  const seen = new Set();
+  const isolatedPolicy = productionPolicy.split(';').map(part => part.trim()).filter(Boolean).map(part => {
+    const [name] = part.split(/\s+/);
+    if (!/^[a-z][a-z-]*$/.test(name) || seen.has(name)) throw new Error('Ambiguous production CSP directive');
+    seen.add(name);
+    return boundaries.has(name) ? `${name} ${boundaries.get(name)}` : part;
+  }).join('; ');
+  if (!['default-src', ...boundaries.keys()].every(name => seen.has(name))) throw new Error('Incomplete production CSP isolation boundary');
   const sitemap = readFileSync(resolve(directory, 'sitemap.xml'), 'utf8');
   const pagePaths = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => {
     const url = new URL(match[1]);
@@ -28,8 +41,7 @@ export function createCompanySiteScanServer({ root = siteRoot, tls, onResponse }
   if (!indexFile.startsWith(directory + sep) || !statSync(indexFile).isFile()) throw new Error('The company page must stay within the static root');
   const handler = (request, response) => {
     for (const header of headers) response.setHeader(header.key, header.value);
-    const productionPolicy = response.getHeader('Content-Security-Policy');
-    if (!productionPolicy) throw new Error('The company scan must preserve its production CSP');
+    response.setHeader('Content-Security-Policy', [productionPolicy, isolatedPolicy]);
     let path;
     const send = (status, type, body) => {
       if (onResponse && receiptPaths.has(path)) {
