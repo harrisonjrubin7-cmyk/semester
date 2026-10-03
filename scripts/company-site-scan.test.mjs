@@ -55,6 +55,17 @@ test('the scan target reuses production headers and blocks external submissions'
   assert.doesNotMatch(source, /unsafe-inline.*replace|delete.*Content-Security-Policy/);
 });
 
+test('the published CSP does not permit inline executable scripts', () => {
+  const page = read('company-site/index.html');
+  const policy = JSON.parse(read('company-site/vercel.json')).headers
+    .flatMap(rule => rule.headers)
+    .find(header => header.key === 'Content-Security-Policy')?.value ?? '';
+  assert.doesNotMatch(policy, /script-src[^;]*'unsafe-inline'/);
+  assert.match(page, /<script src="\/site\.js" defer><\/script>/);
+  assert.doesNotMatch(page, /\son(?:click|change|submit|input|keydown|load|error)=/i);
+  assert.ok(read('company-site/site.js').length > 1000);
+});
+
 const fetchTarget = (server, path, { method = 'GET', ca } = {}) => new Promise((resolve, reject) => {
   const req = (ca ? httpsRequest : request)({ hostname: 'localhost', port: server.address().port, path, method, ca }, response => {
     const chunks = [];
@@ -85,6 +96,10 @@ test('runtime target preserves production headers and byte-exact screenshots', a
     assert.equal(image.headers['content-type'], 'image/jpeg', path);
     assert.deepEqual(image.bytes, readFileSync(new URL(`company-site${path}`, root)), path);
   }
+  const script = await fetchTarget(server, '/site.js');
+  assert.equal(script.status, 200);
+  assert.equal(script.headers['content-type'], 'text/javascript; charset=utf-8');
+  assert.equal(script.bytes.toString(), read('company-site/site.js'));
   const sitemap = await fetchTarget(server, '/sitemap.xml');
   assert.doesNotMatch(sitemap.bytes.toString(), /https:\/\/www.semester.website/);
   assert.match(sitemap.bytes.toString(), new RegExp(`http://localhost:${server.address().port}/product`));
@@ -198,6 +213,20 @@ test('clean complete scan evidence passes (reporting control)', () => {
   assert.deepEqual(result.gaps, []);
   assert.equal(result.paths.size, 16);
   assert.deepEqual(result.untouched, []);
+});
+
+test('native HawkScan URI envelope is bound to the expected scan', () => {
+  const id = cleanReport().scan.id;
+  const result = evaluate(cleanReport(), {
+    graphqlOperations: [], jsonrpcMethods: [], scanId: id, sources: ['spider'], uris: coveredUris,
+  }, coveredUris, healthyEvidence());
+  assert.deepEqual(result.gaps, []);
+  assert.equal(result.paths.size, 16);
+
+  const wrongScan = evaluate(cleanReport(), {
+    scanId: '87654321-1234-1234-1234-123456789abc', uris: coveredUris,
+  }, coveredUris, healthyEvidence());
+  assert.ok(wrongScan.gaps.some(gap => /URI|untouched/.test(gap)));
 });
 
 test('wrong surface, incomplete scans, errors, threshold failure and absent findings fail closed', () => {

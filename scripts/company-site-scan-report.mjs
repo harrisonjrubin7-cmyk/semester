@@ -32,7 +32,7 @@ export function scannedPaths(uris, expectedId) {
   // Unknown native CLI envelopes stay unverified until their schema is observed.
   if (uris?.error || (uris?.errors && (!Array.isArray(uris.errors) || uris.errors.length)) || uris?.success === false) return paths;
   if (uris?.scanId && uris.scanId !== expectedId) return paths;
-  const records = Array.isArray(uris) ? uris : uris?.data;
+  const records = Array.isArray(uris) ? uris : Array.isArray(uris?.uris) ? uris.uris : uris?.data;
   if (!Array.isArray(records)) return paths;
   for (const record of records) {
     const value = typeof record === 'string' ? record : record?.uri;
@@ -114,7 +114,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       const records = readFileSync(process.argv[5], 'utf8').split('\n').filter(Boolean).map(line => JSON.parse(line));
       const result = evaluate(report, uris, expectedRoutes(), { records, checkoutSha: process.env.COMMIT_SHA });
       // Structural diagnostics only: never print arbitrary API values or credentials.
-      const list = Array.isArray(uris) ? uris : uris?.data;
+      const list = Array.isArray(uris) ? uris : Array.isArray(uris?.uris) ? uris.uris : uris?.data;
       console.log(`StackHawk | URI schema: ${Array.isArray(uris) ? 'array' : safeText(Object.keys(uris ?? {}).join(', '))}; records=${Array.isArray(list) ? list.length : 'unsupported'}; first record=${list?.[0] && typeof list[0] === 'object' ? safeText(Object.keys(list[0]).join(', ')) : typeof list?.[0]}`);
       printResult(result);
       if (result.gaps.length) process.exitCode = 1;
