@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ACCESS_BASIS, CONTEXT_BAR, FIGURE_PROVENANCE, PRODUCTION_WRITE_NOTICE } from '../lib/ops/console';
 import { EVIDENCE } from '../lib/ops/evidence';
+import type { CommandItem } from '../lib/console/client';
 
 /**
  * The operations console, driven against a replaced account service.
@@ -298,6 +299,16 @@ describe('the gate', () => {
 });
 
 describe('command center', () => {
+  const exception = (patch: Partial<CommandItem> = {}): CommandItem => ({
+    id: 'gate:production_restore', severity: 'critical', category: 'release gate',
+    title: 'Production restore evidence', tenantId: null, tenantName: null,
+    isDemo: false, owner: 'engineering', dueAt: null, status: 'missing',
+    nextStep: 'Record a dated production result.', route: 'Recovery runbook',
+    source: 'public.platform_release_evidence', evidence: '',
+    limitation: 'A backup listing is not execution evidence.', observedAt: '2026-09-30T16:00:00Z',
+    ...patch,
+  });
+
   it('shows live blockers with their evidence boundary and never turns them green', async () => {
     mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
     mock.command.mockResolvedValue([{
@@ -322,6 +333,105 @@ describe('command center', () => {
     await render();
     expect(host.textContent).toContain('GREEN');
     expect(host.textContent).toContain('no open exception');
+  });
+
+  it('keeps the open count and severity status when a filter hides some or all blockers', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([
+      exception({ id: 'tenant:vu', severity: 'high', title: 'Tenant approval', tenantId: 'vu' }),
+      exception(),
+    ]);
+    await render();
+    const status = 'NOT GO: 1 critical · 1 high · 0 medium · 0 informational';
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+
+    type(field('Filter this view'), 'Tenant approval');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+    expect(host.textContent).not.toContain('GREEN');
+
+    type(field('Filter this view'), 'nothing matches');
+    expect(host.querySelectorAll('article')).toHaveLength(0);
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+    expect(host.textContent).not.toContain('GREEN');
+
+    type(field('Filter this view'), '');
+    expect([...host.querySelectorAll('article')].map((row) => row.getAttribute('aria-label')))
+      .toEqual(['critical Production restore evidence', 'high Tenant approval']);
+    expect(host.textContent).not.toContain('No matching exceptions');
+    expect(host.textContent).toContain(status);
+  });
+
+  it('counts only the selected tenant even when its blockers do not match the filter', async () => {
+    mock.command.mockResolvedValue([
+      exception(),
+      exception({ id: 'tenant:other', severity: 'medium', title: 'Other tenant evidence', tenantId: 'other' }),
+      exception({ id: 'tenant:vu', severity: 'high', title: 'Tenant approval', tenantId: 'vu' }),
+    ]);
+    await render();
+    await press('Customers');
+    type(field('Purpose'), 'SUP-4');
+    await submit(host.querySelector('form[aria-label="Purpose of this read"]'));
+    await press('Scope the console to this tenant');
+    await press('Command center');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('NOT GO: 0 critical · 1 high · 0 medium · 0 informational');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+
+    type(field('Filter this view'), 'Other tenant evidence');
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('NOT GO: 0 critical · 1 high · 0 medium · 0 informational');
+    expect(host.textContent).not.toContain('GREEN');
+    expect(host.querySelectorAll('article')).toHaveLength(0);
+
+    await press('Show all tenants');
+    expect(host.textContent).toContain('3 open');
+    expect(host.textContent).toContain('NOT GO: 1 critical · 1 high · 1 medium · 0 informational');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+  });
+
+  it('can report an empty tenant scope while another scope has blockers', async () => {
+    mock.command.mockResolvedValue([exception()]);
+    await render();
+    await press('Customers');
+    type(field('Purpose'), 'SUP-4');
+    await submit(host.querySelector('form[aria-label="Purpose of this read"]'));
+    await press('Scope the console to this tenant');
+    await press('Command center');
+    type(field('Filter this view'), 'nothing matches');
+    expect(host.textContent).toContain('GREEN');
+    expect(host.textContent).toContain('0 open');
+    expect(host.textContent).not.toContain('No matching exceptions');
+
+    await press('Show all tenants');
+    expect(host.textContent).toContain('NOT GO: 1 critical');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).not.toContain('GREEN');
+  });
+
+  it('never reports green while the live exception reader is pending', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockReturnValue(new Promise(() => {}));
+    await render();
+    expect(host.textContent).toContain('Reading live operational sources');
+    expect(host.textContent).not.toContain('GREEN');
+    expect(host.textContent).not.toContain('No matching exceptions');
+  });
+
+  it('fails closed when the live exception reader cannot be reached', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockRejectedValue(new Error('The operational source refused the read.'));
+    await render();
+    expect(host.textContent).toContain('NOT GO');
+    expect(host.textContent).toContain('The operational source refused the read.');
+    expect(host.textContent).toContain('green status cannot be calculated');
+    expect(host.textContent).not.toContain('GREEN');
   });
 });
 

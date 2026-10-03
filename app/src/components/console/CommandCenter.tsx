@@ -12,28 +12,38 @@ const ORDER: Record<CommandSeverity, number> = { critical: 0, high: 1, medium: 2
  */
 export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
   const [items, setItems] = useState<CommandItem[] | null>(null);
+  const [readError, setReadError] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
     loadCommandCenter(false).then(
-      (rows) => { if (live) setItems(rows); },
+      (rows) => {
+        if (!live) return;
+        setReadError(null);
+        setItems(rows);
+      },
       (e: unknown) => {
         if (!live) return;
+        const error = said(e, 'Could not read the command center.');
+        setReadError(error);
         setItems([]);
-        onStatus(said(e, 'Could not read the command center.'));
+        onStatus(error);
       },
     );
     return () => { live = false; };
   }, [onStatus]);
 
+  const scoped = useMemo(
+    () => (items ?? []).filter((item) => inScope(scope, item.tenantId)),
+    [items, scope],
+  );
   const shown = useMemo(
-    () => (items ?? [])
-      .filter((item) => inScope(scope, item.tenantId))
+    () => scoped
       .filter((item) => matches(filter, item.title, item.category, item.owner, item.status, item.tenantName, item.tenantId))
       .sort((a, b) => ORDER[a.severity] - ORDER[b.severity] || a.title.localeCompare(b.title)),
-    [items, scope, filter],
+    [scoped, filter],
   );
-  const counts = shown.reduce<Record<CommandSeverity, number>>(
+  const counts = scoped.reduce<Record<CommandSeverity, number>>(
     (out, item) => ({ ...out, [item.severity]: out[item.severity] + 1 }),
     { critical: 0, high: 0, medium: 0, info: 0 },
   );
@@ -43,16 +53,26 @@ export function CommandCenter({ env, scope, filter, onStatus }: ViewProps) {
       <Notice>
         {env} truth only. Green means this live exception queue is empty; it does not mean a document, demo, pull request or verbal approval exists somewhere else.
       </Notice>
-      <SectionLabel aside={`${shown.length} open`}>Command center</SectionLabel>
+      <SectionLabel aside={readError ? 'unavailable' : `${scoped.length} open`}>Command center</SectionLabel>
       {items === null && <p role="status" style={{ marginBlock: 0, color: 'var(--app-dim)' }}>Reading live operational sources…</p>}
-      {items !== null && shown.length === 0 && (
+      {readError && (
+        <p role="alert" className="portal-panel" style={{ marginBlock: 0 }}>
+          <strong>NOT GO:</strong> {readError} The live exception queue is unavailable, so green status cannot be calculated.
+        </p>
+      )}
+      {items !== null && !readError && scoped.length === 0 && (
         <p role="status" className="portal-panel" style={{ marginBlock: 0 }}>
           <strong>GREEN</strong> — no open exception was returned for this scope.
         </p>
       )}
-      {shown.length > 0 && (
+      {scoped.length > 0 && (
         <p role="status" style={{ marginBlock: 0 }}>
           <strong>NOT GO:</strong> {counts.critical} critical · {counts.high} high · {counts.medium} medium · {counts.info} informational
+        </p>
+      )}
+      {scoped.length > 0 && shown.length === 0 && (
+        <p role="status" className="portal-panel" style={{ marginBlock: 0 }}>
+          No matching exceptions. Clear the filter to see the open exceptions in this scope.
         </p>
       )}
       {shown.map((item) => (
