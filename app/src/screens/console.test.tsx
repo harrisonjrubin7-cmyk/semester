@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ACCESS_BASIS, CONTEXT_BAR, FIGURE_PROVENANCE, PRODUCTION_WRITE_NOTICE } from '../lib/ops/console';
 import { EVIDENCE } from '../lib/ops/evidence';
+import { READINESS_GATES } from '../lib/ops/readiness';
 import type { CommandItem } from '../lib/console/client';
 
 /**
@@ -703,6 +704,11 @@ describe('evidence', () => {
     expect(cards.length).toBe(EVIDENCE.length);
     expect(EVIDENCE.length).toBeGreaterThan(0);
     for (const card of cards) expect(card.textContent).toMatch(/— (current|expiring|expired)/);
+    const readiness = [...host.querySelectorAll('article[aria-label^="Readiness "]')];
+    expect(readiness).toHaveLength(READINESS_GATES.length);
+    expect(host.textContent).toContain('Configuration — missing');
+    expect(host.textContent).toContain('Observed operation — missing');
+    expect(host.textContent).toContain('Highest continuous evidence: repository');
     expect(mock.customers).not.toHaveBeenCalled();
   });
 });

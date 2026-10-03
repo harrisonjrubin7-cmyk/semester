@@ -2,6 +2,7 @@ import { Notice, SectionLabel } from '../ui';
 import { ESCALATION } from '../../lib/ops/console';
 import { EVIDENCE, evidenceState } from '../../lib/ops/evidence';
 import { Fields, matches, type ViewProps } from './Fields';
+import { ReadinessEvidence } from './ReadinessEvidence';
 
 /**
  * The evidence register: each artifact that exists, when it was produced,
@@ -16,6 +17,7 @@ export function Evidence({ filter, today = new Date().toISOString().slice(0, 10)
 
   return (
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <ReadinessEvidence today={today} />
       <Notice>
         Escalation: {ESCALATION.map((e) => `${e.daysLeft === 0 ? 'at expiry' : `${e.daysLeft} days before`} — ${e.action}`).join(' · ')}
       </Notice>
