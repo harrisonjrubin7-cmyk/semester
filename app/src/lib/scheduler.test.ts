@@ -195,7 +195,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/t\.status in \('resolved', 'closed'\)[\s\S]*?t\.retention_classified[\s\S]*?t\.tenant_id is null/);
     expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
     expect(migration).toMatch(/active legal hold'[\s\S]*?errcode = '55006'/);
-    expect(migration).toMatch(/not t\.retention_classified[\s\S]*?errcode = '55000'/);
+    expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) is distinct from who::text[\s\S]*?not t\.retention_classified[\s\S]*?errcode = '55000'/);
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

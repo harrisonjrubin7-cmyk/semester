@@ -140,7 +140,15 @@ begin
     raise exception 'support tickets are preserved by an active legal hold'
       using errcode = '55006';
   end if;
-  if exists (
+  -- A narrow ticket-only deletion cannot decide the historical authority of
+  -- a pre-classifier row. Whole-account erasure is different: the
+  -- service-role-only erase_account path checks account/platform holds and
+  -- marks the transaction with the account it is erasing; the locked check
+  -- immediately above also covers every durable ticket-tenant hold. Do not
+  -- strand a user's entire account on
+  -- a classification question when no hold requires preservation.
+  if current_setting('semester.erasing_account', true) is distinct from who::text
+     and exists (
     select 1 from public.support_tickets t
      where t.student_id = who and not t.retention_classified
   ) then
@@ -154,7 +162,7 @@ revoke all on function public.forget_my_support_tickets() from public, anon;
 grant execute on function public.forget_my_support_tickets() to authenticated;
 
 comment on function public.forget_my_support_tickets() is
-  'Deletes the caller''s classified support tickets unless a legal hold requires preservation; legacy tickets must first receive evidence-backed retention classification.';
+  'Deletes the caller''s classified support tickets unless a legal hold requires preservation; narrow deletion of legacy tickets needs evidence-backed classification, while hold-cleared whole-account erasure removes them.';
 
 -- scheduler.sql remains the complete infrastructure source. This one
 -- credential-free job is also installed by the migration when pg_cron is

@@ -47,6 +47,7 @@ describe('company-site production availability', () => {
     expect(site).toContain('New individual-beta tickets are classified when opened and deleted with their replies 180 days after resolution or closure');
     expect(site).toContain('Tickets created before the durable classification field are preserved until their historical authority is verified');
     expect(site).toContain('pre-classification legacy tickets stay outside that sweep');
+    expect(site).toContain('legacy tickets require evidence review for ticket-only deletion but leave with hold-cleared whole-account erasure');
   });
 
   it('holds every previously non-green roadmap card to code-complete status without erasing its external gate', () => {

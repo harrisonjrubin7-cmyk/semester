@@ -140,6 +140,17 @@ begin
   perform pg_temp.must('ticket messages cascade when the individual-beta ticket expires',
     not exists (select 1 from public.support_ticket_messages where ticket_id = old_resolved));
 
+  -- erase_account is service-role-only and sets this marker only after its
+  -- legal-hold wrapper has allowed the account erasure to start. A legacy
+  -- classification question may block the narrower RPC, but must not make
+  -- the whole account undeletable once every applicable hold is clear.
+  perform set_config('semester.erasing_account', who::text, true);
+  perform pg_temp.must('hold-cleared whole-account erasure can remove unclassified legacy tickets',
+    pg_temp.error_as(who, 'select public.forget_my_support_tickets()') is null);
+  perform set_config('semester.erasing_account', '', true);
+  perform pg_temp.must('the account-erasure path removes classified and legacy support tickets together',
+    not exists (select 1 from public.support_tickets where student_id = who));
+
   perform set_config('request.jwt.claims', '{}'::text, true);
   insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
   values ('tenant', school, school, 'Preserve this tenant.', 'SUPPORT-TENANT-RETENTION-CHECK', operator_id)
