@@ -64,11 +64,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 49 | `docs/legal-drafts/SERVICE-LEVEL-EXPECTATIONS-DRAFT.md` | EXACT PRESENT | canonical commitment template; all numeric and contractual service targets remain unapproved |
 | 50 | `docs/legal-drafts/SUPPORT-POLICY-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical customer support schedule; staffing, channels, coverage, targets, and escalation exercises remain open |
 | 51 | `docs/legal-drafts/ACCEPTABLE-USE-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical institutional-use draft; customer authority, enforcement, appeals, staffing, and target controls remain unapproved |
-| 52 | `docs/legal-drafts/IMPLEMENTATION-RESPONSIBILITY-MATRIX-DRAFT.md` | NO CLOSE SOURCE | — |
-| 53 | `docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md` | CANDIDATE SOURCE | `docs/DATA-RETENTION-EXPORT-DELETION.md` (filename similarity 0.79; substantive review required) |
-| 54 | `docs/legal-drafts/SUBPROCESSOR-LIST-TEMPLATE-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/SUBPROCESSOR-TEMPLATE.md` (filename similarity 0.59; substantive review required) |
-| 55 | `docs/legal-drafts/SECURITY-INCIDENT-NOTIFICATION-EXHIBIT-DRAFT.md` | NO CLOSE SOURCE | — |
-| 56 | `docs/legal-drafts/ACCESSIBILITY-ROADMAP-EXHIBIT-DRAFT.md` | NO CLOSE SOURCE | — |
+| 52 | `docs/legal-drafts/IMPLEMENTATION-RESPONSIBILITY-MATRIX-DRAFT.md` | EXACT PRESENT | canonical joint responsibility schedule; unnamed, ambiguous, unstaffed, or unaccepted ownership blocks the affected milestone |
+| 53 | `docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical evidence-bounded lifecycle schedule; complete tenant/provider operation and legal terms remain open |
+| 54 | `docs/legal-drafts/SUBPROCESSOR-LIST-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical provider schedule; code dependencies and published terms are not represented as active or executed commitments |
+| 55 | `docs/legal-drafts/SECURITY-INCIDENT-NOTIFICATION-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical notification draft; no 24/7, fixed deadline, recovery, or practiced-operation claim is made |
+| 56 | `docs/legal-drafts/ACCESSIBILITY-ROADMAP-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical scoped roadmap; self-assessment remains YELLOW and formal conformance remains RED |
 | 57 | `docs/legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/AI-USE-POLICY-DRAFT.md` (filename similarity 0.47; substantive review required) |
 | 58 | `docs/legal-drafts/CONFIDENTIALITY-NDA-MUTUAL-DRAFT.md` | NO CLOSE SOURCE | — |
 | 59 | `docs/legal-drafts/EVALUATION-AGREEMENT-DRAFT.md` | NO CLOSE SOURCE | — |

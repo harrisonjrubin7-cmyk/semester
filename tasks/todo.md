@@ -52,7 +52,7 @@
 - [x] L04: public legal documents 16–20; created controlled drafts with exact disclaimer, applicability/decision placeholders, public summaries, audience boundaries, behavior mappings, and publication blockers on 2026-10-03.
 - [x] L05: institutional legal documents 21–25; created evidence-bounded MSA, order form, pilot agreement, SOW, and DPA drafts with exact disclaimer, decision schedules, behavior mappings, and signature/activation blockers on 2026-10-03.
 - [x] L06: institutional legal documents 26–30; created evidence-bounded student-data, security, service-level, support, and acceptable-use exhibits with exact disclaimer, schedules, behavior mappings, and signature/activation blockers on 2026-10-03.
-- [ ] L07: institutional legal documents 31–35.
+- [x] L07: institutional legal documents 31–35; added evidence-bounded responsibility, data lifecycle, subprocessor, incident-notification, and accessibility-roadmap exhibits with exact disclaimer and signature/activation blockers on 2026-10-03.
 - [ ] L08: institutional legal documents 36–40.
 - [ ] L09: institutional legal documents 41–44.
 - [ ] L10: internal legal governance documents 45–49.
