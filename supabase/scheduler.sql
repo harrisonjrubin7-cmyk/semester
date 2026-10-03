@@ -176,6 +176,10 @@ select cron.schedule(
   '43 5 * * *',
   $job$select private.sweep_support_ticket_retention()$job$
 );
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'support-ticket-retention'),
+  active := true
+);
 
 -- AI provider reservations expire after five minutes inside the budget
 -- functions, so a crashed request cannot hold a tenant budget indefinitely.

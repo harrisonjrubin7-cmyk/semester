@@ -12,6 +12,10 @@ set search_path = ''
 as $$
 declare removed integer;
 begin
+  -- Serialize the hold decision with every placement or release. INSERT and
+  -- UPDATE take ROW EXCLUSIVE on legal_holds, which conflicts with SHARE, so
+  -- no hold can become active between this check and the DELETE below.
+  lock table public.legal_holds in share mode;
   delete from public.support_tickets t
    where t.status in ('resolved', 'closed')
      and t.updated_at < now() - interval '180 days'
@@ -36,6 +40,10 @@ begin
   if who is null then
     raise exception 'sign in first' using errcode = 'insufficient_privilege';
   end if;
+  -- Hold placement and release write legal_holds and therefore wait for this
+  -- transaction. Recheck only after taking the lock, then keep it through the
+  -- deletion so a new hold cannot slip into the check/delete boundary.
+  lock table public.legal_holds in share mode;
   if private.account_is_held(who) then
     raise exception 'support tickets are preserved by an active legal hold'
       using errcode = 'insufficient_privilege';
