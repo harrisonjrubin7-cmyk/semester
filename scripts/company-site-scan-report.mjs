@@ -183,6 +183,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     const report = parseJson(readFileSync(process.argv[3], 'utf8'));
     if (process.argv[2] === 'id') {
+      evidenceDiagnostics(report).forEach(shape => console.error(`StackHawk | Scan report shape: ${shape}`));
       console.error(`StackHawk | Scan status: ${safeText(report?.scan?.status)}; threshold: ${safeText(report.thresholdResult)}`);
       printFindings(Array.isArray(report.findings) ? report.findings : [], console.error);
       for (const error of report.errors ?? []) console.error(`StackHawk | Scan error category: ${safeText(error.category)}`);
