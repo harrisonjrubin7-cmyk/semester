@@ -92,7 +92,9 @@ const PILOT_CAPABILITIES = [
 
 function unsatisfiedCapabilityDependencies(capabilityIds: readonly `CAP-${string}`[]): string[] {
   const selected = new Set<string>(capabilityIds);
-  const byId = new Map(CAPABILITIES.map((capability) => [capability.id, capability]));
+  const byId = new Map<string, (typeof CAPABILITIES)[number]>(
+    CAPABILITIES.map((capability) => [capability.id, capability]),
+  );
   const required = new Set<string>();
   const visited = new Set<string>();
   const visit = (id: string) => {
