@@ -78,11 +78,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 63 | `docs/legal-drafts/RFP-RESPONSE-CONTENT-LIBRARY.md` | EXACT PRESENT | controlled index to the technical library; every reused answer requires current evidence, claim, confidentiality, and approval review |
 | 64 | `docs/legal-drafts/CONTRACT-NEGOTIATION-PLAYBOOK.md` | EXACT PRESENT | canonical negotiation control; no draft, repository evidence, or proposed deal default grants binding authority |
 | 65 | `docs/legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md` | EXACT PRESENT | canonical risk-based approval matrix; accepted language does not complete required operational or technical work |
-| 66 | `docs/legal-drafts/LEGAL-COMPLIANCE-CALENDAR.md` | NO CLOSE SOURCE | — |
-| 67 | `docs/legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md` | CANDIDATE SOURCE | `docs/launch-readiness/LEGAL_REVIEW_REQUIRED.md` (filename similarity 0.51; substantive review required) |
-| 68 | `docs/legal-drafts/LEGAL-CLAIMS-APPROVAL-POLICY.md` | NO CLOSE SOURCE | — |
-| 69 | `docs/legal-drafts/MARKETING-CLAIM-REVIEW-MATRIX.md` | NO CLOSE SOURCE | — |
-| 70 | `docs/legal-drafts/DATA-SUBJECT-REQUEST-PROCEDURE-DRAFT.md` | NO CLOSE SOURCE | — |
+| 66 | `docs/legal-drafts/LEGAL-COMPLIANCE-CALENDAR.md` | EXACT PRESENT | canonical obligation calendar template; applicability, dates, completion, and professional determinations remain external evidence |
+| 67 | `docs/legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md` | EXACT PRESENT | canonical review intake reconciled to the launch blocker; intake completion is not qualified approval |
+| 68 | `docs/legal-drafts/LEGAL-CLAIMS-APPROVAL-POLICY.md` | EXACT PRESENT | canonical claim evidence and approval policy; repository evidence cannot establish external, operational, customer, or legal conclusions |
+| 69 | `docs/legal-drafts/MARKETING-CLAIM-REVIEW-MATRIX.md` | EXACT PRESENT | canonical claim-class matrix; controlled beta/discovery language is separated from prohibited paid and enterprise claims |
+| 70 | `docs/legal-drafts/DATA-SUBJECT-REQUEST-PROCEDURE-DRAFT.md` | EXACT PRESENT | canonical rights-request procedure; code/runbooks do not establish legal applicability, staffing, deadlines, or completed operation |
 | 71 | `docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md` | NO CLOSE SOURCE | — |
 | 72 | `docs/legal-drafts/LEGAL-HOLD-PROCEDURE-DRAFT.md` | NO CLOSE SOURCE | — |
 | 73 | `docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md` | NO CLOSE SOURCE | — |
