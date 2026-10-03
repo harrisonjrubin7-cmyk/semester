@@ -136,6 +136,7 @@ jobs:
         run: |
           hawk version
           hawk config --help > /dev/null
+          hawk op scan get --help
           API_KEY="$HAWK_API_KEY" hawk validate config stackhawk-company-site.yml
 
       - name: Run company-site HawkScan
