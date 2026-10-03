@@ -3,6 +3,12 @@
 -- Claiming and consent are decided together in the database, before any
 -- recipient lookup or provider request.
 
+-- Some preview/production histories recorded the original outbox migration
+-- before this consent column existed in their schema. Keep this repair
+-- self-contained instead of trusting migration-history equivalence.
+alter table public.support_tickets
+  add column if not exists email_notice_enabled boolean not null default false;
+
 create or replace function public.claim_support_notifications(want_message uuid, want_limit integer)
 returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
 language sql volatile security invoker set search_path = '' as $$
