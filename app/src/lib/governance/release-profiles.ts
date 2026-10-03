@@ -92,6 +92,13 @@ interface ReleaseApproval {
   subjectRef: string;
 }
 
+function isReleaseEvidence(value: unknown): value is ReleaseEvidence {
+  return Boolean(value
+    && typeof value === 'object'
+    && !Array.isArray(value)
+    && typeof (value as Partial<ReleaseEvidence>).gate === 'string');
+}
+
 export interface ReleaseProfile {
   readonly id: ReleaseProfileId;
   readonly audience: string;
@@ -376,6 +383,9 @@ export function evaluateReleaseProfile(
   target?: ReleaseTarget,
 ): ReleaseProfileDecision {
   const profile = RELEASE_PROFILES[profileId];
+  const evidenceRecords: readonly ReleaseEvidence[] = Array.isArray(evidence) && evidence.every(isReleaseEvidence)
+    ? evidence
+    : [];
   const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
   const targetBound = Boolean(target
     && target.environment === expectedEnvironment
@@ -391,10 +401,11 @@ export function evaluateReleaseProfile(
         && target.registrationWriteback === undefined));
   const technicalTargetBound = Boolean(target && typeof target.deployedSha === 'string' && SHA.test(target.deployedSha));
   const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !technicalTargetBound
-    || !counts(evidence, gate, asOf, undefined, target?.deployedSha));
-  const missingActivation = profile.requiredActivationGates.filter((gate) => !targetBound || !counts(evidence, gate, asOf, target));
+    || !counts(evidenceRecords, gate, asOf, undefined, target?.deployedSha));
+  const missingActivation = profile.requiredActivationGates.filter((gate) => !targetBound
+    || !counts(evidenceRecords, gate, asOf, target));
   const missingDependencies = profile.requiredDependencies.filter((dependency) => !targetBound
-    || !counts(evidence, `dependency:${dependency}`, asOf, target));
+    || !counts(evidenceRecords, `dependency:${dependency}`, asOf, target));
   const technicalStatus = missingTechnical.length === 0 ? 'ready' : 'not-ready';
   const rolloutStatus = technicalStatus === 'ready'
     && targetBound
@@ -403,7 +414,7 @@ export function evaluateReleaseProfile(
     ? 'authorized'
     : 'held';
   const launchOutcomes: Verdict[] = profile.id === 'institutional-pilot' && targetBound
-    ? latestCurrentEvidence(evidence, 'canonical-launch-decision', asOf, target)
+    ? latestCurrentEvidence(evidenceRecords, 'canonical-launch-decision', asOf, target)
       .flatMap((item) => {
         try {
           return item.launchState ? [decide(item.launchState)] : [];

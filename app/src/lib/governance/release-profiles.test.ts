@@ -288,6 +288,12 @@ describe('pilot and individual release profiles', () => {
     const malformedTarget = { ...target, configurationVersion: null as unknown as string };
     expect(() => evaluateReleaseProfile(profile.id, technical(malformedTarget), AS_OF, malformedTarget)).not.toThrow();
     expect(evaluateReleaseProfile(profile.id, technical(malformedTarget), AS_OF, malformedTarget).targetBound).toBe(false);
+    const malformedCollection = [...technical(target), null] as unknown as ReleaseEvidence[];
+    expect(() => evaluateReleaseProfile(profile.id, malformedCollection, AS_OF, target)).not.toThrow();
+    expect(evaluateReleaseProfile(profile.id, malformedCollection, AS_OF, target)).toMatchObject({
+      technicalStatus: 'not-ready',
+      rolloutStatus: 'held',
+    });
   });
 
   it('rejects future-dated evidence and lets the latest denial override an older current record', () => {
