@@ -19,7 +19,7 @@ Begin only with an authorized customer/order or explicitly non-activation design
 | days 6–15 | authorized paper/data flow; sandbox/isolated target; role/feature/source plan; baseline and metric design; accessibility/support needs |
 | days 16–30 | approved configuration/content; integration only where real/authorized; operator/admin/support training; external reviews and remediation |
 | days 31–45 | representative student/admin UAT; role/cross-tenant, accessibility, device, rights, incident, restore/rollback, kill/read-only and offboarding rehearsals |
-| days 46–60 | launch-council evidence; frozen baseline; communications/invitations; support/monitoring; signed GO or documented delay/stop |
+| days 46–60 | launch-council evidence; frozen baseline; support/monitoring ready; signed GO or documented delay/stop; only after signed GO, release approved communications and invitations |
 | weekly after launch | aggregate scorecard, guardrails, reliability/support, risks/changes and named decisions |
 | midpoint/final | continue/correct/pause/stop, outcome report, conversion under new approval or clean offboarding |
 

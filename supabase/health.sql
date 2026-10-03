@@ -169,6 +169,7 @@ with expected(jobname, parked) as (values
   ('lti-nonce',                     false),
   ('media-scan',                    true),
   ('push',                          true),
+  ('support-reply-notify',          true),
   ('tombstones',                    false)
 )
 select coalesce(e.jobname, j.jobname) as jobname,
@@ -200,6 +201,18 @@ select j.jobname,
  where j.active
  group by j.jobname
  order by failed desc, j.jobname;
+
+-- Support email can fail even while pg_cron itself succeeds: pg_net accepts
+-- the HTTP request before the Edge Function knows whether Resend accepted the
+-- message. Any dead letter is an incident; pending rows are the retry backlog.
+select
+  count(*) filter (where accepted_at is null and dead_lettered_at is null) as pending,
+  count(*) filter (where dead_lettered_at is not null)                     as dead_lettered,
+  min(queued_at) filter (where accepted_at is null and dead_lettered_at is null) as oldest_pending,
+  max(dead_lettered_at)                                                   as latest_dead_letter,
+  (array_agg(last_error order by dead_lettered_at desc)
+    filter (where dead_lettered_at is not null))[1]                       as latest_error
+from public.support_notification_outbox;
 
 -- ── 7 · Accounts nobody has used in a long time ───────────────────────────
 --

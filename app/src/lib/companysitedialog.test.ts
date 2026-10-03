@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const site = readFileSync(join(import.meta.dirname, '../../../company-site/index.html'), 'utf8');
+const site = readFileSync(join(import.meta.dirname, '../../../company-site/site.js'), 'utf8');
+const stylesheet = readFileSync(join(import.meta.dirname, '../../../company-site/site.css'), 'utf8');
 
 // Execute the shipped functions, not a copy of their behavior. The only shims
 // are unrelated search results/dropdowns and jsdom's missing layout measurements.
@@ -24,16 +25,32 @@ type Dialogs = {
 };
 
 const fixtures: HTMLElement[] = [];
+const fixtureStyles: HTMLStyleElement[] = [];
 let dialogs: Dialogs;
 let previousOverflow: string;
+let previousModalOpen: boolean;
+let siteStyle: HTMLStyleElement;
 let listeners: ReturnType<typeof vi.spyOn>;
 
 const element = (id: string) => document.getElementById(id)!;
 const backgroundState = () => ['site-header', 'main', 'site-footer'].map(id => Boolean(element(id).inert));
+const bodyOverflow = () => window.getComputedStyle(document.body).overflow;
+const expectScrollLocked = () => expect(bodyOverflow()).toBe('hidden');
 
 beforeEach(() => {
   previousOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'auto';
+  previousModalOpen = document.body.classList.contains('modal-open');
+  document.body.style.removeProperty('overflow');
+  document.body.classList.remove('modal-open');
+  // The strict style CSP no longer permits inline overflow declarations. Supply
+  // the pre-existing auto state through a stylesheet, then load the shipped CSS
+  // so these tests verify the rendered lock rather than its implementation.
+  const baselineStyle = document.createElement('style');
+  baselineStyle.textContent = 'body{overflow:auto}';
+  siteStyle = document.createElement('style');
+  siteStyle.textContent = stylesheet;
+  fixtureStyles.push(baselineStyle, siteStyle);
+  document.head.append(...fixtureStyles);
   const template = document.createElement('template');
   template.innerHTML = `
     <header id="site-header">
@@ -81,7 +98,9 @@ afterEach(() => {
     if (listener) document.removeEventListener(type as string, listener as EventListener, options as AddEventListenerOptions);
   }
   fixtures.splice(0).forEach(node => node.remove());
+  fixtureStyles.splice(0).forEach(node => node.remove());
   document.body.style.overflow = previousOverflow;
+  document.body.classList.toggle('modal-open', previousModalOpen);
   vi.restoreAllMocks();
 });
 
@@ -92,7 +111,8 @@ describe('the company site dialog lifecycle', () => {
     expect(searchSource.includes('search-close')).toBe(true);
     expect(element('search').hidden).toBe(true);
     expect(backgroundState()).toEqual([false, false, true]);
-    expect(document.body.style.overflow).toBe('auto');
+    expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('opens desktop search and returns focus on Escape', () => {
@@ -122,12 +142,14 @@ describe('the company site dialog lifecycle', () => {
     element(kind === 'drawer' ? 'menu-btn' : 'search-btn').focus();
     if (kind === 'drawer') dialogs.openDrawer(); else dialogs.sOpen();
     expect(backgroundState()).toEqual([true, true, true]);
-    expect(document.body.style.overflow).toBe('hidden');
+    expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(element(kind).inert).not.toBe(true);
 
     if (kind === 'drawer') dialogs.closeDrawer(); else dialogs.sClose();
     expect(backgroundState()).toEqual([false, false, true]);
-    expect(document.body.style.overflow).toBe('auto');
+    expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('switches from the mobile menu to shortcut search without two active modals', () => {
@@ -138,11 +160,14 @@ describe('the company site dialog lifecycle', () => {
     expect(element('search').hidden).toBe(false);
     expect(element('menu-btn').getAttribute('aria-expanded')).toBe('false');
     expect(backgroundState()).toEqual([true, true, true]);
-    expect(document.body.style.overflow).toBe('hidden');
+    expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(document.activeElement?.id).toBe('search-q');
     dialogs.sClose();
     expect(document.activeElement?.id).toBe('menu-btn');
     expect(backgroundState()).toEqual([false, false, true]);
+    expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('keeps only the menu active if it replaces an open search dialog', () => {
@@ -152,9 +177,54 @@ describe('the company site dialog lifecycle', () => {
     expect(element('search').hidden).toBe(true);
     expect(element('drawer').hidden).toBe(false);
     expect(document.activeElement?.id).toBe('drawer-close');
-    expect(document.body.style.overflow).toBe('hidden');
+    expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     dialogs.closeDrawer();
     expect(backgroundState()).toEqual([false, false, true]);
-    expect(document.body.style.overflow).toBe('auto');
+    expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
+  });
+
+  it.each(['drawer', 'search'] as const)('preserves an existing scroll lock when %s closes', kind => {
+    document.body.classList.add('modal-open');
+    expectScrollLocked();
+    if (kind === 'drawer') dialogs.openDrawer(); else dialogs.sOpen();
+    expectScrollLocked();
+    if (kind === 'drawer') dialogs.closeDrawer(); else dialogs.sClose();
+    expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
+    expect(backgroundState()).toEqual([false, false, true]);
+  });
+
+  it.each(['drawer', 'search'] as const)('traps both Tab directions inside %s', kind => {
+    if (kind === 'drawer') dialogs.openDrawer(); else dialogs.sOpen();
+    const focusable = Array.from(element(kind).querySelectorAll<HTMLElement>('input,button,a'));
+    const first = focusable[0];
+    const last = focusable.at(-1)!;
+    last.focus();
+    const forward = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    document.dispatchEvent(forward);
+    expect(forward.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(first);
+    const backward = new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+    document.dispatchEvent(backward);
+    expect(backward.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(last);
+    expectScrollLocked();
+  });
+
+  it('detects a missing shipped scroll-lock rule even when modal state is active', () => {
+    const sheet = siteStyle.sheet!;
+    const lockIndex = Array.from(sheet.cssRules).findIndex(rule =>
+      rule instanceof CSSStyleRule && rule.selectorText === 'body.modal-open');
+    expect(lockIndex).toBeGreaterThanOrEqual(0);
+    sheet.deleteRule(lockIndex);
+    dialogs.openDrawer();
+    expect(element('drawer').hidden).toBe(false);
+    expect(backgroundState()).toEqual([true, true, true]);
+    expect(document.body.classList.contains('modal-open')).toBe(true);
+    expect(bodyOverflow()).toBe('auto');
+    // The same behavioral assertion used above must reject this broken CSS.
+    expect(expectScrollLocked).toThrow();
   });
 });

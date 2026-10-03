@@ -176,6 +176,12 @@ begin
     pg_temp.error_as(crowd[1], format('select public.contribute_course_plan(''2027SP'', %L::jsonb)',
       (select jsonb_agg(jsonb_build_object('course', 'ECON ' || (1000 + g), 'role', 'primary')) from generate_series(1, 31) g))),
     'between one and thirty');
+  perform pg_temp.counted('concurrent saves are serialized before replacing contributed rows',
+    (select count(*)
+       from pg_proc p
+      where p.oid = 'public.contribute_course_plan(text,jsonb)'::regprocedure
+        and position('pg_advisory_xact_lock' in p.prosrc) > 0
+        and position('pg_advisory_xact_lock' in p.prosrc) < position('delete from public.term_plan_courses' in p.prosrc)), 1);
 
   perform pg_temp.contribute(crowd[1], '[{"course":"MATH 1300","role":"primary"}]');
   perform pg_temp.contribute(crowd[1], '[{"course":"econ 1010","role":"primary"},{"course":"ECON 1020","role":"backup","rank":1},{"course":"ECON 1010","role":"backup"}]');
@@ -186,6 +192,12 @@ begin
     (select count(*) from public.term_plan_courses where user_id = crowd[1] and course_code = 'ECON 1010'), 1);
   perform pg_temp.counted('as planned when it is both',
     pg_temp.seen(crowd[1], $q$select * from public.my_demand_contribution('2027SP') where course_code = 'ECON 1010' and role = 'primary'$q$), 1);
+  perform pg_temp.contribute(crowd[1], '[{"course":"ECON 1020","role":"backup","rank":4},{"course":"ECON 1020","role":"backup","rank":1},{"course":"ECON 1020","role":"primary"},{"course":"MATH 1300","role":"backup","rank":7},{"course":"MATH 1300","role":"backup","rank":2}]');
+  perform pg_temp.counted('a later primary still wins a duplicate course in the set-based write',
+    pg_temp.seen(crowd[1], $q$select * from public.my_demand_contribution('2027SP') where course_code = 'ECON 1020' and role = 'primary'$q$), 1);
+  perform pg_temp.counted('the first backup rank still wins when every duplicate is a backup',
+    pg_temp.seen(crowd[1], $q$select * from public.term_plan_courses where user_id = (select auth.uid()) and course_code = 'MATH 1300' and backup_rank = 7$q$), 1);
+  perform pg_temp.contribute(crowd[1], '[{"course":"econ1010","role":"primary"},{"course":"ECON 1020","role":"backup","rank":1}]');
   perform pg_temp.counted('at the school on the student''s profile',
     (select count(*) from public.term_plan_courses where user_id = crowd[1] and tenant_id = 'dm-u' and contributes_to_demand), 2);
   perform pg_temp.counted('with a live consent',

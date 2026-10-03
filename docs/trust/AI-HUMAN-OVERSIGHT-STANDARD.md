@@ -37,7 +37,7 @@ Reviewers must not infer correctness from fluency, citations alone, model/provid
 | fresh confirmation/readback | institutional intelligence service tests require confirmation and authoritative readback for supported actions | no named-institution SIS/LMS AI-write operation is evidenced | Product + Customer | approved adapter, UAT, rollback and decision-owner acceptance |
 | sources and limitations | selected disclosure/source components and tests | route-wide notice and comprehension evidence absent | Product + Accessibility | accessibility/usability test with representative users |
 | non-AI and human route | local/manual product paths exist for selected workflows | staffing, hours, escalation and response evidence absent | Support + Customer | submit and close a representative escalation |
-| prohibited scope | `AI-LIFECYCLE-GATES.md` and governance code refuse defined starting scopes | no operated intake/oversight board record | AI Governance | named board, use-case records and sampled decision audit |
+| prohibited scope | `docs/operating-model/AI-LIFECYCLE-GATES.md` and governance code refuse defined starting scopes | no operated intake/oversight board record | AI Governance | named board, use-case records and sampled decision audit |
 
 ## Escalation and stop rules
 

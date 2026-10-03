@@ -26,7 +26,7 @@ Risk ratings and acceptance require accountable human judgment and current evide
 | Control | Code/config evidence | Operational evidence | Status | Missing test/proof |
 | --- | --- | --- | --- | --- |
 | company risk register | [`docs/company/RISK-REGISTER.md`](../company/RISK-REGISTER.md) | ratings/appetite/acceptances not adopted | `DRAFT` | governing review and signed decisions |
-| launch risk register | [`LAUNCH-RISK-REGISTER.md`](../../LAUNCH-RISK-REGISTER.md) | external/customer gates open | `ACTIVE/OPEN` | dated closure evidence |
+| launch risk register | [`LAUNCH-RISK-REGISTER.md`](../../LAUNCH-RISK-REGISTER.md) | external/customer gates open | **ACTIVE / OPEN** | dated closure evidence |
 | security/privacy control evidence | trust registers, tests and source documents | target/independent/operated evidence incomplete | `PARTIAL` | control exercises and reviews |
 | exceptions/acceptance | exception and deviation templates | no complete operating sample | `DESIGNED` | authorized record with expiry and monitoring |
 

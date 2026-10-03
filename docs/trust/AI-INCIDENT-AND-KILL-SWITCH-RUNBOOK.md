@@ -31,7 +31,7 @@ If tenant scope cannot be established, audit data is unreliable, or the switch r
 
 | Control | Code/config evidence | Operational evidence | Owner | Missing test/proof |
 | --- | --- | --- | --- | --- |
-| global/tenant disablement | `supabase/functions/_shared/killswitch.ts`; `app/src/lib/aikillswitch.test.ts` | [`killswitch-drill-2026-09-29T22-51-50-121Z.json`](../evidence/ai/killswitch-drill-2026-09-29T22-51-50-121Z.json) shows before/refuse/after for the deployed shared-key function | Operations | target tenant exercise and deployed institutional gateway exercise |
+| global/tenant disablement | `supabase/functions/_shared/killswitch.ts`; `app/src/lib/aikillswitch.test.ts` | [The recorded kill-switch drill](../evidence/ai/killswitch-drill-2026-09-29T22-51-50-121Z.json) shows before/refuse/after for the deployed shared-key function | Operations | target tenant exercise and deployed institutional gateway exercise |
 | fail-closed read | switch tests treat errors/exceptions as engaged and check both AI runtimes structurally | no target outage/game-day observation | Engineering | induce dependency/read failure in staging and preserve results |
 | communications | `app/src/lib/governance/incident-comms.ts` and tests constrain AI-quality notice fields | no staffed delivery/receipt trail or customer contact proof | Incident commander | tabletop with approved contacts and timing |
 | investigation/recovery | general incident and recovery runbooks | no full AI incident case, provider escalation or corrective-action closure record | Security + AI Governance | end-to-end tabletop and post-incident review |

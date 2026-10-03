@@ -80,6 +80,9 @@ verify_jwt = false
 [functions.billing-checkout]
 verify_jwt = false
 
+[functions.billing-portal]
+verify_jwt = false
+
 [functions.billing-webhook]
 verify_jwt = false
 
@@ -121,4 +124,10 @@ verify_jwt = false
 
 # CORS preflight is unauthenticated; the function validates every POST with auth.getUser.
 [functions.productivity-sourcecheck]
+verify_jwt = false
+
+# A support agent's browser records the in-app reply first, then this function
+# sends a generic email hint. It checks the caller's token and support grant;
+# the student's address and reply body never return to the staff browser.
+[functions.support-reply-notify]
 verify_jwt = false

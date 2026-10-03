@@ -43,7 +43,7 @@ Run width/media/unit guards, the production build and browser smoke first. Then 
 
 ## Release rule
 
-Horizontal page overflow, clipped/obscured primary action, lost data/context on resize/rotation, inaccessible alternative, duplicate/missing navigation, unreachable close/back/recovery, or a core task that cannot complete at a required tier blocks the affected release. Cosmetic differences may be accepted only with an owner and rationale.
+Horizontal page overflow, a clipped or obscured primary action, lost data or context on resize or rotation, an inaccessible alternative, navigation that is duplicated or missing, unreachable close, back, or recovery controls, or a core task that cannot complete at a required tier blocks the affected release. Cosmetic differences may be accepted only with an owner and rationale.
 
 ## Evidence state
 

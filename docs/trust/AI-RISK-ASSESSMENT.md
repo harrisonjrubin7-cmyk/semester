@@ -28,7 +28,7 @@ This baseline names credible harms but does not approve a feature. Each inventor
 
 ## Evidence state
 
-**Code/config evidence.** See [`AI-ASSURANCE.md`](../operating-model/AI-ASSURANCE.md), gateway tests, `app/src/ai/injection.test.ts`, `app/src/lib/aikillswitch.test.ts`, source-policy checks, classification tests and provider adapter tests. These prove specified repository behavior only.
+**Code/config evidence.** See the [operating-model assurance map](../operating-model/AI-ASSURANCE.md), gateway tests, `app/src/ai/injection.test.ts`, `app/src/lib/aikillswitch.test.ts`, source-policy checks, classification tests and provider adapter tests. These prove specified repository behavior only.
 
 **Operational evidence.** Limited point-in-time drill material exists, but no consolidated feature-specific risk acceptance, external assessment, representative evaluation set, ongoing outcome review or named-institution operating history is evidenced.
 

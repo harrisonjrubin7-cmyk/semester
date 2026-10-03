@@ -9,7 +9,7 @@
 
 ## Intended first win
 
-A participant understands Semester's limits and official-system boundary, chooses local/manual or authorized account/setup, adds one safe source/course/calendar item, sees a useful week, confirms/corrects a realistic plan and completes one reversible next action. The source specification proposes completion within 10 minutes and ≥80% unaided representative-UAT completion; these are unapproved targets, not achieved results or promises.
+A participant understands Semester's limits and official-system boundary, chooses local/manual or authorized account/setup, adds one safe source/course/calendar item, sees a useful week, confirms/corrects a realistic plan and intentionally completes, schedules, snoozes or defers one reversible next action. The source specification proposes completion within 10 minutes and ≥80% unaided representative-UAT completion; these are unapproved targets, not achieved results or promises.
 
 ## Flow
 
@@ -19,14 +19,14 @@ A participant understands Semester's limits and official-system boundary, choose
 4. **Permission:** just-in-time purpose, fields, source, read/write scope, duration, storage, revoke/delete route and safe refusal.
 5. **Setup:** manual entry first; optional import only when approved, verified and recoverable. Provide example, empty and resume paths.
 6. **Plan:** render week/workload with source/freshness; let the person correct a mistake and see incomplete-data limits.
-7. **Act:** choose and complete one reversible, non-authoritative next action; never automate an official/high-impact decision.
+7. **Act:** choose and intentionally complete, schedule, snooze or defer one reversible, non-authoritative next action; keep dismiss/correct/help available; never automate an official/high-impact decision.
 8. **Control:** reminders/preferences, privacy, export/delete, help, feedback and known limits.
 
 Every step requires loading/empty/validation/service-error/offline/degraded/back/skip/save/resume/recovery/success states; keyboard, focus, zoom, screen-reader and reduced-motion acceptance; plain language; privacy-safe analytics; and a non-digital/support alternative appropriate to scope. Never block data rights, safety help or official resources behind payment or engagement pressure.
 
 ## Measurement and stop rules
 
-Activation requires the approved minimum-setup + first-week plan + completed next-action definition once per eligible participant/account/device rule. Record only approved coarse flags, timestamp and tenant/cohort/setup method—never course/task content. Freeze denominator, exclude tests/support, suppress small cells and validate a sample. Stop rollout for critical accessibility/privacy/security/rights failure, misleading authority, unsafe recommendation, data loss or unstaffed support.
+Activation requires approved minimum setup once per eligible participant/account/device rule. First win is measured separately after activation and requires reaching Today, understanding one relevant reversible next action and its source/limitations, knowing the relevant human/non-AI help route, and intentionally completing, scheduling, snoozing or deferring it; a full first-week plan is not an extra gate. Preserve those outcomes as separate coarse values rather than collapsing them into completion. Record only approved coarse flags, timestamp and tenant/cohort/setup method—never course/task content. Freeze both denominators, report setup-to-first-win loss, exclude tests/support, suppress small cells and validate a sample. Stop rollout for critical accessibility/privacy/security/rights failure, misleading authority, unsafe recommendation, data loss or unstaffed support.
 
 ## Evidence state
 

@@ -28,7 +28,7 @@ Changes involving identity/tenant boundaries, student or sensitive data, officia
 | feature/config rollout | feature flags, cohort policy and kill-switch tests | target rollout/rollback acceptance absent | `PARTIAL` | Product/Operations | representative target change exercise |
 | schema compatibility | migration history/checks and rollback rules | target migration/forward-fix operation incomplete | `PARTIAL` | Data/Engineering | expand-contract and failure drill |
 | institutional adoption | [`docs/operating-model/CHANGE-MANAGEMENT.md`](../operating-model/CHANGE-MANAGEMENT.md) | no named-customer change governance | `DESIGNED` | Implementation/Customer | customer communication/training/UAT record |
-| emergency change | incident/rollback runbooks | no complete target exercise | `DESIGNED/PARTIAL` | Incident/Operations | emergency change tabletop |
+| emergency change | incident/rollback runbooks | no complete target exercise | **DESIGNED / PARTIAL** | Incident/Operations | emergency change tabletop |
 
 ## Required record
 

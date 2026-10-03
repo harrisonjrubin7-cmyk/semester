@@ -47,6 +47,6 @@ Do not claim universal notice coverage, informed consent, explainability, human 
 
 ## Related drafts
 
-- [`AI-FEATURES-DISCLOSURE-DRAFT.md`](../legal-drafts/AI-FEATURES-DISCLOSURE-DRAFT.md)
-- [`AI-USE-TERMS-EXHIBIT-DRAFT.md`](../legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md)
+- [AI features disclosure draft](../legal-drafts/AI-FEATURES-DISCLOSURE-DRAFT.md)
+- [AI use-terms exhibit draft](../legal-drafts/AI-USE-TERMS-EXHIBIT-DRAFT.md)
 - [`AI-DATA-USE-STANDARD.md`](AI-DATA-USE-STANDARD.md)

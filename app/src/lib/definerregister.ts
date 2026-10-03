@@ -244,6 +244,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
   ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
@@ -298,6 +299,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_member_capabilities', 'admin', ['private.org_can']],
   ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
+  ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -436,6 +438,14 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261001153124_productivity_workspace.sql',
     functions: ['productivity_readiness_aggregate'],
+  },
+  {
+    file: '20261002003000_support_notification_outbox.sql',
+    functions: ['my_support_email_notices'],
+  },
+  {
+    file: '20261003120000_support_notification_consent_boundary.sql',
+    functions: ['set_support_email_notice'],
   },
 ];
 

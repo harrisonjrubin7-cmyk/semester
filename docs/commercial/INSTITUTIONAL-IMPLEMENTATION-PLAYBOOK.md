@@ -11,14 +11,17 @@
 
 | Phase | Required decision and evidence |
 | --- | --- |
-| discover | authorized problem, cohort/workflow, stakeholders, current process/systems, authority/data/risk, success/guardrails, budget/procurement, exclusions and no-fit criteria |
-| design | signed charter/RACI, minimum data flow, role/tenant/source/retention model, manual/read-only fallback, support/recovery/offboarding and acceptance plan |
-| configure | exact revision/environment, tenant/cohort/roles/flags/content, least-privilege access, configuration export/readback and rollback path |
+| discover | authorized problem, cohort/workflow, stakeholders, current process/systems, authority/data/risk, success/guardrails, budget/procurement, exclusions and no-fit criteria; the signed charter/RACI, minimum data flow, role/tenant/source/retention model, manual/read-only fallback and acceptance design are milestones in this stored stage |
+| configure | exact revision/environment, tenant/cohort/roles/flags/content, least-privilege access, approved design milestones, configuration export/readback and rollback path |
 | integrate | only approved provider/adapter/scope; sandbox contract tests, identity mapping, freshness, rate/error/idempotency/reconciliation/degraded behavior and authoritative readback |
 | validate | representative role/cross-tenant, critical-flow, accessibility/device, privacy/security, rights, monitoring/alert, incident, rollback/restore, support and capacity UAT |
+| train | accepted operator/admin/support training, role-appropriate rehearsal, backup coverage and escalation competence |
 | launch | signed customer/Semester GO with no open P0/P1, staffed support/escalation, approved communication/cohort, frozen baseline and safe stop controls |
-| operate | weekly evidence/guardrails, change/incident/problem management, access review, billing/delivery reconciliation and midpoint/final decisions |
-| convert/expand/offboard | new authorized order/scope and capacity for conversion/adjacent expansion, or export/revocation/deletion/retention/transition and closure confirmation |
+| hypercare | bounded post-launch observation, staffed support, incident/problem response, rollback readiness and customer acceptance |
+| measure | weekly evidence/guardrails, change/incident/problem management, access review, billing/delivery reconciliation and midpoint/final decisions |
+| expand | new authorized order/scope, capacity, risk review and acceptance gates for adjacent expansion; conversion or offboarding remains a separate commercial/contract decision, with export/revocation/deletion/retention/transition and closure confirmation outside the implementation-stage value |
+
+These names are the exact values accepted by `implementation_projects.stage`. Design, operation, conversion and offboarding remain milestones or linked decision records rather than invented stage values, so the project record and nightly health calculation use one representable sequence.
 
 ## Delivery rules
 

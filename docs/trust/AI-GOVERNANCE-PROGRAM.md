@@ -35,7 +35,7 @@ Approval is use-case-, tenant-, model-, provider-, region- and configuration-spe
 
 ## Repository evidence and operational evidence
 
-**Code/config evidence.** `app/server/institution/intelligence.ts` and `intelligence-repository.ts` implement an authenticated institutional gateway with policy checks; `supabase/functions/_shared/killswitch.ts` implements global and tenant AI disablement; `app/server/institution/providers/openai.ts` uses bounded foreground responses with `store: false`; `approved_source` and `ai_policy` migrations represent tenant policy and source scope; associated tests exercise portions of those controls. [`AI-ASSURANCE.md`](../operating-model/AI-ASSURANCE.md) maps broader controls and gaps.
+**Code/config evidence.** `app/server/institution/intelligence.ts` and `app/server/institution/intelligence-repository.ts` implement an authenticated institutional gateway with policy checks; `supabase/functions/_shared/killswitch.ts` implements global and tenant AI disablement; `app/server/institution/providers/openai.ts` uses bounded foreground responses with `store: false`; `approved_source` and `ai_policy` migrations represent tenant policy and source scope; associated tests exercise portions of those controls. The [operating-model assurance map](../operating-model/AI-ASSURANCE.md) maps broader controls and gaps.
 
 **Operational evidence.** The repository contains a dated AI kill-switch drill and point-in-time source checks, but no evidence establishes a complete, currently operated governance cycle for a named institution. No executed provider/customer approval, complete feature evaluation pack, named board membership, customer acceptance or production monitoring review is evidenced here.
 

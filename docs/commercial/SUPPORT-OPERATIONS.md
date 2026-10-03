@@ -15,7 +15,7 @@ Publish separate student and authorized institutional/operator routes, supported
 
 1. Verify channel, identity, tenant, authority and supported environment before discussing account/customer information.
 2. Record blocked task, time, route, device/browser, correlation/error, impact/cohort and consented diagnostics—never passwords/tokens, unnecessary course content, sensitive categories or record screenshots.
-3. Classify by harm: P0 active security/privacy/cross-tenant/data-integrity/safety threat; P1 critical supported workflow unavailable without safe workaround; P2 material impairment; P3 question/minor issue. These are internal classifications, not promised clocks.
+3. Classify by harm using the canonical on-call policy: P0 active security/privacy/cross-tenant/data-integrity/safety/rights threat; P1 core workflow unavailable, major accessibility barrier, or serious integrity/reliability risk—even when a temporary workaround exists; P2 other material impairment; P3 question/minor issue. These are internal classifications, not promised clocks.
 4. Route security/privacy/data rights, accessibility, safety, billing, legal, academic-deadline/official-system and incident matters to named accountable owners. Support never gives authoritative academic, legal, medical or financial advice.
 5. Provide a verified safe workaround, owner and next-update expectation only within staffed/approved scope. Use time-limited, least-privilege, consented/authorized and audited support access; revoke it at closure.
 6. Escalate P0/P1, repeated cohort impact, unsafe workaround, data loss, monitoring blind spot, missed update or unowned case into incident/problem management.

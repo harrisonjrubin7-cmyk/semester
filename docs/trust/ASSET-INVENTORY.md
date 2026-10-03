@@ -19,7 +19,7 @@ An asset is anything whose loss, compromise, unavailability, unauthorized change
 
 | Layer | Code/config evidence | Operational evidence | Status | Missing test/proof |
 | --- | --- | --- | --- | --- |
-| product/features/routes | [`FEATURE-INVENTORY.md`](../../FEATURE-INVENTORY.md), source registries/tests | source is dated and not a live deployment inventory | `PARTIAL/STALE` | current generated capability/release reconciliation |
+| product/features/routes | [`FEATURE-INVENTORY.md`](../../FEATURE-INVENTORY.md), source registries/tests | source is dated and not a live deployment inventory | **PARTIAL / STALE** | current generated capability/release reconciliation |
 | schema/data stores | data inventory, migrations and retention sources | target database/provider settings incomplete | `PARTIAL` | target environment and non-database stores |
 | cloud/providers/subprocessors | architecture and provider registers | account ownership, regions, contracts and activation incomplete | `PARTIAL` | external account/vendor evidence |
 | code/repositories/CI | Git/workflow/package sources | account admins, branch protections and recovery incomplete | `PARTIAL` | access/configuration export |

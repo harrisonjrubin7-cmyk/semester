@@ -21,7 +21,7 @@ Continuity prioritizes safety, protected access, data integrity, essential acade
 
 | Control | Code/config evidence | Operational evidence | Status | Owner | Missing test/proof |
 | --- | --- | --- | --- | --- | --- |
-| service/dependency priorities | architecture, critical workflows, runbooks and status surfaces | customer-specific impact/priorities not accepted | `DESIGNED/PARTIAL` | Product/Customer | business-impact analysis and signed service order |
+| service/dependency priorities | architecture, critical workflows, runbooks and status surfaces | customer-specific impact/priorities not accepted | **DESIGNED / PARTIAL** | Product/Customer | business-impact analysis and signed service order |
 | deploy rollback | workflows and [`ROLLBACK.md`](../../ROLLBACK.md) | historic timings exist for page mechanism; staffing and current target rehearsal remain open | `PARTIAL` | Engineering/Operations | witnessed target rollback and compatibility checks |
 | backup/restore | restore scripts/checks and dated logical rehearsal | disposable one-account PostgreSQL rehearsal; not live-provider backup proof | `PARTIAL` | Operations/Security | isolated restore of real provider backup by backup operator |
 | continuity modes | read-only/feature/provider controls and local-first patterns | integrated critical-period exercises incomplete | `PARTIAL` | Product/Operations | provider, identity, write-safety, and total-outage drills |

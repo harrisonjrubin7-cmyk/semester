@@ -36,7 +36,7 @@ Prompts, outputs and retrieved content must not be logged merely for convenience
 
 **Code/config evidence.** Classification tests block higher tiers from selected AI paths; tenant-scoped `ai_policy` and `approved_source` records constrain the institutional gateway; `app/server/institution/providers/openai.ts` sets `store: false`; gateway audit code records metadata without prompt/source bodies for that path; retention migrations address selected usage metadata.
 
-**Operational evidence.** [`PROVIDER-TERMS.md`](PROVIDER-TERMS.md) records published terms but states they are unsigned. [`SUBPROCESSORS.md`](../SUBPROCESSORS.md) inventories code-observed destinations. No complete target data-flow reconciliation, accepted provider terms, region proof, deletion exercise across every AI path, or named-customer authorization is evidenced.
+**Operational evidence.** [`PROVIDER-TERMS.md`](PROVIDER-TERMS.md) records published terms but states they are unsigned. The [subprocessor register](../SUBPROCESSORS.md) inventories code-observed destinations. No complete target data-flow reconciliation, accepted provider terms, region proof, deletion exercise across every AI path, or named-customer authorization is evidenced.
 
 **Missing test/proof.** Trace each live route from UI to provider; test prompt redaction/classification and cross-tenant denial end to end; verify deployed logs and retention; exercise deletion/hold behavior; obtain provider/configuration and customer approval; confirm notices match actual behavior.
 

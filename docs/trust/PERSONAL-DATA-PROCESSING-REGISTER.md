@@ -18,7 +18,7 @@ This register captures candidate processing activities and the evidence required
 | institutional pilot | cohort identity, approved sources and scoped usage | contracted pilot purposes | `[CONTROLLER/PROCESSOR/SCHOOL-OFFICIAL ANALYSIS TBD]` | tenant/gateway/providers `[TBD]` | approved customer/providers | customer schedule `[TBD]` | tenant/policy tests | `CONDITIONAL`; no signed/live tenant |
 | AI assistance | prompt/context/output/usage metadata | requested assistive feature | `[TBD]` | approved provider/model/region `[TBD]` | configured provider | `[TBD]` | gateway/policy/kill-switch sources | `CONDITIONAL`; terms/evaluation/activation |
 | support/security | request, diagnostics, audit/security events | help, integrity and incident response | `[TBD]` | support/audit systems | authorized operators/providers | `[TBD]` | capability/audit sources | `PARTIAL`; staffing/exercise |
-| procurement/sales | institutional contacts and response records | relationship/procurement | `[TBD]` | `[CRM/EMAIL/SYSTEM TBD]` | authorized personnel/vendors | `[TBD]` | incomplete | `MISSING/EXTERNAL` |
+| procurement/sales | institutional contacts and response records | relationship/procurement | `[TBD]` | `[CRM/EMAIL/SYSTEM TBD]` | authorized personnel/vendors | `[TBD]` | incomplete | **MISSING / EXTERNAL** |
 | rights/legal/contract records | identity, request, decision and evidence | rights, legal and contractual duties | `[TBD]` | controlled records systems `[TBD]` | authorized parties | legal schedule/hold `[TBD]` | draft processes | `INCOMPLETE` |
 
 ## Required activity fields

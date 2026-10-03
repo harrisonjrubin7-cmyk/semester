@@ -21,7 +21,7 @@
 | Control | Code/config evidence | Operational evidence | Status | Owner | Missing test/proof |
 | --- | --- | --- | --- | --- | --- |
 | CI quality/security gates | workflows, policy suites, supply-chain tests and scanners | branch/rule enforcement and release approvals need current proof | `PARTIAL` | Engineering/Security | target governance export and release sample |
-| threat/privacy design | architecture, risks and selected threat documents | consistent per-change records absent | `DESIGNED/PARTIAL` | Product/Security/Privacy | required template and sampled reviews |
+| threat/privacy design | architecture, risks and selected threat documents | consistent per-change records absent | **DESIGNED / PARTIAL** | Product/Security/Privacy | required template and sampled reviews |
 | code review/change control | Git workflow and templates | reviewer/segregation operation not fully evidenced | `PARTIAL` | Engineering | protected-branch/current review evidence |
 | test/adversarial coverage | extensive unit, policy and browser suites | target DAST and independent test absent | `PARTIAL` | Engineering/Security | DAST, pen test and negative coverage map |
 | release/rollback/monitoring | workflows and runbooks | target rollback/alert/support evidence incomplete | `PARTIAL` | Operations/Engineering | representative signed release and drills |
