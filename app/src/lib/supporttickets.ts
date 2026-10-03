@@ -234,7 +234,7 @@ export async function supportReply(
   body: string,
   status: 'open' | 'waiting_on_student' | 'resolved',
   operationId: string,
-): Promise<'accepted' | 'queued' | 'preference_off' | 'capped'> {
+): Promise<'accepted' | 'queued' | 'cancelled' | 'preference_off' | 'capped'> {
   const db = await cloud();
   const { data: notification, error } = await db.rpc('support_reply', {
     want_ticket: ticketId,
@@ -257,5 +257,16 @@ export async function supportReply(
   });
   // A 2xx response proves provider acceptance, not inbox delivery. Delivery
   // is established separately by provider events or an end-to-end receipt.
-  return noticeError ? 'queued' : 'accepted';
+  return noticeError ? supportNoticeFailure(noticeError) : 'accepted';
+}
+
+/** A 409 means the claimed notice disappeared, usually because consent was withdrawn. */
+export function supportNoticeFailure(error: unknown): 'queued' | 'cancelled' {
+  const context = error && typeof error === 'object' && 'context' in error
+    ? (error as { context?: unknown }).context
+    : null;
+  const status = context && typeof context === 'object' && 'status' in context
+    ? (context as { status?: unknown }).status
+    : null;
+  return status === 409 ? 'cancelled' : 'queued';
 }

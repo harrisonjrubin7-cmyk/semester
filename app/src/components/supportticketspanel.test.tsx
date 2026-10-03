@@ -21,6 +21,7 @@ interface World {
   calls: { name: string; args?: Record<string, unknown> }[];
   /** Holds the next call to an RPC until the test releases it. */
   gates: Map<string, Promise<void>>;
+  errors: Map<string, { message: string }>;
 }
 let world: World;
 
@@ -34,6 +35,8 @@ vi.mock('../lib/cloud', () => ({
       const thread = typeof world.thread === 'function' ? world.thread(args) : world.thread;
       const gate = world.gates.get(name);
       if (gate) { world.gates.delete(name); await gate; }
+      const error = world.errors.get(name);
+      if (error) return { data: null, error };
       if (name === 'my_support_tickets') return { data: tickets, error: null };
       if (name === 'my_support_thread') return { data: thread, error: null };
       if (name === 'open_support_ticket') return { data: 'new-ticket', error: null };
@@ -54,7 +57,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  world = { tickets: [], thread: [], calls: [], gates: new Map() };
+  world = { tickets: [], thread: [], calls: [], gates: new Map(), errors: new Map() };
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -183,6 +186,19 @@ describe('asking Semester support', () => {
     expect(host.textContent).toContain('Semester support · Which browser?');
     await click(button('Close this question'));
     expect(world.calls.find((c) => c.name === 'close_my_ticket')?.args).toEqual({ want_ticket: '123e4567-e89b-42d3-a456-426614174000' });
+  });
+
+  it('keeps the saved notice choice visible when the post-write refresh fails', async () => {
+    world.tickets = [ticket('t1', 'Notice choice')];
+    await draw();
+    await click(button('Notice choice · Waiting for Semester support'));
+    const noticeBox = host.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    world.errors.set('my_support_tickets', { message: 'Could not refresh questions.' });
+    await click(noticeBox);
+    expect(noticeBox.checked).toBe(true);
+    expect(host.textContent).toContain('Generic email notices are on for this question.');
+    expect(host.textContent).toContain('Could not refresh questions.');
+    expect(host.textContent).toContain('The saved setting is shown.');
   });
 
   it('shows the next account none of the last one’s questions, even when the old answer arrives last', async () => {

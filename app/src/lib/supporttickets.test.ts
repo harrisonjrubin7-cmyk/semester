@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, ticketReference, toTicket } from './supporttickets';
+import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, supportNoticeFailure, ticketReference, toTicket } from './supporttickets';
 
 /**
  * The client half of support tickets, held to the migration it calls. The
@@ -50,6 +50,12 @@ describe('support tickets, client and migration', () => {
     expect(client).toMatch(/const messageId = result\.message_id/);
     expect(client).toMatch(/body:\s*\{\s*message_id:\s*messageId\s*\}/);
     expect(client).not.toMatch(/body:\s*\{\s*ticket_id:\s*ticketId\s*\}/);
+  });
+
+  it('does not call a vanished or consent-cancelled notice queued', () => {
+    expect(supportNoticeFailure({ context: { status: 409 } })).toBe('cancelled');
+    expect(supportNoticeFailure({ context: { status: 503 } })).toBe('queued');
+    expect(supportNoticeFailure(new Error('network unavailable'))).toBe('queued');
   });
 });
 

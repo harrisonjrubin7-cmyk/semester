@@ -423,8 +423,9 @@ describe('approvals', () => {
     expect(mock.decide).not.toHaveBeenCalled();
     const step = host.querySelector('[aria-label="Second factor"]') as Element;
     expect(step).toBeTruthy();
-    expect(button('Approve')).toBeUndefined();
-    expect(host.querySelector('[aria-label="Console views"]')).toBeNull();
+    expect(button('Approve')).toBeDefined();
+    expect(host.querySelector('[aria-label="Console views"]')).not.toBeNull();
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
     type(step.querySelector('input'), '123456');
     await submit(step.querySelector('form'));
     expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');
@@ -442,10 +443,12 @@ describe('approvals', () => {
   it('runs nothing when the second factor is cancelled', async () => {
     mock.mfa.mockResolvedValue(STALE);
     await render();
+    type(field('Evidence attached'), 'Draft evidence survives MFA.');
     await press('Approve');
     await press('Cancel');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    expect(field('Evidence attached').value).toBe('Draft evidence survives MFA.');
   });
 
   it('offers the action only to the requester or an approver who decided it', async () => {

@@ -225,7 +225,12 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           {status}
         </p>
       )}
-      {gate ? <MfaStep onVerified={verified} onCancel={() => setGate(null)} /> : <>
+      {gate && <MfaStep onVerified={verified} onCancel={() => setGate(null)} />}
+      <div
+        data-console-content
+        inert={gate ? true : undefined}
+        aria-hidden={gate ? true : undefined}
+      >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', alignItems: 'end', marginBottom: 'var(--sp-4)' }}>
         <label style={{ display: 'grid', gap: 'var(--sp-2)', flex: 1 }}>
           Filter this view
@@ -261,7 +266,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           />
         )}
       </div>
-      </>}
+      </div>
     </Page>
   );
 }

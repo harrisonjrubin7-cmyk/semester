@@ -121,6 +121,17 @@ describe('the support operations queue', () => {
     );
   });
 
+  it('reports a cancelled notice without claiming a durable retry exists', async () => {
+    mock.reply.mockResolvedValue('cancelled');
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'The reply remains available here.');
+    await click(button('Send support reply'));
+    expect(mock.status).toHaveBeenCalledWith(
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice was cancelled before delivery; the reply is available in Help.',
+    );
+  });
+
   it('reports an explicit in-app-only choice without claiming an email retry', async () => {
     mock.reply.mockResolvedValue('preference_off');
     await draw();

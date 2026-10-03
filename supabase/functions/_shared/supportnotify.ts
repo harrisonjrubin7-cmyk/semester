@@ -96,7 +96,9 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
   const target = await deps.notice(messageId);
   if (!target) return reply(409, { error: 'No support reply is ready to notify.' });
   const outcome = await sendTarget(deps, target);
-  return outcome === 'accepted' ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });
+  if (outcome === 'accepted') return reply(200, { ok: true });
+  if (outcome === 'cancelled') return reply(409, { error: 'The support notice was cancelled before delivery.' });
+  return reply(502, { error: 'The email provider did not accept the notice.' });
 }
 
 async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered' | 'cancelled'> {

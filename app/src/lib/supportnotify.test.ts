@@ -129,7 +129,7 @@ describe('support reply notification', () => {
   it('rechecks a claimed row after recipient resolution and cancels before provider I/O', async () => {
     const d = deps({ eligible: vi.fn().mockResolvedValue(false) });
     const response = await handleSupportNotice(request(), d);
-    expect(response.status).toBe(502);
+    expect(response.status).toBe(409);
     expect(d.eligible).toHaveBeenCalledWith('message-1', claim);
     expect(d.send).not.toHaveBeenCalled();
     expect(d.accepted).not.toHaveBeenCalled();

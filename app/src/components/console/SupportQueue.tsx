@@ -132,9 +132,11 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         ? `Reply recorded for ${ticketReference(ticketId)}. Email notice accepted by the provider; delivery is not yet confirmed.`
         : delivery === 'queued'
           ? `Reply recorded for ${ticketReference(ticketId)}. Email notice is queued for retry; the reply is available in Help.`
-          : delivery === 'capped'
-            ? `Reply recorded for ${ticketReference(ticketId)}. No email was queued because this question reached its three-notice daily cap.`
-            : `Reply recorded for ${ticketReference(ticketId)}. The student chose in-app replies without email notices.`;
+          : delivery === 'cancelled'
+            ? `Reply recorded for ${ticketReference(ticketId)}. Email notice was cancelled before delivery; the reply is available in Help.`
+            : delivery === 'capped'
+              ? `Reply recorded for ${ticketReference(ticketId)}. No email was queued because this question reached its three-notice daily cap.`
+              : `Reply recorded for ${ticketReference(ticketId)}. The student chose in-app replies without email notices.`;
       onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage
       // must not invite an operator to retry and send a duplicate response.

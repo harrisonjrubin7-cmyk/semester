@@ -78,19 +78,26 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
       setTickets(await myTickets());
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not load your questions.');
+      throw error;
     }
   }, []);
 
   // An account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => { void refresh().catch(() => undefined); }, [refresh]);
 
-  const run = (work: () => Promise<void>, done: string) => {
+  const run = (work: () => Promise<void>, done: string, onCommitted?: () => void) => {
     setBusy(true);
     void work()
       .then(async () => {
-        await refresh();
-        setNotice(done);
+        onCommitted?.();
+        try {
+          await refresh();
+          setNotice(done);
+        } catch (error) {
+          const detail = error instanceof Error ? error.message : 'Could not load your questions.';
+          setNotice(onCommitted ? `${done} ${detail} The saved setting is shown.` : detail);
+        }
       })
       .catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'That did not work.'))
       .finally(() => setBusy(false));
@@ -268,6 +275,9 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
                 run(
                   () => setSupportEmailNotice(current.id, enabled),
                   enabled ? 'Generic email notices are on for this question.' : 'Email notices are off for this question.',
+                  () => setTickets((items) => items.map((ticket) => (
+                    ticket.id === current.id ? { ...ticket, emailNoticeEnabled: enabled } : ticket
+                  ))),
                 );
               }}
             />
