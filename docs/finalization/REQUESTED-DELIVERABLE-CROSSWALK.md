@@ -96,11 +96,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 81 | `docs/trust/DATA-FLOW-MAP.md` | EXACT PRESENT | canonical logical flow map; no arrow implies named-tenant activation, provider approval or verified production traffic |
 | 82 | `docs/trust/PERSONAL-DATA-PROCESSING-REGISTER.md` | EXACT PRESENT | canonical draft processing register; legal roles, bases, transfers, ages and jurisdictions remain professional/customer determinations |
 | 83 | `docs/trust/STUDENT-DATA-GOVERNANCE-PROGRAM.md` | EXACT PRESENT | canonical evidence-gated program; repository controls do not establish operational acceptance or blanket education-privacy compliance |
-| 84 | `docs/trust/DATA-MINIMIZATION-STANDARD.md` | NO CLOSE SOURCE | — |
-| 85 | `docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md` | CANDIDATE SOURCE | `docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md` (filename similarity 0.65; substantive review required) |
-| 86 | `docs/trust/DATA-EXPORT-STANDARD.md` | CANDIDATE SOURCE | `docs/DATA-RETENTION-EXPORT-DELETION.md` (filename similarity 0.45; substantive review required) |
-| 87 | `docs/trust/DATA-SUBJECT-REQUEST-RUNBOOK.md` | CANDIDATE SOURCE | `docs/DATA-RIGHTS-REQUEST-RUNBOOK.md` (filename similarity 0.66; substantive review required) |
-| 88 | `docs/trust/CONSENT-AND-PREFERENCE-MANAGEMENT-SPEC.md` | NO CLOSE SOURCE | — |
+| 84 | `docs/trust/DATA-MINIMIZATION-STANDARD.md` | EXACT PRESENT | canonical purpose/field minimization control; selected allowlists and exclusions do not establish universal enforcement |
+| 85 | `docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md` | EXACT PRESENT | canonical lifecycle standard; configured periods and tests remain distinct from legal approval and target operation |
+| 86 | `docs/trust/DATA-EXPORT-STANDARD.md` | EXACT PRESENT | canonical export standard; individual server paths do not establish complete account, device, provider, or tenant portability |
+| 87 | `docs/trust/DATA-SUBJECT-REQUEST-RUNBOOK.md` | EXACT PRESENT | canonical trust runbook; queue/schema behavior does not establish staffing, legal clocks, complete action, or delivery |
+| 88 | `docs/trust/CONSENT-AND-PREFERENCE-MANAGEMENT-SPEC.md` | EXACT PRESENT | canonical scoped-consent specification; selected controls do not establish universal valid consent or downstream enforcement |
 | 89 | `docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md` | CANDIDATE SOURCE | `docs/market-readiness/AI-GOVERNANCE-PROGRAM.md` (filename similarity 0.57; substantive review required) |
 | 90 | `docs/trust/VENDOR-SECURITY-REVIEW-PROGRAM.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/procurement-security-review-package.md` (filename similarity 0.43; substantive review required) |
 | 91 | `docs/trust/INFORMATION-SECURITY-PROGRAM.md` | CANDIDATE SOURCE | `docs/market-readiness/INFORMATION-SECURITY-QUESTIONNAIRE.md` (filename similarity 0.56; substantive review required) |
