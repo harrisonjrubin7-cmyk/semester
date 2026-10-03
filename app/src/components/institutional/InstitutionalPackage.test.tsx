@@ -110,6 +110,7 @@ it('allows an internationalized institution domain for server canonicalization',
 
 it('warns that the form is discovery-only and must not receive secrets or student records', () => {
   act(() => root.render(<InstitutionalPackage />));
+  expect(host.querySelector('#institution-request-error')?.getAttribute('role')).toBe('alert');
   expect(host.textContent).toContain('No passwords, API keys, secrets, or student records');
   expect(host.textContent).toContain('does not activate a tenant or connect a provider');
 });

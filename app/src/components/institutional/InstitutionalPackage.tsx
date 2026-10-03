@@ -132,7 +132,7 @@ function SetupRequest({ requester, institution, submitIntake = submitInstitution
             </select>
           </label>
         </div>
-        <p id="institution-request-error" role={error ? 'alert' : undefined} hidden={!error}>{error}</p>
+        <p id="institution-request-error" role="alert" hidden={!error}>{error}</p>
         <button type="submit" className="btn btn-primary btn-block" disabled={busy} style={{ marginTop: 'var(--sp-4)' }}>
           {busy ? 'Sending request…' : 'Send for human review'}
         </button>
