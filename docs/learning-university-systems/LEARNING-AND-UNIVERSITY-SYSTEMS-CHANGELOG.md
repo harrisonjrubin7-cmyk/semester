@@ -12,6 +12,7 @@
 - Passed all 13 golden-path steps at phone and desktop sizes. The run verified first-run setup, syllabus import through the repository stub, Today, planning, path details, sourced deadline information, help routing, completion, reload/second-tab persistence, and backup restore into a fresh browser context. It did not establish live model quality, human-help sending, or account-synced cross-device resume.
 - Refreshed the repository governance/source registers: indexed 97 rollout evidence sources and passed 787 tests across 65 register suites. The generators produced no diff, so remaining freshness gaps concern external evidence and observed operations rather than generated repository files.
 - Passed the focused AI/source-governance regression set (41 files; 628 passed; 48 live-provider tests skipped). Preserved the documented general Ask source-citation gap rather than treating policy and source-locker coverage as proof that every generated answer is cited.
+- Corrected the stale pilot limitation that said Ask never cites sources. Grounded answers expose application-owned evidence details; general-knowledge answers explicitly report “No source.” The revised copy retains official-record verification for consequential claims.
 - Made no schema, permission, integration, or product-claim expansion; the evidence did not justify activating new authoritative domains.
 - HawkScan preflight stopped because the required `hawk` CLI is not installed; no DAST result is claimed.
 

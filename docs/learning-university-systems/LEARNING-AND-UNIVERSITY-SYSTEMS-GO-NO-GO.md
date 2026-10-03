@@ -13,7 +13,7 @@ The repository shows substantial implemented and tested capability, but implemen
 
 ## P0 disposition
 
-No new broad feature was approved. Lint compliance, the internal browser accessibility/golden-path gates, and repository-generated register refresh are now restored. Focused AI/source-governance regressions pass, but the repository still documents a general Ask source-citation gap, so that gate remains open. Other remaining P0 work is to renew stale or missing external evidence, complete HawkScan in an environment with the required CLI, perform independent accessibility/security assurance, verify live provider and account-sync behavior, and execute a real controlled UAT. Until those pass, marketing must say “beta,” “pilot,” “preparation,” or “official handoff” as applicable.
+No new broad feature was approved. Lint compliance, the internal browser accessibility/golden-path gates, and repository-generated register refresh are now restored. Focused AI/source-governance regressions pass: grounded answers expose evidence details and general-knowledge answers say “No source.” Because not every answer has a citable source, consequential-use verification remains open. Other remaining P0 work is to renew stale or missing external evidence, complete HawkScan in an environment with the required CLI, perform independent accessibility/security assurance, verify live provider and account-sync behavior, and execute a real controlled UAT. Until those pass, marketing must say “beta,” “pilot,” “preparation,” or “official handoff” as applicable.
 
 ---
 

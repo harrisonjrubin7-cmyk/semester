@@ -24,7 +24,7 @@ This directory is the decision layer requested by the 31-page master brief. It d
 - Browser accessibility smoke: pass across seven critical journeys at desktop and 320px reflow; skip focus, landmarks, titles, accessible names, and ARIA references verified.
 - Golden-path smoke: pass across all 13 steps at phone and desktop sizes, including first run, syllabus import, Today, planning, degree path, sourced deadline details, help routing, completion, same-device resume, and backup restore into a fresh browser context.
 - Golden-path limits: the run used the repository's model stub, human-help sending was disabled in this build, and account-synced cross-device resume remains a separate integration claim.
-- AI/source-label disposition: policy, source-locker, disclosure, and grading-boundary regressions pass, but general Ask responses still have a documented source-citation gap; this gate remains open.
+- AI/source-label disposition: policy, source-locker, disclosure, and grading-boundary regressions pass. Grounded Ask answers expose source title, locator, and excerpt; general-knowledge answers explicitly say “No source.” Because not every answer has a citable source, this gate remains open for consequential-use verification.
 - HawkScan DAST: not run; the required `hawk` CLI is not installed in this environment.
 
 The final decision is in [LEARNING-AND-UNIVERSITY-SYSTEMS-GO-NO-GO.md](LEARNING-AND-UNIVERSITY-SYSTEMS-GO-NO-GO.md).
