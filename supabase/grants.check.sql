@@ -197,9 +197,11 @@ declare
     -- creates consent and its bounded grant atomically, and lists only windows
     -- in which the caller is the student or the still-authorized supporter.
     'available_supporters()',
-    'create_support_access(want_supporter uuid, want_reason text, want_days integer)',
+    'create_support_access(want_supporter uuid, want_reason text, want_days integer, want_ticket uuid)',
+    'read_support_case_signals(want_ticket uuid)',
     'revoke_support_access(want_grant uuid)',
     'support_access_windows()',
+    'support_case_access(want_ticket uuid)',
     -- Sets `profiles.school_id` from the address the server confirmed. The
     -- column's own UPDATE privilege is revoked from both API roles, so this
     -- function is the only way in and has to be callable by a signed-in

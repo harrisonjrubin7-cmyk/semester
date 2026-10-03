@@ -265,6 +265,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
+  ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -309,6 +310,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['stop_contributing', 'self-service', ['auth.uid()']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['support_case_access', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active']],
   ['support_reply', 'admin', ['private.support_agent']],
   ['support_ticket_queue', 'admin', ['private.support_agent']],
   ['support_ticket_thread', 'admin', ['private.support_agent']],
@@ -452,6 +454,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261003050000_console_tenant_operations.sql',
     functions: ['console_tenant_operations'],
+  },
+  {
+    file: '20261003060000_support_case_access.sql',
+    functions: ['read_support_case_signals', 'support_case_access'],
   },
   {
     file: '20261003120000_support_notification_consent_boundary.sql',
