@@ -9,8 +9,10 @@ const siteRoot = fileURLToPath(new URL('../company-site/', import.meta.url));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.woff2': 'font/woff2', '.xml': 'application/xml', '.txt': 'text/plain', '.json': 'application/json' };
 const receiptPaths = new Set(['/', '/product', '/students', '/personal-academic-os', '/site.css', '/site.js', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])]);
 
-// Test-only adapter, never deployed. Preserve the published header policy while
-// adding an independent policy that prevents scanner forms contacting live APIs.
+// Test-only adapter, never deployed. The published policy already restricts
+// connections, form submissions and frames to the static test target. Serve it
+// byte-for-byte: a second partial CSP is independently evaluated by browsers and
+// security scanners, where omitted fallback directives appear unrestricted.
 export function createCompanySiteScanServer({ root = siteRoot, tls, onResponse } = {}) {
   const directory = realpathSync(root);
   const config = JSON.parse(readFileSync(resolve(directory, 'vercel.json'), 'utf8'));
@@ -28,7 +30,6 @@ export function createCompanySiteScanServer({ root = siteRoot, tls, onResponse }
     for (const header of headers) response.setHeader(header.key, header.value);
     const productionPolicy = response.getHeader('Content-Security-Policy');
     if (!productionPolicy) throw new Error('The company scan must preserve its production CSP');
-    response.setHeader('Content-Security-Policy', [productionPolicy, "connect-src 'self'; form-action 'self'; frame-src 'none'"]);
     let path;
     const send = (status, type, body) => {
       if (onResponse && receiptPaths.has(path)) {

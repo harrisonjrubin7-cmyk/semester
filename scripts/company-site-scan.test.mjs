@@ -50,10 +50,10 @@ test('the company scan cannot cancel an unrelated queued scan', () => {
   assert.doesNotMatch(companyJob, /group:\s*hawkscan-company-site\s*(?:\n|$)/);
 });
 
-test('the scan target reuses production headers and blocks external submissions', () => {
+test('the scan target reuses the complete production policy without a partial second CSP', () => {
   const source = read('scripts/company-site-scan-server.mjs');
   assert.match(source, /vercel\.json/);
-  assert.match(source, /connect-src 'self'; form-action 'self'; frame-src 'none'/);
+  assert.doesNotMatch(source, /setHeader\(['"]Content-Security-Policy['"]/);
   assert.doesNotMatch(source, /unsafe-inline.*replace|delete.*Content-Security-Policy/);
 });
 
@@ -104,9 +104,7 @@ test('runtime target preserves production headers and byte-exact screenshots', a
   const published = JSON.parse(read('company-site/vercel.json')).headers.flatMap(rule => rule.headers);
   for (const header of published) {
     const actual = page.headers[header.key.toLowerCase()];
-    if (header.key.toLowerCase() === 'content-security-policy') {
-      assert.equal(actual, `${header.value}, connect-src 'self'; form-action 'self'; frame-src 'none'`);
-    } else assert.equal(actual, header.value);
+    assert.equal(actual, header.value);
   }
   for (const path of capturePaths) {
     const image = await fetchTarget(server, path);
