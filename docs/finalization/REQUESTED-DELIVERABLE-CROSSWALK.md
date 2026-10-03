@@ -34,11 +34,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 19 | `docs/company/CRISIS-COMMUNICATIONS-TEMPLATE.md` | EXACT PRESENT | canonical incident-specific template; publication always requires approval |
 | 20 | `docs/company/RISK-REGISTER.md` | EXACT PRESENT | canonical company-risk framework; ratings and acceptance remain external decisions |
 | 21 | `docs/company/POLICY-EXCEPTION-PROCESS.md` | EXACT PRESENT | canonical time-bound exception process; outside authority cannot be waived |
-| 22 | `docs/legal-drafts/TERMS-OF-SERVICE-DRAFT.md` | EXACT PRESENT | `docs/legal/TERMS-OF-SERVICE-DRAFT.md` |
-| 23 | `docs/legal-drafts/PRIVACY-NOTICE-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/PRIVACY-POLICY-DRAFT.md` (filename similarity 0.49; substantive review required) |
-| 24 | `docs/legal-drafts/COOKIE-NOTICE-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md` (filename similarity 0.69; substantive review required) |
-| 25 | `docs/legal-drafts/COOKIE-CONSENT-IMPLEMENTATION-SPEC.md` | NO CLOSE SOURCE | — |
-| 26 | `docs/legal-drafts/ACCEPTABLE-USE-POLICY-DRAFT.md` | EXACT PRESENT | `docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md` |
+| 22 | `docs/legal-drafts/TERMS-OF-SERVICE-DRAFT.md` | EXACT PRESENT | controlled review index to the canonical substantive terms draft; counsel approval required |
+| 23 | `docs/legal-drafts/PRIVACY-NOTICE-DRAFT.md` | EXACT PRESENT | controlled review index to the canonical privacy draft; data-role/jurisdiction review required |
+| 24 | `docs/legal-drafts/COOKIE-NOTICE-DRAFT.md` | EXACT PRESENT | controlled review index to the canonical browser-storage notice; deployment verification required |
+| 25 | `docs/legal-drafts/COOKIE-CONSENT-IMPLEMENTATION-SPEC.md` | EXACT PRESENT | canonical fail-closed implementation contract; applicable consent rules require counsel/privacy approval |
+| 26 | `docs/legal-drafts/ACCEPTABLE-USE-POLICY-DRAFT.md` | EXACT PRESENT | controlled review index to the canonical AUP draft; enforcement operations remain blocked |
 | 27 | `docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md` | EXACT PRESENT | `docs/legal/COMMUNITY-GUIDELINES-DRAFT.md` |
 | 28 | `docs/legal-drafts/COPYRIGHT-DMCA-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md` (filename similarity 0.59; substantive review required) |
 | 29 | `docs/legal-drafts/ACCESSIBILITY-STATEMENT-DRAFT.md` | EXACT PRESENT | `docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md` |
