@@ -21,6 +21,16 @@ declare
 begin
   select id into found_id from public.invoices where provider_ref = want_invoice_ref;
   if found_id is not null then
+    -- A failed automatic-tax finalization can create the draft first. When
+    -- Stripe later succeeds, refresh that same row from the newer invoice
+    -- snapshot rather than preserving the draft's incomplete amounts.
+    update public.invoices
+       set subtotal_cents = greatest(coalesce(want_subtotal_cents, 0), 0),
+           tax_cents = greatest(coalesce(want_tax_cents, 0), 0),
+           currency = coalesce(lower(want_currency), currency),
+           issued_at = coalesce(want_issued_at, issued_at),
+           due_at = coalesce(want_due_at, due_at)
+     where id = found_id;
     return found_id;
   end if;
 

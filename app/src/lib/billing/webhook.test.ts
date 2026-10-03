@@ -95,6 +95,17 @@ describe('the billing webhook', () => {
     expect(d.applyEvent).toHaveBeenCalledWith('evt_1', 'payment_failed', 'inv-uuid', 864, expect.any(String));
   });
 
+  it('records a Stripe Tax outage without putting the customer into dunning', async () => {
+    const { d } = deps();
+    const body = event('invoice.finalization_failed', {
+      id: 'in_tax_outage', subscription: 'sub_1', amount_due: 799,
+      subtotal_excluding_tax: 799, total_taxes: [], currency: 'usd', created: NOW - 60,
+      automatic_tax: { status: 'failed' },
+    });
+    expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
+    expect(d.applyEvent).toHaveBeenCalledWith('evt_1', 'other', 'inv-uuid', 799, expect.any(String));
+  });
+
   it('turns a completed checkout into a subscription, by the checkout id it carries', async () => {
     const { d, calls } = deps();
     const body = event('checkout.session.completed', {

@@ -15,7 +15,7 @@ import {
   priceWords,
   startCheckout,
 } from './membership';
-import { CONSENT_VERSION as SERVER_SHAPE } from '../../../supabase/functions/_shared/billingcheckout';
+import { TAX_CONSENT_VERSION as SERVER_VERSION } from '../../../supabase/functions/_shared/billingcheckout';
 
 const MONTH = { id: '6d5749ba-47da-4545-86d6-bb89461adac6', plan_code: 'plus', amount_cents: 799, currency: 'usd', billing_interval: 'month' };
 const YEAR = { id: '64c5f28d-84dd-452d-b87a-257d6dc9b080', plan_code: 'plus', amount_cents: 5900, currency: 'usd', billing_interval: 'year' };
@@ -45,7 +45,7 @@ describe('consent', () => {
   });
 
   it('sends a version the server accepts', () => {
-    expect(SERVER_SHAPE.test(CONSENT_VERSION)).toBe(true);
+    expect(CONSENT_VERSION).toBe(SERVER_VERSION);
   });
 });
 

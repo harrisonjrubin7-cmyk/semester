@@ -57,6 +57,8 @@ export const MAX_CHECKOUT_BODY_BYTES = 2048;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** The same shape `checkout_sessions.consent_text_version` checks. */
 export const CONSENT_VERSION = /^[a-z0-9][a-z0-9._-]{0,39}$/;
+/** The first wording that explicitly consents to applicable sales tax. */
+export const TAX_CONSENT_VERSION = 'plus-v2';
 
 /** Where Stripe returns the person, with `checkout=success|cancel` added. */
 export function returnTo(base: string, outcome: 'success' | 'cancel'): string {
@@ -130,7 +132,7 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   }
   const { price_id: priceId, consent, consent_text_version: version } = body;
   if (typeof priceId !== 'string' || !UUID.test(priceId)) return reply(400, { error: 'Choose a plan.' });
-  if (consent !== true || typeof version !== 'string' || !CONSENT_VERSION.test(version)) {
+  if (consent !== true || version !== TAX_CONSENT_VERSION || !CONSENT_VERSION.test(version)) {
     return reply(400, { error: 'Agree to the recurring charge to continue.' });
   }
 

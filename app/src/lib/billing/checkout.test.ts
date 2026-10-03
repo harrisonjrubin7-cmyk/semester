@@ -74,7 +74,8 @@ describe('billing checkout', () => {
   it('needs explicit consent, to a named wording, before anything is recorded', async () => {
     for (const body of [
       { ...GOOD, consent: false }, { ...GOOD, consent: 'yes' }, { price_id: PRICE },
-      { ...GOOD, consent_text_version: 'Not A Version' }, { ...GOOD, price_id: 'plus' },
+      { ...GOOD, consent_text_version: 'Not A Version' },
+      { ...GOOD, consent_text_version: 'plus-v1' }, { ...GOOD, price_id: 'plus' },
     ]) {
       const d = deps();
       const res = await handleBillingCheckout(post(body), d);

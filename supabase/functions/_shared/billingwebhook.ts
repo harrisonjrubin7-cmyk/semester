@@ -144,9 +144,17 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
       }
     } else if (type === 'invoice.paid' || type === 'invoice.payment_succeeded' ||
                type === 'invoice.payment_failed' || type === 'invoice.finalization_failed') {
-      const failed = type === 'invoice.payment_failed' || type === 'invoice.finalization_failed';
+      const finalizationFailed = type === 'invoice.finalization_failed';
+      const needsCustomerLocation = finalizationFailed &&
+        obj(o.automatic_tax).status === 'requires_location_inputs';
+      // A Stripe Tax service failure is operational, not a failed customer
+      // payment. Stripe retries it; only missing customer location enters the
+      // existing remediation/dunning path.
+      const failed = type === 'invoice.payment_failed' || needsCustomerLocation;
       kind = failed ? 'payment_failed' : 'payment_succeeded';
-      amount = num(failed ? o.amount_due : o.amount_paid);
+      if (finalizationFailed && !needsCustomerLocation) kind = 'other';
+      const paid = type === 'invoice.paid' || type === 'invoice.payment_succeeded';
+      amount = num(paid ? o.amount_paid : o.amount_due);
       const sub = invoiceSubscription(o);
       const id = str(o.id);
       if (sub && id) {

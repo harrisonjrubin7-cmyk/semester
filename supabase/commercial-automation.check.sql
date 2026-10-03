@@ -254,10 +254,10 @@ begin
   perform pg_temp.answered('an unknown subscription is reported, not invented', t, 'unknown');
 
   select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 799, 65, 'USD', base, base) into inv;
-  select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 799, 65, 'USD', base, base) into inv2;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 825, 75, 'USD', base, base) into inv2;
   perform pg_temp.answered('a provider invoice is recorded once', (inv = inv2)::text, 'true');
-  perform pg_temp.answered('provider tax is kept outside subtotal',
-    (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '799:65');
+  perform pg_temp.answered('a recovered provider invoice refreshes subtotal and tax separately',
+    (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '825:75');
   select public.upsert_provider_invoice_v2('sub_nobody', 'in_test_2', 799, 0, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 
