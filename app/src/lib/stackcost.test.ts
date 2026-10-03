@@ -151,7 +151,7 @@ describe('the download', () => {
 
 // ── the company site's copy ─────────────────────────────────────────────────
 
-const SITE = 'company-site/index.html';
+const SITE = 'company-site/site.js';
 const region = () => {
   const s = read('app/src/lib/stackcost.mjs');
   return s.slice(s.indexOf('// >>> embed') + '// >>> embed'.length, s.indexOf('// <<< embed')).trim();

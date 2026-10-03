@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const site = readFileSync(join(import.meta.dirname, '../../../company-site/index.html'), 'utf8');
+const site = readFileSync(join(import.meta.dirname, '../../../company-site/site.js'), 'utf8');
 
 // Execute the shipped functions, not a copy of their behavior. The only shims
 // are unrelated search results/dropdowns and jsdom's missing layout measurements.
