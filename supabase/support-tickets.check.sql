@@ -207,9 +207,13 @@ begin
   perform pg_temp.become_mfa(agent);
   perform public.support_reply(a11y, 'Second update.', 'waiting_on_student', gen_random_uuid());
   perform public.support_reply(a11y, 'Third update.', 'waiting_on_student', gen_random_uuid());
+  reset role;
+  -- Test-fixture clock control is intentionally outside the support-agent role;
+  -- agents never receive direct access to the notification outbox.
   update public.support_notification_outbox
      set queued_at = now() - interval '2 days'
    where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.become_mfa(agent);
   perform public.support_reply(a11y, 'Fourth update.', 'waiting_on_student', gen_random_uuid());
   reset role;
   select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
