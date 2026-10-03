@@ -10,19 +10,28 @@
 
 One opportunity represents one legal customer, bounded problem/cohort/workflow and potential commercial decision. A contact, form submission, meeting, demo, security questionnaire, proposal or verbal interest is not automatically an opportunity or customer.
 
-| Stage | Entry evidence | Exit evidence |
-| --- | --- | --- |
-| target | organization/use case fits the controlled ICP hypothesis; source and owner recorded | authorized stakeholder agrees to a discovery conversation, or disqualified |
-| qualified conversation | named contact and meeting purpose | problem, urgency/milestone, cohort, authority, sponsor/champion, budget/procurement, data/risk, timeline and no-fit criteria recorded |
-| discovery complete | required discovery fields and disqualifiers reviewed | mutual bounded problem and next-step evidence exchange/workshop agreed |
-| evidence/trust review | requested technical, security, privacy, accessibility, legal and procurement artifacts logged | open questions, owners, dates, exceptions and acceptable pilot prerequisites documented |
-| scoped pilot | customer-specific scope, responsibilities, measures/guardrails, implementation, support and offboarding drafted | feasibility/delivery review and authorized proposal approval |
-| proposal | dated conditional proposal with approved or explicit placeholder terms delivered to authorized contacts | accepted into procurement/contract review, rejected/expired, or returned for rescope |
-| contracting | redlines, order, approvals and dependencies tracked | authorized executed paper, or closed lost/no decision |
-| closed won | authorized contract/order and booking determination approved | handoff accepted by implementation, finance and success owners |
-| closed lost / no decision | explicit rejection, disqualifier, withdrawal or expiry | reason, learning, consent/suppression and future-contact rule recorded |
+This document uses the exact controlled vocabulary in `app/src/lib/gtm/stages.ts`; the code maps every stage to the coarser account statuses `target`, `engaged`, `pilot`, `customer`, `paused` and `closed_lost`.
 
-`closed won` is the terminal successful sales stage. After its handoff exit evidence is accepted, track `implementation pending` in the separate delivery lifecycle: entry requires the signed order and accepted handoff; exit requires the relevant implementation and named-tenant launch gates to begin. Neither state is activation, delivery acceptance, billing, cash collection or recognized revenue.
+| Implemented stage | Required evidence before advancing |
+| --- | --- |
+| `target_account` | organization/use case fits the controlled ICP hypothesis; source and owner recorded |
+| `discovery` | authorized stakeholder agrees to a discovery conversation |
+| `qualified` | named champion, stated problem, budget cycle and decision process recorded |
+| `multi_stakeholder_demo` | appropriate stakeholders and a synthetic/non-activation demonstration scope are agreed |
+| `outcome_workshop` | buying committee is mapped, including IT, privacy, accessibility and academic sponsor |
+| `technical_review` | requested architecture/integration evidence, questions, owners and dates are logged |
+| `security_privacy_accessibility_review` | requested controls, exceptions, owners and acceptable prerequisites are documented |
+| `proposal` | dated conditional proposal with approved or explicit placeholder terms is authorized for delivery |
+| `pilot_or_implementation_SOW` | customer-specific scope, measures/guardrails, responsibilities, support and offboarding pass pilot readiness |
+| `procurement_legal` | proposal is accepted into formal review; redlines, approvals and dependencies are tracked |
+| `contracted` | procurement and legal have signed and deal-desk review has no refusals; this is the successful commercial decision, not activation or recognized revenue |
+| `implementation` | signed scope and accepted handoff enter the controlled pilot/delivery lifecycle |
+| `live` | launch council returns GO for the named first cohort; this does not imply broad or enterprise launch |
+| `renewal` | pilot has a signed final verdict with approved outcomes measured |
+| `expansion` | separately authorized scope and evidence support an expansion decision |
+| `closed_lost` | rejection, disqualifier, withdrawal or expiry is recorded with reason, learning and future-contact rule |
+
+There is no separate `closed_won` or `implementation_pending` value in the implemented model. `contracted` is the successful commercial decision; `implementation` begins delivery after an accepted handoff. The later `live`, `renewal` and `expansion` states preserve one governed GTM lifecycle. None by itself proves activation, delivery acceptance, billing, cash collection, recognized revenue or enterprise readiness.
 
 Movement requires the exit evidence; never advance to improve a forecast. Regress when facts change. Record stage-entered time, next action/date, owner, amount/currency/status, probability source, scope, risk, decision date and evidence links. Any amount, probability or close date without authority is labeled **assumption** and excluded from actual revenue/customer claims.
 
@@ -34,7 +43,7 @@ Pipeline amount uses the approved quoted scope, never an invented price. Weighte
 
 **Repository evidence.** Qualification, discovery, proposal, trust, implementation and commercial-control artifacts define the required stage evidence.
 
-**Operational evidence.** No approved current pipeline, stage history, forecast calibration, deal desk, closed-won institutional customer or revenue record is evidenced.
+**Operational evidence.** No approved current pipeline, stage history, forecast calibration, deal desk, contracted institutional customer or revenue record is evidenced.
 
 **Missing test/proof.** Configure the controlled stages/required fields; deduplicate/import only authorized records; assign reviewers; run hygiene/forecast reviews; reconcile signed orders to finance and implementation; validate stage definitions against real outcomes.
 

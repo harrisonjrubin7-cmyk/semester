@@ -12,7 +12,7 @@ Complete and approve every bracketed field before launch. Keep the frozen baseli
 | Measure | Baseline | Target/range | Owner | Accepted source | Cadence | Interpretation / privacy boundary |
 | --- | --- | --- | --- | --- | --- | --- |
 | eligible cohort activation | [REQUIRED] | [REQUIRED] | [REQUIRED] | [APPROVED ROSTER + VALIDATED EVENT] | weekly | invitation/delivery is not activation |
-| first-win completion | [REQUIRED] | [REQUIRED] | [REQUIRED] | [VALIDATED EVENT + SAMPLE QA] | weekly | definition and denominator frozen pre-launch |
+| first-win decision (complete/schedule/snooze/defer) | [REQUIRED] | [REQUIRED] | [REQUIRED] | [VALIDATED EVENT + SAMPLE QA] | weekly | outcomes separate; definition and denominator frozen pre-launch |
 | meaningful weekly planning | [REQUIRED] | [REQUIRED] | [REQUIRED] | [PRIVACY-REVIEWED AGGREGATE] | weekly | raw logins excluded |
 | approved readiness progress | [REQUIRED] | [REQUIRED] | [REQUIRED] | [APPROVED CHECKLIST AGGREGATE] | weekly | not official registration/eligibility |
 | time to first value | [REQUIRED] | [REQUIRED] | [REQUIRED] | [VALIDATED TIMESTAMPS] | weekly | exclude testing/support accounts |

@@ -16,7 +16,7 @@ Evidence-bounded discovery, synthetic demos, evidence exchange and conditional s
 | Phase | Permitted work | Exit evidence |
 | --- | --- | --- |
 | internal preparation | reconcile exact product/revision, audience/problem, claim register, landing/CTA route, accessibility, privacy/consent, support/recovery, analytics and correction/withdrawal plan | owners/reviewers approve final assets and exact limitations |
-| closed rehearsal | synthetic test traffic/data; test content, CTA, forms, confirmation, suppression/unsubscribe, analytics, accessibility, failure/support and rollback | end-to-end evidence with no unresolved P0/P1 |
+| closed rehearsal | synthetic test traffic/data; test content, CTA, forms, confirmation, suppression/unsubscribe, analytics, accessibility, failure/support and rollback | end-to-end evidence with no unresolved P0/P1 affecting the rehearsal or bounded-discovery scope; production/activation P0/P1 remain explicit blockers for their own motions |
 | bounded discovery | direct qualified outreach/content inviting discovery/demo only | monitored consent/response/support, accurate qualification and no activation implication |
 | invitation beta | only after individual-beta GO; controlled cohort/capacity and clear beta limits | accepted onboarding/support/monitoring/rights and stop controls |
 | named design-partner campaign | only after customer permission and named-tenant launch GO | executed scope, target acceptance, staffed operation and approved wording/logos |

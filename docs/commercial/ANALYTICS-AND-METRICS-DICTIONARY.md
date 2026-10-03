@@ -13,17 +13,18 @@ Every implemented metric must add: metric/event version, purpose/decision, eligi
 | --- | --- | --- |
 | eligible cohort | participants meeting frozen pilot eligibility and invitation rules | approved roster/cohort required; not repository counts |
 | activation rate | approved minimum-setup completions / eligible invited population | invitation delivery/login alone excluded; field event unaccepted |
-| first-win rate | validated first-win completions / participants completing approved minimum setup | first-week plan plus reversible prioritized-action definition proposed; report setup-to-first-win loss separately; QA required |
+| first-win rate | participants who validate the approved first-week plan and intentionally complete, schedule, snooze or defer at least one prioritized reversible action / participants completing approved minimum setup | decision outcomes must be versioned and reported separately; report setup-to-first-win loss; QA required |
 | time to first value | elapsed consented start to first win among valid completions; distribution, not only mean | exclude tests/support; timestamps unaccepted |
 | Weekly Prepared Action Rate | eligible activated participants completing a weekly plan and ≥1 self-selected relevant next action / eligible activated participants in week | proposed north star; privacy-safe field source absent |
 | meaningful retention | prior eligible activated participants with an approved useful action in later window / prior eligible activated participants | raw return/login excluded; cohort/window required |
 | support burden | cases by severity plus staffed-hours acknowledgement/resolution and unresolved age per approved population | staffed support system/hours absent |
 | core reliability | good eligible critical-flow attempts / eligible attempts, with no-data separate | proposed SLI stream absent; not uptime/SLA |
 | pipeline conversion | opportunities entering later controlled stage / opportunities eligible at earlier stage in the stated cohort/window | stage evidence/history absent; never use contacts as opportunities |
-| sales cycle | elapsed qualified-stage entry to authorized closed-won/lost decision; report distribution and censored open records | no representative outcomes |
+| sales cycle | elapsed `qualified` entry to authorized `contracted` or `closed_lost` decision; report distribution and censored open records | uses the implemented GTM vocabulary; no representative outcomes |
 | implementation time | accepted charter/contract milestone to customer-accepted launch gate, with pause reasons | no completed customer implementation |
 | pilot conversion | pilots reaching authorized annual agreement / pilots with final decision due in cohort | extensions/offboarding separate; no denominator yet |
-| renewal/churn | eligible contracts renewed or ended / contracts due, by approved revenue/customer definition | no customer contract cohort |
+| contract renewal decision rate | eligible contracts with a final `renewed`, `expanded` or `downgraded` outcome / eligible contracts with any final renewal outcome in the frozen cohort | extensions and unresolved/no-decision records are separately reported and excluded from the final-decision denominator; no customer contract cohort |
+| contract churn decision rate | eligible contracts with a final `churned` outcome / eligible contracts with any final renewal outcome in the frozen cohort | never calculate as all contracts that ended; extensions and unresolved/no-decision are separate; no customer contract cohort |
 | ARR/MRR/bookings/billings/cash/revenue | **[FINANCE/ACCOUNTING DEFINITIONS AND SOURCES REQUIRED]** | unavailable; never derived from product subscriptions alone |
 | CAC/LTV/gross margin/payback | **[FINANCE-APPROVED COST, CUSTOMER, REVENUE AND COHORT POLICY REQUIRED]** | unavailable; no observed cost/revenue cohort |
 
