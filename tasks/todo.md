@@ -72,8 +72,8 @@
 - [x] S06: trust documents 26–30; added evidence-bounded change, release, asset, threat-model, and risk-treatment controls with explicit approval, inventory, target-testing, recovery, staffing, and residual-risk blockers on 2026-10-03.
 - [x] S07: trust documents 31–34; added controlled security-questionnaire, HECVAT, NIST 800-53, and education-privacy readiness matrices with explicit customer scope, external assessment, legal applicability, and approval blockers on 2026-10-03.
 - [x] S08: AI-governance documents 35–39; added controlled governance, system inventory, risk, data-use, and transparency/user-notice artifacts with feature-specific approval gates, repository-versus-operational evidence, and explicit claim ceilings on 2026-10-03.
-- [ ] S09: AI-governance documents 40–42.
-- [ ] Checkpoint S: every control has status, code/config evidence, operational evidence, owner, missing test, and prohibited-claim ceiling.
+- [x] S09: AI-governance documents 40–42; added controlled human-oversight, AI incident/kill-switch, and model/prompt change-management artifacts with scoped operational evidence, target exercise blockers, and explicit claim ceilings on 2026-10-03.
+- [x] Checkpoint S: audited all 42 requested trust and AI-governance artifacts on 2026-10-03; every artifact has status, code/config or implementation evidence, operational evidence, owner, missing test/proof or gap, and an explicit prohibited-claim ceiling.
 
 **Dependencies:** T02; relevant legal mapping batches.
 

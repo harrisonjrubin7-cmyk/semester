@@ -130,9 +130,9 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 115 | `docs/trust/AI-RISK-ASSESSMENT.md` | EXACT PRESENT | canonical risk baseline; feature/population scoring, evaluation, residual-risk acceptance and institutional operation remain unproven |
 | 116 | `docs/trust/AI-DATA-USE-STANDARD.md` | EXACT PRESENT | canonical minimization, authority, provider and retention boundary; no blanket training, retention, residency or compliance promise is authorized |
 | 117 | `docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md` | EXACT PRESENT | canonical pre-use and at-output notice standard; universal coverage, accessible acceptance and staffed recourse remain open |
-| 118 | `docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md` | NO CLOSE SOURCE | — |
-| 119 | `docs/trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/INCIDENT-RESPONSE-RUNBOOK.md` (filename similarity 0.42; substantive review required) |
-| 120 | `docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md` | CANDIDATE SOURCE | `docs/operating-model/CHANGE-MANAGEMENT.md` (filename similarity 0.55; substantive review required) |
+| 118 | `docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md` | EXACT PRESENT | canonical meaningful-review tiers and prohibited decision boundary; universal human operation, staffing and customer acceptance remain unproven |
+| 119 | `docs/trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md` | EXACT PRESENT | canonical AI response and recovery sequence; one shared-key runtime drill is preserved without promotion to universal or gateway proof |
+| 120 | `docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md` | EXACT PRESENT | canonical change, evaluation, rollout and rollback gate; exact deployed versions, full baselines and named-customer operation remain open |
 | 121 | `docs/product-design/DESIGN-AND-PRODUCT-FINALIZATION-AUDIT.md` | NO CLOSE SOURCE | — |
 | 122 | `docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md` | CANDIDATE SOURCE | `docs/DESIGN-SYSTEM-IMPROVEMENTS.md` (filename similarity 0.47; substantive review required) |
 | 123 | `docs/product-design/PRODUCT-QUALITY-BAR.md` | NO CLOSE SOURCE | — |
