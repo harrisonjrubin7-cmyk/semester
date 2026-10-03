@@ -227,7 +227,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   const calls = [];
   let legacyOpen = true;
   let checkoutEnabled = true;
-  const result = await activateLive(env, { apply: true, fetch: async (url, init) => {
+  let failFinalConnection = false;
+  const fetch = async (url, init) => {
     calls.push({ url, method: init.method || 'GET', body: init.body });
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
     if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
@@ -265,13 +266,17 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
         ? response({ error: 'Not ready for this event.' }, 500)
         : response({ error: 'Not an event.' }, 400);
     }
-    if (url.endsWith('/billing-checkout') && init.method === 'POST') return checkoutEnabled
-      ? response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
-        'X-Semester-Billing-Contract': 'plus-v2' })
-      : response({ error: 'Checkout is not available yet.' }, 503, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
-        'X-Semester-Billing-Contract': 'plus-v2' });
+    if (url.endsWith('/billing-checkout') && init.method === 'POST') {
+      if (checkoutEnabled && failFinalConnection) throw new Error('network down');
+      return checkoutEnabled
+        ? response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
+          'X-Semester-Billing-Contract': 'plus-v2' })
+        : response({ error: 'Checkout is not available yet.' }, 503, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
+          'X-Semester-Billing-Contract': 'plus-v2' });
+    }
     return response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN });
-  } });
+  };
+  const result = await activateLive(env, { apply: true, fetch });
   assert.equal(result.state, 'configured');
   assert.equal(result.taxReady, true);
   assert.equal(result.portalConfigured, true);
@@ -313,4 +318,9 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(calls.some(call => /payment_intents/.test(call.url)), false);
   assert.equal(JSON.stringify(result).includes('whsec_'), false);
   assert.equal(JSON.stringify(result).includes('sk_live_'), false);
+
+  failFinalConnection = true;
+  await assert.rejects(activateLive(env, { apply: true, fetch }), /disabled again/);
+  assert.equal(checkoutEnabled, false);
+  assert.equal(JSON.parse(calls.filter(call => call.url.endsWith('/secrets')).at(-1).body)[0].value, 'false');
 });

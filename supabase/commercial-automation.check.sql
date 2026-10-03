@@ -279,16 +279,14 @@ begin
 
   -- ── Dunning ─────────────────────────────────────────────────────────────
   select public.upsert_provider_invoice_v2('sub_test_1', 'in_address_needed', 864, 65, 'usd', base, base) into inv2;
-  select public.apply_payment_event('stripe', 'evt_address_needed', 'address_required', inv2, 864, repeat('a', 64)) into t;
-  perform pg_temp.answered('missing tax location has its own remediation state', t, 'address_required');
-  perform pg_temp.answered('without calling the card failed',
-    (select status || ':' || billing_issue from public.subscriptions where id = ana_sub), 'active:address_required');
-  perform pg_temp.counted('and without opening dunning',
-    (select count(*) from public.dunning_cases where subscription_id = ana_sub and status = 'open'), 0);
   select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 864, repeat('e', 64)) into t;
   perform pg_temp.answered('a failed renewal opens dunning', t, 'dunning');
-  perform pg_temp.answered('and preserves an address issue on a different invoice',
-    (select billing_issue from public.subscriptions where id = ana_sub), 'address_required');
+  select public.apply_payment_event('stripe', 'evt_address_needed', 'address_required', inv2, 864, repeat('a', 64)) into t;
+  perform pg_temp.answered('a later missing tax location has its own remediation state', t, 'address_required');
+  perform pg_temp.answered('and is shown alongside the earlier card failure',
+    (select status || ':' || billing_issue from public.subscriptions where id = ana_sub), 'past_due:address_required');
+  perform pg_temp.counted('without opening a second dunning case',
+    (select count(*) from public.dunning_cases where subscription_id = ana_sub and status = 'open'), 1);
   select public.run_dunning(base + interval '1 day') into j;
   perform pg_temp.answered('a day later, nothing is due', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');
   select public.run_dunning(base + interval '4 days') into j;

@@ -75,7 +75,7 @@ begin
   if want_kind = 'address_required' and inv.subscription_id is not null and inv.status <> 'paid' then
     update public.subscriptions
        set billing_issue = 'address_required', billing_issue_invoice_id = inv.id, updated_at = now()
-     where id = inv.subscription_id and status in ('trialing', 'active');
+     where id = inv.subscription_id and status in ('trialing', 'active', 'past_due', 'grace');
     return 'address_required';
   elsif want_kind = 'payment_succeeded' then
     update public.invoices set status = 'paid', paid_at = now() where id = inv.id;

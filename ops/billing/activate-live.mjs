@@ -380,10 +380,16 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   for (const origin of c.origins) {
     let ready = false;
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const res = await send(`https://${c.project}.supabase.co/functions/v1/billing-checkout`, {
-        method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
-        headers: { Origin: origin, 'Content-Type': 'application/json' },
-      });
+      let res;
+      try {
+        res = await send(`https://${c.project}.supabase.co/functions/v1/billing-checkout`, {
+          method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
+          headers: { Origin: origin, 'Content-Type': 'application/json' },
+        });
+      } catch {
+        await writeProjectSecrets([{ name: 'BILLING_LIVE_ENABLED', value: 'false' }], 'Supabase checkout rollback');
+        throw new Error('Checkout final verification could not connect and checkout was disabled again.');
+      }
       if (res.status === 401 && res.headers.get('Access-Control-Allow-Origin') === origin) {
         ready = true;
         break;
