@@ -21,12 +21,20 @@ async function retry(messageId: string, attempts: number, reason: string) {
 }
 
 async function target(row: OutboxRow) {
-  const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('student_id').eq('id', row.ticket_id).maybeSingle();
+  const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('student_id,email_notice_enabled').eq('id', row.ticket_id).maybeSingle();
   if (ticketError || !ticket?.student_id) {
     const terminal = await retry(row.message_id, row.attempts, ticketError ? 'student lookup unavailable' : 'student account unavailable');
     return {
       messageId: row.message_id, ticketId: row.ticket_id, email: '', attempts: row.attempts,
       resolutionOutcome: terminal ? 'dead_lettered' as const : 'retrying' as const,
+    };
+  }
+  if (!ticket.email_notice_enabled) {
+    const { error: deleteError } = await admin.from('support_notification_outbox').delete().eq('message_id', row.message_id);
+    if (deleteError) throw new Error('Could not cancel the opted-out support notification.');
+    return {
+      messageId: row.message_id, ticketId: row.ticket_id, email: '', attempts: row.attempts,
+      resolutionOutcome: 'cancelled' as const,
     };
   }
   const { data: user, error } = await admin.auth.admin.getUserById(ticket.student_id);

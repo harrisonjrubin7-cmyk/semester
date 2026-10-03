@@ -191,6 +191,12 @@ begin
   reset role;
   select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
   perform pg_temp.counted('support email is capped at three notices per ticket in a rolling day', n, 3);
+  perform pg_temp.become(ada);
+  perform public.set_support_email_notice(a11y, false);
+  reset role;
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.counted('opting out cancels every support notice still waiting to send', n, 0);
   perform pg_temp.become_mfa(agent);
   begin
     perform public.support_reply(a11y, 'closing', 'closed', gen_random_uuid());

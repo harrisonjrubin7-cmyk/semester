@@ -82,6 +82,12 @@ begin
   if not found then
     raise exception 'no ticket of yours with that id' using errcode = 'insufficient_privilege';
   end if;
+  if not coalesce(want_enabled, false) then
+    delete from public.support_notification_outbox
+     where ticket_id = want_ticket
+       and accepted_at is null
+       and dead_lettered_at is null;
+  end if;
 end $$;
 
 drop function public.support_reply(uuid, text, text);

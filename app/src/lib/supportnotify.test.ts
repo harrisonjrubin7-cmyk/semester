@@ -74,7 +74,7 @@ describe('support reply notification', () => {
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ processed: 2, accepted: 1, retrying: 1, dead_lettered: 0 });
+    expect(await response.json()).toEqual({ processed: 2, accepted: 1, retrying: 1, dead_lettered: 0, cancelled: 0 });
     expect(d.failed).toHaveBeenCalledWith('message-1', 2, 'provider transport unavailable');
     expect(d.accepted).toHaveBeenCalledWith('message-2');
   });
@@ -89,7 +89,7 @@ describe('support reply notification', () => {
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ processed: 1, accepted: 0, retrying: 0, dead_lettered: 1 });
+    expect(await response.json()).toEqual({ processed: 1, accepted: 0, retrying: 0, dead_lettered: 1, cancelled: 0 });
     expect(d.failed).toHaveBeenCalledWith('message-8', 7, 'provider rejected notice');
   });
 
@@ -104,7 +104,21 @@ describe('support reply notification', () => {
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({ processed: 2, accepted: 0, retrying: 1, dead_lettered: 1 });
+    expect(await response.json()).toEqual({ processed: 2, accepted: 0, retrying: 1, dead_lettered: 1, cancelled: 0 });
+    expect(d.send).not.toHaveBeenCalled();
+  });
+
+  it('counts notices cancelled after a student opts out without calling the provider', async () => {
+    const d = deps({
+      cronSecret: 'cron-secret',
+      pending: vi.fn().mockResolvedValue([
+        { messageId: 'message-3', ticketId: ticket, email: '', attempts: 0, resolutionOutcome: 'cancelled' },
+      ]),
+    });
+    const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
+    const response = await handleSupportNotice(cron, d);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ processed: 1, accepted: 0, retrying: 0, dead_lettered: 0, cancelled: 1 });
     expect(d.send).not.toHaveBeenCalled();
   });
 

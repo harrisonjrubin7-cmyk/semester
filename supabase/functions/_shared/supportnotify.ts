@@ -21,7 +21,7 @@ export interface SupportNoticeTarget {
   email: string;
   attempts: number;
   /** Recipient lookup already advanced this row without calling the provider. */
-  resolutionOutcome?: 'retrying' | 'dead_lettered';
+  resolutionOutcome?: 'retrying' | 'dead_lettered' | 'cancelled';
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -55,10 +55,12 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
     let accepted = 0;
     let retrying = 0;
     let deadLettered = 0;
+    let cancelled = 0;
     for (const target of pending) {
       const outcome = await sendTarget(deps, target);
       if (outcome === 'accepted') accepted += 1;
       else if (outcome === 'dead_lettered') deadLettered += 1;
+      else if (outcome === 'cancelled') cancelled += 1;
       else retrying += 1;
     }
     return reply(deadLettered > 0 ? 503 : 200, {
@@ -66,6 +68,7 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
       accepted,
       retrying,
       dead_lettered: deadLettered,
+      cancelled,
     });
   }
 
@@ -94,7 +97,7 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
   return outcome === 'accepted' ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });
 }
 
-async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered'> {
+async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered' | 'cancelled'> {
   if (target.resolutionOutcome) return target.resolutionOutcome;
   const ticketReference = reference(target.ticketId);
   let sent = false;
