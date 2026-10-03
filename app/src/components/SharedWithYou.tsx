@@ -21,7 +21,9 @@ const NOBODY: Record<string, string> = {};
  * copy each student confirmed, exactly; nothing is summarised, counted across
  * categories or dated by activity (design §7).
  */
-export function SharedWithYou({ today = dateToIso(new Date()) }: { today?: string }) {
+export function SharedWithYou({ today: suppliedToday }: { today?: string }) {
+  const [now] = useState(() => new Date());
+  const today = suppliedToday ?? dateToIso(now);
   const { account } = useStore();
   const seen = useDeviceLibrary(`${SEEN_PREFIX}:${account?.id || 'device'}`, readSeen, NOBODY);
   const [shares, setShares] = useState<ShareFrom[] | null>(null);

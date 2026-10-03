@@ -4,7 +4,9 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { AUDIT, EMPTY_RHYTHM, FIELDS, HELP_SCRIPTS, PROGRESS, RESPONSES, RHYTHM_KEY, TIMEBOXES, exportDay, helpDraft, newDay, readRhythm, saveDay, type DailyPlan, type Field } from '../lib/daily-rhythm';
 
-export function DailyRhythm({ accountId, now = new Date() }: { accountId: string | null; now?: Date }) {
+export function DailyRhythm({ accountId, now: suppliedNow }: { accountId: string | null; now?: Date }) {
+  const [currentNow] = useState(() => new Date());
+  const now = suppliedNow ?? currentNow;
   return <DailyRhythmBody key={accountId || 'device'} accountId={accountId} today={dateToIso(now)} />;
 }
 

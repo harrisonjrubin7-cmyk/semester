@@ -19,6 +19,7 @@ const date = (value: string) => dateFormatter({
 }).format(new Date(value));
 
 export function SupportAccess({ account }: { account: Account | null }) {
+  const [now] = useState(() => new Date());
   const [supporters, setSupporters] = useState<SupporterChoice[]>([]);
   const [windows, setWindows] = useState<SupportWindow[]>([]);
   const [signals, setSignals] = useState<Record<string, SupportSignal[]>>({});
@@ -55,7 +56,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { void refresh(); }, [refresh]);
 
-  const active = windows.filter((window) => !window.revokedAt && new Date(window.expiresAt) > new Date());
+  const active = windows.filter((window) => !window.revokedAt && new Date(window.expiresAt) > now);
   const history = windows.filter((window) => !active.includes(window));
 
   return (

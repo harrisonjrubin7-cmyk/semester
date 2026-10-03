@@ -1,4 +1,5 @@
 import { Notice, SectionLabel } from '../ui';
+import { useState } from 'react';
 import { ESCALATION } from '../../lib/ops/console';
 import { EVIDENCE, evidenceState } from '../../lib/ops/evidence';
 import { Fields, matches, type ViewProps } from './Fields';
@@ -11,7 +12,9 @@ import { Fields, matches, type ViewProps } from './Fields';
  * test and the claims test use, so this view cannot say "current" about a
  * record the register calls expired.
  */
-export function Evidence({ filter, today = new Date().toISOString().slice(0, 10) }: ViewProps & { today?: string }) {
+export function Evidence({ filter, today: suppliedToday }: ViewProps & { today?: string }) {
+  const [now] = useState(() => new Date());
+  const today = suppliedToday ?? now.toISOString().slice(0, 10);
   const rows = EVIDENCE.map((r) => ({ r, s: evidenceState(r, today) })).filter(({ r }) => matches(filter, r.artifact, r.id, r.owner, r.path, ...r.claims));
 
   return (

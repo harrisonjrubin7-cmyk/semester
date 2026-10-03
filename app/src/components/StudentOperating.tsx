@@ -16,8 +16,9 @@ function download(name: string, content: string | Uint8Array, mime: string) {
 }
 export function StudentOperating() {
   const { state, dispatch } = useStore();
+  const [now] = useState(() => new Date());
   const workspace = readOperating(state.operatingWorkspace);
-  const today = dateToIso(new Date());
+  const today = dateToIso(now);
   const [temporary, setTemporary] = useState<Manual | null>(null);
   const manual = temporary ?? activeManual(workspace.manual, today);
   const [editingManual, setEditingManual] = useState<Manual>(() => manual ?? defaultManual());

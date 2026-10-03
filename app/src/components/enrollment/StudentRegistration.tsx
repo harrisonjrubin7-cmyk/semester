@@ -98,6 +98,7 @@ function landingSaid(s: LiveSection): string {
 const CONFIRM_LABEL = { seat: 'Confirm enrollment', waitlist: 'Join the waitlist', approval: 'Send the request', full: '' } as const;
 
 export function StudentRegistration({ term, calendar }: { term: string; calendar: TermCalendar | null }) {
+  const [now] = useState(() => new Date());
   const { say } = useStore();
   const plan = useRegistrationPlan();
   const { attempt } = useAttempts();
@@ -110,7 +111,6 @@ export function StudentRegistration({ term, calendar }: { term: string; calendar
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState<Said | null>(null);
   const [reads, setReads] = useState(0);
-  const now = new Date();
   const reviewHead = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {

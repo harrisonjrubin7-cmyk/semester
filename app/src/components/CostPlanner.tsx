@@ -24,12 +24,14 @@ const num = (v: string) => {
 export function CostPlanner({
   lines,
   onChange,
-  now = new Date(),
+  now: suppliedNow,
 }: {
   lines: CostLine[];
   onChange: (next: CostLine[]) => void;
   now?: Date;
 }) {
+  const [currentNow] = useState(() => new Date());
+  const now = suppliedNow ?? currentNow;
   const [kind, setKind] = useState<string>(LINE_KINDS[0]);
   const headingId = useId();
   const sum = totals(lines);

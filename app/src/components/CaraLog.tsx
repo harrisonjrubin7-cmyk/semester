@@ -43,7 +43,7 @@ export function CaraLog({
   update: (change: (old: AthleticsLibrary) => AthleticsLibrary) => boolean;
   blocked: boolean;
 }) {
-  const today = new Date();
+  const [today] = useState(() => new Date());
   const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const [date, setDate] = useState(iso);

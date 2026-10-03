@@ -61,12 +61,13 @@ import { waiting, waitingLine, waitingRoom } from '../lib/waiting';
 
 export function Waiting() {
   const { state, dispatch, catalog, account, school } = useStore();
+  const [now] = useState(() => new Date());
   const [said, setSaid] = useState<Record<string, Message[]>>({});
   const [rooms, setRooms] = useState<string[]>([]);
   const [handle, setHandle] = useState('');
   const [ready, setReady] = useState(false);
 
-  const term = termOf(new Date());
+  const term = termOf(now);
   const ok = cloudConfigured && !!account && eligible(account?.email, school);
 
   useEffect(() => {
@@ -116,7 +117,7 @@ export function Waiting() {
         // rows, so it never shows who said what and loading forty profiles to
         // prefix a line nobody reads would be four queries for nothing.
         () => '',
-        new Date(),
+        now,
         handle,
         /*
          * Your own handle, and it has to be here.
@@ -135,7 +136,7 @@ export function Waiting() {
         handle ? [handle] : [],
       ),
     );
-  }, [account, state.schoolId, catalog.courses, rooms, said, handle]);
+  }, [account, state.schoolId, catalog.courses, rooms, said, handle, now]);
 
   const line = waitingLine(w);
   if (!ok || !ready || line === '') return null;

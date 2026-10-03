@@ -71,6 +71,7 @@ export function Registration() {
 }
 
 function Desk({ school }: { school: string }) {
+  const [now] = useState(() => new Date());
   const [grants, setGrants] = useState<Grant[] | null | string>(null);
   const [grantReads, setGrantReads] = useState(0);
   const [terms, setTerms] = useState<TermCalendar[] | null | string>(null);
@@ -115,7 +116,7 @@ function Desk({ school }: { school: string }) {
   const registrar = !grantsFailed && holdsRegistrar(grants, school);
   const calendar = terms.find((t) => t.term === term) ?? null;
   // A registrar with no term yet still needs the desk, to create one.
-  const deskTerm = term || termOf(new Date());
+  const deskTerm = term || termOf(now);
 
   return (
     <>

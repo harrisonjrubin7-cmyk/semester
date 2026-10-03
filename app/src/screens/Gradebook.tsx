@@ -73,6 +73,7 @@ export function Gradebook() {
 }
 
 function Book({ school, me }: { school: string; me: string }) {
+  const [currentTime] = useState(() => new Date());
   const { dispatch } = useStore();
   const [grants, setGrants] = useState<Grant[] | null | 'error'>(null);
   const [reads, setReads] = useState(0);
@@ -123,7 +124,7 @@ function Book({ school, me }: { school: string; me: string }) {
   const both = teaching.length > 0 && taking.length > 0;
   const showing: View = both ? view : teaching.length > 0 ? 'teaching' : 'mine';
   const offerings: Offering[] = showing === 'teaching' ? teaching : taking;
-  const now = termOf(new Date());
+  const now = termOf(currentTime);
   const chosen =
     offerings.find((o) => offeringKey(o) === picked) ?? offerings.find((o) => o.term === now) ?? offerings[0];
   const key = offeringKey(chosen);

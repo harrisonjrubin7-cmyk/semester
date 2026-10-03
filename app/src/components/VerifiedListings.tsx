@@ -13,6 +13,7 @@ import type { Opportunity } from '../lib/opportunities';
  */
 /** `tracked` holds the Tracker's entry ids and sources, so a listing is known whether or not it has a link. */
 export function VerifiedListings({ onTrack, tracked }: { onTrack: (o: Opportunity) => void; tracked: readonly string[] }) {
+  const [now] = useState(() => new Date());
   const [moderated, setModerated] = useState<Listing[]>([]);
   const [kind, setKind] = useState<ListingKind | 'all'>('all');
   const school = useSchoolRecords();
@@ -24,8 +25,8 @@ export function VerifiedListings({ onTrack, tracked }: { onTrack: (o: Opportunit
   }, []);
 
   const all = useMemo(
-    () => arrange([...moderated, ...(school.status === 'ready' ? fromCareerFeed(school.rows) : [])], new Date()),
-    [moderated, school],
+    () => arrange([...moderated, ...(school.status === 'ready' ? fromCareerFeed(school.rows) : [])], now),
+    [moderated, now, school],
   );
   if (!all.length) return null;
   const shown = all.filter((l) => kind === 'all' || l.kind === kind);

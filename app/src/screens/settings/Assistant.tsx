@@ -62,6 +62,7 @@ import { GuideOperatingContract } from '../../components/GuideOperatingContract'
  * that hunt now ends on this page rather than on a screen about calendars.
  */
 export function SettingsAssistant() {
+  const [now] = useState(() => new Date());
   const [config, setConfig] = useState(settings());
   const [saved, setSaved] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -101,7 +102,7 @@ export function SettingsAssistant() {
     setChecking(false);
   };
   const spend = readSpend();
-  const month = total(since(spend, monthStart(new Date())));
+  const month = total(since(spend, monthStart(now)));
   const courses = byCourse(spend);
   const askers = byAsker(spend);
   const { courseCode, account, dispatch } = useStore();
