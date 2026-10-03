@@ -167,14 +167,24 @@ describe('the probes read the files rather than reporting an empty tree', () => 
       const body = migration.slice(start, end);
       const lock = body.indexOf('lock table public.legal_holds in share mode;');
       const holdCheck = body.indexOf('private.account_is_held');
+      const tenantHoldCheck = body.indexOf('private.tenant_is_held');
       const deletion = body.indexOf('delete from public.support_tickets');
       expect(start).toBeGreaterThanOrEqual(0);
       expect(lock).toBeGreaterThanOrEqual(0);
       expect(holdCheck).toBeGreaterThanOrEqual(0);
+      expect(tenantHoldCheck).toBeGreaterThanOrEqual(0);
       expect(deletion).toBeGreaterThanOrEqual(0);
       expect(lock).toBeLessThan(holdCheck);
+      expect(lock).toBeLessThan(tenantHoldCheck);
       expect(lock).toBeLessThan(deletion);
     }
+  });
+
+  it('snapshots a ticket tenant so leaving a school cannot escape its legal hold', () => {
+    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    expect(migration).toMatch(/add column if not exists tenant_id text/);
+    expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id,/);
+    expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

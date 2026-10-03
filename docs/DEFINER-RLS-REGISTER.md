@@ -104,7 +104,7 @@ The current register also includes 3 callable definers added after that dated ca
 | `make_referral_code` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `note_activity` | `auth.uid()` | `20260921151000_activity.sql` |
 | `open_help_request` | `auth.uid()`, `private.answers_for` | `20260927234000_help_request_reply_on_open.sql` |
-| `open_support_ticket` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
+| `open_support_ticket` | `auth.uid()` | `20261003130000_support_ticket_retention.sql` |
 | `raise_my_data_subject_request` | `auth.uid()` | `20260930234000_data_subject_request_intake.sql` |
 | `registration_drop` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `registration_enroll` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |

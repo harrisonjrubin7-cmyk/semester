@@ -35,7 +35,9 @@ declare
   recent_resolved uuid := gen_random_uuid();
   old_open uuid := gen_random_uuid();
   held uuid := gen_random_uuid();
+  snapshot_ticket uuid;
   hold_id uuid;
+  tenant_hold_id uuid;
   operator_id uuid := gen_random_uuid();
 begin
   insert into public.schools (id, name, email_domains)
@@ -47,16 +49,26 @@ begin
   values (who, 'support_retention', school);
 
   insert into public.support_tickets
-    (id, student_id, category, subject, body, priority, status, created_at, first_response_due, updated_at)
+    (id, student_id, tenant_id, category, subject, body, priority, status, created_at, first_response_due, updated_at)
   values
-    (old_resolved, who, 'bug', 'old resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
-    (old_closed, who, 'bug', 'old closed', 'body', 'normal', 'closed', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
-    (recent_resolved, who, 'bug', 'recent resolved', 'body', 'normal', 'resolved', now() - interval '20 days', now() - interval '19 days', now() - interval '179 days'),
-    (old_open, who, 'bug', 'old open', 'body', 'normal', 'open', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
-    (held, who, 'bug', 'held resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days');
+    (old_resolved, who, school, 'bug', 'old resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (old_closed, who, school, 'bug', 'old closed', 'body', 'normal', 'closed', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (recent_resolved, who, school, 'bug', 'recent resolved', 'body', 'normal', 'resolved', now() - interval '20 days', now() - interval '19 days', now() - interval '179 days'),
+    (old_open, who, school, 'bug', 'old open', 'body', 'normal', 'open', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (held, who, school, 'bug', 'held resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days');
 
   insert into public.support_ticket_messages (ticket_id, from_side, body)
   values (old_resolved, 'support', 'cascades with the ticket');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  snapshot_ticket := public.open_support_ticket(
+    'how_to', 'Tenant snapshot', 'Preserve the tenant that covered this ticket.', '{}'::jsonb, false);
+  reset role;
+  perform pg_temp.must('opening a ticket snapshots the current tenant',
+    (select tenant_id from public.support_tickets where id = snapshot_ticket) = school);
+  delete from public.support_tickets where id = snapshot_ticket;
 
   insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
   values ('account', who::text, school, 'Preserve this account.', 'SUPPORT-RETENTION-CHECK', operator_id)
@@ -74,6 +86,30 @@ begin
   update public.legal_holds
      set released_by = gen_random_uuid(), release_reason = 'Test release.'
    where id = hold_id;
+
+  insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
+  values ('tenant', school, school, 'Preserve this tenant.', 'SUPPORT-TENANT-RETENTION-CHECK', operator_id)
+  returning id into tenant_hold_id;
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.leave_school();
+  reset role;
+
+  perform private.sweep_support_ticket_retention();
+
+  perform pg_temp.must('a tenant hold still preserves tickets after the student leaves the school',
+    (select count(*) from public.support_tickets where student_id = who) = 5);
+  perform pg_temp.must('the ticket keeps the tenant association after membership changes',
+    (select count(*) from public.support_tickets where student_id = who and tenant_id = school) = 5);
+  perform pg_temp.must('the same tenant hold blocks direct erasure after the student leaves',
+    pg_temp.error_as(who, 'select public.forget_my_support_tickets()')
+      like '%active legal hold%');
+
+  update public.legal_holds
+     set released_by = gen_random_uuid(), release_reason = 'Test release.'
+   where id = tenant_hold_id;
   perform private.sweep_support_ticket_retention();
 
   perform pg_temp.must('old resolved and closed tickets are removed',
