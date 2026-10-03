@@ -83,11 +83,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 68 | `docs/legal-drafts/LEGAL-CLAIMS-APPROVAL-POLICY.md` | EXACT PRESENT | canonical claim evidence and approval policy; repository evidence cannot establish external, operational, customer, or legal conclusions |
 | 69 | `docs/legal-drafts/MARKETING-CLAIM-REVIEW-MATRIX.md` | EXACT PRESENT | canonical claim-class matrix; controlled beta/discovery language is separated from prohibited paid and enterprise claims |
 | 70 | `docs/legal-drafts/DATA-SUBJECT-REQUEST-PROCEDURE-DRAFT.md` | EXACT PRESENT | canonical rights-request procedure; code/runbooks do not establish legal applicability, staffing, deadlines, or completed operation |
-| 71 | `docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md` | NO CLOSE SOURCE | — |
-| 72 | `docs/legal-drafts/LEGAL-HOLD-PROCEDURE-DRAFT.md` | NO CLOSE SOURCE | — |
-| 73 | `docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md` | NO CLOSE SOURCE | — |
-| 74 | `docs/legal-drafts/OPEN-SOURCE-LICENSE-COMPLIANCE-POLICY.md` | NO CLOSE SOURCE | — |
-| 75 | `docs/legal-drafts/OPEN-SOURCE-NOTICES-TEMPLATE.md` | NO CLOSE SOURCE | — |
+| 71 | `docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md` | EXACT PRESENT | canonical counsel-routed request procedure; no disclosure, confirmation, preservation, timing, or transparency claim is authorized by the draft |
+| 72 | `docs/legal-drafts/LEGAL-HOLD-PROCEDURE-DRAFT.md` | EXACT PRESENT | canonical hold lifecycle; scoped database controls do not establish complete store or provider-backup preservation |
+| 73 | `docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md` | EXACT PRESENT | canonical chain-of-title and license inventory; repository presence/authorship is not treated as ownership proof |
+| 74 | `docs/legal-drafts/OPEN-SOURCE-LICENSE-COMPLIANCE-POLICY.md` | EXACT PRESENT | canonical lifecycle policy; technical dependency controls and SBOM generation remain distinct from counsel-approved obligations |
+| 75 | `docs/legal-drafts/OPEN-SOURCE-NOTICES-TEMPLATE.md` | EXACT PRESENT | canonical release-specific notice shell; actual shipped code and non-code assets, full texts, offers, and placement require reconciliation |
 | 76 | `docs/legal-drafts/TRADEMARK-BRAND-USAGE-GUIDELINES-DRAFT.md` | NO CLOSE SOURCE | — |
 | 77 | `docs/legal-drafts/DOMAIN-AND-DIGITAL-ASSET-REGISTER-TEMPLATE.md` | CANDIDATE SOURCE | `docs/DOMAIN-REPLACEMENT-REGISTER.md` (filename similarity 0.45; substantive review required) |
 | 78 | `docs/legal-drafts/LEGAL-TRUTH-MAPPING.md` | NO CLOSE SOURCE | — |
