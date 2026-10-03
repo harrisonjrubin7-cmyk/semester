@@ -19,6 +19,12 @@ async function retry(messageId: string, claimId: string, attempts: number, reaso
     .eq('message_id', messageId).eq('claim_id', claimId).select('message_id').maybeSingle();
   if (error) throw new Error('Could not persist the support-notification retry state.');
   if (!data) return 'cancelled';
+  // Releasing a claim after an opt-out activates the database cancellation
+  // trigger. Read back the row so the worker reports that boundary truthfully.
+  const { data: remaining, error: inspectError } = await admin.from('support_notification_outbox')
+    .select('message_id').eq('message_id', messageId).maybeSingle();
+  if (inspectError) throw new Error('Could not inspect the support-notification retry state.');
+  if (!remaining) return 'cancelled';
   return nextAttempts >= 8 ? 'dead_lettered' : 'retrying';
 }
 

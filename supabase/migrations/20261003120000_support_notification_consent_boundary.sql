@@ -18,6 +18,34 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+-- A student may opt out while a worker owns a notice. If that worker later
+-- releases the claim after a delivery or recipient-lookup failure, remove the
+-- retry instead of leaving a dormant notice that could send after a future
+-- opt-in. The ordinary opt-out transaction deletes rows released first; this
+-- trigger covers the opposite commit order.
+create or replace function private.cancel_unconsented_support_retry()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.accepted_at is null
+     and new.dead_lettered_at is null
+     and not exists (
+       select 1 from public.support_tickets t
+        where t.id = new.ticket_id and t.email_notice_enabled
+     ) then
+    delete from public.support_notification_outbox o
+     where o.message_id = new.message_id and o.claim_id is null;
+  end if;
+  return null;
+end $$;
+
+revoke all on function private.cancel_unconsented_support_retry() from public, anon, authenticated;
+drop trigger if exists cancel_unconsented_support_retry on public.support_notification_outbox;
+create trigger cancel_unconsented_support_retry
+after update of claim_id on public.support_notification_outbox
+for each row
+when (old.claim_id is not null and new.claim_id is null)
+execute function private.cancel_unconsented_support_retry();
+
 create or replace function public.claim_support_notifications(want_message uuid, want_limit integer)
 returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
 language sql volatile security invoker set search_path = '' as $$

@@ -224,6 +224,13 @@ begin
   select count(*) into n from public.support_notification_outbox
    where ticket_id = a11y and accepted_at is null and dead_lettered_at is null and claim_id is not null;
   perform pg_temp.counted('opting out preserves the notice already in flight', n, 1);
+  update public.support_notification_outbox
+     set attempts = attempts + 1, claim_id = null, claimed_at = null,
+         next_attempt_at = now() + interval '2 minutes', last_error = 'provider unavailable'
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.counted('a failed claimed notice is cancelled after the student opted out', n, 0);
   perform pg_temp.become_mfa(agent);
   begin
     perform public.support_reply(a11y, 'closing', 'closed', gen_random_uuid());
