@@ -85,7 +85,6 @@ const ASSOCIATED: { id: Associated; label: string }[] = [
 function Workspace({ storageKey }: { storageKey: string }) {
   const now = useNow();
   const { state, dispatch } = useStore();
-  const [now] = useState(() => new Date());
   const lib = useDeviceLibrary(storageKey, readNil, EMPTY_NIL);
 
   const [tab, setTab] = useState<Tab>('log');

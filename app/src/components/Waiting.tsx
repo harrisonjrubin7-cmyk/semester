@@ -62,7 +62,6 @@ import { waiting, waitingLine, waitingRoom } from '../lib/waiting';
 export function Waiting() {
   const now = useNow();
   const { state, dispatch, catalog, account, school } = useStore();
-  const [now] = useState(() => new Date());
   const [said, setSaid] = useState<Record<string, Message[]>>({});
   const [rooms, setRooms] = useState<string[]>([]);
   const [handle, setHandle] = useState('');

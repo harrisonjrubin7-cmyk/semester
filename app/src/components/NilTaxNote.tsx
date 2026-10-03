@@ -45,7 +45,6 @@ import { money } from '../lib/cost';
 export function NilTaxNote() {
   const now = useNow();
   const { account, dispatch } = useStore();
-  const [now] = useState(() => new Date());
   const nil = useDeviceLibrary(nilKey(account?.id), readNil, EMPTY_NIL);
 
   const year = String(now.getFullYear());

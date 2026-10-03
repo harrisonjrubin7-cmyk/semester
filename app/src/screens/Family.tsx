@@ -85,8 +85,6 @@ export function Family() {
 function Workspace({ storageKey }: { storageKey: string }) {
   const now = useNow();
   const { dispatch } = useStore();
-  const [now] = useState(() => new Date());
-  const today = dateToIso(now);
   const lib = useDeviceLibrary(storageKey, readFamily, EMPTY_FAMILY);
 
   const [tab, setTab] = useState<Tab>('people');
