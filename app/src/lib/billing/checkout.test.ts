@@ -103,10 +103,22 @@ describe('billing checkout', () => {
     expect(form.get('line_items[0][price_data][recurring][interval]')).toBe('month');
     expect(form.get('automatic_tax[enabled]')).toBe('true');
     expect(form.get('customer_email')).toBe('ana@example.edu');
+    expect(form.has('customer_update[address]')).toBe(false);
     expect(form.get('success_url')).toBe(`${APP}/?checkout=success`);
     // No card field is ever part of what Semester sends.
     expect([...form.keys()].some((k) => /card|cvc|number/i.test(k))).toBe(false);
     expect(d.attach).toHaveBeenCalledWith(CHECKOUT, 'cs_test_1');
+  });
+
+  it('lets automatic tax refresh an existing customer address on re-subscribe', async () => {
+    const d = deps({ begin: vi.fn(async () => ({ ...OK, customer_ref: 'cus_returning' })) });
+    const res = await handleBillingCheckout(post(GOOD), d);
+    expect(res.status).toBe(200);
+    const [, init] = vi.mocked(d.fetch!).mock.calls[0] as unknown as [string, RequestInit];
+    const form = new URLSearchParams(init.body as string);
+    expect(form.get('customer')).toBe('cus_returning');
+    expect(form.has('customer_email')).toBe(false);
+    expect(form.get('customer_update[address]')).toBe('auto');
   });
 
   it('refuses a price sold by quote, and a second subscription', async () => {

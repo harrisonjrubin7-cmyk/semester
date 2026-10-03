@@ -72,6 +72,11 @@ export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: stri
     client_reference_id: row.checkout_id,
     customer: row.customer_ref ?? undefined,
     customer_email: row.customer_ref ? undefined : row.email ?? undefined,
+    // Automatic Tax must be allowed to persist the address collected by
+    // Checkout when an existing Customer is reused. Without this, Stripe
+    // rejects the Session instead of letting a former subscriber return.
+    // Source: https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-customer_update
+    customer_update: row.customer_ref ? { address: 'auto' } : undefined,
     line_items: [{
       quantity: 1,
       price_data: {
