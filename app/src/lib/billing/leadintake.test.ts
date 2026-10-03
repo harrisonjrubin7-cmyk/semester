@@ -153,6 +153,20 @@ describe('lead intake: the contract the site is built against', () => {
     expect(org.status).toBe(400);
   });
 
+  it('rejects malformed institutional setup metadata before the service-only RPC is called', async () => {
+    const d = deps();
+    const res = await handleLeadIntake(post({
+      ...GOOD,
+      route: 'plan_institution_launch',
+      organization: 'State University',
+      fields: { requested_system: 'unknown_sis', data_mode: 'writeback' },
+    }), d);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ ok: false, error: 'Choose a supported system category.' });
+    expect(d.submit).not.toHaveBeenCalled();
+    expect(d.notify).not.toHaveBeenCalled();
+  });
+
   it('still succeeds when the notification fails, and logs nothing anyone wrote', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const res = await handleLeadIntake(post({ ...GOOD, message: 'my secret plan' }), deps({ notify: vi.fn(async () => { throw new Error('dana@example.org'); }) }));
@@ -194,6 +208,61 @@ describe('lead intake: validation', () => {
     expect(bad({ ...GOOD, fields: { 'Bad Key': 'x' } })).toMatch(/name/);
     expect(bad({ ...GOOD, fields: { a: 1 } })).toMatch(/text/);
     expect(bad({ ...GOOD, fields: Object.fromEntries(Array.from({ length: 21 }, (_, i) => [`f${i}`, 'x'])) })).toMatch(/Too many/);
+  });
+
+  it('accepts and normalizes only bounded institutional setup fields on the launch route', () => {
+    const checked = validateLead({
+      ...GOOD,
+      route: 'plan_institution_launch',
+      organization: 'State University',
+      fields: {
+        requested_domain: ' STATE.EXAMPLE. ',
+        requested_system: 'lms',
+        requested_provider: ' Campus LMS ',
+        requested_product: 'semester_institutional',
+        data_mode: 'connected',
+        desired_launch_window: 'next_term',
+      },
+    });
+    expect(checked).toEqual(expect.objectContaining({
+      ok: true,
+      lead: expect.objectContaining({
+        fields: {
+          requested_domain: 'state.example',
+          requested_system: 'lms',
+          requested_provider: 'Campus LMS',
+          requested_product: 'semester_institutional',
+          data_mode: 'connected',
+          desired_launch_window: 'next_term',
+        },
+      }),
+    }));
+  });
+
+  it('fails closed on unknown or out-of-vocabulary institutional setup fields', () => {
+    const error = (fields: Record<string, string>) => bad({
+      ...GOOD, route: 'plan_institution_launch', organization: 'State University', fields,
+    });
+    expect(error({ surprise: 'yes' })).toMatch(/setup field/);
+    expect(error({ requested_system: 'blackboard' })).toMatch(/system/);
+    expect(error({ requested_product: 'enterprise_everything' })).toMatch(/product/);
+    expect(error({ data_mode: 'writeback' })).toMatch(/data mode/);
+    expect(error({ desired_launch_window: 'tomorrow' })).toMatch(/launch window/);
+    expect(error({ requested_domain: 'https://state.example/path' })).toMatch(/domain/);
+    expect(error({ requested_provider: 'x'.repeat(121) })).toMatch(/provider/);
+  });
+
+  it('does not treat a setup request as proof of ownership or connector support', () => {
+    const checked = validateLead({
+      ...GOOD, route: 'plan_institution_launch', organization: 'State University',
+      fields: { requested_domain: 'state.example', requested_system: 'sis', requested_provider: 'Requested SIS', data_mode: 'manual' },
+    });
+    expect(checked.ok).toBe(true);
+    if (checked.ok) {
+      expect(checked.lead.fields).not.toHaveProperty('verified');
+      expect(checked.lead.fields).not.toHaveProperty('connected');
+      expect(checked.lead.fields).not.toHaveProperty('tenant_id');
+    }
   });
 
   it('refuses a body that is not a JSON object, or too large', async () => {
