@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 2 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 3 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`, `set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -57,8 +57,8 @@ The current register also includes 2 callable definers added after that dated ca
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 204 | |
+| read-helper | 28 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 205 | |
 
 ### self-service (60)
 
@@ -267,7 +267,7 @@ The current register also includes 2 callable definers added after that dated ca
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (27)
+### read-helper (28)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -293,8 +293,9 @@ The current register also includes 2 callable definers added after that dated ca
 | `my_moderation_access` | `private.has_capability` | `20260928000000_moderation_queue_access.sql` |
 | `my_registration` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
 | `my_registration_hold` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
+| `my_support_email_notices` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
 | `my_support_thread` | `auth.uid()` | `20260928210000_support_tickets.sql` |
-| `my_support_tickets` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
+| `my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_volunteer_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `office_action_programs` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
 | `referral_standing` | `auth.uid()` | `20260921002623_referrals.sql` |

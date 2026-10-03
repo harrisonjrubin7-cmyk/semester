@@ -129,7 +129,7 @@ export interface SupportMessage extends Message {
 type Row = Record<string, unknown>;
 const STATUSES = ['open', 'waiting_on_student', 'resolved', 'closed'] as const;
 
-export function toTicket(row: Row): Ticket {
+export function toTicket(row: Row, emailNoticeEnabled = false): Ticket {
   const category = (CATEGORIES as readonly string[]).includes(String(row.category)) ? (row.category as Category) : 'other';
   const status = (STATUSES as readonly string[]).includes(String(row.status)) ? (row.status as Ticket['status']) : 'open';
   return {
@@ -141,7 +141,7 @@ export function toTicket(row: Row): Ticket {
     createdAt: String(row.created_at),
     firstResponseDue: String(row.first_response_due),
     firstRespondedAt: row.first_responded_at ? String(row.first_responded_at) : null,
-    emailNoticeEnabled: row.email_notice_enabled === true,
+    emailNoticeEnabled,
   };
 }
 
@@ -174,9 +174,13 @@ export async function setSupportEmailNotice(ticketId: string, enabled: boolean):
 
 export async function myTickets(): Promise<Ticket[]> {
   const db = await cloud();
-  const { data, error } = await db.rpc('my_support_tickets');
-  if (error) throw fail(error, 'Could not load your questions.');
-  return ((data ?? []) as Row[]).map(toTicket);
+  const [{ data, error }, { data: notices, error: noticesError }] = await Promise.all([
+    db.rpc('my_support_tickets'),
+    db.rpc('my_support_email_notices'),
+  ]);
+  if (error || noticesError) throw fail(error ?? noticesError, 'Could not load your questions.');
+  const enabled = new Map(((notices ?? []) as Row[]).map((row) => [String(row.ticket_id), row.enabled === true]));
+  return ((data ?? []) as Row[]).map((row) => toTicket(row, enabled.get(String(row.id)) ?? false));
 }
 
 export async function myThread(ticketId: string): Promise<Message[]> {

@@ -244,6 +244,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
   ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
@@ -440,7 +441,7 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   },
   {
     file: '20261002003000_support_notification_outbox.sql',
-    functions: ['set_support_email_notice'],
+    functions: ['my_support_email_notices', 'set_support_email_notice'],
   },
 ];
 

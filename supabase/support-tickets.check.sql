@@ -118,6 +118,10 @@ begin
   select count(*) into n from public.my_support_tickets();
   reset role;
   perform pg_temp.counted('another student sees none of Ada''s tickets', n, 0);
+  perform pg_temp.become(ada);
+  select count(*) into n from public.my_support_email_notices() where ticket_id = a11y and enabled;
+  reset role;
+  perform pg_temp.counted('the student can read the email-notice choice for their own ticket', n, 1);
   perform pg_temp.become(ben);
   select count(*) into n from public.my_support_thread(a11y);
   reset role;

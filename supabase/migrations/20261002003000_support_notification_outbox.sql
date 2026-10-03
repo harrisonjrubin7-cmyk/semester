@@ -58,17 +58,13 @@ begin
   return made;
 end $$;
 
-drop function public.my_support_tickets();
-create function public.my_support_tickets()
-returns table (id uuid, category text, subject text, status text, priority text,
-               created_at timestamptz, first_response_due timestamptz, first_responded_at timestamptz,
-               updated_at timestamptz, email_notice_enabled boolean)
+create or replace function public.my_support_email_notices()
+returns table (ticket_id uuid, enabled boolean)
 language sql stable security definer set search_path = '' as $$
-  select t.id, t.category, t.subject, t.status, t.priority, t.created_at, t.first_response_due,
-         t.first_responded_at, t.updated_at, t.email_notice_enabled
+  select t.id, t.email_notice_enabled
     from public.support_tickets t
    where t.student_id = (select auth.uid())
-   order by t.updated_at desc;
+   order by t.id;
 $$;
 
 create or replace function public.set_support_email_notice(want_ticket uuid, want_enabled boolean)
@@ -90,8 +86,8 @@ begin
   end if;
 end $$;
 
-drop function public.support_reply(uuid, text, text);
-create function public.support_reply(
+drop function if exists public.support_reply(uuid, text, text);
+create or replace function public.support_reply(
   want_ticket uuid, want_body text, want_status text, want_operation uuid
 )
 returns text language plpgsql security definer set search_path = '' as $$
@@ -176,10 +172,10 @@ begin
 end $$;
 
 revoke all on function public.open_support_ticket(text, text, text, jsonb, boolean) from public, anon;
-revoke all on function public.my_support_tickets() from public, anon;
+revoke all on function public.my_support_email_notices() from public, anon;
 revoke all on function public.set_support_email_notice(uuid, boolean) from public, anon;
 revoke all on function public.support_reply(uuid, text, text, uuid) from public, anon;
 grant execute on function public.open_support_ticket(text, text, text, jsonb, boolean) to authenticated;
-grant execute on function public.my_support_tickets() to authenticated;
+grant execute on function public.my_support_email_notices() to authenticated;
 grant execute on function public.set_support_email_notice(uuid, boolean) to authenticated;
 grant execute on function public.support_reply(uuid, text, text, uuid) to authenticated;

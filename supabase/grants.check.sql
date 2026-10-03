@@ -454,6 +454,7 @@ declare
     'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb)',
     'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb, want_email_notice boolean)',
     'my_support_tickets()',
+    'my_support_email_notices()',
     'my_support_thread(want_ticket uuid)',
     'reply_to_my_ticket(want_ticket uuid, want_body text)',
     'close_my_ticket(want_ticket uuid)',
