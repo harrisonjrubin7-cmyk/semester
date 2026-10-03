@@ -920,6 +920,25 @@ const EDGES = [
   { id: 'box', label: 'Outline' },
 ] as const;
 
+interface SheetLayout {
+  names: readonly NamedRange[];
+  joins: readonly Span[];
+  covered: ReadonlyMap<string, string>;
+  spans: ReadonlyMap<string, Span>;
+}
+
+const layoutCache = new WeakMap<SheetModel, SheetLayout>();
+
+function layoutOf(sheet: SheetModel): SheetLayout {
+  const cached = layoutCache.get(sheet);
+  if (cached) return cached;
+  const names = Object.freeze(namesOf(sheet));
+  const joins = Object.freeze(joinsOf(sheet));
+  const layout = Object.freeze({ names, joins, covered: coveredBy(joins), spans: spansAt(joins) });
+  layoutCache.set(sheet, layout);
+  return layout;
+}
+
 function Grid({ sheet }: { sheet: SheetModel }) {
   const { state, dispatch, say } = useStore();
   const [sel, setSel] = useState<Range>(() => oneCell('A1'));
@@ -1300,7 +1319,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    */
   const rules = useMemo(() => rulesOf(sheet, INKS), [sheet]);
   /** The names this sheet defines, and the summaries drawn under it. */
-  const names = useMemo(() => namesOf(sheet), [sheet]);
+  const { names, joins, covered, spans } = layoutOf(sheet);
   const pivots = useMemo(() => pivotsOf(sheet), [sheet]);
   const ruleRanges = useMemo(
     () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
@@ -1313,9 +1332,6 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    * `rows × cols` components and each one needs to know whether it is drawn at
    * all, which is a `Map.has` here and was a walk of every join without it.
    */
-  const joins = useMemo(() => joinsOf(sheet), [sheet]);
-  const covered = useMemo(() => coveredBy(joins), [joins]);
-  const spans = useMemo(() => spansAt(joins), [joins]);
   /** What the cells are allowed to hold, and the blocks those rules cover. */
   const checks = useMemo(() => checksOf(sheet), [sheet]);
   const checkRanges = useMemo(
@@ -3720,7 +3736,7 @@ function NameStrip({
   onNames,
   onClose,
 }: {
-  names: NamedRange[];
+  names: readonly NamedRange[];
   /** What is selected in the grid, which is what a new name will cover. */
   selection: string;
   sheetTitle: string;
