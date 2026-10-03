@@ -75,9 +75,9 @@ Severity: **S1** blocks any real-student beta, **S2** blocks institutional pilot
 | G-14 | Live prompt-injection red-team and AI evaluation run not done; no AI-rule (course/institution) enforcement | S1 | M4 | provider key (Ext) |
 | G-15 | Shared AI key unset in production / 502 undiagnosed | S1 | M4 | Owner |
 | G-16 | Supporter view: server grant not read by any client | S2 | M5 | |
-| G-17 | Customer Portal, plan change, resume-cancel absent | S1 | M6 | Stripe (Ext) |
+| G-17 | Customer Portal and end-of-period cancellation passed live; plan change and resume-cancel remain absent | S1 | M6 | Stripe (Ext) |
 | G-18 | Refund/dispute events recorded but inert; no dead-letter; events not replayable | S1 | M6 | |
-| G-19 | Test-mode Stripe E2E suite and manual script absent | S1 | M6 | Stripe test keys (Ext) |
+| G-19 | Monthly live lifecycle passed; annual purchase, refund, failed renewal, dispute and tax in a registered jurisdiction remain unexercised | S1 | M6 | Stripe (Ext) |
 | G-20 | OIDC not built; SAML cert expiry unmonitored; SCIM never run on real IdP | S2 | M7 | Univ. IdP (Ext) |
 | G-21 | No production SIS/catalog adapters; both registries empty | S2 | M7 | University auth (Ext) |
 | G-22 | Google/Microsoft tokens in `localStorage`; no institution-level connector; no server token encryption or revocation cascade | S2 | M7 | Provider apps (Ext) |

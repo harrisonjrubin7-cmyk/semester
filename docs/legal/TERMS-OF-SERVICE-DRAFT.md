@@ -1,13 +1,11 @@
 # Semester Terms of Service — DRAFT
 
-> **Not in force. Not reviewed by a lawyer.** A working draft for qualified
-> counsel to review, correct and approve, covering individual use. Schools and
-> departments sign a separate order form and data processing agreement, which
-> this draft does not replace. Do not publish, link from the app, or accept
-> money under it until the `terms-reviewed` gate in
-> [`GO-NO-GO-CHECKLIST.md`](../GO-NO-GO-CHECKLIST.md) records a qualified
-> review. Every `[DECIDE: …]` is a question only the owner or counsel can
-> answer.
+> **Not in force. Not reviewed by a lawyer.** This remains a working draft for
+> qualified counsel to review, correct and approve. It is not the checkout
+> consent or the effective Refund and Cancellation Policy, and it does not
+> replace the written order form and data processing agreement used for an
+> institution. Every remaining `[DECIDE: …]` is a question only the owner or
+> counsel can answer.
 
 **Effective date:** [DECIDE]
 **Parties:** you, and [DECIDE: legal entity name] ("Semester", "we").
@@ -90,12 +88,11 @@ this section does not apply to you.
 
 - **Before you pay** you tick a box that names the amount, how often it
   renews, and where to cancel. Payment is taken by Stripe, our payment
-  processor; Semester never sees your card. [DECIDE: checkout runs on
-  Stripe test keys today and has taken no real payment; these Terms must be
-  in force before a live key is set.]
+  processor; Semester never sees your card. Live checkout is available in
+  the app.
 - **Renewal.** Plus renews automatically at the end of each month or year
-  until you cancel. [DECIDE with counsel: advance reminder before an annual
-  renewal, as some U.S. states require.]
+  until you cancel. Your renewal date appears in Account → Membership, and
+  any additional notice required by the law where you live also applies.
 - **Cancelling.** Cancel any time from the same Membership panel. The
   cancellation is sent to Stripe first and takes effect only once Stripe
   accepts it, so Plus stays on until the end of the period you have paid
@@ -111,7 +108,7 @@ this section does not apply to you.
 - **Records.** Payment records are kept seven years after the end of the
   year each was made, as the Privacy Policy and retention policy describe.
 
-[DECIDE with counsel: taxes, and whether prices are shown tax-inclusive.]
+Applicable sales tax is calculated by Stripe and shown before payment.
 
 ## 9. Changes and availability
 

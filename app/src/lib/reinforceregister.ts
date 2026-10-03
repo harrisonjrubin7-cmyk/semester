@@ -180,7 +180,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
     title: 'Procurement before the sales call',
     why: 'A buyer gets the whole package — security, privacy, accessibility, AI, implementation and contract — before asking, through a Trust Center and a Trust Room.',
     rows: [
-      ['The policy set, each with its status', T, [['app/src/lib/ops/claims.ts', 'POLICIES'], ['app/src/lib/ops/claims.test.ts', 'nothing in force, and the site says so']], 'Nothing is in force; the privacy seat that would put it in force is vacant.', ['R8', 'M5', 'E', 'F', 'P', 'V']],
+      ['The policy set, each with its status', T, [['app/src/lib/ops/claims.ts', 'POLICIES'], ['app/src/lib/ops/claims.test.ts', 'the effective refund policy remains separate from every draft']], 'The refund and cancellation policy is effective for individual Plus; the broader policy set still awaits the privacy seat and counsel.', ['R8', 'M5', 'E', 'F', 'P', 'V']],
       ['Security overview and architecture', D, [['docs/trust/SECURITY-WHITEPAPER.md', 'the overview'], ['docs/UNIVERSITY-OS-ARCHITECTURE.md', 'the architecture']], 'No data-flow diagram as a picture.', ['R8', 'M5', 'E']],
       ['Subprocessor register', T, [['app/src/lib/trust/subprocessors.test.ts', 'held to the code'], ['docs/SUBPROCESSORS.md', 'draft']], 'Not yet read by counsel.', ['R8', 'M5', 'F', 'P']],
       ['Retention and deletion', T, [['app/src/lib/retention.test.ts', 'the schedule'], ['supabase/deletion.check.sql', 'deletion']], '', ['R8', 'M5', 'F', 'P']],

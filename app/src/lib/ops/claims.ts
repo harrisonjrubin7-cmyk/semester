@@ -515,13 +515,16 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'no-sale',
     capabilityIds: ['CAP-010'],
-    claim: 'Plus can be bought from the Account screen, and nowhere else; Pro is not on sale',
-    scope: 'Checkout and cancellation are built (D-128, D-132) and run on Stripe test keys; no live payment has been taken and the first end-to-end check is not recorded. The public site sells nothing. The refund policy is still a proposal.',
+    claim: 'Semester Plus is available from the Account screen; Pro is not on sale',
+    scope: 'Live checkout, paid invoice, entitlement, customer portal and end-of-period cancellation were accepted on October 3, 2026. The public pricing page links to the signed-in Account screen rather than collecting payment itself.',
     status: 'in-preparation',
     owner: 'founder',
     pages: ['/pricing/'],
     audiences: ['students'],
-    evidence: [{ path: 'app/src/lib/plans.test.ts', shows: 'Every price matches the catalog, and no public page is a button that takes money' }],
+    evidence: [
+      { path: 'docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md', shows: 'The production charge, paid invoice, entitlement, portal and end-of-period cancellation lifecycle' },
+      { path: 'app/src/lib/plans.test.ts', shows: 'The prices and always-included rights remain held to the product catalog' },
+    ],
     rows: ['LEG-003'],
   },
   {
@@ -540,7 +543,7 @@ export const CLAIMS: readonly Claim[] = [
     id: 'student-terms',
     capabilityIds: ['CAP-010', 'CAP-015'],
     claim: 'Terms of service and a privacy policy in force',
-    scope: 'Drafts exist and are held to the subprocessor register by a test. Nothing is in force or reviewed by a lawyer, and there is no legal entity to be the party.',
+    scope: 'The Terms of Service and Privacy Policy drafts are held to the subprocessor register by a test. Neither is in force or reviewed by a lawyer, and there is no legal entity to be the party. The separate Refund and Cancellation Policy is effective for individual Plus plans.',
     status: 'in-preparation',
     owner: 'privacy',
     pages: ['/legal/'],
@@ -693,7 +696,7 @@ export const POLICIES: readonly Policy[] = [
   { id: 'dpa', policy: 'Data Processing Agreement', status: 'outline', path: 'docs/trust/DPA-CHECKLIST.md', version: '0', effective: null, owner: 'privacy', rows: ['LEG-002'] },
   { id: 'student-data', policy: 'Student data addendum', status: 'not-started', path: null, version: '0', effective: null, owner: 'privacy', rows: ['LEG-002', 'SEC-009'] },
   { id: 'sla', policy: 'Service Level Agreement', status: 'outline', path: 'docs/trust/SLA.md', version: '0', effective: null, owner: 'engineering', rows: ['SRE-001'] },
-  { id: 'refunds', policy: 'Refund and cancellation policy', status: 'draft', path: 'docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md', version: '0', effective: null, owner: 'founder', rows: ['LEG-003'], note: 'Owed before a live payment: checkout exists since D-128, and the terms on the pricing page are still proposed; the policy is drafted, not in force.' },
+  { id: 'refunds', policy: 'Refund and cancellation policy', status: 'in-force', path: 'docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md', version: '1.0', effective: '2026-10-03', owner: 'founder', rows: ['LEG-003'], note: 'Published for paid individual Plus plans; institution agreements remain separate.' },
   { id: 'a11y-statement', policy: 'Accessibility statement', status: 'draft', path: 'docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md', version: '0', effective: null, owner: 'accessibility', rows: ['A11Y-007'], note: 'Claims no conformance: no manual assistive-technology review has been done.' },
   { id: 'subprocessors', policy: 'Subprocessor list', status: 'draft', path: 'docs/SUBPROCESSORS.md', version: '0', effective: null, owner: 'privacy', rows: ['SEC-010'], note: 'Held to the code by a test; public once counsel has read it.' },
 ];

@@ -188,7 +188,7 @@ export const DUTIES: readonly Duty[] = [
     twoPerson: false,
     evidence: 'The billing record and the reason',
     rows: ['LEG-003'],
-    note: 'Plus checkout exists (D-128) on Stripe test keys and has refunded nothing. The row is here so the matrix is complete before a live payment, not because there is anything to refund yet.',
+    note: 'Plus billing is live. The production charge, invoice, entitlement, portal and end-of-period cancellation lifecycle passed on October 3, 2026; no refund has been exercised.',
   },
 ];
 

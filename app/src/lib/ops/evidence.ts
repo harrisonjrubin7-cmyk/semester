@@ -63,6 +63,17 @@ export interface EvidenceRecord {
 
 export const EVIDENCE: readonly EvidenceRecord[] = [
   {
+    id: 'billing-live-acceptance-2026-10-03',
+    artifact: 'Production Semester Plus lifecycle acceptance: live checkout, paid invoice, entitlement, customer portal and end-of-period cancellation',
+    path: 'docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md',
+    produced: '2026-10-03',
+    validFor: YEARLY,
+    owner: 'founder',
+    claims: ['no-sale'],
+    rows: [],
+    note: 'One owner-account acceptance run. It does not cover an annual charge, refund, failed renewal, dispute, registered-jurisdiction tax collection, Pro, institution access or general availability.',
+  },
+  {
     id: 'ai-killswitch-drill',
     artifact: 'AI kill-switch drill against production: kill.ai_generation engaged, the deployed claude function refusing, released, each step timed',
     path: 'docs/evidence/ai/killswitch-drill-2026-09-29T22-51-50-121Z.json',

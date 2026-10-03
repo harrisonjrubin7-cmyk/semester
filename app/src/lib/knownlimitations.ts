@@ -88,10 +88,10 @@ export const KNOWN_LIMITATIONS: readonly Limitation[] = [
   },
   {
     id: 'plus-checkout-new',
-    title: 'Plus can be bought in the app, but checkout is new and has taken no live payment.',
-    what: 'Plus can be bought and cancelled from the Account screen, at the price the screen shows. The card is typed into Stripe’s page and never reaches Semester. Checkout runs on Stripe test keys, and its first end-to-end check has not been recorded. Pro is not on sale, nothing can be bought on the public site, and during the pilot every student feature is free.',
+    title: 'Plus is live; Pro and institution-sponsored access are not generally available.',
+    what: 'A live Plus charge, paid invoice, entitlement, customer portal and end-of-period cancellation passed on October 3, 2026. The card is typed into Stripe’s page and never reaches Semester. Pro is not on sale, and institution-sponsored access requires a configured institution and written order form.',
     instead: 'Nothing to do. Buy only from the Account screen: if another page asks you to pay for Semester, it is not Semester. Write to support about any charge you do not recognise.',
-    sources: ['app/src/lib/membership.ts', 'app/src/lib/plans.ts', 'docs/DECISION-LOG.md'],
+    sources: ['app/src/lib/membership.ts', 'app/src/lib/plans.ts', 'docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md'],
   },
   {
     id: 'support-one-address',

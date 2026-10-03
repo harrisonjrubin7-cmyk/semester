@@ -621,10 +621,10 @@ export const Proof: Page = ({ config }) => (
 
 export const Legal: Page = ({ config }) => (
   <>
-    <Hero title="Legal" lead="Nothing is in force yet. Here is every policy, and where each one stands." />
+    <Hero title="Legal" lead="The refund and cancellation policy is in force for individual Plus plans. Here is every policy, and where each one stands." />
     <Section title="Every policy" id="lg-all">
       <PolicyTable />
-      <p className="site-small">Drafts exist for the terms and the privacy policy; they say on their first line that they are not in force. Nothing here has had a lawyer’s review.</p>
+      <p className="site-small">The refund and cancellation policy is effective from October 3, 2026. Drafts for the terms and privacy policy remain not in force and have not had a lawyer’s review.</p>
     </Section>
     <Section title="When a policy takes effect" id="lg-effect">
       <p>From the day one is in force, this page shows for it:</p>

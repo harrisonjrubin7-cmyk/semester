@@ -73,7 +73,9 @@ describe('the operational-maturity register', () => {
     // Legal holds (20260930100000_legal_holds.sql) moved RM-02, RM-04, RM-05 and
     // RM-08 from owed to partial: 76/81 became 80/77. None is in place, because
     // no screen or runbook places a hold and erase_account's resume is unproved.
-    expect(c).toEqual({ inPlace: 43, partial: 80, owed: 77 });
+    // GR-07 moved from owed to in place when the effective refund policy and
+    // live checkout-to-cancellation acceptance record were published.
+    expect(c).toEqual({ inPlace: 44, partial: 80, owed: 76 });
     expect(CONTROLS).toHaveLength(200);
     const one: Control = { id: 'x', area: 'docs', control: 'a control', status: 'owed', evidence: null, note: 'a note long enough' };
     expect(coverage([one])).toEqual({ inPlace: 0, partial: 0, owed: 1 });

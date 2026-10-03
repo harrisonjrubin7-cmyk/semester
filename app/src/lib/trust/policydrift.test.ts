@@ -13,10 +13,10 @@ import { PLANS } from '../plans';
  * checks keep three pairs in agreement:
  *
  *  - the Plus price the public site states, and the plan the app describes;
- *  - the refund window the public site states, and the one the draft policy
+ *  - the refund window the public site states, and the effective policy
  *    sets out;
- *  - the status of that refund policy: nothing on the site may say a refund is
- *    *granted* while the draft says it is not in force.
+ *  - the status of that refund policy: the policy must carry an effective date
+ *    before the site presents a refund as granted.
  *
  * Each parser is checked against a control, because a regex that finds nothing
  * would report every pair in agreement.
@@ -27,7 +27,7 @@ const site = [
   readFileSync(join(root, 'company-site/index.html'), 'utf8'),
   readFileSync(join(root, 'company-site/site.js'), 'utf8'),
 ].join('\n');
-const draft = readFileSync(join(root, 'docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md'), 'utf8');
+const policy = readFileSync(join(root, 'docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md'), 'utf8');
 const plus = PLANS.find((p) => p.id === 'plus')!;
 
 const money = (n: number) => `$${n}`;
@@ -53,21 +53,19 @@ describe('the site and the plans', () => {
 });
 
 describe('the site and the refund policy', () => {
-  const draftWindow = windows(draft.split('\n').find((l) => /annual plan, cancelled within/i.test(l)) ?? '');
+  const policyWindow = windows(policy.split('\n').find((l) => /annual plan, cancelled within/i.test(l)) ?? '');
 
-  it('finds the annual refund window in the draft, and refund claims on the site', () => {
-    expect(draftWindow).toHaveLength(1);
+  it('finds the annual refund window in the policy, and refund claims on the site', () => {
+    expect(policyWindow).toHaveLength(1);
     expect(refundSentences(text).length).toBeGreaterThan(0);
   });
 
-  it('never states a window the draft does not set out', () => {
-    for (const s of refundSentences(text)) for (const w of windows(s)) expect(w, s).toBe(draftWindow[0]);
+  it('never states a window the policy does not set out', () => {
+    for (const s of refundSentences(text)) for (const w of windows(s)) expect(w, s).toBe(policyWindow[0]);
   });
 
-  it('never presents the refund as granted while the draft is not in force', () => {
-    expect(draft).toMatch(/not in force|draft/i);
-    for (const s of refundSentences(text).filter((x) => windows(x).length)) {
-      expect(s, 'a refund window is stated without saying the policy is undecided').toMatch(/not decided|one option|option|weighing|draft/i);
-    }
+  it('presents the refund as granted only with an effective policy', () => {
+    expect(policy).toMatch(/\*\*Effective date:\*\* October 3, 2026/);
+    expect(policy).not.toMatch(/not in force|\[DECIDE/i);
   });
 });

@@ -213,7 +213,7 @@ export const ASSESSMENTS: readonly Assessment[] = [
     open: [
       'Retention: the period for financial records is unset; it must be set before the first charge (RETENTION.md).',
       'Sharing: Stripe’s terms and data-processing agreement are not recorded on the vendor register (SEC-010).',
-      'Everything: nothing has been charged; the first real delivery from Stripe has not been seen (COM-001).',
+      'Everything: a production charge and Stripe delivery passed on October 3, 2026; annual purchase, refund, failed renewal, dispute, tax in a registered jurisdiction and settlement reconciliation remain unexercised (COM-001).',
     ],
   },
   {

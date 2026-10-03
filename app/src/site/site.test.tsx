@@ -259,11 +259,12 @@ describe('what the site says', () => {
     expect(all).not.toMatch(/\bstreaks?\b/i);
   });
 
-  it('shows no policy as in force', () => {
+  it('shows the refund policy as effective without overstating the remaining drafts', () => {
     const legal = pages.find((p) => p.route.path === '/legal/')!.html;
-    expect(legal).toContain('Nothing is in force');
+    expect(legal).toContain('refund and cancellation policy is in force');
+    expect(legal).toContain('2026-10-03');
     expect(legal).toContain('Terms of Service');
-    expect(legal).not.toMatch(/has (been )?reviewed by a lawyer|in force since/i);
+    expect(legal).not.toMatch(/has (been )?reviewed by a lawyer/i);
   });
 });
 
