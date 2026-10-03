@@ -31,6 +31,7 @@ import { SupportQueue } from '../components/console/SupportQueue';
 import { TenantOperations } from '../components/console/TenantOperations';
 import { PrivacyRequests } from '../components/console/PrivacyRequests';
 import { IntegrationHealth } from '../components/console/IntegrationHealth';
+import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
 import { said, when } from '../components/console/Fields';
 import {
   isConsoleWorkspaceId,
@@ -249,6 +250,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
         {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
         {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
+        {tab === 'release-incidents' && <ReleaseIncidents {...viewProps} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}

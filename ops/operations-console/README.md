@@ -225,6 +225,7 @@ What the console shows, one line each; [`docs/OPERATIONS-CONSOLE-MAP.md`](../../
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
 | **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
 | **Integration health** | Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals |
+| **Release & incidents** | Evidence-derived release, deployment-verification and incident lifecycle states with customer impact, communication cadence, rollback status and request-only approvals; never a self-certified GO decision |
 | **Customers** | Tenants, commitments and contracts, each record with its classification and why the operator can see it |
 | **Figures** | Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing |
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |

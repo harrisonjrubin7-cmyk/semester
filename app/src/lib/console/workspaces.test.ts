@@ -19,7 +19,7 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'customers', 'figures', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
   });
@@ -43,7 +43,7 @@ describe('console workspace registry', () => {
     expect(visibleConsoleWorkspaces([grant('console:operate')]).map(({ id }) => id)).not.toContain('support');
     expect(visibleConsoleWorkspaces([grant('console:operate'), grant('support:ticket')]).map(({ id }) => id)).not.toContain('tenant-operations');
     expect(visibleConsoleWorkspaces([
-      grant('console:operate'), grant('support:ticket'), grant('tenant:implement', 'school', 'vu'), grant('data_request:handle', 'school', 'vu'), grant('integration:view', 'school', 'vu'),
+      grant('console:operate'), grant('support:ticket'), grant('tenant:implement', 'school', 'vu'), grant('data_request:handle', 'school', 'vu'), grant('integration:view', 'school', 'vu'), grant('incident:communicate'),
     ])).toEqual(CONSOLE_WORKSPACES);
     expect(visibleConsoleWorkspaces([grant('console:operate', 'school', 'vu')])).toEqual([]);
   });
@@ -67,6 +67,13 @@ describe('console workspace registry', () => {
     expect(canDiscoverWorkspace(health, [grant('integration:view', 'school', 'vu')])).toBe(true);
     expect(canDiscoverWorkspace(health, [grant('integration:view', 'platform')])).toBe(false);
     expect(canDiscoverWorkspace(health, [grant('integration:view', 'school', '')])).toBe(false);
+  });
+
+  it('discovers release and incidents only from the platform incident grant', () => {
+    const releases = CONSOLE_WORKSPACES.find(({ id }) => id === 'release-incidents')!;
+    expect(canDiscoverWorkspace(releases, [grant('incident:communicate')])).toBe(true);
+    expect(canDiscoverWorkspace(releases, [grant('incident:communicate', 'school', 'vu')])).toBe(false);
+    expect(canDiscoverWorkspace(releases, [grant('console:operate')])).toBe(false);
   });
 
   it('validates saved workspace ids against the visible registry', () => {

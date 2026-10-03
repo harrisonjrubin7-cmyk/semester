@@ -457,6 +457,14 @@ evidence file or a secret, and clearing the recorder on account deletion leaves
 the institutional proof intact. The command center treats an expired row as a
 blocker rather than deleting it, so the history remains reviewable.
 
+`platform_incident` is the service-written incident timeline metadata: severity,
+owner, affected workflows, customer impact, lifecycle dates and opaque release
+or rollback references. Tenant incidents are kept with the school; platform
+incidents are kept until Semester removes them under an approved
+evidence-retention decision. There is no automatic sweep yet. Account deletion
+clears the recorder reference and leaves the operational record; notice bodies and
+recipients remain in `governance_incident_notices` under that table's policy.
+
 **The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
 `domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
 are service-role only and, as of that migration, empty: no producer writes to

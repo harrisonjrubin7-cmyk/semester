@@ -10,6 +10,7 @@ export type ConsoleWorkspaceId =
   | 'audit'
   | 'tenant-operations'
   | 'integration-health'
+  | 'release-incidents'
   | 'privacy'
   | 'customers'
   | 'figures'
@@ -79,6 +80,14 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
     capability: 'integration:view',
     scopeKind: 'school',
     scopeId: null,
+    classification: 'restricted',
+  },
+  {
+    id: 'release-incidents',
+    label: 'Release & incidents',
+    capability: 'incident:communicate',
+    scopeKind: 'platform',
+    scopeId: '',
     classification: 'restricted',
   },
   shell('customers', 'Customers'),

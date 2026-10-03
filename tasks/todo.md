@@ -191,14 +191,14 @@ no connector was changed, no authenticated production session was used, and depl
 **Description:** Connect release evidence, deployments, incidents, customer impact, communications, rollback state, and ownership.
 
 **Acceptance criteria:**
-- [ ] A missing deployment source or stale evidence cannot produce GO/GREEN.
-- [ ] Incidents state affected tenants/workflows and communication status.
-- [ ] Release and rollback actions require their declared evidence and approvals.
+- [x] A missing deployment source or stale evidence cannot produce GO/GREEN.
+- [x] Incidents state affected tenants/workflows and communication status.
+- [x] Release and rollback actions require their declared evidence and approvals.
 
 **Verification:**
-- [ ] Fail-closed evidence and authorization tests pass.
-- [ ] UI tests cover release candidate, blocked, deployed-unverified, incident, rollback, and recovered states.
-- [ ] Production claims remain explicitly unverified without external evidence.
+- [x] Fail-closed evidence and authorization tests pass.
+- [x] UI tests cover release candidate, blocked, deployed-unverified, incident, rollback, and recovered states.
+- [x] Production claims remain explicitly unverified without external evidence.
 
 **Dependencies:** A4, B4
 **Files likely touched:** release/incident RPC migration/check, client adapter/test, workspace/test

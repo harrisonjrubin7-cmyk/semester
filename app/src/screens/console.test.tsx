@@ -39,6 +39,7 @@ const mock = vi.hoisted(() => ({
   customers: vi.fn(),
   tenantOperations: vi.fn(),
   integrationHealth: vi.fn(),
+  releaseIncidents: vi.fn(),
   privacyRequests: vi.fn(),
   claimPrivacy: vi.fn(),
   privacyDetail: vi.fn(),
@@ -86,6 +87,7 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadCustomers: mock.customers,
   loadTenantOperations: mock.tenantOperations,
   loadIntegrationHealth: mock.integrationHealth,
+  loadReleaseIncidents: mock.releaseIncidents,
   loadPrivacyRequests: mock.privacyRequests,
   claimPrivacyRequest: mock.claimPrivacy,
   readPrivacyRequestDetail: mock.privacyDetail,
@@ -114,6 +116,7 @@ const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind
 const IMPLEMENTATION_PLATFORM = [...PLATFORM, { capability: 'tenant:implement', scopeKind: 'school', scopeId: 'vu' }];
 const PRIVACY_PLATFORM = [...PLATFORM, { capability: 'data_request:handle', scopeKind: 'school', scopeId: 'vu' }];
 const INTEGRATION_PLATFORM = [...PLATFORM, { capability: 'integration:view', scopeKind: 'school', scopeId: 'vu' }];
+const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -207,6 +210,16 @@ beforeEach(() => {
     nextSafeAction: 'Continue monitoring.', configurationApprovalId: null, configurationApprovalStatus: null,
     classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
   }]);
+  mock.releaseIncidents.mockResolvedValue([{
+    itemId: 'release:platform', itemKind: 'release', tenantId: null, tenantName: null, isDemo: false,
+    state: 'deployed_unverified', title: 'Production release', severity: 'critical', owner: 'engineering',
+    affectedWorkflows: ['application'], customerImpact: 'Deployment recorded; behavior unverified.',
+    communicationStatus: 'not_applicable', lastNoticeAt: null, nextUpdateAt: null,
+    rollbackStatus: 'documented', releaseCommit: 'a'.repeat(40), deploymentSource: 'pages', deploymentId: 'deploy-9',
+    observedAt: '2026-10-03T10:00:00Z', expiresAt: '2026-10-17T10:00:00Z', approvalId: null,
+    approvalStatus: null, evidence: 'production_verification=blocked', nextSafeAction: 'Verify the deployed commit.',
+    classification: 'restricted', provenance: 'server sources', limitation: 'Production behavior remains unverified.',
+  }]);
   mock.privacyRequests.mockResolvedValue([{
     requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
     tenantName: 'Vanderbilt University', isDemo: false, kind: 'export', requestedBy: 'self',
@@ -299,6 +312,23 @@ describe('integration health capability gate', () => {
     expect(mock.integrationHealth).toHaveBeenCalledWith(false);
     expect(host.textContent).toContain('Canvas');
     expect(host.textContent).toContain('No credentials returned.');
+    expect(mock.request).not.toHaveBeenCalled();
+  });
+});
+
+describe('release and incident capability gate', () => {
+  it('does not offer or load release operations for a console-shell-only operator', async () => {
+    await render();
+    expect(button('Release & incidents')).toBeUndefined();
+    expect(mock.releaseIncidents).not.toHaveBeenCalled();
+  });
+
+  it('offers the workspace only with the platform incident communication grant', async () => {
+    mock.caps.mockResolvedValue(INCIDENT_PLATFORM);
+    await render();
+    await press('Release & incidents');
+    expect(mock.releaseIncidents).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Deployment recorded; behavior unverified.');
     expect(mock.request).not.toHaveBeenCalled();
   });
 });

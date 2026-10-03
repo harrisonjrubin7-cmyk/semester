@@ -598,6 +598,80 @@ export async function loadIntegrationHealth(includeDemo = false): Promise<Integr
   return rows(data).map(readIntegrationHealth);
 }
 
+export type ReleaseIncidentState =
+  | 'blocked'
+  | 'release_candidate'
+  | 'deployed_unverified'
+  | 'verified'
+  | 'incident'
+  | 'rollback'
+  | 'recovered';
+
+export interface ReleaseIncident {
+  itemId: string;
+  itemKind: 'release' | 'incident';
+  tenantId: string | null;
+  tenantName: string | null;
+  isDemo: boolean;
+  state: ReleaseIncidentState;
+  title: string;
+  severity: string;
+  owner: string;
+  affectedWorkflows: string[];
+  customerImpact: string;
+  communicationStatus: string;
+  lastNoticeAt: string | null;
+  nextUpdateAt: string | null;
+  rollbackStatus: string;
+  releaseCommit: string | null;
+  deploymentSource: string | null;
+  deploymentId: string | null;
+  observedAt: string | null;
+  expiresAt: string | null;
+  approvalId: string | null;
+  approvalStatus: string | null;
+  evidence: string;
+  nextSafeAction: string;
+  classification: string;
+  provenance: string;
+  limitation: string;
+}
+
+const RELEASE_INCIDENT_STATES: ReleaseIncidentState[] = [
+  'blocked', 'release_candidate', 'deployed_unverified', 'verified', 'incident', 'rollback', 'recovered',
+];
+
+function readReleaseIncident(r: Row): ReleaseIncident {
+  if (r.item_kind !== 'release' && r.item_kind !== 'incident') {
+    throw new Error('The release and incident response contained an unknown item kind.');
+  }
+  if (!RELEASE_INCIDENT_STATES.includes(r.state as ReleaseIncidentState)) {
+    throw new Error('The release and incident response contained an unknown state.');
+  }
+  return {
+    itemId: text(r.item_id), itemKind: r.item_kind, tenantId: maybe(r.tenant_id),
+    tenantName: maybe(r.tenant_name), isDemo: r.is_demo === true,
+    state: r.state as ReleaseIncidentState, title: text(r.title), severity: text(r.severity),
+    owner: text(r.owner), affectedWorkflows: strings(r.affected_workflows),
+    customerImpact: text(r.customer_impact), communicationStatus: text(r.communication_status),
+    lastNoticeAt: maybe(r.last_notice_at), nextUpdateAt: maybe(r.next_update_at),
+    rollbackStatus: text(r.rollback_status), releaseCommit: maybe(r.release_commit),
+    deploymentSource: maybe(r.deployment_source), deploymentId: maybe(r.deployment_id),
+    observedAt: maybe(r.observed_at), expiresAt: maybe(r.expires_at),
+    approvalId: maybe(r.approval_id), approvalStatus: maybe(r.approval_status),
+    evidence: text(r.evidence), nextSafeAction: text(r.next_safe_action),
+    classification: text(r.classification), provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Evidence-derived release and incident summaries at platform scope. No action is executed here. */
+export async function loadReleaseIncidents(includeDemo = false): Promise<ReleaseIncident[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_release_incidents', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read release and incident operations.'));
+  return rows(data).map(readReleaseIncident);
+}
+
 export type PrivacyRequestKind = 'export' | 'erasure' | 'correction' | 'restriction';
 export type PrivacyRequestOutcome = 'completed' | 'refused';
 

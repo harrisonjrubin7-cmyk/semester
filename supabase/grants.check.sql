@@ -602,6 +602,11 @@ declare
     -- external-record or provider-message field.
     'console_integration_health(include_demo boolean)',
 
+    -- Evidence-derived release and incident operations. It requires both the
+    -- platform console shell and platform incident:communicate, excludes demo
+    -- tenants without exact implementation scope, and performs no mutation.
+    'console_release_incidents(include_demo boolean)',
+
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
     -- keeps subject ids and request content out of its result.

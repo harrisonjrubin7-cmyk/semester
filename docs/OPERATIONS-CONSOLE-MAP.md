@@ -37,6 +37,7 @@ Under any production write: *Production change. This will affect a live customer
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
 | **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
 | **Integration health** | Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals |
+| **Release & incidents** | Evidence-derived release, deployment-verification and incident lifecycle states with customer impact, communication cadence, rollback status and request-only approvals; never a self-certified GO decision |
 | **Customers** | Tenants, commitments and contracts, each record with its classification and why the operator can see it |
 | **Figures** | Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing |
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |
@@ -111,6 +112,17 @@ The capability behind each view, and its holders, from the same file.
 - [`app/src/components/console/IntegrationHealth.tsx`](../app/src/components/console/IntegrationHealth.tsx) — Health evidence, cautious impact, next safe action and a structured request-only `integration-config` approval; no configuration mutation or credential field.
 - [`app/src/components/console/IntegrationHealth.test.tsx`](../app/src/components/console/IntegrationHealth.test.tsx) — Healthy, degraded, stale, failed, unconfigured, denial, demo and exact approval-request coverage.
 - [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](INTEGRATION-OPERATOR-RUNBOOK.md) — Actual monitoring, approval, verification and rollback procedure.
+
+### Release & incidents
+
+**Release and incident operations** (done) — a platform-scoped, restricted summary over current release evidence, exact deployment and verification commits, incident impact and communication cadence. It requires both the console shell and `incident:communicate` at platform scope, and exposes approval requests rather than deployment or rollback execution.
+
+- [`supabase/migrations/20261003150000_console_release_incidents.sql`](../supabase/migrations/20261003150000_console_release_incidents.sql) — Conservative seven-gate release state, exact-commit deployment verification, service-recorded incidents, server-derived scope and allowlisted metadata.
+- [`supabase/console-release-incidents.check.sql`](../supabase/console-release-incidents.check.sql) — Missing and mismatched evidence, release candidate, deployment, verification, incident, rollback, recovery, demo, role and planted-notice redaction checks.
+- [`app/src/components/console/ReleaseIncidents.tsx`](../app/src/components/console/ReleaseIncidents.tsx) — Six required lifecycle states plus verified evidence, customer impact, communication cadence and structured request-only release or rollback approvals.
+- [`app/src/components/console/ReleaseIncidents.test.tsx`](../app/src/components/console/ReleaseIncidents.test.tsx) — Lifecycle, denial, empty, demo, no-direct-execution and exact approval-request coverage.
+- [`docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md`](RELEASE-INCIDENT-OPERATOR-RUNBOOK.md) — Evidence capture, approval, external execution, exact-commit verification, incident communication, rollback and recovery procedure.
+- [`docs/operating-model/INCIDENT-COMMUNICATIONS.md`](operating-model/INCIDENT-COMMUNICATIONS.md) — Audience, cadence and message-quality requirements; notice bodies remain outside the console summary.
 
 ### Customers
 

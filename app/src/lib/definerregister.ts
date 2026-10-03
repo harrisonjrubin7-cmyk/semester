@@ -164,6 +164,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_integration_health', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_privacy_requests', 'admin', ['auth.uid()', 'private.account_is_held', 'private.has_capability']],
+  ['console_release_incidents', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
@@ -447,6 +448,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261003150000_console_release_incidents.sql',
+    functions: ['console_release_incidents'],
+  },
   {
     file: '20261003140000_console_integration_health.sql',
     functions: ['console_integration_health'],

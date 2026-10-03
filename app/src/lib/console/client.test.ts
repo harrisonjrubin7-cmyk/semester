@@ -67,6 +67,7 @@ import {
   loadCommandCenter,
   loadTenantOperations,
   loadIntegrationHealth,
+  loadReleaseIncidents,
   loadPrivacyRequests,
   claimPrivacyRequest,
   readPrivacyRequestDetail,
@@ -98,6 +99,18 @@ const HEALTH_ROW = {
   owner_name: 'Integration owner', backup_owner_name: 'Backup owner', customer_impact: 'Assignments may be delayed.',
   next_safe_action: 'Review reconciliation.', configuration_approval_id: null, configuration_approval_status: null,
   classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
+};
+
+const RELEASE_INCIDENT_ROW = {
+  item_id: 'release:platform', item_kind: 'release', tenant_id: null, tenant_name: null, is_demo: false,
+  state: 'deployed_unverified', title: 'Production release', severity: 'critical', owner: 'engineering',
+  affected_workflows: ['application', 'database'], customer_impact: 'Post-deploy behavior is not verified.',
+  communication_status: 'not_applicable', last_notice_at: null, next_update_at: null,
+  rollback_status: 'documented', release_commit: 'a'.repeat(40), deployment_source: 'pages',
+  deployment_id: 'deploy-17', observed_at: '2026-10-03T10:00:00Z', expires_at: '2026-10-17T10:00:00Z',
+  approval_id: null, approval_status: null, evidence: 'production_verification=blocked',
+  next_safe_action: 'Verify the exact commit.', classification: 'restricted',
+  provenance: 'server sources', limitation: 'No institutional activation claim.',
 };
 
 const last = () => calls[calls.length - 1];
@@ -234,6 +247,27 @@ describe('integration health', () => {
 
     replies.set('rpc:console_integration_health', { data: [{ ...HEALTH_ROW, health_state: 'maybe' }] });
     await expect(loadIntegrationHealth()).rejects.toThrow('unknown health state');
+  });
+});
+
+describe('release and incident operations', () => {
+  it('maps the allowlisted response and forwards explicit demo inclusion', async () => {
+    replies.set('rpc:console_release_incidents', { data: [RELEASE_INCIDENT_ROW] });
+    const [row] = await loadReleaseIncidents(true);
+    expect(row).toMatchObject({
+      itemId: 'release:platform', itemKind: 'release', state: 'deployed_unverified',
+      releaseCommit: 'a'.repeat(40), deploymentSource: 'pages', affectedWorkflows: ['application', 'database'],
+    });
+    expect(last()).toMatchObject({ name: 'console_release_incidents', args: { include_demo: true } });
+  });
+
+  it('preserves server refusals and fails closed on unknown item kinds or states', async () => {
+    replies.set('rpc:console_release_incidents', { error: { message: 'incident:communicate at platform scope is required.' } });
+    await expect(loadReleaseIncidents()).rejects.toThrow('incident:communicate at platform scope is required.');
+    replies.set('rpc:console_release_incidents', { data: [{ ...RELEASE_INCIDENT_ROW, item_kind: 'secret' }] });
+    await expect(loadReleaseIncidents()).rejects.toThrow('unknown item kind');
+    replies.set('rpc:console_release_incidents', { data: [{ ...RELEASE_INCIDENT_ROW, state: 'green' }] });
+    await expect(loadReleaseIncidents()).rejects.toThrow('unknown state');
   });
 });
 
