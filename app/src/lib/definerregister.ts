@@ -149,6 +149,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
   ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
   ['claim_family_invite', 'sharing', ['auth.uid()']],
+  ['claim_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['claim_referral', 'self-service', ['auth.uid()']],
   ['claim_school', 'self-service', ['auth.uid()']],
   ['close_break_glass', 'admin', ['auth.uid()', 'g.subject is distinct from me']],
@@ -246,6 +247,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_entitlements', 'read-helper', ['auth.uid()']],
   ['my_help_destinations', 'read-helper', ['private.has_capability']],
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
+  ['my_privacy_completion_certificates', 'read-helper', ['auth.uid()']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_support_email_notices', 'read-helper', ['auth.uid()']],
@@ -266,6 +268,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
+  ['read_privacy_request_detail', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
   ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
@@ -290,6 +293,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
+  ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
   ['restore_school', 'admin', ['private.offboarding_operator']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -319,6 +323,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
+  ['verify_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['volunteer_attest', 'self-service', ['auth.uid()']],
   ['volunteer_decide', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_next_tasks', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
@@ -441,6 +446,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261003131000_privacy_case_actions.sql',
+    functions: ['claim_privacy_request', 'my_privacy_completion_certificates', 'read_privacy_request_detail', 'resolve_privacy_request', 'verify_privacy_request'],
+  },
   {
     file: '20261003130000_privacy_case_workspace.sql',
     functions: ['console_privacy_requests'],

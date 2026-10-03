@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 9 callable definers added after that dated catalogue snapshot: `20261003130000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003040000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261003050000_console_tenant_operations.sql` (`console_tenant_operations`); `20261003060000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 14 callable definers added after that dated catalogue snapshot: `20261003131000_privacy_case_actions.sql` (`claim_privacy_request`, `my_privacy_completion_certificates`, `read_privacy_request_detail`, `resolve_privacy_request`, `verify_privacy_request`); `20261003130000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003040000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261003050000_console_tenant_operations.sql` (`console_tenant_operations`); `20261003060000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -53,12 +53,12 @@ The current register also includes 9 callable definers added after that dated ca
 | --- | --- | --- |
 | self-service | 60 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 21 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 77 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 81 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 29 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 211 | |
+| read-helper | 30 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 216 | |
 
 ### self-service (60)
 
@@ -151,7 +151,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (77)
+### admin (81)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -172,6 +172,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `beta_triage_feedback` | `private.beta_triager` | `20260928220000_private_beta.sql` |
 | `can_manage_escalation_agreements` | `private.has_capability` | `20260928032000_community.sql` |
 | `cancel_offboarding` | `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
+| `claim_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261003131000_privacy_case_actions.sql` |
 | `close_break_glass` | `auth.uid()`, `g.subject is distinct from me` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_act` | `auth.uid()`, `private.has_capability`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_audit_read` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
@@ -210,6 +211,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `publish_course_guidance` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_course_rules` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_study_pack` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
+| `read_privacy_request_detail` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261003131000_privacy_case_actions.sql` |
 | `record_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `record_offboarding_notice` | `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
 | `registrar_decide` | `auth.uid()`, `private.registration_registrar`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
@@ -217,6 +219,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `registrar_put_section` | `auth.uid()`, `private.registration_registrar` | `20260929300000_registration_transaction.sql` |
 | `registrar_put_term` | `auth.uid()`, `private.registration_registrar` | `20260929300000_registration_transaction.sql` |
 | `request_approval` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
+| `resolve_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed`, `private.account_is_held` | `20261003131000_privacy_case_actions.sql` |
 | `restore_school` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `retire_escalation_agreement` | `auth.uid()`, `private.has_capability` | `20260928032000_community.sql` |
 | `review_break_glass` | `auth.uid()`, `private.holds_seat` | `20260929110000_console_approvals_and_break_glass.sql` |
@@ -232,6 +235,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
+| `verify_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261003131000_privacy_case_actions.sql` |
 
 ### integration (6)
 
@@ -272,7 +276,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (29)
+### read-helper (30)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -297,6 +301,7 @@ The current register also includes 9 callable definers added after that dated ca
 | `my_entitlements` | `auth.uid()` | `20260929070000_commercial_core.sql` |
 | `my_help_destinations` | `private.has_capability` | `20260928030000_help_inbox_closed_history.sql` |
 | `my_moderation_access` | `private.has_capability` | `20260928000000_moderation_queue_access.sql` |
+| `my_privacy_completion_certificates` | `auth.uid()` | `20261003131000_privacy_case_actions.sql` |
 | `my_registration` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
 | `my_registration_hold` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
 | `my_support_email_notices` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |

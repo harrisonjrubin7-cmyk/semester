@@ -601,6 +601,18 @@ declare
     -- keeps subject ids and request content out of its result.
     'console_privacy_requests(include_demo boolean)',
 
+    -- The privacy lifecycle in 20261003131000. Claim, sensitive-detail read,
+    -- identity verification and resolution all require fresh MFA, the
+    -- platform console shell and an exact-school data_request:handle grant.
+    -- Completed erasure additionally requires no legal hold and an executed
+    -- data-deletion approval for the exact tenant and request. The final
+    -- reader exposes only the signed-in subject's immutable certificates.
+    'claim_privacy_request(want_request uuid)',
+    'read_privacy_request_detail(want_request uuid)',
+    'verify_privacy_request(want_request uuid, want_basis text, want_evidence text)',
+    'resolve_privacy_request(want_request uuid, want_outcome text, want_resolution text, want_evidence text, want_approval uuid)',
+    'my_privacy_completion_certificates()',
+
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
     -- requester party, deciding checks fresh MFA, refuses self-approval and
