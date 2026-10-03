@@ -110,7 +110,7 @@ needs.
 | Vercel | Runs the institutional gateway | Only for school deployments |
 | Anthropic | AI answers, when you use AI features without your own key | Only when you press an AI button |
 | Stripe | Payments for a paid plan: the checkout page you type your card into, and recurring billing. Semester never sees your card | Only if you subscribe to a paid plan |
-| Resend | Delivers the message you send through a form on Semester's website to our team | Only when you send such a form |
+| Resend | Delivers a company-site form to our team; sends a generic notice to your account email when Semester support replies (the reply body and app context stay in Semester) | Only when you send such a form, or support replies to your in-app question |
 
 **Services you or your school choose to connect.** These receive information
 only because you, or your school, turned them on:

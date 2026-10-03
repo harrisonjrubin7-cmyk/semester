@@ -29,7 +29,7 @@
  */
 
 export type Kind = 'subprocessor' | 'institution-directed' | 'student-directed';
-export type When = 'always' | 'signed-in' | 'institution-enabled' | 'student-opt-in' | 'form-sent';
+export type When = 'always' | 'signed-in' | 'institution-enabled' | 'student-opt-in' | 'form-sent' | 'form-sent-or-opted-in-support-reply';
 
 export interface Party {
   name: string;
@@ -86,10 +86,10 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Resend', kind: 'subprocessor',
-    purpose: 'Emails each company-site form submission to the Semester owner. Not active until its key and the owner’s address are set.',
-    receives: 'What a visitor typed into a company-site form (name, work email, organization, role, message) and the form’s reference. No student data, and no IP address.',
-    when: 'form-sent', hosts: [], functions: ['lead-intake'],
-    evidence: ['supabase/functions/lead-intake/index.ts', 'docs/COMMERCIAL-CORE.md'],
+    purpose: 'Emails each company-site form submission to the Semester owner and, when a student opts in, sends a generic hint through the configured support sender. Each path stays inactive until its key and sender are set.',
+    receives: 'For site forms: the visitor’s submitted contact fields and reference. For opted-in support notices: the student’s email address, a support reference and app link, but never the reply body or approved diagnostic context. No IP address.',
+    when: 'form-sent-or-opted-in-support-reply', hosts: [], functions: ['lead-intake', 'support-reply-notify'],
+    evidence: ['supabase/functions/lead-intake/index.ts', 'supabase/functions/support-reply-notify/index.ts', 'docs/COMMERCIAL-CORE.md'],
   },
   // ── Institution-directed ─────────────────────────────────────────────────
   {
@@ -198,6 +198,7 @@ const WHEN_LABEL: Record<When, string> = {
   'institution-enabled': 'Only once an institution enables it',
   'student-opt-in': 'Only when the student turns it on',
   'form-sent': 'Only when someone sends a company-site form',
+  'form-sent-or-opted-in-support-reply': 'Only when someone sends a company-site form or an opted-in student has a support reply',
 };
 
 /** The register as a Markdown table, which the document must contain verbatim. */

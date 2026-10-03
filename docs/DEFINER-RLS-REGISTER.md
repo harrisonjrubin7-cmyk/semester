@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 1 callable definer added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`). It is held to its migration body and grant declaration below and is not retroactively counted in the 30 September reading.
+The current register also includes 3 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -51,16 +51,16 @@ The current register also includes 1 callable definer added after that dated cat
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 59 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| self-service | 60 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
 | admin | 74 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 27 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 203 | |
+| read-helper | 28 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 205 | |
 
-### self-service (59)
+### self-service (60)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -76,7 +76,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `claim_referral` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `claim_school` | `auth.uid()` | `20260930185000_school_membership_enforcement.sql` |
 | `close_my_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
-| `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20260929350000_plan_save_serialized.sql` |
+| `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20261002091500_set_based_course_plan_contribution.sql` |
 | `create_community` | `auth.uid()`, `private.has_capability`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `create_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `create_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -104,7 +104,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `make_referral_code` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `note_activity` | `auth.uid()` | `20260921151000_activity.sql` |
 | `open_help_request` | `auth.uid()`, `private.answers_for` | `20260927234000_help_request_reply_on_open.sql` |
-| `open_support_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
+| `open_support_ticket` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
 | `raise_my_data_subject_request` | `auth.uid()` | `20260930234000_data_subject_request_intake.sql` |
 | `registration_drop` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `registration_enroll` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
@@ -116,6 +116,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
 | `request_school_membership` | `auth.uid()`, `private.verified_account` | `20260930185000_school_membership_enforcement.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
+| `set_support_email_notice` | `auth.uid()` | `20261003120000_support_notification_consent_boundary.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
 | `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
@@ -222,7 +223,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `set_member_capabilities` | `private.org_can` | `20260921230000_organizations.sql` |
 | `set_member_standing` | `auth.uid()`, `private.org_can` | `20260921230000_organizations.sql` |
 | `set_school_enforcement` | `private.is_app_admin` | `20260930185000_school_membership_enforcement.sql` |
-| `support_reply` | `private.support_agent` | `20260928210000_support_tickets.sql` |
+| `support_reply` | `private.support_agent` | `20261003120000_support_notification_consent_boundary.sql` |
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
@@ -266,7 +267,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (27)
+### read-helper (28)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -292,6 +293,7 @@ The current register also includes 1 callable definer added after that dated cat
 | `my_moderation_access` | `private.has_capability` | `20260928000000_moderation_queue_access.sql` |
 | `my_registration` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
 | `my_registration_hold` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
+| `my_support_email_notices` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
 | `my_support_thread` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_volunteer_standing` | `auth.uid()` | `20260928032000_community.sql` |

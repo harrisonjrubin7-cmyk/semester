@@ -14,6 +14,19 @@ begin
   execute 'set local role authenticated';
 end $$;
 
+create or replace function pg_temp.become_mfa(who uuid)
+returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims',
+    jsonb_build_object(
+      'sub', who::text,
+      'role', 'authenticated',
+      'aal', 'aal2',
+      'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())))
+    )::text, true);
+  execute 'set local role authenticated';
+end $$;
+
 create or replace function pg_temp.newuser(address text)
 returns uuid language plpgsql as $$
 declare who uuid := gen_random_uuid();
@@ -60,6 +73,9 @@ declare
   n bigint;
   due_hours numeric;
   pri text;
+  operation uuid := gen_random_uuid();
+  notice_message uuid;
+  notice_choice text;
 begin
   ada := pg_temp.newuser('ada@tickets.example');
   ben := pg_temp.newuser('ben@tickets.example');
@@ -71,8 +87,9 @@ begin
 
   perform pg_temp.become(ada);
   a11y := public.open_support_ticket('accessibility', 'Drill buttons', 'I cannot reach the buttons with a switch.',
-    '{"app_version": "2026.9.27", "device_class": "tablet", "screen": "#/drill"}'::jsonb);
-  howto := public.open_support_ticket('how_to', 'Export', 'How do I export my calendar?', '{}'::jsonb);
+    '{"app_version": "2026.9.27", "device_class": "tablet", "screen": "#/drill"}'::jsonb, false);
+  howto := public.open_support_ticket('how_to', 'Export', 'How do I export my calendar?', '{}'::jsonb, false);
+  perform public.set_support_email_notice(a11y, true);
   reset role;
 
   select priority, extract(epoch from (first_response_due - created_at)) / 3600 into pri, due_hours
@@ -83,19 +100,19 @@ begin
   perform pg_temp.counted('a how-to question has a 72-hour target', due_hours::bigint, 72);
 
   perform pg_temp.must_refuse('context may not carry a key outside the six', ada,
-    $q$select public.open_support_ticket('bug', 's', 'b', '{"gpa": "3.1"}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 's', 'b', '{"gpa": "3.1"}'::jsonb, false)$q$);
   perform pg_temp.must_refuse('nor a value that is not text', ada,
-    $q$select public.open_support_ticket('bug', 's', 'b', '{"offline": true}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 's', 'b', '{"offline": true}'::jsonb, false)$q$);
   perform pg_temp.become(ben);
   for i in 1..5 loop
-    perform public.open_support_ticket('bug', 'flood ' || i, 'b', '{}'::jsonb);
+    perform public.open_support_ticket('bug', 'flood ' || i, 'b', '{}'::jsonb, false);
   end loop;
   reset role;
   perform pg_temp.must_refuse('a sixth ticket in a day is refused', ben,
-    $q$select public.open_support_ticket('bug', 'sixth', 'b', '{}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 'sixth', 'b', '{}'::jsonb, false)$q$);
   delete from public.support_tickets where student_id = ben;
   perform pg_temp.must_refuse('a signed-out visitor cannot open a ticket', null,
-    $q$select public.open_support_ticket('bug', 's', 'b', '{}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 's', 'b', '{}'::jsonb, false)$q$);
 
   -- ── Each student sees only their own ──────────────────────────────────
 
@@ -103,12 +120,18 @@ begin
   select count(*) into n from public.my_support_tickets();
   reset role;
   perform pg_temp.counted('another student sees none of Ada''s tickets', n, 0);
+  perform pg_temp.become(ada);
+  select count(*) into n from public.my_support_email_notices() where ticket_id = a11y and enabled;
+  reset role;
+  perform pg_temp.counted('the student can read the email-notice choice for their own ticket', n, 1);
   perform pg_temp.become(ben);
   select count(*) into n from public.my_support_thread(a11y);
   reset role;
   perform pg_temp.counted('nor her thread, by its id', n, 0);
   perform pg_temp.must_refuse('nor reply to it', ben, format('select public.reply_to_my_ticket(%L, %L)', a11y, 'hi'));
   perform pg_temp.must_refuse('nor close it', ben, format('select public.close_my_ticket(%L)', a11y));
+  perform pg_temp.must_refuse('nor change its email-notice choice', ben,
+    format('select public.set_support_email_notice(%L, true)', a11y));
   perform pg_temp.must_refuse('the table itself is closed to students', ada, 'select count(*) from public.support_tickets');
 
   -- ── The queue: capability-gated, priority first, no identity ──────────
@@ -139,19 +162,102 @@ begin
 
   -- ── Replies and the first-response clock ──────────────────────────────
 
-  perform pg_temp.become(agent);
-  perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student');
+  perform pg_temp.must_refuse('a support reply requires fresh MFA at the database boundary', agent,
+    format('select public.support_reply(%L, %L, %L, %L)', a11y, 'stale session', 'waiting_on_student', operation));
+  perform pg_temp.become_mfa(agent);
+  perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student', operation);
   reset role;
   select count(*) into n from public.support_tickets where id = a11y and first_responded_at is not null and status = 'waiting_on_student';
   perform pg_temp.counted('a reply stamps the first response and sets the status', n, 1);
-  perform pg_temp.must_refuse('support cannot close a ticket for the student', agent,
-    format('select public.support_reply(%L, %L, %L)', a11y, 'closing', 'closed'));
+  select count(*) into n from public.audit_event
+   where action = 'support.reply'
+     and object_kind = 'support_ticket'
+     and object_sha256 = private.role_audit_sha256(a11y::text)
+     and actor_sha256 = private.role_audit_sha256(agent::text)
+     and actor_kind = 'authenticated'
+     and correlation_id ~ '^[0-9a-f]{64}$'
+     and detail = '{"next_status":"waiting_on_student","notification_queued":true}'::jsonb;
+  perform pg_temp.counted('a reply records its ticket, message and acting agent without support content', n, 1);
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.counted('the reply commits a durable notification intent in the same transaction', n, 1);
+  perform pg_temp.become_mfa(agent);
+  perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student', operation);
+  reset role;
+  select count(*) into n from public.support_ticket_messages
+   where ticket_id = a11y and from_side = 'support' and client_operation_id = operation;
+  perform pg_temp.counted('retrying one reply operation does not duplicate its message', n, 1);
+  select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
+  perform pg_temp.counted('retrying one reply operation does not duplicate its email intent', n, 1);
+  select message_id into notice_message from public.support_notification_outbox where ticket_id = a11y;
+  perform pg_temp.must_refuse('a student cannot claim support-notification work', ada,
+    format('select count(*) from public.claim_support_notifications(%L, 1)', notice_message));
+  execute 'set local role service_role';
+  select count(*) into n from public.claim_support_notifications(notice_message, 1);
+  execute 'reset role';
+  perform pg_temp.counted('the delivery worker atomically claims the pending notice', n, 1);
+  execute 'set local role service_role';
+  select count(*) into n from public.claim_support_notifications(notice_message, 1);
+  execute 'reset role';
+  perform pg_temp.counted('an overlapping worker cannot claim the same notice', n, 0);
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and claim_id is not null and claimed_at is not null;
+  perform pg_temp.counted('a claimed notice records one complete ownership pair', n, 1);
+
+  perform pg_temp.become_mfa(agent);
+  perform public.support_reply(a11y, 'Second update.', 'waiting_on_student', gen_random_uuid());
+  perform public.support_reply(a11y, 'Third update.', 'waiting_on_student', gen_random_uuid());
+  reset role;
+  -- Test-fixture clock control is intentionally outside the support-agent role;
+  -- agents never receive direct access to the notification outbox.
+  update public.support_notification_outbox
+     set queued_at = now() - interval '2 days'
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.become_mfa(agent);
+  perform public.support_reply(a11y, 'Fourth update.', 'waiting_on_student', gen_random_uuid());
+  reset role;
+  select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
+  perform pg_temp.counted('aged pending support email still counts toward the three-notice cap', n, 3);
+  perform pg_temp.become(ada);
+  select public.set_support_email_notice(a11y, false) into notice_choice;
+  reset role;
+  if notice_choice <> 'off_with_in_flight' then
+    raise exception 'FAILED: opting out did not disclose the claimed notice — got %', notice_choice;
+  end if;
+  raise notice 'ok  opting out discloses the notice already in flight';
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null and claim_id is null;
+  perform pg_temp.counted('opting out cancels every unclaimed support notice', n, 0);
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null and claim_id is not null;
+  perform pg_temp.counted('opting out preserves the notice already in flight', n, 1);
+  update public.support_notification_outbox
+     set attempts = attempts + 1, claim_id = null, claimed_at = null,
+         next_attempt_at = now() + interval '2 minutes', last_error = 'provider unavailable'
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
+  perform pg_temp.counted('a failed claimed notice is cancelled after the student opted out', n, 0);
+  perform pg_temp.become_mfa(agent);
+  begin
+    perform public.support_reply(a11y, 'closing', 'closed', gen_random_uuid());
+    raise exception 'FAILED: support closed a ticket for the student';
+  exception when others then
+    if position('only the student closes it' in sqlerrm) = 0 then raise; end if;
+  end;
+  reset role;
+  raise notice 'ok  support cannot close a ticket for the student';
+
+  select count(*) into n from pg_catalog.pg_proc p
+   where p.oid = 'public.support_reply(uuid,text,text,uuid)'::regprocedure
+     and position('private.assert_fresh_mfa()' in p.prosrc) between 1 and position('insert into public.support_ticket_messages' in p.prosrc);
+  perform pg_temp.counted('the reply RPC enforces fresh MFA before writing student-visible content', n, 1);
 
   perform pg_temp.become(ada);
   perform public.reply_to_my_ticket(a11y, 'Switch Control on iPad.');
   select count(*) into n from public.my_support_thread(a11y);
   reset role;
-  perform pg_temp.counted('the student sees the whole thread, both sides', n, 3);
+  perform pg_temp.counted('the student sees the whole thread, both sides', n, 6);
   select count(*) into n from public.support_tickets where id = a11y and status = 'open';
   perform pg_temp.counted('a student reply reopens it for support', n, 1);
 
@@ -179,9 +285,12 @@ begin
   -- function take its per-account lock before it counts? Unlocked, concurrent
   -- calls each count the same rows and all of them insert.
   select count(*) into n from pg_catalog.pg_proc p
-   where p.oid = 'public.open_support_ticket(text, text, text, jsonb)'::regprocedure
+   where p.oid = 'public.open_support_ticket(text, text, text, jsonb, boolean)'::regprocedure
      and position('pg_advisory_xact_lock' in p.prosrc) between 1 and position('count(*)' in p.prosrc);
   perform pg_temp.counted('the daily limit is counted under a per-account lock', n, 1);
+  select count(*) into n from pg_catalog.pg_proc p
+   where p.oid = to_regprocedure('public.open_support_ticket(text, text, text, jsonb)');
+  perform pg_temp.counted('the legacy ticket-opening overload is removed', n, 0);
 
   raise notice 'support tickets: every check passed';
 end $$;
