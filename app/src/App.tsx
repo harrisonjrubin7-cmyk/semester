@@ -157,7 +157,12 @@ function Loading() {
  */
 function SkipLink() {
   return (
-    <a className="skip-link" href="#main">
+    <a className="skip-link" href="#main" onClick={(event) => {
+      const main = event.currentTarget.ownerDocument.getElementById('main');
+      if (!main) return;
+      event.preventDefault();
+      main.focus();
+    }}>
       Skip to content
     </a>
   );
