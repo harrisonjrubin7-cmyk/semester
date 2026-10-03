@@ -59,11 +59,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 44 | `docs/legal-drafts/PILOT-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical bounded-pilot draft reconciled to the source outline; no named customer, sale, activation, or outcome is claimed |
 | 45 | `docs/legal-drafts/STATEMENT-OF-WORK-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical implementation-services schedule; dates, deliverables, fees, acceptance, and dependencies remain proposals |
 | 46 | `docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md` | EXACT PRESENT | canonical processing draft reconciled to the source outline; roles, schedule, subprocessors, regions, and legal applicability remain open |
-| 47 | `docs/legal-drafts/STUDENT-DATA-PRIVACY-ADDENDUM-DRAFT.md` | NO CLOSE SOURCE | — |
-| 48 | `docs/legal-drafts/INFORMATION-SECURITY-ADDENDUM-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/INFORMATION-SECURITY-QUESTIONNAIRE.md` (filename similarity 0.55; substantive review required) |
-| 49 | `docs/legal-drafts/SERVICE-LEVEL-EXPECTATIONS-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/SERVICE-LEVEL-EXPECTATIONS.md` (filename similarity 0.97; substantive review required) |
-| 50 | `docs/legal-drafts/SUPPORT-POLICY-EXHIBIT-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/SUPPORT-POLICY-DRAFT.md` (filename similarity 0.72; substantive review required) |
-| 51 | `docs/legal-drafts/ACCEPTABLE-USE-EXHIBIT-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/ACCEPTABLE-USE-POLICY-DRAFT.md` (filename similarity 0.59; substantive review required) |
+| 47 | `docs/legal-drafts/STUDENT-DATA-PRIVACY-ADDENDUM-DRAFT.md` | EXACT PRESENT | canonical institution/student-data draft; applicability, ages, authority, data map, roles, vendors, and operating evidence remain open |
+| 48 | `docs/legal-drafts/INFORMATION-SECURITY-ADDENDUM-DRAFT.md` | EXACT PRESENT | canonical scoped security schedule; no certification, penetration-test, uptime, or target-operation claim is made |
+| 49 | `docs/legal-drafts/SERVICE-LEVEL-EXPECTATIONS-DRAFT.md` | EXACT PRESENT | canonical commitment template; all numeric and contractual service targets remain unapproved |
+| 50 | `docs/legal-drafts/SUPPORT-POLICY-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical customer support schedule; staffing, channels, coverage, targets, and escalation exercises remain open |
+| 51 | `docs/legal-drafts/ACCEPTABLE-USE-EXHIBIT-DRAFT.md` | EXACT PRESENT | canonical institutional-use draft; customer authority, enforcement, appeals, staffing, and target controls remain unapproved |
 | 52 | `docs/legal-drafts/IMPLEMENTATION-RESPONSIBILITY-MATRIX-DRAFT.md` | NO CLOSE SOURCE | — |
 | 53 | `docs/legal-drafts/DATA-RETENTION-EXPORT-AND-DELETION-EXHIBIT-DRAFT.md` | CANDIDATE SOURCE | `docs/DATA-RETENTION-EXPORT-DELETION.md` (filename similarity 0.79; substantive review required) |
 | 54 | `docs/legal-drafts/SUBPROCESSOR-LIST-TEMPLATE-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/SUBPROCESSOR-TEMPLATE.md` (filename similarity 0.59; substantive review required) |
