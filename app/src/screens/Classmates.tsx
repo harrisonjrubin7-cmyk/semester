@@ -359,7 +359,10 @@ export function Classmates() {
 
   const room = openRow && (
     <Talk
-      key={openRow.key}
+      // The transcript owns live subscriptions and state for exactly one
+      // person, term, and room. Remount when any part of that identity changes
+      // so prior-room data cannot flash while the new queries are in flight.
+      key={`${account.id}/${term}/${openRow.key}`}
       term={term}
       roomKey={openRow.key}
       code={openRow.code}
