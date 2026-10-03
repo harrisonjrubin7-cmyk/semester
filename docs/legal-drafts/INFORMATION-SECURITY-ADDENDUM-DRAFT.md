@@ -12,7 +12,7 @@ This exhibit would describe scoped technical and organizational measures for the
 
 ## Security schedule
 
-Document approved measures and evidence for governance/risk, asset/data classification, identity/MFA/least privilege/access review, tenant isolation, secure development/change/release, secrets/keys/encryption configuration, network/application/API protection, vulnerability/dependency testing, logging/monitoring/alerting, incident response, backup/restore/rollback, continuity, vendor/subprocessor security, deletion/offboarding, AI/integration security, personnel/training and evidence retention.
+Document approved measures and evidence for governance/risk, asset/data classification, identity/MFA/least privilege/access review, tenant isolation, secure development/change/release, credential and cryptographic-material handling, encryption configuration, network/application/API protection, vulnerability/dependency testing, logging/monitoring/alerting, incident response, backup/restore/rollback, continuity, vendor/subprocessor security, deletion/offboarding, AI/integration security, personnel/training and evidence retention.
 
 For each control record owner, exact system/environment, implementation state, test/evidence/date/expiry, limitation, customer dependency and remediation. `[REQUIRED STANDARDS, CUSTOMER QUESTIONNAIRE, AUDIT/EVIDENCE ACCESS, TESTING RIGHTS, INCIDENT TERMS AND EXCEPTIONS TO BE NEGOTIATED BY COUNSEL.]`
 
