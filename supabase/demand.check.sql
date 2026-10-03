@@ -176,6 +176,12 @@ begin
     pg_temp.error_as(crowd[1], format('select public.contribute_course_plan(''2027SP'', %L::jsonb)',
       (select jsonb_agg(jsonb_build_object('course', 'ECON ' || (1000 + g), 'role', 'primary')) from generate_series(1, 31) g))),
     'between one and thirty');
+  perform pg_temp.counted('concurrent saves are serialized before replacing contributed rows',
+    (select count(*)
+       from pg_proc p
+      where p.oid = 'public.contribute_course_plan(text,jsonb)'::regprocedure
+        and position('pg_advisory_xact_lock' in p.prosrc) > 0
+        and position('pg_advisory_xact_lock' in p.prosrc) < position('delete from public.term_plan_courses' in p.prosrc)), 1);
 
   perform pg_temp.contribute(crowd[1], '[{"course":"MATH 1300","role":"primary"}]');
   perform pg_temp.contribute(crowd[1], '[{"course":"econ 1010","role":"primary"},{"course":"ECON 1020","role":"backup","rank":1},{"course":"ECON 1010","role":"backup"}]');

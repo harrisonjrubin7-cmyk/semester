@@ -52,6 +52,14 @@ begin
     ));
   end loop;
 
+  -- Keep the existing two-device guarantee: replacing the plan is one
+  -- student-and-term critical section. Without this lock, two transactions
+  -- can both delete the old rows and then insert their new rows, leaving both
+  -- plans counted toward demand.
+  perform pg_advisory_xact_lock(hashtextextended(
+    'term_plan:' || me::text || ':' || trim(want_term), 0
+  ));
+
   delete from public.term_plan_courses
    where user_id = me
      and term_code = trim(want_term)
