@@ -2,6 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { CAPABILITIES } from '../rollout-capabilities';
+import { COUNCIL, GATES, SEATS, type LaunchState } from '../launchreadiness';
 import { controlLine, renderedFrom, table } from '../ops/render';
 import {
   ACTIVATION_GATES,
@@ -13,6 +14,7 @@ import {
   type ReleaseEvidence,
   type ReleaseProfileId,
   type ReleaseTarget,
+  type TechnicalReleaseGate,
 } from './release-profiles';
 
 const root = join(import.meta.dirname, '../../../..');
@@ -45,6 +47,18 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
     'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
   ],
 };
+const readyLaunchState = (): LaunchState => ({
+  gates: GATES.map((gate) => ({
+    ...gate,
+    status: 'met',
+    evidence: [{ path: 'README.md', shows: 'test evidence' }],
+  })),
+  council: COUNCIL.map((seat) => ({ ...seat, holder: `${seat.seat}-holder` })),
+  signoffs: [...SEATS],
+  blockers: [],
+  acceptances: [],
+  on: AS_OF,
+});
 const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget): ReleaseEvidence => ({
   gate,
   status: 'current',
@@ -54,7 +68,7 @@ const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget)
   target,
   approvals: TEST_APPROVERS[gate].map((role) => ({ role, subjectRef: `${role}-subject` })),
   ...(gate === 'canonical-launch-decision'
-    ? { launchDecision: { verdict: 'go' as const, conditions: [] } }
+    ? { launchState: readyLaunchState() }
     : {}),
 });
 const dependency = (name: string, target: ReleaseTarget): ReleaseEvidence => ({
@@ -104,9 +118,21 @@ describe('pilot and individual release profiles', () => {
     expect(pilot.requiredDependencies).not.toContain('external:approved SIS registration adapter and write authorization');
   });
 
+  it('resolves immutable canonical gates from a profile id', () => {
+    const profile = RELEASE_PROFILES['individual-scale'];
+    expect(Object.isFrozen(RELEASE_PROFILES)).toBe(true);
+    expect(Object.isFrozen(profile)).toBe(true);
+    expect(Object.isFrozen(profile.requiredTechnicalGates)).toBe(true);
+    expect(() => (profile.requiredTechnicalGates as TechnicalReleaseGate[]).pop()).toThrow();
+    expect(evaluateReleaseProfile(profile.id, [], AS_OF, TARGETS[profile.id])).toMatchObject({
+      technicalStatus: 'not-ready',
+      missingTechnical: TECHNICAL_RELEASE_GATES,
+    });
+  });
+
   it('never turns repository references without exact-SHA run evidence into readiness or authorization', () => {
     for (const profile of Object.values(RELEASE_PROFILES)) {
-      const result = evaluateReleaseProfile(profile, REPOSITORY_RELEASE_EVIDENCE, AS_OF);
+      const result = evaluateReleaseProfile(profile.id, REPOSITORY_RELEASE_EVIDENCE, AS_OF);
       expect(result.technicalStatus).toBe('not-ready');
       expect(result.rolloutStatus).toBe('held');
       expect(result.missingTechnical).toEqual(TECHNICAL_RELEASE_GATES);
@@ -121,11 +147,11 @@ describe('pilot and individual release profiles', () => {
         ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
         ...profile.requiredDependencies.map((item) => dependency(item, target)),
       ];
-      const authorized = evaluateReleaseProfile(profile, evidence, AS_OF, target);
+      const authorized = evaluateReleaseProfile(profile.id, evidence, AS_OF, target);
       expect(authorized).toMatchObject({ technicalStatus: 'ready', rolloutStatus: 'authorized', targetBound: true });
       expect(authorized.claim).toBe(profile.authorizedClaim);
       expect(authorized.claim).not.toMatch(/still requires/i);
-      expect(evaluateReleaseProfile(profile, evidence.slice(0, -1), AS_OF, target).rolloutStatus).toBe('held');
+      expect(evaluateReleaseProfile(profile.id, evidence.slice(0, -1), AS_OF, target).rolloutStatus).toBe('held');
     }
   });
 
@@ -139,11 +165,11 @@ describe('pilot and individual release profiles', () => {
     ];
     const agreementIndex = evidence.findIndex((item) => item.gate === 'named-tenant-agreement');
     const insecure = evidence.with(agreementIndex, { ...evidence[agreementIndex], reference: 'x' });
-    expect(evaluateReleaseProfile(profile, insecure, AS_OF, target).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, insecure, AS_OF, target).rolloutStatus).toBe('held');
     const missingRole = evidence.with(agreementIndex, {
       ...evidence[agreementIndex], approvals: [{ role: 'executive-owner', subjectRef: 'executive-owner-subject' }],
     });
-    expect(evaluateReleaseProfile(profile, missingRole, AS_OF, target).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, missingRole, AS_OF, target).rolloutStatus).toBe('held');
     const sameApprover = evidence.with(agreementIndex, {
       ...evidence[agreementIndex],
       approvals: [
@@ -151,7 +177,7 @@ describe('pilot and individual release profiles', () => {
         { role: 'security-owner', subjectRef: 'same-subject' },
       ],
     });
-    expect(evaluateReleaseProfile(profile, sameApprover, AS_OF, target).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, sameApprover, AS_OF, target).rolloutStatus).toBe('held');
     const whitespaceAlias = evidence.with(agreementIndex, {
       ...evidence[agreementIndex],
       approvals: [
@@ -159,16 +185,34 @@ describe('pilot and individual release profiles', () => {
         { role: 'security-owner', subjectRef: ' same-subject ' },
       ],
     });
-    expect(evaluateReleaseProfile(profile, whitespaceAlias, AS_OF, target).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, whitespaceAlias, AS_OF, target).rolloutStatus).toBe('held');
+    const duplicateRoleIndex = evidence.findIndex((item) => item.gate === 'named-tenant-agreement');
+    const duplicateRole = evidence.with(duplicateRoleIndex, {
+      ...evidence[duplicateRoleIndex],
+      approvals: [
+        { role: 'executive-owner', subjectRef: 'executive-a' },
+        { role: 'executive-owner', subjectRef: 'executive-b' },
+        { role: 'security-owner', subjectRef: 'executive-a' },
+      ],
+    });
+    expect(evaluateReleaseProfile(profile.id, duplicateRole, AS_OF, target).rolloutStatus).toBe('held');
     const launchIndex = evidence.findIndex((item) => item.gate === 'canonical-launch-decision');
     const noGo = evidence.with(launchIndex, {
-      ...evidence[launchIndex], launchDecision: { verdict: 'no-go', conditions: [] },
+      ...evidence[launchIndex], launchState: { ...readyLaunchState(), signoffs: [] },
     });
-    expect(evaluateReleaseProfile(profile, noGo, AS_OF, target).rolloutStatus).toBe('held');
-    const emptyConditionalGo = evidence.with(launchIndex, {
-      ...evidence[launchIndex], launchDecision: { verdict: 'go-with-conditions', conditions: [] },
+    expect(evaluateReleaseProfile(profile.id, noGo, AS_OF, target).rolloutStatus).toBe('held');
+    const expiredConditionalGo = evidence.with(launchIndex, {
+      ...evidence[launchIndex],
+      launchState: {
+        ...readyLaunchState(),
+        on: '2026-09-30',
+        blockers: [{ id: 'risk-1', severity: 'P2', summary: 'Accepted risk' }],
+        acceptances: [{
+          blocker: 'risk-1', by: 'founder', reason: 'bounded pilot', disclosure: 'Pilot users are told.', expires: '2026-10-01',
+        }],
+      },
     });
-    expect(evaluateReleaseProfile(profile, emptyConditionalGo, AS_OF, target).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, expiredConditionalGo, AS_OF, target).rolloutStatus).toBe('held');
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {
@@ -176,25 +220,25 @@ describe('pilot and individual release profiles', () => {
     const target = TARGETS[profile.id];
     for (const status of ['expired', 'failed', 'revoked'] as const) {
       const evidence = technical(target).map((item, index) => index === 0 ? { ...item, status } : item);
-      expect(evaluateReleaseProfile(profile, evidence, AS_OF, target).technicalStatus).toBe('not-ready');
+      expect(evaluateReleaseProfile(profile.id, evidence, AS_OF, target).technicalStatus).toBe('not-ready');
     }
     const expired = technical(target).map((item, index) => index === 0 ? { ...item, expiresAt: '2026-10-01' } : item);
-    expect(evaluateReleaseProfile(profile, expired, AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, expired, AS_OF, target).technicalStatus).toBe('not-ready');
     const malformed = technical(target).map((item, index) => index === 0 ? { ...item, expiresAt: 'never' } : item);
-    expect(evaluateReleaseProfile(profile, malformed, AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, malformed, AS_OF, target).technicalStatus).toBe('not-ready');
     const impossible = technical(target).map((item, index) => index === 0 ? { ...item, expiresAt: '2026-02-30' } : item);
-    expect(evaluateReleaseProfile(profile, impossible, AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, impossible, AS_OF, target).technicalStatus).toBe('not-ready');
   });
 
   it('rejects future-dated evidence and lets the latest denial override an older current record', () => {
     const profile = RELEASE_PROFILES['individual-scale'];
     const target = TARGETS[profile.id];
     const future = technical(target).map((item, index) => index === 0 ? { ...item, checkedAt: '2026-10-03' } : item);
-    expect(evaluateReleaseProfile(profile, future, AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, future, AS_OF, target).technicalStatus).toBe('not-ready');
     const revoked: ReleaseEvidence = {
       ...technical(target)[0], status: 'revoked', checkedAt: AS_OF, reference: 'repo:docs/PRODUCT-STATUS-MAP.md',
     };
-    expect(evaluateReleaseProfile(profile, [...technical(target), revoked], AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, [...technical(target), revoked], AS_OF, target).technicalStatus).toBe('not-ready');
     const malformedRevocation: ReleaseEvidence = {
       ...technical(target)[0],
       status: 'revoked',
@@ -202,16 +246,16 @@ describe('pilot and individual release profiles', () => {
       expiresAt: 'never',
       reference: 'runtime://revocation/malformed-expiry',
     };
-    expect(evaluateReleaseProfile(profile, [...technical(target), malformedRevocation], AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, [...technical(target), malformedRevocation], AS_OF, target).technicalStatus).toBe('not-ready');
     const malformedCheckedAt: ReleaseEvidence = {
       ...technical(target)[0],
       status: 'revoked',
       checkedAt: 'not-a-date',
       reference: 'runtime://revocation/malformed-checked-at',
     };
-    expect(evaluateReleaseProfile(profile, [...technical(target), malformedCheckedAt], AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(profile.id, [...technical(target), malformedCheckedAt], AS_OF, target).technicalStatus).toBe('not-ready');
     const timestamped = technical(target).map((item) => ({ ...item, checkedAt: '2026-10-02T10:00:00Z' }));
-    expect(evaluateReleaseProfile(profile, timestamped, AS_OF, target).technicalStatus).toBe('ready');
+    expect(evaluateReleaseProfile(profile.id, timestamped, AS_OF, target).technicalStatus).toBe('ready');
   });
 
   it('binds every activation and dependency record to one exact release target', () => {
@@ -222,16 +266,16 @@ describe('pilot and individual release profiles', () => {
       ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
       ...profile.requiredDependencies.map((item) => dependency(item, target)),
     ];
-    expect(evaluateReleaseProfile(profile, evidence, AS_OF).rolloutStatus).toBe('held');
-    expect(evaluateReleaseProfile(profile, evidence, AS_OF, { ...target, tenantId: 'tenant-b' }).rolloutStatus).toBe('held');
-    expect(evaluateReleaseProfile(profile, evidence, AS_OF, target).rolloutStatus).toBe('authorized');
+    expect(evaluateReleaseProfile(profile.id, evidence, AS_OF).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, evidence, AS_OF, { ...target, tenantId: 'tenant-b' }).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(profile.id, evidence, AS_OF, target).rolloutStatus).toBe('authorized');
     const killSwitchEngaged: ReleaseEvidence = {
       ...runtime('kill-switch-clear', target),
       status: 'revoked',
       checkedAt: '2026-10-02T12:00:00Z',
       reference: 'runtime://kill-switch/engaged',
     };
-    expect(evaluateReleaseProfile(profile, [...evidence, killSwitchEngaged], AS_OF, target)).toMatchObject({
+    expect(evaluateReleaseProfile(profile.id, [...evidence, killSwitchEngaged], AS_OF, target)).toMatchObject({
       rolloutStatus: 'held',
       missingActivation: expect.arrayContaining(['kill-switch-clear']),
     });
@@ -243,20 +287,20 @@ describe('pilot and individual release profiles', () => {
     const activation = individual.requiredActivationGates.map((gate) => runtime(gate, target));
     const dependencies = individual.requiredDependencies.map((item) => dependency(item, target));
     const evidence = [...technical(target), ...activation, ...dependencies];
-    expect(evaluateReleaseProfile(individual, evidence, AS_OF, { ...target, environment: 'pilot' }).rolloutStatus).toBe('held');
+    expect(evaluateReleaseProfile(individual.id, evidence, AS_OF, { ...target, environment: 'pilot' }).rolloutStatus).toBe('held');
     const tenantScopedTarget = { ...target, tenantId: 'tenant-a', cohortId: 'cohort-a' };
     const tenantScopedEvidence = [
       ...technical(tenantScopedTarget),
       ...individual.requiredActivationGates.map((gate) => runtime(gate, tenantScopedTarget)),
       ...individual.requiredDependencies.map((item) => dependency(item, tenantScopedTarget)),
     ];
-    expect(evaluateReleaseProfile(individual, tenantScopedEvidence, AS_OF, tenantScopedTarget)).toMatchObject({
+    expect(evaluateReleaseProfile(individual.id, tenantScopedEvidence, AS_OF, tenantScopedTarget)).toMatchObject({
       targetBound: false,
       rolloutStatus: 'held',
     });
     const staleSha = 'def456def456def456def456def456def456def4';
-    expect(evaluateReleaseProfile(individual, evidence, AS_OF, { ...target, deployedSha: staleSha }).technicalStatus).toBe('not-ready');
-    expect(evaluateReleaseProfile(individual, evidence, AS_OF, {
+    expect(evaluateReleaseProfile(individual.id, evidence, AS_OF, { ...target, deployedSha: staleSha }).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(individual.id, evidence, AS_OF, {
       ...target, deployedSha: target.deployedSha.toUpperCase(),
     })).toMatchObject({ targetBound: false, technicalStatus: 'not-ready', rolloutStatus: 'held' });
   });
@@ -265,7 +309,7 @@ describe('pilot and individual release profiles', () => {
     const profile = RELEASE_PROFILES['institutional-pilot'];
     const target = TARGETS[profile.id];
     const incomplete = { ...target, configurationVersion: '', tenantId: undefined, cohortId: undefined };
-    expect(evaluateReleaseProfile(profile, technical(target), AS_OF, incomplete)).toMatchObject({
+    expect(evaluateReleaseProfile(profile.id, technical(target), AS_OF, incomplete)).toMatchObject({
       technicalStatus: 'ready',
       rolloutStatus: 'held',
       targetBound: false,
@@ -283,7 +327,7 @@ describe('pilot and individual release profiles', () => {
         checkedAt: '2026-10-02T20:00:00Z',
         expiresAt: '2026-10-03T00:00:00Z',
       }));
-      expect(evaluateReleaseProfile(profile, evidence, undefined, target).technicalStatus).toBe('not-ready');
+      expect(evaluateReleaseProfile(profile.id, evidence, undefined, target).technicalStatus).toBe('not-ready');
     } finally {
       vi.useRealTimers();
     }
@@ -311,7 +355,7 @@ describe('pilot and individual release profiles', () => {
 });
 
 function render(): string {
-  const decisions = Object.values(RELEASE_PROFILES).map((profile) => evaluateReleaseProfile(profile, REPOSITORY_RELEASE_EVIDENCE, AS_OF));
+  const decisions = Object.values(RELEASE_PROFILES).map((profile) => evaluateReleaseProfile(profile.id, REPOSITORY_RELEASE_EVIDENCE, AS_OF));
   return [
     '# Pilot and individual release profiles', '',
     renderedFrom('app/src/lib/governance/release-profiles.ts', 'release-profiles.test.ts'), '', controlLine(DOC), '',

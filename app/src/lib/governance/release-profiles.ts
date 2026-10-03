@@ -9,6 +9,7 @@
  */
 
 import { CAPABILITIES } from '../rollout-capabilities';
+import { decide, type LaunchState } from '../launchreadiness';
 
 export const TECHNICAL_RELEASE_GATES = [
   'build-and-regression',
@@ -45,11 +46,8 @@ export interface ReleaseEvidence {
   target?: ReleaseTarget;
   /** Named approval functions and distinct subjects represented by the secure decision artifact. */
   approvals?: readonly { role: ReleaseApproverRole; subjectRef: string }[];
-  /** Re-derived result from the canonical launch-readiness council evaluator. */
-  launchDecision?: {
-    verdict: 'go' | 'go-with-conditions' | 'no-go';
-    conditions: readonly string[];
-  };
+  /** Complete input retained so the canonical launch-readiness verdict can be re-derived. */
+  launchState?: LaunchState;
 }
 
 export const ACTIVATION_GATES = [
@@ -88,18 +86,18 @@ export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
 export type ReleaseProfileId = 'individual-scale' | 'institutional-pilot';
 
 export interface ReleaseProfile {
-  id: ReleaseProfileId;
-  audience: string;
-  capabilityIds: readonly `CAP-${string}`[];
-  requiredTechnicalGates: readonly TechnicalReleaseGate[];
-  requiredActivationGates: readonly ActivationGate[];
-  requiredDependencies: readonly string[];
-  defaultOff: boolean;
-  allowedOperations: readonly string[];
-  forbiddenOperations: readonly string[];
-  claimBoundary: string;
-  authorizedClaim: string;
-  fallback: string;
+  readonly id: ReleaseProfileId;
+  readonly audience: string;
+  readonly capabilityIds: readonly `CAP-${string}`[];
+  readonly requiredTechnicalGates: readonly TechnicalReleaseGate[];
+  readonly requiredActivationGates: readonly ActivationGate[];
+  readonly requiredDependencies: readonly string[];
+  readonly defaultOff: boolean;
+  readonly allowedOperations: readonly string[];
+  readonly forbiddenOperations: readonly string[];
+  readonly claimBoundary: string;
+  readonly authorizedClaim: string;
+  readonly fallback: string;
 }
 
 const CORE_INDIVIDUAL_CAPABILITIES = [
@@ -148,8 +146,18 @@ function planningOnlyPilotDependencies(): string[] {
     .sort();
 }
 
-export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>> = {
-  'individual-scale': {
+function freezeProfile(profile: ReleaseProfile): ReleaseProfile {
+  Object.freeze(profile.capabilityIds);
+  Object.freeze(profile.requiredTechnicalGates);
+  Object.freeze(profile.requiredActivationGates);
+  Object.freeze(profile.requiredDependencies);
+  Object.freeze(profile.allowedOperations);
+  Object.freeze(profile.forbiddenOperations);
+  return Object.freeze(profile);
+}
+
+export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>> = Object.freeze({
+  'individual-scale': freezeProfile({
     id: 'individual-scale',
     audience: 'Individuals using device-first or self-service accounts without institutional activation',
     capabilityIds: CORE_INDIVIDUAL_CAPABILITIES,
@@ -162,8 +170,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     claimBoundary: 'Ready for broad individual use only after exact-SHA deployment and production gates pass; no institutional connection, certification, or system-of-record claim.',
     authorizedClaim: 'Authorized for broad individual use on the evaluated production target; no institutional connection, certification, or system-of-record claim.',
     fallback: 'Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.',
-  },
-  'institutional-pilot': {
+  }),
+  'institutional-pilot': freezeProfile({
     id: 'institutional-pilot',
     audience: 'A named, bounded student cohort using Path and registration-readiness planning',
     capabilityIds: PILOT_CAPABILITIES,
@@ -176,8 +184,8 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     claimBoundary: 'Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, agreed outcomes and exit criteria, deployment, and approval records.',
     authorizedClaim: 'Authorized only for the evaluated named tenant, cohort, deployment, configuration, and planning-only pilot scope.',
     fallback: 'Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.',
-  },
-};
+  }),
+});
 
 /** Repository evidence establishes only the technical half of either profile. */
 export const REPOSITORY_RELEASE_EVIDENCE: readonly ReleaseEvidence[] = [
@@ -236,15 +244,17 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   ],
 };
 
-function hasApprovalProvenance(item: ReleaseEvidence): boolean {
+function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boolean {
   if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) return item.reference.trim().length > 0;
   if (!SECURE_REFERENCE.test(item.reference)) return false;
   if (item.gate === 'canonical-launch-decision') {
-    const decision = item.launchDecision;
-    if (!decision || decision.verdict === 'no-go') return false;
-    if (decision.verdict === 'go' && decision.conditions.length > 0) return false;
-    if (decision.verdict === 'go-with-conditions'
-      && (decision.conditions.length === 0 || decision.conditions.some((condition) => !condition.trim()))) return false;
+    if (!item.launchState) return false;
+    const decision = decide(item.launchState);
+    if (decision.verdict === 'no-go') return false;
+    if (decision.conditions.some((condition) => {
+      const expiry = evidenceTime(condition.expires, true);
+      return expiry === null || expiry < decisionTime;
+    })) return false;
   }
   const required = item.gate.startsWith('dependency:')
     ? ['product-owner', 'security-owner'] as const
@@ -252,11 +262,12 @@ function hasApprovalProvenance(item: ReleaseEvidence): boolean {
   const approvals = item.approvals ?? [];
   if (approvals.some((approval) => approval.subjectRef.trim().length === 0)) return false;
   const requiredSet = new Set<ReleaseApproverRole>(required);
-  const supplied = new Set(approvals.map((approval) => approval.role));
-  const subjects = new Set(approvals
-    .filter((approval) => requiredSet.has(approval.role))
-    .map((approval) => approval.subjectRef.trim()));
-  return required.every((role) => supplied.has(role)) && subjects.size >= required.length;
+  const requiredApprovals = approvals.filter((approval) => requiredSet.has(approval.role));
+  const supplied = new Set(requiredApprovals.map((approval) => approval.role));
+  const subjects = new Set(requiredApprovals.map((approval) => approval.subjectRef.trim()));
+  return requiredApprovals.length === required.length
+    && required.every((role) => supplied.has(role))
+    && subjects.size === required.length;
 }
 
 /** Parse date-only or UTC ISO evidence without relying on string ordering. */
@@ -294,16 +305,17 @@ function counts(
   const latestDate = eligible[0].checked;
   const latest = eligible.filter(({ checked }) => checked === latestDate);
   return latest.every(({ item, expires }) => item.status === 'current'
-    && hasApprovalProvenance(item)
+    && hasApprovalProvenance(item, decisionTime)
     && (expires ?? -1) >= decisionTime);
 }
 
 export function evaluateReleaseProfile(
-  profile: ReleaseProfile,
+  profileId: ReleaseProfileId,
   evidence: readonly ReleaseEvidence[],
   asOf = new Date().toISOString(),
   target?: ReleaseTarget,
 ): ReleaseProfileDecision {
+  const profile = RELEASE_PROFILES[profileId];
   const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
   const targetBound = Boolean(target
     && target.environment === expectedEnvironment

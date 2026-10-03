@@ -455,22 +455,25 @@ async function journey(label, viewport) {
       return { ok: response.ok, status: response.status };
     }, { ...second.service, token: oldSession.access_token });
     expect(!staleSession.ok && staleSession.status >= 400, 'the deleted account\'s old session still identifies a user');
-    const staleApplicationWrite = await other.evaluate(async ({ origin, key, token, userId }) => {
-      const response = await fetch(`${origin}/rest/v1/state`, {
+    const staleApplicationWrite = await other.evaluate(async ({ origin, key, token }) => {
+      const response = await fetch(`${origin}/functions/v1/delete-account`, {
         method: 'POST',
         headers: {
           apikey: key,
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
         },
-        body: JSON.stringify({ user_id: userId, data: { deleted_session_probe: true } }),
+        body: JSON.stringify({ confirm: 'DELETE' }),
       });
-      return { ok: response.ok, status: response.status };
-    }, { ...second.service, token: oldSession.access_token, userId: oldSession.user.id });
+      const body = await response.json().catch(() => ({}));
+      return { ok: response.ok, status: response.status, body };
+    }, { ...second.service, token: oldSession.access_token });
     expect(
-      !staleApplicationWrite.ok && staleApplicationWrite.status >= 400,
-      'the deleted account\'s old access token could still write protected application state',
+      !staleApplicationWrite.ok
+        && staleApplicationWrite.status === 401
+        && staleApplicationWrite.body?.erased === false
+        && staleApplicationWrite.body?.signInRemoved === false,
+      `the deleted account's old access token did not receive an authentication denial (${JSON.stringify(staleApplicationWrite)})`,
     );
 
     walked += 1;
