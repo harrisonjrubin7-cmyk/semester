@@ -62,6 +62,7 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
   'validation-support-roster': ['support-owner', 'operations-owner'],
   'validation-outcome-agreed': ['product-owner', 'trust-owner'],
+  'qualified-accessibility-conformance': ['accessibility-owner', 'trust-owner'],
   'validation-launch-decision': [
     'executive-owner', 'product-owner', 'security-owner', 'privacy-owner',
     'accessibility-owner', 'support-owner', 'operations-owner', 'trust-owner',
@@ -79,6 +80,9 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
     'privacy-owner', 'accessibility-owner', 'support-owner', 'trust-owner',
     'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
   ],
+  'design-partner-activation-and-measured-closeout': [
+    'pilot-champion', 'product-owner', 'trust-owner', 'finance-owner',
+  ],
   'counsel-approved-commercial-paper': ['executive-owner', 'privacy-owner'],
   'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
@@ -88,7 +92,6 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
   'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
   'independent-security-assurance': ['security-owner', 'trust-owner'],
-  'qualified-accessibility-conformance': ['accessibility-owner', 'trust-owner'],
   'reference-and-claims-permission': ['executive-owner', 'product-owner'],
 };
 const readyLaunchState = (): LaunchState => ({
@@ -170,6 +173,7 @@ describe('pilot and individual release profiles', () => {
     const enterprise = RELEASE_PROFILES['broad-enterprise-sale'];
 
     expect(validation.requiredActivationGates).toEqual(VALIDATION_ACTIVATION_GATES);
+    expect(validation.requiredActivationGates).toContain('qualified-accessibility-conformance');
     expect(paidManual.requiredActivationGates).toEqual([
       ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES,
     ]);
@@ -183,6 +187,7 @@ describe('pilot and individual release profiles', () => {
     expect(PAID_ASSURANCE_GATES).toEqual([
       'target-dast-clean-rescan', 'independent-security-assurance', 'qualified-accessibility-conformance',
     ]);
+    expect(COMMERCIAL_ACTIVATION_GATES).toContain('design-partner-activation-and-measured-closeout');
     expect(paidManual.allowedOperations.join(' ')).toMatch(/manual/i);
     expect(paidManual.forbiddenOperations.join(' ')).toMatch(/institutional reads/i);
     expect(paid.forbiddenOperations).toEqual(expect.arrayContaining(['unapproved charge', 'write to SIS', 'act as system of record']));
@@ -248,6 +253,26 @@ describe('pilot and individual release profiles', () => {
     expect(evaluateReleaseProfile(profile.id, complete, AS_OF, target)).toMatchObject({
       rolloutStatus: 'authorized', launchVerdict: 'go',
     });
+    const conditional = complete.with(decisionIndex, {
+      ...complete[decisionIndex],
+      validationDecision: {
+        verdict: 'go-with-conditions' as const,
+        on: AS_OF,
+        conditions: [{
+          blocker: 'validation-risk', severity: 'P2' as const, by: 'founder' as const,
+          reason: 'bounded validation', disclosure: 'Participants receive this notice.', expires: '2026-11-01',
+        }],
+      },
+    });
+    expect(evaluateReleaseProfile(profile.id, conditional, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go-with-conditions',
+      claim: expect.stringMatching(/participants receive this notice/i),
+    });
+    const mixedDecision = conditional.with(decisionIndex, {
+      ...conditional[decisionIndex], launchState: readyLaunchState(),
+    });
+    expect(evaluateReleaseProfile(profile.id, mixedDecision, AS_OF, target).rolloutStatus).toBe('held');
     for (const validationDecision of [
       { verdict: 'no-go' as const, on: AS_OF, conditions: [] },
       {
@@ -876,9 +901,9 @@ function render(): string {
     '## Activation boundary', '',
     '- This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.',
     '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
-    '- Invitation-only unpaid validation additionally requires one named cohort, participant terms and consent, a staffed validation support roster, agreed outcomes and stop criteria, and a current launch decision.',
+    '- Invitation-only unpaid validation additionally requires one named cohort, participant terms and consent, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.',
     '- Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
-    '- A paid pilot additionally requires a clean target-bound DAST rescan, independent security assurance, qualified accessibility conformance, counsel-approved commercial paper, pricing and signing authority, tax/accounting/payment controls, a current insurance decision, and customer purchase and billing authorization.',
+    '- A paid pilot additionally requires an approved design-partner activation and measured closeout, a clean target-bound DAST rescan, independent security assurance, qualified accessibility conformance, counsel-approved commercial paper, pricing and signing authority, tax/accounting/payment controls, a current insurance decision, and customer purchase and billing authorization.',
     '- A broad enterprise sale additionally requires repeated customer deployments, accepted capacity and error budgets, independent security assurance, qualified accessibility conformance, and claim-specific reference permission.',
     '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',

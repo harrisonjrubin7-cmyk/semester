@@ -74,6 +74,7 @@ export const VALIDATION_ACTIVATION_GATES = [
   'participant-terms-and-consent',
   'validation-support-roster',
   'validation-outcome-agreed',
+  'qualified-accessibility-conformance',
   'validation-launch-decision',
 ] as const;
 
@@ -91,6 +92,7 @@ export const PILOT_ACTIVATION_GATES = [
 ] as const;
 
 export const COMMERCIAL_ACTIVATION_GATES = [
+  'design-partner-activation-and-measured-closeout',
   'counsel-approved-commercial-paper',
   'pricing-and-signing-authority',
   'tax-accounting-and-payment-controls',
@@ -423,6 +425,9 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
     'privacy-owner', 'accessibility-owner', 'support-owner', 'trust-owner',
     'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
   ],
+  'design-partner-activation-and-measured-closeout': [
+    'pilot-champion', 'product-owner', 'trust-owner', 'finance-owner',
+  ],
   'counsel-approved-commercial-paper': ['executive-owner', 'privacy-owner'],
   'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
@@ -445,7 +450,7 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
   if (typeof item.reference !== 'string' || !SECURE_REFERENCE.test(item.reference)) return false;
   if (item.gate === 'validation-launch-decision') {
     const decision = item.validationDecision;
-    if (!decision || !['go', 'go-with-conditions', 'no-go'].includes(decision.verdict)) return false;
+    if (item.launchState || !decision || !['go', 'go-with-conditions', 'no-go'].includes(decision.verdict)) return false;
     const launchDate = evidenceTime(decision.on);
     const checked = evidenceTime(item.checkedAt);
     if (launchDate === null || checked === null || launchDate > checked || launchDate > decisionTime) return false;
@@ -464,7 +469,7 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
     ))) return false;
   }
   if (item.gate === 'canonical-launch-decision') {
-    if (!item.launchState) return false;
+    if (item.validationDecision || !item.launchState) return false;
     try {
       const launchDate = evidenceTime(item.launchState.on);
       const checked = evidenceTime(item.checkedAt);
@@ -630,7 +635,9 @@ export function evaluateReleaseProfile(
     ? latestCurrentEvidence(evidenceRecords, decisionGate, asOf, target)
       .flatMap((item) => {
         try {
-          if (item.launchState) return [decide(item.launchState)];
+          if (decisionGate === 'canonical-launch-decision') {
+            return item.launchState ? [decide(item.launchState)] : [];
+          }
           return item.validationDecision ? [{
             verdict: item.validationDecision.verdict,
             reasons: [],
