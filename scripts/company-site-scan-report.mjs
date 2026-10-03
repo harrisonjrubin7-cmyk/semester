@@ -7,6 +7,7 @@ const host = 'https://localhost:4186';
 const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
 const requiredPaths = ['/', '/product', '/students', '/personal-academic-os', '/site.css', '/site.js', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])];
 const safeText = value => String(value).replace(/[\r\n\x00-\x1f]/g, ' ').slice(0, 180);
+const triageStatus = value => String(value ?? '').trim().replace(/[\s-]+/g, '_').toUpperCase();
 
 export function parseJson(text) {
   // Some CLI builds put a skills-update banner before platform lookup output.
@@ -71,7 +72,7 @@ export function evaluate(report, uris, routes = expectedRoutes(), evidence = {})
   if (!Array.isArray(report.findings)) gaps.push('missing findings evidence');
   if (report.thresholdResult !== 'PASS') gaps.push('security threshold did not pass');
   const findings = Array.isArray(report.findings) ? report.findings : [];
-  const actionable = findings.filter(finding => !Array.isArray(finding.paths) || !finding.paths.length || finding.paths.some(path => !['FALSE_POSITIVE', 'RISK_ACCEPTED'].includes(path.status)));
+  const actionable = findings.filter(finding => !Array.isArray(finding.paths) || !finding.paths.length || finding.paths.some(path => !['FALSE_POSITIVE', 'RISK_ACCEPTED'].includes(triageStatus(path.status))));
   if (actionable.length) gaps.push(`${actionable.length} actionable findings remain`);
   const paths = scannedPaths(uris, id);
   if (!paths.size) gaps.push('surface-unscanned: no target URI evidence');

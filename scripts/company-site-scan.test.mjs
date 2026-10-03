@@ -331,7 +331,12 @@ test('NEW and ASSIGNED findings are actionable; existing human triage is respect
     assert.ok(evaluate(report, coveredUris, coveredUris, healthyEvidence()).gaps.some(gap => gap.includes('actionable')));
   }
   const report = cleanReport();
-  report.findings = [{ name: 'Header policy', paths: [{ path: '/', status: 'RISK_ACCEPTED' }, { path: '/product', status: 'FALSE_POSITIVE' }] }];
+  report.findings = [{ name: 'Header policy', paths: [
+    { path: '/', status: 'RISK_ACCEPTED' },
+    { path: '/product', status: 'FALSE_POSITIVE' },
+    { path: '/students', status: 'Risk Accepted' },
+    { path: '/academy', status: 'False Positive' },
+  ] }];
   assert.deepEqual(evaluate(report, coveredUris, coveredUris, healthyEvidence()).gaps, []);
 });
 
