@@ -159,11 +159,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 144 | `docs/engineering-operations/ERROR-BUDGET-DRAFT.md` | EXACT PRESENT | canonical calculation and release-state policy; real budget state remains unavailable without accepted SLI data |
 | 145 | `docs/engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md` | EXACT PRESENT | Harrison Rubin is company-side primary; backup rota, paging, customer contacts and sustained coverage remain absent |
 | 146 | `docs/engineering-operations/PRODUCTION-SUPPORT-RUNBOOK.md` | EXACT PRESENT | canonical privacy-safe intake, escalation, support-access and closure process; staffed channel and target exercise remain open |
-| 147 | `docs/engineering-operations/DATABASE-OPERATIONS-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/RELIABILITY-AND-OPERATIONS-RUNBOOK.md` (filename similarity 0.57; substantive review required) |
-| 148 | `docs/engineering-operations/MIGRATION-AND-ROLLBACK-RUNBOOK.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/migration-rollback-disaster-recovery.md` (filename similarity 0.47; substantive review required) |
-| 149 | `docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md` | NO CLOSE SOURCE | — |
-| 150 | `docs/engineering-operations/PERFORMANCE-OPTIMIZATION-PLAN.md` | NO CLOSE SOURCE | — |
-| 151 | `docs/engineering-operations/DEPENDENCY-MANAGEMENT-POLICY.md` | NO CLOSE SOURCE | — |
+| 147 | `docs/engineering-operations/DATABASE-OPERATIONS-RUNBOOK.md` | EXACT PRESENT | canonical database change, readback and routine-control procedure; provider restore, target access review and second-operator evidence remain open |
+| 148 | `docs/engineering-operations/MIGRATION-AND-ROLLBACK-RUNBOOK.md` | EXACT PRESENT | canonical expand/rehearse/cutover/readback/recovery sequence; production rollback and institutional migration remain unexercised |
+| 149 | `docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md` | EXACT PRESENT | canonical fail-closed flag and kill/read-only control; effective target inventory and production drills remain partial |
+| 150 | `docs/engineering-operations/PERFORMANCE-OPTIMIZATION-PLAN.md` | EXACT PRESENT | canonical bundle/journey/field/capacity improvement plan; real-device field and full-stack capacity proof remain absent |
+| 151 | `docs/engineering-operations/DEPENDENCY-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical selection, lock, review, remediation and exception policy; current SBOM/license/reachability approval remains open |
 | 152 | `docs/engineering-operations/OPEN-SOURCE-INVENTORY.md` | NO CLOSE SOURCE | — |
 | 153 | `docs/engineering-operations/TECHNICAL-DEBT-REGISTER.md` | NO CLOSE SOURCE | — |
 | 154 | `docs/engineering-operations/CAPACITY-AND-SCALING-PLAN.md` | NO CLOSE SOURCE | — |
