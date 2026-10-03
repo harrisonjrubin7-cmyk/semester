@@ -97,9 +97,9 @@ function printFindings(findings, write = console.log) {
 
 function valueShape(value, depth = 0) {
   if (value === null) return 'null';
-  if (Array.isArray(value)) return depth >= 2 ? 'array' : `array<${value.length ? valueShape(value[0], depth + 1) : 'empty'}>`;
+  if (Array.isArray(value)) return depth >= 4 ? 'array' : `array<${value.length ? valueShape(value[0], depth + 1) : 'empty'}>`;
   if (typeof value !== 'object') return typeof value;
-  if (depth >= 2) return 'object';
+  if (depth >= 4) return 'object';
   return `{${Object.keys(value).sort().map(key => `${safeText(key)}:${valueShape(value[key], depth + 1)}`).join(',')}}`;
 }
 
