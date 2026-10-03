@@ -617,7 +617,11 @@ jobs:
         env:
           SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
           SMOKE_URL: http://localhost:4174/
-        run: npm run smoke:sync
+        run: |
+          # This key belongs only to the ephemeral loopback stack. The smoke
+          # refuses to send it to any non-loopback origin and never prints it.
+          export SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────
   #
