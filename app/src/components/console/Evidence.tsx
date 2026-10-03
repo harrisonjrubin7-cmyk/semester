@@ -3,6 +3,7 @@ import { ESCALATION } from '../../lib/ops/console';
 import { EVIDENCE, evidenceState } from '../../lib/ops/evidence';
 import { Fields, matches, type ViewProps } from './Fields';
 import { ReadinessEvidence } from './ReadinessEvidence';
+import { useNow } from '../../state/store';
 
 /**
  * The evidence register: each artifact that exists, when it was produced,
@@ -12,7 +13,9 @@ import { ReadinessEvidence } from './ReadinessEvidence';
  * test and the claims test use, so this view cannot say "current" about a
  * record the register calls expired.
  */
-export function Evidence({ filter, today = new Date().toISOString().slice(0, 10) }: ViewProps & { today?: string }) {
+export function Evidence({ filter, today: suppliedToday }: ViewProps & { today?: string }) {
+  const currentTime = useNow();
+  const today = suppliedToday ?? currentTime.toISOString().slice(0, 10);
   const rows = EVIDENCE.map((r) => ({ r, s: evidenceState(r, today) })).filter(({ r }) => matches(filter, r.artifact, r.id, r.owner, r.path, ...r.claims));
 
   return (

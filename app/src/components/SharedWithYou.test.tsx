@@ -12,7 +12,10 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 const mock = vi.hoisted(() => ({ rpc: vi.fn(), account: { id: 'parent' } as { id: string } | null }));
 vi.mock('../lib/cloud', () => ({ cloudConfigured: true, cloud: () => Promise.resolve({ rpc: mock.rpc }) }));
-vi.mock('../state/store', () => ({ useStore: () => ({ account: mock.account }) }));
+vi.mock('../state/store', () => ({
+  useNow: () => new Date('2026-10-03T12:00:00Z'),
+  useStore: () => ({ account: mock.account }),
+}));
 const { SharedWithYou } = await import('./SharedWithYou');
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

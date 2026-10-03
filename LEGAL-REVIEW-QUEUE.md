@@ -2,7 +2,7 @@
 
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
 
-**Version:** 0.1
+**Version:** 0.2
 
 **Assessment date:** 2026-10-03 (America/Chicago)
 
@@ -14,6 +14,8 @@
 ## Intake rule
 
 No item leaves this queue because a draft exists. It closes only when the correct reviewer has reviewed the identified version, all material business decisions are recorded, required product/operational changes are evidenced, and an authorized approver records the permitted use: internal, publishable, negotiable, or executable.
+
+The exact public-claim wording and its evidence/expiry/withdrawal state are controlled in [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](PUBLIC-CLAIMS-APPROVAL-REGISTER.md). The final four-motion boundary is controlled in [`GO-NO-GO-DECISION.md`](GO-NO-GO-DECISION.md). Neither document supplies legal approval; all applicable rows below remain open until their exit evidence exists.
 
 ## Priority queue
 

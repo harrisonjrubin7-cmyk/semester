@@ -196,7 +196,7 @@ export function Connect() {
         kind,
         name: title,
         url: from,
-        synced: Date.now(),
+        synced: now.getTime(),
         status: `${said(events.length)} read`,
         count: events.length,
       },

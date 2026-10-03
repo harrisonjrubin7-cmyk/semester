@@ -53,14 +53,36 @@ export interface ReleaseEvidence {
   approvals?: readonly { role: ReleaseApproverRole; subjectRef: string }[];
   /** Complete input retained so the canonical launch-readiness verdict can be re-derived. */
   launchState?: LaunchState;
+  /** Non-institutional decision for one named unpaid validation cohort. */
+  validationDecision?: {
+    verdict: 'go' | 'go-with-conditions' | 'no-go';
+    on: string;
+    conditions: readonly Condition[];
+  };
 }
 
-export const ACTIVATION_GATES = [
+export const BASE_ACTIVATION_GATES = [
   'deployed-exact-sha',
   'production-smoke',
   'support-route-live',
   'rollback-current',
   'kill-switch-clear',
+] as const;
+
+export const VALIDATION_ACTIVATION_GATES = [
+  ...BASE_ACTIVATION_GATES,
+  'participant-terms-and-consent',
+  'qualified-legal-public-policy-approval',
+  'representative-user-acceptance',
+  'target-account-lifecycle-acceptance',
+  'validation-support-roster',
+  'validation-outcome-agreed',
+  'qualified-accessibility-conformance',
+  'validation-launch-decision',
+] as const;
+
+export const PILOT_ACTIVATION_GATES = [
+  ...BASE_ACTIVATION_GATES,
   'named-tenant-agreement',
   'named-data-owner',
   'tenant-accessibility-review',
@@ -70,6 +92,49 @@ export const ACTIVATION_GATES = [
   'pilot-support-roster',
   'pilot-outcome-agreed',
   'canonical-launch-decision',
+] as const;
+
+export const COMMERCIAL_ACTIVATION_GATES = [
+  'design-partner-activation-and-measured-closeout',
+  'counsel-approved-commercial-paper',
+  'pricing-and-signing-authority',
+  'tax-accounting-and-payment-controls',
+  'insurance-decision-current',
+  'customer-purchase-and-billing-authorization',
+] as const;
+
+export const PAID_ASSURANCE_GATES = [
+  'target-dast-clean-rescan',
+  'independent-security-assurance',
+  'qualified-accessibility-conformance',
+  'target-restore-rehearsal',
+  'target-incident-alert-drill',
+  'target-data-rights-rehearsal',
+  'target-access-revocation-rehearsal',
+  'target-offboarding-rehearsal',
+  'production-provider-approval',
+] as const;
+
+export const ENTERPRISE_ACTIVATION_GATES = [
+  'broad-enterprise-sale-decision',
+  'repeatable-multi-customer-deployments',
+  'capacity-and-error-budget-accepted',
+  'reference-and-claims-permission',
+] as const;
+
+export const BROAD_INDIVIDUAL_ACTIVATION_GATES = [
+  'broad-individual-rollout-approval',
+] as const;
+
+export const ACTIVATION_GATES = [
+  ...new Set([
+    ...VALIDATION_ACTIVATION_GATES,
+    ...PILOT_ACTIVATION_GATES,
+    ...COMMERCIAL_ACTIVATION_GATES,
+    ...PAID_ASSURANCE_GATES,
+    ...ENTERPRISE_ACTIVATION_GATES,
+    ...BROAD_INDIVIDUAL_ACTIVATION_GATES,
+  ]),
 ] as const;
 
 export type ActivationGate = (typeof ACTIVATION_GATES)[number];
@@ -86,9 +151,20 @@ export const RELEASE_APPROVER_ROLES = [
   'engineering-owner',
   'trust-owner',
   'finance-owner',
+  'legal-owner',
+  'participant-representative',
 ] as const;
 export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
-export type ReleaseProfileId = 'individual-scale' | 'institutional-manual-pilot' | 'institutional-pilot';
+export type ReleaseProfileId =
+  | 'individual-scale'
+  | 'invitation-only-individual-validation'
+  | 'institutional-manual-pilot'
+  | 'institutional-pilot'
+  | 'paid-institutional-manual-pilot'
+  | 'paid-institutional-pilot'
+  | 'broad-enterprise-sale';
+
+type ReleaseTargetKind = 'public-individual' | 'invitation-validation' | 'manual-pilot' | 'connected-pilot' | 'enterprise';
 
 interface ReleaseApproval {
   role: ReleaseApproverRole;
@@ -105,6 +181,7 @@ function isReleaseEvidence(value: unknown): value is ReleaseEvidence {
 export interface ReleaseProfile {
   readonly id: ReleaseProfileId;
   readonly audience: string;
+  readonly targetKind: ReleaseTargetKind;
   readonly capabilityIds: readonly `CAP-${string}`[];
   readonly requiredTechnicalGates: readonly TechnicalReleaseGate[];
   readonly requiredActivationGates: readonly ActivationGate[];
@@ -182,23 +259,43 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
   'individual-scale': freezeProfile({
     id: 'individual-scale',
     audience: 'Individuals using device-first or self-service accounts without institutional activation',
+    targetKind: 'public-individual',
     capabilityIds: CORE_INDIVIDUAL_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: ['deployed-exact-sha', 'production-smoke', 'support-route-live', 'rollback-current', 'kill-switch-clear'],
+    requiredActivationGates: [
+      ...VALIDATION_ACTIVATION_GATES,
+      ...BROAD_INDIVIDUAL_ACTIVATION_GATES,
+    ],
     requiredDependencies: unsatisfiedCapabilityDependencies(CORE_INDIVIDUAL_CAPABILITIES),
-    defaultOff: false,
+    defaultOff: true,
     allowedOperations: ['personal planning', 'source-aware course organization', 'study and creation', 'export', 'account deletion'],
     forbiddenOperations: ['official registration', 'official grading', 'institutional record writes', 'financial aid', 'payments', 'payroll', 'general ledger'],
-    claimBoundary: 'Ready for broad individual use only after exact-SHA deployment and production gates pass; no institutional connection, certification, or system-of-record claim.',
+    claimBoundary: 'Broad individual rollout remains held until the invitation-validation controls and a separate broad-rollout approval are current; no institutional connection, certification, or system-of-record claim.',
     authorizedClaim: 'Authorized for broad individual use on the evaluated production target; no institutional connection, certification, or system-of-record claim.',
     fallback: 'Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.',
+  }),
+  'invitation-only-individual-validation': freezeProfile({
+    id: 'invitation-only-individual-validation',
+    audience: 'A named, invitation-only cohort using Semester without payment or institutional activation',
+    targetKind: 'invitation-validation',
+    capabilityIds: CORE_INDIVIDUAL_CAPABILITIES,
+    requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
+    requiredActivationGates: VALIDATION_ACTIVATION_GATES,
+    requiredDependencies: unsatisfiedCapabilityDependencies(CORE_INDIVIDUAL_CAPABILITIES),
+    defaultOff: true,
+    allowedOperations: ['invitation-only unpaid validation', 'personal planning', 'source-aware course organization', 'export', 'account deletion'],
+    forbiddenOperations: ['paid promotion', 'official registration', 'institutional data access', 'institutional record writes', 'outcome claims', 'act as a staffed institutional service'],
+    claimBoundary: 'Conditional candidate for one named, invitation-only unpaid cohort; authorization requires participant terms, support, outcome, production, and launch-decision evidence bound to that cohort.',
+    authorizedClaim: 'Authorized only for the evaluated invitation-only unpaid cohort, deployment, configuration, disclosed conditions, and non-institutional validation scope.',
+    fallback: 'Close invitations, preserve participant export and deletion, and return to internal validation.',
   }),
   'institutional-manual-pilot': freezeProfile({
     id: 'institutional-manual-pilot',
     audience: 'A named, bounded student cohort using student-confirmed manual course data without institutional connections',
+    targetKind: 'manual-pilot',
     capabilityIds: MANUAL_PILOT_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: ACTIVATION_GATES,
+    requiredActivationGates: PILOT_ACTIVATION_GATES,
     requiredDependencies: unsatisfiedCapabilityDependencies(MANUAL_PILOT_CAPABILITIES),
     defaultOff: true,
     allowedOperations: ['student-confirmed manual import', 'manual course and deadline correction', 'personal planning', 'export', 'account deletion'],
@@ -213,9 +310,10 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
   'institutional-pilot': freezeProfile({
     id: 'institutional-pilot',
     audience: 'A named, bounded student cohort using Path and registration-readiness planning',
+    targetKind: 'connected-pilot',
     capabilityIds: PILOT_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: ACTIVATION_GATES,
+    requiredActivationGates: PILOT_ACTIVATION_GATES,
     requiredDependencies: planningOnlyPilotDependencies(),
     defaultOff: true,
     allowedOperations: ['Path planning', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff'],
@@ -223,6 +321,59 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     claimBoundary: 'Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, agreed outcomes and exit criteria, deployment, and approval records.',
     authorizedClaim: 'Authorized only for the evaluated named tenant, cohort, deployment, configuration, and planning-only pilot scope.',
     fallback: 'Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.',
+  }),
+  'paid-institutional-manual-pilot': freezeProfile({
+    id: 'paid-institutional-manual-pilot',
+    audience: 'One named institution and cohort purchasing a bounded pilot using student-confirmed manual course data',
+    targetKind: 'manual-pilot',
+    capabilityIds: MANUAL_PILOT_CAPABILITIES,
+    requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
+    requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES],
+    requiredDependencies: unsatisfiedCapabilityDependencies(MANUAL_PILOT_CAPABILITIES),
+    defaultOff: true,
+    allowedOperations: ['contracted manual-data pilot', 'student-confirmed manual import', 'manual course and deadline correction', 'personal planning', 'export', 'account deletion', 'authorized billing'],
+    forbiddenOperations: [
+      'unapproved charge', 'institutional reads', 'institutional writes', 'SSO or provisioning claims',
+      'official registration', 'official grading', 'degree certification', 'act as system of record',
+    ],
+    claimBoundary: 'Commercially authorizable only for a manual-data pilot after the complete bounded-pilot package, independent security and accessibility assurance, and commercial authority are current for the named target; no institutional connection is implied.',
+    authorizedClaim: 'Authorized only for the evaluated paid manual-data pilot with the named institution, cohort, deployment, configuration, executed scope, and billing authority; no institutional connection or system-of-record claim.',
+    fallback: 'Stop billing and activation, disable the pilot entitlement, preserve required exports, and execute the contracted offboarding path.',
+  }),
+  'paid-institutional-pilot': freezeProfile({
+    id: 'paid-institutional-pilot',
+    audience: 'One named institution and cohort purchasing a bounded planning-only pilot',
+    targetKind: 'connected-pilot',
+    capabilityIds: PILOT_CAPABILITIES,
+    requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
+    requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES],
+    requiredDependencies: planningOnlyPilotDependencies(),
+    defaultOff: true,
+    allowedOperations: ['contracted planning-only pilot', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff', 'authorized billing'],
+    forbiddenOperations: ['unapproved charge', 'enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'act as system of record'],
+    claimBoundary: 'Commercially authorizable only after the complete bounded-pilot package, independent security and accessibility assurance, and counsel, signing, price, tax, accounting, payment, insurance, customer-purchase, and billing evidence are current for the named target.',
+    authorizedClaim: 'Authorized only for the evaluated paid, planning-only pilot with the named institution, cohort, deployment, configuration, executed scope, and billing authority.',
+    fallback: 'Stop billing and activation, disable the tenant entitlement and institutional reads, preserve required exports, and execute the contracted offboarding path.',
+  }),
+  'broad-enterprise-sale': freezeProfile({
+    id: 'broad-enterprise-sale',
+    audience: 'Enterprise institutions purchasing the evaluated, repeatable planning-only deployment scope',
+    targetKind: 'enterprise',
+    capabilityIds: PILOT_CAPABILITIES,
+    requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
+    requiredActivationGates: [
+      ...PILOT_ACTIVATION_GATES,
+      ...COMMERCIAL_ACTIVATION_GATES,
+      ...PAID_ASSURANCE_GATES,
+      ...ENTERPRISE_ACTIVATION_GATES,
+    ],
+    requiredDependencies: planningOnlyPilotDependencies(),
+    defaultOff: true,
+    allowedOperations: ['contracted enterprise planning deployment', 'repeatable implementation', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff', 'authorized billing'],
+    forbiddenOperations: ['unapproved charge', 'enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'replace the SIS or LMS', 'act as system of record'],
+    claimBoundary: 'Enterprise sale is authorizable only for the evaluated scope after paid-pilot controls, repeated deployments, capacity evidence, independent security and accessibility assurance, and claim-specific customer permission are current.',
+    authorizedClaim: 'Authorized for enterprise contracting and rollout only within the evaluated planning scope and evidence-backed claims; no system-replacement or system-of-record authority.',
+    fallback: 'Suspend new sales and rollout, stop affected billing and activation, disable target entitlements, preserve exports, and execute customer-specific rollback and offboarding.',
   }),
 });
 
@@ -274,6 +425,16 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'support-route-live': ['support-owner'],
   'rollback-current': ['operations-owner', 'security-owner'],
   'kill-switch-clear': ['operations-owner', 'security-owner'],
+  'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
+  'qualified-legal-public-policy-approval': ['legal-owner', 'privacy-owner'],
+  'representative-user-acceptance': ['participant-representative', 'product-owner'],
+  'target-account-lifecycle-acceptance': ['participant-representative', 'privacy-owner', 'operations-owner'],
+  'validation-support-roster': ['support-owner', 'operations-owner'],
+  'validation-outcome-agreed': ['product-owner', 'trust-owner'],
+  'validation-launch-decision': [
+    'executive-owner', 'product-owner', 'security-owner', 'privacy-owner',
+    'accessibility-owner', 'support-owner', 'operations-owner', 'trust-owner',
+  ],
   'named-tenant-agreement': ['executive-owner', 'security-owner'],
   'named-data-owner': ['data-owner'],
   'tenant-accessibility-review': ['accessibility-owner'],
@@ -287,6 +448,34 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
     'privacy-owner', 'accessibility-owner', 'support-owner', 'trust-owner',
     'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
   ],
+  'design-partner-activation-and-measured-closeout': [
+    'pilot-champion', 'product-owner', 'trust-owner', 'finance-owner',
+  ],
+  'broad-individual-rollout-approval': [
+    'executive-owner', 'legal-owner', 'product-owner', 'security-owner',
+    'privacy-owner', 'accessibility-owner', 'support-owner', 'operations-owner',
+  ],
+  'counsel-approved-commercial-paper': ['executive-owner', 'legal-owner', 'privacy-owner'],
+  'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
+  'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
+  'insurance-decision-current': ['executive-owner', 'finance-owner'],
+  'customer-purchase-and-billing-authorization': ['pilot-champion', 'executive-owner', 'finance-owner'],
+  'target-dast-clean-rescan': ['security-owner', 'operations-owner'],
+  'target-restore-rehearsal': ['operations-owner', 'security-owner'],
+  'target-incident-alert-drill': ['operations-owner', 'security-owner', 'support-owner'],
+  'target-data-rights-rehearsal': ['privacy-owner', 'operations-owner'],
+  'target-access-revocation-rehearsal': ['security-owner', 'operations-owner'],
+  'target-offboarding-rehearsal': ['pilot-champion', 'privacy-owner', 'operations-owner'],
+  'production-provider-approval': ['legal-owner', 'privacy-owner', 'security-owner', 'data-owner'],
+  'broad-enterprise-sale-decision': [
+    'pilot-champion', 'executive-owner', 'legal-owner', 'finance-owner',
+    'product-owner', 'security-owner', 'privacy-owner', 'accessibility-owner',
+  ],
+  'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
+  'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
+  'independent-security-assurance': ['security-owner', 'trust-owner'],
+  'qualified-accessibility-conformance': ['accessibility-owner', 'trust-owner'],
+  'reference-and-claims-permission': ['executive-owner', 'product-owner'],
 };
 
 function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boolean {
@@ -296,8 +485,28 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
     return Boolean(match && match[2] === item.gate && match[3] === item.sourceSha);
   }
   if (typeof item.reference !== 'string' || !SECURE_REFERENCE.test(item.reference)) return false;
+  if (item.gate === 'validation-launch-decision') {
+    const decision = item.validationDecision;
+    if (item.launchState || !decision || !['go', 'go-with-conditions', 'no-go'].includes(decision.verdict)) return false;
+    const launchDate = evidenceTime(decision.on);
+    const checked = evidenceTime(item.checkedAt);
+    if (launchDate === null || checked === null || launchDate > checked || launchDate > decisionTime) return false;
+    if (decision.verdict === 'no-go') return false;
+    if (!Array.isArray(decision.conditions)) return false;
+    if ((decision.verdict === 'go' && decision.conditions.length > 0)
+      || (decision.verdict === 'go-with-conditions' && decision.conditions.length === 0)) return false;
+    if (!decision.conditions.every((condition) => Boolean(
+      condition
+      && isNonBlankString(condition.blocker)
+      && ['P2', 'P3'].includes(condition.severity)
+      && condition.by === 'founder'
+      && isNonBlankString(condition.reason)
+      && isNonBlankString(condition.disclosure)
+      && (evidenceTime(condition.expires) ?? -1) > decisionTime,
+    ))) return false;
+  }
   if (item.gate === 'canonical-launch-decision') {
-    if (!item.launchState) return false;
+    if (item.validationDecision || !item.launchState) return false;
     try {
       const launchDate = evidenceTime(item.launchState.on);
       const checked = evidenceTime(item.checkedAt);
@@ -412,22 +621,34 @@ export function evaluateReleaseProfile(
   const evidenceRecords: readonly ReleaseEvidence[] = Array.isArray(evidence) && evidence.every(isReleaseEvidence)
     ? evidence
     : [];
-  const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
-  const expectedDataMode = profile.id === 'institutional-manual-pilot' ? 'manual' : 'connected';
-  const targetBound = Boolean(target
-    && target.environment === expectedEnvironment
+  const targetBaseValid = Boolean(target
     && typeof target.deployedSha === 'string'
     && SHA.test(target.deployedSha)
-    && isNonBlankString(target.configurationVersion)
-    && (profile.id !== 'individual-scale'
-      ? (isNonBlankString(target.tenantId)
-        && isNonBlankString(target.cohortId)
-        && target.dataMode === expectedDataMode
-        && target.registrationWriteback === 'disabled')
-      : target.tenantId === undefined
-        && target.cohortId === undefined
-        && target.dataMode === undefined
-        && target.registrationWriteback === undefined));
+    && isNonBlankString(target.configurationVersion));
+  const targetBound = Boolean(targetBaseValid && target && (() => {
+    switch (profile.targetKind) {
+      case 'public-individual':
+        return target.environment === 'production'
+          && target.tenantId === undefined && target.cohortId === undefined
+          && target.dataMode === undefined && target.registrationWriteback === undefined;
+      case 'invitation-validation':
+        return target.environment === 'production'
+          && target.tenantId === undefined && isNonBlankString(target.cohortId)
+          && target.dataMode === undefined && target.registrationWriteback === undefined;
+      case 'manual-pilot':
+        return target.environment === 'pilot'
+          && isNonBlankString(target.tenantId) && isNonBlankString(target.cohortId)
+          && target.dataMode === 'manual' && target.registrationWriteback === 'disabled';
+      case 'connected-pilot':
+        return target.environment === 'pilot'
+          && isNonBlankString(target.tenantId) && isNonBlankString(target.cohortId)
+          && target.dataMode === 'connected' && target.registrationWriteback === 'disabled';
+      case 'enterprise':
+        return target.environment === 'production'
+          && isNonBlankString(target.tenantId) && isNonBlankString(target.cohortId)
+          && target.dataMode === 'connected' && target.registrationWriteback === 'disabled';
+    }
+  })());
   const technicalTargetBound = Boolean(target && typeof target.deployedSha === 'string' && SHA.test(target.deployedSha));
   const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !technicalTargetBound
     || !counts(evidenceRecords, gate, asOf, undefined, target?.deployedSha));
@@ -442,18 +663,30 @@ export function evaluateReleaseProfile(
     && missingDependencies.length === 0
     ? 'authorized'
     : 'held';
-  const launchOutcomes: Verdict[] = profile.id !== 'individual-scale' && targetBound
-    ? latestCurrentEvidence(evidenceRecords, 'canonical-launch-decision', asOf, target)
+  const decisionGate = profile.requiredActivationGates.includes('canonical-launch-decision')
+    ? 'canonical-launch-decision'
+    : profile.requiredActivationGates.includes('validation-launch-decision')
+      ? 'validation-launch-decision'
+      : null;
+  const launchOutcomes: Verdict[] = decisionGate && targetBound
+    ? latestCurrentEvidence(evidenceRecords, decisionGate, asOf, target)
       .flatMap((item) => {
         try {
-          return item.launchState ? [decide(item.launchState)] : [];
+          if (decisionGate === 'canonical-launch-decision') {
+            return item.launchState ? [decide(item.launchState)] : [];
+          }
+          return item.validationDecision ? [{
+            verdict: item.validationDecision.verdict,
+            reasons: [],
+            conditions: [...item.validationDecision.conditions],
+          }] : [];
         } catch {
           return [];
         }
       })
     : [];
   const launchConditions = launchOutcomes.flatMap((outcome) => outcome.conditions);
-  const launchVerdict = profile.id === 'individual-scale'
+  const launchVerdict = !decisionGate
     ? 'not-applicable'
     : launchOutcomes.length === 0
       ? null

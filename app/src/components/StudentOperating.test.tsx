@@ -9,7 +9,10 @@ import { StudentOperating } from './StudentOperating';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let stored = { ...DEFAULT_PERSISTED, ...initialEphemeral() };
-vi.mock('../state/store', () => ({ useStore: () => { const [state, dispatch] = useReducer(reducer, stored); stored = state; return { state, dispatch }; } }));
+vi.mock('../state/store', () => ({
+  useNow: () => new Date('2026-10-03T12:00:00Z'),
+  useStore: () => { const [state, dispatch] = useReducer(reducer, stored); stored = state; return { state, dispatch }; },
+}));
 let root: Root;
 let host: HTMLDivElement;
 beforeEach(() => {

@@ -15,12 +15,14 @@ import { ActionButton, Notice, SectionLabel } from './ui';
 import { dateFormatter } from '../lib/locale';
 import { ErrorState, PermissionNotice } from './unity/States';
 import { ticketReference } from '../lib/supporttickets';
+import { useNow } from '../state/store';
 
 const date = (value: string) => dateFormatter({
   dateStyle: 'medium', timeStyle: 'short',
 }).format(new Date(value));
 
 export function SupportAccess({ account }: { account: Account | null }) {
+  const now = useNow();
   const [supporters, setSupporters] = useState<SupporterChoice[]>([]);
   const [windows, setWindows] = useState<SupportWindow[]>([]);
   const [tickets, setTickets] = useState<SupportTicketChoice[]>([]);
@@ -68,7 +70,11 @@ export function SupportAccess({ account }: { account: Account | null }) {
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { void refresh(); }, [refresh]);
 
-  const active = windows.filter((window) => !window.revokedAt && window.consentState === 'active');
+  const active = windows.filter((window) => (
+    !window.revokedAt
+    && window.consentState === 'active'
+    && new Date(window.expiresAt) > now
+  ));
   const history = windows.filter((window) => !active.includes(window));
 
   return (

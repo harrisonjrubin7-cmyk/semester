@@ -9,8 +9,8 @@
  *
  * `verify_jwt` is off (supabase/config.toml) so the CORS preflight, which
  * carries no Authorization header, is answered; the handler checks the
- * caller's token itself. Off (503) until `STRIPE_SECRET_KEY` is set. See
- * `docs/COMMERCIAL-CORE.md`.
+ * caller's token itself. New checkout is code-held off even when payment
+ * credentials and the operations setting exist. See `docs/COMMERCIAL-CORE.md`.
  */
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { handleBillingCheckout, type BeginRow } from '../_shared/billingcheckout.ts';
@@ -22,10 +22,15 @@ const db = createClient(
 );
 
 const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') ?? Deno.env.get('STRIPE_API_KEY');
+const billingOperationsRequested = Deno.env.get('BILLING_LIVE_ENABLED') === 'true';
+/** Code-level market hold: environment configuration alone cannot open new checkout. */
+const individualPaidAcquisitionApproved = false;
 
 Deno.serve((req) =>
   handleBillingCheckout(req, {
-    liveEnabled: Deno.env.get('BILLING_LIVE_ENABLED') === 'true',
+    // New individual paid acquisition is held by the current market decision.
+    // Cancellation and billing-history functions remain available to existing subscribers.
+    liveEnabled: individualPaidAcquisitionApproved && billingOperationsRequested,
     stripeKey,
     taxCode: Deno.env.get('STRIPE_PRODUCT_TAX_CODE'),
     allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
