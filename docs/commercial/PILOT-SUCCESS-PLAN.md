@@ -14,7 +14,7 @@ Before activation, the customer and Semester must approve the eligible populatio
 | Measure | Required definition | Current state |
 | --- | --- | --- |
 | eligible cohort activation | consented participants completing approved setup / eligible invited population | **[BASELINE, TARGET, OWNER, SOURCE REQUIRED]**; invitation is not activation |
-| first win | activated participant leaves minimum setup with at least one prioritized Today/This Week action | proposed definition; target event and sample QA unaccepted |
+| first win | participant who completed approved minimum setup then completes the approved first-week plan and at least one prioritized reversible Today/This Week action | proposed definition; target event and sample QA unaccepted |
 | meaningful weekly planning | participant completes an approved planning action; raw login excluded | proposed aggregate; field source unaccepted |
 | approved readiness progress | approved non-authoritative checklist progress | not proof of official registration or eligibility |
 | time to first value | consented start to validated first win, excluding test/support accounts | unmeasured |

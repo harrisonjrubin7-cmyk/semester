@@ -19,9 +19,10 @@ One opportunity represents one legal customer, bounded problem/cohort/workflow a
 | scoped pilot | customer-specific scope, responsibilities, measures/guardrails, implementation, support and offboarding drafted | feasibility/delivery review and authorized proposal approval |
 | proposal | dated conditional proposal with approved or explicit placeholder terms delivered to authorized contacts | accepted into procurement/contract review, rejected/expired, or returned for rescope |
 | contracting | redlines, order, approvals and dependencies tracked | authorized executed paper, or closed lost/no decision |
-| implementation pending | signed order exists; commercial prerequisites recorded | separate implementation and named-tenant launch gates begin; this stage is not activation |
 | closed won | authorized contract/order and booking determination approved | handoff accepted by implementation, finance and success owners |
 | closed lost / no decision | explicit rejection, disqualifier, withdrawal or expiry | reason, learning, consent/suppression and future-contact rule recorded |
+
+`closed won` is the terminal successful sales stage. After its handoff exit evidence is accepted, track `implementation pending` in the separate delivery lifecycle: entry requires the signed order and accepted handoff; exit requires the relevant implementation and named-tenant launch gates to begin. Neither state is activation, delivery acceptance, billing, cash collection or recognized revenue.
 
 Movement requires the exit evidence; never advance to improve a forecast. Regress when facts change. Record stage-entered time, next action/date, owner, amount/currency/status, probability source, scope, risk, decision date and evidence links. Any amount, probability or close date without authority is labeled **assumption** and excluded from actual revenue/customer claims.
 

@@ -12,8 +12,8 @@ Every implemented metric must add: metric/event version, purpose/decision, eligi
 | Metric | Controlled definition | Current source/evidence boundary |
 | --- | --- | --- |
 | eligible cohort | participants meeting frozen pilot eligibility and invitation rules | approved roster/cohort required; not repository counts |
-| activation rate | approved activation completions / eligible invited population | invitation delivery/login alone excluded; field event unaccepted |
-| first-win rate | validated first-win completions / activated participants | minimum-setup and prioritized-action definition proposed; QA required |
+| activation rate | approved minimum-setup completions / eligible invited population | invitation delivery/login alone excluded; field event unaccepted |
+| first-win rate | validated first-win completions / participants completing approved minimum setup | first-week plan plus reversible prioritized-action definition proposed; report setup-to-first-win loss separately; QA required |
 | time to first value | elapsed consented start to first win among valid completions; distribution, not only mean | exclude tests/support; timestamps unaccepted |
 | Weekly Prepared Action Rate | eligible activated participants completing a weekly plan and ≥1 self-selected relevant next action / eligible activated participants in week | proposed north star; privacy-safe field source absent |
 | meaningful retention | prior eligible activated participants with an approved useful action in later window / prior eligible activated participants | raw return/login excluded; cohort/window required |

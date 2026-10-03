@@ -25,7 +25,7 @@ Weights are hypotheses requiring customer/privacy review and outcome validation.
 
 ## Overrides and actions
 
-P0/P1 security, privacy, accessibility, safety, legal/rights, tenant-isolation or integrity issue overrides the score and may pause/stop scope. Other triggers—sponsor departure, unsupported expansion, unstaffed support, unreconciled billing/delivery or missed decision—require human review. Every state maps to a respectful named action: investigate data quality, ask the customer, remediate/support, rescope, pause, or prepare renewal/offboarding. Never penalize students or restrict rights.
+P0/P1 security, privacy, accessibility, safety, legal/rights, tenant-isolation or integrity issue overrides the score, requires incident response and immediately pauses the affected scope until authorized safe recovery. Other triggers—sponsor departure, unsupported expansion, unstaffed support, unreconciled billing/delivery or missed decision—require human review. Every state maps to a respectful named action: investigate data quality, ask the customer, remediate/support, rescope, pause, or prepare renewal/offboarding. Never penalize students or restrict rights.
 
 ## Evidence state
 
