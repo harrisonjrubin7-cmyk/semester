@@ -61,7 +61,9 @@ where mark = 'opened'
 group by 1
 order by 1;
 
--- ── 2 · Legacy course-plus-study funnel (historically "Activation") ──────
+-- ── 2 · Activation ─────────────────────────────────────────────────────────
+-- Legacy course-plus-study funnel; this is not the controlled setup-only
+-- activation metric defined by the current market-readiness specifications.
 --
 -- This is not the controlled setup-only `student_activated` metric. Keep it
 -- labeled legacy course-plus-study in reports; do not publish `pct` as the
