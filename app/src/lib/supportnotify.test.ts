@@ -3,6 +3,7 @@ import { handleSupportNotice, type SupportNoticeDeps } from '../../../supabase/f
 
 const origin = 'https://harrisonjrubin7-cmyk.github.io';
 const ticket = '123e4567-e89b-42d3-a456-426614174000';
+const claim = '223e4567-e89b-42d3-a456-426614174000';
 
 function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
   return {
@@ -11,11 +12,12 @@ function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
     appUrl: `${origin}/semester/`,
     userFromToken: vi.fn().mockResolvedValue('agent'),
     mayAnswer: vi.fn().mockResolvedValue(true),
-    notice: vi.fn().mockResolvedValue({ messageId: 'message-1', ticketId: ticket, email: 'student@example.test', attempts: 0 }),
+    notice: vi.fn().mockResolvedValue({ messageId: 'message-1', ticketId: ticket, claimId: claim, email: 'student@example.test', attempts: 0 }),
     pending: vi.fn().mockResolvedValue([]),
+    eligible: vi.fn().mockResolvedValue(true),
     send: vi.fn().mockResolvedValue(true),
-    accepted: vi.fn().mockResolvedValue(undefined),
-    failed: vi.fn().mockResolvedValue(false),
+    accepted: vi.fn().mockResolvedValue(true),
+    failed: vi.fn().mockResolvedValue('retrying'),
     ...overrides,
   };
 }
@@ -39,26 +41,27 @@ describe('support reply notification', () => {
     const text = vi.mocked(d.send).mock.calls[0][0].text;
     expect(text).toContain('/semester/');
     expect(text).not.toContain('agent');
-    expect(d.accepted).toHaveBeenCalledWith('message-1');
+    expect(d.eligible).toHaveBeenCalledWith('message-1', claim);
+    expect(d.accepted).toHaveBeenCalledWith('message-1', claim);
   });
 
   it('drains durable pending notices for the authenticated scheduler', async () => {
     const d = deps({
       cronSecret: 'cron-secret',
-      pending: vi.fn().mockResolvedValue([{ messageId: 'message-2', ticketId: ticket, email: 'student@example.test', attempts: 1 }]),
+      pending: vi.fn().mockResolvedValue([{ messageId: 'message-2', ticketId: ticket, claimId: claim, email: 'student@example.test', attempts: 1 }]),
     });
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(200);
     expect(d.send).toHaveBeenCalledTimes(1);
-    expect(d.accepted).toHaveBeenCalledWith('message-2');
+    expect(d.accepted).toHaveBeenCalledWith('message-2', claim);
   });
 
   it('leaves rejected notices in the outbox with a retry attempt', async () => {
     const d = deps({ send: vi.fn().mockResolvedValue(false) });
     const response = await handleSupportNotice(request(), d);
     expect(response.status).toBe(502);
-    expect(d.failed).toHaveBeenCalledWith('message-1', 0, 'provider rejected notice');
+    expect(d.failed).toHaveBeenCalledWith('message-1', claim, 0, 'provider rejected notice');
     expect(d.accepted).not.toHaveBeenCalled();
   });
 
@@ -66,8 +69,8 @@ describe('support reply notification', () => {
     const d = deps({
       cronSecret: 'cron-secret',
       pending: vi.fn().mockResolvedValue([
-        { messageId: 'message-1', ticketId: ticket, email: 'first@example.test', attempts: 2 },
-        { messageId: 'message-2', ticketId: ticket, email: 'second@example.test', attempts: 0 },
+        { messageId: 'message-1', ticketId: ticket, claimId: claim, email: 'first@example.test', attempts: 2 },
+        { messageId: 'message-2', ticketId: ticket, claimId: claim, email: 'second@example.test', attempts: 0 },
       ]),
       send: vi.fn().mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce(true),
     });
@@ -75,30 +78,30 @@ describe('support reply notification', () => {
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ processed: 2, accepted: 1, retrying: 1, dead_lettered: 0, cancelled: 0 });
-    expect(d.failed).toHaveBeenCalledWith('message-1', 2, 'provider transport unavailable');
-    expect(d.accepted).toHaveBeenCalledWith('message-2');
+    expect(d.failed).toHaveBeenCalledWith('message-1', claim, 2, 'provider transport unavailable');
+    expect(d.accepted).toHaveBeenCalledWith('message-2', claim);
   });
 
   it('fails the scheduled batch visibly when a notice is dead-lettered', async () => {
     const d = deps({
       cronSecret: 'cron-secret',
-      pending: vi.fn().mockResolvedValue([{ messageId: 'message-8', ticketId: ticket, email: 'student@example.test', attempts: 7 }]),
+      pending: vi.fn().mockResolvedValue([{ messageId: 'message-8', ticketId: ticket, claimId: claim, email: 'student@example.test', attempts: 7 }]),
       send: vi.fn().mockResolvedValue(false),
-      failed: vi.fn().mockResolvedValue(true),
+      failed: vi.fn().mockResolvedValue('dead_lettered'),
     });
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(503);
     expect(await response.json()).toEqual({ processed: 1, accepted: 0, retrying: 0, dead_lettered: 1, cancelled: 0 });
-    expect(d.failed).toHaveBeenCalledWith('message-8', 7, 'provider rejected notice');
+    expect(d.failed).toHaveBeenCalledWith('message-8', claim, 7, 'provider rejected notice');
   });
 
   it('reports recipient-resolution retries and dead letters without calling the provider', async () => {
     const d = deps({
       cronSecret: 'cron-secret',
       pending: vi.fn().mockResolvedValue([
-        { messageId: 'message-7', ticketId: ticket, email: '', attempts: 6, resolutionOutcome: 'retrying' },
-        { messageId: 'message-8', ticketId: ticket, email: '', attempts: 7, resolutionOutcome: 'dead_lettered' },
+        { messageId: 'message-7', ticketId: ticket, claimId: claim, email: '', attempts: 6, resolutionOutcome: 'retrying' },
+        { messageId: 'message-8', ticketId: ticket, claimId: claim, email: '', attempts: 7, resolutionOutcome: 'dead_lettered' },
       ]),
     });
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
@@ -112,7 +115,7 @@ describe('support reply notification', () => {
     const d = deps({
       cronSecret: 'cron-secret',
       pending: vi.fn().mockResolvedValue([
-        { messageId: 'message-3', ticketId: ticket, email: '', attempts: 0, resolutionOutcome: 'cancelled' },
+        { messageId: 'message-3', ticketId: ticket, claimId: claim, email: '', attempts: 0, resolutionOutcome: 'cancelled' },
       ]),
     });
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
@@ -120,6 +123,15 @@ describe('support reply notification', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ processed: 1, accepted: 0, retrying: 0, dead_lettered: 0, cancelled: 1 });
     expect(d.send).not.toHaveBeenCalled();
+  });
+
+  it('rechecks a claimed row after recipient resolution and cancels before provider I/O', async () => {
+    const d = deps({ eligible: vi.fn().mockResolvedValue(false) });
+    const response = await handleSupportNotice(request(), d);
+    expect(response.status).toBe(502);
+    expect(d.eligible).toHaveBeenCalledWith('message-1', claim);
+    expect(d.send).not.toHaveBeenCalled();
+    expect(d.accepted).not.toHaveBeenCalled();
   });
 
   it('refuses callers without the support capability before looking up a ticket', async () => {

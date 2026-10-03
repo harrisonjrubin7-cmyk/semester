@@ -9,9 +9,22 @@ create table if not exists public.support_notification_outbox (
   attempts integer not null default 0 check (attempts between 0 and 8),
   accepted_at timestamptz,
   dead_lettered_at timestamptz,
+  claim_id uuid,
+  claimed_at timestamptz,
   last_error text check (last_error is null or length(last_error) <= 160),
+  constraint support_notification_claim_pair check ((claim_id is null) = (claimed_at is null)),
   constraint support_notification_one_outcome check (accepted_at is null or dead_lettered_at is null)
 );
+
+alter table public.support_notification_outbox
+  add column if not exists claim_id uuid;
+alter table public.support_notification_outbox
+  add column if not exists claimed_at timestamptz;
+do $$ begin
+  alter table public.support_notification_outbox
+    add constraint support_notification_claim_pair check ((claim_id is null) = (claimed_at is null));
+exception when duplicate_object then null;
+end $$;
 
 create index if not exists support_notification_outbox_due
   on public.support_notification_outbox (next_attempt_at, queued_at)
@@ -27,6 +40,36 @@ create index if not exists support_notification_outbox_ticket_due
 alter table public.support_notification_outbox enable row level security;
 revoke all on table public.support_notification_outbox from public, anon, authenticated;
 grant select, insert, update, delete on table public.support_notification_outbox to service_role;
+
+-- Claim before recipient lookup or provider delivery. SKIP LOCKED keeps the
+-- immediate operator attempt and the scheduled drain from ever owning the
+-- same row. A stale claim is recoverable after an interrupted worker.
+create or replace function public.claim_support_notifications(want_ticket uuid, want_limit integer)
+returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
+language sql volatile security invoker set search_path = '' as $$
+  with due as (
+    select o.message_id
+      from public.support_notification_outbox o
+     where o.accepted_at is null
+       and o.dead_lettered_at is null
+       and o.next_attempt_at <= now()
+       and (o.claimed_at is null or o.claimed_at < now() - interval '5 minutes')
+       and (want_ticket is null or o.ticket_id = want_ticket)
+     order by o.queued_at
+     limit greatest(1, least(coalesce(want_limit, 100), 100))
+     for update skip locked
+  ), claimed as (
+    update public.support_notification_outbox o
+       set claim_id = pg_catalog.gen_random_uuid(), claimed_at = now()
+      from due
+     where o.message_id = due.message_id
+    returning o.message_id, o.ticket_id, o.attempts, o.claim_id
+  )
+  select c.message_id, c.ticket_id, c.attempts, c.claim_id from claimed c;
+$$;
+
+revoke all on function public.claim_support_notifications(uuid, integer) from public, anon, authenticated;
+grant execute on function public.claim_support_notifications(uuid, integer) to service_role;
 
 -- Support email is a per-ticket choice. It starts off, can be changed by the
 -- student at any time, and never exposes the ticket content.

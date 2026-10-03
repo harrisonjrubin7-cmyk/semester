@@ -10,14 +10,16 @@ export interface SupportNoticeDeps {
   mayAnswer(userId: string): Promise<boolean>;
   notice(ticketId: string): Promise<SupportNoticeTarget | null>;
   pending(): Promise<SupportNoticeTarget[]>;
+  eligible(messageId: string, claimId: string): Promise<boolean>;
   send(input: { to: string; subject: string; text: string; idempotencyKey: string }): Promise<boolean>;
-  accepted(messageId: string): Promise<void>;
-  failed(messageId: string, attempts: number, reason: string): Promise<boolean>;
+  accepted(messageId: string, claimId: string): Promise<boolean>;
+  failed(messageId: string, claimId: string, attempts: number, reason: string): Promise<'retrying' | 'dead_lettered' | 'cancelled'>;
 }
 
 export interface SupportNoticeTarget {
   messageId: string;
   ticketId: string;
+  claimId: string;
   email: string;
   attempts: number;
   /** Recipient lookup already advanced this row without calling the provider. */
@@ -99,6 +101,9 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
 
 async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered' | 'cancelled'> {
   if (target.resolutionOutcome) return target.resolutionOutcome;
+  // Recipient resolution can take long enough for a student to opt out. Check
+  // the claimed row and preference again immediately before provider I/O.
+  if (!(await deps.eligible(target.messageId, target.claimId))) return 'cancelled';
   const ticketReference = reference(target.ticketId);
   let sent = false;
   try {
@@ -111,13 +116,10 @@ async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget):
   } catch {
     // One network failure must advance this row's retry state without
     // preventing the scheduler from attempting the rest of the batch.
-    const deadLettered = await deps.failed(target.messageId, target.attempts, 'provider transport unavailable');
-    return deadLettered ? 'dead_lettered' : 'retrying';
+    return deps.failed(target.messageId, target.claimId, target.attempts, 'provider transport unavailable');
   }
   if (sent) {
-    await deps.accepted(target.messageId);
-    return 'accepted';
+    return (await deps.accepted(target.messageId, target.claimId)) ? 'accepted' : 'cancelled';
   }
-  const deadLettered = await deps.failed(target.messageId, target.attempts, 'provider rejected notice');
-  return deadLettered ? 'dead_lettered' : 'retrying';
+  return deps.failed(target.messageId, target.claimId, target.attempts, 'provider rejected notice');
 }

@@ -187,6 +187,19 @@ begin
   perform pg_temp.counted('retrying one reply operation does not duplicate its message', n, 1);
   select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
   perform pg_temp.counted('retrying one reply operation does not duplicate its email intent', n, 1);
+  perform pg_temp.must_refuse('a student cannot claim support-notification work', ada,
+    format('select count(*) from public.claim_support_notifications(%L, 1)', a11y));
+  execute 'set local role service_role';
+  select count(*) into n from public.claim_support_notifications(a11y, 1);
+  execute 'reset role';
+  perform pg_temp.counted('the delivery worker atomically claims the pending notice', n, 1);
+  execute 'set local role service_role';
+  select count(*) into n from public.claim_support_notifications(a11y, 1);
+  execute 'reset role';
+  perform pg_temp.counted('an overlapping worker cannot claim the same notice', n, 0);
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and claim_id is not null and claimed_at is not null;
+  perform pg_temp.counted('a claimed notice records one complete ownership pair', n, 1);
 
   perform pg_temp.become_mfa(agent);
   perform public.support_reply(a11y, 'Second update.', 'waiting_on_student', gen_random_uuid());
