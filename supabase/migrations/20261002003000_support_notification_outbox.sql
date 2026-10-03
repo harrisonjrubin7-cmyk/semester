@@ -129,7 +129,11 @@ language sql stable security definer set search_path = '' as $$
    order by t.id;
 $$;
 
-create or replace function public.set_support_email_notice(want_ticket uuid, want_enabled boolean)
+-- A later migration may change this function's return contract. Dropping the
+-- exact signature keeps a full migration replay idempotent because PostgreSQL
+-- cannot change a function return type through create or replace.
+drop function if exists public.set_support_email_notice(uuid, boolean);
+create function public.set_support_email_notice(want_ticket uuid, want_enabled boolean)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
   perform pg_catalog.pg_advisory_xact_lock(
