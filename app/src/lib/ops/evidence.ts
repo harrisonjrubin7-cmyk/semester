@@ -129,6 +129,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'Both live hosts returned 404 for release.json while the local production build emitted a valid GA manifest. This is evidence of an open gate, not a pass; the hourly monitor now refuses missing, stale, beta, demo, signed-out or read-only releases.',
   },
   {
+    id: 'production-public-signup-access-gate-2026-10-02',
+    artifact: 'Read-only production Supabase access-gate readback confirming that Semester public signup is not invite-only',
+    path: 'docs/evidence/production/2026-10-02-public-signup-access-gate.md',
+    produced: '2026-10-02',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SRE-001'],
+    note: 'The production singleton access_gate row returned invite_only=false with a stored change time of 2026-10-01 16:47 UTC. No setting or row was changed. This proves the database gate state, not the full anonymous signup journey.',
+  },
+  {
     id: 'accessibility-browser-smoke-2026-10-02',
     artifact: 'Merged-release critical-journey accessibility smoke in installed Chrome across desktop, 200 and 400 percent reflow equivalents, and WCAG text spacing',
     path: 'docs/evidence/accessibility/2026-10-02-critical-journey-browser-smoke.md',

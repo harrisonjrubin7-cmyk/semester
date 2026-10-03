@@ -23,6 +23,10 @@ Project: `lzrqvlugnawcgywkhqlz` (`semester`).
   not available in this execution environment.
 - Google sign-in and SAML remain disabled in the public auth settings; there are
   zero institution registrations in `public.lti_platform`.
+- The live database access gate returned `invite_only = false` on 2026-10-02;
+  public self-service signup is not blocked by Semester's invite-only control.
+  The production anonymous signup journey itself is still part of the open
+  golden-path acceptance run.
 
 ## Implemented in this change
 
@@ -40,7 +44,6 @@ Project: `lzrqvlugnawcgywkhqlz` (`semester`).
 
 | Item | Required to finish |
 | --- | --- |
-| Public self-service signup | Production invite-only is still on. Automatic approval review rejected switching it off because the exact global access change was not explicitly authorized. Owner approval of opening production signup is required. |
 | Live billing | Live Stripe merchant key, Supabase configuration credential, webhook signing secret (automatically created for a new endpoint), and an approved checkout-to-cancellation acceptance run. See `ops/billing/README.md`. |
 | Google sign-in / personal provider connections | Owner provider app registrations, redirect URLs and approved OAuth credentials; live consent/connect/disconnect tests. |
 | Institutional SSO / SCIM / LTI / grade passback | Platform software exists; institutions must register their identity/LMS deployment and grants, then pass scoped acceptance tests. No tenant is connected. |
