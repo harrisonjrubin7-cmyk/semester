@@ -89,7 +89,7 @@ things green rather than work around them.
 
 | Promise | Where it is made | What enforces it | What it constrains here |
 |---|---|---|---|
-| "Until you delete it. There is no retention schedule that quietly removes your work" | `app/src/lib/privacy.ts`, shown on the Privacy screen | [`RETENTION.md`](../RETENTION.md) and `app/src/lib/retention.test.ts` (every table must have a retention answer) | Part 13's `retention_policies` may govern **records about** work and institution-sourced copies, never student-owned work. Every new table needs a `RETENTION.md` row in the same change |
+| "Your courses, deadlines, notes, plans and other study work stay until you delete them" | `app/src/lib/privacy.ts`, shown on the Privacy screen | [`RETENTION.md`](../RETENTION.md) and `app/src/lib/retention.test.ts` (every table must have a retention answer) | Part 13's `retention_policies` may govern **records about** work, institution-sourced copies and the disclosed 180-day support-ticket exception, never student study work. Every new table needs a `RETENTION.md` row in the same change |
 | No streak, no percentage of you, no comparison | `app/src/lib/you.ts`, `app/src/lib/weekly.ts` | Code comments only today | Part 16. Phase 6 adds a structural test (see the test plan) |
 | Policies ask for a capability, never a role name | every migration since `supabase/migrations/20260922012000_capabilities.sql` | `supabase/capabilities.check.sql`, `supabase/grants.check.sql` | Every new surface gets a capability, not a role check |
 | New public functions are allowlisted | `supabase/grants.check.sql` | CI runs `supabase/check.sh` | Each phase's RPCs are added to the allowlist deliberately |

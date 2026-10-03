@@ -143,6 +143,17 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan']));
   });
 
+  it('explicitly reactivates live jobs whose named schedule may preserve an older parked state', () => {
+    const sql = scheduler();
+    expect(sql).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-reply-notify'[\s\S]*?active\s*:=\s*true/);
+  });
+
+  it('installs the credential-free support retention job with its migration', () => {
+    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    expect(migration).toMatch(/cron\.schedule\([\s\S]*?'support-ticket-retention'/);
+    expect(migration).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
+  });
+
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {
     const sweeps = [...functionsCreated()].filter((f) => SWEEP_SHAPE.test(f));
     expect(sweeps.length).toBeGreaterThan(8);

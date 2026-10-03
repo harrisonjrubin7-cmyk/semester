@@ -12,6 +12,20 @@ begin
   raise notice 'ok  %', what;
 end $$;
 
+create or replace function pg_temp.error_as(who uuid, statement text)
+returns text language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+  execute 'set local role authenticated';
+  execute statement;
+  execute 'reset role';
+  return null;
+exception when others then
+  execute 'reset role';
+  return sqlerrm;
+end $$;
+
 do $$
 declare
   school text := 'support-retention-school';
@@ -50,6 +64,11 @@ begin
 
   perform private.sweep_support_ticket_retention();
   perform pg_temp.must('an account hold preserves every ticket for that account',
+    (select count(*) from public.support_tickets where student_id = who) = 5);
+  perform pg_temp.must('the same hold blocks direct self-service ticket erasure',
+    pg_temp.error_as(who, 'select public.forget_my_support_tickets()')
+      like '%active legal hold%');
+  perform pg_temp.must('direct erasure refusal leaves every held ticket in place',
     (select count(*) from public.support_tickets where student_id = who) = 5);
 
   update public.legal_holds

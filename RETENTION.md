@@ -23,21 +23,24 @@ the day somebody needs it.
 
 `app/src/lib/privacy.ts` tells every student, on a screen in the app:
 
-> **How long anything is kept.** Until you delete it. There is no retention
-> schedule that quietly removes your work, and no archive kept after you delete
-> your account. Nothing is used to train anything. The one thing that does age
-> out is not your work but a record about it: the log of who has read your rows,
-> described below, keeps ninety days and drops what is older.
+> **How long anything is kept.** Your courses, deadlines, notes, plans and other
+> study work stay until you delete them, and no archive is kept after you delete
+> your account. Nothing is used to train anything. Support questions are the one
+> content exception: a resolved or closed ticket and its replies are deleted 180
+> days after the last activity unless a legal hold requires preservation. The
+> access log and daily activity records also age out on the clocks below.
 
 That is a commitment, not a default, and it decides the shape of everything
-below. **A retention schedule here may age out records _about_ a student's work.
-It may not age out the work.** Adding a clock to `notes`, `tasks`, `courses`,
-`state` or anything else a student typed would make that paragraph false, and
-the paragraph is load-bearing — `VANDERBILT-AUDIT.md` and the competitive
-review both rest the product's honest-privacy claim on it.
+below. **A retention schedule here may age out records _about_ a student's work
+and the disclosed support-ticket exception. It may not age out study work.**
+Adding a clock to `notes`, `tasks`, `courses`, `state` or other study content
+would make that paragraph false, and the paragraph is load-bearing —
+`VANDERBILT-AUDIT.md` and the competitive review both rest the product's
+honest-privacy claim on it.
 
-So "no retention schedule" is not a gap in this project. It is the decision.
-What was missing is the sentence saying so, and the list of the exceptions.
+So the absence of a study-work retention clock is not a gap in this project.
+It is the decision. What was missing is the sentence saying so, and the list
+of the disclosed exceptions.
 
 ## The clocks that run
 

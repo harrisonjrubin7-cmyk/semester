@@ -109,7 +109,13 @@ select cron.schedule(
 
 -- Production activation and the sender/secret configuration were verified on
 -- 3 October 2026. Keep this job active when scheduler.sql is reapplied; the
--- recipient mailbox receipt remains a separate evidence gate.
+-- recipient mailbox receipt remains a separate evidence gate. cron.schedule
+-- preserves an existing named job's active flag, so explicitly undo any
+-- earlier parked state after updating the job definition.
+select cron.alter_job(
+  (select jobid from cron.job where jobname = 'support-reply-notify'),
+  active := true
+);
 
 
 -- ── Clearing out old tombstones ───────────────────────────────────────────
