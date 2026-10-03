@@ -192,11 +192,11 @@ describe('the company site shows captured current application screens', () => {
     expect(Number.isFinite(Date.parse(proof.capturedAt))).toBe(true);
     expect(proof.captureDateLabel).toBe('Oct 3, 2026 (America/Chicago)');
     expect(proof.appSourceCommit).toMatch(/^[a-f0-9]{40}$/);
-    expect(proof.appSourceCommit).toBe('92eeafd9d04d3ca5971819cff441bba19dac9adc');
+    expect(proof.appSourceCommit).toBe('a1504691a60af3499803d0e9fd38fa1cb4ea7ec9');
     expect(proof.appDeploymentCommit).toBe(proof.appSourceCommit);
-    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37106520032');
-    expect(proof.deploymentVerification.expectedFixPresent).toContain('min-height: 44px');
-    expect(proof.deploymentVerification.supersededRuleAbsent).toContain('min-height: 0');
+    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37114132948');
+    expect(proof.deploymentVerification.expectedFixPresent).toMatch(/min-height:\s*44px/);
+    expect(proof.deploymentVerification.supersededRuleAbsent).toMatch(/min-height:\s*0/);
     expect(proof.deploymentVerification.serviceWorkerState).toMatch(/brand-new browser profile/i);
     expect(proof.captureMode).toBe('isolated-demo');
     expect(proof.sampleData).toBe(true);
@@ -251,6 +251,13 @@ describe('the company site shows captured current application screens', () => {
       expect(existsSync(capturePath(step.desktop))).toBe(true);
       expect(existsSync(capturePath(step.mobile))).toBe(true);
     }
+
+    expect(steps[0]).toMatchObject({ id: 'search', title: expect.stringMatching(/search/i) });
+    expect(`${steps[0].description} ${steps[0].alt}`).toMatch(/Discover/i);
+    expect(`${steps[0].title} ${steps[0].description} ${steps[0].alt}`).not.toMatch(/course progress|academic progress|Home showing/i);
+    expect(steps[3]).toMatchObject({ id: 'calendar', title: expect.stringMatching(/month/i) });
+    expect(`${steps[3].description} ${steps[3].alt}`).toMatch(/month/i);
+    expect(`${steps[3].title} ${steps[3].alt}`).not.toMatch(/week|weekly/i);
 
     expect(experience?.textContent).toContain('public fictional-data demo');
     expect(experience?.textContent).toContain('Captured Oct 3, 2026');
