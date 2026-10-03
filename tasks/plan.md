@@ -41,13 +41,13 @@ Current-main reconciliation
 - [x] A1: Reconcile current main with Command Center fail-closed fixes.
 - [x] A2: Add a capability-aware console workspace registry.
 - [x] A3: Establish the scoped RPC and negative-policy-test template.
-- [ ] A4: Add a five-layer readiness/evidence registry.
+- [x] A4: Add a five-layer readiness/evidence registry.
 
 ### Checkpoint A
 
 - [ ] Exact-commit TypeScript, lint, university, SQL policy, focused console, shuffle, and build gates pass.
-- [ ] HawkScan completes against the runnable application with no unresolved high/critical finding.
-- [ ] No new workspace can be opened or queried using `console:operate` alone.
+- [x] HawkScan completes against the runnable application with no unresolved high/critical finding.
+- [x] No new workspace can be opened or queried using `console:operate` alone.
 
 ### Phase B — Pilot operating backbone
 

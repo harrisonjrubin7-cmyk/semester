@@ -67,29 +67,33 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 
 **Mutation verification:** Replacing the exact-tenant `audit:read` gate with an anywhere-scope check made the wrong-tenant assertion fail. Restoring the exact gate returned the focused suite to green.
 
-## A4: Add a five-layer readiness registry
+## A4: Add a five-layer readiness registry — complete
 
 **Description:** Model repository, configuration, deployment, activation/approval, and observed-operation evidence separately so the console cannot collapse them into one ready state.
 
 **Acceptance criteria:**
-- [ ] Every readiness item exposes its layer, source, owner, freshness, limitation, and blocking scope.
-- [ ] A repository test cannot satisfy an activation or observed-operation gate.
-- [ ] Stale or absent evidence fails closed.
+- [x] Every readiness item exposes its layer, source, owner, freshness, limitation, and blocking scope.
+- [x] A repository test cannot satisfy an activation or observed-operation gate.
+- [x] Stale or absent evidence fails closed.
 
 **Verification:**
-- [ ] Unit tests cover every transition and prohibited promotion.
-- [ ] Console renders missing and stale evidence without optimistic defaults.
-- [ ] Generated readiness documentation matches the source registry.
+- [x] Seven model tests cover every sequential transition, skipped layers, repository substitution, failed/revoked evidence, expiry, future dates, absence, and wrong-subject evidence.
+- [x] The Evidence workspace renders all five layers and labels missing and stale evidence as blocked without optimistic defaults; component and screen integration tests pass.
+- [x] `docs/OPS-READINESS-EVIDENCE-REGISTER.md` is generated from the source registry and held byte-for-byte by its test.
+- [x] Full app regression passes: 1,262 files, 19,679 tests passed, 48 intentionally skipped.
+- [x] TypeScript, focused lint, and the production build pass. Focused lint retains the existing non-blocking `Date` purity warning in `Evidence.tsx`.
 
 **Dependencies:** A3
 **Files likely touched:** `app/src/lib/ops/readiness.ts`, its test, one console component, one generated register
 **Estimated scope:** Medium
 
+**Security verification:** HawkScan v6.5.0 scan `79cf8cab-7ab8-43ce-b388-f0a8809045ae` passed against exact integrated commit `1af04aed` on 2026-10-03. It reported no NEW findings; the same three Medium `style-src unsafe-inline` paths remain human Risk Accepted. The registry contains no external input or write path; its fail-closed transitions are held by direct unit tests.
+
 ## Checkpoint A: Foundation
 
 - [ ] Full frontend and gateway gates pass.
 - [ ] SQL policy suite passes.
-- [ ] HawkScan DAST passes or the missing runtime/key is recorded as a blocking unverified gate.
+- [x] HawkScan DAST passes or the missing runtime/key is recorded as a blocking unverified gate.
 - [ ] Human review confirms the workspace and scope contracts before Phase B.
 
 ## B1: Tenant and pilot operations read workspace
