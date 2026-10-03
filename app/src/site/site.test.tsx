@@ -182,14 +182,13 @@ describe('what the site says', () => {
     for (const p of pages) for (const [what, re] of OVERCLAIMS) expect(p.html, `${p.route.path}: ${what}`).not.toMatch(re);
   });
 
-  it('sells nothing on the site: no checkout here, Plus is bought in the app, and Pro is planned', () => {
+  it('holds all individual paid acquisition and labels prices as planned', () => {
     const pricing = pages.find((p) => p.route.path === '/pricing/')!.html;
     expect(pricing).not.toMatch(/buy now|subscribe now|start (your )?subscription|add (a |your )?card|enter your card/i);
-    expect(pricing).toContain('Nothing can be bought on this site');
-    expect(pricing).toContain('Plus is bought from the Account screen');
-    expect(pricing).not.toMatch(/no checkout|nothing can be bought here/i);
+    expect(pricing).toContain('Individual paid plans are planned, not on sale');
+    expect(pricing).toContain('New checkout is disabled');
     expect(pricing).toContain('(planned)');
-    expect(pricing).toContain('Pro is not on sale yet');
+    expect(pricing).toContain('Plus and Pro are planned, not on sale');
     expect(pricing).toContain('Export all of your data');
   });
 

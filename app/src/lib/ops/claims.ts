@@ -515,8 +515,8 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'no-sale',
     capabilityIds: ['CAP-010'],
-    claim: 'Plus can be bought from the Account screen, and nowhere else; Pro is not on sale',
-    scope: 'Checkout and cancellation are built (D-128, D-132) and run on Stripe test keys; no live payment has been taken and the first end-to-end check is not recorded. The public site sells nothing. The refund policy is still a proposal.',
+    claim: 'Individual paid acquisition is held; Plus and Pro are planned, not on sale',
+    scope: 'Checkout and cancellation are built, but new checkout is disabled while required approvals remain open. Existing subscribers keep cancellation and billing-history access. No live payment evidence authorizes broad acquisition, and the refund policy is still a proposal.',
     status: 'in-preparation',
     owner: 'founder',
     pages: ['/pricing/'],
