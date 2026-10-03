@@ -101,6 +101,10 @@ begin
          first_response_due = now() - interval '219 days', updated_at = now() - interval '181 days'
    where id = snapshot_ticket;
 
+  -- Legal-hold triggers prefer auth.uid() over supplied actor ids. Clear the
+  -- ticket-opening identity so this service-role fixture keeps distinct named
+  -- placers and releasers, as the two-person release constraint requires.
+  perform set_config('request.jwt.claims', '{}'::text, true);
   insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
   values ('account', who::text, school, 'Preserve this account.', 'SUPPORT-RETENTION-CHECK', operator_id)
   returning id into hold_id;
@@ -114,6 +118,7 @@ begin
   perform pg_temp.must('direct erasure refusal leaves every held ticket in place',
     (select count(*) from public.support_tickets where student_id = who) = 5);
 
+  perform set_config('request.jwt.claims', '{}'::text, true);
   update public.legal_holds
      set released_by = gen_random_uuid(), release_reason = 'Test release.'
    where id = hold_id;
@@ -128,6 +133,7 @@ begin
   perform pg_temp.must('ticket messages cascade when the individual-beta ticket expires',
     not exists (select 1 from public.support_ticket_messages where ticket_id = old_resolved));
 
+  perform set_config('request.jwt.claims', '{}'::text, true);
   insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
   values ('tenant', school, school, 'Preserve this tenant.', 'SUPPORT-TENANT-RETENTION-CHECK', operator_id)
   returning id into tenant_hold_id;
@@ -148,6 +154,7 @@ begin
     pg_temp.error_as(tenant_who, 'select public.forget_my_support_tickets()')
       like '55006 %active legal hold%');
 
+  perform set_config('request.jwt.claims', '{}'::text, true);
   update public.legal_holds
      set released_by = gen_random_uuid(), release_reason = 'Test release.'
    where id = tenant_hold_id;
