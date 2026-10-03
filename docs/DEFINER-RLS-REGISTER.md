@@ -224,8 +224,8 @@ The current register also includes 3 callable definers added after that dated ca
 | `set_member_standing` | `auth.uid()`, `private.org_can` | `20260921230000_organizations.sql` |
 | `set_school_enforcement` | `private.is_app_admin` | `20260930185000_school_membership_enforcement.sql` |
 | `support_reply` | `private.support_agent` | `20261003120000_support_notification_consent_boundary.sql` |
-| `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
-| `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
+| `support_ticket_queue` | `private.support_agent` | `20261003130000_support_ticket_retention.sql` |
+| `support_ticket_thread` | `private.support_agent` | `20261003130000_support_ticket_retention.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 
 ### integration (6)
