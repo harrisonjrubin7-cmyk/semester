@@ -1,36 +1,52 @@
 -- Individual-beta support questions are operational records, not permanent
--- profiles. Resolved and student-closed tickets without a tenant association
--- are retained for 180 days after their last activity, then removed with their
--- messages and notification intents. Tenant-associated tickets remain outside
--- this sweep until an institution-specific contract rule is configured. An
--- active account, tenant or platform legal hold always wins.
+-- profiles. Resolved and student-closed tickets without a signed deployment
+-- association are retained for 180 days after their last activity, then
+-- removed with their messages and notification intents. Tickets opened under
+-- an effective signed order form remain outside this sweep until an
+-- institution-specific contract rule is configured. An active account, tenant
+-- or platform legal hold always wins.
 
 -- A tenant hold protects the record, not merely the student's current profile.
--- Keep the ticket's tenant at creation time so leaving a school cannot detach
--- an existing ticket from a hold that still covers it. The value deliberately
--- has no school foreign key: retained evidence must survive tenant offboarding.
+-- Keep a signed deployment tenant at creation time so leaving a school cannot
+-- detach an existing ticket from a hold that still covers it. Domain-based
+-- school membership alone is not a deployment and must keep the individual
+-- beta clock. The value deliberately has no school foreign key: retained
+-- evidence must survive tenant offboarding.
 alter table public.support_tickets
   add column if not exists tenant_id text;
 
--- Serialize the one-time snapshot with membership changes. Once this update
--- completes, the ticket carries its own durable tenant association.
+-- Serialize the one-time snapshot with membership and commercial-association
+-- changes. Once this update completes, a deployed ticket carries its own
+-- durable tenant association while ordinary school-domain members stay null.
 do $$
 begin
   lock table public.profiles in share mode;
+  lock table public.billing_account_tenants in share mode;
+  lock table public.contracts in share mode;
   update public.support_tickets t
      set tenant_id = p.school_id
     from public.profiles p
    where p.user_id = t.student_id
      and t.tenant_id is null
-     and p.school_id is not null;
+     and p.school_id is not null
+     and exists (
+       select 1
+         from public.billing_account_tenants bt
+         join public.contracts c on c.billing_account_id = bt.billing_account_id
+        where bt.tenant_id = p.school_id
+          and c.kind = 'order_form'
+          and c.status = 'signed'
+          and c.effective_at <= now()
+          and (c.ends_at is null or c.ends_at > now())
+     );
 end $$;
 
 comment on column public.support_tickets.tenant_id is
-  'Tenant associated with the ticket when it was opened; retained after membership changes so tenant legal holds continue to cover the record.';
+  'Effective signed deployment tenant when the ticket was opened; null for school-domain membership alone and retained after membership changes so tenant legal holds continue to cover the record.';
 
 -- Re-state the only client entry point so every new ticket snapshots the
--- caller's current tenant. Staff-facing reads still omit both account and
--- tenant identity.
+-- caller's effective signed deployment tenant. Staff-facing reads still omit
+-- both account and tenant identity.
 create or replace function public.open_support_ticket(
   want_category text, want_subject text, want_body text, want_context jsonb,
   want_email_notice boolean
@@ -38,6 +54,7 @@ create or replace function public.open_support_ticket(
 declare
   made uuid;
   who uuid := (select auth.uid());
+  membership_tenant text;
   ticket_tenant text;
 begin
   if who is null then
@@ -50,8 +67,24 @@ begin
     raise exception 'five questions a day is the limit; reply on an open one instead'
       using errcode = 'check_violation';
   end if;
-  select p.school_id into ticket_tenant
-    from public.profiles p where p.user_id = who;
+  -- Keep claim_school/leave_school from changing membership between the
+  -- snapshot decision and the ticket insert.
+  select p.school_id into membership_tenant
+    from public.profiles p
+   where p.user_id = who
+     for update of p;
+  select membership_tenant into ticket_tenant
+   where membership_tenant is not null
+     and exists (
+       select 1
+         from public.billing_account_tenants bt
+         join public.contracts c on c.billing_account_id = bt.billing_account_id
+        where bt.tenant_id = membership_tenant
+          and c.kind = 'order_form'
+          and c.status = 'signed'
+          and c.effective_at <= now()
+          and (c.ends_at is null or c.ends_at > now())
+     );
   insert into public.support_tickets
     (student_id, tenant_id, category, subject, body, context, priority,
      first_response_due, email_notice_enabled)
@@ -95,7 +128,7 @@ revoke all on function private.sweep_support_ticket_retention() from public, ano
 grant execute on function private.sweep_support_ticket_retention() to service_role;
 
 comment on function private.sweep_support_ticket_retention() is
-  'Deletes individual-beta resolved or closed support tickets after 180 days unless an active legal hold applies; tenant-associated tickets await a configured institutional contract rule.';
+  'Deletes individual-beta resolved or closed support tickets after 180 days unless an active legal hold applies; signed-deployment tickets await a configured institutional contract rule.';
 
 -- A direct self-service deletion is still a deletion and therefore must obey
 -- the same hold as the scheduled sweep. Account erasure already checks holds,
@@ -119,7 +152,7 @@ begin
           and private.tenant_is_held(t.tenant_id)
      ) then
     raise exception 'support tickets are preserved by an active legal hold'
-      using errcode = 'insufficient_privilege';
+      using errcode = '55006';
   end if;
   delete from public.support_tickets where student_id = who;
 end $$;

@@ -23,7 +23,7 @@ begin
   return null;
 exception when others then
   execute 'reset role';
-  return sqlerrm;
+  return sqlstate || ' ' || sqlerrm;
 end $$;
 
 do $$
@@ -31,6 +31,8 @@ declare
   school text := 'support-retention-school';
   who uuid := gen_random_uuid();
   tenant_who uuid := gen_random_uuid();
+  billing_account uuid := gen_random_uuid();
+  contract_id uuid := gen_random_uuid();
   old_resolved uuid := gen_random_uuid();
   old_closed uuid := gen_random_uuid();
   recent_resolved uuid := gen_random_uuid();
@@ -65,13 +67,34 @@ begin
   insert into public.support_ticket_messages (ticket_id, from_side, body)
   values (old_resolved, 'support', 'cascades with the ticket');
 
+  -- An auto-claimed school profile is still individual beta until a signed,
+  -- currently effective institutional order form covers the school.
   perform set_config('request.jwt.claims',
     json_build_object('sub', tenant_who::text, 'role', 'authenticated')::text, true);
   set local role authenticated;
   snapshot_ticket := public.open_support_ticket(
-    'how_to', 'Tenant snapshot', 'Preserve the tenant that covered this ticket.', '{}'::jsonb, false);
+    'how_to', 'Domain membership', 'This is still an individual-beta ticket.', '{}'::jsonb, false);
   reset role;
-  perform pg_temp.must('opening a ticket snapshots the current tenant',
+  perform pg_temp.must('school-domain membership alone does not create a deployment tenant',
+    (select tenant_id from public.support_tickets where id = snapshot_ticket) is null);
+  delete from public.support_tickets where id = snapshot_ticket;
+
+  insert into public.billing_accounts (id, kind, name)
+  values (billing_account, 'institution', 'Support Retention Institution');
+  insert into public.billing_account_tenants (billing_account_id, tenant_id)
+  values (billing_account, school);
+  insert into public.contracts
+    (id, billing_account_id, kind, status, signed_at, effective_at)
+  values
+    (contract_id, billing_account, 'order_form', 'signed', now(), now() - interval '1 day');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', tenant_who::text, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  snapshot_ticket := public.open_support_ticket(
+    'how_to', 'Deployment snapshot', 'Preserve the signed deployment that covered this ticket.', '{}'::jsonb, false);
+  reset role;
+  perform pg_temp.must('opening a ticket snapshots an effective signed deployment tenant',
     (select tenant_id from public.support_tickets where id = snapshot_ticket) = school);
   update public.support_tickets
      set status = 'resolved', created_at = now() - interval '220 days',
@@ -87,7 +110,7 @@ begin
     (select count(*) from public.support_tickets where student_id = who) = 5);
   perform pg_temp.must('the same hold blocks direct self-service ticket erasure',
     pg_temp.error_as(who, 'select public.forget_my_support_tickets()')
-      like '%active legal hold%');
+      like '55006 %active legal hold%');
   perform pg_temp.must('direct erasure refusal leaves every held ticket in place',
     (select count(*) from public.support_tickets where student_id = who) = 5);
 
@@ -123,14 +146,14 @@ begin
     (select tenant_id from public.support_tickets where id = snapshot_ticket) = school);
   perform pg_temp.must('the same tenant hold blocks direct erasure after the student leaves',
     pg_temp.error_as(tenant_who, 'select public.forget_my_support_tickets()')
-      like '%active legal hold%');
+      like '55006 %active legal hold%');
 
   update public.legal_holds
      set released_by = gen_random_uuid(), release_reason = 'Test release.'
    where id = tenant_hold_id;
   perform private.sweep_support_ticket_retention();
 
-  perform pg_temp.must('tenant-associated tickets await a contract-specific retention rule',
+  perform pg_temp.must('signed-deployment tickets await a contract-specific retention rule',
     exists (select 1 from public.support_tickets where id = snapshot_ticket));
   perform pg_temp.must('direct erasure is available after the tenant hold is released',
     pg_temp.error_as(tenant_who, 'select public.forget_my_support_tickets()') is null);
