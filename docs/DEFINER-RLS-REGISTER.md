@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 4 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003040000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 5 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003040000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261003050000_console_tenant_operations.sql` (`console_tenant_operations`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -53,12 +53,12 @@ The current register also includes 4 callable definers added after that dated ca
 | --- | --- | --- |
 | self-service | 60 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
 | sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 75 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| admin | 76 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
 | read-helper | 28 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 206 | |
+| **total** | 207 | |
 
 ### self-service (60)
 
@@ -149,7 +149,7 @@ The current register also includes 4 callable definers added after that dated ca
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (75)
+### admin (76)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
@@ -177,6 +177,7 @@ The current register also includes 4 callable definers added after that dated ca
 | `console_command_center` | `auth.uid()`, `private.has_capability` | `20260930173030_console_command_center.sql` |
 | `console_figures` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_tenant_access` | `auth.uid()`, `private.has_capability` | `20261003040000_console_scoped_tenant_access.sql` |
+| `console_tenant_operations` | `auth.uid()`, `private.has_capability` | `20261003050000_console_tenant_operations.sql` |
 | `decide_approval` | `auth.uid()`, `private.approver_party`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_school_request` | `private.has_capability` | `20260930185000_school_membership_enforcement.sql` |
 | `dining_advance_order` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |

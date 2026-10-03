@@ -588,6 +588,11 @@ declare
     -- wrong tenant, expired grant, cross-tenant subject and demo escalation.
     'console_tenant_access(want_tenant text, want_subject uuid, after_granted_at timestamp with time zone, after_id uuid, want_limit integer, include_demo boolean)',
 
+    -- Metadata-only tenant operations. It requires the platform console shell,
+    -- derives rows from live exact-school tenant:implement grants, excludes
+    -- demos by default and never accepts a tenant id from the caller.
+    'console_tenant_operations(include_demo boolean)',
+
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
     -- requester party, deciding checks fresh MFA, refuses self-approval and
