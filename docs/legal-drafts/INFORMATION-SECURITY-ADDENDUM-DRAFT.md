@@ -32,4 +32,6 @@ Customer protects identities/devices, assigns authorized roles, approves data/in
 
 ## Signature/activation blockers
 
+Confirm covered user ages, student/minor-data scope, customer authority and jurisdictions before adopting security, access, notice or evidence obligations.
+
 Immutable candidate evidence; closed P0/P1; current DAST and independent review as required; target-tenant role/isolation/access/monitoring acceptance; production incident/recovery drills; vendor/region/contract evidence; named primary/back-up; approved exceptions and no unsupported representations.

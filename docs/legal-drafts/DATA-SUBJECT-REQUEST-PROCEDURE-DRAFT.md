@@ -26,4 +26,6 @@ The [Data-rights request runbook](../DATA-RIGHTS-REQUEST-RUNBOOK.md) describes a
 
 ## Activation blockers
 
+Confirm requester/data-subject age, guardian or school authority and applicable jurisdiction before applying identity, consent, deadline, response or deletion rules.
+
 Counsel-approved applicability and clocks; named trained primary/backup; monitored accessible channels; trusted operator surface; customer routing; identity/authority process; legal-hold and incident integration; current data inventory; provider procedures; production-equivalent exercises; appeal/escalation; evidence retention; and notices that match actual behavior. Do not promise a response deadline until those controls and the applicable authority support it.

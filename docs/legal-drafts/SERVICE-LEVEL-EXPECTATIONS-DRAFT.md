@@ -32,4 +32,6 @@ Define planned maintenance, emergency change, force majeure/provider/customer/in
 
 ## Signature blockers
 
+Confirm audience ages, student/minor context, institution authority and jurisdictions where they affect support, notice, accessibility, safety or service obligations.
+
 Defined service and measurement; production history; named coverage/backup; monitoring/status/communications; provider dependencies; tested recovery; support capacity; approved remedies/fees/insurance; and counsel/customer acceptance. Until then use explicitly noncontractual operating targets only.

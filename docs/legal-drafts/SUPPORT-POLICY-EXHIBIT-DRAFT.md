@@ -37,4 +37,6 @@ Targets are contractual only if the Order Form says so; resolution depends on sc
 
 ## Signature/activation blockers
 
+Confirm supported-user ages, minor/student escalation needs, school/guardian authority and jurisdictions before approving channels, access, safety routing or targets.
+
 Named trained primary/back-up, tested channels/escalations, privacy/security/accessibility routing, diagnostic-access controls, ticket retention, customer contacts, measured capacity and approved targets/exclusions. Align with MSA, Order Form, service expectations and public support policy.

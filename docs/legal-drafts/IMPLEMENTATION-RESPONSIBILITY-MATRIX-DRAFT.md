@@ -35,4 +35,6 @@ Use accountable, responsible, consulted, and informed roles only after naming re
 
 ## Signature and activation blockers
 
+Assign responsibility for confirming cohort ages, minor/school authority and jurisdictions; an implementation owner does not substitute for that legal determination.
+
 Named primary and backup owners; accepted authority; exact scope and dependencies; evidence locations; target dates; escalation/change path; customer approvals; and no open P0/P1. This matrix does not make an unstaffed, untested, or unapproved responsibility complete.

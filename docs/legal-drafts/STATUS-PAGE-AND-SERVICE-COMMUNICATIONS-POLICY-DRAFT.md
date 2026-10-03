@@ -33,4 +33,6 @@ Public status covers approved general services. Tenant-specific details use auth
 
 ## Publication/operation blockers
 
+Confirm recipient ages, minor/student context, institution authority and jurisdictions before adopting incident, outage, consent or direct-communication practices.
+
 Named primary/back-up; working accessible status and direct channels; target monitoring/alert tests; incident exercise; legal/contract/privacy decision matrix; subscriber/contact authority; approval and correction workflow; retention/evidence; vendor fallback; and measured capability for any promised cadence. No “all systems operational” automation may run without verified health sources and owner oversight.

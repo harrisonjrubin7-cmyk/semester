@@ -25,4 +25,6 @@ Name an owner and backup; complete qualified manual keyboard/screen-reader/zoom 
 
 ## Prohibited claims
 
+Confirm intended user ages, minor/school-authority posture and launch jurisdictions before publication; accessibility and accommodation duties may vary by audience and context.
+
 Do not state “accessible,” “WCAG compliant,” “ADA compliant,” “Section 508 compliant,” certified, fully tested or formally conformant beyond the exact dated evidence.

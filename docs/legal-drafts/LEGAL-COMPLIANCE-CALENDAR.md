@@ -44,3 +44,5 @@ This calendar prevents legal, contractual, privacy, security, accessibility, cor
 ## Control rules and blockers
 
 Each entry needs the actual authority, calculation rule, time zone, responsible owner and backup, reminders, evidence, completion approval, dependencies, confidentiality, and exception path. Repository dates and draft examples must not be treated as statutory or contractual deadlines. Counsel/accountant/broker/customer determinations populate applicable obligations before activation in a new entity, workforce model, jurisdiction, product, provider, or contract.
+
+Age- or minor-related triggers must be recorded explicitly when an audience, school authority, consent model, data use, communication, or jurisdiction makes them applicable; silence is not a determination that none apply.

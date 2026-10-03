@@ -46,4 +46,6 @@ Use only approved data/environments/accounts and least privilege; no production 
 
 ## Execution blockers
 
+Confirm participant/user ages, minor/school authority and jurisdictions before scoping access, data, communications, training, AI or acceptance activities.
+
 Governing agreement/order, exact owners/scope/dependencies, approved fees/tax, data/access authority, security/privacy/accessibility review, achievable acceptance criteria, resource capacity, change control, IP/confidentiality and exit. Dates and outcomes remain proposals until approved and dependencies are met.

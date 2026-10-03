@@ -29,4 +29,6 @@ The operating source is the [Incident response plan](../market-readiness/INCIDEN
 
 ## Signature and activation blockers
 
+Confirm affected-user ages, minor/student-data rules, institutional authority and jurisdictions before agreeing notice recipients, content, timing or process.
+
 Named primary/backups and authorized contacts; counsel-approved definitions/timelines; target monitoring and escalation tests; evidence repository; vendor/insurer/forensic routes; customer communication exercise; recovery validation; and consistency across the DPA, security addendum, support exhibit, service expectations, status policy, and applicable law.

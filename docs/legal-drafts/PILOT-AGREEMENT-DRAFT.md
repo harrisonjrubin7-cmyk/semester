@@ -44,4 +44,6 @@ Activation requires executed paper, target configuration, role/isolation/access 
 
 ## Legal clauses and blockers
 
+Confirm cohort ages, minor/guardian/school authority and jurisdictions before finalizing participation, data, communication, AI and consent clauses.
+
 Incorporate or attach confidentiality, IP/feedback, DPA/student-data, security, accessibility, AI, support, incidents, subprocessors, service expectations, warranty/liability/indemnity/insurance, publicity, term/termination and disputes only after counsel review. Do not sign or activate without confirmed parties, customer authority, exact scope/data map, approved fees, all exhibits and closed P0/P1.

@@ -30,4 +30,6 @@ The source [Subprocessor template](../market-readiness/SUBPROCESSOR-TEMPLATE.md)
 
 ## Publication and signature blockers
 
+Confirm data-subject ages, student/minor-data scope, institution authority and jurisdictions before approving providers, regions, transfers or notices.
+
 Exact legal entities; active scope and configuration; data categories; regions/transfers; current DPA and security evidence; training/retention/deletion terms; customer notice and objection process; approval dates/expiry; and replacement/exit path. An incomplete row blocks the affected provider and feature.

@@ -33,6 +33,8 @@ Maintain a release-bound inventory of each storage key/DB/cache, purpose, catego
 
 ## Publication blockers
 
+Confirm intended user ages, minor/guardian or school authority and launch jurisdictions before selecting consent, notice, default, withdrawal or retention rules.
+
 Deployment scan; storage inventory; consent classification; privacy/counsel approval; accessible preference controls if required; withdrawal/deletion testing; and change detection in CI or release review.
 
 ## Prohibited claims

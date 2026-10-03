@@ -4,6 +4,7 @@
 
 - **Owner:** Legal coordinator with the accountable claim owner
 - **Applies to:** product, website, sales, procurement, contracts, demos, press, social, grants, hiring, investor, support, status, and in-product language
+- **Effective date/covered entities:** `[TO BE APPROVED]`
 
 ## Plain-language summary
 
@@ -31,6 +32,10 @@ No material claim may be published, submitted, demonstrated as fact, incorporate
 - Internal testing is not independent assurance, formal accessibility conformance, a penetration test, or certification.
 - A proposal, draft, design partner, conversation, logo, or named institution is not a customer, contract, pilot, endorsement, or result.
 - Planned pricing, service targets, integrations, controls, providers, and roadmap dates are not available commitments.
+
+## Product-behavior and evidence mapping
+
+Every product claim must identify the exact behavior, source revision, environment, user/audience, limitations and missing proof. Deployment, operation, external review, customer acceptance and legal applicability require separate evidence; age and jurisdiction must be reviewed for the intended audience and use.
 
 ## Prohibited without qualifying evidence and authority
 

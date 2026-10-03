@@ -59,4 +59,6 @@ Define suspension for safety/security/unauthorized use, cure/notice where approp
 
 ## Negotiation and execution blockers
 
+Confirm authorized user ages, minors/student-data posture, customer authority and jurisdictions; the agreement must not silently expand the intended audience.
+
 Confirmed parties/signing authority; counsel-approved paper; exact scope/data/integrations; pricing/tax/insurance authority; target-environment security/privacy/accessibility acceptance; named operating owners; support/recovery/offboarding evidence; approved exhibits; and no unresolved P0/P1. This draft must not be signed or represented as standard approved terms.

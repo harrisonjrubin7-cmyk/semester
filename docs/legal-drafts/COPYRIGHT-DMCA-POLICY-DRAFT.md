@@ -21,6 +21,8 @@ Verify what content can actually be uploaded, stored, published, linked, reporte
 
 ## Required decisions and publication blockers
 
+Confirm user ages, minor/guardian or school authority and applicable jurisdictions before adopting notice, counter-notice, identity disclosure, consent or enforcement procedures.
+
 Copyright counsel must approve scope and process, determine whether/how to designate and register an agent, approve contact/jurisdiction language and repeat-infringer policy, and confirm trained ownership and recordkeeping. Product/engineering must test locate-disable-restore and notice paths before publication.
 
 ## Prohibited claims

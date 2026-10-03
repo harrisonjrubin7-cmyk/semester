@@ -31,4 +31,6 @@ The source [Accessibility conformance plan](../market-readiness/ACCESSIBILITY-CO
 
 ## Signature and activation blockers
 
+Confirm the covered user ages, minor/school-authority posture, jurisdictions and applicable accessibility obligations; no universal audience assumption is authorized.
+
 Exact release/scope; qualified human evaluation; critical defect remediation/retest; accepted residual risks and workarounds; staffed accessible support; accommodation ownership; customer review; versioned evidence; accurate limitation language; and counsel approval. Paid institutional activation remains blocked by unresolved critical accessibility risk.

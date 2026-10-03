@@ -56,4 +56,6 @@ Pilot fee, implementation fee, expenses, taxes, payment schedule, pilot credit a
 
 ## Submission, signature and activation blockers
 
+Confirm cohort ages, minor/guardian/school authority and applicable jurisdictions before proposing participation, data use, communications, AI or measurement.
+
 Authorized proposal owner; current pricing and capacity; counsel review; customer-specific scope/data/integration map; named owners/backups; security/privacy/accessibility/AI/procurement acceptance; service and support approval; measurable criteria; target-environment UAT; rollback/export/deletion/offboarding exercise; executed agreements; and signed GO with no open P0/P1. This proposal must not be described as an approval, award, contract, customer commitment, or live institutional operation.

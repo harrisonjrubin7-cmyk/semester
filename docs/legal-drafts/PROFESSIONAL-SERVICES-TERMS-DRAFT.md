@@ -32,4 +32,6 @@ These terms provide a framework for separately scoped implementation, configurat
 
 ## Signature and delivery blockers
 
+Confirm whether services involve minors, age-restricted users, student records or jurisdictions that change access, consent, staffing or delivery obligations.
+
 Executed controlling agreement and SOW; authorized scope and fees; staffing/capacity; security and access review; data map; customer dependencies; acceptance criteria; IP treatment; insurance/tax/accounting review; change authority; incident/escalation route; and transition obligations. Professional services cannot be used to imply that an unsupported product capability, certification, integration, or service level already exists.

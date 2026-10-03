@@ -51,4 +51,6 @@ Where the source library conflicts with the current finalization baseline, evide
 
 ## Submission blockers
 
+Every response must state or explicitly mark not applicable the intended ages/minor posture and jurisdictions when they affect product, data, accessibility, AI, consent or contractual answers.
+
 Current question set; named response owner; immutable evidence snapshot; cross-functional review; company facts supplied by accountable owners; confidential-material authorization; all deviations approved; commercial terms approved; and final consistency check against the proposal, contract, DPA, security/accessibility evidence, and target-environment status.

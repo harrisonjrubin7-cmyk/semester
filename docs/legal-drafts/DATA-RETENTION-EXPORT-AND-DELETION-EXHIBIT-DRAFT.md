@@ -32,4 +32,6 @@ The evidence source is [Data retention, export and deletion](../DATA-RETENTION-E
 
 ## Signature and activation blockers
 
+Confirm data-subject ages, minor/school/guardian authority and applicable jurisdictions before adopting retention, export, deletion or notice terms.
+
 Counsel-approved schedule and exceptions; complete data map; named rights/offboarding owners and backups; production-equivalent export, restore, delete, provider-propagation and failure tests; customer-approved formats/timing; legal-hold process; and consistency with the DPA, notice, billing and security terms.

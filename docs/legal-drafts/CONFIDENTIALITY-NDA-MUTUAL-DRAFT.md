@@ -32,4 +32,6 @@ Each party may disclose limited non-public information for the stated purpose. T
 
 ## Signature and disclosure blockers
 
+Confirm whether information concerns minors or age-restricted users and which jurisdictions, student-data rules and institutional authorities apply before disclosure.
+
 Confirmed entities and authority; defined purpose; information classes; representatives; required security; permitted AI use, if any; compelled-disclosure process; retention/deletion/legal-hold treatment; term and survival; remedies/liability; governing law; export/sanctions review where applicable; notice details; and signatures. No confidential item may be uploaded into an AI service or shared through the trust room without separate authorization and verified controls.

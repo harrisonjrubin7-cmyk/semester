@@ -35,4 +35,6 @@ Named security owner/backup; current release and target-environment evidence; Ha
 
 ## Prohibited claims
 
+Confirm covered user ages, student/minor-data scope, institutional authority and jurisdictions before using this overview in a customer or public context.
+
 No SOC 2/ISO certification, FERPA compliance, “enterprise-grade,” “encrypted everywhere,” “zero trust,” “penetration tested,” “no vulnerabilities,” uptime/response guarantee or universal isolation claim without direct current evidence.

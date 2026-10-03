@@ -39,3 +39,5 @@ Controlled individual beta may be described only with accurate beta limitations.
 ## Publication blockers
 
 Exact copy and audience; current substantiation; qualified legal and specialist review; approved consent/targeting/vendor/data use; accessible prominent disclosures; rights-holder permission; product and support readiness; pricing authority; channel compliance; expiry and monitoring; and a working takedown/correction owner.
+
+Audience review must identify applicable ages/minor status and jurisdictions before targeting or publication; this matrix does not authorize marketing to children, students, or any regulated audience.
