@@ -197,6 +197,7 @@ declare
     -- creates consent and its bounded grant atomically, and lists only windows
     -- in which the caller is the student or the still-authorized supporter.
     'available_supporters()',
+    'available_case_supporters()',
     'create_support_access(want_supporter uuid, want_reason text, want_days integer, want_ticket uuid)',
     'read_support_case_signals(want_ticket uuid)',
     'revoke_support_access(want_grant uuid)',

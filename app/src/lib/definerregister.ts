@@ -127,6 +127,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['approve_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['archive_school', 'admin', ['private.offboarding_operator']],
   ['authorize_school_purge', 'admin', ['private.offboarding_operator']],
+  ['available_case_supporters', 'read-helper', ['auth.uid()', 'private.subject_has_capability']],
   ['available_supporters', 'read-helper', ['auth.uid()']],
   ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
   ['beta_add_cohort', 'admin', ['private.beta_manager']],
@@ -457,7 +458,7 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   },
   {
     file: '20261003060000_support_case_access.sql',
-    functions: ['read_support_case_signals', 'support_case_access'],
+    functions: ['available_case_supporters', 'read_support_case_signals', 'support_case_access'],
   },
   {
     file: '20261003120000_support_notification_consent_boundary.sql',

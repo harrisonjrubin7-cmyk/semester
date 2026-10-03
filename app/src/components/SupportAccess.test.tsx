@@ -61,10 +61,12 @@ describe('consented support access surface', () => {
   it('lets a student see and immediately revoke only their named window', async () => {
     mock.load.mockResolvedValue({
       supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' }],
       windows: [{
         grantId: 'grant-1', side: 'student', counterpartLabel: 'Advisor Rivera',
         reason: 'Help me review the pattern.', expiresAt: '2099-01-02T00:00:00Z',
         revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+        ticketId: '123e4567-e89b-12d3-a456-426614174000', scopes: ['learning-progress'], consentState: 'active',
       }],
     });
     mock.revoke.mockResolvedValue(undefined);
@@ -81,32 +83,41 @@ describe('consented support access surface', () => {
   it('creates a bounded window and keeps the success confirmation visible', async () => {
     mock.load.mockResolvedValue({
       supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' }],
       windows: [],
     });
     mock.create.mockResolvedValue(undefined);
     await renderSignedIn();
 
     const reason = host.querySelector('textarea');
-    const [supporter, duration] = [...host.querySelectorAll('select')];
+    const [supporter, ticket, duration] = [...host.querySelectorAll('select')];
     const form = host.querySelector('form');
     await act(async () => {
       if (supporter) changeValue(supporter, 'staff');
+      if (ticket) changeValue(ticket, '123e4567-e89b-12d3-a456-426614174000');
       if (reason) changeValue(reason, 'Help me make a recovery plan.');
       if (duration) changeValue(duration, '3');
     });
     await act(async () => { form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
 
-    expect(mock.create).toHaveBeenCalledWith('staff', 'Help me make a recovery plan.', 3);
+    expect(mock.create).toHaveBeenCalledWith(
+      'staff',
+      'Help me make a recovery plan.',
+      3,
+      '123e4567-e89b-12d3-a456-426614174000',
+    );
     expect(host.textContent).toContain('Support access created');
   });
 
   it('gives the named supporter aggregates but never raw mistake detail', async () => {
     mock.load.mockResolvedValue({
       supporters: [],
+      tickets: [],
       windows: [{
         grantId: 'grant-2', side: 'supporter', counterpartLabel: 'Student Avery',
         reason: 'Help me review the pattern.', expiresAt: '2099-01-02T00:00:00Z',
         revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+        ticketId: null, scopes: ['learning-progress'], consentState: 'active',
       }],
     });
     mock.read.mockResolvedValue([{

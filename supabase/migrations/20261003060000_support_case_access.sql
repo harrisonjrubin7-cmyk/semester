@@ -44,16 +44,24 @@ begin
     raise exception 'A support grant identity, case and revocation are immutable.';
   end if;
 
-  if new.ticket_id is not null and not exists (
+  if new.ticket_id is not null and new.revoked_at is null and not exists (
     select 1
       from public.support_tickets t
      where t.id = new.ticket_id
        and t.student_id = new.student_id
-       and t.status <> 'closed'
+       and t.status in ('open', 'waiting_on_student')
   ) then
     raise exception using
       errcode = '42501',
       message = 'Case-bound access requires the student''s open support ticket.';
+  end if;
+
+  if new.ticket_id is not null and new.revoked_at is null and not private.subject_has_capability(
+    new.supporter_id, 'support:ticket', 'platform', ''
+  ) then
+    raise exception using
+      errcode = '42501',
+      message = 'Case-bound access requires a verified support case agent.';
   end if;
 
   if new.revoked_at is null and (
@@ -97,6 +105,38 @@ revoke all on function private.revoke_case_support_access_on_close()
 create or replace trigger close_revokes_case_support_access
   after update of status on public.support_tickets
   for each row execute function private.revoke_case_support_access_on_close();
+
+create function public.available_case_supporters()
+returns table (supporter_id uuid, label text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with caller as (
+    select p.school_id
+      from public.profiles p
+     where p.user_id = auth.uid()
+       and p.school_id is not null
+  )
+  select distinct p.user_id,
+         coalesce(nullif(trim(p.handle), ''), 'Verified support case agent')
+    from caller c
+    join public.role_grants g
+      on g.scope_kind = 'school'
+     and g.scope_id = c.school_id
+     and g.revoked_at is null
+     and (g.expires_at is null or g.expires_at > now())
+    join public.role_capabilities rc
+      on rc.role = g.role and rc.capability = 'support:read'
+    join public.profiles p
+      on p.user_id = g.subject and p.school_id = c.school_id
+   where g.subject <> auth.uid()
+     and private.subject_has_capability(
+       g.subject, 'support:ticket', 'platform', ''
+     )
+   order by 2, 1;
+$$;
 
 drop function public.create_support_access(uuid, text, integer);
 
@@ -151,11 +191,18 @@ begin
       from public.support_tickets t
      where t.id = want_ticket
        and t.student_id = student
-       and t.status <> 'closed'
+       and t.status in ('open', 'waiting_on_student')
   ) then
     raise exception using
       errcode = '42501',
       message = 'Choose one of your open support tickets.';
+  end if;
+  if want_ticket is not null and not private.subject_has_capability(
+    want_supporter, 'support:ticket', 'platform', ''
+  ) then
+    raise exception using
+      errcode = '42501',
+      message = 'Choose a verified support case agent.';
   end if;
   if exists (
     select 1 from public.support_access_grant g
@@ -367,7 +414,102 @@ begin
   return query select * from public.read_support_signals(linked_grant);
 end $$;
 
+create or replace function public.read_support_signals(want_grant uuid)
+returns table (
+  course_id text,
+  evidence_count bigint,
+  average_score numeric,
+  mistake_count bigint,
+  last_observed_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  grant_row public.support_access_grant;
+  caller uuid := auth.uid();
+begin
+  select * into grant_row
+    from public.support_access_grant g
+   where g.id = want_grant;
+
+  if grant_row.ticket_id is not null then
+    if not private.support_agent() or not exists (
+      select 1
+        from public.support_tickets t
+       where t.id = grant_row.ticket_id
+         and t.student_id = grant_row.student_id
+         and t.status in ('open', 'waiting_on_student')
+    ) then
+      raise exception using
+        errcode = '42501',
+        message = 'Active consent for this support case is required.';
+    end if;
+    perform private.assert_fresh_mfa();
+  end if;
+
+  if caller is null
+     or grant_row.id is null
+     or grant_row.supporter_id <> caller
+     or grant_row.revoked_at is not null
+     or grant_row.expires_at <= now()
+     or not ('learning-progress' = any(grant_row.scopes))
+     or not private.support_consent_active(
+       grant_row.consent_id, grant_row.tenant_id, grant_row.student_id
+     )
+     or not private.subject_has_capability(
+       caller, 'support:read', 'school', grant_row.tenant_id
+     ) then
+    raise exception using
+      errcode = '42501',
+      message = 'An active student-granted support window is required.';
+  end if;
+
+  insert into public.support_access_event (
+    tenant_id, grant_id, action, student_sha256, supporter_sha256,
+    actor_sha256
+  ) values (
+    grant_row.tenant_id,
+    grant_row.id,
+    'signals_viewed',
+    private.role_audit_sha256(grant_row.student_id::text),
+    private.role_audit_sha256(grant_row.supporter_id::text),
+    private.role_audit_sha256(caller::text)
+  );
+
+  return query
+  with concepts as (
+    select c.course_id,
+           count(*)::bigint as evidence_count,
+           avg(c.score)::numeric as average_score,
+           max(c.observed_at) as last_observed_at
+      from public.concept_evidence c
+     where c.tenant_id = grant_row.tenant_id
+       and c.person_id = grant_row.student_id
+     group by c.course_id
+  ), mistakes as (
+    select m.course_id,
+           count(*)::bigint as mistake_count,
+           max(m.observed_at) as last_observed_at
+      from public.mistake_evidence m
+     where m.tenant_id = grant_row.tenant_id
+       and m.person_id = grant_row.student_id
+     group by m.course_id
+  )
+  select coalesce(c.course_id, m.course_id),
+         coalesce(c.evidence_count, 0),
+         c.average_score,
+         coalesce(m.mistake_count, 0),
+         greatest(c.last_observed_at, m.last_observed_at)
+    from concepts c
+    full join mistakes m using (course_id)
+   order by coalesce(c.course_id, m.course_id);
+end $$;
+
 revoke all on function public.create_support_access(uuid, text, integer, uuid)
+  from public, anon, authenticated;
+revoke all on function public.available_case_supporters()
   from public, anon, authenticated;
 revoke all on function public.support_access_windows()
   from public, anon, authenticated;
@@ -377,12 +519,15 @@ revoke all on function public.read_support_case_signals(uuid)
   from public, anon, authenticated;
 grant execute on function public.create_support_access(uuid, text, integer, uuid)
   to authenticated;
+grant execute on function public.available_case_supporters() to authenticated;
 grant execute on function public.support_access_windows() to authenticated;
 grant execute on function public.support_case_access(uuid) to authenticated;
 grant execute on function public.read_support_case_signals(uuid) to authenticated;
 
 comment on column public.support_access_grant.ticket_id is
   'Optional student-owned support ticket that bounds a grant to one case; null preserves general support access outside the case workspace.';
+comment on function public.available_case_supporters() is
+  'Lists only same-school support:read holders who also have active platform support:ticket duty, so a case grant always names an eligible case operator.';
 comment on function public.create_support_access(uuid, text, integer, uuid) is
   'Atomically creates versioned consent and a one-to-seven-day aggregate-only support grant, optionally bound to one open ticket owned by the student.';
 comment on function public.support_access_windows() is

@@ -46,6 +46,11 @@ describe('support tickets, client and migration', () => {
     expect(client).not.toMatch(/\.from\('/);
   });
 
+  it('keeps metadata and sensitive case reads on separate ticket-bound RPCs', () => {
+    expect(client).toMatch(/rpc\('support_case_access', \{ want_ticket: ticketId \}\)/);
+    expect(client).toMatch(/rpc\('read_support_case_signals', \{ want_ticket: ticketId \}\)/);
+  });
+
   it('targets the exact outbox row returned by the reply RPC', () => {
     expect(client).toMatch(/const messageId = result\.message_id/);
     expect(client).toMatch(/body:\s*\{\s*message_id:\s*messageId\s*\}/);

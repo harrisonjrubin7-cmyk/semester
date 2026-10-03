@@ -248,12 +248,14 @@ describe('SupportAccess: permission changes and a failed load', () => {
     grantId: 'grant-1', side: 'student', counterpartLabel: 'Advisor Rivera',
     reason: 'Help me review the pattern.', expiresAt: '2099-01-02T00:00:00Z',
     revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+    ticketId: '123e4567-e89b-12d3-a456-426614174000', scopes: ['learning-progress'], consentState: 'active',
   };
+  const TICKETS = [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' }];
 
   it('says a created window as a permission change, with the way to the revoke', async () => {
     vi.spyOn(supportAccess, 'loadSupportAccess')
-      .mockResolvedValueOnce({ supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }], windows: [] } as never)
-      .mockResolvedValue({ supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }], windows: [WINDOW] } as never);
+      .mockResolvedValueOnce({ supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }], tickets: TICKETS, windows: [] } as never)
+      .mockResolvedValue({ supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }], tickets: TICKETS, windows: [WINDOW] } as never);
     vi.spyOn(supportAccess, 'createSupportAccess').mockResolvedValue(undefined as never);
     await mount(<SupportAccess account={ACCOUNT} />, false);
     await act(async () => setValue(host.querySelector('textarea')!, 'Help me make a recovery plan.'));
@@ -269,7 +271,7 @@ describe('SupportAccess: permission changes and a failed load', () => {
   });
 
   it('says a revoke as a permission change with no control to go anywhere', async () => {
-    vi.spyOn(supportAccess, 'loadSupportAccess').mockResolvedValue({ supporters: [], windows: [WINDOW] } as never);
+    vi.spyOn(supportAccess, 'loadSupportAccess').mockResolvedValue({ supporters: [], tickets: [], windows: [WINDOW] } as never);
     vi.spyOn(supportAccess, 'revokeSupportAccess').mockResolvedValue(undefined as never);
     await mount(<SupportAccess account={ACCOUNT} />, false);
     await press('Revoke now');
@@ -283,7 +285,7 @@ describe('SupportAccess: permission changes and a failed load', () => {
     const load = vi
       .spyOn(supportAccess, 'loadSupportAccess')
       .mockRejectedValueOnce(new Error('The service is down.'))
-      .mockResolvedValue({ supporters: [], windows: [] } as never);
+      .mockResolvedValue({ supporters: [], tickets: [], windows: [] } as never);
     await mount(<SupportAccess account={ACCOUNT} />, false);
     const alert = host.querySelector('.state-error')!;
     expect(alert.getAttribute('role')).toBe('alert');

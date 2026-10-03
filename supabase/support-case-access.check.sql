@@ -87,6 +87,7 @@ declare
   wrong_tenant_agent uuid;
   active_ticket uuid := gen_random_uuid();
   closed_ticket uuid := gen_random_uuid();
+  resolved_ticket uuid := gen_random_uuid();
   other_ticket uuid := gen_random_uuid();
   unlinked_ticket uuid := gen_random_uuid();
   case_grant_id uuid;
@@ -94,6 +95,7 @@ declare
   n bigint;
   state text;
   linked uuid;
+  close_grant uuid;
   last_read timestamptz;
 begin
   insert into public.schools (id, name, email_domains) values
@@ -123,8 +125,26 @@ begin
   ) values
     (active_ticket, student, 'bug', 'Active case', 'Please help.', '{}', 'normal', 'open', now() + interval '3 days'),
     (closed_ticket, student, 'bug', 'Closed case', 'Already closed.', '{}', 'normal', 'closed', now() + interval '3 days'),
+    (resolved_ticket, student, 'bug', 'Resolved case', 'Awaiting closure.', '{}', 'normal', 'resolved', now() + interval '3 days'),
     (other_ticket, other_student, 'bug', 'Other student', 'Private.', '{}', 'normal', 'open', now() + interval '3 days'),
     (unlinked_ticket, student, 'how_to', 'No access', 'Metadata only.', '{}', 'normal', 'open', now() + interval '3 days');
+
+  perform pg_temp.become(student);
+  select count(*) into n
+    from public.available_case_supporters();
+  reset role;
+  perform pg_temp.counted(
+    'the case picker offers only a same-school dual-role case agent', n, 1
+  );
+
+  perform pg_temp.must_refuse(
+    'a support reader without case duty cannot receive case-bound access',
+    student,
+    format(
+      'select public.create_support_access(%L, %L, 1, %L)',
+      reader_only, 'Reader without case duty.', active_ticket
+    )
+  );
 
   perform pg_temp.must_refuse(
     'a student cannot bind access to another student ticket',
@@ -140,6 +160,14 @@ begin
     format(
       'select public.create_support_access(%L, %L, 1, %L)',
       dual_agent, 'Closed case.', closed_ticket
+    )
+  );
+  perform pg_temp.must_refuse(
+    'a student cannot bind access to a resolved ticket outside the active queue',
+    student,
+    format(
+      'select public.create_support_access(%L, %L, 1, %L)',
+      dual_agent, 'Resolved case.', resolved_ticket
     )
   );
 
@@ -204,6 +232,11 @@ begin
     'a case signal read requires fresh MFA',
     dual_agent,
     format('select count(*) from public.read_support_case_signals(%L)', active_ticket)
+  );
+  perform pg_temp.must_refuse(
+    'the legacy aggregate RPC cannot bypass fresh MFA for a case grant',
+    dual_agent,
+    format('select count(*) from public.read_support_signals(%L)', case_grant_id)
   );
 
   insert into public.evidence_reference (
@@ -304,11 +337,16 @@ begin
   );
 
   perform pg_temp.become(student);
+  perform public.revoke_support_access(linked);
+  select public.create_support_access(
+    dual_agent, 'This active case grant must close with its case.', 1,
+    active_ticket
+  ) into close_grant;
   perform public.close_my_ticket(active_ticket);
   reset role;
   select count(*) into n
     from public.support_access_grant g
-   where g.id = case_grant_id and g.revoked_at is not null;
+   where g.id = close_grant and g.revoked_at is not null;
   perform pg_temp.counted('closing a case revokes its case-bound access', n, 1);
 
   select count(*) into n
@@ -318,6 +356,16 @@ begin
      and position('public.read_support_signals(linked_grant)' in p.prosrc) > 0;
   perform pg_temp.counted(
     'the case reader enforces server MFA and delegates to the audited aggregate reader', n, 1
+  );
+
+  select count(*) into n
+    from pg_catalog.pg_proc p
+   where p.oid = 'public.read_support_signals(uuid)'::regprocedure
+     and position('grant_row.ticket_id is not null' in p.prosrc) > 0
+     and position('private.assert_fresh_mfa()' in p.prosrc) > 0
+     and position('private.support_agent()' in p.prosrc) > 0;
+  perform pg_temp.counted(
+    'the legacy aggregate reader independently protects every case-linked grant', n, 1
   );
 
   raise notice 'support case access: every check passed';

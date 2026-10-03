@@ -126,6 +126,25 @@ export interface SupportMessage extends Message {
   context: Partial<Record<ContextKey, string>> | null;
 }
 
+export interface SupportCaseAccess {
+  ticketId: string;
+  grantId: string | null;
+  scope: string | null;
+  reason: string | null;
+  expiresAt: string | null;
+  consentState: 'not_granted' | 'active' | 'expired' | 'revoked' | 'wrong_scope' | 'role_missing';
+  active: boolean;
+  lastSensitiveReadAt: string | null;
+}
+
+export interface SupportCaseSignal {
+  courseId: string;
+  evidenceCount: number;
+  averageScore: number | null;
+  mistakeCount: number;
+  lastObservedAt: string | null;
+}
+
 type Row = Record<string, unknown>;
 const STATUSES = ['open', 'waiting_on_student', 'resolved', 'closed'] as const;
 
@@ -228,6 +247,43 @@ export async function supportThread(ticketId: string): Promise<SupportMessage[]>
     context: row.context && typeof row.context === 'object' && !Array.isArray(row.context)
       ? contextToSend(row.context as Partial<Record<ContextKey, string>>, new Set(CONTEXT_KEYS))
       : null,
+  }));
+}
+
+/** Identity-free metadata only. This call never returns student content or identity. */
+export async function supportCaseAccess(ticketId: string): Promise<SupportCaseAccess> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('support_case_access', { want_ticket: ticketId });
+  if (error) throw fail(error, 'Could not load case access metadata.');
+  const row = ((data ?? []) as Row[])[0];
+  if (!row) throw new Error('Case access metadata is unavailable.');
+  const consentState = String(row.consent_state);
+  const known = ['not_granted', 'active', 'expired', 'revoked', 'wrong_scope', 'role_missing'];
+  return {
+    ticketId: String(row.ticket_id),
+    grantId: row.grant_id ? String(row.grant_id) : null,
+    scope: row.scope ? String(row.scope) : null,
+    reason: row.reason ? String(row.reason) : null,
+    expiresAt: row.expires_at ? String(row.expires_at) : null,
+    consentState: known.includes(consentState)
+      ? consentState as SupportCaseAccess['consentState']
+      : 'not_granted',
+    active: row.active === true,
+    lastSensitiveReadAt: row.last_sensitive_read_at ? String(row.last_sensitive_read_at) : null,
+  };
+}
+
+/** Separate MFA-gated route for the case's consented aggregate learning signals. */
+export async function readSupportCaseSignals(ticketId: string): Promise<SupportCaseSignal[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('read_support_case_signals', { want_ticket: ticketId });
+  if (error) throw fail(error, 'Could not read consented aggregate signals.');
+  return ((data ?? []) as Row[]).map((row) => ({
+    courseId: String(row.course_id),
+    evidenceCount: Number(row.evidence_count),
+    averageScore: row.average_score == null ? null : Number(row.average_score),
+    mistakeCount: Number(row.mistake_count),
+    lastObservedAt: row.last_observed_at ? String(row.last_observed_at) : null,
   }));
 }
 

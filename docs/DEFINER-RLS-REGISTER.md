@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 7 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003040000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261003050000_console_tenant_operations.sql` (`console_tenant_operations`); `20261003060000_support_case_access.sql` (`read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 8 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003040000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261003050000_console_tenant_operations.sql` (`console_tenant_operations`); `20261003060000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -57,8 +57,8 @@ The current register also includes 7 callable definers added after that dated ca
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 28 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 209 | |
+| read-helper | 29 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 210 | |
 
 ### self-service (60)
 
@@ -142,7 +142,7 @@ The current register also includes 7 callable definers added after that dated ca
 | `read_shared_accommodation` | `auth.uid()` | `20260926150000_expansion_roles_and_features.sql` |
 | `read_support_case_signals` | `auth.uid()`, `private.assert_fresh_mfa`, `private.subject_has_capability`, `private.support_agent`, `private.support_consent_active`, `public.read_support_signals` | `20261003060000_support_case_access.sql` |
 | `read_support_share` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
-| `read_support_signals` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20260925103000_support_access.sql` |
+| `read_support_signals` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20261003060000_support_case_access.sql` |
 | `revoke_support_access` | `auth.uid()` | `20260925160000_support_access_ui.sql` |
 | `share_with_advisor` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `share_with_support` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
@@ -271,10 +271,11 @@ The current register also includes 7 callable definers added after that dated ca
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (28)
+### read-helper (29)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
+| `available_case_supporters` | `auth.uid()`, `private.subject_has_capability` | `20261003060000_support_case_access.sql` |
 | `available_supporters` | `auth.uid()` | `20260925160000_support_access_ui.sql` |
 | `beta_invitation_for_me` | `auth.uid()`, `private.beta_confirmed_email` | `20260928220000_private_beta.sql` |
 | `beta_known_issues_for_me` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
