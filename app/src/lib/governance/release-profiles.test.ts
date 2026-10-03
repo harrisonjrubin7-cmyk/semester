@@ -60,6 +60,8 @@ describe('pilot and individual release profiles', () => {
     expect(pilot.capabilityIds).toContain('CAP-050');
     expect(pilot.allowedOperations.join(' ')).toMatch(/planning|comparison|validation/i);
     expect(pilot.forbiddenOperations).toEqual(expect.arrayContaining(['enroll', 'drop', 'write to SIS', 'act as system of record']));
+    expect(pilot.requiredActivationGates).toEqual(expect.arrayContaining(['approved-data-scope', 'kill-switch-clear']));
+    expect(RELEASE_PROFILES['individual-scale'].requiredActivationGates).toContain('kill-switch-clear');
   });
 
   it('never turns repository references without exact-SHA run evidence into readiness or authorization', () => {
@@ -111,6 +113,21 @@ describe('pilot and individual release profiles', () => {
       ...technical(target)[0], status: 'revoked', checkedAt: AS_OF, reference: 'repo:docs/PRODUCT-STATUS-MAP.md',
     };
     expect(evaluateReleaseProfile(profile, [...technical(target), revoked], AS_OF, target).technicalStatus).toBe('not-ready');
+    const malformedRevocation: ReleaseEvidence = {
+      ...technical(target)[0],
+      status: 'revoked',
+      checkedAt: '2026-10-02T12:00:00Z',
+      expiresAt: 'never',
+      reference: 'runtime://revocation/malformed-expiry',
+    };
+    expect(evaluateReleaseProfile(profile, [...technical(target), malformedRevocation], AS_OF, target).technicalStatus).toBe('not-ready');
+    const malformedCheckedAt: ReleaseEvidence = {
+      ...technical(target)[0],
+      status: 'revoked',
+      checkedAt: 'not-a-date',
+      reference: 'runtime://revocation/malformed-checked-at',
+    };
+    expect(evaluateReleaseProfile(profile, [...technical(target), malformedCheckedAt], AS_OF, target).technicalStatus).toBe('not-ready');
     const timestamped = technical(target).map((item) => ({ ...item, checkedAt: '2026-10-02T10:00:00Z' }));
     expect(evaluateReleaseProfile(profile, timestamped, AS_OF, target).technicalStatus).toBe('ready');
   });
@@ -126,6 +143,16 @@ describe('pilot and individual release profiles', () => {
     expect(evaluateReleaseProfile(profile, evidence, AS_OF).rolloutStatus).toBe('held');
     expect(evaluateReleaseProfile(profile, evidence, AS_OF, { ...target, tenantId: 'tenant-b' }).rolloutStatus).toBe('held');
     expect(evaluateReleaseProfile(profile, evidence, AS_OF, target).rolloutStatus).toBe('authorized');
+    const killSwitchEngaged: ReleaseEvidence = {
+      ...runtime('kill-switch-clear', target),
+      status: 'revoked',
+      checkedAt: '2026-10-02T12:00:00Z',
+      reference: 'runtime://kill-switch/engaged',
+    };
+    expect(evaluateReleaseProfile(profile, [...evidence, killSwitchEngaged], AS_OF, target)).toMatchObject({
+      rolloutStatus: 'held',
+      missingActivation: expect.arrayContaining(['kill-switch-clear']),
+    });
   });
 
   it('requires the intended environment and the exact tested source SHA', () => {
@@ -135,6 +162,16 @@ describe('pilot and individual release profiles', () => {
     const dependencies = individual.requiredDependencies.map((item) => dependency(item, target));
     const evidence = [...technical(target), ...activation, ...dependencies];
     expect(evaluateReleaseProfile(individual, evidence, AS_OF, { ...target, environment: 'pilot' }).rolloutStatus).toBe('held');
+    const tenantScopedTarget = { ...target, tenantId: 'tenant-a', cohortId: 'cohort-a' };
+    const tenantScopedEvidence = [
+      ...technical(tenantScopedTarget),
+      ...individual.requiredActivationGates.map((gate) => runtime(gate, tenantScopedTarget)),
+      ...individual.requiredDependencies.map((item) => dependency(item, tenantScopedTarget)),
+    ];
+    expect(evaluateReleaseProfile(individual, tenantScopedEvidence, AS_OF, tenantScopedTarget)).toMatchObject({
+      targetBound: false,
+      rolloutStatus: 'held',
+    });
     const staleSha = 'def456def456def456def456def456def456def4';
     expect(evaluateReleaseProfile(individual, evidence, AS_OF, { ...target, deployedSha: staleSha }).technicalStatus).toBe('not-ready');
   });
@@ -172,7 +209,11 @@ function render(): string {
       decision.profileId,
       decision.technicalStatus,
       decision.rolloutStatus,
-      [...decision.missingActivation, ...decision.missingDependencies.map((item) => `dependency:${item}`)].join(', '),
+      [
+        ...decision.missingTechnical,
+        ...decision.missingActivation,
+        ...decision.missingDependencies.map((item) => `dependency:${item}`),
+      ].join(', '),
     ])), '',
     'This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.',
     'Both profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also',
@@ -197,7 +238,7 @@ function render(): string {
       REPOSITORY_RELEASE_EVIDENCE.find((item) => item.gate === gate)?.expiresAt ?? 'missing',
     ])), '',
     '## Activation boundary', '',
-    '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, and current rollback evidence.',
+    '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
     '- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, and a staffed support roster.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
     '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant and cohort. Mixed-target evidence fails closed.',

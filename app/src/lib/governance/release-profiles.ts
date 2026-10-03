@@ -50,6 +50,7 @@ export const ACTIVATION_GATES = [
   'production-smoke',
   'support-route-live',
   'rollback-current',
+  'kill-switch-clear',
   'named-tenant-agreement',
   'named-data-owner',
   'tenant-accessibility-review',
@@ -119,7 +120,7 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     audience: 'Individuals using device-first or self-service accounts without institutional activation',
     capabilityIds: CORE_INDIVIDUAL_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: ['deployed-exact-sha', 'production-smoke', 'support-route-live', 'rollback-current'],
+    requiredActivationGates: ['deployed-exact-sha', 'production-smoke', 'support-route-live', 'rollback-current', 'kill-switch-clear'],
     requiredDependencies: unsatisfiedCapabilityDependencies(CORE_INDIVIDUAL_CAPABILITIES),
     defaultOff: false,
     allowedOperations: ['personal planning', 'source-aware course organization', 'study and creation', 'export', 'account deletion'],
@@ -202,14 +203,14 @@ function counts(
 ): boolean {
   const decisionTime = evidenceTime(asOf, true);
   if (decisionTime === null) return false;
-  const eligible = evidence
-    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt, true) }))
-    .filter(({ item, checked, expires }) => item.gate === gate
-      && checked !== null
-      && expires !== null
-      && checked <= decisionTime
+  const matching = evidence
+    .filter((item) => item.gate === gate
       && (!target || sameTarget(item.target, target))
       && (!sourceSha || (SHA.test(item.sourceSha ?? '') && item.sourceSha === sourceSha)))
+    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt, true) }));
+  if (matching.some(({ checked }) => checked === null)) return false;
+  const eligible = matching
+    .filter(({ checked }) => checked !== null && checked <= decisionTime)
     .sort((a, b) => (b.checked ?? 0) - (a.checked ?? 0));
   if (eligible.length === 0) return false;
   const latestDate = eligible[0].checked;
@@ -231,7 +232,9 @@ export function evaluateReleaseProfile(
     && SHA.test(target.deployedSha)
     && target.deployedSha.trim()
     && target.configurationVersion.trim()
-    && (profile.id !== 'institutional-pilot' || (target.tenantId?.trim() && target.cohortId?.trim())));
+    && (profile.id === 'institutional-pilot'
+      ? (target.tenantId?.trim() && target.cohortId?.trim())
+      : target.tenantId === undefined && target.cohortId === undefined));
   const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !targetBound
     || !counts(evidence, gate, asOf, undefined, target?.deployedSha));
   const missingActivation = profile.requiredActivationGates.filter((gate) => !targetBound || !counts(evidence, gate, asOf, target));
