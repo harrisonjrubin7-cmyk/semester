@@ -7,15 +7,16 @@
 These executable profiles define the next honest release targets: broad individual use and a bounded institutional pilot.
 They do not rename repository completion as deployment, tenant approval, certification, or live operation.
 
-## Current repository decision
+## Repository snapshot decision (2026-10-02)
 
 | Profile | Technical candidate | Rollout | Still required |
 | --- | --- | --- | --- |
-| individual-scale | ready | held | deployed-exact-sha, production-smoke, support-route-live, rollback-current, dependency:CAP-003, dependency:CAP-013, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:external:approved catalog and degree-audit data |
-| institutional-pilot | ready | held | deployed-exact-sha, production-smoke, support-route-live, rollback-current, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, pilot-cohort-consent, pilot-support-roster, dependency:CAP-013, dependency:CAP-043, dependency:external:approved SIS registration adapter and write authorization, dependency:external:approved catalog and degree-audit data, dependency:external:authoritative registrar calendar feed |
+| individual-scale | not-ready | held | deployed-exact-sha, production-smoke, support-route-live, rollback-current, dependency:CAP-003, dependency:CAP-013, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037, dependency:external:approved catalog and degree-audit data, dependency:external:provider credentials and institution approval |
+| institutional-pilot | not-ready | held | deployed-exact-sha, production-smoke, support-route-live, rollback-current, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, dependency:CAP-013, dependency:CAP-043, dependency:external:approved SIS registration adapter and write authorization, dependency:external:approved catalog and degree-audit data, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
 
-The repository currently satisfies the technical evidence contract for both profiles. Rollout remains held because runtime
-and named-tenant activation records do not live in source code and have not been supplied to this evaluator.
+This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.
+Both profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also
+requires deployment and, for a pilot, named-tenant activation records that do not live in source code.
 
 ## Scope and boundaries
 
@@ -27,7 +28,7 @@ and named-tenant activation records do not live in source code and have not been
 
 **Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-044`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
 
-**Unsatisfied capability dependencies:** `CAP-003`, `CAP-013`, `CAP-034`, `CAP-035`, `CAP-036`, `external:approved catalog and degree-audit data`
+**Unsatisfied capability dependencies:** `CAP-003`, `CAP-013`, `CAP-034`, `CAP-035`, `CAP-036`, `CAP-037`, `external:approved catalog and degree-audit data`, `external:provider credentials and institution approval`
 
 **Allowed:** personal planning; source-aware course organization; study and creation; export; account deletion
 
@@ -45,7 +46,7 @@ and named-tenant activation records do not live in source code and have not been
 
 **Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
 
-**Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved SIS registration adapter and write authorization`, `external:approved catalog and degree-audit data`, `external:authoritative registrar calendar feed`
+**Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved SIS registration adapter and write authorization`, `external:approved catalog and degree-audit data`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
 
 **Allowed:** Path planning; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff
 
@@ -73,7 +74,8 @@ and named-tenant activation records do not live in source code and have not been
 ## Activation boundary
 
 - Individual scale still needs an exact deployed SHA, production smoke, a live support route, and current rollback evidence.
-- An institutional pilot additionally needs a named agreement, data owner, cohort consent, tenant accessibility/security/privacy reviews, and a staffed support roster.
+- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, and a staffed support roster.
+- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.
 - Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant and cohort. Mixed-target evidence fails closed.
 - Canonical external and out-of-scope capability dependencies are activation requirements; green generic gates cannot bypass them.
 - CAP-050 is admitted only for search, comparison, validation, and official-system handoff. Enrollment, waitlist, drop, withdrawal, and SIS writes remain prohibited.

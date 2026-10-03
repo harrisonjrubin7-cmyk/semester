@@ -40,6 +40,8 @@ export interface ReleaseEvidence {
   reference: string;
   checkedAt: string;
   expiresAt: string;
+  /** Exact source commit exercised by a technical gate. */
+  sourceSha?: string;
   target?: ReleaseTarget;
 }
 
@@ -52,6 +54,7 @@ export const ACTIVATION_GATES = [
   'named-data-owner',
   'tenant-accessibility-review',
   'tenant-security-privacy-review',
+  'approved-data-scope',
   'pilot-cohort-consent',
   'pilot-support-roster',
 ] as const;
@@ -89,11 +92,23 @@ const PILOT_CAPABILITIES = [
 
 function unsatisfiedCapabilityDependencies(capabilityIds: readonly `CAP-${string}`[]): string[] {
   const selected = new Set<string>(capabilityIds);
-  return [...new Set(CAPABILITIES
-    .filter((capability) => selected.has(capability.id))
-    .flatMap((capability) => capability.dependencies)
-    .filter((dependency) => dependency.startsWith('external:') || !selected.has(dependency)))]
-    .sort();
+  const byId = new Map(CAPABILITIES.map((capability) => [capability.id, capability]));
+  const required = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (id: string) => {
+    if (visited.has(id)) return;
+    visited.add(id);
+    for (const dependency of byId.get(id)?.dependencies ?? []) {
+      if (dependency.startsWith('external:')) {
+        required.add(dependency);
+        continue;
+      }
+      if (!selected.has(dependency)) required.add(dependency);
+      visit(dependency);
+    }
+  };
+  for (const id of capabilityIds) visit(id);
+  return [...required].sort();
 }
 
 export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>> = {
@@ -161,21 +176,45 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
     && actual.cohortId === expected.cohortId);
 }
 
+const SHA = /^[0-9a-f]{40}$/i;
+
+/** Parse date-only or UTC ISO evidence without relying on string ordering. */
+function evidenceTime(value: string, endOfDate = false): number | null {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const stamp = Date.parse(`${value}T${endOfDate ? '23:59:59.999' : '00:00:00.000'}Z`);
+    return Number.isFinite(stamp) && new Date(stamp).toISOString().slice(0, 10) === value ? stamp : null;
+  }
+  const match = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/);
+  if (!match) return null;
+  const stamp = Date.parse(value);
+  const normalized = `${match[1]}.${(match[2] ?? '').padEnd(3, '0')}Z`;
+  return Number.isFinite(stamp) && new Date(stamp).toISOString() === normalized ? stamp : null;
+}
+
 function counts(
   evidence: readonly ReleaseEvidence[],
   gate: ReleaseEvidence['gate'],
   asOf: string,
   target?: ReleaseTarget,
+  sourceSha?: string,
 ): boolean {
+  const decisionTime = evidenceTime(asOf, true);
+  if (decisionTime === null) return false;
   const eligible = evidence
-    .filter((item) => item.gate === gate && item.checkedAt <= asOf && (!target || sameTarget(item.target, target)))
-    .sort((a, b) => b.checkedAt.localeCompare(a.checkedAt));
+    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt, true) }))
+    .filter(({ item, checked, expires }) => item.gate === gate
+      && checked !== null
+      && expires !== null
+      && checked <= decisionTime
+      && (!target || sameTarget(item.target, target))
+      && (!sourceSha || (SHA.test(item.sourceSha ?? '') && item.sourceSha === sourceSha)))
+    .sort((a, b) => (b.checked ?? 0) - (a.checked ?? 0));
   if (eligible.length === 0) return false;
-  const latestDate = eligible[0].checkedAt;
-  const latest = eligible.filter((item) => item.checkedAt === latestDate);
-  return latest.every((item) => item.status === 'current'
+  const latestDate = eligible[0].checked;
+  const latest = eligible.filter(({ checked }) => checked === latestDate);
+  return latest.every(({ item, expires }) => item.status === 'current'
     && item.reference.trim().length > 0
-    && item.expiresAt >= asOf);
+    && (expires ?? -1) >= decisionTime);
 }
 
 export function evaluateReleaseProfile(
@@ -184,11 +223,15 @@ export function evaluateReleaseProfile(
   asOf = new Date().toISOString().slice(0, 10),
   target?: ReleaseTarget,
 ): ReleaseProfileDecision {
-  const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !counts(evidence, gate, asOf));
+  const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
   const targetBound = Boolean(target
+    && target.environment === expectedEnvironment
+    && SHA.test(target.deployedSha)
     && target.deployedSha.trim()
     && target.configurationVersion.trim()
     && (profile.id !== 'institutional-pilot' || (target.tenantId?.trim() && target.cohortId?.trim())));
+  const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !targetBound
+    || !counts(evidence, gate, asOf, undefined, target?.deployedSha));
   const missingActivation = profile.requiredActivationGates.filter((gate) => !targetBound || !counts(evidence, gate, asOf, target));
   const missingDependencies = profile.requiredDependencies.filter((dependency) => !targetBound
     || !counts(evidence, `dependency:${dependency}`, asOf, target));
