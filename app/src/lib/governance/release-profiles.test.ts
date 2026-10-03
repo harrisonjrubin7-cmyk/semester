@@ -39,6 +39,11 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'pilot-cohort-consent': ['privacy-owner'],
   'pilot-support-roster': ['support-owner', 'operations-owner'],
   'pilot-outcome-agreed': ['pilot-champion', 'product-owner'],
+  'canonical-launch-decision': [
+    'executive-owner', 'product-owner', 'engineering-owner', 'security-owner',
+    'privacy-owner', 'accessibility-owner', 'support-owner', 'trust-owner',
+    'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
+  ],
 };
 const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget): ReleaseEvidence => ({
   gate,
@@ -48,6 +53,9 @@ const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget)
   expiresAt: '2026-11-01',
   target,
   approvals: TEST_APPROVERS[gate].map((role) => ({ role, subjectRef: `${role}-subject` })),
+  ...(gate === 'canonical-launch-decision'
+    ? { launchDecision: { verdict: 'go' as const, conditions: [] } }
+    : {}),
 });
 const dependency = (name: string, target: ReleaseTarget): ReleaseEvidence => ({
   gate: `dependency:${name}`, status: 'current', reference: `vault://release/dependency/${encodeURIComponent(name)}`,
@@ -89,7 +97,7 @@ describe('pilot and individual release profiles', () => {
     expect(pilot.allowedOperations.join(' ')).toMatch(/planning|comparison|validation/i);
     expect(pilot.forbiddenOperations).toEqual(expect.arrayContaining(['enroll', 'drop', 'write to SIS', 'act as system of record']));
     expect(pilot.requiredActivationGates).toEqual(expect.arrayContaining([
-      'approved-data-scope', 'kill-switch-clear', 'pilot-outcome-agreed',
+      'approved-data-scope', 'kill-switch-clear', 'pilot-outcome-agreed', 'canonical-launch-decision',
     ]));
     expect(RELEASE_PROFILES['individual-scale'].requiredActivationGates).toContain('kill-switch-clear');
     expect(pilot.requiredDependencies).toContain('external:approved read-only SIS registration-readiness adapter');
@@ -152,6 +160,15 @@ describe('pilot and individual release profiles', () => {
       ],
     });
     expect(evaluateReleaseProfile(profile, whitespaceAlias, AS_OF, target).rolloutStatus).toBe('held');
+    const launchIndex = evidence.findIndex((item) => item.gate === 'canonical-launch-decision');
+    const noGo = evidence.with(launchIndex, {
+      ...evidence[launchIndex], launchDecision: { verdict: 'no-go', conditions: [] },
+    });
+    expect(evaluateReleaseProfile(profile, noGo, AS_OF, target).rolloutStatus).toBe('held');
+    const emptyConditionalGo = evidence.with(launchIndex, {
+      ...evidence[launchIndex], launchDecision: { verdict: 'go-with-conditions', conditions: [] },
+    });
+    expect(evaluateReleaseProfile(profile, emptyConditionalGo, AS_OF, target).rolloutStatus).toBe('held');
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {
@@ -239,6 +256,9 @@ describe('pilot and individual release profiles', () => {
     });
     const staleSha = 'def456def456def456def456def456def456def4';
     expect(evaluateReleaseProfile(individual, evidence, AS_OF, { ...target, deployedSha: staleSha }).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(individual, evidence, AS_OF, {
+      ...target, deployedSha: target.deployedSha.toUpperCase(),
+    })).toMatchObject({ targetBound: false, technicalStatus: 'not-ready', rolloutStatus: 'held' });
   });
 
   it('keeps exact-SHA technical readiness separate from activation target completeness', () => {
@@ -332,7 +352,7 @@ function render(): string {
     ])), '',
     '## Activation boundary', '',
     '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
-    '- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a staffed support roster, and agreed baseline, success, review, expansion and exit criteria.',
+    '- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
     '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
     '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant and cohort. Mixed-target evidence fails closed.',

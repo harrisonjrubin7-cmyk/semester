@@ -45,6 +45,11 @@ export interface ReleaseEvidence {
   target?: ReleaseTarget;
   /** Named approval functions and distinct subjects represented by the secure decision artifact. */
   approvals?: readonly { role: ReleaseApproverRole; subjectRef: string }[];
+  /** Re-derived result from the canonical launch-readiness council evaluator. */
+  launchDecision?: {
+    verdict: 'go' | 'go-with-conditions' | 'no-go';
+    conditions: readonly string[];
+  };
 }
 
 export const ACTIVATION_GATES = [
@@ -61,6 +66,7 @@ export const ACTIVATION_GATES = [
   'pilot-cohort-consent',
   'pilot-support-roster',
   'pilot-outcome-agreed',
+  'canonical-launch-decision',
 ] as const;
 
 export type ActivationGate = (typeof ACTIVATION_GATES)[number];
@@ -74,6 +80,9 @@ export const RELEASE_APPROVER_ROLES = [
   'operations-owner',
   'executive-owner',
   'pilot-champion',
+  'engineering-owner',
+  'trust-owner',
+  'finance-owner',
 ] as const;
 export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
 export type ReleaseProfileId = 'individual-scale' | 'institutional-pilot';
@@ -204,7 +213,7 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
     && actual.cohortId === expected.cohortId);
 }
 
-const SHA = /^[0-9a-f]{40}$/i;
+const SHA = /^[0-9a-f]{40}$/;
 const SECURE_REFERENCE = /^(trust-room|vault|ticket):\/\/[^\s]+$/;
 const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApproverRole[]>> = {
   'deployed-exact-sha': ['operations-owner', 'security-owner'],
@@ -220,11 +229,23 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'pilot-cohort-consent': ['privacy-owner'],
   'pilot-support-roster': ['support-owner', 'operations-owner'],
   'pilot-outcome-agreed': ['pilot-champion', 'product-owner'],
+  'canonical-launch-decision': [
+    'executive-owner', 'product-owner', 'engineering-owner', 'security-owner',
+    'privacy-owner', 'accessibility-owner', 'support-owner', 'trust-owner',
+    'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
+  ],
 };
 
 function hasApprovalProvenance(item: ReleaseEvidence): boolean {
   if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) return item.reference.trim().length > 0;
   if (!SECURE_REFERENCE.test(item.reference)) return false;
+  if (item.gate === 'canonical-launch-decision') {
+    const decision = item.launchDecision;
+    if (!decision || decision.verdict === 'no-go') return false;
+    if (decision.verdict === 'go' && decision.conditions.length > 0) return false;
+    if (decision.verdict === 'go-with-conditions'
+      && (decision.conditions.length === 0 || decision.conditions.some((condition) => !condition.trim()))) return false;
+  }
   const required = item.gate.startsWith('dependency:')
     ? ['product-owner', 'security-owner'] as const
     : APPROVERS_BY_GATE[item.gate as ActivationGate];
