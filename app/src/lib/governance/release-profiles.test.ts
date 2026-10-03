@@ -116,6 +116,8 @@ describe('pilot and individual release profiles', () => {
     expect(RELEASE_PROFILES['individual-scale'].requiredActivationGates).toContain('kill-switch-clear');
     expect(pilot.requiredDependencies).toContain('external:approved read-only SIS registration-readiness adapter');
     expect(pilot.requiredDependencies).not.toContain('external:approved SIS registration adapter and write authorization');
+    expect(RELEASE_PROFILES['individual-scale'].capabilityIds).not.toEqual(expect.arrayContaining(['CAP-019', 'CAP-044']));
+    expect(RELEASE_PROFILES['individual-scale'].requiredDependencies.some((item) => item.startsWith('external:'))).toBe(false);
   });
 
   it('resolves immutable canonical gates from a profile id', () => {
@@ -208,11 +210,15 @@ describe('pilot and individual release profiles', () => {
         on: '2026-09-30',
         blockers: [{ id: 'risk-1', severity: 'P2', summary: 'Accepted risk' }],
         acceptances: [{
-          blocker: 'risk-1', by: 'founder', reason: 'bounded pilot', disclosure: 'Pilot users are told.', expires: '2026-10-01',
+          blocker: 'risk-1', by: 'founder', reason: 'bounded pilot', disclosure: 'Pilot users are told.', expires: AS_OF,
         }],
       },
     });
     expect(evaluateReleaseProfile(profile.id, expiredConditionalGo, AS_OF, target).rolloutStatus).toBe('held');
+    const futureDecision = evidence.with(launchIndex, {
+      ...evidence[launchIndex], launchState: { ...readyLaunchState(), on: '2026-10-03' },
+    });
+    expect(evaluateReleaseProfile(profile.id, futureDecision, AS_OF, target).rolloutStatus).toBe('held');
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {

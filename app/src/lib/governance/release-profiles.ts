@@ -102,9 +102,9 @@ export interface ReleaseProfile {
 
 const CORE_INDIVIDUAL_CAPABILITIES = [
   'CAP-001', 'CAP-004', 'CAP-005', 'CAP-006', 'CAP-007', 'CAP-008', 'CAP-009',
-  'CAP-010', 'CAP-011', 'CAP-014', 'CAP-015', 'CAP-016', 'CAP-017', 'CAP-019',
+  'CAP-010', 'CAP-011', 'CAP-014', 'CAP-015', 'CAP-016', 'CAP-017',
   'CAP-020', 'CAP-021', 'CAP-022', 'CAP-023', 'CAP-024', 'CAP-025', 'CAP-028',
-  'CAP-031', 'CAP-040', 'CAP-044', 'CAP-049', 'CAP-053', 'CAP-054', 'CAP-055',
+  'CAP-031', 'CAP-040', 'CAP-049', 'CAP-053', 'CAP-054', 'CAP-055',
 ] as const;
 
 const PILOT_CAPABILITIES = [
@@ -249,11 +249,14 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
   if (!SECURE_REFERENCE.test(item.reference)) return false;
   if (item.gate === 'canonical-launch-decision') {
     if (!item.launchState) return false;
+    const launchDate = evidenceTime(item.launchState.on);
+    const checked = evidenceTime(item.checkedAt);
+    if (launchDate === null || checked === null || launchDate > checked || launchDate > decisionTime) return false;
     const decision = decide(item.launchState);
     if (decision.verdict === 'no-go') return false;
     if (decision.conditions.some((condition) => {
       const expiry = evidenceTime(condition.expires, true);
-      return expiry === null || expiry < decisionTime;
+      return expiry === null || expiry <= decisionTime;
     })) return false;
   }
   const required = item.gate.startsWith('dependency:')

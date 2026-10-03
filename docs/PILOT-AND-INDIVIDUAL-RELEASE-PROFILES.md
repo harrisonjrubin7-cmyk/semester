@@ -11,7 +11,7 @@ They do not rename repository completion as deployment, tenant approval, certifi
 
 | Profile | Technical candidate | Rollout | Still required |
 | --- | --- | --- | --- |
-| individual-scale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, dependency:CAP-003, dependency:CAP-013, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037, dependency:external:approved catalog and degree-audit data, dependency:external:provider credentials and institution approval |
+| individual-scale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, dependency:CAP-003, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037 |
 | institutional-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision, dependency:CAP-013, dependency:CAP-043, dependency:external:approved catalog and degree-audit data, dependency:external:approved read-only SIS registration-readiness adapter, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
 
 This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.
@@ -26,9 +26,9 @@ requires deployment and, for a pilot, named-tenant activation records that do no
 
 **Default:** available after production release gates
 
-**Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-044`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
+**Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
 
-**Unsatisfied capability dependencies:** `CAP-003`, `CAP-013`, `CAP-034`, `CAP-035`, `CAP-036`, `CAP-037`, `external:approved catalog and degree-audit data`, `external:provider credentials and institution approval`
+**Unsatisfied capability dependencies:** `CAP-003`, `CAP-034`, `CAP-035`, `CAP-036`, `CAP-037`
 
 **Allowed:** personal planning; source-aware course organization; study and creation; export; account deletion
 
