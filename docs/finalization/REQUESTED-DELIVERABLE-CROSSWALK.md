@@ -188,26 +188,26 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 173 | `docs/commercial/PRICING-AND-PACKAGING.md` | EXACT PRESENT | canonical packaging and quote-control logic with every price, floor and commercial term unresolved pending discovery and authorized finance/tax/legal decisions |
 | 174 | `docs/commercial/ORDERING-AND-BILLING-OPERATIONS.md` | EXACT PRESENT | canonical order-to-cash control sequence separating signed scope, billing, entitlement, activation, collection and reconciliation; live financial operation remains unapproved |
 | 175 | `docs/commercial/REVENUE-RECOGNITION-REVIEW-CHECKLIST.md` | EXACT PRESENT | canonical fact package for qualified accounting review; it contains no recognition conclusion, accounting policy, entry or reported revenue |
-| 176 | `docs/commercial/SALES-PIPELINE-DEFINITIONS.md` | NO CLOSE SOURCE | — |
-| 177 | `docs/commercial/CRM-DATA-MODEL.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/canonical-data-model-permissions.md` (filename similarity 0.44; substantive review required) |
-| 178 | `docs/commercial/REVENUE-OPERATIONS-DASHBOARD-SPEC.md` | NO CLOSE SOURCE | — |
-| 179 | `docs/commercial/GROWTH-FUNNEL-SPEC.md` | NO CLOSE SOURCE | — |
-| 180 | `docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md` | CANDIDATE SOURCE | `docs/market-readiness/METRICS-AND-ANALYTICS-PLAN.md` (filename similarity 0.47; substantive review required) |
-| 181 | `docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md` | EXACT PRESENT | `docs/market-readiness/CUSTOMER-SUCCESS-PLAYBOOK.md` |
-| 182 | `docs/commercial/CUSTOMER-ONBOARDING-PLAYBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/CUSTOMER-ONBOARDING-TIMELINE.md` (filename similarity 0.57; substantive review required) |
-| 183 | `docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md` (filename similarity 0.69; substantive review required) |
-| 184 | `docs/commercial/STUDENT-ONBOARDING-PLAYBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/STUDENT-ONBOARDING-SPEC.md` (filename similarity 0.59; substantive review required) |
-| 185 | `docs/commercial/CUSTOMER-HEALTH-SCORE.md` | EXACT PRESENT | `docs/market-readiness/CUSTOMER-HEALTH-SCORE.md` |
-| 186 | `docs/commercial/SUPPORT-OPERATIONS.md` | EXACT PRESENT | `docs/market-readiness/SUPPORT-OPERATIONS.md` |
-| 187 | `docs/commercial/KNOWLEDGE-BASE-STRATEGY.md` | NO CLOSE SOURCE | — |
-| 188 | `docs/commercial/FEEDBACK-AND-VOICE-OF-CUSTOMER-PROGRAM.md` | NO CLOSE SOURCE | — |
-| 189 | `docs/commercial/RENEWAL-AND-EXPANSION-PLAYBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/RENEWAL-PLAYBOOK.md` (filename similarity 0.68; substantive review required) |
-| 190 | `docs/commercial/CHURN-AND-RISK-PLAYBOOK.md` | NO CLOSE SOURCE | — |
-| 191 | `docs/commercial/PARTNER-AND-CHANNEL-STRATEGY.md` | NO CLOSE SOURCE | — |
-| 192 | `docs/commercial/LAUNCH-CAMPAIGN-PLAN.md` | CANDIDATE SOURCE | `docs/LAUNCH-READINESS-TEST-PLAN.md` (filename similarity 0.48; substantive review required) |
-| 193 | `docs/commercial/CONTENT-AND-COMMUNITY-PLAN.md` | CANDIDATE SOURCE | `docs/market-readiness/CONTENT-AND-CHANNEL-PLAN.md` (filename similarity 0.58; substantive review required) |
-| 194 | `docs/commercial/PRESS-AND-ANALYST-READINESS.md` | NO CLOSE SOURCE | — |
-| 195 | `docs/commercial/CUSTOMER-REFERENCE-PROGRAM-DRAFT.md` | NO CLOSE SOURCE | — |
+| 176 | `docs/commercial/SALES-PIPELINE-DEFINITIONS.md` | EXACT PRESENT | canonical evidence-gated stages and forecast hygiene; no current pipeline value, calibrated probability, customer or revenue is asserted |
+| 177 | `docs/commercial/CRM-DATA-MODEL.md` | EXACT PRESENT | canonical privacy-minimized account/stakeholder/opportunity/evidence/order/implementation/renewal relationships; operated CRM and data quality remain unproved |
+| 178 | `docs/commercial/REVENUE-OPERATIONS-DASHBOARD-SPEC.md` | EXACT PRESENT | canonical pipeline-to-accounting reconciliation and dashboard boundaries; all revenue, CAC, margin, retention and forecast actuals remain unavailable |
+| 179 | `docs/commercial/GROWTH-FUNNEL-SPEC.md` | EXACT PRESENT | canonical individual, institutional and customer funnels with privacy/safety guardrails; field conversion, attribution, retention and lift remain unmeasured |
+| 180 | `docs/commercial/ANALYTICS-AND-METRICS-DICTIONARY.md` | EXACT PRESENT | canonical proposed product, pilot, pipeline and finance metric definitions; production sources, targets and observed values remain unaccepted/unavailable |
+| 181 | `docs/commercial/CUSTOMER-SUCCESS-PLAYBOOK.md` | EXACT PRESENT | canonical handoff-to-offboarding outcome/decision lifecycle; no staffed success operation, customer outcome, renewal or reference is asserted |
+| 182 | `docs/commercial/CUSTOMER-ONBOARDING-PLAYBOOK.md` | EXACT PRESENT | canonical evidence-gated proposed 0–60-day sequence; dates never waive gates and no completed/repeatable customer onboarding is claimed |
+| 183 | `docs/commercial/INSTITUTIONAL-IMPLEMENTATION-PLAYBOOK.md` | EXACT PRESENT | canonical discover-to-convert/offboard implementation phases; repository controls remain distinct from named target, provider, UAT and customer acceptance |
+| 184 | `docs/commercial/STUDENT-ONBOARDING-PLAYBOOK.md` | EXACT PRESENT | canonical intended first-win journey and proposed UAT targets; representative participant, accessibility, event and customer validation remain open |
+| 185 | `docs/commercial/CUSTOMER-HEALTH-SCORE.md` | EXACT PRESENT | canonical proposed account-level human-review model with safety overrides; no customer score, predictive validity or automated decision authority exists |
+| 186 | `docs/commercial/SUPPORT-OPERATIONS.md` | EXACT PRESENT | canonical privacy-safe intake/triage/access/escalation/closure model; channels, hours, backup rota, target exercise and response performance remain unproved |
+| 187 | `docs/commercial/KNOWLEDGE-BASE-STRATEGY.md` | EXACT PRESENT | canonical audience, article, approval, accessibility and lifecycle strategy; platform, launch coverage, comprehension and operated editorial ownership remain open |
+| 188 | `docs/commercial/FEEDBACK-AND-VOICE-OF-CUSTOMER-PROGRAM.md` | EXACT PRESENT | canonical voluntary research/feedback loop with separate attribution/reference permission; representative operation, validation and customer evidence remain absent |
+| 189 | `docs/commercial/RENEWAL-AND-EXPANSION-PLAYBOOK.md` | EXACT PRESENT | canonical pre-launch-through-final decision and clean-exit process; no renewal, expansion, recurring revenue or annual conversion is evidenced |
+| 190 | `docs/commercial/CHURN-AND-RISK-PLAYBOOK.md` | EXACT PRESENT | canonical human-reviewed account-risk and respectful offboarding model; no churn cohort, predictive model, retention result or save evidence exists |
+| 191 | `docs/commercial/PARTNER-AND-CHANNEL-STRATEGY.md` | EXACT PRESENT | canonical channel hypotheses, diligence and lifecycle; no partner, reseller, integration availability, channel traction or partner revenue is asserted |
+| 192 | `docs/commercial/LAUNCH-CAMPAIGN-PLAN.md` | EXACT PRESENT | canonical gated internal-to-broad-launch sequence; current authority is limited to preparation/rehearsal and non-activation discovery |
+| 193 | `docs/commercial/CONTENT-AND-COMMUNITY-PLAN.md` | EXACT PRESENT | canonical evidence/accessibility/rights/moderation controls and proposed cadence; no audience, community safety or channel-performance claim is authorized |
+| 194 | `docs/commercial/PRESS-AND-ANALYST-READINESS.md` | EXACT PRESENT | canonical fact/briefing/correction readiness process; no press launch, market/customer/financial, certification, enterprise or impact claim is authorized |
+| 195 | `docs/commercial/CUSTOMER-REFERENCE-PROGRAM-DRAFT.md` | EXACT PRESENT | canonical specific permission, substantiation, expiry and withdrawal workflow; no current customer, logo, quote, result, reference or endorsement exists |
 | 196 | `docs/institutional-readiness/INSTITUTIONAL-PROCUREMENT-READINESS.md` | CANDIDATE SOURCE | `docs/INSTITUTIONAL-SSO-LAUNCH-READINESS.md` (filename similarity 0.51; substantive review required) |
 | 197 | `docs/institutional-readiness/INSTITUTIONAL-SECURITY-PACKAGE.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/procurement-security-review-package.md` (filename similarity 0.46; substantive review required) |
 | 198 | `docs/institutional-readiness/INSTITUTIONAL-PRIVACY-PACKAGE.md` | NO CLOSE SOURCE | — |
