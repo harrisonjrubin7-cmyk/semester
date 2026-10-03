@@ -1633,7 +1633,10 @@ function Listen() {
   const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
-  const pod = catalog.podcast[state.guideId];
+  // A deep link can render once before the dynamically loaded sample catalog
+  // arrives. Keep Listen usable during that hand-off instead of throwing into
+  // the screen boundary while `settleCourse` waits for the requested course.
+  const pod = catalog.podcast[state.guideId] ?? { blurb: '', editions: [] };
   /*
    * Drawn rather than native, and the element is not here.
    *
