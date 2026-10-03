@@ -1,5 +1,5 @@
 {
-  "measuredOn": "2026-10-01",
+  "measuredOn": "2026-10-03",
   "firstLoad": 490496,
   "largest": 491520,
   "route": 49152,
@@ -21,7 +21,7 @@
     "src/screens/Clocks.tsx": 12288,
     "src/screens/Community.tsx": 30720,
     "src/screens/Connect.tsx": 23552,
-    "src/screens/Console.tsx": 24576,
+    "src/screens/Console.tsx": 34816,
     "src/screens/Costs.tsx": 21504,
     "src/screens/Courses.tsx": 100352,
     "src/screens/Create.tsx": 29696,
