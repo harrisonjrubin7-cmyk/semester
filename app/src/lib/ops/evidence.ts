@@ -69,8 +69,8 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     produced: '2026-10-03',
     validFor: YEARLY,
     owner: 'founder',
-    claims: ['no-sale'],
-    rows: [],
+    claims: [],
+    rows: ['COM-001'],
     note: 'One owner-account acceptance run. It does not cover an annual charge, refund, failed renewal, dispute, registered-jurisdiction tax collection, Pro, institution access or general availability, and it does not authorize enabling the governed acquisition hold.',
   },
   {
