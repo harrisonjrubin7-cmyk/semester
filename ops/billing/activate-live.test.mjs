@@ -132,7 +132,7 @@ test('a portal setup failure cannot create a webhook whose one-time secret would
     // contract header must still let the safe 403 preflight prove code version.
     if (url.endsWith('/billing-checkout') && init.method === 'OPTIONS') return new Response(null, { status: 403,
       headers: { 'X-Semester-Billing-Contract': 'plus-v2' } });
-    if (url.endsWith('/secrets')) return response([]);
+    if (url.endsWith('/secrets')) return new Response(null, { status: 201 });
     if (url.endsWith('/billing-checkout') && init.method === 'POST') return response(
       { error: 'Checkout is not available yet.' }, 503, { 'X-Semester-Billing-Contract': 'plus-v2' });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_bad', active: false, features: {} });
@@ -258,7 +258,7 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
       const secrets = JSON.parse(init.body);
       const gate = secrets.find(secret => secret.name === 'BILLING_LIVE_ENABLED');
       if (gate) checkoutEnabled = gate.value === 'true';
-      return response([]);
+      return new Response(null, { status: 201 });
     }
     if (url.endsWith('/billing-webhook')) {
       const event = JSON.parse(init.body);

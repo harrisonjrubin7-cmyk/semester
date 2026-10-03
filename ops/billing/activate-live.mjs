@@ -44,7 +44,13 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     try { res = await send(url, { ...init, signal: AbortSignal.timeout(20_000), redirect: 'error' }); }
     catch { throw new Error(`${label} could not connect. No provider payload was logged.`); }
     if (!res.ok) throw new Error(`${label} refused the request (HTTP ${res.status}).`);
-    try { return await res.json(); } catch { throw new Error(`${label} returned an unreadable response.`); }
+    let body;
+    try { body = await res.text(); } catch { throw new Error(`${label} returned an unreadable response.`); }
+    // Supabase's secret-management endpoint can acknowledge a successful
+    // write with an empty 2xx response. Accept that explicit success while
+    // continuing to reject malformed non-empty provider payloads.
+    if (!body.trim()) return null;
+    try { return JSON.parse(body); } catch { throw new Error(`${label} returned an unreadable response.`); }
   }
   const stripe = (path, init = {}) => request(`https://api.stripe.com/v1/${path}`, {
     ...init, headers: { Authorization: `Bearer ${c.stripeKey}`, ...init.headers },
