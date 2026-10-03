@@ -376,7 +376,7 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
     }),
     [
       'alert=object(pluginId:string;uriCount:number)',
-      'applicationScanAlertUris=array(1;item=object(findingHash,method,uri))',
+      'applicationScanAlertUris=array(1;item=object(findingHash,method,scan,uri))',
       'nextPageToken=string',
       'totalCount=number',
       'applicationScanAlertUris[0].scan=object(id:string)',
