@@ -51,6 +51,21 @@ The principal commands were `npm ci` through pinned npm `11.6.2`, `tsc -b --noEm
 
 The tested candidate is not identified by one commit: its base is `d246a34879b148e3464df599f5783d9060352dc5` plus the current uncommitted finalization changes. This satisfies transparent candidate identification for the working session but not the immutable-revision requirement for a release. Hosted CI and target checks must be rerun against the eventual immutable candidate.
 
+## Post-main reconciliation record
+
+The preceding tables preserve the original P07 session exactly. The package was subsequently reconciled with current `origin/main` at `641554dab2caa511eea8a42614f5abd4e6c8590e`; duplicate add/add readiness drafts were resolved to the more current main versions, and the saved finalization changes were reapplied. PR #1111 head `3581ee465160562a0298711d07ca62d17f3890dc` changed no path in the final 51-file package. The reconciled tree was committed locally as `125524a358c3aab01252ae900acc39f1615a687b`.
+
+| Reconciliation gate | Result |
+| --- | --- |
+| focused claims | **PASS** — 2 files, 38 tests |
+| lint | **PASS** — 22 warnings below the configured 25-warning ceiling |
+| TypeScript and production build | **PASS** — Vite retained the existing large-chunk advisory |
+| full tests, reduced concurrency | **PASS** — 1,262 files; 19,698 passed; 48 skipped; 446.63 seconds |
+| changed-document links and diff integrity | **PASS** — 46 Markdown files checked, zero broken relative links; `git diff --check` clean |
+| local HawkScan | **UNAVAILABLE / OPEN** — no Hawk runtime/tool and no `HAWK_API_KEY`; no scan or rescan occurred |
+
+This later pass verifies the merged local tree, not hosted CI, DAST, PostgreSQL 17, live account sync, deployment, target operation, independent assurance, customer acceptance or launch authority. The local commit was not pushed, merged or deployed by this reconciliation.
+
 ## Release boundary
 
 This record establishes local repository and build behavior only. It does not establish a clean immutable release commit, hosted CI success for the final candidate, PostgreSQL 17 policy/load/restore results, live account sync, production gateway or application health, HawkScan DAST, independent security/accessibility review, provider configuration, staffed operation, customer acceptance, activation or outcomes. The final candidate must be committed or otherwise immutably identified and the missing target/external gates must be completed or explicitly accepted by authorized owners before a go-live claim.

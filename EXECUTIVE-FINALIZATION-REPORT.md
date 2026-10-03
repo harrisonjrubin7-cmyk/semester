@@ -4,13 +4,13 @@
 | --- | --- |
 | Status | **CONTROLLED FINAL ASSESSMENT — LOCAL READINESS EVIDENCED; ACTIVATION NOT AUTHORIZED** |
 | Assessment date | 2026-10-03, America/Chicago |
-| Candidate | base `d246a34879b148e3464df599f5783d9060352dc5` plus uncommitted finalization changes; not an immutable release |
+| Candidate | local reconciliation commit `125524a358c3aab01252ae900acc39f1615a687b`; not pushed, hosted-CI validated, deployed or authorized as a release |
 | Accountable primary | Harrison Rubin; backups and external authorities remain open |
 | Decision basis | [`FINALIZATION-BASELINE.md`](FINALIZATION-BASELINE.md), [`P07 validation evidence`](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md), [`external evidence queue`](docs/finalization/EXTERNAL-EVIDENCE-QUEUE.md), and the linked canonical registers below |
 
 ## Executive decision
 
-Semester has a substantial, coherent product and a strong repository-control foundation. The current candidate passed the executed local test, build, gateway, supply-chain, accessibility-smoke, performance-budget and secret-scan scope. That does not establish a deployable institutional service or a broadly supported consumer launch: the candidate is uncommitted, HawkScan and PostgreSQL 17 validation did not run, target operations are unproved, professional reviews are open, and no institution has accepted a tenant, integration, pilot, or outcome plan.
+Semester has a substantial, coherent product and a strong repository-control foundation. The current local candidate passed the executed test and build scope, including the post-merge reconciliation below. That does not establish a deployable institutional service or a broadly supported consumer launch: the commit is local and unpublished, HawkScan and PostgreSQL 17 validation did not run, target operations are unproved, professional reviews are open, and no institution has accepted a tenant, integration, pilot, or outcome plan.
 
 | Motion | Decision | What the decision permits now |
 | --- | --- | --- |
@@ -47,9 +47,9 @@ The company site and application now share the existing Semester visual and clai
 
 ## D. Technology and security
 
-The candidate passed exact clean installs, application/gateway/video typechecks, lint within its configured warning ceiling, 1,257 ordered and shuffled test files with 19,612 active passing tests, gateway smoke, course validation, production build, bundle budgets, npm advisory audit, supply-chain/license tests, CycloneDX generation and a full working-tree Gitleaks scan. See the [P07 record](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md) for commands, counts, transients and limitations.
+The original P07 candidate passed exact clean installs, application/gateway/video typechecks, lint within its configured warning ceiling, 1,257 ordered and shuffled test files with 19,612 active passing tests, gateway smoke, course validation, production build, bundle budgets, npm advisory audit, supply-chain/license tests, CycloneDX generation and a full working-tree Gitleaks scan. After merging current `origin/main` (`641554da`) and reconciling the package without overlapping PR #1111's change paths, the tree committed as `125524a3` passed 38 focused claim tests, lint with 22 warnings under the 25-warning ceiling, TypeScript/production build and a reduced-concurrency full run of 1,262 files with 19,698 passed and 48 skipped tests. See the [P07 record](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md) for commands, counts, transients and limitations.
 
-Repository evidence exists for access/role helpers, tenant controls, audit paths, local diagnostics, error boundaries, rollback/runbook design, kill switches, export/deletion/consent interfaces and incident/recovery procedures. It does not prove target configuration or operation. Still open: an immutable candidate and hosted CI, PostgreSQL 17 policy/load/restore suites, local/live account sync, production alert delivery, staffed acknowledgement, target rollback/restore/rights/offboarding drills, target role/isolation readback, HawkScan, independent penetration testing and qualified accessibility assessment.
+Repository evidence exists for access/role helpers, tenant controls, audit paths, local diagnostics, error boundaries, rollback/runbook design, kill switches, export/deletion/consent interfaces and incident/recovery procedures. It does not prove target configuration or operation. Still open: publication/freeze of an authorized candidate and exact-SHA hosted CI, PostgreSQL 17 policy/load/restore suites, local/live account sync, production alert delivery, staffed acknowledgement, target rollback/restore/rights/offboarding drills, target role/isolation readback, HawkScan, independent penetration testing and qualified accessibility assessment.
 
 Export, deletion, consent and support are implemented or documented for defined repository paths; they are not evidenced as a complete staffed, legally approved, target-operated service. No broad compliance, security-assurance or service-level claim follows from the local pass.
 
@@ -63,7 +63,7 @@ The procurement package is structurally extensive: security, privacy, accessibil
 
 ## F. Required sequence
 
-1. Freeze and immutably identify the candidate; rerun hosted CI, PostgreSQL 17 suites, account sync and HawkScan on the authorized target.
+1. Publish/freeze and immutably identify an authorized candidate; rerun hosted CI, PostgreSQL 17 suites, account sync and HawkScan on the authorized target.
 2. Close counsel, entity/IP/signing, pricing, tax/accounting, insurance, provider and public-policy decisions.
 3. Assign backups, support/incident coverage and alert ownership; execute target restore, rollback, rights, revocation and offboarding drills.
 4. Complete independent security and qualified accessibility reviews and remediate findings.
