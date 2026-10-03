@@ -17,7 +17,10 @@ export function configuration(env) {
   const taxCode = env.STRIPE_PRODUCT_TAX_CODE;
   const accessToken = env.SUPABASE_ACCESS_TOKEN;
   if (!/^[a-z]{20}$/.test(project)) throw new Error('Invalid SUPABASE_PROJECT_REF.');
-  if (!/^(sk|rk)_live_[A-Za-z0-9]+$/.test(stripeKey || '')) throw new Error('A live STRIPE_SECRET_KEY is required.');
+  // Restricted-key permissions are independently configurable per resource.
+  // This workflow needs Checkout Session, Subscription, portal, webhook and
+  // read permissions together, so accept only Stripe's full live secret key.
+  if (!/^sk_live_[A-Za-z0-9]+$/.test(stripeKey || '')) throw new Error('A full live STRIPE_SECRET_KEY is required.');
   if (!/^txcd_[0-9]{8}$/.test(taxCode || ''))
     throw new Error('An owner-approved STRIPE_PRODUCT_TAX_CODE is required.');
   if (!accessToken) throw new Error('SUPABASE_ACCESS_TOKEN is required.');
@@ -104,11 +107,16 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   for (const session of completedLegacySessions) {
     const subscriptionRef = typeof session?.subscription === 'string' ? session.subscription : session?.subscription?.id;
     if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionRef || '')) continue;
-    const subscription = await stripe(`subscriptions/${encodeURIComponent(subscriptionRef)}`);
+    const subscription = await stripe(
+      `subscriptions/${encodeURIComponent(subscriptionRef)}?expand[]=items.data.price.product`,
+    );
     const ended = ['canceled', 'incomplete_expired'].includes(subscription?.status);
+    const items = subscription?.items?.data;
+    const productsAreCurrent = Array.isArray(items) && items.length > 0 &&
+      items.every(item => item?.price?.product?.tax_code === c.taxCode);
     const migrated = subscription?.metadata?.semester_tax_contract === 'plus-v2' &&
       subscription?.metadata?.semester_tax_code === c.taxCode &&
-      subscription?.automatic_tax?.enabled === true;
+      subscription?.automatic_tax?.enabled === true && productsAreCurrent;
     if (!ended && !migrated) legacyActiveSubscriptions.push(subscriptionRef);
   }
   if (apply && legacyActiveSubscriptions.length > 0)
@@ -197,10 +205,10 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   if (!/^bpc_[A-Za-z0-9]+$/.test(portal?.id || ''))
     throw new Error('Stripe did not return a usable billing portal configuration id. Project secrets were not changed.');
 
-  // A restricted key may allow configuration reads but deny portal-session
-  // creation. An intentionally nonexistent customer must reach Stripe's
-  // resource lookup (400 resource_missing); a permission response proves the
-  // key cannot support the signed-in portal before it is published.
+  // Exercise the live portal-session write route without creating a session.
+  // An intentionally nonexistent customer must reach Stripe's resource lookup
+  // (400 resource_missing), proving the credential and configuration work
+  // together before the credential is published.
   let portalProbe;
   try {
     portalProbe = await send('https://api.stripe.com/v1/billing_portal/sessions', {

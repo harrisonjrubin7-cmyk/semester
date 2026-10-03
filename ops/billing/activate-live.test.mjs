@@ -129,29 +129,22 @@ test('blocks a completed legacy checkout while its subscription still uses the o
     if (url.includes('/tax/registrations') || url.includes('status=open')) return response({ data: [], has_more: false });
     if (url.includes('status=complete')) return response({ data: [{ id: 'cs_live_old', subscription: 'sub_old',
       metadata: { semester_checkout_id: 'old', semester_tax_contract: 'plus-v1' } }], has_more: false });
-    if (url.endsWith('/subscriptions/sub_old')) return response({ id: 'sub_old', status: 'active', automatic_tax: { enabled: false }, metadata: {} });
+    if (url.includes('/subscriptions/sub_old?')) return response({
+      id: 'sub_old', status: 'active', automatic_tax: { enabled: true },
+      metadata: { semester_tax_contract: 'plus-v2', semester_tax_code: env.STRIPE_PRODUCT_TAX_CODE },
+      items: { data: [{ price: { product: { id: 'prod_old', tax_code: 'txcd_99999999' } } }] },
+    });
     throw new Error(`unexpected call to ${url}`);
   } }), /older tax contract/);
   assert.equal(calls.some(call => call.method === 'POST'), false);
 });
 
-test('a read-only restricted key cannot be published for portal use', async () => {
-  const calls = [];
-  await assert.rejects(activateLive({ ...env, STRIPE_SECRET_KEY: 'rk_live_readonly' }, { apply: true, fetch: async (url, init) => {
-    calls.push({ url, method: init.method || 'GET' });
-    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
-    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
-    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
-    if (url.includes('/tax/registrations') || url.includes('/checkout/sessions?') || url.includes('webhook_endpoints?'))
-      return response({ data: [], has_more: false });
-    if (url.includes('/billing_portal/configurations?')) return response({ data: [{ id: 'bpc_semester', active: true,
-      metadata: { semester_product: 'semester' }, features: { invoice_history: { enabled: true },
-        payment_method_update: { enabled: true }, customer_update: { enabled: true, allowed_updates: ['address'] } } }], has_more: false });
-    if (url.endsWith('/billing_portal/sessions')) return response({ error: { type: 'invalid_request_error' } }, 403);
-    throw new Error(`unexpected call to ${url}`);
-  } }), /cannot create billing portal sessions/);
-  assert.equal(calls.some(call => call.url.endsWith('/webhook_endpoints') && call.method === 'POST'), false);
-  assert.equal(calls.some(call => call.url.endsWith('/secrets')), false);
+test('rejects restricted keys before calling any provider', async () => {
+  let calls = 0;
+  await assert.rejects(activateLive({ ...env, STRIPE_SECRET_KEY: 'rk_live_readonly' }, {
+    apply: true, fetch: async () => { calls += 1; return response({}); },
+  }), /full live STRIPE_SECRET_KEY/);
+  assert.equal(calls, 0);
 });
 
 test('existing endpoints require their signing secret and pagination cannot create duplicates', async () => {
