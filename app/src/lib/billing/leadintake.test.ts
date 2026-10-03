@@ -158,6 +158,8 @@ describe('lead intake: the contract the site is built against', () => {
       [{ requested_system: 'unknown_sis', data_mode: 'writeback' }, 'Choose a supported system category.'],
       [{ requested_domain: 'state.example\\anything' }, 'Please enter an institution domain, not a URL.'],
       [{ requested_domain: '127.0.0.1' }, 'Please enter an institution domain, not a URL.'],
+      [{ requested_domain: '%65xample.com' }, 'Please enter an institution domain, not a URL.'],
+      [{ requested_domain: `${'é'.repeat(56)}.${'é'.repeat(56)}.${'é'.repeat(56)}.${'é'.repeat(56)}.com` }, 'Please enter an institution domain, not a URL.'],
     ] as const) {
       const d = deps();
       const res = await handleLeadIntake(post({

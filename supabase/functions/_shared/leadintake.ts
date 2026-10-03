@@ -114,7 +114,7 @@ const DOMAIN_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
 function requestedDomain(value: string): string | null {
   const raw = value.trim().toLowerCase().replace(/\.$/, '');
-  if (!raw || raw.length > 253 || /[\s\\/:?#@]/.test(raw)) return null;
+  if (!raw || raw.length > 253 || /[\s%\\/:?#@]/.test(raw)) return null;
   let domain: string;
   try {
     domain = new URL(`https://${raw}`).hostname;
