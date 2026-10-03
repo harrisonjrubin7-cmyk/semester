@@ -203,6 +203,10 @@ async function primaryAction(page, name, missing) {
     .locator('button.btn.btn-block')
     .filter({ hasText: name })
     .filter({ visible: true });
+  // `go()` can see the shell's route heading before this lazy screen's chunk
+  // has replaced the Suspense fallback. Locator counts are immediate, so wait
+  // for the control itself before deciding whether it is absent or duplicated.
+  await action.first().waitFor({ state: 'visible', timeout: WAIT }).catch(() => {});
   const count = await action.count();
   if (count !== 1) {
     const seen = await page.getByRole('button', { name }).evaluateAll((buttons) =>
