@@ -14,6 +14,8 @@ hawk:
     maxDurationMinutes: 4
     ajaxBrowser: CHROME_HEADLESS
     seedPaths:
+      - /site.css
+      - /site.js
       - /product
       - /students
       - /personal-academic-os

@@ -16,6 +16,7 @@ const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path
 const workflow = read('.github/workflows/hawkscan.yml');
 const companyJob = workflow.split('\n  company_site:')[1] ?? '';
 const capturePaths = ['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`]);
+const companyAssets = ['/site.css', '/site.js'];
 
 test('the existing app scan remains intact (control)', () => {
   assert.match(workflow, /working-directory: app/);
@@ -41,6 +42,7 @@ test('the company configuration does not reuse the app environment or suppress f
   assert.match(config, /ajax: true/);
   assert.match(config, /failureThreshold: low/);
   assert.doesNotMatch(config, /excludePaths|excludePlugins/);
+  for (const path of companyAssets) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
   for (const path of capturePaths) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
 });
 
@@ -64,6 +66,22 @@ test('the published CSP does not permit inline executable scripts', () => {
   assert.match(page, /<script src="\/site\.js" defer><\/script>/);
   assert.doesNotMatch(page, /\son(?:click|change|submit|input|keydown|load|error)=/i);
   assert.ok(read('company-site/site.js').length > 1000);
+});
+
+test('the published CSP permits no inline styles and ships all styling from self', () => {
+  const html = read('company-site/index.html');
+  const script = read('company-site/site.js');
+  const config = JSON.parse(read('company-site/vercel.json'));
+  const csp = config.headers.flatMap(rule => rule.headers).find(header => header.key === 'Content-Security-Policy')?.value ?? '';
+  const styleSource = csp.match(/(?:^|;)\s*style-src\s+([^;]+)/)?.[1] ?? '';
+  assert.match(html, /<link rel="stylesheet" href="\/site\.css">/);
+  assert.doesNotMatch(html, /<style\b|\sstyle=/i);
+  assert.doesNotMatch(script, /\sstyle=/i);
+  assert.doesNotMatch(script, /\.style\b|setAttribute\(\s*['"]style/i);
+  assert.match(script, /sheet\.insertRule/);
+  assert.match(styleSource, /'self'/);
+  assert.doesNotMatch(styleSource, /'unsafe-inline'/);
+  assert.ok(read('company-site/site.css').length > 1000);
 });
 
 const fetchTarget = (server, path, { method = 'GET', ca } = {}) => new Promise((resolve, reject) => {
@@ -100,6 +118,10 @@ test('runtime target preserves production headers and byte-exact screenshots', a
   assert.equal(script.status, 200);
   assert.equal(script.headers['content-type'], 'text/javascript; charset=utf-8');
   assert.equal(script.bytes.toString(), read('company-site/site.js'));
+  const stylesheet = await fetchTarget(server, '/site.css');
+  assert.equal(stylesheet.status, 200);
+  assert.equal(stylesheet.headers['content-type'], 'text/css');
+  assert.equal(stylesheet.bytes.toString(), read('company-site/site.css'));
   const sitemap = await fetchTarget(server, '/sitemap.xml');
   assert.doesNotMatch(sitemap.bytes.toString(), /https:\/\/www.semester.website/);
   assert.match(sitemap.bytes.toString(), new RegExp(`http://localhost:${server.address().port}/product`));

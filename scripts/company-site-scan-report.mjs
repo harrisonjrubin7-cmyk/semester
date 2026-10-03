@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 
 const host = 'https://localhost:4186';
 const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
-const requiredPaths = ['/', '/product', '/students', '/personal-academic-os', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])];
+const requiredPaths = ['/', '/product', '/students', '/personal-academic-os', '/site.css', '/site.js', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])];
 const safeText = value => String(value).replace(/[\r\n\x00-\x1f]/g, ' ').slice(0, 180);
 
 export function parseJson(text) {
@@ -53,8 +53,11 @@ export function scannedPaths(uris, expectedId) {
 export function expectedResponses() {
   return requiredPaths.map(path => {
     const image = path.startsWith('/screenshots/');
-    const bytes = readFileSync(new URL(`../company-site/${image ? path.slice(1) : 'index.html'}`, import.meta.url));
-    return { path, contentType: image ? 'image/jpeg' : 'text/html; charset=utf-8', sha256: createHash('sha256').update(bytes).digest('hex') };
+    const asset = path === '/site.css' || path === '/site.js';
+    const file = image || asset ? path.slice(1) : 'index.html';
+    const contentType = image ? 'image/jpeg' : path === '/site.css' ? 'text/css' : path === '/site.js' ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8';
+    const bytes = readFileSync(new URL(`../company-site/${file}`, import.meta.url));
+    return { path, contentType, sha256: createHash('sha256').update(bytes).digest('hex') };
   });
 }
 
