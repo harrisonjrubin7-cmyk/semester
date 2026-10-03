@@ -91,11 +91,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 76 | `docs/legal-drafts/TRADEMARK-BRAND-USAGE-GUIDELINES-DRAFT.md` | EXACT PRESENT | canonical controlled brand-use draft; ownership, clearance, registration, permission, and licensing remain unverified |
 | 77 | `docs/legal-drafts/DOMAIN-AND-DIGITAL-ASSET-REGISTER-TEMPLATE.md` | EXACT PRESENT | canonical asset-control register; product-domain strategy and repository configuration do not establish external account ownership/control |
 | 78 | `docs/legal-drafts/LEGAL-TRUTH-MAPPING.md` | EXACT PRESENT | canonical evidence-ceiling and release-gate map; draft completeness is separated from legal approval, execution, and activation |
-| 79 | `docs/trust/DATA-INVENTORY.md` | CANDIDATE SOURCE | `docs/DATA-INVENTORY-AND-LINEAGE.md` (filename similarity 0.68; substantive review required) |
-| 80 | `docs/trust/DATA-CLASSIFICATION-STANDARD.md` | CANDIDATE SOURCE | `docs/ai-toolkit/DATA-CLASSIFICATION-AND-TOOL-GOVERNANCE.md` (filename similarity 0.49; substantive review required) |
-| 81 | `docs/trust/DATA-FLOW-MAP.md` | CANDIDATE SOURCE | `docs/market-readiness/DATA-FLOW-DIAGRAM.md` (filename similarity 0.57; substantive review required) |
-| 82 | `docs/trust/PERSONAL-DATA-PROCESSING-REGISTER.md` | NO CLOSE SOURCE | — |
-| 83 | `docs/trust/STUDENT-DATA-GOVERNANCE-PROGRAM.md` | CANDIDATE SOURCE | `docs/market-readiness/AI-GOVERNANCE-PROGRAM.md` (filename similarity 0.51; substantive review required) |
+| 79 | `docs/trust/DATA-INVENTORY.md` | EXACT PRESENT | canonical trust index over the generated schema and lifecycle sources; target environment, fields, providers and operations remain incomplete |
+| 80 | `docs/trust/DATA-CLASSIFICATION-STANDARD.md` | EXACT PRESENT | canonical T0–T6 control standard; tested selected gates remain distinct from universal workflow enforcement or legal sufficiency |
+| 81 | `docs/trust/DATA-FLOW-MAP.md` | EXACT PRESENT | canonical logical flow map; no arrow implies named-tenant activation, provider approval or verified production traffic |
+| 82 | `docs/trust/PERSONAL-DATA-PROCESSING-REGISTER.md` | EXACT PRESENT | canonical draft processing register; legal roles, bases, transfers, ages and jurisdictions remain professional/customer determinations |
+| 83 | `docs/trust/STUDENT-DATA-GOVERNANCE-PROGRAM.md` | EXACT PRESENT | canonical evidence-gated program; repository controls do not establish operational acceptance or blanket education-privacy compliance |
 | 84 | `docs/trust/DATA-MINIMIZATION-STANDARD.md` | NO CLOSE SOURCE | — |
 | 85 | `docs/trust/DATA-RETENTION-AND-DELETION-STANDARD.md` | CANDIDATE SOURCE | `docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md` (filename similarity 0.65; substantive review required) |
 | 86 | `docs/trust/DATA-EXPORT-STANDARD.md` | CANDIDATE SOURCE | `docs/DATA-RETENTION-EXPORT-DELETION.md` (filename similarity 0.45; substantive review required) |

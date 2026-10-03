@@ -64,7 +64,7 @@
 
 ## Phase 3 — Trust, security, privacy, and AI
 
-- [ ] S01: trust documents 1–5.
+- [x] S01: trust documents 1–5; added evidence-bounded data inventory, classification, flow map, processing register, and student-data governance program with explicit control status, code/config evidence, operational evidence, owners, missing proof, and claim ceilings on 2026-10-03.
 - [ ] S02: trust documents 6–10.
 - [ ] S03: trust documents 11–15.
 - [ ] S04: trust documents 16–20.
