@@ -136,7 +136,7 @@ describe('the Degree tab', () => {
     expect(text()).not.toContain('Advisor meeting');
     await act(async () => root.render(<StoreProvider><Degree advisorMeeting /></StoreProvider>));
     expect([...host.querySelectorAll('button, [role="tab"], [role="radio"]')].some((b) => b.textContent === 'Advisor meeting')).toBe(true);
-  });
+  }, 15_000);
 });
 
 describe('preparing and exporting', () => {

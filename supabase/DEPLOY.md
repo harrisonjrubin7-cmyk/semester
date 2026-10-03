@@ -25,6 +25,7 @@ reading:
     billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
     billing-webhook   ACTIVE, v32, verify_jwt off   platform
     lead-intake       ACTIVE, v32, verify_jwt off   platform
+    support-reply-notify PENDING, live evidence absent; merge/deploy, activate the `support-reply-notify` scheduler job, and receipt UAT required
 
     productivity-sourcecheck ACTIVE, v2, verify_jwt off   manual (first deploy)
 

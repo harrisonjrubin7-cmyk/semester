@@ -83,6 +83,14 @@ function press(named: RegExp) {
   });
 }
 
+function overflow(row: HTMLElement) {
+  Object.defineProperties(row, {
+    clientWidth: { configurable: true, value: 300 },
+    scrollWidth: { configurable: true, value: 600 },
+  });
+  act(() => window.dispatchEvent(new Event('resize')));
+}
+
 /**
  * Press the control with this accessible name.
  *
@@ -323,6 +331,18 @@ describe('the shelf', () => {
     // The seven templates used to be behind a button that had to be pressed
     // before anybody could find out there were any.
     expect(starters.length).toBeGreaterThan(4);
+  });
+
+  it('reveals accessible overflow controls for document and sheet templates', () => {
+    show(<Write />);
+    overflow(host.querySelector<HTMLElement>('.gal-start')!);
+    expect(host.querySelector('[aria-label="Scroll Start a new document right"]')).not.toBe(null);
+
+    remount();
+    show(<Sheet />);
+    const blank = buttons().find((button) => /^Blank sheet/.test((button.textContent ?? '').trim()))!;
+    overflow(blank.parentElement!);
+    expect(host.querySelector('[aria-label="Scroll Start a new sheet right"]')).not.toBe(null);
   });
 
   it('says a new shelf is empty rather than drawing an empty grid', () => {

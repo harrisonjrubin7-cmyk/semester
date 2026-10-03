@@ -62,7 +62,7 @@ export function GoalPlan({
       </label>
       <button
         type="button"
-        className="btn btn-primary"
+        className="btn btn-secondary"
         onClick={() => {
           setPlan(draftPlan({ goal, by: by || null, registrationDate, now }));
           setSaved(false);

@@ -239,7 +239,7 @@ function render(): string {
     '',
     '### After the second reading',
     '',
-    `The current register also includes ${AFTER_SECOND_READING.reduce((n, s) => n + s.functions.length, 0)} callable definer added after that dated catalogue snapshot: ${AFTER_SECOND_READING.map((s) => `\`${s.file}\` (${s.functions.map((f) => `\`${f}\``).join(', ')})`).join('; ')}. It is held to its migration body and grant declaration below and is not retroactively counted in the 30 September reading.`,
+    `The current register also includes ${AFTER_SECOND_READING.reduce((n, s) => n + s.functions.length, 0)} callable definers added after that dated catalogue snapshot: ${AFTER_SECOND_READING.map((s) => `\`${s.file}\` (${s.functions.map((f) => `\`${f}\``).join(', ')})`).join('; ')}. They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.`,
     '',
     '## How this page is held',
     '',

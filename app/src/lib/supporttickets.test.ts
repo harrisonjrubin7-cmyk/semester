@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, toTicket } from './supporttickets';
+import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, supportNoticeFailure, supportNoticeResult, ticketReference, toTicket } from './supporttickets';
 
 /**
  * The client half of support tickets, held to the migration it calls. The
@@ -45,6 +45,24 @@ describe('support tickets, client and migration', () => {
   it('never reads or writes a support table directly', () => {
     expect(client).not.toMatch(/\.from\('/);
   });
+
+  it('targets the exact outbox row returned by the reply RPC', () => {
+    expect(client).toMatch(/const messageId = result\.message_id/);
+    expect(client).toMatch(/body:\s*\{\s*message_id:\s*messageId\s*\}/);
+    expect(client).not.toMatch(/body:\s*\{\s*ticket_id:\s*ticketId\s*\}/);
+  });
+
+  it('does not call a vanished or consent-cancelled notice queued', () => {
+    expect(supportNoticeFailure({ context: { status: 409 } })).toBe('cancelled');
+    expect(supportNoticeFailure({ context: { status: 503 } })).toBe('queued');
+    expect(supportNoticeFailure(new Error('network unavailable'))).toBe('queued');
+  });
+
+  it('keeps an already-claimed notice distinct from cancellation', () => {
+    expect(supportNoticeResult({ outcome: 'in_progress' }, null)).toBe('in_progress');
+    expect(supportNoticeResult({ outcome: 'queued' }, null)).toBe('queued');
+    expect(supportNoticeResult({ outcome: 'accepted' }, null)).toBe('accepted');
+  });
 });
 
 describe('what goes with a ticket', () => {
@@ -68,6 +86,14 @@ describe('what goes with a ticket', () => {
   it('reads an unknown status or category conservatively', () => {
     const t = toTicket({ id: '1', category: 'grades', subject: 's', status: 'mystery', priority: 'urgent', created_at: 'x', first_response_due: 'y' });
     expect(t).toMatchObject({ category: 'other', status: 'open', priority: 'normal', firstRespondedAt: null });
+  });
+
+  it('makes a stable support reference without exposing anything about the student', () => {
+    expect(ticketReference('123e4567-e89b-12d3-a456-426614174000')).toBe('SUP-123E-4567-E89B-12D3');
+    expect(ticketReference('123e4567-ffff-12d3-a456-426614174000')).not.toBe(
+      ticketReference('123e4567-e89b-12d3-a456-426614174000'),
+    );
+    expect(ticketReference('')).toBe('SUP-UNKNOWN');
   });
 
   it('offers only app facts, and shapes each one before the student sees it', () => {

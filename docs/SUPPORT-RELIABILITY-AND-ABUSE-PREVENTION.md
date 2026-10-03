@@ -50,19 +50,26 @@ student's data to help, that is the existing student-granted
 **Switched on by** `VITE_SUPPORT_TICKETS` (`off` by default). An institutional
 preview never turns it on: a ticket is a real message to real staff.
 
-**Not built, and needed before this is turned on for a real cohort.**
+**Built since the first support slice.**
 
-- **A staff screen.** The queue, thread and reply functions exist and are
-  tested; nothing in the app draws them. Until one does, an agent answers from
-  the SQL editor as themselves, with the capability, which is the same
-  arrangement `MONITORING.md` uses for the weekly check.
-- **A notification to the student.** A reply appears when the student next
-  opens Help. There is no email. A 24-hour target the student cannot see being
-  met is a target on paper only; the panel says where the reply will appear.
+- **A staff screen.** The Operations Console now draws the identity-free queue,
+  thread, approved context, SLA state, reply and resolution controls.
+- **A notification to the student.** `support-reply-notify` sends a generic
+  email hint through Resend after the in-app reply is committed. The endpoint
+  rechecks the staff capability, never returns the student's address to the
+  browser, omits the reply body from email, and uses the support message id as
+  the provider idempotency key. An email failure does not erase the in-app
+  reply and is shown to the operator.
+
+**Still needed before this is turned on for a real cohort.**
+
 - **A retention period for closed tickets.** `RETENTION.md` says so in bold.
 - **A named owner and hours.** The first-response targets are computed; nobody
   is yet on the hook for them. See the SLO register below — `SLO-5` is
   `UNPROBED` for exactly this reason.
+- **Production deployment and staffed UAT.** The function, configured sender,
+  live notification receipt, operator reply and student readback must all be
+  evidenced before `VITE_SUPPORT_TICKETS` is enabled.
 
 ## 2. Service levels
 

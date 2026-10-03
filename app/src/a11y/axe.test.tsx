@@ -176,6 +176,10 @@ async function show(hash: string, stored: Record<string, unknown> = { nav: 'tabs
     if (!host.querySelector('[aria-busy="true"]')) break;
   }
   expect(host.querySelector('[aria-busy="true"]'), `${hash} never finished loading`).toBeNull();
+  expect(
+    host.textContent,
+    `${hash} rendered the screen error boundary instead of the requested screen`,
+  ).not.toContain('Something on this screen went wrong.');
 }
 
 interface Finding {
