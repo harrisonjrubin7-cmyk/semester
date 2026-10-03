@@ -117,3 +117,91 @@ end $$;
 
 revoke all on function public.set_support_email_notice(uuid, boolean) from public, anon;
 grant execute on function public.set_support_email_notice(uuid, boolean) to authenticated;
+
+-- Re-state the reply boundary so production histories that already recorded
+-- the original outbox migration receive the corrected cap. Every still-
+-- deliverable notice counts, however old it is, and an accepted notice keeps
+-- its slot for 24 hours from provider acceptance rather than queue time.
+create or replace function public.support_reply(
+  want_ticket uuid, want_body text, want_status text, want_operation uuid
+)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  made uuid;
+  notices boolean;
+  notice_outcome text := 'preference_off';
+begin
+  if not private.support_agent() then
+    raise exception 'support:ticket is required' using errcode = 'insufficient_privilege';
+  end if;
+  perform private.assert_fresh_mfa();
+  if want_status not in ('open', 'waiting_on_student', 'resolved') then
+    raise exception 'support may leave a ticket open, waiting on the student, or resolved; only the student closes it';
+  end if;
+  if want_operation is null then
+    raise exception 'a stable reply operation id is required' using errcode = 'not_null_violation';
+  end if;
+
+  insert into public.support_ticket_messages (ticket_id, from_side, body, client_operation_id)
+    values (want_ticket, 'support', want_body, want_operation)
+    on conflict (ticket_id, client_operation_id)
+      where from_side = 'support' and client_operation_id is not null
+      do nothing
+    returning id into made;
+
+  if made is null then
+    select m.id into made
+      from public.support_ticket_messages m
+     where m.ticket_id = want_ticket
+       and m.from_side = 'support'
+       and m.client_operation_id = want_operation;
+    return (
+      select jsonb_build_object('outcome', m.support_notice_outcome, 'message_id', m.id)
+        from public.support_ticket_messages m where m.id = made
+    );
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('support_notice:' || want_ticket::text, 0));
+
+  update public.support_tickets
+     set status = want_status, updated_at = now(),
+         first_responded_at = coalesce(first_responded_at, now())
+   where id = want_ticket and status <> 'closed';
+  if not found then raise exception 'no open ticket with that id'; end if;
+
+  select t.email_notice_enabled into notices
+    from public.support_tickets t where t.id = want_ticket;
+  if notices then
+    if (select count(*) from public.support_notification_outbox o
+         where o.ticket_id = want_ticket
+           and (
+             (o.accepted_at is null and o.dead_lettered_at is null)
+             or o.accepted_at > now() - interval '1 day'
+           )) < 3 then
+      insert into public.support_notification_outbox (message_id, ticket_id)
+        values (made, want_ticket);
+      notice_outcome := 'queued';
+    else
+      notice_outcome := 'capped';
+    end if;
+  end if;
+
+  update public.support_ticket_messages
+     set support_notice_outcome = notice_outcome
+   where id = made;
+
+  perform private.record_audit(
+    null,
+    'support.reply',
+    'support_ticket',
+    want_ticket::text,
+    'allowed',
+    private.role_audit_sha256(made::text),
+    jsonb_build_object('next_status', want_status, 'notification_queued', notice_outcome = 'queued')
+  );
+  return jsonb_build_object('outcome', notice_outcome, 'message_id', made);
+end $$;
+
+revoke all on function public.support_reply(uuid, text, text, uuid) from public, anon;
+grant execute on function public.support_reply(uuid, text, text, uuid) to authenticated;

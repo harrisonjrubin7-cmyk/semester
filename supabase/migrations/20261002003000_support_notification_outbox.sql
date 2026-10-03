@@ -213,7 +213,10 @@ begin
     -- concurrent replies as well as ordinary sequential use.
     if (select count(*) from public.support_notification_outbox o
          where o.ticket_id = want_ticket
-           and o.queued_at > now() - interval '1 day') < 3 then
+           and (
+             (o.accepted_at is null and o.dead_lettered_at is null)
+             or o.accepted_at > now() - interval '1 day'
+           )) < 3 then
       insert into public.support_notification_outbox (message_id, ticket_id)
         values (made, want_ticket);
       notice_outcome := 'queued';

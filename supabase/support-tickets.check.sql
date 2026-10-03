@@ -207,10 +207,13 @@ begin
   perform pg_temp.become_mfa(agent);
   perform public.support_reply(a11y, 'Second update.', 'waiting_on_student', gen_random_uuid());
   perform public.support_reply(a11y, 'Third update.', 'waiting_on_student', gen_random_uuid());
+  update public.support_notification_outbox
+     set queued_at = now() - interval '2 days'
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
   perform public.support_reply(a11y, 'Fourth update.', 'waiting_on_student', gen_random_uuid());
   reset role;
   select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
-  perform pg_temp.counted('support email is capped at three notices per ticket in a rolling day', n, 3);
+  perform pg_temp.counted('aged pending support email still counts toward the three-notice cap', n, 3);
   perform pg_temp.become(ada);
   select public.set_support_email_notice(a11y, false) into notice_choice;
   reset role;
