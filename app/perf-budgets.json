@@ -5,7 +5,7 @@
   "route": 49152,
   "routes": {
     "src/ai/Chat.tsx": 118784,
-    "src/screens/Account.tsx": 25600,
+    "src/screens/Account.tsx": 26624,
     "src/screens/Activities.tsx": 21504,
     "src/screens/Activity.tsx": 11264,
     "src/screens/Agreements.tsx": 22528,
