@@ -173,9 +173,9 @@ describe('the company site shows captured current application screens', () => {
     expect(proof.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
     expect(Number.isFinite(Date.parse(proof.capturedAt))).toBe(true);
     expect(proof.appSourceCommit).toMatch(/^[a-f0-9]{40}$/);
-    expect(proof.appSourceCommit).toBe('fc08913447d691cf0fa8ef757dc365a3b7d8275d');
+    expect(proof.appSourceCommit).toBe('92eeafd9d04d3ca5971819cff441bba19dac9adc');
     expect(proof.appDeploymentCommit).toBe(proof.appSourceCommit);
-    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37043013395');
+    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37106520032');
     expect(proof.deploymentVerification.expectedFixPresent).toContain('min-height: 44px');
     expect(proof.deploymentVerification.supersededRuleAbsent).toContain('min-height: 0');
     expect(proof.deploymentVerification.serviceWorkerState).toMatch(/brand-new browser profile/i);
