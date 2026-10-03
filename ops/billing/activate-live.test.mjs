@@ -103,6 +103,22 @@ test('reuses the tagged non-default Semester portal configuration', async () => 
   assert.equal(calls.some(call => call.method === 'POST'), false);
 });
 
+test('a portal setup failure cannot create a webhook whose one-time secret would be lost', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/tax/registrations') || url.includes('/checkout/sessions?') ||
+        url.includes('/billing_portal/configurations?') || url.includes('webhook_endpoints?'))
+      return response({ data: [], has_more: false });
+    if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_bad', active: false, features: {} });
+    throw new Error(`unexpected call to ${url}`);
+  } }), /usable billing portal/);
+  assert.equal(calls.some(call => call.method === 'POST' && call.url.endsWith('/webhook_endpoints')), false);
+});
+
 test('existing endpoints require their signing secret and pagination cannot create duplicates', async () => {
   const calls = [];
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
@@ -161,6 +177,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');
   assert.equal(portalBody.get('features[customer_update][allowed_updates][0]'), 'address');
   assert.equal(calls.filter(call => call.url.endsWith('/webhook_endpoints')).length, 1);
+  assert.ok(calls.findIndex(call => call.url.endsWith('/billing_portal/configurations')) <
+    calls.findIndex(call => call.url.endsWith('/webhook_endpoints')));
   const expiration = calls.find(call => call.url.endsWith('/checkout/sessions/cs_live_legacy/expire'));
   assert.equal(expiration.method, 'POST');
   assert.ok(calls.indexOf(expiration) < calls.findIndex(call => call.url.endsWith('/secrets')));

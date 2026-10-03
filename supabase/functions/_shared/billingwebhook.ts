@@ -55,7 +55,8 @@ export interface WebhookDeps {
   applyInvoiceEvent(
     eventId: string, kind: PaymentKind, subscriptionRef: string, invoiceRef: string,
     subtotalCents: number | null, taxCents: number | null, currency: string | null,
-    issuedAt: string | null, dueAt: string | null, amountCents: number | null, sha256: string,
+    issuedAt: string | null, dueAt: string | null, snapshotAt: string, snapshotRank: number,
+    amountCents: number | null, sha256: string,
   ): Promise<string>;
   applyEvent(eventId: string, kind: PaymentKind, invoiceId: string | null, amountCents: number | null, sha256: string): Promise<string>;
 }
@@ -155,6 +156,10 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
       kind = failed ? 'payment_failed' : 'payment_succeeded';
       if (finalizationFailed && !needsCustomerLocation) kind = 'other';
       const paid = type === 'invoice.paid' || type === 'invoice.payment_succeeded';
+      // Stripe may deliver finalization failures after a later payment event.
+      // The database uses this lifecycle rank before event time when deciding
+      // whether the snapshot may replace stored invoice amounts.
+      const snapshotRank = paid ? 2 : type === 'invoice.payment_failed' ? 1 : 0;
       amount = num(paid ? o.amount_paid : o.amount_due);
       const sub = invoiceSubscription(o);
       const id = str(o.id);
@@ -164,7 +169,7 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
           num(o.subtotal) ?? Math.max((num(o.amount_due) ?? 0) - tax, 0);
         const outcome = await deps.applyInvoiceEvent(
           eventId, kind, sub, id, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
-          isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created), amount, sha,
+          isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created), eventAt, snapshotRank, amount, sha,
         );
         if (outcome === 'not_ready') {
           // The subscription is not stored yet: its checkout event is still on

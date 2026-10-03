@@ -100,6 +100,7 @@ begin
      or not pg_temp.refused($q$select public.upsert_provider_invoice('sub_x', 'in_x', 1, 'usd', now(), now())$q$)
      or not pg_temp.refused($q$select public.upsert_provider_invoice_v2('sub_x', 'in_x', 1, 0, 'usd', now(), now())$q$)
      or not pg_temp.refused($q$select public.apply_invoice_payment_event_v2('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 1, 0, 'usd', now(), now(), 1, repeat('a', 64))$q$)
+     or not pg_temp.refused($q$select public.apply_invoice_payment_event_v3('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 1, 0, 'usd', now(), now(), now(), 0::smallint, 1, repeat('a', 64))$q$)
      or not pg_temp.refused($q$select public.sync_provider_subscription('sub_x', 'active', null, null, false, now())$q$) then
     raise exception 'FAILED: a signed-in account called a service-only commercial function';
   end if;
@@ -259,6 +260,12 @@ begin
   perform pg_temp.answered('a provider invoice is recorded once', (inv = inv2)::text, 'true');
   perform pg_temp.answered('a recovered provider invoice refreshes subtotal and tax separately',
     (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '825:75');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_snapshot_new', 'other', 'sub_test_1', 'in_test_1',
+    900, 90, 'USD', base, base, base + interval '2 minutes', 1::smallint, 990, repeat('7', 64)) into t;
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_snapshot_late_old', 'other', 'sub_test_1', 'in_test_1',
+    1, 0, 'USD', base, base, base + interval '3 minutes', 0::smallint, 1, repeat('8', 64)) into t;
+  perform pg_temp.answered('a late finalization snapshot cannot replace a newer payment-stage snapshot',
+    (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '900:90');
   select public.upsert_provider_invoice_v2('sub_nobody', 'in_test_2', 799, 0, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 

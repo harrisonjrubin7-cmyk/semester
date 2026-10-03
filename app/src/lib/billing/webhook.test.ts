@@ -80,7 +80,7 @@ describe('the billing webhook', () => {
     expect(calls).toEqual(['invoice']);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
       'evt_1', 'payment_failed', 'sub_1', 'in_1', 799, 0, 'usd', expect.any(String), expect.any(String),
-      799, createHash('sha256').update(body).digest('hex'));
+      new Date((NOW - 5) * 1000).toISOString(), 1, 799, createHash('sha256').update(body).digest('hex'));
     expect(d.applyEvent).not.toHaveBeenCalled();
   });
 
@@ -94,7 +94,20 @@ describe('the billing webhook', () => {
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'payment_failed', 'sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String), 815, expect.any(String));
+      'evt_1', 'payment_failed', 'sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String),
+      expect.any(String), 0, 815, expect.any(String));
+  });
+
+  it('marks a paid invoice as the terminal snapshot stage', async () => {
+    const { d } = deps();
+    const body = event('invoice.paid', {
+      id: 'in_paid', subscription: 'sub_1', amount_paid: 864,
+      subtotal_excluding_tax: 799, total_taxes: [{ amount: 65 }], currency: 'usd', created: NOW - 60,
+    });
+    expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
+    expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
+      'evt_1', 'payment_succeeded', 'sub_1', 'in_paid', 799, 65, 'usd', expect.any(String), expect.any(String),
+      expect.any(String), 2, 864, expect.any(String));
   });
 
   it('records a Stripe Tax outage without putting the customer into dunning', async () => {
@@ -106,7 +119,8 @@ describe('the billing webhook', () => {
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'other', 'sub_1', 'in_tax_outage', 799, 0, 'usd', expect.any(String), expect.any(String), 799, expect.any(String));
+      'evt_1', 'other', 'sub_1', 'in_tax_outage', 799, 0, 'usd', expect.any(String), expect.any(String),
+      expect.any(String), 0, 799, expect.any(String));
   });
 
   it('turns a completed checkout into a subscription, by the checkout id it carries', async () => {

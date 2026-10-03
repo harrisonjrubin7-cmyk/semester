@@ -146,20 +146,9 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   if ((await legacyCheckoutSessions()).length > 0)
     throw new Error('A legacy untaxed Checkout Session is still open. Checkout remains unavailable.');
 
-  if (!endpoint) {
-    const body = new URLSearchParams({ url: c.webhookUrl, description: 'Semester subscription lifecycle' });
-    EVENTS.forEach((event, i) => body.set(`enabled_events[${i}]`, event));
-    const key = createHash('sha256').update(`${account.id}:${c.project}:semester-billing-v1`).digest('hex');
-    endpoint = await stripe('webhook_endpoints', { method: 'POST', headers: { ...headers, 'Idempotency-Key': key }, body });
-    if (endpoint.livemode !== true || endpoint.status !== 'enabled' || !/^whsec_[A-Za-z0-9]+$/.test(endpoint.secret || ''))
-      throw new Error('Stripe did not return a usable live webhook. Project secrets were not changed.');
-    c.webhookSecret = endpoint.secret;
-  } else if (!completeEvents) {
-    // Retain any event types already configured by the owner.
-    const body = new URLSearchParams();
-    [...new Set([...endpoint.enabled_events, ...EVENTS])].forEach((event, i) => body.set(`enabled_events[${i}]`, event));
-    await stripe(`webhook_endpoints/${encodeURIComponent(endpoint.id)}`, { method: 'POST', headers, body });
-  }
+  // Configure and validate the portal before creating a webhook. Stripe only
+  // returns a new endpoint's signing secret once; no later setup failure may
+  // strand that secret and make an otherwise-safe rerun impossible.
   if (!portalReady) {
     const body = new URLSearchParams({
       'features[invoice_history][enabled]': 'true',
@@ -182,6 +171,21 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   }
   if (!/^bpc_[A-Za-z0-9]+$/.test(portal?.id || ''))
     throw new Error('Stripe did not return a usable billing portal configuration id. Project secrets were not changed.');
+
+  if (!endpoint) {
+    const body = new URLSearchParams({ url: c.webhookUrl, description: 'Semester subscription lifecycle' });
+    EVENTS.forEach((event, i) => body.set(`enabled_events[${i}]`, event));
+    const key = createHash('sha256').update(`${account.id}:${c.project}:semester-billing-v1`).digest('hex');
+    endpoint = await stripe('webhook_endpoints', { method: 'POST', headers: { ...headers, 'Idempotency-Key': key }, body });
+    if (endpoint.livemode !== true || endpoint.status !== 'enabled' || !/^whsec_[A-Za-z0-9]+$/.test(endpoint.secret || ''))
+      throw new Error('Stripe did not return a usable live webhook. Project secrets were not changed.');
+    c.webhookSecret = endpoint.secret;
+  } else if (!completeEvents) {
+    // Retain any event types already configured by the owner.
+    const body = new URLSearchParams();
+    [...new Set([...endpoint.enabled_events, ...EVENTS])].forEach((event, i) => body.set(`enabled_events[${i}]`, event));
+    await stripe(`webhook_endpoints/${encodeURIComponent(endpoint.id)}`, { method: 'POST', headers, body });
+  }
   await request(`https://api.supabase.com/v1/projects/${c.project}/secrets`, {
     method: 'POST', headers: { Authorization: `Bearer ${c.accessToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify([
