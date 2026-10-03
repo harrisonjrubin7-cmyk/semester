@@ -25,15 +25,15 @@ type Dialogs = {
 
 const fixtures: HTMLElement[] = [];
 let dialogs: Dialogs;
-let previousOverflow: string;
+let previousModalOpen: boolean;
 let listeners: ReturnType<typeof vi.spyOn>;
 
 const element = (id: string) => document.getElementById(id)!;
 const backgroundState = () => ['site-header', 'main', 'site-footer'].map(id => Boolean(element(id).inert));
 
 beforeEach(() => {
-  previousOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'auto';
+  previousModalOpen = document.body.classList.contains('modal-open');
+  document.body.classList.remove('modal-open');
   const template = document.createElement('template');
   template.innerHTML = `
     <header id="site-header">
@@ -81,7 +81,7 @@ afterEach(() => {
     if (listener) document.removeEventListener(type as string, listener as EventListener, options as AddEventListenerOptions);
   }
   fixtures.splice(0).forEach(node => node.remove());
-  document.body.style.overflow = previousOverflow;
+  document.body.classList.toggle('modal-open', previousModalOpen);
   vi.restoreAllMocks();
 });
 
@@ -92,7 +92,7 @@ describe('the company site dialog lifecycle', () => {
     expect(searchSource.includes('search-close')).toBe(true);
     expect(element('search').hidden).toBe(true);
     expect(backgroundState()).toEqual([false, false, true]);
-    expect(document.body.style.overflow).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('opens desktop search and returns focus on Escape', () => {
@@ -122,12 +122,12 @@ describe('the company site dialog lifecycle', () => {
     element(kind === 'drawer' ? 'menu-btn' : 'search-btn').focus();
     if (kind === 'drawer') dialogs.openDrawer(); else dialogs.sOpen();
     expect(backgroundState()).toEqual([true, true, true]);
-    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(element(kind).inert).not.toBe(true);
 
     if (kind === 'drawer') dialogs.closeDrawer(); else dialogs.sClose();
     expect(backgroundState()).toEqual([false, false, true]);
-    expect(document.body.style.overflow).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('switches from the mobile menu to shortcut search without two active modals', () => {
@@ -138,7 +138,7 @@ describe('the company site dialog lifecycle', () => {
     expect(element('search').hidden).toBe(false);
     expect(element('menu-btn').getAttribute('aria-expanded')).toBe('false');
     expect(backgroundState()).toEqual([true, true, true]);
-    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(document.activeElement?.id).toBe('search-q');
     dialogs.sClose();
     expect(document.activeElement?.id).toBe('menu-btn');
@@ -152,9 +152,9 @@ describe('the company site dialog lifecycle', () => {
     expect(element('search').hidden).toBe(true);
     expect(element('drawer').hidden).toBe(false);
     expect(document.activeElement?.id).toBe('drawer-close');
-    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     dialogs.closeDrawer();
     expect(backgroundState()).toEqual([false, false, true]);
-    expect(document.body.style.overflow).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 });

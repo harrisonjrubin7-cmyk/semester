@@ -5,6 +5,8 @@ import { BARS, slabPath } from '../components/mark.data';
 
 const root = join(import.meta.dirname, '../../..');
 const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+const styles = readFileSync(join(root, 'company-site/site.css'), 'utf8');
+const surface = `${site}\n${styles}`;
 
 describe('the company site and application share one identity', () => {
   it('draws every public logo from the application silhouette, including the favicon', () => {
@@ -17,10 +19,10 @@ describe('the company site and application share one identity', () => {
 
   it('uses the application typography and restrained material palette', () => {
     for (const token of ["--serif:'Cinzel'", "--sans:'Barlow'", '--brass:#d8c79a']) {
-      expect(site.includes(token)).toBe(true);
+      expect(styles.includes(token)).toBe(true);
     }
     for (const oldTreatment of ['fonts.googleapis.com', '--gold-metal:linear-gradient', 'rotateY(-6deg)', 'TODAY  /  ONE CLEAR NEXT STEP']) {
-      expect(site.includes(oldTreatment)).toBe(false);
+      expect(surface.includes(oldTreatment)).toBe(false);
     }
   });
 
@@ -28,7 +30,7 @@ describe('the company site and application share one identity', () => {
     const tokens = readFileSync(join(root, 'app/src/styles/tokens.css'), 'utf8');
     for (const name of ['--brand-canvas', '--brand-surface', '--brand-ink', '--brand-muted', '--brand-accent', '--brand-focus']) {
       expect(tokens.includes(name), `application is missing ${name}`).toBe(true);
-      expect(site.includes(name), `company site is missing ${name}`).toBe(true);
+      expect(styles.includes(name), `company site is missing ${name}`).toBe(true);
     }
   });
 
@@ -43,16 +45,16 @@ describe('the company site and application share one identity', () => {
   });
 
   it('fits the 90-day status strip without widening the page on a small phone', () => {
-    const bars = site.match(/\.st-bars\{([^}]+)\}/)?.[1] ?? '';
-    const bar = site.match(/\.st-bar\{([^}]+)\}/)?.[1] ?? '';
+    const bars = styles.match(/\.st-bars\{([^}]+)\}/)?.[1] ?? '';
+    const bar = styles.match(/\.st-bar\{([^}]+)\}/)?.[1] ?? '';
     expect(bars.includes('grid-template-columns:repeat(90,minmax(0,1fr))')).toBe(true);
     expect(bars.includes('gap:1px')).toBe(true);
     expect(bar.includes('min-width:0')).toBe(true);
   });
 
   it('keeps selected navigation and tabs distinct beyond a subtle surface fill', () => {
-    const nav = [...site.matchAll(/\.nav-main a\[aria-current="page"\]\{([^}]+)\}/g)].at(-1)?.[1] ?? '';
-    const tabs = [...site.matchAll(/\.tabs button\[aria-selected="true"\]\{([^}]+)\}/g)].at(-1)?.[1] ?? '';
+    const nav = [...styles.matchAll(/\.nav-main a\[aria-current="page"\]\{([^}]+)\}/g)].at(-1)?.[1] ?? '';
+    const tabs = [...styles.matchAll(/\.tabs button\[aria-selected="true"\]\{([^}]+)\}/g)].at(-1)?.[1] ?? '';
     for (const selected of [nav, tabs]) {
       expect(selected.includes('box-shadow:inset 0 -2px 0 var(--brass)')).toBe(true);
     }
@@ -79,17 +81,17 @@ describe('the company site and application share one identity', () => {
   });
 
   it('hides only the compact header wordmark, preserving the named footer link', () => {
-    expect(site.includes('@media (max-width:420px){header.nav .brand-word{display:none}')).toBe(true);
-    expect(site.includes('@media (max-width:420px){.brand-word{display:none}')).toBe(false);
+    expect(styles.includes('@media (max-width:420px){header.nav .brand-word{display:none}')).toBe(true);
+    expect(styles.includes('@media (max-width:420px){.brand-word{display:none}')).toBe(false);
   });
 
   it('keeps the compact navigation targets at least 44 pixels', () => {
-    expect(site.includes('.brand{min-width:44px;min-height:44px}')).toBe(true);
-    expect(site.includes('.nav-right .btn{min-width:44px}')).toBe(true);
+    expect(styles.includes('.brand{min-width:44px;min-height:44px}')).toBe(true);
+    expect(styles.includes('.nav-right .btn{min-width:44px}')).toBe(true);
   });
 
   it('reserves display type for titles rather than long reading passages', () => {
-    expect(site.includes('.letter p,.quote-box p,.big-quote,.pull p{font-family:var(--sans);font-weight:400;line-height:1.65}')).toBe(true);
-    expect(site.includes('.letter p{font-size:18px}')).toBe(true);
+    expect(styles.includes('.letter p,.quote-box p,.big-quote,.pull p{font-family:var(--sans);font-weight:400;line-height:1.65}')).toBe(true);
+    expect(styles.includes('.letter p{font-size:18px}')).toBe(true);
   });
 });
