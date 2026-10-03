@@ -135,6 +135,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const [support, setSupport] = useState<SupportGrant[] | null | string>(null);
   const [status, setStatus] = useState('');
   const [gate, setGate] = useState<{ run: () => Promise<void> } | null>(null);
+  const [gateRunning, setGateRunning] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   const onStatus = useCallback((s: string) => setStatus(s), []);
@@ -210,8 +211,15 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
 
   const verified = () => {
     const pending = gate;
-    setGate(null);
-    void readMfa().then(() => pending?.run().catch((e: unknown) => setStatus(said(e, 'The change was not recorded.'))));
+    if (!pending) return;
+    setGateRunning(true);
+    void readMfa()
+      .then(() => pending.run())
+      .catch((e: unknown) => setStatus(said(e, 'The change was not recorded.')))
+      .finally(() => {
+        setGate(null);
+        setGateRunning(false);
+      });
   };
 
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
@@ -225,7 +233,9 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           {status}
         </p>
       )}
-      {gate && <MfaStep onVerified={verified} onCancel={() => setGate(null)} />}
+      {gate && (gateRunning
+        ? <p role="status">Finishing the verified change…</p>
+        : <MfaStep onVerified={verified} onCancel={() => setGate(null)} />)}
       <div
         data-console-content
         inert={gate ? true : undefined}

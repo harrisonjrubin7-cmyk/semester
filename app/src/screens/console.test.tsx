@@ -427,10 +427,17 @@ describe('approvals', () => {
     expect(host.querySelector('[aria-label="Console views"]')).not.toBeNull();
     expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
     type(step.querySelector('input'), '123456');
+    let finishDecision: (() => void) | undefined;
+    mock.decide.mockImplementationOnce(() => new Promise<void>((resolve) => { finishDecision = resolve; }));
     await submit(step.querySelector('form'));
     expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
+    expect(host.textContent).toContain('Finishing the verified change');
+    await act(async () => { finishDecision?.(); });
+    await flush();
     expect(mock.decide).toHaveBeenCalledExactlyOnceWith('req-1', 'approve');
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(false);
   });
 
   it('offers no decision where the server says the caller cannot decide, and says why', async () => {

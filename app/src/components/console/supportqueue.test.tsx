@@ -259,6 +259,8 @@ describe('the support operations queue', () => {
     await click(button('Open conversation'));
     type(host.querySelector('textarea')!, 'Replying to the first ticket.');
     await click(button('Send support reply'));
+    expect(host.querySelector('textarea')?.disabled).toBe(true);
+    expect(host.querySelector('select')?.disabled).toBe(true);
     await click(button('Open conversation'));
     await act(async () => { finishReply?.('accepted'); });
     await act(async () => { finishSecond?.([{ from: 'student', body: 'Second thread.', at: '2026-10-01T10:05:00Z', context: null }]); });

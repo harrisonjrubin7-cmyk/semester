@@ -213,11 +213,11 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
             >
               <label>
                 Reply
-                <textarea className="input" required maxLength={4000} value={reply} onChange={(event) => { setReply(event.target.value); replyOperation.current = null; }} />
+                <textarea className="input" required maxLength={4000} value={reply} disabled={busy} onChange={(event) => { setReply(event.target.value); replyOperation.current = null; }} />
               </label>
               <label>
                 After this reply
-                <select className="input" value={nextStatus} onChange={(event) => { setNextStatus(event.target.value as typeof nextStatus); replyOperation.current = null; }}>
+                <select className="input" value={nextStatus} disabled={busy} onChange={(event) => { setNextStatus(event.target.value as typeof nextStatus); replyOperation.current = null; }}>
                   <option value="waiting_on_student">Wait for the student</option>
                   <option value="resolved">Mark resolved for the student to close</option>
                   <option value="open">Keep open with support</option>
