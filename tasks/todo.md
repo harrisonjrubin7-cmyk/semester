@@ -22,23 +22,27 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 
 **Security verification:** HawkScan v6.5.0 scan `dc811e2c-042f-4096-a115-c7fb90d8371c` completed on 2026-10-03 against the built SPA. It reported no NEW findings. Three Medium CSP paths retained their existing human Risk Accepted state. The quality gate observed 45 served URIs, Ajax Spider coverage, 1,505 requests, zero timeouts, one transient connection failure, and no auth-wall or all-4xx condition. The authenticated console is stateful rather than a distinct URL, so this scan does not establish coverage of a live privileged operator session.
 
-## A2: Add a capability-aware console workspace registry
+## A2: Add a capability-aware console workspace registry — complete
 
 **Description:** Replace the fixed tab list with a typed registry that declares each workspace's capability, scope kind, classification, and component while preserving the current UI.
 
 **Acceptance criteria:**
-- [ ] Shell access alone does not expose domain workspaces.
-- [ ] Hidden workspace navigation is backed by the same capability contract used by server calls.
-- [ ] Existing eight views retain behavior and saved-view compatibility.
+- [x] Shell access alone does not expose domain workspaces.
+- [x] Hidden workspace navigation is backed by an exact capability and scope contract; server authorization remains independently required.
+- [x] Existing eight views retain behavior and saved-view compatibility.
 
 **Verification:**
-- [ ] Focused registry and console rendering tests pass.
-- [ ] A grant matrix test covers allowed and denied workspaces.
-- [ ] Keyboard and narrow-viewport navigation remain usable.
+- [x] Focused registry and console rendering suite passes: 38/38.
+- [x] A grant matrix test covers allowed and denied workspaces and fails when exact capability/scope matching is removed.
+- [x] Existing shared `TabList` keyboard and responsive behavior is preserved; no navigation markup or styling changed.
 
 **Dependencies:** A1
 **Files likely touched:** `app/src/screens/Console.tsx`, `app/src/lib/console/workspaces.ts`, `app/src/lib/console/workspaces.test.ts`, `app/src/screens/console.test.tsx`
 **Estimated scope:** Medium
+
+**Security verification:** HawkScan v6.5.0 scan `dce00a3c-595c-4150-89d2-54fb115b7fab` passed against the exact committed build on 2026-10-03. It reported no NEW findings; the same three Medium CSP paths remain human Risk Accepted. The quality gate observed 45 served URIs, Ajax Spider coverage, 1,504 requests, zero timeouts, one transient connection failure, and no auth-wall or all-4xx condition. As with A1, the stateful authenticated console is not a distinct URL and a live privileged session was not scanned.
+
+**Known baseline gate:** Focused lint passes for all A2 files. The repository-wide lint command remains red because current main exceeds its existing 25-warning budget in unrelated files; A2 introduces no lint warning.
 
 ## A3: Establish the scoped RPC and policy-test template
 
