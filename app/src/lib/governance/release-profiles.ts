@@ -53,6 +53,12 @@ export interface ReleaseEvidence {
   approvals?: readonly { role: ReleaseApproverRole; subjectRef: string }[];
   /** Complete input retained so the canonical launch-readiness verdict can be re-derived. */
   launchState?: LaunchState;
+  /** Non-institutional decision for one named unpaid validation cohort. */
+  validationDecision?: {
+    verdict: 'go' | 'go-with-conditions' | 'no-go';
+    on: string;
+    conditions: readonly Condition[];
+  };
 }
 
 export const BASE_ACTIVATION_GATES = [
@@ -68,7 +74,7 @@ export const VALIDATION_ACTIVATION_GATES = [
   'participant-terms-and-consent',
   'validation-support-roster',
   'validation-outcome-agreed',
-  'canonical-launch-decision',
+  'validation-launch-decision',
 ] as const;
 
 export const PILOT_ACTIVATION_GATES = [
@@ -92,11 +98,14 @@ export const COMMERCIAL_ACTIVATION_GATES = [
   'customer-purchase-and-billing-authorization',
 ] as const;
 
+export const PAID_ASSURANCE_GATES = [
+  'independent-security-assurance',
+  'qualified-accessibility-conformance',
+] as const;
+
 export const ENTERPRISE_ACTIVATION_GATES = [
   'repeatable-multi-customer-deployments',
   'capacity-and-error-budget-accepted',
-  'independent-security-assurance',
-  'qualified-accessibility-conformance',
   'reference-and-claims-permission',
 ] as const;
 
@@ -105,6 +114,7 @@ export const ACTIVATION_GATES = [
     ...VALIDATION_ACTIVATION_GATES,
     ...PILOT_ACTIVATION_GATES,
     ...COMMERCIAL_ACTIVATION_GATES,
+    ...PAID_ASSURANCE_GATES,
     ...ENTERPRISE_ACTIVATION_GATES,
   ]),
 ] as const;
@@ -130,6 +140,7 @@ export type ReleaseProfileId =
   | 'invitation-only-individual-validation'
   | 'institutional-manual-pilot'
   | 'institutional-pilot'
+  | 'paid-institutional-manual-pilot'
   | 'paid-institutional-pilot'
   | 'broad-enterprise-sale';
 
@@ -288,18 +299,36 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     authorizedClaim: 'Authorized only for the evaluated named tenant, cohort, deployment, configuration, and planning-only pilot scope.',
     fallback: 'Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.',
   }),
+  'paid-institutional-manual-pilot': freezeProfile({
+    id: 'paid-institutional-manual-pilot',
+    audience: 'One named institution and cohort purchasing a bounded pilot using student-confirmed manual course data',
+    targetKind: 'manual-pilot',
+    capabilityIds: MANUAL_PILOT_CAPABILITIES,
+    requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
+    requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES],
+    requiredDependencies: unsatisfiedCapabilityDependencies(MANUAL_PILOT_CAPABILITIES),
+    defaultOff: true,
+    allowedOperations: ['contracted manual-data pilot', 'student-confirmed manual import', 'manual course and deadline correction', 'personal planning', 'export', 'account deletion', 'authorized billing'],
+    forbiddenOperations: [
+      'unapproved charge', 'institutional reads', 'institutional writes', 'SSO or provisioning claims',
+      'official registration', 'official grading', 'degree certification', 'act as system of record',
+    ],
+    claimBoundary: 'Commercially authorizable only for a manual-data pilot after the complete bounded-pilot package, independent security and accessibility assurance, and commercial authority are current for the named target; no institutional connection is implied.',
+    authorizedClaim: 'Authorized only for the evaluated paid manual-data pilot with the named institution, cohort, deployment, configuration, executed scope, and billing authority; no institutional connection or system-of-record claim.',
+    fallback: 'Stop billing and activation, disable the pilot entitlement, preserve required exports, and execute the contracted offboarding path.',
+  }),
   'paid-institutional-pilot': freezeProfile({
     id: 'paid-institutional-pilot',
     audience: 'One named institution and cohort purchasing a bounded planning-only pilot',
     targetKind: 'connected-pilot',
     capabilityIds: PILOT_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES],
+    requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES],
     requiredDependencies: planningOnlyPilotDependencies(),
     defaultOff: true,
     allowedOperations: ['contracted planning-only pilot', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff', 'authorized billing'],
     forbiddenOperations: ['unapproved charge', 'enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'act as system of record'],
-    claimBoundary: 'Commercially authorizable only after the complete bounded-pilot package and counsel, signing, price, tax, accounting, payment, insurance, customer-purchase, and billing evidence are current for the named target.',
+    claimBoundary: 'Commercially authorizable only after the complete bounded-pilot package, independent security and accessibility assurance, and counsel, signing, price, tax, accounting, payment, insurance, customer-purchase, and billing evidence are current for the named target.',
     authorizedClaim: 'Authorized only for the evaluated paid, planning-only pilot with the named institution, cohort, deployment, configuration, executed scope, and billing authority.',
     fallback: 'Stop billing and activation, disable the tenant entitlement and institutional reads, preserve required exports, and execute the contracted offboarding path.',
   }),
@@ -309,7 +338,12 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     targetKind: 'enterprise',
     capabilityIds: PILOT_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
-    requiredActivationGates: [...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...ENTERPRISE_ACTIVATION_GATES],
+    requiredActivationGates: [
+      ...PILOT_ACTIVATION_GATES,
+      ...COMMERCIAL_ACTIVATION_GATES,
+      ...PAID_ASSURANCE_GATES,
+      ...ENTERPRISE_ACTIVATION_GATES,
+    ],
     requiredDependencies: planningOnlyPilotDependencies(),
     defaultOff: true,
     allowedOperations: ['contracted enterprise planning deployment', 'repeatable implementation', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff', 'authorized billing'],
@@ -371,6 +405,10 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
   'validation-support-roster': ['support-owner', 'operations-owner'],
   'validation-outcome-agreed': ['product-owner', 'trust-owner'],
+  'validation-launch-decision': [
+    'executive-owner', 'product-owner', 'security-owner', 'privacy-owner',
+    'accessibility-owner', 'support-owner', 'operations-owner', 'trust-owner',
+  ],
   'named-tenant-agreement': ['executive-owner', 'security-owner'],
   'named-data-owner': ['data-owner'],
   'tenant-accessibility-review': ['accessibility-owner'],
@@ -403,6 +441,28 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
     return Boolean(match && match[2] === item.gate && match[3] === item.sourceSha);
   }
   if (typeof item.reference !== 'string' || !SECURE_REFERENCE.test(item.reference)) return false;
+  if (item.gate === 'validation-launch-decision') {
+    const decision = item.validationDecision;
+    if (!decision || !['go', 'go-with-conditions', 'no-go'].includes(decision.verdict)) return false;
+    const launchDate = evidenceTime(decision.on);
+    const checked = evidenceTime(item.checkedAt);
+    if (launchDate === null || checked === null || launchDate > checked || launchDate > decisionTime) return false;
+    if (decision.verdict === 'no-go') return false;
+    if (!Array.isArray(decision.conditions)) return false;
+    if ((decision.verdict === 'go' && decision.conditions.length > 0)
+      || (decision.verdict === 'go-with-conditions' && decision.conditions.length === 0)) return false;
+    const evaluationDate = new Date(decisionTime).toISOString().slice(0, 10);
+    if (!decision.conditions.every((condition) => Boolean(
+      condition
+      && isNonBlankString(condition.blocker)
+      && ['P0', 'P1', 'P2', 'P3'].includes(condition.severity)
+      && isNonBlankString(condition.by)
+      && isNonBlankString(condition.reason)
+      && isNonBlankString(condition.disclosure)
+      && evidenceTime(condition.expires) !== null
+      && condition.expires > evaluationDate,
+    ))) return false;
+  }
   if (item.gate === 'canonical-launch-decision') {
     if (!item.launchState) return false;
     try {
@@ -561,19 +621,28 @@ export function evaluateReleaseProfile(
     && missingDependencies.length === 0
     ? 'authorized'
     : 'held';
-  const requiresLaunchDecision = profile.requiredActivationGates.includes('canonical-launch-decision');
-  const launchOutcomes: Verdict[] = requiresLaunchDecision && targetBound
-    ? latestCurrentEvidence(evidenceRecords, 'canonical-launch-decision', asOf, target)
+  const decisionGate = profile.requiredActivationGates.includes('canonical-launch-decision')
+    ? 'canonical-launch-decision'
+    : profile.requiredActivationGates.includes('validation-launch-decision')
+      ? 'validation-launch-decision'
+      : null;
+  const launchOutcomes: Verdict[] = decisionGate && targetBound
+    ? latestCurrentEvidence(evidenceRecords, decisionGate, asOf, target)
       .flatMap((item) => {
         try {
-          return item.launchState ? [decide(item.launchState)] : [];
+          if (item.launchState) return [decide(item.launchState)];
+          return item.validationDecision ? [{
+            verdict: item.validationDecision.verdict,
+            reasons: [],
+            conditions: [...item.validationDecision.conditions],
+          }] : [];
         } catch {
           return [];
         }
       })
     : [];
   const launchConditions = launchOutcomes.flatMap((outcome) => outcome.conditions);
-  const launchVerdict = !requiresLaunchDecision
+  const launchVerdict = !decisionGate
     ? 'not-applicable'
     : launchOutcomes.length === 0
       ? null

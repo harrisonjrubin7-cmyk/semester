@@ -8,6 +8,7 @@ import {
   ACTIVATION_GATES,
   COMMERCIAL_ACTIVATION_GATES,
   ENTERPRISE_ACTIVATION_GATES,
+  PAID_ASSURANCE_GATES,
   PILOT_ACTIVATION_GATES,
   VALIDATION_ACTIVATION_GATES,
   RELEASE_PROFILES,
@@ -39,6 +40,10 @@ const TARGETS: Record<ReleaseProfileId, ReleaseTarget> = {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
     registrationWriteback: 'disabled', dataMode: 'connected',
   },
+  'paid-institutional-manual-pilot': {
+    environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'paid-manual-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
+    registrationWriteback: 'disabled', dataMode: 'manual',
+  },
   'paid-institutional-pilot': {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'paid-pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
     registrationWriteback: 'disabled', dataMode: 'connected',
@@ -57,6 +62,10 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
   'validation-support-roster': ['support-owner', 'operations-owner'],
   'validation-outcome-agreed': ['product-owner', 'trust-owner'],
+  'validation-launch-decision': [
+    'executive-owner', 'product-owner', 'security-owner', 'privacy-owner',
+    'accessibility-owner', 'support-owner', 'operations-owner', 'trust-owner',
+  ],
   'named-tenant-agreement': ['executive-owner', 'security-owner'],
   'named-data-owner': ['data-owner'],
   'tenant-accessibility-review': ['accessibility-owner'],
@@ -103,6 +112,8 @@ const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget)
   approvals: TEST_APPROVERS[gate].map((role) => ({ role, subjectRef: `${role}-subject` })),
   ...(gate === 'canonical-launch-decision'
     ? { launchState: readyLaunchState() }
+    : gate === 'validation-launch-decision'
+      ? { validationDecision: { verdict: 'go' as const, on: AS_OF, conditions: [] } }
     : {}),
 });
 const dependency = (name: string, target: ReleaseTarget): ReleaseEvidence => ({
@@ -153,18 +164,27 @@ describe('pilot and individual release profiles', () => {
 
   it('makes validation, paid-pilot, and enterprise authority cumulative and fail-closed', () => {
     const validation = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const paidManual = RELEASE_PROFILES['paid-institutional-manual-pilot'];
     const paid = RELEASE_PROFILES['paid-institutional-pilot'];
     const enterprise = RELEASE_PROFILES['broad-enterprise-sale'];
 
     expect(validation.requiredActivationGates).toEqual(VALIDATION_ACTIVATION_GATES);
-    expect(paid.requiredActivationGates).toEqual([...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES]);
-    expect(enterprise.requiredActivationGates).toEqual([
-      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...ENTERPRISE_ACTIVATION_GATES,
+    expect(paidManual.requiredActivationGates).toEqual([
+      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES,
     ]);
+    expect(paid.requiredActivationGates).toEqual([
+      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES,
+    ]);
+    expect(enterprise.requiredActivationGates).toEqual([
+      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES, ...ENTERPRISE_ACTIVATION_GATES,
+    ]);
+    expect(paidManual.requiredDependencies).toEqual([]);
+    expect(paidManual.allowedOperations.join(' ')).toMatch(/manual/i);
+    expect(paidManual.forbiddenOperations.join(' ')).toMatch(/institutional reads/i);
     expect(paid.forbiddenOperations).toEqual(expect.arrayContaining(['unapproved charge', 'write to SIS', 'act as system of record']));
     expect(enterprise.forbiddenOperations).toEqual(expect.arrayContaining(['replace the SIS or LMS', 'act as system of record']));
 
-    for (const profile of [validation, paid, enterprise]) {
+    for (const profile of [validation, paidManual, paid, enterprise]) {
       const target = TARGETS[profile.id];
       const complete = [
         ...technical(target),
@@ -258,6 +278,36 @@ describe('pilot and individual release profiles', () => {
         ...individualTarget, dataMode,
       } as ReleaseTarget)).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
     }
+  });
+
+  it('uses a non-institutional decision record for invitation-only validation', () => {
+    const profile = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const target = TARGETS[profile.id];
+    expect(profile.requiredActivationGates).toContain('validation-launch-decision');
+    expect(profile.requiredActivationGates).not.toContain('canonical-launch-decision');
+    expect(TEST_APPROVERS['validation-launch-decision']).not.toContain('pilot-champion');
+    expect(TEST_APPROVERS['validation-launch-decision']).not.toContain('finance-owner');
+
+    const complete = [
+      ...technical(target),
+      ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+      ...profile.requiredDependencies.map((item) => dependency(item, target)),
+    ];
+    expect(evaluateReleaseProfile(profile.id, complete, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go',
+    });
+
+    const decisionIndex = complete.findIndex((item) => item.gate === 'validation-launch-decision');
+    const institutionalDecision = complete.with(decisionIndex, {
+      ...complete[decisionIndex],
+      validationDecision: undefined,
+      launchState: readyLaunchState(),
+    });
+    expect(evaluateReleaseProfile(profile.id, institutionalDecision, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'held',
+      missingActivation: expect.arrayContaining(['validation-launch-decision']),
+    });
   });
 
   it.each([MANUAL_PROFILE, 'institutional-pilot'] as const)(

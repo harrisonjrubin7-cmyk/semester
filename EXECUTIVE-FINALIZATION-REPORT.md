@@ -2,15 +2,15 @@
 
 | Control | Value |
 | --- | --- |
-| Status | **CONTROLLED FINAL ASSESSMENT — LOCAL READINESS EVIDENCED; ACTIVATION NOT AUTHORIZED** |
+| Status | **CONTROLLED FINAL ASSESSMENT — REVIEW-TRAIN READINESS EVIDENCED; ACTIVATION NOT AUTHORIZED** |
 | Assessment date | 2026-10-03, America/Chicago |
-| Candidate | local reconciliation commit `125524a358c3aab01252ae900acc39f1615a687b`; not pushed, hosted-CI validated, deployed or authorized as a release |
+| Candidate | GitHub pull request `#1129`; the immutable candidate is its exact head SHA recorded by hosted checks and, after approval, the merge/deployment record. This report does not use an earlier local ancestor or self-referential embedded SHA as release identity. |
 | Accountable primary | Harrison Rubin; backups and external authorities remain open |
 | Decision basis | [`FINALIZATION-BASELINE.md`](FINALIZATION-BASELINE.md), [`P07 validation evidence`](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md), [`external evidence queue`](docs/finalization/EXTERNAL-EVIDENCE-QUEUE.md), and the linked canonical registers below |
 
 ## Executive decision
 
-Semester has a substantial, coherent product and a strong repository-control foundation. The current local candidate passed the executed test and build scope, including the post-merge reconciliation below. That does not establish a deployable institutional service or a broadly supported consumer launch: the commit is local and unpublished, HawkScan and PostgreSQL 17 validation did not run, target operations are unproved, professional reviews are open, and no institution has accepted a tenant, integration, pilot, or outcome plan.
+Semester has a substantial, coherent product and a strong repository-control foundation. The PR review train passed hosted CI, PostgreSQL 17 validation and HawkScan for its recorded exact head; any later review fix must repeat those checks before merge. That does not establish a deployable institutional service or a broadly supported consumer launch: target operations are unproved, professional reviews are open, and no institution has accepted a tenant, integration, pilot, or outcome plan.
 
 | Motion | Decision | What the decision permits now |
 | --- | --- | --- |
@@ -43,13 +43,13 @@ The student first win is: add minimum trustworthy academic context, reach Today,
 
 The signed-out golden path, selected account/data-rights components, institutional control surfaces, six critical responsive/accessibility journeys, performance checks and failure/recovery controls passed their recorded repository scope. These are GREEN only as local test evidence. Account-synced resume, real data-rights operations, target tenant isolation, manual assistive-technology review, complete device/theme/route coverage, live support and representative user acceptance remain YELLOW/RED.
 
-The company site and application now share the existing Semester visual and claims foundation, and unqualified LMS/gradebook replacement copy was removed. Brand and source consistency are evidenced locally; the deployed revision, all external delivery behavior and representative perception have not been verified.
+The company site and application now share the existing Semester visual and claims foundation, and unqualified LMS/gradebook replacement copy was removed. Brand and source consistency are evidenced in the review train; production delivery and representative perception remain separate evidence gates.
 
 ## D. Technology and security
 
-The original P07 candidate passed exact clean installs, application/gateway/video typechecks, lint within its configured warning ceiling, 1,257 ordered and shuffled test files with 19,612 active passing tests, gateway smoke, course validation, production build, bundle budgets, npm advisory audit, supply-chain/license tests, CycloneDX generation and a full working-tree Gitleaks scan. After merging current `origin/main` (`641554da`) and reconciling the package without overlapping PR #1111's change paths, the tree committed as `125524a3` passed 38 focused claim tests, lint with 22 warnings under the 25-warning ceiling, TypeScript/production build and a reduced-concurrency full run of 1,262 files with 19,698 passed and 48 skipped tests. See the [P07 record](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md) for commands, counts, transients and limitations.
+The original P07 candidate passed exact clean installs, application/gateway/video typechecks, lint within its configured warning ceiling, 1,257 ordered and shuffled test files with 19,612 active passing tests, gateway smoke, course validation, production build, bundle budgets, npm advisory audit, supply-chain/license tests, CycloneDX generation and a full working-tree Gitleaks scan. After merging the then-current `origin/main` (`641554da`) and reconciling the package without overlapping PR #1111's change paths, the historic tree committed as `125524a3` passed 38 focused claim tests, lint with 22 warnings under the 25-warning ceiling, TypeScript/production build and a reduced-concurrency full run of 1,262 files with 19,698 passed and 48 skipped tests. Those results describe that exact ancestor only; they are not current-PR or release evidence. See the [P07 record](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md) for commands, counts, transients and limitations.
 
-Repository evidence exists for access/role helpers, tenant controls, audit paths, local diagnostics, error boundaries, rollback/runbook design, kill switches, export/deletion/consent interfaces and incident/recovery procedures. It does not prove target configuration or operation. Still open: publication/freeze of an authorized candidate and exact-SHA hosted CI, PostgreSQL 17 policy/load/restore suites, local/live account sync, production alert delivery, staffed acknowledgement, target rollback/restore/rights/offboarding drills, target role/isolation readback, HawkScan, independent penetration testing and qualified accessibility assessment.
+Repository evidence exists for access/role helpers, tenant controls, audit paths, local diagnostics, error boundaries, rollback/runbook design, kill switches, export/deletion/consent interfaces and incident/recovery procedures. It does not prove target configuration or operation. Exact-SHA hosted CI, PostgreSQL 17 policy/load/restore suites and HawkScan must be green on the final PR head. Still open: production alert delivery, staffed acknowledgement, target rollback/restore/rights/offboarding drills, target role/isolation readback, independent penetration testing and qualified accessibility assessment.
 
 Export, deletion, consent and support are implemented or documented for defined repository paths; they are not evidenced as a complete staffed, legally approved, target-operated service. No broad compliance, security-assurance or service-level claim follows from the local pass.
 
