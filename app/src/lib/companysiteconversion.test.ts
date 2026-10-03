@@ -3,8 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const root = join(import.meta.dirname, '../../..');
-const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
-const home = site.slice(site.indexOf('data-page="home"'), site.indexOf('<!-- ================= PRODUCT'));
+const siteHtml = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+const siteScript = readFileSync(join(root, 'company-site/site.js'), 'utf8');
+const site = `${siteHtml}\n${siteScript}`;
+const home = siteHtml.slice(siteHtml.indexOf('data-page="home"'), siteHtml.indexOf('<!-- ================= PRODUCT'));
 
 describe('the company-site conversion path', () => {
   it('leads with an immediate student outcome and a working app signup', () => {

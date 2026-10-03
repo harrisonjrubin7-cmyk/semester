@@ -25,7 +25,9 @@ const stripeKey = Deno.env.get('STRIPE_SECRET_KEY') ?? Deno.env.get('STRIPE_API_
 
 Deno.serve((req) =>
   handleBillingCheckout(req, {
+    liveEnabled: Deno.env.get('BILLING_LIVE_ENABLED') === 'true',
     stripeKey,
+    taxCode: Deno.env.get('STRIPE_PRODUCT_TAX_CODE'),
     allowedOrigin: Deno.env.get('ALLOWED_ORIGIN'),
     returnUrl: Deno.env.get('CHECKOUT_RETURN_URL'),
     async userFromToken(token) {
