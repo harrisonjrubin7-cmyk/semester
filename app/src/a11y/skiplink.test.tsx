@@ -92,20 +92,22 @@ async function show(hash: '#/calendar' | '#/me') {
 
 describe('the app skip link', () => {
   it.each([
-    ['Calendar', '#/calendar'],
-    ['Me', '#/me'],
-  ] as const)('focuses the current main without routing away from %s', async (_screen, hash) => {
+    ['Calendar', '#/calendar', 'Calendar'],
+    ['Me', '#/me', 'Progress'],
+  ] as const)('focuses the current main without routing away from %s', async (_screen, hash, heading) => {
     await show(hash);
     const skip = host.querySelector('a.skip-link') as HTMLAnchorElement;
     const main = host.querySelector('main#main') as HTMLElement;
 
     expect(skip.getAttribute('href')).toBe('#main');
+    expect(host.querySelector('h1')?.textContent).toBe(heading);
     await act(async () => skip.click());
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     expect(window.location.hash).toBe(hash);
+    expect(host.querySelector('h1')?.textContent).toBe(heading);
     expect(document.activeElement).toBe(main);
   });
 });
