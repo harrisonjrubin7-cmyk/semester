@@ -35,6 +35,7 @@ begin
   if not private.support_agent() then
     raise exception 'support:ticket is required' using errcode = 'insufficient_privilege';
   end if;
+  perform private.assert_fresh_mfa();
   if want_status not in ('open', 'waiting_on_student', 'resolved') then
     raise exception 'support may leave a ticket open, waiting on the student, or resolved; only the student closes it';
   end if;

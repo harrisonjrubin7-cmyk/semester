@@ -14,6 +14,19 @@ begin
   execute 'set local role authenticated';
 end $$;
 
+create or replace function pg_temp.become_mfa(who uuid)
+returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims',
+    jsonb_build_object(
+      'sub', who::text,
+      'role', 'authenticated',
+      'aal', 'aal2',
+      'amr', jsonb_build_array(jsonb_build_object('method', 'totp', 'timestamp', extract(epoch from now())))
+    )::text, true);
+  execute 'set local role authenticated';
+end $$;
+
 create or replace function pg_temp.newuser(address text)
 returns uuid language plpgsql as $$
 declare who uuid := gen_random_uuid();
@@ -139,7 +152,9 @@ begin
 
   -- ── Replies and the first-response clock ──────────────────────────────
 
-  perform pg_temp.become(agent);
+  perform pg_temp.must_refuse('a support reply requires fresh MFA at the database boundary', agent,
+    format('select public.support_reply(%L, %L, %L)', a11y, 'stale session', 'waiting_on_student'));
+  perform pg_temp.become_mfa(agent);
   perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student');
   reset role;
   select count(*) into n from public.support_tickets where id = a11y and first_responded_at is not null and status = 'waiting_on_student';
@@ -156,8 +171,20 @@ begin
   select count(*) into n from public.support_notification_outbox
    where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
   perform pg_temp.counted('the reply commits a durable notification intent in the same transaction', n, 1);
-  perform pg_temp.must_refuse('support cannot close a ticket for the student', agent,
-    format('select public.support_reply(%L, %L, %L)', a11y, 'closing', 'closed'));
+  perform pg_temp.become_mfa(agent);
+  begin
+    perform public.support_reply(a11y, 'closing', 'closed');
+    raise exception 'FAILED: support closed a ticket for the student';
+  exception when others then
+    if position('only the student closes it' in sqlerrm) = 0 then raise; end if;
+  end;
+  reset role;
+  raise notice 'ok  support cannot close a ticket for the student';
+
+  select count(*) into n from pg_catalog.pg_proc p
+   where p.oid = 'public.support_reply(uuid,text,text)'::regprocedure
+     and position('private.assert_fresh_mfa()' in p.prosrc) between 1 and position('insert into public.support_ticket_messages' in p.prosrc);
+  perform pg_temp.counted('the reply RPC enforces fresh MFA before writing student-visible content', n, 1);
 
   perform pg_temp.become(ada);
   perform public.reply_to_my_ticket(a11y, 'Switch Control on iPad.');

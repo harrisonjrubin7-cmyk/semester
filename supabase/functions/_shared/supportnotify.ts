@@ -12,7 +12,7 @@ export interface SupportNoticeDeps {
   pending(): Promise<SupportNoticeTarget[]>;
   send(input: { to: string; subject: string; text: string; idempotencyKey: string }): Promise<boolean>;
   accepted(messageId: string): Promise<void>;
-  failed(messageId: string, attempts: number): Promise<void>;
+  failed(messageId: string, attempts: number, reason: string): Promise<void>;
 }
 
 export interface SupportNoticeTarget {
@@ -85,13 +85,21 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
 
 async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<boolean> {
   const ticketReference = reference(target.ticketId);
-  const sent = await deps.send({
-    to: target.email,
-    subject: `[Semester] Support replied to ${ticketReference}`,
-    text: `Semester support replied to ${ticketReference}.\n\nOpen Semester and go to Help to read the reply: ${deps.appUrl}\n\nThe reply is not included in email to keep your support conversation private.`,
-    idempotencyKey: `support-${target.messageId}`,
-  });
+  let sent = false;
+  try {
+    sent = await deps.send({
+      to: target.email,
+      subject: `[Semester] Support replied to ${ticketReference}`,
+      text: `Semester support replied to ${ticketReference}.\n\nOpen Semester and go to Help to read the reply: ${deps.appUrl}\n\nThe reply is not included in email to keep your support conversation private.`,
+      idempotencyKey: `support-${target.messageId}`,
+    });
+  } catch {
+    // One network failure must advance this row's retry state without
+    // preventing the scheduler from attempting the rest of the batch.
+    await deps.failed(target.messageId, target.attempts, 'provider transport unavailable');
+    return false;
+  }
   if (sent) await deps.accepted(target.messageId);
-  else await deps.failed(target.messageId, target.attempts);
+  else await deps.failed(target.messageId, target.attempts, 'provider rejected notice');
   return sent;
 }

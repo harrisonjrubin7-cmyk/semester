@@ -38,13 +38,18 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [nextStatus, setNextStatus] = useState<'open' | 'waiting_on_student' | 'resolved'>('waiting_on_student');
   const [busy, setBusy] = useState(false);
   const wanted = useRef<string | null>(null);
+  const queueRequest = useRef(0);
 
   const refresh = useCallback(async (): Promise<boolean> => {
+    const request = ++queueRequest.current;
     try {
-      setTickets(await supportQueue());
+      const next = await supportQueue();
+      if (request !== queueRequest.current) return false;
+      setTickets(next);
       setQueueFailed(false);
       return true;
     } catch (error) {
+      if (request !== queueRequest.current) return false;
       // Keep the last-known queue visible. Replacing it with an empty list
       // would falsely tell an operator that every open ticket disappeared.
       setQueueFailed(true);

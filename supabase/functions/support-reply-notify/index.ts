@@ -15,7 +15,8 @@ async function retry(messageId: string, attempts: number, reason: string) {
   const patch = nextAttempts >= 8
     ? { attempts: nextAttempts, dead_lettered_at: new Date().toISOString(), last_error: reason }
     : { attempts: nextAttempts, next_attempt_at: new Date(Date.now() + Math.min(60, 2 ** nextAttempts) * 60_000).toISOString(), last_error: reason };
-  await admin.from('support_notification_outbox').update(patch).eq('message_id', messageId);
+  const { error } = await admin.from('support_notification_outbox').update(patch).eq('message_id', messageId);
+  if (error) throw new Error('Could not persist the support-notification retry state.');
 }
 
 async function target(row: OutboxRow) {
@@ -55,19 +56,21 @@ Deno.serve((req) => handleSupportNotice(req, {
     if (error) return false;
     const roles = (grants ?? []).filter((grant) => !grant.expires_at || grant.expires_at > now).map((grant) => grant.role);
     if (!roles.length) return false;
-    const { data } = await admin.from('role_capabilities').select('role').eq('capability', 'support:ticket').in('role', roles).limit(1);
-    return Boolean(data?.length);
+    const { data, error: capabilityError } = await admin.from('role_capabilities').select('role').eq('capability', 'support:ticket').in('role', roles).limit(1);
+    return !capabilityError && Boolean(data?.length);
   },
   async notice(ticketId) {
-    const { data } = await admin.from('support_notification_outbox').select('message_id,ticket_id,attempts')
+    const { data, error } = await admin.from('support_notification_outbox').select('message_id,ticket_id,attempts')
       .eq('ticket_id', ticketId).is('accepted_at', null).is('dead_lettered_at', null)
       .lte('next_attempt_at', new Date().toISOString()).order('queued_at', { ascending: true }).limit(1).maybeSingle();
+    if (error) throw new Error('Could not read the support-notification outbox.');
     return data ? target(data as OutboxRow) : null;
   },
   async pending() {
-    const { data } = await admin.from('support_notification_outbox').select('message_id,ticket_id,attempts')
+    const { data, error } = await admin.from('support_notification_outbox').select('message_id,ticket_id,attempts')
       .is('accepted_at', null).is('dead_lettered_at', null).lte('next_attempt_at', new Date().toISOString())
       .order('queued_at', { ascending: true }).limit(100);
+    if (error) throw new Error('Could not read the support-notification outbox.');
     const rows = await Promise.all(((data ?? []) as OutboxRow[]).map(target));
     return rows.filter((row): row is NonNullable<typeof row> => row !== null);
   },
@@ -81,9 +84,10 @@ Deno.serve((req) => handleSupportNotice(req, {
     return res.ok;
   },
   async accepted(messageId) {
-    await admin.from('support_notification_outbox').update({ accepted_at: new Date().toISOString(), last_error: null }).eq('message_id', messageId);
+    const { error } = await admin.from('support_notification_outbox').update({ accepted_at: new Date().toISOString(), last_error: null }).eq('message_id', messageId);
+    if (error) throw new Error('Could not persist the accepted support notification.');
   },
-  async failed(messageId, attempts) {
-    await retry(messageId, attempts, 'provider rejected notice');
+  async failed(messageId, attempts, reason) {
+    await retry(messageId, attempts, reason);
   },
 }));

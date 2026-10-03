@@ -58,8 +58,25 @@ describe('support reply notification', () => {
     const d = deps({ send: vi.fn().mockResolvedValue(false) });
     const response = await handleSupportNotice(request(), d);
     expect(response.status).toBe(502);
-    expect(d.failed).toHaveBeenCalledWith('message-1', 0);
+    expect(d.failed).toHaveBeenCalledWith('message-1', 0, 'provider rejected notice');
     expect(d.accepted).not.toHaveBeenCalled();
+  });
+
+  it('records a transport failure and continues draining the scheduler batch', async () => {
+    const d = deps({
+      cronSecret: 'cron-secret',
+      pending: vi.fn().mockResolvedValue([
+        { messageId: 'message-1', ticketId: ticket, email: 'first@example.test', attempts: 2 },
+        { messageId: 'message-2', ticketId: ticket, email: 'second@example.test', attempts: 0 },
+      ]),
+      send: vi.fn().mockRejectedValueOnce(new Error('network unavailable')).mockResolvedValueOnce(true),
+    });
+    const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
+    const response = await handleSupportNotice(cron, d);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ processed: 2, accepted: 1 });
+    expect(d.failed).toHaveBeenCalledWith('message-1', 2, 'provider transport unavailable');
+    expect(d.accepted).toHaveBeenCalledWith('message-2');
   });
 
   it('refuses callers without the support capability before looking up a ticket', async () => {
