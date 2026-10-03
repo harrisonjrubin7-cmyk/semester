@@ -125,14 +125,20 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 **Description:** Provide metadata-first case operations while keeping student-content access behind the existing explicit support-access workflow.
 
 **Acceptance criteria:**
-- [ ] Case readers cannot browse student content from the case screen.
-- [ ] Escalation to support access requires ticket, scope, expiry, consent state, and reason.
-- [ ] Every sensitive read is audited and the active grant is visible.
+- [x] Case readers cannot browse student content from the case screen.
+- [x] Escalation to support access requires ticket, scope, expiry, consent state, and reason.
+- [x] Every sensitive read is audited and the active grant is visible.
 
 **Verification:**
-- [ ] Consent absent/expired/wrong-scope tests fail closed.
-- [ ] Support-agent and non-support role tests pass.
-- [ ] UI clearly distinguishes metadata from private content access.
+- [x] The focused database gate passes 115 assertions across support-case access, foreign-key indexes, grants, definer sweep, legacy support access, and support tickets. It covers absent, expired, revoked, wrong-scope, wrong-supporter, wrong-tenant, closed-ticket, stale-MFA, and audit failure paths.
+- [x] Focused client and component coverage passes 69 tests. It verifies metadata-only case opening, separate sensitive-read intent, capability/MFA routing, server-authoritative consent state, failure announcements, and no automatic private read.
+- [x] TypeScript, university TypeScript, focused zero-warning lint, production build, generated role/definer registers, style, accessible-label, and terminology gates pass. The repository-wide lint remains red on 49 pre-existing React-compiler warnings outside the B2 files.
+- [x] The full SQL sweep reaches every check; B2 and its index gate pass. The sweep remains red only on the branch's existing `financial-retention.check.sql` and `ledger-seals.check.sql` baselines.
+- [x] The signed-out browser state fails closed. Authenticated visual exercise was unavailable without a synthetic Supabase operator session; the component/DOM tests hold loading, empty, denied, metadata, consent, and sensitive-read behavior.
+
+**Security verification:** HawkScan v6.5.0 scan `33d78f76-bdca-4ee1-aaf4-fe5501339d1f` passed against exact code commit `aad55c99` on 2026-10-03. It reported no NEW findings; the same three Medium `style-src unsafe-inline` paths remain human Risk Accepted. The scanner discovered 45 URLs with Ajax Spider coverage. This scan covers the built SPA surface, not authenticated Supabase RPCs; the 115 direct PostgreSQL assertions are the authorization boundary evidence.
+
+**Regression note:** the full frontend run was attempted after the focused gates. The original five failures were resolved or passed in isolation; the rerun became resource-starved while the full PostgreSQL sweep ran and exposed an unrelated existing `DemandContribution.test.tsx` failure that also reproduces alone (8 failures, 2 passes). No B2 source is in that test path, so no full-suite pass is claimed.
 
 **Dependencies:** B1
 **Files likely touched:** support RPC migration/check, client adapter/test, support workspace/test
