@@ -86,8 +86,8 @@ begin
 
   perform pg_temp.become(ada);
   a11y := public.open_support_ticket('accessibility', 'Drill buttons', 'I cannot reach the buttons with a switch.',
-    '{"app_version": "2026.9.27", "device_class": "tablet", "screen": "#/drill"}'::jsonb);
-  howto := public.open_support_ticket('how_to', 'Export', 'How do I export my calendar?', '{}'::jsonb);
+    '{"app_version": "2026.9.27", "device_class": "tablet", "screen": "#/drill"}'::jsonb, false);
+  howto := public.open_support_ticket('how_to', 'Export', 'How do I export my calendar?', '{}'::jsonb, false);
   perform public.set_support_email_notice(a11y, true);
   reset role;
 
@@ -99,19 +99,19 @@ begin
   perform pg_temp.counted('a how-to question has a 72-hour target', due_hours::bigint, 72);
 
   perform pg_temp.must_refuse('context may not carry a key outside the six', ada,
-    $q$select public.open_support_ticket('bug', 's', 'b', '{"gpa": "3.1"}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 's', 'b', '{"gpa": "3.1"}'::jsonb, false)$q$);
   perform pg_temp.must_refuse('nor a value that is not text', ada,
-    $q$select public.open_support_ticket('bug', 's', 'b', '{"offline": true}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 's', 'b', '{"offline": true}'::jsonb, false)$q$);
   perform pg_temp.become(ben);
   for i in 1..5 loop
-    perform public.open_support_ticket('bug', 'flood ' || i, 'b', '{}'::jsonb);
+    perform public.open_support_ticket('bug', 'flood ' || i, 'b', '{}'::jsonb, false);
   end loop;
   reset role;
   perform pg_temp.must_refuse('a sixth ticket in a day is refused', ben,
-    $q$select public.open_support_ticket('bug', 'sixth', 'b', '{}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 'sixth', 'b', '{}'::jsonb, false)$q$);
   delete from public.support_tickets where student_id = ben;
   perform pg_temp.must_refuse('a signed-out visitor cannot open a ticket', null,
-    $q$select public.open_support_ticket('bug', 's', 'b', '{}'::jsonb)$q$);
+    $q$select public.open_support_ticket('bug', 's', 'b', '{}'::jsonb, false)$q$);
 
   -- ── Each student sees only their own ──────────────────────────────────
 
