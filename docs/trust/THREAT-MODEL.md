@@ -1,31 +1,33 @@
-# Semester threat model — controlled draft
+# Semester threat model — controlled trust index
 
-- **Status:** `PARTIAL / REPOSITORY MODEL; TARGET VALIDATION OPEN`
-- **Owner:** Security owner with Engineering, Privacy, Product, AI, Operations, and customer security authority
+- **Status:** `PARTIAL / REQUIRES REVALIDATION`
+- **Owner:** Harrison Rubin, Security/Engineering/Privacy/AI/Product primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
+- **Primary technical source:** [`docs/SECURITY-THREAT-MODEL.md`](../SECURITY-THREAT-MODEL.md), originally assessed at an earlier revision
 
 ## Scope and method
 
-This canonical model governs the web client, authentication, APIs/functions, databases/storage, institutional gateway/integrations, payments, AI providers/tools, operator/support access, CI/CD, vendors, devices, backups, and customer boundaries. It uses assets, actors, trust boundaries, data flows, STRIDE/abuse cases, privacy/safety harms, control evidence, residual risk, test cases, owners, and change triggers.
+Protect student/personal/education data, identity and authorization, tenant/resource isolation, official/institutional boundaries, service availability, financial/entitlement state, AI/provider boundaries, audit evidence, code/release integrity and company/customer secrets. Review by asset, actor, entry point, trust boundary, data flow, STRIDE-style threat, abuse/safety case, likelihood/impact, controls, evidence, residual risk and treatment.
 
-The detailed [platform model](../SECURITY-THREAT-MODEL.md), [integration model](../INTEGRATION-THREAT-MODEL.md), and [AI Toolkit model](../ai-toolkit/AI-TOOLKIT-THREAT-MODEL.md) are repository analyses, not penetration-test or target-operation results.
+The source model contains detailed boundaries and threats but is not a penetration test and cannot be assumed current for every later schema, feature, provider, integration or deployment change.
 
-## Priority threat register
+## Current priority threats
 
-| Threat | Code/config evidence | Operational evidence | Status | Owner | Missing test/proof |
+| Threat area | Code/config evidence | Operational evidence | Status | Owner | Missing test/proof |
 | --- | --- | --- | --- | --- | --- |
-| cross-account/tenant access or privilege escalation | RLS, membership, capability, grant, support and break-glass controls/tests | named-tenant independent acceptance absent | `PARTIAL` | Security/Engineering | two-account/two-tenant target adversarial test |
-| session/identity/provider compromise | auth/SSO/SCIM/MFA/refusal controls | target provider, recovery, console MFA and revocation evidence incomplete | `PARTIAL` | IAM/Security | provider lifecycle and account-takeover testing |
-| injection, active content, unsafe fetch/import or secret exposure | validation/sanitization, destination, boundary, secret and content tests | current target DAST/manual assessment absent | `PARTIAL` | Security/Engineering | authenticated API/browser adversarial assessment |
-| integration replay/forgery/duplicate or wrong official write | signature/nonce, journal, prepare/commit, idempotency and receipt controls | no live institution/provider write acceptance | `PARTIAL` | Integration/Customer | target negative, outage and reconciliation UAT |
-| AI injection, leakage, tool escalation, unsafe output or cost abuse | fencing, policy, scope, kill-switch and limit sources | provider/model/tenant evaluation incomplete | `PARTIAL` | AI/Security | approved-model red-team and per-tenant drill |
-| monitoring/recovery failure or key-person loss | smoke, status, runbooks, rollback and logical restore | no staffed rota or provider-backup recovery proof | `OPEN/PARTIAL` | Operations/Executive | alert, incident, key-person and restore exercises |
-| supply-chain/CI/provider compromise | pinned workflows, audits, secret scans, lockfile/SBOM paths | signed provenance and provider assurance incomplete | `PARTIAL` | Engineering/Security | release attestation, provider review and independent test |
+| account/session/privileged compromise | auth, session, MFA and access tests | full console/target MFA and recovery evidence absent | `PARTIAL` | Security/Identity | target adversarial lifecycle |
+| cross-account/tenant/resource access | RLS/capability/isolation suites | named-tenant target acceptance absent | `VERIFIED — REPOSITORY/PARTIAL SCOPE` | Security/Data | complete target negative matrix |
+| untrusted input, XSS/SSRF/injection | parsers, guards and selected negative tests | authenticated target DAST absent | `PARTIAL` | Engineering/Security | DAST/manual and bypass testing |
+| AI prompt/tool/data abuse | policy, injection and kill-switch sources | full live-model evaluation and approved-provider operation absent | `PARTIAL` | AI/Security/Privacy | scored red-team/evaluation |
+| provider/integration/webhook compromise | signature/scope/replay/adapter controls | real provider/tenant acceptance absent | `CONDITIONAL` | Integrations/Security | target provider exercise |
+| release/supply-chain compromise | locked dependencies, action allowlist, scans, SBOM | signed provenance and compromise drill absent | `PARTIAL` | Engineering/Security | attestation and supplier drill |
+| loss/corruption/outage | restore/rollback/continuity sources | production backup restore and staffed response incomplete | `PARTIAL` | Operations | target restore/incident exercise |
+| insider/support misuse | scoped support/break-glass/audit tests | periodic access/audit review absent | `PARTIAL` | Security/Privacy | operated review and misuse drill |
 
-## Change triggers
+## Required threat record
 
-Review before or after a new trust boundary, sensitive data field, identity/provider, customer/tenant model, official write, upload/active content, external fetch/webhook, AI model/tool/source, payment, cryptography/key store, privileged/support path, logging/analytics, dependency/runtime, deployment/provider/region, backup/recovery method, significant incident, penetration-test finding, or material regulatory/customer requirement.
+`[THREAT ID]`, assets/data/users, actors/capabilities, boundaries/entry points, scenario/preconditions, existing controls, source/operational/independent evidence, likelihood/impact, residual risk, owner, treatment, verification, monitoring, incident/kill switch, customer dependency and review trigger.
 
-## Claim ceiling and activation blockers
+## Claim ceiling and blockers
 
-Permitted: “Semester maintains platform, integration, and AI repository threat models tied to control evidence and open risks.” Prohibited: complete threat coverage, independently validated model, penetration-tested controls, no exploitable path, or institution-specific acceptance. Blocks: current architecture/data-flow/asset reconciliation; target configuration; named owners; open-threat treatment; two-tenant and provider tests; target DAST/manual assessment; AI red-team; recovery/incident drills; independent penetration test; and signed review.
+Permitted: “Semester maintains a detailed repository-informed threat model and security control tests.” Prohibited: complete/current attack-surface coverage, adversarially validated controls, secure platform, mitigated top risks, or penetration-tested status. Blocks: current architecture/asset/data-flow reconciliation, target configuration, all new boundaries/providers/features, abuse cases, named owners, DAST/independent testing, AI red team, recovery/incident drills, risk treatment and customer acceptance.

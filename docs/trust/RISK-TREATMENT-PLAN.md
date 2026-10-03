@@ -1,33 +1,39 @@
-# Semester risk treatment plan — controlled draft
+# Semester security and trust risk treatment plan — controlled draft
 
-- **Status:** `PARTIAL / MATERIAL RISKS REMAIN OPEN`
-- **Owner:** Executive risk owner with Security, Privacy, Accessibility, Product, Engineering, Operations, Legal, Finance, and customer authorities
+- **Status:** `INCOMPLETE / NO ADOPTED RISK APPETITE`
+- **Owner:** Harrison Rubin, Executive Risk/Security/Privacy/Accessibility/AI/Operations/Product primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
+- **Approval:** authorized governing/customer authority according to risk ownership
 
-## Decision framework
+## Treatment rule
 
-For each risk, choose and document: avoid (do not launch/remove scope), reduce (implement and verify controls), transfer/share (contract/insurance/provider without pretending responsibility disappears), or accept (authorized, informed, time-bound residual risk). Zero-tolerance risks cannot be accepted. Any treatment must name owner/backup, actions, funding/dependencies, due date, evidence, residual rating, escalation, customer/notice effect, exception/expiry, and verification.
+Risk ratings and acceptance require accountable human judgment and current evidence. Missing evidence cannot lower residual risk. Treat by avoiding the activity, mitigating through verified controls, transferring only through confirmed contract/insurance, or accepting through an authorized, time-bounded record with monitoring and expiry. P0/P1, unlawful, unauthorized or safety-critical risk cannot be silently accepted.
 
-The generated [risk governance register](../operating-model/RISK-GOVERNANCE.md) is the principal source. It explicitly reports unnamed governance seats, no approved exceptions, no completed game days, and material open security, continuity, legal, staffing, monitoring, accessibility, and commercial risks.
+## Priority treatment plan
 
-## Priority treatment map
-
-| Risk area | Treatment | Code/config evidence | Operational evidence | Owner | Missing test/proof |
+| Risk | Current evidence/state | Treatment and exit evidence | Owner/backup | Due/review | Decision/blocker |
 | --- | --- | --- | --- | --- | --- |
-| tenant/data authorization | reduce/avoid activation until accepted | extensive RLS/identity/capability tests | named-tenant independent test absent | Security/Engineering | two-account/two-tenant UAT and remediation |
-| privileged access/MFA | reduce | MFA/freshness/access controls | all-console enforcement and review absent | Security/IAM | console proof, recovery/break-glass and access review |
-| monitoring/key-person/incident | reduce and avoid broad commitments | smoke/status/runbooks | no rota, backup operator or integrated exercise | Executive/Operations | alert-to-response, key-person and tabletop evidence |
-| backup/recovery | reduce; avoid RTO/RPO commitments | restore tooling and logical rehearsal | provider backup restore absent | Operations/Security | timed isolated provider restore and reconciliation |
-| legal/privacy/accessibility claims | avoid unsupported publication/sale; reduce through qualified review | draft controls and automated evidence | approvals/external assessment absent | Executive/Legal/Privacy/Accessibility | counsel and qualified reviews plus remediation |
-| vulnerability/independent assurance | reduce | CI/scans/test plan | current target DAST and penetration test absent | Security/Engineering | scan, assessment, remediation and retest |
-| vendor/AI/integration | reduce/avoid activation pending authority and terms | provider, policy, kill-switch and integration controls | contracts, configuration, target/provider acceptance incomplete | Vendor/AI/Integration | reviews, terms, target drills and customer approval |
+| unstaffed security/privacy/support/recovery | roles and runbooks designed; backups absent | name/train owners, route alerts, exercises and coverage record | Harrison Rubin / backup `UNASSIGNED` | weekly; before any supported launch | avoid paid activation |
+| cross-tenant/authorization scope gaps | strong repository suites; target/named-tenant proof absent | complete negative matrix, target acceptance and independent test | Harrison Rubin / customer security `UNASSIGNED` | before institutional activation | open P0/P1 blocks activation |
+| incomplete vulnerability/adversarial assurance | scans/tests; target DAST and pen test open | DAST, finding closure, independent report/re-test | Harrison Rubin / independent assessor `UNASSIGNED` | before paid pilot | no security assurance claim |
+| recovery/backup/key-person failure | logical rehearsal/runbooks; production restore and backup owner absent | provider settings, timed isolated restore, backup operator and corrective actions | Harrison Rubin / backup operator `UNASSIGNED` | before supported production or RTO/RPO claim | no RTO/RPO or broad launch |
+| privacy/data/provider/AI authority gaps | inventories/policies partial; contracts/customer/terms open | approved map, roles, providers, age/jurisdiction, lifecycle and evaluations | Harrison Rubin / qualified/customer authorities `UNASSIGNED` | before affected processing activation | keep affected processing disabled |
+| accessibility barrier | automated evidence; qualified manual/ACR absent | manual assessment, remediation/retest and support route | Harrison Rubin / qualified assessor `UNASSIGNED` | before broad individual or paid pilot | no conformance/enterprise claim |
+| unsupported commercial/legal claim | claim controls/drafts; approvals external | qualified review, evidence, monitoring and withdrawal | Harrison Rubin / counsel `UNASSIGNED` | before publication, signature or payment | no publication/signature/payment |
 
-## Treatment record and review
+## Control and evidence map
 
-`[RISK ID]`, statement/affected assets and people, source, inherent likelihood/impact, tolerance, controls/evidence, treatment decision/rationale, actions, owner/backup, budget/dependencies, target/milestones, residual rating, indicators/triggers, customer/legal/contract effect, exception/approver/expiry, validation, last/next review, status, closure and reopening criteria.
+| Control | Code/config evidence | Operational evidence | Status | Missing test/proof |
+| --- | --- | --- | --- | --- |
+| company risk register | [`docs/company/RISK-REGISTER.md`](../company/RISK-REGISTER.md) | ratings/appetite/acceptances not adopted | `DRAFT` | governing review and signed decisions |
+| launch risk register | [`LAUNCH-RISK-REGISTER.md`](../../LAUNCH-RISK-REGISTER.md) | external/customer gates open | `ACTIVE/OPEN` | dated closure evidence |
+| security/privacy control evidence | trust registers, tests and source documents | target/independent/operated evidence incomplete | `PARTIAL` | control exercises and reviews |
+| exceptions/acceptance | exception and deviation templates | no complete operating sample | `DESIGNED` | authorized record with expiry and monitoring |
 
-Critical, zero-tolerance, overdue, expired-exception, customer-impacting, or residual-above-appetite risks escalate to authorized executive and relevant domain/customer owners. Closing a document or merging code does not close the risk; verification and approval do.
+## Required risk record
+
+`[RISK ID]`, cause/event/consequence, assets/users/data/customers, category, inherent likelihood/impact, controls/evidence, residual likelihood/impact, treatment/actions, dependencies, owner/back-up, target/expiry, monitoring/indicators, exception/acceptance authority, customer ownership, verification and closure evidence.
 
 ## Claim ceiling and activation blockers
 
-Permitted: “Semester has a structured risk register, treatment rules, and evidence-linked priority actions.” Prohibited: enterprise risks controlled, residual risk accepted, governance operating, exceptions approved, game days complete, or institutional launch risk acceptable. Blocks: named governance seats; current asset/risk reconciliation; funded owners/dates; zero-tolerance disposition; legal/privacy/accessibility/security external review; target testing and recovery; game days; exception process operation; metrics; customer disclosure/approval; and signed residual-risk decision.
+Permitted: “Semester maintains draft risk registers and evidence-linked treatment requirements.” Prohibited: risks controlled/accepted, defined enterprise risk appetite, complete risk inventory, insured transfer, or readiness based on unscored templates. Blocks: adopted scales/appetite/authority, named owners/backups, completed ratings, funded actions/dates, target and independent evidence, customer-owned decisions, exception/expiry review, metrics, residual acceptance and no open P0/P1.

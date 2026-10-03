@@ -1,36 +1,39 @@
 # Semester change management policy — controlled draft
 
-- **Status:** `PARTIAL / PROCESS NOT FULLY OPERATED`
-- **Owner:** Engineering/Operations owner with Product, Security, Privacy, Accessibility, Support, and customer change authority
+- **Status:** `PARTIAL / NOT FULLY OPERATED`
+- **Owner:** Harrison Rubin, Engineering/Operations/Security/Privacy/Accessibility/Product primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
+- **Scope:** product, code, schema, infrastructure, configuration, providers, integrations, policies and customer-affecting operations
 
 ## Policy
 
-Every production-affecting code, schema, configuration, provider, integration, policy, data, AI-model, content, legal, support, or operational change requires a traceable request, accountable owner, risk/impact assessment, appropriate review, validation, rollout and rollback/forward-repair plan, communication decision, target verification, and closure evidence. Emergency changes use the same evidence after immediate containment and receive retrospective review.
+Every material change requires an accountable owner, reason, affected systems/users/customers, risk tier, dependencies, data/authority impact, review, test evidence, release/rollback or forward-fix path, communication, monitoring and retained decision. Emergency changes preserve the same evidence after containment and receive prompt independent review.
 
-## Change classes
+Changes involving identity/tenant boundaries, student or sensitive data, official writes, AI/providers, payments, accessibility, retention/deletion, security controls, schema compatibility, service commitments or customer obligations require the relevant specialist and customer authority before activation.
 
-| Class | Examples | Minimum governance |
+## Change classes and gates
+
+| Class | Examples | Minimum gate |
 | --- | --- | --- |
-| standard/low | pre-approved reversible maintenance with unchanged trust boundaries | documented procedure, automated checks, owner, verification |
-| normal/material | feature, dependency, configuration, migration, integration, data or policy change | risk review, peer/domain approval, test evidence, rollout/rollback, communication |
-| high risk | identity, tenancy, privileged access, sensitive data, AI tools, official writes, payments, crypto, deletion/retention, critical workflow | security/privacy/accessibility/customer review as applicable, negative tests, staged rollout, explicit GO |
-| emergency | active incident, critical vulnerability, severe outage or integrity risk | incident authority, containment, minimal safe test, evidence preservation, retrospective within approved window |
+| standard/low | reversible documentation or preapproved routine configuration | owner, review, verification and record |
+| normal | feature, dependency, workflow, provider or non-breaking schema change | risk review, tests, rollback/flag, release approval and monitoring |
+| high/critical | auth/tenant/data/security/AI/payment/official write/destructive migration | cross-functional review, target acceptance, incident/rollback readiness and executive/customer authority as applicable |
+| emergency | active incident/exposure/outage | incident authority, minimum safe change, live verification, retrospective and corrective action |
 
 ## Control and evidence map
 
 | Control | Code/config evidence | Operational evidence | Status | Owner | Missing test/proof |
 | --- | --- | --- | --- | --- | --- |
-| source/change traceability | Git history, pull requests, workflow and decision sources | complete ticket-to-release sample not assembled | `PARTIAL` | Engineering | sampled end-to-end records and approver evidence |
-| automated validation | CI, function, database, supply-chain, accessibility and smoke checks | current branch/rules enforcement readback incomplete | `PARTIAL` | Engineering/Security | enforced gate export and candidate results |
-| migration/config safety | migration checks, feature controls, rollout and rollback sources | target configuration baseline/drift review incomplete | `PARTIAL` | Operations/Engineering | target change rehearsal and readback |
-| customer/adoption change | [adoption/change source](../operating-model/CHANGE-MANAGEMENT.md) and implementation playbooks | no named institution committee or accepted calendar | `DESIGNED` | Product/Customer | stakeholder sign-off, training and communication evidence |
-| emergency change | incident, rollback, security and recovery procedures | no target emergency-change exercise/sample | `DESIGNED/PARTIAL` | Incident commander | timed exercise and retrospective evidence |
+| source/change history | Git, PR and workflow records | current branch/rule enforcement and reviewer evidence incomplete | `PARTIAL` | Engineering | protected-branch and sample approval export |
+| feature/config rollout | feature flags, cohort policy and kill-switch tests | target rollout/rollback acceptance absent | `PARTIAL` | Product/Operations | representative target change exercise |
+| schema compatibility | migration history/checks and rollback rules | target migration/forward-fix operation incomplete | `PARTIAL` | Data/Engineering | expand-contract and failure drill |
+| institutional adoption | [`docs/operating-model/CHANGE-MANAGEMENT.md`](../operating-model/CHANGE-MANAGEMENT.md) | no named-customer change governance | `DESIGNED` | Implementation/Customer | customer communication/training/UAT record |
+| emergency change | incident/rollback runbooks | no complete target exercise | `DESIGNED/PARTIAL` | Incident/Operations | emergency change tabletop |
 
-## Required change record
+## Required record
 
-`[CHANGE ID]`, request/reason, owner/backups, systems/assets/tenants/users, data/authority, risk/class, dependencies, threat/privacy/accessibility/AI/legal/customer impact, reviewers/approvers, tests/scans, migration/configuration, rollout/feature state, rollback or forward repair, monitoring/support, communications/training, window/freeze, artifact/commit, target readback, findings/exceptions, result and closure.
+`[CHANGE ID]`, owner/back-up, reason/urgency, systems/data/tenants/audiences, risk/class, dependencies, legal/privacy/security/accessibility/AI/customer review, test/scan results, migration compatibility, artifact/config, rollout/flag, rollback/forward fix, monitoring/support, approvals, execution timestamps, outcome, exceptions and evidence expiry.
 
-## Claim ceiling and activation blockers
+## Claim ceiling and blockers
 
-Permitted: “Semester has repository change controls, extensive automated checks, and defined risk/adoption requirements.” Prohibited: every change approved, enforced segregation of duties, complete configuration control, customer-approved change process, or proven emergency operation. Blocks: named owners/backups; adopted classifications and approval matrix; enforced branch/release controls; configuration baselines; representative normal/high-risk/emergency records; customer calendars/communications; training; metrics; exceptions; and signed target acceptance.
+Permitted: “Semester maintains source history, extensive CI checks and scoped rollout controls.” Prohibited: every change approved, complete segregation of duties, zero-downtime change, proven emergency process, or customer-accepted operation. Blocks: adopted authority matrix, branch/reviewer evidence, risk criteria, target rollout/rollback/migration exercises, emergency path, configuration/provider inventory, customer communications, metrics, exception review and named owners.
