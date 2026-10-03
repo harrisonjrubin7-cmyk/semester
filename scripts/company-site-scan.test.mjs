@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { evaluate, expectedResponses, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { evaluate, expectedResponses, findingHash, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path, root), 'utf8') : '';
@@ -255,6 +255,13 @@ test('NEW and ASSIGNED findings are actionable; existing human triage is respect
   const report = cleanReport();
   report.findings = [{ name: 'Header policy', paths: [{ path: '/', status: 'RISK_ACCEPTED' }, { path: '/product', status: 'FALSE_POSITIVE' }] }];
   assert.deepEqual(evaluate(report, coveredUris, coveredUris, healthyEvidence()).gaps, []);
+});
+
+test('finding hashes are exposed only when they are valid triage identifiers', () => {
+  const hash = 'a'.repeat(64);
+  assert.equal(findingHash({ findingHash: hash }), hash);
+  assert.equal(findingHash({ findingHash: 'not-a-hash' }), null);
+  assert.equal(findingHash({}), null);
 });
 
 test('empty coverage and missing changed assets cannot clear the company gate', () => {

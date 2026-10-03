@@ -86,8 +86,13 @@ export function evaluate(report, uris, routes = expectedRoutes(), evidence = {})
 function printFindings(findings, write = console.log) {
   for (const finding of findings) {
     const paths = (finding.paths ?? []).map(path => `${safeText(path.method)} ${safeText(String(path.path).split('?')[0])} [${safeText(path.status)}]`);
-    write(`StackHawk | Finding: ${safeText(finding.severity)} ${safeText(finding.name)}; ${paths.join(', ')}`);
+    const hash = findingHash(finding);
+    write(`StackHawk | Finding: ${safeText(finding.severity)} ${safeText(finding.name)}; triage-hash=${hash ?? 'unavailable'}; ${paths.join(', ')}`);
   }
+}
+
+export function findingHash(finding) {
+  return /^[a-f\d]{64}$/i.test(finding?.findingHash ?? '') ? finding.findingHash : null;
 }
 
 function printResult(result) {
