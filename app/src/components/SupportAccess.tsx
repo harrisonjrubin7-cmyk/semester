@@ -24,6 +24,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
   const [supporters, setSupporters] = useState<SupporterChoice[]>([]);
   const [windows, setWindows] = useState<SupportWindow[]>([]);
   const [tickets, setTickets] = useState<SupportTicketChoice[]>([]);
+  const [ticketLoadError, setTicketLoadError] = useState('');
   const [signals, setSignals] = useState<Record<string, SupportSignal[]>>({});
   const [supporterId, setSupporterId] = useState('');
   const [ticketId, setTicketId] = useState('');
@@ -46,6 +47,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
       setSupporters(next.supporters);
       setWindows(next.windows);
       setTickets(nextTickets);
+      setTicketLoadError(next.ticketLoadError ?? '');
       setSupporterId((old) => next.supporters.some((supporter) => supporter.supporterId === old)
         ? old
         : next.supporters[0]?.supporterId ?? '');
@@ -94,6 +96,11 @@ export function SupportAccess({ account }: { account: Account | null }) {
             />
           )}
           {notice && <Notice alert>{notice}</Notice>}
+          {ticketLoadError && (
+            <Notice alert>
+              Your existing support windows are still shown, but support questions could not be loaded. Creating a new window is disabled until they are available.
+            </Notice>
+          )}
           {changed && (
             <PermissionNotice
               changed={changed.changed}

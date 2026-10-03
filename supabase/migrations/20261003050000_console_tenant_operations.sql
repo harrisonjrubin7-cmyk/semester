@@ -161,7 +161,7 @@ begin
         'restricted'::text,
         'public.customer + public.customer_contract'::text,
         'commercial'::text,
-        (select max(c.updated_at)
+        (select max(coalesce(k.signed_on, k.starts_on, k.ends_on))::timestamptz
            from public.customer c
            join public.customer_contract k on k.customer_id = c.id
           where c.tenant_id = a.id),

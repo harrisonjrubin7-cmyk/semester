@@ -18,6 +18,7 @@ const row = (overrides: Partial<IntegrationHealthRow> = {}): IntegrationHealthRo
   customerImpact: 'No current customer impact is indicated by connector telemetry.',
   nextSafeAction: 'Continue monitoring against the declared freshness target.',
   configurationApprovalId: null, configurationApprovalStatus: null, classification: 'restricted',
+  canRequest: true,
   provenance: 'server sources', limitation: 'Credentials, cursors and payload references are never returned.',
   ...overrides,
 });
@@ -131,6 +132,12 @@ describe('integration health workspace', () => {
   it('does not offer another request while an approval is open', async () => {
     await draw(async () => [row({ configurationApprovalId: 'approval-2', configurationApprovalStatus: 'pending' })]);
     expect(host.textContent).toContain('Keep this connector unchanged while approval approval-2 is pending.');
+    expect(button('Request configuration approval')).toBeUndefined();
+  });
+
+  it('does not offer configuration requests to a read-only viewer', async () => {
+    await draw(async () => [row({ canRequest: false })]);
+    expect(host.textContent).toContain('read-only for your current duty assignment');
     expect(button('Request configuration approval')).toBeUndefined();
   });
 });

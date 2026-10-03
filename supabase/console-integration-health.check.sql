@@ -172,6 +172,14 @@ begin
   select count(*) into n from public.integration_connections where id = stale and status = 'healthy';
   perform pg_temp.counted('requesting approval did not mutate connector configuration', n, 1);
 
+  update public.approval_request set expires_at = now() - interval '1 second' where ticket = 'INT-100';
+  perform pg_temp.become(operator);
+  select count(*) into n from public.console_integration_health(false) h
+   where h.connection_name = 'Stale Catalog'
+     and h.configuration_approval_status = 'expired';
+  reset role;
+  perform pg_temp.counted('an expired configuration approval is not presented as open', n, 1);
+
   if not pg_temp.refused(operator, 'select count(*) from public.console_integration_health(true)') then
     raise exception 'FAILED: demo integrations were included without tenant:implement';
   end if;

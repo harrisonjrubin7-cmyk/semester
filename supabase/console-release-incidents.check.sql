@@ -165,14 +165,14 @@ begin
 end $$;
 
 insert into public.platform_release_evidence
-  (gate, status, approved_by, evidence, source, commit_sha, observed_at)
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG', 'production browser verification', repeat('b', 40), now());
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG', 'production browser verification', repeat('b', 40), 'deployment-1', now());
 
 insert into public.platform_release_evidence
-  (gate, status, approved_by, evidence, source, commit_sha, observed_at)
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-FUTURE', 'future clock probe', repeat('a', 40), now() + interval '1 hour');
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-FUTURE', 'future clock probe', repeat('a', 40), 'deployment-1', now() + interval '1 hour');
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text;
@@ -195,9 +195,9 @@ begin
 end $$;
 
 insert into public.platform_release_evidence
-  (gate, status, approved_by, evidence, source, commit_sha, observed_at)
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), now());
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), 'deployment-1', now());
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; leaked text;

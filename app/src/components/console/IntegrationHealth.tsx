@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Notice, SectionLabel } from '../ui';
 import {
   loadIntegrationHealth,
@@ -50,13 +50,18 @@ export function IntegrationHealth({
   const [openId, setOpenId] = useState<string | null>(null);
   const [approval, setApproval] = useState(EMPTY_APPROVAL);
   const [busy, setBusy] = useState(false);
+  const refreshRequest = useRef(0);
 
   const refresh = useCallback(async (): Promise<boolean> => {
+    const sequence = ++refreshRequest.current;
     try {
-      setConnections(await read(env === 'Production' ? false : includeDemo));
+      const rows = await read(env === 'Production' ? false : includeDemo);
+      if (sequence !== refreshRequest.current) return false;
+      setConnections(rows);
       setError('');
       return true;
     } catch (caught) {
+      if (sequence !== refreshRequest.current) return false;
       const detail = said(caught, 'Could not read integration health.');
       setError(detail);
       onStatus(detail);
@@ -199,13 +204,15 @@ export function IntegrationHealth({
 
             {approvalOpen ? (
               <Notice>Keep this connector unchanged while approval {connection.configurationApprovalId ?? ''} is {connection.configurationApprovalStatus}.</Notice>
-            ) : (
+            ) : connection.canRequest ? (
               <button type="button" className="btn btn-secondary" onClick={() => open(expanded ? null : connection.connectionId)}>
                 {expanded ? 'Cancel approval request' : 'Request configuration approval'}
               </button>
+            ) : (
+              <Notice>This view is read-only for your current duty assignment.</Notice>
             )}
 
-            {expanded && !approvalOpen && (
+            {expanded && connection.canRequest && !approvalOpen && (
               <div style={{ display: 'grid', gap: 'var(--sp-3)' }}>
                 <Notice alert>Never paste credentials, secrets or tokens. Use opaque approval, rollback and ticket references only. This request does not change the connector.</Notice>
                 <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>

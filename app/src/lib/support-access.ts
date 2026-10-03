@@ -38,6 +38,7 @@ export async function loadSupportAccess(): Promise<{
   supporters: SupporterChoice[];
   windows: SupportWindow[];
   tickets: SupportTicketChoice[];
+  ticketLoadError: string | null;
 }> {
   const db = await cloud();
   const [
@@ -51,7 +52,6 @@ export async function loadSupportAccess(): Promise<{
   ]);
   if (supporterError) throw new Error(message(supporterError, 'Could not load verified supporters.'));
   if (windowError) throw new Error(message(windowError, 'Could not load support access.'));
-  if (ticketError) throw new Error(message(ticketError, 'Could not load support questions.'));
   return {
     supporters: (supporterRows ?? []).map((row: Record<string, unknown>) => ({
       supporterId: String(row.supporter_id),
@@ -71,12 +71,13 @@ export async function loadSupportAccess(): Promise<{
         ? 'expired'
         : row.consent_state === 'revoked' ? 'revoked' : 'active',
     })),
-    tickets: (ticketRows ?? [])
+    tickets: ticketError ? [] : (ticketRows ?? [])
       .filter((row: Record<string, unknown>) => row.status === 'open' || row.status === 'waiting_on_student')
       .map((row: Record<string, unknown>) => ({
         ticketId: String(row.id),
         subject: String(row.subject),
       })),
+    ticketLoadError: ticketError ? message(ticketError, 'Could not load support questions.') : null,
   };
 }
 

@@ -559,6 +559,7 @@ export interface IntegrationHealth {
   nextSafeAction: string;
   configurationApprovalId: string | null;
   configurationApprovalStatus: string | null;
+  canRequest: boolean;
   classification: string;
   provenance: string;
   limitation: string;
@@ -586,6 +587,7 @@ function readIntegrationHealth(r: Row): IntegrationHealth {
     customerImpact: text(r.customer_impact), nextSafeAction: text(r.next_safe_action),
     configurationApprovalId: maybe(r.configuration_approval_id),
     configurationApprovalStatus: maybe(r.configuration_approval_status), classification: text(r.classification),
+    canRequest: r.can_request === true,
     provenance: text(r.provenance), limitation: text(r.limitation),
   };
 }

@@ -76,17 +76,21 @@ export function PrivacyRequests({
   const [busy, setBusy] = useState('');
   const openRequest = useRef<string | null>(null);
   const detailRequest = useRef(0);
+  const queueRequest = useRef(0);
   const [verification, setVerification] = useState(EMPTY_VERIFY);
   const [resolution, setResolution] = useState(EMPTY_RESOLUTION);
   const [approval, setApproval] = useState(EMPTY_APPROVAL);
 
   const refresh = useCallback(async (): Promise<boolean> => {
+    const sequence = ++queueRequest.current;
     try {
       const rows = await read(env === 'Production' ? false : includeDemo);
+      if (sequence !== queueRequest.current) return false;
       setRequests(rows);
       setQueueError('');
       return true;
     } catch (error) {
+      if (sequence !== queueRequest.current) return false;
       const detail = said(error, 'Could not read privacy requests.');
       setQueueError(detail);
       onStatus(detail);

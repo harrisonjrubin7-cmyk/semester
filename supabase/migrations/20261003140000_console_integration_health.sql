@@ -35,6 +35,7 @@ returns table (
   next_safe_action text,
   configuration_approval_id uuid,
   configuration_approval_status text,
+  can_request boolean,
   classification text,
   provenance text,
   limitation text
@@ -123,7 +124,8 @@ begin
       owners.owner_name,
       owners.backup_owner_name,
       approval.id as approval_id,
-      approval.status as approval_status,
+      case when approval.status in ('pending', 'approved') and approval.expires_at <= now()
+        then 'expired' else approval.status end as approval_status,
       case
         when c.status in ('disconnected', 'configuring') then 'unconfigured'
         when c.status = 'error' or latest.status = 'failed' or coalesce(problems.critical_errors, 0) > 0 then 'failed'
@@ -167,7 +169,7 @@ begin
        where d.connection_id = c.id and d.resolved_at is null
     ) letters on true
     left join lateral (
-      select ar.id, ar.status
+      select ar.id, ar.status, ar.expires_at
         from public.approval_request ar
        where ar.duty_id = 'integration-config'
          and ar.tenant_id is not distinct from c.tenant_id
@@ -219,6 +221,7 @@ begin
     end,
     f.approval_id,
     f.approval_status,
+    private.party_held('role:integration_admin') as can_request,
     'restricted'::text,
     'public.integration_connections + sync runs + redacted error/dead-letter counts + source ownership + approval_request'::text,
     'Operational metadata only. Credentials, cursors, payload references, external record references and provider messages are never returned.'::text

@@ -302,6 +302,7 @@ as $$
          case
            when c.status <> 'consented' or c.revoked_at is not null then 'revoked'
            when c.expires_at is not null and c.expires_at <= now() then 'expired'
+           when g.expires_at <= now() then 'expired'
            else 'active'
          end
     from public.support_access_grant g

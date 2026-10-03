@@ -97,7 +97,7 @@ const HEALTH_ROW = {
   latest_run_at: '2026-10-03T10:00:00Z', reconciliation_state: 'warning', records_received: 20,
   records_rejected: 2, open_errors: 1, critical_errors: 0, open_dead_letters: 1,
   owner_name: 'Integration owner', backup_owner_name: 'Backup owner', customer_impact: 'Assignments may be delayed.',
-  next_safe_action: 'Review reconciliation.', configuration_approval_id: null, configuration_approval_status: null,
+  next_safe_action: 'Review reconciliation.', configuration_approval_id: null, configuration_approval_status: null, can_request: true,
   classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
 };
 

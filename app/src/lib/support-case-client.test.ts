@@ -54,4 +54,18 @@ describe('case-bound support access client', () => {
     });
   });
 
+  it('preserves windows when the support-ticket list is temporarily unavailable', async () => {
+    mock.rpc.mockImplementation(async (name: string) => {
+      if (name === 'available_case_supporters') return { data: [], error: null };
+      if (name === 'support_access_windows') return {
+        data: [{ grant_id: 'grant-1', side: 'student', counterpart_label: 'Advisor Rivera', reason: 'Existing access', expires_at: '2099-01-02T00:00:00Z', revoked_at: null, created_at: '2099-01-01T00:00:00Z', ticket_id: 'ticket-1', scopes: ['learning-progress'], consent_state: 'active' }], error: null,
+      };
+      return { data: null, error: { message: 'Ticket service unavailable.' } };
+    });
+    const result = await loadSupportAccess();
+    expect(result.windows).toHaveLength(1);
+    expect(result.tickets).toEqual([]);
+    expect(result.ticketLoadError).toBe('Ticket service unavailable.');
+  });
+
 });

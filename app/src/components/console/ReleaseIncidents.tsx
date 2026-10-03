@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Notice, SectionLabel } from '../ui';
 import {
   loadReleaseIncidents,
@@ -15,6 +15,7 @@ interface Props extends ViewProps {
 
 const EMPTY = { change: '', verification: '', rollback: '', ticket: '' };
 const SAFE_REFERENCE = /^[A-Za-z0-9._:/-]{3,200}$/;
+const SAFE_TICKET = /^[A-Za-z0-9._:-]{3,80}$/;
 const LABEL: Record<ReleaseIncident['state'], string> = {
   blocked: 'Blocked', release_candidate: 'Release candidate', deployed_unverified: 'Deployed — needs confirmation',
   verified: 'Verified evidence', incident: 'Incident', rollback: 'Rollback', recovered: 'Recovered',
@@ -30,13 +31,18 @@ export function ReleaseIncidents({
   const [openId, setOpenId] = useState<string | null>(null);
   const [refs, setRefs] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
+  const refreshRequest = useRef(0);
 
   const refresh = useCallback(async (): Promise<boolean> => {
+    const sequence = ++refreshRequest.current;
     try {
-      setItems(await read(env === 'Production' ? false : includeDemo));
+      const rows = await read(env === 'Production' ? false : includeDemo);
+      if (sequence !== refreshRequest.current) return false;
+      setItems(rows);
       setError('');
       return true;
     } catch (caught) {
+      if (sequence !== refreshRequest.current) return false;
       const detail = said(caught, 'Could not read release and incident operations.');
       setError(detail);
       onStatus(detail);
@@ -111,7 +117,8 @@ export function ReleaseIncidents({
         const canRequest = item.canRequest && (item.itemKind === 'incident'
           ? item.state === 'incident' || item.state === 'rollback'
           : item.state === 'blocked' || item.state === 'release_candidate');
-        const ready = Object.values(refs).every((value) => SAFE_REFERENCE.test(value.trim()));
+        const ready = [refs.change, refs.verification, refs.rollback].every((value) => SAFE_REFERENCE.test(value.trim()))
+          && SAFE_TICKET.test(refs.ticket.trim());
         const rollback = item.itemKind === 'incident';
         return (
           <article key={item.itemId} className="portal-panel" aria-label={`${item.title} release or incident record`} style={{ display: 'grid', gap: 'var(--sp-4)' }}>
@@ -144,7 +151,7 @@ export function ReleaseIncidents({
                 <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>{rollback ? 'Change evidence reference' : 'CI result reference'}<input className="input" value={refs.change} onChange={(event) => setRefs({ ...refs, change: event.target.value })} maxLength={200} /></label>
                 <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>{rollback ? 'Verification plan reference' : 'Golden path reference'}<input className="input" value={refs.verification} onChange={(event) => setRefs({ ...refs, verification: event.target.value })} maxLength={200} /></label>
                 <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>{rollback ? 'Rollback procedure reference' : 'Rollback rehearsal reference'}<input className="input" value={refs.rollback} onChange={(event) => setRefs({ ...refs, rollback: event.target.value })} maxLength={200} /></label>
-                <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>Change ticket<input className="input" value={refs.ticket} onChange={(event) => setRefs({ ...refs, ticket: event.target.value })} maxLength={200} /></label>
+                <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>Change ticket<input className="input" value={refs.ticket} onChange={(event) => setRefs({ ...refs, ticket: event.target.value })} pattern="[A-Za-z0-9._:-]{3,80}" maxLength={80} /></label>
                 <button type="button" className="btn" disabled={!ready || busy} onClick={() => { void ask(item); }}>{busy ? 'Requesting…' : `Request ${rollback ? 'rollback' : 'release'} approval`}</button>
                 <WriteNotice env={env} />
               </div>

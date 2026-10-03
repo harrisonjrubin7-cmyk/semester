@@ -117,15 +117,15 @@ begin
   end if;
 
   return query
-  with gate_definition(gate, max_age, needs_commit) as (
+  with gate_definition(gate, max_age, needs_commit, needs_deployment, needs_rollback) as (
     values
-      ('production_restore', interval '90 days', false),
-      ('legal_approval', interval '365 days', false),
-      ('paid_infrastructure', interval '30 days', false),
-      ('domain_tls', interval '30 days', false),
-      ('production_migrations', interval '14 days', true),
-      ('production_deployment', interval '14 days', true),
-      ('production_verification', interval '14 days', true)
+      ('production_restore', interval '90 days', false, false, false),
+      ('legal_approval', interval '365 days', false, false, false),
+      ('paid_infrastructure', interval '30 days', false, false, false),
+      ('domain_tls', interval '30 days', false, false, false),
+      ('production_migrations', interval '14 days', true, false, false),
+      ('production_deployment', interval '14 days', true, true, true),
+      ('production_verification', interval '14 days', true, true, false)
   ), latest_gate as (
     select distinct on (e.gate)
       e.gate, e.status, e.evidence, e.source, e.commit_sha, e.deployment_id,
@@ -140,7 +140,9 @@ begin
         and l.observed_at <= now()
         and coalesce(l.expires_at, l.observed_at + g.max_age) > now()
         and coalesce(length(trim(l.source)), 0) >= 3
-        and (not g.needs_commit or l.commit_sha ~ '^[0-9a-f]{40}$') as current
+        and (not g.needs_commit or l.commit_sha ~ '^[0-9a-f]{40}$')
+        and (not g.needs_deployment or coalesce(length(trim(l.deployment_id)), 0) >= 3)
+        and (not g.needs_rollback or coalesce(length(trim(l.rollback_ref)), 0) >= 3) as current
     from gate_definition g
     left join latest_gate l on l.gate = g.gate
   ), release_approval as (

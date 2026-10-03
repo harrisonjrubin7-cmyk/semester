@@ -7,8 +7,10 @@ import {
   fileDataRightRequest,
   isOpen,
   loadDataRightRequests,
+  loadPrivacyCompletionCertificates,
   type DataRightKind,
   type DataRightRequest,
+  type PrivacyCompletionCertificate,
 } from '../lib/data-rights';
 import { dateFormatter } from '../lib/locale';
 import { ErrorState } from './unity/States';
@@ -18,6 +20,7 @@ const date = (value: string) => dateFormatter({ dateStyle: 'medium' }).format(ne
 
 export function DataRightsRequests({ account }: { account: Account | null }) {
   const [items, setItems] = useState<DataRightRequest[]>([]);
+  const [certificates, setCertificates] = useState<PrivacyCompletionCertificate[]>([]);
   const [kind, setKind] = useState<DataRightKind>('correction');
   const [detail, setDetail] = useState('');
   const [busy, setBusy] = useState(false);
@@ -28,7 +31,12 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
     if (!account) return;
     setBusy(true);
     try {
-      setItems(await loadDataRightRequests());
+      const [nextItems, nextCertificates] = await Promise.all([
+        loadDataRightRequests(),
+        loadPrivacyCompletionCertificates(),
+      ]);
+      setItems(nextItems);
+      setCertificates(nextCertificates);
       setLoadError('');
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load your requests.');
@@ -130,6 +138,19 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
                   <strong>{DATA_RIGHT_COPY[item.kind].label}</strong>
                   <p>{DATA_RIGHT_STATUS[item.status]}{item.resolvedAt ? ` · ${date(item.resolvedAt)}` : ''}</p>
                   {item.resolution && <p>{item.resolution}</p>}
+                </article>
+              ))}
+            </details>
+          )}
+
+          {certificates.length > 0 && (
+            <details style={{ marginTop: 'var(--sp-5)' }}>
+              <summary>Completion certificates · {certificates.length}</summary>
+              {certificates.map((certificate) => (
+                <article key={certificate.certificateId} style={{ marginBlock: 'var(--sp-4)' }}>
+                  <strong>{DATA_RIGHT_COPY[certificate.kind].label}</strong>
+                  <p>Certificate {certificate.certificateId} · issued {date(certificate.issuedAt)}</p>
+                  <p style={{ color: 'var(--app-dim)' }}>Request {certificate.requestRef} · evidence {certificate.evidenceReference}</p>
                 </article>
               ))}
             </details>
