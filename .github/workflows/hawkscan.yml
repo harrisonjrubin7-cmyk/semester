@@ -84,7 +84,7 @@ jobs:
     needs: hawkscan
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     concurrency:
       group: hawkscan-company-site
       cancel-in-progress: false
@@ -107,6 +107,8 @@ jobs:
         env:
           COMPANY_SCAN_KEY: ${{ runner.temp }}/company-site-scan.key
           COMPANY_SCAN_CERT: ${{ runner.temp }}/company-site-scan.crt
+          COMPANY_SCAN_EVIDENCE: ${{ runner.temp }}/company-site-responses.jsonl
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           openssl req -x509 -newkey rsa:2048 -sha256 -nodes \
             -keyout "$COMPANY_SCAN_KEY" -out "$COMPANY_SCAN_CERT" -days 1 \
@@ -150,13 +152,18 @@ jobs:
           HAWK_AGENT: Codex
         run: |
           echo 'StackHawk | Scanning isolated company frontend; production backends are out of scope'
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          echo "StackHawk | Actual checkout: $COMMIT_SHA"
+          # Exclude target readiness probes. From here only the scanner visits it.
+          node -e "require('node:fs').writeFileSync(process.env.RUNNER_TEMP + '/company-site-responses.jsonl', '')"
           API_KEY="$HAWK_API_KEY" hawk scan stackhawk-company-site.yml --json-output > "$RUNNER_TEMP/company-site-scan.json"
 
       - name: Verify company-site scan evidence
         if: always() && steps.company_scan.outcome != 'skipped' && steps.company_scan.outcome != ''
         env:
           HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           scan_id=$(node scripts/company-site-scan-report.mjs id "$RUNNER_TEMP/company-site-scan.json")
           API_KEY="$HAWK_API_KEY" hawk op scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
-          node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json"
+          node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl"
