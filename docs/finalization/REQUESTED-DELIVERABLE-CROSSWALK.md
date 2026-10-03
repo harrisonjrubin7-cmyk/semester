@@ -178,16 +178,16 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 163 | `docs/commercial/SALES-PLAYBOOK.md` | EXACT PRESENT | canonical qualify/discover/demo/evidence/conditional-scope process; payment, live data and activation remain gated |
 | 164 | `docs/commercial/DISCOVERY-CALL-SCRIPT.md` | EXACT PRESENT | canonical problem/cohort/authority/data/fit script authorized for non-activation discovery |
 | 165 | `docs/commercial/DEMO-SCRIPT-EXECUTIVE.md` | EXACT PRESENT | canonical synthetic executive first-win/first-proof/limits/decision demo; customer and activation proof remain absent |
-| 166 | `docs/commercial/DEMO-SCRIPT-OPERATIONAL.md` | CANDIDATE SOURCE | `docs/market-readiness/DEMO-SCRIPT.md` (filename similarity 0.66; substantive review required) |
-| 167 | `docs/commercial/DEMO-SCRIPT-TECHNICAL.md` | CANDIDATE SOURCE | `docs/market-readiness/DEMO-SCRIPT.md` (filename similarity 0.67; substantive review required) |
-| 168 | `docs/commercial/PILOT-OFFER.md` | EXACT PRESENT | `docs/market-readiness/PILOT-OFFER.md` |
-| 169 | `docs/commercial/PILOT-SUCCESS-PLAN.md` | EXACT PRESENT | `docs/market-readiness/PILOT-SUCCESS-PLAN.md` |
-| 170 | `docs/commercial/PILOT-SCORECARD.md` | EXACT PRESENT | `docs/market-readiness/PILOT-SCORECARD.md` |
-| 171 | `docs/commercial/PILOT-PROPOSAL-TEMPLATE.md` | EXACT PRESENT | `docs/market-readiness/PILOT-PROPOSAL-TEMPLATE.md` |
-| 172 | `docs/commercial/IMPLEMENTATION-PLAN-TEMPLATE.md` | EXACT PRESENT | `docs/market-readiness/IMPLEMENTATION-PLAN-TEMPLATE.md` |
-| 173 | `docs/commercial/PRICING-AND-PACKAGING.md` | EXACT PRESENT | `docs/market-readiness/PRICING-AND-PACKAGING.md` |
-| 174 | `docs/commercial/ORDERING-AND-BILLING-OPERATIONS.md` | NO CLOSE SOURCE | — |
-| 175 | `docs/commercial/REVENUE-RECOGNITION-REVIEW-CHECKLIST.md` | NO CLOSE SOURCE | — |
+| 166 | `docs/commercial/DEMO-SCRIPT-OPERATIONAL.md` | EXACT PRESENT | canonical synthetic cohort, student loop, support, aggregate review, weekly decision and offboarding walkthrough; live operations and staffed support remain unproved |
+| 167 | `docs/commercial/DEMO-SCRIPT-TECHNICAL.md` | EXACT PRESENT | canonical evidence-exchange walkthrough across architecture, authorization, lifecycle, integrations, security and recovery; target, external and customer acceptance remain open |
+| 168 | `docs/commercial/PILOT-OFFER.md` | EXACT PRESENT | canonical conditional bounded pilot concept with explicit exclusions, unresolved price and commercial/launch gates; payment, live data and activation remain prohibited |
+| 169 | `docs/commercial/PILOT-SUCCESS-PLAN.md` | EXACT PRESENT | canonical metric/guardrail/decision contract; baselines, targets, validated sources, owners and customer approvals remain required before launch |
+| 170 | `docs/commercial/PILOT-SCORECARD.md` | EXACT PRESENT | canonical blank scorecard with frozen definitions, suppression and stop controls; it contains no observed customer outcome evidence |
+| 171 | `docs/commercial/PILOT-PROPOSAL-TEMPLATE.md` | EXACT PRESENT | canonical conditional proposal structure across scope, safeguards, measures, commercials and exit; incomplete/unsigned content creates no customer, revenue or launch claim |
+| 172 | `docs/commercial/IMPLEMENTATION-PLAN-TEMPLATE.md` | EXACT PRESENT | canonical stage/exit-evidence plan from qualification through convert/offboard; populated dates remain estimates and every owner/target acceptance is open |
+| 173 | `docs/commercial/PRICING-AND-PACKAGING.md` | EXACT PRESENT | canonical packaging and quote-control logic with every price, floor and commercial term unresolved pending discovery and authorized finance/tax/legal decisions |
+| 174 | `docs/commercial/ORDERING-AND-BILLING-OPERATIONS.md` | EXACT PRESENT | canonical order-to-cash control sequence separating signed scope, billing, entitlement, activation, collection and reconciliation; live financial operation remains unapproved |
+| 175 | `docs/commercial/REVENUE-RECOGNITION-REVIEW-CHECKLIST.md` | EXACT PRESENT | canonical fact package for qualified accounting review; it contains no recognition conclusion, accounting policy, entry or reported revenue |
 | 176 | `docs/commercial/SALES-PIPELINE-DEFINITIONS.md` | NO CLOSE SOURCE | — |
 | 177 | `docs/commercial/CRM-DATA-MODEL.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/canonical-data-model-permissions.md` (filename similarity 0.44; substantive review required) |
 | 178 | `docs/commercial/REVENUE-OPERATIONS-DASHBOARD-SPEC.md` | NO CLOSE SOURCE | — |

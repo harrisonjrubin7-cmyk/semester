@@ -101,8 +101,8 @@
 
 - [x] R01: commercial documents 1–5; added controlled positioning/messaging, ideal-customer, buyer-persona, user-persona, and segmentation artifacts that authorize truthful non-activation discovery while preserving activation, validation, market-size, customer, and enterprise evidence gates on 2026-10-03.
 - [x] R02: commercial documents 6–10; added controlled competitive positioning, claims library, sales playbook, discovery script, and executive demo script that make non-activation engagement executable while keeping live data, payment, activation, customer, outcome, compliance, and enterprise claims gated on 2026-10-03.
-- [ ] R03: commercial documents 11–15.
-- [ ] R04: commercial documents 16–20.
+- [x] R03: commercial documents 11–15; added controlled operational and technical demo scripts plus pilot offer, success plan, and scorecard with synthetic/non-activation boundaries, unresolved pricing, payment/activation gates, frozen metric definitions, privacy suppression, guardrail stop rules, and customer/target evidence requirements explicit on 2026-10-03.
+- [x] R04: commercial documents 16–20; added controlled pilot-proposal and implementation templates, pricing/packaging logic, ordering/billing operations, and revenue-recognition review with all price/cost/accounting terms unresolved until authorized and contract, billing, entitlement, activation, delivery, cash, and recognition kept as separate evidence gates on 2026-10-03.
 - [ ] R05: commercial documents 21–25.
 - [ ] R06: commercial documents 26–30.
 - [ ] R07: commercial documents 31–35.
