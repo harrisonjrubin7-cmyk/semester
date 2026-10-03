@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Grant } from '../capabilities';
 import {
   CONSOLE_WORKSPACES,
@@ -7,6 +7,8 @@ import {
   visibleConsoleWorkspaces,
   type ConsoleWorkspace,
 } from './workspaces';
+
+vi.mock('../experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 
 const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant => ({
   capability,
@@ -44,7 +46,7 @@ describe('console workspace registry', () => {
   });
 
   it('validates saved workspace ids against the visible registry', () => {
-    const visible = CONSOLE_WORKSPACES.slice(0, 2);
+    const visible = CONSOLE_WORKSPACES.filter(({ id }) => id === 'command' || id === 'approvals');
     expect(isConsoleWorkspaceId('approvals', visible)).toBe(true);
     expect(isConsoleWorkspaceId('audit', visible)).toBe(false);
     expect(isConsoleWorkspaceId({ id: 'command' }, visible)).toBe(false);
