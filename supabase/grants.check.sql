@@ -596,6 +596,12 @@ declare
     -- demos by default and never accepts a tenant id from the caller.
     'console_tenant_operations(include_demo boolean)',
 
+    -- Credential-free connector health. It requires the platform console
+    -- shell, derives tenants from exact-school integration:view grants,
+    -- excludes demos by default, and returns no credential, cursor, payload,
+    -- external-record or provider-message field.
+    'console_integration_health(include_demo boolean)',
+
     -- Identity-minimized privacy queue. It requires the platform console
     -- shell, derives tenants from exact-school data_request:handle grants and
     -- keeps subject ids and request content out of its result.
