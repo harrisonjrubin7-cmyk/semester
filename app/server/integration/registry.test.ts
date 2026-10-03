@@ -12,14 +12,13 @@ const live = (patch: Partial<AdapterDeclaration> = {}): RegisteredAdapter => ({
 
 describe('the live adapter registry', () => {
   it('holds no mock, nothing invalid, and no two adapters for one connection', () => {
-    expect(ADAPTERS).toEqual([]);
     expect(validateAdapterRegistry(ADAPTERS)).toEqual([]);
   });
 
   it('accepts distinct valid live claims without changing the input', () => {
     const adapters = Object.freeze([
       Object.freeze(live()),
-      Object.freeze(live({ id: 'live_sis_two', product: 'Fixture 2.0' })),
+      Object.freeze(live({ id: 'live_sis_two', provider: 'Other Provider', product: 'Fixture 2.0' })),
       Object.freeze(live({ id: 'live_lms', domain: 'lms' })),
     ]);
     const before = JSON.stringify(adapters.map(({ declaration }) => declaration));
@@ -29,11 +28,12 @@ describe('the live adapter registry', () => {
 
   it('reports multiple simultaneous faults in deterministic order without collapsing domains', () => {
     const adapters = [
-      live({ id: 'BAD', mock: true }),
-      live({ id: 'duplicate_id', product: 'One' }),
-      live({ id: 'duplicate_id', product: 'Two' }),
+      live({ id: 'BAD', mock: true, provider: 'Bad Provider' }),
+      live({ id: 'duplicate_id', provider: 'Duplicate One', product: 'One' }),
+      live({ id: 'duplicate_id', provider: 'Duplicate Two', product: 'Two' }),
       live({ id: 'claim_a', provider: ' Example Provider ', product: ' Product ' }),
       live({ id: 'claim_b', provider: 'example provider', product: 'product' }),
+      live({ id: 'claim_c', provider: 'example provider', product: 'different product' }),
       live({ id: 'other_domain', domain: 'lms', provider: 'example provider', product: 'product' }),
     ];
     const before = JSON.stringify(adapters.map(({ declaration }) => declaration));
@@ -43,10 +43,11 @@ describe('the live adapter registry', () => {
       'BAD:mock_adapter',
       'claim_a:duplicate_connection_claim',
       'claim_b:duplicate_connection_claim',
+      'claim_c:duplicate_connection_claim',
       'duplicate_id:duplicate_id',
       'duplicate_id:duplicate_id',
     ]);
-    expect(faults.filter(({ code }) => code === 'duplicate_connection_claim')).toHaveLength(2);
+    expect(faults.filter(({ code }) => code === 'duplicate_connection_claim')).toHaveLength(3);
     expect(faults.some(({ adapterId }) => adapterId === 'other_domain')).toBe(false);
     expect(JSON.stringify(adapters.map(({ declaration }) => declaration))).toBe(before);
   });

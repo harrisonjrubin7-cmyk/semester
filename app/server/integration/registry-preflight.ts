@@ -30,7 +30,10 @@ const compareText = (left: string, right: string) => (left < right ? -1 : left >
  *
  * Every member of a duplicate group gets its own fault so callers can point
  * at each declaration. Domain is deliberately not normalized: it is already
- * a closed catalog value and is part of the runtime connection claim.
+ * a closed catalog value and is part of the runtime connection claim. Product
+ * is deliberately excluded from the claim: runtime connections may omit it,
+ * in which case `adapterFor` matches every product for the provider. Allowing
+ * two products here would therefore create an ambiguous, unrunnable registry.
  */
 export function validateAdapterRegistry(adapters: readonly RegisteredAdapter[]): AdapterRegistryFault[] {
   const faults: AdapterRegistryFault[] = [];
@@ -62,7 +65,6 @@ export function validateAdapterRegistry(adapters: readonly RegisteredAdapter[]):
     const claim = JSON.stringify([
       declaration.domain,
       normalizedName(declaration.provider),
-      normalizedName(declaration.product),
     ]);
     const claimMembers = byClaim.get(claim) ?? [];
     claimMembers.push(adapterIndex);
