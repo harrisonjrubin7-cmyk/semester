@@ -95,6 +95,14 @@ function printFindings(findings, write = console.log) {
   }
 }
 
+function valueShape(value, depth = 0) {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return depth >= 2 ? 'array' : `array<${value.length ? valueShape(value[0], depth + 1) : 'empty'}>`;
+  if (typeof value !== 'object') return typeof value;
+  if (depth >= 2) return 'object';
+  return `{${Object.keys(value).sort().map(key => `${safeText(key)}:${valueShape(value[key], depth + 1)}`).join(',')}}`;
+}
+
 export function findingHash(finding) {
   return /^[a-f\d]{64}$/i.test(finding?.findingHash ?? '') ? finding.findingHash : null;
 }
@@ -122,6 +130,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     else if (process.argv[2] === 'hashes') {
       if (!Array.isArray(report.findings)) throw new Error('Full finding evidence was not returned');
       console.log(`StackHawk | Full finding evidence: ${report.findings.length} findings`);
+      report.findings.forEach((finding, index) => console.log(`StackHawk | Finding schema ${index + 1}: ${valueShape(finding)}`));
       printFindings(report.findings);
       if (report.findings.some(finding => !findingHash(finding))) throw new Error('A finding did not include its triage hash');
     }
