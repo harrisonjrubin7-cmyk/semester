@@ -20,6 +20,7 @@ import {
   type Profile,
   type Reaction,
 } from '../../lib/classmates';
+import { useNow } from '../../state/store';
 import {
   clockAt,
   conversation,
@@ -119,6 +120,7 @@ export function Talk({
   onPaper: (code: string) => void;
   paperOf: (body: string) => string | null;
 }) {
+  const now = useNow();
   const [messages, setMessages] = useState<Message[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [present, setPresent] = useState<string[]>([]);
@@ -222,7 +224,7 @@ export function Talk({
   );
 
   const handles = useMemo(() => people.map((p) => p.handle).filter(Boolean), [people]);
-  const days = useMemo(() => conversation(messages as Say[], new Date()), [messages]);
+  const days = useMemo(() => conversation(messages as Say[], now), [messages, now]);
   const tallies = useMemo(() => tally(reactions, me, nameOf), [reactions, me, nameOf]);
   const seen = unread(messages as Say[], openedAt, me, myHandle, handles);
   const hits = useMemo(() => findSaid(messages as Say[], query), [messages, query]);
