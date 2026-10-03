@@ -36,10 +36,11 @@ test('the company scan uses an isolated HTTPS target and its own configuration',
   assert.match(companyJob, /configurationFiles: stackhawk-company-site\.yml/);
   assert.match(companyJob, /hawkop-v0\.11\.0-x86_64-unknown-linux-gnu\.tar\.gz/);
   assert.match(companyJob, /8e37168b6361b39d6a67eb1426b31328b2a8bb8472a53b8c7dcffd35ffa720c3/);
-  assert.match(companyJob, /HAWKOP_API_KEY:\s*\$\{\{ secrets\.HAWK_API_KEY \}\}/);
+  assert.match(companyJob, /HAWK_API_KEY:\s*\$\{\{ secrets\.HAWK_API_KEY \}\}/);
+  assert.doesNotMatch(companyJob, /HAWKOP_API_KEY/);
   assert.match(companyJob, /"\$RUNNER_TEMP\/hawkop" scan get "\$scan_id" --detail full --format json/);
   assert.match(companyJob, /company-site-scan-report\.mjs hashes/);
-  assert.match(companyJob, /"\$RUNNER_TEMP\/hawkop" scan uris "\$scan_id" --format json/);
+  assert.match(companyJob, /API_KEY="\$HAWK_API_KEY" hawk op scan uris "\$scan_id" --format json/);
   assert.doesNotMatch(companyJob, /latest-version|hawk op scan get --help/);
 });
 
