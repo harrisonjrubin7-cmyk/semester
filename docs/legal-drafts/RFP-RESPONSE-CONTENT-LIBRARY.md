@@ -39,6 +39,16 @@ Do not infer company facts from code; convert a mock/test integration into an av
 
 Where the source library conflicts with the current finalization baseline, evidence register, legal draft, deployment state, or approved customer scope, use the more conservative truthful answer and queue the source for correction.
 
+## Product-behavior and evidence mapping
+
+| Evidence layer | What it supports | What it does not establish alone |
+| --- | --- | --- |
+| code, configuration and automated test | exact implemented behavior at a named revision | deployment, staffing, legal sufficiency or customer acceptance |
+| CI or deployment record | checks completed or artifact deployed at a date | named-institution activation, continuous operation or outcome |
+| operational exercise | one scoped process was practiced | universal or contractual performance |
+| independent assessment | the assessor's exact scope, period and conclusion | broader certification, conformance or future state |
+| signed customer record | accepted scope or decision for that customer | general availability or another institution's approval |
+
 ## Submission blockers
 
 Current question set; named response owner; immutable evidence snapshot; cross-functional review; company facts supplied by accountable owners; confidential-material authorization; all deviations approved; commercial terms approved; and final consistency check against the proposal, contract, DPA, security/accessibility evidence, and target-environment status.

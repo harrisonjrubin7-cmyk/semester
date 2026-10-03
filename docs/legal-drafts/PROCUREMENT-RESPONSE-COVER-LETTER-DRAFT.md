@@ -7,6 +7,10 @@
 - **Response owner/date/version:** `[TBD]`
 - **Validity/confidentiality:** `[TBD; SUBJECT TO APPROVED NDA AND PROCUREMENT RULES]`
 
+## Plain-language summary
+
+This template introduces a controlled procurement response while separating verified current evidence from proposals, missing external proof, and customer-specific decisions. It is not an offer, certification, compliance opinion, institutional approval, or authorization to process data, accept payment, or activate service.
+
 ## Draft letter
 
 Dear `[AUTHORIZED RECIPIENT]`,
@@ -30,6 +34,16 @@ Sincerely,
 - Approved scope, data flow, providers, integrations, support, accessibility, AI, and offboarding boundaries.
 - Requested confidential materials shared only through an approved channel and authority.
 - Every company, price, customer, outcome, compliance, certification, insurance, financial, or operational fact independently confirmed.
+
+## Product-behavior and evidence mapping
+
+| Area | Current source | Response boundary |
+| --- | --- | --- |
+| product and integration answers | [Higher-Ed RFP Response Library](../HIGHER-ED-RFP-RESPONSE-LIBRARY.md) | each answer requires a dated scope and drift review |
+| procurement artifacts | [Procurement Checklist](../market-readiness/PROCUREMENT_CHECKLIST.md) | several expected artifacts remain partial or absent |
+| legal/publication authority | [`LEGAL-REVIEW-QUEUE.md`](../../LEGAL-REVIEW-QUEUE.md) | document creation does not make an item publishable, negotiable, or executable |
+
+Age/cohort, geography, jurisdiction, education-record authority, AI use, data sources, and disclosure tier must be recorded for the specific response; none may be inferred from a general product demonstration.
 
 ## Submission blockers
 

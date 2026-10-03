@@ -6,6 +6,10 @@
 - **Record:** `[CONTROLLED DEVIATION REGISTER LOCATION TO BE APPROVED]`
 - **Rule:** no deviation is accepted by silence, email convenience, sales urgency, repository documentation, or prior one-off treatment
 
+## Plain-language summary
+
+This matrix routes nonstandard customer language to the people who can assess its legal, financial, product, operational and institutional effects. It does not delegate approval authority: until qualified counsel and authorized owners adopt named people and thresholds, every material deviation remains blocked.
+
 ## Approval matrix
 
 | Deviation category | Required reviewers | Evidence/decision required | Default without approval |
@@ -26,6 +30,17 @@
 Record customer request, baseline language, proposed response, reason, affected users/data/systems, legal and operational risk, security/privacy/accessibility/AI impact, financial exposure, implementation work, dependencies, compensating controls, approvers and dissent, effective/expiry dates, renewal treatment, precedent status, obligations, verification, and rollback/exit.
 
 Approval of contract language does not prove implementation. Any deviation requiring product, configuration, staffing, vendor, monitoring, support, recovery, or evidence changes remains an activation blocker until those changes are verified in the target environment.
+
+## Product-behavior and evidence mapping
+
+| Evidence state | Permitted treatment |
+| --- | --- |
+| repository implementation/test only | describe narrowly at a named revision; do not claim deployment or operation |
+| configured and tested in target environment | support only that exact scope, date and documented limitation |
+| independent review or operational exercise | use only the assessor/exercise scope, result, date and expiry |
+| customer acceptance or signed paper | applies only to that customer, version, use case, ages and jurisdictions |
+
+Every deviation affecting age posture, student/education data, geography, governing law, AI, accessibility, security, support, or official-system authority requires an explicit applicability decision; a prior deal is not evidence for a new one.
 
 ## Prohibited approval patterns
 

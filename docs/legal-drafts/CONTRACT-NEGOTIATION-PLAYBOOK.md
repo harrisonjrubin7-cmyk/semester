@@ -6,7 +6,7 @@
 - **Applies to:** institutional NDAs, evaluations, pilots, subscriptions, services, DPAs, security/accessibility/AI exhibits, and amendments
 - **Approval authority:** qualified counsel and authorized business, finance, security, privacy, accessibility, product, engineering, insurance, and executive owners as applicable
 
-## Purpose
+## Plain-language summary
 
 This playbook keeps proposed language aligned with actual product, operational, financial, legal, and risk capacity. It does not authorize anyone to give legal advice, bind the company, accept customer paper, or trade one uncontrolled risk for another.
 
@@ -31,6 +31,13 @@ This playbook keeps proposed language aligned with actual product, operational, 
 ## Product-behavior and commercial mapping
 
 Repository evidence supports only the exact implementation and tests cited. Operational, target-environment, independent, customer, professional, and contractual evidence remain separate. The proposed defaults in [Commercial governance](../operating-model/COMMERCIAL-GOVERNANCE.md) are not an approved price book or negotiation authority.
+
+| Negotiated promise | Evidence required before approval |
+| --- | --- |
+| feature, configuration or integration | source evidence plus target-environment acceptance and customer dependencies |
+| privacy, security, AI or accessibility position | approved schedule, current scoped evidence, limitations, age/jurisdiction analysis and owner acceptance |
+| SLA, support or recovery | staffing, monitoring history, exercised escalation/recovery and approved remedies |
+| implementation, custom work or outcome | accepted SOW, capacity, objective criteria and explicit non-guarantee of customer outcomes |
 
 ## Execution blockers
 
