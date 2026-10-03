@@ -39,11 +39,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 24 | `docs/legal-drafts/COOKIE-NOTICE-DRAFT.md` | EXACT PRESENT | controlled review index to the canonical browser-storage notice; deployment verification required |
 | 25 | `docs/legal-drafts/COOKIE-CONSENT-IMPLEMENTATION-SPEC.md` | EXACT PRESENT | canonical fail-closed implementation contract; applicable consent rules require counsel/privacy approval |
 | 26 | `docs/legal-drafts/ACCEPTABLE-USE-POLICY-DRAFT.md` | EXACT PRESENT | controlled review index to the canonical AUP draft; enforcement operations remain blocked |
-| 27 | `docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md` | EXACT PRESENT | `docs/legal/COMMUNITY-GUIDELINES-DRAFT.md` |
-| 28 | `docs/legal-drafts/COPYRIGHT-DMCA-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/COPYRIGHT-AND-TAKEDOWN-POLICY-DRAFT.md` (filename similarity 0.59; substantive review required) |
-| 29 | `docs/legal-drafts/ACCESSIBILITY-STATEMENT-DRAFT.md` | EXACT PRESENT | `docs/legal/ACCESSIBILITY-STATEMENT-DRAFT.md` |
-| 30 | `docs/legal-drafts/SECURITY-OVERVIEW-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/SECURITY-OVERVIEW.md` (filename similarity 0.95; substantive review required) |
-| 31 | `docs/legal-drafts/AI-FEATURES-DISCLOSURE-DRAFT.md` | NO CLOSE SOURCE | — |
+| 27 | `docs/legal-drafts/COMMUNITY-GUIDELINES-DRAFT.md` | EXACT PRESENT | controlled review index; community activation and moderation staffing remain blocked |
+| 28 | `docs/legal-drafts/COPYRIGHT-DMCA-POLICY-DRAFT.md` | EXACT PRESENT | controlled review index; no DMCA safe-harbor or registered-agent claim is made |
+| 29 | `docs/legal-drafts/ACCESSIBILITY-STATEMENT-DRAFT.md` | EXACT PRESENT | controlled review index; no conformance or ACR/VPAT claim is made |
+| 30 | `docs/legal-drafts/SECURITY-OVERVIEW-DRAFT.md` | EXACT PRESENT | canonical legal/procurement summary with explicit evidence-layer limits |
+| 31 | `docs/legal-drafts/AI-FEATURES-DISCLOSURE-DRAFT.md` | EXACT PRESENT | canonical user-facing draft; providers, data uses and obligations remain scope-specific |
 | 32 | `docs/legal-drafts/AI-USE-AND-DATA-GOVERNANCE-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/AI-USE-POLICY-DRAFT.md` (filename similarity 0.62; substantive review required) |
 | 33 | `docs/legal-drafts/STUDENT-DATA-PRIVACY-SUMMARY-DRAFT.md` | NO CLOSE SOURCE | — |
 | 34 | `docs/legal-drafts/SUPPORT-AND-ESCALATION-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/SUPPORT-POLICY-DRAFT.md` (filename similarity 0.68; substantive review required) |

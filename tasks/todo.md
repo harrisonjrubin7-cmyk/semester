@@ -47,7 +47,7 @@
 ## Phase 2 — Legal and commercial drafts
 
 - [x] L01: public legal documents 1–5; reconciled canonical sources, disclaimer, placeholders, jurisdiction/age questions, behavior mapping, plain-language summary, and publication blockers on 2026-10-03.
-- [ ] L02: public legal documents 6–10.
+- [x] L02: public legal documents 6–10; reconciled source drafts and added community, copyright, accessibility, security, and AI disclosure controls on 2026-10-03.
 - [ ] L03: public legal documents 11–15.
 - [ ] L04: public legal documents 16–20.
 - [ ] L05: institutional legal documents 21–25.
