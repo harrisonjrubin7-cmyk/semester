@@ -21,11 +21,16 @@ const root = join(import.meta.dirname, '../../../..');
 const DOC = 'docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md';
 const AS_OF = '2026-10-02';
 const SOURCE_SHA = 'abc123abc123abc123abc123abc123abc123abcd';
+const MANUAL_PROFILE = 'institutional-manual-pilot' as ReleaseProfileId;
 const TARGETS: Record<ReleaseProfileId, ReleaseTarget> = {
   'individual-scale': { environment: 'production', deployedSha: SOURCE_SHA, configurationVersion: 'individual-v1' },
+  'institutional-manual-pilot': {
+    environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'manual-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
+    registrationWriteback: 'disabled', dataMode: 'manual',
+  },
   'institutional-pilot': {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
-    registrationWriteback: 'disabled',
+    registrationWriteback: 'disabled', dataMode: 'connected',
   },
 };
 const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly ReleaseApproverRole[]> = {
@@ -89,6 +94,179 @@ const technical = (target: ReleaseTarget): ReleaseEvidence[] => REPOSITORY_RELEA
 }));
 
 describe('pilot and individual release profiles', () => {
+  it('keeps a manual institutional pilot closed over capabilities with no external dependency', () => {
+    const manual = RELEASE_PROFILES[MANUAL_PROFILE];
+    expect(manual.capabilityIds).toEqual([
+      'CAP-001', 'CAP-003', 'CAP-010', 'CAP-011', 'CAP-014', 'CAP-015', 'CAP-016',
+      'CAP-017', 'CAP-020', 'CAP-021', 'CAP-022', 'CAP-023', 'CAP-024',
+    ]);
+    expect(manual.requiredDependencies).toEqual([]);
+    expect(manual.defaultOff).toBe(true);
+    expect(manual.requiredTechnicalGates).toEqual(TECHNICAL_RELEASE_GATES);
+    expect(manual.requiredActivationGates).toEqual(ACTIVATION_GATES);
+    expect(manual.allowedOperations.join(' ')).toMatch(/manual|student-confirmed|personal planning/i);
+    expect(manual.forbiddenOperations.join(' ')).toMatch(/institutional read|registration|system of record/i);
+    for (const connected of ['CAP-013', 'CAP-019', 'CAP-043', 'CAP-044', 'CAP-045', 'CAP-050']) {
+      expect(manual.capabilityIds).not.toContain(connected);
+    }
+  });
+
+  it('preserves the connected institutional pilot dependency contract exactly', () => {
+    expect(RELEASE_PROFILES['institutional-pilot'].requiredDependencies).toEqual([
+      'CAP-013',
+      'CAP-043',
+      'external:approved catalog and degree-audit data',
+      'external:approved read-only SIS registration-readiness adapter',
+      'external:authoritative registrar calendar feed',
+      'external:institution agreement and approved service adapters',
+      'external:provider credentials and institution approval',
+    ]);
+  });
+
+  it('binds institutional evidence to an explicit manual or connected data mode', () => {
+    const manual = RELEASE_PROFILES[MANUAL_PROFILE];
+    const manualTarget = {
+      environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'manual-v1',
+      tenantId: 'tenant-a', cohortId: 'cohort-a', registrationWriteback: 'disabled', dataMode: 'manual',
+    } as ReleaseTarget;
+    const manualEvidence = [
+      ...technical(manualTarget),
+      ...manual.requiredActivationGates.map((gate) => runtime(gate, manualTarget)),
+    ];
+    expect(evaluateReleaseProfile(MANUAL_PROFILE, manualEvidence, AS_OF, manualTarget)).toMatchObject({
+      targetBound: true,
+      technicalStatus: 'ready',
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go',
+    });
+    for (const dataMode of [undefined, null, 'connected', 'unknown', 1, {}]) {
+      const target = { ...manualTarget, dataMode } as ReleaseTarget;
+      expect(evaluateReleaseProfile(MANUAL_PROFILE, manualEvidence, AS_OF, target)).toMatchObject({
+        targetBound: false,
+        rolloutStatus: 'held',
+      });
+    }
+
+    const connected = RELEASE_PROFILES['institutional-pilot'];
+    const connectedTarget = { ...TARGETS['institutional-pilot'], dataMode: 'connected' } as ReleaseTarget;
+    const connectedEvidence = [
+      ...technical(connectedTarget),
+      ...connected.requiredActivationGates.map((gate) => runtime(gate, connectedTarget)),
+      ...connected.requiredDependencies.map((item) => dependency(item, connectedTarget)),
+    ];
+    expect(evaluateReleaseProfile('institutional-pilot', connectedEvidence, AS_OF, connectedTarget).rolloutStatus).toBe('authorized');
+    expect(evaluateReleaseProfile('institutional-pilot', connectedEvidence, AS_OF, {
+      ...connectedTarget, dataMode: 'manual',
+    } as ReleaseTarget)).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
+
+    const individual = RELEASE_PROFILES['individual-scale'];
+    const individualTarget = TARGETS[individual.id];
+    const individualEvidence = [
+      ...technical(individualTarget),
+      ...individual.requiredActivationGates.map((gate) => runtime(gate, individualTarget)),
+    ];
+    for (const dataMode of ['manual', 'connected', null, 'unknown']) {
+      expect(evaluateReleaseProfile(individual.id, individualEvidence, AS_OF, {
+        ...individualTarget, dataMode,
+      } as ReleaseTarget)).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
+    }
+  });
+
+  it.each([MANUAL_PROFILE, 'institutional-pilot'] as const)(
+    'requires every technical and activation gate for %s',
+    (profileId) => {
+      const profile = RELEASE_PROFILES[profileId];
+      const target = TARGETS[profileId];
+      const technicalEvidence = technical(target);
+      const activationEvidence = profile.requiredActivationGates.map((gate) => runtime(gate, target));
+      const dependencyEvidence = profile.requiredDependencies.map((item) => dependency(item, target));
+      const complete = [...technicalEvidence, ...activationEvidence, ...dependencyEvidence];
+      expect(profile.requiredTechnicalGates).toHaveLength(10);
+      expect(profile.requiredActivationGates).toHaveLength(14);
+      expect(profile.requiredActivationGates).toContain('support-route-live');
+      expect(evaluateReleaseProfile(profileId, complete, AS_OF, target).rolloutStatus).toBe('authorized');
+      for (const gate of profile.requiredTechnicalGates) {
+        const withoutGate = complete.filter((item) => item.gate !== gate);
+        expect(evaluateReleaseProfile(profileId, withoutGate, AS_OF, target)).toMatchObject({
+          technicalStatus: 'not-ready',
+          rolloutStatus: 'held',
+          missingTechnical: expect.arrayContaining([gate]),
+        });
+      }
+      for (const gate of profile.requiredActivationGates) {
+        const withoutGate = complete.filter((item) => item.gate !== gate);
+        expect(evaluateReleaseProfile(profileId, withoutGate, AS_OF, target)).toMatchObject({
+          rolloutStatus: 'held',
+          missingActivation: expect.arrayContaining([gate]),
+        });
+      }
+    },
+  );
+
+  it('preserves conditional-launch disclosures for a manual institutional pilot', () => {
+    const profile = RELEASE_PROFILES[MANUAL_PROFILE];
+    const target = {
+      environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'manual-v1',
+      tenantId: 'tenant-a', cohortId: 'cohort-a', registrationWriteback: 'disabled', dataMode: 'manual',
+    } as ReleaseTarget;
+    const activation = profile.requiredActivationGates.map((gate) => runtime(gate, target));
+    const launchIndex = activation.findIndex((item) => item.gate === 'canonical-launch-decision');
+    activation[launchIndex] = {
+      ...activation[launchIndex],
+      launchState: {
+        ...readyLaunchState(),
+        on: '2026-09-30',
+        blockers: [{ id: 'manual-risk', severity: 'P2', summary: 'Bounded accepted risk' }],
+        acceptances: [{
+          blocker: 'manual-risk', by: 'founder', reason: 'bounded pilot',
+          disclosure: 'Manual-pilot users receive this notice.', expires: '2026-11-01',
+        }],
+      },
+    };
+    expect(evaluateReleaseProfile(MANUAL_PROFILE, [...technical(target), ...activation], AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go-with-conditions',
+      launchConditions: [expect.objectContaining({ blocker: 'manual-risk' })],
+      claim: expect.stringMatching(/authorized with conditions.*manual-pilot users receive this notice/i),
+    });
+  });
+
+  it('fails a manual pilot closed on no-go, expired conditions, or aliased approvers', () => {
+    const profile = RELEASE_PROFILES[MANUAL_PROFILE];
+    const target = TARGETS[MANUAL_PROFILE];
+    const complete = [
+      ...technical(target),
+      ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+    ];
+    const launchIndex = complete.findIndex((item) => item.gate === 'canonical-launch-decision');
+    const agreementIndex = complete.findIndex((item) => item.gate === 'named-tenant-agreement');
+    const noGo = complete.with(launchIndex, {
+      ...complete[launchIndex], launchState: { ...readyLaunchState(), signoffs: [] },
+    });
+    expect(evaluateReleaseProfile(MANUAL_PROFILE, noGo, AS_OF, target).rolloutStatus).toBe('held');
+    const expired = complete.with(launchIndex, {
+      ...complete[launchIndex],
+      launchState: {
+        ...readyLaunchState(),
+        on: '2026-09-30',
+        blockers: [{ id: 'expired-risk', severity: 'P2', summary: 'Expired risk acceptance' }],
+        acceptances: [{
+          blocker: 'expired-risk', by: 'founder', reason: 'bounded pilot',
+          disclosure: 'Pilot users receive this notice.', expires: AS_OF,
+        }],
+      },
+    });
+    expect(evaluateReleaseProfile(MANUAL_PROFILE, expired, AS_OF, target).rolloutStatus).toBe('held');
+    const aliased = complete.with(agreementIndex, {
+      ...complete[agreementIndex],
+      approvals: [
+        { role: 'executive-owner', subjectRef: 'same-person' },
+        { role: 'security-owner', subjectRef: ' same-person ' },
+      ],
+    });
+    expect(evaluateReleaseProfile(MANUAL_PROFILE, aliased, AS_OF, target).rolloutStatus).toBe('held');
+  });
+
   it('binds every scoped capability to the canonical registry', () => {
     const ids = new Set(CAPABILITIES.map((capability) => capability.id));
     for (const profile of Object.values(RELEASE_PROFILES)) {
@@ -455,7 +633,7 @@ function render(): string {
   return [
     '# Pilot and individual release profiles', '',
     renderedFrom('app/src/lib/governance/release-profiles.ts', 'release-profiles.test.ts'), '', controlLine(DOC), '',
-    'These executable profiles define the next honest release targets: broad individual use and a bounded institutional pilot.',
+    'These executable profiles define the next honest release targets: broad individual use and bounded manual-data or connected institutional pilots.',
     'They do not rename repository completion as deployment, tenant approval, certification, or live operation.', '',
     `## Repository snapshot decision (${AS_OF})`, '',
     ...table(['Profile', 'Technical candidate', 'Rollout', 'Still required'], decisions.map((decision) => [
@@ -469,7 +647,7 @@ function render(): string {
       ].join(', '),
     ])), '',
     'This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.',
-    'Both profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also',
+    'All profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also',
     'requires deployment and, for a pilot, named-tenant activation records that do not live in source code.', '',
     '## Scope and boundaries', '',
     ...Object.values(RELEASE_PROFILES).flatMap((profile) => [
@@ -491,11 +669,12 @@ function render(): string {
       REPOSITORY_RELEASE_EVIDENCE.find((item) => item.gate === gate)?.expiresAt ?? 'missing',
     ])), '',
     '## Activation boundary', '',
+    '- This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.',
     '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
-    '- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
+    '- Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
     '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
-    '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant and cohort. Mixed-target evidence fails closed.',
+    '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant, cohort and explicit manual or connected data mode. Mixed-target evidence fails closed.',
     '- Canonical external and out-of-scope capability dependencies are activation requirements; green generic gates cannot bypass them.',
     '- CAP-050 is admitted only for search, comparison, validation, and official-system handoff. Enrollment, waitlist, drop, withdrawal, and SIS writes remain prohibited.',
     '- No profile activates financial aid, payments, payroll, general ledger, official grading, certification, or system-of-record authority.', '',

@@ -1,5 +1,6 @@
 /**
- * Release profiles for the two audiences Semester can responsibly serve next.
+ * Release profiles for the individual audience and two bounded institutional
+ * data modes Semester can responsibly evaluate next.
  *
  * These profiles deliberately separate a repository-verified technical
  * candidate from permission to roll it out. A green repository can make an
@@ -33,6 +34,8 @@ export interface ReleaseTarget {
   configurationVersion: string;
   tenantId?: string;
   cohortId?: string;
+  /** Manual and connected institutional evidence must never authorize each other. */
+  dataMode?: 'manual' | 'connected';
   /** Registration submission policy for this exact configuration. Pilots require disabled. */
   registrationWriteback?: 'disabled' | 'sandbox' | 'production';
 }
@@ -85,7 +88,7 @@ export const RELEASE_APPROVER_ROLES = [
   'finance-owner',
 ] as const;
 export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
-export type ReleaseProfileId = 'individual-scale' | 'institutional-pilot';
+export type ReleaseProfileId = 'individual-scale' | 'institutional-manual-pilot' | 'institutional-pilot';
 
 interface ReleaseApproval {
   role: ReleaseApproverRole;
@@ -125,6 +128,11 @@ const PILOT_CAPABILITIES = [
   'CAP-001', 'CAP-003', 'CAP-010', 'CAP-011', 'CAP-014', 'CAP-015', 'CAP-016',
   'CAP-017', 'CAP-019', 'CAP-020', 'CAP-021', 'CAP-022', 'CAP-023', 'CAP-024',
   'CAP-044', 'CAP-045', 'CAP-050',
+] as const;
+
+const MANUAL_PILOT_CAPABILITIES = [
+  'CAP-001', 'CAP-003', 'CAP-010', 'CAP-011', 'CAP-014', 'CAP-015', 'CAP-016',
+  'CAP-017', 'CAP-020', 'CAP-021', 'CAP-022', 'CAP-023', 'CAP-024',
 ] as const;
 
 const SIS_WRITE_AUTHORITY = 'external:approved SIS registration adapter and write authorization';
@@ -185,6 +193,23 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     authorizedClaim: 'Authorized for broad individual use on the evaluated production target; no institutional connection, certification, or system-of-record claim.',
     fallback: 'Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.',
   }),
+  'institutional-manual-pilot': freezeProfile({
+    id: 'institutional-manual-pilot',
+    audience: 'A named, bounded student cohort using student-confirmed manual course data without institutional connections',
+    capabilityIds: MANUAL_PILOT_CAPABILITIES,
+    requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
+    requiredActivationGates: ACTIVATION_GATES,
+    requiredDependencies: unsatisfiedCapabilityDependencies(MANUAL_PILOT_CAPABILITIES),
+    defaultOff: true,
+    allowedOperations: ['student-confirmed manual import', 'manual course and deadline correction', 'personal planning', 'export', 'account deletion'],
+    forbiddenOperations: [
+      'institutional reads', 'institutional writes', 'SSO or provisioning claims', 'official registration',
+      'official grading', 'degree certification', 'financial aid', 'payments', 'act as system of record',
+    ],
+    claimBoundary: 'Technically prepared for a manual-data pilot only; this release-evidence profile does not enforce runtime entitlements on shared Account, Courses, or Import surfaces and does not prove any institutional connection.',
+    authorizedClaim: 'Authorized only for the evaluated named tenant, cohort, deployment, configuration, and student-confirmed manual-data scope; no institutional connection or system-of-record claim.',
+    fallback: 'Disable the pilot entitlement, retain device-first planning and export, and direct users to official systems.',
+  }),
   'institutional-pilot': freezeProfile({
     id: 'institutional-pilot',
     audience: 'A named, bounded student cohort using Path and registration-readiness planning',
@@ -201,7 +226,7 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
   }),
 });
 
-/** Repository evidence establishes only the technical half of either profile. */
+/** Repository evidence establishes only the technical half of a profile. */
 export const REPOSITORY_RELEASE_EVIDENCE: readonly ReleaseEvidence[] = [
   { gate: 'build-and-regression', status: 'current', reference: 'repo:.github/workflows/ci.yml', checkedAt: '2026-10-02', expiresAt: '2026-11-01' },
   { gate: 'real-account-lifecycle', status: 'current', reference: 'repo:app/scripts/account-sync.mjs', checkedAt: '2026-10-02', expiresAt: '2026-11-01' },
@@ -235,6 +260,7 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
     && actual.configurationVersion === expected.configurationVersion
     && actual.tenantId === expected.tenantId
     && actual.cohortId === expected.cohortId
+    && actual.dataMode === expected.dataMode
     && actual.registrationWriteback === expected.registrationWriteback);
 }
 
@@ -387,17 +413,20 @@ export function evaluateReleaseProfile(
     ? evidence
     : [];
   const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
+  const expectedDataMode = profile.id === 'institutional-manual-pilot' ? 'manual' : 'connected';
   const targetBound = Boolean(target
     && target.environment === expectedEnvironment
     && typeof target.deployedSha === 'string'
     && SHA.test(target.deployedSha)
     && isNonBlankString(target.configurationVersion)
-    && (profile.id === 'institutional-pilot'
+    && (profile.id !== 'individual-scale'
       ? (isNonBlankString(target.tenantId)
         && isNonBlankString(target.cohortId)
+        && target.dataMode === expectedDataMode
         && target.registrationWriteback === 'disabled')
       : target.tenantId === undefined
         && target.cohortId === undefined
+        && target.dataMode === undefined
         && target.registrationWriteback === undefined));
   const technicalTargetBound = Boolean(target && typeof target.deployedSha === 'string' && SHA.test(target.deployedSha));
   const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !technicalTargetBound
@@ -413,7 +442,7 @@ export function evaluateReleaseProfile(
     && missingDependencies.length === 0
     ? 'authorized'
     : 'held';
-  const launchOutcomes: Verdict[] = profile.id === 'institutional-pilot' && targetBound
+  const launchOutcomes: Verdict[] = profile.id !== 'individual-scale' && targetBound
     ? latestCurrentEvidence(evidenceRecords, 'canonical-launch-decision', asOf, target)
       .flatMap((item) => {
         try {
