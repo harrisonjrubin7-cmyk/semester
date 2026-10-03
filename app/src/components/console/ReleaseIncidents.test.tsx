@@ -13,7 +13,7 @@ const row = (overrides: Partial<ReleaseIncident> = {}): ReleaseIncident => ({
   affectedWorkflows: ['application', 'database'], customerImpact: 'No deployment is established.',
   communicationStatus: 'not_applicable', lastNoticeAt: null, nextUpdateAt: null,
   rollbackStatus: 'documented', releaseCommit: null, deploymentSource: null, deploymentId: null,
-  observedAt: null, expiresAt: null, approvalId: null, approvalStatus: null,
+  observedAt: null, expiresAt: null, approvalId: null, approvalStatus: null, canRequest: true,
   evidence: 'production_deployment=blocked', nextSafeAction: 'Resolve every blocked prerequisite.',
   classification: 'restricted', provenance: 'server evidence', limitation: 'No production claim.',
   ...overrides,
@@ -126,6 +126,11 @@ describe('release and incident workspace', () => {
   it('does not duplicate an open approval', async () => {
     await draw(async () => [row({ approvalId: 'approval-2', approvalStatus: 'pending' })]);
     expect(host.textContent).toContain('Keep the release unchanged while approval approval-2 is pending.');
+    expect(button('Request release approval')).toBeUndefined();
+  });
+
+  it('does not offer release writes to an incident-only operator', async () => {
+    await draw(async () => [row({ canRequest: false })]);
     expect(button('Request release approval')).toBeUndefined();
   });
 });

@@ -23,6 +23,30 @@ create index support_access_by_ticket_supporter
 create index support_access_ticket_student_fk_idx
   on public.support_access_grant (ticket_id, student_id);
 
+create or replace function private.support_grant_current(want_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from public.support_access_grant g
+     where g.id = want_id
+       and g.revoked_at is null
+       and g.expires_at > now()
+       and 'learning-progress' = any(g.scopes)
+       and private.support_consent_active(g.consent_id, g.tenant_id, g.student_id)
+       and private.subject_has_capability(g.supporter_id, 'support:read', 'school', g.tenant_id)
+       and (g.ticket_id is null or private.subject_has_capability(
+         g.supporter_id, 'support:ticket', 'platform', ''
+       ))
+  );
+$$;
+
+revoke all on function private.support_grant_current(uuid) from public, anon, authenticated;
+
 create or replace function private.assert_support_grant()
 returns trigger
 language plpgsql
@@ -212,6 +236,7 @@ begin
      where g.student_id = student
        and g.supporter_id = want_supporter
        and g.tenant_id = tenant
+       and g.ticket_id is not distinct from want_ticket
        and g.revoked_at is null
        and g.expires_at > now()
   ) then

@@ -134,6 +134,22 @@ begin
   perform pg_temp.said('current prerequisites plus an exact approval produce a release candidate', state, 'release_candidate');
 end $$;
 
+insert into public.approval_request
+  (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, expires_at)
+select 'release', v, null, 'platform', '{"action":"release"}', 'Expired evidence.', 'REL-EXPIRED', 'pending', now() - interval '1 second'
+from ids where k = 'operator';
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); state text;
+begin
+  perform pg_temp.become(operator);
+  select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
+  perform pg_temp.nobody();
+  perform pg_temp.said('an expired approval cannot create a release candidate', state, 'blocked');
+end $$;
+
+delete from public.approval_request where ticket = 'REL-EXPIRED';
+
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, rollback_ref, observed_at)
 values
@@ -153,6 +169,22 @@ insert into public.platform_release_evidence
 values
   ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG', 'production browser verification', repeat('b', 40), now());
 
+insert into public.platform_release_evidence
+  (gate, status, approved_by, evidence, source, commit_sha, observed_at)
+values
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-FUTURE', 'future clock probe', repeat('a', 40), now() + interval '1 hour');
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); state text;
+begin
+  perform pg_temp.become(operator);
+  select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
+  perform pg_temp.nobody();
+  perform pg_temp.said('future-dated verification cannot clear the release', state, 'deployed_unverified');
+end $$;
+
+delete from public.platform_release_evidence where evidence = 'VERIFY-FUTURE';
+
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text;
 begin
@@ -165,7 +197,7 @@ end $$;
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), now() + interval '1 second');
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), now());
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; leaked text;

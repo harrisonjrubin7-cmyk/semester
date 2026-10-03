@@ -108,7 +108,7 @@ const RELEASE_INCIDENT_ROW = {
   communication_status: 'not_applicable', last_notice_at: null, next_update_at: null,
   rollback_status: 'documented', release_commit: 'a'.repeat(40), deployment_source: 'pages',
   deployment_id: 'deploy-17', observed_at: '2026-10-03T10:00:00Z', expires_at: '2026-10-17T10:00:00Z',
-  approval_id: null, approval_status: null, evidence: 'production_verification=blocked',
+  approval_id: null, approval_status: null, can_request: true, evidence: 'production_verification=blocked',
   next_safe_action: 'Verify the exact commit.', classification: 'restricted',
   provenance: 'server sources', limitation: 'No institutional activation claim.',
 };

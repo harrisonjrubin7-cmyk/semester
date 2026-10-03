@@ -108,9 +108,9 @@ export function ReleaseIncidents({
       {shown.map((item) => {
         const expanded = openId === item.itemId;
         const approvalOpen = item.approvalStatus === 'pending' || item.approvalStatus === 'approved';
-        const canRequest = item.itemKind === 'incident'
+        const canRequest = item.canRequest && (item.itemKind === 'incident'
           ? item.state === 'incident' || item.state === 'rollback'
-          : item.state === 'blocked' || item.state === 'release_candidate';
+          : item.state === 'blocked' || item.state === 'release_candidate');
         const ready = Object.values(refs).every((value) => SAFE_REFERENCE.test(value.trim()));
         const rollback = item.itemKind === 'incident';
         return (

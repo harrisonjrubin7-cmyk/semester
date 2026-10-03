@@ -42,6 +42,21 @@ security definer
 set search_path = ''
 as $$
 begin
+  if tg_op = 'UPDATE'
+     and new.id is not distinct from old.id
+     and new.request_id is not distinct from old.request_id
+     and new.request_ref is not distinct from old.request_ref
+     and (new.subject is not distinct from old.subject or (old.subject is not null and new.subject is null))
+     and new.subject_sha256 is not distinct from old.subject_sha256
+     and new.tenant_id is not distinct from old.tenant_id
+     and new.kind is not distinct from old.kind
+     and new.outcome is not distinct from old.outcome
+     and new.evidence_reference is not distinct from old.evidence_reference
+     and new.approval_request is not distinct from old.approval_request
+     and (new.issued_by is not distinct from old.issued_by or (old.issued_by is not null and new.issued_by is null))
+     and new.issued_at is not distinct from old.issued_at then
+    return new;
+  end if;
   raise exception 'Privacy completion certificates are immutable.' using errcode = '42501';
 end $$;
 

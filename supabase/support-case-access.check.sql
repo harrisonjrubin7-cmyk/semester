@@ -90,6 +90,7 @@ declare
   resolved_ticket uuid := gen_random_uuid();
   other_ticket uuid := gen_random_uuid();
   unlinked_ticket uuid := gen_random_uuid();
+  second_ticket uuid := gen_random_uuid();
   case_grant_id uuid;
   evidence uuid;
   n bigint;
@@ -128,6 +129,11 @@ begin
     (resolved_ticket, student, 'bug', 'Resolved case', 'Awaiting closure.', '{}', 'normal', 'resolved', now() + interval '3 days'),
     (other_ticket, other_student, 'bug', 'Other student', 'Private.', '{}', 'normal', 'open', now() + interval '3 days'),
     (unlinked_ticket, student, 'how_to', 'No access', 'Metadata only.', '{}', 'normal', 'open', now() + interval '3 days');
+  insert into public.support_tickets (
+    id, student_id, category, subject, body, context, priority, status, first_response_due
+  ) values (
+    second_ticket, student, 'bug', 'Second active case', 'Separate case.', '{}', 'normal', 'open', now() + interval '3 days'
+  );
 
   perform pg_temp.become(student);
   select count(*) into n
@@ -188,6 +194,14 @@ begin
   perform pg_temp.counted(
     'case, scope and consent are structurally linked to the grant', n, 1
   );
+
+  perform pg_temp.become(student);
+  select public.create_support_access(
+    dual_agent, 'A separate active case needs separate consent.', 1, second_ticket
+  ) into linked;
+  perform public.revoke_support_access(linked);
+  reset role;
+  raise notice 'ok  an existing case grant does not block consent for a different case';
 
   perform pg_temp.become(dual_agent);
   select a.grant_id, a.consent_state, a.last_sensitive_read_at

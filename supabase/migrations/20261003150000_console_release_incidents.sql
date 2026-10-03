@@ -96,6 +96,7 @@ returns table (
   expires_at timestamptz,
   approval_id uuid,
   approval_status text,
+  can_request boolean,
   evidence text,
   next_safe_action text,
   classification text,
@@ -136,13 +137,16 @@ begin
       l.observed_at, coalesce(l.expires_at, l.observed_at + g.max_age) as expires_at,
       l.gate is not null
         and l.status = 'pass'
+        and l.observed_at <= now()
         and coalesce(l.expires_at, l.observed_at + g.max_age) > now()
         and coalesce(length(trim(l.source)), 0) >= 3
         and (not g.needs_commit or l.commit_sha ~ '^[0-9a-f]{40}$') as current
     from gate_definition g
     left join latest_gate l on l.gate = g.gate
   ), release_approval as (
-    select r.id, r.status
+    select r.id,
+      case when r.status in ('pending', 'approved') and r.expires_at <= now()
+        then 'expired' else r.status end as status
     from public.approval_request r
     where r.duty_id = 'release'
       and r.tenant_id is null
@@ -193,6 +197,7 @@ begin
       (select g.expires_at from gate_state g where g.gate = 'production_deployment')::timestamptz as expires_at,
       (select a.id from release_approval a)::uuid as approval_id,
       (select a.status from release_approval a)::text as approval_status,
+      private.party_held('engineering') as can_request,
       coalesce((select string_agg(gate || '=' || case when current then 'current' else 'blocked' end, '; ' order by gate) from gate_state), '')::text as evidence,
       case
         when exists (select 1 from gate_state where gate in (
@@ -238,6 +243,7 @@ begin
       i.recovered_at::timestamptz as expires_at,
       rollback_approval.id::uuid as approval_id,
       rollback_approval.status::text as approval_status,
+      private.party_held('engineering') as can_request,
       coalesce(i.rollback_ref, 'No rollback reference recorded.')::text as evidence,
       case when i.status = 'recovered' then 'Confirm the resolution notice, preserve evidence and schedule the post-incident review.'
            when i.status = 'rollback' and rollback_approval.status in ('pending', 'approved') then 'Keep the release unchanged while rollback approval awaits execution.'
@@ -258,7 +264,9 @@ begin
       limit 1
     ) notice on true
     left join lateral (
-      select r.id, r.status
+      select r.id,
+        case when r.status in ('pending', 'approved') and r.expires_at <= now()
+          then 'expired' else r.status end as status
       from public.approval_request r
       where r.duty_id = 'release'
         and r.tenant_id is not distinct from i.tenant_id

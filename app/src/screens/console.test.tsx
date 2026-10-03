@@ -217,7 +217,7 @@ beforeEach(() => {
     communicationStatus: 'not_applicable', lastNoticeAt: null, nextUpdateAt: null,
     rollbackStatus: 'documented', releaseCommit: 'a'.repeat(40), deploymentSource: 'pages', deploymentId: 'deploy-9',
     observedAt: '2026-10-03T10:00:00Z', expiresAt: '2026-10-17T10:00:00Z', approvalId: null,
-    approvalStatus: null, evidence: 'production_verification=blocked', nextSafeAction: 'Verify the deployed commit.',
+    approvalStatus: null, canRequest: true, evidence: 'production_verification=blocked', nextSafeAction: 'Verify the deployed commit.',
     classification: 'restricted', provenance: 'server sources', limitation: 'Production behavior remains unverified.',
   }]);
   mock.privacyRequests.mockResolvedValue([{

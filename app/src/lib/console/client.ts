@@ -630,6 +630,7 @@ export interface ReleaseIncident {
   expiresAt: string | null;
   approvalId: string | null;
   approvalStatus: string | null;
+  canRequest: boolean;
   evidence: string;
   nextSafeAction: string;
   classification: string;
@@ -659,6 +660,7 @@ function readReleaseIncident(r: Row): ReleaseIncident {
     deploymentSource: maybe(r.deployment_source), deploymentId: maybe(r.deployment_id),
     observedAt: maybe(r.observed_at), expiresAt: maybe(r.expires_at),
     approvalId: maybe(r.approval_id), approvalStatus: maybe(r.approval_status),
+    canRequest: r.can_request === true,
     evidence: text(r.evidence), nextSafeAction: text(r.next_safe_action),
     classification: text(r.classification), provenance: text(r.provenance), limitation: text(r.limitation),
   };

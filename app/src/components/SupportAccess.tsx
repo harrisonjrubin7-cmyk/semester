@@ -46,7 +46,9 @@ export function SupportAccess({ account }: { account: Account | null }) {
       setSupporters(next.supporters);
       setWindows(next.windows);
       setTickets(nextTickets);
-      setSupporterId((old) => old || next.supporters[0]?.supporterId || '');
+      setSupporterId((old) => next.supporters.some((supporter) => supporter.supporterId === old)
+        ? old
+        : next.supporters[0]?.supporterId ?? '');
       setTicketId((old) => nextTickets.some((ticket) => ticket.ticketId === old)
         ? old
         : nextTickets[0]?.ticketId ?? '');

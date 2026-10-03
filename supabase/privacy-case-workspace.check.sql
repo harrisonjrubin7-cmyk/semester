@@ -50,6 +50,8 @@ declare
   console_only uuid;
   data_only uuid;
   expired uuid;
+  departing uuid;
+  departing_request uuid;
   held_request uuid;
   n bigint;
 begin
@@ -65,6 +67,22 @@ begin
   console_only := pg_temp.newuser('console@privacy-north.example', 'privacy-north');
   data_only := pg_temp.newuser('data@privacy-north.example', 'privacy-north');
   expired := pg_temp.newuser('expired@privacy-north.example', 'privacy-north');
+  departing := pg_temp.newuser('departing@privacy-north.example', 'privacy-north');
+
+  insert into public.data_subject_request (
+    subject, tenant_id, kind, detail, assigned_to, assigned_at,
+    verified_at, verified_by, verification_basis, verification_evidence
+  ) values (
+    north_student, 'privacy-north', 'correction', 'Historical assigned request.', departing, now(),
+    now(), departing, 'signed-in account holder', 'case://departing-1'
+  ) returning id into departing_request;
+  delete from auth.users where id = departing;
+  select count(*) into n from public.data_subject_request
+   where id = departing_request and assigned_to is null and assigned_at is null
+     and verified_by is null and verified_at is null
+     and verification_basis is null and verification_evidence is null;
+  perform pg_temp.counted('deleting a steward preserves the request and clears coupled assignment and verification fields', n, 1);
+  delete from public.data_subject_request where id = departing_request;
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance, expires_at) values
     (steward, 'data_steward', 'platform', '', 'platform', null),

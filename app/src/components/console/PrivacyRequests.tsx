@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Notice, SectionLabel } from '../ui';
 import {
   claimPrivacyRequest,
@@ -74,6 +74,8 @@ export function PrivacyRequests({
   const [detail, setDetail] = useState<PrivacyRequestDetail | null>(null);
   const [detailFailed, setDetailFailed] = useState(false);
   const [busy, setBusy] = useState('');
+  const openRequest = useRef<string | null>(null);
+  const detailRequest = useRef(0);
   const [verification, setVerification] = useState(EMPTY_VERIFY);
   const [resolution, setResolution] = useState(EMPTY_RESOLUTION);
   const [approval, setApproval] = useState(EMPTY_APPROVAL);
@@ -112,6 +114,8 @@ export function PrivacyRequests({
   );
 
   const open = (requestId: string | null) => {
+    openRequest.current = requestId;
+    detailRequest.current += 1;
     setOpenId(requestId);
     setDetail(null);
     setDetailFailed(false);
@@ -134,17 +138,21 @@ export function PrivacyRequests({
   });
 
   const readSensitive = (request: PrivacyRequest) => privileged(async () => {
+    const sequence = ++detailRequest.current;
     setBusy('detail');
     setDetailFailed(false);
     try {
-      setDetail(await readDetail(request.requestId));
+      const next = await readDetail(request.requestId);
+      if (sequence !== detailRequest.current || openRequest.current !== request.requestId) return;
+      setDetail(next);
       onStatus(`${request.requestRef} detail was read and the read was audited.`);
     } catch (error) {
+      if (sequence !== detailRequest.current || openRequest.current !== request.requestId) return;
       setDetail(null);
       setDetailFailed(true);
       onStatus(said(error, 'Could not read the privacy request detail.'));
     } finally {
-      setBusy('');
+      if (sequence === detailRequest.current) setBusy('');
     }
   });
 

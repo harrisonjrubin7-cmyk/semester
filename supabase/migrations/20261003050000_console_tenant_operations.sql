@@ -9,6 +9,27 @@
 -- counts scoped, expiring access grants; it never reads support tickets,
 -- student identifiers, consent reasons or student content.
 
+create or replace function private.support_grant_current(want_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from public.support_access_grant g
+     where g.id = want_id
+       and g.revoked_at is null
+       and g.expires_at > now()
+       and 'learning-progress' = any(g.scopes)
+       and private.support_consent_active(g.consent_id, g.tenant_id, g.student_id)
+       and private.subject_has_capability(g.supporter_id, 'support:read', 'school', g.tenant_id)
+  );
+$$;
+
+revoke all on function private.support_grant_current(uuid) from public, anon, authenticated;
+
 create or replace function public.console_tenant_operations(include_demo boolean default false)
 returns table (
   tenant_id text,
@@ -172,8 +193,7 @@ begin
         (select count(*)::text || ' active scoped grant(s)'
            from public.support_access_grant g
           where g.tenant_id = a.id
-            and g.revoked_at is null
-            and g.expires_at > now()),
+            and private.support_grant_current(g.id)),
         'restricted'::text,
         'public.support_access_grant aggregate'::text,
         'support'::text,

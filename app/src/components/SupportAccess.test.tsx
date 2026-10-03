@@ -109,6 +109,22 @@ describe('consented support access surface', () => {
     expect(host.textContent).toContain('Support access created');
   });
 
+  it('replaces a supporter selection that is no longer eligible', async () => {
+    const ticket = { ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Recovery plan' };
+    mock.load
+      .mockResolvedValueOnce({ supporters: [{ supporterId: 'old', label: 'Old agent' }], tickets: [ticket], windows: [] })
+      .mockResolvedValue({ supporters: [{ supporterId: 'new', label: 'New agent' }], tickets: [ticket], windows: [] });
+    mock.create.mockResolvedValue(undefined);
+    await renderSignedIn();
+    const reason = host.querySelector('textarea')!;
+    const form = host.querySelector('form')!;
+    await act(async () => changeValue(reason, 'First request.'));
+    await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    await act(async () => changeValue(reason, 'Second request.'));
+    await act(async () => form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
+    expect(mock.create).toHaveBeenLastCalledWith('new', 'Second request.', 1, ticket.ticketId);
+  });
+
   it('gives the named supporter aggregates but never raw mistake detail', async () => {
     mock.load.mockResolvedValue({
       supporters: [],

@@ -22,6 +22,29 @@ alter table public.data_subject_request
       (verified_at is not null and verified_by is not null and verification_basis is not null and verification_evidence is not null)
     );
 
+create or replace function private.clear_privacy_request_user_links()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update public.data_subject_request
+     set assigned_to = null, assigned_at = null
+   where assigned_to = old.id;
+  update public.data_subject_request
+     set verified_by = null, verified_at = null,
+         verification_basis = null, verification_evidence = null
+   where verified_by = old.id;
+  return old;
+end $$;
+
+revoke all on function private.clear_privacy_request_user_links() from public, anon, authenticated;
+drop trigger if exists clear_privacy_request_user_links on auth.users;
+create trigger clear_privacy_request_user_links
+  before delete on auth.users
+  for each row execute function private.clear_privacy_request_user_links();
+
 create index data_subject_request_by_assignee
   on public.data_subject_request (assigned_to, due_at);
 

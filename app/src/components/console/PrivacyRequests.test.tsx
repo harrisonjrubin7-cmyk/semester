@@ -186,6 +186,23 @@ describe('privacy request workspace', () => {
     expect(verify).toHaveBeenCalledWith('request-1', 'signed-in account holder', 'case://verify-1');
   });
 
+  it('discards a late sensitive response after the operator changes cases', async () => {
+    let finish!: (value: PrivacyRequestDetail) => void;
+    readDetail.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    await draw([
+      request({ assignedTo: 'op-1', assignedToMe: true, status: 'verifying' }),
+      request({ requestId: 'request-2', requestRef: 'DSR-0987654321', assignedTo: 'op-1', assignedToMe: true, status: 'verifying' }),
+    ]);
+    const openButtons = () => buttons().filter((item) => item.textContent?.trim() === 'Open case');
+    await act(async () => openButtons()[0]?.click());
+    await act(async () => button('View request detail')?.click());
+    await act(async () => button('Close case')?.click());
+    await act(async () => openButtons()[1]?.click());
+    await act(async () => finish(detail));
+    expect(host.textContent).not.toContain('Delete eligible account data.');
+    expect(host.textContent).toContain('DSR-0987654321');
+  });
+
   it('creates an exact-request deletion approval without treating it as executed', async () => {
     await draw([request({
       assignedTo: 'op-1', assignedToMe: true, status: 'in_progress', identityState: 'verified',

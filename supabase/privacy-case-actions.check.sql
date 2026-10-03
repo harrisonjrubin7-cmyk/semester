@@ -55,6 +55,7 @@ declare
   steward uuid;
   other_steward uuid;
   outsider uuid;
+  certificate_user uuid;
   export_request uuid;
   audit_failure_request uuid;
   erase_request uuid;
@@ -74,6 +75,20 @@ begin
   steward := pg_temp.newuser('steward@privacy-action.example', 'privacy-action');
   other_steward := pg_temp.newuser('second@privacy-action.example', 'privacy-action');
   outsider := pg_temp.newuser('outsider@privacy-action-other.example', 'privacy-action-other');
+  certificate_user := pg_temp.newuser('certificate-user@privacy-action.example', 'privacy-action');
+
+  insert into public.privacy_completion_certificate (
+    request_id, request_ref, subject, subject_sha256, tenant_id, kind,
+    evidence_reference, issued_by
+  ) values (
+    gen_random_uuid(), 'DSR-ABCDEF1234', certificate_user,
+    private.role_audit_sha256(certificate_user::text),
+    'privacy-action', 'export', 'case://identity-clear', certificate_user
+  ) returning id into certificate;
+  delete from auth.users where id = certificate_user;
+  select count(*) into n from public.privacy_completion_certificate
+   where id = certificate and subject is null and issued_by is null;
+  perform pg_temp.counted('account deletion preserves the certificate while clearing direct identity links', n, 1);
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (steward, 'data_steward', 'platform', '', 'platform'),
