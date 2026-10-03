@@ -195,6 +195,22 @@ begin
     'case, scope and consent are structurally linked to the grant', n, 1
   );
 
+  perform pg_temp.become(dual_agent);
+  select count(*) into n from public.support_access_windows() w where w.grant_id = case_grant_id;
+  reset role;
+  perform pg_temp.counted('current case duty exposes the supporter window', n, 1);
+
+  update public.role_grants
+     set revoked_at = now()
+   where subject = dual_agent and role = 'support_agent' and scope_kind = 'platform' and scope_id = '';
+  perform pg_temp.become(dual_agent);
+  select count(*) into n from public.support_access_windows() w where w.grant_id = case_grant_id;
+  reset role;
+  perform pg_temp.counted('losing case duty hides the case-bound supporter window', n, 0);
+  update public.role_grants
+     set revoked_at = null
+   where subject = dual_agent and role = 'support_agent' and scope_kind = 'platform' and scope_id = '';
+
   perform pg_temp.become(student);
   select public.create_support_access(
     dual_agent, 'A separate active case needs separate consent.', 1, second_ticket

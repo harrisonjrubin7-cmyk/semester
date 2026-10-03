@@ -24,6 +24,7 @@ const EMPTY_APPROVAL = {
 };
 
 const SAFE_REFERENCE = /^[A-Za-z0-9._:/-]{3,200}$/;
+const SAFE_TICKET = /^[A-Za-z0-9._:-]{3,80}$/;
 const HEALTH_LABEL: Record<IntegrationHealthRow['healthState'], string> = {
   healthy: 'Healthy',
   degraded: 'Degraded',
@@ -49,6 +50,7 @@ export function IntegrationHealth({
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [approval, setApproval] = useState(EMPTY_APPROVAL);
+  const [today] = useState(() => new Date().toISOString().slice(0, 10));
   const [busy, setBusy] = useState(false);
   const refreshRequest = useRef(0);
 
@@ -105,6 +107,7 @@ export function IntegrationHealth({
           requested_change: approval.change,
           connection_name: connection.connectionName,
           provider_domain: connection.providerDomain,
+          credential_expiry: approval.credentialExpiry,
         },
         evidence: [
           `institution_approval=${approval.institutionApproval.trim()}`,
@@ -165,8 +168,11 @@ export function IntegrationHealth({
           || connection.configurationApprovalStatus === 'approved';
         const ready = SAFE_REFERENCE.test(approval.institutionApproval.trim())
           && SAFE_REFERENCE.test(approval.rollback.trim())
-          && /^\d{4}-\d{2}-\d{2}$/.test(approval.credentialExpiry)
-          && SAFE_REFERENCE.test(approval.ticket.trim());
+          && (approval.change === 'disable' || (
+            /^\d{4}-\d{2}-\d{2}$/.test(approval.credentialExpiry)
+            && approval.credentialExpiry > today
+          ))
+          && SAFE_TICKET.test(approval.ticket.trim());
         return (
           <article
             key={connection.connectionId}

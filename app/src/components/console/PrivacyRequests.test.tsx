@@ -226,6 +226,18 @@ describe('privacy request workspace', () => {
     expect(status).toHaveBeenCalledWith(expect.stringContaining('execution remains separate'));
   });
 
+  it('rejects invalid deletion-ticket characters before submission', async () => {
+    await draw([request({
+      assignedTo: 'op-1', assignedToMe: true, status: 'in_progress', identityState: 'verified',
+    })]);
+    await press('Open case');
+    await press('View request detail');
+    type(field('Deletion evidence'), 'Verified request and store-by-store deletion plan.');
+    type(field('Change or case ticket'), 'PRIV/100');
+    expect(button('Record approval request')?.disabled).toBe(true);
+    expect(requestDeletionApproval).not.toHaveBeenCalled();
+  });
+
   it('blocks held erasure completion but permits a reasoned refusal', async () => {
     await draw([request({
       assignedTo: 'op-1', assignedToMe: true, status: 'in_progress', identityState: 'verified',

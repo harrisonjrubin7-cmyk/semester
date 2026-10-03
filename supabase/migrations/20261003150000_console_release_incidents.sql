@@ -178,6 +178,10 @@ begin
         when not (select current from gate_state where gate = 'production_verification')
           or (select g.commit_sha from gate_state g where g.gate = 'production_verification')
              is distinct from (select g.commit_sha from gate_state g where g.gate = 'production_deployment')
+          or (select g.deployment_id from gate_state g where g.gate = 'production_verification')
+             is distinct from (select g.deployment_id from gate_state g where g.gate = 'production_deployment')
+          or (select g.observed_at from gate_state g where g.gate = 'production_verification')
+             < (select g.observed_at from gate_state g where g.gate = 'production_deployment')
           then 'deployed_unverified'
         else 'verified'
       end::text as state,
@@ -196,8 +200,8 @@ begin
       case when coalesce(length(trim((select g.rollback_ref from gate_state g where g.gate = 'production_deployment'))), 0) >= 3
         then 'documented' else 'missing' end::text as rollback_status,
       coalesce(
-        (select g.commit_sha from gate_state g where g.gate = 'production_deployment'),
-        (select g.commit_sha from gate_state g where g.gate = 'production_migrations')
+        (select g.commit_sha from gate_state g where g.gate = 'production_deployment' and g.current),
+        (select g.commit_sha from gate_state g where g.gate = 'production_migrations' and g.current)
       )::text as release_commit,
       (select g.source from gate_state g where g.gate = 'production_deployment')::text as deployment_source,
       (select g.deployment_id from gate_state g where g.gate = 'production_deployment')::text as deployment_id,
@@ -205,7 +209,11 @@ begin
       (select g.expires_at from gate_state g where g.gate = 'production_deployment')::timestamptz as expires_at,
       (select a.id from release_approval a)::uuid as approval_id,
       (select a.status from release_approval a)::text as approval_status,
-      private.party_held('engineering') as can_request,
+      (private.party_held('engineering') and not exists (
+        select 1 from gate_state where gate in (
+          'production_restore', 'legal_approval', 'paid_infrastructure', 'domain_tls', 'production_migrations'
+        ) and not current
+      )) as can_request,
       coalesce((select string_agg(gate || '=' || case when current then 'current' else 'blocked' end, '; ' order by gate) from gate_state), '')::text as evidence,
       case
         when exists (select 1 from gate_state where gate in (
@@ -236,7 +244,8 @@ begin
       i.affected_workflows::text[],
       i.customer_impact::text,
       case when notice.sent_at is null then 'missing'
-           when i.status = 'recovered' then 'complete'
+           when i.status = 'recovered' and notice.sent_at >= i.recovered_at then 'complete'
+           when i.status = 'recovered' then 'missing'
            when notice.next_update_at <= now() then 'overdue'
            else 'current' end::text as communication_status,
       notice.sent_at::timestamptz as last_notice_at,

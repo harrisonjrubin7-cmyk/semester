@@ -91,7 +91,7 @@ describe('release and incident workspace', () => {
 
   it('requests a structured release approval and never executes it', async () => {
     const request = vi.fn(async () => 'approval-17');
-    await draw(async () => [row()], request);
+    await draw(async () => [row({ state: 'release_candidate' })], request);
     await act(async () => button('Request release approval')?.click());
     await change(field('CI result reference'), 'CI-44');
     await change(field('Golden path reference'), 'SMOKE-22');
@@ -130,13 +130,18 @@ describe('release and incident workspace', () => {
   });
 
   it('does not request a release approval until an exact candidate commit is established', async () => {
-    await draw(async () => [row({ releaseCommit: null })]);
+    await draw(async () => [row({ state: 'release_candidate', releaseCommit: null })]);
     expect(button('Request release approval')).toBeUndefined();
     expect(host.textContent).toContain('not established');
   });
 
   it('does not offer release writes to an incident-only operator', async () => {
     await draw(async () => [row({ canRequest: false })]);
+    expect(button('Request release approval')).toBeUndefined();
+  });
+
+  it('does not offer release approval while prerequisite gates are blocked', async () => {
+    await draw(async () => [row({ state: 'blocked', canRequest: true })]);
     expect(button('Request release approval')).toBeUndefined();
   });
 });

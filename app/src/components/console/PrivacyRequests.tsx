@@ -48,6 +48,7 @@ interface PrivacyRequestsProps extends ViewProps {
 const EMPTY_VERIFY = { basis: '', evidence: '' };
 const EMPTY_RESOLUTION = { outcome: 'completed' as PrivacyRequestOutcome, resolution: '', evidence: '' };
 const EMPTY_APPROVAL = { evidence: '', ticket: '' };
+const SAFE_TICKET = /^[A-Za-z0-9._:-]{3,80}$/;
 
 /**
  * Data-rights operations with an identity-minimized queue and an explicit
@@ -375,9 +376,9 @@ export function PrivacyRequests({
                     </label>
                     <label style={{ display: 'grid', gap: 'var(--sp-2)' }}>
                       Change or case ticket
-                      <input className="input" required minLength={3} maxLength={80} value={approval.ticket} onChange={(event) => setApproval((value) => ({ ...value, ticket: event.target.value }))} />
+                      <input className="input" required minLength={3} maxLength={80} pattern="[A-Za-z0-9._:-]{3,80}" value={approval.ticket} onChange={(event) => setApproval((value) => ({ ...value, ticket: event.target.value }))} />
                     </label>
-                    <button type="submit" className="btn btn-primary" disabled={busy === 'approval' || approval.evidence.trim().length === 0 || approval.ticket.trim().length < 3}>
+                    <button type="submit" className="btn btn-primary" disabled={busy === 'approval' || approval.evidence.trim().length === 0 || !SAFE_TICKET.test(approval.ticket.trim())}>
                       Record approval request
                     </button>
                     <WriteNotice env={env} />

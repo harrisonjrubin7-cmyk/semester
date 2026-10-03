@@ -320,6 +320,12 @@ as $$
         and private.subject_has_capability(
           g.supporter_id, 'support:read', 'school', g.tenant_id
         )
+        and (
+          g.ticket_id is null
+          or private.subject_has_capability(
+            g.supporter_id, 'support:ticket', 'platform', ''
+          )
+        )
       )
    order by g.created_at desc;
 $$;

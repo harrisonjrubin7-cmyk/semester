@@ -222,6 +222,8 @@ export function SupportAccess({ account }: { account: Account | null }) {
                       .finally(() => setBusy(false));
                   }}
                 >Revoke now</ActionButton>
+              ) : window.ticketId ? (
+                <Notice>Case-bound support summaries require fresh MFA. Open this case in the Operations Console to view its aggregate signals.</Notice>
               ) : (
                 <ActionButton
                   disabled={busy}

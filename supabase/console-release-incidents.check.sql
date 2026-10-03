@@ -59,6 +59,7 @@ begin
     (operator, 'incident_responder', 'platform', '', 'platform'),
     (shell_only, 'platform_admin', 'platform', '', 'platform'),
     (domain_only, 'incident_responder', 'school', 'release-live', 'platform');
+  insert into public.council_seat_holder (seat, subject) values ('engineering', operator);
   insert into ids values ('operator', operator), ('shell', shell_only), ('domain', domain_only);
 
   insert into public.platform_incident
@@ -78,7 +79,7 @@ begin
     ('incident-recovered', null, 'Recovered service interruption', 'high', 'recovered', 'incident commander', array['sign in'], 'Sign in was unavailable and is now recovered.', now() - interval '2 hours', now() - interval '1 hour');
 
   insert into public.governance_incident_notices
-    (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+    (tenant_id, incident_ref, audience, sections, details, approved_by, sent_at, next_update_at)
   values
     (null, 'incident-recovered', 'admin_outage', jsonb_build_object(
       'what_happened', 'NOTICE-BODY-CANARY service interruption.',
@@ -88,7 +89,7 @@ begin
       'what_semester_is_doing', 'Monitoring recovery.',
       'next_update', 'This is the resolution update.',
       'where_to_get_help', 'Use the support route.'),
-      '{}'::jsonb, array['Incident commander'], now() + interval '30 minutes');
+      '{}'::jsonb, array['Incident commander'], now() - interval '90 minutes', now() + interval '30 minutes');
 
   insert into public.approval_request
     (duty_id, requester, tenant_id, target, detail, evidence, ticket, status)
@@ -98,12 +99,25 @@ begin
 end $$;
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint;
+declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; blocked boolean := false;
 begin
   perform pg_temp.become(operator);
   select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
   perform pg_temp.nobody();
   perform pg_temp.said('missing release evidence is blocked', state, 'blocked');
+
+  perform pg_temp.become(operator);
+  begin
+    perform public.request_approval(
+      'release', null, 'platform',
+      jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+      'CI, golden path and rollback rehearsal references.', 'REL-BLOCKED', null
+    );
+  exception when check_violation then blocked := true;
+  end;
+  perform pg_temp.nobody();
+  if not blocked then raise exception 'FAILED: blocked release prerequisites allowed an approval request'; end if;
+  raise notice 'ok  release prerequisites are enforced at the approval write boundary';
 
   perform pg_temp.become(operator);
   select count(*) into n from public.console_release_incidents(false) r where item_kind = 'incident' and r.is_demo;
@@ -125,13 +139,33 @@ values
   ('domain_tls', 'pass', 'Engineering owner', 'TLS-1', 'public DNS and TLS probe', null, now()),
   ('production_migrations', 'pass', 'Data owner', 'MIGRATION-1', 'Supabase migration result', repeat('a', 40), now());
 
+insert into public.platform_release_evidence
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, rollback_ref, observed_at, expires_at)
+values
+  ('production_deployment', 'pass', 'Engineering owner', 'DEPLOY-STALE', 'expired production deployment', repeat('b', 40), 'deployment-stale', 'RUNBOOK-STALE', now() - interval '30 days', now() - interval '1 day');
+
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text;
+declare operator uuid := (select v from ids where k = 'operator'); state text; commit text; made uuid;
 begin
   perform pg_temp.become(operator);
   select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
   perform pg_temp.nobody();
   perform pg_temp.said('current prerequisites plus an exact approval produce a release candidate', state, 'release_candidate');
+
+  perform pg_temp.become(operator);
+  select r.release_commit into commit from public.console_release_incidents(false) r where item_kind = 'release';
+  perform pg_temp.nobody();
+  perform pg_temp.said('an expired deployment cannot replace the current migration commit', commit, repeat('a', 40));
+
+  perform pg_temp.become(operator);
+  made := public.request_approval(
+    'release', null, 'platform',
+    jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+    'CI, golden path and rollback rehearsal references.', 'REL-BOUND', null
+  );
+  perform pg_temp.nobody();
+  if made is null then raise exception 'FAILED: current exact-commit release request was not created'; end if;
+  raise notice 'ok  current prerequisites permit an exact-commit approval request';
 end $$;
 
 insert into public.approval_request
@@ -154,6 +188,11 @@ insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, rollback_ref, observed_at)
 values
   ('production_deployment', 'pass', 'Engineering owner', 'DEPLOY-1', 'Vercel production deployment', repeat('a', 40), 'deployment-1', 'RUNBOOK-ROLLBACK-1', now());
+
+insert into public.platform_release_evidence
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
+values
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-BEFORE-DEPLOY', 'earlier production browser verification', repeat('a', 40), 'deployment-1', now() - interval '1 hour');
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text;
@@ -183,7 +222,7 @@ begin
   perform pg_temp.said('future-dated verification cannot clear the release', state, 'deployed_unverified');
 end $$;
 
-delete from public.platform_release_evidence where evidence = 'VERIFY-FUTURE';
+delete from public.platform_release_evidence where evidence in ('VERIFY-FUTURE', 'VERIFY-BEFORE-DEPLOY');
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text;
@@ -197,19 +236,36 @@ end $$;
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), 'deployment-1', now());
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG-DEPLOYMENT', 'production browser verification', repeat('a', 40), 'deployment-0', now());
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; leaked text;
+declare operator uuid := (select v from ids where k = 'operator'); state text;
 begin
   perform pg_temp.become(operator);
   select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
-  select count(*) into n from public.console_release_incidents(false) r
+  perform pg_temp.nobody();
+  perform pg_temp.said('verification for a different deployment cannot clear the release', state, 'deployed_unverified');
+end $$;
+
+insert into public.platform_release_evidence
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
+values
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), 'deployment-1', now());
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; incident_count bigint; leaked text;
+begin
+  perform pg_temp.become(operator);
+  select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
+  select count(*) into incident_count from public.console_release_incidents(false) r
     where r.state in ('incident', 'rollback', 'recovered');
   select string_agg(row_to_json(r)::text, '') into leaked from public.console_release_incidents(false) r;
+  select count(*) into n from public.console_release_incidents(false) r
+   where r.item_id = 'incident-recovered' and r.communication_status = 'missing';
   perform pg_temp.nobody();
   perform pg_temp.said('exact current post-deploy evidence verifies the release summary', state, 'verified');
-  perform pg_temp.counted('incident, rollback and recovered states are explicit', n, 3);
+  perform pg_temp.counted('incident, rollback and recovered states are explicit', incident_count, 3);
+  perform pg_temp.counted('recovery is not communication-complete without a post-recovery notice', n, 1);
   if leaked like '%NOTICE-BODY-CANARY%' then raise exception 'FAILED: notice body leaked'; end if;
   raise notice 'ok  incident notice bodies are not returned';
 end $$;

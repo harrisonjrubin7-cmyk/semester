@@ -25,18 +25,28 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
   const [detail, setDetail] = useState('');
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [certificateError, setCertificateError] = useState('');
   const [notice, setNotice] = useState('');
 
   const refresh = useCallback(async () => {
     if (!account) return;
     setBusy(true);
     try {
-      const [nextItems, nextCertificates] = await Promise.all([
+      const [requestResult, certificateResult] = await Promise.allSettled([
         loadDataRightRequests(),
         loadPrivacyCompletionCertificates(),
       ]);
-      setItems(nextItems);
-      setCertificates(nextCertificates);
+      if (requestResult.status === 'rejected') throw requestResult.reason;
+      setItems(requestResult.value);
+      if (certificateResult.status === 'fulfilled') {
+        setCertificates(certificateResult.value);
+        setCertificateError('');
+      } else {
+        setCertificates([]);
+        setCertificateError(certificateResult.reason instanceof Error
+          ? certificateResult.reason.message
+          : 'Completion certificates could not be loaded.');
+      }
       setLoadError('');
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load your requests.');
@@ -77,6 +87,7 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
             />
           )}
           {notice && <Notice>{notice}</Notice>}
+          {certificateError && <Notice alert>Your privacy requests are available, but completion certificates could not be loaded. {certificateError}</Notice>}
           <form
             onSubmit={(event) => {
               event.preventDefault();

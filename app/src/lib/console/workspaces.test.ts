@@ -55,10 +55,10 @@ describe('console workspace registry', () => {
     expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', '')])).toBe(false);
   });
 
-  it('discovers privacy requests only from a non-empty exact-school data-rights grant', () => {
+  it('discovers privacy requests from an exact-school or platform data-rights grant', () => {
     const privacy = CONSOLE_WORKSPACES.find(({ id }) => id === 'privacy')!;
     expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'school', 'vu')])).toBe(true);
-    expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'platform')])).toBe(false);
+    expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'platform')])).toBe(true);
     expect(canDiscoverWorkspace(privacy, [grant('data_request:handle', 'school', '')])).toBe(false);
   });
 

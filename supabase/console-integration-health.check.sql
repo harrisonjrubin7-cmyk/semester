@@ -47,6 +47,7 @@ declare
   console_only uuid;
   integration_only uuid;
   other_operator uuid;
+  mixed_operator uuid;
   healthy uuid;
   degraded uuid;
   stale uuid;
@@ -57,6 +58,7 @@ declare
   failed_run uuid;
   n bigint;
   leaked text;
+  denied boolean := false;
 begin
   insert into public.schools (id, name, email_domains, is_demo) values
     ('health-north', 'Health North', array['health-north.example'], false),
@@ -67,6 +69,7 @@ begin
   console_only := pg_temp.newuser('console@health-north.example', 'health-north');
   integration_only := pg_temp.newuser('integration@health-north.example', 'health-north');
   other_operator := pg_temp.newuser('operator@health-south.example', 'health-south');
+  mixed_operator := pg_temp.newuser('mixed@health-north.example', 'health-north');
 
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (operator, 'platform_admin', 'platform', '', 'platform'),
@@ -75,7 +78,10 @@ begin
     (console_only, 'platform_admin', 'platform', '', 'platform'),
     (integration_only, 'integration_admin', 'school', 'health-north', 'platform'),
     (other_operator, 'platform_admin', 'platform', '', 'platform'),
-    (other_operator, 'integration_admin', 'school', 'health-south', 'platform');
+    (other_operator, 'integration_admin', 'school', 'health-south', 'platform'),
+    (mixed_operator, 'platform_admin', 'platform', '', 'platform'),
+    (mixed_operator, 'integration_admin', 'school', 'health-north', 'platform'),
+    (mixed_operator, 'university_admin', 'school', 'health-south', 'platform');
 
   insert into public.integration_connections
     (tenant_id, provider_domain, provider_name, connection_name, status, approved_at,
@@ -161,6 +167,42 @@ begin
      ('Failed Identity', 'failed'), ('Unconfigured Advising', 'unconfigured'));
   reset role;
   perform pg_temp.counted('all five declared health states are derived from telemetry', n, 5);
+
+  perform pg_temp.become(mixed_operator);
+  select count(*) into n from public.console_integration_health(false) h
+   where (h.tenant_id = 'health-north' and h.can_request)
+      or (h.tenant_id = 'health-south' and not h.can_request);
+  reset role;
+  perform pg_temp.counted('configuration request eligibility is bound to each row tenant', n, 6);
+
+  perform pg_temp.become(mixed_operator);
+  begin
+    perform public.request_approval(
+      'integration-config', 'health-south',
+      (select c.public_id from public.integration_connections c where c.id = other_connection),
+      jsonb_build_object('requested_change', 'configure', 'credential_expiry', (current_date + 30)::text),
+      'Institution approval and rollback references.', 'INT-CROSS-TENANT', null
+    );
+  exception when insufficient_privilege then denied := true;
+  end;
+  reset role;
+  if not denied then raise exception 'FAILED: cross-tenant integration approval request was accepted'; end if;
+  raise notice 'ok  exact-school integration authority is enforced at the write boundary';
+
+  denied := false;
+  perform pg_temp.become(operator);
+  begin
+    perform public.request_approval(
+      'integration-config', 'health-north',
+      (select c.public_id from public.integration_connections c where c.id = healthy),
+      jsonb_build_object('requested_change', 'configure', 'credential_expiry', (current_date - 1)::text),
+      'Institution approval and rollback references.', 'INT-EXPIRED-CREDENTIAL', null
+    );
+  exception when invalid_parameter_value then denied := true;
+  end;
+  reset role;
+  if not denied then raise exception 'FAILED: expired credential evidence entered the approval queue'; end if;
+  raise notice 'ok  credential-bearing changes require a future expiry at the write boundary';
 
   perform pg_temp.become(operator);
   select count(*) into n from public.console_integration_health(false) h

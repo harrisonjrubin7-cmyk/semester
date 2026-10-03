@@ -225,7 +225,7 @@ begin
     end,
     f.approval_id,
     f.approval_status,
-    private.party_held('role:integration_admin') as can_request,
+    private.has_capability('integration:configure', 'school', f.allowed_tenant_id) as can_request,
     'restricted'::text,
     'public.integration_connections + sync runs + redacted error/dead-letter counts + source ownership + approval_request'::text,
     'Operational metadata only. Credentials, cursors, payload references, external record references and provider messages are never returned.'::text

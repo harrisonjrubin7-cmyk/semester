@@ -116,17 +116,29 @@ describe('integration health workspace', () => {
     await change(field('Requested change'), 'rotate-credential-reference');
     await change(field('Institution approval reference'), 'APPROVAL-17');
     await change(field('Fallback or rollback reference'), 'RUNBOOK-9');
-    await change(field('Credential expiry date'), '2027-01-31');
+    await change(field('Credential expiry date'), '2099-01-31');
     await change(field('Change ticket'), 'CHG-44');
     await act(async () => { button('Request two-person approval')?.click(); });
 
     expect(request).toHaveBeenCalledWith({
       dutyId: 'integration-config', tenantId: 'vu', target: 'conn-canvas',
-      detail: { requested_change: 'rotate-credential-reference', connection_name: 'Canvas', provider_domain: 'lms' },
-      evidence: 'institution_approval=APPROVAL-17; data_scope=lms; fallback=RUNBOOK-9; credential_expiry=2027-01-31',
+      detail: { requested_change: 'rotate-credential-reference', connection_name: 'Canvas', provider_domain: 'lms', credential_expiry: '2099-01-31' },
+      evidence: 'institution_approval=APPROVAL-17; data_scope=lms; fallback=RUNBOOK-9; credential_expiry=2099-01-31',
       ticket: 'CHG-44',
     });
     expect(status).toHaveBeenCalledWith('Integration configuration approval approval-9 was requested for Canvas; execution remains separate.');
+  });
+
+  it('keeps an expired credential date from reaching the approval endpoint', async () => {
+    const request = vi.fn(async () => 'approval-10');
+    await draw(async () => [row()], request);
+    await act(async () => { button('Request configuration approval')?.click(); });
+    await change(field('Institution approval reference'), 'APPROVAL-17');
+    await change(field('Fallback or rollback reference'), 'RUNBOOK-9');
+    await change(field('Credential expiry date'), '2020-01-01');
+    await change(field('Change ticket'), 'CHG-44');
+    expect(button('Request two-person approval')?.disabled).toBe(true);
+    expect(request).not.toHaveBeenCalled();
   });
 
   it('does not offer another request while an approval is open', async () => {
@@ -139,5 +151,17 @@ describe('integration health workspace', () => {
     await draw(async () => [row({ canRequest: false })]);
     expect(host.textContent).toContain('read-only for your current duty assignment');
     expect(button('Request configuration approval')).toBeUndefined();
+  });
+
+  it('keeps invalid change-ticket characters from reaching the approval endpoint', async () => {
+    const request = vi.fn(async () => 'approval-10');
+    await draw(async () => [row()], request);
+    await act(async () => { button('Request configuration approval')?.click(); });
+    await change(field('Institution approval reference'), 'APPROVAL-17');
+    await change(field('Fallback or rollback reference'), 'RUNBOOK-9');
+    await change(field('Credential expiry date'), '2027-01-31');
+    await change(field('Change ticket'), 'CHG/44');
+    expect(button('Request two-person approval')?.disabled).toBe(true);
+    expect(request).not.toHaveBeenCalled();
   });
 });

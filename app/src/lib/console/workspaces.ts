@@ -99,8 +99,11 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
 export function canDiscoverWorkspace(workspace: ConsoleWorkspace, grants: readonly Grant[]): boolean {
   return grants.some((grant) =>
     grant.capability === workspace.capability
-    && grant.scopeKind === workspace.scopeKind
-    && (workspace.scopeId === null ? grant.scopeId.length > 0 : grant.scopeId === workspace.scopeId),
+    && (
+      (grant.scopeKind === workspace.scopeKind
+        && (workspace.scopeId === null ? grant.scopeId.length > 0 : grant.scopeId === workspace.scopeId))
+      || (workspace.id === 'privacy' && grant.scopeKind === 'platform' && grant.scopeId === '')
+    ),
   );
 }
 

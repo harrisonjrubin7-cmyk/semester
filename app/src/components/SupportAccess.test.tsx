@@ -150,4 +150,20 @@ describe('consented support access surface', () => {
     expect(host.textContent).not.toContain('Private detail');
     expect(host.textContent).not.toContain('Revoke now');
   });
+
+  it('routes case-bound supporter reads through the MFA-gated console path', async () => {
+    mock.load.mockResolvedValue({
+      supporters: [], tickets: [], windows: [{
+        grantId: 'grant-case', side: 'supporter', counterpartLabel: 'Student Avery',
+        reason: 'Help with this case.', expiresAt: '2099-01-02T00:00:00Z',
+        revokedAt: null, createdAt: '2099-01-01T00:00:00Z',
+        ticketId: '123e4567-e89b-12d3-a456-426614174000', scopes: ['learning-progress'], consentState: 'active',
+      }],
+    });
+    await renderSignedIn();
+    expect(host.textContent).toContain('require fresh MFA');
+    expect(host.textContent).toContain('Operations Console');
+    expect(host.textContent).not.toContain('View aggregate signals');
+    expect(mock.read).not.toHaveBeenCalled();
+  });
 });

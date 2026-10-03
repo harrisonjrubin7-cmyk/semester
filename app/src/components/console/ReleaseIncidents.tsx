@@ -117,7 +117,7 @@ export function ReleaseIncidents({
         const hasBoundCommit = /^[0-9a-f]{40}$/.test(item.releaseCommit ?? '');
         const canRequest = item.canRequest && hasBoundCommit && (item.itemKind === 'incident'
           ? item.state === 'incident' || item.state === 'rollback'
-          : item.state === 'blocked' || item.state === 'release_candidate');
+          : item.state === 'release_candidate');
         const ready = [refs.change, refs.verification, refs.rollback].every((value) => SAFE_REFERENCE.test(value.trim()))
           && SAFE_TICKET.test(refs.ticket.trim());
         const rollback = item.itemKind === 'incident';

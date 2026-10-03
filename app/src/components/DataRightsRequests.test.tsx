@@ -96,4 +96,14 @@ describe('data-rights request surface', () => {
     expect(host.textContent).toContain('certificate-1');
     expect(host.textContent).toContain('delivery://export-1');
   });
+
+  it('keeps request history visible when certificate retrieval fails', async () => {
+    mock.load.mockResolvedValue([open]);
+    mock.certificates.mockRejectedValue(new Error('Certificate reader unavailable.'));
+    await act(async () => { root.render(<DataRightsRequests account={account} />); });
+    expect(host.textContent).toContain('My program is wrong.');
+    expect(host.textContent).toContain('privacy requests are available');
+    expect(host.textContent).toContain('Certificate reader unavailable.');
+    expect(host.textContent).not.toContain('Could not load privacy requests');
+  });
 });
