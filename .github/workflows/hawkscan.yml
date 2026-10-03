@@ -162,5 +162,7 @@ jobs:
           COMMIT_SHA: ${{ github.sha }}
         run: |
           scan_id=$(node scripts/company-site-scan-report.mjs id "$RUNNER_TEMP/company-site-scan.json")
+          API_KEY="$HAWK_API_KEY" hawk op scan get "$scan_id" --detail full --format json > "$RUNNER_TEMP/company-site-findings.json"
+          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings.json"
           API_KEY="$HAWK_API_KEY" hawk op scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
           node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl"

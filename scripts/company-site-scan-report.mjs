@@ -67,6 +67,7 @@ export function evaluate(report, uris, routes = expectedRoutes(), evidence = {})
   if (report.scan.host !== host || report.scan.environment !== 'CompanySiteCI') gaps.push('surface-unscanned: wrong host or environment');
   if (report.scan.status !== 'COMPLETED') gaps.push('env-unreachable: scan did not complete');
   if (!Array.isArray(report.errors) || report.errors.length) gaps.push('scan errors or missing error evidence');
+  if (!Array.isArray(report.warnings) || report.warnings.length) gaps.push('scan warnings or missing warning evidence');
   if (!Array.isArray(report.findings)) gaps.push('missing findings evidence');
   if (report.thresholdResult !== 'PASS') gaps.push('security threshold did not pass');
   const findings = Array.isArray(report.findings) ? report.findings : [];
@@ -94,6 +95,14 @@ function printFindings(findings, write = console.log) {
   }
 }
 
+function valueShape(value, depth = 0) {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return depth >= 2 ? 'array' : `array<${value.length ? valueShape(value[0], depth + 1) : 'empty'}>`;
+  if (typeof value !== 'object') return typeof value;
+  if (depth >= 2) return 'object';
+  return `{${Object.keys(value).sort().map(key => `${safeText(key)}:${valueShape(value[key], depth + 1)}`).join(',')}}`;
+}
+
 export function findingHash(finding) {
   return /^[a-f\d]{64}$/i.test(finding?.findingHash ?? '') ? finding.findingHash : null;
 }
@@ -115,7 +124,15 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.error(`StackHawk | Scan status: ${safeText(report?.scan?.status)}; threshold: ${safeText(report.thresholdResult)}`);
       printFindings(Array.isArray(report.findings) ? report.findings : [], console.error);
       for (const error of report.errors ?? []) console.error(`StackHawk | Scan error category: ${safeText(error.category)}`);
+      for (const warning of report.warnings ?? []) console.error(`StackHawk | Scan warning category: ${safeText(warning.category)}`);
       console.log(scanId(report));
+    }
+    else if (process.argv[2] === 'hashes') {
+      if (!Array.isArray(report.findings)) throw new Error('Full finding evidence was not returned');
+      console.log(`StackHawk | Full finding evidence: ${report.findings.length} findings`);
+      report.findings.forEach((finding, index) => console.log(`StackHawk | Finding schema ${index + 1}: ${valueShape(finding)}`));
+      printFindings(report.findings);
+      if (report.findings.some(finding => !findingHash(finding))) throw new Error('A finding did not include its triage hash');
     }
     else if (process.argv[2] === 'verify') {
       const uris = parseJson(readFileSync(process.argv[4], 'utf8'));
@@ -126,7 +143,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`StackHawk | URI schema: ${Array.isArray(uris) ? 'array' : safeText(Object.keys(uris ?? {}).join(', '))}; records=${Array.isArray(list) ? list.length : 'unsupported'}; first record=${list?.[0] && typeof list[0] === 'object' ? safeText(Object.keys(list[0]).join(', ')) : typeof list?.[0]}`);
       printResult(result);
       if (result.gaps.length) process.exitCode = 1;
-    } else throw new Error('Use id or verify with scan evidence files');
+    } else throw new Error('Use id, hashes or verify with scan evidence files');
   } catch (error) {
     console.error(`StackHawk | Evidence unavailable: ${safeText(error.message)}`);
     process.exitCode = 1;
