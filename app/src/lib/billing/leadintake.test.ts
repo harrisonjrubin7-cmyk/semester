@@ -154,17 +154,23 @@ describe('lead intake: the contract the site is built against', () => {
   });
 
   it('rejects malformed institutional setup metadata before the service-only RPC is called', async () => {
-    const d = deps();
-    const res = await handleLeadIntake(post({
-      ...GOOD,
-      route: 'plan_institution_launch',
-      organization: 'State University',
-      fields: { requested_system: 'unknown_sis', data_mode: 'writeback' },
-    }), d);
-    expect(res.status).toBe(400);
-    expect(await res.json()).toEqual({ ok: false, error: 'Choose a supported system category.' });
-    expect(d.submit).not.toHaveBeenCalled();
-    expect(d.notify).not.toHaveBeenCalled();
+    for (const [fields, message] of [
+      [{ requested_system: 'unknown_sis', data_mode: 'writeback' }, 'Choose a supported system category.'],
+      [{ requested_domain: 'state.example\\anything' }, 'Please enter an institution domain, not a URL.'],
+      [{ requested_domain: '127.0.0.1' }, 'Please enter an institution domain, not a URL.'],
+    ] as const) {
+      const d = deps();
+      const res = await handleLeadIntake(post({
+        ...GOOD,
+        route: 'plan_institution_launch',
+        organization: 'State University',
+        fields,
+      }), d);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toEqual({ ok: false, error: message });
+      expect(d.submit).not.toHaveBeenCalled();
+      expect(d.notify).not.toHaveBeenCalled();
+    }
   });
 
   it('still succeeds when the notification fails, and logs nothing anyone wrote', async () => {
