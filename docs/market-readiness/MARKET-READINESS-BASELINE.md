@@ -1,7 +1,7 @@
 # Market-readiness baseline
 
 **Assessment date:** 2026-10-02
-**Repository baseline:** `origin/main` at `fc089134`
+**Repository baseline:** `origin/main` at `92eeafd9`
 **Scope:** repository evidence and the unactivated operating package in this directory. This is not proof of a live institutional deployment, customer approval, legal approval, accessibility conformance, or certification.
 
 ## Readiness scale

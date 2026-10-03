@@ -1,7 +1,7 @@
 # Semester GA final verification
 
-**Verified candidate:** working tree on `codex/market-readiness-transformation`, based on `fc08913447d691cf0fa8ef757dc365a3b7d8275d`  
-**Date:** 2026-10-02 (America/Chicago)  
+**Verified candidate:** `codex/market-readiness-transformation`, rebased onto `origin/main` at `92eeafd9`
+**Date:** 2026-10-02 (America/Chicago)
 **Final decision:** **NO-GO**
 
 ## Verification summary

@@ -1,7 +1,7 @@
 # Semester launch-readiness package
 
-**Decision date:** 2026-10-02  
-**Candidate:** `fc08913447d691cf0fa8ef757dc365a3b7d8275d`  
+**Decision date:** 2026-10-02
+**Candidate baseline:** `origin/main` at `92eeafd9`
 **Decision:** **NO-GO**
 
 This package is procurement- and reviewer-facing, but it is not a certification, contract, audit report, legal opinion, institutional approval, or statement of general availability.

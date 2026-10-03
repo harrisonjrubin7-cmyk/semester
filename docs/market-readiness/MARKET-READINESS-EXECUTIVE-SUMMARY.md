@@ -1,7 +1,7 @@
 # Semester market-readiness executive summary
 
 **Assessment date:** 2026-10-02
-**Repository baseline:** `origin/main` at `fc089134`
+**Repository baseline:** `origin/main` at `92eeafd9`
 **Decision rule:** repository implementation is not the same as institutional approval, live operation, or independent assurance.
 
 ## CEO dashboard

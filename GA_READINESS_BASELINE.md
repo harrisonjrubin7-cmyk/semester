@@ -1,8 +1,8 @@
 # Semester GA readiness baseline
 
-**Assessment date:** 2026-10-02 (America/Chicago)  
-**Candidate commit:** `fc08913447d691cf0fa8ef757dc365a3b7d8275d`  
-**Candidate version:** no GA version assigned  
+**Assessment date:** 2026-10-02 (America/Chicago)
+**Candidate baseline:** `origin/main` at `92eeafd9`
+**Candidate version:** no GA version assigned
 **Decision:** **NO-GO**
 
 This baseline records what is demonstrably true. It does not convert a repository control, a passing local test, a draft, or a proposed integration into production or institutional evidence.

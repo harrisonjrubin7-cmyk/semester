@@ -1,6 +1,6 @@
 # Semester beta exit criteria
 
-**Status:** open  
+**Status:** open
 **Applies to:** the first GA release and every named institutional production launch
 
 GA is a release state supported by evidence. It is not achieved by deleting the word “beta.” All mandatory gates below must be closed against one immutable release candidate.

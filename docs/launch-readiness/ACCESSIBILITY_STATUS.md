@@ -1,6 +1,6 @@
 # Accessibility status
 
-**Target:** WCAG 2.2 AA  
+**Target:** WCAG 2.2 AA
 **Current claim:** automated accessibility controls exist; conformance has not been independently established
 
 ## Evidence observed

@@ -4,9 +4,9 @@
 
 **NO-GO — Semester is not approved for general availability.**
 
-Candidate commit: `fc08913447d691cf0fa8ef757dc365a3b7d8275d`  
-Candidate version: not assigned  
-Assessment date: 2026-10-02 (America/Chicago)  
+Candidate baseline: `origin/main` at `92eeafd9`
+Candidate version: not assigned
+Assessment date: 2026-10-02 (America/Chicago)
 Release owner: Founder / repository owner; formal GA council sign-off not complete
 
 ## Why

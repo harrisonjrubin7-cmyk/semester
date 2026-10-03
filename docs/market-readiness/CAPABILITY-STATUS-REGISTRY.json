@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "assessedAt": "2026-10-02",
-  "repositoryBaseline": "fc089134",
+  "repositoryBaseline": "92eeafd9",
   "allowedStatuses": ["BLOCKED", "INTERNAL", "DESIGN_PARTNER", "PILOT_READY", "GENERAL_AVAILABILITY", "ENTERPRISE_READY"],
   "claimRule": "No status above DESIGN_PARTNER is valid without named-tenant or production evidence outside the repository.",
   "capabilities": [

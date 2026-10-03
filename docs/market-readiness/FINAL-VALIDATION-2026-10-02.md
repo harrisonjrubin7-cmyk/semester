@@ -1,6 +1,6 @@
 # Final validation — 2026-10-02
 
-**Revision baseline:** `origin/main` / `HEAD` at `fc089134` with an uncommitted market-readiness worktree.
+**Revision baseline:** `origin/main` at `92eeafd9`; readiness changes committed on `codex/market-readiness-transformation`.
 **Decision:** validation supports continued repository work and accurate design-partner discovery; it does not support paid-pilot activation or GA.
 
 ## Green checks
