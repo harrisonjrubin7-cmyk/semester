@@ -42,15 +42,6 @@ const configuredEndpoint = (): string => {
   return base ? `${base}/functions/v1/lead-intake` : '';
 };
 
-const json = async (response: Response): Promise<Record<string, unknown>> => {
-  try {
-    const value: unknown = await response.json();
-    return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {};
-  } catch {
-    return {};
-  }
-};
-
 /**
  * Submit discovery metadata. This endpoint returns a receipt only; it cannot
  * authenticate ownership, activate a tenant, connect a provider, or retrieve
@@ -92,12 +83,21 @@ export async function submitInstitutionalIntake(
       }),
     });
   } catch {
+    clearTimeout(timeout);
     throw new Error('The request may or may not have arrived. Do not submit it again automatically; check before retrying.');
+  }
+
+  let body: Record<string, unknown> = {};
+  try {
+    const value: unknown = await response.json();
+    if (value && typeof value === 'object' && !Array.isArray(value)) body = value as Record<string, unknown>;
+  } catch {
+    if (controller.signal.aborted) {
+      throw new Error('The request may or may not have arrived. Do not submit it again automatically; check before retrying.');
+    }
   } finally {
     clearTimeout(timeout);
   }
-
-  const body = await json(response);
   if (response.ok && body.ok === true && typeof body.reference === 'string' && /^SL-[0-9A-F]{10}$/.test(body.reference)) {
     return { reference: body.reference };
   }

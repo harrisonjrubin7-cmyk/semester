@@ -78,4 +78,20 @@ describe('institutional intake client', () => {
     await uncertain;
     expect(fetcher).toHaveBeenCalledOnce();
   });
+
+  it('keeps the timeout active while an accepted response body is stalled', async () => {
+    vi.useFakeTimers();
+    const fetcher = vi.fn<typeof fetch>(async (_url, init) => new Response(new ReadableStream({
+      start(controller) {
+        init?.signal?.addEventListener('abort', () => controller.error(new DOMException('Aborted', 'AbortError')));
+      },
+    }), { status: 200 }));
+    const request = submitInstitutionalIntake(INPUT, {
+      endpoint: 'https://example.test/functions/v1/lead-intake', fetcher, timeoutMs: 25,
+    });
+    const uncertain = expect(request).rejects.toThrow(/may or may not have arrived/i);
+    await vi.advanceTimersByTimeAsync(25);
+    await uncertain;
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
 });
