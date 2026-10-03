@@ -474,6 +474,32 @@ describe('pilot and individual release profiles', () => {
     });
   });
 
+  it('expires evidence at the start of its expiry date and strictly before its timestamp boundary', () => {
+    const profile = RELEASE_PROFILES['individual-scale'];
+    const target = TARGETS[profile.id];
+    const expiring = (expiresAt: string) => technical(target).map((item) => ({ ...item, expiresAt }));
+
+    expect(evaluateReleaseProfile(profile.id, expiring('2026-10-02'), AS_OF, target).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(
+      profile.id,
+      expiring('2026-10-02T07:00:00-05:00'),
+      '2026-10-02T12:00:00Z',
+      target,
+    ).technicalStatus).toBe('not-ready');
+    expect(evaluateReleaseProfile(
+      profile.id,
+      expiring('2026-10-02T07:00:00.001-05:00'),
+      '2026-10-02T12:00:00Z',
+      target,
+    ).technicalStatus).toBe('ready');
+    expect(evaluateReleaseProfile(
+      profile.id,
+      expiring('2026-10-02T07:00:00+24:00'),
+      '2026-10-02T12:00:00Z',
+      target,
+    ).technicalStatus).toBe('not-ready');
+  });
+
   it('rejects future-dated evidence and lets the latest denial override an older current record', () => {
     const profile = RELEASE_PROFILES['individual-scale'];
     const target = TARGETS[profile.id];
