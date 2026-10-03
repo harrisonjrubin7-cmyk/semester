@@ -106,11 +106,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 91 | `docs/trust/INFORMATION-SECURITY-PROGRAM.md` | EXACT PRESENT | canonical evidence-classified program; repository controls remain distinct from external assurance and target operation |
 | 92 | `docs/trust/ACCESS-CONTROL-POLICY.md` | EXACT PRESENT | canonical least-privilege lifecycle; defined-path tests do not establish universal or operated access governance |
 | 93 | `docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md` | EXACT PRESENT | canonical identity lifecycle; implemented SSO/SCIM/MFA controls are not represented as live institutional operation |
-| 94 | `docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md` | NO CLOSE SOURCE | — |
-| 95 | `docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md` | NO CLOSE SOURCE | — |
-| 96 | `docs/trust/SECURE-DEVELOPMENT-LIFECYCLE.md` | NO CLOSE SOURCE | — |
-| 97 | `docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md` | NO CLOSE SOURCE | — |
-| 98 | `docs/trust/SECURITY-TESTING-PLAN.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/testing-verification-plan.md` (filename similarity 0.51; substantive review required) |
+| 94 | `docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md` | EXACT PRESENT | canonical identity/session control; selected implementation and attestation are separated from console proof and operated lifecycle evidence |
+| 95 | `docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md` | EXACT PRESENT | canonical cryptographic control; provider claims and scoped code do not establish complete encryption or key lifecycle operation |
+| 96 | `docs/trust/SECURE-DEVELOPMENT-LIFECYCLE.md` | EXACT PRESENT | canonical security lifecycle; extensive repository checks remain distinct from complete review, target testing and signed provenance |
+| 97 | `docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical finding lifecycle; scan inputs and internal targets do not establish sustained remediation or external assurance |
+| 98 | `docs/trust/SECURITY-TESTING-PLAN.md` | EXACT PRESENT | canonical layered test plan; repository tests, target DAST and independent penetration testing remain separately labeled |
 | 99 | `docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md` | NO CLOSE SOURCE | — |
 | 100 | `docs/trust/INCIDENT-RESPONSE-PLAN.md` | EXACT PRESENT | `docs/market-readiness/INCIDENT-RESPONSE-PLAN.md` |
 | 101 | `docs/trust/SECURITY-INCIDENT-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/INCIDENT-RESPONSE-RUNBOOK.md` (filename similarity 0.54; substantive review required) |
