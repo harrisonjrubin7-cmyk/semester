@@ -8,7 +8,7 @@ export interface SupportNoticeDeps {
   appUrl: string;
   userFromToken(token: string): Promise<string | null>;
   mayAnswer(userId: string): Promise<boolean>;
-  notice(ticketId: string): Promise<SupportNoticeTarget | null>;
+  notice(messageId: string): Promise<SupportNoticeTarget | null>;
   pending(): Promise<SupportNoticeTarget[]>;
   eligible(messageId: string, claimId: string): Promise<boolean>;
   send(input: { to: string; subject: string; text: string; idempotencyKey: string }): Promise<boolean>;
@@ -84,16 +84,16 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
   const user = await deps.userFromToken(token);
   if (!user || !(await deps.mayAnswer(user))) return reply(403, { error: 'Support access is required.' });
 
-  let ticketId = '';
+  let messageId = '';
   try {
-    const body = await req.json() as { ticket_id?: unknown };
-    if (typeof body.ticket_id === 'string') ticketId = body.ticket_id;
+    const body = await req.json() as { message_id?: unknown };
+    if (typeof body.message_id === 'string') messageId = body.message_id;
   } catch {
     return reply(400, { error: 'Send JSON.' });
   }
-  if (!UUID.test(ticketId)) return reply(400, { error: 'Choose a support ticket.' });
+  if (!UUID.test(messageId)) return reply(400, { error: 'Choose a support reply.' });
 
-  const target = await deps.notice(ticketId);
+  const target = await deps.notice(messageId);
   if (!target) return reply(409, { error: 'No support reply is ready to notify.' });
   const outcome = await sendTarget(deps, target);
   return outcome === 'accepted' ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });

@@ -138,7 +138,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage
       // must not invite an operator to retry and send a duplicate response.
-      await loadThread(ticketId, false);
+      if (wanted.current === ticketId) await loadThread(ticketId, false);
     } catch (error) {
       onStatus(said(error, 'Could not send the support reply.'));
     } finally {

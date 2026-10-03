@@ -74,6 +74,7 @@ declare
   due_hours numeric;
   pri text;
   operation uuid := gen_random_uuid();
+  notice_message uuid;
 begin
   ada := pg_temp.newuser('ada@tickets.example');
   ben := pg_temp.newuser('ben@tickets.example');
@@ -187,14 +188,15 @@ begin
   perform pg_temp.counted('retrying one reply operation does not duplicate its message', n, 1);
   select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
   perform pg_temp.counted('retrying one reply operation does not duplicate its email intent', n, 1);
+  select message_id into notice_message from public.support_notification_outbox where ticket_id = a11y;
   perform pg_temp.must_refuse('a student cannot claim support-notification work', ada,
-    format('select count(*) from public.claim_support_notifications(%L, 1)', a11y));
+    format('select count(*) from public.claim_support_notifications(%L, 1)', notice_message));
   execute 'set local role service_role';
-  select count(*) into n from public.claim_support_notifications(a11y, 1);
+  select count(*) into n from public.claim_support_notifications(notice_message, 1);
   execute 'reset role';
   perform pg_temp.counted('the delivery worker atomically claims the pending notice', n, 1);
   execute 'set local role service_role';
-  select count(*) into n from public.claim_support_notifications(a11y, 1);
+  select count(*) into n from public.claim_support_notifications(notice_message, 1);
   execute 'reset role';
   perform pg_temp.counted('an overlapping worker cannot claim the same notice', n, 0);
   select count(*) into n from public.support_notification_outbox
@@ -261,9 +263,12 @@ begin
   -- function take its per-account lock before it counts? Unlocked, concurrent
   -- calls each count the same rows and all of them insert.
   select count(*) into n from pg_catalog.pg_proc p
-   where p.oid = 'public.open_support_ticket(text, text, text, jsonb)'::regprocedure
+   where p.oid = 'public.open_support_ticket(text, text, text, jsonb, boolean)'::regprocedure
      and position('pg_advisory_xact_lock' in p.prosrc) between 1 and position('count(*)' in p.prosrc);
   perform pg_temp.counted('the daily limit is counted under a per-account lock', n, 1);
+  select count(*) into n from pg_catalog.pg_proc p
+   where p.oid = to_regprocedure('public.open_support_ticket(text, text, text, jsonb)');
+  perform pg_temp.counted('the legacy ticket-opening overload is removed', n, 0);
 
   raise notice 'support tickets: every check passed';
 end $$;

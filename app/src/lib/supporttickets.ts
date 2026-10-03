@@ -236,19 +236,24 @@ export async function supportReply(
   operationId: string,
 ): Promise<'accepted' | 'queued' | 'preference_off' | 'capped'> {
   const db = await cloud();
-  const { data: notificationOutcome, error } = await db.rpc('support_reply', {
+  const { data: notification, error } = await db.rpc('support_reply', {
     want_ticket: ticketId,
     want_body: body.trim(),
     want_status: status,
     want_operation: operationId,
   });
   if (error) throw fail(error, 'Could not send the support reply.');
+  const result = notification && typeof notification === 'object' && !Array.isArray(notification)
+    ? notification as { outcome?: unknown; message_id?: unknown }
+    : null;
+  const notificationOutcome = result?.outcome;
   if (notificationOutcome === 'preference_off' || notificationOutcome === 'capped') return notificationOutcome;
-  if (notificationOutcome !== 'queued') {
+  if (!result || notificationOutcome !== 'queued' || typeof result.message_id !== 'string') {
     throw new Error('The support reply was recorded, but its notification outcome is unavailable. Refresh before replying again.');
   }
+  const messageId = result.message_id;
   const { error: noticeError } = await db.functions.invoke('support-reply-notify', {
-    body: { ticket_id: ticketId },
+    body: { message_id: messageId },
   });
   // A 2xx response proves provider acceptance, not inbox delivery. Delivery
   // is established separately by provider events or an end-to-end receipt.

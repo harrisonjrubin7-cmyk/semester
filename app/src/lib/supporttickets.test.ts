@@ -45,6 +45,12 @@ describe('support tickets, client and migration', () => {
   it('never reads or writes a support table directly', () => {
     expect(client).not.toMatch(/\.from\('/);
   });
+
+  it('targets the exact outbox row returned by the reply RPC', () => {
+    expect(client).toMatch(/const messageId = result\.message_id/);
+    expect(client).toMatch(/body:\s*\{\s*message_id:\s*messageId\s*\}/);
+    expect(client).not.toMatch(/body:\s*\{\s*ticket_id:\s*ticketId\s*\}/);
+  });
 });
 
 describe('what goes with a ticket', () => {

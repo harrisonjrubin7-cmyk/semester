@@ -53,8 +53,8 @@ async function target(row: OutboxRow) {
   };
 }
 
-async function claim(ticketId: string | null, limit: number): Promise<OutboxRow[]> {
-  const { data, error } = await admin.rpc('claim_support_notifications', { want_ticket: ticketId, want_limit: limit });
+async function claim(messageId: string | null, limit: number): Promise<OutboxRow[]> {
+  const { data, error } = await admin.rpc('claim_support_notifications', { want_message: messageId, want_limit: limit });
   if (error) throw new Error('Could not claim the support-notification outbox.');
   return (data ?? []) as OutboxRow[];
 }
@@ -83,8 +83,8 @@ Deno.serve((req) => handleSupportNotice(req, {
     const { data, error: capabilityError } = await admin.from('role_capabilities').select('role').eq('capability', 'support:ticket').in('role', roles).limit(1);
     return !capabilityError && Boolean(data?.length);
   },
-  async notice(ticketId) {
-    const [row] = await claim(ticketId, 1);
+  async notice(messageId) {
+    const [row] = await claim(messageId, 1);
     return row ? target(row) : null;
   },
   async pending() {

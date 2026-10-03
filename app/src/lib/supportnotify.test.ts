@@ -4,6 +4,7 @@ import { handleSupportNotice, type SupportNoticeDeps } from '../../../supabase/f
 const origin = 'https://harrisonjrubin7-cmyk.github.io';
 const ticket = '123e4567-e89b-42d3-a456-426614174000';
 const claim = '223e4567-e89b-42d3-a456-426614174000';
+const message = '323e4567-e89b-42d3-a456-426614174000';
 
 function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
   return {
@@ -22,7 +23,7 @@ function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
   };
 }
 
-const request = (body: unknown = { ticket_id: ticket }) => new Request('https://project.supabase.co/functions/v1/support-reply-notify', {
+const request = (body: unknown = { message_id: message }) => new Request('https://project.supabase.co/functions/v1/support-reply-notify', {
   method: 'POST',
   headers: { Origin: origin, Authorization: 'Bearer session', 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
@@ -158,7 +159,7 @@ describe('support reply notification', () => {
     const local = new Request(request().url, {
       method: 'POST',
       headers: { Origin: 'http://localhost:5173', Authorization: 'Bearer session', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ticket_id: ticket }),
+      body: JSON.stringify({ message_id: message }),
     });
     expect((await handleSupportNotice(local, deps({ allowedOrigin: undefined }))).status).toBe(403);
     const response = await handleSupportNotice(local, deps({ allowedOrigin: undefined, devOrigin: '1' }));

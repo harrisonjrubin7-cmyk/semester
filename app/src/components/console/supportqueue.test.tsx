@@ -222,6 +222,41 @@ describe('the support operations queue', () => {
     expect(host.textContent).not.toContain('Open with support');
   });
 
+  it('keeps a newly selected conversation when the prior ticket finishes sending', async () => {
+    const first = '123e4567-e89b-12d3-a456-426614174000';
+    const second = '223e4567-e89b-12d3-a456-426614174000';
+    mock.queue.mockResolvedValue([
+      {
+        id: first, category: 'accessibility', subject: 'First ticket', status: 'open', priority: 'high',
+        createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null,
+        emailNoticeEnabled: true, overdue: true,
+      },
+      {
+        id: second, category: 'bug', subject: 'Second ticket', status: 'open', priority: 'normal',
+        createdAt: '2026-10-01T10:05:00Z', firstResponseDue: '2026-10-04T10:05:00Z', firstRespondedAt: null,
+        emailNoticeEnabled: true, overdue: false,
+      },
+    ]);
+    let finishReply: ((value: 'accepted') => void) | undefined;
+    let finishSecond: ((value: Awaited<ReturnType<typeof mock.thread>>) => void) | undefined;
+    mock.reply.mockImplementationOnce(() => new Promise((resolve) => { finishReply = resolve; }));
+    mock.thread.mockImplementation((id: string) => id === first
+      ? Promise.resolve([{ from: 'student', body: 'First thread.', at: '2026-10-01T10:00:00Z', context: null }])
+      : new Promise((resolve) => { finishSecond = resolve; }));
+
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'Replying to the first ticket.');
+    await click(button('Send support reply'));
+    await click(button('Open conversation'));
+    await act(async () => { finishReply?.('accepted'); });
+    await act(async () => { finishSecond?.([{ from: 'student', body: 'Second thread.', at: '2026-10-01T10:05:00Z', context: null }]); });
+
+    expect(host.textContent).toContain('Second ticket');
+    expect(host.textContent).toContain('Second thread.');
+    expect(mock.thread.mock.calls.filter(([id]) => id === first)).toHaveLength(1);
+  });
+
   it('shows an initial queue outage as retryable instead of as an empty queue', async () => {
     mock.queue.mockRejectedValueOnce(new Error('queue unavailable')).mockResolvedValueOnce([{
       id: '123e4567-e89b-12d3-a456-426614174000',

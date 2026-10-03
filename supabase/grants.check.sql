@@ -451,7 +451,6 @@ declare
     -- way in. Student routes act only on the caller's own tickets; the last
     -- three check `support:ticket` and return no column
     -- that names the student.
-    'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb)',
     'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb, want_email_notice boolean)',
     'my_support_tickets()',
     'my_support_email_notices()',

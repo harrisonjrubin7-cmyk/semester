@@ -44,7 +44,7 @@ grant select, insert, update, delete on table public.support_notification_outbox
 -- Claim before recipient lookup or provider delivery. SKIP LOCKED keeps the
 -- immediate operator attempt and the scheduled drain from ever owning the
 -- same row. A stale claim is recoverable after an interrupted worker.
-create or replace function public.claim_support_notifications(want_ticket uuid, want_limit integer)
+create or replace function public.claim_support_notifications(want_message uuid, want_limit integer)
 returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
 language sql volatile security invoker set search_path = '' as $$
   with due as (
@@ -54,7 +54,7 @@ language sql volatile security invoker set search_path = '' as $$
        and o.dead_lettered_at is null
        and o.next_attempt_at <= now()
        and (o.claimed_at is null or o.claimed_at < now() - interval '5 minutes')
-       and (want_ticket is null or o.ticket_id = want_ticket)
+       and (want_message is null or o.message_id = want_message)
      order by o.queued_at
      limit greatest(1, least(coalesce(want_limit, 100), 100))
      for update skip locked
@@ -94,12 +94,31 @@ create or replace function public.open_support_ticket(
 ) returns uuid language plpgsql security definer set search_path = '' as $$
 declare made uuid;
 begin
-  made := public.open_support_ticket(want_category, want_subject, want_body, want_context);
-  update public.support_tickets
-     set email_notice_enabled = coalesce(want_email_notice, false)
-   where id = made and student_id = (select auth.uid());
+  if (select auth.uid()) is null then
+    raise exception 'sign in first' using errcode = 'insufficient_privilege';
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('support_ticket:' || (select auth.uid())::text, 0));
+  if (select count(*) from public.support_tickets t
+       where t.student_id = (select auth.uid()) and t.created_at > now() - interval '1 day') >= 5 then
+    raise exception 'five questions a day is the limit; reply on an open one instead'
+      using errcode = 'check_violation';
+  end if;
+  insert into public.support_tickets
+    (student_id, category, subject, body, context, priority, first_response_due, email_notice_enabled)
+  values (
+    (select auth.uid()), want_category, want_subject, want_body, coalesce(want_context, '{}'::jsonb),
+    case when want_category in ('accessibility', 'privacy') then 'high' else 'normal' end,
+    now() + make_interval(hours => private.support_first_response_hours(want_category)),
+    coalesce(want_email_notice, false)
+  ) returning id into made;
   return made;
 end $$;
+
+-- The five-argument form is the only client entry point after this migration.
+-- Keeping the legacy overload callable would let a name-only security inventory
+-- silently validate the wrong body.
+drop function if exists public.open_support_ticket(text, text, text, jsonb);
 
 create or replace function public.my_support_email_notices()
 returns table (ticket_id uuid, enabled boolean)
@@ -130,10 +149,11 @@ begin
 end $$;
 
 drop function if exists public.support_reply(uuid, text, text);
+drop function if exists public.support_reply(uuid, text, text, uuid);
 create or replace function public.support_reply(
   want_ticket uuid, want_body text, want_status text, want_operation uuid
 )
-returns text language plpgsql security definer set search_path = '' as $$
+returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   made uuid;
   notices boolean;
@@ -166,7 +186,7 @@ begin
        and m.from_side = 'support'
        and m.client_operation_id = want_operation;
     return (
-      select m.support_notice_outcome
+      select jsonb_build_object('outcome', m.support_notice_outcome, 'message_id', m.id)
         from public.support_ticket_messages m where m.id = made
     );
   end if;
@@ -211,7 +231,7 @@ begin
     private.role_audit_sha256(made::text),
     jsonb_build_object('next_status', want_status, 'notification_queued', notice_outcome = 'queued')
   );
-  return notice_outcome;
+  return jsonb_build_object('outcome', notice_outcome, 'message_id', made);
 end $$;
 
 revoke all on function public.open_support_ticket(text, text, text, jsonb, boolean) from public, anon;
