@@ -179,7 +179,7 @@ test('runtime target records completed responses only for the required exact sur
   const server = createCompanySiteScanServer({ onResponse: receipt => receipts.push(receipt) });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
-  const paths = ['/', '/product', '/students', '/personal-academic-os', ...capturePaths];
+  const paths = ['/', '/product', '/students', '/personal-academic-os', ...companyAssets, ...capturePaths];
   for (const path of paths) {
     const response = await fetchTarget(server, `${path}?scan=not-recorded`);
     assert.deepEqual(receipts.at(-1), {
@@ -213,7 +213,7 @@ test('HTTPS works with the generated certificate trusted explicitly, without dis
 });
 
 const cleanReport = () => ({ scan: { id: '12345678-1234-1234-1234-123456789abc', host: 'https://localhost:4186', environment: 'CompanySiteCI', status: 'COMPLETED' }, findings: [], errors: [], warnings: [], thresholdResult: 'PASS' });
-const coveredUris = ['/', '/product', '/students', '/personal-academic-os', ...capturePaths];
+const coveredUris = ['/', '/product', '/students', '/personal-academic-os', ...companyAssets, ...capturePaths];
 const checkoutSha = 'a'.repeat(40);
 const healthyEvidence = () => ({ checkoutSha, records: expectedResponses().map(record => ({ ...record, checkoutSha, method: 'GET', status: 200 })) });
 
@@ -233,7 +233,7 @@ test('URI presence alone cannot pass without successful response receipts', () =
 test('clean complete scan evidence passes (reporting control)', () => {
   const result = evaluate(cleanReport(), { data: coveredUris }, coveredUris, healthyEvidence());
   assert.deepEqual(result.gaps, []);
-  assert.equal(result.paths.size, 16);
+  assert.equal(result.paths.size, 18);
   assert.deepEqual(result.untouched, []);
 });
 
@@ -243,7 +243,7 @@ test('native HawkScan URI envelope is bound to the expected scan', () => {
     graphqlOperations: [], jsonrpcMethods: [], scanId: id, sources: ['spider'], uris: coveredUris,
   }, coveredUris, healthyEvidence());
   assert.deepEqual(result.gaps, []);
-  assert.equal(result.paths.size, 16);
+  assert.equal(result.paths.size, 18);
 
   const wrongScan = evaluate(cleanReport(), {
     scanId: '87654321-1234-1234-1234-123456789abc', uris: coveredUris,
