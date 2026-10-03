@@ -111,11 +111,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 96 | `docs/trust/SECURE-DEVELOPMENT-LIFECYCLE.md` | EXACT PRESENT | canonical security lifecycle; extensive repository checks remain distinct from complete review, target testing and signed provenance |
 | 97 | `docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical finding lifecycle; scan inputs and internal targets do not establish sustained remediation or external assurance |
 | 98 | `docs/trust/SECURITY-TESTING-PLAN.md` | EXACT PRESENT | canonical layered test plan; repository tests, target DAST and independent penetration testing remain separately labeled |
-| 99 | `docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md` | NO CLOSE SOURCE | — |
-| 100 | `docs/trust/INCIDENT-RESPONSE-PLAN.md` | EXACT PRESENT | `docs/market-readiness/INCIDENT-RESPONSE-PLAN.md` |
-| 101 | `docs/trust/SECURITY-INCIDENT-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/INCIDENT-RESPONSE-RUNBOOK.md` (filename similarity 0.54; substantive review required) |
-| 102 | `docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md` | CANDIDATE SOURCE | `docs/market-readiness/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY.md` (filename similarity 0.84; substantive review required) |
-| 103 | `docs/trust/BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md` | NO CLOSE SOURCE | — |
+| 99 | `docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md` | EXACT PRESENT | canonical signal/alert control; hourly smoke and selected telemetry are separated from manual gaps, staffing, and target alert operation |
+| 100 | `docs/trust/INCIDENT-RESPONSE-PLAN.md` | EXACT PRESENT | canonical incident lifecycle; documented containment and communication sources do not establish staffed or target-exercised response |
+| 101 | `docs/trust/SECURITY-INCIDENT-RUNBOOK.md` | EXACT PRESENT | canonical first-response procedure; no 24/7 coverage, guaranteed clock, complete evidence, or customer acceptance is claimed |
+| 102 | `docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md` | EXACT PRESENT | canonical continuity/recovery plan; logical rehearsal remains distinct from provider backup restore and any RTO/RPO commitment |
+| 103 | `docs/trust/BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md` | EXACT PRESENT | canonical recovery runbook; disposable one-account logical evidence is not promoted into production-backup, PITR, or zero-loss proof |
 | 104 | `docs/trust/CHANGE-MANAGEMENT-POLICY.md` | CANDIDATE SOURCE | `docs/operating-model/CHANGE-MANAGEMENT.md` (filename similarity 0.72; substantive review required) |
 | 105 | `docs/trust/RELEASE-MANAGEMENT-POLICY.md` | NO CLOSE SOURCE | — |
 | 106 | `docs/trust/ASSET-INVENTORY.md` | CANDIDATE SOURCE | `FEATURE-INVENTORY.md` (filename similarity 0.46; substantive review required) |

@@ -68,7 +68,7 @@
 - [x] S02: trust documents 6–10; added evidence-bounded minimization, retention/deletion, export, rights-request, and consent/preference controls with explicit status, ownership, missing proof, and prohibited-claim ceilings on 2026-10-03.
 - [x] S03: trust documents 11–15; added evidence-bounded subprocessor, vendor-review, information-security, access-control, and IAM programs with status, ownership, missing proof, and prohibited-claim ceilings on 2026-10-03.
 - [x] S04: trust documents 16–20; added evidence-bounded password/session/MFA, encryption/key-management, secure-development, vulnerability-management, and security-testing controls with explicit status, owners, technical and operational evidence, missing proof, and claim ceilings on 2026-10-03.
-- [ ] S05: trust documents 21–25.
+- [x] S05: trust documents 21–25; added evidence-bounded logging/monitoring/alerting, incident plan/runbook, continuity/recovery plan, and backup/restore/rollback runbook with explicit staffing, target-exercise, provider-backup, and RTO/RPO blockers on 2026-10-03.
 - [ ] S06: trust documents 26–30.
 - [ ] S07: trust documents 31–34.
 - [ ] S08: AI-governance documents 35–39.
