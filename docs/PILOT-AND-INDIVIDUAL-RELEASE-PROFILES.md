@@ -12,7 +12,7 @@ They do not rename repository completion as deployment, tenant approval, certifi
 | Profile | Technical candidate | Rollout | Still required |
 | --- | --- | --- | --- |
 | individual-scale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, dependency:CAP-003, dependency:CAP-013, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037, dependency:external:approved catalog and degree-audit data, dependency:external:provider credentials and institution approval |
-| institutional-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, dependency:CAP-013, dependency:CAP-043, dependency:external:approved SIS registration adapter and write authorization, dependency:external:approved catalog and degree-audit data, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
+| institutional-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, dependency:CAP-013, dependency:CAP-043, dependency:external:approved catalog and degree-audit data, dependency:external:approved read-only SIS registration-readiness adapter, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
 
 This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.
 Both profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also
@@ -46,13 +46,13 @@ requires deployment and, for a pilot, named-tenant activation records that do no
 
 **Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
 
-**Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved SIS registration adapter and write authorization`, `external:approved catalog and degree-audit data`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
+**Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved catalog and degree-audit data`, `external:approved read-only SIS registration-readiness adapter`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
 
 **Allowed:** Path planning; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff
 
 **Forbidden:** enroll; waitlist; drop; withdraw; write to SIS; certify degree progress; act as system of record
 
-**Claim boundary:** Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, deployment, and approval records.
+**Claim boundary:** Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, agreed outcomes and exit criteria, deployment, and approval records.
 
 **Fallback:** Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.
 
@@ -74,7 +74,8 @@ requires deployment and, for a pilot, named-tenant activation records that do no
 ## Activation boundary
 
 - Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.
-- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, and a staffed support roster.
+- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a staffed support roster, and agreed baseline, success, review, expansion and exit criteria.
+- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.
 - Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.
 - Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant and cohort. Mixed-target evidence fails closed.
 - Canonical external and out-of-scope capability dependencies are activation requirements; green generic gates cannot bypass them.

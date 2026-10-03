@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CAPABILITIES } from '../rollout-capabilities';
 import { controlLine, renderedFrom, table } from '../ops/render';
 import {
@@ -9,6 +9,7 @@ import {
   REPOSITORY_RELEASE_EVIDENCE,
   TECHNICAL_RELEASE_GATES,
   evaluateReleaseProfile,
+  type ReleaseApproverRole,
   type ReleaseEvidence,
   type ReleaseProfileId,
   type ReleaseTarget,
@@ -24,12 +25,39 @@ const TARGETS: Record<ReleaseProfileId, ReleaseTarget> = {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
   },
 };
+const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly ReleaseApproverRole[]> = {
+  'deployed-exact-sha': ['operations-owner', 'security-owner'],
+  'production-smoke': ['operations-owner'],
+  'support-route-live': ['support-owner'],
+  'rollback-current': ['operations-owner', 'security-owner'],
+  'kill-switch-clear': ['operations-owner', 'security-owner'],
+  'named-tenant-agreement': ['executive-owner', 'security-owner'],
+  'named-data-owner': ['data-owner'],
+  'tenant-accessibility-review': ['accessibility-owner'],
+  'tenant-security-privacy-review': ['security-owner', 'privacy-owner'],
+  'approved-data-scope': ['data-owner', 'privacy-owner'],
+  'pilot-cohort-consent': ['privacy-owner'],
+  'pilot-support-roster': ['support-owner', 'operations-owner'],
+  'pilot-outcome-agreed': ['pilot-champion', 'product-owner'],
+};
 const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget): ReleaseEvidence => ({
-  gate, status: 'current', reference: `runtime://${gate}/verified`, checkedAt: AS_OF, expiresAt: '2026-11-01', target,
+  gate,
+  status: 'current',
+  reference: `trust-room://release/${gate}/verified`,
+  checkedAt: AS_OF,
+  expiresAt: '2026-11-01',
+  target,
+  approvals: TEST_APPROVERS[gate].map((role) => ({ role, subjectRef: `${role}-subject` })),
 });
 const dependency = (name: string, target: ReleaseTarget): ReleaseEvidence => ({
-  gate: `dependency:${name}`, status: 'current', reference: `runtime://dependency/${encodeURIComponent(name)}`,
-  checkedAt: AS_OF, expiresAt: '2026-11-01', target,
+  gate: `dependency:${name}`, status: 'current', reference: `vault://release/dependency/${encodeURIComponent(name)}`,
+  checkedAt: AS_OF,
+  expiresAt: '2026-11-01',
+  target,
+  approvals: [
+    { role: 'product-owner', subjectRef: 'product-owner-subject' },
+    { role: 'security-owner', subjectRef: 'security-owner-subject' },
+  ],
 });
 const technical = (target: ReleaseTarget): ReleaseEvidence[] => REPOSITORY_RELEASE_EVIDENCE.map((item) => ({
   ...item,
@@ -60,8 +88,12 @@ describe('pilot and individual release profiles', () => {
     expect(pilot.capabilityIds).toContain('CAP-050');
     expect(pilot.allowedOperations.join(' ')).toMatch(/planning|comparison|validation/i);
     expect(pilot.forbiddenOperations).toEqual(expect.arrayContaining(['enroll', 'drop', 'write to SIS', 'act as system of record']));
-    expect(pilot.requiredActivationGates).toEqual(expect.arrayContaining(['approved-data-scope', 'kill-switch-clear']));
+    expect(pilot.requiredActivationGates).toEqual(expect.arrayContaining([
+      'approved-data-scope', 'kill-switch-clear', 'pilot-outcome-agreed',
+    ]));
     expect(RELEASE_PROFILES['individual-scale'].requiredActivationGates).toContain('kill-switch-clear');
+    expect(pilot.requiredDependencies).toContain('external:approved read-only SIS registration-readiness adapter');
+    expect(pilot.requiredDependencies).not.toContain('external:approved SIS registration adapter and write authorization');
   });
 
   it('never turns repository references without exact-SHA run evidence into readiness or authorization', () => {
@@ -87,6 +119,31 @@ describe('pilot and individual release profiles', () => {
       expect(authorized.claim).not.toMatch(/still requires/i);
       expect(evaluateReleaseProfile(profile, evidence.slice(0, -1), AS_OF, target).rolloutStatus).toBe('held');
     }
+  });
+
+  it('requires secure approval provenance and the complete approver-role set', () => {
+    const profile = RELEASE_PROFILES['institutional-pilot'];
+    const target = TARGETS[profile.id];
+    const evidence = [
+      ...technical(target),
+      ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+      ...profile.requiredDependencies.map((item) => dependency(item, target)),
+    ];
+    const agreementIndex = evidence.findIndex((item) => item.gate === 'named-tenant-agreement');
+    const insecure = evidence.with(agreementIndex, { ...evidence[agreementIndex], reference: 'x' });
+    expect(evaluateReleaseProfile(profile, insecure, AS_OF, target).rolloutStatus).toBe('held');
+    const missingRole = evidence.with(agreementIndex, {
+      ...evidence[agreementIndex], approvals: [{ role: 'executive-owner', subjectRef: 'executive-owner-subject' }],
+    });
+    expect(evaluateReleaseProfile(profile, missingRole, AS_OF, target).rolloutStatus).toBe('held');
+    const sameApprover = evidence.with(agreementIndex, {
+      ...evidence[agreementIndex],
+      approvals: [
+        { role: 'executive-owner', subjectRef: 'same-subject' },
+        { role: 'security-owner', subjectRef: 'same-subject' },
+      ],
+    });
+    expect(evaluateReleaseProfile(profile, sameApprover, AS_OF, target).rolloutStatus).toBe('held');
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {
@@ -176,6 +233,34 @@ describe('pilot and individual release profiles', () => {
     expect(evaluateReleaseProfile(individual, evidence, AS_OF, { ...target, deployedSha: staleSha }).technicalStatus).toBe('not-ready');
   });
 
+  it('keeps exact-SHA technical readiness separate from activation target completeness', () => {
+    const profile = RELEASE_PROFILES['institutional-pilot'];
+    const target = TARGETS[profile.id];
+    const incomplete = { ...target, configurationVersion: '', tenantId: undefined, cohortId: undefined };
+    expect(evaluateReleaseProfile(profile, technical(target), AS_OF, incomplete)).toMatchObject({
+      technicalStatus: 'ready',
+      rolloutStatus: 'held',
+      targetBound: false,
+    });
+  });
+
+  it('uses the current instant for live decisions instead of the end of the UTC day', () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime('2026-10-02T08:00:00Z');
+      const profile = RELEASE_PROFILES['individual-scale'];
+      const target = TARGETS[profile.id];
+      const evidence = technical(target).map((item) => ({
+        ...item,
+        checkedAt: '2026-10-02T20:00:00Z',
+        expiresAt: '2026-10-03T00:00:00Z',
+      }));
+      expect(evaluateReleaseProfile(profile, evidence, undefined, target).technicalStatus).toBe('not-ready');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps prohibited institutional and financial claims out of broad individual use', () => {
     const individual = RELEASE_PROFILES['individual-scale'];
     expect(individual.forbiddenOperations).toEqual(expect.arrayContaining(['official registration', 'financial aid', 'payroll', 'general ledger']));
@@ -239,7 +324,8 @@ function render(): string {
     ])), '',
     '## Activation boundary', '',
     '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
-    '- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, and a staffed support roster.',
+    '- An institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a staffed support roster, and agreed baseline, success, review, expansion and exit criteria.',
+    '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
     '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant and cohort. Mixed-target evidence fails closed.',
     '- Canonical external and out-of-scope capability dependencies are activation requirements; green generic gates cannot bypass them.',

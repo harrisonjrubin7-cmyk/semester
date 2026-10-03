@@ -43,6 +43,8 @@ export interface ReleaseEvidence {
   /** Exact source commit exercised by a technical gate. */
   sourceSha?: string;
   target?: ReleaseTarget;
+  /** Named approval functions and distinct subjects represented by the secure decision artifact. */
+  approvals?: readonly { role: ReleaseApproverRole; subjectRef: string }[];
 }
 
 export const ACTIVATION_GATES = [
@@ -58,9 +60,22 @@ export const ACTIVATION_GATES = [
   'approved-data-scope',
   'pilot-cohort-consent',
   'pilot-support-roster',
+  'pilot-outcome-agreed',
 ] as const;
 
 export type ActivationGate = (typeof ACTIVATION_GATES)[number];
+export const RELEASE_APPROVER_ROLES = [
+  'product-owner',
+  'data-owner',
+  'accessibility-owner',
+  'security-owner',
+  'privacy-owner',
+  'support-owner',
+  'operations-owner',
+  'executive-owner',
+  'pilot-champion',
+] as const;
+export type ReleaseApproverRole = (typeof RELEASE_APPROVER_ROLES)[number];
 export type ReleaseProfileId = 'individual-scale' | 'institutional-pilot';
 
 export interface ReleaseProfile {
@@ -91,6 +106,9 @@ const PILOT_CAPABILITIES = [
   'CAP-044', 'CAP-045', 'CAP-050',
 ] as const;
 
+const SIS_WRITE_AUTHORITY = 'external:approved SIS registration adapter and write authorization';
+const SIS_READ_AUTHORITY = 'external:approved read-only SIS registration-readiness adapter';
+
 function unsatisfiedCapabilityDependencies(capabilityIds: readonly `CAP-${string}`[]): string[] {
   const selected = new Set<string>(capabilityIds);
   const byId = new Map<string, (typeof CAPABILITIES)[number]>(
@@ -114,6 +132,13 @@ function unsatisfiedCapabilityDependencies(capabilityIds: readonly `CAP-${string
   return [...required].sort();
 }
 
+function planningOnlyPilotDependencies(): string[] {
+  return unsatisfiedCapabilityDependencies(PILOT_CAPABILITIES)
+    .filter((dependency) => dependency !== SIS_WRITE_AUTHORITY)
+    .concat(SIS_READ_AUTHORITY)
+    .sort();
+}
+
 export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>> = {
   'individual-scale': {
     id: 'individual-scale',
@@ -135,11 +160,11 @@ export const RELEASE_PROFILES: Readonly<Record<ReleaseProfileId, ReleaseProfile>
     capabilityIds: PILOT_CAPABILITIES,
     requiredTechnicalGates: TECHNICAL_RELEASE_GATES,
     requiredActivationGates: ACTIVATION_GATES,
-    requiredDependencies: unsatisfiedCapabilityDependencies(PILOT_CAPABILITIES),
+    requiredDependencies: planningOnlyPilotDependencies(),
     defaultOff: true,
     allowedOperations: ['Path planning', 'term planning', 'schedule comparison', 'conflict validation', 'advisor agenda', 'official-system handoff'],
     forbiddenOperations: ['enroll', 'waitlist', 'drop', 'withdraw', 'write to SIS', 'certify degree progress', 'act as system of record'],
-    claimBoundary: 'Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, deployment, and approval records.',
+    claimBoundary: 'Technically prepared for a controlled pilot; activation still requires the named tenant, cohort, data scope, reviews, support roster, agreed outcomes and exit criteria, deployment, and approval records.',
     authorizedClaim: 'Authorized only for the evaluated named tenant, cohort, deployment, configuration, and planning-only pilot scope.',
     fallback: 'Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.',
   },
@@ -180,6 +205,38 @@ function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget):
 }
 
 const SHA = /^[0-9a-f]{40}$/i;
+const SECURE_REFERENCE = /^(trust-room|vault|ticket):\/\/[^\s]+$/;
+const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApproverRole[]>> = {
+  'deployed-exact-sha': ['operations-owner', 'security-owner'],
+  'production-smoke': ['operations-owner'],
+  'support-route-live': ['support-owner'],
+  'rollback-current': ['operations-owner', 'security-owner'],
+  'kill-switch-clear': ['operations-owner', 'security-owner'],
+  'named-tenant-agreement': ['executive-owner', 'security-owner'],
+  'named-data-owner': ['data-owner'],
+  'tenant-accessibility-review': ['accessibility-owner'],
+  'tenant-security-privacy-review': ['security-owner', 'privacy-owner'],
+  'approved-data-scope': ['data-owner', 'privacy-owner'],
+  'pilot-cohort-consent': ['privacy-owner'],
+  'pilot-support-roster': ['support-owner', 'operations-owner'],
+  'pilot-outcome-agreed': ['pilot-champion', 'product-owner'],
+};
+
+function hasApprovalProvenance(item: ReleaseEvidence): boolean {
+  if ((TECHNICAL_RELEASE_GATES as readonly string[]).includes(item.gate)) return item.reference.trim().length > 0;
+  if (!SECURE_REFERENCE.test(item.reference)) return false;
+  const required = item.gate.startsWith('dependency:')
+    ? ['product-owner', 'security-owner'] as const
+    : APPROVERS_BY_GATE[item.gate as ActivationGate];
+  const approvals = item.approvals ?? [];
+  if (approvals.some((approval) => approval.subjectRef.trim().length === 0)) return false;
+  const requiredSet = new Set<ReleaseApproverRole>(required);
+  const supplied = new Set(approvals.map((approval) => approval.role));
+  const subjects = new Set(approvals
+    .filter((approval) => requiredSet.has(approval.role))
+    .map((approval) => approval.subjectRef));
+  return required.every((role) => supplied.has(role)) && subjects.size >= required.length;
+}
 
 /** Parse date-only or UTC ISO evidence without relying on string ordering. */
 function evidenceTime(value: string, endOfDate = false): number | null {
@@ -216,14 +273,14 @@ function counts(
   const latestDate = eligible[0].checked;
   const latest = eligible.filter(({ checked }) => checked === latestDate);
   return latest.every(({ item, expires }) => item.status === 'current'
-    && item.reference.trim().length > 0
+    && hasApprovalProvenance(item)
     && (expires ?? -1) >= decisionTime);
 }
 
 export function evaluateReleaseProfile(
   profile: ReleaseProfile,
   evidence: readonly ReleaseEvidence[],
-  asOf = new Date().toISOString().slice(0, 10),
+  asOf = new Date().toISOString(),
   target?: ReleaseTarget,
 ): ReleaseProfileDecision {
   const expectedEnvironment = profile.id === 'individual-scale' ? 'production' : 'pilot';
@@ -235,7 +292,8 @@ export function evaluateReleaseProfile(
     && (profile.id === 'institutional-pilot'
       ? (target.tenantId?.trim() && target.cohortId?.trim())
       : target.tenantId === undefined && target.cohortId === undefined));
-  const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !targetBound
+  const technicalTargetBound = Boolean(target && SHA.test(target.deployedSha));
+  const missingTechnical = profile.requiredTechnicalGates.filter((gate) => !technicalTargetBound
     || !counts(evidence, gate, asOf, undefined, target?.deployedSha));
   const missingActivation = profile.requiredActivationGates.filter((gate) => !targetBound || !counts(evidence, gate, asOf, target));
   const missingDependencies = profile.requiredDependencies.filter((dependency) => !targetBound
