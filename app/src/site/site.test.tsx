@@ -149,6 +149,19 @@ describe('what the site says', () => {
     expect(all).toContain('No institutional connection is live today');
   });
 
+  it('presents official-system replacement only as a separately approved future cutover', () => {
+    const institutions = pages.find((p) => p.route.path === '/institutions/')!.html;
+    const pricing = pages.find((p) => p.route.path === '/pricing/')!.html;
+
+    expect(institutions).toContain('Pilot a student action layer beside existing systems');
+    expect(institutions).toContain('could an institution separately authorize Semester');
+    expect(institutions).not.toContain('Replace the LMS gradebook');
+    expect(institutions).toContain('off until separately approved for the institution');
+    expect(pricing).toContain('alongside existing systems');
+    expect(pricing).toContain('off until an institution-approved cutover');
+    expect(pricing).not.toContain('Native LMS and gradebook of record');
+  });
+
   // The five claims the reinforcement briefs of 29 September say never to
   // make without an agreement, evidence or an auditable scope behind them.
   const OVERCLAIMS: readonly [string, RegExp][] = [

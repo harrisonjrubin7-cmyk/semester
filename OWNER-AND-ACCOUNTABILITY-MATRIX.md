@@ -1,6 +1,6 @@
 # Semester owner and accountability matrix
 
-**Version:** 0.1
+**Version:** 0.2
 **Assessment date:** 2026-10-03 (America/Chicago)
 **Document owner:** Harrison Rubin, Founder/CEO, until delegated
 **Review cadence:** weekly during finalization; before every launch decision; quarterly after stable operation
@@ -46,6 +46,18 @@ Harrison Rubin is the named primary for every company-side seat below under the 
 - Security, privacy, accessibility, and data-rights protections are not tradable for price or schedule.
 - A missing signature, primary/backup, tested channel, or scope authority is a NO-GO for the affected motion.
 - The customer controls customer-side authorization; Semester cannot substitute its own approval.
+
+## Final motion accountability
+
+| Motion | Company accountable primary | Required independent/customer acceptance | Current authority state |
+| --- | --- | --- | --- |
+| invitation-only individual validation | Harrison Rubin — Product/Privacy/Support coordination | qualified legal and accessibility review plus representative-user acceptance as applicable | **CONDITIONAL**; activation conditions remain open |
+| non-activation design-partner engagement | Harrison Rubin — Founder/Revenue/Product | prospect controls its own name, statements and confidential information; no customer approval implied | **AUTHORIZED ONLY WITHIN THE NON-ACTIVATION BOUNDARY** in [`GO-NO-GO-DECISION.md`](GO-NO-GO-DECISION.md) |
+| institutional activation | Harrison Rubin — cross-functional company primary | named sponsor, champion, IT, privacy, security, accessibility and procurement/counsel acceptance | **NO-GO**; all customer seats unidentified |
+| paid pilot | Harrison Rubin — Founder/Deal Desk/Finance coordination | counsel, tax/accounting, insurance, independent assurance and customer signatories | **NO-GO** |
+| broad enterprise sale | Harrison Rubin — Founder/Revenue | repeated customer, operational and independent evidence | **NO-GO** |
+
+The evidence producer, evidence acceptor, risk owner and launch decision-maker may be different people. Harrison may coordinate and produce internal evidence but cannot act as his own qualified independent assessor, licensed counsel, customer approver or proof of backup coverage.
 
 ## Required founder confirmations
 

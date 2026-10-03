@@ -1,6 +1,6 @@
 # Semester launch risk register
 
-**Version:** 0.1
+**Version:** 0.2
 **Assessment date:** 2026-10-03 (America/Chicago)
 **Owner:** Harrison Rubin, Founder/Business Operations primary; backup `UNASSIGNED`
 **Approval authority:** Founder/CEO plus the accountable domain owner; customer authority for customer-controlled risks
@@ -27,12 +27,12 @@ This register is conservative by design. A risk closes only when the linked evid
 | FR-006 | P0 | Operations | Harrison Rubin is primary across company-side seats, but backups, rota, coverage calendar, independent review and live escalation evidence are absent | Harrison Rubin | named/trained backups, coverage calendar, tested channels, escalation exercise | any supported launch |
 | FR-007 | P1 | Accessibility | Automated evidence exists, but qualified critical-path manual assistive-technology evaluation and approved ACR/statement are absent | Accessibility owner + counsel | qualified report; remediation; approved claim/status language | broad individual, paid pilot |
 | FR-008 | P1 | Commercial/finance | Pricing, payment production configuration, tax/nexus, refunds, cancellation, renewal, insurance, and revenue recognition are unapproved or unknown | Founder + finance + counsel | approved price book and policies; processor evidence; tax/accounting and insurance decisions | accepting payment, contracts |
-| FR-009 | P1 | Release quality | Evidence sources conflict: the 2026-10-02 final validation records red exact full/shuffle commands, while another scorecard states full success | Engineering owner | rerun immutable candidate matrix; reconcile or supersede contradictory records; record exact commands/results | any release decision |
+| FR-009 | P1 | Release quality | P07 reconciled the earlier conflicting full/shuffle records; after current-main reconciliation, local commit `125524a3` passed focused claims, lint, type/build and 1,262 test files, but it is unpublished and has no exact-SHA hosted-CI/DAST or environment-dependent record | Engineering owner | publish/freeze an authorized candidate; rerun hosted CI and every environment-dependent gate; bind evidence to the SHA | any release decision |
 | FR-010 | P1 | Privacy/data | Retention, legal hold, backup deletion, request staffing, vendor terms, minor posture, and production data-flow verification are incomplete | Privacy/data owner + counsel | approved data inventory/flow/register; retention/legal-hold decisions; request/offboarding drills | broad individual, paid pilot |
 | FR-011 | P1 | Monitoring/support | A 2026-10-03 public production smoke passed, but institutional telemetry, alert delivery, retained history, on-call/support channel, privacy-safe logging, service communications, and response operation are not accepted | Harrison Rubin primary; backup unassigned | target-environment alert tests; staffed rota; support/incident exercises; approved commitments | supported production launch |
 | FR-012 | P1 | Product/customer | Representative student/admin UAT and agreed outcome baseline do not exist | Product + customer champion | signed critical-flow UAT; accessibility/role acceptance; baseline scorecard and guardrails | institutional activation |
 | FR-013 | P2 | Performance | Build/chunk warnings and limited real-device/route coverage remain despite budget evidence | Frontend/performance owner | agreed performance budgets; representative device/network results; regression gate | scaled acquisition/pilot |
-| FR-014 | P2 | Documentation | 210 of 232 requested exact basenames were absent at planning time; multiple overlapping sources can drift | Document-control owner | reconcile crosswalk; designate canonical sources; link/claim/contradiction checks | procurement consistency |
+| FR-014 | P2 | Documentation | All 232 requested exact filenames are reconciled after F02, but canonical sources, executive indexes and older overlapping readiness records can drift | Document-control owner | retain canonical/index designations; automate link, claim, freshness and contradiction checks; review on material change | procurement consistency |
 | FR-015 | P2 | Vendor/supply chain | Code inventory does not prove executed contracts, assurance, regions, access ownership, or renewal monitoring | Vendor management + security/privacy | vendor inventory; contracts/DPAs; assurance reviews; owner/renewal/offboarding records | affected production features |
 | FR-016 | P3 | Scale/maturity | No repeatable multi-customer implementation, capacity, renewal, reference, or expansion evidence exists | Executive + revenue + success | multiple validated pilots, capacity results, renewals, permissioned references | broad enterprise sale |
 
@@ -47,4 +47,4 @@ Stop or withhold activation if any of the following occurs: suspected secret exp
 - Paid institutional pilot: **RED / NO-GO**.
 - Broad enterprise sale: **RED / NO-GO**.
 
-See the [requested-deliverable crosswalk](docs/finalization/REQUESTED-DELIVERABLE-CROSSWALK.md) and [external evidence queue](docs/finalization/EXTERNAL-EVIDENCE-QUEUE.md).
+See the [go/no-go decision](GO-NO-GO-DECISION.md), [executive evidence register](EVIDENCE-REGISTER.md), [requested-deliverable crosswalk](docs/finalization/REQUESTED-DELIVERABLE-CROSSWALK.md), and [external evidence queue](docs/finalization/EXTERNAL-EVIDENCE-QUEUE.md).

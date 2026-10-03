@@ -1,23 +1,27 @@
-# Pilot and individual release profiles
+# Market-motion release profiles
 
 <!-- Rendered from app/src/lib/governance/release-profiles.ts by release-profiles.test.ts. Edit the data, then run `npm run registers` from app/. -->
 
 > Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../SEMESTER-OPERATING-SYSTEM.md).
 
-These executable profiles define the next honest release targets: broad individual use and bounded manual-data or connected institutional pilots.
-They do not rename repository completion as deployment, tenant approval, certification, or live operation.
+These executable profiles define an evidence-gated path from invitation-only individual validation through bounded pilots and enterprise contracting.
+They do not rename repository completion as deployment, participant or tenant approval, commercial authority, independent assurance, or live operation.
 
 ## Repository snapshot decision (2026-10-02)
 
 | Profile | Technical candidate | Rollout | Still required |
 | --- | --- | --- | --- |
 | individual-scale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, dependency:CAP-003, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037 |
+| invitation-only-individual-validation | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, participant-terms-and-consent, validation-support-roster, validation-outcome-agreed, qualified-accessibility-conformance, validation-launch-decision, dependency:CAP-003, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037 |
 | institutional-manual-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision |
 | institutional-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision, dependency:CAP-013, dependency:CAP-043, dependency:external:approved catalog and degree-audit data, dependency:external:approved read-only SIS registration-readiness adapter, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
+| paid-institutional-manual-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision, design-partner-activation-and-measured-closeout, counsel-approved-commercial-paper, pricing-and-signing-authority, tax-accounting-and-payment-controls, insurance-decision-current, customer-purchase-and-billing-authorization, target-dast-clean-rescan, independent-security-assurance, qualified-accessibility-conformance |
+| paid-institutional-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision, design-partner-activation-and-measured-closeout, counsel-approved-commercial-paper, pricing-and-signing-authority, tax-accounting-and-payment-controls, insurance-decision-current, customer-purchase-and-billing-authorization, target-dast-clean-rescan, independent-security-assurance, qualified-accessibility-conformance, dependency:CAP-013, dependency:CAP-043, dependency:external:approved catalog and degree-audit data, dependency:external:approved read-only SIS registration-readiness adapter, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
+| broad-enterprise-sale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision, design-partner-activation-and-measured-closeout, counsel-approved-commercial-paper, pricing-and-signing-authority, tax-accounting-and-payment-controls, insurance-decision-current, customer-purchase-and-billing-authorization, target-dast-clean-rescan, independent-security-assurance, qualified-accessibility-conformance, repeatable-multi-customer-deployments, capacity-and-error-budget-accepted, reference-and-claims-permission, dependency:CAP-013, dependency:CAP-043, dependency:external:approved catalog and degree-audit data, dependency:external:approved read-only SIS registration-readiness adapter, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
 
 This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.
 All profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also
-requires deployment and, for a pilot, named-tenant activation records that do not live in source code.
+requires deployment and the profile-specific participant, tenant, commercial, assurance, and approval records that do not live in source code.
 
 ## Scope and boundaries
 
@@ -38,6 +42,24 @@ requires deployment and, for a pilot, named-tenant activation records that do no
 **Claim boundary:** Ready for broad individual use only after exact-SHA deployment and production gates pass; no institutional connection, certification, or system-of-record claim.
 
 **Fallback:** Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.
+
+### invitation-only-individual-validation
+
+**Audience:** A named, invitation-only cohort using Semester without payment or institutional activation
+
+**Default:** off
+
+**Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
+
+**Unsatisfied capability dependencies:** `CAP-003`, `CAP-034`, `CAP-035`, `CAP-036`, `CAP-037`
+
+**Allowed:** invitation-only unpaid validation; personal planning; source-aware course organization; export; account deletion
+
+**Forbidden:** paid promotion; official registration; institutional data access; institutional record writes; outcome claims; act as a staffed institutional service
+
+**Claim boundary:** Conditional candidate for one named, invitation-only unpaid cohort; authorization requires participant terms, support, outcome, production, and launch-decision evidence bound to that cohort.
+
+**Fallback:** Close invitations, preserve participant export and deletion, and return to internal validation.
 
 ### institutional-manual-pilot
 
@@ -75,6 +97,60 @@ requires deployment and, for a pilot, named-tenant activation records that do no
 
 **Fallback:** Disable the pilot entitlement and all institutional reads; retain device-first planning and links to official systems.
 
+### paid-institutional-manual-pilot
+
+**Audience:** One named institution and cohort purchasing a bounded pilot using student-confirmed manual course data
+
+**Default:** off
+
+**Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`
+
+**Unsatisfied capability dependencies:** none
+
+**Allowed:** contracted manual-data pilot; student-confirmed manual import; manual course and deadline correction; personal planning; export; account deletion; authorized billing
+
+**Forbidden:** unapproved charge; institutional reads; institutional writes; SSO or provisioning claims; official registration; official grading; degree certification; act as system of record
+
+**Claim boundary:** Commercially authorizable only for a manual-data pilot after the complete bounded-pilot package, independent security and accessibility assurance, and commercial authority are current for the named target; no institutional connection is implied.
+
+**Fallback:** Stop billing and activation, disable the pilot entitlement, preserve required exports, and execute the contracted offboarding path.
+
+### paid-institutional-pilot
+
+**Audience:** One named institution and cohort purchasing a bounded planning-only pilot
+
+**Default:** off
+
+**Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
+
+**Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved catalog and degree-audit data`, `external:approved read-only SIS registration-readiness adapter`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
+
+**Allowed:** contracted planning-only pilot; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff; authorized billing
+
+**Forbidden:** unapproved charge; enroll; waitlist; drop; withdraw; write to SIS; certify degree progress; act as system of record
+
+**Claim boundary:** Commercially authorizable only after the complete bounded-pilot package, independent security and accessibility assurance, and counsel, signing, price, tax, accounting, payment, insurance, customer-purchase, and billing evidence are current for the named target.
+
+**Fallback:** Stop billing and activation, disable the tenant entitlement and institutional reads, preserve required exports, and execute the contracted offboarding path.
+
+### broad-enterprise-sale
+
+**Audience:** Enterprise institutions purchasing the evaluated, repeatable planning-only deployment scope
+
+**Default:** off
+
+**Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
+
+**Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved catalog and degree-audit data`, `external:approved read-only SIS registration-readiness adapter`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
+
+**Allowed:** contracted enterprise planning deployment; repeatable implementation; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff; authorized billing
+
+**Forbidden:** unapproved charge; enroll; waitlist; drop; withdraw; write to SIS; certify degree progress; replace the SIS or LMS; act as system of record
+
+**Claim boundary:** Enterprise sale is authorizable only for the evaluated scope after paid-pilot controls, repeated deployments, capacity evidence, independent security and accessibility assurance, and claim-specific customer permission are current.
+
+**Fallback:** Suspend new sales and rollout, stop affected billing and activation, disable target entitlements, preserve exports, and execute customer-specific rollback and offboarding.
+
 ## Technical evidence contract
 
 | Gate | Repository reference | Checked | Expires |
@@ -94,7 +170,10 @@ requires deployment and, for a pilot, named-tenant activation records that do no
 
 - This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.
 - Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.
+- Invitation-only unpaid validation additionally requires one named cohort, participant terms and consent, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.
 - Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.
+- A paid pilot additionally requires an approved design-partner activation and measured closeout, a clean target-bound DAST rescan, independent security assurance, qualified accessibility conformance, counsel-approved commercial paper, pricing and signing authority, tax/accounting/payment controls, a current insurance decision, and customer purchase and billing authorization.
+- A broad enterprise sale additionally requires repeated customer deployments, accepted capacity and error budgets, independent security assurance, qualified accessibility conformance, and claim-specific reference permission.
 - Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.
 - Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.
 - Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant, cohort and explicit manual or connected data mode. Mixed-target evidence fails closed.

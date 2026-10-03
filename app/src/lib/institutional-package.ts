@@ -9,9 +9,9 @@
 
 export const INSTITUTIONAL_PACKAGE = {
   name: 'Semester Institutional',
-  promise: 'One institutional agreement for the student operating system, native LMS and gradebook, and the work required to adopt them safely.',
+  promise: 'One proposed institutional agreement for a student action layer and the controlled work required before any broader migration.',
   includes: [
-    'Native LMS, accessible course workspace, assessments, feedback and gradebook of record',
+    'Accessible course, assessment, feedback and gradebook capabilities, off until separately approved for the institution',
     'Student planning, consented advisor agendas, registration readiness, support, community and pathways',
     'Institution-managed resources, policies, service routing and student communications',
     'Student-controlled credential wallet and privacy-thresholded institutional analytics',
