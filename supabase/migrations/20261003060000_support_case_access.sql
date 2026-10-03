@@ -20,6 +20,9 @@ create index support_access_by_ticket_supporter
   on public.support_access_grant (ticket_id, supporter_id, created_at desc)
   where ticket_id is not null;
 
+create index support_access_ticket_student_fk_idx
+  on public.support_access_grant (ticket_id, student_id);
+
 create or replace function private.assert_support_grant()
 returns trigger
 language plpgsql
