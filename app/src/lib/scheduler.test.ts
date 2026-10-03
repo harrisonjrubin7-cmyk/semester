@@ -189,6 +189,9 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/join public\.contracts c/);
     expect(migration).toMatch(/c\.kind = 'order_form'/);
     expect(migration).toMatch(/c\.status = 'signed'/);
+    expect(migration).toMatch(/c\.signed_at <= t\.created_at/);
+    expect(migration).toMatch(/c\.effective_at <= t\.created_at/);
+    expect(migration).toMatch(/c\.ends_at > t\.created_at/);
     expect(migration).toMatch(/t\.status in \('resolved', 'closed'\)[\s\S]*?t\.tenant_id is null/);
     expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
     expect(migration).toMatch(/active legal hold'[\s\S]*?errcode = '55006'/);

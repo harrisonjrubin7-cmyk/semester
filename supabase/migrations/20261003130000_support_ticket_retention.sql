@@ -16,8 +16,10 @@ alter table public.support_tickets
   add column if not exists tenant_id text;
 
 -- Serialize the one-time snapshot with membership and commercial-association
--- changes. Once this update completes, a deployed ticket carries its own
--- durable tenant association while ordinary school-domain members stay null.
+-- changes. Classify legacy tickets against the signed contract window that
+-- existed when each ticket was opened, not the deployment state today. Once
+-- this update completes, a deployed ticket carries its own durable tenant
+-- association while ordinary school-domain members stay null.
 do $$
 begin
   lock table public.profiles in share mode;
@@ -35,9 +37,10 @@ begin
          join public.contracts c on c.billing_account_id = bt.billing_account_id
         where bt.tenant_id = p.school_id
           and c.kind = 'order_form'
-          and c.status = 'signed'
-          and c.effective_at <= now()
-          and (c.ends_at is null or c.ends_at > now())
+          and c.status in ('signed', 'superseded', 'terminated')
+          and c.signed_at <= t.created_at
+          and c.effective_at <= t.created_at
+          and (c.ends_at is null or c.ends_at > t.created_at)
      );
 end $$;
 
