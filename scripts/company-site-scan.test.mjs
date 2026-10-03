@@ -6,10 +6,12 @@ import { request as httpsRequest } from 'node:https';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
 import { assertCompleteFindingEvidence, evaluate, evidenceDiagnostics, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import * as findingEvidence from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path, root), 'utf8') : '';
@@ -390,6 +392,334 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
     ],
   );
   assert.throws(() => findingPluginIds({ vulnerabilities: [csrf] }), /unsupported schema: object\(vulnerabilities:array\(1;item=object\(/i);
+});
+
+// Synthetic values in the observed native formats: the raw scan summary has
+// count/cweId and method/path records; full-get detail has cwe_id/plugin_id,
+// total_paths and method/uri/finding_hash records. No private response bodies,
+// real finding hashes, or unobserved full-get scan association are fixtures.
+const reconciliationFixture = () => {
+  const summary = cleanReport();
+  summary.thresholdResult = 'FAIL';
+  const groups = [
+    { cweId: 'CWE-200', cwe_id: 'CWE-200', severity: 'low', plugin_id: '10032', name: 'Synthetic email evidence', count: 14, stem: 'email' },
+    { cweId: 'CWE-352', cwe_id: 'CWE-352', severity: 'medium', plugin_id: '10202', name: 'Synthetic form evidence', count: 2, stem: 'form' },
+  ];
+  summary.findings = groups.map(group => ({
+    count: group.count, cweId: group.cweId, name: group.name, severity: group.severity,
+    paths: Array.from({ length: group.count }, (_, index) => ({
+      method: 'GET', path: `/synthetic-${group.stem}-${index + 1}`, status: 'NEW',
+    })),
+  }));
+  const detail = {
+    findings: groups.map((group, index) => ({
+      cwe_id: group.cwe_id, plugin_id: group.plugin_id, plugin_name: group.name,
+      severity: group.severity, total_paths: group.count,
+      paths: summary.findings[index].paths.map(path => ({
+        method: path.method, uri: path.path, status: 'UNKNOWN',
+        finding_hash: createHash('sha256').update(`${group.plugin_id}:${path.method}:${path.path}`).digest('hex'),
+      })),
+    })),
+  };
+  return { summary, detail };
+};
+
+const reconciliationValidator = () => {
+  assert.equal(typeof findingEvidence.assertReconciledFindingEvidence, 'function', 'the independent reconciliation validator must exist');
+  return findingEvidence.assertReconciledFindingEvidence;
+};
+
+test('reconciliation accepts full independent finding evidence without inventing human triage', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  const before = structuredClone({ summary, detail });
+  assert.deepEqual(reconcile(summary, detail), detail.findings);
+  assert.deepEqual({ summary, detail }, before, 'reconciliation must not mutate findings or their statuses');
+  assert.ok(detail.findings.every(finding => finding.paths.every(path => path.status === 'UNKNOWN')));
+});
+
+test('reconciliation accepts explicitly clean complete summary and full-detail evidence', () => {
+  const reconcile = reconciliationValidator();
+  assert.deepEqual(reconcile(cleanReport(), { findings: [] }), []);
+});
+
+test('reconciliation rejects independently reported 14 paths versus self-consistent 10-path detail', () => {
+  const { summary, detail } = reconciliationFixture();
+  detail.findings[0].total_paths = 10;
+  detail.findings[0].paths = detail.findings[0].paths.slice(0, 10);
+  assert.equal(summary.findings[0].count, 14);
+  assert.doesNotThrow(() => detail.findings.forEach(assertCompleteFindingEvidence), 'control: the old self-count check accepts the truncated evidence');
+  const reconcile = reconciliationValidator();
+  assert.throws(() => reconcile(summary, detail), /reconcil|mismatch|incomplete|count/i);
+});
+
+test('reconciliation does not trust a summary count that contradicts its own paths', () => {
+  const reconcile = reconciliationValidator();
+  for (const count of [13, 15, 0, -1, 14.5, '14', null, undefined]) {
+    const { summary, detail } = reconciliationFixture();
+    summary.findings[0].count = count;
+    assert.throws(() => reconcile(summary, detail), /summary|count|incomplete|reconcil/i, String(count));
+  }
+});
+
+test('reconciliation rejects a whole finding omitted from either independent source', () => {
+  const reconcile = reconciliationValidator();
+  for (const omitted of ['summary', 'detail']) {
+    const fixture = reconciliationFixture();
+    fixture[omitted].findings.pop();
+    assert.throws(() => reconcile(fixture.summary, fixture.detail), /finding|group|mismatch|reconcil/i, omitted);
+  }
+});
+
+test('reconciliation rejects an empty detail list when the raw summary reports findings', () => {
+  const reconcile = reconciliationValidator();
+  const { summary } = reconciliationFixture();
+  assert.throws(() => reconcile(summary, { findings: [] }), /finding|group|mismatch|reconcil/i);
+});
+
+test('reconciliation rejects summary schema failures instead of treating them as clean evidence', () => {
+  const reconcile = reconciliationValidator();
+  const mutations = [
+    summary => { delete summary.findings; },
+    summary => { summary.findings = null; },
+    summary => { summary.errors.push({ category: 'LOOKUP' }); },
+    summary => { delete summary.errors; },
+    summary => { summary.warnings.push({ category: 'DISCOVERY' }); },
+    summary => { delete summary.warnings; },
+    summary => { delete summary.scan.id; },
+    summary => { summary.scan.id = 'wrong-scan'; },
+  ];
+  for (const mutate of mutations) {
+    const summary = cleanReport();
+    mutate(summary);
+    assert.throws(() => reconcile(summary, { findings: [] }), /summary|finding|scan|error|warning|evidence/i);
+  }
+});
+
+test('reconciliation rejects error envelopes even when they include findings empty-list bait', () => {
+  const reconcile = reconciliationValidator();
+  const envelopes = [
+    { error: 'Synthetic API failure', findings: [] },
+    { errors: [{ category: 'LOOKUP' }], findings: [] },
+    { warnings: [{ category: 'DISCOVERY' }], findings: [] },
+    { success: false, findings: [] },
+    {},
+    { findings: null },
+    { data: { findings: [] } },
+  ];
+  for (const detail of envelopes) {
+    assert.throws(() => reconcile(cleanReport(), detail), /detail|finding|error|warning|evidence|schema/i);
+  }
+});
+
+test('reconciliation rejects changed methods, paths, query strings and fragments', () => {
+  const reconcile = reconciliationValidator();
+  const mutations = [
+    detail => { detail.findings[0].paths[0].method = 'POST'; },
+    detail => { detail.findings[0].paths[0].uri = '/another-synthetic-path'; },
+    detail => { detail.findings[0].paths[0].uri += '?record=another'; },
+    detail => { detail.findings[0].paths[0].uri += '#another'; },
+  ];
+  for (const mutate of mutations) {
+    const { summary, detail } = reconciliationFixture();
+    mutate(detail);
+    assert.doesNotThrow(() => detail.findings.forEach(assertCompleteFindingEvidence), 'control: detail counts and hashes still look complete');
+    assert.throws(() => reconcile(summary, detail), /path|method|mismatch|reconcil/i);
+  }
+});
+
+test('reconciliation permits matching query and fragment records without collapsing their identity', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  summary.findings[0].paths[0].path += '?record=one#part-one';
+  detail.findings[0].paths[0].uri = summary.findings[0].paths[0].path;
+  assert.deepEqual(reconcile(summary, detail), detail.findings);
+});
+
+test('reconciliation preserves legitimate repeated URI records as a multiset rather than deduplicating counts', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  summary.findings[0].paths[13].path = summary.findings[0].paths[0].path;
+  detail.findings[0].paths[13].uri = summary.findings[0].paths[13].path;
+  assert.notEqual(detail.findings[0].paths[13].finding_hash, detail.findings[0].paths[0].finding_hash, 'each evidence record retains its own hash');
+  assert.deepEqual(reconcile(summary, detail), detail.findings);
+});
+
+test('reconciliation binds absolute URI detail to the target origin, path, query and fragment', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  summary.findings[0].paths[0].path += '?record=one#part-one';
+  detail.findings[0].paths[0].uri = `https://localhost:4186${summary.findings[0].paths[0].path}`;
+  assert.deepEqual(reconcile(summary, detail), detail.findings, 'control: absolute target URI and relative summary path refer to the same target');
+  detail.findings[0].paths[0].uri = `https://another.invalid${summary.findings[0].paths[0].path}`;
+  assert.throws(() => reconcile(summary, detail), /origin|target|path|reconcil/i);
+});
+
+test('reconciliation rejects duplicate-path substitution even with equal counts and unique hashes', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  detail.findings[0].paths[13].uri = detail.findings[0].paths[0].uri;
+  assert.doesNotThrow(() => detail.findings.forEach(assertCompleteFindingEvidence));
+  assert.throws(() => reconcile(summary, detail), /path|duplicate|mismatch|reconcil/i);
+});
+
+test('reconciliation rejects duplicated triage hashes rather than counting another record twice', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  detail.findings[0].paths[13].finding_hash = detail.findings[0].paths[0].finding_hash;
+  assert.doesNotThrow(() => detail.findings.forEach(assertCompleteFindingEvidence), 'control: the existing hash check verifies syntax, not uniqueness');
+  assert.throws(() => reconcile(summary, detail), /hash|duplicate|reconcil/i);
+});
+
+test('reconciliation rejects omitted or changed group identity without guessing plugin identity from names', () => {
+  const reconcile = reconciliationValidator();
+  const mutations = [
+    detail => { detail.findings[1].cwe_id = 'CWE-200'; detail.findings[1].severity = 'low'; },
+    detail => { delete detail.findings[0].cwe_id; },
+    detail => { detail.findings[0].cwe_id = 'CWE-999'; },
+    detail => { detail.findings[0].severity = 'high'; },
+    detail => { delete detail.findings[0].plugin_id; },
+    detail => { detail.findings[0].plugin_id = '../unsafe'; },
+    detail => { detail.findings[1].plugin_id = detail.findings[0].plugin_id; },
+  ];
+  for (const mutate of mutations) {
+    const { summary, detail } = reconciliationFixture();
+    mutate(detail);
+    assert.throws(() => reconcile(summary, detail), /CWE|group|severity|plugin|identity|reconcil|finding/i);
+  }
+});
+
+test('reconciliation rejects ambiguous repeated CWE and severity groups in either source', () => {
+  const reconcile = reconciliationValidator();
+  for (const duplicated of ['summary', 'detail']) {
+    const fixture = reconciliationFixture();
+    fixture[duplicated].findings.push(structuredClone(fixture[duplicated].findings[0]));
+    assert.throws(() => reconcile(fixture.summary, fixture.detail), /ambiguous|duplicate|group|reconcil/i, duplicated);
+  }
+});
+
+test('native URI evidence requires an explicit matching scan association', () => {
+  const id = cleanReport().scan.id;
+  const envelope = { graphqlOperations: [], jsonrpcMethods: [], sources: ['spider'], uris: coveredUris };
+  assert.equal(scannedPaths({ ...envelope, scanId: id }, id).size, coveredUris.length, 'control: matching observed native association passes');
+  for (const scanId of [undefined, null, '', 'wrong-scan', '87654321-1234-1234-1234-123456789abc']) {
+    assert.equal(scannedPaths({ ...envelope, scanId }, id).size, 0, `native scanId ${String(scanId)}`);
+  }
+});
+
+const runFindingCli = (t, mode, summary, detail) => {
+  const fixture = mkdtempSync(join(tmpdir(), 'semester-finding-cli-'));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  const summaryFile = join(fixture, 'summary.json');
+  const detailFile = join(fixture, 'detail.json');
+  writeFileSync(summaryFile, JSON.stringify(summary));
+  writeFileSync(detailFile, JSON.stringify(detail));
+  const reportScript = fileURLToPath(new URL('./company-site-scan-report.mjs', import.meta.url));
+  const args = mode === 'hashes' ? [reportScript, mode, detailFile] : [reportScript, mode, summaryFile, detailFile];
+  const result = spawnSync(process.execPath, args, { encoding: 'utf8' });
+  assert.equal(result.error, undefined, 'the exact test runtime must execute the shipped CLI');
+  return result;
+};
+
+test('the hashes CLI labels self-count evidence as structural, never exhaustive vendor evidence', t => {
+  const { summary, detail } = reconciliationFixture();
+  detail.findings[0].total_paths = 10;
+  detail.findings[0].paths = detail.findings[0].paths.slice(0, 10);
+  const result = runFindingCli(t, 'hashes', summary, detail);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Structural finding detail/);
+  assert.match(result.stdout, /exhaustive enumeration unverified/);
+  assert.doesNotMatch(`${result.stdout}${result.stderr}`, /Complete finding evidence/);
+});
+
+test('the reconcile CLI rejects the independent 14-versus-10 reporting gap with nonzero status', t => {
+  const { summary, detail } = reconciliationFixture();
+  detail.findings[0].total_paths = 10;
+  detail.findings[0].paths = detail.findings[0].paths.slice(0, 10);
+  const result = runFindingCli(t, 'reconcile', summary, detail);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /count mismatch.*summary 14, detail 10/i);
+  assert.doesNotMatch(result.stdout, /Summary-reconciled finding evidence/);
+});
+
+test('the reconcile CLI accepts full 14-path and clean controls while retaining vendor association limitations', t => {
+  const { summary, detail } = reconciliationFixture();
+  const full = runFindingCli(t, 'reconcile', summary, detail);
+  assert.equal(full.status, 0, full.stderr);
+  assert.match(full.stdout, /Summary-reconciled finding evidence: 2 findings, 16 instances/);
+  assert.match(full.stdout, /Native full-detail scan association and vendor pagination require separate verification/);
+  assert.doesNotMatch(full.stdout, /Complete finding evidence/);
+  const clean = runFindingCli(t, 'reconcile', cleanReport(), { findings: [] });
+  assert.equal(clean.status, 0, clean.stderr);
+  assert.match(clean.stdout, /0 findings, 0 instances/);
+});
+
+test('the reconcile CLI cannot turn an error envelope with findings empty-list bait into success', t => {
+  for (const detail of [
+    { findings: [], error: 'Synthetic lookup error' },
+    { findings: [], errors: [{ category: 'LOOKUP' }] },
+    { findings: [], success: false },
+  ]) {
+    const result = runFindingCli(t, 'reconcile', cleanReport(), detail);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /error/i);
+    assert.doesNotMatch(result.stdout, /Summary-reconciled finding evidence/);
+  }
+});
+
+test('the reconcile CLI rejects invalid explicitly claimed scan identities without inventing native association', t => {
+  // These are adversarial identity claims, not assertions that full-get emits
+  // these fields. Absent identity remains separately unverified in the CLI.
+  for (const id of ['87654321-1234-1234-1234-123456789abc', null, '']) {
+    for (const claim of [{ scanId: id }, { scan: { id } }]) {
+      const result = runFindingCli(t, 'reconcile', cleanReport(), { findings: [], ...claim });
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /scan association/i);
+      assert.doesNotMatch(result.stdout, /Summary-reconciled finding evidence/);
+    }
+  }
+});
+
+test('the reconcile CLI rejects an explicitly unconsumed continuation rather than claiming pagination completeness', t => {
+  for (const continuation of [{ nextPageToken: 'synthetic-next-page' }, { next_page_token: 'synthetic-next-page' }]) {
+    const result = runFindingCli(t, 'reconcile', cleanReport(), { findings: [], ...continuation });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /unconsumed continuation/i);
+    assert.doesNotMatch(result.stdout, /Summary-reconciled finding evidence/);
+  }
+});
+
+test('the workflow requires independent reconciliation and keeps its failure after later URI and receipt checks', () => {
+  const verification = companyJob.split('      - name: Verify company-site scan evidence')[1] ?? '';
+  assert.match(verification, /node scripts\/company-site-scan-report\.mjs reconcile "\$RUNNER_TEMP\/company-site-scan\.json" "\$RUNNER_TEMP\/company-site-findings\.json" \|\| evidence_status=1/);
+  assert.match(verification, /node scripts\/company-site-scan-report\.mjs hashes "\$RUNNER_TEMP\/company-site-findings\.json" \|\| evidence_status=1/);
+  assert.match(verification, /node scripts\/company-site-scan-report\.mjs verify "\$RUNNER_TEMP\/company-site-scan\.json" "\$RUNNER_TEMP\/company-site-uris\.json" "\$RUNNER_TEMP\/company-site-responses\.jsonl" \|\| evidence_status=1/);
+  assert.match(verification, /exit "\$evidence_status"/);
+  assert.ok(verification.indexOf(' reconcile ') < verification.indexOf('hawk op scan uris'), 'the independent check precedes URI retrieval');
+  assert.ok(verification.indexOf('hawk op scan uris') < verification.indexOf(' verify '), 'response/URI verification still runs after reconciliation');
+
+  // Execute only the extracted status aggregation, substituting constant local
+  // true/false commands for every real collector. No scanner or vendor API runs.
+  const lines = verification.split('\n').map(line => line.trim());
+  const statusLines = lines.filter(line => line === 'evidence_status=0' || line === 'exit "$evidence_status"' || /^node scripts\/company-site-scan-report\.mjs (?:hashes|reconcile|verify) /.test(line));
+  assert.equal(statusLines.length, 5);
+  const simulate = failed => {
+    const script = statusLines.map(line => {
+      if (!line.startsWith('node ')) return line;
+      const mode = line.match(/company-site-scan-report\.mjs (hashes|reconcile|verify) /)?.[1];
+      assert.ok(mode);
+      assert.match(line, / \|\| evidence_status=1$/);
+      return `${mode === failed ? 'false' : 'true'} || evidence_status=1`;
+    }).join('\n');
+    assert.doesNotMatch(script, /hawk|node|API_KEY|RUNNER_TEMP/);
+    return spawnSync('bash', ['-c', script], { encoding: 'utf8' });
+  };
+  for (const failed of ['hashes', 'reconcile', 'verify']) {
+    const result = simulate(failed);
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 1, `${failed}: ${result.stderr}`);
+  }
+  assert.equal(simulate(null).status, 0, 'control: every evidence check succeeding leaves a zero status');
 });
 
 test('empty coverage and missing changed assets cannot clear the company gate', () => {

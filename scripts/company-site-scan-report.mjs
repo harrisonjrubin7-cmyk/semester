@@ -32,7 +32,10 @@ export function scannedPaths(uris, expectedId) {
   // Only URI records, never recursively collected URLs in errors or metadata.
   // Unknown native CLI envelopes stay unverified until their schema is observed.
   if (uris?.error || (uris?.errors && (!Array.isArray(uris.errors) || uris.errors.length)) || uris?.success === false) return paths;
-  if (uris?.scanId && uris.scanId !== expectedId) return paths;
+  // The observed native envelope must actually identify the expected scan.
+  // Missing/null/empty IDs are not evidence of association.
+  if (Array.isArray(uris?.uris) && (!uuid.test(expectedId ?? '') || uris.scanId !== expectedId)) return paths;
+  if (uris && !Array.isArray(uris) && 'scanId' in uris && uris.scanId !== expectedId) return paths;
   const records = Array.isArray(uris) ? uris : Array.isArray(uris?.uris) ? uris.uris : uris?.data;
   if (!Array.isArray(records)) return paths;
   for (const record of records) {
@@ -148,6 +151,7 @@ export function evidenceDiagnostics(report) {
 }
 
 export function findingsFromEvidence(report) {
+  assertFindingEnvelope(report, 'detail');
   if (Array.isArray(report?.findings)) return report.findings;
   if (report?.finding && typeof report.finding === 'object') return [report.finding];
   if (report?.plugin_id && Array.isArray(report.paths)) return [report];
@@ -161,6 +165,8 @@ export function findingPluginIds(report) {
 }
 
 export function assertCompleteFindingEvidence(finding) {
+  // Structural consistency only: a CLI can return ten paths and total_paths=10
+  // while the independently produced scan summary reports fourteen instances.
   const plugin = String(finding?.plugin_id ?? 'unknown');
   if (!Number.isInteger(finding?.total_paths) || finding.total_paths < 1 || !Array.isArray(finding.paths) || finding.paths.length !== finding.total_paths) {
     throw new Error(`Incomplete finding evidence for plugin ${safeText(plugin)}`);
@@ -168,6 +174,96 @@ export function assertCompleteFindingEvidence(finding) {
   if (finding.paths.some(path => !/^[a-f\d]{64}$/i.test(path?.finding_hash ?? ''))) {
     throw new Error(`Missing triage hash for plugin ${safeText(plugin)}`);
   }
+}
+
+function assertFindingEnvelope(report, source) {
+  if (!report || typeof report !== 'object' || Array.isArray(report)) throw new Error(`Unsupported ${source} finding evidence schema`);
+  if (report.error || ('success' in report && report.success !== true)) throw new Error(`${source} finding evidence contains an error`);
+  for (const field of ['errors', 'warnings']) {
+    if (field in report && (!Array.isArray(report[field]) || report[field].length)) throw new Error(`${source} finding evidence contains ${field}`);
+  }
+  for (const field of ['nextPageToken', 'next_page_token']) {
+    if (field in report && report[field] !== null && report[field] !== '') throw new Error(`${source} finding evidence has an unconsumed continuation`);
+  }
+}
+
+function findingGroup(finding, source) {
+  const cwe = source === 'summary' ? finding?.cweId : finding?.cwe_id;
+  const match = /^(?:CWE-)?([1-9]\d*)$/i.exec(String(cwe ?? ''));
+  if (!match || !Number.isSafeInteger(Number(match[1]))) throw new Error(`${source} finding has unsupported CWE identity`);
+  const severity = String(finding?.severity ?? '').toUpperCase();
+  if (!['LOW', 'MEDIUM', 'HIGH'].includes(severity)) throw new Error(`${source} finding has unsupported severity`);
+  return `CWE-${Number(match[1])}/${severity}`;
+}
+
+function findingPathCounts(records, source) {
+  const counts = new Map();
+  for (const record of records) {
+    const method = record?.method;
+    const value = source === 'summary' ? record?.path : record?.uri;
+    if (typeof method !== 'string' || !/^[A-Z]{1,16}$/i.test(method) || typeof value !== 'string' || !/^(https?:\/\/|\/)/.test(value)) {
+      throw new Error(`${source} finding has unsupported method or path evidence`);
+    }
+    let url;
+    try { url = new URL(value, host); } catch { throw new Error(`${source} finding has malformed path evidence`); }
+    if (url.origin !== host || url.username || url.password) throw new Error(`${source} finding path has the wrong target origin`);
+    const key = `${method.toUpperCase()} ${url.pathname}${url.search}${url.hash}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export function assertReconciledFindingEvidence(summary, detail) {
+  const id = scanId(summary);
+  assertFindingEnvelope(summary, 'summary');
+  if (summary.scan.status !== 'COMPLETED' || summary.scan.host !== host || summary.scan.environment !== 'CompanySiteCI') {
+    throw new Error('Summary finding evidence is not a completed scan of the expected target');
+  }
+  if (!Array.isArray(summary.errors) || !Array.isArray(summary.warnings) || !Array.isArray(summary.findings)) {
+    throw new Error('Summary finding evidence is missing findings, errors or warnings');
+  }
+  assertFindingEnvelope(detail, 'detail');
+  if (!Array.isArray(detail.findings)) throw new Error('Unsupported full-detail finding evidence schema');
+  // Do not synthesize native association from the query argument. If supplied,
+  // an explicit identity must match; absence remains unverified, not cleared.
+  if (('scanId' in detail && detail.scanId !== id) || ('scan' in detail && detail.scan?.id !== id)) {
+    throw new Error('Detail finding evidence claims a mismatched scan association');
+  }
+  const groups = new Map();
+  for (const finding of summary.findings) {
+    const key = findingGroup(finding, 'summary');
+    if (groups.has(key)) throw new Error('Ambiguous duplicate summary finding group');
+    if (!Number.isInteger(finding.count) || finding.count < 1 || !Array.isArray(finding.paths) || finding.paths.length !== finding.count) {
+      throw new Error(`Incomplete independent summary count for ${key}`);
+    }
+    groups.set(key, { count: finding.count, paths: findingPathCounts(finding.paths, 'summary') });
+  }
+  const seenGroups = new Set();
+  const plugins = new Set();
+  const hashes = new Set();
+  for (const finding of detail.findings) {
+    const key = findingGroup(finding, 'detail');
+    if (seenGroups.has(key)) throw new Error('Ambiguous duplicate detail finding group');
+    seenGroups.add(key);
+    const plugin = finding?.plugin_id;
+    if (typeof plugin !== 'string' || !/^[a-z\d._:-]{1,128}$/i.test(plugin) || plugins.has(plugin)) throw new Error('Missing, unsafe or duplicate detail plugin identity');
+    plugins.add(plugin);
+    const expected = groups.get(key);
+    if (!expected) throw new Error(`Unmatched independent finding group ${key}`);
+    assertCompleteFindingEvidence(finding);
+    if (finding.total_paths !== expected.count) throw new Error(`Finding count mismatch for ${key}: summary ${expected.count}, detail ${finding.total_paths}`);
+    const actual = findingPathCounts(finding.paths, 'detail');
+    if (actual.size !== expected.paths.size || [...expected.paths].some(([path, count]) => actual.get(path) !== count)) {
+      throw new Error(`Finding method/path reconciliation mismatch for ${key}`);
+    }
+    for (const path of finding.paths) {
+      const hash = path.finding_hash.toLowerCase();
+      if (hashes.has(hash)) throw new Error('Duplicate finding hash cannot count as another evidence record');
+      hashes.add(hash);
+    }
+  }
+  if (seenGroups.size !== groups.size) throw new Error('Independent finding groups are missing from the detail evidence');
+  return detail.findings;
 }
 
 function printResult(result) {
@@ -199,8 +295,14 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       evidenceDiagnostics(report).forEach(shape => console.error(`StackHawk | Finding evidence shape: ${shape}`));
       const findings = findingsFromEvidence(report);
       findings.forEach(assertCompleteFindingEvidence);
-      console.log(`StackHawk | Complete finding evidence: ${findings.length} findings`);
+      console.log(`StackHawk | Structural finding detail: ${findings.length} findings; exhaustive enumeration unverified`);
       printFindings(findings);
+    }
+    else if (process.argv[2] === 'reconcile') {
+      const detail = parseJson(readFileSync(process.argv[4], 'utf8'));
+      const findings = assertReconciledFindingEvidence(report, detail);
+      console.log(`StackHawk | Summary-reconciled finding evidence: ${findings.length} findings, ${findings.reduce((count, finding) => count + finding.paths.length, 0)} instances`);
+      console.log('StackHawk | Native full-detail scan association and vendor pagination require separate verification');
     }
     else if (process.argv[2] === 'verify') {
       const uris = parseJson(readFileSync(process.argv[4], 'utf8'));
@@ -211,7 +313,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`StackHawk | URI schema: ${Array.isArray(uris) ? 'array' : safeText(Object.keys(uris ?? {}).join(', '))}; records=${Array.isArray(list) ? list.length : 'unsupported'}; first record=${list?.[0] && typeof list[0] === 'object' ? safeText(Object.keys(list[0]).join(', ')) : typeof list?.[0]}`);
       printResult(result);
       if (result.gaps.length) process.exitCode = 1;
-    } else throw new Error('Use id, plugin-ids, hashes or verify with scan evidence files');
+    } else throw new Error('Use id, plugin-ids, hashes, reconcile or verify with scan evidence files');
   } catch (error) {
     console.error(`StackHawk | Evidence unavailable: ${safeText(error.message)}`);
     process.exitCode = 1;

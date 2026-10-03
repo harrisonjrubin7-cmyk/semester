@@ -19,7 +19,7 @@
     "note": "Captured from the successful GitHub Pages deployment at /semester/demo/ after skipping only the demo onboarding. The live stylesheet contains the 44px target fix and not the superseded zero-height rule."
   },
   "theme": {
-    "surface": "Current production dark interface",
+    "surface": "Current deployed public demo, dark interface",
     "accent": "Semester brass",
     "layout": "Responsive application shell"
   },

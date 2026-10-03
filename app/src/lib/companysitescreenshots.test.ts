@@ -53,6 +53,12 @@ function manifest(): Manifest {
   return JSON.parse(readFileSync(path, 'utf8')) as Manifest;
 }
 
+function captureDate(capturedAt: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago', month: 'short', day: 'numeric', year: 'numeric',
+  }).format(new Date(capturedAt));
+}
+
 function capturePath(path: string): string {
   expect(path).toMatch(/^\/?screenshots\/[a-z0-9-]+\.jpg$/);
   return join(companyRoot, path.replace(/^\//, ''));
@@ -126,7 +132,7 @@ describe('the company site shows captured current application screens', () => {
 
   it('describes the captured screens and reserves their real intrinsic image dimensions', () => {
     const images = captureImages();
-    const displayedCaptureDate = manifest().captureDateLabel.replace(/ \([^)]*\)$/, '');
+    const displayedCaptureDate = captureDate(manifest().capturedAt);
     expect(images.length).toBeGreaterThanOrEqual(4);
     for (const image of images) {
       const alt = image.getAttribute('alt')?.trim() ?? '';
@@ -192,6 +198,7 @@ describe('the company site shows captured current application screens', () => {
     expect(proof.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
     expect(Number.isFinite(Date.parse(proof.capturedAt))).toBe(true);
     expect(proof.captureDateLabel).toBe('Oct 3, 2026 (America/Chicago)');
+    expect(proof.captureDateLabel).toBe(`${captureDate(proof.capturedAt)} (America/Chicago)`);
     expect(proof.appSourceCommit).toMatch(/^[a-f0-9]{40}$/);
     expect(proof.appSourceCommit).toBe('a1504691a60af3499803d0e9fd38fa1cb4ea7ec9');
     expect(proof.appDeploymentCommit).toBe(proof.appSourceCommit);
@@ -201,12 +208,17 @@ describe('the company site shows captured current application screens', () => {
     expect(proof.deploymentVerification.serviceWorkerState).toMatch(/brand-new browser profile/i);
     expect(proof.captureMode).toBe('isolated-demo');
     expect(proof.sampleData).toBe(true);
-    expect(proof.theme).toMatchObject({ surface: 'Current production dark interface' });
+    expect(proof.theme).toMatchObject({ surface: 'Current deployed public demo, dark interface' });
     for (const appearance of [proof.theme, proof.nav]) {
       expect(appearance).toBeTruthy();
       expect(typeof appearance === 'string' ? appearance.trim().length : Object.keys(appearance).length).toBeGreaterThan(0);
     }
     expect(proof.images.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('derives the Chicago capture date independently of a declared label (boundary control)', () => {
+    expect(captureDate('2026-10-03T02:50:01Z')).toBe('Oct 2, 2026');
+    expect(captureDate('2026-10-03T10:12:23Z')).toBe('Oct 3, 2026');
   });
 
   it('ties every displayed capture to provenance with matching bytes and JPEG dimensions', () => {
