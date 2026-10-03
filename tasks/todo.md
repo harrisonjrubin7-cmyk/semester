@@ -14,7 +14,7 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 **Verification:**
 - [x] Focused console suite: 34/34 passed.
 - [x] `npx tsc -b` passed using the bundled Node runtime.
-- [x] Branch was reconciled onto `origin/main` `46e162da`; the scoped foundation commits remain isolated from unrelated work.
+- [x] Branch was reconciled onto `origin/main` `a1504691`; the scoped foundation commits remain isolated from unrelated work.
 
 **Dependencies:** None
 **Files likely touched:** `app/src/components/console/CommandCenter.tsx`, `app/src/screens/console.test.tsx`
@@ -55,15 +55,15 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 
 **Verification:**
 - [x] The new 14-assertion SQL check covers no grant, wrong tenant, expired grant, account narrowing, bounded keyset pagination, demo exclusion, sandbox opt-in, grants, and valid access.
-- [ ] Full `supabase/check.sh`: A3 passes, but the command remains red on the unchanged `financial-retention.check.sql` and `ledger-seals.check.sql` failures. Both failures reproduce from a detached `origin/main` `46e162da` checkout under the same PostgreSQL 17 runtime.
+- [ ] Full `supabase/check.sh`: A3 passes, but the command remains red on the unchanged `financial-retention.check.sql` and `ledger-seals.check.sql` failures. Both failures reproduce from a detached `origin/main` `a1504691` checkout under the same PostgreSQL 17 runtime.
 - [x] `console-scoped-tenant-access`, `grants`, and `definer-sweep` pass together on PostgreSQL 17 (31 assertions total).
-- [x] The register generator passes 8/8, TypeScript passes, focused lint passes, and the production build succeeds.
+- [x] The rebased workspace, console, and register suites pass 48/48; TypeScript passes, focused lint passes, and the production build succeeds.
 
 **Dependencies:** A2
 **Files likely touched:** one new migration, one new `supabase/*.check.sql`, `supabase/check.sh`, `supabase/grants.check.sql`
 **Estimated scope:** Medium
 
-**Security verification:** HawkScan v6.5.0 scan `fade092f-e9fd-4c21-8668-d1f692aa4e00` passed against committed build `37c9487e` on 2026-10-03. It reported no NEW findings; the same three Medium `style-src unsafe-inline` paths remain human Risk Accepted. The scan covered the SPA surface, while the RPC's authenticated authorization boundaries are held by the direct PostgreSQL policy tests above.
+**Security verification:** HawkScan v6.5.0 scan `cb8dad8d-4919-4bbd-92d0-73c7b62b4ab8` passed against exact committed build `e48e1264` on 2026-10-03. It reported no NEW findings; the same three Medium `style-src unsafe-inline` paths remain human Risk Accepted. The scan covered the SPA surface, while the RPC's authenticated authorization boundaries are held by the direct PostgreSQL policy tests above.
 
 **Mutation verification:** Replacing the exact-tenant `audit:read` gate with an anywhere-scope check made the wrong-tenant assertion fail. Restoring the exact gate returned the focused suite to green.
 

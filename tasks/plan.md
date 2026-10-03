@@ -4,7 +4,7 @@
 
 Extend Semester's existing secure Operations Console into a complete internal SaaS and company control plane. The work preserves the current role/capability/RLS/audit/approval foundation, consolidates existing GTM and commercial records instead of duplicating them, and delivers one verified vertical slice at a time.
 
-Planning baseline: the working branch is reconciled onto `origin/main` at `46e162da`. The earlier Command Center hardening and subsequent foundation slices remain isolated on this feature branch.
+Planning baseline: the working branch is reconciled onto `origin/main` at `a1504691`. The earlier Command Center hardening and subsequent foundation slices remain isolated on this feature branch.
 
 ## Architecture decisions
 
