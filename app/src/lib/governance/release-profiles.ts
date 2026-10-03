@@ -99,6 +99,7 @@ export const COMMERCIAL_ACTIVATION_GATES = [
 ] as const;
 
 export const PAID_ASSURANCE_GATES = [
+  'target-dast-clean-rescan',
   'independent-security-assurance',
   'qualified-accessibility-conformance',
 ] as const;
@@ -427,6 +428,7 @@ const APPROVERS_BY_GATE: Readonly<Record<ActivationGate, readonly ReleaseApprove
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
   'insurance-decision-current': ['executive-owner', 'finance-owner'],
   'customer-purchase-and-billing-authorization': ['executive-owner', 'finance-owner'],
+  'target-dast-clean-rescan': ['security-owner', 'operations-owner'],
   'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
   'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
   'independent-security-assurance': ['security-owner', 'trust-owner'],

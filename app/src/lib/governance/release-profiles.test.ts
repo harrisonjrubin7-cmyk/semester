@@ -84,6 +84,7 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
   'insurance-decision-current': ['executive-owner', 'finance-owner'],
   'customer-purchase-and-billing-authorization': ['executive-owner', 'finance-owner'],
+  'target-dast-clean-rescan': ['security-owner', 'operations-owner'],
   'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
   'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
   'independent-security-assurance': ['security-owner', 'trust-owner'],
@@ -179,6 +180,9 @@ describe('pilot and individual release profiles', () => {
       ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES, ...ENTERPRISE_ACTIVATION_GATES,
     ]);
     expect(paidManual.requiredDependencies).toEqual([]);
+    expect(PAID_ASSURANCE_GATES).toEqual([
+      'target-dast-clean-rescan', 'independent-security-assurance', 'qualified-accessibility-conformance',
+    ]);
     expect(paidManual.allowedOperations.join(' ')).toMatch(/manual/i);
     expect(paidManual.forbiddenOperations.join(' ')).toMatch(/institutional reads/i);
     expect(paid.forbiddenOperations).toEqual(expect.arrayContaining(['unapproved charge', 'write to SIS', 'act as system of record']));
@@ -874,7 +878,7 @@ function render(): string {
     '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
     '- Invitation-only unpaid validation additionally requires one named cohort, participant terms and consent, a staffed validation support roster, agreed outcomes and stop criteria, and a current launch decision.',
     '- Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
-    '- A paid pilot additionally requires counsel-approved commercial paper, pricing and signing authority, tax/accounting/payment controls, a current insurance decision, and customer purchase and billing authorization.',
+    '- A paid pilot additionally requires a clean target-bound DAST rescan, independent security assurance, qualified accessibility conformance, counsel-approved commercial paper, pricing and signing authority, tax/accounting/payment controls, a current insurance decision, and customer purchase and billing authorization.',
     '- A broad enterprise sale additionally requires repeated customer deployments, accepted capacity and error budgets, independent security assurance, qualified accessibility conformance, and claim-specific reference permission.',
     '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
