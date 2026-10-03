@@ -66,7 +66,7 @@
 
 - [x] S01: trust documents 1–5; added evidence-bounded data inventory, classification, flow map, processing register, and student-data governance program with explicit control status, code/config evidence, operational evidence, owners, missing proof, and claim ceilings on 2026-10-03.
 - [x] S02: trust documents 6–10; added evidence-bounded minimization, retention/deletion, export, rights-request, and consent/preference controls with explicit status, ownership, missing proof, and prohibited-claim ceilings on 2026-10-03.
-- [ ] S03: trust documents 11–15.
+- [x] S03: trust documents 11–15; added evidence-bounded subprocessor, vendor-review, information-security, access-control, and IAM programs with status, ownership, missing proof, and prohibited-claim ceilings on 2026-10-03.
 - [ ] S04: trust documents 16–20.
 - [ ] S05: trust documents 21–25.
 - [ ] S06: trust documents 26–30.

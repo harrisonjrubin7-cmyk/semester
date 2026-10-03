@@ -101,11 +101,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 86 | `docs/trust/DATA-EXPORT-STANDARD.md` | EXACT PRESENT | canonical export standard; individual server paths do not establish complete account, device, provider, or tenant portability |
 | 87 | `docs/trust/DATA-SUBJECT-REQUEST-RUNBOOK.md` | EXACT PRESENT | canonical trust runbook; queue/schema behavior does not establish staffing, legal clocks, complete action, or delivery |
 | 88 | `docs/trust/CONSENT-AND-PREFERENCE-MANAGEMENT-SPEC.md` | EXACT PRESENT | canonical scoped-consent specification; selected controls do not establish universal valid consent or downstream enforcement |
-| 89 | `docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md` | CANDIDATE SOURCE | `docs/market-readiness/AI-GOVERNANCE-PROGRAM.md` (filename similarity 0.57; substantive review required) |
-| 90 | `docs/trust/VENDOR-SECURITY-REVIEW-PROGRAM.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/procurement-security-review-package.md` (filename similarity 0.43; substantive review required) |
-| 91 | `docs/trust/INFORMATION-SECURITY-PROGRAM.md` | CANDIDATE SOURCE | `docs/market-readiness/INFORMATION-SECURITY-QUESTIONNAIRE.md` (filename similarity 0.56; substantive review required) |
-| 92 | `docs/trust/ACCESS-CONTROL-POLICY.md` | NO CLOSE SOURCE | — |
-| 93 | `docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md` | NO CLOSE SOURCE | — |
+| 89 | `docs/trust/SUBPROCESSOR-GOVERNANCE-PROGRAM.md` | EXACT PRESENT | canonical provider governance draft; technical inventory is explicitly separated from assessment, contract, region, and activation approval |
+| 90 | `docs/trust/VENDOR-SECURITY-REVIEW-PROGRAM.md` | EXACT PRESENT | canonical risk-tiered review lifecycle; no current inventory row is promoted into an assessed or approved vendor claim |
+| 91 | `docs/trust/INFORMATION-SECURITY-PROGRAM.md` | EXACT PRESENT | canonical evidence-classified program; repository controls remain distinct from external assurance and target operation |
+| 92 | `docs/trust/ACCESS-CONTROL-POLICY.md` | EXACT PRESENT | canonical least-privilege lifecycle; defined-path tests do not establish universal or operated access governance |
+| 93 | `docs/trust/IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md` | EXACT PRESENT | canonical identity lifecycle; implemented SSO/SCIM/MFA controls are not represented as live institutional operation |
 | 94 | `docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md` | NO CLOSE SOURCE | — |
 | 95 | `docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md` | NO CLOSE SOURCE | — |
 | 96 | `docs/trust/SECURE-DEVELOPMENT-LIFECYCLE.md` | NO CLOSE SOURCE | — |
