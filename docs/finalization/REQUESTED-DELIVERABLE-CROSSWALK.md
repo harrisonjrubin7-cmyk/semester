@@ -168,11 +168,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 153 | `docs/engineering-operations/TECHNICAL-DEBT-REGISTER.md` | EXACT PRESENT | canonical prioritized closure register across recovery, isolation, release, operations, accessibility, security, performance and supply chain |
 | 154 | `docs/engineering-operations/CAPACITY-AND-SCALING-PLAN.md` | EXACT PRESENT | canonical staged workload, full-stack, failure, invariant and cost plan; production/institutional scale remains unproven |
 | 155 | `docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md` | EXACT PRESENT | canonical provider-backed restore and full-service verification plan; logical rehearsal remains distinct from RTO/RPO and production recovery |
-| 156 | `docs/commercial/POSITIONING-AND-MESSAGING.md` | NO CLOSE SOURCE | — |
-| 157 | `docs/commercial/IDEAL-CUSTOMER-PROFILE.md` | EXACT PRESENT | `docs/market-readiness/IDEAL-CUSTOMER-PROFILE.md` |
-| 158 | `docs/commercial/BUYER-PERSONAS.md` | EXACT PRESENT | `docs/market-readiness/BUYER-PERSONAS.md` |
-| 159 | `docs/commercial/USER-PERSONAS.md` | CANDIDATE SOURCE | `docs/market-readiness/BUYER-PERSONAS.md` (filename similarity 0.50; substantive review required) |
-| 160 | `docs/commercial/MARKET-SEGMENTATION.md` | CANDIDATE SOURCE | `MARKET-POSITION.md` (filename similarity 0.45; substantive review required) |
+| 156 | `docs/commercial/POSITIONING-AND-MESSAGING.md` | EXACT PRESENT | canonical motion-specific positioning and claim boundary; discovery/demo/scoping is separated from activation and enterprise claims |
+| 157 | `docs/commercial/IDEAL-CUSTOMER-PROFILE.md` | EXACT PRESENT | canonical first-partner hypothesis, required characteristics and disqualifiers; named-customer validation remains open |
+| 158 | `docs/commercial/BUYER-PERSONAS.md` | EXACT PRESENT | canonical stakeholder decision/evidence map; named buying-committee validation remains open |
+| 159 | `docs/commercial/USER-PERSONAS.md` | EXACT PRESENT | canonical job/access/safeguard hypotheses; representative research and UAT remain open |
+| 160 | `docs/commercial/MARKET-SEGMENTATION.md` | EXACT PRESENT | canonical initial wedge and deferred-enterprise segmentation; market-size/conversion validation remains open |
 | 161 | `docs/commercial/COMPETITIVE-POSITIONING.md` | CANDIDATE SOURCE | `COMPETITIVE-REVIEW.md` (filename similarity 0.42; substantive review required) |
 | 162 | `docs/commercial/PRODUCT-MARKETING-CLAIMS-LIBRARY.md` | NO CLOSE SOURCE | — |
 | 163 | `docs/commercial/SALES-PLAYBOOK.md` | EXACT PRESENT | `docs/market-readiness/SALES-PLAYBOOK.md` |
