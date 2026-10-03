@@ -2,7 +2,7 @@
 
 This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focused vertical slices. Do not start implementation until the plan and target baseline are reviewed.
 
-## A1: Reconcile current main with Command Center fail-closed fixes — implementation verified; security gate blocked
+## A1: Reconcile current main with Command Center fail-closed fixes — complete
 
 **Description:** Move the existing read-error and filtered-status hardening onto a baseline containing current `origin/main`, without carrying unrelated stale-branch history.
 
@@ -20,7 +20,7 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 **Files likely touched:** `app/src/components/console/CommandCenter.tsx`, `app/src/screens/console.test.tsx`
 **Estimated scope:** Small
 
-**Security verification:** HawkScan preflight on 2026-10-03 found no `hawk` CLI, no Docker fallback, and no `HAWK_API_KEY`. A1 remains open until the required DAST scan and any remediation/rescan loop complete.
+**Security verification:** HawkScan v6.5.0 scan `dc811e2c-042f-4096-a115-c7fb90d8371c` completed on 2026-10-03 against the built SPA. It reported no NEW findings. Three Medium CSP paths retained their existing human Risk Accepted state. The quality gate observed 45 served URIs, Ajax Spider coverage, 1,505 requests, zero timeouts, one transient connection failure, and no auth-wall or all-4xx condition. The authenticated console is stateful rather than a distinct URL, so this scan does not establish coverage of a live privileged operator session.
 
 ## A2: Add a capability-aware console workspace registry
 
