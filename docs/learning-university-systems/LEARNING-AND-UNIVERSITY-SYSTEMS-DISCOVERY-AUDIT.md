@@ -4,6 +4,8 @@
 
 Semester already has a broad student operating system: 93 routed screens, 175 screen files, 558 component files, 387 Supabase files, source badges, recovery mode, course workspaces, eleven study formats, writing and research tools, degree and registration planning, a native gradebook foundation, institutional controls, and extensive governance registers. Breadth is not the limiting factor. Activation evidence, faculty workflow depth, integration proof, accessibility verification, service ownership, and operational reality are.
 
+The market-readiness package merged at `8ccf55af` strengthens the repository control plane with exact motion gates, approval subjects, institutional-readiness templates, and external-evidence queues. It does not supply the missing target operation, professional approval, customer acceptance, or outcome evidence, so the activation decision below is unchanged.
+
 ## Strongest verified areas
 
 - Course → assignment → study → calendar → next-action loop: code and focused tests.
@@ -22,8 +24,8 @@ Semester already has a broad student operating system: 93 routed screens, 175 sc
 
 ## Evidence anchors
 
-`app/src/screens.tsx`, `app/src/components/CourseHub.tsx`, `app/src/components/StudyStudio.tsx`, `app/src/lib/learningregister.ts`, `app/src/lib/learning-loop.ts`, `app/src/lib/integration/lmsmatrix.ts`, `app/src/lib/governance/release-profiles.ts`, `docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md`, `docs/OPERATIONAL-REALITY-REGISTER.md`, and `supabase/migrations/`.
+`app/src/screens.tsx`, `app/src/components/CourseHub.tsx`, `app/src/components/StudyStudio.tsx`, `app/src/lib/learningregister.ts`, `app/src/lib/learning-loop.ts`, `app/src/lib/integration/lmsmatrix.ts`, `app/src/lib/governance/release-profiles.ts`, `GO-NO-GO-DECISION.md`, `EXECUTIVE-FINALIZATION-REPORT.md`, `docs/institutional-readiness/GO-LIVE-CHECKLIST.md`, `docs/LEARNING-ASSESSMENT-GRADEBOOK-REGISTER.md`, `docs/OPERATIONAL-REALITY-REGISTER.md`, and `supabase/migrations/`.
 
 ---
 
-Evidence baseline: `origin/main` at `06b40d98`, assessed 2026-10-03. “Implemented” means repository evidence, not institutional approval or observed production operation.
+Evidence baseline: `origin/main` at `8ccf55af`, assessed 2026-10-03. “Implemented” means repository evidence, not institutional approval or observed production operation.

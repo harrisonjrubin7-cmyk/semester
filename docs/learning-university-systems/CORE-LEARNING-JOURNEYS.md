@@ -18,4 +18,4 @@ Exam preparation, research-paper drafting, registration preparation, accommodati
 
 ---
 
-Evidence baseline: `origin/main` at `06b40d98`, assessed 2026-10-03. “Implemented” means repository evidence, not institutional approval or observed production operation.
+Evidence baseline: `origin/main` at `8ccf55af`, assessed 2026-10-03. “Implemented” means repository evidence, not institutional approval or observed production operation.
