@@ -14,13 +14,16 @@ alter table public.support_tickets
 
 -- Serialize the one-time snapshot with membership changes. Once this update
 -- completes, the ticket carries its own durable tenant association.
-lock table public.profiles in share mode;
-update public.support_tickets t
-   set tenant_id = p.school_id
-  from public.profiles p
- where p.user_id = t.student_id
-   and t.tenant_id is null
-   and p.school_id is not null;
+do $$
+begin
+  lock table public.profiles in share mode;
+  update public.support_tickets t
+     set tenant_id = p.school_id
+    from public.profiles p
+   where p.user_id = t.student_id
+     and t.tenant_id is null
+     and p.school_id is not null;
+end $$;
 
 comment on column public.support_tickets.tenant_id is
   'Tenant associated with the ticket when it was opened; retained after membership changes so tenant legal holds continue to cover the record.';
