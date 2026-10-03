@@ -43,14 +43,6 @@ Under any production write: *Production change. This will affect a live customer
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |
 | **Views** | Saved table views and the last tab, stored per operator in operator_preference |
 
-## Performance budget
-
-The console route has a 34 KiB compressed route budget. The previous 24 KiB
-ceiling predates the capability-gated support, privacy, integration, readiness,
-release and incident workspaces added here; the current production build is
-32.6 KiB. The narrow 34 KiB ceiling records that deliberate cost while keeping
-future route growth fail-closed in `app/scripts/budgets.ts`.
-
 ## What holds each view
 
 The capability behind each view, and its holders, from the same file.

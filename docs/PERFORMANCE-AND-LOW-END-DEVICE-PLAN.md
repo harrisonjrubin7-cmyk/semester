@@ -165,3 +165,10 @@ that limit, which is its own question for the owner. Nor does it load journeys t
   two different answers.
 - A 5,000-item list renders under a DOM node budget.
 - A throttled browser smoke (4× CPU, slow 3G) loads Today within the budget.
+
+On 3 October 2026, the operations-console route measured 33,377 gzip bytes
+after the capability-gated support, privacy, integration, readiness, release
+and incident workspaces were added. Its prior 24 KiB ceiling predated those
+workspaces. The recorded measurement now derives a 41 KiB ceiling through the
+same `budgetFrom` rule as every other route (measurement plus bounded headroom,
+including the repository's 8 KiB floor); future console growth still fails CI.
