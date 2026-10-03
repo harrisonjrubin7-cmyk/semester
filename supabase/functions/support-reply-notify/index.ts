@@ -17,6 +17,7 @@ async function retry(messageId: string, attempts: number, reason: string) {
     : { attempts: nextAttempts, next_attempt_at: new Date(Date.now() + Math.min(60, 2 ** nextAttempts) * 60_000).toISOString(), last_error: reason };
   const { error } = await admin.from('support_notification_outbox').update(patch).eq('message_id', messageId);
   if (error) throw new Error('Could not persist the support-notification retry state.');
+  return nextAttempts >= 8;
 }
 
 async function target(row: OutboxRow) {
@@ -88,6 +89,6 @@ Deno.serve((req) => handleSupportNotice(req, {
     if (error) throw new Error('Could not persist the accepted support notification.');
   },
   async failed(messageId, attempts, reason) {
-    await retry(messageId, attempts, reason);
+    return retry(messageId, attempts, reason);
   },
 }));

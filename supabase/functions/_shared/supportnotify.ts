@@ -12,7 +12,7 @@ export interface SupportNoticeDeps {
   pending(): Promise<SupportNoticeTarget[]>;
   send(input: { to: string; subject: string; text: string; idempotencyKey: string }): Promise<boolean>;
   accepted(messageId: string): Promise<void>;
-  failed(messageId: string, attempts: number, reason: string): Promise<void>;
+  failed(messageId: string, attempts: number, reason: string): Promise<boolean>;
 }
 
 export interface SupportNoticeTarget {
@@ -51,11 +51,20 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
     if (!deps.resendKey) return reply(503, { error: 'Support email is not configured.' });
     const pending = await deps.pending();
     let accepted = 0;
+    let retrying = 0;
+    let deadLettered = 0;
     for (const target of pending) {
-      const sent = await sendTarget(deps, target);
-      if (sent) accepted += 1;
+      const outcome = await sendTarget(deps, target);
+      if (outcome === 'accepted') accepted += 1;
+      else if (outcome === 'dead_lettered') deadLettered += 1;
+      else retrying += 1;
     }
-    return reply(200, { processed: pending.length, accepted });
+    return reply(deadLettered > 0 ? 503 : 200, {
+      processed: pending.length,
+      accepted,
+      retrying,
+      dead_lettered: deadLettered,
+    });
   }
 
   if (req.method === 'OPTIONS') return allowed ? new Response(null, { status: 204, headers: cors }) : new Response(null, { status: 403 });
@@ -79,11 +88,11 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
 
   const target = await deps.notice(ticketId);
   if (!target) return reply(409, { error: 'No support reply is ready to notify.' });
-  const sent = await sendTarget(deps, target);
-  return sent ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });
+  const outcome = await sendTarget(deps, target);
+  return outcome === 'accepted' ? reply(200, { ok: true }) : reply(502, { error: 'The email provider did not accept the notice.' });
 }
 
-async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<boolean> {
+async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered'> {
   const ticketReference = reference(target.ticketId);
   let sent = false;
   try {
@@ -96,10 +105,13 @@ async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget):
   } catch {
     // One network failure must advance this row's retry state without
     // preventing the scheduler from attempting the rest of the batch.
-    await deps.failed(target.messageId, target.attempts, 'provider transport unavailable');
-    return false;
+    const deadLettered = await deps.failed(target.messageId, target.attempts, 'provider transport unavailable');
+    return deadLettered ? 'dead_lettered' : 'retrying';
   }
-  if (sent) await deps.accepted(target.messageId);
-  else await deps.failed(target.messageId, target.attempts, 'provider rejected notice');
-  return sent;
+  if (sent) {
+    await deps.accepted(target.messageId);
+    return 'accepted';
+  }
+  const deadLettered = await deps.failed(target.messageId, target.attempts, 'provider rejected notice');
+  return deadLettered ? 'dead_lettered' : 'retrying';
 }

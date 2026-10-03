@@ -15,7 +15,7 @@ function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
     pending: vi.fn().mockResolvedValue([]),
     send: vi.fn().mockResolvedValue(true),
     accepted: vi.fn().mockResolvedValue(undefined),
-    failed: vi.fn().mockResolvedValue(undefined),
+    failed: vi.fn().mockResolvedValue(false),
     ...overrides,
   };
 }
@@ -74,9 +74,23 @@ describe('support reply notification', () => {
     const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
     const response = await handleSupportNotice(cron, d);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ processed: 2, accepted: 1 });
+    expect(await response.json()).toEqual({ processed: 2, accepted: 1, retrying: 1, dead_lettered: 0 });
     expect(d.failed).toHaveBeenCalledWith('message-1', 2, 'provider transport unavailable');
     expect(d.accepted).toHaveBeenCalledWith('message-2');
+  });
+
+  it('fails the scheduled batch visibly when a notice is dead-lettered', async () => {
+    const d = deps({
+      cronSecret: 'cron-secret',
+      pending: vi.fn().mockResolvedValue([{ messageId: 'message-8', ticketId: ticket, email: 'student@example.test', attempts: 7 }]),
+      send: vi.fn().mockResolvedValue(false),
+      failed: vi.fn().mockResolvedValue(true),
+    });
+    const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
+    const response = await handleSupportNotice(cron, d);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ processed: 1, accepted: 0, retrying: 0, dead_lettered: 1 });
+    expect(d.failed).toHaveBeenCalledWith('message-8', 7, 'provider rejected notice');
   });
 
   it('refuses callers without the support capability before looking up a ticket', async () => {

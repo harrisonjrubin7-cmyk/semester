@@ -423,6 +423,8 @@ describe('approvals', () => {
     expect(mock.decide).not.toHaveBeenCalled();
     const step = host.querySelector('[aria-label="Second factor"]') as Element;
     expect(step).toBeTruthy();
+    expect(button('Approve')).toBeUndefined();
+    expect(host.querySelector('[aria-label="Console views"]')).toBeNull();
     type(step.querySelector('input'), '123456');
     await submit(step.querySelector('form'));
     expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');

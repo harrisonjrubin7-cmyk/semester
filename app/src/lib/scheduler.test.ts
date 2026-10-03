@@ -219,6 +219,13 @@ describe('the live check and the deploy notes cannot drift from scheduler.sql', 
     expect(Object.fromEntries(healthExpected())).toEqual(Object.fromEntries(fromFile));
   });
 
+  it('surfaces support-notification dead letters even when pg_cron itself succeeds', () => {
+    const sql = read(join(SUPABASE, 'health.sql'));
+    expect(sql).toMatch(/from public\.support_notification_outbox/);
+    expect(sql).toMatch(/dead_lettered_at is not null/);
+    expect(sql).toMatch(/latest_error/);
+  });
+
   it('scheduler.sql names each job once', () => {
     const names = jobs(scheduler()).map((j) => j.name);
     expect(names.length).toBe(new Set(names).size);
