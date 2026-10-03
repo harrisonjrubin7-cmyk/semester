@@ -10,6 +10,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
+import { prefersLessMotion } from '../lib/prefers';
 import { ChevronLeft, ChevronRight } from './Icons';
 
 type Position = {
@@ -19,6 +20,35 @@ type Position = {
 };
 
 const RESTING: Position = { overflowing: false, atStart: true, atEnd: true };
+
+function outerLayoutStyle(style?: CSSProperties): CSSProperties | undefined {
+  if (!style) return undefined;
+  const outer: CSSProperties = {};
+  if (style.alignSelf !== undefined) outer.alignSelf = style.alignSelf;
+  if (style.flex !== undefined) outer.flex = style.flex;
+  else {
+    if (style.flexBasis !== undefined) outer.flexBasis = style.flexBasis;
+    if (style.flexGrow !== undefined) outer.flexGrow = style.flexGrow;
+    if (style.flexShrink !== undefined) outer.flexShrink = style.flexShrink;
+  }
+  if (style.gridArea !== undefined) outer.gridArea = style.gridArea;
+  else {
+    if (style.gridColumn !== undefined) outer.gridColumn = style.gridColumn;
+    if (style.gridRow !== undefined) outer.gridRow = style.gridRow;
+  }
+  if (style.justifySelf !== undefined) outer.justifySelf = style.justifySelf;
+  if (style.margin !== undefined) outer.margin = style.margin;
+  else {
+    if (style.marginBlock !== undefined) outer.marginBlock = style.marginBlock;
+    if (style.marginInline !== undefined) outer.marginInline = style.marginInline;
+  }
+  if (style.maxHeight !== undefined) outer.maxHeight = style.maxHeight;
+  if (style.maxWidth !== undefined) outer.maxWidth = style.maxWidth;
+  if (style.minHeight !== undefined) outer.minHeight = style.minHeight;
+  if (style.minWidth !== undefined) outer.minWidth = style.minWidth;
+  if (style.order !== undefined) outer.order = style.order;
+  return outer;
+}
 
 /**
  * A horizontally scrolling row with controls that exist only when it clips.
@@ -47,6 +77,7 @@ export function HorizontalOverflow({
   const id = useId();
   const ownRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<Position>(RESTING);
+  const outerStyle = outerLayoutStyle(style);
 
   const remember = useCallback(
     (node: HTMLDivElement | null) => {
@@ -98,12 +129,12 @@ export function HorizontalOverflow({
     if (!row) return;
     row.scrollBy({
       left: direction * Math.round(row.clientWidth * 0.85),
-      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      behavior: prefersLessMotion() ? 'auto' : 'smooth',
     });
   };
 
   return (
-    <div className="overflow-cue">
+    <div className="overflow-cue" style={outerStyle}>
       {position.overflowing && (
         <div className="overflow-cue__controls" role="group" aria-label={`${label} scroll controls`}>
           <button

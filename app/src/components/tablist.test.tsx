@@ -69,6 +69,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  document.documentElement.removeAttribute('data-calm');
   window.matchMedia = originalMatchMedia;
 });
 
@@ -139,6 +140,29 @@ it('offers named overflow controls only when the tab strip needs them', () => {
   expect(forward.disabled).toBe(false);
 });
 
+it('preserves flex-item sizing on the wrapper that replaced the tab strip', () => {
+  act(() => {
+    root.render(
+      <TabList
+        label="Three things"
+        tabs={[
+          { id: 'one', label: 'One' },
+          { id: 'two', label: 'Two' },
+          { id: 'three', label: 'Three' },
+        ]}
+        value="one"
+        onChange={() => {}}
+        style={{ flex: 'none', display: 'flex', gap: 'var(--sp-6)' }}
+      />,
+    );
+  });
+
+  const strip = host.querySelector<HTMLElement>('[role="tablist"]')!;
+  expect(strip.parentElement?.style.flex).toBe('0 0 auto');
+  expect(strip.parentElement?.style.display).toBe('');
+  expect(strip.style.display).toBe('flex');
+});
+
 it('scrolls with reduced motion and disables the control at the reached end', () => {
   window.matchMedia = ((query: string) => ({
     matches: query === '(prefers-reduced-motion: reduce)',
@@ -170,4 +194,32 @@ it('scrolls with reduced motion and disables the control at the reached end', ()
   expect(calls).toEqual([{ left: 255, behavior: 'auto' }]);
   expect(host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things right"]')!.disabled).toBe(true);
   expect(host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things left"]')!.disabled).toBe(false);
+});
+
+it('uses instant scrolling when the app calm setting asks for less motion', () => {
+  window.matchMedia = (() => ({
+    matches: false,
+    media: '(prefers-reduced-motion: reduce)',
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    onchange: null,
+    dispatchEvent: () => false,
+  })) as typeof window.matchMedia;
+  document.documentElement.setAttribute('data-calm', 'still');
+  draw('one');
+  const strip = host.querySelector<HTMLElement>('[role="tablist"]')!;
+  size(strip, 300, 600);
+  const calls: ScrollToOptions[] = [];
+  Object.defineProperty(strip, 'scrollBy', {
+    configurable: true,
+    value: (options: ScrollToOptions) => calls.push(options),
+  });
+
+  act(() => {
+    host.querySelector<HTMLButtonElement>('[aria-label="Scroll Three things right"]')!.click();
+  });
+
+  expect(calls).toEqual([{ left: 255, behavior: 'auto' }]);
 });
