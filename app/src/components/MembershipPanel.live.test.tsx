@@ -102,7 +102,7 @@ it('re-asks for consent when the price changes', async () => {
   const yearly = [...host.querySelectorAll('input[type="radio"]')][1] as HTMLInputElement;
   await act(async () => yearly.click());
   expect((host.querySelector('input[type="checkbox"]') as HTMLInputElement).checked).toBe(false);
-  expect(host.textContent).toContain('$59 a year for Semester Plus');
+  expect(host.textContent).toContain('$59 a year, plus any applicable sales tax shown before purchase, for Semester Plus');
 });
 
 it('says the function’s refusal in its own words', async () => {
