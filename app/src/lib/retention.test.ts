@@ -608,6 +608,7 @@ describe('institutional setup intake retention is prospective and not activated'
     expect(migration).toMatch(/b\.kind = 'institution'/);
     expect(migration).toMatch(/b\.gtm_account_id = lead\.gtm_account_id/);
     expect(migration).toMatch(/l\.route_key = 'plan_institution_launch'/);
+    expect(migration).toMatch(/new\.created_at, new\.route_key, new\.retention_class, new\.purge_after/);
     expect(migration).toMatch(/l\.converted_at is null and l\.converted_billing_account_id is null/);
     expect(migration).toMatch(/private\.platform_is_held\(\)/);
     expect(migration.match(/pg_advisory_xact_lock\(hashtext\('site_lead_retention:platform_hold'\)\)/g)).toHaveLength(2);
@@ -617,6 +618,7 @@ describe('institutional setup intake retention is prospective and not activated'
     expect(migration).toMatch(/dry_run boolean default true/);
     expect(migration).toMatch(/if not dry_run and as_of > now\(\) then/);
     expect(migration).toMatch(/revoke update, delete, truncate on public\.site_leads from service_role/);
+    expect(migration).not.toMatch(/grant update \([\s\S]*?route_key[\s\S]*?\) on public\.site_leads to service_role/);
     expect(migration).toMatch(/revoke all on function private\.site_lead_retention_run[\s\S]*from public, anon, authenticated/);
     expect(migration).toMatch(/grant execute on function private\.site_lead_retention_run[\s\S]*to service_role/);
     expect(scheduler).not.toContain('site_lead_retention_run');

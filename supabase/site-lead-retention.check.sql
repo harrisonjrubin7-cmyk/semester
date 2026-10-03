@@ -118,6 +118,9 @@ begin
   perform pg_temp.counted('retention classification cannot be rewritten',
     pg_temp.raises($q$update public.site_leads set purge_after = purge_after + interval '1 day'
       where reference = 'SL-0000000002'$q$)::int, 1);
+  perform pg_temp.counted('the server-owned route cannot be changed after classification',
+    pg_temp.raises($q$update public.site_leads set route_key = 'general_contact'
+      where reference = 'SL-0000000002'$q$)::int, 1);
   perform pg_temp.counted('a classified request cannot be manually deleted around the sweep',
     pg_temp.raises($q$delete from public.site_leads where reference = 'SL-0000000002'$q$)::int, 1);
 
@@ -206,6 +209,8 @@ begin
       and not has_table_privilege('service_role', 'public.site_lead_retention_runs', 'delete'))::int, 1);
   perform pg_temp.counted('service_role cannot truncate retained leads',
     has_table_privilege('service_role', 'public.site_leads', 'truncate')::int, 0);
+  perform pg_temp.counted('service_role cannot rewrite the server-owned retention route',
+    has_column_privilege('service_role', 'public.site_leads', 'route_key', 'update')::int, 0);
 end $$;
 
 rollback;

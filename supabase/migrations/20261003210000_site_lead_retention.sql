@@ -94,9 +94,9 @@ begin
     return old;
   end if;
 
-  if (new.created_at, new.retention_class, new.purge_after)
-     is distinct from (old.created_at, old.retention_class, old.purge_after) then
-    raise exception 'Site-lead retention classification and deadline are immutable.' using errcode = '42501';
+  if (new.created_at, new.route_key, new.retention_class, new.purge_after)
+     is distinct from (old.created_at, old.route_key, old.retention_class, old.purge_after) then
+    raise exception 'Site-lead retention route, classification and deadline are immutable.' using errcode = '42501';
   end if;
 
   if (new.converted_at, new.converted_billing_account_id)
@@ -128,7 +128,7 @@ create trigger site_lead_retention_guard
 -- owner, so a caller cannot bypass their checks by setting the custom GUCs.
 revoke update, delete, truncate on public.site_leads from service_role;
 grant update (
-  reference, route_key, destination, name, email, organization, role, message,
+  reference, destination, name, email, organization, role, message,
   fields, page, status, respond_by, gtm_account_id, gtm_stakeholder_id,
   trust_request_id
 ) on public.site_leads to service_role;
