@@ -1,5 +1,6 @@
 import { useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 
 /**
  * A standing note about where these four courses came from — and two ways out.
@@ -33,7 +34,11 @@ import { secondLine } from '../lib/dim';
  */
 export function SampleMark() {
   const { state, dispatch, say, adopt } = useStore();
-  if (!state.sample) return null;
+  // The institutional build already carries a permanent, non-dismissible
+  // “Demo environment · Fictional data” disclosure. Offering “These are
+  // mine” there is both redundant and misleading: a tenant demo is not the
+  // place to adopt its fixture courses into a personal semester.
+  if (!state.sample || INSTITUTIONAL_PREVIEW) return null;
 
   return (
     <div

@@ -1033,7 +1033,7 @@ export function Connect() {
                   {!token ? (
                     <button
                       type="button"
-                      className="btn btn-primary"
+                      className="btn btn-secondary"
                       disabled={busy === id}
                       onClick={() => void connect(id)}
                       style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
