@@ -37,6 +37,19 @@ Proceed now with truthful design-partner discovery and preparation. In parallel,
 
 Conditions are gates, not a schedule promise. If evidence expires, scope changes, a new material finding appears, or an owner/approver withdraws acceptance, the affected decision returns to NO-GO.
 
+## Executable path to GO
+
+The release evaluator in [`app/src/lib/governance/release-profiles.ts`](app/src/lib/governance/release-profiles.ts) now encodes the cumulative evidence needed to convert each held motion. It authorizes only the exact deployment, configuration, cohort and, where applicable, tenant and data mode named by current secure evidence. Missing, stale, malformed, cross-target or withdrawn evidence fails closed.
+
+| Motion | Executable profile or control | GO conversion rule |
+| --- | --- | --- |
+| Invitation-only unpaid individual validation | `invitation-only-individual-validation` | exact-SHA technical gates plus production, participant terms/consent, validation support, agreed outcomes/stop criteria and a current launch decision for one named cohort |
+| Non-activation design-partner work | controlling non-activation boundary in this decision | remains GO only while work uses synthetic or otherwise approved non-production information, makes no customer/activation claim and creates no live-data, payment or launch obligation |
+| Paid institutional pilot | `paid-institutional-pilot` | every bounded-pilot gate plus counsel-approved paper, pricing/signing authority, tax/accounting/payment controls, insurance decision and customer purchase/billing authorization for one named target |
+| Broad enterprise sale | `broad-enterprise-sale` | every paid-pilot gate plus repeated customer deployments, capacity/error-budget acceptance, independent security assurance, qualified accessibility conformance and claim-specific reference permission |
+
+Passing the evaluator records authority for its exact scope; it does not waive a prohibited operation or turn planning-only scope into SIS/LMS replacement or system-of-record authority. The generated evidence contract is [`docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md`](docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md).
+
 ## Checkpoint F consistency decision
 
 **Finalization-program status: COMPLETE as a controlled repository package. Launch status: NOT COMPLETE and not broadly approved.** Completion means the ten required executive controls exist, reconcile to the current evidence and state conservative decisions. It does not convert missing professional, operated, customer, activation or outcome evidence into approval.

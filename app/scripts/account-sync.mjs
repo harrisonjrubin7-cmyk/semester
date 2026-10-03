@@ -30,6 +30,12 @@
  *   5. **Sign in there**, through `#/login`, and see the action — still done.
  *   6. **And back the other way.** The second device makes an action of its
  *      own; the server holds it; the first device, reloaded, shows it.
+ *   7. **Export the account** from the second device and inspect the exact
+ *      JSON blob the download helper hands to the browser for both actions.
+ *   8. **Delete the account** through the Privacy screen, observe the Edge
+ *      Function's complete-erasure receipt, prove the old session no longer
+ *      identifies a user, and prove its access JWT cannot recreate protected
+ *      application state through PostgREST.
  *
  * Both viewports, each with its own account, and any uncaught page error is a
  * finding, as in the golden path.
@@ -58,7 +64,8 @@
  *   VITE_SUPABASE_KEY="$(supabase status -o json | jq -r .PUBLISHABLE_KEY)" \
  *     npx vite build --outDir /tmp/sync-dist
  *   npx vite preview --outDir /tmp/sync-dist --port 4174 &
- *   SMOKE_URL=http://localhost:4174/ SMOKE_PLAYWRIGHT=… npm run smoke:sync
+ *   SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')" \
+ *     SMOKE_URL=http://localhost:4174/ SMOKE_PLAYWRIGHT=… npm run smoke:sync
  *
  * Exit 0 only when every step at both viewports was walked and passed. Exit 1
  * on a finding, and 2 when the instrument itself could not run — never 0 for
@@ -67,9 +74,11 @@
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { randomBytes } from 'node:crypto';
+import { ProofUnavailable, proveDeletedAccountAbsent, tryDeletedAccountStateWrite } from './account-sync-proof.mjs';
 
 const BASE = (process.env.SMOKE_URL || 'http://localhost:4174/').replace(/\/?$/, '/');
 const CHROME = process.env.SMOKE_CHROME || '/opt/pw-browsers/chromium';
+const LOCAL_SERVICE_KEY = process.env.SMOKE_SUPABASE_SERVICE_KEY || '';
 /** How long a single expectation may take to come true. */
 const WAIT = Number(process.env.SMOKE_WAIT || 15_000);
 /**
@@ -95,6 +104,8 @@ const STEPS = [
   'the second device adds one',
   'the server holds that too',
   'the first device, reloaded, shows it',
+  'download the account export and inspect it',
+  'delete the account and invalidate the old session',
 ];
 
 let chromium;
@@ -112,6 +123,10 @@ try {
   if (!response.ok) throw new Error(String(response.status));
 } catch (error) {
   console.error(`Nothing is serving ${BASE}: ${String(error).slice(0, 120)}`);
+  process.exit(2);
+}
+if (!LOCAL_SERVICE_KEY) {
+  console.error('Set SMOKE_SUPABASE_SERVICE_KEY to the ephemeral service key printed by the local Supabase stack.');
   process.exit(2);
 }
 
@@ -179,6 +194,46 @@ async function visible(locator, timeout = WAIT) {
   } catch {
     return false;
   }
+}
+
+/**
+ * The Privacy screen's section headings are buttons too: `FoldHead` gives a
+ * heading the same accessible name as the action it introduces. Select the
+ * product's primary block control before asserting uniqueness, so the check
+ * distinguishes "open this section" from "perform this account action".
+ *
+ * Keep the exact-one assertion. If the action is ever rendered twice, the
+ * failure includes enough DOM state to tell a duplicate control from a
+ * hidden transition copy without weakening the journey to `.first()`.
+ */
+async function primaryAction(page, name, missing) {
+  const action = page
+    .locator('button.btn.btn-block')
+    .filter({ hasText: name })
+    .filter({ visible: true });
+  // `go()` can see the shell's route heading before this lazy screen's chunk
+  // has replaced the Suspense fallback. Locator counts are immediate, so wait
+  // for the control itself before deciding whether it is absent or duplicated.
+  await action.first().waitFor({ state: 'visible', timeout: WAIT }).catch(() => {});
+  const count = await action.count();
+  if (count !== 1) {
+    const seen = await page.getByRole('button', { name }).evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const style = getComputedStyle(button);
+        const box = button.getBoundingClientRect();
+        return {
+          className: button.className,
+          expanded: button.getAttribute('aria-expanded'),
+          display: style.display,
+          visibility: style.visibility,
+          width: Math.round(box.width),
+          height: Math.round(box.height),
+        };
+      }),
+    );
+    throw new Finding(`${missing} (found ${count} visible primary controls; named buttons: ${JSON.stringify(seen)})`);
+  }
+  return action;
 }
 
 /**
@@ -329,6 +384,128 @@ async function journey(label, viewport) {
     await go(page, '#/mine', 'Personal');
     expect(await visible(page.getByRole('button', { name: open(reply) }), SETTLE), 'the first device, reloaded, does not show the second device\'s action');
     expect(await visible(page.getByRole('button', { name: done(title) })), 'the first device lost its own finished action after the reload');
+
+    // ── 8 · The account export contains what both devices made ────────────
+    at(STEPS[8]);
+    await go(other, '#/privacy', 'Privacy');
+    // Capture the exact Blob passed to URL.createObjectURL. Waiting for a
+    // native browser `download` event is fragile here: the button changes its
+    // accessible name while its asynchronous RPC is in flight, and a pending
+    // Playwright event promise can reject before the click action settles.
+    // The product path is still exercised end to end — Privacy calls the real
+    // RPC, `download()` creates the Blob and clicks its anchor — while the
+    // verifier reads the payload before browser/OS download handling can make
+    // the test runner's filesystem part of the result.
+    await other.evaluate(() => {
+      const original = URL.createObjectURL.bind(URL);
+      Object.defineProperty(window, '__semesterExportCapture', {
+        configurable: true,
+        value: { blob: null, original },
+      });
+      URL.createObjectURL = (blob) => {
+        window.__semesterExportCapture.blob = blob;
+        return original(blob);
+      };
+    });
+    const exportButton = await primaryAction(
+      other,
+      /^download my account data$/i,
+      'the Privacy screen did not expose exactly one visible account export action',
+    );
+    await exportButton.click();
+    expect(await visible(other.getByText(/saved .* with rows from/i)), 'the Privacy screen did not confirm the account export');
+    const exported = await other.evaluate(async (timeout) => {
+      const capture = window.__semesterExportCapture;
+      const until = Date.now() + timeout;
+      while (!capture?.blob && Date.now() < until) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      const body = capture?.blob ? await capture.blob.text() : '';
+      if (capture?.original) URL.createObjectURL = capture.original;
+      delete window.__semesterExportCapture;
+      return body;
+    }, WAIT);
+    expect(Boolean(exported), 'the account export produced no readable JSON blob');
+    let exportFile;
+    try {
+      exportFile = JSON.parse(exported);
+    } catch {
+      throw new Finding('the account export was not valid JSON; refusing to continue to deletion');
+    }
+    const isRecord = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+    expect(isRecord(exportFile), 'the account export was not a JSON object');
+    expect(exportFile.format === 'semester.account-export', 'the account export had the wrong format');
+    expect(exportFile.version === 1, 'the account export had an unsupported version');
+    expect(isRecord(exportFile.account), 'the account export had no account record');
+    expect(exportFile.account.email === email, 'the account export did not identify the account it belongs to');
+    expect(isRecord(exportFile.tables), 'the account export had no table map');
+    expect(Array.isArray(exportFile.withheld), 'the account export did not describe withheld records');
+    const stateRows = exportFile.tables.state;
+    expect(Array.isArray(stateRows) && stateRows.length === 1, 'the account export did not contain exactly one state row');
+    const stateRow = stateRows[0];
+    expect(isRecord(stateRow), 'the exported state row was not an object');
+    expect(typeof stateRow.user_id === 'string' && stateRow.user_id.length > 0, 'the exported state row had no owner');
+    expect(isRecord(stateRow.data), 'the exported state row had no structured data');
+    const stateData = JSON.stringify(stateRow.data);
+    expect(stateData.includes(title), 'the exported state row did not contain the first device action');
+    expect(stateData.includes(reply), 'the exported state row did not contain the second device action');
+
+    // ── 9 · Complete server-side deletion and local sign-out ──────────────
+    at(STEPS[9]);
+    const oldSession = await other.evaluate(() => JSON.parse(localStorage.getItem('semester.auth') || 'null'));
+    expect(Boolean(oldSession?.access_token), 'the signed-in device had no session before deletion');
+    expect(Boolean(oldSession?.user?.id), 'the signed-in device had no user identity before deletion');
+    const deleteButton = await primaryAction(
+      other,
+      /^delete my account$/i,
+      'the Privacy screen did not expose exactly one visible account deletion action',
+    );
+    await deleteButton.click();
+    const deletion = other.getByRole('dialog', { name: 'Delete your account' });
+    expect(await visible(deletion), 'the destructive account confirmation did not open');
+    await deletion.getByRole('textbox').fill('DELETE');
+    const receiptReady = other.waitForResponse(
+      (response) => response.request().method() === 'POST' && new URL(response.url()).pathname.endsWith('/functions/v1/delete-account'),
+      { timeout: WAIT },
+    );
+    await deletion.getByRole('button', { name: /^delete it$/i }).click();
+    const receipt = await receiptReady;
+    const receiptBody = await receipt.json().catch(() => ({}));
+    expect(receipt.ok(), `the delete-account function answered ${receipt.status()}`);
+    expect(receiptBody?.erased === true, 'the delete-account receipt did not confirm data erasure');
+    expect(receiptBody?.signInRemoved === true, 'the delete-account receipt did not confirm sign-in removal');
+    expect(await visible(other.getByText(/you are signed out/i)), 'the Privacy screen did not confirm local sign-out');
+    const staleSession = await other.evaluate(async ({ origin, key, token }) => {
+      const response = await fetch(`${origin}/auth/v1/user`, {
+        headers: { apikey: key, Authorization: `Bearer ${token}` },
+      });
+      return { ok: response.ok, status: response.status };
+    }, { ...second.service, token: oldSession.access_token });
+    expect(!staleSession.ok && staleSession.status >= 400, 'the deleted account\'s old session still identifies a user');
+    let staleApplicationWrite;
+    let privilegedAbsence;
+    try {
+      staleApplicationWrite = await tryDeletedAccountStateWrite({
+        origin: second.service.origin,
+        publicKey: second.service.key,
+        staleToken: oldSession.access_token,
+        userId: oldSession.user.id,
+      });
+      privilegedAbsence = await proveDeletedAccountAbsent({
+        origin: second.service.origin,
+        serviceKey: LOCAL_SERVICE_KEY,
+        userId: oldSession.user.id,
+      });
+    } catch (error) {
+      if (error instanceof ProofUnavailable) throw new Unrunnable(error.message);
+      throw error;
+    }
+    expect(
+      staleApplicationWrite.denied,
+      `the deleted account's old access token recreated protected application state (status ${staleApplicationWrite.status})`,
+    );
+    expect(privilegedAbsence.authUserAbsent, 'the deleted account is still present in the local auth service');
+    expect(privilegedAbsence.stateAbsent, 'the deleted account still has a protected application state row');
 
     walked += 1;
   } catch (error) {
