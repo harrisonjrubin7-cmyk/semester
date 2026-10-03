@@ -426,9 +426,29 @@ async function journey(label, viewport) {
       return body;
     }, WAIT);
     expect(Boolean(exported), 'the account export produced no readable JSON blob');
-    expect(exported.includes(title), 'the account export did not contain the first device action');
-    expect(exported.includes(reply), 'the account export did not contain the second device action');
-    expect(exported.includes(email), 'the account export did not identify the account it belongs to');
+    let exportFile;
+    try {
+      exportFile = JSON.parse(exported);
+    } catch {
+      throw new Finding('the account export was not valid JSON; refusing to continue to deletion');
+    }
+    const isRecord = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+    expect(isRecord(exportFile), 'the account export was not a JSON object');
+    expect(exportFile.format === 'semester.account-export', 'the account export had the wrong format');
+    expect(exportFile.version === 1, 'the account export had an unsupported version');
+    expect(isRecord(exportFile.account), 'the account export had no account record');
+    expect(exportFile.account.email === email, 'the account export did not identify the account it belongs to');
+    expect(isRecord(exportFile.tables), 'the account export had no table map');
+    expect(Array.isArray(exportFile.withheld), 'the account export did not describe withheld records');
+    const stateRows = exportFile.tables.state;
+    expect(Array.isArray(stateRows) && stateRows.length === 1, 'the account export did not contain exactly one state row');
+    const stateRow = stateRows[0];
+    expect(isRecord(stateRow), 'the exported state row was not an object');
+    expect(typeof stateRow.user_id === 'string' && stateRow.user_id.length > 0, 'the exported state row had no owner');
+    expect(isRecord(stateRow.data), 'the exported state row had no structured data');
+    const stateData = JSON.stringify(stateRow.data);
+    expect(stateData.includes(title), 'the exported state row did not contain the first device action');
+    expect(stateData.includes(reply), 'the exported state row did not contain the second device action');
 
     // ── 9 · Complete server-side deletion and local sign-out ──────────────
     at(STEPS[9]);
