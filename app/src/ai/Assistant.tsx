@@ -318,6 +318,16 @@ export function probes(rest: DOMRect, lifted = 0): [number, number][] {
 }
 
 function clearOf(rest: DOMRect, self: Element | null, tries = TRIES): number {
+  // Hit testing is a progressive enhancement. Browsers normally provide both
+  // methods, but embedded/test DOMs can expose an `elementsFromPoint` shim
+  // whose implementation still depends on a missing `elementFromPoint`.
+  // Staying in the resting position is safer than letting a deferred layout
+  // check fail after the screen that scheduled it has already gone away.
+  if (
+    typeof document.elementsFromPoint !== 'function'
+    || typeof document.elementFromPoint !== 'function'
+  ) return 0;
+
   /*
    * The least bad place found so far, which is the answer when there is no
    * clear one.
