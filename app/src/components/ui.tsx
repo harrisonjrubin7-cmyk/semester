@@ -7,6 +7,7 @@ import type {
 } from 'react';
 import { useRowStyle } from './shell/useShell';
 import { longhandMargins } from '../lib/margins';
+import { HorizontalOverflow } from './HorizontalOverflow';
 
 /** The uppercase rule that opens a section. */
 /**
@@ -470,7 +471,14 @@ export function TabList<T extends string>({
   };
 
   return (
-    <div ref={strip} role="tablist" aria-label={label} className={className} style={style} onKeyDown={onKeyDown}>
+    <HorizontalOverflow
+      viewportRef={strip}
+      role="tablist"
+      label={label}
+      className={className}
+      style={style}
+      onKeyDown={onKeyDown}
+    >
       {tabs.map((t) => {
         const on = t.id === value;
         return (
@@ -489,7 +497,7 @@ export function TabList<T extends string>({
           </button>
         );
       })}
-    </div>
+    </HorizontalOverflow>
   );
 }
 

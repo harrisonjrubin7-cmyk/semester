@@ -131,8 +131,9 @@ for (const width of WIDTHS) {
     const top = page.locator('.action-center article');
     check(width, 'Today shows a most important action', (await top.count()) === 1);
     check(width, 'the action carries a source label', (await top.locator('[data-source]').count()) >= 1);
-    await top.getByText(/why am i seeing this/i).click();
-    check(width, 'the explanation shows how it was ranked', /How it was ranked/.test(await top.innerText()));
+    await top.getByRole('button', { name: /^why this\?$/i }).click();
+    check(width, 'the explanation shows how it was ranked', await page.getByText('How it was ranked', { exact: true }).isVisible());
+    await page.getByRole('button', { name: /^close$/i }).click();
     const title = await page.locator('#action-top-title').innerText();
     await top.getByRole('button', { name: /^done$/i }).click();
     await page.waitForTimeout(300);

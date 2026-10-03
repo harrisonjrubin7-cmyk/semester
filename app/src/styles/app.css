@@ -4223,6 +4223,21 @@ section[data-drop] > .grip + * {
   padding-bottom: var(--sp-3);
 }
 
+@media (min-width: 840px) {
+  /* Keep every persistent institutional layer on a short laptop without
+     shrinking its 44px controls. These three bands previously put the page
+     itself 361px below the window top. Removing only surrounding air keeps
+     the content start inside the 320px compact-chrome budget. */
+  .deskwork:has(.institutional-navigation) > .deskstrip,
+  .deskwork:has(.institutional-navigation) > .desktop-bar {
+    padding-block: 0;
+  }
+
+  .deskwork:has(.institutional-navigation) .app-header {
+    padding-block: 0;
+  }
+}
+
 @media (max-width: 839px) {
   .deskwork:has(.institutional-navigation) > .desktop-bar {
     padding-inline: var(--sp-5);
@@ -4739,6 +4754,54 @@ section[data-drop] > .grip + * {
   height: 18px;
   margin: 0 var(--sp-2);
   background: var(--app-line);
+}
+
+/* A horizontal row only announces that it moves when it actually clips.
+   Native touch, wheel and focus scrolling stay on the viewport; these controls
+   make that movement discoverable without covering the row's last item. */
+.overflow-cue {
+  min-width: 0;
+}
+
+.overflow-cue__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.overflow-cue__button {
+  display: grid;
+  place-items: center;
+  width: var(--target-compact);
+  min-width: var(--target-compact);
+  height: var(--target-compact);
+  padding: 0;
+  color: var(--app-fg);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.overflow-cue__button:hover:not(:disabled) {
+  border-color: var(--app-accent-deep);
+  background: var(--app-accent-wash);
+}
+
+.overflow-cue__button:disabled {
+  color: var(--app-faint);
+  background: transparent;
+  cursor: default;
+}
+
+.overflow-cue__viewport {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overflow-cue__viewport {
+    scroll-behavior: auto;
+  }
 }
 
 /* ── The shelf a file screen opens on ─────────────────────────────────────
@@ -11129,3 +11192,13 @@ button.adband-bar {
 .standards-audit a { overflow-wrap: anywhere; text-decoration: underline; }
 .standards-audit li { margin-bottom: var(--sp-5); }
 .standards-audit :focus-visible { outline: 2px solid var(--app-fg); outline-offset: 3px; }
+
+/* One default assignment action stays visible; alternatives remain a readable
+   list without turning four equal controls into a single action wall. */
+.assignment-options-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}

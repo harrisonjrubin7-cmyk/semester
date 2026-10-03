@@ -6,6 +6,7 @@ import { BARS, slabPath } from '../components/mark.data';
 const root = join(import.meta.dirname, '../../..');
 const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
 const styles = readFileSync(join(root, 'company-site/site.css'), 'utf8');
+const surface = `${site}\n${styles}`;
 
 describe('the company site and application share one identity', () => {
   it('draws every public logo from the application silhouette, including the favicon', () => {
@@ -29,7 +30,7 @@ describe('the company site and application share one identity', () => {
       expect(styles.includes(token)).toBe(true);
     }
     for (const oldTreatment of ['fonts.googleapis.com', '--gold-metal:linear-gradient', 'rotateY(-6deg)', 'TODAY  /  ONE CLEAR NEXT STEP']) {
-      expect((site + styles).includes(oldTreatment)).toBe(false);
+      expect(surface.includes(oldTreatment)).toBe(false);
     }
   });
 

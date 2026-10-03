@@ -69,6 +69,13 @@ describe('AssignmentStates interaction', () => {
     await act(async () => [...row.querySelectorAll('button')].find((b) => b.textContent === 'Ask for help')!.click());
     expect(onOption).toHaveBeenCalledWith('near', 'help');
   });
+
+  it('ranks the immediate action and groups the alternatives', () => {
+    const h = html();
+    expect(h).toContain('class="assignment-options-list"');
+    expect(h).toContain('<summary>Other ways to handle this</summary>');
+    expect(h.indexOf('Start a focus session')).toBeLessThan(h.indexOf('Other ways to handle this'));
+  });
 });
 
 describe('AssignmentStates empty', () => {

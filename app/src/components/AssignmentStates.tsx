@@ -93,11 +93,21 @@ function Row({ a, now, onOption }: { a: Assignment; now: number; onOption?: (id:
         </>
       ) : null}
       <div>
-        {OPTIONS.map(([key, label]) => (
-          <button key={key} type="button" className="btn" onClick={() => onOption?.(a.id, key)}>
-            {label}
-          </button>
-        ))}
+        <button type="button" className="btn" onClick={() => onOption?.(a.id, OPTIONS[0][0])}>
+          {OPTIONS[0][1]}
+        </button>
+        <details>
+          <summary>Other ways to handle this</summary>
+          <ul className="assignment-options-list">
+            {OPTIONS.slice(1).map(([key, label]) => (
+              <li key={key}>
+                <button type="button" className="btn" onClick={() => onOption?.(a.id, key)}>
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
       </div>
     </li>
   );

@@ -112,6 +112,7 @@ describe('the company site dialog lifecycle', () => {
     expect(element('search').hidden).toBe(true);
     expect(backgroundState()).toEqual([false, false, true]);
     expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('opens desktop search and returns focus on Escape', () => {
@@ -142,11 +143,13 @@ describe('the company site dialog lifecycle', () => {
     if (kind === 'drawer') dialogs.openDrawer(); else dialogs.sOpen();
     expect(backgroundState()).toEqual([true, true, true]);
     expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(element(kind).inert).not.toBe(true);
 
     if (kind === 'drawer') dialogs.closeDrawer(); else dialogs.sClose();
     expect(backgroundState()).toEqual([false, false, true]);
     expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('switches from the mobile menu to shortcut search without two active modals', () => {
@@ -158,11 +161,13 @@ describe('the company site dialog lifecycle', () => {
     expect(element('menu-btn').getAttribute('aria-expanded')).toBe('false');
     expect(backgroundState()).toEqual([true, true, true]);
     expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(document.activeElement?.id).toBe('search-q');
     dialogs.sClose();
     expect(document.activeElement?.id).toBe('menu-btn');
     expect(backgroundState()).toEqual([false, false, true]);
     expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it('keeps only the menu active if it replaces an open search dialog', () => {
@@ -173,9 +178,11 @@ describe('the company site dialog lifecycle', () => {
     expect(element('drawer').hidden).toBe(false);
     expect(document.activeElement?.id).toBe('drawer-close');
     expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     dialogs.closeDrawer();
     expect(backgroundState()).toEqual([false, false, true]);
     expect(bodyOverflow()).toBe('auto');
+    expect(document.body.classList.contains('modal-open')).toBe(false);
   });
 
   it.each(['drawer', 'search'] as const)('preserves an existing scroll lock when %s closes', kind => {
@@ -185,6 +192,7 @@ describe('the company site dialog lifecycle', () => {
     expectScrollLocked();
     if (kind === 'drawer') dialogs.closeDrawer(); else dialogs.sClose();
     expectScrollLocked();
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(backgroundState()).toEqual([false, false, true]);
   });
 
@@ -214,6 +222,7 @@ describe('the company site dialog lifecycle', () => {
     dialogs.openDrawer();
     expect(element('drawer').hidden).toBe(false);
     expect(backgroundState()).toEqual([true, true, true]);
+    expect(document.body.classList.contains('modal-open')).toBe(true);
     expect(bodyOverflow()).toBe('auto');
     // The same behavioral assertion used above must reject this broken CSS.
     expect(expectScrollLocked).toThrow();
