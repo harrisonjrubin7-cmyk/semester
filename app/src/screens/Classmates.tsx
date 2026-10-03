@@ -31,6 +31,14 @@ import { markRead, marks as storedMarks, remember, type Marks } from '../lib/roo
 import { Rooms } from '../components/room/Rooms';
 import { Talk } from '../components/room/Talk';
 
+async function loadClassmates(accountId: string, term: string) {
+  const [profile, rooms] = await Promise.all([myProfile(accountId), myRooms(accountId, term)]);
+  // Fetch every room's last lines together; one request per room makes the
+  // conversation list wait on a chain of phone round trips.
+  const messages = rooms.length > 0 ? bucket(await across(term, rooms), (message) => message.code) : {};
+  return { profile, rooms, messages };
+}
+
 /**
  * The people in your classes, as a chat rather than as a settings page.
  *
@@ -82,7 +90,11 @@ export function Classmates() {
   /** Everything said in every room you are in, for the list's last lines. */
   const [said, setSaid] = useState<Record<string, Message[]>>({});
   const [marks, setMarks] = useState<Marks>(() => storedMarks());
-  const [open, setOpen] = useState('');
+  const [open, setOpen] = useState(() =>
+    typeof window === 'undefined'
+      ? ''
+      : (new URLSearchParams(window.location.search).get('room') ?? ''),
+  );
   const [adding, setAdding] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -97,25 +109,12 @@ export function Classmates() {
 
   const refresh = useCallback(async () => {
     if (!account || !ok) return;
-    setError('');
     try {
-      const [p, mine] = await Promise.all([myProfile(account.id), myRooms(account.id, term)]);
-      setProfile(p);
-      setHandle(p?.handle ?? '');
-      setRooms(mine);
-      /*
-       * One query for every room's last lines, rather than one per room.
-       *
-       * The list needs a preview and an unread count for each class; asking
-       * room by room is five round trips on a phone before anything is drawn.
-       * `bucket` splits the one answer back out. See `lib/roomchat.ts`.
-       */
-      if (mine.length > 0) {
-        const recent = await across(term, mine);
-        setSaid(bucket(recent, (m) => m.code));
-      } else {
-        setSaid({});
-      }
+      const loaded = await loadClassmates(account.id, term);
+      setProfile(loaded.profile);
+      setHandle(loaded.profile?.handle ?? '');
+      setRooms(loaded.rooms);
+      setSaid(loaded.messages);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -124,8 +123,26 @@ export function Classmates() {
   }, [account, ok, term]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (!account || !ok) return;
+    let live = true;
+    void loadClassmates(account.id, term)
+      .then((loaded) => {
+        if (!live) return;
+        setProfile(loaded.profile);
+        setHandle(loaded.profile?.handle ?? '');
+        setRooms(loaded.rooms);
+        setSaid(loaded.messages);
+      })
+      .catch((e: unknown) => {
+        if (live) setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (live) setLoaded(true);
+      });
+    return () => {
+      live = false;
+    };
+  }, [account, ok, term]);
 
   /*
    * `?room=` — the link the room's own menu copies.
@@ -141,7 +158,6 @@ export function Classmates() {
     const url = new URL(window.location.href);
     url.searchParams.delete('room');
     window.history.replaceState({}, '', url);
-    setOpen(asked);
   }, []);
 
   /*
@@ -309,6 +325,7 @@ export function Classmates() {
   };
 
   const onLeave = (key: string) => {
+    setError('');
     void leave(account.id, term, key)
       .then(() => {
         setOpen((now) => (now === key ? '' : now));
