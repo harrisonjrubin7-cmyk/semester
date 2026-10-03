@@ -75,6 +75,7 @@ declare
   pri text;
   operation uuid := gen_random_uuid();
   notice_message uuid;
+  notice_choice text;
 begin
   ada := pg_temp.newuser('ada@tickets.example');
   ben := pg_temp.newuser('ben@tickets.example');
@@ -211,11 +212,18 @@ begin
   select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
   perform pg_temp.counted('support email is capped at three notices per ticket in a rolling day', n, 3);
   perform pg_temp.become(ada);
-  perform public.set_support_email_notice(a11y, false);
+  select public.set_support_email_notice(a11y, false) into notice_choice;
   reset role;
+  if notice_choice <> 'off_with_in_flight' then
+    raise exception 'FAILED: opting out did not disclose the claimed notice — got %', notice_choice;
+  end if;
+  raise notice 'ok  opting out discloses the notice already in flight';
   select count(*) into n from public.support_notification_outbox
-   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
-  perform pg_temp.counted('opting out cancels every support notice still waiting to send', n, 0);
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null and claim_id is null;
+  perform pg_temp.counted('opting out cancels every unclaimed support notice', n, 0);
+  select count(*) into n from public.support_notification_outbox
+   where ticket_id = a11y and accepted_at is null and dead_lettered_at is null and claim_id is not null;
+  perform pg_temp.counted('opting out preserves the notice already in flight', n, 1);
   perform pg_temp.become_mfa(agent);
   begin
     perform public.support_reply(a11y, 'closing', 'closed', gen_random_uuid());

@@ -441,7 +441,11 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   },
   {
     file: '20261002003000_support_notification_outbox.sql',
-    functions: ['my_support_email_notices', 'set_support_email_notice'],
+    functions: ['my_support_email_notices'],
+  },
+  {
+    file: '20261003120000_support_notification_consent_boundary.sql',
+    functions: ['set_support_email_notice'],
   },
 ];
 

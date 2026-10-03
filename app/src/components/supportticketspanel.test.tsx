@@ -22,6 +22,7 @@ interface World {
   /** Holds the next call to an RPC until the test releases it. */
   gates: Map<string, Promise<void>>;
   errors: Map<string, { message: string }>;
+  noticeOutcome: 'on' | 'off' | 'off_with_in_flight';
 }
 let world: World;
 
@@ -38,8 +39,13 @@ vi.mock('../lib/cloud', () => ({
       const error = world.errors.get(name);
       if (error) return { data: null, error };
       if (name === 'my_support_tickets') return { data: tickets, error: null };
+      if (name === 'my_support_email_notices') return {
+        data: tickets.map((ticket) => ({ ticket_id: ticket.id, enabled: ticket.email_notice_enabled === true })),
+        error: null,
+      };
       if (name === 'my_support_thread') return { data: thread, error: null };
       if (name === 'open_support_ticket') return { data: 'new-ticket', error: null };
+      if (name === 'set_support_email_notice') return { data: world.noticeOutcome, error: null };
       return { data: null, error: null };
     },
   }),
@@ -57,7 +63,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
-  world = { tickets: [], thread: [], calls: [], gates: new Map(), errors: new Map() };
+  world = { tickets: [], thread: [], calls: [], gates: new Map(), errors: new Map(), noticeOutcome: 'on' };
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -199,6 +205,17 @@ describe('asking Semester support', () => {
     expect(host.textContent).toContain('Generic email notices are on for this question.');
     expect(host.textContent).toContain('Could not refresh questions.');
     expect(host.textContent).toContain('The saved setting is shown.');
+  });
+
+  it('warns when opt-out happens after a notice is already in flight', async () => {
+    world.tickets = [{ ...ticket('t1', 'Notice choice'), email_notice_enabled: true }];
+    world.noticeOutcome = 'off_with_in_flight';
+    await draw();
+    await click(button('Notice choice · Waiting for Semester support'));
+    const noticeBox = host.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(noticeBox.checked).toBe(true);
+    await click(noticeBox);
+    expect(host.textContent).toContain('One notice was already being delivered and may still arrive.');
   });
 
   it('shows the next account none of the last one’s questions, even when the old answer arrives last', async () => {

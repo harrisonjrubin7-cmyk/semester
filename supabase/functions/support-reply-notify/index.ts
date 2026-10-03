@@ -23,21 +23,12 @@ async function retry(messageId: string, claimId: string, attempts: number, reaso
 }
 
 async function target(row: OutboxRow) {
-  const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('student_id,email_notice_enabled').eq('id', row.ticket_id).maybeSingle();
+  const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('student_id').eq('id', row.ticket_id).maybeSingle();
   if (ticketError || !ticket?.student_id) {
     const outcome = await retry(row.message_id, row.claim_id, row.attempts, ticketError ? 'student lookup unavailable' : 'student account unavailable');
     return {
       messageId: row.message_id, ticketId: row.ticket_id, claimId: row.claim_id, email: '', attempts: row.attempts,
       resolutionOutcome: outcome,
-    };
-  }
-  if (!ticket.email_notice_enabled) {
-    const { error: deleteError } = await admin.from('support_notification_outbox').delete()
-      .eq('message_id', row.message_id).eq('claim_id', row.claim_id);
-    if (deleteError) throw new Error('Could not cancel the opted-out support notification.');
-    return {
-      messageId: row.message_id, ticketId: row.ticket_id, claimId: row.claim_id, email: '', attempts: row.attempts,
-      resolutionOutcome: 'cancelled' as const,
     };
   }
   const { data: user, error } = await admin.auth.admin.getUserById(ticket.student_id);
@@ -87,22 +78,23 @@ Deno.serve((req) => handleSupportNotice(req, {
     const [row] = await claim(messageId, 1);
     return row ? target(row) : null;
   },
+  async unavailable(messageId) {
+    const { data, error } = await admin.from('support_notification_outbox')
+      .select('accepted_at,dead_lettered_at,claim_id').eq('message_id', messageId).maybeSingle();
+    if (error) throw new Error('Could not inspect the support-notification state.');
+    if (!data) return 'cancelled';
+    if (data.accepted_at) return 'accepted';
+    if (data.dead_lettered_at) return 'unavailable';
+    return data.claim_id ? 'in_progress' : 'queued';
+  },
   async pending() {
     return Promise.all((await claim(null, 100)).map(target));
   },
   async eligible(messageId, claimId) {
-    const { data: row, error } = await admin.from('support_notification_outbox').select('ticket_id')
+    const { data: row, error } = await admin.from('support_notification_outbox').select('message_id')
       .eq('message_id', messageId).eq('claim_id', claimId).maybeSingle();
     if (error) throw new Error('Could not recheck the support-notification claim.');
-    if (!row) return false;
-    const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('email_notice_enabled')
-      .eq('id', row.ticket_id).maybeSingle();
-    if (ticketError) throw new Error('Could not recheck the support-notification preference.');
-    if (ticket?.email_notice_enabled) return true;
-    const { error: deleteError } = await admin.from('support_notification_outbox').delete()
-      .eq('message_id', messageId).eq('claim_id', claimId);
-    if (deleteError) throw new Error('Could not cancel the opted-out support notification.');
-    return false;
+    return Boolean(row);
   },
   async send(input) {
     if (!supportSender) return false;

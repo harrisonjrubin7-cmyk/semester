@@ -132,6 +132,8 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         ? `Reply recorded for ${ticketReference(ticketId)}. Email notice accepted by the provider; delivery is not yet confirmed.`
         : delivery === 'queued'
           ? `Reply recorded for ${ticketReference(ticketId)}. Email notice is queued for retry; the reply is available in Help.`
+          : delivery === 'in_progress'
+            ? `Reply recorded for ${ticketReference(ticketId)}. Email notice is already being delivered; provider acceptance is not yet confirmed.`
           : delivery === 'cancelled'
             ? `Reply recorded for ${ticketReference(ticketId)}. Email notice was cancelled before delivery; the reply is available in Help.`
             : delivery === 'capped'

@@ -38,7 +38,7 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor 
 
 ### After the second reading
 
-The current register also includes 3 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`, `set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 3 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -116,7 +116,7 @@ The current register also includes 3 callable definers added after that dated ca
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
 | `request_school_membership` | `auth.uid()`, `private.verified_account` | `20260930185000_school_membership_enforcement.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
-| `set_support_email_notice` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
+| `set_support_email_notice` | `auth.uid()` | `20261003120000_support_notification_consent_boundary.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
 | `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |

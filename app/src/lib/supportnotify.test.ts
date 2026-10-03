@@ -14,6 +14,7 @@ function deps(overrides: Partial<SupportNoticeDeps> = {}): SupportNoticeDeps {
     userFromToken: vi.fn().mockResolvedValue('agent'),
     mayAnswer: vi.fn().mockResolvedValue(true),
     notice: vi.fn().mockResolvedValue({ messageId: 'message-1', ticketId: ticket, claimId: claim, email: 'student@example.test', attempts: 0 }),
+    unavailable: vi.fn().mockResolvedValue('cancelled'),
     pending: vi.fn().mockResolvedValue([]),
     eligible: vi.fn().mockResolvedValue(true),
     send: vi.fn().mockResolvedValue(true),
@@ -126,13 +127,32 @@ describe('support reply notification', () => {
     expect(d.send).not.toHaveBeenCalled();
   });
 
-  it('rechecks a claimed row after recipient resolution and cancels before provider I/O', async () => {
+  it('rechecks ownership of a claimed row before provider I/O', async () => {
     const d = deps({ eligible: vi.fn().mockResolvedValue(false) });
     const response = await handleSupportNotice(request(), d);
     expect(response.status).toBe(409);
     expect(d.eligible).toHaveBeenCalledWith('message-1', claim);
     expect(d.send).not.toHaveBeenCalled();
     expect(d.accepted).not.toHaveBeenCalled();
+  });
+
+  it('reports an already-claimed notice as in progress rather than cancelled', async () => {
+    const d = deps({
+      notice: vi.fn().mockResolvedValue(null),
+      unavailable: vi.fn().mockResolvedValue('in_progress'),
+    });
+    const response = await handleSupportNotice(request(), d);
+    expect(response.status).toBe(202);
+    expect(await response.json()).toEqual({ ok: true, outcome: 'in_progress' });
+    expect(d.send).not.toHaveBeenCalled();
+  });
+
+  it('uses 409 only when the notice really was cancelled', async () => {
+    const d = deps({ notice: vi.fn().mockResolvedValue(null) });
+    const response = await handleSupportNotice(request(), d);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ outcome: 'cancelled' });
+    expect(d.unavailable).toHaveBeenCalledWith(message);
   });
 
   it('refuses callers without the support capability before looking up a ticket', async () => {

@@ -166,10 +166,12 @@ export async function openTicket(
   return String(data);
 }
 
-export async function setSupportEmailNotice(ticketId: string, enabled: boolean): Promise<void> {
+export async function setSupportEmailNotice(ticketId: string, enabled: boolean): Promise<'on' | 'off' | 'off_with_in_flight'> {
   const db = await cloud();
-  const { error } = await db.rpc('set_support_email_notice', { want_ticket: ticketId, want_enabled: enabled });
+  const { data, error } = await db.rpc('set_support_email_notice', { want_ticket: ticketId, want_enabled: enabled });
   if (error) throw fail(error, 'Could not change the email notice choice.');
+  if (data === 'on' || data === 'off' || data === 'off_with_in_flight') return data;
+  throw new Error('The email notice choice was saved, but its delivery state is unavailable. Refresh this question.');
 }
 
 export async function myTickets(): Promise<Ticket[]> {
@@ -234,7 +236,7 @@ export async function supportReply(
   body: string,
   status: 'open' | 'waiting_on_student' | 'resolved',
   operationId: string,
-): Promise<'accepted' | 'queued' | 'cancelled' | 'preference_off' | 'capped'> {
+): Promise<'accepted' | 'in_progress' | 'queued' | 'cancelled' | 'preference_off' | 'capped'> {
   const db = await cloud();
   const { data: notification, error } = await db.rpc('support_reply', {
     want_ticket: ticketId,
@@ -252,15 +254,23 @@ export async function supportReply(
     throw new Error('The support reply was recorded, but its notification outcome is unavailable. Refresh before replying again.');
   }
   const messageId = result.message_id;
-  const { error: noticeError } = await db.functions.invoke('support-reply-notify', {
+  const { data: noticeResult, error: noticeError } = await db.functions.invoke('support-reply-notify', {
     body: { message_id: messageId },
   });
   // A 2xx response proves provider acceptance, not inbox delivery. Delivery
   // is established separately by provider events or an end-to-end receipt.
-  return noticeError ? supportNoticeFailure(noticeError) : 'accepted';
+  return supportNoticeResult(noticeResult, noticeError);
 }
 
-/** A 409 means the claimed notice disappeared, usually because consent was withdrawn. */
+export function supportNoticeResult(data: unknown, error: unknown): 'accepted' | 'in_progress' | 'queued' | 'cancelled' {
+  if (!error && data && typeof data === 'object' && 'outcome' in data) {
+    const outcome = (data as { outcome?: unknown }).outcome;
+    if (outcome === 'in_progress' || outcome === 'queued' || outcome === 'accepted') return outcome;
+  }
+  return error ? supportNoticeFailure(error) : 'accepted';
+}
+
+/** The function reserves 409 for a notice cancelled before any worker claimed it. */
 export function supportNoticeFailure(error: unknown): 'queued' | 'cancelled' {
   const context = error && typeof error === 'object' && 'context' in error
     ? (error as { context?: unknown }).context

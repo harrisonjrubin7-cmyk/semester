@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, supportNoticeFailure, ticketReference, toTicket } from './supporttickets';
+import { CATEGORIES, CATEGORY_LABELS, CONTEXT_KEYS, CONTEXT_LABELS, availableContext, contextToSend, firstResponseHours, screenShape, supportNoticeFailure, supportNoticeResult, ticketReference, toTicket } from './supporttickets';
 
 /**
  * The client half of support tickets, held to the migration it calls. The
@@ -56,6 +56,12 @@ describe('support tickets, client and migration', () => {
     expect(supportNoticeFailure({ context: { status: 409 } })).toBe('cancelled');
     expect(supportNoticeFailure({ context: { status: 503 } })).toBe('queued');
     expect(supportNoticeFailure(new Error('network unavailable'))).toBe('queued');
+  });
+
+  it('keeps an already-claimed notice distinct from cancellation', () => {
+    expect(supportNoticeResult({ outcome: 'in_progress' }, null)).toBe('in_progress');
+    expect(supportNoticeResult({ outcome: 'queued' }, null)).toBe('queued');
+    expect(supportNoticeResult({ outcome: 'accepted' }, null)).toBe('accepted');
   });
 });
 

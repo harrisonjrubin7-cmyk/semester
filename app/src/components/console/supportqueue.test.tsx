@@ -121,6 +121,17 @@ describe('the support operations queue', () => {
     );
   });
 
+  it('reports an already-claimed notice without calling it accepted or cancelled', async () => {
+    mock.reply.mockResolvedValue('in_progress');
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'The reply remains available here.');
+    await click(button('Send support reply'));
+    expect(mock.status).toHaveBeenCalledWith(
+      'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice is already being delivered; provider acceptance is not yet confirmed.',
+    );
+  });
+
   it('reports a cancelled notice without claiming a durable retry exists', async () => {
     mock.reply.mockResolvedValue('cancelled');
     await draw();

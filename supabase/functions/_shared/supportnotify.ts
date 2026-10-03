@@ -9,6 +9,7 @@ export interface SupportNoticeDeps {
   userFromToken(token: string): Promise<string | null>;
   mayAnswer(userId: string): Promise<boolean>;
   notice(messageId: string): Promise<SupportNoticeTarget | null>;
+  unavailable(messageId: string): Promise<'accepted' | 'in_progress' | 'queued' | 'cancelled' | 'unavailable'>;
   pending(): Promise<SupportNoticeTarget[]>;
   eligible(messageId: string, claimId: string): Promise<boolean>;
   send(input: { to: string; subject: string; text: string; idempotencyKey: string }): Promise<boolean>;
@@ -94,17 +95,24 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
   if (!UUID.test(messageId)) return reply(400, { error: 'Choose a support reply.' });
 
   const target = await deps.notice(messageId);
-  if (!target) return reply(409, { error: 'No support reply is ready to notify.' });
+  if (!target) {
+    const outcome = await deps.unavailable(messageId);
+    if (outcome === 'accepted') return reply(200, { ok: true, outcome });
+    if (outcome === 'in_progress' || outcome === 'queued') return reply(202, { ok: true, outcome });
+    if (outcome === 'cancelled') return reply(409, { error: 'The support notice was cancelled before delivery.', outcome });
+    return reply(503, { error: 'The support notice is not available for delivery.', outcome });
+  }
   const outcome = await sendTarget(deps, target);
-  if (outcome === 'accepted') return reply(200, { ok: true });
+  if (outcome === 'accepted') return reply(200, { ok: true, outcome });
   if (outcome === 'cancelled') return reply(409, { error: 'The support notice was cancelled before delivery.' });
   return reply(502, { error: 'The email provider did not accept the notice.' });
 }
 
 async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered' | 'cancelled'> {
   if (target.resolutionOutcome) return target.resolutionOutcome;
-  // Recipient resolution can take long enough for a student to opt out. Check
-  // the claimed row and preference again immediately before provider I/O.
+  // Consent is checked atomically when the row is claimed. Once claimed, the
+  // notice is visibly in flight; this final check only proves this worker
+  // still owns the row before provider I/O.
   if (!(await deps.eligible(target.messageId, target.claimId))) return 'cancelled';
   const ticketReference = reference(target.ticketId);
   let sent = false;
