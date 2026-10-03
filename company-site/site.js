@@ -583,7 +583,7 @@ const exampleRow = (scale = 1) => ({
     "pref-notif":[["n-dead","Deadline reminders",true],["n-plan","Plan and registration alerts",true],["n-inst","Messages from my institution",true],["n-push","Push notifications on this device",false]],
     "pref-priv":[["p-ai","Keep Ask Semester history",true],["p-share","Share my plan with my advisor",false],["p-sup","Allow support to view my account when I open a ticket",false]]};
   Object.entries(PR).forEach(([el,items])=>{document.getElementById(el).innerHTML=items.map(([id,l,d])=>{const on=d==="lock"?true:(id in prefs?prefs[id]:d);return `<div class="sw-row"><span id="${id}-l">${l}${d==="lock"?' <span class="fine">· always on</span>':""}</span><button type="button" class="sw" role="switch" id="${id}" aria-checked="${on}" aria-labelledby="${id}-l"${d==="lock"?" disabled":""}></button></div>`}).join("")});
-  
+
   document.querySelectorAll(".sw").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-checked")!=="true";b.setAttribute("aria-checked",on);prefs[b.id]=on;try{localStorage.setItem(PKEY,JSON.stringify(prefs))}catch(e){}document.getElementById("pref-saved").textContent=`Saved in this browser: ${document.getElementById(b.id+"-l").textContent.trim()} ${on?"on":"off"}.`}));
 
   // ---------- compare ----------
