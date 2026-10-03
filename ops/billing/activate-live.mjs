@@ -46,6 +46,19 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   const stripe = (path, init = {}) => request(`https://api.stripe.com/v1/${path}`, {
     ...init, headers: { Authorization: `Bearer ${c.stripeKey}`, ...init.headers },
   }, 'Stripe');
+  async function legacyCheckoutSessions() {
+    const sessions = [];
+    let sessionCursor;
+    do {
+      const page = await stripe(`checkout/sessions?status=open&limit=100${sessionCursor ? `&starting_after=${encodeURIComponent(sessionCursor)}` : ''}`);
+      if (!Array.isArray(page.data)) throw new Error('Stripe returned an invalid Checkout Session list.');
+      sessions.push(...page.data.filter(item =>
+        item?.metadata?.semester_checkout_id && item?.metadata?.semester_tax_contract !== 'plus-v2'));
+      sessionCursor = page.has_more === true ? page.data.at(-1)?.id : undefined;
+      if (page.has_more === true && !sessionCursor) throw new Error('Stripe returned invalid Checkout Session pagination.');
+    } while (sessionCursor);
+    return sessions;
+  }
   const account = await stripe('account');
   if (!account.id || account.charges_enabled !== true || account.details_submitted !== true)
     throw new Error('Stripe account onboarding is incomplete or live charges are disabled. No settings changed.');
@@ -71,6 +84,12 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     registrationCursor = page.has_more === true ? page.data.at(-1)?.id : undefined;
     if (page.has_more === true && !registrationCursor) throw new Error('Stripe returned invalid tax registration pagination.');
   } while (registrationCursor);
+
+  // Any Semester link created before the tax-aware contract remains usable
+  // until Stripe expires it. Inventory every open page before activation;
+  // --apply invalidates those links and verifies none remain before secrets
+  // can make the new checkout available.
+  const legacySessions = await legacyCheckoutSessions();
 
   // API-created portal configurations are non-default. Tag Semester's one and
   // page through active configurations so a retry updates it instead of
@@ -113,9 +132,20 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     taxReady, taxBehaviorConfigured: !!taxBehavior, productTaxCodeConfigured: true,
     activeTaxRegistrations: registrations.length,
     portalConfigured: portalReady, webhookExists: !!endpoint,
+    legacyOpenCheckoutSessions: legacySessions.length,
     requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
 
   const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  for (const session of legacySessions) {
+    if (!/^cs_(?:live|test)_[A-Za-z0-9]+$/.test(session?.id || ''))
+      throw new Error('Stripe returned an invalid legacy Checkout Session. No settings changed.');
+    const expired = await stripe(`checkout/sessions/${encodeURIComponent(session.id)}/expire`, { method: 'POST', headers });
+    if (expired?.id !== session.id || expired?.status !== 'expired')
+      throw new Error('Stripe did not confirm expiration of a legacy Checkout Session. Checkout remains unavailable.');
+  }
+  if ((await legacyCheckoutSessions()).length > 0)
+    throw new Error('A legacy untaxed Checkout Session is still open. Checkout remains unavailable.');
+
   if (!endpoint) {
     const body = new URLSearchParams({ url: c.webhookUrl, description: 'Semester subscription lifecycle' });
     EVENTS.forEach((event, i) => body.set(`enabled_events[${i}]`, event));
@@ -190,7 +220,8 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   return { state: 'configured', project: c.project, chargesEnabled: true,
     taxReady: true, taxBehaviorConfigured: true, productTaxCodeConfigured: true,
     activeTaxRegistrations: registrations.length,
-    portalConfigured: true, webhookVerified: true, originsVerified: true, paymentsVerified: false,
+    portalConfigured: true, webhookVerified: true, originsVerified: true,
+    expiredLegacyCheckoutSessions: legacySessions.length, paymentsVerified: false,
     remaining: 'Complete one owner-approved checkout, receipt, entitlement and cancellation lifecycle before marking billing available.' };
 }
 

@@ -8,8 +8,8 @@
  *
  *   checkout.session.completed      complete_checkout → an active subscription
  *   customer.subscription.*         sync_provider_subscription (newer events only)
- *   invoice.paid / payment_succeeded upsert_provider_invoice_v2, then payment_succeeded
- *   invoice.payment_failed          upsert_provider_invoice_v2, then payment_failed → dunning
+ *   invoice.paid / payment_succeeded atomic invoice snapshot + payment_succeeded
+ *   invoice.payment_failed          atomic invoice snapshot + payment_failed → dunning
  *   invoice.finalization_failed     recorded with its tax/location failure → dunning
  *   charge.refunded                 refund
  *   charge.dispute.created          chargeback
@@ -52,10 +52,11 @@ export interface WebhookDeps {
     ref: string, status: SubscriptionStatus, periodStart: string | null, periodEnd: string | null,
     cancelAtPeriodEnd: boolean | null, eventAt: string,
   ): Promise<unknown>;
-  upsertInvoice(
-    subscriptionRef: string, invoiceRef: string, subtotalCents: number | null, taxCents: number | null, currency: string | null,
-    issuedAt: string | null, dueAt: string | null,
-  ): Promise<string | null>;
+  applyInvoiceEvent(
+    eventId: string, kind: PaymentKind, subscriptionRef: string, invoiceRef: string,
+    subtotalCents: number | null, taxCents: number | null, currency: string | null,
+    issuedAt: string | null, dueAt: string | null, amountCents: number | null, sha256: string,
+  ): Promise<string>;
   applyEvent(eventId: string, kind: PaymentKind, invoiceId: string | null, amountCents: number | null, sha256: string): Promise<string>;
 }
 
@@ -161,16 +162,17 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
         const tax = invoiceTax(o);
         const subtotal = num(o.total_excluding_tax) ?? num(o.subtotal_excluding_tax) ??
           num(o.subtotal) ?? Math.max((num(o.amount_due) ?? 0) - tax, 0);
-        invoiceId = await deps.upsertInvoice(
-          sub, id, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
-          isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created),
+        const outcome = await deps.applyInvoiceEvent(
+          eventId, kind, sub, id, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
+          isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created), amount, sha,
         );
-        if (invoiceId === null) {
+        if (outcome === 'not_ready') {
           // The subscription is not stored yet: its checkout event is still on
           // its way. Nothing is recorded, so the provider's retry is not a duplicate.
           console.error('billing-webhook: an invoice arrived before its subscription; asked for a retry');
           return reply(500, { error: 'Not ready for this event.' });
         }
+        return reply(200, { received: true, outcome });
       }
     } else if (type === 'charge.refunded') {
       kind = 'refund';

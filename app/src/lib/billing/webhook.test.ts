@@ -19,7 +19,7 @@ function deps(over: Partial<WebhookDeps> = {}) {
     now: () => NOW,
     completeCheckout: vi.fn(async () => { calls.push('complete'); return 'sub-id'; }),
     syncSubscription: vi.fn(async () => { calls.push('sync'); return 'updated'; }),
-    upsertInvoice: vi.fn(async () => { calls.push('invoice'); return 'inv-uuid'; }),
+    applyInvoiceEvent: vi.fn(async () => { calls.push('invoice'); return 'recorded'; }),
     applyEvent: vi.fn(async () => { calls.push('apply'); return 'recorded'; }),
     ...over,
   };
@@ -54,7 +54,7 @@ describe('the billing webhook', () => {
       const res = await handleBillingWebhook(post(body, { 'Stripe-Signature': sig }), d);
       expect(res.status).toBe(400);
       expect(d.applyEvent).not.toHaveBeenCalled();
-      expect(d.upsertInvoice).not.toHaveBeenCalled();
+      expect(d.applyInvoiceEvent).not.toHaveBeenCalled();
     }
   });
 
@@ -72,15 +72,16 @@ describe('the billing webhook', () => {
     expect(ok.headers.get('Access-Control-Allow-Origin')).toBeNull();
   });
 
-  it('hashes the raw body it verified, and records the event last', async () => {
+  it('hashes the raw body it verified, and atomically records the invoice event', async () => {
     const { d, calls } = deps();
     const body = event('invoice.payment_failed', { id: 'in_1', subscription: 'sub_1', amount_due: 799, currency: 'usd', created: NOW - 60 });
     const res = await handleBillingWebhook(post(body), d);
     expect(res.status).toBe(200);
-    expect(calls).toEqual(['invoice', 'apply']);
-    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_1', 799, 0, 'usd', expect.any(String), expect.any(String));
-    expect(d.applyEvent).toHaveBeenCalledWith(
-      'evt_1', 'payment_failed', 'inv-uuid', 799, createHash('sha256').update(body).digest('hex'));
+    expect(calls).toEqual(['invoice']);
+    expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
+      'evt_1', 'payment_failed', 'sub_1', 'in_1', 799, 0, 'usd', expect.any(String), expect.any(String),
+      799, createHash('sha256').update(body).digest('hex'));
+    expect(d.applyEvent).not.toHaveBeenCalled();
   });
 
   it('stores invoice tax separately and remediates finalization failures', async () => {
@@ -92,8 +93,8 @@ describe('the billing webhook', () => {
       automatic_tax: { status: 'requires_location_inputs' },
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
-    expect(d.upsertInvoice).toHaveBeenCalledWith('sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String));
-    expect(d.applyEvent).toHaveBeenCalledWith('evt_1', 'payment_failed', 'inv-uuid', 815, expect.any(String));
+    expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
+      'evt_1', 'payment_failed', 'sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String), 815, expect.any(String));
   });
 
   it('records a Stripe Tax outage without putting the customer into dunning', async () => {
@@ -104,7 +105,8 @@ describe('the billing webhook', () => {
       automatic_tax: { status: 'failed' },
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
-    expect(d.applyEvent).toHaveBeenCalledWith('evt_1', 'other', 'inv-uuid', 799, expect.any(String));
+    expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
+      'evt_1', 'other', 'sub_1', 'in_tax_outage', 799, 0, 'usd', expect.any(String), expect.any(String), 799, expect.any(String));
   });
 
   it('turns a completed checkout into a subscription, by the checkout id it carries', async () => {
@@ -149,7 +151,7 @@ describe('the billing webhook', () => {
   it('answers 500 and logs nothing about the event when applying fails, so the provider retries', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const info = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const { d } = deps({ applyEvent: vi.fn(async () => { throw new Error('db down'); }) });
+    const { d } = deps({ applyInvoiceEvent: vi.fn(async () => { throw new Error('db down'); }) });
     const body = event('invoice.paid', { id: 'in_secret_1', subscription: 'sub_secret', customer_email: 'student@example.edu' });
     const res = await handleBillingWebhook(post(body), d);
     expect(res.status).toBe(500);
@@ -159,18 +161,18 @@ describe('the billing webhook', () => {
 
   it('asks for a retry, recording nothing, when an invoice arrives before its subscription', async () => {
     const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const { d } = deps({ upsertInvoice: vi.fn(async () => null) });
+    const { d } = deps({ applyInvoiceEvent: vi.fn(async () => 'not_ready') });
     const body = event('invoice.paid', { id: 'in_secret_2', subscription: 'sub_not_yet', amount_paid: 799 });
     const res = await handleBillingWebhook(post(body), d);
     expect(res.status).toBe(500);
-    expect(d.upsertInvoice).toHaveBeenCalledTimes(1);
+    expect(d.applyInvoiceEvent).toHaveBeenCalledTimes(1);
     expect(d.applyEvent).not.toHaveBeenCalled();
     const logged = JSON.stringify(log.mock.calls);
     for (const leak of ['in_secret_2', 'sub_not_yet', 'evt_1', body]) expect(logged).not.toContain(leak);
     // An invoice that bills no subscription has nothing to wait for: recorded as before.
     const one = await handleBillingWebhook(post(event('invoice.paid', { id: 'in_once', amount_paid: 500 }, 'evt_2')), d);
     expect(one.status).toBe(200);
-    expect(d.upsertInvoice).toHaveBeenCalledTimes(1);
+    expect(d.applyInvoiceEvent).toHaveBeenCalledTimes(1);
     expect(d.applyEvent).toHaveBeenCalledWith('evt_2', 'payment_succeeded', null, 500, expect.any(String));
   });
 

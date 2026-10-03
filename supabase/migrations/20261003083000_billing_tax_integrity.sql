@@ -73,3 +73,69 @@ grant execute on function public.upsert_provider_invoice_v2(text, text, bigint, 
 
 comment on function public.upsert_provider_invoice_v2(text, text, bigint, bigint, text, timestamptz, timestamptz) is
   'Idempotently records a provider invoice with pre-tax subtotal and calculated tax kept in separate columns.';
+
+-- Record an invoice snapshot and apply its payment event in one transaction.
+-- The advisory lock also serializes the first two deliveries for an invoice,
+-- before either delivery has created a row that could be locked. Without this,
+-- a finalization failure and a paid event can interleave between the snapshot
+-- upsert and apply_payment_event, leaving paid status paired with stale draft
+-- amounts or briefly reopening dunning after payment.
+create or replace function public.apply_invoice_payment_event_v2(
+  want_provider text,
+  want_event_id text,
+  want_kind text,
+  want_subscription_ref text,
+  want_invoice_ref text,
+  want_subtotal_cents bigint,
+  want_tax_cents bigint,
+  want_currency text,
+  want_issued_at timestamptz,
+  want_due_at timestamptz,
+  want_amount_cents bigint,
+  want_payload_sha256 text,
+  grace interval default interval '14 days'
+)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  invoice_id uuid;
+begin
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(want_invoice_ref, 0));
+
+  invoice_id := public.upsert_provider_invoice_v2(
+    want_subscription_ref,
+    want_invoice_ref,
+    want_subtotal_cents,
+    want_tax_cents,
+    want_currency,
+    want_issued_at,
+    want_due_at
+  );
+  if invoice_id is null then
+    return 'not_ready';
+  end if;
+
+  return public.apply_payment_event(
+    want_provider,
+    want_event_id,
+    want_kind,
+    invoice_id,
+    want_amount_cents,
+    want_payload_sha256,
+    grace
+  );
+end $$;
+
+revoke all on function public.apply_invoice_payment_event_v2(
+  text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz, bigint, text, interval
+) from public, anon, authenticated;
+grant execute on function public.apply_invoice_payment_event_v2(
+  text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz, bigint, text, interval
+) to service_role;
+
+comment on function public.apply_invoice_payment_event_v2(
+  text, text, text, text, text, bigint, bigint, text, timestamptz, timestamptz, bigint, text, interval
+) is 'Atomically serializes an invoice snapshot with its idempotent payment event so paid state and amounts cannot diverge.';

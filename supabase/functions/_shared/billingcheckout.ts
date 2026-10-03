@@ -93,8 +93,13 @@ export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: stri
         product_data: { name: `Semester ${row.plan_name}`, tax_code: taxCode },
       },
     }],
-    metadata: { semester_checkout_id: row.checkout_id },
-    subscription_data: { metadata: { semester_checkout_id: row.checkout_id } },
+    // The contract marker lets the activation gate distinguish current,
+    // tax-aware sessions from older open links that must be expired before
+    // billing can be enabled.
+    metadata: { semester_checkout_id: row.checkout_id, semester_tax_contract: TAX_CONSENT_VERSION },
+    subscription_data: { metadata: {
+      semester_checkout_id: row.checkout_id, semester_tax_contract: TAX_CONSENT_VERSION,
+    } },
     // Stripe Checkout collects the location it needs and carries the tax
     // result onto the subscription and its invoices. Collection still follows
     // the merchant account's reviewed registrations; this does not invent one.

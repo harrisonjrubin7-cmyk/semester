@@ -43,11 +43,11 @@ describe('payment environment boundaries', () => {
     const body = JSON.stringify({ id: 'evt_test', type: 'checkout.session.completed', created: 1790000000,
       livemode: false, data: { object: { client_reference_id: '0b1c2d3e-4f50-4617-8829-3a4b5c6d7e8f', mode: 'subscription' } } });
     const deps: WebhookDeps = { secret: 'whsec_abc', stripeKey: 'sk_live_abc', now: () => 1790000000,
-      completeCheckout: vi.fn(), syncSubscription: vi.fn(), upsertInvoice: vi.fn(), applyEvent: vi.fn() };
+      completeCheckout: vi.fn(), syncSubscription: vi.fn(), applyInvoiceEvent: vi.fn(), applyEvent: vi.fn() };
     const signature = await hmacSha256Hex('whsec_abc', `1790000000.${body}`);
     const request = new Request('https://project.example', { method: 'POST', body,
       headers: { 'Stripe-Signature': `t=1790000000,v1=${signature}` } });
     expect((await handleBillingWebhook(request, deps)).status).toBe(400);
-    for (const callback of [deps.completeCheckout, deps.syncSubscription, deps.upsertInvoice, deps.applyEvent]) expect(callback).not.toHaveBeenCalled();
+    for (const callback of [deps.completeCheckout, deps.syncSubscription, deps.applyInvoiceEvent, deps.applyEvent]) expect(callback).not.toHaveBeenCalled();
   });
 });

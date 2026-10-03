@@ -34,7 +34,7 @@ test('a check is read-only and never claims payment verification', async () => {
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     return response({ data: [], has_more: false });
   } });
-  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
   assert.equal(result.state, 'checked');
   assert.equal(result.taxReady, true);
   assert.equal(result.portalConfigured, false);
@@ -110,22 +110,30 @@ test('existing endpoints require their signing secret and pagination cannot crea
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
     if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
-    if (url.includes('/tax/registrations') || url.includes('/billing_portal/configurations')) return response({ data: [], has_more: false });
+    if (url.includes('/tax/registrations') || url.includes('/billing_portal/configurations') || url.includes('/checkout/sessions?'))
+      return response({ data: [], has_more: false });
     if (!url.includes('starting_after')) return response({ data: [{ id: 'we_other', url: 'https://other.example' }], has_more: true });
     return response({ data: [{ id: 'we_semester', url: 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-webhook',
       livemode: true, status: 'enabled', enabled_events: EVENTS }], has_more: false });
   } }), /cannot be retrieved/);
-  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
 });
 
 test('activates one endpoint, writes secrets only to Supabase, probes without charging', async () => {
   const calls = [];
+  let legacyOpen = true;
   const result = await activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push({ url, method: init.method || 'GET', body: init.body });
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
     if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
+    if (url.includes('/checkout/sessions?')) return response({ data: legacyOpen ? [{ id: 'cs_live_legacy',
+      metadata: { semester_checkout_id: 'old-checkout' }, status: 'open' }] : [], has_more: false });
+    if (url.endsWith('/checkout/sessions/cs_live_legacy/expire')) {
+      legacyOpen = false;
+      return response({ id: 'cs_live_legacy', status: 'expired' });
+    }
     if (url.includes('/billing_portal/configurations?')) return response({ data: [], has_more: false });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_1', active: true,
       features: { invoice_history: { enabled: true }, payment_method_update: { enabled: true },
@@ -139,6 +147,7 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(result.state, 'configured');
   assert.equal(result.taxReady, true);
   assert.equal(result.portalConfigured, true);
+  assert.equal(result.expiredLegacyCheckoutSessions, 1);
   assert.equal(result.paymentsVerified, false);
   const stored = JSON.parse(calls.find(call => call.url.endsWith('/secrets')).body);
   assert.deepEqual(stored.map(secret => secret.name), [
@@ -152,7 +161,10 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');
   assert.equal(portalBody.get('features[customer_update][allowed_updates][0]'), 'address');
   assert.equal(calls.filter(call => call.url.endsWith('/webhook_endpoints')).length, 1);
-  assert.equal(calls.some(call => /checkout\/sessions|payment_intents/.test(call.url)), false);
+  const expiration = calls.find(call => call.url.endsWith('/checkout/sessions/cs_live_legacy/expire'));
+  assert.equal(expiration.method, 'POST');
+  assert.ok(calls.indexOf(expiration) < calls.findIndex(call => call.url.endsWith('/secrets')));
+  assert.equal(calls.some(call => /payment_intents/.test(call.url)), false);
   assert.equal(JSON.stringify(result).includes('whsec_'), false);
   assert.equal(JSON.stringify(result).includes('sk_live_'), false);
 });

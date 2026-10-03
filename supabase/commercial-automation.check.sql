@@ -99,6 +99,7 @@ begin
      or not pg_temp.refused($q$select public.complete_checkout(gen_random_uuid(), 'sub_x', 'cus_x', null)$q$)
      or not pg_temp.refused($q$select public.upsert_provider_invoice('sub_x', 'in_x', 1, 'usd', now(), now())$q$)
      or not pg_temp.refused($q$select public.upsert_provider_invoice_v2('sub_x', 'in_x', 1, 0, 'usd', now(), now())$q$)
+     or not pg_temp.refused($q$select public.apply_invoice_payment_event_v2('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 1, 0, 'usd', now(), now(), 1, repeat('a', 64))$q$)
      or not pg_temp.refused($q$select public.sync_provider_subscription('sub_x', 'active', null, null, false, now())$q$) then
     raise exception 'FAILED: a signed-in account called a service-only commercial function';
   end if;
