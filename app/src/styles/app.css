@@ -22,7 +22,7 @@
 /* One calm content frame for every routed workspace. Individual screens own
    their internal layout; the shell owns readable measure and dependable air. */
 .page-frame {
-  width: min(100%, 1180px);
+  width: min(100%, var(--layout-operational));
   margin-inline: auto;
   padding: var(--page-pad);
 }
@@ -39,7 +39,7 @@
 }
 
 .page-purpose {
-  max-width: 68ch;
+  max-width: var(--layout-reading);
   margin-bottom: var(--sp-6);
   color: var(--app-dim);
   font-size: var(--type-base);

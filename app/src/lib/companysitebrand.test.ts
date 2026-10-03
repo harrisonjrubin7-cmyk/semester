@@ -24,6 +24,14 @@ describe('the company site and application share one identity', () => {
     }
   });
 
+  it('shares the same semantic brand vocabulary across both product surfaces', () => {
+    const tokens = readFileSync(join(root, 'app/src/styles/tokens.css'), 'utf8');
+    for (const name of ['--brand-canvas', '--brand-surface', '--brand-ink', '--brand-muted', '--brand-accent', '--brand-focus']) {
+      expect(tokens.includes(name), `application is missing ${name}`).toBe(true);
+      expect(site.includes(name), `company site is missing ${name}`).toBe(true);
+    }
+  });
+
   it('keeps product proof in a dedicated hero column, not beside its actions', () => {
     const product = site.slice(site.indexOf('data-page="product"'), site.indexOf('<!-- ================= STUDENTS'));
     expect(product.includes('class="wrap product-hero-grid"')).toBe(true);

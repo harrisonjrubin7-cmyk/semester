@@ -28,6 +28,17 @@ hex value in a component when an equivalent semantic token exists. Brass is a
 focus and action signal, not decoration. Course colors identify course context;
 they do not encode success or error.
 
+The company site and app share six cross-surface role names:
+`--brand-canvas`, `--brand-surface`, `--brand-ink`, `--brand-muted`,
+`--brand-accent`, and `--brand-focus`. They share a job, not necessarily a
+literal value: the application follows the selected accessible ground/accent,
+while the public site uses the fixed Graphite/Brass editorial palette.
+
+Use the finite surface family before inventing a feature-specific card:
+canvas, plain, standard/base, quiet/inset, feature/raised, modal/overlay, and
+critical. Critical surfaces still require explicit text and an icon or label;
+color is never the only state signal.
+
 ### Typography
 
 - Serif display: major product/page statements and selected editorial moments.
@@ -38,12 +49,46 @@ they do not encode success or error.
 Use one H1 for the active page. Heading levels describe structure, not visual
 size. Keep body measures near 58–72 characters on wide screens.
 
+The semantic roles are `--type-role-display`, `--type-role-page`,
+`--type-role-section`, `--type-role-body`, `--type-role-compact`,
+`--type-role-label`, `--type-role-numeric`, `--type-role-control`, and
+`--type-role-caption`. These resolve through the existing responsive type scale,
+so Text size preferences continue to apply. Use `--font-editorial` only for
+major moments and `--font-product` for task-oriented reading.
+
 ### Spacing, shape, and elevation
 
 Use the existing 4px-derived spacing scale. Prefer flow spacing and shared page
 padding tokens over route-specific margins. Use the established corner setting
 and sparse shadows. A border plus surface change should usually be enough; avoid
 nested card-on-card treatments.
+
+Page gutters remain tier-aware through `--page-pad`; readable content uses
+`--layout-reading`, ordinary operational content uses `--layout-measure`, and
+the widest shared product frame uses `--layout-operational`. Controls use the
+compact and standard height roles, with 44px remaining the ordinary touch
+target. The app's fine-grained density-aware 2px steps support compact UI; macro
+layout stays on the 4px rhythm.
+
+### Motion
+
+Use the role tokens only: fast feedback, standard state change, panel, sheet,
+and progress. Motion explains cause/effect or spatial continuity; it does not
+advertise premium quality. Every role is zeroed by both `prefers-reduced-motion`
+and Semester's own calm/still settings. Do not add parallax or looping
+decoration.
+
+### Component states
+
+- Loading: use a structural skeleton only when the final shape is known;
+  otherwise state what is happening.
+- Empty: explain why it is empty and offer one relevant next action.
+- Partial/offline/error: preserve entered work, identify what may be stale, and
+  offer retry or the official/human route.
+- Read-only/locked/restricted: state who controls access and how it can change.
+- Preview/beta: label the status near the affected capability; do not present
+  illustrative data as live.
+- Destructive: name the object, consequence, and recovery path before confirm.
 
 ## Components
 
