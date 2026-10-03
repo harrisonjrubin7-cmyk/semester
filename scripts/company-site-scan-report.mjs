@@ -113,7 +113,12 @@ export function findingsFromEvidence(report) {
   if (Array.isArray(report?.findings)) return report.findings;
   if (report?.finding && typeof report.finding === 'object') return [report.finding];
   if (report?.plugin_id && Array.isArray(report.paths)) return [report];
-  throw new Error('Finding evidence used an unsupported schema');
+  const shape = Array.isArray(report)
+    ? `array(${report.length})`
+    : report && typeof report === 'object'
+      ? `object(${Object.keys(report).sort().map(safeText).join(',')})`
+      : typeof report;
+  throw new Error(`Finding evidence used an unsupported schema: ${shape}`);
 }
 
 export function findingPluginIds(report) {

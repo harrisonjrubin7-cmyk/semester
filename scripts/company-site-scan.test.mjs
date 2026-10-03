@@ -359,6 +359,7 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
   assert.throws(() => assertCompleteFindingEvidence({ ...csrf, total_paths: 2, paths: csrf.paths.slice(0, 1) }), /incomplete.*10202/i);
   assert.throws(() => assertCompleteFindingEvidence({ ...csrf, paths: [{ ...csrf.paths[0], finding_hash: 'redacted' }, csrf.paths[1]] }), /triage hash.*10202/i);
   assert.throws(() => findingPluginIds({ findings: [{ ...csrf, plugin_id: '../unsafe' }] }), /plugin identifier/i);
+  assert.throws(() => findingPluginIds({ vulnerabilities: [csrf] }), /unsupported schema: object\(vulnerabilities\)/i);
 });
 
 test('empty coverage and missing changed assets cannot clear the company gate', () => {
