@@ -79,10 +79,10 @@
 
 ## Phase 4 — Product and design
 
-- [ ] D01: design/product documents 1–5.
-- [ ] D02: design/product documents 6–10.
-- [ ] D03: design/product document 11 and cross-document consistency review.
-- [ ] Checkpoint D: first win, first proof, state coverage, responsive matrix, keyboard/zoom/reduced-motion tests, performance budgets, component reuse, and brand continuity are explicit.
+- [x] D01: design/product documents 1–5; added a controlled current-state audit, design-system operating standard, product quality bar, core-journey map, and student first-win specification while preserving the existing Semester foundation and separating repository evidence from observed outcomes on 2026-10-03.
+- [x] D02: design/product documents 6–10; added controlled pilot-first-proof, accessibility, responsive QA, performance-budget, and UI-consistency artifacts that distinguish repository guards and measured bundle ceilings from customer, device, field and human-validation evidence on 2026-10-03.
+- [x] D03: design/product document 11 and cross-document consistency review; added the controlled product-copy and voice guide, reconciled owner, status, evidence, missing-proof and claim-boundary fields across all 11 product/design artifacts, and preserved the existing Semester vocabulary on 2026-10-03.
+- [x] Checkpoint D: first win, first proof, state coverage, responsive matrix, keyboard/zoom/reduced-motion plans, performance budgets, component reuse, brand continuity and explicit evidence ceilings are documented; human, target-environment, qualified-reviewer and named-customer proof remain open.
 
 **Dependencies:** T02; current route/capability inventory.
 

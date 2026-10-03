@@ -133,17 +133,17 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 118 | `docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md` | EXACT PRESENT | canonical meaningful-review tiers and prohibited decision boundary; universal human operation, staffing and customer acceptance remain unproven |
 | 119 | `docs/trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md` | EXACT PRESENT | canonical AI response and recovery sequence; one shared-key runtime drill is preserved without promotion to universal or gateway proof |
 | 120 | `docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md` | EXACT PRESENT | canonical change, evaluation, rollout and rollback gate; exact deployed versions, full baselines and named-customer operation remain open |
-| 121 | `docs/product-design/DESIGN-AND-PRODUCT-FINALIZATION-AUDIT.md` | NO CLOSE SOURCE | — |
-| 122 | `docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md` | CANDIDATE SOURCE | `docs/DESIGN-SYSTEM-IMPROVEMENTS.md` (filename similarity 0.47; substantive review required) |
-| 123 | `docs/product-design/PRODUCT-QUALITY-BAR.md` | NO CLOSE SOURCE | — |
-| 124 | `docs/product-design/CORE-USER-JOURNEYS.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/product-systems-user-journeys.md` (filename similarity 0.48; substantive review required) |
-| 125 | `docs/product-design/FIRST-WIN-SPECIFICATION.md` | NO CLOSE SOURCE | — |
-| 126 | `docs/product-design/PILOT-FIRST-PROOF-SPECIFICATION.md` | NO CLOSE SOURCE | — |
-| 127 | `docs/product-design/ACCESSIBILITY-TEST-PLAN.md` | CANDIDATE SOURCE | `docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md` (filename similarity 0.77; substantive review required) |
-| 128 | `docs/product-design/RESPONSIVE-QA-PLAN.md` | CANDIDATE SOURCE | `docs/RESPONSIVE-ACCESSIBILITY-TEST-PLAN.md` (filename similarity 0.48; substantive review required) |
-| 129 | `docs/product-design/PERFORMANCE-BUDGETS.md` | NO CLOSE SOURCE | — |
-| 130 | `docs/product-design/UI-CONSISTENCY-MATRIX.md` | NO CLOSE SOURCE | — |
-| 131 | `docs/product-design/PRODUCT-COPY-AND-VOICE-GUIDE.md` | NO CLOSE SOURCE | — |
+| 121 | `docs/product-design/DESIGN-AND-PRODUCT-FINALIZATION-AUDIT.md` | EXACT PRESENT | canonical current-state audit; strong repository foundation remains distinct from human validation, target performance and finalization |
+| 122 | `docs/product-design/DESIGN-SYSTEM-OPERATING-STANDARD.md` | EXACT PRESENT | canonical extension and governance standard preserving Semester tokens, settings, components and visual identity; adoption remains partial |
+| 123 | `docs/product-design/PRODUCT-QUALITY-BAR.md` | EXACT PRESENT | canonical cross-functional quality and sequential-stage gate; operating and customer acceptance remain scope-specific |
+| 124 | `docs/product-design/CORE-USER-JOURNEYS.md` | EXACT PRESENT | canonical launch-critical journey and state map; focused tests remain distinct from complete observed end-to-end evidence |
+| 125 | `docs/product-design/FIRST-WIN-SPECIFICATION.md` | EXACT PRESENT | canonical student first-win path and proposed evidence plan; outcome targets and observed completion remain unapproved/unmeasured |
+| 126 | `docs/product-design/PILOT-FIRST-PROOF-SPECIFICATION.md` | EXACT PRESENT | canonical bounded institutional proof definition and evidence gate; pilot templates and repository controls remain distinct from named-customer operation/results |
+| 127 | `docs/product-design/ACCESSIBILITY-TEST-PLAN.md` | EXACT PRESENT | canonical automated/manual/assistive-technology plan; automated checks do not establish WCAG conformance or an ACR |
+| 128 | `docs/product-design/RESPONSIVE-QA-PLAN.md` | EXACT PRESENT | canonical viewport, zoom, orientation, journey and state matrix; complete device/browser and visual evidence remain open |
+| 129 | `docs/product-design/PERFORMANCE-BUDGETS.md` | EXACT PRESENT | canonical summary of enforced gzip ceilings and unmeasured experience targets; bundle gates are not Core Web Vitals or capacity proof |
+| 130 | `docs/product-design/UI-CONSISTENCY-MATRIX.md` | EXACT PRESENT | canonical pattern/adoption matrix preserving existing Semester primitives; route-wide adoption and human coherence evidence remain partial |
+| 131 | `docs/product-design/PRODUCT-COPY-AND-VOICE-GUIDE.md` | EXACT PRESENT | canonical calm, plain-language and evidence-bounded product voice; automated guards remain distinct from route-wide comprehension, localization and customer approval |
 | 132 | `docs/engineering-operations/SYSTEM-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/ARCHITECTURE.md` (filename similarity 0.58; substantive review required) |
 | 133 | `docs/engineering-operations/APPLICATION-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/ARCHITECTURE.md` (filename similarity 0.55; substantive review required) |
 | 134 | `docs/engineering-operations/DATA-ARCHITECTURE.md` | CANDIDATE SOURCE | `docs/ARCHITECTURE.md` (filename similarity 0.60; substantive review required) |
