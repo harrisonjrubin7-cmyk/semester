@@ -196,6 +196,7 @@
   // ---------- experience ----------
   let xpStep=0;
   const xpSteps=JSON.parse(document.getElementById("xp-walkthrough-data").textContent);
+  const xpMobile=window.matchMedia("(max-width:600px)");
   function xpRender(){
     const st=xpSteps[xpStep];
     document.getElementById("xp-scn").textContent=st.title;
@@ -204,17 +205,21 @@
     shot.src=st.desktop;shot.alt=st.alt;source.srcset=st.mobile;
     document.getElementById("xp-step-title").textContent=st.title;
     document.getElementById("xp-step-description").textContent=st.description;
-    document.getElementById("xp-full").href=st.desktop;
+    document.getElementById("xp-full").href=xpMobile.matches?st.mobile:st.desktop;
     document.getElementById("xp-live").href=st.route;
     document.getElementById("xp-count").textContent=`Step ${xpStep+1} of ${xpSteps.length}`;
     document.getElementById("xp-prev").disabled=xpStep===0;
     const last=xpStep===xpSteps.length-1;document.getElementById("xp-next").hidden=last;
     document.getElementById("xp-end").hidden=!last;
   }
+  function responsiveCaptureLinks(){document.querySelectorAll("[data-responsive-capture-link]").forEach(link=>{link.href=xpMobile.matches?link.dataset.mobile:link.dataset.desktop})}
   document.getElementById("xp-list").addEventListener("click",e=>{const b=e.target.closest("button");if(b){xpStep=+b.dataset.i;xpRender()}});
   document.getElementById("xp-prev").addEventListener("click",()=>{if(xpStep>0){xpStep--;xpRender()}});
   document.getElementById("xp-next").addEventListener("click",()=>{xpStep++;xpRender();document.getElementById("xp-next").hidden?document.getElementById("xp-cta").focus():0});
   document.getElementById("xp-restart").addEventListener("click",()=>{xpStep=0;xpRender()});
+  xpMobile.addEventListener("change",xpRender);
+  xpMobile.addEventListener("change",responsiveCaptureLinks);
+  responsiveCaptureLinks();
   xpRender();
 
   // ---------- build my semester ----------

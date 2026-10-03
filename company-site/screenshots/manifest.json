@@ -1,14 +1,14 @@
 {
-  "capturedAt": "2026-10-03T02:50:01Z",
-  "captureDateLabel": "Oct 2, 2026 (America/Chicago)",
-  "appSourceCommit": "fc08913447d691cf0fa8ef757dc365a3b7d8275d",
-  "appDeploymentCommit": "fc08913447d691cf0fa8ef757dc365a3b7d8275d",
-  "appDeploymentRun": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37043013395",
+  "capturedAt": "2026-10-03T10:12:23Z",
+  "captureDateLabel": "Oct 3, 2026 (America/Chicago)",
+  "appSourceCommit": "a1504691a60af3499803d0e9fd38fa1cb4ea7ec9",
+  "appDeploymentCommit": "a1504691a60af3499803d0e9fd38fa1cb4ea7ec9",
+  "appDeploymentRun": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37114132948",
   "deploymentVerification": {
-    "liveStylesheet": "https://harrisonjrubin7-cmyk.github.io/semester/demo/assets/index-CSgjd_5u.css",
-    "expectedFixPresent": ".device .portal-workspace button.for-this-new { min-height: 44px; }",
-    "supersededRuleAbsent": ".device .portal-workspace button.for-this-new { min-height: 0; }",
-    "serviceWorkerState": "A brand-new browser profile loaded the network response before the demo service worker registered; every route was then captured in that same isolated profile."
+    "liveStylesheet": "https://harrisonjrubin7-cmyk.github.io/semester/demo/assets/index-iDqdiatC.css",
+    "expectedFixPresent": ".device .portal-workspace button.for-this-new{min-height:44px",
+    "supersededRuleAbsent": ".device .portal-workspace button.for-this-new{min-height:0",
+    "serviceWorkerState": "A brand-new browser profile in isolated headless Chrome loaded the live network response with its cache disabled and service-worker interception bypassed for every captured route."
   },
   "captureMode": "isolated-demo",
   "sampleData": true,
@@ -16,27 +16,27 @@
   "build": {
     "institutionalPreview": false,
     "backendConnected": false,
-    "note": "Captured from the successful GitHub Pages deployment at /semester/demo/ after dismissing only the demo onboarding overlay. The live stylesheet contains the fc089134 44px target fix and not the superseded zero-height rule."
+    "note": "Captured from the successful GitHub Pages deployment at /semester/demo/ after skipping only the demo onboarding. The live stylesheet contains the 44px target fix and not the superseded zero-height rule."
   },
   "theme": {
-    "surface": "Current production light interface",
+    "surface": "Current production dark interface",
     "accent": "Semester brass",
     "layout": "Responsive application shell"
   },
   "nav": "Home, Calendar, Discover, Ask Semester, Inbox",
   "processing": "Raw Chrome JPEG screenshots at 1440 × 900 desktop and 390 × 845 phone viewports. No retouching, generated UI, DOM alteration, cropping or private content.",
   "images": [
-    {"path":"/screenshots/search-desktop.jpg","screen":"Home","view":"desktop","width":1440,"height":900,"sha256":"6283cb28a44c744fab1c3c2ee21013d85f69dded5944083d56b88723138eacf2"},
-    {"path":"/screenshots/search-mobile.jpg","screen":"Home","view":"phone","width":390,"height":845,"sha256":"62dd5945f999e8910f8aad0635c8a9a7da46736cfb8f33715d0e9b4092578dd7"},
-    {"path":"/screenshots/today-desktop.jpg","screen":"Today","view":"desktop","width":1440,"height":900,"sha256":"fae050b1e3b2c71c9ae39cc262e060353dac82fc7d19332db15ac1db2abd3d9c"},
-    {"path":"/screenshots/today-mobile.jpg","screen":"Today","view":"phone","width":390,"height":845,"sha256":"fd4c60eac1c9c6c47c7ac1fda949347b721f6e9a5794b2bac90d743f8e00e498"},
-    {"path":"/screenshots/courses-desktop.jpg","screen":"Courses","view":"desktop","width":1440,"height":900,"sha256":"99891943fb0e3dd631f459066189fd907727dc24d0fe870fbc8d35e7067f002e"},
-    {"path":"/screenshots/courses-mobile.jpg","screen":"Courses","view":"phone","width":390,"height":845,"sha256":"2faad0837a8d5b4e4972809afeca98ddc8d181de8085a13645760e1eb694b120"},
-    {"path":"/screenshots/calendar-desktop.jpg","screen":"Calendar","view":"desktop","width":1440,"height":900,"sha256":"5709158f984dffd9fd9a8e3ae38c79a6b91935e5a6052ceb02e97ec5ee96f2ed"},
-    {"path":"/screenshots/calendar-mobile.jpg","screen":"Calendar","view":"phone","width":390,"height":845,"sha256":"5f626a87b1ac69d0886dc64a38bbd63cb48c56dd56c61491c70ee82b2bf6db54"},
-    {"path":"/screenshots/path-desktop.jpg","screen":"My Path","view":"desktop","width":1440,"height":900,"sha256":"8e6d2f5ae4ede0483f65975f411a41c56260bd4455d5b9f581831188ae5891f8"},
-    {"path":"/screenshots/path-mobile.jpg","screen":"My Path","view":"phone","width":390,"height":845,"sha256":"e79d22361c10f5233b82f6b560a2f25268ba4eb5c32e2f0605bd99c2ae14a0f3"},
-    {"path":"/screenshots/discover-desktop.jpg","screen":"Discover","view":"desktop","width":1440,"height":900,"sha256":"ec0392d677583470df8b7c5db4dce81c818b46bbc2aa7f421817e6d422824686"},
-    {"path":"/screenshots/discover-mobile.jpg","screen":"Discover","view":"phone","width":390,"height":845,"sha256":"2af1ba9c8426f0f17197d1c382a1dbbabff2e417d16ec86d61dcb6b00429f0e8"}
+    {"path":"/screenshots/search-desktop.jpg","screen":"Discover search","view":"desktop","width":1440,"height":900,"sha256":"80e3445fcdedd8e3adc4aa4fcaa7fbcb463577561f1dffef4bfb5a1fd8ebcc8f"},
+    {"path":"/screenshots/search-mobile.jpg","screen":"Discover search","view":"phone","width":390,"height":845,"sha256":"f75a2fbfd001bfa495f64393226de10f1e99b50287ae038a166d0c5d72280408"},
+    {"path":"/screenshots/today-desktop.jpg","screen":"Today","view":"desktop","width":1440,"height":900,"sha256":"b2059574c9fd93e59b24e6f2d57bf9549232f9828a395049f30f03a5f3d4a60b"},
+    {"path":"/screenshots/today-mobile.jpg","screen":"Today","view":"phone","width":390,"height":845,"sha256":"a2042e7d1598aed6c2feed4035cae2c53ac04493d76039bacb7ded785c304b40"},
+    {"path":"/screenshots/courses-desktop.jpg","screen":"Courses","view":"desktop","width":1440,"height":900,"sha256":"eb0a1b509fbd5b2138b9f8c4b842b71d5446a0ea59f4230bd533f50f1dca92ff"},
+    {"path":"/screenshots/courses-mobile.jpg","screen":"Courses","view":"phone","width":390,"height":845,"sha256":"22a96fa9822bdf945c76639c7f4ae0cfb8c38e5e9ef14f35a15c6834515ce7d2"},
+    {"path":"/screenshots/calendar-desktop.jpg","screen":"Calendar month","view":"desktop","width":1440,"height":900,"sha256":"2542ea372c7b49520a4ede23484cf30001c9cc885a74a3d0d8783210d7b22231"},
+    {"path":"/screenshots/calendar-mobile.jpg","screen":"Calendar month","view":"phone","width":390,"height":845,"sha256":"ff5db831806b6db034fe2e2e8bf51094c2192c5bce6de0ca1c27562ae2a7bd0c"},
+    {"path":"/screenshots/path-desktop.jpg","screen":"My Path","view":"desktop","width":1440,"height":900,"sha256":"5761cb464dbac5d7e58c4dc645aab8f69337bbf0cd4ca5db34af3eab57924f94"},
+    {"path":"/screenshots/path-mobile.jpg","screen":"My Path","view":"phone","width":390,"height":845,"sha256":"af7a7cf318d977b21943815de7310c50116e7ca901c408eebdd6902aa9f302a0"},
+    {"path":"/screenshots/discover-desktop.jpg","screen":"Discover directory","view":"desktop","width":1440,"height":900,"sha256":"a22f19e47f2c821964891089a279eada29ad6b399071db4e11e090c198b5e774"},
+    {"path":"/screenshots/discover-mobile.jpg","screen":"Discover directory","view":"phone","width":390,"height":845,"sha256":"d401b476c62d2d0a3942e3f16582e21605a39900bd39399c1a0808ea7f077440"}
   ]
 }

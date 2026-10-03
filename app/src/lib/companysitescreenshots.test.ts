@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const companyRoot = join(import.meta.dirname, '../../../company-site');
 const site = readFileSync(join(companyRoot, 'index.html'), 'utf8');
+const script = readFileSync(join(companyRoot, 'site.js'), 'utf8');
 const page = new DOMParser().parseFromString(site, 'text/html');
 const walkthroughScreens = ['search', 'today', 'courses', 'calendar', 'path', 'discover'] as const;
 const requiredCaptures = walkthroughScreens.flatMap(screen => [`${screen}-desktop.jpg`, `${screen}-mobile.jpg`]);
@@ -21,6 +22,7 @@ type Capture = {
 };
 type Manifest = {
   capturedAt: string;
+  captureDateLabel: string;
   appSourceCommit: string;
   appDeploymentCommit: string;
   appDeploymentRun: string;
@@ -124,6 +126,7 @@ describe('the company site shows captured current application screens', () => {
 
   it('describes the captured screens and reserves their real intrinsic image dimensions', () => {
     const images = captureImages();
+    const displayedCaptureDate = manifest().captureDateLabel.replace(/ \([^)]*\)$/, '');
     expect(images.length).toBeGreaterThanOrEqual(4);
     for (const image of images) {
       const alt = image.getAttribute('alt')?.trim() ?? '';
@@ -136,7 +139,23 @@ describe('the company site shows captured current application screens', () => {
         .toEqual(jpegDimensions(bytes));
       const caption = image.closest('figure')?.textContent ?? image.parentElement?.textContent ?? '';
       expect(/(?:illustrative(?: demo)?|sample|fictional|demo)[ -]data/i.test(caption)).toBe(true);
+      expect(caption).toContain(`Captured ${displayedCaptureDate}`);
     }
+  });
+
+  it('names the Today mobile hero accurately and keeps full-size links responsive', () => {
+    const hero = page.querySelector<HTMLImageElement>('[data-page="home"] .hero img[src="/screenshots/today-mobile.jpg"]');
+    expect(hero?.getAttribute('alt')).toMatch(/Semester Today mobile/i);
+    expect(hero?.getAttribute('alt')).not.toMatch(/Semester Home mobile/i);
+
+    const links = [...page.querySelectorAll<HTMLAnchorElement>('a[data-responsive-capture-link]')];
+    expect(links).toHaveLength(2);
+    for (const link of links) {
+      expect(link.dataset.desktop).toBe('/screenshots/today-desktop.jpg');
+      expect(link.dataset.mobile).toBe('/screenshots/today-mobile.jpg');
+    }
+    expect(script).toContain('responsiveCaptureLinks');
+    expect(script).toContain('xpMobile.addEventListener("change",responsiveCaptureLinks)');
   });
 
   it('reserves the matching desktop and phone proportions instead of stretching either capture', () => {
@@ -172,15 +191,17 @@ describe('the company site shows captured current application screens', () => {
     const proof = manifest();
     expect(proof.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
     expect(Number.isFinite(Date.parse(proof.capturedAt))).toBe(true);
+    expect(proof.captureDateLabel).toBe('Oct 3, 2026 (America/Chicago)');
     expect(proof.appSourceCommit).toMatch(/^[a-f0-9]{40}$/);
-    expect(proof.appSourceCommit).toBe('fc08913447d691cf0fa8ef757dc365a3b7d8275d');
+    expect(proof.appSourceCommit).toBe('a1504691a60af3499803d0e9fd38fa1cb4ea7ec9');
     expect(proof.appDeploymentCommit).toBe(proof.appSourceCommit);
-    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37043013395');
-    expect(proof.deploymentVerification.expectedFixPresent).toContain('min-height: 44px');
-    expect(proof.deploymentVerification.supersededRuleAbsent).toContain('min-height: 0');
+    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37114132948');
+    expect(proof.deploymentVerification.expectedFixPresent).toMatch(/min-height:\s*44px/);
+    expect(proof.deploymentVerification.supersededRuleAbsent).toMatch(/min-height:\s*0/);
     expect(proof.deploymentVerification.serviceWorkerState).toMatch(/brand-new browser profile/i);
     expect(proof.captureMode).toBe('isolated-demo');
     expect(proof.sampleData).toBe(true);
+    expect(proof.theme).toMatchObject({ surface: 'Current production dark interface' });
     for (const appearance of [proof.theme, proof.nav]) {
       expect(appearance).toBeTruthy();
       expect(typeof appearance === 'string' ? appearance.trim().length : Object.keys(appearance).length).toBeGreaterThan(0);
@@ -232,8 +253,19 @@ describe('the company site shows captured current application screens', () => {
       expect(existsSync(capturePath(step.mobile))).toBe(true);
     }
 
+    expect(steps[0]).toMatchObject({ id: 'search', title: expect.stringMatching(/search/i) });
+    expect(`${steps[0].description} ${steps[0].alt}`).toMatch(/Discover/i);
+    expect(`${steps[0].title} ${steps[0].description} ${steps[0].alt}`).not.toMatch(/course progress|academic progress|Home showing/i);
+    expect(steps[3]).toMatchObject({ id: 'calendar', title: expect.stringMatching(/month/i) });
+    expect(`${steps[3].description} ${steps[3].alt}`).toMatch(/month/i);
+    expect(`${steps[3].title} ${steps[3].alt}`).not.toMatch(/week|weekly/i);
+
     expect(experience?.textContent).toContain('public fictional-data demo');
-    expect(experience?.textContent).toContain('Captured Oct 2, 2026');
+    expect(experience?.textContent).toContain('Captured Oct 3, 2026');
+    expect(experience?.querySelector('#xp-step-details')?.getAttribute('aria-live')).toBe('polite');
+    expect(experience?.querySelector('#xp-step-details')?.getAttribute('aria-atomic')).toBe('true');
+    expect(script).toContain('document.getElementById("xp-full").href=xpMobile.matches?st.mobile:st.desktop');
+    expect(script).toContain('xpMobile.addEventListener("change",xpRender)');
   });
 
   it('keeps unbuilt concept examples clearly separate from current app proof', () => {
