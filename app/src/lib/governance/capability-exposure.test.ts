@@ -77,7 +77,7 @@ describe('capability exposure resolver', () => {
     expect(ROUTE_EXPOSURE_INDEX.map((item) => item.route)).toEqual(DESTINATIONS.map((item) => item.screen));
     expect(ROUTE_EXPOSURE_INDEX.every((item) => item.capabilityIds.length > 0)).toBe(true);
     expect(CAPABILITY_EXPOSURE_STATES).toEqual([
-      'live', 'connected', 'pilot', 'early_access', 'institution_controlled', 'hidden', 'retired',
+      'live', 'connected', 'pilot', 'early_access', 'institution_controlled', 'planned_but_not_exposed',
     ]);
     for (const item of CAPABILITY_EXPOSURE_INDEX) {
       expect(item.requiredOperationalChecks).toEqual(OPERATIONAL_READINESS_CHECKS);
@@ -88,7 +88,7 @@ describe('capability exposure resolver', () => {
       expect(item.rollback.trim()).not.toBe('');
       expect(item.evidenceRefs.length).toBeGreaterThan(0);
       expect(item.platforms).toEqual(['web', 'pwa']);
-      expect(item.nativeMobile).toBe('hidden');
+      expect(item.nativeMobile).toBe('planned_but_not_exposed');
     }
   });
 
@@ -159,25 +159,25 @@ describe('capability exposure resolver', () => {
   it('fails closed for mismatched profiles, missing scope, unhealthy connections and kill switches', () => {
     expect(resolveCapabilityExposure('CAP-001', context({
       release: release({ profileId: 'institutional-pilot' }),
-    })).status).toBe('hidden');
+    })).status).toBe('planned_but_not_exposed');
     expect(resolveCapabilityExposure('CAP-044', context({
       profileId: 'broad-enterprise-sale',
       release: release({ profileId: 'broad-enterprise-sale' }, connectedTarget),
       target: connectedTarget,
       connectionHealthy: false,
     })).status).toBe('institution_controlled');
-    expect(resolveCapabilityExposure('CAP-001', context({ cohortAuthorized: false })).status).toBe('hidden');
+    expect(resolveCapabilityExposure('CAP-001', context({ cohortAuthorized: false })).status).toBe('planned_but_not_exposed');
     expect(resolveCapabilityExposure('CAP-001', context({
       target: { ...productionTarget, configurationVersion: 'different' },
-    }))).toMatchObject({ status: 'hidden', reason: 'release-target-mismatch' });
+    }))).toMatchObject({ status: 'planned_but_not_exposed', reason: 'release-target-mismatch' });
     expect(resolveCapabilityExposure('CAP-001', context({ killSwitchActive: true }))).toMatchObject({
-      status: 'hidden', visible: false, reason: 'kill-switch-active',
+      status: 'planned_but_not_exposed', visible: false, reason: 'kill-switch-active',
     });
     expect(resolveCapabilityExposure('CAP-999', context())).toMatchObject({
-      status: 'hidden', visible: false, reason: 'unknown-capability',
+      status: 'planned_but_not_exposed', visible: false, reason: 'unknown-capability',
     });
     expect(resolveCapabilityExposure('CAP-001', context({ retired: true }))).toMatchObject({
-      status: 'retired', visible: false, reason: 'capability-retired',
+      status: 'planned_but_not_exposed', visible: false, reason: 'capability-retired',
     });
   });
 
