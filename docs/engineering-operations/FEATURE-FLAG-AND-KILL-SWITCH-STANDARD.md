@@ -2,29 +2,40 @@
 
 | Control | Value |
 | --- | --- |
-| Status | **CONTROLLED STANDARD — FAIL-CLOSED EVALUATION TESTED; TARGET DRILLS PARTIAL** |
-| Owner | Harrison Rubin — flag, activation and incident-control primary; backup incident responder and customer approver unassigned |
+| Status | **CONTROLLED STANDARD — FAIL-CLOSED MODEL IMPLEMENTED; TARGET EXERCISE PARTIAL** |
+| Owner | Harrison Rubin — flag governance and incident authority; backup operator and customer approver unassigned |
 | Evidence date | 2026-10-03 at repository revision `ccc254d4` |
-| Canonical registry | [`../FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) |
+| Canonical registry | [`../FEATURE-FLAG-REGISTRY.md`](../FEATURE-FLAG-REGISTRY.md) and `app/src/lib/flags.ts` |
 
-Every flag requires key, type, purpose, owner/backup, default, environments, tenant/cohort/role scope, data/authority impact, prerequisites, expiry/review, success/guardrail measures, audit fields, activation approval, rollback and kill switch. Unknown, misspelled, expired or insufficiently scoped values resolve off.
+## Standard
 
-Build flags decide what code ships; they do not authorize a tenant. Tenant policy, capabilities, connection/provider scopes, role, data classification, course rules and user eligibility must all pass server-side where risk requires it. Sensitive institutional, AI, upload, sharing, community, writeback and code-execution functions default off.
+Every runtime flag needs a unique key, type, owner, default, environment/tenant/role scope, risk, creation/review/expiry date, prerequisites, success/abort signals and rollback path. Unknown, malformed or expired temporary values fail closed. Build switches control shipped UI; they do not grant server authority. Server policy, capability, provider scope, data-classification and consent gates remain authoritative.
 
-Kill switches evaluate before entitlement. Engage the narrowest effective scope, provide a reason, verify through authoritative readback and user behavior, communicate impact, preserve audit evidence and reconcile uncertain actions. Release only after remediation/retest; connections return through validation rather than directly to healthy. Read-only mode protects broad database recovery separately from feature-specific kills.
+High-risk capabilities default off and require explicit target/customer approval before production scope. Prefer the narrowest stop: connection, feature, tenant, writeback, provider or cohort before a global switch. A kill switch stops new affected work; it must not silently delete data or claim to undo completed external actions.
+
+## Change and incident procedure
+
+1. Verify identity, scope, current state and authoritative readback; record reason, incident/change link and approver.
+2. Engage the narrow control. For database-backed switches, require a non-empty reason and audited write; for build-time flags, deploy the immutable candidate.
+3. Confirm through independent readback and a refused/allowed request at the correct boundary. UI absence alone is insufficient.
+4. Communicate scope, retained data, user-visible behavior and fallback. Preserve access/audit records without sensitive content.
+5. Release only after remediation, validation and approval. Resume connections through their safe lifecycle rather than directly declaring them healthy.
+6. At review/expiry, remove stale code, configuration, policy rows, tests and documentation together. Exceptions need owner, reason, compensating control and expiry.
+
+The general write-stop path uses `VITE_READ_ONLY=true` for the app and `SEMESTER_READ_ONLY=on` for the gateway; both must be set and independently verified for their respective surfaces. The named kill-switch inventory and evaluation order remain in the canonical registry.
 
 ## Evidence state
 
-**Code/config evidence.** Registry/evaluator tests, tenant policy, audited kill-switch rows, build flags and client/gateway read-only guards establish fail-closed mechanics.
+**Code/config evidence.** Registry/evaluator tests, tenant policy rows, audited kill switches, server-side safety gates, build flags and app/gateway read-only controls exist.
 
-**Operational evidence.** No complete target inventory/readback proves current effective values. Production kill switches and read-only mode have not been fully exercised with alert/support/customer operation.
+**Operational evidence.** Repository tests cover important decisions, but production engagement/release, alert-to-operator delivery, all side effects and institutional acceptance are not comprehensively exercised.
 
-**Missing test/proof.** Reconcile effective target flags, assign backup authority, exercise each launch-critical kill/read-only path, verify audit/alert/user message and recovery, and obtain customer approval for tenant activation.
+**Missing test/proof.** Inventory every shipped/runtime flag against the registry; exercise each high-risk switch in a production-like target; verify in-flight/retry behavior and downstream providers; test access, audit, communication and safe re-enable; assign a backup operator.
 
 ## Claim ceiling
 
-Semester may say sensitive capabilities default off and that repository tests enforce ordered fail-closed evaluation.
+Semester may say high-risk institutional flags are designed fail-closed and that repository-tested kill/read-only controls exist.
 
 ## Prohibited claims
 
-Do not claim a flag authorizes launch, production kill switches are proven, all paths are server-enforced or customer activation is approved without target evidence.
+Do not claim instant global containment, complete side-effect reversal, production-tested kill switches, customer-approved enablement or safe reactivation without target exercises and authoritative readback.
