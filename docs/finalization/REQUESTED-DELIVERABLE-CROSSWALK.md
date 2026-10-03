@@ -154,11 +154,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 139 | `docs/engineering-operations/TEST-STRATEGY.md` | EXACT PRESENT | canonical layered risk-based evidence ladder; automated coverage remains distinct from human, target and external assurance |
 | 140 | `docs/engineering-operations/TEST-COVERAGE-MATRIX.md` | EXACT PRESENT | canonical coverage/gap map across product, data, operations, security and commercial claims; current aggregate and external evidence remain open |
 | 141 | `docs/engineering-operations/CRITICAL-FLOW-TEST-PLAN.md` | EXACT PRESENT | canonical CF-01–CF-10 journey/boundary plan with motion-specific priorities; complete target/customer acceptance remains open |
-| 142 | `docs/engineering-operations/OBSERVABILITY-PLAN.md` | CANDIDATE SOURCE | `tasks/plan.md` (filename similarity 0.46; substantive review required) |
-| 143 | `docs/engineering-operations/SLO-SLI-DRAFT.md` | NO CLOSE SOURCE | — |
-| 144 | `docs/engineering-operations/ERROR-BUDGET-DRAFT.md` | NO CLOSE SOURCE | — |
-| 145 | `docs/engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md` | CANDIDATE SOURCE | `docs/CAMPUS-ESCALATION-POLICY.md` (filename similarity 0.51; substantive review required) |
-| 146 | `docs/engineering-operations/PRODUCTION-SUPPORT-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/PILOT-SUPPORT-RUNBOOK.md` (filename similarity 0.59; substantive review required) |
+| 142 | `docs/engineering-operations/OBSERVABILITY-PLAN.md` | EXACT PRESENT | canonical outcome/signal, privacy, alert-routing and exercise plan; institutional telemetry and operated alert delivery remain incomplete |
+| 143 | `docs/engineering-operations/SLO-SLI-DRAFT.md` | EXACT PRESENT | canonical proposed journey SLIs/SLOs; no achieved field values or SLA are asserted |
+| 144 | `docs/engineering-operations/ERROR-BUDGET-DRAFT.md` | EXACT PRESENT | canonical calculation and release-state policy; real budget state remains unavailable without accepted SLI data |
+| 145 | `docs/engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md` | EXACT PRESENT | Harrison Rubin is company-side primary; backup rota, paging, customer contacts and sustained coverage remain absent |
+| 146 | `docs/engineering-operations/PRODUCTION-SUPPORT-RUNBOOK.md` | EXACT PRESENT | canonical privacy-safe intake, escalation, support-access and closure process; staffed channel and target exercise remain open |
 | 147 | `docs/engineering-operations/DATABASE-OPERATIONS-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/RELIABILITY-AND-OPERATIONS-RUNBOOK.md` (filename similarity 0.57; substantive review required) |
 | 148 | `docs/engineering-operations/MIGRATION-AND-ROLLBACK-RUNBOOK.md` | CANDIDATE SOURCE | `docs/institutional-rollout/generated/publication/migration-rollback-disaster-recovery.md` (filename similarity 0.47; substantive review required) |
 | 149 | `docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md` | NO CLOSE SOURCE | — |
