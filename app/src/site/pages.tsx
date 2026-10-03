@@ -195,7 +195,7 @@ export const Students: Page = ({ config }) => (
 
 export const Institutions: Page = ({ config }) => (
   <>
-    <Hero title="Semester Institutional" lead="Replace the LMS gradebook and fragmented student systems through one package and a controlled, phased migration.">
+    <Hero title="Semester Institutional" lead="Pilot a student action layer beside existing systems, with one package and a controlled path to any approved migration.">
       <p className="site-actions">
         <a className="site-button" href={href(config, '/demo/')}>Explore a sample university</a>
         <a href={href(config, '/contact/')}>Talk to us</a>
@@ -214,10 +214,10 @@ export const Institutions: Page = ({ config }) => (
     </Section>
     <Section title="How Semester connects" id="i-connect">
       <p>
-        Semester starts beside the systems you have, read-only and least-privilege. After conformance, parallel-run and
-        migration evidence is approved, Semester can become the institution's LMS and gradebook of record. Registration,
-        finance and other official writes remain off until the institution separately authorizes each workflow. No
-        institutional connection is live today.
+        Semester starts beside the systems you have, read-only and least-privilege. Only after conformance, parallel-run,
+        migration and customer acceptance evidence is approved could an institution separately authorize Semester as
+        its LMS or gradebook of record. Registration, finance and every other official write remain off until the
+        institution authorizes that exact workflow. No institutional connection is live today.
       </p>
       <p>Each connection below carries the word the register gives it. None is running for an institution yet.</p>
       <ClaimList ids={['sso', 'scim', 'lti', 'sis', 'connector-health', 'support-access', 'hecvat']} />

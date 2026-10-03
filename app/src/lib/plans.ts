@@ -78,11 +78,11 @@ export const PLANS: Plan[] = [
   {
     id: 'institution',
     name: 'Semester Institutional',
-    forWhom: 'Universities replacing fragmented student systems and the LMS gradebook',
+    forWhom: 'Universities piloting a student action layer alongside existing systems',
     price: null,
     priceStatus: 'contact',
     includes: [
-      'Native LMS and gradebook of record',
+      'Controlled LMS and gradebook capabilities, off until an institution-approved cutover',
       'Student planning, advising, support and pathways',
       'SSO, LTI, OneRoster and approved SIS integrations',
       'Pilot, phased integration, migration, training and hypercare',
