@@ -136,19 +136,19 @@ begin
   reset role;
 
   -- Dry-run is the default and mutates no lead.
-  result := private.sweep_site_lead_retention('2026-04-01 00:00:00+00');
+  result := private.site_lead_retention_run('2026-04-01 00:00:00+00');
   perform pg_temp.counted('dry-run reports the one eligible unconverted row', (result ->> 'candidates')::bigint, 1);
   perform pg_temp.counted('dry-run deletes nothing', (result ->> 'deleted')::bigint, 0);
   perform pg_temp.counted('dry-run leaves both candidates',
     (select count(*) from public.site_leads where reference in ('SL-0000000001', 'SL-0000000003')), 2);
   perform pg_temp.counted('a deleting run cannot move the clock into the future',
-    pg_temp.raises($q$select private.sweep_site_lead_retention('2099-01-01', 200, false)$q$)::int, 1);
+    pg_temp.raises($q$select private.site_lead_retention_run('2099-01-01', 200, false)$q$)::int, 1);
 
   -- A platform hold pauses both dry and deleting runs. Tenant/account holds
   -- are never guessed from a prospect's email or domain.
   insert into public.legal_holds (subject_kind, subject_id, reason, matter_ref, placed_by)
   values ('platform', '', 'Retention test hold', 'MATTER-RETENTION-1', gen_random_uuid());
-  result := private.sweep_site_lead_retention('2026-04-01 00:00:00+00', 200, false);
+  result := private.site_lead_retention_run('2026-04-01 00:00:00+00', 200, false);
   perform pg_temp.counted('a platform legal hold makes the deleting run skip',
     ((result ->> 'skipped') = 'legal_hold')::int, 1);
   perform pg_temp.counted('a held run deletes nothing', (result ->> 'deleted')::bigint, 0);
@@ -158,7 +158,7 @@ begin
   -- At the exact 90-day boundary the unconverted row is eligible. Converted,
   -- recent, historical and ambiguous rows stay, and deleting the intake does
   -- not delete its GTM account or stakeholder.
-  result := private.sweep_site_lead_retention('2026-04-01 00:00:00+00', 200, false);
+  result := private.site_lead_retention_run('2026-04-01 00:00:00+00', 200, false);
   perform pg_temp.counted('the active sweep deletes only one due unconverted request',
     (result ->> 'deleted')::bigint, 1);
   perform pg_temp.counted('the due unconverted request is gone',
@@ -175,7 +175,7 @@ begin
   perform pg_temp.counted('the GTM stakeholder remains',
     (select count(*) from public.gtm_stakeholders where id = stakeholder), 1);
 
-  result := private.sweep_site_lead_retention('2026-04-01 00:00:00+00', 200, false);
+  result := private.site_lead_retention_run('2026-04-01 00:00:00+00', 200, false);
   perform pg_temp.counted('a second deleting run is idempotent', (result ->> 'deleted')::bigint, 0);
 
   perform pg_temp.counted('every run journal row contains coherent counts',
@@ -190,11 +190,11 @@ end $$;
 do $$
 begin
   perform pg_temp.counted('authenticated cannot run the retention sweep',
-    has_function_privilege('authenticated', 'private.sweep_site_lead_retention(timestamptz,integer,boolean)', 'execute')::int, 0);
+    has_function_privilege('authenticated', 'private.site_lead_retention_run(timestamptz,integer,boolean)', 'execute')::int, 0);
   perform pg_temp.counted('anon cannot run the retention sweep',
-    has_function_privilege('anon', 'private.sweep_site_lead_retention(timestamptz,integer,boolean)', 'execute')::int, 0);
+    has_function_privilege('anon', 'private.site_lead_retention_run(timestamptz,integer,boolean)', 'execute')::int, 0);
   perform pg_temp.counted('only the service role can run the retention sweep',
-    has_function_privilege('service_role', 'private.sweep_site_lead_retention(timestamptz,integer,boolean)', 'execute')::int, 1);
+    has_function_privilege('service_role', 'private.site_lead_retention_run(timestamptz,integer,boolean)', 'execute')::int, 1);
   perform pg_temp.counted('authenticated cannot mark a request converted',
     has_function_privilege('authenticated', 'private.mark_site_lead_converted(text,uuid)', 'execute')::int, 0);
   perform pg_temp.counted('the run journal is not exposed to authenticated',

@@ -617,9 +617,9 @@ describe('institutional setup intake retention is prospective and not activated'
     expect(migration).toMatch(/dry_run boolean default true/);
     expect(migration).toMatch(/if not dry_run and as_of > now\(\) then/);
     expect(migration).toMatch(/revoke update, delete, truncate on public\.site_leads from service_role/);
-    expect(migration).toMatch(/revoke all on function private\.sweep_site_lead_retention[\s\S]*from public, anon, authenticated/);
-    expect(migration).toMatch(/grant execute on function private\.sweep_site_lead_retention[\s\S]*to service_role/);
-    expect(scheduler).not.toContain('sweep_site_lead_retention');
+    expect(migration).toMatch(/revoke all on function private\.site_lead_retention_run[\s\S]*from public, anon, authenticated/);
+    expect(migration).toMatch(/grant execute on function private\.site_lead_retention_run[\s\S]*to service_role/);
+    expect(scheduler).not.toContain('site_lead_retention_run');
   });
 
   it('documents the approved 90-day boundary and the records outside it', () => {

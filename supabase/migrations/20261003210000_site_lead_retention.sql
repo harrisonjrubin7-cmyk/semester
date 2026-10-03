@@ -225,7 +225,7 @@ revoke all on public.site_lead_retention_runs from public, anon, authenticated;
 revoke all on public.site_lead_retention_runs from service_role;
 grant select on public.site_lead_retention_runs to service_role;
 
-create or replace function private.sweep_site_lead_retention(
+create or replace function private.site_lead_retention_run(
   as_of timestamptz default now(),
   batch_size integer default 200,
   dry_run boolean default true)
@@ -298,9 +298,9 @@ begin
   );
 end $$;
 
-revoke all on function private.sweep_site_lead_retention(timestamptz, integer, boolean)
+revoke all on function private.site_lead_retention_run(timestamptz, integer, boolean)
   from public, anon, authenticated;
-grant execute on function private.sweep_site_lead_retention(timestamptz, integer, boolean) to service_role;
+grant execute on function private.site_lead_retention_run(timestamptz, integer, boolean) to service_role;
 
 comment on column public.site_leads.retention_class is
   'Prospective class derived from the server-owned CTA route. Null means no approved automatic purge applies; never infer one from historical data.';
@@ -308,5 +308,5 @@ comment on column public.site_leads.converted_billing_account_id is
   'Explicit customer conversion link. A GTM account alone is not conversion because intake creates it.';
 comment on table public.site_lead_retention_runs is
   'Counts-only record of manual institutional-intake retention checks/runs. Contains no lead payload. No production schedule is installed.';
-comment on function private.sweep_site_lead_retention(timestamptz, integer, boolean) is
+comment on function private.site_lead_retention_run(timestamptz, integer, boolean) is
   'Service-only, unscheduled and dry-run by default. Removes only prospectively classified, unconverted institutional setup requests due after 90 days; a platform legal hold pauses it.';
