@@ -24,9 +24,18 @@ hawk:
       - /status
       - /legal
       - /sitemap.xml
+      - /screenshots/search-desktop.jpg
+      - /screenshots/search-mobile.jpg
       - /screenshots/today-desktop.jpg
       - /screenshots/today-mobile.jpg
+      - /screenshots/courses-desktop.jpg
       - /screenshots/courses-mobile.jpg
+      - /screenshots/calendar-desktop.jpg
+      - /screenshots/calendar-mobile.jpg
+      - /screenshots/path-desktop.jpg
+      - /screenshots/path-mobile.jpg
+      - /screenshots/discover-desktop.jpg
+      - /screenshots/discover-mobile.jpg
 
 tags:
   - name: _STACKHAWK_AGENT

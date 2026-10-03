@@ -41,6 +41,11 @@ test('the company configuration does not reuse the app environment or suppress f
   assert.match(config, /ajax: true/);
   assert.match(config, /failureThreshold: low/);
   assert.doesNotMatch(config, /excludePaths|excludePlugins/);
+  for (const path of capturePaths) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
+});
+
+test('the company scan cannot cancel an unrelated queued scan', () => {
+  assert.doesNotMatch(companyJob, /group:\s*hawkscan-company-site\s*(?:\n|$)/);
 });
 
 test('the scan target reuses production headers and blocks external submissions', () => {
