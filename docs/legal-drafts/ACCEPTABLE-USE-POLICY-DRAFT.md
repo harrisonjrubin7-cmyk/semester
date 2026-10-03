@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester acceptable use policy — controlled draft index
 
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is not legal advice, is not in force, and must not be used for enforcement until approved, published, and supported by an accessible notice and review process.**

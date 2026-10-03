@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester copyright and DMCA policy — controlled draft index
 
 > **DRAFT FOR QUALIFIED COPYRIGHT COUNSEL. This document is not legal advice, is not in force, and does not establish DMCA safe-harbor eligibility, a registered agent, or an operating repeat-infringer program.**

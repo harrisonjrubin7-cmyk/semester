@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester community guidelines — controlled draft index
 
 > **DRAFT FOR QUALIFIED LEGAL AND TRUST-AND-SAFETY REVIEW. This document is not legal advice, is not in force, and must not be published or enforced until the relevant community capabilities, staffing, notice, appeal, safety, privacy, and institutional controls are approved.**

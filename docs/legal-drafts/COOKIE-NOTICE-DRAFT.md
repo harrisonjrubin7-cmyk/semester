@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester cookie and browser-storage notice — controlled draft index
 
 > **DRAFT FOR QUALIFIED LEGAL AND PRIVACY REVIEW. This notice is not legal advice, is not in force, and must be reverified against the deployed sites before publication.**

@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester cookie and storage consent implementation specification
 
 > **DRAFT FOR QUALIFIED LEGAL AND PRIVACY REVIEW. This is an engineering specification, not a conclusion about which consent rules apply in any jurisdiction.**
@@ -5,6 +7,7 @@
 | Control | Draft value |
 | --- | --- |
 | Version | 0.1 |
+| Effective date | `[TO BE APPROVED]` |
 | Owner | Privacy owner with Engineering |
 | Review frequency | Per release affecting storage/tags; annual full review |
 | Approval authority | Privacy/Legal for classification and language; Engineering for verified implementation |
@@ -13,6 +16,10 @@
 ## Objective
 
 Keep optional technology fail-closed until a qualified reviewer determines the applicable rule, the user makes a valid choice, and automated verification proves the choice controls execution—not merely UI text.
+
+## Plain-language summary
+
+The current product is intended to operate without advertising or third-party analytics cookies. If Semester later proposes optional analytics, preference, embedded-content, or marketing storage, it must stay off until any required choice is obtained, be as easy to reject or withdraw as to accept, and be enforced in code and network behavior rather than only described by a banner.
 
 ## Categories
 
@@ -59,6 +66,20 @@ Any new cookie, local/session storage purpose, IndexedDB store, service-worker c
 
 Because no optional tracking technology is evidenced, do not add a performative consent banner. Publish an accurate storage notice only after deployment verification. If optional technology is proposed, implement and approve this control before that technology ships.
 
+## Product-behavior mapping
+
+| Area | Current evidence | Status / change required |
+| --- | --- | --- |
+| no intentional cookies/ad trackers | company-site statement, legal source draft, tracking-host tests | repository-evidenced; verify deployed app/site/auth/media/payment surfaces |
+| local/IndexedDB storage | persistence and privacy code | necessary/product storage; inventory purposes, keys and retention |
+| visit attribution/forms | company-site behavior | verify session scope, submission contents and notice |
+| signed-in service analytics | privacy code/database controls | reconcile field list, purpose, retention and jurisdiction/legal basis |
+| consent enforcement | no optional technology currently approved | implement this specification before enabling any optional category |
+
 ## External decisions
 
 Applicable jurisdictions, legal basis, consent duration, age treatment, global-privacy-control handling, vendor deletion and record retention require counsel/privacy approval.
+
+## Publication and implementation blockers
+
+Deployed storage/network inventory; counsel-approved category and jurisdiction decisions; accessible/dark-pattern review; vendor/data-flow/retention approval; versioned enforcement and withdrawal tests; and alignment among product behavior, Privacy Notice, Cookie Notice, company-site language, and institutional configuration.

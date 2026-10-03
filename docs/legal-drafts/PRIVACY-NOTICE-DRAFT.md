@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester privacy notice — controlled draft index
 
 > **DRAFT FOR QUALIFIED LEGAL AND PRIVACY REVIEW. This document is not legal advice, is not in force, and must not be published or represented as complete until applicable jurisdictions, data roles, product behavior, vendors, retention, rights, and institutional terms are verified and approved.**

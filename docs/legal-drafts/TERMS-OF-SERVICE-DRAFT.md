@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester terms of service — controlled draft index
 
 > **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is not legal advice, is not in force, is not an executed agreement, and must not be published, accepted, or used to take payment until licensed counsel in the applicable jurisdictions approves it.**

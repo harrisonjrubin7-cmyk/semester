@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester security overview — legal and procurement draft
 
 > **DRAFT FOR QUALIFIED SECURITY, PRIVACY, LEGAL, AND CUSTOMER REVIEW. This document is not legal advice, a certification, penetration-test report, guarantee, or proof that controls operate in a live customer environment.**
@@ -23,7 +25,7 @@ Semester's repository includes tenant/role controls, row-level policies, audit s
 | independent assurance | not established | scoped penetration and relevant external review |
 | customer acceptance | not established | named-tenant security/privacy approval |
 
-## Review mapping
+## Product-behavior and evidence mapping
 
 Reconcile architecture, data flows/classification, identity/access, tenant isolation, encryption/key handling, secure development, vulnerability management, logging/monitoring, incident response, backup/recovery, vendors, AI, data rights and offboarding with exact evidence, owner, date, expiry and limitation.
 

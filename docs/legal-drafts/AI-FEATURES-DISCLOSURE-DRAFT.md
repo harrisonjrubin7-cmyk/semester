@@ -1,3 +1,5 @@
+> **DRAFT FOR QUALIFIED LEGAL REVIEW. This document is a business and operational template, not legal advice, not an executed agreement, and not a substitute for review by licensed counsel in the applicable jurisdiction.**
+
 # Semester AI features disclosure — draft
 
 > **DRAFT FOR QUALIFIED LEGAL, PRIVACY, AI-GOVERNANCE, ACCESSIBILITY, AND EDUCATION REVIEW. This document is not legal advice, is not in force, and does not authorize any provider, model, data use, course use, institutional deployment, or high-impact decision.**
@@ -12,6 +14,16 @@
 ## Plain-language notice
 
 Semester includes optional AI-assisted workflows. AI can be wrong, incomplete or misleading. Check important information against original sources, your instructor and official institutional systems. AI output is not an official academic record, professional advice, grade, disciplinary decision, eligibility decision or substitute for human judgment.
+
+## Product-behavior mapping
+
+| Statement | Current evidence | Status / required remediation |
+| --- | --- | --- |
+| AI is user- or institution-invoked | AI action/provider code and feature controls | CONDITIONAL; verify every active route and target configuration |
+| provider/data depend on configured path | provider clients, gateway, party register | VERIFIED in code; approved terms, regions and customer configuration open |
+| course rules and source/provenance controls exist | AI governance, course-policy and source-locker modules/tests | PARTIAL; reconcile UI coverage and human operating process |
+| no high-impact autonomous decision authority | governance and do-not-build rules | policy/implementation evidence; legal/customer approval and monitoring open |
+| kill switch/evaluations exist | evidence register and AI test suites | point-in-time repository evidence; production operation must be exercised |
 
 ## When information is sent
 
@@ -47,3 +59,7 @@ Do not claim that AI is always accurate, unbiased, safe, private, compliant, exp
 ## External decisions
 
 Applicable notices/consent, age posture, provider terms, institution/course authority, record retention, intellectual-property treatment and jurisdiction-specific AI obligations require qualified review.
+
+## Publication blockers
+
+Approved AI-system inventory; provider/contract/data-flow reconciliation; user and institution notices; course/age/jurisdiction review; human-oversight and accessible alternative operation; target-environment kill-switch/incident exercise; and confirmation that every public statement matches the deployed provider, model, prompt and retention/training terms.
