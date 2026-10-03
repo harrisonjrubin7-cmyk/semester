@@ -117,7 +117,8 @@
 .system-context-link,
 .system-health {
   width: auto;
-  min-height: 32px;
+  min-width: var(--target-primary);
+  min-height: var(--target-primary);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   color: inherit;
@@ -395,6 +396,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
+  justify-content: center;
 }
 
 .system-health[data-tone='attention'] {

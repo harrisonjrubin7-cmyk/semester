@@ -4223,6 +4223,21 @@ section[data-drop] > .grip + * {
   padding-bottom: var(--sp-3);
 }
 
+@media (min-width: 840px) {
+  /* Keep every persistent institutional layer on a short laptop without
+     shrinking its 44px controls. These three bands previously put the page
+     itself 361px below the window top. Removing only surrounding air keeps
+     the content start inside the 320px compact-chrome budget. */
+  .deskwork:has(.institutional-navigation) > .deskstrip,
+  .deskwork:has(.institutional-navigation) > .desktop-bar {
+    padding-block: 0;
+  }
+
+  .deskwork:has(.institutional-navigation) .app-header {
+    padding-block: 0;
+  }
+}
+
 @media (max-width: 839px) {
   .deskwork:has(.institutional-navigation) > .desktop-bar {
     padding-inline: var(--sp-5);
@@ -11129,3 +11144,13 @@ button.adband-bar {
 .standards-audit a { overflow-wrap: anywhere; text-decoration: underline; }
 .standards-audit li { margin-bottom: var(--sp-5); }
 .standards-audit :focus-visible { outline: 2px solid var(--app-fg); outline-offset: 3px; }
+
+/* One default assignment action stays visible; alternatives remain a readable
+   list without turning four equal controls into a single action wall. */
+.assignment-options-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}

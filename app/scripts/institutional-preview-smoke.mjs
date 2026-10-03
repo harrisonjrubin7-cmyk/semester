@@ -129,10 +129,17 @@ try {
       if (expectedPreview) {
         await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
         await page.getByText('Demo environment', { exact: false }).first().waitFor({ state: 'visible' });
-        if (probe.module) await page.getByText(probe.module, { exact: false }).first().waitFor({ state: 'visible' });
         const workspace = page.locator('details.institutional-workspace-disclosure');
         await workspace.locator('summary').click();
         await workspace.locator('[aria-label="Current journey"]').waitFor({ state: 'visible' });
+        if (probe.module) {
+          const module = page.getByText(probe.module, { exact: false }).first();
+          if (!(await module.isVisible())) {
+            const collapsed = module.locator('xpath=ancestor::details[not(@open)][1]');
+            if (await collapsed.count()) await collapsed.locator('summary').first().click();
+          }
+          await module.waitFor({ state: 'visible' });
+        }
       }
 
       const result = await page.evaluate(() => ({
@@ -219,6 +226,9 @@ try {
       const previewControls = page.locator('aside[aria-label="Demo environment"]');
       await previewControls.locator('summary').click();
       await previewControls.locator('select').nth(0).selectOption('cedar-coast');
+      if ((await previewControls.locator('details').getAttribute('open')) === null) {
+        await previewControls.locator('summary').click();
+      }
       await page.getByText('Cedar Coast College', { exact: false }).first().waitFor();
       if (await page.getByText('Help with Evidence & sampling practice', { exact: false }).count()) {
         findings.push('context isolation: Northstar draft leaked into Cedar Coast');
@@ -236,7 +246,7 @@ try {
         const roleSelect = previewControls.locator('select').nth(1);
         await roleSelect.selectOption(`cedar-coast-${role}`);
         await page.getByText(title, { exact: true }).waitFor();
-        await page.getByText(applicableFunction, { exact: true }).waitFor();
+        await page.getByLabel('Available functions').getByText(applicableFunction, { exact: true }).waitFor();
         const visibleRoleHeadings = await page.locator('section[aria-label*="workspace for"] .section-label').allTextContents();
         if (visibleRoleHeadings.length !== 1 || visibleRoleHeadings[0]?.trim() !== title) {
           findings.push(`role workspace ${role}: visible headings were ${JSON.stringify(visibleRoleHeadings)}`);

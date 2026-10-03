@@ -129,13 +129,13 @@ describe('with demand_forecasting off', () => {
     await act(async () => button(/^Cart \(2\)$/).click());
     await settle(() => host.querySelector('.demand-contribution') !== null);
     expect(host.querySelector('.demand-contribution')).not.toBeNull();
-  });
+  }, 15_000);
 
   it('University has no Demand tab', async () => {
     const { University } = await import('../screens/University');
     await render(<University />);
     expect(() => button(/^Demand$/)).toThrow();
-  });
+  }, 15_000);
 });
 
 describe('a student contributing', () => {

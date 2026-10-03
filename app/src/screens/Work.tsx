@@ -1,6 +1,6 @@
 import { StudentOperating } from '../components/StudentOperating';
 import { useMemo, useRef, useState } from 'react';
-import { faintLine } from '../lib/dim';
+import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -362,7 +362,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 'calc(20px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(20px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
