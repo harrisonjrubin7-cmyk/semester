@@ -1,114 +1,140 @@
-# Implementation Plan: Semester Operations Console Expansion
+# Implementation Plan: Semester Company and Product Finalization
 
 ## Overview
 
-Extend Semester's existing secure Operations Console into a complete internal SaaS and company control plane. The work preserves the current role/capability/RLS/audit/approval foundation, consolidates existing GTM and commercial records instead of duplicating them, and delivers one verified vertical slice at a time.
+Extend the in-progress market-readiness program into the full company, legal, trust, product, engineering, commercial, institutional, and go/no-go package requested on 2026-10-02. Preserve the existing application and the uncommitted readiness work already in this worktree. Reuse verified evidence and canonical source documents, but create the requested directory structure and exact filenames only after reconciling each item with its existing equivalent.
 
-Planning baseline: the working branch is reconciled onto `origin/main` at `a1504691`. The earlier Command Center hardening and subsequent foundation slices remain isolated on this feature branch.
+This is an evidence-gated program, not a documentation-completion exercise. Repository implementation can establish implementation evidence; it cannot establish legal approval, a signed contract, insurance, tax treatment, production operation, institutional approval, accessibility conformance, a penetration test, certification, staffing, or customer outcomes.
 
-## Architecture decisions
+## Current Baseline
 
-- Keep Supabase Auth, `app_roles`, `role_capabilities`, `role_grants`, `private.has_capability`, and RLS as the authorization foundation.
-- Treat `console:operate` as shell access only. Each workspace requires its own domain capability and scoped server-side authorization.
-- Reuse GTM and commercial schemas as systems of record; do not create duplicate CRM, contract, billing, or success entities.
-- Use typed, security-definer read RPCs with pinned search paths, explicit scope validation, demo exclusion, pagination, classification, and provenance.
-- Route high-risk writes through fresh MFA, existing approval duties, reason/evidence capture, and audit-first transactional execution.
-- Keep student-private content outside general console views and search. Support access remains consent-bound, scoped, expiring, bannered, and audited.
-- Preserve the Semester visual system and build responsive, accessible operational density with existing components.
-- Represent readiness in separate evidence layers: repository, configured, deployed, activated/approved, and observed-live.
+- Initial worktree baseline: `codex/market-readiness-transformation` at `fc089134`, then matching `origin/main`; subsequent work is preserved in incremental commits on the same branch.
+- Current decision: GREEN for controlled non-activation discovery, synthetic demonstrations, evidence exchange and scoping; YELLOW for invitation beta after applicable gates; NO-GO for institutional activation, paid institutional pilots and broad enterprise sales.
+- Requested Markdown deliverables: 232 unique filenames.
+- Exact-name inventory at planning time: 22 present, 210 absent. Many absent names have useful source material under `docs/market-readiness/`, `docs/legal/`, `docs/trust/`, `docs/operating-model/`, and other existing directories.
+- Validation: typecheck, lint, build, focused browser/a11y checks passed in the prior run; exact full and shuffled test commands remained red because of load-sensitive timeouts. HawkScan could not run because the runtime and API key were absent.
 
-## Dependency graph
+## Dependency Graph
 
 ```text
-Current-main reconciliation
-  -> workspace registry + scope contract
-     -> reusable RPC/test pattern
-        -> tenant/pilot slice
-           -> support + privacy slices
-           -> integration + reliability slices
-        -> GTM/commercial mappings
-           -> sales slice
-           -> billing slice
-           -> success/renewal slice
-        -> trust/company operations
-           -> analytics and automation
+Repository and external-fact inventory
+    -> finalization baseline + evidence/claims registers
+        -> company operating controls
+        -> legal/commercial drafts
+        -> trust/security/privacy/AI controls
+        -> product/design requirements
+        -> engineering operations
+        -> commercial operating system
+        -> institutional procurement package
+            -> prioritized code/configuration remediation
+                -> target-environment and external validation
+                    -> final go/no-go package
 ```
 
-## Task list
+## Architecture Decisions
 
-### Phase A — Foundation and safety
+- Use `FINALIZATION-BASELINE.md` at the worktree root as the executive truth layer. More detailed evidence remains in existing registers and matrices.
+- Create the exact requested directories: `docs/company/`, `docs/legal-drafts/`, `docs/trust/`, `docs/engineering-operations/`, `docs/commercial/`, and `docs/institutional-readiness/`.
+- Do not replace existing canonical material blindly. Each requested file must either become the canonical document or clearly identify and link the existing canonical source.
+- Every legal-draft file begins with the exact required legal-review disclaimer. Unknown company, jurisdiction, commercial, retention, service, insurance, or operational facts remain bracketed decisions.
+- Every substantive claim is labeled VERIFIED, CONDITIONAL, ROADMAP, or PROHIBITED and maps to code/configuration evidence, operational evidence, an owner, and missing proof.
+- Code remediation is vertically sliced by launch-critical journey, with tests and HawkScan after each meaningful code batch.
+- No beta-language removal, public publication, activation, customer communication, contract execution, payment enablement, or institutional rollout is authorized by document creation.
 
-- [x] A1: Reconcile current main with Command Center fail-closed fixes.
-- [x] A2: Add a capability-aware console workspace registry.
-- [x] A3: Establish the scoped RPC and negative-policy-test template.
-- [x] A4: Add a five-layer readiness/evidence registry.
+## Task List
 
-### Checkpoint A
+Tasks are tracked in `tasks/todo.md`. Artifact batches contain at most five requested files; existing equivalents are reviewed before any new file is created.
 
-- [ ] Exact-commit TypeScript, lint, university, SQL policy, focused console, shuffle, and build gates pass.
-- [x] HawkScan completes against the runnable application with no unresolved high/critical finding.
-- [x] No new workspace can be opened or queried using `console:operate` alone.
+### Phase 0 — Truth layer
 
-### Phase B — Pilot operating backbone
+- T00: Reconcile repository, deployment, operating, legal, commercial, and external-fact evidence.
+- T01: Create the finalization baseline, requested-deliverable crosswalk, and evidence/claims control map.
+- T02: Reconcile the launch risk register, owner matrix, and blocked-external-evidence queue.
 
-- [x] B1: Tenant and pilot operations read workspace.
-- [x] B2: Support case workspace with metadata-first diagnosis.
-- [x] B3: Privacy/data-rights request workspace.
-- [x] B4: Integration health and sync-exception workspace.
-- [x] B5: Release and incident workspace.
-- [ ] B6: Implementation and success-plan workspace.
+### Phase 1 — Company operations (four batches)
 
-### Checkpoint B
+- C01–C04: Create or reconcile requested company documents 1–20 in four five-file batches.
+- Checkpoint C: every company fact is evidenced or explicitly assigned for founder/professional confirmation.
 
-- [ ] A limited institutional pilot can be operated end to end using synthetic/demo data.
-- [ ] Cross-tenant, demo/production, support-consent, and legal-hold negative tests pass.
-- [ ] Accessibility, keyboard, narrow viewport, loading, empty, stale, and error states are verified.
+### Phase 2 — Legal and commercial drafts (twelve batches)
 
-### Phase C — Revenue and enterprise operations
+- L01–L04: public-facing legal documents 1–20.
+- L05–L09: institutional/B2B legal documents 21–44.
+- L10–L12: internal legal/compliance governance documents 45–56 plus `LEGAL-TRUTH-MAPPING.md`.
+- Checkpoint L: disclaimer, placeholders, jurisdiction review, public-language summary, behavior mapping, and publication blockers verified for every draft.
 
-- [ ] C1: GTM account, stakeholder, opportunity, and pilot workspace.
-- [ ] C2: Quote and contract workspace.
-- [ ] C3: Billing, invoice, collections, and dunning workspace.
-- [ ] C4: Credit, refund, and cancellation approval workflows.
-- [ ] C5: Renewal, expansion, QBR, and account-health workspace.
-- [ ] C6: Vendor, subprocessor, procurement, and policy-review workspace.
+### Phase 3 — Trust, security, privacy, and AI governance (nine batches)
 
-### Checkpoint C
+- S01–S07: requested trust documents 1–34.
+- S08–S09: requested AI-governance documents 35–42.
+- Checkpoint S: every control is VERIFIED, PARTIAL, UNVERIFIED, NOT IMPLEMENTED, or NOT APPLICABLE with exact evidence and missing tests.
 
-- [ ] Draft, test, provider-verified, live, failed, refunded, and archived financial states are visibly distinct.
-- [ ] No payment instrument, raw provider payload, secret, or credential is exposed.
-- [ ] Revenue reports reconcile to provider-verified records and state their source and limitations.
+### Phase 4 — Product and design (three batches)
 
-### Phase D — Company control plane and advanced operations
+- D01–D03: requested design/product documents 1–11.
+- Checkpoint D: first win, first proof, state coverage, responsive matrix, accessibility tests, performance budgets, and brand continuity are reviewable.
 
-- [ ] D1: Internal workstream, risk, decision, and operating-review workspace.
-- [ ] D2: Provenance-bearing operational and revenue analytics.
-- [ ] D3: Approval-enforced feature flag and entitlement changes.
-- [ ] D4: Deployment/release adapter and rollback evidence ingestion.
-- [ ] D5: Human-in-the-loop automation framework.
-- [ ] D6: Complete runbook library, changelog, and readiness report.
+### Phase 5 — Engineering operations (five batches)
 
-### Checkpoint D
+- E01–E05: requested engineering-operations documents 1–24.
+- Checkpoint E: release, rollback, observability, support, database, dependency, performance, capacity, and disaster-recovery claims match actual implementation and test evidence.
 
-- [ ] Every sensitive action has server authorization, scope validation, reason, audit evidence, and required approval.
-- [ ] All project gates and DAST pass on the exact release commit.
-- [ ] The readiness report distinguishes repository evidence from external production evidence and names every remaining blocker.
+### Phase 6 — Commercial operations (eight batches)
 
-## Risks and mitigations
+- R01–R08: requested commercial documents 1–40.
+- Checkpoint R: pilot scope, buyer, price-approval status, funnel stages, implementation, support, success, renewal, and offboarding are coherent and non-deceptive.
+
+### Phase 7 — Institutional readiness (six batches)
+
+- I01–I06: requested institutional-readiness documents 1–27.
+- Checkpoint I: every integration/capability is labeled available and verified, available with configuration, pilot-only, professional-services required, planned, or not supported.
+
+### Phase 8 — Vertical implementation and validation
+
+- P01: individual first-win path: onboarding -> limited academic plan -> Today/This Week -> support/recovery.
+- P02: account and data-rights path: access -> consent/preferences -> export -> deletion/request -> recovery.
+- P03: institutional first-proof path: scoped tenant/cohort -> role checks -> privacy-thresholded evidence -> export/offboarding.
+- P04: public company-site truth pass: claims, legal links, beta status, pricing status, forms, analytics, and consent.
+- P05: reliability and operations path: logging, monitoring, incident, rollback, restore, feature flags, and support escalation.
+- P06: responsive/accessibility/performance pass across the required viewport, zoom, keyboard, reduced-motion, and failure-state matrix.
+- P07: full validation: clean install in the owning package manager, typecheck, lint, unit/integration/E2E tests, build, gateway checks, secret scan, dependency/license inventory, HawkScan loop, and evidence capture.
+
+Every P task is split again before implementation if it would touch more than five files. Each meaningful code batch requires focused regression tests and the autonomous HawkScan fix/rescan loop. External reviews and target-environment drills remain separate evidence gates.
+
+### Phase 9 — Final decision (two batches)
+
+- F01: requested final outputs 1–5.
+- F02: requested final outputs 6–10 and executive consistency review.
+- Checkpoint F: the four market motions receive evidence-backed GO, CONDITIONAL GO, or NO-GO decisions with blockers, owners, remediation, evidence, category, and sequencing.
+
+## Verification Cadence
+
+- After every artifact batch: exact filenames, required sections, disclaimer/placeholders where applicable, relative links, contradictions, prohibited-claim scan, and evidence citation check.
+- After every two artifact batches: compare against `FINALIZATION-BASELINE.md`, the evidence register, capability registry, and current code/configuration.
+- After every code batch: focused tests, typecheck/lint as applicable, browser or API acceptance, secret scan, HawkScan scan/fix/rescan, and diff review.
+- Before any launch recommendation: full release matrix, target-environment evidence, external reviews, owner acceptance, and dated decision record.
+
+## Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 | --- | --- | --- |
-| Existing branch is behind main | High | Reconcile before implementation; do not stack new features on stale history |
-| Duplicate business records | High | Declare GTM/commercial systems of record and add explicit mappings |
-| Capability creep | High | One capability per domain action class; negative policy tests for every RPC |
-| Cross-tenant leakage | Critical | Server-derived scope, RLS, demo exclusion, and direct adversarial SQL tests |
-| Student-content exposure | Critical | Exclude content from console models; require separate support grants |
-| False readiness claims | High | Five-layer evidence state and exact-source provenance |
-| Financial-state ambiguity | High | Provider verification fields and explicit draft/test/live labels |
-| Unverified external operations | High | Keep activation gates blocked until deployment, staffing, approval, and observed-operation evidence exists |
+| Existing uncommitted work is overwritten or misattributed | High | Preserve all current changes; review each overlapping file before editing; use small patches and diff checks. |
+| Hundreds of files create contradictory sources of truth | High | Maintain a deliverable crosswalk and designate one canonical source for every topic. |
+| Draft volume is mistaken for operating maturity | High | Keep readiness labels, owners, tests, and external evidence gates in each applicable artifact. |
+| Legal drafts imply sufficiency or execution | High | Exact disclaimer, explicit placeholders, counsel queue, no signature/publication claim. |
+| Repository controls are mistaken for production operation | High | Separate source, test, target-environment, operational, independent-review, customer-acceptance, and approval evidence. |
+| Code changes outrun reviewability | High | Vertical slices, maximum-five-file tasks, checkpoints, and HawkScan after meaningful code changes. |
+| Exact full tests remain nondeterministic | High | Diagnose resource/timing cause without weakening assertions or deleting tests; require green release command evidence. |
+| Scanner/runtime credentials remain unavailable | High | Retain NO-GO for affected sale gates and run scans only when the required runtime/credentials exist. |
 
-## Open decisions for review
+## Open Decisions Requiring Human or Professional Authority
 
-- Continue the isolated `codex/ops-console-foundation-20261003` branch/worktree, rebasing onto current main before each new slice.
-- Confirm the first vertical slice: recommended default is Tenant/Pilot Operations because it exercises scope, entitlements, integrations, support, contracts, and readiness without introducing payment mutations.
-- Confirm who may hold each new internal role in production and which actions require two-person approval; repository defaults are not staffing approval.
+- Legal entity, jurisdiction, address, governing law, dispute terms, age posture, and counsel approval.
+- Ownership, IP assignments, employment/contractor classification, tax, accounting, insurance, banking, and authorization thresholds.
+- Approved pricing, payment processor/configuration, refunds, cancellation, renewal, revenue recognition, and sales authority.
+- Production environment, named operational owners/backups, monitoring/on-call route, retention periods, incident notification commitments, and service levels.
+- Named pilot customer, sponsor, cohort, data scope, integrations, accessibility/security reviewers, contract, implementation dates, and acceptance criteria.
+
+## Planning Gate
+
+This plan must be reviewed before expanding the existing uncommitted work into the 210 missing exact-name deliverables or beginning additional code remediation. Approval authorizes staged implementation; it does not authorize publication, signing, billing, customer activation, or unsupported claims.

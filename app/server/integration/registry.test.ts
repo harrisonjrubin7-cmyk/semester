@@ -1,30 +1,54 @@
 import { describe, expect, it } from 'vitest';
-import { validateDeclaration } from '../../src/lib/integration/adapter.ts';
+import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
 import { MOCK_SIS } from '../../src/lib/integration/mock-sis.ts';
+import { validateAdapterRegistry } from './registry-preflight.ts';
 import { ADAPTERS } from './registry.ts';
-import { adapterFor, type RegisteredAdapter } from './tick.ts';
+import type { RegisteredAdapter } from './tick.ts';
 
-/** The rules every registered adapter is held to, as one function so the control can use it too. */
-function faults(adapters: readonly RegisteredAdapter[]): string[] {
-  const out: string[] = [];
-  for (const { declaration: d } of adapters) {
-    if (d.mock) out.push(`${d.id} is a mock`);
-    for (const p of validateDeclaration(d)) out.push(`${d.id}: ${p}`);
-    const claim = { provider_domain: d.domain, provider_name: d.provider, provider_product: d.product };
-    if (adapterFor(adapters, claim) === null) out.push(`${d.id} shares its connection with another adapter`);
-  }
-  return out;
-}
+const live = (patch: Partial<AdapterDeclaration> = {}): RegisteredAdapter => ({
+  declaration: { ...MOCK_SIS, id: 'live_sis', mock: false, ...patch },
+  pull: async () => { throw new Error('unused'); },
+});
 
 describe('the live adapter registry', () => {
   it('holds no mock, nothing invalid, and no two adapters for one connection', () => {
-    expect(faults(ADAPTERS)).toEqual([]);
+    expect(validateAdapterRegistry(ADAPTERS)).toEqual([]);
   });
 
-  it('and those rules catch a mock and a double claim (the control)', () => {
-    const mock = { declaration: MOCK_SIS, pull: async () => { throw new Error('unused'); } };
-    expect(faults([mock])).toContain(`${MOCK_SIS.id} is a mock`);
-    const twice = faults([mock, { ...mock }]);
-    expect(twice.filter((f) => f.endsWith('another adapter'))).toHaveLength(2);
+  it('accepts distinct valid live claims without changing the input', () => {
+    const adapters = Object.freeze([
+      Object.freeze(live()),
+      Object.freeze(live({ id: 'live_sis_two', provider: 'Other Provider', product: 'Fixture 2.0' })),
+      Object.freeze(live({ id: 'live_lms', domain: 'lms' })),
+    ]);
+    const before = JSON.stringify(adapters.map(({ declaration }) => declaration));
+    expect(validateAdapterRegistry(adapters)).toEqual([]);
+    expect(JSON.stringify(adapters.map(({ declaration }) => declaration))).toBe(before);
+  });
+
+  it('reports multiple simultaneous faults in deterministic order without collapsing domains', () => {
+    const adapters = [
+      live({ id: 'BAD', mock: true, provider: 'Bad Provider' }),
+      live({ id: 'duplicate_id', provider: 'Duplicate One', product: 'One' }),
+      live({ id: 'duplicate_id', provider: 'Duplicate Two', product: 'Two' }),
+      live({ id: 'claim_a', provider: ' Example Provider ', product: ' Product ' }),
+      live({ id: 'claim_b', provider: 'example provider', product: 'product' }),
+      live({ id: 'claim_c', provider: 'example provider', product: 'different product' }),
+      live({ id: 'other_domain', domain: 'lms', provider: 'example provider', product: 'product' }),
+    ];
+    const before = JSON.stringify(adapters.map(({ declaration }) => declaration));
+    const faults = validateAdapterRegistry(adapters);
+    expect(faults.map(({ adapterId, code }) => `${adapterId}:${code}`)).toEqual([
+      'BAD:invalid_declaration',
+      'BAD:mock_adapter',
+      'claim_a:duplicate_connection_claim',
+      'claim_b:duplicate_connection_claim',
+      'claim_c:duplicate_connection_claim',
+      'duplicate_id:duplicate_id',
+      'duplicate_id:duplicate_id',
+    ]);
+    expect(faults.filter(({ code }) => code === 'duplicate_connection_claim')).toHaveLength(3);
+    expect(faults.some(({ adapterId }) => adapterId === 'other_domain')).toBe(false);
+    expect(JSON.stringify(adapters.map(({ declaration }) => declaration))).toBe(before);
   });
 });
