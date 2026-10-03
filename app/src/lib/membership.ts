@@ -36,6 +36,7 @@ export interface Subscription {
   status: 'trialing' | 'active' | 'past_due' | 'grace' | 'canceled' | 'ended';
   periodEnd: string;
   cancelAtPeriodEnd: boolean;
+  billingIssue: 'address_required' | null;
 }
 
 export type Started = { kind: 'redirect'; url: string } | { kind: 'refused'; said: string };
@@ -108,6 +109,7 @@ export function currentSubscription(rows: unknown): Subscription | null {
       status: r.status as Subscription['status'],
       periodEnd: typeof r.current_period_end === 'string' ? r.current_period_end : '',
       cancelAtPeriodEnd: r.cancel_at_period_end === true,
+      billingIssue: r.billing_issue === 'address_required' ? 'address_required' : null,
     };
   }
   return null;
@@ -273,7 +275,7 @@ export async function fetchPlusPrices(db: Db): Promise<PlusPrice[]> {
 export async function fetchOwnSubscriptions(db: Db, accountId: string): Promise<unknown> {
   const { data, error } = await db
     .from('subscriptions')
-    .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_accounts!inner(kind, user_id)')
+    .select('id, plan_code, status, current_period_end, cancel_at_period_end, billing_issue, billing_accounts!inner(kind, user_id)')
     .eq('billing_accounts.kind', 'individual')
     .eq('billing_accounts.user_id', accountId);
   if (error) throw new Error('subscription read failed');

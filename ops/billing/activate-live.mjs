@@ -64,12 +64,14 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     } while (sessionCursor);
     return sessions;
   }
-  async function staleActiveSubscriptions(sessions) {
+  async function invalidActiveSubscriptions(sessions) {
     const subscriptions = [];
-    for (const session of sessions.filter(item =>
-      item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item))) {
+    for (const session of sessions.filter(item => item?.metadata?.semester_checkout_id)) {
       const subscriptionRef = typeof session?.subscription === 'string' ? session.subscription : session?.subscription?.id;
-      if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionRef || '')) continue;
+      if (!/^sub_[A-Za-z0-9]+$/.test(subscriptionRef || '')) {
+        subscriptions.push('missing_subscription_reference');
+        continue;
+      }
       const subscription = await stripe(
         `subscriptions/${encodeURIComponent(subscriptionRef)}?expand[]=items.data.price.product`,
       );
@@ -121,7 +123,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   // expiration cannot repair the resulting subscription, so detect any live
   // subscription whose Checkout tax contract or product classification is
   // stale and stop for an explicit provider-side migration.
-  const legacyActiveSubscriptions = await staleActiveSubscriptions(await checkoutSessions('complete'));
+  const legacyActiveSubscriptions = await invalidActiveSubscriptions(await checkoutSessions('complete'));
   if (apply && legacyActiveSubscriptions.length > 0)
     throw new Error('An active Semester subscription uses an older tax contract. Migrate it in Stripe before activation; no settings changed.');
 
@@ -227,7 +229,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   if ((await checkoutSessions('open')).some(item =>
     item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item)))
     throw new Error('A legacy untaxed Checkout Session is still open. Checkout remains unavailable.');
-  if ((await staleActiveSubscriptions(await checkoutSessions('complete'))).length > 0)
+  if ((await invalidActiveSubscriptions(await checkoutSessions('complete'))).length > 0)
     throw new Error('An active Semester subscription uses an older tax contract. Migrate it in Stripe; checkout remains unavailable.');
 
   // Configure and validate the portal before creating a webhook. Stripe only
@@ -315,23 +317,49 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   }
   if (!verified) throw new Error('Secrets were configured, but the deployed webhook did not verify the signing key. Check deployment; do not advertise live billing yet.');
 
+  // A structurally valid invoice event reaches the v3 database RPC. Its
+  // deliberately nonexistent subscription makes the RPC return not_ready
+  // before inserting an invoice or payment event, so this proves the schema
+  // and deployed function agree without manufacturing a financial record.
+  const invoiceProbeBody = JSON.stringify({
+    id: 'evt_semester_activation_probe', type: 'invoice.finalization_failed',
+    livemode: true, created: t, data: { object: {
+      id: 'in_semester_activation_probe', subscription: 'sub_semester_activation_probe',
+      amount_due: 0, subtotal_excluding_tax: 0, total_taxes: [], currency: 'usd', created: t,
+      automatic_tax: { status: 'failed' },
+    } },
+  });
+  const invoiceProbeSig = createHmac('sha256', c.webhookSecret).update(`${t}.${invoiceProbeBody}`).digest('hex');
+  let invoiceRpcVerified = false;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const res = await send(c.webhookUrl, { method: 'POST', body: invoiceProbeBody, redirect: 'error', signal: AbortSignal.timeout(20_000),
+      headers: { 'Content-Type': 'application/json', 'Stripe-Signature': `t=${t},v1=${invoiceProbeSig}` } });
+    const said = await res.json().catch(() => ({}));
+    if (res.status === 500 && said.error === 'Not ready for this event.') { invoiceRpcVerified = true; break; }
+    if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  if (!invoiceRpcVerified)
+    throw new Error('The deployed webhook did not confirm the invoice-event database RPC. Checkout remains unavailable.');
+
   // The provider inventory is now stable because checkout is confirmed off.
   // Recheck immediately before the only write that can make purchases live.
   if ((await checkoutSessions('open')).some(item =>
     item?.metadata?.semester_checkout_id && !semesterSessionIsCurrent(item)) ||
-      (await staleActiveSubscriptions(await checkoutSessions('complete'))).length > 0)
+      (await invalidActiveSubscriptions(await checkoutSessions('complete'))).length > 0)
     throw new Error('A stale tax contract appeared during activation. Checkout remains unavailable.');
-  await writeProjectSecrets([{ name: 'BILLING_LIVE_ENABLED', value: 'true' }], 'Supabase checkout enablement');
 
+  // Prove every management path while checkout is still fail-closed. A probe
+  // failure cannot leave purchases enabled without cancellation or portal.
   for (const origin of c.origins) {
     for (const name of ['billing-checkout', 'billing-cancel', 'billing-portal']) {
+      const expectedStatus = name === 'billing-checkout' ? 503 : 401;
       let ready = false;
       for (let attempt = 0; attempt < 5; attempt += 1) {
         const res = await send(`https://${c.project}.supabase.co/functions/v1/${name}`, {
           method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
           headers: { Origin: origin, 'Content-Type': 'application/json' },
         });
-        if (res.status === 401 && res.headers.get('Access-Control-Allow-Origin') === origin) {
+        if (res.status === expectedStatus && res.headers.get('Access-Control-Allow-Origin') === origin) {
           ready = true;
           break;
         }
@@ -339,6 +367,26 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
       }
       if (!ready)
         throw new Error(`Secrets were configured, but ${name} did not pass authentication/CORS verification. Do not advertise live billing yet.`);
+    }
+  }
+
+  await writeProjectSecrets([{ name: 'BILLING_LIVE_ENABLED', value: 'true' }], 'Supabase checkout enablement');
+  for (const origin of c.origins) {
+    let ready = false;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const res = await send(`https://${c.project}.supabase.co/functions/v1/billing-checkout`, {
+        method: 'POST', body: '{}', redirect: 'error', signal: AbortSignal.timeout(20_000),
+        headers: { Origin: origin, 'Content-Type': 'application/json' },
+      });
+      if (res.status === 401 && res.headers.get('Access-Control-Allow-Origin') === origin) {
+        ready = true;
+        break;
+      }
+      if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    if (!ready) {
+      await writeProjectSecrets([{ name: 'BILLING_LIVE_ENABLED', value: 'false' }], 'Supabase checkout rollback');
+      throw new Error('Checkout did not pass its final authentication/CORS verification and was disabled again.');
     }
   }
   return { state: 'configured', project: c.project, chargesEnabled: true,

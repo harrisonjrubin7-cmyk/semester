@@ -163,6 +163,27 @@ test('blocks a completed legacy checkout while its subscription still uses the o
   assert.equal(calls.some(call => call.method === 'POST'), false);
 });
 
+test('blocks a current checkout whose live subscription drifted from the tax contract', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/tax/registrations') || url.includes('status=open')) return response({ data: [], has_more: false });
+    if (url.includes('status=complete')) return response({ data: [{ id: 'cs_live_current', subscription: 'sub_current',
+      metadata: { semester_checkout_id: 'current', semester_tax_contract: 'plus-v2',
+        semester_tax_code: env.STRIPE_PRODUCT_TAX_CODE } }], has_more: false });
+    if (url.includes('/subscriptions/sub_current?')) return response({
+      id: 'sub_current', status: 'active', automatic_tax: { enabled: false },
+      metadata: { semester_tax_contract: 'plus-v2', semester_tax_code: env.STRIPE_PRODUCT_TAX_CODE },
+      items: { data: [{ price: { product: { id: 'prod_current', tax_code: env.STRIPE_PRODUCT_TAX_CODE } } }] },
+    });
+    throw new Error(`unexpected call to ${url}`);
+  } }), /older tax contract/);
+  assert.equal(calls.some(call => call.method === 'POST'), false);
+});
+
 test('rejects restricted keys before calling any provider', async () => {
   let calls = 0;
   await assert.rejects(activateLive({ ...env, STRIPE_SECRET_KEY: 'rk_live_readonly' }, {
@@ -222,7 +243,12 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
       if (gate) checkoutEnabled = gate.value === 'true';
       return response([]);
     }
-    if (url.endsWith('/billing-webhook')) return response({ error: 'Not an event.' }, 400);
+    if (url.endsWith('/billing-webhook')) {
+      const event = JSON.parse(init.body);
+      return event.type === 'invoice.finalization_failed'
+        ? response({ error: 'Not ready for this event.' }, 500)
+        : response({ error: 'Not an event.' }, 400);
+    }
     if (url.endsWith('/billing-checkout') && init.method === 'POST') return checkoutEnabled
       ? response({ error: 'Sign in.' }, 401, { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN,
         'X-Semester-Billing-Contract': 'plus-v2' })
@@ -245,6 +271,16 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(stored.find(secret => secret.name === 'STRIPE_PRODUCT_TAX_CODE').value, env.STRIPE_PRODUCT_TAX_CODE);
   assert.equal(stored.find(secret => secret.name === 'BILLING_LIVE_ENABLED').value, 'false');
   assert.equal(JSON.parse(secretWrites.at(-1).body)[0].value, 'true');
+  const enableIndex = calls.findIndex(call => call.url.endsWith('/secrets') &&
+    JSON.parse(call.body).some(secret => secret.name === 'BILLING_LIVE_ENABLED' && secret.value === 'true'));
+  assert.ok(enableIndex >= 0);
+  for (const name of ['billing-cancel', 'billing-portal']) {
+    const probeIndex = calls.findIndex(call => call.url.endsWith(`/${name}`) && call.method === 'POST');
+    assert.ok(probeIndex >= 0 && probeIndex < enableIndex);
+  }
+  const rpcProbeIndex = calls.findIndex(call => call.url.endsWith('/billing-webhook') &&
+    JSON.parse(call.body).type === 'invoice.finalization_failed');
+  assert.ok(rpcProbeIndex >= 0 && rpcProbeIndex < enableIndex);
   const portalBody = new URLSearchParams(calls.find(call => call.url.endsWith('/billing_portal/configurations')).body);
   assert.equal(portalBody.get('metadata[semester_product]'), 'semester');
   assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');

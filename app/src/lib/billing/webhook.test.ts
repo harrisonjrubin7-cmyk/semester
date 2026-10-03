@@ -94,7 +94,7 @@ describe('the billing webhook', () => {
     });
     expect((await handleBillingWebhook(post(body), d)).status).toBe(200);
     expect(d.applyInvoiceEvent).toHaveBeenCalledWith(
-      'evt_1', 'payment_failed', 'sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String),
+      'evt_1', 'address_required', 'sub_1', 'in_tax', 750, 65, 'usd', expect.any(String), expect.any(String),
       expect.any(String), 0, 815, expect.any(String));
   });
 

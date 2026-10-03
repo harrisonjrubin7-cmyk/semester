@@ -137,6 +137,18 @@ it('shows Plus when paid, and cancels it from the same place', async () => {
   expect(button(/Cancel membership/)).toBeUndefined();
 });
 
+it('directs a missing-tax-location issue to the address portal without calling it a card failure', async () => {
+  mock.tables.subscriptions = [{
+    id: 's1', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T12:00:00Z',
+    cancel_at_period_end: false, billing_issue: 'address_required',
+  }];
+  await render();
+  expect(host.textContent).toContain('Stripe needs your current billing address to calculate tax');
+  expect(host.textContent).toContain('your card has not failed');
+  expect(host.textContent).not.toContain('Your last payment did not go through');
+  expect(button(/Receipts, invoices and payment method/)).toBeDefined();
+});
+
 it('opens hosted receipts and invoices for a current or former subscriber', async () => {
   const go = vi.fn();
   vi.stubGlobal('location', { ...window.location, search: '', assign: go });

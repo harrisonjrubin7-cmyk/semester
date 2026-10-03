@@ -6,6 +6,14 @@ alter table public.invoices
     check (provider_snapshot_rank between 0 and 2),
   add column if not exists provider_snapshot_at timestamptz;
 
+alter table public.subscriptions
+  add column if not exists billing_issue text
+    check (billing_issue is null or billing_issue = 'address_required');
+
+alter table public.payment_events drop constraint if exists payment_events_kind_check;
+alter table public.payment_events add constraint payment_events_kind_check
+  check (kind in ('payment_succeeded', 'payment_failed', 'address_required', 'refund', 'chargeback', 'other'));
+
 -- Existing invoices can already contain a payment-stage event. Seed their
 -- precedence before the v3 webhook is enabled so a delayed finalization
 -- failure cannot overwrite the newer, finalized subtotal and tax snapshot.
@@ -32,6 +40,89 @@ update public.invoices i
        end
   from prior
  where i.id = prior.invoice_id;
+
+-- Missing tax location is customer action, not a declined payment. Preserve a
+-- distinct issue for the Account screen without opening dunning or removing
+-- entitlements. A real failure clears that issue and follows ordinary dunning;
+-- a later payment clears either condition and restores the subscription.
+create or replace function public.apply_payment_event(
+  want_provider text, want_event_id text, want_kind text, want_invoice uuid,
+  want_amount_cents bigint, want_payload_sha256 text, grace interval default interval '14 days'
+)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  inv public.invoices;
+  open_case uuid;
+begin
+  insert into public.payment_events (provider, provider_event_id, kind, invoice_id, amount_cents, payload_sha256)
+  values (want_provider, want_event_id, want_kind, want_invoice, want_amount_cents, want_payload_sha256)
+  on conflict (provider, provider_event_id) do nothing;
+  if not found then
+    return 'duplicate';
+  end if;
+
+  select * into inv from public.invoices where id = want_invoice;
+  if not found then
+    return 'recorded';
+  end if;
+
+  if want_kind = 'address_required' and inv.subscription_id is not null and inv.status <> 'paid' then
+    update public.subscriptions
+       set billing_issue = 'address_required', updated_at = now()
+     where id = inv.subscription_id and status in ('trialing', 'active');
+    return 'address_required';
+  elsif want_kind = 'payment_succeeded' then
+    update public.invoices set status = 'paid', paid_at = now() where id = inv.id;
+    if inv.subscription_id is not null then
+      update public.subscriptions
+         set status = case when status in ('past_due', 'grace') then 'active' else status end,
+             billing_issue = null,
+             updated_at = now()
+       where id = inv.subscription_id;
+      with recovered as (
+        update public.dunning_cases set status = 'recovered', closed_at = now()
+         where subscription_id = inv.subscription_id and status in ('open', 'restricted')
+        returning id
+      )
+      insert into public.dunning_actions (case_id, action, detail)
+      select id, 'recover', 'Payment received.' from recovered;
+      insert into public.subscription_entitlements (subscription_id, entitlement_key, value, source)
+      select inv.subscription_id, e.entitlement_key, e.value, 'plan'
+        from public.subscriptions s join public.plan_entitlements e on e.plan_code = s.plan_code
+       where s.id = inv.subscription_id and s.status in ('trialing', 'active')
+      on conflict (subscription_id, entitlement_key) do nothing;
+    end if;
+    return 'paid';
+  elsif want_kind = 'payment_failed' and inv.subscription_id is not null and inv.status <> 'paid' then
+    update public.subscriptions
+       set status = case when status in ('active', 'trialing', 'grace') then 'past_due' else status end,
+           billing_issue = null,
+           updated_at = now()
+     where id = inv.subscription_id and status in ('active', 'trialing', 'past_due', 'grace');
+    insert into public.dunning_cases (subscription_id, invoice_id, grace_ends_at)
+    values (inv.subscription_id, inv.id, now() + grace)
+    on conflict (subscription_id) where status = 'open' do nothing
+    returning id into open_case;
+    if open_case is null then
+      select id into open_case from public.dunning_cases
+       where subscription_id = inv.subscription_id and status = 'open';
+      insert into public.dunning_actions (case_id, action, detail) values (open_case, 'retry', 'Another failed attempt.');
+    else
+      insert into public.dunning_actions (case_id, action, detail) values (open_case, 'notice', 'Payment failed; customer notified.');
+    end if;
+    return 'dunning';
+  end if;
+  return 'recorded';
+end $$;
+
+revoke all on function public.apply_payment_event(text, text, text, uuid, bigint, text, interval)
+  from public, anon, authenticated;
+grant execute on function public.apply_payment_event(text, text, text, uuid, bigint, text, interval)
+  to service_role;
 
 create or replace function public.apply_invoice_payment_event_v3(
   want_provider text,

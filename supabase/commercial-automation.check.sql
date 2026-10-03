@@ -270,8 +270,16 @@ begin
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 
   -- ── Dunning ─────────────────────────────────────────────────────────────
+  select public.apply_payment_event('stripe', 'evt_address_needed', 'address_required', inv, 864, repeat('a', 64)) into t;
+  perform pg_temp.answered('missing tax location has its own remediation state', t, 'address_required');
+  perform pg_temp.answered('without calling the card failed',
+    (select status || ':' || billing_issue from public.subscriptions where id = ana_sub), 'active:address_required');
+  perform pg_temp.counted('and without opening dunning',
+    (select count(*) from public.dunning_cases where subscription_id = ana_sub and status = 'open'), 0);
   select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 864, repeat('e', 64)) into t;
   perform pg_temp.answered('a failed renewal opens dunning', t, 'dunning');
+  perform pg_temp.answered('and clears the address-only issue',
+    (select billing_issue from public.subscriptions where id = ana_sub), null);
   select public.run_dunning(base + interval '1 day') into j;
   perform pg_temp.answered('a day later, nothing is due', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');
   select public.run_dunning(base + interval '4 days') into j;

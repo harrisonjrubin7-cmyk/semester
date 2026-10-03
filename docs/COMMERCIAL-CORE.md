@@ -55,6 +55,7 @@ signup → Free (no subscription row needed)
 
 ```
 payment fails        → subscription past_due, one open dunning_case, action 'notice'
+tax needs an address → subscription stays active, `billing_issue = address_required`, no dunning
 further failures     → same case, action 'retry'
 grace (14 days)      → paid features keep working
 final notice         → exact restriction date sent (worker writes 'final_notice')
@@ -81,7 +82,9 @@ role's alone; nothing is callable by a visitor or a signed-in account.
    (an older event never overwrites a newer one); `invoice.paid` /
    `invoice.payment_failed` / `invoice.finalization_failed` →
    `upsert_provider_invoice_v2` (subtotal and tax separately) then
-   `apply_payment_event`; refunds and disputes by kind. `apply_payment_event`
+   `apply_payment_event`; a missing tax address is kept distinct from a card
+   failure, leaves access active, and asks the student to update their address
+   in Stripe without opening dunning. Refunds and disputes are applied by kind. `apply_payment_event`
    runs last and is the idempotency key, so a half-applied event is finished by
    the provider's retry. An invoice event that arrives before the checkout
    event that creates its subscription is answered 500 with nothing recorded,

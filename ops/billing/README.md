@@ -32,7 +32,9 @@ gate, creates or updates exactly this project's live webhook, enables the
 default Stripe billing portal's invoice history and payment-method controls,
 stores the credentials and the exact portal configuration id in Supabase,
 rescans legacy sessions while checkout is quiesced, and only then opens the
-gate after checking the deployed signature, authentication and CORS boundaries. It refuses to activate until Stripe Tax
+gate after checking the deployed signature, invoice-event database path,
+authentication and CORS boundaries. The invoice probe uses a nonexistent
+subscription and therefore writes no invoice or payment record. It refuses to activate until Stripe Tax
 reports an active setup, and reports the number of active tax registrations so
 the owner and counsel can reconcile it with the approved nexus decision. It
 does not create a checkout, register the business for tax, charge a card or

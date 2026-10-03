@@ -55,9 +55,16 @@ describe('the subscription', () => {
       { id: 'a', plan_code: 'plus', status: 'ended', current_period_end: '2026-01-01T00:00:00Z' },
       { id: 'b', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T00:00:00Z', cancel_at_period_end: false },
     ];
-    expect(currentSubscription(rows)).toEqual({ id: 'b', plan: 'plus', status: 'active', periodEnd: '2026-10-29T00:00:00Z', cancelAtPeriodEnd: false });
+    expect(currentSubscription(rows)).toEqual({ id: 'b', plan: 'plus', status: 'active', periodEnd: '2026-10-29T00:00:00Z', cancelAtPeriodEnd: false, billingIssue: null });
     expect(currentSubscription([rows[0]])).toBeNull();
     expect(currentSubscription(undefined)).toBeNull();
+  });
+
+  it('preserves a missing billing-address issue for distinct remediation', () => {
+    expect(currentSubscription([{
+      id: 'b', plan_code: 'plus', status: 'active', current_period_end: '2026-10-29T00:00:00Z',
+      cancel_at_period_end: false, billing_issue: 'address_required',
+    }])?.billingIssue).toBe('address_required');
   });
 
   it('remembers a paid plan that has ended', () => {

@@ -10,7 +10,7 @@
  *   customer.subscription.*         sync_provider_subscription (newer events only)
  *   invoice.paid / payment_succeeded atomic invoice snapshot + payment_succeeded
  *   invoice.payment_failed          atomic invoice snapshot + payment_failed → dunning
- *   invoice.finalization_failed     recorded with its tax/location failure → dunning
+ *   invoice.finalization_failed     tax outage recorded; missing location requests an address update
  *   charge.refunded                 refund
  *   charge.dispute.created          chargeback
  *   anything else                   recorded as `other`
@@ -150,10 +150,10 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
       const needsCustomerLocation = finalizationFailed &&
         obj(o.automatic_tax).status === 'requires_location_inputs';
       // A Stripe Tax service failure is operational, not a failed customer
-      // payment. Stripe retries it; only missing customer location enters the
-      // existing remediation/dunning path.
-      const failed = type === 'invoice.payment_failed' || needsCustomerLocation;
-      kind = failed ? 'payment_failed' : 'payment_succeeded';
+      // payment. Missing customer location is also not a card failure: keep a
+      // distinct issue for the Account screen and never start dunning for it.
+      const failed = type === 'invoice.payment_failed';
+      kind = needsCustomerLocation ? 'address_required' : failed ? 'payment_failed' : 'payment_succeeded';
       if (finalizationFailed && !needsCustomerLocation) kind = 'other';
       const paid = type === 'invoice.paid' || type === 'invoice.payment_succeeded';
       // Stripe may deliver finalization failures after a later payment event.
