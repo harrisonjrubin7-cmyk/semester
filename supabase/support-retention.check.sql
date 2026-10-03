@@ -38,6 +38,7 @@ declare
   recent_resolved uuid := gen_random_uuid();
   old_open uuid := gen_random_uuid();
   held uuid := gen_random_uuid();
+  legacy_unclassified uuid := gen_random_uuid();
   snapshot_ticket uuid;
   hold_id uuid;
   tenant_hold_id uuid;
@@ -56,13 +57,14 @@ begin
     (tenant_who, 'tenant_support_retention', school);
 
   insert into public.support_tickets
-    (id, student_id, tenant_id, category, subject, body, priority, status, created_at, first_response_due, updated_at)
+    (id, student_id, tenant_id, retention_classified, category, subject, body, priority, status, created_at, first_response_due, updated_at)
   values
-    (old_resolved, who, null, 'bug', 'old resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
-    (old_closed, who, null, 'bug', 'old closed', 'body', 'normal', 'closed', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
-    (recent_resolved, who, null, 'bug', 'recent resolved', 'body', 'normal', 'resolved', now() - interval '20 days', now() - interval '19 days', now() - interval '179 days'),
-    (old_open, who, null, 'bug', 'old open', 'body', 'normal', 'open', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
-    (held, who, null, 'bug', 'held resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days');
+    (old_resolved, who, null, true, 'bug', 'old resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (old_closed, who, null, true, 'bug', 'old closed', 'body', 'normal', 'closed', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (recent_resolved, who, null, true, 'bug', 'recent resolved', 'body', 'normal', 'resolved', now() - interval '20 days', now() - interval '19 days', now() - interval '179 days'),
+    (old_open, who, null, true, 'bug', 'old open', 'body', 'normal', 'open', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (held, who, null, true, 'bug', 'held resolved', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days'),
+    (legacy_unclassified, who, null, false, 'bug', 'legacy unresolved provenance', 'body', 'normal', 'resolved', now() - interval '220 days', now() - interval '219 days', now() - interval '181 days');
 
   insert into public.support_ticket_messages (ticket_id, from_side, body)
   values (old_resolved, 'support', 'cascades with the ticket');
@@ -111,12 +113,12 @@ begin
 
   perform private.sweep_support_ticket_retention();
   perform pg_temp.must('an account hold preserves every ticket for that account',
-    (select count(*) from public.support_tickets where student_id = who) = 5);
+    (select count(*) from public.support_tickets where student_id = who) = 6);
   perform pg_temp.must('the same hold blocks direct self-service ticket erasure',
     pg_temp.error_as(who, 'select public.forget_my_support_tickets()')
       like '55006 %active legal hold%');
   perform pg_temp.must('direct erasure refusal leaves every held ticket in place',
-    (select count(*) from public.support_tickets where student_id = who) = 5);
+    (select count(*) from public.support_tickets where student_id = who) = 6);
 
   perform set_config('request.jwt.claims', '{}'::text, true);
   update public.legal_holds
@@ -130,6 +132,11 @@ begin
   perform pg_temp.must('recent resolved and active individual-beta tickets remain',
     exists (select 1 from public.support_tickets where id = recent_resolved)
     and exists (select 1 from public.support_tickets where id = old_open));
+  perform pg_temp.must('unclassified legacy tickets are preserved pending evidence review',
+    exists (select 1 from public.support_tickets where id = legacy_unclassified));
+  perform pg_temp.must('unclassified legacy tickets also block direct deletion pending evidence review',
+    pg_temp.error_as(who, 'select public.forget_my_support_tickets()')
+      like '55000 %evidence-backed retention classification%');
   perform pg_temp.must('ticket messages cascade when the individual-beta ticket expires',
     not exists (select 1 from public.support_ticket_messages where ticket_id = old_resolved));
 

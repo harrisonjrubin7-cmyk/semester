@@ -41,6 +41,14 @@ describe('company-site production availability', () => {
     expect(site).toContain('318 of 318, checked October 1, 2026');
   });
 
+  it('discloses live support content and its conservative retention boundary', () => {
+    expect(site).toContain('"Support questions":["The category, question, approved app details, replies and notification delivery state"');
+    expect(site).toContain('<th scope="row">Support questions</th>');
+    expect(site).toContain('New individual-beta tickets are classified when opened and deleted with their replies 180 days after resolution or closure');
+    expect(site).toContain('Tickets created before the durable classification field are preserved until their historical authority is verified');
+    expect(site).toContain('pre-classification legacy tickets stay outside that sweep');
+  });
+
   it('holds every previously non-green roadmap card to code-complete status without erasing its external gate', () => {
     const roadmap = site.slice(site.indexOf('const RM='), site.indexOf('document.getElementById("roadmap-cols")'));
     expect(site).toContain('Last updated October 3, 2026');

@@ -183,18 +183,19 @@ describe('the probes read the files rather than reporting an empty tree', () => 
   it('snapshots only a signed deployment tenant and locks membership through ticket creation', () => {
     const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
     expect(migration).toMatch(/add column if not exists tenant_id text/);
-    expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id,/);
+    expect(migration).toMatch(/add column if not exists retention_classified boolean not null default false/);
+    expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id, retention_classified,/);
     expect(migration).toMatch(/from public\.profiles p[\s\S]*?for update of p/);
     expect(migration).toMatch(/public\.billing_account_tenants bt/);
     expect(migration).toMatch(/join public\.contracts c/);
     expect(migration).toMatch(/c\.kind = 'order_form'/);
     expect(migration).toMatch(/c\.status = 'signed'/);
-    expect(migration).toMatch(/c\.signed_at <= t\.created_at/);
-    expect(migration).toMatch(/c\.effective_at <= t\.created_at/);
-    expect(migration).toMatch(/c\.ends_at > t\.created_at/);
-    expect(migration).toMatch(/t\.status in \('resolved', 'closed'\)[\s\S]*?t\.tenant_id is null/);
+    expect(migration).toMatch(/who, ticket_tenant, true,/);
+    expect(migration).not.toMatch(/update public\.support_tickets t[\s\S]*?from public\.profiles p/);
+    expect(migration).toMatch(/t\.status in \('resolved', 'closed'\)[\s\S]*?t\.retention_classified[\s\S]*?t\.tenant_id is null/);
     expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
     expect(migration).toMatch(/active legal hold'[\s\S]*?errcode = '55006'/);
+    expect(migration).toMatch(/not t\.retention_classified[\s\S]*?errcode = '55000'/);
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

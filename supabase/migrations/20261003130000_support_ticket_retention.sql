@@ -13,39 +13,21 @@
 -- beta clock. The value deliberately has no school foreign key: retained
 -- evidence must survive tenant offboarding.
 alter table public.support_tickets
-  add column if not exists tenant_id text;
+  add column if not exists tenant_id text,
+  add column if not exists retention_classified boolean not null default false;
 
--- Serialize the one-time snapshot with membership and commercial-association
--- changes. Classify legacy tickets against the signed contract window that
--- existed when each ticket was opened, not the deployment state today. Once
--- this update completes, a deployed ticket carries its own durable tenant
--- association while ordinary school-domain members stay null.
-do $$
-begin
-  lock table public.profiles in share mode;
-  lock table public.billing_account_tenants in share mode;
-  lock table public.contracts in share mode;
-  update public.support_tickets t
-     set tenant_id = p.school_id
-    from public.profiles p
-   where p.user_id = t.student_id
-     and t.tenant_id is null
-     and p.school_id is not null
-     and exists (
-       select 1
-         from public.billing_account_tenants bt
-         join public.contracts c on c.billing_account_id = bt.billing_account_id
-        where bt.tenant_id = p.school_id
-          and c.kind = 'order_form'
-          and c.status in ('signed', 'superseded', 'terminated')
-          and c.signed_at <= t.created_at
-          and c.effective_at <= t.created_at
-          and (c.ends_at is null or c.ends_at > t.created_at)
-     );
-end $$;
+-- Do not infer a historical tenant from today's profile or today's contract
+-- state. Older tickets predate the durable snapshot, and the membership audit
+-- does not prove every revocation/move interval. They therefore stay
+-- unclassified and outside automated deletion until an operator verifies the
+-- contemporaneous membership and contract evidence. Every ticket opened
+-- through the function below is classified atomically at creation time.
 
 comment on column public.support_tickets.tenant_id is
   'Effective signed deployment tenant when the ticket was opened; null for school-domain membership alone and retained after membership changes so tenant legal holds continue to cover the record.';
+
+comment on column public.support_tickets.retention_classified is
+  'True only when the ticket was classified from contemporaneous membership and contract state; false legacy rows are preserved pending evidence-backed classification.';
 
 -- Re-state the only client entry point so every new ticket snapshots the
 -- caller's effective signed deployment tenant. Staff-facing reads still omit
@@ -89,10 +71,10 @@ begin
           and (c.ends_at is null or c.ends_at > now())
      );
   insert into public.support_tickets
-    (student_id, tenant_id, category, subject, body, context, priority,
+    (student_id, tenant_id, retention_classified, category, subject, body, context, priority,
      first_response_due, email_notice_enabled)
   values (
-    who, ticket_tenant, want_category, want_subject, want_body,
+    who, ticket_tenant, true, want_category, want_subject, want_body,
     coalesce(want_context, '{}'::jsonb),
     case when want_category in ('accessibility', 'privacy') then 'high' else 'normal' end,
     now() + make_interval(hours => private.support_first_response_hours(want_category)),
@@ -119,6 +101,7 @@ begin
   lock table public.legal_holds in share mode;
   delete from public.support_tickets t
    where t.status in ('resolved', 'closed')
+     and t.retention_classified
      and t.tenant_id is null
      and t.updated_at < now() - interval '180 days'
      and not private.account_is_held(t.student_id)
@@ -157,6 +140,13 @@ begin
     raise exception 'support tickets are preserved by an active legal hold'
       using errcode = '55006';
   end if;
+  if exists (
+    select 1 from public.support_tickets t
+     where t.student_id = who and not t.retention_classified
+  ) then
+    raise exception 'legacy support tickets await evidence-backed retention classification'
+      using errcode = '55000';
+  end if;
   delete from public.support_tickets where student_id = who;
 end $$;
 
@@ -164,7 +154,7 @@ revoke all on function public.forget_my_support_tickets() from public, anon;
 grant execute on function public.forget_my_support_tickets() to authenticated;
 
 comment on function public.forget_my_support_tickets() is
-  'Deletes the caller''s support tickets unless an account, tenant or platform legal hold requires preservation.';
+  'Deletes the caller''s classified support tickets unless a legal hold requires preservation; legacy tickets must first receive evidence-backed retention classification.';
 
 -- scheduler.sql remains the complete infrastructure source. This one
 -- credential-free job is also installed by the migration when pg_cron is

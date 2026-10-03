@@ -65,9 +65,11 @@ email address.
 
 - **Institution-specific support retention terms** remain a contracting and
   configuration gate before institutional launch. The current individual beta
-  rule deletes resolved or student-closed tickets 180 days after last activity,
-  unless an account, ticket-tenant or platform legal hold requires preservation;
-  `20261003130000_support_ticket_retention.sql` enforces that rule.
+  rule deletes creation-time-classified resolved or student-closed tickets 180
+  days after last activity. Pre-classifier legacy tickets remain outside both
+  deletion paths pending evidence review. Account, ticket-tenant and platform
+  legal holds still require preservation; `20261003130000_support_ticket_retention.sql`
+  enforces those boundaries.
 - **Pilot outcome measures** (the GTM work in #817) will need their own row in
   the first table before any is reported to a university; the cohort floor
   applies to them as to everything else.
