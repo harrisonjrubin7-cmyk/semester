@@ -142,14 +142,23 @@ begin
 
   -- erase_account is service-role-only and sets this marker only after its
   -- legal-hold wrapper has allowed the account erasure to start. A legacy
-  -- classification question may block the narrower RPC, but must not make
-  -- the whole account undeletable once every applicable hold is clear.
+  -- classification question may block the narrower RPC, but must neither
+  -- strand the whole account nor destroy evidence whose historical tenant is
+  -- still unknown.
   perform set_config('semester.erasing_account', who::text, true);
-  perform pg_temp.must('hold-cleared whole-account erasure can remove unclassified legacy tickets',
+  perform pg_temp.must('hold-cleared whole-account erasure can detach unclassified legacy tickets',
     pg_temp.error_as(who, 'select public.forget_my_support_tickets()') is null);
   perform set_config('semester.erasing_account', '', true);
-  perform pg_temp.must('the account-erasure path removes classified and legacy support tickets together',
+  perform pg_temp.must('the account-erasure path removes classified support tickets',
     not exists (select 1 from public.support_tickets where student_id = who));
+  perform pg_temp.must('the account-erasure path preserves legacy evidence detached from auth.users',
+    exists (
+      select 1 from public.support_tickets
+       where id = legacy_unclassified
+         and student_id is null
+         and retention_subject_id = who
+         and not email_notice_enabled
+    ));
 
   perform set_config('request.jwt.claims', '{}'::text, true);
   insert into public.legal_holds (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
@@ -184,6 +193,64 @@ begin
     pg_temp.error_as(tenant_who, 'select public.forget_my_support_tickets()') is null);
   perform pg_temp.must('direct erasure removes the released tenant ticket',
     not exists (select 1 from public.support_tickets where id = snapshot_ticket));
+end $$;
+
+-- Regression: a pre-classifier ticket may have been opened while a signed
+-- deployment covered the student, even though that historical tenant was not
+-- stored on the row. If the student later leaves and a tenant hold is placed,
+-- current-profile and ticket-tenant checks cannot rediscover that authority.
+-- Whole-account erasure must still preserve the ambiguous evidence while
+-- allowing the auth account itself to be removed.
+do $$
+declare
+  school text := 'support-retention-school';
+  legacy_who uuid := gen_random_uuid();
+  legacy_ticket uuid := gen_random_uuid();
+  operator_id uuid := gen_random_uuid();
+begin
+  insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
+  values (legacy_who, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+          'legacy-tenant-support@example.test', now(), now(), now());
+  insert into public.profiles (user_id, handle, school_id)
+  values (legacy_who, 'legacy_tenant_support', school);
+
+  insert into public.support_tickets
+    (id, student_id, tenant_id, retention_classified, category, subject, body,
+     priority, status, first_response_due)
+  values
+    (legacy_ticket, legacy_who, null, false, 'privacy', 'Legacy signed-deployment ticket',
+     'Historical tenant was not snapshotted.', 'high', 'resolved', now() + interval '1 day');
+
+  perform set_config('request.jwt.claims',
+    json_build_object('sub', legacy_who::text, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  perform public.leave_school();
+  reset role;
+
+  perform set_config('request.jwt.claims', '{}'::text, true);
+  insert into public.legal_holds
+    (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
+  values
+    ('tenant', school, school, 'Preserve the former deployment.',
+     'SUPPORT-LEGACY-TENANT-HOLD-CHECK', operator_id);
+
+  grant usage on schema public to service_role;
+  perform set_config('request.jwt.claims', json_build_object('role', 'service_role')::text, true);
+  set local role service_role;
+  perform public.erase_account(legacy_who);
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+
+  perform pg_temp.must('whole-account erasure removes the former signed-deployment auth account',
+    not exists (select 1 from auth.users where id = legacy_who));
+  perform pg_temp.must('a later tenant hold cannot lose an unclassified former-deployment ticket',
+    exists (
+      select 1 from public.support_tickets
+       where id = legacy_ticket
+         and student_id is null
+         and retention_subject_id = legacy_who
+         and not email_notice_enabled
+    ));
 end $$;
 
 set local role authenticated;

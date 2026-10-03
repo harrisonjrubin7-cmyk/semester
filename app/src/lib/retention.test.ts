@@ -170,7 +170,7 @@ describe('the document exists and says what it is for', () => {
     expect(said).toContain('after a ticket is resolved or closed and has no new activity for 180 days');
     expect(said).toContain('no automatic school-ticket purge runs until that rule is configured');
     expect(said).toContain('Tickets created before the durable creation-time classifier remain outside automated and ticket-only deletion');
-    expect(said).toContain('hold-cleared whole-account erasure still removes them');
+    expect(said).toContain('Whole-account erasure detaches those legacy records');
     expect(flat()).toContain('Your courses, deadlines, notes, plans and other study work stay until you delete them');
     expect(flat()).toContain('Individual-beta support questions not associated with a school deployment');
     expect(flat()).toContain('a resolved or closed ticket and its replies are deleted 180 days after the last activity');

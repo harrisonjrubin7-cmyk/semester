@@ -48,7 +48,7 @@ describe('company-site production availability', () => {
     expect(site).toContain('Tickets created before the durable classification field stay outside timed and ticket-only deletion until their historical authority is verified');
     expect(site).toContain('pre-classification legacy tickets stay outside that sweep');
     expect(site).toContain('ticket-only deletion is not exposed in the app');
-    expect(site).toContain('hold-cleared whole-account erasure still removes them');
+    expect(site).toContain('whole-account erasure detaches those legacy records');
     expect(site).toContain('<td>Resend</td>');
     expect(site).toContain('Support path inactive pending approval');
   });

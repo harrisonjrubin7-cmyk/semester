@@ -14,7 +14,29 @@
 -- evidence must survive tenant offboarding.
 alter table public.support_tickets
   add column if not exists tenant_id text,
-  add column if not exists retention_classified boolean not null default false;
+  add column if not exists retention_classified boolean not null default false,
+  add column if not exists retention_subject_id uuid;
+
+-- A pre-classifier ticket can outlive account erasure only while its
+-- historical authority is still unknown. Detach it from auth.users before
+-- that account is removed, but retain the opaque former subject id so an
+-- evidence-backed review can still associate records from the same matter.
+-- Classified tickets never use this path.
+alter table public.support_tickets alter column student_id drop not null;
+do $$ begin
+  alter table public.support_tickets
+    add constraint support_ticket_live_or_preserved_subject check (
+      (student_id is not null and retention_subject_id is null)
+      or
+      (student_id is null and retention_subject_id is not null
+       and not retention_classified and not email_notice_enabled)
+    );
+exception when duplicate_object then null;
+end $$;
+
+create index if not exists support_tickets_preserved_subject
+  on public.support_tickets (retention_subject_id)
+  where student_id is null;
 
 -- Bound the daily sweep to rows it can actually remove. Signed-deployment
 -- and unclassified legacy tickets are outside this partial index, so their
@@ -37,6 +59,9 @@ comment on column public.support_tickets.tenant_id is
 
 comment on column public.support_tickets.retention_classified is
   'True only when the ticket was classified from contemporaneous membership and contract state; false legacy rows are preserved pending evidence-backed classification.';
+
+comment on column public.support_tickets.retention_subject_id is
+  'Opaque former account UUID used only for an unclassified legacy ticket detached during account erasure; it is not a foreign key and is never returned by student or support functions.';
 
 -- Re-state the only client entry point so every new ticket snapshots the
 -- caller's effective signed deployment tenant. Staff-facing reads still omit
@@ -173,12 +198,12 @@ begin
       using errcode = '55006';
   end if;
   -- A narrow ticket-only deletion cannot decide the historical authority of
-  -- a pre-classifier row. Whole-account erasure is different: the
-  -- service-role-only erase_account path checks account/platform holds and
-  -- marks the transaction with the account it is erasing; the locked check
-  -- immediately above also covers every durable ticket-tenant hold. Do not
-  -- strand a user's entire account on
-  -- a classification question when no hold requires preservation.
+  -- a pre-classifier row. Whole-account erasure must not strand the account,
+  -- but it also cannot destroy a legacy row that may have been opened under a
+  -- signed deployment whose tenant was never snapshotted. Detach that row
+  -- from auth.users and disable delivery while retaining an opaque subject
+  -- reference for evidence-backed review. Properly classified rows still
+  -- delete below.
   if current_setting('semester.erasing_account', true) is distinct from who::text
      and exists (
     select 1 from public.support_tickets t
@@ -187,6 +212,14 @@ begin
     raise exception 'legacy support tickets await evidence-backed retention classification'
       using errcode = '55000';
   end if;
+  if current_setting('semester.erasing_account', true) = who::text then
+    update public.support_tickets
+       set retention_subject_id = student_id,
+           student_id = null,
+           email_notice_enabled = false
+     where student_id = who
+       and not retention_classified;
+  end if;
   delete from public.support_tickets where student_id = who;
 end $$;
 
@@ -194,7 +227,68 @@ revoke all on function public.forget_my_support_tickets() from public, anon;
 grant execute on function public.forget_my_support_tickets() to authenticated;
 
 comment on function public.forget_my_support_tickets() is
-  'Deletes the caller''s classified support tickets unless a legal hold requires preservation; narrow deletion of legacy tickets needs evidence-backed classification, while hold-cleared whole-account erasure removes them.';
+  'Deletes the caller''s classified support tickets unless a legal hold requires preservation; narrow deletion of legacy tickets needs evidence-backed classification, while whole-account erasure detaches and preserves them without retaining the auth account.';
+
+-- Preserved legacy evidence is not an active support conversation. Keep it
+-- out of the ordinary staff queue and thread reader, even for a staff member
+-- who retained an old SUP reference.
+create or replace function public.support_ticket_queue()
+returns table (id uuid, category text, subject text, status text, priority text,
+               created_at timestamptz, first_response_due timestamptz, first_responded_at timestamptz, overdue boolean)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not private.support_agent() then
+    raise exception 'support:ticket is required' using errcode = 'insufficient_privilege';
+  end if;
+  return query
+    select t.id, t.category, t.subject, t.status, t.priority, t.created_at, t.first_response_due,
+           t.first_responded_at, (t.first_responded_at is null and t.first_response_due < now())
+      from public.support_tickets t
+     where t.student_id is not null
+       and t.status in ('open', 'waiting_on_student')
+     order by (t.priority = 'high') desc, t.first_response_due;
+end $$;
+
+create or replace function public.support_ticket_thread(want_ticket uuid)
+returns table (from_side text, body text, context jsonb, created_at timestamptz)
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if not private.support_agent() then
+    raise exception 'support:ticket is required' using errcode = 'insufficient_privilege';
+  end if;
+  return query
+    select 'student'::text, t.body, t.context, t.created_at
+      from public.support_tickets t
+     where t.id = want_ticket and t.student_id is not null
+    union all
+    select m.from_side, m.body, null::jsonb, m.created_at
+      from public.support_ticket_messages m
+      join public.support_tickets t on t.id = m.ticket_id
+     where t.id = want_ticket and t.student_id is not null
+    order by 4;
+end $$;
+
+-- support_reply inserts the message before it updates the ticket, so guard
+-- the message boundary itself. A preserved record can only be handled by a
+-- future evidence-review workflow, not by the ordinary support console.
+create or replace function private.guard_preserved_support_ticket_message()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if exists (
+    select 1 from public.support_tickets t
+     where t.id = new.ticket_id and t.student_id is null
+  ) then
+    raise exception 'preserved legacy support evidence is not an active conversation'
+      using errcode = '55000';
+  end if;
+  return new;
+end $$;
+
+revoke all on function private.guard_preserved_support_ticket_message() from public, anon, authenticated;
+drop trigger if exists guard_preserved_support_ticket_message on public.support_ticket_messages;
+create trigger guard_preserved_support_ticket_message
+before insert or update on public.support_ticket_messages
+for each row execute function private.guard_preserved_support_ticket_message();
 
 -- scheduler.sql remains the complete infrastructure source. This one
 -- credential-free job is also installed by the migration when pg_cron is

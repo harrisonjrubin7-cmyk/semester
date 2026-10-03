@@ -129,7 +129,15 @@ describe('asking Semester support', () => {
     await draw();
     expect(host.textContent).toMatch(/without your name or email address/);
     expect(host.textContent).toMatch(/only if you tick them/);
+    expect(host.textContent).toMatch(/targets, not guaranteed coverage/);
     expect(host.querySelector('a[href="#/support"]')).not.toBeNull();
+  });
+
+  it('labels the category response window as a target rather than a promised SLA', async () => {
+    await draw();
+    await write('Response target', 'I need help with the app.');
+    await click(button('Check before sending'));
+    expect(host.textContent).toContain('Our first-reply target is 72 hours. It is not a guaranteed SLA.');
   });
 
   it('starts every app detail unticked, with its value shown beside it', async () => {

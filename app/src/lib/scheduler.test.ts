@@ -199,6 +199,9 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
     expect(migration).toMatch(/add column if not exists tenant_id text/);
     expect(migration).toMatch(/add column if not exists retention_classified boolean not null default false/);
+    expect(migration).toMatch(/add column if not exists retention_subject_id uuid/);
+    expect(migration).toMatch(/alter column student_id drop not null/);
+    expect(migration).toMatch(/support_ticket_live_or_preserved_subject check/);
     expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id, retention_classified,/);
     expect(migration).toMatch(/from public\.profiles p[\s\S]*?for update of p/);
     expect(migration).toMatch(/public\.billing_account_tenants bt/);
@@ -211,6 +214,10 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
     expect(migration).toMatch(/active legal hold'[\s\S]*?errcode = '55006'/);
     expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) is distinct from who::text[\s\S]*?not t\.retention_classified[\s\S]*?errcode = '55000'/);
+    expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) = who::text[\s\S]*?set retention_subject_id = student_id,[\s\S]*?student_id = null,[\s\S]*?and not retention_classified/);
+    expect(migration).toMatch(/support_ticket_queue\(\)[\s\S]*?where t\.student_id is not null/);
+    expect(migration).toMatch(/support_ticket_thread\(want_ticket uuid\)[\s\S]*?t\.student_id is not null/);
+    expect(migration).toMatch(/guard_preserved_support_ticket_message[\s\S]*?t\.student_id is null[\s\S]*?errcode = '55000'/);
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

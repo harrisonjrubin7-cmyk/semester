@@ -725,8 +725,9 @@ declare
 begin
   reset role;
   -- A pre-classifier support row is deliberately not eligible for the timed
-  -- or narrow ticket-only deletion paths. It must still leave with a full
-  -- account erasure once the hold wrapper has allowed that erasure to begin.
+  -- or narrow ticket-only deletion paths. Full account erasure detaches it
+  -- from auth.users without destroying evidence whose historical tenant is
+  -- still unknown.
   insert into public.support_tickets
     (student_id, retention_classified, category, subject, body, priority,
      status, first_response_due)
@@ -744,8 +745,9 @@ begin
   perform pg_temp.counted('it reports what it removed',
     ((said -> 'removed' ->> 'courses')::bigint), 1);
   perform pg_temp.counted('and hands back a receipt', (said ->> 'receipt' is not null)::int, 1);
-  perform pg_temp.counted('whole-account erasure removes a pre-classifier support ticket',
-    (select count(*) from public.support_tickets where student_id = leaver), 0);
+  perform pg_temp.counted('whole-account erasure detaches a pre-classifier support ticket',
+    (select count(*) from public.support_tickets
+      where student_id is null and retention_subject_id = leaver), 1);
   perform pg_temp.counted('no column that references auth.users still names the account',
     pg_temp.naming(leaver), 0);
 end $$;

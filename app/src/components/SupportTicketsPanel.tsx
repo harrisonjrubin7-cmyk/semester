@@ -158,8 +158,8 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
       <ul style={{ lineHeight: 'var(--leading-relaxed-plus)' }}>
         <li>Semester’s support staff read what you write, without your name or email address.</li>
         <li>Details about the app go only if you tick them, and you see each one first.</li>
-        <li>Accessibility and privacy questions get a first reply within a day; the rest within three.</li>
-        <li>Deleting your account deletes these too.</li>
+        <li>We aim to reply to accessibility and privacy questions within a day, and other questions within three. These are targets, not guaranteed coverage.</li>
+        <li>Deleting your account deletes classified questions. Older unclassified records are detached and preserved only for evidence-backed retention review.</li>
       </ul>
       {notice && <Notice>{notice}</Notice>}
 
@@ -242,7 +242,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
             </dd>
             <dt>Email notice</dt><dd>{emailNotice ? 'On — generic notice only' : 'Off'}</dd>
           </dl>
-          <p style={{ color: 'var(--app-dim)' }}>A first reply is due within {firstResponseHours(category)} hours.</p>
+          <p style={{ color: 'var(--app-dim)' }}>Our first-reply target is {firstResponseHours(category)} hours. It is not a guaranteed SLA.</p>
           <ActionButton
             tone="primary"
             disabled={busy}
