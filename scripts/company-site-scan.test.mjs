@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { assertCompleteFindingEvidence, evaluate, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { assertCompleteFindingEvidence, evaluate, evidenceDiagnostics, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path, root), 'utf8') : '';
@@ -362,6 +362,20 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
   assert.equal(
     evidenceShape({ alert: [{ id: 'not-printed' }], nextPageToken: null, totalCount: 1 }),
     'object(alert:array(1;item=object(id));nextPageToken:null;totalCount:number)',
+  );
+  assert.deepEqual(
+    evidenceDiagnostics({
+      alert: { pluginId: 'secret-value', uriCount: 2 },
+      applicationScanAlertUris: [{ findingHash: 'secret-hash', method: 'GET', uri: '/private' }],
+      nextPageToken: 'secret-token',
+      totalCount: 2,
+    }),
+    [
+      'alert=object(pluginId:string;uriCount:number)',
+      'applicationScanAlertUris=array(1;item=object(findingHash,method,uri))',
+      'nextPageToken=string',
+      'totalCount=number',
+    ],
   );
   assert.throws(() => findingPluginIds({ vulnerabilities: [csrf] }), /unsupported schema: object\(vulnerabilities:array\(1;item=object\(/i);
 });

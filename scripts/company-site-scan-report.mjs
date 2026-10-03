@@ -134,6 +134,13 @@ export function evidenceShape(value) {
   return typeof value;
 }
 
+export function evidenceDiagnostics(report) {
+  if (!report || typeof report !== 'object' || Array.isArray(report)) return [];
+  return ['alert', 'applicationScanAlertUris', 'nextPageToken', 'totalCount']
+    .filter(key => key in report)
+    .map(key => `${key}=${evidenceShape(report[key])}`);
+}
+
 export function findingsFromEvidence(report) {
   if (Array.isArray(report?.findings)) return report.findings;
   if (report?.finding && typeof report.finding === 'object') return [report.finding];
@@ -181,6 +188,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       findingPluginIds(report).forEach(id => console.log(id));
     }
     else if (process.argv[2] === 'hashes') {
+      evidenceDiagnostics(report).forEach(shape => console.error(`StackHawk | Finding evidence shape: ${shape}`));
       const findings = findingsFromEvidence(report);
       findings.forEach(assertCompleteFindingEvidence);
       console.log(`StackHawk | Complete finding evidence: ${findings.length} findings`);
