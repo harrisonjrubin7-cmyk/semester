@@ -97,7 +97,7 @@ describe('billing checkout', () => {
     expect(url).toBe('https://api.stripe.com/v1/checkout/sessions');
     const headers = init.headers as Record<string, string>;
     expect(headers.Authorization).toBe('Bearer sk_test_x');
-    expect(headers['Idempotency-Key']).toBe(`checkout-${CHECKOUT}`);
+    expect(headers['Idempotency-Key']).toBe(`checkout-v2-txcd_10103000-${CHECKOUT}`);
     const form = new URLSearchParams(init.body as string);
     expect(form.get('mode')).toBe('subscription');
     expect(form.get('client_reference_id')).toBe(CHECKOUT);

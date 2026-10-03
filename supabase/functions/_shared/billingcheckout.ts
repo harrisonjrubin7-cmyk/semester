@@ -160,7 +160,10 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
         Authorization: `Bearer ${deps.stripeKey}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         // One session per checkout row, however often the button is pressed.
-        'Idempotency-Key': `checkout-${row.checkout_id}`,
+        // Versioned for the tax-aware parameter contract. This avoids Stripe
+        // rejecting a retry that reuses a pre-tax session's key with new
+        // automatic-tax, product-code, or customer-update parameters.
+        'Idempotency-Key': `checkout-v2-${taxCode}-${row.checkout_id}`,
       },
       body: formEncode(sessionParams(row, returnTo(base, 'success'), returnTo(base, 'cancel'), taxCode)),
     });

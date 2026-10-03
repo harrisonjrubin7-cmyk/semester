@@ -72,9 +72,22 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     if (page.has_more === true && !registrationCursor) throw new Error('Stripe returned invalid tax registration pagination.');
   } while (registrationCursor);
 
-  const portalPage = await stripe('billing_portal/configurations?is_default=true&active=true&limit=1');
-  if (!Array.isArray(portalPage.data)) throw new Error('Stripe returned an invalid billing portal configuration list.');
-  let portal = portalPage.data[0];
+  // API-created portal configurations are non-default. Tag Semester's one and
+  // page through active configurations so a retry updates it instead of
+  // creating another configuration every time.
+  const portals = [];
+  let portalCursor;
+  do {
+    const page = await stripe(`billing_portal/configurations?active=true&limit=100${portalCursor ? `&starting_after=${encodeURIComponent(portalCursor)}` : ''}`);
+    if (!Array.isArray(page.data)) throw new Error('Stripe returned an invalid billing portal configuration list.');
+    portals.push(...page.data);
+    portalCursor = page.has_more === true ? page.data.at(-1)?.id : undefined;
+    if (page.has_more === true && !portalCursor) throw new Error('Stripe returned invalid portal configuration pagination.');
+  } while (portalCursor);
+  const semesterPortals = portals.filter(item => item?.metadata?.semester_product === 'semester');
+  if (semesterPortals.length > 1)
+    throw new Error('Multiple Semester billing portal configurations exist. Resolve the duplicate before activation.');
+  let portal = semesterPortals[0] ?? portals.find(item => item?.is_default === true);
   let portalReady = portal?.features?.invoice_history?.enabled === true &&
     portal?.features?.payment_method_update?.enabled === true &&
     portal?.features?.customer_update?.enabled === true &&
@@ -122,6 +135,7 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
       'features[invoice_history][enabled]': 'true',
       'features[payment_method_update][enabled]': 'true',
       'features[customer_update][enabled]': 'true',
+      'metadata[semester_product]': 'semester',
       default_return_url: c.returnUrl,
     });
     const customerUpdates = new Set([...(portal?.features?.customer_update?.allowed_updates ?? []), 'address']);

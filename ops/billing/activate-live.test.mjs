@@ -86,6 +86,23 @@ test('counts every page of active tax registrations', async () => {
   assert.equal(result.activeTaxRegistrations, 2);
 });
 
+test('reuses the tagged non-default Semester portal configuration', async () => {
+  const calls = [];
+  const result = await activateLive(env, { fetch: async (url, init) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
+    if (url.includes('/billing_portal/configurations')) return response({ data: [{ id: 'bpc_semester', active: true,
+      is_default: false, metadata: { semester_product: 'semester' }, features: { invoice_history: { enabled: true },
+        payment_method_update: { enabled: true }, customer_update: { enabled: true, allowed_updates: ['address'] } } }], has_more: false });
+    return response({ data: [], has_more: false });
+  } });
+  assert.equal(result.portalConfigured, true);
+  assert.equal(calls.some(call => call.method === 'POST'), false);
+});
+
 test('existing endpoints require their signing secret and pagination cannot create duplicates', async () => {
   const calls = [];
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
@@ -131,6 +148,7 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   assert.equal(stored.find(secret => secret.name === 'STRIPE_PORTAL_CONFIGURATION_ID').value, 'bpc_1');
   assert.equal(stored.find(secret => secret.name === 'STRIPE_PRODUCT_TAX_CODE').value, env.STRIPE_PRODUCT_TAX_CODE);
   const portalBody = new URLSearchParams(calls.find(call => call.url.endsWith('/billing_portal/configurations')).body);
+  assert.equal(portalBody.get('metadata[semester_product]'), 'semester');
   assert.equal(portalBody.get('features[customer_update][enabled]'), 'true');
   assert.equal(portalBody.get('features[customer_update][allowed_updates][0]'), 'address');
   assert.equal(calls.filter(call => call.url.endsWith('/webhook_endpoints')).length, 1);
