@@ -39,6 +39,23 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [busy, setBusy] = useState(false);
   const wanted = useRef<string | null>(null);
   const queueRequest = useRef(0);
+  const threadRequest = useRef(0);
+
+  const loadThread = useCallback(async (ticketId: string, reportError = true): Promise<boolean> => {
+    const request = ++threadRequest.current;
+    try {
+      const messages = await supportThread(ticketId);
+      if (wanted.current !== ticketId || request !== threadRequest.current) return false;
+      setThreadFailed(false);
+      setThread(messages);
+      return true;
+    } catch (error) {
+      if (wanted.current !== ticketId || request !== threadRequest.current) return false;
+      setThreadFailed(true);
+      if (reportError) onStatus(said(error, 'Could not read the support conversation.'));
+      return false;
+    }
+  }, [onStatus]);
 
   const refresh = useCallback(async (): Promise<boolean> => {
     const request = ++queueRequest.current;
@@ -75,6 +92,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   );
 
   const open = (id: string | null) => {
+    threadRequest.current += 1;
     wanted.current = id;
     setOpenId(id);
     setThread(null);
@@ -82,20 +100,15 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
     setReply('');
     setNextStatus('waiting_on_student');
     if (!id) return;
-    supportThread(id).then(
-      (messages) => {
-        if (wanted.current === id) {
-          setThreadFailed(false);
-          setThread(messages);
-        }
-      },
-      (error: unknown) => {
-        if (wanted.current === id) {
-          setThreadFailed(true);
-          onStatus(said(error, 'Could not read the support conversation.'));
-        }
-      },
-    );
+    void loadThread(id);
+  };
+
+  const refreshVisible = async () => {
+    const ticketId = wanted.current;
+    await Promise.all([
+      refresh(),
+      ticketId ? loadThread(ticketId) : Promise.resolve(true),
+    ]);
   };
 
   const send = async () => {
@@ -114,15 +127,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
       onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage
       // must not invite an operator to retry and send a duplicate response.
-      await supportThread(ticketId).then(
-        (messages) => {
-          if (wanted.current === ticketId) {
-            setThreadFailed(false);
-            setThread(messages);
-          }
-        },
-        () => {},
-      );
+      await loadThread(ticketId, false);
     } catch (error) {
       onStatus(said(error, 'Could not send the support reply.'));
     } finally {
@@ -138,7 +143,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
         Identity-free queue. This view receives no student name, email, account, handle or tenant. It shows only the question and app context the student chose to send.
       </Notice>
       <SectionLabel aside={tickets === null ? 'reading' : `${shown.length} open`}>Support queue</SectionLabel>
-      <button type="button" className="btn btn-secondary" onClick={() => { void refresh(); }}>Refresh support queue</button>
+      <button type="button" className="btn btn-secondary" onClick={() => { void refreshVisible(); }}>Refresh support queue</button>
       {queueFailed && (
         <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
           <Notice>{tickets === null ? 'Support queue unavailable.' : 'Support queue could not be refreshed; the last-known list remains visible.'}</Notice>
@@ -168,7 +173,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
           {threadFailed && (
             <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
               <Notice>Conversation unavailable. Replies stay disabled until the full thread can be read.</Notice>
-              <button type="button" className="btn btn-secondary" onClick={() => open(current.id)}>Retry conversation</button>
+              <button type="button" className="btn btn-secondary" onClick={() => { void loadThread(current.id); }}>Retry conversation</button>
             </div>
           )}
           {thread?.map((message, index) => (

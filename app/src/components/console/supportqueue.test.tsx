@@ -239,4 +239,21 @@ describe('the support operations queue', () => {
     await click(button('Refresh support queue'));
     expect(mock.queue).toHaveBeenCalledTimes(2);
   });
+
+  it('refreshes the open conversation with the queue without discarding a reply draft', async () => {
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'Draft response in progress.');
+    mock.thread.mockResolvedValueOnce([
+      { from: 'student', body: 'Tab skips the button.', at: '2026-10-01T10:00:00Z', context: null },
+      { from: 'student', body: 'This is the new detail.', at: '2026-10-01T10:05:00Z', context: null },
+    ]);
+
+    await click(button('Refresh support queue'));
+
+    expect(mock.queue).toHaveBeenCalledTimes(2);
+    expect(mock.thread).toHaveBeenCalledTimes(2);
+    expect(host.textContent).toContain('This is the new detail.');
+    expect((host.querySelector('textarea') as HTMLTextAreaElement).value).toBe('Draft response in progress.');
+  });
 });
