@@ -181,7 +181,7 @@ begin
     update public.invoices
        set provider_snapshot_rank = want_snapshot_rank,
            provider_snapshot_at = want_snapshot_at,
-           status = want_invoice_status
+           status = case when want_invoice_status = 'paid' then status else want_invoice_status end
      where id = invoice_id;
   else
     replace_snapshot := invoice_status <> 'paid' and (
@@ -197,7 +197,7 @@ begin
       update public.invoices
          set provider_snapshot_rank = want_snapshot_rank,
              provider_snapshot_at = want_snapshot_at,
-             status = want_invoice_status
+             status = case when want_invoice_status = 'paid' then status else want_invoice_status end
        where id = invoice_id;
     end if;
   end if;

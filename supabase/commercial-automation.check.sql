@@ -274,6 +274,10 @@ begin
     'open', 799, 0, 'USD', base, base, base + interval '1 minute', 1::smallint, 799, repeat('4', 64)) into t;
   perform pg_temp.answered('a later provider snapshot advances the draft to open',
     (select status from public.invoices where provider_ref = 'in_status_test'), 'open');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_paid_status', 'payment_succeeded', 'sub_test_1', 'in_paid_status',
+    'paid', 799, 65, 'USD', base, base, base + interval '2 minutes', 2::smallint, 864, repeat('5', 64)) into t;
+  perform pg_temp.answered('a paid snapshot advances with its paid date atomically',
+    (select (status = 'paid' and paid_at is not null)::text from public.invoices where provider_ref = 'in_paid_status'), 'true');
   select public.upsert_provider_invoice_v2('sub_nobody', 'in_test_2', 799, 0, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 

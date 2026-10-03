@@ -142,7 +142,10 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   const semesterPortals = portals.filter(item => item?.metadata?.semester_product === 'semester');
   if (semesterPortals.length > 1)
     throw new Error('Multiple Semester billing portal configurations exist. Resolve the duplicate before activation.');
-  let portal = semesterPortals[0] ?? portals.find(item => item?.is_default === true);
+  // Never rewrite the account-wide default: other products or integrations
+  // may rely on its subscription-management features. Semester sessions name
+  // this dedicated tagged configuration explicitly.
+  let portal = semesterPortals[0];
   let portalReady = portal?.features?.invoice_history?.enabled === true &&
     portal?.features?.payment_method_update?.enabled === true &&
     portal?.features?.customer_update?.enabled === true &&
