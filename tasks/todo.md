@@ -39,8 +39,8 @@
 - [x] C01: company documents 1–5; verified purpose, owner, cadence, authority, version/effective-date placeholders, dependencies, and external confirmations on 2026-10-03.
 - [x] C02: company documents 6–10; verified required structure, professional-review boundary, and external confirmations on 2026-10-03.
 - [x] C03: company documents 11–15; verified required structure, professional-review boundary, and external confirmations on 2026-10-03.
-- [ ] C04: company documents 16–20; same verification.
-- [ ] Checkpoint C: founder, attorney, accountant, tax, insurance, banking, IP, employment, vendor, and continuity facts are not fabricated.
+- [x] C04: company documents 16–20; verified control lifecycle, ownership, cadence, approval boundary, evidence requirements, and external limits on 2026-10-03.
+- [x] Checkpoint C: all 20 company artifacts preserve founder, attorney, accountant, tax, insurance, banking, IP, employment, vendor, and continuity facts as unverified until supplied by the accountable authority.
 
 **Dependencies:** T02
 

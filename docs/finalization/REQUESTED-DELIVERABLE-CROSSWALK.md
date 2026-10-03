@@ -29,11 +29,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 14 | `docs/company/INSURANCE-READINESS-CHECKLIST.md` | EXACT PRESENT | canonical broker/counsel intake checklist; no coverage is asserted |
 | 15 | `docs/company/TAX-AND-ACCOUNTING-READINESS-CHECKLIST.md` | EXACT PRESENT | canonical professional-review checklist; no tax conclusion is asserted |
 | 16 | `docs/company/RECORDS-RETENTION-SCHEDULE-DRAFT.md` | EXACT PRESENT | canonical draft schedule; every duration remains subject to approval |
-| 17 | `docs/company/DOCUMENT-CONTROL-POLICY.md` | NO CLOSE SOURCE | — |
-| 18 | `docs/company/BUSINESS-CONTINUITY-OPERATING-PLAN.md` | NO CLOSE SOURCE | — |
-| 19 | `docs/company/CRISIS-COMMUNICATIONS-TEMPLATE.md` | CANDIDATE SOURCE | `docs/operating-model/INCIDENT-COMMUNICATIONS.md` (filename similarity 0.43; substantive review required) |
-| 20 | `docs/company/RISK-REGISTER.md` | CANDIDATE SOURCE | `docs/trust/VENDOR-RISK-REGISTER.md` (filename similarity 0.70; substantive review required) |
-| 21 | `docs/company/POLICY-EXCEPTION-PROCESS.md` | NO CLOSE SOURCE | — |
+| 17 | `docs/company/DOCUMENT-CONTROL-POLICY.md` | EXACT PRESENT | canonical draft controlling approval, publication, change and supersession |
+| 18 | `docs/company/BUSINESS-CONTINUITY-OPERATING-PLAN.md` | EXACT PRESENT | canonical operating draft; exercises and named responders remain open |
+| 19 | `docs/company/CRISIS-COMMUNICATIONS-TEMPLATE.md` | EXACT PRESENT | canonical incident-specific template; publication always requires approval |
+| 20 | `docs/company/RISK-REGISTER.md` | EXACT PRESENT | canonical company-risk framework; ratings and acceptance remain external decisions |
+| 21 | `docs/company/POLICY-EXCEPTION-PROCESS.md` | EXACT PRESENT | canonical time-bound exception process; outside authority cannot be waived |
 | 22 | `docs/legal-drafts/TERMS-OF-SERVICE-DRAFT.md` | EXACT PRESENT | `docs/legal/TERMS-OF-SERVICE-DRAFT.md` |
 | 23 | `docs/legal-drafts/PRIVACY-NOTICE-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/PRIVACY-POLICY-DRAFT.md` (filename similarity 0.49; substantive review required) |
 | 24 | `docs/legal-drafts/COOKIE-NOTICE-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md` (filename similarity 0.69; substantive review required) |
