@@ -128,6 +128,16 @@ jobs:
           version: 6.5.0
           configurationFiles: stackhawk-company-site.yml
 
+      - name: Install checksum-pinned HawkOp evidence CLI
+        run: |
+          archive="$RUNNER_TEMP/hawkop-v0.11.0-x86_64-unknown-linux-gnu.tar.gz"
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location \
+            'https://download.stackhawk.com/hawkop/cli/hawkop-v0.11.0-x86_64-unknown-linux-gnu.tar.gz' \
+            --output "$archive"
+          echo "8e37168b6361b39d6a67eb1426b31328b2a8bb8472a53b8c7dcffd35ffa720c3  $archive" | sha256sum --check --strict
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP" hawkop
+          "$RUNNER_TEMP/hawkop" --version
+
       - name: Validate company-site scan
         env:
           HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
@@ -158,16 +168,12 @@ jobs:
       - name: Verify company-site scan evidence
         if: always() && steps.company_scan.outcome != 'skipped' && steps.company_scan.outcome != ''
         env:
-          HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          HAWKOP_API_KEY: ${{ secrets.HAWK_API_KEY }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
           scan_id=$(node scripts/company-site-scan-report.mjs id "$RUNNER_TEMP/company-site-scan.json")
           echo "StackHawk | Scan id: $scan_id"
-          API_KEY="$HAWK_API_KEY" hawk op scan get "$scan_id" --detail full --format json > "$RUNNER_TEMP/company-site-findings.json"
-          node scripts/company-site-scan-report.mjs plugin-ids "$RUNNER_TEMP/company-site-findings.json" > "$RUNNER_TEMP/company-site-plugin-ids.txt"
-          while IFS= read -r plugin_id; do
-            API_KEY="$HAWK_API_KEY" hawk op scan get "$scan_id" --plugin-id "$plugin_id" --format json > "$RUNNER_TEMP/company-site-plugin-$plugin_id.json"
-            node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-plugin-$plugin_id.json"
-          done < "$RUNNER_TEMP/company-site-plugin-ids.txt"
-          API_KEY="$HAWK_API_KEY" hawk op scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
+          "$RUNNER_TEMP/hawkop" scan get "$scan_id" --detail full --format json > "$RUNNER_TEMP/company-site-findings.json"
+          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings.json"
+          "$RUNNER_TEMP/hawkop" scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
           node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl"
