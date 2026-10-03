@@ -49,6 +49,11 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
   const account = await stripe('account');
   if (!account.id || account.charges_enabled !== true || account.details_submitted !== true)
     throw new Error('Stripe account onboarding is incomplete or live charges are disabled. No settings changed.');
+  // A well-shaped tax code can still be a typo. Retrieve the exact live
+  // object before reporting readiness or publishing the secret to checkout.
+  const productTaxCode = await stripe(`tax_codes/${encodeURIComponent(c.taxCode)}`);
+  if (productTaxCode?.id !== c.taxCode)
+    throw new Error('Stripe did not confirm the configured product tax code. No settings changed.');
   const tax = await stripe('tax/settings');
   const taxBehavior = tax?.defaults?.tax_behavior;
   const taxReady = tax.status === 'active' && ['exclusive', 'inclusive', 'inferred_by_currency'].includes(taxBehavior);

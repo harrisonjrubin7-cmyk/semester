@@ -30,10 +30,11 @@ test('a check is read-only and never claims payment verification', async () => {
   const result = await activateLive(env, { fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     return response({ data: [], has_more: false });
   } });
-  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
   assert.equal(result.state, 'checked');
   assert.equal(result.taxReady, true);
   assert.equal(result.portalConfigured, false);
@@ -45,9 +46,10 @@ test('apply refuses an incomplete Stripe Tax setup before any mutation', async (
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     return response({ status: 'pending' });
   } }), /Stripe Tax must be active/);
-  assert.deepEqual(calls, ['GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET']);
 });
 
 test('apply refuses active Stripe Tax without a reviewed default tax behavior', async () => {
@@ -55,14 +57,26 @@ test('apply refuses active Stripe Tax without a reviewed default tax behavior', 
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     return response({ status: 'active', defaults: { tax_behavior: null } });
   } }), /default tax behavior/);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET']);
+});
+
+test('refuses an unknown live product tax code before any mutation', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push(init.method || 'GET');
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    return response({ error: { message: 'No such tax code' } }, 404);
+  } }), /Stripe refused the request/);
   assert.deepEqual(calls, ['GET', 'GET']);
 });
 
 test('counts every page of active tax registrations', async () => {
   const result = await activateLive(env, { fetch: async (url) => {
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'inclusive' } });
     if (url.includes('/tax/registrations') && !url.includes('starting_after'))
       return response({ data: [{ id: 'txr_1' }], has_more: true });
@@ -77,13 +91,14 @@ test('existing endpoints require their signing secret and pagination cannot crea
   await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push(init.method || 'GET');
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations') || url.includes('/billing_portal/configurations')) return response({ data: [], has_more: false });
     if (!url.includes('starting_after')) return response({ data: [{ id: 'we_other', url: 'https://other.example' }], has_more: true });
     return response({ data: [{ id: 'we_semester', url: 'https://lzrqvlugnawcgywkhqlz.supabase.co/functions/v1/billing-webhook',
       livemode: true, status: 'enabled', enabled_events: EVENTS }], has_more: false });
   } }), /cannot be retrieved/);
-  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
+  assert.deepEqual(calls, ['GET', 'GET', 'GET', 'GET', 'GET', 'GET', 'GET']);
 });
 
 test('activates one endpoint, writes secrets only to Supabase, probes without charging', async () => {
@@ -91,6 +106,7 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
   const result = await activateLive(env, { apply: true, fetch: async (url, init) => {
     calls.push({ url, method: init.method || 'GET', body: init.body });
     if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
     if (url.includes('/billing_portal/configurations?')) return response({ data: [], has_more: false });
