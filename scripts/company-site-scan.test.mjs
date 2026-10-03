@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { assertCompleteFindingEvidence, evaluate, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { assertCompleteFindingEvidence, evaluate, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
 const read = path => existsSync(new URL(path, root)) ? readFileSync(new URL(path, root), 'utf8') : '';
@@ -359,7 +359,11 @@ test('triage evidence is collected per plugin and rejects CLI path truncation', 
   assert.throws(() => assertCompleteFindingEvidence({ ...csrf, total_paths: 2, paths: csrf.paths.slice(0, 1) }), /incomplete.*10202/i);
   assert.throws(() => assertCompleteFindingEvidence({ ...csrf, paths: [{ ...csrf.paths[0], finding_hash: 'redacted' }, csrf.paths[1]] }), /triage hash.*10202/i);
   assert.throws(() => findingPluginIds({ findings: [{ ...csrf, plugin_id: '../unsafe' }] }), /plugin identifier/i);
-  assert.throws(() => findingPluginIds({ vulnerabilities: [csrf] }), /unsupported schema: object\(vulnerabilities\)/i);
+  assert.equal(
+    evidenceShape({ alert: [{ id: 'not-printed' }], nextPageToken: null, totalCount: 1 }),
+    'object(alert:array(1;item=object(id));nextPageToken:null;totalCount:number)',
+  );
+  assert.throws(() => findingPluginIds({ vulnerabilities: [csrf] }), /unsupported schema: object\(vulnerabilities:array\(1;item=object\(/i);
 });
 
 test('empty coverage and missing changed assets cannot clear the company gate', () => {

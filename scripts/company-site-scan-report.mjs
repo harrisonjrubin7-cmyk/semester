@@ -109,16 +109,36 @@ export function findingHashes(finding) {
   return [...new Set(hashes)];
 }
 
+export function evidenceShape(value) {
+  if (Array.isArray(value)) {
+    const item = value[0];
+    const itemShape = item && typeof item === 'object' && !Array.isArray(item)
+      ? `object(${Object.keys(item).sort().map(safeText).join(',')})`
+      : Array.isArray(item) ? `array(${item.length})` : typeof item;
+    return `array(${value.length};item=${itemShape})`;
+  }
+  if (value && typeof value === 'object') {
+    const fields = Object.keys(value).sort().map(key => {
+      const field = value[key];
+      const shape = field === null
+        ? 'null'
+        : Array.isArray(field)
+        ? `array(${field.length}${field[0] && typeof field[0] === 'object' ? `;item=object(${Object.keys(field[0]).sort().map(safeText).join(',')})` : ''})`
+        : field && typeof field === 'object'
+          ? `object(${Object.keys(field).sort().map(safeText).join(',')})`
+          : typeof field;
+      return `${safeText(key)}:${shape}`;
+    });
+    return `object(${fields.join(';')})`;
+  }
+  return typeof value;
+}
+
 export function findingsFromEvidence(report) {
   if (Array.isArray(report?.findings)) return report.findings;
   if (report?.finding && typeof report.finding === 'object') return [report.finding];
   if (report?.plugin_id && Array.isArray(report.paths)) return [report];
-  const shape = Array.isArray(report)
-    ? `array(${report.length})`
-    : report && typeof report === 'object'
-      ? `object(${Object.keys(report).sort().map(safeText).join(',')})`
-      : typeof report;
-  throw new Error(`Finding evidence used an unsupported schema: ${shape}`);
+  throw new Error(`Finding evidence used an unsupported schema: ${evidenceShape(report)}`);
 }
 
 export function findingPluginIds(report) {
