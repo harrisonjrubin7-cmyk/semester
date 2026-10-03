@@ -65,6 +65,7 @@ describe('billing checkout', () => {
     const res = await handleBillingCheckout(new Request('https://x', { method: 'OPTIONS', headers: { Origin: APP } }), deps());
     expect(res.status).toBe(204);
     expect(res.headers.get('Access-Control-Allow-Origin')).toBe(APP);
+    expect(res.headers.get('X-Semester-Billing-Contract')).toBe('plus-v2');
   });
 
   it('needs a signed-in caller', async () => {

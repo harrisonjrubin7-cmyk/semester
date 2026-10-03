@@ -167,6 +167,24 @@ export async function activateLive(env, { apply = false, fetch: send = globalThi
     legacyActiveSubscriptions: legacyActiveSubscriptions.length,
     requiredEventsConfigured: !!completeEvents, paymentsVerified: false };
 
+  // Do not publish a live key until the deployed checkout proves it is the
+  // tax-aware handler. This preflight needs no Stripe secret, so an older
+  // deployment cannot become purchasable in the gap between secret storage
+  // and the post-activation authentication probes.
+  let checkoutContract;
+  try {
+    checkoutContract = await send(`https://${c.project}.supabase.co/functions/v1/billing-checkout`, {
+      method: 'OPTIONS', redirect: 'error', signal: AbortSignal.timeout(20_000),
+      headers: { Origin: c.origins[0], 'Access-Control-Request-Method': 'POST' },
+    });
+  } catch {
+    throw new Error('The deployed tax-aware checkout could not be verified. No settings changed.');
+  }
+  if (checkoutContract.status !== 204 ||
+      checkoutContract.headers.get('X-Semester-Billing-Contract') !== 'plus-v2' ||
+      checkoutContract.headers.get('Access-Control-Allow-Origin') !== c.origins[0])
+    throw new Error('Deploy the plus-v2 tax-aware checkout before activation. No settings changed.');
+
   const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
   for (const session of legacySessions) {
     if (!/^cs_(?:live|test)_[A-Za-z0-9]+$/.test(session?.id || ''))

@@ -113,10 +113,29 @@ test('a portal setup failure cannot create a webhook whose one-time secret would
     if (url.includes('/tax/registrations') || url.includes('/checkout/sessions?') ||
         url.includes('/billing_portal/configurations?') || url.includes('webhook_endpoints?'))
       return response({ data: [], has_more: false });
+    if (url.endsWith('/billing-checkout') && init.method === 'OPTIONS') return new Response(null, { status: 204,
+      headers: { 'X-Semester-Billing-Contract': 'plus-v2', 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN } });
     if (url.endsWith('/billing_portal/configurations')) return response({ id: 'bpc_bad', active: false, features: {} });
     throw new Error(`unexpected call to ${url}`);
   } }), /usable billing portal/);
   assert.equal(calls.some(call => call.method === 'POST' && call.url.endsWith('/webhook_endpoints')), false);
+});
+
+test('refuses to publish a live key until the deployed checkout proves it is tax-aware', async () => {
+  const calls = [];
+  await assert.rejects(activateLive(env, { apply: true, fetch: async (url, init) => {
+    calls.push({ url, method: init.method || 'GET' });
+    if (url.endsWith('/account')) return response({ id: 'acct_1', charges_enabled: true, details_submitted: true });
+    if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
+    if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
+    if (url.includes('/tax/registrations') || url.includes('/checkout/sessions?') ||
+        url.includes('/billing_portal/configurations?') || url.includes('webhook_endpoints?'))
+      return response({ data: [], has_more: false });
+    if (url.endsWith('/billing-checkout') && init.method === 'OPTIONS') return new Response(null, { status: 204,
+      headers: { 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN } });
+    throw new Error(`unexpected call to ${url}`);
+  } }), /plus-v2 tax-aware checkout/);
+  assert.equal(calls.some(call => call.method === 'POST'), false);
 });
 
 test('blocks a completed legacy checkout while its subscription still uses the old tax contract', async () => {
@@ -172,6 +191,8 @@ test('activates one endpoint, writes secrets only to Supabase, probes without ch
     if (url.endsWith(`/tax_codes/${env.STRIPE_PRODUCT_TAX_CODE}`)) return response({ id: env.STRIPE_PRODUCT_TAX_CODE });
     if (url.endsWith('/tax/settings')) return response({ status: 'active', defaults: { tax_behavior: 'exclusive' } });
     if (url.includes('/tax/registrations')) return response({ data: [], has_more: false });
+    if (url.endsWith('/billing-checkout') && init.method === 'OPTIONS') return new Response(null, { status: 204,
+      headers: { 'X-Semester-Billing-Contract': 'plus-v2', 'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN } });
     if (url.includes('status=open')) return response({ data: legacyOpen ? [{ id: 'cs_live_legacy',
       metadata: { semester_checkout_id: 'old-checkout', semester_tax_contract: 'plus-v2',
         semester_tax_code: 'txcd_99999999' }, status: 'open' }] : [], has_more: false });

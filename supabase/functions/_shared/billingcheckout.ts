@@ -123,7 +123,13 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   const reply = (status: number, body: unknown, extra: Record<string, string> = {}) =>
     new Response(body === null ? null : JSON.stringify(body), {
       status,
-      headers: { ...cors, 'Cache-Control': 'no-store', ...(body === null ? {} : { 'Content-Type': 'application/json' }), ...extra },
+      headers: {
+        ...cors,
+        'Cache-Control': 'no-store',
+        'X-Semester-Billing-Contract': TAX_CONSENT_VERSION,
+        ...(body === null ? {} : { 'Content-Type': 'application/json' }),
+        ...extra,
+      },
     });
 
   // A preflight from an allowed page succeeds even while checkout is off, so
