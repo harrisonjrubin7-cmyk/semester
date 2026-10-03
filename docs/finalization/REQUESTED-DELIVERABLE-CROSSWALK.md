@@ -116,11 +116,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 101 | `docs/trust/SECURITY-INCIDENT-RUNBOOK.md` | EXACT PRESENT | canonical first-response procedure; no 24/7 coverage, guaranteed clock, complete evidence, or customer acceptance is claimed |
 | 102 | `docs/trust/BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md` | EXACT PRESENT | canonical continuity/recovery plan; logical rehearsal remains distinct from provider backup restore and any RTO/RPO commitment |
 | 103 | `docs/trust/BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md` | EXACT PRESENT | canonical recovery runbook; disposable one-account logical evidence is not promoted into production-backup, PITR, or zero-loss proof |
-| 104 | `docs/trust/CHANGE-MANAGEMENT-POLICY.md` | CANDIDATE SOURCE | `docs/operating-model/CHANGE-MANAGEMENT.md` (filename similarity 0.72; substantive review required) |
-| 105 | `docs/trust/RELEASE-MANAGEMENT-POLICY.md` | NO CLOSE SOURCE | — |
-| 106 | `docs/trust/ASSET-INVENTORY.md` | CANDIDATE SOURCE | `FEATURE-INVENTORY.md` (filename similarity 0.46; substantive review required) |
-| 107 | `docs/trust/THREAT-MODEL.md` | CANDIDATE SOURCE | `docs/SECURITY-THREAT-MODEL.md` (filename similarity 0.68; substantive review required) |
-| 108 | `docs/trust/RISK-TREATMENT-PLAN.md` | NO CLOSE SOURCE | — |
+| 104 | `docs/trust/CHANGE-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical risk-classed change control; repository checks and adoption sources do not establish operated approvals or target acceptance |
+| 105 | `docs/trust/RELEASE-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical candidate-to-readback release control; passing code remains distinct from immutable evidence, recovery, UAT and signed GO |
+| 106 | `docs/trust/ASSET-INVENTORY.md` | EXACT PRESENT | canonical reconciliation schema across technical, data, provider, identity and business assets; repository discovery is not represented as complete live inventory |
+| 107 | `docs/trust/THREAT-MODEL.md` | EXACT PRESENT | canonical cross-model threat register; repository analysis remains distinct from target testing and independent validation |
+| 108 | `docs/trust/RISK-TREATMENT-PLAN.md` | EXACT PRESENT | canonical treatment/acceptance control; material open risks, unnamed seats, absent game days and external assurance remain explicit blockers |
 | 109 | `docs/trust/SECURITY-QUESTIONNAIRE.md` | CANDIDATE SOURCE | `docs/market-readiness/INFORMATION-SECURITY-QUESTIONNAIRE.md` (filename similarity 0.70; substantive review required) |
 | 110 | `docs/trust/HECVAT-READINESS-MATRIX.md` | CANDIDATE SOURCE | `docs/market-readiness/HECVAT_READINESS.md` (filename similarity 0.70; substantive review required) |
 | 111 | `docs/trust/NIST-800-53-READINESS-MATRIX.md` | CANDIDATE SOURCE | `docs/market-readiness/PILOT-READINESS-MATRIX.md` (filename similarity 0.46; substantive review required) |
