@@ -54,11 +54,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 39 | `docs/legal-drafts/TESTIMONIAL-AND-CASE-STUDY-CONSENT-DRAFT.md` | EXACT PRESENT | canonical rights and substantiation draft; current customer, outcome, reference, and permission claims remain prohibited |
 | 40 | `docs/legal-drafts/BETA-TERMS-AND-FEEDBACK-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical beta schedule draft; individual beta does not authorize institution data or activation |
 | 41 | `docs/legal-drafts/STATUS-PAGE-AND-SERVICE-COMMUNICATIONS-POLICY-DRAFT.md` | EXACT PRESENT | canonical communications draft; no uptime, response, notification, or live-operations claim is made |
-| 42 | `docs/legal-drafts/MASTER-SUBSCRIPTION-AGREEMENT-DRAFT.md` | NO CLOSE SOURCE | — |
-| 43 | `docs/legal-drafts/ORDER-FORM-TEMPLATE-DRAFT.md` | NO CLOSE SOURCE | — |
-| 44 | `docs/legal-drafts/PILOT-AGREEMENT-DRAFT.md` | CANDIDATE SOURCE | `docs/trust/PILOT-AGREEMENT-OUTLINE.md` (filename similarity 0.70; substantive review required) |
-| 45 | `docs/legal-drafts/STATEMENT-OF-WORK-TEMPLATE-DRAFT.md` | NO CLOSE SOURCE | — |
-| 46 | `docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/DATA-PROCESSING-ADDENDUM-OUTLINE.md` (filename similarity 0.78; substantive review required) |
+| 42 | `docs/legal-drafts/MASTER-SUBSCRIPTION-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical evidence-bounded institutional framework; parties, commercial terms, exhibits, assurance, and execution remain unapproved |
+| 43 | `docs/legal-drafts/ORDER-FORM-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical scope and commercial schedule; blank or unsupported material fields block signature and activation |
+| 44 | `docs/legal-drafts/PILOT-AGREEMENT-DRAFT.md` | EXACT PRESENT | canonical bounded-pilot draft reconciled to the source outline; no named customer, sale, activation, or outcome is claimed |
+| 45 | `docs/legal-drafts/STATEMENT-OF-WORK-TEMPLATE-DRAFT.md` | EXACT PRESENT | canonical implementation-services schedule; dates, deliverables, fees, acceptance, and dependencies remain proposals |
+| 46 | `docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md` | EXACT PRESENT | canonical processing draft reconciled to the source outline; roles, schedule, subprocessors, regions, and legal applicability remain open |
 | 47 | `docs/legal-drafts/STUDENT-DATA-PRIVACY-ADDENDUM-DRAFT.md` | NO CLOSE SOURCE | — |
 | 48 | `docs/legal-drafts/INFORMATION-SECURITY-ADDENDUM-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/INFORMATION-SECURITY-QUESTIONNAIRE.md` (filename similarity 0.55; substantive review required) |
 | 49 | `docs/legal-drafts/SERVICE-LEVEL-EXPECTATIONS-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/SERVICE-LEVEL-EXPECTATIONS.md` (filename similarity 0.97; substantive review required) |
