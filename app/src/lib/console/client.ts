@@ -682,7 +682,7 @@ export type PrivacyRequestOutcome = 'completed' | 'refused';
 export interface PrivacyRequest {
   requestId: string;
   requestRef: string;
-  tenantId: string;
+  tenantId: string | null;
   tenantName: string;
   isDemo: boolean;
   kind: PrivacyRequestKind;
@@ -714,7 +714,7 @@ export async function loadPrivacyRequests(includeDemo = false): Promise<PrivacyR
   return rows(data).map((r) => ({
     requestId: text(r.request_id),
     requestRef: text(r.request_ref),
-    tenantId: text(r.tenant_id),
+    tenantId: maybe(r.tenant_id),
     tenantName: text(r.tenant_name),
     isDemo: r.is_demo === true,
     kind: PRIVACY_KINDS.includes(r.kind as PrivacyRequestKind) ? (r.kind as PrivacyRequestKind) : 'restriction',
@@ -745,7 +745,7 @@ export interface PrivacyRequestDetail {
   kind: PrivacyRequestKind;
   requestedBy: string;
   detail: string;
-  tenantId: string;
+  tenantId: string | null;
   verifiedAt: string | null;
   resolution: string;
   resolutionEvidence: string | null;
@@ -772,7 +772,7 @@ export async function readPrivacyRequestDetail(requestId: string): Promise<Priva
     kind: PRIVACY_KINDS.includes(r.kind as PrivacyRequestKind) ? (r.kind as PrivacyRequestKind) : 'restriction',
     requestedBy: text(r.requested_by),
     detail: text(r.detail),
-    tenantId: text(r.tenant_id),
+    tenantId: maybe(r.tenant_id),
     verifiedAt: maybe(r.verified_at),
     resolution: text(r.resolution),
     resolutionEvidence: maybe(r.resolution_evidence),

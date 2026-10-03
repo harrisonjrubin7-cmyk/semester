@@ -12,7 +12,7 @@ const row = (overrides: Partial<ReleaseIncident> = {}): ReleaseIncident => ({
   state: 'blocked', title: 'Production release', severity: 'critical', owner: 'engineering',
   affectedWorkflows: ['application', 'database'], customerImpact: 'No deployment is established.',
   communicationStatus: 'not_applicable', lastNoticeAt: null, nextUpdateAt: null,
-  rollbackStatus: 'documented', releaseCommit: null, deploymentSource: null, deploymentId: null,
+  rollbackStatus: 'documented', releaseCommit: 'a'.repeat(40), deploymentSource: null, deploymentId: null,
   observedAt: null, expiresAt: null, approvalId: null, approvalStatus: null, canRequest: true,
   evidence: 'production_deployment=blocked', nextSafeAction: 'Resolve every blocked prerequisite.',
   classification: 'restricted', provenance: 'server evidence', limitation: 'No production claim.',
@@ -100,7 +100,7 @@ describe('release and incident workspace', () => {
     await act(async () => button('Request release approval')?.click());
     expect(request).toHaveBeenCalledWith({
       dutyId: 'release', tenantId: null, target: 'platform',
-      detail: { action: 'release', release_commit: 'not-deployed' },
+      detail: { action: 'release', release_commit: 'a'.repeat(40) },
       evidence: 'ci=CI-44; golden_path=SMOKE-22; rollback=DRILL-9', ticket: 'CHG-100',
     });
     expect(status).toHaveBeenCalledWith('Release approval approval-17 was requested; execution and verification remain separate.');
@@ -127,6 +127,12 @@ describe('release and incident workspace', () => {
     await draw(async () => [row({ approvalId: 'approval-2', approvalStatus: 'pending' })]);
     expect(host.textContent).toContain('Keep the release unchanged while approval approval-2 is pending.');
     expect(button('Request release approval')).toBeUndefined();
+  });
+
+  it('does not request a release approval until an exact candidate commit is established', async () => {
+    await draw(async () => [row({ releaseCommit: null })]);
+    expect(button('Request release approval')).toBeUndefined();
+    expect(host.textContent).toContain('not established');
   });
 
   it('does not offer release writes to an incident-only operator', async () => {

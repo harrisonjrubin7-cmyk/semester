@@ -278,7 +278,9 @@ export function PrivacyRequests({
             <Fields
               label={`Metadata for ${request.requestRef}`}
               items={[
-                { field: 'Tenant', value: `${request.tenantName || request.tenantId} · ${request.tenantId}${request.isDemo ? ' (demo)' : ''}` },
+                { field: 'Tenant', value: request.tenantId
+                  ? `${request.tenantName || request.tenantId} · ${request.tenantId}${request.isDemo ? ' (demo)' : ''}`
+                  : 'Platform / unassigned' },
                 { field: 'Status', value: STATUS_LABEL[request.status] ?? request.status },
                 { field: 'Received', value: when(request.receivedAt) },
                 { field: 'Due', value: `${when(request.dueAt)}${request.overdue ? ' · OVERDUE' : ''}` },

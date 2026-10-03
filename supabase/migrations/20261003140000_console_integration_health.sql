@@ -109,8 +109,9 @@ begin
       c.status,
       coalesce(flag.state::text, 'not configured') as flag_state,
       c.last_successful_sync_at,
-      case when c.freshness_target is null then null
-           else (extract(epoch from c.freshness_target) / 60)::integer end as target_minutes,
+      coalesce(owners.freshness_target_minutes,
+        case when c.freshness_target is null then null
+             else (extract(epoch from c.freshness_target) / 60)::integer end) as target_minutes,
       case when c.last_successful_sync_at is null then null
            else (extract(epoch from now() - c.last_successful_sync_at) / 60)::integer end as since_success,
       latest.status as run_status,
@@ -132,7 +133,10 @@ begin
         when c.approved_at is not null
          and c.status in ('healthy', 'degraded')
          and (c.last_successful_sync_at is null
-              or c.last_successful_sync_at < now() - 2 * coalesce(c.freshness_target, interval '1 day')) then 'stale'
+              or c.last_successful_sync_at < now() - make_interval(mins =>
+                coalesce(owners.stale_threshold_minutes,
+                  case when c.freshness_target is null then 2880
+                       else (2 * extract(epoch from c.freshness_target) / 60)::integer end))) then 'stale'
         when c.status in ('degraded', 'paused')
           or latest.status = 'partial'
           or coalesce(problems.open_errors, 0) > 0

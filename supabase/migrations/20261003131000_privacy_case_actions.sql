@@ -17,7 +17,7 @@ create table public.privacy_completion_certificate (
   request_ref text not null check (request_ref ~ '^DSR-[A-F0-9]{10}$'),
   subject uuid references auth.users(id) on delete set null,
   subject_sha256 text not null check (subject_sha256 ~ '^[0-9a-f]{64}$'),
-  tenant_id text not null references public.schools(id) on delete restrict,
+  tenant_id text references public.schools(id) on delete restrict,
   kind text not null check (kind in ('export', 'erasure', 'correction', 'restriction')),
   outcome text not null default 'completed' check (outcome = 'completed'),
   evidence_reference text not null check (evidence_reference ~ '^[A-Za-z0-9._:/-]{3,200}$'),
@@ -52,7 +52,8 @@ begin
      and new.kind is not distinct from old.kind
      and new.outcome is not distinct from old.outcome
      and new.evidence_reference is not distinct from old.evidence_reference
-     and new.approval_request is not distinct from old.approval_request
+     and (new.approval_request is not distinct from old.approval_request
+          or (old.approval_request is not null and new.approval_request is null))
      and (new.issued_by is not distinct from old.issued_by or (old.issued_by is not null and new.issued_by is null))
      and new.issued_at is not distinct from old.issued_at then
     return new;
@@ -76,9 +77,11 @@ security definer
 set search_path = ''
 as $$
   select auth.uid() is not null
-     and want_tenant is not null
      and private.has_capability('console:operate', 'platform', '')
-     and private.has_capability('data_request:handle', 'school', want_tenant);
+     and case when want_tenant is null
+          then private.has_capability('data_request:handle', 'platform', '')
+          else private.has_capability('data_request:handle', 'school', want_tenant)
+         end;
 $$;
 
 revoke all on function private.privacy_case_allowed(text) from public, anon, authenticated;

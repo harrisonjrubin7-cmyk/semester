@@ -67,7 +67,7 @@ declare n bigint;
 begin
   perform pg_temp.become((select v from ids where k = 'operator'));
   select count(*) into n from public.console_command_center(false) where category = 'release gate';
-  perform pg_temp.counted('missing platform proof is red, not silently green', n, 6);
+  perform pg_temp.counted('missing platform proof is red, not silently green', n, 7);
   select count(*) into n from public.console_command_center(false) where category = 'integration';
   perform pg_temp.counted('the live integration exception is visible', n, 1);
   select count(*) into n from public.console_command_center(false) where tenant_id = 'command-demo';
@@ -77,8 +77,14 @@ begin
   perform pg_temp.nobody();
 end $$;
 
-insert into public.platform_release_evidence (gate, status, approved_by, evidence, observed_at)
-select gate, 'pass', 'Named approver', 'evidence://command-center-check/' || gate, now()
+insert into public.platform_release_evidence
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, rollback_ref, observed_at)
+select gate, 'pass', 'Named approver', 'evidence://command-center-check/' || gate,
+       'command-center-check',
+       case when gate in ('production_deployment', 'production_migrations') then repeat('a', 40) end,
+       case when gate = 'production_deployment' then 'deployment-command-check' end,
+       case when gate = 'production_deployment' then 'rollback-command-check' end,
+       now()
 from unnest(array[
   'production_restore', 'legal_approval', 'paid_infrastructure',
   'production_deployment', 'domain_tls', 'production_migrations'
@@ -89,7 +95,21 @@ declare n bigint;
 begin
   perform pg_temp.become((select v from ids where k = 'operator'));
   select count(*) into n from public.console_command_center(false) where category = 'release gate';
-  perform pg_temp.counted('current passing evidence clears only its release gates', n, 0);
+  perform pg_temp.counted('missing post-deploy verification remains a command-center exception', n, 1);
+  perform pg_temp.nobody();
+end $$;
+
+insert into public.platform_release_evidence
+  (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
+values ('production_verification', 'pass', 'Named approver', 'VERIFY-COMMAND',
+        'production smoke', repeat('a', 40), 'deployment-command-check', now());
+
+do $$
+declare n bigint;
+begin
+  perform pg_temp.become((select v from ids where k = 'operator'));
+  select count(*) into n from public.console_command_center(false) where category = 'release gate';
+  perform pg_temp.counted('exact current production verification clears the final release gate', n, 0);
   perform pg_temp.nobody();
 end $$;
 

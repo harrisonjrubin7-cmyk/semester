@@ -12,7 +12,17 @@ alter table public.data_subject_request
   add column verification_basis text
     check (verification_basis is null or length(trim(verification_basis)) between 3 and 200),
   add column verification_evidence text
-    check (verification_evidence is null or verification_evidence ~ '^[A-Za-z0-9._:/-]{3,200}$'),
+    check (verification_evidence is null or verification_evidence ~ '^[A-Za-z0-9._:/-]{3,200}$');
+
+-- Older requests may have a timestamp without the actor or evidence that the
+-- new verification contract requires. Make those rows explicitly unverified
+-- so the constraint can be installed without inventing provenance.
+update public.data_subject_request
+   set verified_at = null
+ where verified_at is not null
+   and (verified_by is null or verification_basis is null or verification_evidence is null);
+
+alter table public.data_subject_request
   add constraint data_subject_request_assignment_pair
     check ((assigned_to is null) = (assigned_at is null)),
   add constraint data_subject_request_verification_complete
@@ -88,7 +98,8 @@ begin
       message = 'console:operate at platform scope is required.';
   end if;
 
-  if not exists (
+  if not private.has_capability('data_request:handle', 'platform', '')
+     and not exists (
     select 1
       from public.role_grants g
       join public.role_capabilities rc on rc.role = g.role
@@ -100,7 +111,7 @@ begin
        and (g.expires_at is null or g.expires_at > now())
   ) then
     raise exception using errcode = '42501',
-      message = 'data_request:handle over an exact school is required.';
+      message = 'data_request:handle at platform scope or over an exact school is required.';
   end if;
 
   if include_demo and exists (
@@ -131,6 +142,9 @@ begin
        and g.revoked_at is null
        and (g.expires_at is null or g.expires_at > now())
        and (include_demo or not s.is_demo)
+    union all
+    select null::text, 'Platform / unassigned'::text, false
+     where private.has_capability('data_request:handle', 'platform', '')
   )
   select
     r.id,
@@ -156,19 +170,21 @@ begin
       else array['named processing purpose', 'downstream processors identified in evidence']::text[]
     end,
     approval.id,
-    approval.status,
+    case when approval.status in ('pending', 'approved') and approval.expires_at <= now()
+      then 'expired' else approval.status end,
     'restricted'::text,
     'public.data_subject_request + public.legal_holds + public.approval_request'::text,
     'Metadata only. The subject identifier and request detail require a separate, audited, MFA-gated read after assignment.'::text
   from allowed a
-  join public.data_subject_request r on r.tenant_id = a.id
+  join public.data_subject_request r on r.tenant_id is not distinct from a.id
   left join lateral (
-    select ar.id, ar.status
+    select ar.id, ar.status, ar.expires_at
       from public.approval_request ar
      where ar.duty_id = 'data-deletion'
        and ar.tenant_id is not distinct from r.tenant_id
        and ar.target = r.id::text
-     order by ar.created_at desc, ar.id desc
+     order by case when ar.status = 'executed' then 0 else 1 end,
+              ar.created_at desc, ar.id desc
      limit 1
   ) approval on true
   order by (r.resolved_at is null) desc, r.due_at, r.received_at, r.id;
@@ -178,4 +194,4 @@ revoke all on function public.console_privacy_requests(boolean) from public, ano
 grant execute on function public.console_privacy_requests(boolean) to authenticated;
 
 comment on function public.console_privacy_requests(boolean) is
-  'Identity-minimized privacy request queue. Tenants come only from live exact-school data_request:handle grants; demo requests require explicit inclusion plus tenant:implement.';
+  'Identity-minimized privacy request queue. Tenantless requests require platform data_request:handle; school requests come from live exact-school grants; demo requests require explicit inclusion plus tenant:implement.';

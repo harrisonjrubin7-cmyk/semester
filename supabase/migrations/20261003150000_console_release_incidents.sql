@@ -154,6 +154,9 @@ begin
       and r.tenant_id is null
       and r.target = 'platform'
       and r.detail ->> 'action' = 'release'
+      and r.detail ->> 'release_commit' ~ '^[0-9a-f]{40}$'
+      and r.detail ->> 'release_commit' =
+        (select g.commit_sha from gate_state g where g.gate = 'production_migrations')
     order by r.created_at desc, r.id desc
     limit 1
   ), release_row as (
@@ -192,7 +195,10 @@ begin
       null::timestamptz as next_update_at,
       case when coalesce(length(trim((select g.rollback_ref from gate_state g where g.gate = 'production_deployment'))), 0) >= 3
         then 'documented' else 'missing' end::text as rollback_status,
-      (select g.commit_sha from gate_state g where g.gate = 'production_deployment')::text as release_commit,
+      coalesce(
+        (select g.commit_sha from gate_state g where g.gate = 'production_deployment'),
+        (select g.commit_sha from gate_state g where g.gate = 'production_migrations')
+      )::text as release_commit,
       (select g.source from gate_state g where g.gate = 'production_deployment')::text as deployment_source,
       (select g.deployment_id from gate_state g where g.gate = 'production_deployment')::text as deployment_id,
       (select g.observed_at from gate_state g where g.gate = 'production_deployment')::timestamptz as observed_at,
@@ -298,3 +304,95 @@ grant execute on function public.console_release_incidents(boolean) to authentic
 
 comment on function public.console_release_incidents(boolean) is
   'Evidence-derived release and incident summary for platform incident operators; no deployment or incident mutation is performed.';
+
+-- Keep the command center's release exceptions on the same evidence contract
+-- as the dedicated release workspace. Preserve the established non-release
+-- queue behind a private function, then replace the public RPC with a wrapper
+-- that recomputes release gates from the stricter schema above.
+alter function public.console_command_center(boolean) set schema private;
+alter function private.console_command_center(boolean) rename to console_command_center_legacy;
+revoke all on function private.console_command_center_legacy(boolean) from public, anon, authenticated;
+
+create or replace function public.console_command_center(include_demo boolean default false)
+returns table (
+  id text, severity text, category text, title text,
+  tenant_id text, tenant_name text, is_demo boolean,
+  owner text, due_at timestamptz, status text, next_step text, route text,
+  source text, evidence text, limitation text, observed_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or not private.has_capability('console:operate', 'platform', '') then
+    raise exception using errcode = '42501', message = 'console:operate at platform scope is required.';
+  end if;
+
+  return query
+  with required_gate(gate, label, owner_name, route_name, max_age, needs_commit, needs_deployment, needs_rollback) as (
+    values
+      ('production_restore', 'Production restore evidence', 'engineering', 'Recovery runbook', interval '90 days', false, false, false),
+      ('legal_approval', 'Legal approval evidence', 'founder', 'Trust and legal', interval '365 days', false, false, false),
+      ('paid_infrastructure', 'Paid infrastructure evidence', 'engineering', 'Infrastructure', interval '30 days', false, false, false),
+      ('production_deployment', 'Production deployment evidence', 'engineering', 'Releases', interval '14 days', true, true, true),
+      ('production_verification', 'Production verification evidence', 'engineering', 'Releases', interval '14 days', true, true, false),
+      ('domain_tls', 'Production domain and TLS evidence', 'engineering', 'Infrastructure', interval '30 days', false, false, false),
+      ('production_migrations', 'Production migration evidence', 'data', 'Releases', interval '14 days', true, false, false)
+  ), latest_gate as (
+    select distinct on (e.gate) e.gate, e.status, e.evidence, e.source, e.commit_sha,
+           e.deployment_id, e.rollback_ref, e.observed_at, e.expires_at
+      from public.platform_release_evidence e
+     order by e.gate, e.observed_at desc, e.recorded_at desc, e.id desc
+  ), gate_exception as (
+    select
+      ('gate:' || g.gate)::text,
+      'critical'::text,
+      'release gate'::text,
+      g.label::text,
+      null::text,
+      null::text,
+      false,
+      g.owner_name::text,
+      coalesce(l.expires_at, l.observed_at + g.max_age)::timestamptz,
+      case
+        when l.gate is null then 'missing'
+        when l.status <> 'pass' then 'failed'
+        when l.observed_at > now() then 'future_dated'
+        when coalesce(l.expires_at, l.observed_at + g.max_age) <= now() then 'expired'
+        when coalesce(length(trim(l.source)), 0) < 3 then 'missing_source'
+        when g.needs_commit and coalesce(l.commit_sha, '') !~ '^[0-9a-f]{40}$' then 'missing_commit'
+        when g.needs_deployment and coalesce(length(trim(l.deployment_id)), 0) < 3 then 'missing_deployment'
+        when g.needs_rollback and coalesce(length(trim(l.rollback_ref)), 0) < 3 then 'missing_rollback'
+        else 'blocked'
+      end::text,
+      ('Record current, source-backed production evidence for ' || g.label || '.')::text,
+      g.route_name::text,
+      'public.platform_release_evidence'::text,
+      coalesce(l.evidence, '')::text,
+      'A statement, draft, backup listing, preview deployment or synthetic run is not execution evidence.'::text,
+      coalesce(l.observed_at, now())::timestamptz
+    from required_gate g
+    left join latest_gate l on l.gate = g.gate
+    where l.gate is null
+       or l.status <> 'pass'
+       or l.observed_at > now()
+       or coalesce(l.expires_at, l.observed_at + g.max_age) <= now()
+       or coalesce(length(trim(l.source)), 0) < 3
+       or (g.needs_commit and coalesce(l.commit_sha, '') !~ '^[0-9a-f]{40}$')
+       or (g.needs_deployment and coalesce(length(trim(l.deployment_id)), 0) < 3)
+       or (g.needs_rollback and coalesce(length(trim(l.rollback_ref)), 0) < 3)
+  )
+  select * from gate_exception
+  union all
+  select legacy.*
+    from private.console_command_center_legacy(include_demo) legacy
+   where legacy.category <> 'release gate';
+end $$;
+
+revoke all on function public.console_command_center(boolean) from public, anon;
+grant execute on function public.console_command_center(boolean) to authenticated;
+
+comment on function public.console_command_center(boolean) is
+  'Exception queue whose release gates use the same exact-commit, source, deployment, rollback and freshness contract as console_release_incidents.';

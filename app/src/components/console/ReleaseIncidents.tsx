@@ -71,7 +71,7 @@ export function ReleaseIncidents({
         target: rollback ? item.itemId : 'platform',
         detail: rollback
           ? { action: 'rollback', incident_ref: item.itemId, release_commit: item.releaseCommit }
-          : { action: 'release', release_commit: item.releaseCommit ?? 'not-deployed' },
+          : { action: 'release', release_commit: item.releaseCommit },
         evidence: rollback
           ? `change_evidence=${refs.change.trim()}; verification_plan=${refs.verification.trim()}; rollback_procedure=${refs.rollback.trim()}`
           : `ci=${refs.change.trim()}; golden_path=${refs.verification.trim()}; rollback=${refs.rollback.trim()}`,
@@ -114,7 +114,8 @@ export function ReleaseIncidents({
       {shown.map((item) => {
         const expanded = openId === item.itemId;
         const approvalOpen = item.approvalStatus === 'pending' || item.approvalStatus === 'approved';
-        const canRequest = item.canRequest && (item.itemKind === 'incident'
+        const hasBoundCommit = /^[0-9a-f]{40}$/.test(item.releaseCommit ?? '');
+        const canRequest = item.canRequest && hasBoundCommit && (item.itemKind === 'incident'
           ? item.state === 'incident' || item.state === 'rollback'
           : item.state === 'blocked' || item.state === 'release_candidate');
         const ready = [refs.change, refs.verification, refs.rollback].every((value) => SAFE_REFERENCE.test(value.trim()))

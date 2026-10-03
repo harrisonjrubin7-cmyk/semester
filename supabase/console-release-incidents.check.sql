@@ -93,7 +93,7 @@ begin
   insert into public.approval_request
     (duty_id, requester, tenant_id, target, detail, evidence, ticket, status)
   values
-    ('release', operator, null, 'platform', '{"action":"release"}', 'CI, golden path and rollback rehearsal references.', 'REL-100', 'pending'),
+    ('release', operator, null, 'platform', jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)), 'CI, golden path and rollback rehearsal references.', 'REL-100', 'pending'),
     ('release', operator, null, 'incident-rollback', '{"action":"rollback"}', 'Incident and rollback evidence references.', 'INC-100', 'approved');
 end $$;
 
@@ -136,7 +136,7 @@ end $$;
 
 insert into public.approval_request
   (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, expires_at)
-select 'release', v, null, 'platform', '{"action":"release"}', 'Expired evidence.', 'REL-EXPIRED', 'pending', now() - interval '1 second'
+select 'release', v, null, 'platform', jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)), 'Expired evidence.', 'REL-EXPIRED', 'pending', now() - interval '1 second'
 from ids where k = 'operator';
 
 do $$

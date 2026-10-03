@@ -116,7 +116,7 @@ begin
   insert into public.integration_source_owners
     (tenant_id, connection_id, owner_name, backup_owner_name, freshness_target_minutes,
      stale_threshold_minutes, escalation, correction_route)
-  values ('health-north', healthy, 'Registrar operations', 'Integration operations', 60, 120,
+  values ('health-north', healthy, 'Registrar operations', 'Integration operations', 30, 120,
           'Open the integration incident path.', 'Correct at the SIS source.');
 
   insert into public.integration_sync_runs
@@ -161,6 +161,12 @@ begin
      ('Failed Identity', 'failed'), ('Unconfigured Advising', 'unconfigured'));
   reset role;
   perform pg_temp.counted('all five declared health states are derived from telemetry', n, 5);
+
+  perform pg_temp.become(operator);
+  select count(*) into n from public.console_integration_health(false) h
+   where h.connection_name = 'Healthy SIS' and h.freshness_target_minutes = 30;
+  reset role;
+  perform pg_temp.counted('source-owner freshness policy overrides the connection fallback', n, 1);
 
   perform pg_temp.become(operator);
   select count(*) into n from public.console_integration_health(false) h

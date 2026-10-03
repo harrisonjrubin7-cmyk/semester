@@ -252,6 +252,11 @@ begin
    where c.id = (result ->> 'certificate_id')::uuid and c.approval_request = approval;
   perform pg_temp.counted('exact executed deletion approval permits certified erasure completion', n, 1);
 
+  delete from public.approval_request where id = approval;
+  select count(*) into n from public.privacy_completion_certificate c
+   where c.id = (result ->> 'certificate_id')::uuid and c.approval_request is null;
+  perform pg_temp.counted('approval retention cleanup preserves the immutable certificate and clears only its foreign key', n, 1);
+
   select count(*) into n from private.console_audit_event e
    where e.target in (export_request::text, erase_request::text, held_request::text)
      and e.action in ('privacy.case_claimed', 'privacy.case_read',

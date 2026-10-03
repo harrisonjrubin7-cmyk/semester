@@ -47,12 +47,14 @@ declare
   south_student uuid;
   demo_student uuid;
   steward uuid;
+  platform_steward uuid;
   console_only uuid;
   data_only uuid;
   expired uuid;
   departing uuid;
   departing_request uuid;
   held_request uuid;
+  platform_request uuid;
   n bigint;
 begin
   insert into public.schools (id, name, email_domains, is_demo) values
@@ -64,6 +66,7 @@ begin
   south_student := pg_temp.newuser('student@privacy-south.example', 'privacy-south');
   demo_student := pg_temp.newuser('student@privacy-demo.example', 'privacy-demo');
   steward := pg_temp.newuser('steward@privacy-north.example', 'privacy-north');
+  platform_steward := pg_temp.newuser('platform-steward@privacy-north.example', 'privacy-north');
   console_only := pg_temp.newuser('console@privacy-north.example', 'privacy-north');
   data_only := pg_temp.newuser('data@privacy-north.example', 'privacy-north');
   expired := pg_temp.newuser('expired@privacy-north.example', 'privacy-north');
@@ -88,6 +91,7 @@ begin
     (steward, 'data_steward', 'platform', '', 'platform', null),
     (steward, 'data_steward', 'school', 'privacy-north', 'platform', null),
     (steward, 'data_steward', 'school', 'privacy-demo', 'platform', null),
+    (platform_steward, 'data_steward', 'platform', '', 'platform', null),
     (console_only, 'platform_admin', 'platform', '', 'platform', null),
     (data_only, 'data_steward', 'school', 'privacy-north', 'platform', null),
     (expired, 'data_steward', 'platform', '', 'platform', now() - interval '1 minute'),
@@ -100,6 +104,9 @@ begin
   values (south_student, 'privacy-south', 'correction', 'Private correction details.');
   insert into public.data_subject_request (subject, tenant_id, kind, detail)
   values (demo_student, 'privacy-demo', 'export', 'Private demo details.');
+  insert into public.data_subject_request (subject, tenant_id, kind, detail)
+  values (north_student, null, 'restriction', 'Platform-scoped request details.')
+  returning id into platform_request;
   insert into public.legal_holds
     (subject_kind, subject_id, tenant_id, reason, matter_ref, placed_by)
   values ('account', north_student::text, 'privacy-north', 'Preserve for review', 'MAT-100', steward);
@@ -107,7 +114,15 @@ begin
   perform pg_temp.become(steward);
   select count(*) into n from public.console_privacy_requests(false);
   reset role;
-  perform pg_temp.counted('the queue derives one non-demo request from exact-school grants', n, 1);
+  perform pg_temp.counted('the queue combines exact-school and platform-scoped requests from live grants', n, 2);
+
+  perform pg_temp.become(platform_steward);
+  select count(*) into n from public.console_privacy_requests(false) q
+   where q.request_id = platform_request
+     and q.tenant_id is null
+     and q.tenant_name = 'Platform / unassigned';
+  reset role;
+  perform pg_temp.counted('a platform-only handler can process the tenantless queue without gaining school requests', n, 1);
 
   perform pg_temp.become(steward);
   select count(*) into n
@@ -132,7 +147,7 @@ begin
   perform pg_temp.become(steward);
   select count(*) into n from public.console_privacy_requests(true);
   reset role;
-  perform pg_temp.counted('explicit authorized demo inclusion adds only the allowed demo request', n, 2);
+  perform pg_temp.counted('explicit authorized demo inclusion adds only the allowed demo request', n, 3);
 
   if not pg_temp.refused(console_only, 'select count(*) from public.console_privacy_requests(false)') then
     raise exception 'FAILED: console shell alone opened privacy requests';
