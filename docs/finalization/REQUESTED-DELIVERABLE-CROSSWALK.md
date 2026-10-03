@@ -125,11 +125,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 110 | `docs/trust/HECVAT-READINESS-MATRIX.md` | EXACT PRESENT | canonical HECVAT readiness summary; assessment preparation is explicitly not certification, completion, or buyer acceptance |
 | 111 | `docs/trust/NIST-800-53-READINESS-MATRIX.md` | EXACT PRESENT | canonical selective family mapping; applicability awaits buyer boundary, baseline, tailoring, parameters and assessment |
 | 112 | `docs/trust/EDUCATION-PRIVACY-READINESS-MATRIX.md` | EXACT PRESENT | canonical education-privacy readiness map; legal roles, applicability, compliance and institution approval remain external determinations |
-| 113 | `docs/trust/AI-GOVERNANCE-PROGRAM.md` | EXACT PRESENT | `docs/market-readiness/AI-GOVERNANCE-PROGRAM.md` |
-| 114 | `docs/trust/AI-SYSTEM-INVENTORY.md` | NO CLOSE SOURCE | — |
-| 115 | `docs/trust/AI-RISK-ASSESSMENT.md` | NO CLOSE SOURCE | — |
-| 116 | `docs/trust/AI-DATA-USE-STANDARD.md` | CANDIDATE SOURCE | `docs/trust/AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md` (filename similarity 0.43; substantive review required) |
-| 117 | `docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md` | NO CLOSE SOURCE | — |
+| 113 | `docs/trust/AI-GOVERNANCE-PROGRAM.md` | EXACT PRESENT | canonical lifecycle and decision-authority control; repository implementation remains distinct from scoped approval and operated governance |
+| 114 | `docs/trust/AI-SYSTEM-INVENTORY.md` | EXACT PRESENT | controlled family-level baseline; deployed routes, models, versions, regions, accounts and owners still require reconciliation |
+| 115 | `docs/trust/AI-RISK-ASSESSMENT.md` | EXACT PRESENT | canonical risk baseline; feature/population scoring, evaluation, residual-risk acceptance and institutional operation remain unproven |
+| 116 | `docs/trust/AI-DATA-USE-STANDARD.md` | EXACT PRESENT | canonical minimization, authority, provider and retention boundary; no blanket training, retention, residency or compliance promise is authorized |
+| 117 | `docs/trust/AI-TRANSPARENCY-AND-USER-NOTICE.md` | EXACT PRESENT | canonical pre-use and at-output notice standard; universal coverage, accessible acceptance and staffed recourse remain open |
 | 118 | `docs/trust/AI-HUMAN-OVERSIGHT-STANDARD.md` | NO CLOSE SOURCE | — |
 | 119 | `docs/trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md` | CANDIDATE SOURCE | `docs/market-readiness/INCIDENT-RESPONSE-RUNBOOK.md` (filename similarity 0.42; substantive review required) |
 | 120 | `docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md` | CANDIDATE SOURCE | `docs/operating-model/CHANGE-MANAGEMENT.md` (filename similarity 0.55; substantive review required) |
