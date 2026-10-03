@@ -189,6 +189,42 @@ async function visible(locator, timeout = WAIT) {
 }
 
 /**
+ * The Privacy screen's section headings are buttons too: `FoldHead` gives a
+ * heading the same accessible name as the action it introduces. Select the
+ * product's primary block control before asserting uniqueness, so the check
+ * distinguishes "open this section" from "perform this account action".
+ *
+ * Keep the exact-one assertion. If the action is ever rendered twice, the
+ * failure includes enough DOM state to tell a duplicate control from a
+ * hidden transition copy without weakening the journey to `.first()`.
+ */
+async function primaryAction(page, name, missing) {
+  const action = page
+    .locator('button.btn.btn-block')
+    .filter({ hasText: name })
+    .filter({ visible: true });
+  const count = await action.count();
+  if (count !== 1) {
+    const seen = await page.getByRole('button', { name }).evaluateAll((buttons) =>
+      buttons.map((button) => {
+        const style = getComputedStyle(button);
+        const box = button.getBoundingClientRect();
+        return {
+          className: button.className,
+          expanded: button.getAttribute('aria-expanded'),
+          display: style.display,
+          visibility: style.visibility,
+          width: Math.round(box.width),
+          height: Math.round(box.height),
+        };
+      }),
+    );
+    throw new Finding(`${missing} (found ${count} visible primary controls; named buttons: ${JSON.stringify(seen)})`);
+  }
+  return action;
+}
+
+/**
  * Whether the account's `state` row on the server mentions `text`, read with
  * the signed-in student's own token (`storageKey: 'semester.auth'` in
  * `lib/cloud.ts`), so row-level security decides what comes back exactly as
@@ -359,10 +395,11 @@ async function journey(label, viewport) {
         return original(blob);
       };
     });
-    const exportButton = other
-      .getByRole('button', { name: /^download my account data$/i })
-      .filter({ visible: true });
-    expect((await exportButton.count()) === 1, 'the Privacy screen did not expose exactly one visible account export action');
+    const exportButton = await primaryAction(
+      other,
+      /^download my account data$/i,
+      'the Privacy screen did not expose exactly one visible account export action',
+    );
     await exportButton.click();
     expect(await visible(other.getByText(/saved .* with rows from/i)), 'the Privacy screen did not confirm the account export');
     const exported = await other.evaluate(async (timeout) => {
@@ -385,10 +422,11 @@ async function journey(label, viewport) {
     at(STEPS[9]);
     const oldSession = await other.evaluate(() => JSON.parse(localStorage.getItem('semester.auth') || 'null'));
     expect(Boolean(oldSession?.access_token), 'the signed-in device had no session before deletion');
-    const deleteButton = other
-      .getByRole('button', { name: /^delete my account$/i })
-      .filter({ visible: true });
-    expect((await deleteButton.count()) === 1, 'the Privacy screen did not expose exactly one visible account deletion action');
+    const deleteButton = await primaryAction(
+      other,
+      /^delete my account$/i,
+      'the Privacy screen did not expose exactly one visible account deletion action',
+    );
     await deleteButton.click();
     const deletion = other.getByRole('dialog', { name: 'Delete your account' });
     expect(await visible(deletion), 'the destructive account confirmation did not open');
