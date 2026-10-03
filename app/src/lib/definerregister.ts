@@ -298,6 +298,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_member_capabilities', 'admin', ['private.org_can']],
   ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
+  ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -436,6 +437,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261001153124_productivity_workspace.sql',
     functions: ['productivity_readiness_aggregate'],
+  },
+  {
+    file: '20261002003000_support_notification_outbox.sql',
+    functions: ['set_support_email_notice'],
   },
 ];
 
