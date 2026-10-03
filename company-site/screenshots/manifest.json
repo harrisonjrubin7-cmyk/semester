@@ -8,7 +8,7 @@
     "liveStylesheet": "https://harrisonjrubin7-cmyk.github.io/semester/demo/assets/index-iDqdiatC.css",
     "expectedFixPresent": ".device .portal-workspace button.for-this-new{min-height:44px",
     "supersededRuleAbsent": ".device .portal-workspace button.for-this-new{min-height:0",
-    "serviceWorkerState": "A brand-new isolated headless Chrome profile loaded the live network response with its cache disabled and service-worker interception bypassed for every captured route."
+    "serviceWorkerState": "A brand-new browser profile in isolated headless Chrome loaded the live network response with its cache disabled and service-worker interception bypassed for every captured route."
   },
   "captureMode": "isolated-demo",
   "sampleData": true,
