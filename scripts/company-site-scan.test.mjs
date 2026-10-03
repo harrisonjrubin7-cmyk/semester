@@ -34,6 +34,8 @@ test('the company scan uses an isolated HTTPS target and its own configuration',
   assert.match(companyJob, /node scripts\/company-site-scan-server\.mjs/);
   assert.match(companyJob, /APP_HOST: https:\/\/localhost:4186/);
   assert.match(companyJob, /configurationFiles: stackhawk-company-site\.yml/);
+  assert.match(companyJob, /hawk op scan get "\$scan_id" --detail full --format json/);
+  assert.match(companyJob, /company-site-scan-report\.mjs hashes/);
 });
 
 test('the company configuration does not reuse the app environment or suppress findings', () => {
@@ -249,13 +251,15 @@ test('native HawkScan URI envelope is bound to the expected scan', () => {
   assert.ok(wrongScan.gaps.some(gap => /URI|untouched/.test(gap)));
 });
 
-test('wrong surface, incomplete scans, errors, threshold failure and absent findings fail closed', () => {
+test('wrong surface, incomplete scans, errors, warnings, threshold failure and absent findings fail closed', () => {
   const mutations = [
     report => { report.scan.host = 'http://localhost:4173'; },
     report => { report.scan.environment = 'CI'; },
     report => { report.scan.status = 'ERROR'; },
     report => { report.errors.push({ category: 'CONNECTION', message: 'Target unavailable' }); },
     report => { delete report.errors; },
+    report => { report.warnings.push({ category: 'DISCOVERY', message: 'A route could not be crawled' }); },
+    report => { delete report.warnings; },
     report => { report.thresholdResult = 'FAIL'; },
     report => { delete report.findings; },
   ];
