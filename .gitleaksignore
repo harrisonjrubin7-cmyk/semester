@@ -1,0 +1,5 @@
+# Historical false positive in a legal-template control list. The detected
+# text was ordinary prose ("secrets/keys/encryption"), contained no value,
+# and is already absent from the branch tip. Keep the exception pinned to the
+# exact commit, path, rule, and line so every other finding remains blocking.
+7aefea8f9e42f8d6469e1c19343d6ecbbbe35617:docs/legal-drafts/INFORMATION-SECURITY-ADDENDUM-DRAFT.md:generic-api-key:15

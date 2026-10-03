@@ -3,10 +3,9 @@
  * Membership panel.
  *
  * **These are descriptions, not prices anyone is charged.** The figures are
- * the blueprint's *suggested* ones and are shown as "planned". Plus is the one
- * plan that can be bought, from the Membership panel, and it is bought at the
- * price in the server's catalog (`commercial_prices`), which the panel reads —
- * never at a figure here (DECISION-LOG D-128).
+ * the blueprint's *suggested* ones and are shown as "planned". New individual
+ * paid acquisition is held until its explicit market-motion approvals exist.
+ * Existing subscribers keep cancellation and billing-history access.
  *
  * Two promises are written into the data rather than the copy, so no plan can
  * drop them by accident (blueprint §12, `plans.test.ts`):
@@ -15,6 +14,9 @@
  */
 
 export type PlanId = 'free' | 'plus' | 'pro' | 'institution';
+
+/** Product-level hold matching the current NO-GO decision for paid individual acquisition. */
+export const INDIVIDUAL_PAID_ACQUISITION_ENABLED = false;
 
 export interface Plan {
   id: PlanId;
@@ -54,7 +56,7 @@ export const PLANS: Plan[] = [
     name: 'Semester Plus',
     forWhom: 'Students who plan several terms ahead',
     price: { monthly: 7.99, yearly: 59 },
-    priceStatus: 'in-app',
+    priceStatus: 'planned',
     includes: [
       'Unlimited saved plans and schedules',
       'Side-by-side plan comparison',
@@ -78,20 +80,20 @@ export const PLANS: Plan[] = [
   {
     id: 'institution',
     name: 'Semester Institutional',
-    forWhom: 'Universities replacing fragmented student systems and the LMS gradebook',
+    forWhom: 'Universities piloting a student action layer alongside existing systems',
     price: null,
     priceStatus: 'contact',
     includes: [
-      'Native LMS and gradebook of record',
+      'Controlled LMS and gradebook capabilities, off until an institution-approved cutover',
       'Student planning, advising, support and pathways',
-      'SSO, LTI, OneRoster and approved SIS integrations',
+      'Approved institutional connections after implementation, target conformance and customer acceptance',
       'Pilot, phased integration, migration, training and hypercare',
     ],
   },
 ];
 
 export const PILOT_NOTE =
-  'Plus can be bought from the Account screen in the app; Pro is not on sale yet. During the pilot, every feature a student can use is free.';
+  'Plus and Pro are planned, not on sale. During the controlled validation period, every feature a student can use is free.';
 
 /** What a build with no catalog — a device-only build, or a network that is gone — says instead. */
 export const NOT_ON_SALE_HERE =

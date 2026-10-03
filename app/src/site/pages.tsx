@@ -195,7 +195,7 @@ export const Students: Page = ({ config }) => (
 
 export const Institutions: Page = ({ config }) => (
   <>
-    <Hero title="Semester Institutional" lead="Replace the LMS gradebook and fragmented student systems through one package and a controlled, phased migration.">
+    <Hero title="Semester Institutional" lead="Pilot a student action layer beside existing systems, with one package and a controlled path to any approved migration.">
       <p className="site-actions">
         <a className="site-button" href={href(config, '/demo/')}>Explore a sample university</a>
         <a href={href(config, '/contact/')}>Talk to us</a>
@@ -214,10 +214,10 @@ export const Institutions: Page = ({ config }) => (
     </Section>
     <Section title="How Semester connects" id="i-connect">
       <p>
-        Semester starts beside the systems you have, read-only and least-privilege. After conformance, parallel-run and
-        migration evidence is approved, Semester can become the institution's LMS and gradebook of record. Registration,
-        finance and other official writes remain off until the institution separately authorizes each workflow. No
-        institutional connection is live today.
+        Semester starts beside the systems you have, read-only and least-privilege. Only after conformance, parallel-run,
+        migration and customer acceptance evidence is approved could an institution separately authorize Semester as
+        its LMS or gradebook of record. Registration, finance and every other official write remain off until the
+        institution authorizes that exact workflow. No institutional connection is live today.
       </p>
       <p>Each connection below carries the word the register gives it. None is running for an institution yet.</p>
       <ClaimList ids={['sso', 'scim', 'lti', 'sis', 'connector-health', 'support-access', 'hecvat']} />
@@ -236,11 +236,11 @@ const COMMERCIAL_TERMS: [string, string][] = [
   ['Billing period', 'Monthly or yearly, as shown. No other period.'],
   ['Tax', 'Determined for your location before anything is sold; the price shown is before tax.'],
   ['Free trial', 'Not decided. Everything a student can use is free during the pilot, which is more than a trial.'],
-  ['Upgrading', 'Plus, from the Account screen in the app: the price is shown first and you tick a consent before Stripe is asked. Pro is not on sale.'],
+  ['Upgrading', 'Individual paid acquisition is held. Plus and Pro are planned, not on sale, until the required product, legal, privacy, accessibility, security and operational approvals are current.'],
   ['Cancelling', 'From the same screen. Cancelling stops the renewal at Stripe, Plus lasts to the end of the period you paid for, and everything you built stays.'],
   ['What stays available', 'Everything on Free, always, and every plan you saved.'],
   ['Refunds', 'The policy is a proposal: it is published on the legal page before a live payment is taken, not after.'],
-  ['Receipts and invoices', 'Stripe sends the receipt for a Plus payment. Nothing else has been charged.'],
+  ['Receipts and invoices', 'Existing subscribers retain billing-history access. New individual checkout is disabled.'],
   ['Institution-sponsored access', 'If your university provides Semester, you sign in with your university account and pay nothing.'],
 ];
 
@@ -263,9 +263,9 @@ export const Pricing: Page = ({ config }) => (
       <ul>
         {ALWAYS_INCLUDED.map((i) => <li key={i}>{i}</li>)}
       </ul>
-      <p>Nothing you built on a free plan is taken away. Nothing can be bought on this site. Plus is bought from the Account screen in the app, on Stripe’s own page, and no card details reach Semester.</p>
+      <p>Nothing you built on a free plan is taken away. Individual paid plans are planned, not on sale. New checkout is disabled while the required approvals remain open.</p>
     </Section>
-    <Section title="Buying Semester Plus" id="pr-terms">
+    <Section title="Planned individual plans" id="pr-terms">
       <ClaimList ids={['no-sale']} />
       <dl className="site-legend">
         {COMMERCIAL_TERMS.map(([term, detail]) => (

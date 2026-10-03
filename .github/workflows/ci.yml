@@ -549,7 +549,9 @@ jobs:
   # builds the app against it, and has `scripts/account-sync.mjs` sign up on
   # one browser context, make and finish an action, confirm the server holds
   # it, sign in on a second fresh context and see it there done, and then the
-  # same in reverse. Nothing is mocked.
+  # same in reverse. It then downloads and inspects the account export, deletes
+  # the account through the real Edge Function, and proves the old session is
+  # invalid. Nothing is mocked.
   #
   # Shown to be a guard rather than assumed one: with `push()` in
   # `lib/cloud.ts` made to return before writing, both viewports go red at
@@ -559,7 +561,7 @@ jobs:
   # A job of its own because `supabase start` pulls a stack of images and
   # wants a runner that is not also doing everything `build` does. The
   # services the journey never touches are left out (`-x`) to keep the pull
-  # small: sign-in and sync are Kong, GoTrue, PostgREST and Postgres.
+  # small. Edge Runtime stays because the last step exercises delete-account.
   account-sync:
     runs-on: ubuntu-latest
 
@@ -580,8 +582,13 @@ jobs:
         with:
           version: latest
 
+      - name: Allow loopback CORS only for this local test stack
+        run: |
+          install -d supabase/functions
+          printf 'CORS_ALLOW_DEV=1\n' > supabase/functions/.env
+
       - name: Start a local Supabase from this repository
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,storage-api
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor,postgres-meta,storage-api
 
       # The public key of the *local* stack — the same fixed development value
       # every `supabase start` prints, not a secret of any project. `--outDir`
@@ -605,12 +612,16 @@ jobs:
       # Exits 1 on a finding and 2 if it could not run — including when the
       # build turns out to be talking to anything but a loopback address, in
       # which case it refuses to make an account at all.
-      - name: Sign in on two devices and sync between them
+      - name: Complete the real account lifecycle across two devices
         working-directory: app
         env:
           SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
           SMOKE_URL: http://localhost:4174/
-        run: npm run smoke:sync
+        run: |
+          # This key belongs only to the ephemeral loopback stack. The smoke
+          # refuses to send it to any non-loopback origin and never prints it.
+          export SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────
   #

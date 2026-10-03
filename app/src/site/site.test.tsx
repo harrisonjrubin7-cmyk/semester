@@ -149,6 +149,19 @@ describe('what the site says', () => {
     expect(all).toContain('No institutional connection is live today');
   });
 
+  it('presents official-system replacement only as a separately approved future cutover', () => {
+    const institutions = pages.find((p) => p.route.path === '/institutions/')!.html;
+    const pricing = pages.find((p) => p.route.path === '/pricing/')!.html;
+
+    expect(institutions).toContain('Pilot a student action layer beside existing systems');
+    expect(institutions).toContain('could an institution separately authorize Semester');
+    expect(institutions).not.toContain('Replace the LMS gradebook');
+    expect(institutions).toContain('off until separately approved for the institution');
+    expect(pricing).toContain('alongside existing systems');
+    expect(pricing).toContain('off until an institution-approved cutover');
+    expect(pricing).not.toContain('Native LMS and gradebook of record');
+  });
+
   // The five claims the reinforcement briefs of 29 September say never to
   // make without an agreement, evidence or an auditable scope behind them.
   const OVERCLAIMS: readonly [string, RegExp][] = [
@@ -169,14 +182,13 @@ describe('what the site says', () => {
     for (const p of pages) for (const [what, re] of OVERCLAIMS) expect(p.html, `${p.route.path}: ${what}`).not.toMatch(re);
   });
 
-  it('sells nothing on the site: no checkout here, Plus is bought in the app, and Pro is planned', () => {
+  it('holds all individual paid acquisition and labels prices as planned', () => {
     const pricing = pages.find((p) => p.route.path === '/pricing/')!.html;
     expect(pricing).not.toMatch(/buy now|subscribe now|start (your )?subscription|add (a |your )?card|enter your card/i);
-    expect(pricing).toContain('Nothing can be bought on this site');
-    expect(pricing).toContain('Plus is bought from the Account screen');
-    expect(pricing).not.toMatch(/no checkout|nothing can be bought here/i);
+    expect(pricing).toContain('Individual paid plans are planned, not on sale');
+    expect(pricing).toContain('New checkout is disabled');
     expect(pricing).toContain('(planned)');
-    expect(pricing).toContain('Pro is not on sale yet');
+    expect(pricing).toContain('Plus and Pro are planned, not on sale');
     expect(pricing).toContain('Export all of your data');
   });
 

@@ -8,7 +8,7 @@ Use [PILOT-SUCCESS-PLAN.md](PILOT-SUCCESS-PLAN.md) and the detailed [PILOT-SUCCE
 | first-win completion | [REQUIRED] | [REQUIRED] | [REQUIRED] | validated event + sample QA | weekly | target event not yet production-accepted |
 | meaningful weekly planning | [REQUIRED] | [REQUIRED] | [REQUIRED] | aggregate workflow event | weekly | logins excluded |
 | approved readiness progress | [REQUIRED] | [REQUIRED] | [REQUIRED] | aggregate checklist | weekly | not official registration/eligibility |
-| time to first value | [REQUIRED] | [REQUIRED] | [REQUIRED] | event timestamps | weekly | exclude test/support accounts |
+| time to first value | [REQUIRED] | [REQUIRED] | [REQUIRED] | event timestamps | weekly | fixed window; exclude test/support/invalid attempts; report incomplete attempts as censored count/share |
 | reliability and recovery | [REQUIRED] | [REQUIRED] | [REQUIRED] | privacy-reviewed telemetry | weekly | no uptime promise |
 | support burden | [REQUIRED] | [REQUIRED] | [REQUIRED] | support system | weekly | within published hours |
 | student/staff trust and usefulness | [REQUIRED] | [REQUIRED] | [REQUIRED] | approved survey/interview | midpoint/final | self-reported, non-causal |

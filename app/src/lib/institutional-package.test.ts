@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { INSTITUTIONAL_PACKAGE, ROLLOUT_PHASES, nextRolloutPhase, rolloutReadiness } from './institutional-package';
 
 describe('Semester Institutional', () => {
-  it('is one package that includes the native LMS, gradebook, integrations and migration', () => {
+  it('is one package that keeps LMS and gradebook authority gated while including integrations and migration', () => {
     expect(INSTITUTIONAL_PACKAGE.name).toBe('Semester Institutional');
     const offer = INSTITUTIONAL_PACKAGE.includes.join(' ');
-    expect(offer).toMatch(/Native LMS/);
-    expect(offer).toMatch(/gradebook of record/);
-    expect(offer).toMatch(/SSO/);
-    expect(offer).toMatch(/OneRoster/);
+    expect(offer).toMatch(/gradebook capabilities/);
+    expect(offer).toMatch(/off until separately approved/);
+    expect(offer).not.toMatch(/Native LMS|gradebook of record/);
+    expect(offer).toMatch(/Approved institutional connections/);
+    expect(offer).not.toMatch(/OneRoster/);
     expect(offer).toMatch(/credential wallet/);
     expect(offer).toMatch(/institutional analytics/);
     expect(offer).toMatch(/official-system write workflows/);
