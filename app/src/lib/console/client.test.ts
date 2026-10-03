@@ -65,6 +65,7 @@ import {
   loadDuties,
   loadFigures,
   loadCommandCenter,
+  loadTenantOperations,
   loadPreferences,
   mfaFresh,
   mfaLevel,
@@ -300,6 +301,43 @@ describe('figures and customers', () => {
     replies.set('rpc:console_customers', { data: [{ id: 'c-2', tenant_id: 'x', school_name: 'X', is_demo: true, legal_name: null, status: 'prospect', owner_seat: null, commitments: [], contracts: null }] });
     const [c] = await loadCustomers(true);
     expect(c).toMatchObject({ isDemo: true, legalName: '', commitments: [], contracts: [] });
+  });
+});
+
+describe('tenant operations', () => {
+  it('maps the metadata-only RPC contract without inventing freshness', async () => {
+    replies.set('rpc:console_tenant_operations', {
+      data: [{
+        tenant_id: 'vu', tenant_name: 'Vanderbilt University', is_demo: false,
+        fact_key: 'integration', category: 'integration', label: 'Integration connections',
+        value: '2 configured; 1 healthy; 1 degraded or error', classification: 'restricted',
+        provenance: 'public.integration_connections', owner: 'integration',
+        observed_at: null, stale_after_days: 7, limitation: 'Counts only.',
+        visibility_reason: 'Live tenant:implement grant at exact school scope.',
+      }],
+    });
+
+    const [fact] = await loadTenantOperations();
+    expect(fact).toEqual({
+      tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+      factKey: 'integration', category: 'integration', label: 'Integration connections',
+      value: '2 configured; 1 healthy; 1 degraded or error', classification: 'restricted',
+      provenance: 'public.integration_connections', owner: 'integration',
+      observedAt: null, staleAfterDays: 7, limitation: 'Counts only.',
+      visibilityReason: 'Live tenant:implement grant at exact school scope.',
+    });
+    expect(last()).toMatchObject({
+      kind: 'rpc', name: 'console_tenant_operations', args: { include_demo: false },
+    });
+  });
+
+  it('passes explicit demo intent and surfaces server refusals', async () => {
+    replies.set('rpc:console_tenant_operations', { data: [] });
+    await loadTenantOperations(true);
+    expect(last()).toMatchObject({ args: { include_demo: true } });
+
+    replies.set('rpc:console_tenant_operations', { error: { message: 'console:operate at platform scope is required.' } });
+    await expect(loadTenantOperations()).rejects.toThrow('console:operate at platform scope is required.');
   });
 });
 

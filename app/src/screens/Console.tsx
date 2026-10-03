@@ -28,6 +28,7 @@ import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
 import { SupportQueue } from '../components/console/SupportQueue';
+import { TenantOperations } from '../components/console/TenantOperations';
 import { said, when } from '../components/console/Fields';
 import {
   isConsoleWorkspaceId,
@@ -243,6 +244,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
+        {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}

@@ -8,6 +8,7 @@ export type ConsoleWorkspaceId =
   | 'approvals'
   | 'breakglass'
   | 'audit'
+  | 'tenant-operations'
   | 'customers'
   | 'figures'
   | 'evidence'
@@ -18,7 +19,8 @@ export interface ConsoleWorkspace {
   label: string;
   capability: string;
   scopeKind: string;
-  scopeId: string;
+  /** Null means any one exact, non-empty scope of `scopeKind`; the server still derives the allowed rows. */
+  scopeId: string | null;
   classification: Classification;
 }
 
@@ -53,6 +55,14 @@ export const CONSOLE_WORKSPACES: readonly ConsoleWorkspace[] = [
   shell('approvals', 'Approvals', 'restricted'),
   shell('breakglass', 'Break-glass', 'restricted'),
   shell('audit', 'Audit', 'restricted'),
+  {
+    id: 'tenant-operations',
+    label: 'Tenant operations',
+    capability: 'tenant:implement',
+    scopeKind: 'school',
+    scopeId: null,
+    classification: 'restricted',
+  },
   shell('customers', 'Customers'),
   shell('figures', 'Figures'),
   shell('evidence', 'Evidence'),
@@ -63,7 +73,7 @@ export function canDiscoverWorkspace(workspace: ConsoleWorkspace, grants: readon
   return grants.some((grant) =>
     grant.capability === workspace.capability
     && grant.scopeKind === workspace.scopeKind
-    && grant.scopeId === workspace.scopeId,
+    && (workspace.scopeId === null ? grant.scopeId.length > 0 : grant.scopeId === workspace.scopeId),
   );
 }
 

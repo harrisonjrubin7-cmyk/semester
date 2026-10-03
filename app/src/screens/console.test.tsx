@@ -37,6 +37,7 @@ const mock = vi.hoisted(() => ({
   figures: vi.fn(),
   command: vi.fn(),
   customers: vi.fn(),
+  tenantOperations: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
   mfa: vi.fn(),
@@ -77,6 +78,7 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadFigures: mock.figures,
   loadCommandCenter: mock.command,
   loadCustomers: mock.customers,
+  loadTenantOperations: mock.tenantOperations,
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
   mfaLevel: mock.mfa,
@@ -97,6 +99,7 @@ let root: Root;
 
 const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeId: '' }];
 const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
+const IMPLEMENTATION_PLATFORM = [...PLATFORM, { capability: 'tenant:implement', scopeKind: 'school', scopeId: 'vu' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -171,6 +174,14 @@ beforeEach(() => {
       contracts: [{ id: 'ct-1', kind: 'pilot-agreement', signedOn: '2026-09-01', startsOn: '2026-09-01', endsOn: '2027-05-31', documentRef: 'VU-PILOT-1' }],
     },
   ]);
+  mock.tenantOperations.mockResolvedValue([{
+    tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+    factKey: 'rollout', category: 'rollout', label: 'Rollout state', value: 'requested',
+    classification: 'internal', provenance: 'public.tenant_rollout', owner: 'implementation',
+    observedAt: '2026-10-03T10:00:00Z', staleAfterDays: 14,
+    limitation: 'State is not approval evidence.',
+    visibilityReason: 'Live tenant:implement grant at exact school scope.',
+  }]);
   // Existing view tests exercise Approvals first; production defaults to the
   // Command center when no server-side preference exists.
   mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
@@ -213,6 +224,22 @@ describe('support tab capability gate', () => {
     mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
     await render();
     expect(button('Support')).toBeDefined();
+  });
+});
+
+describe('tenant operations capability gate', () => {
+  it('does not offer tenant operations to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Tenant operations')).toBeUndefined();
+  });
+
+  it('offers and loads tenant operations for an exact-school implementation grant', async () => {
+    mock.caps.mockResolvedValue(IMPLEMENTATION_PLATFORM);
+    await render();
+    await press('Tenant operations');
+    expect(mock.tenantOperations).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Vanderbilt University');
+    expect(host.textContent).toContain('Live tenant:implement grant at exact school scope.');
   });
 });
 

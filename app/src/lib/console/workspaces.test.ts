@@ -19,7 +19,7 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'customers', 'figures', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'customers', 'figures', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
   });
@@ -41,8 +41,18 @@ describe('console workspace registry', () => {
 
   it('shows the existing shell views only to a platform console operator', () => {
     expect(visibleConsoleWorkspaces([grant('console:operate')]).map(({ id }) => id)).not.toContain('support');
-    expect(visibleConsoleWorkspaces([grant('console:operate'), grant('support:ticket')])).toEqual(CONSOLE_WORKSPACES);
+    expect(visibleConsoleWorkspaces([grant('console:operate'), grant('support:ticket')]).map(({ id }) => id)).not.toContain('tenant-operations');
+    expect(visibleConsoleWorkspaces([
+      grant('console:operate'), grant('support:ticket'), grant('tenant:implement', 'school', 'vu'),
+    ])).toEqual(CONSOLE_WORKSPACES);
     expect(visibleConsoleWorkspaces([grant('console:operate', 'school', 'vu')])).toEqual([]);
+  });
+
+  it('discovers tenant operations from a non-empty exact-school implementation grant', () => {
+    const operations = CONSOLE_WORKSPACES.find(({ id }) => id === 'tenant-operations')!;
+    expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', 'vu')])).toBe(true);
+    expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'platform')])).toBe(false);
+    expect(canDiscoverWorkspace(operations, [grant('tenant:implement', 'school', '')])).toBe(false);
   });
 
   it('validates saved workspace ids against the visible registry', () => {

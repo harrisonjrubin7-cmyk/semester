@@ -485,6 +485,48 @@ export async function loadCustomers(includeDemo = false): Promise<Customer[]> {
   }));
 }
 
+// ── tenant operations ─────────────────────────────────────────────────────
+
+export interface TenantOperationFact {
+  tenantId: string;
+  tenantName: string;
+  isDemo: boolean;
+  factKey: string;
+  category: string;
+  label: string;
+  value: string;
+  classification: string;
+  provenance: string;
+  owner: string;
+  observedAt: string | null;
+  staleAfterDays: number;
+  limitation: string;
+  visibilityReason: string;
+}
+
+/** Metadata-only facts for the exact schools carried by the caller's live implementation grants. */
+export async function loadTenantOperations(includeDemo = false): Promise<TenantOperationFact[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_tenant_operations', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read tenant operations.'));
+  return rows(data).map((r) => ({
+    tenantId: text(r.tenant_id),
+    tenantName: text(r.tenant_name),
+    isDemo: r.is_demo === true,
+    factKey: text(r.fact_key),
+    category: text(r.category),
+    label: text(r.label),
+    value: text(r.value),
+    classification: text(r.classification),
+    provenance: text(r.provenance),
+    owner: text(r.owner),
+    observedAt: maybe(r.observed_at),
+    staleAfterDays: num(r.stale_after_days),
+    limitation: text(r.limitation),
+    visibilityReason: text(r.visibility_reason),
+  }));
+}
+
 // ── preferences ────────────────────────────────────────────────────────────
 
 /**
