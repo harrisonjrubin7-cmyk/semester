@@ -90,6 +90,9 @@ describe('tenant operations workspace', () => {
     expect(host.textContent).toContain('Why visibleLive tenant:implement grant at exact school scope.');
     expect(host.textContent).toContain('LimitationA lifecycle state is not approval evidence.');
     expect(host.querySelector('article')?.style.gridTemplateColumns).toBe('');
+    const refresh = host.querySelector('button');
+    expect(refresh?.style.color).toBe('var(--app-fg)');
+    expect(refresh?.style.borderColor).toBe('var(--app-line)');
   });
 
   it('fails missing or invalid observation times closed', () => {

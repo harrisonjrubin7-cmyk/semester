@@ -93,7 +93,14 @@ export function TenantOperations({
             Include demo tenants explicitly
           </label>
         )}
-        <button type="button" className="btn" onClick={refresh}>Refresh tenant operations</button>
+        <button
+          type="button"
+          className="btn"
+          style={{ color: 'var(--app-fg)', borderColor: 'var(--app-line)' }}
+          onClick={refresh}
+        >
+          Refresh tenant operations
+        </button>
       </div>
 
       {error && (
