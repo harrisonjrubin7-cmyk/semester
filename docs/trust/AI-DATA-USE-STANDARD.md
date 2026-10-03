@@ -3,7 +3,7 @@
 | Control | Value |
 | --- | --- |
 | Status | **CONTROLLED DRAFT — TARGET APPROVAL AND ENFORCEMENT EVIDENCE REQUIRED** |
-| Owner | Privacy owner with Security and AI Governance |
+| Owner | Harrison Rubin, Privacy/Security/AI Governance primary; backup `UNASSIGNED` |
 | Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
 | Applies to | AI inputs, outputs, retrieval sources, embeddings/indexes, usage metadata, evaluations, safety review and support artifacts |
 

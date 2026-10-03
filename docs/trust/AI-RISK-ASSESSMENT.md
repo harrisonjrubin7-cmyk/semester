@@ -3,7 +3,7 @@
 | Control | Value |
 | --- | --- |
 | Status | **CONTROLLED BASELINE — FEATURE-SPECIFIC ASSESSMENT REQUIRED** |
-| Owner | AI Governance owner; risk owners assigned per activated system |
+| Owner | Harrison Rubin, AI Governance primary; per-system owners remain required before activation; backup `UNASSIGNED` |
 | Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
 | Method | Qualitative likelihood and impact; unresolved high/consequential risk blocks activation |
 

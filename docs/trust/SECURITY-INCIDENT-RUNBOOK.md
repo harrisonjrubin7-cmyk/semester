@@ -1,7 +1,7 @@
 # Semester security incident runbook — controlled draft
 
 - **Status:** `DESIGNED / NOT TARGET-EXERCISED`
-- **Owner:** Incident commander and security owner pending named-person and backup acceptance
+- **Owner:** Harrison Rubin, incident commander and security primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 
 ## First response

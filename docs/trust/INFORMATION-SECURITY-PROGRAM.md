@@ -1,8 +1,8 @@
 # Semester information security program — controlled draft
 
 - **Status:** `PARTIAL / NOT OPERATIONALLY ACCEPTED`
-- **Executive owner:** `[TBD]`
-- **Security owner/backup:** `[TBD]`
+- **Executive owner:** Harrison Rubin
+- **Security owner/backup:** Harrison Rubin / `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 
 ## Program objective

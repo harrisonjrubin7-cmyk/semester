@@ -3,7 +3,7 @@
 | Control | Value |
 | --- | --- |
 | Status | **CONTROLLED BASELINE — REPOSITORY-INFERRED; DEPLOYMENT RECONCILIATION REQUIRED** |
-| Owner | AI Governance owner with Product and Security |
+| Owner | Harrison Rubin, AI Governance/Product/Security primary; backup `UNASSIGNED` |
 | Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
 | Review cadence | Before activation; monthly while active; on any provider/model/purpose/data/tool change |
 

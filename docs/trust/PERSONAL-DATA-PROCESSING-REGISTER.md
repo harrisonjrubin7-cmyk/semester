@@ -1,7 +1,7 @@
 # Semester personal-data processing register — controlled draft
 
 - **Status:** `INCOMPLETE`
-- **Owner:** Privacy owner pending named-person acceptance
+- **Owner:** Harrison Rubin, Privacy primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 - **Legal status:** not a completed statutory record of processing activities
 

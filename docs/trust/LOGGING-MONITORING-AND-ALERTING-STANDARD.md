@@ -1,7 +1,7 @@
 # Semester logging, monitoring, and alerting standard — controlled draft
 
 - **Status:** `PARTIAL / NOT FULLY STAFFED OR OPERATED`
-- **Owner:** Operations/Security owner pending named-person and backup acceptance
+- **Owner:** Harrison Rubin, Operations/Security primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 - **Scope:** application, identity, database, integrations, AI, security, privacy, availability, backups, releases, and customer-impact signals
 

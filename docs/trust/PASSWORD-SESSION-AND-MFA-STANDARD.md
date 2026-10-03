@@ -1,7 +1,7 @@
 # Semester password, session and MFA standard — controlled draft
 
 - **Status:** `PARTIAL`
-- **Owner:** Security/Identity owner pending named-person acceptance
+- **Owner:** Harrison Rubin, Security/Identity primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 - **Scope:** product identities, privileged roles, company/provider consoles, service credentials and recovery
 

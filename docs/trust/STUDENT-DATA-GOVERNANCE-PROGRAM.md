@@ -1,8 +1,8 @@
 # Semester student-data governance program — controlled draft
 
 - **Status:** `PARTIAL / NOT OPERATIONALLY ACCEPTED`
-- **Executive owner:** `[TBD]`
-- **Privacy/Data/Security owners:** `[TBD]`
+- **Executive owner:** Harrison Rubin; backup `UNASSIGNED`
+- **Privacy/Data/Security owners:** Harrison Rubin primary; backups `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 
 ## Program objective

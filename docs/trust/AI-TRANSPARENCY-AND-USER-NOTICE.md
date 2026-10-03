@@ -3,7 +3,7 @@
 | Control | Value |
 | --- | --- |
 | Status | **CONTROLLED DRAFT — NOTICE COVERAGE AND APPROVAL NOT COMPLETE** |
-| Owner | Product owner with AI Governance, Privacy, Accessibility, Legal and Customer owner |
+| Owner | Harrison Rubin, Product/AI Governance primary; Privacy, Accessibility, Legal and customer approvals remain required; backup `UNASSIGNED` |
 | Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
 | Review trigger | Before activation and on purpose, data, provider/model, limitation, retention, human-review or control change |
 

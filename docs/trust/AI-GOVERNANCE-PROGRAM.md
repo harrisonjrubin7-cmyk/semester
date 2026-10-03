@@ -3,7 +3,7 @@
 | Control | Value |
 | --- | --- |
 | Status | **CONTROLLED DRAFT — NOT IN FORCE / NOT PRODUCTION-APPROVED** |
-| Owner | AI Governance owner; interim accountable seat: CEO |
+| Owner | Harrison Rubin, AI Governance primary; backup `UNASSIGNED` |
 | Control partners | Product, Security, Privacy, Accessibility, Legal, Academic/Customer owner |
 | Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
 | Review trigger | Before any customer activation and after a material provider, model, prompt, data, purpose, tool or control change |

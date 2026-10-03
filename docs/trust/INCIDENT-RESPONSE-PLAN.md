@@ -1,7 +1,7 @@
 # Semester incident response plan — controlled draft
 
 - **Status:** `DESIGNED / NOT TARGET-EXERCISED`
-- **Owner:** Incident-response executive and security owners pending named-person and backup acceptance
+- **Owner:** Harrison Rubin, incident-response executive and security primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 - **Scope:** security, privacy, availability, integrity, safety, AI, vendor, integration, and recovery incidents
 

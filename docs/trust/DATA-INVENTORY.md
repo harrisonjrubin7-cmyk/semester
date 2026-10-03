@@ -1,7 +1,7 @@
 # Semester data inventory — trust control index
 
 - **Status:** `PARTIAL`
-- **Owner:** Data/Privacy owner pending named-person acceptance
+- **Owner:** Harrison Rubin, Data/Privacy primary; backup `UNASSIGNED`
 - **Evidence date:** 2026-10-03
 - **Review trigger:** schema, provider, feature, integration, retention or customer-scope change
 
