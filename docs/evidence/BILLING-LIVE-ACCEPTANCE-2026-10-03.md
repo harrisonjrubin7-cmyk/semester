@@ -6,7 +6,8 @@
 
 This record covers the individual Semester Plus lifecycle in the production
 Stripe and Supabase projects. It does not approve Semester Pro, an institution
-deployment, or general availability.
+deployment, general availability, or new paid acquisition. The checkout path is
+currently held by the governed acquisition control.
 
 ## Verified lifecycle
 
@@ -43,3 +44,5 @@ scheduled to end on November 3, 2026.
   written order form; no institution sponsors Semester yet.
 - This evidence does not convert the private beta into general availability or
   replace legal, accessibility, security, or institution-specific approvals.
+- This evidence is historical acceptance evidence, not authorization to enable
+  checkout. Current launch and public-claims registers remain controlling.

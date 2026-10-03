@@ -1,6 +1,14 @@
 # Data retention, export and deletion
 
-Full-beta Milestone 1. A synthesis of what the tree does, at `fd056fc`, with each claim pointing at its source. The per-table schedule is [RETENTION.md](../RETENTION.md), which `retention.test.ts` holds to the migrations in both directions; this page does not restate it, and if the two disagree, RETENTION.md wins and this page is wrong.
+Full-beta Milestone 1. A synthesis of what the tree does, revalidated at `d246a348`, with each claim pointing at its source. The per-table schedule is [RETENTION.md](../RETENTION.md), which `retention.test.ts` holds to the migrations in both directions; this page does not restate it, and if the two disagree, RETENTION.md wins and this page is wrong.
+
+## Repository validation — 2026-10-03
+
+The P02 validation pass exercised consent, privacy, export, revocation, account deletion, deletion state, browser recovery, recovery drafts, academic recovery, plan recovery, incident recovery, FERPA consent, the call-consent screen, Trust Center and Advisor Meeting. The focused Vitest run passed **18 files and 397 tests**.
+
+This is repository evidence, not proof of live account operation. The isolated two-device account-sync journey could not run on this host because neither the Supabase CLI nor Docker is installed. The focused deletion, subject-request and hold-aware database suites also could not run because the required PostgreSQL 17 server is absent; the checker exited 2 before creating a database or executing a suite. No production service or data was contacted.
+
+Accordingly, this pass establishes the tested client and library behaviors only. It does **not** establish provider-backed cross-device sync, a live deletion execution, restoration of provider data, an operated rights-request response, institutional acceptance, or production activation. Those remain separate gates.
 
 ## The three promises
 

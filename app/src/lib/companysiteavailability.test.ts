@@ -11,12 +11,12 @@ const site = [
 describe('company-site production availability', () => {
   it('keeps signup and billing claims behind their production activation gates', () => {
     expect(site).toContain('sign-up may ask for an invite');
-    expect(site).toContain('Semester Plus is available from the signed-in Account screen');
+    expect(site).toContain('Checkout is not available yet');
     expect(site).not.toMatch(/public signup is open/i);
     expect(site).not.toMatch(/no invitation required/i);
     expect(site).not.toMatch(/checkout runs on (?:stripe )?test keys/i);
     expect(site).not.toMatch(/hosted stripe checkout passed/i);
-    expect(site).toContain('A live charge, paid invoice, entitlement, portal and cancellation lifecycle passed October 3, 2026');
+    expect(site).not.toMatch(/plus can be bought/i);
   });
   it('publishes verified personal export and deletion, with retained-record limits', () => {
     expect(site).toContain('["Full self-service data export","Yes","Yes","Yes","Yes","av"]');
@@ -35,8 +35,8 @@ describe('company-site production availability', () => {
     expect(site).toContain('["LTI 1.3 launch (Canvas)","No","Optional","Yes","Yes","bt"]');
   });
 
-  it('publishes live Plus billing while leaving staffed support at its real activation gate', () => {
-    expect(site).toContain('["Paid plans (Plus) and invoicing","Yes","Yes","Yes","Yes","av"]');
+  it('leaves billing and staffed support unavailable until their real activation gates pass', () => {
+    expect(site).toContain('["Paid plans (Plus) and invoicing","Yes","Yes","Yes","Yes","ip"]');
     expect(site).toContain('["24/7 critical support","No","No","No","Yes","pl"]');
     expect(site).toContain('318 of 318, checked October 1, 2026');
   });
@@ -48,7 +48,7 @@ describe('company-site production availability', () => {
     expect(roadmap).toContain('["Built & tested, activation gated","ex"');
     expect(roadmap).not.toContain('["In active development"');
     expect(roadmap).toContain('manual assistive-technology review and an external evaluation remain open');
-    expect(roadmap).toContain('A live charge, paid invoice, entitlement, portal and end-of-period cancellation passed October 3, 2026');
+    expect(roadmap).toContain('live-payment evidence and commercial activation remain open');
     expect(roadmap).toContain('provider credentials and live activation remain open');
     expect(roadmap).toContain('no institution platform is registered or verified');
     expect(roadmap).toContain('notification deployment, staffed production enablement and UAT remain open');

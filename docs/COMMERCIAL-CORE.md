@@ -174,7 +174,7 @@ or leads go unanswered.
 | `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | App route where Stripe returns the student. Activation supplies the production Account route; the portal refuses to fall back to an origin root |
 | `STRIPE_PORTAL_CONFIGURATION_ID` | billing-portal | Active `bpc_…` configuration created or selected by the activation tool; sessions always name it explicitly |
 | `STRIPE_PRODUCT_TAX_CODE` | billing-checkout | Owner/accountant-approved `txcd_…` classification for Semester Plus software; sent on every inline Stripe Product and required before checkout opens |
-| `BILLING_LIVE_ENABLED` | billing-checkout | Explicit operations gate. Only literal `true` opens checkout; the activation tool keeps it false while credentials, tax code, and provider inventory are changing |
+| `BILLING_LIVE_ENABLED` | billing-checkout | Explicit operations setting. `false` closes checkout; `true` is necessary but cannot override the current code-level paid-acquisition hold. The activation tool keeps it false while credentials, tax code, and provider inventory are changing |
 | `LEAD_IP_SALT` | lead-intake | Optional: the key the IP address is hashed with (default: the service key) |
 
 The Stripe webhook to register (Developers → Webhooks) is

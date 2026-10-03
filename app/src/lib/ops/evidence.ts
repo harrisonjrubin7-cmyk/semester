@@ -71,7 +71,7 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     owner: 'founder',
     claims: ['no-sale'],
     rows: [],
-    note: 'One owner-account acceptance run. It does not cover an annual charge, refund, failed renewal, dispute, registered-jurisdiction tax collection, Pro, institution access or general availability.',
+    note: 'One owner-account acceptance run. It does not cover an annual charge, refund, failed renewal, dispute, registered-jurisdiction tax collection, Pro, institution access or general availability, and it does not authorize enabling the governed acquisition hold.',
   },
   {
     id: 'ai-killswitch-drill',

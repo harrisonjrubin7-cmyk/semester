@@ -51,7 +51,7 @@ export const ROUTES: Route[] = [
   { path: '/known-limitations/', title: 'Known limitations — Semester', description: 'What does not work yet for pilot users, what to do instead, and how to report something. Dated, and held to the code by a test.', Page: P.KnownLimitations },
   { path: '/launch-readiness/', title: 'Are we ready? — Semester', description: 'What runs today, what is built but not deployed, and what is still planned, for students, departments, institutions and reviewers.', Page: P.LaunchReadiness },
   { path: '/proof/', title: 'How Semester shows proof', description: 'No invented metrics, no unapproved logos, no causal claims without a method. The rules, written before there is proof to show.', Page: P.Proof },
-  { path: '/legal/', title: 'Semester legal and policies', description: 'Every policy, its status, version and effective date, including the effective refund and cancellation policy for Plus.', Page: P.Legal },
+  { path: '/legal/', title: 'Semester legal and policies', description: 'Every policy, its status, version and effective date. Nothing is in force yet, and this page says so.', Page: P.Legal },
   { path: '/login/', title: 'Log in to Semester', description: 'Sign in inside the Semester app.', Page: P.Login },
   { path: '/signup/', title: 'Get started with Semester', description: 'Start free, with no card and no account required.', Page: P.Signup },
   { path: '/account/', title: 'Your Semester account', description: 'Your profile, sign-in and data controls, in the Semester app.', Page: P.Account },

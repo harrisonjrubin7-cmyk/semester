@@ -156,7 +156,7 @@ None is open. The four this register found — the Plus price, the pilot length,
 
 | ID | Item | Status | Evidence | Gap | Asked by | Overlaps |
 | --- | --- | --- | --- | --- | --- | --- |
-| PRC-001 | The policy set, each with its status | tested | `app/src/lib/ops/claims.ts` — POLICIES<br>`app/src/lib/ops/claims.test.ts` — the effective refund policy remains separate from every draft | The refund and cancellation policy is effective for individual Plus; the broader policy set still awaits the privacy seat and counsel. | R8, M5, E, F, P, V | — |
+| PRC-001 | The policy set, each with its status | tested | `app/src/lib/ops/claims.ts` — POLICIES<br>`app/src/lib/ops/claims.test.ts` — nothing in force, and the site says so | Nothing is in force; the privacy seat that would put it in force is vacant. | R8, M5, E, F, P, V | — |
 | PRC-002 | Security overview and architecture | designed | `docs/trust/SECURITY-WHITEPAPER.md` — the overview<br>`docs/UNIVERSITY-OS-ARCHITECTURE.md` — the architecture | No data-flow diagram as a picture. | R8, M5, E | — |
 | PRC-003 | Subprocessor register | tested | `app/src/lib/trust/subprocessors.test.ts` — held to the code<br>`docs/SUBPROCESSORS.md` — draft | Not yet read by counsel. | R8, M5, F, P | — |
 | PRC-004 | Retention and deletion | tested | `app/src/lib/retention.test.ts` — the schedule<br>`supabase/deletion.check.sql` — deletion | Held in code; nothing under docs/evidence/ shows it operating. | R8, M5, F, P | — |

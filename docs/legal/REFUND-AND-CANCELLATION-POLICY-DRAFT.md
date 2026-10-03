@@ -1,9 +1,17 @@
-# Semester Refund and Cancellation Policy
+# Semester Refund and Cancellation Policy — DRAFT
 
-This policy applies to individual Semester Plus purchases. Institution plans
-are governed by their written order forms.
+> **Not in force. Not reviewed by a lawyer.** Urgent: Semester Plus can be
+> bought in the app since D-128 (Stripe test keys), and the claims register
+> says this policy is owed before any checkout exists. It must be reviewed and
+> published before a live key is set. Written from the code
+> ([`app/src/lib/membership.ts`](../../app/src/lib/membership.ts),
+> [`MembershipPanel.tsx`](../../app/src/components/MembershipPanel.tsx)) and
+> D-128 in [`DECISION-LOG.md`](../DECISION-LOG.md). The
+> [Terms of Service draft](TERMS-OF-SERVICE-DRAFT.md) section 8 says the same
+> things and points here for refunds; change them together. Every
+> `[DECIDE: …]` is a question only the owner or counsel can answer.
 
-**Effective date:** October 3, 2026
+**Effective date:** [DECIDE]
 
 ## 1. What you pay for
 
@@ -20,8 +28,8 @@ apply to you.
 ## 2. Renewal
 
 Plus renews automatically at the end of each month or year until you cancel.
-Your renewal date is shown in Account → Membership. Any additional notice or
-right required by the law where you live also applies.
+[DECIDE with counsel: advance reminder before an annual renewal, as some U.S.
+states require.]
 
 ## 3. Cancelling
 
@@ -34,6 +42,7 @@ will refund that charge in full.
 
 ## 4. Refunds
 
+[DECIDE — a suggested starting point for counsel:]
 - A charge made after you cancelled, or a duplicate or mistaken charge: refunded
   in full.
 - A new annual plan, cancelled within 14 days of purchase: refunded in full.
@@ -41,8 +50,9 @@ will refund that charge in full.
   the end of it.
 - Where the law where you live gives you more, that applies.
 
-Ask by email to harrisonjrubin7@gmail.com from the email on your account.
-Refunds go back to the original payment method through Stripe.
+Ask by email to harrisonjrubin7@gmail.com [DECIDE: dedicated billing address],
+from the email on your account. Refunds go back to the original payment
+method through Stripe.
 
 ## 5. Failed payments
 

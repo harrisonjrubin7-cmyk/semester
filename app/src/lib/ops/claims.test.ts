@@ -186,7 +186,7 @@ describe('the register', () => {
 
   it('holds every policy to the tree', () => {
     expect(policyProblems(POLICIES, FACTS)).toEqual([]);
-    expect(POLICIES.filter((p) => p.status === 'in-force').map((p) => p.id)).toEqual(['refunds']);
+    expect(POLICIES.filter((p) => p.status === 'in-force')).toEqual([]); // the day this changes, /legal/ shows a version and a date
     for (const p of POLICIES) expect(SEATS).toContain(p.owner);
   });
 
@@ -202,11 +202,10 @@ describe('the register', () => {
     for (const rule of PROOF_RULES) expect(html).toContain(escapeHtml(rule));
   });
 
-  it('is what the legal page shows: every policy and the effective refund policy', () => {
+  it('is what the legal page shows: every policy, none in force', () => {
     const html = pages.get('/legal/')!;
     for (const p of POLICIES) expect(html).toContain(escapeHtml(p.policy));
-    expect(html).toContain('2026-10-03');
-    expect(html).toContain(escapeHtml(POLICY_MEANING['in-force'].split(';')[0]));
+    expect(html).not.toMatch(/in force since|effective from \d/i);
   });
 
   it(`is what ${DOC} says`, () => {
@@ -279,8 +278,9 @@ function render(): string {
     '',
     '## The policies',
     '',
-    'What `/legal/` lists. An in-force policy carries a version and effective',
-    'date; drafts and outlines remain clearly separate, and this table says so.',
+    'What `/legal/` lists. No policy is in force; the day one is, it carries a',
+    'version, an effective date, its previous versions and a plain-language',
+    'summary of what changed, and this table says so.',
     '',
     ...table(
       ['Policy', 'Status', 'Where', 'Owner', 'Rests on', 'Note'],

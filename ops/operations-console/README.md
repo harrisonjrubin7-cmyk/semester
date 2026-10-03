@@ -34,7 +34,7 @@ row of `public.app_roles`, or the student. The test refuses anything else.
 | **Delete an institution’s data, or a student’s on their behalf**<br>A student’s own deletion, from their own account, needs nobody’s approval; this row is for deletion done for them. | role `data_steward` | seat `privacy` | no | The verified request, the retention class of each store touched, and the deletion certificate that will be issued | `LEG-004` (building) |
 | **Change an AI provider, model or policy** | seat `product` | seat `security` **and** seat `privacy` | yes | The evaluation evidence from the G0–G5 gates, and the subprocessor register updated in the same change | `AI-001` (building), `AI-002` (building) |
 | **Release controlled evidence to a reviewer** | seat `success` | seat `security` or seat `privacy` | no | The signed NDA, the named reviewer, the commit the packet was generated from, and the expiring link | `SEC-013` (building) |
-| **Refund or credit above the threshold**<br>Plus billing is live. The production charge, invoice, entitlement, portal and end-of-period cancellation lifecycle passed on October 3, 2026; no refund has been exercised. | role `business_admin` | seat `founder` | no | The billing record and the reason | `LEG-003` (building) |
+| **Refund or credit above the threshold**<br>Plus checkout exists (D-128) on Stripe test keys and has refunded nothing. The row is here so the matrix is complete before a live payment, not because there is anything to refund yet. | role `business_admin` | seat `founder` | no | The billing record and the reason | `LEG-003` (building) |
 
 ## Data classification
 

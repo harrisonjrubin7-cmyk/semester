@@ -152,7 +152,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
       ['Leadership succession and emergency operating authority', 'not-started', [['docs/FEATURE-FLAG-REGISTRY.md', 'kill-switch authority only']], 'No one else can act for the company.'],
       ['Remote-work continuity', 'not-started', [], 'None.'],
       ['Vendor failure contingency', 'designed', [['docs/market-readiness/DISASTER_RECOVERY.md', 'recovery path per component']], 'No exit plan per vendor.'],
-      ['Payment-provider outage plan', 'not-started', [['docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md', 'Stripe now processes live Plus payments']], 'Now applicable; no documented customer-access and communication plan for a Stripe outage.'],
+      ['Payment-provider outage plan', 'not-started', [['docs/DECISION-LOG.md', 'D-009: no payment processor yet']], 'Not applicable until there is a processor.'],
       ['Domain and DNS recovery', 'not-started', [], 'Registrar access and recovery are undocumented.'],
       ['Identity-provider lockout recovery', 'designed', [['docs/superpowers/specs/2026-09-24-vanderbilt-production-readiness-design.md', 'break-glass admin accounts with MFA and audit']], 'Not built; GitHub and Supabase account lockout not covered.'],
       ['Legal counsel continuity', 'not-started', [], 'No counsel engaged.'],

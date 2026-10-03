@@ -10,7 +10,7 @@ and each control marked with what the tree holds. A control that claims to
 exist cites a file, and the file exists; an owed control says what would
 close it. Nothing here is a promise of a date.
 
-**44 of 200 controls are in place, 80 are partial and 76 are owed.**
+**43 of 200 controls are in place, 80 are partial and 77 are owed.**
 Nothing at all is in place in 7 areas: Records management and legal holds; E-discovery and export defensibility; Accessibility of generated content; Physical security and device management; Cost governance; Data residency; Disaster scenarios beyond technology.
 Most owed controls wait on something that does not exist yet — a company,
 a second person, billing, an assessment engine, a customer — and the note
@@ -43,7 +43,7 @@ never a person; every seat is vacant.
 | [Cloud-provider exit](#cloud-provider-exit) | 2 | 4 | 4 | `staff` | `engineering` |
 | [Accessibility and security of internal tools](#accessibility-and-security-of-internal-tools) | 2 | 4 | 2 | `staff` | `accessibility` |
 | [Data residency](#data-residency) | 0 | 2 | 8 | `staff` | `security` |
-| [Ethics of growth and pricing](#ethics-of-growth-and-pricing) | 5 | 3 | 2 | `public` | `founder` |
+| [Ethics of growth and pricing](#ethics-of-growth-and-pricing) | 4 | 3 | 3 | `public` | `founder` |
 | [Disaster scenarios beyond technology](#disaster-scenarios-beyond-technology) | 0 | 6 | 5 | `internal` | `founder` |
 | [Adoption and change management](#adoption-and-change-management) | 4 | 6 | 1 | `staff` | `success` |
 | [Documentation resilience](#documentation-resilience) | 1 | 4 | 4 | `staff` | `engineering` |
@@ -336,17 +336,17 @@ Exposure `staff` · owner `security` · 0 of 10 in place.
 
 > No dark pattern, no paywall around a student’s own data, no manipulative nudge, and every price explained before it is charged.
 
-Exposure `public` · owner `founder` · 5 of 10 in place.
+Exposure `public` · owner `founder` · 4 of 10 in place.
 
 | ID | Control | Status | Evidence | What it shows, or what would close it |
 | --- | --- | --- | --- | --- |
 | GR-01 | No dark patterns. | in place | [`docs/ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md`](../ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md) | The engagement policy names them and the test suite forbids streaks, guilt and time-in-app as an achievement. |
 | GR-02 | No hidden paywall around a student’s own data. | in place | [`app/src/lib/plans.ts`](../../app/src/lib/plans.ts) | Export, deletion and saved plans are on every plan, written into the data and tested. |
 | GR-03 | No manipulative student nudges. | in place | [`app/src/donotbuild.test.ts`](../../app/src/donotbuild.test.ts) | Notifications only from allow-listed files, no ad or tracking hosts, no streaks. |
-| GR-04 | Fair student pricing. | partial | [`app/src/lib/plans.ts`](../../app/src/lib/plans.ts) | Free covers everything a student needs to plan; paid plans add capacity and comparison. Plus is live; longer-term fairness still needs operating history. |
+| GR-04 | Fair student pricing. | partial | [`app/src/lib/plans.ts`](../../app/src/lib/plans.ts) | Free covers everything a student needs to plan; paid plans add capacity and comparison. Only Plus is on sale, in the app and on test keys, so fairness is still a design more than a record. |
 | GR-05 | Transparent institutional implementation pricing. | partial | [`app/src/site/more.tsx`](../../app/src/site/more.tsx) | The public “how pricing works” page names the four drivers and what implementation includes. No price list exists. |
 | GR-06 | Clear AI and usage costs. | partial | [`app/src/screens/settings/Assistant.tsx`](../../app/src/screens/settings/Assistant.tsx) | The assistant settings say what a question costs the student (nothing) and what the gateway meters. Institutional allowance terms are unwritten. |
-| GR-07 | Accessible refund and cancellation. | in place | [`docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md`](../evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md) | The individual policy is effective from 2026-10-03; a live checkout, invoice, entitlement and end-of-period cancellation passed acceptance. |
+| GR-07 | Accessible refund and cancellation. | owed | — | Cancellation reaches Stripe (D-132); the refund policy is still a proposal and is owed before a live payment. |
 | GR-08 | Ambassador disclosure. | owed | — | No ambassador programme; if one starts, every ambassador discloses. |
 | GR-09 | Responsible advertising and sponsorship policy. | in place | [`docs/operating-model/TRUST-BRAND-AND-LEGAL.md`](TRUST-BRAND-AND-LEGAL.md) | No advertising and no selling of student data, stated publicly and held by the no-tracking-hosts test. |
 | GR-10 | Equity, access and accessibility discount policy. | owed | — | Not decided. Belongs with the first price list. |

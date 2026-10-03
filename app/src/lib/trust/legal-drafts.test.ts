@@ -5,8 +5,8 @@ import { PARTIES } from './subprocessors';
 import { SUPPORT } from '../privacy';
 
 /**
- * The draft policies in `docs/legal/`, plus the effective individual refund
- * policy, held to the registers they were written from.
+ * The Terms of Service and Privacy Policy drafts in `docs/legal/`, held to the
+ * registers they were written from.
  *
  * They are drafts for counsel, not law in force, and two things would make
  * them dangerous before that review happens:
@@ -49,16 +49,15 @@ const NAMED_AS: Record<string, string> = {
 };
 
 describe('legal drafts', () => {
-  const EFFECTIVE_REFUND_POLICY = 'REFUND-AND-CANCELLATION-POLICY-DRAFT.md';
-  // Every other policy in the folder remains a draft. The refund policy keeps
-  // its historical filename so existing links do not break, but its contents
-  // and policy register deliberately mark it effective from 2026-10-03.
-  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md') && f !== EFFECTIVE_REFUND_POLICY);
+  // Every draft in the folder, not a list someone must remember to extend: a
+  // new policy without the banner is exactly the one that gets linked by
+  // mistake.
+  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md'));
 
   it('finds every draft, including the two it began with', () => {
     expect(DRAFTS).toContain('PRIVACY-POLICY-DRAFT.md');
     expect(DRAFTS).toContain('TERMS-OF-SERVICE-DRAFT.md');
-    expect(DRAFTS.length).toBeGreaterThanOrEqual(12);
+    expect(DRAFTS.length).toBeGreaterThanOrEqual(13);
     for (const f of DRAFTS) expect(f, 'a policy here is a draft until it is in force').toMatch(/-DRAFT\.md$/);
   });
 
@@ -70,13 +69,6 @@ describe('legal drafts', () => {
       expect(text).toContain(SUPPORT);
     },
   );
-
-  it('holds the individual refund policy to its effective marker and support route', () => {
-    const text = read(EFFECTIVE_REFUND_POLICY);
-    expect(text).toContain('**Effective date:** October 3, 2026');
-    expect(text).not.toContain('**Not in force.');
-    expect(text).toContain(SUPPORT);
-  });
 
   it('maps every party in the subprocessor register', () => {
     const unmapped = PARTIES.map((p) => p.name).filter((n) => !(n in NAMED_AS));

@@ -32,9 +32,11 @@ gate, creates or updates exactly this project's live webhook, enables the
 default Stripe billing portal's invoice history and payment-method controls,
 explicitly disables portal-side subscription changes and cancellation,
 stores the credentials and the exact portal configuration id in Supabase,
-rescans legacy sessions while checkout is quiesced, and only then opens the
-gate after checking the deployed signature, invoice-event database path,
-authentication and CORS boundaries. The invoice probe uses a nonexistent
+rescans legacy sessions while checkout is quiesced, and only then marks the
+operations setting ready after checking the deployed signature, invoice-event database path,
+authentication and CORS boundaries. The current code-level market hold still
+keeps new checkout closed; lifting it requires a separately reviewed code change
+after the individual-sale decision gates are satisfied. The invoice probe uses a nonexistent
 subscription and therefore writes no invoice or payment record. It refuses to activate until Stripe Tax
 reports an active setup, and reports the number of active tax registrations so
 the owner and counsel can reconcile it with the approved nexus decision. It

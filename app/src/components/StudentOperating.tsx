@@ -2,7 +2,7 @@ import { OperatingProjectMap } from './OperatingProjectMap';
 import { dateToIso } from '../lib/date';
 import { useState } from 'react';
 import { zipSync, strToU8 } from 'fflate';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { activeManual, critic, defaultManual, emptyEntry, exportOperating, operatingCsv, operatingIcs, operatingMarkdown, PLAYBOOKS, readOperating, visibleEntries } from '../lib/student-operating';
 import type { EntryKind, Manual, OperatingEntry, OperatingWorkspace, Structure } from '../lib/student-operating';
 import { ActionButton, SectionLabel } from './ui';
@@ -15,9 +15,10 @@ function download(name: string, content: string | Uint8Array, mime: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export function StudentOperating() {
+  const now = useNow();
   const { state, dispatch } = useStore();
   const workspace = readOperating(state.operatingWorkspace);
-  const today = dateToIso(new Date());
+  const today = dateToIso(now);
   const [temporary, setTemporary] = useState<Manual | null>(null);
   const manual = temporary ?? activeManual(workspace.manual, today);
   const [editingManual, setEditingManual] = useState<Manual>(() => manual ?? defaultManual());

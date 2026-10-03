@@ -6,6 +6,11 @@ import { COUNCIL, GATES, SEATS, type LaunchState } from '../launchreadiness';
 import { controlLine, renderedFrom, table } from '../ops/render';
 import {
   ACTIVATION_GATES,
+  COMMERCIAL_ACTIVATION_GATES,
+  ENTERPRISE_ACTIVATION_GATES,
+  PAID_ASSURANCE_GATES,
+  PILOT_ACTIVATION_GATES,
+  VALIDATION_ACTIVATION_GATES,
   RELEASE_PROFILES,
   REPOSITORY_RELEASE_EVIDENCE,
   TECHNICAL_RELEASE_GATES,
@@ -24,12 +29,27 @@ const SOURCE_SHA = 'abc123abc123abc123abc123abc123abc123abcd';
 const MANUAL_PROFILE = 'institutional-manual-pilot' as ReleaseProfileId;
 const TARGETS: Record<ReleaseProfileId, ReleaseTarget> = {
   'individual-scale': { environment: 'production', deployedSha: SOURCE_SHA, configurationVersion: 'individual-v1' },
+  'invitation-only-individual-validation': {
+    environment: 'production', deployedSha: SOURCE_SHA, configurationVersion: 'validation-v1', cohortId: 'validation-cohort-a',
+  },
   'institutional-manual-pilot': {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'manual-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
     registrationWriteback: 'disabled', dataMode: 'manual',
   },
   'institutional-pilot': {
     environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
+    registrationWriteback: 'disabled', dataMode: 'connected',
+  },
+  'paid-institutional-manual-pilot': {
+    environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'paid-manual-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
+    registrationWriteback: 'disabled', dataMode: 'manual',
+  },
+  'paid-institutional-pilot': {
+    environment: 'pilot', deployedSha: SOURCE_SHA, configurationVersion: 'paid-pilot-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
+    registrationWriteback: 'disabled', dataMode: 'connected',
+  },
+  'broad-enterprise-sale': {
+    environment: 'production', deployedSha: SOURCE_SHA, configurationVersion: 'enterprise-v1', tenantId: 'tenant-a', cohortId: 'cohort-a',
     registrationWriteback: 'disabled', dataMode: 'connected',
   },
 };
@@ -39,6 +59,17 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
   'support-route-live': ['support-owner'],
   'rollback-current': ['operations-owner', 'security-owner'],
   'kill-switch-clear': ['operations-owner', 'security-owner'],
+  'participant-terms-and-consent': ['privacy-owner', 'product-owner'],
+  'qualified-legal-public-policy-approval': ['legal-owner', 'privacy-owner'],
+  'representative-user-acceptance': ['participant-representative', 'product-owner'],
+  'target-account-lifecycle-acceptance': ['participant-representative', 'privacy-owner', 'operations-owner'],
+  'validation-support-roster': ['support-owner', 'operations-owner'],
+  'validation-outcome-agreed': ['product-owner', 'trust-owner'],
+  'qualified-accessibility-conformance': ['accessibility-owner', 'trust-owner'],
+  'validation-launch-decision': [
+    'executive-owner', 'product-owner', 'security-owner', 'privacy-owner',
+    'accessibility-owner', 'support-owner', 'operations-owner', 'trust-owner',
+  ],
   'named-tenant-agreement': ['executive-owner', 'security-owner'],
   'named-data-owner': ['data-owner'],
   'tenant-accessibility-review': ['accessibility-owner'],
@@ -52,6 +83,33 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
     'privacy-owner', 'accessibility-owner', 'support-owner', 'trust-owner',
     'data-owner', 'finance-owner', 'operations-owner', 'pilot-champion',
   ],
+  'design-partner-activation-and-measured-closeout': [
+    'pilot-champion', 'product-owner', 'trust-owner', 'finance-owner',
+  ],
+  'broad-individual-rollout-approval': [
+    'executive-owner', 'legal-owner', 'product-owner', 'security-owner',
+    'privacy-owner', 'accessibility-owner', 'support-owner', 'operations-owner',
+  ],
+  'counsel-approved-commercial-paper': ['executive-owner', 'legal-owner', 'privacy-owner'],
+  'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
+  'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
+  'insurance-decision-current': ['executive-owner', 'finance-owner'],
+  'customer-purchase-and-billing-authorization': ['pilot-champion', 'executive-owner', 'finance-owner'],
+  'target-dast-clean-rescan': ['security-owner', 'operations-owner'],
+  'target-restore-rehearsal': ['operations-owner', 'security-owner'],
+  'target-incident-alert-drill': ['operations-owner', 'security-owner', 'support-owner'],
+  'target-data-rights-rehearsal': ['privacy-owner', 'operations-owner'],
+  'target-access-revocation-rehearsal': ['security-owner', 'operations-owner'],
+  'target-offboarding-rehearsal': ['pilot-champion', 'privacy-owner', 'operations-owner'],
+  'production-provider-approval': ['legal-owner', 'privacy-owner', 'security-owner', 'data-owner'],
+  'broad-enterprise-sale-decision': [
+    'pilot-champion', 'executive-owner', 'legal-owner', 'finance-owner',
+    'product-owner', 'security-owner', 'privacy-owner', 'accessibility-owner',
+  ],
+  'repeatable-multi-customer-deployments': ['operations-owner', 'product-owner'],
+  'capacity-and-error-budget-accepted': ['engineering-owner', 'operations-owner'],
+  'independent-security-assurance': ['security-owner', 'trust-owner'],
+  'reference-and-claims-permission': ['executive-owner', 'product-owner'],
 };
 const readyLaunchState = (): LaunchState => ({
   gates: GATES.map((gate) => ({
@@ -75,6 +133,8 @@ const runtime = (gate: (typeof ACTIVATION_GATES)[number], target: ReleaseTarget)
   approvals: TEST_APPROVERS[gate].map((role) => ({ role, subjectRef: `${role}-subject` })),
   ...(gate === 'canonical-launch-decision'
     ? { launchState: readyLaunchState() }
+    : gate === 'validation-launch-decision'
+      ? { validationDecision: { verdict: 'go' as const, on: AS_OF, conditions: [] } }
     : {}),
 });
 const dependency = (name: string, target: ReleaseTarget): ReleaseEvidence => ({
@@ -103,7 +163,7 @@ describe('pilot and individual release profiles', () => {
     expect(manual.requiredDependencies).toEqual([]);
     expect(manual.defaultOff).toBe(true);
     expect(manual.requiredTechnicalGates).toEqual(TECHNICAL_RELEASE_GATES);
-    expect(manual.requiredActivationGates).toEqual(ACTIVATION_GATES);
+    expect(manual.requiredActivationGates).toEqual(PILOT_ACTIVATION_GATES);
     expect(manual.allowedOperations.join(' ')).toMatch(/manual|student-confirmed|personal planning/i);
     expect(manual.forbiddenOperations.join(' ')).toMatch(/institutional read|registration|system of record/i);
     for (const connected of ['CAP-013', 'CAP-019', 'CAP-043', 'CAP-044', 'CAP-045', 'CAP-050']) {
@@ -121,6 +181,139 @@ describe('pilot and individual release profiles', () => {
       'external:institution agreement and approved service adapters',
       'external:provider credentials and institution approval',
     ]);
+  });
+
+  it('makes validation, paid-pilot, and enterprise authority cumulative and fail-closed', () => {
+    const validation = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const paidManual = RELEASE_PROFILES['paid-institutional-manual-pilot'];
+    const paid = RELEASE_PROFILES['paid-institutional-pilot'];
+    const enterprise = RELEASE_PROFILES['broad-enterprise-sale'];
+
+    expect(validation.requiredActivationGates).toEqual(VALIDATION_ACTIVATION_GATES);
+    expect(validation.requiredActivationGates).toContain('qualified-accessibility-conformance');
+    expect(paidManual.requiredActivationGates).toEqual([
+      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES,
+    ]);
+    expect(paid.requiredActivationGates).toEqual([
+      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES,
+    ]);
+    expect(enterprise.requiredActivationGates).toEqual([
+      ...PILOT_ACTIVATION_GATES, ...COMMERCIAL_ACTIVATION_GATES, ...PAID_ASSURANCE_GATES, ...ENTERPRISE_ACTIVATION_GATES,
+    ]);
+    expect(paidManual.requiredDependencies).toEqual([]);
+    expect(PAID_ASSURANCE_GATES).toEqual([
+      'target-dast-clean-rescan', 'independent-security-assurance', 'qualified-accessibility-conformance',
+      'target-restore-rehearsal', 'target-incident-alert-drill', 'target-data-rights-rehearsal',
+      'target-access-revocation-rehearsal', 'target-offboarding-rehearsal', 'production-provider-approval',
+    ]);
+    expect(COMMERCIAL_ACTIVATION_GATES).toContain('design-partner-activation-and-measured-closeout');
+    expect(paidManual.allowedOperations.join(' ')).toMatch(/manual/i);
+    expect(paidManual.forbiddenOperations.join(' ')).toMatch(/institutional reads/i);
+    expect(paid.forbiddenOperations).toEqual(expect.arrayContaining(['unapproved charge', 'write to SIS', 'act as system of record']));
+    expect(enterprise.forbiddenOperations).toEqual(expect.arrayContaining(['replace the SIS or LMS', 'act as system of record']));
+
+    for (const profile of [validation, paidManual, paid, enterprise]) {
+      const target = TARGETS[profile.id];
+      const complete = [
+        ...technical(target),
+        ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+        ...profile.requiredDependencies.map((item) => dependency(item, target)),
+      ];
+      expect(evaluateReleaseProfile(profile.id, complete, AS_OF, target)).toMatchObject({
+        technicalStatus: 'ready', rolloutStatus: 'authorized', targetBound: true,
+      });
+      for (const gate of profile.requiredActivationGates) {
+        expect(evaluateReleaseProfile(
+          profile.id,
+          complete.filter((item) => item.gate !== gate),
+          AS_OF,
+          target,
+        )).toMatchObject({ rolloutStatus: 'held', missingActivation: expect.arrayContaining([gate]) });
+      }
+    }
+  });
+
+  it('binds validation and enterprise authority to their exact market-motion target', () => {
+    const validation = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const validationTarget = TARGETS[validation.id];
+    const validationEvidence = [
+      ...technical(validationTarget),
+      ...validation.requiredActivationGates.map((gate) => runtime(gate, validationTarget)),
+    ];
+    expect(evaluateReleaseProfile(validation.id, validationEvidence, AS_OF, {
+      ...validationTarget, cohortId: undefined,
+    })).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
+    expect(evaluateReleaseProfile(validation.id, validationEvidence, AS_OF, {
+      ...validationTarget, tenantId: 'institution-a',
+    })).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
+
+    const enterprise = RELEASE_PROFILES['broad-enterprise-sale'];
+    const enterpriseTarget = TARGETS[enterprise.id];
+    const enterpriseEvidence = [
+      ...technical(enterpriseTarget),
+      ...enterprise.requiredActivationGates.map((gate) => runtime(gate, enterpriseTarget)),
+      ...enterprise.requiredDependencies.map((item) => dependency(item, enterpriseTarget)),
+    ];
+    expect(evaluateReleaseProfile(enterprise.id, enterpriseEvidence, AS_OF, {
+      ...enterpriseTarget, environment: 'pilot',
+    })).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
+  });
+
+  it('keeps the non-institutional validation decision fail-closed without a pilot champion', () => {
+    const profile = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const target = TARGETS[profile.id];
+    const complete = [
+      ...technical(target),
+      ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+      ...profile.requiredDependencies.map((item) => dependency(item, target)),
+    ];
+    const decisionIndex = complete.findIndex((item) => item.gate === 'validation-launch-decision');
+    expect(complete[decisionIndex].approvals?.map((approval) => approval.role)).not.toContain('pilot-champion');
+    expect(evaluateReleaseProfile(profile.id, complete, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized', launchVerdict: 'go',
+    });
+    const conditional = complete.with(decisionIndex, {
+      ...complete[decisionIndex],
+      validationDecision: {
+        verdict: 'go-with-conditions' as const,
+        on: AS_OF,
+        conditions: [{
+          blocker: 'validation-risk', severity: 'P2' as const, by: 'founder' as const,
+          reason: 'bounded validation', disclosure: 'Participants receive this notice.', expires: '2026-11-01',
+        }],
+      },
+    });
+    expect(evaluateReleaseProfile(profile.id, conditional, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go-with-conditions',
+      claim: expect.stringMatching(/participants receive this notice/i),
+    });
+    const mixedDecision = conditional.with(decisionIndex, {
+      ...conditional[decisionIndex], launchState: readyLaunchState(),
+    });
+    expect(evaluateReleaseProfile(profile.id, mixedDecision, AS_OF, target).rolloutStatus).toBe('held');
+    for (const validationDecision of [
+      { verdict: 'no-go' as const, on: AS_OF, conditions: [] },
+      {
+        verdict: 'go-with-conditions' as const,
+        on: AS_OF,
+        conditions: [{
+          blocker: 'expired-risk', severity: 'P2' as const, by: 'founder' as const,
+          reason: 'bounded validation', disclosure: 'Participants receive this notice.', expires: AS_OF,
+        }],
+      },
+      {
+        verdict: 'go-with-conditions' as const,
+        on: AS_OF,
+        conditions: [{
+          blocker: 'critical-risk', severity: 'P1' as const, by: 'founder' as const,
+          reason: 'cannot waive', disclosure: 'Participants receive this notice.', expires: '2026-11-01',
+        }],
+      },
+    ]) {
+      const evidence = complete.with(decisionIndex, { ...complete[decisionIndex], validationDecision });
+      expect(evaluateReleaseProfile(profile.id, evidence, AS_OF, target).rolloutStatus).toBe('held');
+    }
   });
 
   it('binds institutional evidence to an explicit manual or connected data mode', () => {
@@ -170,6 +363,36 @@ describe('pilot and individual release profiles', () => {
         ...individualTarget, dataMode,
       } as ReleaseTarget)).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
     }
+  });
+
+  it('uses a non-institutional decision record for invitation-only validation', () => {
+    const profile = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const target = TARGETS[profile.id];
+    expect(profile.requiredActivationGates).toContain('validation-launch-decision');
+    expect(profile.requiredActivationGates).not.toContain('canonical-launch-decision');
+    expect(TEST_APPROVERS['validation-launch-decision']).not.toContain('pilot-champion');
+    expect(TEST_APPROVERS['validation-launch-decision']).not.toContain('finance-owner');
+
+    const complete = [
+      ...technical(target),
+      ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+      ...profile.requiredDependencies.map((item) => dependency(item, target)),
+    ];
+    expect(evaluateReleaseProfile(profile.id, complete, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized',
+      launchVerdict: 'go',
+    });
+
+    const decisionIndex = complete.findIndex((item) => item.gate === 'validation-launch-decision');
+    const institutionalDecision = complete.with(decisionIndex, {
+      ...complete[decisionIndex],
+      validationDecision: undefined,
+      launchState: readyLaunchState(),
+    });
+    expect(evaluateReleaseProfile(profile.id, institutionalDecision, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'held',
+      missingActivation: expect.arrayContaining(['validation-launch-decision']),
+    });
   });
 
   it.each([MANUAL_PROFILE, 'institutional-pilot'] as const)(
@@ -657,10 +880,10 @@ describe('pilot and individual release profiles', () => {
 function render(): string {
   const decisions = Object.values(RELEASE_PROFILES).map((profile) => evaluateReleaseProfile(profile.id, REPOSITORY_RELEASE_EVIDENCE, AS_OF));
   return [
-    '# Pilot and individual release profiles', '',
+    '# Market-motion release profiles', '',
     renderedFrom('app/src/lib/governance/release-profiles.ts', 'release-profiles.test.ts'), '', controlLine(DOC), '',
-    'These executable profiles define the next honest release targets: broad individual use and bounded manual-data or connected institutional pilots.',
-    'They do not rename repository completion as deployment, tenant approval, certification, or live operation.', '',
+    'These executable profiles define an evidence-gated path from invitation-only individual validation through bounded pilots and enterprise contracting.',
+    'They do not rename repository completion as deployment, participant or tenant approval, commercial authority, independent assurance, or live operation.', '',
     `## Repository snapshot decision (${AS_OF})`, '',
     ...table(['Profile', 'Technical candidate', 'Rollout', 'Still required'], decisions.map((decision) => [
       decision.profileId,
@@ -674,7 +897,7 @@ function render(): string {
     ])), '',
     'This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.',
     'All profiles therefore remain not ready in this evaluator until current run evidence names the evaluated commit. Rollout also',
-    'requires deployment and, for a pilot, named-tenant activation records that do not live in source code.', '',
+    'requires deployment and the profile-specific participant, tenant, commercial, assurance, and approval records that do not live in source code.', '',
     '## Scope and boundaries', '',
     ...Object.values(RELEASE_PROFILES).flatMap((profile) => [
       `### ${profile.id}`, '',
@@ -696,8 +919,11 @@ function render(): string {
     ])), '',
     '## Activation boundary', '',
     '- This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.',
-    '- Individual scale still needs an exact deployed SHA, production smoke, a live support route, current rollback evidence, and a current target-bound kill-switch-clear record.',
+    '- Broad individual rollout remains held behind every invitation-validation gate plus a separate broad-rollout decision; the current product checkout hold independently disables new paid acquisition.',
+    '- Invitation-only unpaid validation requires one named cohort, participant terms and consent, qualified legal/public-policy approval, representative-user acceptance, target account-lifecycle acceptance, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.',
     '- Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
+    '- A paid pilot additionally requires an approved design-partner activation and measured closeout; target-bound DAST, restore, incident/alert, data-rights, access-revocation and offboarding exercises; independent security assurance; qualified accessibility conformance; approved production providers; counsel-approved commercial paper; pricing and signing authority; tax/accounting/payment controls; a current insurance decision; and customer-side purchase and billing authorization.',
+    '- A broad enterprise sale additionally requires a separate broad-sale decision, repeated customer deployments, accepted capacity and error budgets, and claim-specific reference permission.',
     '- Activation and dependency decisions count only when a secure trust-room, vault or ticket artifact names every required approval function; arbitrary strings cannot authorize rollout.',
     '- Every technical record must name the exact 40-character source SHA exercised by that gate; repository file references alone are not run evidence.',
     '- Every activation and dependency record must match one environment, deployed SHA, configuration version and, for a pilot, one tenant, cohort and explicit manual or connected data mode. Mixed-target evidence fails closed.',
