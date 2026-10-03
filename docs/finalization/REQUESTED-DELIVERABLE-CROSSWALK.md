@@ -44,11 +44,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 29 | `docs/legal-drafts/ACCESSIBILITY-STATEMENT-DRAFT.md` | EXACT PRESENT | controlled review index; no conformance or ACR/VPAT claim is made |
 | 30 | `docs/legal-drafts/SECURITY-OVERVIEW-DRAFT.md` | EXACT PRESENT | canonical legal/procurement summary with explicit evidence-layer limits |
 | 31 | `docs/legal-drafts/AI-FEATURES-DISCLOSURE-DRAFT.md` | EXACT PRESENT | canonical user-facing draft; providers, data uses and obligations remain scope-specific |
-| 32 | `docs/legal-drafts/AI-USE-AND-DATA-GOVERNANCE-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/AI-USE-POLICY-DRAFT.md` (filename similarity 0.62; substantive review required) |
-| 33 | `docs/legal-drafts/STUDENT-DATA-PRIVACY-SUMMARY-DRAFT.md` | NO CLOSE SOURCE | — |
-| 34 | `docs/legal-drafts/SUPPORT-AND-ESCALATION-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/SUPPORT-POLICY-DRAFT.md` (filename similarity 0.68; substantive review required) |
-| 35 | `docs/legal-drafts/REFUND-CANCELLATION-AND-RENEWAL-POLICY-DRAFT.md` | CANDIDATE SOURCE | `docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md` (filename similarity 0.76; substantive review required) |
-| 36 | `docs/legal-drafts/SUBSCRIPTION-BILLING-DISCLOSURE-DRAFT.md` | NO CLOSE SOURCE | — |
+| 32 | `docs/legal-drafts/AI-USE-AND-DATA-GOVERNANCE-POLICY-DRAFT.md` | EXACT PRESENT | canonical controlled policy tying public language to the detailed AI data-use source; provider and production approvals remain open |
+| 33 | `docs/legal-drafts/STUDENT-DATA-PRIVACY-SUMMARY-DRAFT.md` | EXACT PRESENT | canonical plain-language draft; no blanket FERPA, privacy, training, retention, or on-device claim is authorized |
+| 34 | `docs/legal-drafts/SUPPORT-AND-ESCALATION-POLICY-DRAFT.md` | EXACT PRESENT | canonical controlled policy; support activation remains RED until staffing, routing, targets, and drills are evidenced |
+| 35 | `docs/legal-drafts/REFUND-CANCELLATION-AND-RENEWAL-POLICY-DRAFT.md` | EXACT PRESENT | controlled review index and requirements; prices, windows, notices, and remedies remain unapproved |
+| 36 | `docs/legal-drafts/SUBSCRIPTION-BILLING-DISCLOSURE-DRAFT.md` | EXACT PRESENT | canonical disclosure template; live billing and broad paid acquisition remain RED pending legal, finance, product, and support evidence |
 | 37 | `docs/legal-drafts/MOBILE-APP-TERMS-ADDENDUM-DRAFT.md` | NO CLOSE SOURCE | — |
 | 38 | `docs/legal-drafts/MARKETING-COMMUNICATIONS-CONSENT-DRAFT.md` | NO CLOSE SOURCE | — |
 | 39 | `docs/legal-drafts/TESTIMONIAL-AND-CASE-STUDY-CONSENT-DRAFT.md` | CANDIDATE SOURCE | `docs/market-readiness/CASE-STUDY-TEMPLATE.md` (filename similarity 0.48; substantive review required) |
