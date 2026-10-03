@@ -4,7 +4,7 @@
 
 Extend Semester's existing secure Operations Console into a complete internal SaaS and company control plane. The work preserves the current role/capability/RLS/audit/approval foundation, consolidates existing GTM and commercial records instead of duplicating them, and delivers one verified vertical slice at a time.
 
-Planning baseline: `origin/main` at `944a2878`. The attached working branch contains relevant Command Center hardening but is behind main; the first implementation action is baseline reconciliation in a fresh or safely updated branch.
+Planning baseline: the working branch is reconciled onto `origin/main` at `46e162da`. The earlier Command Center hardening and subsequent foundation slices remain isolated on this feature branch.
 
 ## Architecture decisions
 
@@ -40,7 +40,7 @@ Current-main reconciliation
 
 - [x] A1: Reconcile current main with Command Center fail-closed fixes.
 - [x] A2: Add a capability-aware console workspace registry.
-- [ ] A3: Establish the scoped RPC and negative-policy-test template.
+- [x] A3: Establish the scoped RPC and negative-policy-test template.
 - [ ] A4: Add a five-layer readiness/evidence registry.
 
 ### Checkpoint A
@@ -109,6 +109,6 @@ Current-main reconciliation
 
 ## Open decisions for review
 
-- Choose the implementation branch/worktree after reconciling the existing Command Center fixes with current main.
+- Continue the isolated `codex/ops-console-foundation-20261003` branch/worktree, rebasing onto current main before each new slice.
 - Confirm the first vertical slice: recommended default is Tenant/Pilot Operations because it exercises scope, entitlements, integrations, support, contracts, and readiness without introducing payment mutations.
 - Confirm who may hold each new internal role in production and which actions require two-person approval; repository defaults are not staffing approval.
