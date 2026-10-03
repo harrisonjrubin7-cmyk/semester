@@ -93,6 +93,21 @@ describe('support reply notification', () => {
     expect(d.failed).toHaveBeenCalledWith('message-8', 7, 'provider rejected notice');
   });
 
+  it('reports recipient-resolution retries and dead letters without calling the provider', async () => {
+    const d = deps({
+      cronSecret: 'cron-secret',
+      pending: vi.fn().mockResolvedValue([
+        { messageId: 'message-7', ticketId: ticket, email: '', attempts: 6, resolutionOutcome: 'retrying' },
+        { messageId: 'message-8', ticketId: ticket, email: '', attempts: 7, resolutionOutcome: 'dead_lettered' },
+      ]),
+    });
+    const cron = new Request(request().url, { method: 'POST', headers: { Authorization: 'Bearer cron-secret' }, body: '{}' });
+    const response = await handleSupportNotice(cron, d);
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ processed: 2, accepted: 0, retrying: 1, dead_lettered: 1 });
+    expect(d.send).not.toHaveBeenCalled();
+  });
+
   it('refuses callers without the support capability before looking up a ticket', async () => {
     const d = deps({ mayAnswer: vi.fn().mockResolvedValue(false) });
     const response = await handleSupportNotice(request(), d);

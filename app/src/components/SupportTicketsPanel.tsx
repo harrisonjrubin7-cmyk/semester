@@ -14,6 +14,7 @@ import {
   myTickets,
   openTicket,
   replyToTicket,
+  setSupportEmailNotice,
   ticketReference,
   type Category,
   type ContextKey,
@@ -63,6 +64,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
   const [ticked, setTicked] = useState<ReadonlySet<ContextKey>>(new Set());
   // Whether the handoff lines (`lib/tickethandoff.ts`) go in the body. Off until ticked, like every context key.
   const [withDetails, setWithDetails] = useState(false);
+  const [emailNotice, setEmailNotice] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [thread, setThread] = useState<Message[]>([]);
@@ -122,6 +124,7 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
     setBody('');
     setTicked(new Set());
     setWithDetails(false);
+    setEmailNotice(false);
   };
 
   // The database holds the body to 4000 characters after trimming. The lines
@@ -197,6 +200,16 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
               <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>Never included: your notes, files, grades, conversations with the assistant, or anything from your student record.</p>
             </fieldset>
           ) : null}
+          <fieldset style={{ border: 0, padding: 0 }}>
+            <legend>When support replies (optional)</legend>
+            <label style={{ display: 'block' }}>
+              <input type="checkbox" checked={emailNotice} onChange={() => setEmailNotice((value) => !value)} />
+              {' '}Email me a generic notice. The reply itself stays in Semester.
+            </label>
+            <p style={{ color: 'var(--app-dim)', margin: 'var(--sp-2) 0 0' }}>
+              Off by default. At most three notices per question in 24 hours. You can turn it off anytime.
+            </p>
+          </fieldset>
           <button className="btn btn-primary btn-block" disabled={!subject.trim() || !body.trim() || composed.length > BODY_LIMIT}>Check before sending</button>
           <button type="button" className="btn btn-secondary btn-block" onClick={reset}>Cancel</button>
         </form>
@@ -213,12 +226,13 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
                 ? 'None'
                 : CONTEXT_KEYS.filter((k) => k in sending).map((k) => `${CONTEXT_LABELS[k]}: ${sending[k]}`).join(' · ')}
             </dd>
+            <dt>Email notice</dt><dd>{emailNotice ? 'On — generic notice only' : 'Off'}</dd>
           </dl>
           <p style={{ color: 'var(--app-dim)' }}>A first reply is due within {firstResponseHours(category)} hours.</p>
           <ActionButton
             tone="primary"
             disabled={busy}
-            onClick={() => run(async () => { await openTicket(category, subject, composed, sending); reset(); }, 'Sent. The reply will appear here.')}
+            onClick={() => run(async () => { await openTicket(category, subject, composed, sending, emailNotice); reset(); }, 'Sent. The reply will appear here.')}
           >
             Send to Semester support
           </ActionButton>
@@ -244,6 +258,22 @@ function AccountTickets({ context, handoff }: { context: Record<ContextKey, stri
 
       {current && (
         <div aria-label="Conversation" style={{ display: 'grid', gap: 'var(--sp-3)' }}>
+          <label className="portal-panel">
+            <input
+              type="checkbox"
+              checked={current.emailNoticeEnabled}
+              disabled={busy}
+              onChange={(event) => {
+                const enabled = event.currentTarget.checked;
+                run(
+                  () => setSupportEmailNotice(current.id, enabled),
+                  enabled ? 'Generic email notices are on for this question.' : 'Email notices are off for this question.',
+                );
+              }}
+            />
+            {' '}Email me a generic notice when support replies
+            <span style={{ display: 'block', color: 'var(--app-dim)' }}>At most three notices in 24 hours. Turn off anytime; replies remain here.</span>
+          </label>
           {thread.map((m, i) => (
             <p key={i} className="portal-panel">
               <strong>{m.from === 'support' ? 'Semester support' : 'You'}</strong>{' · '}{m.body}

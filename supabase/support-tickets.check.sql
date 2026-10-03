@@ -73,6 +73,7 @@ declare
   n bigint;
   due_hours numeric;
   pri text;
+  operation uuid := gen_random_uuid();
 begin
   ada := pg_temp.newuser('ada@tickets.example');
   ben := pg_temp.newuser('ben@tickets.example');
@@ -86,6 +87,7 @@ begin
   a11y := public.open_support_ticket('accessibility', 'Drill buttons', 'I cannot reach the buttons with a switch.',
     '{"app_version": "2026.9.27", "device_class": "tablet", "screen": "#/drill"}'::jsonb);
   howto := public.open_support_ticket('how_to', 'Export', 'How do I export my calendar?', '{}'::jsonb);
+  perform public.set_support_email_notice(a11y, true);
   reset role;
 
   select priority, extract(epoch from (first_response_due - created_at)) / 3600 into pri, due_hours
@@ -122,6 +124,8 @@ begin
   perform pg_temp.counted('nor her thread, by its id', n, 0);
   perform pg_temp.must_refuse('nor reply to it', ben, format('select public.reply_to_my_ticket(%L, %L)', a11y, 'hi'));
   perform pg_temp.must_refuse('nor close it', ben, format('select public.close_my_ticket(%L)', a11y));
+  perform pg_temp.must_refuse('nor change its email-notice choice', ben,
+    format('select public.set_support_email_notice(%L, true)', a11y));
   perform pg_temp.must_refuse('the table itself is closed to students', ada, 'select count(*) from public.support_tickets');
 
   -- ── The queue: capability-gated, priority first, no identity ──────────
@@ -153,9 +157,9 @@ begin
   -- ── Replies and the first-response clock ──────────────────────────────
 
   perform pg_temp.must_refuse('a support reply requires fresh MFA at the database boundary', agent,
-    format('select public.support_reply(%L, %L, %L)', a11y, 'stale session', 'waiting_on_student'));
+    format('select public.support_reply(%L, %L, %L, %L)', a11y, 'stale session', 'waiting_on_student', operation));
   perform pg_temp.become_mfa(agent);
-  perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student');
+  perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student', operation);
   reset role;
   select count(*) into n from public.support_tickets where id = a11y and first_responded_at is not null and status = 'waiting_on_student';
   perform pg_temp.counted('a reply stamps the first response and sets the status', n, 1);
@@ -172,8 +176,24 @@ begin
    where ticket_id = a11y and accepted_at is null and dead_lettered_at is null;
   perform pg_temp.counted('the reply commits a durable notification intent in the same transaction', n, 1);
   perform pg_temp.become_mfa(agent);
+  perform public.support_reply(a11y, 'Thanks. Which switch software do you use?', 'waiting_on_student', operation);
+  reset role;
+  select count(*) into n from public.support_ticket_messages
+   where ticket_id = a11y and from_side = 'support' and client_operation_id = operation;
+  perform pg_temp.counted('retrying one reply operation does not duplicate its message', n, 1);
+  select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
+  perform pg_temp.counted('retrying one reply operation does not duplicate its email intent', n, 1);
+
+  perform pg_temp.become_mfa(agent);
+  perform public.support_reply(a11y, 'Second update.', 'waiting_on_student', gen_random_uuid());
+  perform public.support_reply(a11y, 'Third update.', 'waiting_on_student', gen_random_uuid());
+  perform public.support_reply(a11y, 'Fourth update.', 'waiting_on_student', gen_random_uuid());
+  reset role;
+  select count(*) into n from public.support_notification_outbox where ticket_id = a11y;
+  perform pg_temp.counted('support email is capped at three notices per ticket in a rolling day', n, 3);
+  perform pg_temp.become_mfa(agent);
   begin
-    perform public.support_reply(a11y, 'closing', 'closed');
+    perform public.support_reply(a11y, 'closing', 'closed', gen_random_uuid());
     raise exception 'FAILED: support closed a ticket for the student';
   exception when others then
     if position('only the student closes it' in sqlerrm) = 0 then raise; end if;
@@ -182,7 +202,7 @@ begin
   raise notice 'ok  support cannot close a ticket for the student';
 
   select count(*) into n from pg_catalog.pg_proc p
-   where p.oid = 'public.support_reply(uuid,text,text)'::regprocedure
+   where p.oid = 'public.support_reply(uuid,text,text,uuid)'::regprocedure
      and position('private.assert_fresh_mfa()' in p.prosrc) between 1 and position('insert into public.support_ticket_messages' in p.prosrc);
   perform pg_temp.counted('the reply RPC enforces fresh MFA before writing student-visible content', n, 1);
 
@@ -190,7 +210,7 @@ begin
   perform public.reply_to_my_ticket(a11y, 'Switch Control on iPad.');
   select count(*) into n from public.my_support_thread(a11y);
   reset role;
-  perform pg_temp.counted('the student sees the whole thread, both sides', n, 3);
+  perform pg_temp.counted('the student sees the whole thread, both sides', n, 6);
   select count(*) into n from public.support_tickets where id = a11y and status = 'open';
   perform pg_temp.counted('a student reply reopens it for support', n, 1);
 

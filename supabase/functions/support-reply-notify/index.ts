@@ -23,13 +23,19 @@ async function retry(messageId: string, attempts: number, reason: string) {
 async function target(row: OutboxRow) {
   const { data: ticket, error: ticketError } = await admin.from('support_tickets').select('student_id').eq('id', row.ticket_id).maybeSingle();
   if (ticketError || !ticket?.student_id) {
-    await retry(row.message_id, row.attempts, ticketError ? 'student lookup unavailable' : 'student account unavailable');
-    return null;
+    const terminal = await retry(row.message_id, row.attempts, ticketError ? 'student lookup unavailable' : 'student account unavailable');
+    return {
+      messageId: row.message_id, ticketId: row.ticket_id, email: '', attempts: row.attempts,
+      resolutionOutcome: terminal ? 'dead_lettered' as const : 'retrying' as const,
+    };
   }
   const { data: user, error } = await admin.auth.admin.getUserById(ticket.student_id);
   if (error || !user.user.email) {
-    await retry(row.message_id, row.attempts, error ? 'student email lookup unavailable' : 'student email unavailable');
-    return null;
+    const terminal = await retry(row.message_id, row.attempts, error ? 'student email lookup unavailable' : 'student email unavailable');
+    return {
+      messageId: row.message_id, ticketId: row.ticket_id, email: '', attempts: row.attempts,
+      resolutionOutcome: terminal ? 'dead_lettered' as const : 'retrying' as const,
+    };
   }
   return {
     messageId: row.message_id, ticketId: row.ticket_id, email: user.user.email, attempts: row.attempts,
@@ -72,8 +78,7 @@ Deno.serve((req) => handleSupportNotice(req, {
       .is('accepted_at', null).is('dead_lettered_at', null).lte('next_attempt_at', new Date().toISOString())
       .order('queued_at', { ascending: true }).limit(100);
     if (error) throw new Error('Could not read the support-notification outbox.');
-    const rows = await Promise.all(((data ?? []) as OutboxRow[]).map(target));
-    return rows.filter((row): row is NonNullable<typeof row> => row !== null);
+    return Promise.all(((data ?? []) as OutboxRow[]).map(target));
   },
   async send(input) {
     if (!supportSender) return false;

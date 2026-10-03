@@ -35,6 +35,7 @@ beforeEach(() => {
     createdAt: '2026-10-01T10:00:00Z',
     firstResponseDue: '2026-10-02T10:00:00Z',
     firstRespondedAt: null,
+    emailNoticeEnabled: true,
     overdue: true,
   }]);
   mock.thread.mockResolvedValue([{
@@ -101,6 +102,7 @@ describe('the support operations queue', () => {
       '123e4567-e89b-12d3-a456-426614174000',
       'Please try again after reloading.',
       'resolved',
+      expect.any(String),
     );
     expect(mock.queue).toHaveBeenCalledTimes(2);
     expect(mock.status).toHaveBeenCalledWith(
@@ -109,13 +111,35 @@ describe('the support operations queue', () => {
   });
 
   it('keeps an in-app reply successful when email delivery is unavailable', async () => {
-    mock.reply.mockResolvedValue('in_app_only');
+    mock.reply.mockResolvedValue('queued');
     await draw();
     await click(button('Open conversation'));
     type(host.querySelector('textarea')!, 'The reply remains available here.');
     await click(button('Send support reply'));
     expect(mock.status).toHaveBeenCalledWith(
       'Reply recorded for SUP-123E-4567-E89B-12D3. Email notice is queued for retry; the reply is available in Help.',
+    );
+  });
+
+  it('reports an explicit in-app-only choice without claiming an email retry', async () => {
+    mock.reply.mockResolvedValue('preference_off');
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'The reply remains available here.');
+    await click(button('Send support reply'));
+    expect(mock.status).toHaveBeenCalledWith(
+      'Reply recorded for SUP-123E-4567-E89B-12D3. The student chose in-app replies without email notices.',
+    );
+  });
+
+  it('reports the email cap without misreporting the student preference', async () => {
+    mock.reply.mockResolvedValue('capped');
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'This reply remains in Semester.');
+    await click(button('Send support reply'));
+    expect(mock.status).toHaveBeenCalledWith(
+      'Reply recorded for SUP-123E-4567-E89B-12D3. No email was queued because this question reached its three-notice daily cap.',
     );
   });
 
@@ -130,6 +154,17 @@ describe('the support operations queue', () => {
     expect(mock.reply).not.toHaveBeenCalled();
     await act(async () => { await approved?.(); });
     expect(mock.reply).toHaveBeenCalledTimes(1);
+  });
+
+  it('reuses one operation id when an unchanged reply is retried after an ambiguous failure', async () => {
+    mock.reply.mockRejectedValueOnce(new Error('response lost')).mockResolvedValueOnce('preference_off');
+    await draw();
+    await click(button('Open conversation'));
+    type(host.querySelector('textarea')!, 'One reply, even if the response is lost.');
+    await click(button('Send support reply'));
+    const firstOperation = mock.reply.mock.calls[0][3];
+    await click(button('Send support reply'));
+    expect(mock.reply.mock.calls[1][3]).toBe(firstOperation);
   });
 
   it('does not report a committed reply as failed when the thread refresh is unavailable', async () => {
@@ -151,6 +186,7 @@ describe('the support operations queue', () => {
       id: '123e4567-e89b-12d3-a456-426614174000',
       category: 'accessibility', subject: 'Cannot reach Continue', status: 'open', priority: 'high',
       createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null, overdue: true,
+      emailNoticeEnabled: true,
     }]).mockRejectedValueOnce(new Error('queue unavailable'));
     await draw();
     await click(button('Open conversation'));
@@ -169,6 +205,7 @@ describe('the support operations queue', () => {
         id: '123e4567-e89b-12d3-a456-426614174000',
         category: 'accessibility', subject: 'Cannot reach Continue', status: 'resolved', priority: 'high',
         createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: '2026-10-01T11:00:00Z', overdue: false,
+        emailNoticeEnabled: true,
       }]);
     await act(async () => {
       root.render(<SupportQueue env="Production" scope="All" filter="" onStatus={mock.status} privileged={(run) => void run()} />);
@@ -179,6 +216,7 @@ describe('the support operations queue', () => {
       id: '123e4567-e89b-12d3-a456-426614174000',
       category: 'accessibility', subject: 'Cannot reach Continue', status: 'open', priority: 'high',
       createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null, overdue: true,
+      emailNoticeEnabled: true,
     }]); });
     expect(host.textContent).toContain('Resolved; student may close');
     expect(host.textContent).not.toContain('Open with support');
@@ -189,6 +227,7 @@ describe('the support operations queue', () => {
       id: '123e4567-e89b-12d3-a456-426614174000',
       category: 'accessibility', subject: 'Cannot reach Continue', status: 'open', priority: 'high',
       createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: null, overdue: true,
+      emailNoticeEnabled: true,
     }]);
     await draw();
     expect(host.textContent).toContain('Support queue unavailable');
@@ -232,6 +271,7 @@ describe('the support operations queue', () => {
       id: '123e4567-e89b-12d3-a456-426614174000',
       category: 'accessibility', subject: 'Cannot reach Continue', status: 'waiting_on_student', priority: 'high',
       createdAt: '2026-10-01T10:00:00Z', firstResponseDue: '2026-10-02T10:00:00Z', firstRespondedAt: '2026-10-01T11:00:00Z', overdue: false,
+      emailNoticeEnabled: true,
     }]);
     await draw();
     expect(host.textContent).toContain('Waiting for student');

@@ -20,6 +20,8 @@ export interface SupportNoticeTarget {
   ticketId: string;
   email: string;
   attempts: number;
+  /** Recipient lookup already advanced this row without calling the provider. */
+  resolutionOutcome?: 'retrying' | 'dead_lettered';
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -93,6 +95,7 @@ export async function handleSupportNotice(req: Request, deps: SupportNoticeDeps)
 }
 
 async function sendTarget(deps: SupportNoticeDeps, target: SupportNoticeTarget): Promise<'accepted' | 'retrying' | 'dead_lettered'> {
+  if (target.resolutionOutcome) return target.resolutionOutcome;
   const ticketReference = reference(target.ticketId);
   let sent = false;
   try {

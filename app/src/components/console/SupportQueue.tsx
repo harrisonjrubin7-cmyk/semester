@@ -37,6 +37,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
   const [reply, setReply] = useState('');
   const [nextStatus, setNextStatus] = useState<'open' | 'waiting_on_student' | 'resolved'>('waiting_on_student');
   const [busy, setBusy] = useState(false);
+  const replyOperation = useRef<string | null>(null);
   const wanted = useRef<string | null>(null);
   const queueRequest = useRef(0);
   const threadRequest = useRef(0);
@@ -98,6 +99,7 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
     setThread(null);
     setThreadFailed(false);
     setReply('');
+    replyOperation.current = null;
     setNextStatus('waiting_on_student');
     if (!id) return;
     void loadThread(id);
@@ -116,14 +118,23 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
     const ticketId = openId;
     const message = reply;
     const status = nextStatus;
+    const operationId = replyOperation.current ?? crypto.randomUUID();
+    replyOperation.current = operationId;
     setBusy(true);
     try {
-      const delivery = await supportReply(ticketId, message, status);
-      if (wanted.current === ticketId) setReply('');
+      const delivery = await supportReply(ticketId, message, status, operationId);
+      if (wanted.current === ticketId) {
+        setReply('');
+        replyOperation.current = null;
+      }
       const queueFresh = await refresh();
       const outcome = delivery === 'accepted'
         ? `Reply recorded for ${ticketReference(ticketId)}. Email notice accepted by the provider; delivery is not yet confirmed.`
-        : `Reply recorded for ${ticketReference(ticketId)}. Email notice is queued for retry; the reply is available in Help.`;
+        : delivery === 'queued'
+          ? `Reply recorded for ${ticketReference(ticketId)}. Email notice is queued for retry; the reply is available in Help.`
+          : delivery === 'capped'
+            ? `Reply recorded for ${ticketReference(ticketId)}. No email was queued because this question reached its three-notice daily cap.`
+            : `Reply recorded for ${ticketReference(ticketId)}. The student chose in-app replies without email notices.`;
       onStatus(queueFresh ? outcome : `${outcome} The queue could not be refreshed; retry before acting on its status.`);
       // The write and notification have already succeeded. A later read outage
       // must not invite an operator to retry and send a duplicate response.
@@ -200,11 +211,11 @@ export function SupportQueue({ filter, onStatus, privileged }: ViewProps) {
             >
               <label>
                 Reply
-                <textarea className="input" required maxLength={4000} value={reply} onChange={(event) => setReply(event.target.value)} />
+                <textarea className="input" required maxLength={4000} value={reply} onChange={(event) => { setReply(event.target.value); replyOperation.current = null; }} />
               </label>
               <label>
                 After this reply
-                <select className="input" value={nextStatus} onChange={(event) => setNextStatus(event.target.value as typeof nextStatus)}>
+                <select className="input" value={nextStatus} onChange={(event) => { setNextStatus(event.target.value as typeof nextStatus); replyOperation.current = null; }}>
                   <option value="waiting_on_student">Wait for the student</option>
                   <option value="resolved">Mark resolved for the student to close</option>
                   <option value="open">Keep open with support</option>

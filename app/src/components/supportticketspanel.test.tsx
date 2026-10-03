@@ -75,6 +75,7 @@ function hold(name: string): () => Promise<void> {
 const ticket = (id: string, subject: string) => ({
   id, category: 'bug', subject, status: 'open', priority: 'normal',
   created_at: '2026-09-27T00:00:00Z', first_response_due: '2026-09-30T00:00:00Z', first_responded_at: null,
+  email_notice_enabled: false,
 });
 
 async function draw(who: unknown = account) {
@@ -120,7 +121,7 @@ describe('asking Semester support', () => {
     await draw();
     await write('Sync', 'My phone and laptop disagree.');
     const boxes = [...host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
-    expect(boxes).toHaveLength(6);
+    expect(boxes).toHaveLength(7);
     expect(boxes.every((b) => !b.checked)).toBe(true);
     expect(host.textContent).toContain('build-42');
   });
@@ -133,7 +134,9 @@ describe('asking Semester support', () => {
     expect(preview.textContent).toMatch(/App detailsNone/);
     await click(button('Send to Semester support'));
     const sent = world.calls.find((c) => c.name === 'open_support_ticket')!;
-    expect(sent.args).toEqual({ want_category: 'how_to', want_subject: 'Sync', want_body: 'My phone and laptop disagree.', want_context: {} });
+    expect(sent.args).toEqual({
+      want_category: 'how_to', want_subject: 'Sync', want_body: 'My phone and laptop disagree.', want_context: {}, want_email_notice: false,
+    });
   });
 
   it('sends exactly the ticked details, and shows them in the preview first', async () => {
@@ -152,10 +155,23 @@ describe('asking Semester support', () => {
     expect(sent.args?.want_context).toEqual({ device_class: 'phone', offline: 'no' });
   });
 
+  it('keeps email notices off by default and previews explicit opt-in before sending', async () => {
+    await draw();
+    await write('Reply notice', 'Tell me when support replies.');
+    const emailBox = [...host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')].at(-1)!;
+    expect(emailBox.checked).toBe(false);
+    await click(emailBox);
+    await click(button('Check before sending'));
+    expect(host.querySelector('dl[aria-label="What will be sent"]')?.textContent).toMatch(/Email noticeOn — generic notice only/);
+    await click(button('Send to Semester support'));
+    expect(world.calls.find((call) => call.name === 'open_support_ticket')?.args?.want_email_notice).toBe(true);
+  });
+
   it('shows a question and its thread, and lets the student reply or close it', async () => {
     world.tickets = [{
       id: '123e4567-e89b-42d3-a456-426614174000', category: 'bug', subject: 'Drill freezes', status: 'waiting_on_student', priority: 'normal',
       created_at: '2026-09-27T00:00:00Z', first_response_due: '2026-09-30T00:00:00Z', first_responded_at: '2026-09-27T02:00:00Z',
+      email_notice_enabled: false,
     }];
     world.thread = [
       { from_side: 'student', body: 'It freezes on card 3.', created_at: '2026-09-27T00:00:00Z' },

@@ -107,6 +107,7 @@ export interface Ticket {
   createdAt: string;
   firstResponseDue: string;
   firstRespondedAt: string | null;
+  emailNoticeEnabled: boolean;
 }
 
 export interface Message {
@@ -140,18 +141,35 @@ export function toTicket(row: Row): Ticket {
     createdAt: String(row.created_at),
     firstResponseDue: String(row.first_response_due),
     firstRespondedAt: row.first_responded_at ? String(row.first_responded_at) : null,
+    emailNoticeEnabled: row.email_notice_enabled === true,
   };
 }
 
 const fail = (error: { message?: string } | null, fallback: string) => new Error(error?.message?.trim() || fallback);
 
-export async function openTicket(category: Category, subject: string, body: string, context: Partial<Record<ContextKey, string>>): Promise<string> {
+export async function openTicket(
+  category: Category,
+  subject: string,
+  body: string,
+  context: Partial<Record<ContextKey, string>>,
+  emailNoticeEnabled: boolean,
+): Promise<string> {
   const db = await cloud();
   const { data, error } = await db.rpc('open_support_ticket', {
-    want_category: category, want_subject: subject.trim(), want_body: body.trim(), want_context: context,
+    want_category: category,
+    want_subject: subject.trim(),
+    want_body: body.trim(),
+    want_context: context,
+    want_email_notice: emailNoticeEnabled,
   });
   if (error) throw fail(error, 'Could not send your question.');
   return String(data);
+}
+
+export async function setSupportEmailNotice(ticketId: string, enabled: boolean): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.rpc('set_support_email_notice', { want_ticket: ticketId, want_enabled: enabled });
+  if (error) throw fail(error, 'Could not change the email notice choice.');
 }
 
 export async function myTickets(): Promise<Ticket[]> {
@@ -211,18 +229,24 @@ export async function supportReply(
   ticketId: string,
   body: string,
   status: 'open' | 'waiting_on_student' | 'resolved',
-): Promise<'accepted' | 'in_app_only'> {
+  operationId: string,
+): Promise<'accepted' | 'queued' | 'preference_off' | 'capped'> {
   const db = await cloud();
-  const { error } = await db.rpc('support_reply', {
+  const { data: notificationOutcome, error } = await db.rpc('support_reply', {
     want_ticket: ticketId,
     want_body: body.trim(),
     want_status: status,
+    want_operation: operationId,
   });
   if (error) throw fail(error, 'Could not send the support reply.');
+  if (notificationOutcome === 'preference_off' || notificationOutcome === 'capped') return notificationOutcome;
+  if (notificationOutcome !== 'queued') {
+    throw new Error('The support reply was recorded, but its notification outcome is unavailable. Refresh before replying again.');
+  }
   const { error: noticeError } = await db.functions.invoke('support-reply-notify', {
     body: { ticket_id: ticketId },
   });
   // A 2xx response proves provider acceptance, not inbox delivery. Delivery
   // is established separately by provider events or an end-to-end receipt.
-  return noticeError ? 'in_app_only' : 'accepted';
+  return noticeError ? 'queued' : 'accepted';
 }

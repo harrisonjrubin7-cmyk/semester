@@ -28,9 +28,71 @@ alter table public.support_notification_outbox enable row level security;
 revoke all on table public.support_notification_outbox from public, anon, authenticated;
 grant select, insert, update, delete on table public.support_notification_outbox to service_role;
 
-create or replace function public.support_reply(want_ticket uuid, want_body text, want_status text)
-returns void language plpgsql security definer set search_path = '' as $$
+-- Support email is a per-ticket choice. It starts off, can be changed by the
+-- student at any time, and never exposes the ticket content.
+alter table public.support_tickets
+  add column if not exists email_notice_enabled boolean not null default false;
+
+-- The operator creates this once for an attempted reply and reuses it after
+-- an ambiguous network response. The database, not the browser, is the final
+-- duplicate-write boundary.
+alter table public.support_ticket_messages
+  add column if not exists client_operation_id uuid;
+alter table public.support_ticket_messages
+  add column if not exists support_notice_outcome text
+    check (support_notice_outcome is null or support_notice_outcome in ('queued', 'preference_off', 'capped'));
+create unique index if not exists support_ticket_messages_reply_operation
+  on public.support_ticket_messages (ticket_id, client_operation_id)
+  where from_side = 'support' and client_operation_id is not null;
+
+create or replace function public.open_support_ticket(
+  want_category text, want_subject text, want_body text, want_context jsonb,
+  want_email_notice boolean
+) returns uuid language plpgsql security definer set search_path = '' as $$
 declare made uuid;
+begin
+  made := public.open_support_ticket(want_category, want_subject, want_body, want_context);
+  update public.support_tickets
+     set email_notice_enabled = coalesce(want_email_notice, false)
+   where id = made and student_id = (select auth.uid());
+  return made;
+end $$;
+
+drop function public.my_support_tickets();
+create function public.my_support_tickets()
+returns table (id uuid, category text, subject text, status text, priority text,
+               created_at timestamptz, first_response_due timestamptz, first_responded_at timestamptz,
+               updated_at timestamptz, email_notice_enabled boolean)
+language sql stable security definer set search_path = '' as $$
+  select t.id, t.category, t.subject, t.status, t.priority, t.created_at, t.first_response_due,
+         t.first_responded_at, t.updated_at, t.email_notice_enabled
+    from public.support_tickets t
+   where t.student_id = (select auth.uid())
+   order by t.updated_at desc;
+$$;
+
+create or replace function public.set_support_email_notice(want_ticket uuid, want_enabled boolean)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('support_notice:' || want_ticket::text, 0));
+  update public.support_tickets
+     set email_notice_enabled = coalesce(want_enabled, false)
+   where id = want_ticket and student_id = (select auth.uid());
+  if not found then
+    raise exception 'no ticket of yours with that id' using errcode = 'insufficient_privilege';
+  end if;
+end $$;
+
+drop function public.support_reply(uuid, text, text);
+create function public.support_reply(
+  want_ticket uuid, want_body text, want_status text, want_operation uuid
+)
+returns text language plpgsql security definer set search_path = '' as $$
+declare
+  made uuid;
+  notices boolean;
+  notice_outcome text := 'preference_off';
 begin
   if not private.support_agent() then
     raise exception 'support:ticket is required' using errcode = 'insufficient_privilege';
@@ -39,16 +101,61 @@ begin
   if want_status not in ('open', 'waiting_on_student', 'resolved') then
     raise exception 'support may leave a ticket open, waiting on the student, or resolved; only the student closes it';
   end if;
-  insert into public.support_ticket_messages (ticket_id, from_side, body)
-    values (want_ticket, 'support', want_body) returning id into made;
+  if want_operation is null then
+    raise exception 'a stable reply operation id is required' using errcode = 'not_null_violation';
+  end if;
+
+  insert into public.support_ticket_messages (ticket_id, from_side, body, client_operation_id)
+    values (want_ticket, 'support', want_body, want_operation)
+    on conflict (ticket_id, client_operation_id)
+      where from_side = 'support' and client_operation_id is not null
+      do nothing
+    returning id into made;
+
+  -- A committed response may be lost in transit. Reusing the same operation
+  -- ID returns its original notification outcome without writing again.
+  if made is null then
+    select m.id into made
+      from public.support_ticket_messages m
+     where m.ticket_id = want_ticket
+       and m.from_side = 'support'
+       and m.client_operation_id = want_operation;
+    return (
+      select m.support_notice_outcome
+        from public.support_ticket_messages m where m.id = made
+    );
+  end if;
+
+  -- Preference changes and reply-notice decisions share this lock, so an
+  -- opt-out cannot race with the enqueue decision.
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended('support_notice:' || want_ticket::text, 0));
+
   update public.support_tickets
      set status = want_status, updated_at = now(),
          first_responded_at = coalesce(first_responded_at, now())
    where id = want_ticket and status <> 'closed';
   if not found then raise exception 'no open ticket with that id'; end if;
 
-  insert into public.support_notification_outbox (message_id, ticket_id)
-    values (made, want_ticket);
+  select t.email_notice_enabled into notices
+    from public.support_tickets t where t.id = want_ticket;
+  if notices then
+    -- The same lock makes the three-per-ticket rolling-day cap hold under
+    -- concurrent replies as well as ordinary sequential use.
+    if (select count(*) from public.support_notification_outbox o
+         where o.ticket_id = want_ticket
+           and o.queued_at > now() - interval '1 day') < 3 then
+      insert into public.support_notification_outbox (message_id, ticket_id)
+        values (made, want_ticket);
+      notice_outcome := 'queued';
+    else
+      notice_outcome := 'capped';
+    end if;
+  end if;
+
+  update public.support_ticket_messages
+     set support_notice_outcome = notice_outcome
+   where id = made;
 
   perform private.record_audit(
     null,
@@ -57,9 +164,16 @@ begin
     want_ticket::text,
     'allowed',
     private.role_audit_sha256(made::text),
-    jsonb_build_object('next_status', want_status, 'notification_queued', true)
+    jsonb_build_object('next_status', want_status, 'notification_queued', notice_outcome = 'queued')
   );
+  return notice_outcome;
 end $$;
 
-revoke all on function public.support_reply(uuid, text, text) from public, anon;
-grant execute on function public.support_reply(uuid, text, text) to authenticated;
+revoke all on function public.open_support_ticket(text, text, text, jsonb, boolean) from public, anon;
+revoke all on function public.my_support_tickets() from public, anon;
+revoke all on function public.set_support_email_notice(uuid, boolean) from public, anon;
+revoke all on function public.support_reply(uuid, text, text, uuid) from public, anon;
+grant execute on function public.open_support_ticket(text, text, text, jsonb, boolean) to authenticated;
+grant execute on function public.my_support_tickets() to authenticated;
+grant execute on function public.set_support_email_notice(uuid, boolean) to authenticated;
+grant execute on function public.support_reply(uuid, text, text, uuid) to authenticated;
