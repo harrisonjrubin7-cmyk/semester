@@ -24,11 +24,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 9 | `docs/company/FINANCIAL-CONTROLS.md` | EXACT PRESENT | canonical control draft; operation requires external records and acceptance |
 | 10 | `docs/company/EXPENSE-APPROVAL-POLICY.md` | EXACT PRESENT | canonical policy draft; thresholds remain unapproved |
 | 11 | `docs/company/PROCUREMENT-AND-VENDOR-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical policy draft; vendor assessments remain unverified |
-| 12 | `docs/company/VENDOR-RISK-ASSESSMENT-TEMPLATE.md` | CANDIDATE SOURCE | `docs/trust/VENDOR-RISK-REGISTER.md` (filename similarity 0.53; substantive review required) |
-| 13 | `docs/company/VENDOR-INVENTORY-TEMPLATE.md` | NO CLOSE SOURCE | — |
-| 14 | `docs/company/INSURANCE-READINESS-CHECKLIST.md` | CANDIDATE SOURCE | `docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md` (filename similarity 0.60; substantive review required) |
-| 15 | `docs/company/TAX-AND-ACCOUNTING-READINESS-CHECKLIST.md` | CANDIDATE SOURCE | `docs/market-readiness/LAUNCH-READINESS-CHECKLIST.md` (filename similarity 0.50; substantive review required) |
-| 16 | `docs/company/RECORDS-RETENTION-SCHEDULE-DRAFT.md` | NO CLOSE SOURCE | — |
+| 12 | `docs/company/VENDOR-RISK-ASSESSMENT-TEMPLATE.md` | EXACT PRESENT | canonical assessment template; no vendor is represented as approved |
+| 13 | `docs/company/VENDOR-INVENTORY-TEMPLATE.md` | EXACT PRESENT | canonical inventory template; controlled records remain external |
+| 14 | `docs/company/INSURANCE-READINESS-CHECKLIST.md` | EXACT PRESENT | canonical broker/counsel intake checklist; no coverage is asserted |
+| 15 | `docs/company/TAX-AND-ACCOUNTING-READINESS-CHECKLIST.md` | EXACT PRESENT | canonical professional-review checklist; no tax conclusion is asserted |
+| 16 | `docs/company/RECORDS-RETENTION-SCHEDULE-DRAFT.md` | EXACT PRESENT | canonical draft schedule; every duration remains subject to approval |
 | 17 | `docs/company/DOCUMENT-CONTROL-POLICY.md` | NO CLOSE SOURCE | — |
 | 18 | `docs/company/BUSINESS-CONTINUITY-OPERATING-PLAN.md` | NO CLOSE SOURCE | — |
 | 19 | `docs/company/CRISIS-COMMUNICATIONS-TEMPLATE.md` | CANDIDATE SOURCE | `docs/operating-model/INCIDENT-COMMUNICATIONS.md` (filename similarity 0.43; substantive review required) |
