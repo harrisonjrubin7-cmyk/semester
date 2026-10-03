@@ -144,6 +144,14 @@ describe('pilot and individual release profiles', () => {
       ],
     });
     expect(evaluateReleaseProfile(profile, sameApprover, AS_OF, target).rolloutStatus).toBe('held');
+    const whitespaceAlias = evidence.with(agreementIndex, {
+      ...evidence[agreementIndex],
+      approvals: [
+        { role: 'executive-owner', subjectRef: 'same-subject' },
+        { role: 'security-owner', subjectRef: ' same-subject ' },
+      ],
+    });
+    expect(evaluateReleaseProfile(profile, whitespaceAlias, AS_OF, target).rolloutStatus).toBe('held');
   });
 
   it('fails closed on stale, failed, revoked, or expired evidence', () => {

@@ -33,8 +33,9 @@
  *   7. **Export the account** from the second device and inspect the exact
  *      JSON blob the download helper hands to the browser for both actions.
  *   8. **Delete the account** through the Privacy screen, observe the Edge
- *      Function's complete-erasure receipt, and prove the old session no
- *      longer identifies a user.
+ *      Function's complete-erasure receipt, prove the old session no longer
+ *      identifies a user, and prove its access JWT cannot recreate protected
+ *      application state through PostgREST.
  *
  * Both viewports, each with its own account, and any uncaught page error is a
  * finding, as in the golden path.
@@ -426,6 +427,7 @@ async function journey(label, viewport) {
     at(STEPS[9]);
     const oldSession = await other.evaluate(() => JSON.parse(localStorage.getItem('semester.auth') || 'null'));
     expect(Boolean(oldSession?.access_token), 'the signed-in device had no session before deletion');
+    expect(Boolean(oldSession?.user?.id), 'the signed-in device had no user identity before deletion');
     const deleteButton = await primaryAction(
       other,
       /^delete my account$/i,
@@ -453,6 +455,23 @@ async function journey(label, viewport) {
       return { ok: response.ok, status: response.status };
     }, { ...second.service, token: oldSession.access_token });
     expect(!staleSession.ok && staleSession.status >= 400, 'the deleted account\'s old session still identifies a user');
+    const staleApplicationWrite = await other.evaluate(async ({ origin, key, token, userId }) => {
+      const response = await fetch(`${origin}/rest/v1/state`, {
+        method: 'POST',
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({ user_id: userId, data: { deleted_session_probe: true } }),
+      });
+      return { ok: response.ok, status: response.status };
+    }, { ...second.service, token: oldSession.access_token, userId: oldSession.user.id });
+    expect(
+      !staleApplicationWrite.ok && staleApplicationWrite.status >= 400,
+      'the deleted account\'s old access token could still write protected application state',
+    );
 
     walked += 1;
   } catch (error) {

@@ -234,7 +234,7 @@ function hasApprovalProvenance(item: ReleaseEvidence): boolean {
   const supplied = new Set(approvals.map((approval) => approval.role));
   const subjects = new Set(approvals
     .filter((approval) => requiredSet.has(approval.role))
-    .map((approval) => approval.subjectRef));
+    .map((approval) => approval.subjectRef.trim()));
   return required.every((role) => supplied.has(role)) && subjects.size >= required.length;
 }
 
