@@ -377,7 +377,7 @@ function latestCurrentEvidence(
     .filter((item) => item.gate === gate
       && (!target || sameTarget(item.target, target))
       && (!sourceSha || (SHA.test(item.sourceSha ?? '') && item.sourceSha === sourceSha)))
-    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt, true) }));
+    .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt) }));
   if (matching.some(({ checked }) => checked === null)) return [];
   const eligible = matching
     .filter(({ checked }) => checked !== null && checked <= decisionTime)
@@ -387,7 +387,7 @@ function latestCurrentEvidence(
   const latest = eligible.filter(({ checked }) => checked === latestDate);
   return latest.every(({ item, expires }) => item.status === 'current'
     && hasApprovalProvenance(item, decisionTime)
-    && (expires ?? -1) >= decisionTime)
+    && (expires ?? -1) > decisionTime)
     ? latest.map(({ item }) => item)
     : [];
 }
