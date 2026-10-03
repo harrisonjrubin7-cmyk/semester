@@ -38,6 +38,7 @@ const mock = vi.hoisted(() => ({
   command: vi.fn(),
   customers: vi.fn(),
   tenantOperations: vi.fn(),
+  integrationHealth: vi.fn(),
   privacyRequests: vi.fn(),
   claimPrivacy: vi.fn(),
   privacyDetail: vi.fn(),
@@ -84,6 +85,7 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadCommandCenter: mock.command,
   loadCustomers: mock.customers,
   loadTenantOperations: mock.tenantOperations,
+  loadIntegrationHealth: mock.integrationHealth,
   loadPrivacyRequests: mock.privacyRequests,
   claimPrivacyRequest: mock.claimPrivacy,
   readPrivacyRequestDetail: mock.privacyDetail,
@@ -111,6 +113,7 @@ const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeI
 const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
 const IMPLEMENTATION_PLATFORM = [...PLATFORM, { capability: 'tenant:implement', scopeKind: 'school', scopeId: 'vu' }];
 const PRIVACY_PLATFORM = [...PLATFORM, { capability: 'data_request:handle', scopeKind: 'school', scopeId: 'vu' }];
+const INTEGRATION_PLATFORM = [...PLATFORM, { capability: 'integration:view', scopeKind: 'school', scopeId: 'vu' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -193,6 +196,17 @@ beforeEach(() => {
     limitation: 'State is not approval evidence.',
     visibilityReason: 'Live tenant:implement grant at exact school scope.',
   }]);
+  mock.integrationHealth.mockResolvedValue([{
+    connectionId: 'conn-canvas', tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+    connectionName: 'Canvas', providerDomain: 'lms', providerName: 'Canvas', configurationState: 'healthy',
+    healthState: 'healthy', featureState: 'production', lastSuccessfulSyncAt: '2026-10-03T10:00:00Z',
+    freshnessTargetMinutes: 30, minutesSinceSuccess: 10, latestRunStatus: 'success',
+    latestRunAt: '2026-10-03T10:00:00Z', reconciliationState: 'complete', recordsReceived: 20,
+    recordsRejected: 0, openErrors: 0, criticalErrors: 0, openDeadLetters: 0,
+    ownerName: 'Integration owner', backupOwnerName: 'Backup owner', customerImpact: 'No current impact.',
+    nextSafeAction: 'Continue monitoring.', configurationApprovalId: null, configurationApprovalStatus: null,
+    classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
+  }]);
   mock.privacyRequests.mockResolvedValue([{
     requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
     tenantName: 'Vanderbilt University', isDemo: false, kind: 'export', requestedBy: 'self',
@@ -268,6 +282,24 @@ describe('tenant operations capability gate', () => {
     expect(mock.tenantOperations).toHaveBeenCalledWith(false);
     expect(host.textContent).toContain('Vanderbilt University');
     expect(host.textContent).toContain('Live tenant:implement grant at exact school scope.');
+  });
+});
+
+describe('integration health capability gate', () => {
+  it('does not offer integration health to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Integration health')).toBeUndefined();
+    expect(mock.integrationHealth).not.toHaveBeenCalled();
+  });
+
+  it('offers and loads credential-free health for an exact-school integration grant', async () => {
+    mock.caps.mockResolvedValue(INTEGRATION_PLATFORM);
+    await render();
+    await press('Integration health');
+    expect(mock.integrationHealth).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Canvas');
+    expect(host.textContent).toContain('No credentials returned.');
+    expect(mock.request).not.toHaveBeenCalled();
   });
 });
 

@@ -169,14 +169,18 @@ This checklist implements `tasks/plan.md`. Tasks are intentionally sized as focu
 **Description:** Surface connector configuration state, sync freshness, data quality, failures, owner, customer impact, and the next safe action without exposing credentials.
 
 **Acceptance criteria:**
-- [ ] Credentials and raw tokens are never returned.
-- [ ] Tenant and environment boundaries are enforced server-side.
-- [ ] Configuration changes require the applicable approval duty.
+- [x] Credentials and raw tokens are never returned.
+- [x] Tenant and environment boundaries are enforced server-side.
+- [x] Configuration changes require the applicable approval duty.
 
 **Verification:**
-- [ ] SQL tests cover redaction, wrong scope, demo exclusion, and approval enforcement.
-- [ ] UI tests cover healthy, degraded, stale, failed, and unconfigured states.
-- [ ] Integration runbook references actual actions and rollback paths.
+- [x] SQL tests cover redaction, wrong scope, demo exclusion, and approval visibility.
+- [x] UI tests cover healthy, degraded, stale, failed, and unconfigured states.
+- [x] Integration runbook references actual actions and rollback paths.
+
+**Evidence boundary:** the database tests prove exact-school authorization and redaction against PostgreSQL 17, and
+focused UI tests prove the five-state and request-only workspace. Configuration execution is intentionally separate;
+no connector was changed, no authenticated production session was used, and deployment remains unclaimed.
 
 **Dependencies:** B1
 **Files likely touched:** integration RPC migration/check, client adapter/test, workspace/test

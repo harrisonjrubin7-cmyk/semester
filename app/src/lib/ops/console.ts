@@ -643,6 +643,12 @@ export interface View {
   view: string;
   /** What it shows, and what it reads, in one line. */
   shows: string;
+  detail?: {
+    capability: string;
+    status: 'done';
+    replacement: string;
+    holders: readonly { path: string; how: string }[];
+  };
 }
 
 /** The console's views, in the order the screen offers them. */
@@ -651,6 +657,42 @@ export const VIEWS: readonly View[] = [
   { id: 'approvals', view: 'Approvals', shows: 'Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement' },
   { id: 'break-glass', view: 'Break-glass', shows: 'Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else' },
   { id: 'audit', view: 'Audit', shows: 'The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so' },
+  {
+    id: 'privacy',
+    view: 'Privacy requests',
+    shows: 'An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions',
+    detail: {
+      capability: 'Privacy and data-rights operations',
+      status: 'done',
+      replacement: 'an identity-minimized queue over `public.data_subject_request`, available only when the operator has both the platform console shell and a live `data_request:handle` grant for an exact school. Sensitive detail is never loaded with the queue',
+      holders: [
+        { path: 'supabase/migrations/20261003130000_privacy_case_workspace.sql', how: 'Metadata-only queue, exact-school authorization, demo separation, assignment fields, legal-hold state and deletion-approval state' },
+        { path: 'supabase/migrations/20261003131000_privacy_case_actions.sql', how: 'Fresh-MFA claim, audited detail read, identity verification, resolution, live-hold and exact executed-approval enforcement, and immutable completion certificates' },
+        { path: 'supabase/privacy-case-workspace.check.sql', how: 'Wrong-role, expired-grant, wrong-tenant, demo, assignment and identity-minimization checks' },
+        { path: 'supabase/privacy-case-actions.check.sql', how: 'Stale-MFA, ownership, failed-audit, live-hold, approval, certificate and audit-first paths' },
+        { path: 'app/src/components/console/PrivacyRequests.tsx', how: 'Metadata queue, explicit claim/detail/verification/approval/resolution controls, overdue and hold states, and fail-closed loading, denial and error behavior' },
+        { path: 'app/src/components/console/PrivacyRequests.test.tsx', how: 'Metadata-only rendering, overdue routing, denial, claim, detail, verification, deletion approval, held refusal, completed erasure and terminal read-only states' },
+        { path: 'docs/DATA-RIGHTS-REQUEST-RUNBOOK.md', how: 'The operated procedure and quarterly rehearsal boundary' },
+      ],
+    },
+  },
+  {
+    id: 'integration-health',
+    view: 'Integration health',
+    shows: 'Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals',
+    detail: {
+      capability: 'Integration health operations',
+      status: 'done',
+      replacement: 'a credential-free summary over connector configuration, sync freshness, data quality, failures, ownership and customer impact, available only with both the platform console shell and a live `integration:view` grant for an exact school. The browser cannot submit a tenant id to the reader',
+      holders: [
+        { path: 'supabase/migrations/20261003140000_console_integration_health.sql', how: 'Server-derived tenant scope, explicit demo gate, allowlisted fields, computed five-state health and exact configuration-approval status' },
+        { path: 'supabase/console-integration-health.check.sql', how: 'Exact-school, demo, shell/domain denial, five-state, pending-approval and planted-secret redaction checks' },
+        { path: 'app/src/components/console/IntegrationHealth.tsx', how: 'Health evidence, cautious impact, next safe action and a structured request-only `integration-config` approval; no configuration mutation or credential field' },
+        { path: 'app/src/components/console/IntegrationHealth.test.tsx', how: 'Healthy, degraded, stale, failed, unconfigured, denial, demo and exact approval-request coverage' },
+        { path: 'docs/INTEGRATION-OPERATOR-RUNBOOK.md', how: 'Actual monitoring, approval, verification and rollback procedure' },
+      ],
+    },
+  },
   { id: 'customers', view: 'Customers', shows: 'Tenants, commitments and contracts, each record with its classification and why the operator can see it' },
   { id: 'figures', view: 'Figures', shows: 'Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing' },
   { id: 'evidence', view: 'Evidence', shows: 'Every evidence record with its expiry, its escalation step and the claims resting on it' },

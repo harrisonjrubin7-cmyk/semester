@@ -66,6 +66,7 @@ import {
   loadFigures,
   loadCommandCenter,
   loadTenantOperations,
+  loadIntegrationHealth,
   loadPrivacyRequests,
   claimPrivacyRequest,
   readPrivacyRequestDetail,
@@ -86,6 +87,18 @@ import {
   verifyTotp,
   totpFactors,
 } from './client';
+
+const HEALTH_ROW = {
+  connection_id: 'conn-canvas', tenant_id: 'vu', tenant_name: 'Vanderbilt University', is_demo: false,
+  connection_name: 'Canvas', provider_domain: 'lms', provider_name: 'Canvas', configuration_state: 'healthy',
+  health_state: 'degraded', feature_state: 'production', last_successful_sync_at: '2026-10-03T10:00:00Z',
+  freshness_target_minutes: 30, minutes_since_success: 45, latest_run_status: 'partial',
+  latest_run_at: '2026-10-03T10:00:00Z', reconciliation_state: 'warning', records_received: 20,
+  records_rejected: 2, open_errors: 1, critical_errors: 0, open_dead_letters: 1,
+  owner_name: 'Integration owner', backup_owner_name: 'Backup owner', customer_impact: 'Assignments may be delayed.',
+  next_safe_action: 'Review reconciliation.', configuration_approval_id: null, configuration_approval_status: null,
+  classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
+};
 
 const last = () => calls[calls.length - 1];
 
@@ -200,6 +213,27 @@ describe('duties and approvals', () => {
     expect(last()).toMatchObject({ kind: 'rpc', name: 'console_approvals', args: { include_demo: false } });
     await loadApprovals(true);
     expect(last()).toMatchObject({ args: { include_demo: true } });
+  });
+});
+
+describe('integration health', () => {
+  it('maps the credential-free health contract and forwards explicit demo inclusion', async () => {
+    replies.set('rpc:console_integration_health', { data: [HEALTH_ROW] });
+    const [row] = await loadIntegrationHealth(true);
+    expect(row).toMatchObject({
+      connectionId: 'conn-canvas', tenantId: 'vu', healthState: 'degraded', featureState: 'production',
+      freshnessTargetMinutes: 30, minutesSinceSuccess: 45, openDeadLetters: 1,
+      configurationApprovalId: null, classification: 'restricted',
+    });
+    expect(last()).toMatchObject({ name: 'console_integration_health', args: { include_demo: true } });
+  });
+
+  it('preserves server refusals and fails closed on an unknown health state', async () => {
+    replies.set('rpc:console_integration_health', { error: { message: 'integration:view over an exact school is required.' } });
+    await expect(loadIntegrationHealth()).rejects.toThrow('integration:view over an exact school is required.');
+
+    replies.set('rpc:console_integration_health', { data: [{ ...HEALTH_ROW, health_state: 'maybe' }] });
+    await expect(loadIntegrationHealth()).rejects.toThrow('unknown health state');
   });
 });
 

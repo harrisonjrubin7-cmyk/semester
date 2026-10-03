@@ -529,6 +529,75 @@ export async function loadTenantOperations(includeDemo = false): Promise<TenantO
 
 // ── privacy requests ──────────────────────────────────────────────────────
 
+export type IntegrationHealthState = 'healthy' | 'degraded' | 'stale' | 'failed' | 'unconfigured';
+
+export interface IntegrationHealth {
+  connectionId: string;
+  tenantId: string;
+  tenantName: string;
+  isDemo: boolean;
+  connectionName: string;
+  providerDomain: string;
+  providerName: string;
+  configurationState: string;
+  healthState: IntegrationHealthState;
+  featureState: string;
+  lastSuccessfulSyncAt: string | null;
+  freshnessTargetMinutes: number | null;
+  minutesSinceSuccess: number | null;
+  latestRunStatus: string | null;
+  latestRunAt: string | null;
+  reconciliationState: string | null;
+  recordsReceived: number;
+  recordsRejected: number;
+  openErrors: number;
+  criticalErrors: number;
+  openDeadLetters: number;
+  ownerName: string;
+  backupOwnerName: string;
+  customerImpact: string;
+  nextSafeAction: string;
+  configurationApprovalId: string | null;
+  configurationApprovalStatus: string | null;
+  classification: string;
+  provenance: string;
+  limitation: string;
+}
+
+const HEALTH_STATES: IntegrationHealthState[] = ['healthy', 'degraded', 'stale', 'failed', 'unconfigured'];
+
+function readIntegrationHealth(r: Row): IntegrationHealth {
+  if (!HEALTH_STATES.includes(r.health_state as IntegrationHealthState)) {
+    throw new Error('The integration health response contained an unknown health state.');
+  }
+  return {
+    connectionId: text(r.connection_id), tenantId: text(r.tenant_id), tenantName: text(r.tenant_name),
+    isDemo: r.is_demo === true, connectionName: text(r.connection_name), providerDomain: text(r.provider_domain),
+    providerName: text(r.provider_name), configurationState: text(r.configuration_state),
+    healthState: r.health_state as IntegrationHealthState, featureState: text(r.feature_state),
+    lastSuccessfulSyncAt: maybe(r.last_successful_sync_at),
+    freshnessTargetMinutes: r.freshness_target_minutes == null ? null : num(r.freshness_target_minutes),
+    minutesSinceSuccess: r.minutes_since_success == null ? null : num(r.minutes_since_success),
+    latestRunStatus: maybe(r.latest_run_status), latestRunAt: maybe(r.latest_run_at),
+    reconciliationState: maybe(r.reconciliation_state), recordsReceived: num(r.records_received),
+    recordsRejected: num(r.records_rejected), openErrors: num(r.open_errors),
+    criticalErrors: num(r.critical_errors), openDeadLetters: num(r.open_dead_letters),
+    ownerName: text(r.owner_name), backupOwnerName: text(r.backup_owner_name),
+    customerImpact: text(r.customer_impact), nextSafeAction: text(r.next_safe_action),
+    configurationApprovalId: maybe(r.configuration_approval_id),
+    configurationApprovalStatus: maybe(r.configuration_approval_status), classification: text(r.classification),
+    provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Credential-free health for exact schools derived by the server from live grants. */
+export async function loadIntegrationHealth(includeDemo = false): Promise<IntegrationHealth[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_integration_health', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read integration health.'));
+  return rows(data).map(readIntegrationHealth);
+}
+
 export type PrivacyRequestKind = 'export' | 'erasure' | 'correction' | 'restriction';
 export type PrivacyRequestOutcome = 'completed' | 'refused';
 

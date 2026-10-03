@@ -36,6 +36,7 @@ Under any production write: *Production change. This will affect a live customer
 | **Break-glass** | Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else |
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
 | **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
+| **Integration health** | Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals |
 | **Customers** | Tenants, commitments and contracts, each record with its classification and why the operator can see it |
 | **Figures** | Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing |
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |
@@ -95,10 +96,21 @@ The capability behind each view, and its holders, from the same file.
 
 - [`supabase/migrations/20261003130000_privacy_case_workspace.sql`](../supabase/migrations/20261003130000_privacy_case_workspace.sql) — Metadata-only queue, exact-school authorization, demo separation, assignment fields, legal-hold state and deletion-approval state.
 - [`supabase/migrations/20261003131000_privacy_case_actions.sql`](../supabase/migrations/20261003131000_privacy_case_actions.sql) — Fresh-MFA claim, audited detail read, identity verification, resolution, live-hold and exact executed-approval enforcement, and immutable completion certificates.
-- [`supabase/privacy-case-workspace.check.sql`](../supabase/privacy-case-workspace.check.sql) and [`supabase/privacy-case-actions.check.sql`](../supabase/privacy-case-actions.check.sql) — Wrong-role, expired-grant, wrong-tenant, stale-MFA, ownership, failed-audit, live-hold, approval, certificate and audit-first paths.
+- [`supabase/privacy-case-workspace.check.sql`](../supabase/privacy-case-workspace.check.sql) — Wrong-role, expired-grant, wrong-tenant, demo, assignment and identity-minimization checks.
+- [`supabase/privacy-case-actions.check.sql`](../supabase/privacy-case-actions.check.sql) — Stale-MFA, ownership, failed-audit, live-hold, approval, certificate and audit-first paths.
 - [`app/src/components/console/PrivacyRequests.tsx`](../app/src/components/console/PrivacyRequests.tsx) — Metadata queue, explicit claim/detail/verification/approval/resolution controls, overdue and hold states, and fail-closed loading, denial and error behavior.
 - [`app/src/components/console/PrivacyRequests.test.tsx`](../app/src/components/console/PrivacyRequests.test.tsx) — Metadata-only rendering, overdue routing, denial, claim, detail, verification, deletion approval, held refusal, completed erasure and terminal read-only states.
 - [`docs/DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md) — The operated procedure and quarterly rehearsal boundary.
+
+### Integration health
+
+**Integration health operations** (done) — a credential-free summary over connector configuration, sync freshness, data quality, failures, ownership and customer impact, available only with both the platform console shell and a live `integration:view` grant for an exact school. The browser cannot submit a tenant id to the reader.
+
+- [`supabase/migrations/20261003140000_console_integration_health.sql`](../supabase/migrations/20261003140000_console_integration_health.sql) — Server-derived tenant scope, explicit demo gate, allowlisted fields, computed five-state health and exact configuration-approval status.
+- [`supabase/console-integration-health.check.sql`](../supabase/console-integration-health.check.sql) — Exact-school, demo, shell/domain denial, five-state, pending-approval and planted-secret redaction checks.
+- [`app/src/components/console/IntegrationHealth.tsx`](../app/src/components/console/IntegrationHealth.tsx) — Health evidence, cautious impact, next safe action and a structured request-only `integration-config` approval; no configuration mutation or credential field.
+- [`app/src/components/console/IntegrationHealth.test.tsx`](../app/src/components/console/IntegrationHealth.test.tsx) — Healthy, degraded, stale, failed, unconfigured, denial, demo and exact approval-request coverage.
+- [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](INTEGRATION-OPERATOR-RUNBOOK.md) — Actual monitoring, approval, verification and rollback procedure.
 
 ### Customers
 
