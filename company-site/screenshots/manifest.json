@@ -1,6 +1,6 @@
 {
   "capturedAt": "2026-10-03T07:36:46Z",
-  "captureDateLabel": "Oct 2, 2026 (America/Chicago)",
+  "captureDateLabel": "Oct 3, 2026 (America/Chicago)",
   "appSourceCommit": "92eeafd9d04d3ca5971819cff441bba19dac9adc",
   "appDeploymentCommit": "92eeafd9d04d3ca5971819cff441bba19dac9adc",
   "appDeploymentRun": "https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37106520032",
@@ -19,7 +19,7 @@
     "note": "Captured from the successful GitHub Pages deployment at /semester/demo/ after dismissing only the demo onboarding overlay. The live stylesheet contains the 92eeafd9 44px target fix and not the superseded zero-height rule."
   },
   "theme": {
-    "surface": "Current production light interface",
+    "surface": "Current production dark interface",
     "accent": "Semester brass",
     "layout": "Responsive application shell"
   },

@@ -21,6 +21,7 @@ type Capture = {
 };
 type Manifest = {
   capturedAt: string;
+  captureDateLabel: string;
   appSourceCommit: string;
   appDeploymentCommit: string;
   appDeploymentRun: string;
@@ -124,6 +125,7 @@ describe('the company site shows captured current application screens', () => {
 
   it('describes the captured screens and reserves their real intrinsic image dimensions', () => {
     const images = captureImages();
+    const displayedCaptureDate = manifest().captureDateLabel.replace(/ \([^)]*\)$/, '');
     expect(images.length).toBeGreaterThanOrEqual(4);
     for (const image of images) {
       const alt = image.getAttribute('alt')?.trim() ?? '';
@@ -136,6 +138,7 @@ describe('the company site shows captured current application screens', () => {
         .toEqual(jpegDimensions(bytes));
       const caption = image.closest('figure')?.textContent ?? image.parentElement?.textContent ?? '';
       expect(/(?:illustrative(?: demo)?|sample|fictional|demo)[ -]data/i.test(caption)).toBe(true);
+      expect(caption).toContain(`Captured ${displayedCaptureDate}`);
     }
   });
 
@@ -172,6 +175,7 @@ describe('the company site shows captured current application screens', () => {
     const proof = manifest();
     expect(proof.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
     expect(Number.isFinite(Date.parse(proof.capturedAt))).toBe(true);
+    expect(proof.captureDateLabel).toBe('Oct 3, 2026 (America/Chicago)');
     expect(proof.appSourceCommit).toMatch(/^[a-f0-9]{40}$/);
     expect(proof.appSourceCommit).toBe('92eeafd9d04d3ca5971819cff441bba19dac9adc');
     expect(proof.appDeploymentCommit).toBe(proof.appSourceCommit);
@@ -181,6 +185,7 @@ describe('the company site shows captured current application screens', () => {
     expect(proof.deploymentVerification.serviceWorkerState).toMatch(/brand-new browser profile/i);
     expect(proof.captureMode).toBe('isolated-demo');
     expect(proof.sampleData).toBe(true);
+    expect(proof.theme).toMatchObject({ surface: 'Current production dark interface' });
     for (const appearance of [proof.theme, proof.nav]) {
       expect(appearance).toBeTruthy();
       expect(typeof appearance === 'string' ? appearance.trim().length : Object.keys(appearance).length).toBeGreaterThan(0);
@@ -233,7 +238,11 @@ describe('the company site shows captured current application screens', () => {
     }
 
     expect(experience?.textContent).toContain('public fictional-data demo');
-    expect(experience?.textContent).toContain('Captured Oct 2, 2026');
+    expect(experience?.textContent).toContain('Captured Oct 3, 2026');
+    expect(experience?.querySelector('#xp-step-details')?.getAttribute('aria-live')).toBe('polite');
+    expect(experience?.querySelector('#xp-step-details')?.getAttribute('aria-atomic')).toBe('true');
+    expect(site).toContain('document.getElementById("xp-full").href=xpMobile.matches?st.mobile:st.desktop');
+    expect(site).toContain('xpMobile.addEventListener("change",xpRender)');
   });
 
   it('keeps unbuilt concept examples clearly separate from current app proof', () => {
