@@ -9,6 +9,7 @@ import type {
   PrivacyRequestOutcome,
   PrivacyResolution,
 } from '../../lib/console/client';
+import { when } from './Fields';
 import { PrivacyRequests } from './PrivacyRequests';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -142,9 +143,10 @@ async function submit(label: string) {
 
 describe('privacy request workspace', () => {
   it('renders metadata without fetching subject identity or request detail', async () => {
-    await draw([request({ overdue: true })]);
+    const item = request({ overdue: true });
+    await draw([item]);
     expect(host.textContent).toContain('DSR-1234567890 · Erasure');
-    expect(host.textContent).toContain('DueOct 31, 2026');
+    expect(host.textContent).toContain(`Due${when(item.dueAt)}`);
     expect(host.textContent).toContain('OVERDUE');
     expect(host.textContent).toContain('OwnerUnassigned');
     expect(host.textContent).toContain('Affected storeserasable account records · retained audit history');
