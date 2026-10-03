@@ -57,8 +57,8 @@
 - [x] L09: institutional legal documents 41–44; added procurement-cover, controlled RFP library, negotiation, and contract-deviation drafts with exact disclaimer, truthful-status controls, approval routing, and signature/activation blockers on 2026-10-03.
 - [x] L10: internal legal governance documents 45–49; added compliance-calendar, legal-intake, claim-approval, marketing-review, and data-rights procedures with exact disclaimer, evidence ceilings, routing, and operational blockers on 2026-10-03.
 - [x] L11: internal legal governance documents 50–54; added evidence-bounded law-enforcement-request, legal-hold, IP-inventory, open-source-compliance, and release-notices drafts with exact disclaimer, scoped evidence mappings, approval routing, and operational/publication blockers on 2026-10-03.
-- [ ] L12: internal legal governance documents 55–56 plus `LEGAL-TRUTH-MAPPING.md`.
-- [ ] Checkpoint L: every file starts with the required disclaimer; placeholders, jurisdiction review, age posture, plain-language summary, behavior mapping, and publication blockers are present.
+- [x] L12: internal legal governance documents 55–56 plus `LEGAL-TRUTH-MAPPING.md`; added evidence-bounded trademark/brand and domain/digital-asset controls and consolidated every legal artifact's evidence ceiling and activation gate on 2026-10-03.
+- [x] Checkpoint L: all 56 requested legal files begin with the required disclaimer and preserve placeholders, jurisdiction/age review, plain-language summaries, behavior/evidence mappings, publication blockers, and the distinction between draft completeness and external approval.
 
 **Dependencies:** T02; company-fact placeholders from C01–C04 where relevant.
 

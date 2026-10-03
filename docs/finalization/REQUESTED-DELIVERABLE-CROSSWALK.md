@@ -88,9 +88,9 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 73 | `docs/legal-drafts/IP-ASSET-INVENTORY-TEMPLATE.md` | EXACT PRESENT | canonical chain-of-title and license inventory; repository presence/authorship is not treated as ownership proof |
 | 74 | `docs/legal-drafts/OPEN-SOURCE-LICENSE-COMPLIANCE-POLICY.md` | EXACT PRESENT | canonical lifecycle policy; technical dependency controls and SBOM generation remain distinct from counsel-approved obligations |
 | 75 | `docs/legal-drafts/OPEN-SOURCE-NOTICES-TEMPLATE.md` | EXACT PRESENT | canonical release-specific notice shell; actual shipped code and non-code assets, full texts, offers, and placement require reconciliation |
-| 76 | `docs/legal-drafts/TRADEMARK-BRAND-USAGE-GUIDELINES-DRAFT.md` | NO CLOSE SOURCE | — |
-| 77 | `docs/legal-drafts/DOMAIN-AND-DIGITAL-ASSET-REGISTER-TEMPLATE.md` | CANDIDATE SOURCE | `docs/DOMAIN-REPLACEMENT-REGISTER.md` (filename similarity 0.45; substantive review required) |
-| 78 | `docs/legal-drafts/LEGAL-TRUTH-MAPPING.md` | NO CLOSE SOURCE | — |
+| 76 | `docs/legal-drafts/TRADEMARK-BRAND-USAGE-GUIDELINES-DRAFT.md` | EXACT PRESENT | canonical controlled brand-use draft; ownership, clearance, registration, permission, and licensing remain unverified |
+| 77 | `docs/legal-drafts/DOMAIN-AND-DIGITAL-ASSET-REGISTER-TEMPLATE.md` | EXACT PRESENT | canonical asset-control register; product-domain strategy and repository configuration do not establish external account ownership/control |
+| 78 | `docs/legal-drafts/LEGAL-TRUTH-MAPPING.md` | EXACT PRESENT | canonical evidence-ceiling and release-gate map; draft completeness is separated from legal approval, execution, and activation |
 | 79 | `docs/trust/DATA-INVENTORY.md` | CANDIDATE SOURCE | `docs/DATA-INVENTORY-AND-LINEAGE.md` (filename similarity 0.68; substantive review required) |
 | 80 | `docs/trust/DATA-CLASSIFICATION-STANDARD.md` | CANDIDATE SOURCE | `docs/ai-toolkit/DATA-CLASSIFICATION-AND-TOOL-GOVERNANCE.md` (filename similarity 0.49; substantive review required) |
 | 81 | `docs/trust/DATA-FLOW-MAP.md` | CANDIDATE SOURCE | `docs/market-readiness/DATA-FLOW-DIAGRAM.md` (filename similarity 0.57; substantive review required) |
