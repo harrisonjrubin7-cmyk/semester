@@ -8,6 +8,15 @@
 -- self-contained instead of trusting migration-history equivalence.
 alter table public.support_tickets
   add column if not exists email_notice_enabled boolean not null default false;
+alter table public.support_notification_outbox
+  add column if not exists claim_id uuid;
+alter table public.support_notification_outbox
+  add column if not exists claimed_at timestamptz;
+do $$ begin
+  alter table public.support_notification_outbox
+    add constraint support_notification_claim_pair check ((claim_id is null) = (claimed_at is null));
+exception when duplicate_object then null;
+end $$;
 
 create or replace function public.claim_support_notifications(want_message uuid, want_limit integer)
 returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
