@@ -164,10 +164,10 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 149 | `docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md` | EXACT PRESENT | canonical fail-closed flag and kill/read-only control; effective target inventory and production drills remain partial |
 | 150 | `docs/engineering-operations/PERFORMANCE-OPTIMIZATION-PLAN.md` | EXACT PRESENT | canonical bundle/journey/field/capacity improvement plan; real-device field and full-stack capacity proof remain absent |
 | 151 | `docs/engineering-operations/DEPENDENCY-MANAGEMENT-POLICY.md` | EXACT PRESENT | canonical selection, lock, review, remediation and exception policy; current SBOM/license/reachability approval remains open |
-| 152 | `docs/engineering-operations/OPEN-SOURCE-INVENTORY.md` | NO CLOSE SOURCE | — |
-| 153 | `docs/engineering-operations/TECHNICAL-DEBT-REGISTER.md` | NO CLOSE SOURCE | — |
-| 154 | `docs/engineering-operations/CAPACITY-AND-SCALING-PLAN.md` | NO CLOSE SOURCE | — |
-| 155 | `docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md` | CANDIDATE SOURCE | `docs/market-readiness/DISASTER_RECOVERY.md` (filename similarity 0.57; substantive review required) |
+| 152 | `docs/engineering-operations/OPEN-SOURCE-INVENTORY.md` | EXACT PRESENT | controlled direct package inventory and SBOM process; full transitive license/advisory/artifact review remains open |
+| 153 | `docs/engineering-operations/TECHNICAL-DEBT-REGISTER.md` | EXACT PRESENT | canonical prioritized closure register across recovery, isolation, release, operations, accessibility, security, performance and supply chain |
+| 154 | `docs/engineering-operations/CAPACITY-AND-SCALING-PLAN.md` | EXACT PRESENT | canonical staged workload, full-stack, failure, invariant and cost plan; production/institutional scale remains unproven |
+| 155 | `docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md` | EXACT PRESENT | canonical provider-backed restore and full-service verification plan; logical rehearsal remains distinct from RTO/RPO and production recovery |
 | 156 | `docs/commercial/POSITIONING-AND-MESSAGING.md` | NO CLOSE SOURCE | — |
 | 157 | `docs/commercial/IDEAL-CUSTOMER-PROFILE.md` | EXACT PRESENT | `docs/market-readiness/IDEAL-CUSTOMER-PROFILE.md` |
 | 158 | `docs/commercial/BUYER-PERSONAS.md` | EXACT PRESENT | `docs/market-readiness/BUYER-PERSONAS.md` |
