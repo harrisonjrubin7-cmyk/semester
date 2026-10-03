@@ -98,6 +98,7 @@ describe('lead intake: the contract the site is built against', () => {
   it("takes the site's own origins with no secret set, and still nobody else", async () => {
     expect(SITE_PRODUCTION_ORIGINS).toEqual([
       'https://www.semester.website', 'https://semester.website', 'https://semester-company-site.vercel.app',
+      'https://harrisonjrubin7-cmyk.github.io',
     ]);
     for (const siteOrigins of [undefined, '', ' ']) {
       for (const origin of SITE_PRODUCTION_ORIGINS) {
@@ -271,6 +272,21 @@ describe('lead intake: validation', () => {
       expect(checked.lead.fields).not.toHaveProperty('connected');
       expect(checked.lead.fields).not.toHaveProperty('tenant_id');
     }
+  });
+
+  it('keeps the live company-site institutional topic compatible, but closed', () => {
+    const companySite = readFileSync(join(process.cwd(), '..', 'company-site/index.html'), 'utf8');
+    const liveTopic = /<option value="pilot">([^<]+)<\/option>/.exec(companySite)?.[1];
+    expect(liveTopic).toBeTruthy();
+    const live = validateLead({
+      ...GOOD, route: 'plan_institution_launch', organization: 'State University',
+      fields: { topic: liveTopic as string },
+    });
+    expect(live.ok).toBe(true);
+    expect(bad({
+      ...GOOD, route: 'plan_institution_launch', organization: 'State University',
+      fields: { topic: 'Anything a caller wants' },
+    })).toMatch(/topic/);
   });
 
   it('refuses a body that is not a JSON object, or too large', async () => {

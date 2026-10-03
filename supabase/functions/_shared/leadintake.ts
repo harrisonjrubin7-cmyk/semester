@@ -79,6 +79,9 @@ export const SITE_PRODUCTION_ORIGINS: readonly string[] = [
   'https://www.semester.website',
   'https://semester.website',
   'https://semester-company-site.vercel.app',
+  // The owned GitHub Pages app hosts the University > Package intake form.
+  // Exact origin only: this does not admit arbitrary github.io projects.
+  'https://harrisonjrubin7-cmyk.github.io',
 ];
 
 /** The origin list this handler reads: the built-in origins, then the secret's. */
@@ -104,8 +107,11 @@ export const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const FIELD_KEY = /^[a-z][a-z0-9_]{0,39}$/;
 
 export const INSTITUTION_SETUP_FIELDS = [
-  'requested_domain', 'requested_system', 'requested_provider', 'requested_product', 'data_mode', 'desired_launch_window',
+  // `topic` is the existing company-site contact form's selected label. Keep
+  // its current institutional value compatible while refusing arbitrary text.
+  'topic', 'requested_domain', 'requested_system', 'requested_provider', 'requested_product', 'data_mode', 'desired_launch_window',
 ] as const;
+export const INSTITUTION_TOPICS = ['An institutional pilot'] as const;
 export const REQUESTED_SYSTEMS = ['identity', 'lms', 'sis', 'catalog', 'degree_audit', 'other'] as const;
 export const REQUESTED_PRODUCTS = ['semester_institutional'] as const;
 export const DATA_MODES = ['manual', 'connected'] as const;
@@ -137,6 +143,9 @@ function institutionalFields(route: string, fields: Record<string, string>): Ins
     }
   }
   const normalized = { ...fields };
+  if (fields.topic && !(INSTITUTION_TOPICS as readonly string[]).includes(fields.topic)) {
+    return { error: 'Choose a supported institutional topic.' };
+  }
   if (fields.requested_domain) {
     const domain = requestedDomain(fields.requested_domain);
     if (!domain) return { error: 'Please enter an institution domain, not a URL.' };

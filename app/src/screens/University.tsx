@@ -830,7 +830,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
-      {tab === 'package' && <InstitutionalPackage />}
+      {tab === 'package' && (
+        <InstitutionalPackage
+          requester={{ name: state.myName, email: account?.email ?? '' }}
+          institution={{ name: school.name, domain: school.emailDomains?.[0] ?? '' }}
+        />
+      )}
 
       {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
         <ControlPlane
