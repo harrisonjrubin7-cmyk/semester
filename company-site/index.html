@@ -121,7 +121,7 @@ section.blk{padding-block:72px}
 .hero .ctas{margin-top:30px}
 .trustline{margin-top:20px;font-size:13px;color:var(--ink-faint);letter-spacing:.02em}
 .phone{position:relative;border-radius:34px;border:1px solid var(--line);background:var(--bg-soft);padding:9px;max-width:290px;margin-inline:auto;box-shadow:0 40px 90px -30px rgba(0,0,0,.85)}
-.phone img{display:block;border-radius:25px;width:100%;height:auto}
+.phone img{display:block;border-radius:25px;width:100%;height:auto;aspect-ratio:390/845;object-fit:contain}
 .phone figcaption{padding:12px 8px 4px;font-size:12px;line-height:1.5;color:var(--ink-dim);text-align:center}
 .phone .src{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%)}
 .page-hero{padding-block:64px 40px}
@@ -807,7 +807,9 @@ footer{background:var(--bg-soft)}
 .src,.cs,.status{white-space:normal}
 .product-hero-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center}
 .product-preview{margin:0;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface);box-shadow:0 20px 64px -44px #000}
-.product-preview picture,.product-preview img{display:block;width:100%;height:auto}
+.product-preview picture,.product-preview img{display:block;width:100%}
+.product-preview picture[data-capture-pair]{aspect-ratio:8/5;overflow:hidden;background:var(--bg-soft)}
+.product-preview picture[data-capture-pair] img{height:100%;aspect-ratio:8/5;object-fit:contain}
 .preview-top{display:flex;gap:12px;align-items:center;padding:16px 20px;background:var(--bg-soft);border-bottom:1px solid var(--line-soft);font-family:var(--heading);letter-spacing:.12em}
 .preview-top .preview-dot{width:8px;height:8px;border-radius:50%;background:var(--brass)}
 .preview-body{padding:28px;display:grid;gap:24px}
@@ -822,6 +824,7 @@ footer{background:var(--bg-soft)}
 .product-preview figcaption a,.phone figcaption a{display:inline-block;padding-block:6px;text-underline-offset:3px}
 @media (max-width:1100px){.nav-main,.nav-right .hide-m{display:none}.menu-btn{display:inline-flex}.hero-grid,.product-hero-grid{gap:32px}}
 @media (max-width:900px){.hero-grid,.product-hero-grid{grid-template-columns:1fr}.hero h1{max-width:20ch}.product-preview{max-width:560px;width:100%}.proof-rail{grid-template-columns:1fr 1fr}.status-map,.buyer-outcome{grid-template-columns:1fr}}
+@media (max-width:600px){.product-preview picture[data-capture-pair]{aspect-ratio:390/845}.product-preview picture[data-capture-pair] img{aspect-ratio:390/845}}
 @media (max-width:600px){.wrap{padding-inline:20px}.hero,.page-hero{padding-block:40px}.hero h1,.page-hero h1{font-size:34px}.hero .phone{margin-top:12px}section.blk{padding-block:40px}.preview-body{padding:20px}.proof-rail{grid-template-columns:1fr}.ctas>*{max-width:100%}.banner{font-size:12px;line-height:1.5}.nav-row{gap:12px}.brand-word{font-size:18px}.brand-mark{width:34px;height:34px}}
 @media (max-width:420px){header.nav .brand-word{display:none}.nav-right{gap:8px}.nav-right .btn{padding:10px 12px}.hero h1,.page-hero h1{font-size:30px}.preview-tabs{font-size:12px}.preview-focus{padding:16px}.preview-row{flex-wrap:wrap}}
 @media (forced-colors:active){.brand-mark{background:Canvas;color:CanvasText;border:1px solid CanvasText}.btn-primary{background:ButtonFace;color:ButtonText}.preview-focus{border-color:CanvasText}}
@@ -1054,7 +1057,7 @@ footer{background:var(--bg-soft)}
         <p style="margin-top:12px"><a class="link" href="#experience">Demo — fictional data, no sign-in →</a> &nbsp; <a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore a sample university (fictional data) ↗</a> &nbsp; <a class="link" href="#institutions">Semester for institutions →</a></p>
         <p class="trustline">Private by design · Source-aware · Built for accessibility</p>
       </div>
-      <figure class="phone cx"><img src="/screenshots/today-mobile.jpg" alt="Semester Today mobile showing the current navigation and next best step" width="390" height="845" loading="eager" decoding="async"><figcaption>Current app · Oct 1, 2026 · Sample data. <a href="/screenshots/today-mobile.jpg" target="_blank" rel="noopener">View full-size ↗</a></figcaption></figure>
+      <figure class="phone cx"><img src="/screenshots/today-mobile.jpg" alt="Semester Home mobile showing current navigation, sample courses and a next action" width="390" height="845" loading="eager" decoding="async"><figcaption>Current app · Captured Oct 2, 2026 · Public fictional-data demo. <a href="/screenshots/today-mobile.jpg" target="_blank" rel="noopener">View full-size ↗</a></figcaption></figure>
     </div>
   </section>
 
@@ -1078,15 +1081,14 @@ footer{background:var(--bg-soft)}
 
   <section class="blk rule" id="proof-walkthrough" aria-labelledby="proof-walkthrough-h">
     <div class="wrap">
-      <div class="sec-head"><p class="eyebrow">Product proof · about 90 seconds</p><h2 id="proof-walkthrough-h">From an open requirement to a confident handoff.</h2><p class="lede">Follow one realistic student decision. Every source, estimate and boundary stays visible.</p></div>
+      <div class="sec-head"><p class="eyebrow">Product proof · about 90 seconds</p><h2 id="proof-walkthrough-h">Six current screens. One clear academic workspace.</h2><p class="lede">Tour the public fictional-data demo as it appears today, from Home through Discover.</p></div>
       <div class="proof-rail">
-        <article class="proof-step"><span class="k">01 · NOTICE</span><h3>See the open requirement</h3><p>A Path Snapshot shows what still needs attention.</p></article>
-        <article class="proof-step"><span class="k">02 · VERIFY</span><h3>Understand why</h3><p>The requirement includes its source and last update.</p></article>
-        <article class="proof-step"><span class="k">03 · COMPARE</span><h3>Find eligible courses</h3><p>Options stay separate from official decisions.</p></article>
-        <article class="proof-step"><span class="k">04 · EXPLAIN</span><h3>Catch a conflict</h3><p>Semester explains the collision in plain language.</p></article>
-        <article class="proof-step"><span class="k">05 · PREPARE</span><h3>Save a backup</h3><p>A ranked alternative keeps the plan resilient.</p></article>
-        <article class="proof-step"><span class="k">06 · ALIGN</span><h3>Build an advisor agenda</h3><p>The student chooses exactly what to share.</p></article>
-        <article class="proof-step"><span class="k">07 · ACT</span><h3>Use the official system</h3><p>Semester hands off safely; the registrar remains authoritative.</p></article>
+        <article class="proof-step"><span class="k">01 · HOME</span><h3>Start with the semester</h3><p>Current courses, progress and navigation share one calm overview.</p></article>
+        <article class="proof-step"><span class="k">02 · TODAY</span><h3>Choose what helps now</h3><p>Semester makes the next useful action visible without hiding context.</p></article>
+        <article class="proof-step"><span class="k">03 · COURSES</span><h3>Gather course work</h3><p>Sample courses and their workspaces stay easy to scan.</p></article>
+        <article class="proof-step"><span class="k">04 · CALENDAR</span><h3>See the week together</h3><p>Course meetings and planning blocks sit in one schedule.</p></article>
+        <article class="proof-step"><span class="k">05 · MY PATH</span><h3>Check degree direction</h3><p>Student-entered and estimated information stays clearly labelled.</p></article>
+        <article class="proof-step"><span class="k">06 · DISCOVER</span><h3>Explore the workspace</h3><p>The app directory shows where planning, learning and campus tools live.</p></article>
       </div>
       <div class="ctas" style="margin-top:24px"><a class="btn btn-primary" href="#experience">Open the interactive demo</a><a class="btn btn-ghost" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">Try it with your semester ↗</a></div>
     </div>
@@ -1144,8 +1146,8 @@ footer{background:var(--bg-soft)}
         <div><h3>One briefing for the day.</h3><p class="muted" style="margin-top:12px">Classes, deadlines and the single most useful next action, pulled from your syllabi and connected calendars.</p>
           <ul><li>Syllabus upload extracts every deadline for you to confirm</li><li>Deadlines sorted by when to start, not only when they're due</li><li>Quiet hours and reminder frequency are yours to set</li></ul></div>
         <figure class="product-preview" aria-label="Current Semester Today screenshot">
-          <picture><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today workspace showing a next step, source review and planning status" width="1441" height="901" loading="lazy" decoding="async"></picture>
-          <figcaption>Current app · Captured Oct 1, 2026 · Sample data. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View desktop capture ↗</a></figcaption>
+          <picture data-capture-pair><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today workspace showing current sample courses, progress and planning actions" width="1440" height="900" loading="lazy" decoding="async"></picture>
+          <figcaption>Current app · Captured Oct 2, 2026 · Public fictional-data demo. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View desktop capture ↗</a></figcaption>
           <details class="why"><summary>Illustrative example: why is a step suggested?</summary><dl><dt>Suggests</dt><dd>Start your advisor agenda today</dd><dt>Because</dt><dd>Your appointment is in 3 days and registration opens next week</dd><dt>Data used</dt><dd>Your calendar (connected) · registrar calendar (synced 2h ago)</dd><dt>Can't know</dt><dd>Whether you've already prepared somewhere else</dd><dt>Your controls</dt><dd>Dismiss · correct · view source · ask for help</dd></dl></details>
         </figure>
       </div>
@@ -1304,8 +1306,8 @@ footer{background:var(--bg-soft)}
     <div class="ctas"><a class="btn btn-primary" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore a sample university</a><a class="btn btn-ghost" href="#pricing">Compare plans</a></div>
     </div>
     <figure class="product-preview" data-product-preview aria-label="Current Semester Today screenshot">
-      <picture><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today with unified navigation, a next best step and source review notices" width="1441" height="901" loading="eager" decoding="async"></picture>
-      <figcaption>Current app · Captured Oct 1, 2026 · Illustrative demo data. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
+      <picture data-capture-pair><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today with current navigation, sample courses, progress and next actions" width="1440" height="900" loading="eager" decoding="async"></picture>
+      <figcaption>Current app · Captured Oct 2, 2026 · Public fictional-data demo. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
     </figure>
   </div></section>
   <section class="blk rule"><div class="wrap">
@@ -1317,7 +1319,7 @@ footer{background:var(--bg-soft)}
     <div class="grid-3" id="mod-inst"></div>
   </div></section>
   <section class="blk rule"><div class="wrap grid-2">
-    <figure class="phone cx"><img src="/screenshots/courses-mobile.jpg" alt="Semester Courses mobile showing the current course list and course navigation" width="390" height="845" loading="lazy" decoding="async"><figcaption>Current app · Oct 1, 2026 · Sample data. <a href="/screenshots/courses-mobile.jpg" target="_blank" rel="noopener">View full-size ↗</a></figcaption></figure>
+    <figure class="phone cx"><img src="/screenshots/courses-mobile.jpg" alt="Semester Courses mobile showing the current public sample course list" width="390" height="845" loading="lazy" decoding="async"><figcaption>Current app · Captured Oct 2, 2026 · Public fictional-data demo. <a href="/screenshots/courses-mobile.jpg" target="_blank" rel="noopener">View full-size ↗</a></figcaption></figure>
     <div>
       <p class="eyebrow">Boundaries</p>
       <h2 style="font-size:clamp(28px,3.4vw,40px);margin-top:12px">How Semester takes over, one module at a time.</h2>
@@ -1761,22 +1763,33 @@ Which requirement should I finish first?</textarea></label>
 <div data-page="experience" hidden>
   <section class="page-hero"><div class="wrap">
     <p class="crumb"><a href="#home">Home</a> / Interactive demo</p>
-    <p class="eyebrow brass">The Semester experience</p>
-    <h1>Walk through Semester from your side of campus.</h1>
-    <p class="lede">Demo — fictional data, no sign-in. A guided tour with no video: pick a perspective and step through a scenario. For the real app, <a class="link" href="https://harrisonjrubin7-cmyk.github.io/semester/#/signup" target="_blank" rel="noopener">create an account</a> (private beta).</p>
-    <div class="persona" role="group" aria-label="Choose a perspective" id="xp-roles"></div>
+    <p class="eyebrow brass">90-second current app walkthrough</p>
+    <h1>See the Semester students can use today.</h1>
+    <p class="lede">Six current screens from the public fictional-data demo, captured in a fresh browser with no sign-in or connected account. Move at your own pace or open the same route in the live app.</p>
   </div></section>
   <section class="blk rule" style="padding-top:40px"><div class="wrap">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 id="xp-scn" style="font-size:clamp(24px,3vw,34px)"></h2><span class="src demo">Illustrative demo data · this guided experience does not access your records</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 id="xp-scn" style="font-size:clamp(24px,3vw,34px)">Start with Home</h2><span class="src demo">Public fictional-data demo · no private student records</span></div>
     <div class="xp">
       <ol class="xp-steps" id="xp-list"></ol>
       <div>
-        <div class="mock" id="xp-mock" aria-live="polite"></div>
+        <figure class="product-preview walkthrough-capture" aria-labelledby="xp-step-title xp-caption">
+          <picture id="xp-picture" data-capture-pair><source id="xp-source" media="(max-width:600px)" srcset="/screenshots/search-mobile.jpg" width="390" height="845"><img id="xp-shot" src="/screenshots/search-desktop.jpg" alt="Semester Home showing the current public sample semester overview" width="1440" height="900" loading="eager" decoding="async"></picture>
+          <figcaption id="xp-caption">Captured Oct 2, 2026 · Public fictional-data demo. <a id="xp-full" href="/screenshots/search-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
+        </figure>
+        <div class="box" style="margin-top:18px"><h3 id="xp-step-title" style="font-size:22px">Start with Home</h3><p class="muted" id="xp-step-description" style="margin-top:6px">See sample courses, academic progress and the current app navigation in one overview.</p><p style="margin-top:12px"><a class="link" id="xp-live" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/#/search" target="_blank" rel="noopener">Open this screen in the live fictional-data demo ↗</a></p></div>
         <div class="xp-nav"><button class="btn btn-ghost btn-sm" type="button" id="xp-prev">← Previous</button><span class="fine" id="xp-count" style="align-self:center"></span><button class="btn btn-primary btn-sm" type="button" id="xp-next">Next step →</button></div>
-        <div class="box" id="xp-end" hidden style="margin-top:18px"><h3 style="font-size:22px">That's the workflow.</h3><p class="muted" style="margin-top:6px" id="xp-end-p"></p><div class="ctas" style="margin-top:14px"><a class="btn btn-primary btn-sm" id="xp-cta" href="#"></a><button class="btn btn-ghost btn-sm" type="button" id="xp-restart">Start over</button></div></div>
+        <div class="box" id="xp-end" hidden style="margin-top:18px"><h3 style="font-size:22px">That is the current Semester workspace.</h3><p class="muted" style="margin-top:6px" id="xp-end-p">You toured six real screens using public sample data. The live demo lets you explore them without an account.</p><div class="ctas" style="margin-top:14px"><a class="btn btn-primary btn-sm" id="xp-cta" href="https://harrisonjrubin7-cmyk.github.io/semester/demo/" target="_blank" rel="noopener">Explore the live fictional-data demo ↗</a><button class="btn btn-ghost btn-sm" type="button" id="xp-restart">Start over</button></div></div>
       </div>
     </div>
   </div></section>
+  <script type="application/json" id="xp-walkthrough-data">[
+    {"id":"search","title":"Start with Home","description":"See sample courses, academic progress and the current app navigation in one overview.","desktop":"/screenshots/search-desktop.jpg","mobile":"/screenshots/search-mobile.jpg","alt":"Semester Home showing the current public sample semester overview","route":"https://harrisonjrubin7-cmyk.github.io/semester/demo/#/search"},
+    {"id":"today","title":"Choose what helps today","description":"Review the current suggestions and choose the academic action that is most useful now.","desktop":"/screenshots/today-desktop.jpg","mobile":"/screenshots/today-mobile.jpg","alt":"Semester Today showing current suggestions and planning actions for sample courses","route":"https://harrisonjrubin7-cmyk.github.io/semester/demo/#/home"},
+    {"id":"courses","title":"Gather course work","description":"Scan the public sample course list and move into the workspace for each class.","desktop":"/screenshots/courses-desktop.jpg","mobile":"/screenshots/courses-mobile.jpg","alt":"Semester Courses showing the current list of public sample university courses","route":"https://harrisonjrubin7-cmyk.github.io/semester/demo/#/courses"},
+    {"id":"calendar","title":"See the week together","description":"View sample class meetings and planning blocks together in the current calendar.","desktop":"/screenshots/calendar-desktop.jpg","mobile":"/screenshots/calendar-mobile.jpg","alt":"Semester Calendar showing the current weekly schedule for public sample courses","route":"https://harrisonjrubin7-cmyk.github.io/semester/demo/#/calendar"},
+    {"id":"path","title":"Check degree direction","description":"Review degree progress while student-entered information and estimates remain visibly labelled.","desktop":"/screenshots/path-desktop.jpg","mobile":"/screenshots/path-mobile.jpg","alt":"Semester My Path showing current degree progress with student-entered and estimated labels","route":"https://harrisonjrubin7-cmyk.github.io/semester/demo/#/degree"},
+    {"id":"discover","title":"Explore the workspace","description":"Browse the current app directory to find planning, learning and campus tools.","desktop":"/screenshots/discover-desktop.jpg","mobile":"/screenshots/discover-mobile.jpg","alt":"Semester Discover showing the current directory of planning and learning applications","route":"https://harrisonjrubin7-cmyk.github.io/semester/demo/#/directory"}
+  ]</script>
 </div>
 
 <!-- ================= BUILD MY SEMESTER ================= -->
@@ -3858,8 +3871,8 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
     <div><p class="eyebrow">The signature screen</p><h2 style="font-size:clamp(26px,3vw,36px);margin-top:12px">Today.</h2>
       <p class="muted" style="margin-top:12px">Scattered information becomes one clear next step, with verified facts kept separate from estimates.</p></div>
     <figure class="product-preview" aria-label="Current Semester Today screenshot">
-      <picture><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today showing student-controlled planning and visible source freshness notices" width="1441" height="901" loading="lazy" decoding="async"></picture>
-      <figcaption>Current app · Captured Oct 1, 2026 · Sample data, no connected account. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
+      <picture data-capture-pair><source media="(max-width:600px)" srcset="/screenshots/today-mobile.jpg" width="390" height="845"><img src="/screenshots/today-desktop.jpg" alt="Semester Today showing current public sample courses and student-controlled planning actions" width="1440" height="900" loading="lazy" decoding="async"></picture>
+      <figcaption>Current app · Captured Oct 2, 2026 · Public fictional-data demo, no connected account. <a href="/screenshots/today-desktop.jpg" target="_blank" rel="noopener">View full-size capture ↗</a></figcaption>
     </figure>
   </div></section>
   <section class="blk rule"><div class="wrap">
@@ -4205,78 +4218,31 @@ SPAN 1102 Spanish II, MW, 14:30-15:45, 3</textarea></label>
 
   // ---------- persona ----------
   const PER={student:["See Semester for students.","Plan your term, prepare for registration and study from your own materials. Free in the private beta.",["Semester for students","#students"]],advising:["See how advising works.","Students arrive with an agenda and a plan they chose to share.",["Advising & student success","#advising"]],faculty:["See Course Studio.","Accessible authoring, source packs and a course AI policy students can read.",["Faculty & course design","#faculty"]],acadops:["See registration readiness.","Source labels, registration windows, ranked backups and official handoffs.",["For registrars","#registrars"]],it:["Start with the evidence.","Capability status, security, accessibility evidence and the procurement package.",["Open the Trust Center","#trust"]],leader:["See what's ready now.","An honest answer on what's ready, what's in beta and what's planned.",["Are we ready?","#launch-readiness"]],join:["Join or partner with Semester.","Careers, design-partner councils and partnerships.",["Ways to join","#company"]]};
-  const XPMAP={advising:"advisor",faculty:"faculty",it:"it"};
   document.querySelectorAll("#persona button").forEach(b=>b.addEventListener("click",()=>{
     document.querySelectorAll("#persona button").forEach(x=>x.setAttribute("aria-pressed",x===b));
     const d=PER[b.dataset.p];document.getElementById("reco").hidden=false;document.getElementById("reco-h").textContent=d[0];document.getElementById("reco-p").textContent=d[1];
     const a=document.getElementById("reco-a");a.textContent=d[2][0];a.href=d[2][1];
     if(d[2][1].startsWith("http")){a.target="_blank";a.rel="noopener"}else{a.removeAttribute("target")}
-    if(XPMAP[b.dataset.p])xpRole=XPMAP[b.dataset.p];
   }));
   document.getElementById("reco-reset").addEventListener("click",()=>{document.querySelectorAll("#persona button").forEach(x=>x.setAttribute("aria-pressed","false"));document.getElementById("reco").hidden=true});
 
   // ---------- experience ----------
-  const R=(t,s,l,c)=>`<div class="row"><div class="l">${c?`<i class="stripe" style="background:var(--${c})"></i>`:""}<div><div class="ttl">${t}</div><div class="sub">${s}</div></div></div>${l}</div>`;
-  const L=(k,t)=>`<span class="src ${k}">${t}</span>`;
-  const XP={
-    student:{n:"Student",scn:"Registration opens soon",cta:["Start planning free",APP],end:"You planned a term, fixed a conflict, prepared for advising and knew exactly where to register.",steps:[
-      ["Today","One next step",R("Registration opens Friday","Two backups still need saving",L("off","Registrar"),"brass")+R("ECON 1010 problem set","Start today · est. 2h",L("off","Syllabus"),"sage")],
-      ["My Path","Requirement context",R("Major core","5 of 9 complete",L("off","Degree audit · 3 days old"),"sage")+R("Business minor","2 of 6 complete",L("stu","You entered"),"rose")],
-      ["Compare courses","Two options for one requirement",R("PSCI 2220 National Security","TR 9:30 · fits your path",L("off","Catalog"),"slate")+R("PSCI 2240 Intelligence Policy","MWF 1:10 · also fits",L("off","Catalog"),"slate")],
-      ["Resolve a conflict","Plain-language explanation",R("MATH 1100 overlaps ECON 2100","MWF 10:30 vs 10:10–11:00",L("est","Conflict"),"rose")+R("Suggested fix","Switch MATH to section 02, MWF 12:10",L("est","Estimate"),"brass")],
-      ["Primary plan + backup","Ranked backups",R("Plan A","15 credits · no conflicts",L("stu","Your plan"),"sage")+R("Backup #1 for PSCI 2220","PSCI 2240 · seats as of 9:02 am",L("off","Registrar"),"slate")],
-      ["Advisor agenda","Walk in prepared",R("3 questions ready","Second major feasibility, sequencing, approvals",L("stu","You"),"slate")+R("Shared with advisor","You can revoke any time",L("stu","Your choice"),"sage")],
-      ["Official handoff","Semester routes, you register",R("Copy section numbers","12 digits ready to paste",L("stu","Your plan"),"sage")+R("Open official registration","Semester does not register for you",L("off","Registrar"),"brass")],
-      ["Sources & privacy","Why you can trust it",R("Every fact labelled","Official · You · Estimate",L("off","Source-aware"),"sage")+R("Your data","Export or delete any time, free",L("stu","Private"),"slate")]]},
-    advisor:{n:"Advisor",scn:"Prepare for an advising meeting",cta:["Explore advising workflows","#advising"],end:"The student arrived prepared and in control of what you could see.",steps:[
-      ["Shared agenda","The student chose to share",R("Maya R. shared an agenda","Appointment Fri 2:30",L("stu","Shared by student"),"sage")],
-      ["Scoped plan","Only what was shared",R("Plan A + 2 backups","Visible to you until the student revokes",L("stu","Student plan"),"slate")+R("Private notes","Not shared",L("demo","Hidden"),"rose")],
-      ["Questions","Ready before the meeting",R("Can I add a second major?","Asked by student",L("stu","Student"),"slate")+R("Which requirement first?","Asked by student",L("stu","Student"),"slate")],
-      ["Follow-up actions","Assign next steps",R("Submit override request","Due Nov 3 · official route linked",L("off","Registrar form"),"brass")],
-      ["Privacy boundary","The student stays in control",R("Access revoked by student","You no longer see this plan",L("stu","Student choice"),"rose")]]},
-    faculty:{n:"Faculty",scn:"Set up a course module",cta:["Explore Course Studio","#faculty"],end:"Accessible content, a clear AI policy, and study support grounded in your sources.",steps:[
-      ["Course Studio","Your course home",R("ECON 1010 · Week 6","3 items drafted",L("off","Your course"),"sage")],
-      ["Accessible authoring","Checks as you write",R("2 images need alt text","Fix inline",L("est","Accessibility check"),"brass")],
-      ["Assignment & rubric","Clear criteria",R("Problem set 4","4-criterion rubric · due Thu",L("off","Published"),"sage")],
-      ["Course AI policy","Students can read it",R("Explain concepts","Allowed",L("off","Policy"),"sage")+R("Write graded answers","Not allowed",L("off","Policy"),"rose")],
-      ["Source-grounded study","Answers from your materials",R("Week 6 source pack","3 readings approved for Ask Semester",L("off","Approved"),"slate")],
-      ["Grading & audit","Every change recorded",R("Grade changed 82 → 85","By you · Oct 12 · reason noted",L("off","Audit history"),"slate")]]},
-    registrar:{n:"Registrar",scn:"Prepare a cohort for registration",cta:["Explore registration readiness","#registrars"],end:"Students saw official information with its freshness, and you saw only privacy-safe aggregates.",steps:[
-      ["Publish window","Registration dates",R("Spring 2027 · Class of 2029","Opens Nov 6, 7:00 am",L("off","Published"),"brass")],
-      ["Approve catalog update","Source changes are reviewed",R("PSCI 2220 moved to TR 9:30","Pending your approval",L("est","Needs review"),"rose")],
-      ["Freshness for students","What students see",R("Catalog","Synced 2h ago",L("off","Official"),"sage")],
-      ["Cohort action","Scoped to one group",R("\"Clear advising holds by Nov 1\"","Sent to 612 students",L("off","Registrar"),"slate")],
-      ["Readiness aggregate","Privacy-suppressed",R("68% have a plan with backups","Groups under 10 students hidden",L("est","Aggregate"),"sage")],
-      ["What you can't see","By design",R("Individual student plans","Not visible to registrar staff",L("demo","Restricted"),"rose")]]},
-    admin:{n:"Institution admin",scn:"Configure a university tenant",cta:["Plan an institutional launch","#institutions"],end:"A governed tenant, configured before any student signs in.",steps:[
-      ["Tenant setup","Branding and roles",R("Example University","Tenant created · 4 admin roles",L("off","Configured"),"sage")],
-      ["Feature policy","Turn modules on or off",R("Ask Semester","On for pilot cohort only",L("off","Policy"),"brass")],
-      ["SSO","Your identity provider",R("SAML connection","Test sign-in passed",L("off","Verified"),"sage")],
-      ["Integration health","Freshness at a glance",R("Catalog feed","Last sync 2h ago · healthy",L("off","Healthy"),"sage")+R("Degree audit","Last sync 3 days · check",L("est","Stale"),"rose")],
-      ["Aggregate insight","Privacy thresholds on",R("Pilot activation","412 of 612 students active",L("est","Aggregate"),"slate")]]},
-    it:{n:"IT & security",scn:"Review governance and integration architecture",cta:["Request procurement package","#procurement"],end:"Least privilege, audited access and a clear integration boundary.",steps:[
-      ["Tenant isolation","Authorization path",R("Every request scoped to tenant","Enforced server-side",L("off","Control"),"sage")],
-      ["Source model","Freshness metadata",R("Each field records source + timestamp","Shown to users as labels",L("off","Control"),"slate")],
-      ["Integration boundary","Read-only by default",R("SIS: read approved fields","No writes without contract + UAT",L("off","Boundary"),"brass")],
-      ["Support access","Time-limited",R("Support grant · 2 hours","Approved by tenant admin",L("off","Audited"),"sage")],
-      ["Audit chain","Every event",R("admin.policy.updated","Oct 12 14:02 · actor recorded",L("off","Audit log"),"slate")],
-      ["Operations","Monitoring and recovery",R("Backups + incident process","Summary in procurement package",L("est","Documented"),"brass")]]}
-  };
-  let xpRole="student",xpStep=0;
-  const xr=document.getElementById("xp-roles");
-  xr.innerHTML=Object.entries(XP).map(([k,v])=>`<button type="button" data-r="${k}" aria-pressed="false">${v.n}</button>`).join("");
-  xr.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;xpRole=b.dataset.r;xpStep=0;xpRender()});
-  function xpRender(){const r=XP[xpRole];
-    xr.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.r===xpRole));
-    document.getElementById("xp-scn").textContent=r.n+": "+r.scn;
-    document.getElementById("xp-list").innerHTML=r.steps.map((s,i)=>`<li><button type="button" data-i="${i}"${i===xpStep?' aria-current="step"':""}><span class="k">${String(i+1).padStart(2,"0")}</span><span>${s[0]}</span></button></li>`).join("");
-    const st=r.steps[xpStep];
-    document.getElementById("xp-mock").innerHTML=`<div class="mock-top"><span class="h">${st[0]}</span><span class="fine">${st[1]}</span></div>${st[2]}`;
-    document.getElementById("xp-count").textContent=`Step ${xpStep+1} of ${r.steps.length}`;
+  let xpStep=0;
+  const xpSteps=JSON.parse(document.getElementById("xp-walkthrough-data").textContent);
+  function xpRender(){
+    const st=xpSteps[xpStep];
+    document.getElementById("xp-scn").textContent=st.title;
+    document.getElementById("xp-list").innerHTML=xpSteps.map((s,i)=>`<li><button type="button" data-i="${i}"${i===xpStep?' aria-current="step"':""}><span class="k">${String(i+1).padStart(2,"0")}</span><span>${s.title}</span></button></li>`).join("");
+    const shot=document.getElementById("xp-shot"),source=document.getElementById("xp-source");
+    shot.src=st.desktop;shot.alt=st.alt;source.srcset=st.mobile;
+    document.getElementById("xp-step-title").textContent=st.title;
+    document.getElementById("xp-step-description").textContent=st.description;
+    document.getElementById("xp-full").href=st.desktop;
+    document.getElementById("xp-live").href=st.route;
+    document.getElementById("xp-count").textContent=`Step ${xpStep+1} of ${xpSteps.length}`;
     document.getElementById("xp-prev").disabled=xpStep===0;
-    const last=xpStep===r.steps.length-1;document.getElementById("xp-next").hidden=last;
-    document.getElementById("xp-end").hidden=!last;document.getElementById("xp-end-p").textContent=r.end;
-    const c=document.getElementById("xp-cta");c.textContent=r.cta[0];c.href=r.cta[1];if(r.cta[1].startsWith("http")){c.target="_blank";c.rel="noopener"}else c.removeAttribute("target");
+    const last=xpStep===xpSteps.length-1;document.getElementById("xp-next").hidden=last;
+    document.getElementById("xp-end").hidden=!last;
   }
   document.getElementById("xp-list").addEventListener("click",e=>{const b=e.target.closest("button");if(b){xpStep=+b.dataset.i;xpRender()}});
   document.getElementById("xp-prev").addEventListener("click",()=>{if(xpStep>0){xpStep--;xpRender()}});
@@ -5439,14 +5405,6 @@ const exampleRow = (scale = 1) => ({
   document.getElementById("kit-list").innerHTML=KIT.map((k,i)=>`<div class="box kit"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="font-size:clamp(20px,2.4vw,24px)" id="kit-h${i}">${k[0]}</h2><div style="display:flex;gap:8px;align-items:center"><span class="fine" data-kit-msg="${i}" aria-live="polite"></span><button class="btn btn-ghost btn-sm" type="button" data-kit="${i}" aria-describedby="kit-h${i}">Copy</button></div></div><pre class="kittext" tabindex="0" aria-labelledby="kit-h${i}">${esc(k[1])}</pre></div>`).join("");
   document.getElementById("kit-list").addEventListener("click",e=>{const b=e.target.closest("[data-kit]");if(!b)return;const i=+b.dataset.kit,m=document.querySelector(`[data-kit-msg="${i}"]`);
     try{navigator.clipboard.writeText(KIT[i][1]).then(()=>{m.textContent="Copied."},()=>{m.textContent="Copy isn't available here; select the text instead."})}catch(err){m.textContent="Copy isn't available here; select the text instead."}});
-
-  // ---------- demo handoff: a role-specific next step ----------
-  XP.advisor.cta=["Use the advisor agenda template","#agenda"];
-  XP.it.cta=["Request the architecture and procurement package","#procurement"];
-  XP.admin.cta2=["Enterprise? Schedule an enterprise briefing","#contact","ent"];
-  XP.it.end+=" Architecture diagrams and security documents are released through the procurement package.";
-  const xpEndC=document.querySelector("#xp-end .ctas");if(xpEndC)xpEndC.insertAdjacentHTML("beforeend",`<a class="btn btn-ghost btn-sm" id="xp-cta2" href="#" hidden></a>`);
-  const xpOrig=xpRender;xpRender=function(){xpOrig();const r=XP[xpRole],c2=document.getElementById("xp-cta2");if(!c2)return;if(r.cta2){c2.hidden=false;c2.textContent=r.cta2[0];c2.href=r.cta2[1];c2.dataset.topic=r.cta2[2]||""}else c2.hidden=true};
 
   // ---------- after-signup links on every signup / request CTA ----------
   document.querySelectorAll('a[href$="#/signup"],a[href="#request-invite"]').forEach(a=>{

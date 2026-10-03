@@ -7,7 +7,8 @@ import { describe, expect, it } from 'vitest';
 const companyRoot = join(import.meta.dirname, '../../../company-site');
 const site = readFileSync(join(companyRoot, 'index.html'), 'utf8');
 const page = new DOMParser().parseFromString(site, 'text/html');
-const requiredCaptures = ['today-desktop.jpg', 'today-mobile.jpg', 'courses-mobile.jpg'];
+const walkthroughScreens = ['search', 'today', 'courses', 'calendar', 'path', 'discover'] as const;
+const requiredCaptures = walkthroughScreens.flatMap(screen => [`${screen}-desktop.jpg`, `${screen}-mobile.jpg`]);
 const captureImages = () => [...page.querySelectorAll('img')]
   .filter(image => image.getAttribute('src')?.includes('screenshots/'));
 
@@ -22,11 +23,26 @@ type Manifest = {
   capturedAt: string;
   appSourceCommit: string;
   appDeploymentCommit: string;
+  appDeploymentRun: string;
+  deploymentVerification: {
+    expectedFixPresent: string;
+    supersededRuleAbsent: string;
+    serviceWorkerState: string;
+  };
   captureMode: string;
   sampleData: boolean;
   theme: string | Record<string, unknown>;
   nav: string | Record<string, unknown>;
   images: Capture[];
+};
+type WalkthroughStep = {
+  id: string;
+  title: string;
+  description: string;
+  desktop: string;
+  mobile: string;
+  alt: string;
+  route: string;
 };
 
 function manifest(): Manifest {
@@ -38,6 +54,12 @@ function manifest(): Manifest {
 function capturePath(path: string): string {
   expect(path).toMatch(/^\/?screenshots\/[a-z0-9-]+\.jpg$/);
   return join(companyRoot, path.replace(/^\//, ''));
+}
+
+function walkthrough(): WalkthroughStep[] {
+  const data = page.querySelector<HTMLScriptElement>('#xp-walkthrough-data');
+  expect(data, 'The walkthrough needs a machine-readable capture sequence').not.toBeNull();
+  return JSON.parse(data!.textContent ?? '[]') as WalkthroughStep[];
 }
 
 // Read the dimensions from the shipped JPEG, not a hard-coded viewport request:
@@ -66,10 +88,11 @@ function sourceReferences(): string[] {
   const captures = [...page.querySelectorAll('img, source')].filter(element =>
     [element.getAttribute('src'), element.getAttribute('srcset')].some(value => value?.includes('screenshots/')),
   );
-  return captures.flatMap(element => [
+  const markupReferences = captures.flatMap(element => [
     ...(element.getAttribute('src') ? [element.getAttribute('src')!] : []),
     ...(element.getAttribute('srcset')?.split(',').map(candidate => candidate.trim().split(/\s+/)[0]) ?? []),
   ]);
+  return [...markupReferences, ...walkthrough().flatMap(step => [step.desktop, step.mobile])];
 }
 
 describe('the company site shows captured current application screens', () => {
@@ -112,19 +135,27 @@ describe('the company site shows captured current application screens', () => {
       expect({ width: Number(image.getAttribute('width')), height: Number(image.getAttribute('height')) })
         .toEqual(jpegDimensions(bytes));
       const caption = image.closest('figure')?.textContent ?? image.parentElement?.textContent ?? '';
-      expect(/(?:illustrative(?: demo)?|sample|fictional|demo) data/i.test(caption)).toBe(true);
+      expect(/(?:illustrative(?: demo)?|sample|fictional|demo)[ -]data/i.test(caption)).toBe(true);
     }
   });
 
-  it('offers real desktop and phone sources for the Today screenshot rather than a stretched phone', () => {
-    const responsive = [...page.querySelectorAll('picture')].some(picture => {
-      const references = [...picture.querySelectorAll('source, img')]
-        .flatMap(element => [element.getAttribute('src') ?? '', element.getAttribute('srcset') ?? '']).join(' ');
-      return references.includes('/screenshots/today-desktop.jpg')
-        && references.includes('/screenshots/today-mobile.jpg')
-        && Boolean(picture.querySelector('source[media][srcset]'));
-    });
-    expect(responsive).toBe(true);
+  it('reserves the matching desktop and phone proportions instead of stretching either capture', () => {
+    const responsive = [...page.querySelectorAll<HTMLPictureElement>('picture[data-capture-pair]')];
+    expect(responsive.length).toBeGreaterThanOrEqual(4);
+    for (const picture of responsive) {
+      const source = picture.querySelector('source[media][srcset]');
+      const image = picture.querySelector('img[src]');
+      expect(source).not.toBeNull();
+      expect(image).not.toBeNull();
+      expect({ width: source?.getAttribute('width'), height: source?.getAttribute('height') })
+        .toEqual({ width: '390', height: '845' });
+      expect({ width: image?.getAttribute('width'), height: image?.getAttribute('height') })
+        .toEqual({ width: '1440', height: '900' });
+      expect(jpegDimensions(readFileSync(capturePath(source!.getAttribute('srcset')!))))
+        .toEqual({ width: 390, height: 845 });
+      expect(jpegDimensions(readFileSync(capturePath(image!.getAttribute('src')!))))
+        .toEqual({ width: 1440, height: 900 });
+    }
   });
 
   it('loads hero proof immediately while keeping below-the-fold captures deferred', () => {
@@ -142,7 +173,12 @@ describe('the company site shows captured current application screens', () => {
     expect(proof.capturedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/);
     expect(Number.isFinite(Date.parse(proof.capturedAt))).toBe(true);
     expect(proof.appSourceCommit).toMatch(/^[a-f0-9]{40}$/);
-    expect(proof.appDeploymentCommit).toMatch(/^[a-f0-9]{40}$/);
+    expect(proof.appSourceCommit).toBe('fc08913447d691cf0fa8ef757dc365a3b7d8275d');
+    expect(proof.appDeploymentCommit).toBe(proof.appSourceCommit);
+    expect(proof.appDeploymentRun).toBe('https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37043013395');
+    expect(proof.deploymentVerification.expectedFixPresent).toContain('min-height: 44px');
+    expect(proof.deploymentVerification.supersededRuleAbsent).toContain('min-height: 0');
+    expect(proof.deploymentVerification.serviceWorkerState).toMatch(/brand-new browser profile/i);
     expect(proof.captureMode).toBe('isolated-demo');
     expect(proof.sampleData).toBe(true);
     for (const appearance of [proof.theme, proof.nav]) {
@@ -170,15 +206,37 @@ describe('the company site shows captured current application screens', () => {
     }
   });
 
-  it('preserves interactive and unbuilt concept examples without mislabelling them as captures', () => {
-    // These controls were never photographs: changing every .mock would erase
-    // the working walkthrough and make planned concepts look implemented.
+  it('uses current application captures for every step of the 90-second walkthrough', () => {
     const experience = page.querySelector('[data-page="experience"]');
-    expect(experience?.querySelector('#xp-mock')).not.toBeNull();
+    expect(experience?.querySelector('#xp-mock')).toBeNull();
+    expect(experience?.querySelector('.persona')).toBeNull();
+    expect(experience?.querySelector('picture#xp-picture[data-capture-pair]')).not.toBeNull();
+    expect(experience?.querySelector('#xp-shot')).not.toBeNull();
+    expect(experience?.querySelector('#xp-caption')).not.toBeNull();
+    expect(experience?.querySelector('#xp-live')).not.toBeNull();
     for (const control of ['xp-prev', 'xp-next', 'xp-restart']) {
       expect(experience?.querySelector(`#${control}`)).not.toBeNull();
     }
-    expect(experience?.textContent).toContain('this guided experience does not access your records');
+
+    const steps = walkthrough();
+    expect(steps.map(step => step.id)).toEqual(walkthroughScreens);
+    expect(new Set(steps.flatMap(step => [step.desktop, step.mobile])).size).toBe(12);
+    for (const step of steps) {
+      expect(step.title.trim().split(/\s+/).length).toBeGreaterThanOrEqual(2);
+      expect(step.description.trim().split(/\s+/).length).toBeGreaterThanOrEqual(6);
+      expect(step.alt).toMatch(/Semester/i);
+      expect(step.route).toMatch(/^https:\/\/harrisonjrubin7-cmyk\.github\.io\/semester\/demo\/#\/[a-z]+$/);
+      expect(step.desktop).toBe(`/screenshots/${step.id}-desktop.jpg`);
+      expect(step.mobile).toBe(`/screenshots/${step.id}-mobile.jpg`);
+      expect(existsSync(capturePath(step.desktop))).toBe(true);
+      expect(existsSync(capturePath(step.mobile))).toBe(true);
+    }
+
+    expect(experience?.textContent).toContain('public fictional-data demo');
+    expect(experience?.textContent).toContain('Captured Oct 2, 2026');
+  });
+
+  it('keeps unbuilt concept examples clearly separate from current app proof', () => {
     expect(page.querySelector('[data-page="membership"]')?.textContent).toContain('nothing here is charged or cancelled');
     expect(page.querySelector('[data-page="credential-wallet"]')?.textContent).toContain('Illustrative concept · not built');
   });

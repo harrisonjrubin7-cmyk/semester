@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const host = 'https://localhost:4186';
 const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
-const requiredPaths = ['/', '/product', '/students', '/personal-academic-os', '/screenshots/today-desktop.jpg', '/screenshots/today-mobile.jpg', '/screenshots/courses-mobile.jpg'];
+const requiredPaths = ['/', '/product', '/students', '/personal-academic-os', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])];
 const safeText = value => String(value).replace(/[\r\n\x00-\x1f]/g, ' ').slice(0, 180);
 
 export function parseJson(text) {

@@ -112,12 +112,12 @@ test('HTTPS works with the generated certificate trusted explicitly, without dis
 });
 
 const cleanReport = () => ({ scan: { id: '12345678-1234-1234-1234-123456789abc', host: 'https://localhost:4186', environment: 'CompanySiteCI', status: 'COMPLETED' }, findings: [], errors: [], warnings: [], thresholdResult: 'PASS' });
-const coveredUris = ['/', '/product', '/students', '/personal-academic-os', '/screenshots/today-desktop.jpg', '/screenshots/today-mobile.jpg', '/screenshots/courses-mobile.jpg'];
+const coveredUris = ['/', '/product', '/students', '/personal-academic-os', ...['search', 'today', 'courses', 'calendar', 'path', 'discover'].flatMap(screen => [`/screenshots/${screen}-desktop.jpg`, `/screenshots/${screen}-mobile.jpg`])];
 
 test('clean complete scan evidence passes (reporting control)', () => {
   const result = evaluate(cleanReport(), { urls: coveredUris }, coveredUris);
   assert.deepEqual(result.gaps, []);
-  assert.equal(result.paths.size, 7);
+  assert.equal(result.paths.size, 16);
   assert.deepEqual(result.untouched, []);
 });
 
