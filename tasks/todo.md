@@ -100,7 +100,7 @@
 ## Phase 6 — Commercial operations
 
 - [x] R01: commercial documents 1–5; added controlled positioning/messaging, ideal-customer, buyer-persona, user-persona, and segmentation artifacts that authorize truthful non-activation discovery while preserving activation, validation, market-size, customer, and enterprise evidence gates on 2026-10-03.
-- [ ] R02: commercial documents 6–10.
+- [x] R02: commercial documents 6–10; added controlled competitive positioning, claims library, sales playbook, discovery script, and executive demo script that make non-activation engagement executable while keeping live data, payment, activation, customer, outcome, compliance, and enterprise claims gated on 2026-10-03.
 - [ ] R03: commercial documents 11–15.
 - [ ] R04: commercial documents 16–20.
 - [ ] R05: commercial documents 21–25.

@@ -173,11 +173,11 @@ At planning time, 22 of 232 requested basenames were present and 210 were absent
 | 158 | `docs/commercial/BUYER-PERSONAS.md` | EXACT PRESENT | canonical stakeholder decision/evidence map; named buying-committee validation remains open |
 | 159 | `docs/commercial/USER-PERSONAS.md` | EXACT PRESENT | canonical job/access/safeguard hypotheses; representative research and UAT remain open |
 | 160 | `docs/commercial/MARKET-SEGMENTATION.md` | EXACT PRESENT | canonical initial wedge and deferred-enterprise segmentation; market-size/conversion validation remains open |
-| 161 | `docs/commercial/COMPETITIVE-POSITIONING.md` | CANDIDATE SOURCE | `COMPETITIVE-REVIEW.md` (filename similarity 0.42; substantive review required) |
-| 162 | `docs/commercial/PRODUCT-MARKETING-CLAIMS-LIBRARY.md` | NO CLOSE SOURCE | — |
-| 163 | `docs/commercial/SALES-PLAYBOOK.md` | EXACT PRESENT | `docs/market-readiness/SALES-PLAYBOOK.md` |
-| 164 | `docs/commercial/DISCOVERY-CALL-SCRIPT.md` | EXACT PRESENT | `docs/market-readiness/DISCOVERY-CALL-SCRIPT.md` |
-| 165 | `docs/commercial/DEMO-SCRIPT-EXECUTIVE.md` | CANDIDATE SOURCE | `docs/market-readiness/DEMO-SCRIPT.md` (filename similarity 0.67; substantive review required) |
+| 161 | `docs/commercial/COMPETITIVE-POSITIONING.md` | EXACT PRESENT | canonical self-position and comparative-claim limits; current primary-source research and win/loss validation remain open |
+| 162 | `docs/commercial/PRODUCT-MARKETING-CLAIMS-LIBRARY.md` | EXACT PRESENT | canonical substantiated internal formulations and channel approval boundary; broader claims remain prohibited |
+| 163 | `docs/commercial/SALES-PLAYBOOK.md` | EXACT PRESENT | canonical qualify/discover/demo/evidence/conditional-scope process; payment, live data and activation remain gated |
+| 164 | `docs/commercial/DISCOVERY-CALL-SCRIPT.md` | EXACT PRESENT | canonical problem/cohort/authority/data/fit script authorized for non-activation discovery |
+| 165 | `docs/commercial/DEMO-SCRIPT-EXECUTIVE.md` | EXACT PRESENT | canonical synthetic executive first-win/first-proof/limits/decision demo; customer and activation proof remain absent |
 | 166 | `docs/commercial/DEMO-SCRIPT-OPERATIONAL.md` | CANDIDATE SOURCE | `docs/market-readiness/DEMO-SCRIPT.md` (filename similarity 0.66; substantive review required) |
 | 167 | `docs/commercial/DEMO-SCRIPT-TECHNICAL.md` | CANDIDATE SOURCE | `docs/market-readiness/DEMO-SCRIPT.md` (filename similarity 0.67; substantive review required) |
 | 168 | `docs/commercial/PILOT-OFFER.md` | EXACT PRESENT | `docs/market-readiness/PILOT-OFFER.md` |
