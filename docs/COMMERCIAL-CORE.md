@@ -158,14 +158,14 @@ or leads go unanswered.
 
 | Secret | Function | What it does |
 | --- | --- | --- |
-| `STRIPE_SECRET_KEY` (preferred), `STRIPE_API_KEY` (legacy deployed name) | billing-checkout, billing-cancel | Stripe secret key. The functions prefer the canonical name and fall back to the legacy name; if neither is set, checkout and cancel answer 503 |
+| `STRIPE_SECRET_KEY` (preferred), `STRIPE_API_KEY` (legacy deployed name) | billing-checkout, billing-cancel, billing-portal | Stripe secret key. The functions prefer the canonical name and fall back to the legacy name; if neither is set, checkout, cancel and billing history answer 503 |
 | `STRIPE_WEBHOOK_SECRET` | billing-webhook | The webhook endpoint's signing secret. Unset: webhook answers 503 |
-| `ALLOWED_ORIGIN` | billing-checkout, billing-cancel | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
+| `ALLOWED_ORIGIN` | billing-checkout, billing-cancel, billing-portal | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
 | `SITE_ORIGINS` | lead-intake | Origins to add, comma-separated. The site's own are built in (`SITE_PRODUCTION_ORIGINS`), so unset adds nothing and still serves the site |
 | `RESEND_API_KEY` | lead-intake | Resend key; with `LEAD_NOTIFY_EMAIL`, every lead is emailed |
 | `LEAD_NOTIFY_EMAIL` | lead-intake | The owner's inbox: set it to `harrisonjrubin7@gmail.com`. Configuration, never code |
 | `LEAD_NOTIFY_FROM` | lead-intake | Optional: a verified Resend sender (default Resend's onboarding sender, which only delivers to the Resend account's own address) |
-| `CHECKOUT_RETURN_URL` | billing-checkout | Optional: where Stripe returns the student (default: the calling origin) |
+| `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | Optional: where Stripe returns the student (default: the calling origin) |
 | `LEAD_IP_SALT` | lead-intake | Optional: the key the IP address is hashed with (default: the service key) |
 
 The Stripe webhook to register (Developers → Webhooks) is

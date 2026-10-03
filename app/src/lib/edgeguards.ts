@@ -51,6 +51,7 @@ const USER = [/\.auth\.getUser\(/] as const;
 export const EDGE_GUARDS: readonly EdgeGuard[] = [
   { fn: 'billing-cancel', guard: 'user-token', evidence: USER },
   { fn: 'billing-checkout', guard: 'user-token', evidence: USER },
+  { fn: 'billing-portal', guard: 'user-token', evidence: USER },
   { fn: 'billing-webhook', guard: 'signature', evidence: [/STRIPE_WEBHOOK_SECRET/] },
   { fn: 'calendar', guard: 'link-token', evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/] },
   { fn: 'canvas', guard: 'user-token', evidence: USER },

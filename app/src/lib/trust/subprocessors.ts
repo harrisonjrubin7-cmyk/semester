@@ -81,8 +81,8 @@ export const PARTIES: readonly Party[] = [
     name: 'Stripe', kind: 'subprocessor',
     purpose: 'Payments for a paid plan: the hosted checkout page, recurring billing, and the webhook that tells Semester a payment succeeded or failed. Not active until its keys are set; nothing is charged before then.',
     receives: 'The student’s email address, the plan and price chosen, and the payment details they type into Stripe’s own page, which never pass through Semester. Semester keeps Stripe’s customer and subscription references, never card or bank data.',
-    when: 'student-opt-in', hosts: [], functions: ['billing-cancel', 'billing-checkout', 'billing-webhook'],
-    evidence: ['supabase/functions/billing-cancel/index.ts', 'supabase/functions/billing-checkout/index.ts', 'supabase/functions/billing-webhook/index.ts', 'docs/COMMERCIAL-CORE.md'],
+    when: 'student-opt-in', hosts: [], functions: ['billing-cancel', 'billing-checkout', 'billing-portal', 'billing-webhook'],
+    evidence: ['supabase/functions/billing-cancel/index.ts', 'supabase/functions/billing-checkout/index.ts', 'supabase/functions/billing-portal/index.ts', 'supabase/functions/billing-webhook/index.ts', 'docs/COMMERCIAL-CORE.md'],
   },
   {
     name: 'Resend', kind: 'subprocessor',
