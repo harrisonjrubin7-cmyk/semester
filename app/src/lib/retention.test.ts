@@ -592,3 +592,40 @@ describe('the AI-runtime and Community sweeps obey a hold at their last definiti
     expect(ACCOUNTLESS).not.toContain('community_restrictions');
   });
 });
+
+describe('institutional setup intake retention is prospective and not activated', () => {
+  const migration = readFileSync(join(MIGRATIONS, '20261003210000_site_lead_retention.sql'), 'utf8');
+  const scheduler = readFileSync(join(ROOT, 'supabase', 'scheduler.sql'), 'utf8');
+
+  it('classifies only new exact setup requests and never backfills historical leads', () => {
+    expect(migration).toMatch(/before insert on public\.site_leads/);
+    expect(migration).toMatch(/new\.route_key = 'plan_institution_launch'/);
+    expect(migration).toMatch(/new\.purge_after := new\.created_at \+ interval '90 days'/);
+    expect(migration).not.toMatch(/update\s+public\.site_leads\s+set\s+retention_class/i);
+  });
+
+  it('fails closed for conversion, classification and legal holds', () => {
+    expect(migration).toMatch(/b\.kind = 'institution'/);
+    expect(migration).toMatch(/b\.gtm_account_id = lead\.gtm_account_id/);
+    expect(migration).toMatch(/l\.route_key = 'plan_institution_launch'/);
+    expect(migration).toMatch(/l\.converted_at is null and l\.converted_billing_account_id is null/);
+    expect(migration).toMatch(/private\.platform_is_held\(\)/);
+    expect(migration.match(/pg_advisory_xact_lock\(hashtext\('site_lead_retention:platform_hold'\)\)/g)).toHaveLength(2);
+  });
+
+  it('is service-only, dry-run by default and deliberately absent from the scheduler', () => {
+    expect(migration).toMatch(/dry_run boolean default true/);
+    expect(migration).toMatch(/if not dry_run and as_of > now\(\) then/);
+    expect(migration).toMatch(/revoke update, delete, truncate on public\.site_leads from service_role/);
+    expect(migration).toMatch(/revoke all on function private\.sweep_site_lead_retention[\s\S]*from public, anon, authenticated/);
+    expect(migration).toMatch(/grant execute on function private\.sweep_site_lead_retention[\s\S]*to service_role/);
+    expect(scheduler).not.toContain('sweep_site_lead_retention');
+  });
+
+  it('documents the approved 90-day boundary and the records outside it', () => {
+    const said = flat();
+    expect(said).toContain('**new, unconverted institutional setup requests: 90 days; all historical, other-route and converted rows: no automatic time-based purge**');
+    expect(said).toContain('Converted customer records need their separate commercial retention policy');
+    expect(said).toContain('deliberately **not scheduled or activated**');
+  });
+});
