@@ -451,16 +451,14 @@ function hasApprovalProvenance(item: ReleaseEvidence, decisionTime: number): boo
     if (!Array.isArray(decision.conditions)) return false;
     if ((decision.verdict === 'go' && decision.conditions.length > 0)
       || (decision.verdict === 'go-with-conditions' && decision.conditions.length === 0)) return false;
-    const evaluationDate = new Date(decisionTime).toISOString().slice(0, 10);
     if (!decision.conditions.every((condition) => Boolean(
       condition
       && isNonBlankString(condition.blocker)
-      && ['P0', 'P1', 'P2', 'P3'].includes(condition.severity)
-      && isNonBlankString(condition.by)
+      && ['P2', 'P3'].includes(condition.severity)
+      && condition.by === 'founder'
       && isNonBlankString(condition.reason)
       && isNonBlankString(condition.disclosure)
-      && evidenceTime(condition.expires) !== null
-      && condition.expires > evaluationDate,
+      && (evidenceTime(condition.expires) ?? -1) > decisionTime,
     ))) return false;
   }
   if (item.gate === 'canonical-launch-decision') {

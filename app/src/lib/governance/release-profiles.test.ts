@@ -231,6 +231,43 @@ describe('pilot and individual release profiles', () => {
     })).toMatchObject({ targetBound: false, rolloutStatus: 'held' });
   });
 
+  it('keeps the non-institutional validation decision fail-closed without a pilot champion', () => {
+    const profile = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const target = TARGETS[profile.id];
+    const complete = [
+      ...technical(target),
+      ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
+      ...profile.requiredDependencies.map((item) => dependency(item, target)),
+    ];
+    const decisionIndex = complete.findIndex((item) => item.gate === 'validation-launch-decision');
+    expect(complete[decisionIndex].approvals?.map((approval) => approval.role)).not.toContain('pilot-champion');
+    expect(evaluateReleaseProfile(profile.id, complete, AS_OF, target)).toMatchObject({
+      rolloutStatus: 'authorized', launchVerdict: 'go',
+    });
+    for (const validationDecision of [
+      { verdict: 'no-go' as const, on: AS_OF, conditions: [] },
+      {
+        verdict: 'go-with-conditions' as const,
+        on: AS_OF,
+        conditions: [{
+          blocker: 'expired-risk', severity: 'P2' as const, by: 'founder' as const,
+          reason: 'bounded validation', disclosure: 'Participants receive this notice.', expires: AS_OF,
+        }],
+      },
+      {
+        verdict: 'go-with-conditions' as const,
+        on: AS_OF,
+        conditions: [{
+          blocker: 'critical-risk', severity: 'P1' as const, by: 'founder' as const,
+          reason: 'cannot waive', disclosure: 'Participants receive this notice.', expires: '2026-11-01',
+        }],
+      },
+    ]) {
+      const evidence = complete.with(decisionIndex, { ...complete[decisionIndex], validationDecision });
+      expect(evaluateReleaseProfile(profile.id, evidence, AS_OF, target).rolloutStatus).toBe('held');
+    }
+  });
+
   it('binds institutional evidence to an explicit manual or connected data mode', () => {
     const manual = RELEASE_PROFILES[MANUAL_PROFILE];
     const manualTarget = {
