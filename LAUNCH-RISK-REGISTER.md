@@ -43,7 +43,7 @@ Stop or withhold activation if any of the following occurs: suspected secret exp
 ## Current decision
 
 - Individual invitation-based validation: **YELLOW**, only after the applicable gates are accepted.
-- Design-partner discovery/demonstration: **YELLOW**; activation is **RED** today.
+- Design-partner discovery, synthetic demonstrations, evidence exchange, and scoping: **GREEN / GO** within the controlled non-activation scripts, claim ceilings, approved-data boundary, and no-customer-status rule; activation is **RED / NO-GO** today.
 - Paid institutional pilot: **RED / NO-GO**.
 - Broad enterprise sale: **RED / NO-GO**.
 
