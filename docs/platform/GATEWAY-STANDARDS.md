@@ -55,6 +55,7 @@ envelope.
 | --- | --- | --- | --- |
 | `invalid_request` | 400 | no | Malformed request (bad header, bad `limit`) |
 | `validation_failed` | 400 | no | The input is not acceptable; the message says how to fix it |
+| `refused` | 400 | no | An adapter or domain meant to say no, with a sentence for the person; nothing was written |
 | `version_unsupported` | 400 | no | Unknown or retired API version; names the version to move to |
 | `invalid_cursor` | 400 | no | Forged, expired, other-tenant or other-query cursor; start from page one |
 | `unauthenticated` | 401 | no | No or invalid credential (also every service-token failure, deliberately uninformative) |
@@ -65,14 +66,29 @@ envelope.
 | `tenant_suspended` | 403 | no | The tenant is not `active` |
 | `consent_required` | 403 | no | A consent from the data's owner would open this; the surface can offer the prompt |
 | `not_found` | 404 | no | Not found **or not yours** — the two are indistinguishable by design |
+| `method_not_supported` | 405 | no | The method is not offered on this route |
 | `conflict` | 409 | no | Stale version / already exists |
+| `expired` | 410 | no | A review or grant lapsed; start again from a fresh one |
 | `idempotency_in_progress` | 409 | no | The first attempt is still running; `Retry-After` says when to ask again with the same key |
 | `precondition_failed` | 412 | no | The state does not allow it (an illegal workflow move, a file not ready, a legal hold) |
+| `too_large` | 413 | no | The body exceeds the route's cap |
+| `unsupported_media_type` | 415 | no | Not JSON where JSON is required |
 | `idempotency_key_reused` | 422 | no | The key was used for a different request: a client bug (the IETF idempotency-key draft's 422) |
 | `rate_limited` | 429 | **yes** | Slow down; `Retry-After` |
 | `internal` | 500 | no | Our fault; the message is generic |
-| `outcome_unknown` | 502 | no | An upstream call may or may not have happened — **reconcile, do not retry** |
+| `outcome_uncertain` | 502 | no | An upstream call may or may not have happened — **reconcile, do not retry** |
 | `unavailable` | 503 | **yes** | Try again later |
+
+**Specific codes.** The institution gateway already refines a status with a name a
+client may switch on — `review_expired`, `record_changed`, `review_changed`,
+`review_refused`, `already_claimed`, `adapter_not_configured`, `connection_forbids`,
+`not_ready_to_execute`, `read_only` (ADR 0010: "a status alone is not enough to tell
+*the review expired* from *the record moved*"). The platform carries them
+(`PlatformError.specific(status, code, …)`: lowercase, `_` or `-` inside, 3–48 characters — the live `policy-disabled` is kebab-case, and the wire is not ours to rename) rather than
+flattening them into the catalogue's nearest name; only the table above is the platform's
+to promise. A specific code may reuse a catalogue name at another status — the live
+gateway says `outcome_uncertain` at 409 as well as 502 — and `retryable` always follows
+the *status* (429 and 503), never the name.
 
 `idempotency_in_progress` is 409 with `retryable: false` to honour the ADR's rule
 that only 429 and 503 are blind-retryable; the SDK does not auto-retry it, and a

@@ -50,7 +50,6 @@ describe('the intelligence expansion preserves the existing Semester product', (
       configurationStudio: 'off',
       recordLedger: 'off',
       studentAccounts: 'off',
-      domainToday: 'off',
       domainTasks: 'off',
     });
   });

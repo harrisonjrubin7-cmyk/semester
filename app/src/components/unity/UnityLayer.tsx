@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { FixThis } from '../FixThis';
-import { useModal } from '../../a11y/modal';
+import { useModal, useScrim } from '../../a11y/modal';
 import { DESKTOP, useMedia } from '../../lib/media';
 import { statusOf } from '../../lib/status';
 import { SESSION_MINUTES, closeOverlay, showCapture, useOverlay, type SourceDetail } from '../../lib/unity';
 import { FocusBar } from './modes';
 import { useStore } from '../../state/store';
-import { useTaskActions } from '../../state/taskactions';
+import { useTaskActions } from '../../composition/taskactions';
 import { courseFieldFor } from '../../lib/parent';
 import { useModernShell } from '../shell-context';
 import { SaveState, StatusChip } from './Status';
@@ -44,8 +44,9 @@ function Sheet({ label, children, initial }: { label: string; children: React.Re
   const wide = useMedia(DESKTOP);
   const modern = useModernShell();
   const { ref, onKeyDown } = useModal<HTMLDivElement>({ onClose: closeOverlay, initial });
+  const scrim = useScrim(closeOverlay);
   return (
-    <div className={`unity-scrim ${wide || modern ? 'is-window' : 'is-pane'}`} onClick={closeOverlay}>
+    <div className={`unity-scrim ${wide || modern ? 'is-window' : 'is-pane'}`} {...scrim}>
       <div
         role="dialog"
         aria-modal="true"

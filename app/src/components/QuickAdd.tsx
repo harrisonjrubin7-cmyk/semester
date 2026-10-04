@@ -47,7 +47,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useModal } from '../a11y/modal';
 import { useModernShell } from './shell-context';
 import { useNow, useStore } from '../state/store';
-import { useTaskActions } from '../state/taskactions';
+import { useTaskActions } from '../composition/taskactions';
 import { capture, enough, readBack, type Caught } from '../lib/capture';
 import { heardLine, readAloud } from '../lib/aloud';
 import { dictate, dictationSupported } from '../lib/mic';

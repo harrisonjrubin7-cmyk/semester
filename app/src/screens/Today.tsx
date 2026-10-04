@@ -74,10 +74,8 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
-import { EXPERIENCE_FLAGS, moduleOn } from '../lib/experience-flags';
-import { TodayShadow } from '../state/todayshadow';
-import { deadlinesToday, useTodayView } from '../state/todayview';
-import { useTaskActions } from '../state/taskactions';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { useTaskActions } from '../composition/taskactions';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
@@ -875,8 +873,7 @@ function Feed_next() {
 function Feed_due() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
-  // Step 4 (D-1149): at `domainToday=production` the domain decides which of these are due today and in what order.
-  const today = deadlinesToday(useTodayView(), itemsDueToday(catalog, now));
+  const today = itemsDueToday(catalog, now);
   const doneCount = today.filter((i) => state.done[i.id]).length;
   const left = today.length - doneCount;
   // Used only by the all-clear line, which names what is next after today.
@@ -2142,13 +2139,7 @@ export function Today() {
       emptyNode={<FirstRun where="on today"><DailyPlanSlot /></FirstRun>}
       inset
     >
-      {() => (
-        <>
-          {shape === 'feed' ? <FeedHome /> : <TabHome />}
-          {/* Steps 3 and 4 of the modularization (D-1149): compare the domain's Today with this one. Draws nothing. */}
-          {moduleOn(EXPERIENCE_FLAGS.domainToday) && <TodayShadow />}
-        </>
-      )}
+      {() => (shape === 'feed' ? <FeedHome /> : <TabHome />)}
     </ReadState>
   );
 }

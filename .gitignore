@@ -70,3 +70,6 @@ crash.log
 override.tf
 override.tf.json
 *_override.tf
+
+# Visual-regression screenshots and the runner's own baseline (scripts/gallery-shots.mjs)
+.gallery/

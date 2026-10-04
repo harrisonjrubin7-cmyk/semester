@@ -37,6 +37,8 @@ have been made.
 | [0008](0008-event-envelope-and-outbox.md) | One event envelope, written through a transactional outbox | Accepted; no producer writes yet |
 | [0009](0009-workflow-state-machines.md) | Consequential workflows are state machines | Accepted |
 | [0010](0010-correlation-ids-and-error-envelope.md) | One correlation id to the audit row; one error envelope | Accepted, live in the gateway |
+| [0011](0011-modular-monolith-before-services.md) | Modularize the monolith in place; extract a service only when a trigger fires | Accepted — [plan](modularization/README.md) |
+| [0012](0012-legacy-only-through-anti-corruption-layers.md) | New code reaches legacy only through adapters; legacy may only improve | Accepted — held by `src/architecture/` |
 
 Not yet decided, and deliberately not recorded as if they were: messaging
 fan-out, notification digests, payments processor, object storage for generated

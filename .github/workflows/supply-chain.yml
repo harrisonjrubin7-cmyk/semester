@@ -67,10 +67,12 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
+      # From the root, as ci.yml does: `app/` is a workspace member (D-1193), so
+      # `npm ci` inside it skips the `@semester/*` links and `npm sbom` below
+      # then fails on them as missing.
       - name: Install (exactly the lockfile)
-        working-directory: app
         run: npm ci
 
       - name: Critical advisories in production dependencies block
@@ -93,6 +95,10 @@ jobs:
       # pinned, so the same commit yields the same bytes and a hash means
       # something.
       - name: Bundle deterministically
+        # pipefail, so a failed `tar` cannot leave a truncated archive that is
+        # then hashed and attested; `workflowshell.test.ts` requires it of any
+        # step that pipes into tee.
+        shell: bash
         run: |
           tar --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
               -C app -cf - dist | gzip -n > app-dist.tar.gz

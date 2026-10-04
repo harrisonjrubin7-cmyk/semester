@@ -60,24 +60,13 @@ export interface ExperienceFlags {
    */
   studentAccounts: FeatureState;
   /**
-   * Today computed through `src/domains` (steps 3 and 4 of
-   * docs/architecture/modular-monolith.md, D-1149).
-   *
-   * `preview` and `sandbox` run the domain's Today beside the legacy one and
-   * report any disagreement to the console; **nothing on screen changes**.
-   * `production` cuts over: the "Due today" list takes its membership and order
-   * from the domain (the shadow keeps running). A role the domain does not serve
-   * is drawn from the legacy selectors as before. Never inherited from an
-   * institutional preview: it is a developer's instrument, and a preview account
-   * has nothing to compare.
-   */
-  domainToday: FeatureState;
-  /**
-   * Ticking a task and moving it a day go through `src/domains/tasks` (step 5 of
-   * docs/architecture/modular-monolith.md, D-1149), which refuses a second
-   * completion and checks the date. Only `production` switches it on; every
-   * other state is the legacy reducer, exactly as before. A repeating task
-   * always takes the legacy path: the domain does not own repetition.
+   * Adding, ticking, moving and deleting a task go through `src/domains/tasks`
+   * (phase 4 of docs/architecture/modularization/03-refactoring-sequence.md,
+   * D-1149), which checks the title and the day and refuses a request the
+   * policy refuses. Only `production` switches it on; every other state is the
+   * legacy reducer, exactly as before. A domain refusal or exception falls back
+   * to the legacy dispatch, so no action is lost. Never inherited from an
+   * institutional preview: it is a developer's instrument.
    */
   domainTasks: FeatureState;
 }
@@ -114,7 +103,6 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     configurationStudio: featureState(env, 'VITE_CONFIGURATION_STUDIO', preview),
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
-    domainToday: featureState(env, 'VITE_DOMAIN_TODAY', false),
     domainTasks: featureState(env, 'VITE_DOMAIN_TASKS', false),
   };
 }

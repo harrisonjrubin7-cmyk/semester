@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
-import { useTaskActions } from '../state/taskactions';
+import { useTaskActions } from '../composition/taskactions';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';

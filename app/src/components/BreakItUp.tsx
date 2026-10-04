@@ -15,7 +15,7 @@
 import { useState } from 'react';
 import { Panel } from './Produced';
 import { useNow, useStore } from '../state/store';
-import { useTaskActions } from '../state/taskactions';
+import { useTaskActions } from '../composition/taskactions';
 import { planFor, planLine } from '../lib/steps';
 import type { DatedItem } from '../lib/types';
 

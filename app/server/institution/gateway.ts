@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import {
-  CORRELATION_ID_PATTERN,
   UNIVERSITY_AREAS,
   isRefusal,
   groundsFor,
@@ -9,11 +8,20 @@ import {
   parseAction,
   validateActionFields,
   type ActionInput,
+  type PolicyEnvironment,
   type UniversityArea,
   type UniversityIdentity,
   type UserAction,
 } from '../../../packages/institution/src/index.ts';
+import {
+  PlatformError,
+  errorResponse,
+  isPlatformError,
+  resolveCorrelationId,
+  type ErrorEnvelope as PlatformErrorEnvelope,
+} from '../../../packages/platform/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { contextFor } from './context.ts';
 import type { ActionJournalStore } from './journal.ts';
 import type { IntelligenceService } from './intelligence.ts';
 import type { PublicSsoConfig } from './membership.ts';
@@ -95,6 +103,8 @@ interface Config {
    * and the two are registered together in `docs/FEATURE-FLAG-REGISTRY.md`.
    */
   readOnly?: () => boolean;
+  /** Which environment the tenants of this gateway are in. `production` unless told otherwise. */
+  environment?: PolicyEnvironment;
 }
 
 export interface GatewayTelemetryEvent {
@@ -127,7 +137,7 @@ function telemetryRoute(pathname: string): string {
  * client may switch on them; a status alone is not enough to tell "the
  * review expired" from "the record moved", and both are 4xx.
  */
-const CODE_BY_STATUS: Record<number, string> = {
+export const CODE_BY_STATUS: Record<number, string> = {
   400: 'invalid_request',
   401: 'unauthenticated',
   403: 'forbidden',
@@ -142,21 +152,6 @@ const CODE_BY_STATUS: Record<number, string> = {
   503: 'unavailable',
 };
 
-/** Whether the same request may be sent again. Only two statuses say yes. */
-const retryable = (status: number) => status === 429 || status === 503;
-
-class HttpError extends Error {
-  status: number;
-  code: string;
-  userAction?: UserAction;
-  constructor(status: number, message: string, code?: string, userAction?: UserAction) {
-    super(message);
-    this.status = status;
-    this.code = code ?? CODE_BY_STATUS[status] ?? 'error';
-    if (userAction) this.userAction = userAction;
-  }
-}
-
 /*
  * A declaration rather than a const arrow, deliberately: TypeScript only
  * narrows control flow through a `never`-returning call when the callee is a
@@ -164,25 +159,18 @@ class HttpError extends Error {
  * arrow, every `fail(...)` guard below would still leave its subject nullable.
  */
 function fail(status: number, message: string, code?: string, userAction?: UserAction): never {
-  throw new HttpError(status, message, code, userAction);
+  throw PlatformError.from(status, code ?? CODE_BY_STATUS[status] ?? 'error', message, userAction ? { userAction } : {});
 }
 
-export interface ErrorEnvelope {
-  error: {
-    code: string;
-    message: string;
-    correlation_id: string;
-    retryable: boolean;
-    user_action?: UserAction;
-  };
-  /** The same sentence, where a client written before the envelope looks for it. */
-  message: string;
-}
+/**
+ * The envelope every refusal is: `@semester/platform`'s, which is this
+ * gateway's own shape (ADR 0010) lifted out so every surface says it the same
+ * way. Kept as an export here because clients and tests import it by this name.
+ */
+export type ErrorEnvelope = PlatformErrorEnvelope;
 
 function envelope(status: number, code: string, message: string, correlationId: string, userAction?: UserAction): ErrorEnvelope {
-  const error: ErrorEnvelope['error'] = { code, message, correlation_id: correlationId, retryable: retryable(status) };
-  if (userAction) error.user_action = userAction;
-  return { error, message };
+  return errorResponse(PlatformError.from(status, code, message, userAction ? { userAction } : {}), correlationId).body;
 }
 
 /**
@@ -192,8 +180,7 @@ function envelope(status: number, code: string, message: string, correlationId: 
  * outside it (a sentence, a script, four kilobytes) reaches a log line.
  */
 export function correlationIdFor(request: Request): string {
-  const given = request.headers.get('x-correlation-id');
-  return given && CORRELATION_ID_PATTERN.test(given) ? given : randomUUID();
+  return resolveCorrelationId(request.headers.get('x-correlation-id') ?? undefined, { next: () => randomUUID() });
 }
 
 /** How long somebody has to read a review and confirm it. */
@@ -219,7 +206,7 @@ export function createGateway(config: Config) {
   const installed = new Map(config.adapters.map((a) => [`${a.institutionId}:${a.area}`, a]));
   const rateLimiter = config.rateLimiter ?? new MemoryRateLimiter();
 
-  const handle = async (request: Request, correlationId: string): Promise<Response> => {
+  const handle = async (request: Request, correlationId: string, requestId: string): Promise<Response> => {
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
@@ -337,7 +324,15 @@ export function createGateway(config: Config) {
         fail(503, 'Semester is in read-only mode for maintenance. Nothing was sent; try again later.', 'read_only');
       }
 
-      const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
+      /*
+       * The platform's request context, built once from the verified identity
+       * and the two ids this request already carries. It is where a client's
+       * `X-Tenant-Id` that disagrees with the session is refused
+       * (`tenant_mismatch`) instead of ignored: the tenant is the session's, and
+       * a request that names another one is a bug or an attack worth hearing about.
+       */
+      const ids = { requestId, correlationId };
+      const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000), request: contextFor(request, who, ids, config.environment) };
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
       if (request.method === 'GET' && path === '/v1/intelligence/policy') {
@@ -368,6 +363,7 @@ export function createGateway(config: Config) {
           }
           who = current;
           context.identity = current;
+          context.request = contextFor(request, current, ids, config.environment);
         }
         const response = path === '/v1/intelligence/respond'
           ? await config.intelligence.respond(who, value)
@@ -555,6 +551,7 @@ export function createGateway(config: Config) {
         }
         who = current;
         context.identity = current;
+        context.request = contextFor(request, current, ids, config.environment);
       }
 
       /*
@@ -644,7 +641,7 @@ export function createGateway(config: Config) {
       /*
        * Three kinds of thrown thing, and the middle one used to be lost.
        *
-       * An `HttpError` is something this gateway meant to say. A `Refusal` is
+       * A `PlatformError` is something this gateway meant to say. A `Refusal` is
        * something the *adapter* meant to say — a rubric line that will not
        * parse, a mark outside its range, a deadline that has passed — and it
        * is the caller's to fix, so it is a 400 carrying that sentence. Every
@@ -657,7 +654,7 @@ export function createGateway(config: Config) {
        * sentence, which is still the default and still the right one.
        */
       if (isRefusal(e)) return refuse(400, 'refused', e.message);
-      if (e instanceof HttpError) return refuse(e.status, e.code, e.message, e.userAction);
+      if (isPlatformError(e)) return refuse(e.status, e.code, e.message, e.userAction);
       return refuse(503, 'unavailable', 'The university service is unavailable. Please try again later.');
     }
   };
@@ -666,7 +663,7 @@ export function createGateway(config: Config) {
     const requestId = randomUUID();
     const correlationId = correlationIdFor(request);
     const started = performance.now();
-    const response = await handle(request, correlationId);
+    const response = await handle(request, correlationId, requestId);
     response.headers.set('X-Request-Id', requestId);
     response.headers.set('X-Correlation-Id', correlationId);
     const pathname = new URL(request.url).pathname;

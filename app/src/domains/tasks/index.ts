@@ -1,7 +1,11 @@
-export { TASK_MACHINE, TASK_STATES, TITLE_LIMIT, isDueOn, isOverdue } from './model';
-export type { Task, TaskEvent, TaskState } from './model';
-export type { NewTask, TaskRepository } from './ports';
-export { createTaskService } from './usecases';
-export type { AddTaskInput, TaskService, TaskServiceDeps } from './usecases';
-export { legacyTaskRepository, taskFromLegacy } from './acl';
-export type { LegacyTaskCommand, LegacyTaskHost, NewLegacyTask } from './acl';
+/**
+ * Tasks: what the student has to do, and ticking it off.
+ *
+ * Public entry. Other slices may import types and use-case factories from
+ * here and nothing else (`architecture.test.ts`, slice-doors-stay-shut).
+ */
+export { TASK_LIFECYCLE, TITLE_LIMIT, complete, reopen, reschedule, draftTask, isDay, openTasks, isOverdue, stateOf } from './domain/task';
+export type { Task, TaskState, TaskChange, NewTask } from './domain/task';
+export { completeTask, reopenTask, toggleTask, addTask, rescheduleTask, removeTask, listTasks } from './application/use-cases';
+export type { Completion, TaskDeps, TaskList } from './application/use-cases';
+export type { TaskRepository, Guard } from './application/ports';

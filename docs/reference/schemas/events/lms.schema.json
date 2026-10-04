@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:lms",
+  "title": "Semester events: LMS",
+  "description": "The 10 LMS event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "course.published",
+      "properties": {
+        "eventType": {
+          "const": "course.published"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "assignment.created",
+      "properties": {
+        "eventType": {
+          "const": "assignment.created"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "submission.draft_saved",
+      "properties": {
+        "eventType": {
+          "const": "submission.draft_saved"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "submission.finalized",
+      "properties": {
+        "eventType": {
+          "const": "submission.finalized"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "assessment.started",
+      "properties": {
+        "eventType": {
+          "const": "assessment.started"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "assessment.autosaved",
+      "properties": {
+        "eventType": {
+          "const": "assessment.autosaved"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "assessment.recovered",
+      "properties": {
+        "eventType": {
+          "const": "assessment.recovered"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "grade.posted",
+      "properties": {
+        "eventType": {
+          "const": "grade.posted"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares student_record for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "student_record"
+        }
+      }
+    },
+    {
+      "title": "grade.passback_requested",
+      "properties": {
+        "eventType": {
+          "const": "grade.passback_requested"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "grade.passback_reconciled",
+      "properties": {
+        "eventType": {
+          "const": "grade.passback_reconciled"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from '../../state/store';
-import { useTaskActions } from '../../state/taskactions';
+import { useTaskActions } from '../../composition/taskactions';
 import { Blueprint } from '../../components/Blueprint';
 import { capture, enough, readBack } from '../../lib/capture';
 import { isoToDate, longLabel, shownTime } from '../../lib/date';

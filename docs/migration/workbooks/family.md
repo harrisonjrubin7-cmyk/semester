@@ -32,6 +32,40 @@ A domain passes only when every evidence class has a check that examined somethi
 | `family.permission.guardian_visibility` | permission | critical | `permissionParity` | For every guardian: the set of things visible equals the consented set. Widening is a stop-the-line failure |
 | `family.outcome.visible_to_guardian` | outcome | critical | `outcomeParity` | For sampled guardians (and every one with a revoked or expired release) the rendered view equals the permitted view |
 
+## What the engine runs
+
+`institution-migration validate` executes these against the source, target and crosswalk files. Each is **proven on the real data** by injecting a defect of its own kind and requiring the check to notice; a check that examined nothing holds the domain. Stakes: **high** (no major defect tolerated; minor at 0.5%).
+
+| Check | Kind | If it fails | What it asks |
+| --- | --- | --- | --- |
+| `family.relationship.crosswalk` | crosswalk | critical | Every guardian_relationship maps to exactly one target guardian_relationship; no two collapse into one; nothing appears from nowhere. |
+| `family.relationship.preserved` | preserved | critical | guardian_relationship: relationship, status mean the same thing after the move. |
+| `family.consent.crosswalk` | crosswalk | critical | Every consent_record maps to exactly one target consent_record; no two collapse into one; nothing appears from nowhere. |
+| `family.consent.preserved` | preserved | critical | consent_record: scope, basis, active mean the same thing after the move. |
+| `family.consent.dates` | preserved | critical | consent_record: granted_on, revoked_on mean the same thing after the move (compared as date). |
+| `family.consent.window` | temporal | high | consent_record.granted_on is not after consent_record.revoked_on. |
+| `family.consent.student` | reference | critical | Every consent_record.student_id points at a real student_record, and none that were fine in the source are orphaned. |
+| `family.event.crosswalk` | crosswalk | critical | Every consent_event maps to exactly one target consent_event; no two collapse into one; nothing appears from nowhere. |
+| `family.event.history` | history | critical | consent_event: every event of each consent_record, in order, with the same values. |
+| `family.student.consented` | derived | critical | family.student.consented: the sum of consent_record.scope_level per student_record, recomputed from rows on both sides, agrees within 0. |
+| `family.proxy.crosswalk` | crosswalk | critical | Every proxy_access maps to exactly one target proxy_access; no two collapse into one; nothing appears from nowhere. |
+| `family.proxy.access` | permission | critical | proxy_access: nobody gains access they did not have; every grant has an active consent_record record; lost access is reported. |
+
+**Evidence classes the engine covers on its own:** `count`, `key`, `semantic`, `relationship`, `history`, `permission`, `outcome`.
+**Nothing is left to supply from outside:** the gate can pass this domain on executable evidence alone.
+
+## What stays behind
+
+| What | Class | What happens instead |
+| --- | --- | --- |
+| court orders and custody documents | T4 | Not migrated as data. Held by the registrar as documents under counsel's direction; any restriction they impose is entered as an explicit block by a person. |
+| accommodation records | T4 | Not migrated. The disability or accessibility office keeps the record; Semester stores no accommodation, flag or inference. Changing this is a decision for the institution and counsel, not a migration setting. |
+| health and counseling records | T4 | Not migrated. Remains with the health and counseling service under its own rules. |
+
+## Scope approvals
+
+No field here is refused or needs a named approval.
+
 ## What a count will not show
 
 - Legacy portals gave parents blanket access; migrating that as "consent" creates consent nobody gave.

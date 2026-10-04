@@ -2,7 +2,7 @@ import { StudentOperating } from '../components/StudentOperating';
 import { useMemo, useRef, useState } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
-import { useTaskActions } from '../state/taskactions';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';

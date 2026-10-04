@@ -129,7 +129,7 @@ Each entry below gives: the question; the options; the recommendation and the cr
 | B. Optional student subscription after G1 | Early revenue signal | Needs billing, tax, refund, support and rights operations (FR-008); safeguarding exposure; churn-prone | Moderate |
 | C. Free student tier funded by institutions, paid premium AI later | Aligns with the pricing architecture | Complex before the base works | Yes |
 
-**Recommendation: A**, revisit at G3. Criteria: do not gate accessibility or safety; no surprise bills.
+**Recommendation: A**, revisit at G3. Criteria: do not gate accessibility or safety; no surprise bills. The pricing architecture (F7) finds that a free tier at today's cap is not funded by Plus conversion unless conversion is far above typical consumer rates, so a free student tier is an acquisition cost to be budgeted and capped in dollars, or funded by institutions (option C).
 **Evidence before deciding:** S4 and S2 readings from the invitation cohort.
 **If no decision:** checkout stays disabled by default.
 **Links:** SR-014, SR-002.
@@ -163,11 +163,11 @@ Each entry below gives: the question; the options; the recommendation and the cr
 
 | Option | Benefit | Risk or cost | Reversibility |
 | --- | --- | --- | --- |
-| A. No-fee design-partner activation with signed conversion intent; price book approved before G3 | Honest with the RED paid-pilot status; reduces friction for the first reference | Zero Year 1 revenue; risk that "free" sets the price anchor | Yes |
+| A. No-fee design-partner activation with signed conversion intent; price book approved before G3 | Honest with the RED paid-pilot status; reduces friction for the first reference | Zero Year 1 revenue; risk that "free" sets the price anchor; about $13k of unpriced delivery per cohort; **a 100% pilot credit exceeds the deal-desk cap of 50% of first-year value, so it needs a recorded exception** | Yes |
 | B. Scoping or implementation fee | Tests willingness to pay early | Payment is RED until controls exist | Moderate |
 | C. Full paid pilot | Revenue | Not permitted before G3 | |
 
-**Recommendation: A**, with at least 10 willingness-to-pay conversations by 2027-04-30. Criteria: no quote without an approved price book; floors set from observed delivery cost.
+**Recommendation: A**, with at least 10 willingness-to-pay conversations by 2027-04-30, and **with the deal-desk exception recorded by finance and counsel before the charter is signed**. Criteria: no quote without an approved price book; floors set from observed delivery cost, not the modelled floors in [`PRICING-UNIT-ECONOMICS-ARCHITECTURE.md`](../commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) §5.3 and §5.5 (which say themselves that the fixed-cost inputs are likely overstated for a founder-led company). Its decisions 1, 4 and 8 (price book, implementation floor, reviewers) are the same questions and should be decided together.
 **Evidence before deciding:** first discovery readings.
 **If no decision:** the charter cannot state a fee term.
 **Links:** SR-014, SR-015.
@@ -223,7 +223,7 @@ Each entry below gives: the question; the options; the recommendation and the cr
 | A. Provider-agnostic gateway; zero-retention, no-training terms; regional processing where required; per-student monthly cap | Avoids provider lock-in and concentration (SR-034); matches the AI governance docs | Integration overhead | Yes |
 | B. Single provider | Simpler | Concentration; terms change | Moderate |
 
-**Recommendation: A.** Criteria: no student data used to train any model; tenant controls for models, retention, data zone and tool permissions; cost cap set from B7's baseline.
+**Recommendation: A, decided together with decision 3 of [`PRICING-UNIT-ECONOMICS-ARCHITECTURE.md`](../commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) §13.2** (dollar-weighted AI units and a 40% worst-case-margin rule), since they are one question. Its first engineering steps (restrict shared-key models by plan, cap output per plan, then a dollar meter) are **preconditions for G1**, not follow-ups, because the key is capped in calls and not dollars today. Criteria: no student data used to train any model; tenant controls for models, retention, data zone and tool permissions; cost cap set from B7's baseline.
 **Evidence before deciding:** provider terms read by counsel; B7 baseline.
 **If no decision:** cost and terms unmanaged.
 **Links:** SR-003, SR-014, SR-034.
@@ -241,7 +241,7 @@ Each entry below gives: the question; the options; the recommendation and the cr
 | A. Adopt | Preserves the thesis while capping claims by evidence | Some buyers want the bold claim | Yes |
 | B. Allow the bold claim in sales conversations only | Memorable | The claim reaches procurement; the claims register exists to prevent exactly this | Reputation is not reversible |
 
-**Recommendation: A.** Criteria: the no-go conditions in the go/no-go decision already forbid replacement positioning.
+**Recommendation: A, including the buyer-facing label rule in [`MARKET-ENTRY-PLAN.md`](MARKET-ENTRY-PLAN.md) §3a.** Criteria: the no-go conditions in the go/no-go decision already forbid replacement positioning, and [`PRICING-UNIT-ECONOMICS-ARCHITECTURE.md`](../commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) §3.2 names a package "Replace" (SKUs `native_lms`, `university_os`) that it says may be quoted before replacement is earned; under the ladder that label is itself the claim.
 **Evidence before deciding:** none beyond existing governance.
 **If no decision:** the claims register governs alone, without a shared vocabulary for the ladder.
 **Links:** SR-017, SR-027.

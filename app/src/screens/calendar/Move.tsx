@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { revealKindly } from '../../lib/prefers';
 import { useStore } from '../../state/store';
-import { useTaskActions } from '../../state/taskactions';
+import { useTaskActions } from '../../composition/taskactions';
 import { Blueprint } from '../../components/Blueprint';
 import { isoToDate, longLabel, shownTime } from '../../lib/date';
 import { timeLabel } from '../../lib/drag';

@@ -113,6 +113,8 @@ These tie to the model: the minimum-cash policy is 6 months, and the Base scenar
 
 Applied to the model (scenario 7: flexible roles nine months later, with 10% less volume to reflect lost capacity): peak funding need falls from $21.1M to **$16.2M**, lowest cash with the assumed rounds rises from $1.2M to $2.1M, months below the cash policy fall from 3 to 0, and Year-3 revenue is $4.2M instead of $4.7M. The gate is the cheapest insurance in the plan.
 
+The release schedule for these gates, with each gate's cost, quarter-by-quarter cash effect and the evidence in the form the workbook carries it, is in [`12-GATED-HIRING-SCHEDULE.md`](12-GATED-HIRING-SCHEDULE.md) and the workbook's `Gate_Schedule` sheet. Where the two differ in wording, the sheet and that document are the more recent.
+
 ## 7. Contingency, transfers and variances
 
 - **Contingency.** 5% of non-people operating spend, held by the CFO. Drawing on it needs the CFO and the budget owner and is logged with a reason.

@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
-import { useTaskActions } from '../state/taskactions';
+import { useTaskActions } from '../composition/taskactions';
 import { WIDE, useMedia } from '../lib/media';
 import { secondLine } from '../lib/dim';
 import { typing } from '../lib/keys';

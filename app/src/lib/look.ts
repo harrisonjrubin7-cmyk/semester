@@ -756,6 +756,25 @@ export function lineHeightOf(id: string | undefined): number {
 }
 
 /**
+ * How far apart the letters and the words sit.
+ *
+ * Its own setting, not part of line spacing: crowding between letters is a
+ * different complaint from crowding between lines, and it is the one people
+ * with dyslexia most often name. The steps are deliberately below the
+ * 0.12em / 0.16em that WCAG 1.4.12 asks a layout to survive, so anything
+ * offered here is inside what `npm run sweep:spacing` measures.
+ */
+export const TEXT_SPACINGS = [
+  { id: 'normal', label: 'Normal', tracking: 0, word: 0, blurb: 'The default.' },
+  { id: 'open', label: 'Open', tracking: 0.02, word: 0.08, blurb: 'A little room between letters and words.' },
+  { id: 'wide', label: 'Wide', tracking: 0.05, word: 0.16, blurb: 'As open as it goes. Long words wrap sooner.' },
+];
+
+export function textSpacingOf(id: string | undefined) {
+  return TEXT_SPACINGS.find((t) => t.id === id) ?? TEXT_SPACINGS[0];
+}
+
+/**
  * How wide a paragraph is allowed to get.
  *
  * Only on the long-form screens — a guide, a note, a reading. Typographers put
@@ -1366,6 +1385,8 @@ export interface Look {
   typeface?: string;
   bodyface?: string;
   lineHeight?: string;
+  /** `normal`, `open` or `wide` — letter and word spacing. See `TEXT_SPACINGS`. */
+  textSpacing?: string;
   readingWidth?: string;
   iconShape?: string;
   /**
@@ -1696,6 +1717,8 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     // the body text hard to read had nothing to change.
     '--font-body': bodyfaceOf(look.bodyface).body,
     '--line-height': String(lineHeightOf(look.lineHeight)),
+    '--tracking-body': `${textSpacingOf(look.textSpacing).tracking}em`,
+    '--word-space': `${textSpacingOf(look.textSpacing).word}em`,
     // Zero means no cap. Used only by the long-form screens.
     '--reading-width': readingWidthOf(look.readingWidth)
       ? `${readingWidthOf(look.readingWidth)}ch`
@@ -1764,6 +1787,7 @@ export function readLook(saved: Look | undefined): Required<Look> {
     typeface: typefaceOf(saved?.typeface).id,
     bodyface: bodyfaceOf(saved?.bodyface).id,
     lineHeight: LINE_HEIGHTS.find((l) => l.id === saved?.lineHeight)?.id ?? 'normal',
+    textSpacing: textSpacingOf(saved?.textSpacing).id,
     readingWidth: READING_WIDTHS.find((w) => w.id === saved?.readingWidth)?.id ?? 'normal',
     iconShape: iconShapeOf(saved?.iconShape).id,
     // Unrecognised falls to `device`, which is the value that defers to the
