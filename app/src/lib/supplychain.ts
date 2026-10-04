@@ -58,7 +58,7 @@ export type Lockfile = 'app' | 'video' | 'pipeline';
 
 /** Where each lockfile's code goes. Only `ships` reaches a student. */
 export const LOCKFILES: Record<Lockfile, { path: string; ships: boolean; what: string }> = {
-  app: { path: 'app/package-lock.json', ships: true, what: 'The app: built and deployed to every user' },
+  app: { path: 'package-lock.json', ships: true, what: 'The app: built and deployed to every user (the workspace root lockfile, which also locks packages/*)' },
   video: { path: 'video/package-lock.json', ships: false, what: 'Local video rendering; never deployed' },
   pipeline: { path: 'pipeline/package-lock.json', ships: false, what: 'Local course-material pipeline; never deployed' },
 };

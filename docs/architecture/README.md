@@ -41,3 +41,7 @@ have been made.
 Not yet decided, and deliberately not recorded as if they were: messaging
 fan-out, notification digests, payments processor, object storage for generated
 media. Each becomes a record when a phase needs it.
+
+## Related
+
+[`data-architecture/`](data-architecture/README.md): canonical entity model, source-of-truth matrix, schema conventions, event and lineage design, lifecycle governance, analytics, search, AI data access and physical design. A **proposal** with validated, un-applied SQL; it adds no ADR and changes no decision recorded here.

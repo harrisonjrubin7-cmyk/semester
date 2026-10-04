@@ -67,12 +67,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       # `npm ci` rather than `npm install`: it installs the lockfile exactly,
       # so CI cannot pass on a dependency tree nobody has locally.
       - name: Install
-        working-directory: app
         run: npm ci
 
       # ── Advisories published since the lockfile was written ──────────────
@@ -572,10 +571,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
-        working-directory: app
         run: npm ci
 
       - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3
