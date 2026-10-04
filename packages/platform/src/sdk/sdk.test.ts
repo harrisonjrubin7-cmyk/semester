@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { sequenceRng, sequentialIds } from '../kernel/clock.ts';
 import { PlatformError, errorResponse } from '../gateway/errors.ts';
 import { createClient, SemesterApiError, type FetchLike, type HttpResponse } from './client.ts';

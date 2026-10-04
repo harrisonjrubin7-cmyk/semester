@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { OrgDirectory } from '../tenancy/organization.ts';
 import { isLive, liveAffiliations, sourceMayAssert, strongerSource, type Affiliation } from './affiliation.ts';
 import { findLiveRelationship, relationshipIsLive, type Relationship } from './relationship.ts';
