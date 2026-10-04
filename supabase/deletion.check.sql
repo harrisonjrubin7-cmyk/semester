@@ -611,8 +611,10 @@ begin
   perform pg_temp.counted('and the one filed about you, which names its reporter, is not',
     (select count(*) from jsonb_array_elements(file -> 'tables' -> 'reports') r
       where r ->> 'about' = leaver::text)::bigint, 0);
+  -- Three columns of the person's own tables, and one whole table (a school's
+  -- guardian restrictions, 20261004150000).
   perform pg_temp.counted('and the file says what it left out, and why',
-    jsonb_array_length(file -> 'withheld'), 3);
+    jsonb_array_length(file -> 'withheld'), 4);
   perform pg_temp.counted('the export is itself on the record',
     (select count(*) from jsonb_array_elements(file -> 'tables' -> 'data_requests') d
       where d ->> 'kind' = 'export')::bigint, 1);
