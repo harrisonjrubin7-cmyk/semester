@@ -13,6 +13,7 @@
     "audit:screens": "node scripts/screen-audit.mjs",
     "census:exports": "node scripts/exports.mjs .",
     "census:design": "node scripts/design-census.mjs",
+    "census:arch": "node scripts/arch-census.ts",
     "icons": "node scripts/icons.mjs",
     "mirror": "node scripts/mirror.mjs",
     "preview": "vite preview",
