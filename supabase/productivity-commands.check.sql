@@ -55,7 +55,8 @@ create or replace function pg_temp.task(id uuid, seq_read bigint, over jsonb def
 returns jsonb language sql as $$
   select jsonb_build_object('type', 'task', 'expectedSeq', seq_read, 'row', jsonb_build_object(
     'id', id, 'title', 'Read chapter 4', 'notes', 'for Thursday', 'status', 'open', 'completedAt', null,
-    'dueAt', '2026-10-08T17:00:00.000Z', 'priority', 'high', 'courseId', null,
+    'dueAt', '2026-10-08T17:00:00.000Z', 'dueOn', null, 'whenText', null, 'priority', 'high', 'courseId', null,
+    'repeat', null, 'steps', '[]'::jsonb, 'plannedFrom', null,
     'source', jsonb_build_object('kind', 'student_entered'),
     'clocks', jsonb_build_object('title', '1790000000000.0000.dev-a'),
     'version', 1, 'createdAt', '2026-10-05T15:00:00.000Z', 'updatedAt', '2026-10-05T15:00:00.000Z',
@@ -350,6 +351,78 @@ begin
     exists (select 1 from public.audit_event where action = 'task.created' and tenant_id = 'pc-school-a')
     and exists (select 1 from private.domain_outbox_events where tenant_id = 'pc-school-a' and event_type = 'task.created'));
   perform pg_temp.must('the sweep is not the clients''', not has_function_privilege('authenticated', 'private.productivity_sweep_commands()', 'execute'));
+end $$;
+
+-- ── The fields the app's task carries ──────────────────────────────────────
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  t constant uuid := 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7';
+  t2 constant uuid := 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8';
+  rule constant jsonb := '{"every": "weekly", "until": "2026-12-18", "except": ["2026-11-27"]}';
+  two constant jsonb := '[{"id": "s1", "text": "Skim", "done": true}, {"id": "s2", "text": "Notes", "done": false}]';
+  code text;
+  row_ public.productivity_task;
+  seq_t bigint;
+begin
+  perform public.productivity_commit('pc-school-a', a, pg_temp.cmd('c0000000-0000-4000-8000-0000000000a1'),
+    jsonb_build_array(pg_temp.task(t, 0, jsonb_build_object('dueOn', '2026-10-09', 'whenText', '6:30 PM', 'repeat', rule,
+      'steps', two, 'plannedFrom', 'deadline-1'))),
+    pg_temp.audit('task.created'), pg_temp.event('e0000000-0000-4000-8000-0000000000a1', 'task.created', 'c0000000-0000-4000-8000-0000000000a1'));
+  select * into row_ from public.productivity_task where tenant_id = 'pc-school-a' and owner_id = a and id = t;
+  perform pg_temp.must('the day, the free text and the source reference are stored',
+    row_.due_on = date '2026-10-09' and row_.when_text = '6:30 PM' and row_.planned_from = 'deadline-1');
+  perform pg_temp.must('the repeat rule and the steps are stored whole', row_.repeat_rule = rule and row_.steps = two);
+  seq_t := row_.seq;
+
+  -- A field the service sends as null is SQL null, not the JSON literal that would fail the object check.
+  perform public.productivity_commit('pc-school-a', a, pg_temp.cmd('c0000000-0000-4000-8000-0000000000a2'),
+    jsonb_build_array(pg_temp.task(t2, 0)), pg_temp.audit('task.created'),
+    pg_temp.event('e0000000-0000-4000-8000-0000000000a2', 'task.created', 'c0000000-0000-4000-8000-0000000000a2'));
+  select * into row_ from public.productivity_task where tenant_id = 'pc-school-a' and owner_id = a and id = t2;
+  perform pg_temp.must('a task with no repeat rule, no day and no steps stores null, null and an empty list',
+    row_.repeat_rule is null and row_.due_on is null and row_.when_text is null and row_.steps = '[]'::jsonb and row_.planned_from is null);
+
+  -- An update replaces the steps as a whole.
+  perform public.productivity_commit('pc-school-a', a, pg_temp.cmd('c0000000-0000-4000-8000-0000000000a3'),
+    jsonb_build_array(pg_temp.task(t, seq_t, jsonb_build_object('version', 2, 'steps', '[{"id": "s1", "text": "Skim", "done": true}]'::jsonb, 'repeat', null))),
+    pg_temp.audit('task.updated'), pg_temp.event('e0000000-0000-4000-8000-0000000000a3', 'task.updated', 'c0000000-0000-4000-8000-0000000000a3'));
+  select * into row_ from public.productivity_task where tenant_id = 'pc-school-a' and owner_id = a and id = t;
+  perform pg_temp.must('an update replaces the steps and can clear the repeat rule', jsonb_array_length(row_.steps) = 1 and row_.repeat_rule is null and row_.seq > seq_t);
+end $$;
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  n int := 0;
+
+  procedure_ text;
+begin
+  -- Each of these is something the service would already have refused. The database refuses it too.
+  for procedure_ in select unnest(array[
+    '{"repeat": {"every": "hourly", "until": "2026-12-18"}}',
+    '{"repeat": {"every": "weekly"}}',
+    '{"repeat": {"every": "weekly", "until": "next term"}}',
+    '{"whenText": "012345678901234567890123456789012345678901"}',
+    '{"plannedFrom": ""}',
+    '{"steps": {"not": "a list"}}'
+  ]) loop
+    n := n + 1;
+    begin
+      perform public.productivity_commit('pc-school-a', a,
+        pg_temp.cmd(('c0000000-0000-4000-8000-0000000001' || lpad(n::text, 2, '0'))::uuid),
+        jsonb_build_array(pg_temp.task(('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa01' || lpad(n::text, 2, '0'))::uuid, 0, procedure_::jsonb)),
+        pg_temp.audit('task.created'),
+        pg_temp.event(('e0000000-0000-4000-8000-0000000001' || lpad(n::text, 2, '0'))::uuid, 'task.created',
+                      'c0000000-0000-4000-8000-0000000001' || lpad(n::text, 2, '0')));
+      perform pg_temp.must('the database refused case ' || n || ' (' || procedure_ || ')', false);
+    exception when check_violation then
+      null;
+    end;
+  end loop;
+  perform pg_temp.must('every one of the six was refused', n = 6);
+  perform pg_temp.must('and none was written', not exists (select 1 from public.productivity_task where id::text like 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa01%'));
 end $$;
 
 rollback;

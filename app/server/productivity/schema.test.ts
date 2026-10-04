@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EVENT_TYPES } from '../../../packages/institution/src/index.ts';
-import { LIMITS } from './contract.ts';
+import { LIMITS, REPEAT_EVERY } from './contract.ts';
 import { EVENT_ID, TASK_ID, createEvent, createTask, harness, person } from './fixtures.ts';
 
 /**
@@ -13,8 +13,20 @@ import { EVENT_ID, TASK_ID, createEvent, createTask, harness, person } from './f
  * table — silently, in both cases, until somebody noticed a missing field.
  */
 
-const sql = readFileSync(new URL('../../../supabase/migrations/20261004123000_productivity_commands.sql', import.meta.url), 'utf8');
-const commit = sql.slice(sql.indexOf('create or replace function private.productivity_commit'), sql.indexOf('create or replace function public.productivity_commit'));
+const MIGRATIONS = new URL('../../../supabase/migrations/', import.meta.url);
+const migration = (name: string) => readFileSync(new URL(name, MIGRATIONS), 'utf8');
+const sql = migration('20261004123000_productivity_commands.sql');
+/** The commit function is replaced by later migrations; the one that applies last is the one the service writes to. */
+const COMMIT_DEFINITION = 'create or replace function private.productivity_commit';
+const latest = readdirSync(MIGRATIONS)
+  .filter((f) => f.endsWith('.sql') && /productivity/.test(f) && migration(f).includes(COMMIT_DEFINITION))
+  .sort()
+  .pop()!;
+const latestSql = migration(latest);
+const commitFrom = latestSql.slice(latestSql.indexOf(COMMIT_DEFINITION));
+const commit = commitFrom.slice(0, commitFrom.indexOf('\nend $$;'));
+/** The migration that adds the app's task fields, which holds their column constraints. */
+const fieldsSql = migration('20261004190000_productivity_task_carries_the_apps_task.sql');
 
 const keysRead = (variable: string, from: string): Set<string> => {
   const out = new Set<string>();
@@ -80,6 +92,16 @@ describe('the limits are the same in both places', () => {
     has(`length(course_id) between 1 and ${LIMITS.courseIdMax}`);
     has(`length(source_ref) between 1 and ${LIMITS.sourceRefMax}`);
     has(`interval '${LIMITS.eventMaxDays} days'`);
+  });
+
+  it('holds the new task fields to the bounds the validators enforce', () => {
+    const has = (s: string) => expect(fieldsSql, s).toContain(s);
+    has(`length(when_text) between 1 and ${LIMITS.whenTextMax}`);
+    has(`length(planned_from) between 1 and ${LIMITS.plannedFromMax}`);
+    has(`jsonb_array_length(steps) <= ${LIMITS.stepsMax}`);
+    has(`in (${REPEAT_EVERY.map((e) => `'${e}'`).join(', ')})`);
+    // `coalesce(…, false)`: a check passes on null, so without it a rule with no `until` would be stored.
+    expect(fieldsSql).toMatch(/coalesce\([\s\S]*?false\s*\)/);
   });
 
   it('keeps the ledger five days longer than a command can be replayed', () => {
