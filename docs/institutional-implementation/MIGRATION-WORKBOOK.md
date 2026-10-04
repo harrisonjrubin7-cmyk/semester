@@ -13,10 +13,10 @@
 
 Two different things are called migration
 ([`../market-readiness/MIGRATION_PLAYBOOK.md`](../market-readiness/MIGRATION_PLAYBOOK.md)
-separates *ours* from *theirs*). That playbook's Part B says nothing supports
-customer data migration. **That is out of date** — it was written before the
-Migration Center and roster staging landed — and this workbook corrects it
-(see [the stale-playbook finding](#finding-the-playbook-is-stale)). The precise
+separates *ours* from *theirs*). That playbook's Part B once said nothing supports
+customer data migration. **That was out of date** — it was written before the
+Migration Center and roster staging landed — and has been corrected
+(see [the finding](#finding-the-playbook-was-stale-corrected)). The precise
 state is:
 
 | Capability | State on `main` |
@@ -162,19 +162,19 @@ holds it and for how long; the retention length is counsel's and the data
 owner's decision, not this workbook's. Monitoring rows record each check after
 cutover: what was compared, when, by whom, and the result.
 
-## Finding: the playbook is stale
+## Finding: the playbook was stale (corrected)
 
-`docs/market-readiness/MIGRATION_PLAYBOOK.md` Part B states that import format,
-validation and dry-run, provenance, rollback and a reconciliation report all
-have state "None". Four of those five now exist in some form — a manifest
-(import format), validation with a dry-run report, rollback, and reconciliation —
-for rosters in the database (roster staging) and as browser-side evidence
-(Migration Center). Per-field provenance and a production load path do not
-exist, and nothing but rosters has even the foundation. The repository's
-own readiness test warns about exactly this failure — something reported
-absent that is already there — so that Part B should be rewritten from section
-**what is and is not built** here. This pull request does not edit it, because
-`marketreadiness.test.ts` probes that area.
+`docs/market-readiness/MIGRATION_PLAYBOOK.md` Part B stated that import format,
+validation and dry-run, provenance, rollback and a reconciliation report all had
+state "None", and that nothing supported customer data migration. That predated
+the Migration Center and roster staging. Part B has since been rewritten from the
+**what is and is not built** table above, and `marketreadiness.test.ts` now fails
+if it again says nothing supports migration while those migrations are in the
+tree. Four of the five needs exist in some form — a manifest, validation with a
+dry-run report, rollback and reconciliation — for rosters in the database and as
+browser-side evidence in the Migration Center. Per-field provenance and a
+production load path do not exist, and nothing but rosters has even the
+foundation.
 
 ## Acceptance criteria for phases 5 and 7
 
