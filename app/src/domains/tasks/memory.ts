@@ -22,7 +22,14 @@ export function memoryTaskRepository(seed: readonly Task[] = []): TaskRepository
       tasks = tasks.map((t) => (t.id === task.id ? task : t));
     },
     async create(draft) {
-      const task: Task = { id: `mem-${++counter}`, state: 'open', repeats: false, ...draft };
+      const task: Task = {
+        id: `mem-${++counter}`,
+        state: 'open',
+        repeats: false,
+        title: draft.title,
+        dueOn: draft.dueOn,
+        courseId: draft.courseId,
+      };
       tasks = [...tasks, task];
       return task;
     },

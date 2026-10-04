@@ -19,8 +19,11 @@ import type { TaskRepository } from './ports';
  * dispatches into the reducer, and the test drives the reducer directly.
  */
 
+/** What the reducer's `addTask` takes: a `PersonalTask` before it has an id, a creation time or a state. */
+export type NewLegacyTask = Omit<PersonalTask, 'id' | 'created' | 'done'>;
+
 export type LegacyTaskCommand =
-  | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
+  | { type: 'addTask'; task: NewLegacyTask }
   | { type: 'toggleTask'; id: string }
   | { type: 'editTask'; id: string; patch: { date: string | null } };
 
@@ -80,7 +83,14 @@ export function legacyTaskRepository(host: LegacyTaskHost): TaskRepository {
       const known = new Set(host.read().map((t) => t.id));
       host.dispatch({
         type: 'addTask',
-        task: { title: draft.title, date: draft.dueOn, time: '', note: '', courseId: draft.courseId },
+        task: {
+          title: draft.title,
+          date: draft.dueOn,
+          time: draft.time,
+          note: draft.note,
+          courseId: draft.courseId,
+          ...(draft.origin !== null ? { from: draft.origin } : {}),
+        },
       });
       await host.settled?.();
       const added = host.read().find((t) => !known.has(t.id));

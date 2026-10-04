@@ -35,6 +35,7 @@ function stub(initial: Task[]) {
       complete: vi.fn(async (id: string) => { calls.push(`complete:${id}`); tasks = tasks.map((t) => (t.id === id ? { ...t, state: 'done' as const } : t)); return ok; }),
       reopen: vi.fn(async (id: string) => { calls.push(`reopen:${id}`); tasks = tasks.map((t) => (t.id === id ? { ...t, state: 'open' as const } : t)); return ok; }),
       reschedule: vi.fn(async (id: string, to: string | null) => { calls.push(`reschedule:${id}:${to}`); return ok; }),
+      add: vi.fn(async (input: { title: string }) => { calls.push(`add:${input.title}`); return ok; }),
     },
     settled: async () => undefined,
   } as unknown as Domains;
@@ -100,6 +101,64 @@ describe('makeTaskActions', () => {
       { type: 'toggleTask', id: 't1' },
       { type: 'editTask', id: 't1', patch: { date: '2026-09-12' } },
     ]);
+  });
+});
+
+describe('makeTaskActions.add', () => {
+  const plain = { title: 'Email Dr. Rao', date: '2026-09-11', time: '6 PM', note: 'about the essay', courseId: 'econ', from: 'deadline:e1' };
+
+  it('is the legacy addTask, exactly, when the flag is not production', () => {
+    for (const flag of ['off', 'preview', 'sandbox'] as const) {
+      const { domains, dispatch, calls } = stub([]);
+      makeTaskActions(domains, dispatch, flag).add(plain);
+      expect(dispatch.mock.calls.map((c) => c[0])).toEqual([{ type: 'addTask', task: plain }]);
+      expect(calls).toEqual([]);
+    }
+  });
+
+  it('adds through the domain at production, carrying time, note and what the task was made for', async () => {
+    const { domains, dispatch, calls } = stub([]);
+    makeTaskActions(domains, dispatch, 'production').add(plain);
+    await drain(); await drain();
+    expect(calls).toEqual(['add:Email Dr. Rao']);
+    expect(domains.tasks.add).toHaveBeenCalledWith({
+      title: 'Email Dr. Rao', dueOn: '2026-09-11', courseId: 'econ', time: '6 PM', note: 'about the essay', origin: 'deadline:e1',
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('sends a repeating task, or one with steps, to the legacy reducer without asking the domain', async () => {
+    const { domains, dispatch, calls } = stub([]);
+    const a = makeTaskActions(domains, dispatch, 'production');
+    a.add({ ...plain, repeat: { every: 'weekly', until: '2026-12-01' } });
+    a.add({ ...plain, steps: [{ id: 's', text: 'Skim', done: false }] });
+    await drain(); await drain(); await drain();
+    expect(calls).toEqual([]);
+    expect(dispatch.mock.calls.map((c) => c[0].type)).toEqual(['addTask', 'addTask']);
+  });
+
+  it('never loses an action to an exception either: a throw is said once and the legacy store takes it', async () => {
+    const { domains, dispatch } = stub([dom()]);
+    (domains.tasks.add as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('did not record'));
+    (domains.tasks.complete as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('boom'));
+    const log = vi.fn();
+    const a = makeTaskActions(domains, dispatch, 'production', log);
+    a.add(plain);
+    a.toggle('t1');
+    await drain(); await drain(); await drain(); await drain();
+    expect(log).toHaveBeenCalledTimes(2);
+    expect(dispatch.mock.calls.map((c) => c[0].type)).toEqual(['addTask', 'toggleTask']);
+  });
+
+  it('never loses a task: a refusal is said once, and the legacy store takes it', async () => {
+    const { domains, dispatch } = stub([]);
+    (domains.tasks.add as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: false, error: { code: 'validation', message: 'x', retryable: false } });
+    const log = vi.fn();
+    makeTaskActions(domains, dispatch, 'production', log).add(plain);
+    await drain(); await drain(); await drain();
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log.mock.calls[0][0]).toContain('refused an add (validation)');
+    expect(dispatch.mock.calls.map((c) => c[0])).toEqual([{ type: 'addTask', task: plain }]);
   });
 });
 
@@ -203,5 +262,36 @@ describe('in a real store, against the legacy reducer', () => {
     await act(async () => actions.toggle('t0'));
     await flush();
     expect(strip(tasks)).toEqual(strip(legacyOnly(rows, [{ type: 'toggleTask', id: 't0' }])));
+  });
+  it('adds like the legacy reducer, fields and all, apart from the title being trimmed', async () => {
+    await mount('production', []);
+    const input = { title: '  Email Dr. Rao  ', date: '2026-09-11', time: '6 PM', note: 'about the essay', courseId: 'econ', from: 'deadline:e1' };
+    await act(async () => actions.add(input));
+    await flush();
+    const viaLegacy = legacyOnly([], [{ type: 'addTask', task: { ...input, title: 'Email Dr. Rao' } }]);
+    const pick = (rows: PersonalTask[]) => rows.map((t) => ({ title: t.title, date: t.date, time: t.time, note: t.note, courseId: t.courseId, from: t.from, done: t.done }));
+    expect(pick(tasks)).toEqual(pick(viaLegacy));
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].from).toBe('deadline:e1'); // the control: origin really reached the store
+  });
+
+  it('keeps a repeating add exactly as the legacy reducer makes it', async () => {
+    await mount('production', []);
+    const input = { title: 'Laundry', date: '2026-09-15', time: '', note: '', courseId: null, repeat: { every: 'weekly' as const, until: '2026-12-01' } };
+    await act(async () => actions.add(input));
+    await flush();
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].repeat).toEqual(input.repeat);
+  });
+
+  it('stores a title the domain would refuse, and says so once', async () => {
+    await mount('production', []);
+    const long = 'x'.repeat(201);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await act(async () => actions.add({ title: long, date: null, time: '', note: '', courseId: null }));
+    await flush();
+    expect(tasks.map((t) => t.title)).toEqual([long]);
+    expect(warn.mock.calls.filter((c) => String(c[0]).includes('[domainTasks]'))).toHaveLength(1);
+    warn.mockRestore();
   });
 });

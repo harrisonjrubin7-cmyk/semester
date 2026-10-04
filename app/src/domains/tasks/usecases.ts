@@ -13,6 +13,15 @@ import type { TaskRepository } from './ports';
  * rule is never evaluated against a task that was not loaded.
  */
 
+export interface AddTaskInput {
+  title: string;
+  dueOn?: string | null;
+  courseId?: string | null;
+  time?: string;
+  note?: string;
+  origin?: string | null;
+}
+
 export interface TaskServiceDeps {
   repo: TaskRepository;
   clock: Clock;
@@ -20,7 +29,7 @@ export interface TaskServiceDeps {
 }
 
 export interface TaskService {
-  add(input: { title: string; dueOn?: string | null; courseId?: string | null }): Promise<Result<Outcome<Task, Obligation>>>;
+  add(input: AddTaskInput): Promise<Result<Outcome<Task, Obligation>>>;
   complete(id: string): Promise<Result<Outcome<Task, Obligation>>>;
   reopen(id: string): Promise<Result<Outcome<Task, Obligation>>>;
   reschedule(id: string, dueOn: string | null): Promise<Result<Outcome<Task, Obligation>>>;
@@ -59,7 +68,14 @@ export function createTaskService({ repo, clock, can }: TaskServiceDeps): TaskSe
       if (!title.ok) return title;
       const dueOn = validateDueOn(input.dueOn ?? null);
       if (!dueOn.ok) return dueOn;
-      const task = await repo.create({ title: title.value, dueOn: dueOn.value, courseId: input.courseId ?? null });
+      const task = await repo.create({
+        title: title.value,
+        dueOn: dueOn.value,
+        courseId: input.courseId ?? null,
+        time: input.time ?? '',
+        note: input.note ?? '',
+        origin: input.origin ?? null,
+      });
       return ok({ value: task, events: [event('task.added', task.id)], obligations: decision.obligations });
     },
     complete: (id) => guarded(id, complete, 'task.completed'),

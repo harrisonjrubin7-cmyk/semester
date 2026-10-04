@@ -145,4 +145,18 @@ describe('the slice running on the legacy store', () => {
     expect(r.ok && r.value.value.title).toBe('Deferred');
     expect(committed).toHaveLength(1);
   });
+
+  it('carries time, note and what the task was made for through to the reducer', async () => {
+    const { h, state } = host();
+    const d = createDomains(h, clock);
+    const r = await d.tasks.add({ title: 'Reply to Dr. Rao', dueOn: '2026-09-11', courseId: 'econ', time: '6 PM', note: 'about the essay', origin: 'follow-up:7' });
+    expect(r.ok).toBe(true);
+    expect(state().tasks[0]).toMatchObject({ title: 'Reply to Dr. Rao', date: '2026-09-11', time: '6 PM', note: 'about the essay', courseId: 'econ', from: 'follow-up:7', done: false });
+  });
+
+  it('leaves `from` off a task that nothing made', async () => {
+    const { h, state } = host();
+    await createDomains(h, clock).tasks.add({ title: 'Plain' });
+    expect('from' in state().tasks[0]).toBe(false);
+  });
 });

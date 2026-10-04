@@ -390,7 +390,8 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 }
 
 function Tasks({ rows }: { rows?: PersonalTask[] }) {
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -403,17 +404,14 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
 
   const add = () => {
     if (!title.trim()) return;
-    dispatch({
-      type: 'addTask',
-      task: {
-        title: title.trim(),
-        date: date || null,
-        time: time.trim(),
-        note: '',
-        courseId,
-        // A rule counts from a first day; without one there is no series.
-        ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
-      },
+    taskActions.add({
+      title: title.trim(),
+      date: date || null,
+      time: time.trim(),
+      note: '',
+      courseId,
+      // A rule counts from a first day; without one there is no series.
+      ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
     });
     setTitle('');
     setTime('');

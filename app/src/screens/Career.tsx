@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { useTaskActions } from '../state/taskactions';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { Group, NavRow } from '../components/shell/Rows';
@@ -157,6 +158,7 @@ export function Career({
 
 function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }: { storageKey: string; pathwayKey: string; careerSkillsGraph: boolean; careerEvidence: boolean }) {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
   const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
 
@@ -1242,16 +1244,13 @@ function Workspace({ storageKey, pathwayKey, careerSkillsGraph, careerEvidence }
                       setNotice('That follow-up is already an action.');
                       return;
                     }
-                    dispatch({
-                      type: 'addTask',
-                      task: {
-                        title: c.next || `Follow up with ${c.name}`,
-                        date: c.nextDate || null,
-                        time: '',
-                        note: c.organization,
-                        courseId: null,
-                        from,
-                      },
+                    taskActions.add({
+                      title: c.next || `Follow up with ${c.name}`,
+                      date: c.nextDate || null,
+                      time: '',
+                      note: c.organization,
+                      courseId: null,
+                      from,
                     });
                     setNotice('Added to your actions. No message was sent.');
                   }}

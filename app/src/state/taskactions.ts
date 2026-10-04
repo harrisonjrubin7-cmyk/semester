@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Domains } from '../domains/composition';
+import type { NewLegacyTask } from '../domains/tasks';
 import type { FeatureState } from '../intelligence/contracts';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import { useDomains } from './domains';
@@ -9,7 +10,7 @@ import { useStore } from './store';
 /**
  * Step 5: the two things a screen does to a task that the domain owns.
  *
- * Ticking a task and moving it to another day. The screens used to dispatch
+ * Ticking a task, moving it to another day, and adding one. The screens used to dispatch
  * `toggleTask` and `editTask` themselves; now they ask for `toggle` and
  * `reschedule` and this decides how. With `domainTasks` off, or for a repeating
  * task, that is the same dispatch as before, byte for byte. At `production` it
@@ -36,14 +37,27 @@ import { useStore } from './store';
  */
 
 export interface TaskActions {
+  /**
+   * Add a task. The one door for it: nine screens used to dispatch `addTask`
+   * each with its own copy of the fields. A task with a repeat rule or steps
+   * goes to the legacy reducer, because the domain owns neither; the rest go
+   * through the domain, which checks the title and the date.
+   */
+  add(task: NewLegacyTask): void;
   /** Tick or un-tick, whichever the task is not. */
   toggle(id: string): void;
   /** Move to a day, as `YYYY-MM-DD`. */
   reschedule(id: string, date: string): void;
 }
 
-export function makeTaskActions(domains: Domains, dispatch: (action: Action) => void, flag: FeatureState): TaskActions {
+export function makeTaskActions(
+  domains: Domains,
+  dispatch: (action: Action) => void,
+  flag: FeatureState,
+  log: (message: string) => void = (message) => console.warn(message),
+): TaskActions {
   const legacy: TaskActions = {
+    add: (task) => dispatch({ type: 'addTask', task }),
     toggle: (id) => dispatch({ type: 'toggleTask', id }),
     reschedule: (id, date) => dispatch({ type: 'editTask', id, patch: { date } }),
   };
@@ -54,6 +68,24 @@ export function makeTaskActions(domains: Domains, dispatch: (action: Action) => 
   const enqueue = (job: () => Promise<void>) => {
     tail = tail.then(job).catch(() => undefined);
   };
+
+  /**
+   * Run a job; if the domain *throws* (a repository that could not find what it
+   * had just written, say), say so once and do the legacy dispatch instead. A
+   * refusal is handled inside each job; this is for the exception, which would
+   * otherwise be swallowed by the queue and take the person's action with it.
+   * Safe against doing it twice: the only awaits that can throw come before the
+   * dispatch (`list`, `get`) or after it has committed or timed out.
+   */
+  const orLegacy = (job: () => Promise<void>, fallback: () => void) =>
+    enqueue(async () => {
+      try {
+        await job();
+      } catch (error) {
+        log(`[domainTasks] the domain threw (${error instanceof Error ? error.message : 'unknown'}); the legacy store took it`);
+        await viaLegacy(fallback);
+      }
+    });
 
   /** Run the legacy dispatch, and wait for it to land before the next press looks. */
   const viaLegacy = async (go: () => void) => {
@@ -67,22 +99,40 @@ export function makeTaskActions(domains: Domains, dispatch: (action: Action) => 
   };
 
   return {
+    add: (task) =>
+      orLegacy(async () => {
+        if (task.repeat !== undefined || (task.steps?.length ?? 0) > 0) return viaLegacy(() => legacy.add(task));
+        const added = await domains.tasks.add({
+          title: task.title,
+          dueOn: task.date,
+          courseId: task.courseId,
+          time: task.time,
+          note: task.note,
+          origin: task.from ?? null,
+        });
+        if (!added.ok) {
+          // The screens have no place to show a refusal, and losing somebody's task is worse than
+          // storing one the domain would have questioned. It is said once, where a developer sees it.
+          log(`[domainTasks] the domain refused an add (${added.error.code}); the legacy store took it`);
+          await viaLegacy(() => legacy.add(task));
+        }
+      }, () => legacy.add(task)),
     toggle: (id) =>
-      enqueue(async () => {
+      orLegacy(async () => {
         const task = await find(id);
         if (!task) return; // gone since it was drawn
         if (task.repeats) return viaLegacy(() => legacy.toggle(id));
         const done = await (task.state === 'done' ? domains.tasks.reopen(id) : domains.tasks.complete(id));
         if (!done.ok && done.error.code !== 'not_found') await viaLegacy(() => legacy.toggle(id));
-      }),
+      }, () => legacy.toggle(id)),
     reschedule: (id, date) =>
-      enqueue(async () => {
+      orLegacy(async () => {
         const task = await find(id);
         if (!task) return;
         if (task.repeats) return viaLegacy(() => legacy.reschedule(id, date));
         const moved = await domains.tasks.reschedule(id, date);
         if (!moved.ok && moved.error.code !== 'not_found') await viaLegacy(() => legacy.reschedule(id, date));
-      }),
+      }, () => legacy.reschedule(id, date)),
   };
 }
 
