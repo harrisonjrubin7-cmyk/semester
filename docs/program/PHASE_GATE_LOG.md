@@ -11,7 +11,7 @@
 | Boundaries enumerated with a classification | 16 tenancy boundaries and the privileged surface (`docs/architecture/tenancy/tenant-boundary-map.md`, `docs/architecture/security/privileged-surface-map.md`); 12 AI invocation paths (`docs/architecture/ai/ai-policy-enforcement-map.md`); 105 capability rows (`docs/program/CAPABILITY_TRACEABILITY_MATRIX.md`); commercial rows (`commercial/READINESS_GAP_MATRIX.md`) | Met |
 | Owner | 14 domains keyed to seats (`docs/program/DOMAIN_OWNERSHIP_MATRIX.md`); owners on every ADR and risk are **roles**. One person holds every seat and the backup is unassigned (`OWNER-AND-ACCOUNTABILITY-MATRIX.md`; R-018) | Met as accountability; not as independence |
 | Traceability | capability -> UI -> state -> contract -> DB -> policy -> test -> ops, per row, with a label | Met for the 105 rows; per-table RLS/audit for the 50 browser-written tables is not written (R-003) |
-| Risk classification | 36 risks, 2 P0, 22 P1 (`docs/program/RISK_REGISTER.md`) | Met |
+| Risk classification | 36 risks, 2 P0, 23 P1 (`docs/program/RISK_REGISTER.md`) | Met |
 | Next action | Ordered Phase 1 plan with slice and proof per step (`docs/program/PHASE_1_EXECUTION_BACKLOG.md`) | Met |
 | ADR system and backlog | template, review policy, rights, checklist, index, backlog and Proposed ADR-0001..0025 under `docs/decisions/` and `docs/governance/` | Met as drafts; **none accepted** |
 | Fitness functions identified | `docs/governance/FITNESS_FUNCTIONS.md`: 20 rows, existing mechanism, CI status, gap; no script created | Met as a map; none implemented |
