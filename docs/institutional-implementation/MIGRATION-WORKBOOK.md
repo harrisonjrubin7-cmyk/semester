@@ -24,6 +24,7 @@ state is:
 | Migration record, twelve gated stages, field maps, runs, approvals, per-stage gate | **Built**, behind the `migrationCenter` flag (off by default) |
 | Evidence is counts and the sample's SHA-256; the sample is read in the browser and goes no further | **Built** |
 | Dry-run: preview and sample import mapped in the browser with no write | **Built** |
+| Migration assurance: semantic verification, injected-defect proofs, hash-chained ledger, exception queue (D-1185; `app/src/lib/migration-assurance/`) | **Built as files**, beside the Center; persisting the ledger needs the Center's tables extended, with RLS, a check suite and retention entries, and applying that needs the owner's approval. Connects to no source system and loads nothing |
 | Roster staging, manifest validation, delta hold, last-known-good rollback | **Built, server-only foundation.** No OneRoster client, no network call, no SIS read; **nothing reads `roster_current`** |
 | Load of any domain's records into live Semester objects | **Not built** |
 | Per-field provenance on imported values | **Not built** ([`../market-readiness/DATA_READINESS.md`](../market-readiness/DATA_READINESS.md)) |

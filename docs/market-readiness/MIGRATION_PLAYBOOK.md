@@ -21,7 +21,7 @@ both pending. The guard caught it; the recurrence is not closed.
 ## B. Customer data migration (theirs) — evidence path built; no load path
 
 Bringing a university's existing data into Semester. Read off `main` on 4 October
-2026 (`2b97e60`). Two things exist, and neither moves data into live Semester
+2026 (`8a33cd2`). Three things exist, and none moves data into live Semester
 objects for any domain:
 
 - **The Migration Center** (D-144; `supabase/migrations/20260929200000_migration_center.sql`,
@@ -30,6 +30,12 @@ objects for any domain:
   is mapped, validated and reconciled **in the browser**; what is recorded is
   counts and the file's SHA-256, never a record. It proves a mapping works and a
   file reconciles. It loads nothing.
+- **Migration assurance** (D-1185; `app/src/lib/migration-assurance/`). Semantic
+  verification beside the Center: checks proven on real data by injecting a
+  defect of their own kind, inherited-versus-introduced defects, a hash-chained
+  replayed ledger, and a bridge that refuses to turn an inconclusive verdict into
+  passing counts. The ledger and exception queue are files, not tables, and it
+  connects to no source system and loads nothing.
 - **Roster staging** (D-160; `supabase/migrations/20260930220000_roster_import_staging.sql`).
   A server-only foundation: stage, validate against a manifest, reconcile,
   promote (held for a different approver when it would remove more than the
