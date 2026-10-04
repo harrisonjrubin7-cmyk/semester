@@ -57,9 +57,11 @@ new section in the log and any number written twice.
 ## The gates, and what each is for
 
 Every command runs from `app/`, not the repository root — the root
-`package.json` is a workspace manifest for `packages/*` only and defines none of
-these scripts, so `npm test` there fails with "Missing script" instead of
-running the suite.
+`package.json` is the npm workspace manifest (`app/` and `packages/*`, one
+lockfile) and defines none of these scripts, so `npm test` there fails with
+"Missing script" instead of running the suite. Install from the root
+(`npm ci`), which links every workspace; `npm ci` inside `app/` installs only
+`app/`'s dependencies and skips the `@semester/*` links.
 [REGRESSION-CHECKLIST.md](REGRESSION-CHECKLIST.md) says the same thing at more
 length, and holds the baseline figures.
 

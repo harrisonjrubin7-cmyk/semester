@@ -58,10 +58,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
-        working-directory: app
         run: npm ci
 
       # Playwright is installed here and not in `app/package.json`, which is

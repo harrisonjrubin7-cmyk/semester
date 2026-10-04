@@ -52,7 +52,7 @@ Read-only; no source code was changed. The companion documents:
 | | |
 |---|---|
 | Framework | React 19.3, Vite 8.3, TypeScript 7.0, Vitest 5, oxlint (`app/package.json`) |
-| Package manager | npm (`app/package-lock.json`); **all commands run from `app/`** |
+| Package manager | npm workspaces (`package-lock.json` at the repository root); **all commands run from `app/`** |
 | Routing | In-house hash router `app/src/lib/route.ts`; 81 `Screen` members (`lib/types.ts`); 79 lazy screens in `app/src/screens.tsx`; 59 navigable destinations on 8 shelves (`lib/nav.ts`); 6 nav modes; default 5-tab bar `home, courses, study, calendar, me` (`lib/tabbar.ts`) |
 | State | Reducer over 10 slices (`app/src/state/`); IndexedDB `semester-store` with a `semester.v1` rollback copy; `lib/migrate.ts` `SCHEMA = 6`; ~50 `semester.*` device keys |
 | Backend | Supabase Postgres (59 migrations), 6 edge functions, prepare-only institution gateway (`app/server/institution`, Vercel function `app/api/institution`) |
