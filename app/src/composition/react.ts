@@ -12,6 +12,7 @@ import { ownedScope } from '../lib/standing';
 import { pathSnapshot } from '../lib/today-decision';
 import type { PersonalTask } from '../lib/types';
 import { useNow, useStore, type Action, type State } from '../state/store';
+import { makeBridge } from './bridge';
 import { composeDomains, defaultPlatform, type Domains, type LegacyHost, type Platform } from './domains';
 
 /**
@@ -62,8 +63,9 @@ function patchOf(current: PersonalTask, next: PersonalTask): Partial<PersonalTas
  * Reads call `read()` each time rather than closing over a snapshot, so a
  * use case that runs after a dispatch sees the state that dispatch made.
  */
-export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) => void): LegacyHost {
+export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) => void, settled?: () => Promise<void>): LegacyHost {
   return {
+    settled,
     identity: () => {
       const s = read();
       return { role: s.state.role, userId: s.accountId, schoolId: s.schoolId, grants: s.grants };
@@ -81,6 +83,11 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
           if (Object.keys(patch).length) dispatch({ type: 'editTask', id: t.id, patch } as Action);
         }
       },
+    },
+    taskCommands: {
+      add: (task) => dispatch({ type: 'addTask', task }),
+      move: (id, date, time) => dispatch({ type: 'moveTask', id, date, ...(time === undefined ? {} : { time }) }),
+      remove: (id) => dispatch({ type: 'deleteTask', id }),
     },
     appointments: () => read().state.appointments,
     // The sample's deadlines are not the student's until they say so: the same
@@ -147,19 +154,6 @@ export interface DomainOptions {
   readonly officeList?: readonly OfficeAction[] | null;
 }
 
-function makeBridge(first: StoreSnapshot, firstDispatch: (a: Action) => void) {
-  let snapshot = first;
-  let dispatch = firstDispatch;
-  return {
-    sync(next: StoreSnapshot, nextDispatch: (a: Action) => void) {
-      snapshot = next;
-      dispatch = nextDispatch;
-    },
-    read: () => snapshot,
-    send: (a: Action) => dispatch(a),
-  };
-}
-
 export function useDomains(platform: Platform = defaultPlatform, options: DomainOptions = {}): Domains {
   const store = useStore();
   const now = useNow();
@@ -181,13 +175,21 @@ export function useDomains(platform: Platform = defaultPlatform, options: Domain
     registration: { active: !!options.registrationDay, data: plan.data, cart: plan.cart, catalog: plan.catalog },
     office,
   };
-  // A bridge the host reads through. It lives as long as the component and is
-  // synced after each commit; the host's closures run later, when a use case
-  // does, never during render, so they see the latest committed snapshot.
-  const [bridge] = useState(() => makeBridge(snapshot, store.dispatch));
-  useEffect(() => {
-    bridge.sync(snapshot, store.dispatch);
-  });
+  return useBridgedDomains(snapshot, platform);
+}
 
-  return useMemo(() => composeDomains(hostOver(bridge.read, bridge.send), platform), [bridge, platform]);
+/**
+ * The composed domains over a snapshot, through a bridge the host reads.
+ *
+ * The bridge lives as long as the component and is synced after each commit;
+ * the host's closures run later, when a use case does, never during render, so
+ * they see the latest committed snapshot.
+ */
+function useBridgedDomains(snapshot: StoreSnapshot, platform: Platform): Domains {
+  const { dispatch } = useStore();
+  const [bridge] = useState(() => makeBridge(snapshot, dispatch));
+  useEffect(() => {
+    bridge.sync(snapshot, dispatch);
+  });
+  return useMemo(() => composeDomains(hostOver(bridge.read, bridge.send, bridge.settled), platform), [bridge, platform]);
 }
