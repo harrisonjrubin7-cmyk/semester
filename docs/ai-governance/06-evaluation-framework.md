@@ -58,7 +58,7 @@ that writes the exam, and a threshold on only one of them trains the system towa
 
 - **Synthetic or expressly approved.** No real student, staff or institutional record in any suite. A lint over case
   files refuses anything shaped like a real address or student id, and is **shown to fail on a planted one**
-  (a requirement of the harness plan, not yet built).
+  (`eval-lint.ts`, `EV-05`).
 - **A case is a file, versioned with the prompt it tests**: input, the sources it may use, assertions (must cite, must
   refuse, must refer, must not contain). It changes in the same commit as the prompt.
 - **A held-out set** that prompt authors do not read, so a prompt is not tuned to its own test.
@@ -132,7 +132,7 @@ The plan names ten suites; the dimensions above cut across them, so each suite i
 | `EV-02` | Thresholds ratified by the AI governance owner after the baseline, replacing the proposals here | not started |
 | `EV-03` | Deterministic layer (`PR` stage) for every suite, running in `npm test` | partial: model quality, injection structure, tool scoping; no suite for leakage, bias, refusal |
 | `EV-04` | Suites `SU-LEAK`, `SU-TOOL`, `SU-BIAS`, `SU-COST` exist | not started |
-| `EV-05` | A case-file lint for real-looking data, shown to fail on a planted example | not started |
+| `EV-05` | A case-file lint for real-looking data, shown to fail on a planted example | **tested**: `app/src/lib/governance/eval-lint.ts` runs the existing PII detector over everything a case carries (prompt, tools, messages, good reply, every reply a check is shown), with reserved example addresses and the `555-01xx` fiction range allowed and a Social Security shape and Luhn-valid card numbers added; planted in each field in turn; the 15 cases are clean; eight mutations caught. It lints the cases in code today, and any case file the harness adds must be passed through it |
 | `EV-06` | A held-out set and a published feature × dimension × tier coverage matrix | not started |
 | `EV-07` | Paired-prompt bias harness reporting intervals, with the "not established" outcome | not started |
 | `EV-08` | Human review protocol: sampling by tier, two raters, adjudication, agreement, assistive-technology reviewer | designed |
