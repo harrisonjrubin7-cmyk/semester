@@ -90,8 +90,14 @@ export interface Item<T = unknown> {
 
 export interface Vault {
   readonly namespace: string;
-  /** Seal and store. Refuses a class that may not be kept offline. */
-  put(id: string, cls: DataClass, value: Record<string, unknown>, stamp: string): Promise<void>;
+  /**
+   * Seal and store. Refuses a class that may not be kept offline, and drops
+   * fields the class does not allowlist. `envelope: true` skips only that
+   * second step, for a wrapper that carries its own bookkeeping (the queue's
+   * mutation) and has already minimised the record data inside it; the class
+   * gate still applies.
+   */
+  put(id: string, cls: DataClass, value: Record<string, unknown>, stamp: string, opts?: { envelope?: boolean }): Promise<void>;
   /** Open one. `null` if absent or past its class's age limit (which also deletes it). Throws `tampered` if it will not open. */
   get<T = Record<string, unknown>>(id: string): Promise<Item<T> | null>;
   remove(id: string): Promise<void>;
@@ -148,11 +154,11 @@ export async function openVault(
   return {
     namespace: ns,
 
-    async put(id, cls, value, stamp) {
+    async put(id, cls, value, stamp, opts) {
       alive();
       const verdict = mayKeep(cls);
       if (!verdict.ok) throw new VaultError(verdict.reason, verdict.why);
-      const kept = minimise(cls, value);
+      const kept = opts?.envelope ? value : minimise(cls, value);
       const iv = random(12);
       const k = (await key(true)) as CryptoKey;
       const ct = new Uint8Array(

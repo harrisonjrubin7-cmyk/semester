@@ -40,6 +40,17 @@ describe('enqueueing', () => {
     expect((await entries(vault)).map((x) => x.id)).toEqual(['e1']);
   });
 
+  it('keeps the whole envelope for an allowlisted class, and minimises only the record’s own fields', async () => {
+    const { vault } = await setup();
+    const m = await enqueue(vault, edit('e1', { cls: 'assignment_meta', fields: { title: 'Lab 3', dueAt: 9, grade: '92' } }), NOW);
+    expect(m.fields).toEqual({ title: 'Lab 3', dueAt: 9 });
+    const [stored] = await entries(vault);
+    expect(stored).toMatchObject({ id: 'e1', recordId: 'task-1', op: 'upsert', cls: 'assignment_meta', state: 'queued', fields: { title: 'Lab 3', dueAt: 9 } });
+    // …and it still drains and records the outcome rather than vanishing.
+    await drain(vault, always({ status: 'accepted' }), { now: () => NOW });
+    expect((await entries(vault))[0].state).toBe('accepted');
+  });
+
   it('returns the first entry for a repeated key instead of making a second', async () => {
     const { vault } = await setup();
     await enqueue(vault, edit('e1', { fields: { title: 'first' } }), NOW);

@@ -37,7 +37,7 @@
  * so, and waits for the student to decide, rather than retrying forever.
  */
 
-import type { DataClass } from './classes';
+import { minimise, type DataClass } from './classes';
 import { compare } from './hlc';
 import type { Vault } from './vault';
 
@@ -107,18 +107,18 @@ export async function enqueue(vault: Vault, e: Enqueue, now = Date.now()): Promi
   const have = await vault.get<Mutation>(idOf(e.key));
   if (have) return have.value;
   const m: Mutation = {
-    id: e.key, recordId: e.recordId, op: e.op, cls: e.cls, fields: e.fields ?? {},
+    id: e.key, recordId: e.recordId, op: e.op, cls: e.cls, fields: minimise(e.cls, e.fields ?? {}),
     baseStamp: e.baseStamp ?? null, stamp: e.stamp, correlationId: e.correlationId, policyVersion: e.policyVersion,
     state: e.hold ? 'saved_locally' : 'queued', attempts: 0, nextAttemptAt: now, createdAt: now, expiresAt: now + WAIT_MS,
   };
   // The class gate lives in the vault, so this throws for a class that may not
   // be kept offline, and nothing about the edit is written anywhere.
-  await vault.put(idOf(e.key), e.cls, m as unknown as Record<string, unknown>, e.stamp);
+  await vault.put(idOf(e.key), e.cls, m as unknown as Record<string, unknown>, e.stamp, { envelope: true });
   return m;
 }
 
 async function save(vault: Vault, m: Mutation): Promise<void> {
-  await vault.put(idOf(m.id), m.cls, m as unknown as Record<string, unknown>, m.stamp);
+  await vault.put(idOf(m.id), m.cls, m as unknown as Record<string, unknown>, m.stamp, { envelope: true });
 }
 
 function move(m: Mutation, to: State, reason?: string): Mutation {
