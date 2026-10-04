@@ -59,6 +59,18 @@ export interface ExperienceFlags {
    * D-146). RLS and the approval trigger decide what each account may do.
    */
   studentAccounts: FeatureState;
+  /**
+   * Today computed a second way, through `src/domains` (step 3 of
+   * docs/architecture/modular-monolith.md, D-1149).
+   *
+   * `preview` and `sandbox` run the domain's Today beside the legacy one and
+   * report any disagreement to the console; **nothing on screen changes**.
+   * `production` is reserved for step 4, when the screen reads the domain; until
+   * that ships it behaves as `preview`. Never inherited from an institutional
+   * preview: it is a developer's instrument, and a preview account has nothing
+   * to compare.
+   */
+  domainToday: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -93,6 +105,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     configurationStudio: featureState(env, 'VITE_CONFIGURATION_STUDIO', preview),
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
+    domainToday: featureState(env, 'VITE_DOMAIN_TODAY', false),
   };
 }
 

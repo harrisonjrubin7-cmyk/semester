@@ -17,12 +17,12 @@ const e = (over: Partial<Entry> & { id: string }): Entry => ({
 });
 
 describe('a day', () => {
-  it('lists timed entries by start, then untimed ones by title', () => {
+  it('lists timed entries by start, then untimed ones in the order given', () => {
     const day = entriesOn(
       [e({ id: 'z', title: 'Zeta' }), e({ id: 'b', startMin: 600 }), e({ id: 'a', startMin: 540 }), e({ id: 'y', title: 'Alpha' }), e({ id: 'other', day: '2026-09-10', startMin: 1 })],
       '2026-09-09',
     );
-    expect(day.map((x) => x.id)).toEqual(['a', 'b', 'y', 'z']);
+    expect(day.map((x) => x.id)).toEqual(['a', 'b', 'z', 'y']);
   });
 
   it('finds overlapping blocks, but not blocks that merely touch, and never a deadline', () => {

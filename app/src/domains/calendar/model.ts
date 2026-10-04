@@ -42,12 +42,19 @@ const OCCUPIES: ReadonlySet<EntryKind> = new Set(['class', 'appointment', 'campu
 const occupies = (e: Entry): e is Entry & { startMin: number; endMin: number } =>
   OCCUPIES.has(e.kind) && e.startMin !== null && e.endMin !== null && e.endMin > e.startMin;
 
-/** Timed entries first, by start; untimed ones after, by title so the order is stable. */
+/**
+ * Timed entries first, by start; untimed ones after.
+ *
+ * Ties keep the order the source listed them in (the sort is stable). That is
+ * what the legacy checklist does, and the shadow comparison (`today/shadow.ts`)
+ * reports any difference in order as a disagreement, so an alphabetical
+ * tie-break here would be reported on every day with two untimed deadlines.
+ */
 export function byStart(a: Entry, b: Entry): number {
-  if (a.startMin !== null && b.startMin !== null) return a.startMin - b.startMin || a.title.localeCompare(b.title);
+  if (a.startMin !== null && b.startMin !== null) return a.startMin - b.startMin;
   if (a.startMin !== null) return -1;
   if (b.startMin !== null) return 1;
-  return a.title.localeCompare(b.title);
+  return 0;
 }
 
 export const entriesOn = (entries: readonly Entry[], day: IsoDate): Entry[] =>

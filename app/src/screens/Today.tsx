@@ -69,7 +69,8 @@ import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
 import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { EXPERIENCE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { TodayShadow } from '../state/todayshadow';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
@@ -2116,7 +2117,14 @@ export function Today() {
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
   if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today"><DailyPlanSlot /></FirstRun>;
-  return shape === 'feed' ? <FeedHome /> : <TabHome />;
+  // Step 3 of the modularization (D-1149): compare the domain's Today with this one. Draws nothing.
+  // Not on the first-run branch above: with nothing entered there is nothing to compare.
+  return (
+    <>
+      {shape === 'feed' ? <FeedHome /> : <TabHome />}
+      {moduleOn(EXPERIENCE_FLAGS.domainToday) && <TodayShadow />}
+    </>
+  );
 }
 
 /** Re-exported for the Me screen's load bars. */
