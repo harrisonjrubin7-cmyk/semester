@@ -2,6 +2,8 @@
 
 All figures require market discovery and finance approval. This document defines logic, not invented price points.
 
+> **Status of the offer described here:** a target, not a current one. Paid institutional pilots are **NO-GO / RED** ([`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)); "paid pilot" must not appear in public copy until that changes. Public wording today is *design-partner discovery and scoping, non-activation*.
+
 ## Price status
 
 - Individual free plan: **[PRICE TO BE CONFIRMED]**; define the safe, useful core before publishing limits.

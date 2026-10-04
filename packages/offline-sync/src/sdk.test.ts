@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { createOfflineSdk, type SdkConfig } from './sdk.ts'
 import { memoryStore } from './memory-store.ts'
 import { ReferenceGateway } from './testing/reference-gateway.ts'

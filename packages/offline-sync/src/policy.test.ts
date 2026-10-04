@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { OFFICIAL_PREFIXES } from '../../../app/src/lib/sync/classes.ts'
 import {
   assertCacheable, assertCrdt, assertQueueable, CRDT_CLASSES, DATA_CLASSES, dataClasses, freshness,

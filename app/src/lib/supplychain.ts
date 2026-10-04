@@ -58,7 +58,7 @@ export type Lockfile = 'app' | 'video' | 'pipeline';
 
 /** Where each lockfile's code goes. Only `ships` reaches a student. */
 export const LOCKFILES: Record<Lockfile, { path: string; ships: boolean; what: string }> = {
-  app: { path: 'app/package-lock.json', ships: true, what: 'The app: built and deployed to every user' },
+  app: { path: 'package-lock.json', ships: true, what: 'The app: built and deployed to every user (the workspace root lockfile, which also locks packages/*)' },
   video: { path: 'video/package-lock.json', ships: false, what: 'Local video rendering; never deployed' },
   pipeline: { path: 'pipeline/package-lock.json', ships: false, what: 'Local course-material pipeline; never deployed' },
 };
@@ -200,6 +200,10 @@ export const ACTIONS: Record<string, { publisher: string; why: string }> = {
   'actions/deploy-pages': { publisher: 'GitHub', why: 'Pages deploy.' },
   'gitleaks/gitleaks-action': { publisher: 'Gitleaks', why: 'Secret scanning; reads the tree, writes nothing. See ci.yml.' },
   'stackhawk/hawkscan-action': { publisher: 'StackHawk', why: 'Runs DAST against the ephemeral local preview; receives the StackHawk API key and a read-only repository token.' },
+  'actions/download-artifact': { publisher: 'GitHub', why: 'infra-apply.yml hands the reviewed plan from the plan job to the apply job.' },
+  'actions/attest-build-provenance': { publisher: 'GitHub', why: 'Signs which workflow built the app bundle, at which commit (Sigstore). See supply-chain.yml.' },
+  'actions/attest-sbom': { publisher: 'GitHub', why: 'Binds the CycloneDX SBOM to the same bundle (Sigstore). See supply-chain.yml.' },
+  'hashicorp/setup-terraform': { publisher: 'HashiCorp', why: 'Installs a pinned Terraform for the infrastructure plans; holds no credential itself. See infra.yml.' },
   'supabase/setup-cli': { publisher: 'Supabase', why: 'Installs the CLI that deploys the Edge Functions; Supabase already holds the data.' },
 };
 
@@ -256,7 +260,7 @@ export const WORKFLOW: readonly { step: string; heldBy: string | null }[] = [
   { step: 'Locked version added', heldBy: 'package-lock.json, installed by npm ci' },
   { step: 'CI scan and test', heldBy: 'ci.yml — npm audit --audit-level=high, the suite' },
   { step: 'SBOM updated', heldBy: 'pages.yml — npm run sbom on every deploy' },
-  { step: 'Release artifact and provenance retained', heldBy: null },
+  { step: 'Release artifact and provenance retained', heldBy: 'supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3)' },
   { step: 'Advisory monitoring', heldBy: '.github/dependabot.yml' },
   { step: 'Impact assessment: which services and tenants', heldBy: null },
   { step: 'Patch, mitigate, roll back or disable', heldBy: 'ROLLBACK.md, feature flags (docs/FEATURE-FLAG-REGISTRY.md)' },

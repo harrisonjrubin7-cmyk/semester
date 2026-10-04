@@ -300,13 +300,13 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'a11y-app',
     capabilityIds: ['CAP-001', 'CAP-017', 'CAP-020', 'CAP-021', 'CAP-025', 'CAP-031'],
-    claim: 'Every screen of the app is scanned for serious and critical accessibility violations on every change.',
-    scope: 'axe-core over every route, desktop and phone, in CI. Automated checks find a minority of barriers; the rest need a person.',
+    claim: 'The main student screens are scanned for serious and critical accessibility violations on every change.',
+    scope: 'axe-core in a simulated browser over twelve screens at desktop width and three at phone width, in CI. It cannot check colour contrast or layout, and automated checks find a minority of barriers; the rest need a person.',
     status: 'in-preparation',
     owner: 'accessibility',
     pages: ['/accessibility/'],
     audiences: ['students', 'departments', 'reviewers'],
-    evidence: [{ path: 'app/src/a11y/axe.test.tsx', shows: 'No serious or critical violation on any route, and the probe is shown a planted one first' }],
+    evidence: [{ path: 'app/src/a11y/axe.test.tsx', shows: 'No serious or critical violation on the twelve desktop and three phone screens it lists, and the probe is shown a planted one first' }],
     rows: ['A11Y-001', 'A11Y-002', 'A11Y-003', 'A11Y-004', 'A11Y-005'],
   },
   {

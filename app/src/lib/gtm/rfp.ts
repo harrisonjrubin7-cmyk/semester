@@ -240,8 +240,8 @@ export const LIBRARY: readonly Answer[] = [
   {
     id: 'PF-4', section: 'privacy-ferpa', status: 'planned',
     question: 'List your subprocessors.',
-    answer: 'A published list is planned; it can be drawn from the architecture today (database and authentication host, static hosting, the institution-approved AI provider).',
-    evidence: [],
+    answer: 'A register of every destination student data can reach exists, labelled as subprocessor, institution-directed or student-directed, and a test holds it to the app’s content-security policy and its server functions. It is a draft: counsel has not reviewed it, each provider’s own terms and hosting regions are not yet on file, and it has not been published to institutions.',
+    evidence: ['docs/SUBPROCESSORS.md', 'app/src/lib/trust/subprocessors.test.ts'],
     hecvat: ['PRIV-5'],
   },
   {
@@ -352,8 +352,15 @@ export const LIBRARY: readonly Answer[] = [
   {
     id: 'CT-1', section: 'contract-terms', status: 'company-input',
     question: 'Provide your standard terms, order form and DPA.',
-    answer: 'Not yet drafted. Counsel prepares them; the procurement checklist tracks what exists.',
-    evidence: ['docs/market-readiness/PROCUREMENT_CHECKLIST.md'],
+    answer: 'Drafts exist in the repository of a master subscription agreement, order form, statement of work, data processing addendum and pilot agreement. None has been reviewed by qualified counsel, approved or signed, so none can be offered as Semester’s terms. Counsel prepares the terms that are offered; the procurement checklist tracks what exists.',
+    evidence: [
+      'docs/legal-drafts/MASTER-SUBSCRIPTION-AGREEMENT-DRAFT.md',
+      'docs/legal-drafts/ORDER-FORM-TEMPLATE-DRAFT.md',
+      'docs/legal-drafts/STATEMENT-OF-WORK-TEMPLATE-DRAFT.md',
+      'docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md',
+      'docs/legal-drafts/PILOT-AGREEMENT-DRAFT.md',
+      'docs/market-readiness/PROCUREMENT_CHECKLIST.md',
+    ],
   },
 ];
 
