@@ -4,9 +4,9 @@
 | --- | --- |
 | Status | **PROPOSED DESIGN — NOTHING HERE IS OPERATING, APPROVED OR LIVE** |
 | Owner | Harrison Rubin — company-side revenue-operations owner; finance operator, deal desk, accountant, tax reviewer, counsel and backup for every role below unassigned |
-| Evidence date | 2026-10-04 at repository revision `7287ddc` |
+| Evidence date | 2026-10-04; drafted at repository revision `7287ddc`, finding 6 re-read at `c2e582b` (see below) |
 | Repository basis | `supabase/migrations/20260929070000_commercial_core.sql`, `20260929080000_commercial_automation.sql`, `20260928004730_tenant_plan.sql`, `20260927235000_governance_registries.sql`, `20260928090000_gtm_foundation.sql`, `20260930110000_ledger_chains.sql`, `app/src/lib/gtm/stages.ts`, `supabase/functions/_shared/entitlement.ts` |
-| Extends | [`CRM-DATA-MODEL`](CRM-DATA-MODEL.md), [`SALES-PIPELINE-DEFINITIONS`](SALES-PIPELINE-DEFINITIONS.md), [`ORDERING-AND-BILLING-OPERATIONS`](ORDERING-AND-BILLING-OPERATIONS.md), [`PRICING-AND-PACKAGING`](PRICING-AND-PACKAGING.md), [`REVENUE-OPERATIONS-DASHBOARD-SPEC`](REVENUE-OPERATIONS-DASHBOARD-SPEC.md), [`REVENUE-RECOGNITION-REVIEW-CHECKLIST`](REVENUE-RECOGNITION-REVIEW-CHECKLIST.md), [`RENEWAL-AND-EXPANSION-PLAYBOOK`](RENEWAL-AND-EXPANSION-PLAYBOOK.md), [`ANALYTICS-AND-METRICS-DICTIONARY`](ANALYTICS-AND-METRICS-DICTIONARY.md), [`../COMMERCIAL-CORE.md`](../COMMERCIAL-CORE.md), [`../ENTITLEMENT-RESOLUTION.md`](../ENTITLEMENT-RESOLUTION.md), [`../company/FINANCIAL-CONTROLS.md`](../company/FINANCIAL-CONTROLS.md), [`../legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md`](../legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md) |
+| Extends | [`CRM-DATA-MODEL`](CRM-DATA-MODEL.md), [`SALES-PIPELINE-DEFINITIONS`](SALES-PIPELINE-DEFINITIONS.md), [`ORDERING-AND-BILLING-OPERATIONS`](ORDERING-AND-BILLING-OPERATIONS.md), [`PRICING-AND-PACKAGING`](PRICING-AND-PACKAGING.md), [`REVENUE-OPERATIONS-DASHBOARD-SPEC`](REVENUE-OPERATIONS-DASHBOARD-SPEC.md), [`REVENUE-RECOGNITION-REVIEW-CHECKLIST`](REVENUE-RECOGNITION-REVIEW-CHECKLIST.md), [`RENEWAL-AND-EXPANSION-PLAYBOOK`](RENEWAL-AND-EXPANSION-PLAYBOOK.md), [`ANALYTICS-AND-METRICS-DICTIONARY`](ANALYTICS-AND-METRICS-DICTIONARY.md), [`../COMMERCIAL-CORE.md`](../COMMERCIAL-CORE.md), [`../ENTITLEMENT-RESOLUTION.md`](../ENTITLEMENT-RESOLUTION.md), [`PRICING-UNIT-ECONOMICS-ARCHITECTURE`](PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) (pricing-side structure, meters and leakage controls; this document is the finance-operations side), [`../company/FINANCIAL-CONTROLS.md`](../company/FINANCIAL-CONTROLS.md), [`../legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md`](../legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md) |
 
 > This is an operating design for qualified finance, accounting, tax and legal review. It is not accounting, tax or legal advice. Every price, discount, approval threshold, SLA and probability below is a placeholder or a labeled proposal. None is approved.
 
@@ -36,7 +36,7 @@ Read from the migrations and functions, not inferred from the documents. Nothing
 3. **There is no sales opportunity table.** `renewal_opportunities` is the only table with that word. Opportunities exist as `gtm_accounts.status` plus the stage vocabulary in `app/src/lib/gtm/stages.ts`.
 4. **Money fields are thin.** `contracts` carries no value. `quote_lines` stores one `unit_amount_cents`, so a list price and a discount cannot both be recorded. `invoices` has no amount-paid or balance, and `status` has no partially-paid state.
 5. **The financial tables are mutable and outside the tamper-evidence chain.** I found no history or immutability trigger on `quotes`, `quote_lines`, `contracts`, `invoices` or `credits_refunds`. The hash chain, its HMAC-signed daily manifests and its nightly verifier exist (`20260930110000_ledger_chains.sql`, `20260930150000_ledger_chain_seals.sql`), but they accept only two ledgers, `academic_record` and `student_account`.
-6. **A later order form can overwrite an earlier plan.** `tenant_plan` is one row per school (`tenant_id` primary key), and `apply_signed_contract` upserts it from the contract just signed with no comparison to the current row. A department pilot ending in December signed after a campus agreement ending the next June would replace the campus tier and end date. The change lands in `tenant_plan_history`, so it is recoverable, but nothing prevents it and no check covers overlapping order forms. Read from the code, not reproduced.
+6. **A later order form could overwrite an earlier plan. Fixed on main after this document was drafted.** `tenant_plan` is one row per school (`tenant_id` primary key), and `apply_signed_contract` upserted it from the contract just signed with no comparison to the current row, so a department pilot ending in December signed after a campus agreement ending the next June replaced the campus tier and end date. `supabase/migrations/20261004090000_order_form_never_downgrades_plan.sql` (commit `44e3303`, which cites this finding) now refuses, as its header describes, an order form whose tier is lower or whose end date is earlier than a current plan's; a higher tier, longer term or renewal goes through, and lowering a plan is a deliberate service-role write. I read the migration and did not run it. Still open: a school with two funded scopes (a campus licence plus a department add-on) cannot be represented, because one tier and one date range is all a school row holds.
 7. **A signed order form writes `tenant_plan.status = 'active'`** (never `trial`), dated from `effective_at`. [`ORDERING-AND-BILLING-OPERATIONS`](ORDERING-AND-BILLING-OPERATIONS.md) says signature is separate from launch GO. Today the separation rests on `starts_at` and the module step, and the entitlement order runs in shadow and enforces nothing; a school with no plan row passes ([`ENTITLEMENT-RESOLUTION`](../ENTITLEMENT-RESOLUTION.md)).
 8. **Two documents disagree about the individual price.** [`COMMERCIAL-CORE`](../COMMERCIAL-CORE.md) and `ops/billing` print $7.99/month and $59/year as catalog prices; [`PRICING-AND-PACKAGING`](PRICING-AND-PACKAGING.md) says no price is approved and a price in code is not the price book. This document uses no number and treats price approval as open.
 
@@ -103,7 +103,7 @@ Two accounting-facing rules follow. Semester's own customer billing is separate 
 2. Money is integer minor units with an explicit currency, and one billing account never mixes currencies. *(integer cents enforced; one-currency rule not seen)*
 3. A quote line stores list price, net price and discount reason separately, so the discount is computable. *(proposed)*
 4. Sent and signed commercial records are append-only; a change is a new version linked to the one it supersedes. *(`version` exists; supersession link and immutability proposed)*
-5. A contract has at most one active order form per tenant per product unless an amendment links them, and a later order never silently lowers an existing plan. *(violated today, finding 6)*
+5. A contract has at most one active order form per tenant per product unless an amendment links them, and a later order never silently lowers an existing plan. *(lowering is refused since `44e3303`; two funded scopes per school are still not representable)*
 6. Booked, billed, collected, entitled, delivered and recognized are six separate states. None implies another.
 7. A subscription records contracted quantity, so contracted, entitled and used can be compared. *(proposed)*
 8. Every state change on a financial record writes one history row with actor, time, reason and prior values. *(proposed beyond `tenant_plan_history`)*
@@ -155,7 +155,7 @@ Each role is dated, one party can hold several, and a role is a row, not a colum
 1. **Contract hierarchy:** an MSA, DPA or SLA sits at the highest signing party. Order forms hang off it through `parent_contract_id`, and amendments off the order form. Terms flow down; commercial scope does not flow up or sideways.
 2. **Billing rollup:** a billing account may have a parent billing account for consolidated statements. Each invoice still names one bill-to, and consolidation is a view, not a merged ledger.
 3. **Entitlement inheritance narrows only**, matching policy nodes. A system-level purchase may fund several campuses, a campus limit cannot be exceeded by a child, and a child cannot grant itself more than its parent bought.
-4. **Overlapping funding:** when two contracts fund one tenant, entitlements resolve by explicit rule, not "last signed wins" (finding 6). Proposed: the later contract is an amendment, or it is refused until the earlier plan's scope is stated.
+4. **Overlapping funding:** when two contracts fund one tenant, entitlements resolve by explicit rule, not "last signed wins". Since `44e3303` a later order may raise a plan but never lower it. Still proposed: a second funded scope (department add-on) is an amendment or a separate scoped record, because one `tenant_plan` row cannot hold two.
 5. **Segmentation of money flows:** institution pays Semester (this model); the institution bills its students on its own ledger (`student_account_*`, not ours); a guardian or family payer is governed by the consent model, not by an institutional contract; the individual subscription is a separate `kind = 'individual'` account.
 6. **Mergers, renames, affiliations:** a party relationship ends with a date rather than being edited. Open contracts are re-papered by amendment. History is preserved.
 7. **Hierarchy changes are approval events** because they change who may read financial data. Access follows the account's tenants (`can_read_billing`), so a rollup never widens access by itself.
@@ -209,7 +209,7 @@ States reuse the repository vocabulary; none is invented. A **handoff** is an ev
 | Integration | Direction | Key | Failure behavior | Privacy rule | State |
 | --- | --- | --- | --- | --- | --- |
 | Site form → `site_leads` → `gtm_accounts` | in | route, HMAC of IP | filled honeypot discarded; rate limit | no student data, no raw IP | exists |
-| Signed order form → tenant, project, renewal | internal | contract ID | idempotent on re-sign | none | exists, finding 6 |
+| Signed order form → tenant, project, renewal | internal | contract ID | idempotent on re-sign | none | exists; plan-lowering fixed on main, finding 6 |
 | Stripe → `payment_events` and invoices | in | provider + event ID (unique) | duplicate returns `duplicate`; out-of-order invoice answered 500 and retried | no card data stored | exists, unconfigured |
 | Accounting system ← invoices, credits, payments | out | invoice number, event ID | queue with retry; unposted items on a daily exception list | financial minimum only | **absent** |
 | SIS or roster → eligible-student counts | in | tenant, term | stale count blocks true-up, never invoices | counts only, no rosters | **absent** |
@@ -401,12 +401,14 @@ Controls: least privilege; quarterly access review recorded; revoke on role chan
 
 ## 9. Revenue leakage and pricing exceptions
 
+[`PRICING-UNIT-ECONOMICS-ARCHITECTURE`](PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) proposes pricing-side leakage controls (its L-series, such as a discount outside the ladder). This section is the finance-operations view: what to detect after the fact and which record shows it. Where the two overlap, the pricing document owns the price ladder and this one owns detection and review.
+
 | # | Leak | Where it occurs | Detection | Prevention |
 | ---: | --- | --- | --- | --- |
 | 1 | Contracted seats exceed entitled or billed seats | subscription has no quantity | contracted vs metered vs invoiced per tenant, monthly | `subscription_items` quantity; true-up at period close |
 | 2 | Active contract, nothing invoiced | missed billing run | contracts active in a period with no invoice | billing schedule generated at signature, not by memory |
-| 3 | Plan outlives contract | `tenant_plan` end date not matching contract | plan end vs contract end report | single writer; finding 6 rule |
-| 4 | Plan lowered by a later small order | `apply_signed_contract` upsert | overlap check at signature | refuse or require amendment |
+| 3 | Plan outlives contract | `tenant_plan` end date not matching contract | plan end vs contract end report | single writer; refusal rule from `44e3303` |
+| 4 | Plan lowered by a later small order | `apply_signed_contract` upsert | refused at signing since `44e3303`; monitor refusals | deliberate downgrade is a recorded service-role write |
 | 5 | Auto-renewal not invoiced, or non-renewal notice missed | renewal board | notice-date calendar | owner per notice date |
 | 6 | Discount not recorded | `quote_lines` has one price | list vs net absent today | list, net and reason columns, approvals |
 | 7 | Discount beyond authority | quote | discount vs band | approval required before send |
@@ -498,7 +500,7 @@ Ordered by risk to money and to the record, not by effort. Each step needs its o
 
 | Step | Work | Closes | Gate |
 | ---: | --- | --- | --- |
-| 1 | Add an overlap rule so a later order form cannot lower or shorten a plan; add a check for it | finding 6, leaks 3–4 | engineering, finance |
+| 1 | ~~Overlap rule so a later order form cannot lower or shorten a plan~~ **done on main, `44e3303`**. Remaining: represent a second funded scope per school | finding 6 (remainder), leak 3 | engineering, finance |
 | 2 | List price, net price, discount reason and `quote_approvals`; approver ≠ requester | leaks 6–7 | finance, counsel |
 | 3 | History rows and immutability for `quotes`, `contracts`, `invoices`, `credits_refunds`; add `credits_refunds` approver and provider reference | leaks 10–11 | finance |
 | 4 | Contract value and ARR frozen at signature; amount on `renewal_opportunities` | forecast, KPIs | accountant |
@@ -521,7 +523,7 @@ Ordered by risk to money and to the record, not by effort. Each step needs its o
 
 ## Evidence state
 
-**Repository evidence.** The tables, functions and documents cited above exist at revision `7287ddc`. Findings 2 through 8 were read from the migrations and functions; none was reproduced because no database was available in the authoring session.
+**Repository evidence.** The tables, functions and documents cited above exist at revision `7287ddc`. Findings 2 through 8 were read from the migrations and functions; none was reproduced because no database was available in the authoring session. Finding 6 was re-read against main at `c2e582b` after its fix landed; the fix was also read and not run.
 
 **Operational evidence.** No operating CRM, price book, issued institutional invoice, collected payment, accounting system, accountant, deal desk, collections process, close or audit is evidenced. All roles are unassigned.
 
