@@ -106,3 +106,31 @@ describe('the composed slice', () => {
     expect(d.subject().signedIn).toBe(false);
   });
 });
+
+describe('the composed look-ahead', () => {
+  it('has tasks in it, and today.view() does not: a task is counted once in each question', async () => {
+    const w = world({ tasks: [ptask({ id: 'a', title: 'Read', date: '2026-10-08', time: '6:30 PM' }), ptask({ id: 'b', title: 'Later', date: '2026-10-10' })] });
+    const look = await w.domains.today.commitments(4);
+    expect(look.ok && look.value.flatMap((d) => d.entries.filter((e) => e.kind === 'task').map((e) => `${d.on}:${e.id}`))).toEqual(['2026-10-08:task:a', '2026-10-10:task:b']);
+    const view = await w.domains.today.view();
+    expect(view.ok && view.value.schedule.filter((e) => e.kind === 'task')).toEqual([]);
+    expect(view.ok && view.value.dueToday.map((t) => t.id)).toEqual(['a']);
+  });
+
+  it('carries appointments and deadlines on the days they fall, and each day in order from today', async () => {
+    const w = world({ appointments: [appt({ id: 'a1', date: '2026-10-09', at: 600 })], deadlines: [due('d1', 0)] });
+    const look = await w.domains.today.commitments(3);
+    const kinds = look.ok ? look.value.map((d) => [d.on, d.entries.map((e) => e.kind)]) : [];
+    // The `due` fixture dates every deadline 2026-10-08, whatever its second argument says.
+    expect(kinds).toEqual([['2026-10-08', ['deadline']], ['2026-10-09', ['appointment']], ['2026-10-10', []]]);
+  });
+
+  it('keeps a deadline the student has ticked, marked done, where today.view() drops it', async () => {
+    const w = world({ deadlines: [due('d1', 0)] });
+    const done = composeDomains({ ...w.h, isDone: (id) => id === 'd1' }, { clock, ids: counterIds('req'), events: new MemorySink() });
+    const look = await done.today.commitments(1);
+    expect(look.ok && look.value[0].entries.map((e) => [e.id, e.done])).toEqual([['deadline:d1', true]]);
+    const view = await done.today.view();
+    expect(view.ok && view.value.schedule.map((e) => e.id)).toEqual([]);
+  });
+});

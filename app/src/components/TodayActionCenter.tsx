@@ -1,14 +1,13 @@
 import { lazy, Suspense, useMemo } from 'react';
-import { blocksFor } from '../data/catalog';
 import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, rank, readActionChoices } from '../lib/actions';
 import { clock, dateToIso } from '../lib/date';
+import { HORIZON_DAYS, legacyCommitmentRows } from '../lib/commitment-rows';
 import { useDeviceLibrary } from '../lib/device-library';
-import { readDue } from '../lib/duetime';
 import { DESKTOP, useMedia } from '../lib/media';
 import { goCal } from '../lib/opencal';
 import { goMine } from '../lib/openmine';
 import { fromHash } from '../lib/route';
-import { appointmentsOn, tasksOn, upcomingItems } from '../lib/select';
+import { upcomingItems } from '../lib/select';
 import { freshnessLine, freshnessState, SOURCE_TEXT, type SourceLabel } from '../lib/source';
 import { officeActionToAction } from '../lib/office-actions';
 import { useOfficeActions } from '../lib/office-actions.hook';
@@ -19,7 +18,6 @@ import { todayActions } from '../lib/today-actions';
 import {
   STATUS_SENTENCE,
   doneForToday,
-  itemSource,
   planCommitments,
   type CommitmentRow,
 } from '../lib/today-center';
@@ -31,8 +29,6 @@ import { SourceBadge } from './SourceBadge';
 import { shadowEnabled } from '../composition/shadow';
 import { Meter } from './ui';
 
-/** How far ahead the commitment rows look. "In 9 days" is the furthest the brief's example reaches. */
-const HORIZON_DAYS = 10;
 const ACCOUNT_SYNC_FRESH_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -108,63 +104,10 @@ export function TodayActionCenter({
     [upcoming, state.done, now, choices],
   );
 
-  const rows = useMemo(() => {
-    const out: CommitmentRow[] = [];
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + HORIZON_DAYS);
-    for (const item of upcoming) {
-      if (state.done[item.id] || item.date < start || item.date >= end) continue;
-      out.push({
-        id: `course:${item.id}`,
-        at: item.date.getTime() + Math.min(item.dueAt, 24 * 60 - 1) * 60_000,
-        title: item.title,
-        meta: catalog.byId[item.c]?.code || 'Course deadline',
-        kind: 'deadline',
-        group: item.c,
-        source: itemSource(item),
-        itemId: item.id,
-      });
-    }
-    for (let offset = 0; offset < HORIZON_DAYS; offset += 1) {
-      const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
-      for (const task of tasksOn(state.tasks, date).filter((t) => !t.done)) {
-        out.push({
-          id: `task:${task.id}`,
-          at: date.getTime() + (readDue(task.time) ?? 24 * 60 - 1) * 60_000,
-          title: task.title,
-          meta: 'Your action',
-          kind: 'task',
-          source: 'student_entered',
-        });
-      }
-      for (const appointment of appointmentsOn(state.appointments, date)) {
-        out.push({
-          id: `appointment:${appointment.id}:${dateToIso(date)}`,
-          at: date.getTime() + (appointment.at ?? 0) * 60_000,
-          title: appointment.title,
-          meta: appointment.where || 'Your appointment',
-          kind: 'appointment',
-          source: 'student_entered',
-        });
-      }
-      // Classes only for today and tomorrow: a timetable repeated for ten
-      // days would push every deadline off the list.
-      if (offset > 1) continue;
-      // The sample's classes are not the student's classes until they say so.
-      const theirs = (b: { c?: string | null }) => !state.sample || !b.c || ownIds.includes(b.c);
-      for (const block of blocksFor(catalog, date).filter((b) => !b.optional && !b.canceled && theirs(b))) {
-        out.push({
-          id: `class:${dateToIso(date)}:${block.c}:${block.at}`,
-          at: date.getTime() + block.at * 60_000,
-          title: block.title,
-          meta: `Class · ${clock(block.at)}`,
-          kind: 'class',
-          group: block.c || undefined,
-        });
-      }
-    }
-    return out;
-  }, [catalog, now, ownIds, state.appointments, state.done, state.sample, state.tasks, upcoming]);
+  const rows = useMemo(
+    () => legacyCommitmentRows({ catalog, now, ownIds, sample: state.sample, tasks: state.tasks, appointments: state.appointments, done: state.done, upcoming }),
+    [catalog, now, ownIds, state.appointments, state.done, state.sample, state.tasks, upcoming],
+  );
 
   const commitments = useMemo(() => planCommitments(rows, now.getTime(), leadingId), [rows, now, leadingId]);
 
