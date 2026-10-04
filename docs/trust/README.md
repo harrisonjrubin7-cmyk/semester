@@ -58,6 +58,10 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md) | The no-training-by-default policy in full and the eleven implementation requirements, each held to the tree. A draft for counsel, rendered from `app/src/lib/trust/ai-training-policy.ts` |
 | [`COMPLIANCE-CROSSWALK.md`](COMPLIANCE-CROSSWALK.md) | HECVAT 4, the four 1EdTech TrustEd Apps rubrics and EDUCAUSE 2026 as one control library: every domain rests on rows of the four readiness registers and every 0–4 score is computed by the test, capped at 2 until `docs/evidence/` exists. Also Semester through a university's own vendor intake. Rendered from `app/src/lib/trust/compliance-crosswalk.ts` |
 | [`EVIDENCE-REGISTER.md`](EVIDENCE-REGISTER.md) | The evidence index the operating system listed as missing: for every control, the artifact that would prove it operates, its owner seat, frequency and visibility, and what the tree holds today. No evidence has been produced, and the word is refused by test until `docs/evidence/` exists. Rendered from `app/src/lib/trust/evidence-register.ts` |
+| [`SECURITY-OVERVIEW.md`](SECURITY-OVERVIEW.md) | How the security model works as built, each statement with the evidence that holds it and what is not shown. Opens with what has not been done |
+| [`CONTROL-FACTS.md`](CONTROL-FACTS.md) | Counts rendered from the tree: tables with row-level security, check suites, headers, event classes, edge functions, definer functions. Rendered by `app/src/lib/docs/trust-docs.test.ts` |
+| [`REVIEWER-QUESTION-MAP.md`](REVIEWER-QUESTION-MAP.md) | The questions a security or procurement reviewer asks, the page that answers each, and its status. Holds no answers |
+| [`DOCUMENT-MAP.md`](DOCUMENT-MAP.md) | Every document in `docs/trust`, `docs/security`, `docs/compliance` and `docs/legal`, grouped by what a reviewer wants |
 
 ## Controlled readiness library
 
