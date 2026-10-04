@@ -198,6 +198,7 @@ export const ACTIONS: Record<string, { publisher: string; why: string }> = {
   'actions/configure-pages': { publisher: 'GitHub', why: 'Pages deploy.' },
   'actions/upload-pages-artifact': { publisher: 'GitHub', why: 'Pages deploy.' },
   'actions/deploy-pages': { publisher: 'GitHub', why: 'Pages deploy.' },
+  'github/codeql-action': { publisher: 'GitHub', why: 'Static analysis (SAST) of the source; writes results to the Security tab only. See codeql.yml.' },
   'gitleaks/gitleaks-action': { publisher: 'Gitleaks', why: 'Secret scanning; reads the tree, writes nothing. See ci.yml.' },
   'stackhawk/hawkscan-action': { publisher: 'StackHawk', why: 'Runs DAST against the ephemeral local preview; receives the StackHawk API key and a read-only repository token.' },
   'supabase/setup-cli': { publisher: 'Supabase', why: 'Installs the CLI that deploys the Edge Functions; Supabase already holds the data.' },

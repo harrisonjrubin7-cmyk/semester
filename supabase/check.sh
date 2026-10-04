@@ -301,12 +301,21 @@ echo "· checks"
 failed=0
 for c in "${suites[@]}"; do
   out=$(psql -f "$c" 2>&1 || true)
+  oks=$(echo "$out" | grep -cE 'NOTICE: +ok' || true)
   if echo "$out" | grep -qE "FAILED|ERROR"; then
     echo "  ✗ $(basename "$c")"
     echo "$out" | grep -E "FAILED|ERROR" | head -5 | sed 's/^/      /'
     failed=1
+  elif [ "$oks" = 0 ]; then
+    # A suite that prints no `ok` line proved nothing we can see. psql exits 0
+    # and prints no ERROR for an empty file or an `\ir` of a path that is not
+    # there, so "no error" alone cannot tell a passing suite from one that never
+    # ran. Every suite ends by saying what it established.
+    echo "  ✗ $(basename "$c") — passed with no 'ok' notice, so nothing shows it ran"
+    echo "$out" | head -3 | sed 's/^/      /'
+    failed=1
   else
-    echo "  ✓ $(basename "$c") — $(echo "$out" | grep -cE 'NOTICE: +ok') checks"
+    echo "  ✓ $(basename "$c") — $oks checks"
   fi
 done
 
