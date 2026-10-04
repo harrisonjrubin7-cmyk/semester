@@ -4,8 +4,8 @@ import { appointmentSource, classSource, deadlineSource, type ClassMeeting } fro
 import { currentSubject } from '../domains/identity';
 import { legacyIdentity, type LegacyIdentity } from '../domains/identity/adapters';
 import { createAuthorizer, type InstitutionalContext } from '../domains/policy';
-import { completeTask, listTasks, reopenTask } from '../domains/tasks';
-import { legacyTaskRepository, type StateAccess } from '../domains/tasks/adapters';
+import { addTask, completeTask, listTasks, removeTask, reopenTask, rescheduleTask, toggleTask } from '../domains/tasks';
+import { legacyTaskRepository, type Settled, type StateAccess, type TaskCommands } from '../domains/tasks/adapters';
 import { getToday } from '../domains/today';
 import { legacyRanking, type LegacyRankingInput } from '../domains/today/adapters';
 import type { Appointment, DatedItem, PersonalTask } from '../lib/types';
@@ -21,6 +21,10 @@ import type { Appointment, DatedItem, PersonalTask } from '../lib/types';
 export interface LegacyHost {
   readonly identity: () => LegacyIdentity;
   readonly tasks: StateAccess<PersonalTask[]>;
+  /** The writes a whole-list `update` cannot say: add, move (with its undo), delete. */
+  readonly taskCommands: TaskCommands;
+  /** Resolves once the store has committed what was just dispatched. Absent where a write is synchronous. */
+  readonly settled?: Settled;
   readonly appointments: () => Appointment[];
   readonly deadlines: () => DatedItem[];
   /** The student's class meetings on a day, with how long each runs. */
@@ -58,13 +62,22 @@ export function composeDomains(host: LegacyHost, platform: Platform = defaultPla
   const guard = (action: string, resource?: { ownerId?: string | null }) =>
     authorizer.enforce(subject(), { action, resource, correlationId: ids.next() });
 
-  const taskDeps = { tasks: legacyTaskRepository(host.tasks), guard, clock, events };
+  const settled: Settled = host.settled ?? (async () => {});
+  const taskDeps = { tasks: legacyTaskRepository(host.tasks, host.taskCommands, settled), guard, clock, events };
   const sources = [classSource(host.classes), appointmentSource(host.appointments), deadlineSource(host.deadlines, host.isDone)];
-  const tasks = { list: listTasks(taskDeps), complete: completeTask(taskDeps), reopen: reopenTask(taskDeps) };
+  const tasks = {
+    list: listTasks(taskDeps),
+    complete: completeTask(taskDeps),
+    reopen: reopenTask(taskDeps),
+    toggle: toggleTask(taskDeps),
+    add: addTask(taskDeps),
+    reschedule: rescheduleTask(taskDeps),
+    remove: removeTask(taskDeps),
+  };
   const calendar = { agenda: getAgenda({ sources, guard }) };
   const today = { view: getToday({ guard, clock, tasks: tasks.list, agenda: calendar.agenda, ranking: legacyRanking(host.ranking) }) };
 
-  return { subject, tasks, calendar, today };
+  return { subject, tasks, calendar, today, settled };
 }
 
 export type Domains = ReturnType<typeof composeDomains>;

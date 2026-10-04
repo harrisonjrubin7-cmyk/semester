@@ -23,6 +23,11 @@ function host(over: Partial<{ tasks: PersonalTask[]; appointments: Appointment[]
   const h: LegacyHost = {
     identity: () => ({ role: 'student', userId: over.user ?? null, schoolId: null, grants: [] }),
     tasks: { read: () => tasks, update: (f) => void (tasks = f(tasks)) },
+    taskCommands: {
+      add: (t) => void (tasks = [...tasks, { ...t, id: `n${tasks.length}`, created: 0, done: false }]),
+      move: (id, date, time) => void (tasks = tasks.map((t) => (t.id === id ? { ...t, date, ...(time === undefined ? {} : { time }) } : t))),
+      remove: (id) => void (tasks = tasks.filter((t) => t.id !== id)),
+    },
     appointments: () => over.appointments ?? [],
     deadlines: () => over.deadlines ?? [],
     isDone: () => false,

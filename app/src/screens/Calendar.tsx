@@ -1,6 +1,7 @@
 import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -179,6 +180,7 @@ function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
   const { state, dispatch, catalog, say, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
@@ -193,12 +195,7 @@ function DayView() {
   const taskDrag = useDragToMove<Movable>({
     onDrop: ({ payload, point }) => {
       if (!point || payload.kind !== 'task') return;
-      dispatch({
-        type: 'moveTask',
-        id: payload.id,
-        date: dateToIso(day),
-        time: timeLabel(point.minutes),
-      });
+      taskActions.reschedule(payload.id, dateToIso(day), timeLabel(point.minutes));
       say(`Moved · ${payload.title} to ${shownTime(timeLabel(point.minutes), point.minutes)}.`, 'mine');
     },
   });
@@ -647,12 +644,13 @@ function DayView() {
  */
 function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<HTMLElement> }) {
   const taskRow = useRowStyle(8);
-  const { dispatch, courseCode, say } = useStore();
+  const { courseCode, say } = useStore();
+  const taskActions = useTaskActions();
   if (!t.date) return null;
 
   const move = (days: number) => {
     const to = shiftIso(t.date ?? '', days);
-    dispatch({ type: 'editTask', id: t.id, patch: { date: to } });
+    taskActions.reschedule(t.id, to);
     say(`Moved · ${t.title} to ${longLabel(isoToDate(to))}.`, 'mine');
   };
 
@@ -670,7 +668,7 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
         style={{ width: 20, flex: 'none' }}
       >

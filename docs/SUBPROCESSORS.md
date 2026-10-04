@@ -37,6 +37,19 @@ Mixing the third kind into the first would overstate what Semester
 controls. Leaving it out would understate where data goes. So both are
 listed, and labelled.
 
+## What this register does not cover
+
+The table above is driven by the **app's** content-security policy. It does not
+cover `company-site/`, which has its own hosting and loads: it is served from
+GitHub Pages, embeds YouTube through `www.youtube-nocookie.com` and
+`i.ytimg.com`, and posts its lead forms to the `lead-intake` function. Those
+destinations see a visitor's IP address and are in no register yet. They are
+listed as coverage gaps to close in
+[`privacy-operations/03-VENDOR-REVIEW-PROCESS.md`](privacy-operations/03-VENDOR-REVIEW-PROCESS.md) §6 (including whether any
+script CDN is loaded and whether the site's hosting is the same party as the
+app's). Until a row exists for each, do not read this register as the
+complete list for the company site.
+
 ## Before this is published
 
 This register is accurate to the code and tested. Publishing it to an

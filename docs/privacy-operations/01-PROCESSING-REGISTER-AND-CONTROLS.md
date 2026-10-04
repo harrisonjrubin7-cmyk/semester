@@ -47,7 +47,7 @@ Not in the register because **not built**: marketplace orders and payouts, alumn
 | --- | --- | --- | --- | --- |
 | Classification | T0–T6; DB `data_classification_rules`; `source_records` accepts T0–T3 only | Enforced on the integration path | `integration-control-plane.check.sql` | **Not enforced at AI runtime**; flag evaluator's `ctx.classification` has no production caller |
 | Retention | pg_cron sweeps, write-time pruning, check constraints | Enforced where listed | `retention.test.ts` (doc ↔ schema), sweep `*.check.sql` | `domain_outbox_*`, `integration_reconciliation_*`, `gtm_*`, `site_leads`, closed `support_tickets`, `capture_asset` storage objects |
-| Deletion | `delete-account` → `erase_account()` in one transaction; refuses on hold | Enforced | `deletion.check.sql`, `legal-holds.check.sql`, 2026-09-30 synthetic drill | Staff who wrote four append-only history tables cannot be erased (fails closed); JSON snapshots (8-C5) |
+| Deletion | `delete-account` → `erase_account()` in one transaction; refuses on hold | Enforced | `deletion.check.sql`, `legal-holds.check.sql`, 2026-09-30 synthetic drill | Staff who wrote four append-only history tables cannot be erased (fails closed); JSON snapshots scrubbed by D-1198 (8-C5); audit pseudonyms remain (8-C8) |
 | Backups | Provider daily, 7-day expiry | **Unverified** | none | 7 days is plan-tier documentation, not read off the dashboard; no restore drill; D-124 **[CR]** |
 | Export | `export_my_data()`; catalog-driven map | Enforced | `deletion.check.sql` | Device files; AI context; guardian-restriction leak (8-C4) |
 | Legal hold | `legal_holds`; blocks erasure and purge | Enforced in DB | `legal-holds.check.sql` | No screen, no runbook, no `privacy.hold_*` audit event |
