@@ -4,7 +4,7 @@
 
 An idempotent consumer of the Semester event envelope, for developers who add or react to events; stop reading if you want to receive events from Semester in another system, which nothing sends today.
 
-**Status:** `IMPLEMENTED_NOT_RELEASED`. The envelope, the catalog, `drainOutbox` and `processOnce` exist and are tested. **No production code writes to the outbox**, so this example runs against the in-memory `MemoryOutbox` and `MemoryReceiptLedger`. ADR 0008 says the same: "no producer writes to the outbox yet" ([`docs/architecture/0008-event-envelope-and-outbox.md`](../../docs/architecture/0008-event-envelope-and-outbox.md)). The test fails when that stops being true.
+**Status:** `IMPLEMENTED_NOT_RELEASED`. The envelope, the catalog, `drainOutbox` and `processOnce` exist and are tested. **One producer exists and nothing runs it**: the productivity command service writes `task.*` and `calendar_event.*` events to the outbox from a SQL function, but nothing outside `app/server/productivity/` imports it and `drainOutbox` has no caller. This example therefore runs against the in-memory `MemoryOutbox` and `MemoryReceiptLedger`. ADR 0008 says "no producer writes to the outbox yet" ([`docs/architecture/0008-event-envelope-and-outbox.md`](../../docs/architecture/0008-event-envelope-and-outbox.md)), which was true when it was written. The test fails when a mount or a publisher appears.
 
 ## What is here
 

@@ -4,7 +4,7 @@
 
 This page walks through an idempotent consumer of the Semester event envelope and the rule for adding an event type; stop reading if you want Semester to send events to your own system, because nothing sends them today.
 
-**Status:** `IMPLEMENTED_NOT_RELEASED`. The envelope, the catalog, `drainOutbox` and `processOnce` are built and tested. **No production code writes to the outbox.** The only `INSERT` into `private.domain_outbox_events` in the repository is in a SQL check script, and the table is named in prose in two registers, one of which says "the outbox drainer has no caller". ADR 0008 says "no producer writes to the outbox yet". Everything on this page therefore runs against `MemoryOutbox` and `MemoryReceiptLedger`, in memory. `app/src/lib/docs/examples.test.ts` scans the code and fails when a producer appears, so this page gets revisited in the same change.
+**Status:** `IMPLEMENTED_NOT_RELEASED`. The envelope, the catalog, `drainOutbox` and `processOnce` are built and tested. **One producer exists in the repository and nothing runs it.** The productivity command service (`app/server/productivity/service.ts`) builds `task.*` and `calendar_event.*` events, and a SQL function in `supabase/migrations/20261004090000_productivity_commands.sql` writes them to `private.domain_outbox_events` in the command's transaction. No code outside `app/server/productivity/` imports that service, and `drainOutbox` has no caller, so nothing publishes what it writes. ADR 0008 says "no producer writes to the outbox yet", which was true when it was written. Everything on this page runs against `MemoryOutbox` and `MemoryReceiptLedger`, in memory. `app/src/lib/docs/examples.test.ts` scans the code and fails when something mounts the producer or calls `drainOutbox`, so this page gets revisited in the same change.
 
 The code is [`examples/event-consumer/consumer.ts`](../../../examples/event-consumer/consumer.ts). Every code block below is copied from the repository byte for byte and held by the test. The decision is [ADR 0008](../../architecture/0008-event-envelope-and-outbox.md). The event catalogue reference is [`docs/reference/EVENTS.md`](../../reference/EVENTS.md).
 
@@ -186,7 +186,7 @@ To add a type, in one change:
 1. Add a row to `EVENT_TYPES` in `packages/institution/src/events.ts`: the name as `<domain>.<name>` in lowercase with underscores, the version `1`, the lowest classification the payload may carry, and a retention class. `events.test.ts` holds the name shape equal to the database constraint.
 2. Write the consumer's handler, as in section 4, and its tests: a valid event, a redelivery, a wrong version, another tenant.
 3. Use `makeEvent` to build events in the producer's tests. It stamps version, classification and retention from the catalog, so they cannot be stamped wrong.
-4. Do not wire a production producer yet. The ADR owes a retention sweep for both tables first, and no producer path exists to extend.
+4. Do not mount a producer in production yet. The ADR owes a retention sweep for both tables first. The one producer that exists, the productivity command service, is the pattern to follow: it builds events with `makeEvent` and hands them to a SQL function that writes them in the command's transaction.
 
 The example's test shows step 1 from the other side: `advising.appointment_booked` is refused today as an unknown type, and stays refused until a row for it lands.
 

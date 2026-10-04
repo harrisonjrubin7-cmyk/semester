@@ -12,7 +12,7 @@ The figures on this page were measured on 2026-10-04 in a Linux container with N
 
 | Command | Result in that container |
 | --- | --- |
-| `npm ci --no-audit --no-fund` | `added 221 packages in 13s`, with four `EBADENGINE` warnings (see Prerequisites) |
+| `npm ci --no-audit --no-fund` (at the repository root) | `added 226 packages in 15s`, with `EBADENGINE` warnings for four packages (see Prerequisites) |
 | `npx tsc -b` | exit 0, 17 s |
 | `npm run lint` | exit 0, 7 s, 21 oxlint warnings, under the ceiling of 25 |
 | `npx vitest run src/lib/branchprotection.test.ts` | 1 file, 8 tests passed, 2 s wall clock |
@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository's root `package.json` is a workspace root for `packages/*` only and defines no scripts. Every npm command on this page runs from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says, unless a step says otherwise. At the root, `npm test` finds no script and silently does nothing.
+The repository's root `package.json` is a workspace root for `app` and `packages/*` and defines no scripts; it holds the one lockfile. Install at the root, then run every other npm command from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says. At the root, `npm test` fails with "Missing script" instead of running the suite.
 
 ## 3. Check main first
 
@@ -56,11 +56,11 @@ Read it for the defect, not the titles. If the thing you are about to build has 
 ## 4. Install
 
 ```bash
-cd app
 npm ci
+cd app
 ```
 
-Use `npm ci`, as CI does. It installs exactly what `app/package-lock.json` records.
+Run `npm ci` at the repository root, as CI does. It installs exactly what the root `package-lock.json` records, for `app/` and `packages/*` together.
 
 ## 5. Run the app
 

@@ -16,7 +16,7 @@ The index of walk-throughs for people who build the other side of a Semester int
 | --- | --- | --- | --- |
 | [Call the institution gateway](gateway-client.md) | A partner or app calling a gateway | [`gateway-client`](../../../examples/gateway-client/README.md) | `MOCK_DEMO` |
 | [Provision users over SCIM](scim-provisioner.md) | An identity provider pushing accounts | [`scim-provisioner`](../../../examples/scim-provisioner/README.md) | `IMPLEMENTED_NOT_RELEASED` |
-| [Consume events](event-consumer.md) | A module reacting to events | [`event-consumer`](../../../examples/event-consumer/README.md) | `IMPLEMENTED_NOT_RELEASED`, no producer |
+| [Consume events](event-consumer.md) | A module reacting to events | [`event-consumer`](../../../examples/event-consumer/README.md) | `IMPLEMENTED_NOT_RELEASED`; one producer, mounted nowhere |
 | [Write a SIS adapter](sis-adapter.md) | An integrator at a school | [`sis-adapter`](../../../examples/sis-adapter/README.md) | `PLANNED` |
 
 ## How these pages stay true

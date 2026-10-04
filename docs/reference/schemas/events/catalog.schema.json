@@ -11,6 +11,9 @@
       "$ref": "urn:semester:events:student-and-action"
     },
     {
+      "$ref": "urn:semester:events:tasks-and-calendar"
+    },
+    {
       "$ref": "urn:semester:events:lms"
     },
     {

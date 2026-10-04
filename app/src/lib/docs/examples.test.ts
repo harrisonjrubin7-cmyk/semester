@@ -739,20 +739,35 @@ describe('examples/event-consumer', () => {
     expect(Object.keys(EVENT_TYPES).every((t) => /^[a-z_]+\.[a-z_]+$/.test(t))).toBe(true);
   });
 
-  it('has no production producer: only the migration, the register and the check scripts name the outbox table', () => {
-    // The guide says the outbox runs in memory only. This fails when that stops being true,
-    // so that someone revisits the guide in the same change that adds the first producer.
-    const holders: string[] = [];
+  it('has one producer, the productivity command service, which nothing mounts and nothing publishes', () => {
+    // The guide says the outbox runs in memory only in these examples, and that the one producer in the repository
+    // is not reachable from anything that runs. This fails when either stops being true, so that someone revisits
+    // the guide in the same change.
+    const code: { file: string; text: string }[] = [];
     for (const dir of ['app/src', 'app/server', 'app/api', 'supabase/functions', 'packages']) {
       for (const file of walk(dir)) {
         if (!/\.(ts|tsx)$/.test(file) || /\.test\.tsx?$/.test(file) || file.endsWith('packages/institution/src/events.ts')) continue;
-        if (/domain_outbox_events|\b(makeEvent|drainOutbox|MemoryOutbox)\b/.test(read(file))) holders.push(file);
+        code.push({ file, text: read(file) });
       }
     }
-    // Two registers that name the table or the drainer in prose (lmsmatrix.ts says "the outbox drainer has no caller"). Neither writes anything.
-    expect(holders).toEqual(['app/src/lib/definerregister.ts', 'app/src/lib/integration/lmsmatrix.ts']);
-    const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f)));
-    expect(inserts, 'only a check script inserts into the outbox').toEqual(['supabase/outbox.check.sql']);
+    const holders = code.filter((c) => /domain_outbox_events|\b(makeEvent|drainOutbox|MemoryOutbox)\b/.test(c.text)).map((c) => c.file);
+    // Two registers name the table or the drainer in prose (lmsmatrix.ts says "the outbox drainer has no caller"); they write nothing.
+    expect(holders).toEqual([
+      'app/src/lib/definerregister.ts',
+      'app/src/lib/integration/lmsmatrix.ts',
+      'app/server/productivity/memory.ts',
+      'app/server/productivity/service.ts',
+    ]);
+    // Nothing outside the producer's folder imports it, so no entry point runs it.
+    const mounts = code.filter((c) => !c.file.startsWith('app/server/productivity/') && /from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)).map((c) => c.file);
+    expect(mounts, 'something now imports the productivity service').toEqual([]);
+    // Nothing publishes: drainOutbox has no caller outside the library.
+    expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
+    const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();
+    expect(inserts, 'the producer\'s migration function and the check scripts insert into the outbox').toEqual([
+      'supabase/migrations/20261004090000_productivity_commands.sql',
+      'supabase/outbox.check.sql',
+    ]);
     expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('**no\nproducer writes to the outbox yet**');
   });
 });

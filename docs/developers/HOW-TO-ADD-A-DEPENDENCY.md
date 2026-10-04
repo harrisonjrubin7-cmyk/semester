@@ -14,7 +14,7 @@ This page is for adding an npm package to `app/` or a GitHub Action to a workflo
    npm install <package>
    ```
 
-   Use `--save-dev` for anything the build or tests need but the shipped app does not. Commit both `app/package.json` and `app/package-lock.json`. CI installs with `npm ci`, which uses the lockfile exactly.
+   Use `--save-dev` for anything the build or tests need but the shipped app does not. Commit both `app/package.json` and the root `package-lock.json`: npm run from `app/` edits the workspace manifest and the one lockfile at the root. CI installs with `npm ci` at the root, which uses the lockfile exactly.
 4. Check the licence. `app/src/lib/supplychain.ts` has an `APPROVED` list. A package under a licence not on it fails the test until it has an entry in `NAMED` with the reason. A forbidden licence fails even with an entry.
 5. The package must resolve from `registry.npmjs.org` and carry a sha512 integrity hash in the lockfile. A different source fails the test.
 6. For a new GitHub Action, add it to `ACTIONS` in `supplychain.ts` with its publisher and what its token can do, pin it to a full commit SHA with its release in a comment, and make sure the workflow declares `permissions:`. Workflow files are under `.github/`, which has its own code owner entry.
@@ -33,7 +33,7 @@ This page is for adding an npm package to `app/` or a GitHub Action to a workflo
 
 ## What fails if you get it wrong
 
-This was followed in a scratch copy on 2026-10-04 with `is-odd`, added with `npm install --package-lock-only`.
+This was followed in a scratch copy on 2026-10-04 with `is-odd`, added with `npm install --package-lock-only` from `app/`; it changed `app/package.json` and the root `package-lock.json`, and nothing else.
 
 | Step | Result |
 | --- | --- |

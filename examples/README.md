@@ -21,7 +21,7 @@ Not sure which one you need? Read [Which integration path do I want?](../docs/gu
 
 - Plain Node 22 TypeScript with type stripping. No build step.
 - Imports only `node:` builtins, other files in `examples/`, and `packages/institution/src`.
-- No `package.json`, no `node_modules`, no new dependency. Because there is no `package.json` under `examples/`, npm does not treat it as a workspace.
+- No `package.json`, no `node_modules`, no new dependency. `examples/` is not in the root `package.json`'s `workspaces` list (`app` and `packages/*`), and having no `package.json` of its own keeps it out of any later glob.
 - Each example is about 250 lines of code or fewer.
 
 `app/src/lib/docs/examples.test.ts` holds all four rules by scanning the files.

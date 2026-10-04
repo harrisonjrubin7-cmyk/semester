@@ -560,14 +560,17 @@ describe('the onboarding page', () => {
     expect(onboarding).toContain('`node-version: 22`');
     expect(JSON.parse(read('app/package.json')).engines, 'the page says no engines field').toBeUndefined();
     expect(existsSync(at('.nvmrc')), 'the page says there is no .nvmrc').toBe(false);
-    // The root manifest is a workspace root for packages/* and nothing else (PR 1180): no scripts, so `npm test` there still does nothing.
+    // The root manifest is the workspace root for app and packages/* (PRs 1180 and the C0 PR 1b that followed): it holds the one lockfile and no scripts, so `npm test` there fails with "Missing script".
     const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: object; engines?: { node?: string } };
     expect(root.private).toBe(true);
-    expect(root.workspaces).toEqual(['packages/*']);
+    expect(root.workspaces).toEqual(['app', 'packages/*']);
     expect(root.scripts, 'the page says the root defines no scripts').toBeUndefined();
     expect(onboarding).toContain(`engines: { node: \"${root.engines?.node}\" }`);
-    expect(onboarding).toContain('workspace root for `packages/*` only and defines no scripts');
-    const lock = JSON.parse(read('app/package-lock.json')).packages['node_modules/jsdom'];
+    expect(onboarding).toContain('workspace root for `app` and `packages/*` and defines no scripts');
+    expect(existsSync(at('package-lock.json')), 'the page says the one lockfile is at the root').toBe(true);
+    expect(existsSync(at('app/package-lock.json')), 'the page no longer mentions an app lockfile').toBe(false);
+    expect(read('.github/workflows/ci.yml')).toContain('cache-dependency-path: package-lock.json');
+    const lock = JSON.parse(read('package-lock.json')).packages['node_modules/jsdom'];
     expect(onboarding).toContain(lock.engines.node);
   });
 

@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 171 |
-| Tables created in `public` and not later dropped | 319 |
-| … of which enable row-level security in a migration | 319 |
-| Tables created in `private` and not later dropped | 29 |
-| … of which enable row-level security in a migration | 29 |
+| Migration files | 173 |
+| Tables created in `public` and not later dropped | 321 |
+| … of which enable row-level security in a migration | 321 |
+| Tables created in `private` and not later dropped | 31 |
+| … of which enable row-level security in a migration | 31 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 270 |
-| Tables with RLS found and no literal policy statement | 78 |
+| Tables named by at least one literal `create policy` statement | 272 |
+| Tables with RLS found and no literal policy statement | 80 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-106 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+107 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -108,6 +108,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
+| `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
@@ -200,14 +201,14 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Catalogued event types | Count |
 | --- | --- |
-| All | 50 |
+| All | 58 |
 | retention `operational` | 13 |
-| retention `student_record` | 9 |
-| retention `audit` | 23 |
+| retention `student_record` | 16 |
+| retention `audit` | 24 |
 | retention `commercial` | 5 |
 | classification `public` | 0 |
 | classification `internal` | 22 |
-| classification `student_private` | 19 |
+| classification `student_private` | 27 |
 | classification `education_record` | 9 |
 
 **How counted.** The two constant arrays are imported and printed; event types are counted from the `EVENT_TYPES` catalogue by the retention class and classification floor each declares.

@@ -276,7 +276,12 @@ function eventGroups(source: string): Group[] {
   const groups: Group[] = [];
   for (const line of block.split('\n')) {
     const comment = /^\s*\/\/\s*(.+)$/.exec(line)?.[1];
-    if (comment) groups.push({ name: comment.trim(), slug: comment.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'), types: [] });
+    // A comment straight after another comment, before any type, continues the same heading
+    // (the tasks and calendar group explains itself over two lines); the name is its first sentence.
+    if (comment && !(groups.length && groups[groups.length - 1].types.length === 0)) {
+      const name = comment.trim().split(/\.(?:\s|$)/)[0].trim();
+      groups.push({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), types: [] });
+    }
     const type = /^\s*'([a-z_]+\.[a-z_]+)':/.exec(line)?.[1];
     if (type) groups[groups.length - 1].types.push(type as EventType);
   }
@@ -367,11 +372,41 @@ function findEventUses(files: readonly { path: string; text: string }[]): EventU
 }
 
 function repoEventUses(): EventUse[] {
-  const code = ['app/src', 'app/server', 'app/api', 'app/scripts', 'packages', 'supabase/functions']
-    .flatMap((d) => walk(d, isCode))
-    .map((path) => ({ path, text: read(path) }));
+  const code = repoCodeFiles();
   const sql = walk('supabase/migrations', (r) => r.endsWith('.sql')).map((path) => ({ path, text: read(path) }));
   return findEventUses([...code, ...sql]);
+}
+
+interface ProducerFacts {
+  /** Directories holding TypeScript that produces events. */
+  dirs: string[];
+  /** Non-test code outside those directories that imports from them: a mount. Empty means nothing runs them. */
+  mounts: string[];
+  /** Non-test code, other than the library, that calls `drainOutbox(`: a publisher. */
+  drainCallers: string[];
+}
+
+/**
+ * Whether the producers the scan found are reachable from anything that runs,
+ * and whether anything publishes what they write. Both are facts about imports
+ * and calls, so they are read from the source rather than written down.
+ */
+function producerFactsOf(uses: readonly EventUse[], files: readonly { path: string; text: string }[]): ProducerFacts {
+  const dirs = [...new Set(uses.filter((u) => u.file.endsWith('.ts')).map((u) => u.file.split('/').slice(0, -1).join('/')))].sort();
+  const mounts = new Set<string>();
+  for (const dir of dirs) {
+    const base = dir.split('/').pop() as string;
+    const importsIt = new RegExp(`from\\s+['"][^'"]*/${base}/[^'"]*['"]`);
+    for (const f of files) if (!f.path.startsWith(`${dir}/`) && importsIt.test(f.text)) mounts.add(f.path);
+  }
+  const drainCallers = files.filter((f) => f.path !== EVENTS_SRC && f.path !== THIS_TEST && /\bdrainOutbox\s*\(/.test(f.text)).map((f) => f.path).sort();
+  return { dirs, mounts: [...mounts].sort(), drainCallers };
+}
+
+function repoCodeFiles(): { path: string; text: string }[] {
+  return ['app/src', 'app/server', 'app/api', 'app/scripts', 'packages', 'supabase/functions']
+    .flatMap((d) => walk(d, isCode))
+    .map((path) => ({ path, text: read(path) }));
 }
 
 function numberAfter(source: string, pattern: RegExp, what: string): number {
@@ -396,15 +431,18 @@ function renderEvents(): string {
   const total = Object.keys(EVENT_TYPES).length;
   const code = (s: string) => `\`${s}\``;
 
+  const facts = producerFactsOf(uses, repoCodeFiles());
+  const running = facts.mounts.length > 0;
+  const list = (xs: readonly string[]) => xs.map(code).join(', ');
   const producers = uses.length === 0
     ? 'none. No code outside the library and its tests calls it, no store other than the in-memory ones implements it, and no migration inserts into the outbox tables.'
-    : uses.map((u) => `${code(u.file)} (${u.why})`).join('; ');
+    : `${uses.map((u) => `${code(u.file)} (${u.why})`).join('; ')}. Mounted on a running entry point: ${running ? list(facts.mounts) : `none; no code outside ${list(facts.dirs)} imports it`}. Callers of \`drainOutbox\` outside the library: ${facts.drainCallers.length ? list(facts.drainCallers) : 'none, so nothing publishes what is written'}.`;
   const out: string[] = [];
   out.push('# Event catalog and outbox');
   out.push('');
   out.push(`> **Type:** reference · **Audience:** implementers, partner-developers · **Owner:** \`data\` · **Truth:** generated · **Reviewed:** 2026-10-04 · **Held by:** \`${THIS_TEST}\``);
   out.push('');
-  out.push(`This page lists the ${total} event types the platform's event envelope allows, the rules that decide whether a value is a valid event, and how the outbox and consumer receipts work; stop reading if you want events you can subscribe to today, because no producer writes one yet.`);
+  out.push(`This page lists the ${total} event types the platform's event envelope allows, the rules that decide whether a value is a valid event, and how the outbox and consumer receipts work; stop reading if you want events you can subscribe to today, because ${running ? 'producers are mounted, but nothing outside the repository can subscribe' : uses.length ? 'a producer exists in code but nothing runs it and nothing publishes what it writes' : 'no producer writes one yet'}.`);
   out.push('');
   out.push(`**Status:** PARTIAL — the envelope, the catalog, the validator, the publisher loop, the consumer rule and the two database tables are built and tested. Producers: ${producers}`);
   out.push('');
@@ -423,7 +461,7 @@ function renderEvents(): string {
     ['A retention sweep for the two tables', 'Owed. Not built.', '[`RETENTION.md`](../../RETENTION.md)'],
   ]));
   out.push('');
-  out.push('The scan reads every non-test `.ts`, `.tsx` and `.mjs` file under `app/src`, `app/server`, `app/api`, `app/scripts`, `packages` and `supabase/functions`, and every migration, for calls to the four library functions, construction of the in-memory stores, store implementations, imports of `events.ts`, and inserts into the two tables. This page is regenerated by that scan, so a producer landing makes the test fail until the page is rewritten. The decision record is [ADR 0008](../architecture/0008-event-envelope-and-outbox.md), which says the same: the envelope, catalog and two tables are accepted, and no producer writes to the outbox yet.');
+  out.push('The scan reads every non-test `.ts`, `.tsx` and `.mjs` file under `app/src`, `app/server`, `app/api`, `app/scripts`, `packages` and `supabase/functions`, and every migration, for calls to the four library functions, construction of the in-memory stores, store implementations, imports of `events.ts`, and inserts into the two tables. This page is regenerated by that scan, so a producer landing makes the test fail until the page is rewritten. The decision record is [ADR 0008](../architecture/0008-event-envelope-and-outbox.md).' + (uses.length === 0 ? ' It says the same: the envelope, catalog and two tables are accepted, and no producer writes to the outbox yet.' : ' It says no producer writes to the outbox yet, which was true when it was written; the scan above is the authority now.'));
   out.push('');
   out.push('`app/src/lib/plan-recovery.ts` exports its own `EVENT_TYPES`. It is a different list, for plan recovery, and unrelated to this catalog.');
   out.push('');
@@ -491,7 +529,7 @@ function renderEvents(): string {
   out.push('');
   out.push('### The table `private.domain_outbox_events`');
   out.push('');
-  out.push('Columns: `id`, `aggregate_type`, `aggregate_id`, `event_type`, `event_version`, `environment`, `tenant_id`, `producer`, `correlation_id`, `causation_id`, `idempotency_key`, `payload`, `data_classification`, `retention_class`, `occurred_at`, `published_at`, `publish_attempts`, `last_error` (at most 500 characters), `dead_lettered_at`. The envelope has no `aggregate_type` or `aggregate_id`, and the table has no `customerAccountId`, `actor` or `subject` column: mapping between the two is a producer\'s job and no producer exists yet. The table is service role only; no signed-in account can reach it.');
+  out.push('Columns: `id`, `aggregate_type`, `aggregate_id`, `event_type`, `event_version`, `environment`, `tenant_id`, `producer`, `correlation_id`, `causation_id`, `idempotency_key`, `payload`, `data_classification`, `retention_class`, `occurred_at`, `published_at`, `publish_attempts`, `last_error` (at most 500 characters), `dead_lettered_at`. The envelope has no `aggregate_type` or `aggregate_id`, and the table has no `customerAccountId`, `actor` or `subject` column: mapping between the two is a producer\'s job.' + (uses.some((u) => u.file.endsWith('.sql')) ? ' The one producer found does it in a SQL function: the envelope\'s `subject` becomes `aggregate_type` and `aggregate_id`, and `actor` is not stored.' : ' No producer exists yet.') + ' The table is service role only; no signed-in account can reach it.');
   out.push('');
   out.push('### `processOnce(ledger, consumer, value, handler, expectedTenant?)`');
   out.push('');
@@ -1156,12 +1194,12 @@ describe('EVENTS.md and its schemas (generated)', () => {
   const source = read(EVENTS_SRC);
   const groups = eventGroups(source);
 
-  it('the catalog reads as 8 groups holding every type exactly once', () => {
-    expect(groups.map((g) => g.name)).toEqual(['Identity', 'Student and action', 'LMS', 'Integration', 'AI', 'Support and security', 'Commercial', 'Credential']);
+  it('the catalog reads as 9 groups holding every type exactly once', () => {
+    expect(groups.map((g) => g.name)).toEqual(['Identity', 'Student and action', 'Tasks and calendar', 'LMS', 'Integration', 'AI', 'Support and security', 'Commercial', 'Credential']);
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(50);
+    expect(all.length).toBe(58);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1199,7 +1237,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     }
   });
 
-  it('a sample event from makeEvent() for each of the 50 types validates under the validator and its own group schema', () => {
+  it('a sample event from makeEvent() for each type in the catalog validates under the validator and its own group schema', () => {
     const registry = diskRegistry();
     for (const g of groups) {
       const group = registry.get(`urn:semester:events:${g.slug}`)!;
@@ -1280,8 +1318,33 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(findEventUses([{ path: 'packages/institution/src/index.ts', text: "export * from './events.ts'" }])).toEqual([]);
   });
 
-  it('the repository has no producer today, which is what the page says', () => {
-    expect(repoEventUses()).toEqual([]);
+  it('the repository has exactly the producers the page lists, none mounted and none published', () => {
+    // The productivity command service (PR 1175) is the one producer: it builds events, and a migration function
+    // writes them to the outbox in the command's transaction. Nothing imports it and nothing calls drainOutbox.
+    // When that changes this goes red, and the page's status, the event-consumer guide and the example's README
+    // (all of which say "no running code writes to the outbox") are revisited in the same change.
+    const uses = repoEventUses();
+    expect(uses.map((u) => u.file)).toEqual([
+      'app/server/productivity/memory.ts',
+      'app/server/productivity/service.ts',
+      'supabase/migrations/20261004090000_productivity_commands.sql',
+    ]);
+    const facts = producerFactsOf(uses, repoCodeFiles());
+    expect(facts.dirs).toEqual(['app/server/productivity']);
+    expect(facts.mounts, 'something now imports the producer').toEqual([]);
+    expect(facts.drainCallers, 'something now publishes the outbox').toEqual([]);
+  });
+
+  it('the mount and publisher probes see a mount and a caller, and ignore the producer itself (control)', () => {
+    const uses = [{ file: 'app/server/thing/service.ts', why: 'calls the library' }];
+    const files = [
+      { path: 'app/server/thing/service.ts', text: "import { x } from './repo.ts'" },
+      { path: 'app/api/thing.ts', text: "import { svc } from '../server/thing/service.ts'" },
+      { path: 'app/server/publisher.ts', text: 'await drainOutbox(store, send)' },
+      { path: 'app/server/other.ts', text: "import { y } from '../thing-other/y.ts'" },
+    ];
+    expect(producerFactsOf(uses, files)).toEqual({ dirs: ['app/server/thing'], mounts: ['app/api/thing.ts'], drainCallers: ['app/server/publisher.ts'] });
+    expect(producerFactsOf(uses, files.slice(0, 1))).toEqual({ dirs: ['app/server/thing'], mounts: [], drainCallers: [] });
   });
 
   it('the outbox numbers the page quotes are the ones in the source', () => {
