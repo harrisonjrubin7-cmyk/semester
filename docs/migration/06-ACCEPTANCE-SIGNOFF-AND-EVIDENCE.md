@@ -150,4 +150,3 @@ act, after this, under its own records schedule.
 - The agreed cutover window and the staffing for hypercare.
 - Whether `rehearsal` becomes a Center stage (a production schema change that
   needs the owner's approval).
-- Whether the Center's `date_iso` gets the explicit slash-date setting.

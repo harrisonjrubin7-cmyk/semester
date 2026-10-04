@@ -25,7 +25,7 @@ the evidence.
 | Situation | Behaviour | Why |
 | --- | --- | --- |
 | Code not in the code table | Issue `unknown_code`; no value written | A default grade, status or role is a silent decision |
-| `a/b/yyyy` date | Read only if the spec says `month_first` or `day_first`; else `bad_date` | `03/04/2025` is two different days. (The Center's `date_iso` assumes month-first; see [README findings](README.md#findings-while-building-this)) |
+| `a/b/yyyy` date | Read only if the spec says `month_first` or `day_first`; else `bad_date` | `03/04/2025` is two different days. The Center's `date_iso` now behaves the same way: it refuses an ambiguous slash date until the order is chosen ([README findings](README.md#findings-while-building-this)) |
 | Impossible date (`2025-02-30`) | `bad_date` | Never normalised |
 | Money | Integer minor units, or `bad_amount`. More than two decimals is an error, never rounded | A float or a rounded cent is a ledger difference nobody can explain |
 | Empty required field | `missing_required` | Not defaulted |
