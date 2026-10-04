@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CLOCK, LIMITS, clampClock, decodeCursor, encodeCursor, formatClock, normalizeInstant, parseClock, validateBatch, validateCommand,
+  AUTHORITATIVE_FIELDS, CLOCK, LIMITS, REPEAT_EVERY, TASK_FIELDS, clampClock, isDay, decodeCursor, encodeCursor, formatClock, normalizeInstant, parseClock, validateBatch, validateCommand,
 } from './contract.ts';
 import { TASK_ID, T0, clock, createTask } from './fixtures.ts';
 
@@ -72,5 +72,75 @@ describe('commands', () => {
     expect(validateBatch({ commands: [{}, 1, null] })).toMatchObject({ ok: true });
     expect(validateBatch({ commands: Array.from({ length: LIMITS.batchMax }, () => ({})) })).toMatchObject({ ok: true });
     expect(validateBatch({ commands: Array.from({ length: LIMITS.batchMax + 1 }, () => ({})) })).toMatchObject({ ok: false });
+  });
+});
+
+describe('the fields the app\'s task carries', () => {
+  const issue = (over: Record<string, unknown>) => {
+    const v = validateCommand(createTask(over));
+    return v.ok ? null : v.issues.map((i) => `${i.path} ${i.issue}`).join('; ');
+  };
+  const steps = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `s${i}`, text: `step ${i}`, done: false }));
+
+  it('accepts a task with all of them, and keeps them as sent', () => {
+    const full = {
+      dueOn: '2026-10-09', whenText: '6:30 PM', plannedFrom: 'deadline-1',
+      repeat: { every: 'weekly', until: '2026-12-18', except: ['2026-11-27', '2026-11-20'] },
+      steps: [{ id: 's1', text: 'Skim', done: true }, { id: 's2', text: 'Notes', done: false }],
+    };
+    const v = validateCommand(createTask(full));
+    expect(v).toMatchObject({ ok: true, value: { fields: { dueOn: '2026-10-09', whenText: '6:30 PM', plannedFrom: 'deadline-1', steps: full.steps } } });
+    // The skipped days are stored sorted, so the same rule always hashes and compares the same.
+    expect(v.ok && (v.value as { fields: { repeat: unknown } }).fields.repeat).toEqual({ every: 'weekly', until: '2026-12-18', except: ['2026-11-20', '2026-11-27'] });
+  });
+
+  it('lists every one of them in the field list the router and the document are held to', () => {
+    for (const f of ['dueOn', 'whenText', 'repeat', 'steps', 'plannedFrom']) expect(TASK_FIELDS).toContain(f);
+    expect(AUTHORITATIVE_FIELDS.task).toContain('dueOn');
+  });
+
+  it('knows a day from a date that does not exist', () => {
+    for (const ok of ['2026-10-09', '2028-02-29', '2026-12-31']) expect(isDay(ok), ok).toBe(true);
+    for (const bad of ['2026-02-29', '2026-02-30', '2026-13-01', '2026-10-9', '2026-10-09T00:00:00Z', '', 20261009, null]) expect(isDay(bad), String(bad)).toBe(false);
+  });
+
+  it.each([
+    ['a day that does not exist', { dueOn: '2026-02-30' }, 'dueOn'],
+    ['a day with a time on it', { dueOn: '2026-10-09T10:00:00Z' }, 'dueOn'],
+    ['free text past its bound', { whenText: 'x'.repeat(LIMITS.whenTextMax + 1) }, 'whenText'],
+    ['a repeat rule that never stops', { repeat: { every: 'weekly' } }, 'repeat.until'],
+    ['a repeat rule with an unknown cadence', { repeat: { every: 'hourly', until: '2026-12-18' } }, 'repeat.every'],
+    ['a repeat rule with an unknown key', { repeat: { every: 'weekly', until: '2026-12-18', count: 4 } }, 'repeat.count'],
+    ['a repeat rule that skips a day that does not exist', { repeat: { every: 'daily', until: '2026-12-18', except: ['2026-02-30'] } }, 'repeat.except'],
+    ['more skipped days than a series can have', { repeat: { every: 'daily', until: '2026-12-18', except: Array.from({ length: LIMITS.repeatExceptMax + 1 }, (_, i) => new Date(Date.UTC(2027, 0, 1 + i)).toISOString().slice(0, 10)) } }, 'repeat.except'],
+    ['steps that are not a list', { steps: { not: 'a list' } }, 'steps'],
+    ['more steps than a task can hold', { steps: steps(LIMITS.stepsMax + 1) }, 'steps'],
+    ['two steps with one id', { steps: [{ id: 'a', text: 'one', done: false }, { id: 'a', text: 'two', done: false }] }, 'steps[1].id'],
+    ['a step with no text', { steps: [{ id: 'a', text: '', done: false }] }, 'steps[0].text'],
+    ['a step with no done flag', { steps: [{ id: 'a', text: 'one' }] }, 'steps[0].done'],
+    ['a step with an unknown key', { steps: [{ id: 'a', text: 'one', done: false, note: 'x' }] }, 'steps[0].note'],
+    ['a source reference past its bound', { plannedFrom: 'x'.repeat(LIMITS.plannedFromMax + 1) }, 'plannedFrom'],
+  ])('refuses %s', (_name, over, path) => {
+    // The control is the first test above: the same command without the one bad field is accepted.
+    expect(issue(over)).toContain(path);
+  });
+
+  it('refuses too many skipped days because of their number, not because one is malformed', () => {
+    const days = Array.from({ length: LIMITS.repeatExceptMax + 1 }, (_, i) => new Date(Date.UTC(2027, 0, 1 + i)).toISOString().slice(0, 10));
+    expect(days.every(isDay)).toBe(true);
+    expect(issue({ repeat: { every: 'daily', until: '2028-12-31', except: days } })).toContain(`has more than ${LIMITS.repeatExceptMax} days`);
+  });
+
+  it('takes the largest of each exactly at the bound', () => {
+    expect(issue({ whenText: 'x'.repeat(LIMITS.whenTextMax) })).toBeNull();
+    expect(issue({ steps: steps(LIMITS.stepsMax) })).toBeNull();
+    expect(issue({ plannedFrom: 'x'.repeat(LIMITS.plannedFromMax) })).toBeNull();
+    const daysFrom2027 = (n: number) => Array.from({ length: n }, (_, i) => new Date(Date.UTC(2027, 0, 1 + i)).toISOString().slice(0, 10));
+    expect(issue({ repeat: { every: 'daily', until: '2028-12-31', except: daysFrom2027(LIMITS.repeatExceptMax) } })).toBeNull();
+  });
+
+  it('lets a clear be said as null (a task with no repeat, no day and no free text), and an empty list for no steps', () => {
+    expect(issue({ repeat: null, dueOn: null, whenText: null, plannedFrom: null, steps: [] })).toBeNull();
+    expect(REPEAT_EVERY).toEqual(['daily', 'weekdays', 'weekly', 'fortnightly', 'monthly']);
   });
 });
