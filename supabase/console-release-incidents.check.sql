@@ -168,6 +168,12 @@ begin
   raise notice 'ok  current prerequisites permit an exact-commit approval request';
 end $$;
 
+delete from public.approval_request
+ where duty_id = 'release'
+   and tenant_id is null
+   and target = 'platform'
+   and detail ->> 'action' = 'release';
+
 insert into public.approval_request
   (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, expires_at)
 select 'release', v, null, 'platform', jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)), 'Expired evidence.', 'REL-EXPIRED', 'pending', now() - interval '1 second'
