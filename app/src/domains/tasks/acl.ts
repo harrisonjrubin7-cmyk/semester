@@ -1,0 +1,72 @@
+import { isIsoDate } from '../kernel';
+import type { PersonalTask } from '../../lib/types';
+import type { Task } from './model';
+import type { TaskRepository } from './ports';
+
+/**
+ * Anti-corruption layer: the legacy `PersonalTask` and its reducer, as a `Task`
+ * and a `TaskRepository`.
+ *
+ * The legacy shape is wider than the domain's, deliberately — it carries steps,
+ * notes, a free-text time and a repeat rule that the slice does not own yet.
+ * The mapping is therefore **lossy in one direction only**: reading drops what
+ * the domain does not model, and writing never goes through a whole-object
+ * replace. Every write is the narrowest legacy command that expresses it
+ * (`toggleTask`, `editTask` with a one-field patch), so a task's steps and notes cannot be overwritten
+ * by a domain that never saw them.
+ *
+ * A host provides {@link LegacyTaskHost}; the real one reads `useStore()` and
+ * dispatches into the reducer, and the test drives the reducer directly.
+ */
+
+export type LegacyTaskCommand =
+  | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
+  | { type: 'toggleTask'; id: string }
+  | { type: 'editTask'; id: string; patch: { date: string | null } };
+
+export interface LegacyTaskHost {
+  /** The tasks as the legacy state holds them *now* (not as they were when the host was built). */
+  read(): readonly PersonalTask[];
+  dispatch(command: LegacyTaskCommand): void;
+}
+
+export function taskFromLegacy(task: PersonalTask): Task {
+  return {
+    id: task.id,
+    title: task.title,
+    state: task.done ? 'done' : 'open',
+    dueOn: task.date !== null && isIsoDate(task.date) ? task.date : null,
+    courseId: task.courseId,
+    repeats: task.repeat !== undefined,
+  };
+}
+
+export function legacyTaskRepository(host: LegacyTaskHost): TaskRepository {
+  return {
+    async get(id) {
+      const found = host.read().find((t) => t.id === id);
+      return found ? taskFromLegacy(found) : null;
+    },
+    async list() {
+      return host.read().map(taskFromLegacy);
+    },
+    async save(task) {
+      const before = host.read().find((t) => t.id === task.id);
+      if (!before) return;
+      // `toggleTask` flips, so it is only dispatched when the stored state differs.
+      if ((before.done ? 'done' : 'open') !== task.state) host.dispatch({ type: 'toggleTask', id: task.id });
+      // `editTask` rather than `moveTask`: only it can send a task back to "someday" (date null).
+      if (taskFromLegacy(before).dueOn !== task.dueOn) host.dispatch({ type: 'editTask', id: task.id, patch: { date: task.dueOn } });
+    },
+    async create(draft) {
+      const known = new Set(host.read().map((t) => t.id));
+      host.dispatch({
+        type: 'addTask',
+        task: { title: draft.title, date: draft.dueOn, time: '', note: '', courseId: draft.courseId },
+      });
+      const added = host.read().find((t) => !known.has(t.id));
+      if (!added) throw new Error('The legacy store did not record the new entry.');
+      return taskFromLegacy(added);
+    },
+  };
+}
