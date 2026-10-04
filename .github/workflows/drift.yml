@@ -1,0 +1,159 @@
+# Is production what the repository says it is?
+#
+# Every day, and on demand, each Terraform root is planned against the live
+# system. A plan with changes means somebody — or something — altered an object
+# this repository manages without going through this repository.
+#
+# That is the failure this workflow exists to catch, and it has one rule: **a
+# drift is never closed by editing the plan to match.** It is closed one of two
+# ways, both of which leave a record:
+#
+#   · revert it  — run `infra-apply.yml` for that root, under its own change
+#     record, and the live system is made to match main again; or
+#   · adopt it   — open a pull request that changes the Terraform to match
+#     what was done, with a change record marked `emergency`, written
+#     retrospectively within one business day.
+#
+# Until one of those happens the issue this opens stays open, and the evidence
+# bundle shows it. Silence is not an outcome: a root that cannot be planned
+# (no state store, no credential) is reported as NOT CHECKED, never as clean.
+
+name: Infrastructure drift
+
+on:
+  schedule:
+    # Daily, off the hour — the hour is when everything else runs.
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: infra-drift
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TERRAFORM_VERSION: '1.15.9'
+
+jobs:
+  plan:
+    name: drift (${{ matrix.root }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Plans only, from the default branch, with the environment that has no
+    # reviewer and read-scoped credentials.
+    environment: infrastructure-plan
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [platform, staging, production]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Is this root configured to be checked?
+        id: configured
+        env:
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+        run: |
+          if [ -z "$STATE_BUCKET" ]; then
+            {
+              echo "### ⚠️ ${{ matrix.root }}: NOT CHECKED"
+              echo
+              echo "\`TF_STATE_BUCKET\` is not set for the \`infrastructure-plan\` environment, so there is no state to plan against."
+              echo "This is not a clean result. See docs/infrastructure/ACTIVATION.md."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Drift not checked::${{ matrix.root }} has no state store configured"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        if: steps.configured.outputs.run == 'true'
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Plan
+        id: plan
+        if: steps.configured.outputs.run == 'true'
+        working-directory: infra/terraform/envs/${{ matrix.root }}
+        env:
+          TF_IN_AUTOMATION: '1'
+          TF_INPUT: '0'
+          GITHUB_TOKEN: ${{ secrets.INFRA_GITHUB_TOKEN }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.TF_STATE_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.TF_STATE_SECRET_ACCESS_KEY }}
+          STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+          STATE_REGION: ${{ vars.TF_STATE_REGION }}
+          STATE_ENDPOINT: ${{ vars.TF_STATE_ENDPOINT }}
+        run: |
+          "$GITHUB_WORKSPACE/scripts/infra/tf-init.sh" "${{ matrix.root }}"
+          # -lock=false: a read-only check must not be able to wedge an apply.
+          # Exit 0 = no changes, 1 = error, 2 = changes (drift).
+          set +e
+          terraform plan -detailed-exitcode -lock=false -out=plan.bin -no-color > plan.txt
+          code=$?
+          set -e
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          terraform show -json plan.bin > plan.json
+          sha256sum plan.json | cut -d' ' -f1 > plan.json.sha256
+          [ "$code" -eq 1 ] && { cat plan.txt; exit 1; }
+          exit 0
+
+      - name: Record the plan as evidence
+        if: steps.configured.outputs.run == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: drift-${{ matrix.root }}-${{ github.run_id }}
+          path: |
+            infra/terraform/envs/${{ matrix.root }}/plan.txt
+            infra/terraform/envs/${{ matrix.root }}/plan.json
+            infra/terraform/envs/${{ matrix.root }}/plan.json.sha256
+          retention-days: 400
+
+      - name: Open or update the drift issue
+        if: steps.plan.outputs.code == '2'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ROOT: ${{ matrix.root }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        working-directory: infra/terraform/envs/${{ matrix.root }}
+        run: |
+          title="Infrastructure drift: $ROOT"
+          {
+            echo "The live \`$ROOT\` infrastructure differs from the repository."
+            echo
+            echo "**Run:** $RUN_URL"
+            echo
+            echo "Close this by **reverting** (\`infra-apply.yml\` for \`$ROOT\`, under a change record) or by **adopting** (a pull request changing the Terraform, with an \`emergency\` change record). Editing this issue closed is not either."
+            echo
+            echo '<details><summary>Plan</summary>'
+            echo
+            echo '```'
+            head -c 50000 plan.txt
+            echo '```'
+            echo '</details>'
+          } > body.md
+          gh label create infra-drift --color B60205 --description 'Live infrastructure differs from the repository' --force
+          existing=$(gh issue list --state open --label infra-drift --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file body.md
+          else
+            gh issue create --title "$title" --label infra-drift --body-file body.md
+          fi
+
+      # Red, so the schedule's notification reaches the maintainer even if the
+      # issue is not read.
+      - name: Fail on drift
+        if: steps.plan.outputs.code == '2'
+        run: |
+          echo "::error title=Infrastructure drift::${{ matrix.root }} differs from the repository"
+          exit 1
