@@ -99,7 +99,7 @@ Two accounting-facing rules follow. Semester's own customer billing is separate 
 
 ### Invariants (some enforced today, the rest are the design)
 
-1. A signed order form has a quote, an effective date, an end date for any pilot, and an immutable document reference. *(end date enforced; immutability not)*
+1. A signed order form has a quote, an effective date, an end date for any pilot, and an immutable document reference. *(quote linkage proposed, not enforced: `contracts.quote_id` is nullable and the signing trigger does not require it; end date enforced; immutability not)*
 2. Money is integer minor units with an explicit currency, and one billing account never mixes currencies. *(integer cents enforced; one-currency rule not seen)*
 3. A quote line stores list price, net price and discount reason separately, so the discount is computable. *(proposed)*
 4. Sent and signed commercial records are append-only; a change is a new version linked to the one it supersedes. *(`version` exists; supersession link and immutability proposed)*
