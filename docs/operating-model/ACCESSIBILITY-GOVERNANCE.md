@@ -21,3 +21,7 @@ company discipline, and that's what this document sets up.
 **Recurrence** is the metric that shows whether the discipline is working. If a defect class keeps coming back, the
 fix belongs in a shared component or a lint rule. That is how the label audit and the contrast ramp test came to
 exist.
+
+## The seat
+
+**Accessibility lead: [@harrisonjrubin7-cmyk](https://github.com/harrisonjrubin7-cmyk), from 2026-10-04.** Self-named by the repository owner. The three champions (engineering, product, content), the paid assistive-technology panel and a monitored accessibility mailbox are **not** yet in place; the program's roadmap ([`docs/accessibility/PROGRAM.md`](../accessibility/PROGRAM.md) §7) lists them as open items.

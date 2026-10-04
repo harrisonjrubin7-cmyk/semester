@@ -34,7 +34,8 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
-import { clampRequest } from '../_shared/clamp.ts';
+import { clampRequest, modelsForPlan, type SharedPlan } from '../_shared/clamp.ts';
+import { planFromSubscriptions } from '../_shared/sharedplan.ts';
 import { KILLED_MESSAGE, aiGenerationKilled } from '../_shared/killswitch.ts';
 import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
 import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
@@ -121,17 +122,55 @@ Deno.serve(async (req) => {
     return json({ error: { message: KILLED_MESSAGE } }, 503);
   }
 
+  // ── which models their plan covers ──────────────────────────────────────
+  //
+  // Read the way `my_entitlements()` reads it — a subscription that is in
+  // date, in a paying status and still holds entitlements — and before the
+  // body is clamped, so the clamp can name the models this account may use.
+  // The calls are counted, not the dollars, and the models cost very
+  // different amounts: see `PLAN_MODELS` in `../_shared/clamp.ts`.
+  //
+  // A lookup that fails is `free`, never an error and never a wider list: the
+  // student is served on what every account gets, and the log says why. The
+  // cost of that direction is a paying student briefly offered fewer models,
+  // which the refusal's own wording explains; the cost of the other is a
+  // wider list for anyone who can make a query fail.
+  let plan: SharedPlan = 'free';
+  try {
+    const { data, error } = await admin
+      .from('billing_accounts')
+      .select('subscriptions(plan_code, status, current_period_end, subscription_entitlements(entitlement_key))')
+      .eq('user_id', userId);
+    if (error) throw error;
+    plan = planFromSubscriptions(
+      (data ?? []).flatMap((a: { subscriptions?: unknown[] }) => a.subscriptions ?? []),
+    );
+  } catch (e) {
+    console.error('claude: the plan could not be read; serving this account as free', describeThrow(e));
+  }
+
   // ── what they asked for ─────────────────────────────────────────────────
   //
   // Read and rebuilt before the call is counted, so a request the shared key
   // will not pay for is refused without costing one of the caller's sixty. The
-  // rules, and why each exists, are in `../_shared/clamp.ts`: a model the app
-  // offers, `max_tokens` held under a ceiling, the app's own tools and a
-  // five-use web search, and nothing else. A body that cannot be read at all
-  // is the caller's request falling over, and is answered as that.
+  // rules, and why each exists, are in `../_shared/clamp.ts`: a model the
+  // account's plan covers, `max_tokens` held under a ceiling, the app's own
+  // tools and a five-use web search, and nothing else. A body that cannot be
+  // read at all is the caller's request falling over, and is answered as that.
   const raw = await req.text();
-  const clamped = clampRequest(raw, new TextEncoder().encode(raw).length);
-  if (!clamped.ok) return json({ error: { message: clamped.message } }, clamped.status);
+  const clamped = clampRequest(raw, new TextEncoder().encode(raw).length, { models: modelsForPlan(plan) });
+  if (!clamped.ok) {
+    return json(
+      {
+        error: {
+          message: clamped.message,
+          ...(clamped.code ? { code: clamped.code } : {}),
+          ...(clamped.allowed ? { allowed_models: clamped.allowed } : {}),
+        },
+      },
+      clamped.status,
+    );
+  }
   const body = clamped.body;
 
   // ── how much they have used ─────────────────────────────────────────────

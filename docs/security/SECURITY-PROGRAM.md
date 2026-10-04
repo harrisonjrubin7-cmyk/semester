@@ -36,7 +36,7 @@ coverage.
 | 1 | Architecture and threat model | `docs/SECURITY-THREAT-MODEL.md`, `docs/INTEGRATION-THREAT-MODEL.md`, `docs/trust/THREAT-MODEL.md` | §2 domain map, per-change record | Domain models for billing, community/media, LTI/SCIM/SSO, marketing site |
 | 2 | Identity and privileged access | `docs/SSO-SECURITY-AND-SESSION-MANAGEMENT.md`, `docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md`, `docs/security/operations-console-access-model.md` | §3 target controls | Passkey policy, session list, break-glass drill |
 | 3 | Tenant isolation | `supabase/rls-coverage.check.sql`, `supabase/definer-sweep.check.sql`, `docs/TENANT-CONTRACT.md` | [`TENANT-ISOLATION-VERIFICATION.md`](TENANT-ISOLATION-VERIFICATION.md), `check.sh` guard | F-01, F-12 |
-| 4 | Secure SDLC | `.github/workflows/ci.yml`, `docs/SUPPLY-CHAIN.md`, `.github/dependabot.yml`, `SECRETS.md` | §4 gate table; CodeQL; verified secret scanner | Signing, IaC scan, applied ruleset (F-09) |
+| 4 | Secure SDLC | `.github/workflows/ci.yml`, `docs/SUPPLY-CHAIN.md`, `.github/dependabot.yml`, `SECRETS.md` | §4 gate table; CodeQL; verified secret scanner | Attesting the deployed bytes, applied ruleset (F-09) |
 | 5 | Data protection | `docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md`, `RESTORE.md`, `RETENTION.md` | §5 by data store | F-02, F-03, production restore (E-02) |
 | 6 | Vulnerability management | `SECURITY.md` severity table, `docs/trust/VULNERABILITY-MANAGEMENT-POLICY.md` | §6 intake, scoring, ageing | Acknowledgement clock, role mailbox (F-13) |
 | 7 | Monitoring and IR | `MONITORING.md`, `docs/INCIDENT-RECOVERY-PLAYBOOK.md` | [`DETECTION-CATALOG.md`](DETECTION-CATALOG.md) | Everything routed (F-08) |
@@ -106,9 +106,9 @@ recorded as `docs/decisions/D-<pull request number>.md`.
 | SAST | CodeQL, `security-extended` | Added (C-01); runs where code scanning is available |
 | DAST | StackHawk against the local preview | Present, gated on its secret; does **not** scan the Supabase API |
 | Dependencies | `npm audit --audit-level=high`, grouped Dependabot, licence/registry/integrity checks | Present; audit is non-blocking by design (`.github/workflows/ci.yml`) |
-| SBOM | CycloneDX on every deploy, kept 90 days | Present; **unsigned** |
-| Signing and provenance | Build attestation (SLSA-style) for the deployed artifact | **Missing** — `docs/SUPPLY-CHAIN.md` says "nothing yet" |
-| IaC and workflow scanning | Scan Actions workflows and Supabase config for misconfiguration | **Missing** — propose a workflow linter; infra is migrations + `supabase/config.toml` + Actions |
+| SBOM | CycloneDX on every deploy, kept 90 days | Present. `.github/workflows/supply-chain.yml` also attests an SBOM against the bundle it builds, and verifies it in the same run — **that bundle, not the bytes `.github/workflows/pages.yml` deploys** (see below) |
+| Signing and provenance | Build-provenance attestation for the artifact that is deployed | **Partial.** `.github/workflows/supply-chain.yml` signs and verifies provenance for the bundle it builds from a clean checkout. Its own header says the deployed bytes differ (`.github/workflows/pages.yml` bakes in `VITE_BASE` and the demo build), so the deployed artifact is not yet attested; main records this as risk R-3 in `infra/README.md` |
+| IaC and workflow scanning | Validate Terraform, and hold every workflow to a policy | **Present for Terraform and workflows:** `.github/workflows/infra.yml` runs `terraform validate` and an OPA policy over every workflow (checksum-pinned binary). **Not covered:** the Supabase migrations and `supabase/config.toml`, which the SQL suites test instead |
 | Pinning | Every Action pinned to a SHA with a release comment | Enforced by `app/src/lib/supplychain.test.ts` |
 | Policy tests | RLS, grants, definers, tenant isolation | `supabase/check.sh`; **now fails a silent suite** (C-03) |
 
@@ -147,7 +147,10 @@ repeated after any infrastructure change and at least annually.
   attempt (§10).
 - **Severity and clock:** the table in [`SECURITY.md`](../../SECURITY.md) —
   critical 2 days, high 14, medium 60, low 180 — held to
-  `PATCH_POLICY` by a test. Any suspected read of another account's rows is
+  `PATCH_POLICY` by a test, and restated in
+  [`docs/infrastructure/VULNERABILITY-MANAGEMENT.md`](../infrastructure/VULNERABILITY-MANAGEMENT.md)
+  with the same numbers (D-124); a critical advisory in a production dependency
+  also blocks `main` through `.github/workflows/supply-chain.yml`. Any suspected read of another account's rows is
   critical until disproven.
 - **Scoring — proposal.** Score with CVSS v4.0 base for a vendor-assigned CVE or
   a scanner finding, then adjust to the table: **raise** one level when the
@@ -268,7 +271,7 @@ is the CI gates above plus a recorded read-back of what the founder approved.
 |---|---|---|
 | 30 days (2026-11-03) | Apply the ruleset and file the read-back; route DET-01–DET-06 to a paging channel and file delivery tests; turn on `enforce_membership` in staging and land TI-01–TI-05; decide F-03 (shared-device erase); choose the role mailbox; first rotation entry | F-09, F-08 closed or compensated; TI-01–05 green |
 | 60 days (2026-12-03) | TI-06–TI-12; move provider tokens server-side or document the limit (F-02); decide F-04; header-capable host (F-06); first vendor assessments (database/auth, AI); provider restore (E-02); first access review | F-01 closable; E-02, E-03, E-04 filed |
-| 90 days (2027-01-02) | AI red-team on the deployed path; build provenance and SBOM signing; workflow/IaC scan; break-glass drill; tabletop 1; pen-test scope and quote | AI-01…08 green; E-05 filed; E-01 scoped |
+| 90 days (2027-01-02) | AI red-team on the deployed path; attest the bytes `.github/workflows/pages.yml` deploys (R-3); break-glass drill; tabletop 1; pen-test scope and quote | AI-01…08 green; E-05 filed; E-01 scoped |
 
 **Not claimed at day 90:** SOC 2, ISO 27001, HECVAT completion, or independent
 assurance of any kind. Those need an outside party and, for SOC 2, an

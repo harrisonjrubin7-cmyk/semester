@@ -23,6 +23,10 @@
 --   * signing an order form writes the tenant's plan, one implementation
 --     project and one renewal at ends_at − 120 days, and signing it again
 --     writes nothing; an MSA triggers nothing; a pilot needs an end date;
+--   * a later order form cannot lower a current plan's tier or shorten its
+--     end date (the signing is refused and the plan is untouched), a
+--     legitimate upgrade goes through, and replaying an older order form
+--     over that upgrade changes nothing;
 --   * account health is written once a day per institution, from allowed
 --     signals, and anything not healthy waits for a person.
 
@@ -76,6 +80,16 @@ exception when others then
   return true;
 end $$;
 
+-- Refused, and for the stated reason: `refused` alone would also pass on a typo.
+create or replace function pg_temp.refused_for(statement text, reason text)
+returns boolean language plpgsql as $$
+begin
+  execute statement;
+  return false;
+exception when others then
+  return sqlerrm like '%' || reason || '%';
+end $$;
+
 do $$
 declare
   ana uuid; ben uuid;
@@ -83,6 +97,7 @@ declare
   lead record; o text; n bigint; t text; j jsonb;
   plus_price uuid; quote_price uuid; co record; ana_sub uuid; again uuid; inv uuid; inv2 uuid;
   gtm uuid; acct uuid; q uuid; k uuid; msa uuid; pilot uuid; ends timestamptz;
+  lower_k uuid; short_k uuid; up_k uuid; before_plan text;
   base timestamptz := now();
 begin
   insert into public.schools (id, name, email_domains) values
@@ -405,6 +420,57 @@ begin
   end if;
   reset role;
   raise notice 'ok  a pilot order form needs an end date before it is signed';
+
+  -- ── A later order form never lowers a current plan ─────────────────────
+  -- north-auto is department, ending `ends` (base + 365 days).
+  set local role service_role;
+  select tier || '/' || ends_at into before_plan from public.tenant_plan where tenant_id = 'north-auto';
+  select count(*) into n from public.tenant_plan_history where tenant_id = 'north-auto';
+
+  insert into public.quotes (billing_account_id, version, status, exclusions) values (acct, 3, 'accepted', 'Lower tier, longer.')
+  returning id into q;
+  insert into public.quote_lines (quote_id, plan_code, description, unit_amount_cents) values (q, 'registration_pilot', 'Pilot', 0);
+  insert into public.contracts (billing_account_id, quote_id, kind, status, ends_at)
+  values (acct, q, 'order_form', 'draft', base + interval '800 days') returning id into lower_k;
+  if not pg_temp.refused_for(format($q$update public.contracts set status = 'signed', signed_at = now(), effective_at = now() where id = %L$q$, lower_k),
+                             'would lower') then
+    raise exception 'FAILED: a pilot order form lowered a department plan, or was refused for another reason';
+  end if;
+  perform pg_temp.answered('a lower-tier later order is refused, and the plan is untouched',
+    (select tier || '/' || ends_at from public.tenant_plan where tenant_id = 'north-auto'), before_plan);
+  perform pg_temp.answered('the refused contract stays unsigned',
+    (select status from public.contracts where id = lower_k), 'draft');
+
+  insert into public.quotes (billing_account_id, version, status, exclusions) values (acct, 4, 'accepted', 'Same tier, shorter.')
+  returning id into q;
+  insert into public.quote_lines (quote_id, plan_code, description, unit_amount_cents) values (q, 'department_launch', 'Department Launch', 1500000);
+  insert into public.contracts (billing_account_id, quote_id, kind, status, ends_at)
+  values (acct, q, 'order_form', 'draft', base + interval '100 days') returning id into short_k;
+  if not pg_temp.refused_for(format($q$update public.contracts set status = 'signed', signed_at = now(), effective_at = now() where id = %L$q$, short_k),
+                             'would shorten') then
+    raise exception 'FAILED: a shorter order form cut a plan''s end date, or was refused for another reason';
+  end if;
+  perform pg_temp.answered('a shorter later order is refused, and the plan is untouched',
+    (select tier || '/' || ends_at from public.tenant_plan where tenant_id = 'north-auto'), before_plan);
+  select count(*) into n from public.tenant_plan_history where tenant_id = 'north-auto' and reason = format('Order form %s signed.', short_k);
+  perform pg_temp.counted('and wrote no history row', n, 0);
+
+  insert into public.quotes (billing_account_id, version, status, exclusions) values (acct, 5, 'accepted', 'Upgrade.')
+  returning id into q;
+  insert into public.quote_lines (quote_id, plan_code, description, unit_amount_cents) values (q, 'semester_access', 'Semester Access', 5000000);
+  insert into public.contracts (billing_account_id, quote_id, kind, status, ends_at)
+  values (acct, q, 'order_form', 'draft', base + interval '730 days') returning id into up_k;
+  update public.contracts set status = 'signed', signed_at = now(), effective_at = now() where id = up_k;
+  perform pg_temp.answered('a legitimate upgrade is applied: higher tier, longer term',
+    (select tier || '/' || (ends_at = base + interval '730 days')::text from public.tenant_plan where tenant_id = 'north-auto'), 'campus/true');
+
+  -- Replaying the older order form over the upgrade must neither lower the
+  -- plan nor raise: it was applied once and is skipped.
+  reset role;
+  perform private.apply_signed_contract(k);
+  perform pg_temp.answered('replaying the first order form leaves the upgrade in place',
+    (select tier || '/' || (ends_at = base + interval '730 days')::text from public.tenant_plan where tenant_id = 'north-auto'), 'campus/true');
+  raise notice 'ok  a later order form raises a plan, never lowers it';
 
   -- ── Account health ──────────────────────────────────────────────────────
   set local role service_role;

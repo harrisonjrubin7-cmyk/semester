@@ -39,7 +39,7 @@
 | DET-10 | AI kill switch flipped | kill-switch row (`supabase/functions/_shared/killswitch.ts`) | yes | Any change to the global or a tenant row | High | Page |
 | DET-11 | Bulk export of education records | export job / audit | **no** registry of exports (SECURITY-GAP-AUDIT) | Export row-count above the tenant's p99, or by an actor with no prior export | High | Page |
 | DET-12 | Legal-hold bypass | `public.legal_holds`, `private.tenant_is_held` | yes | A delete/erase touching a held tenant | Critical | Page |
-| DET-13 | Dependency or Action compromise | Dependabot, `npm audit`, CodeQL | partial (audit is non-blocking by design) | Critical advisory on a shipped package; unpinned Action (the test already fails) | Critical | Page |
+| DET-13 | Dependency or Action compromise | Dependabot, `npm audit`, CodeQL | partial (`npm audit` is non-blocking by design; `.github/workflows/supply-chain.yml` blocks a critical advisory in a production dependency on main) | Critical advisory on a shipped package; unpinned Action (the test already fails) | Critical | Page |
 | DET-14 | Secret in the repository | gitleaks (`.github/workflows/ci.yml` `secrets` job) | yes | Any finding | Critical | Page + rotate per `SECURITY.md` |
 | DET-15 | Public-site / app availability | `.github/workflows/production-smoke.yml` (hourly) | yes | Two consecutive failures | Medium | Notify |
 | DET-16 | Webhook forgery | billing-webhook signature failures | partial — logged, not counted | >3 signature failures per hour | Medium | Digest |
