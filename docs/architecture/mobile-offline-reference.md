@@ -362,7 +362,7 @@ sdk.onChange(listener)                           // drives live regions
 
 ## 10a. The first wired slice: personal tasks through the engine
 
-Status: **built, default off, one device at a time.** It replaces nothing for anyone who has not opted in.
+Status: **built, default off, behind a registered module flag and a per-device opt-in.** It replaces nothing for anyone who has not turned both on. The flag's rollout plan, success criteria, rollback and review date are in `docs/FEATURE-FLAG-REGISTRY.md`; setting `VITE_OFFLINE_ENGINE_TASKS` back to `off` returns every device to the account sync with no task lost, because the old half has pushed the task list in its blob all along. A task *deleted* while the engine was on can reappear on a device that had not opted in; the old merge has no record of that deletion.
 
 **What it is.** `app/src/lib/sync/engine/` carries the student's tasks (the product calls them *actions*) through `SyncEngine` instead of the account's `state` blob, over the existing `public.tasks` table (`20260901000700_records.sql`: own-row RLS, `deleted_at` tombstone, `touch_updated_at` trigger, `(user_id, updated_at)` index — created for this and unused until now). **No migration, no new function, no new policy.**
 
@@ -373,7 +373,7 @@ Status: **built, default off, one device at a time.** It replaces nothing for an
 | Transport | `tasks-transport.ts` | the engine's "server": idempotency, ordering, snapshot and cursor, over that port |
 | Store on disk | `persistent.ts` | the engine's queue, rows and cursor as one IndexedDB record per account (`semester-engine`), written through on every commit; cleared by Erase from this device |
 | Bridge | `tasks.ts` | adopts the student's list into engine writes, hands engine tasks back, `weave`s them against the live list, and folds the engine's counts into the sync line |
-| Ownership | `ownership.ts` | the opt-in `semester.engine.tasks = on`, and what the old sync half may see |
+| Ownership | `ownership.ts` | the two switches — the build's module flag `offline_engine_tasks` (`VITE_OFFLINE_ENGINE_TASKS`) and the device's opt-in `semester.engine.tasks = on` — and what the old sync half may see |
 | Hook | `state/useTaskEngine.ts` | adopt → send and take → weave, one pass at a time, 800 ms after the list settles and every 60 s |
 
 **One owner, with a one-way mirror.** While a device has opted in, the engine is the only source of its tasks: `cloud.ts`'s `pull` no longer reads the account's old copy back (a stale mirror from another device must not resurrect what the engine deleted), and the old merge's base and local view leave tasks out (`forLegacy`, `baseForLegacy`). What the device *pushes* still carries its tasks, so a device that has not opted in keeps receiving them. The mirror is write-only: **edits made to tasks on a device that has not opted in do not reach an opted-in one.** Opt in on every device of an account, or accept that the others are read-through. With the switch off every call site receives the very same object it always did (`ownership.test.ts` asserts identity), and the whole existing suite passes unchanged.
@@ -390,7 +390,7 @@ Status: **built, default off, one device at a time.** It replaces nothing for an
 
 **Visible state.** `withEngine` folds the engine's counts into the existing sync line, the same move the store already makes for waiting choices: pending tasks make "Synced" read "Queued"; refused ones say *"N actions were not accepted by your account. Still saved on this device."*; a conflict says both versions are kept. Per-row labels (`TaskSync.states()`) exist but **no screen shows them yet**.
 
-**Not in this slice:** notes, appointments and practice papers (the other three `public.*` tables and their policy classes); a registered feature flag (`FLAGS`, a `VITE_` module flag, a rollout plan and kill switch — added when this leaves one person's device); a screen for conflicts and rejections; the receipts table and gateway that make idempotency and ordering real; any native client.
+**Not in this slice:** notes, appointments and practice papers (the other three `public.*` tables and their policy classes); a per-school switch or tenant policy (the flag is a build decision); a screen for conflicts and rejections; the receipts table and gateway that make idempotency and ordering real; any native client.
 
 ## 11. Gaps that remain, open questions, and items for qualified counsel
 

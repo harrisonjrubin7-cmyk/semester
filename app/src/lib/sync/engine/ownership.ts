@@ -1,3 +1,5 @@
+import { MODULE_FLAGS, moduleOn } from '../../experience-flags';
+
 /**
  * Which half of the sync owns the student's tasks — the old one, or the engine.
  *
@@ -9,17 +11,25 @@
  * missing from the account as a deletion, which is exactly the wrong thing). It does still *push* them, though:
  * a write-only mirror, so that a device on the same account that has not opted in keeps receiving tasks.
  *
- * ## The switch
+ * ## Two switches, and both must be on
  *
- * A device-local opt-in, off unless set, for dogfooding one device at a time. It is not a `FLAGS` entry or a
- * `VITE_` module flag yet: those carry a rollout plan, a kill switch, a deploy-workflow variable and a review
- * date, and are added when this leaves one person's device — a follow-up, not an oversight. Turning it off puts
- * the old half back in charge of the tasks this device holds; the rows the engine wrote stay in the table,
- * unread. `Erase from this device` clears it, as it clears every `semester.` key.
+ * 1. **The build's module flag**, `offline_engine_tasks` (`VITE_OFFLINE_ENGINE_TASKS`, off unless set, like every
+ *    module flag — `lib/experience-flags.ts`). It decides whether this build has the feature at all. It is the
+ *    rollback: set it back to `off` and the next build returns every device to the account sync. Nothing is lost
+ *    by that, because the old half has pushed the task list in its blob all along (the write-only mirror below),
+ *    so it resumes from a list that is current. (A task *deleted* while the engine was on can reappear on a
+ *    device that had not opted in: the old merge keeps no record of a deletion it never saw.) The rows the
+ *    engine wrote stay in `public.tasks`, unread.
+ * 2. **This device's own opt-in**, `semester.engine.tasks = on`. The mirror is one-way — edits made to tasks on a
+ *    device that has not opted in do not reach one that has — so a person turns the engine on per device, knowing
+ *    that. `Erase from this device` clears it, as it clears every `semester.` key.
+ *
+ * Either one off and every call site here receives the very same object it always did.
  */
 export const OWNS_TASKS_KEY = 'semester.engine.tasks';
 
 export function taskEngineOn(): boolean {
+  if (!moduleOn(MODULE_FLAGS.offline_engine_tasks)) return false;
   try {
     return localStorage.getItem(OWNS_TASKS_KEY) === 'on';
   } catch {

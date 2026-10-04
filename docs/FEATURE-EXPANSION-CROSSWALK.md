@@ -46,11 +46,14 @@ the duplicate that file warns about.
 | K | Course Demand Forecasting | `demand_forecasting` (D-051, D-052, D-053) | Plan › registration **Cart** (student consent); University › **Demand** (staff, by `demand:read` scope) (built) | **Extend** + migration | `20260928305000_course_demand_forecasting.sql`; `lib/course-demand.ts`, `components/DemandContribution.tsx`, `components/DemandDesk.tsx` |
 | L | Semester Wrapped | `semester_wrapped` (D-054) | Me → `me` › You: the recap card (built) | **Extend** | `lib/wrapped.ts`, `components/SemesterWrapped.tsx`; reads `state.done`/`tickedAt`/`sessions`/`taken` and the device stores of Phases B, G, I and the registration workspace |
 | M | Offline Mode | `offline_mode` (D-055, D-056) | App shell: the offline badge under the header; every screen (refusals in shared `ConfirmDialog` and the remote calls) (built) | **Extend** | `lib/offline-mode.ts`, `components/OfflineBanner.tsx`; reuses `lib/offline.ts`, `lib/merge.ts`, `public/sw.js` (unchanged) |
+| P | Task sync engine | `offline_engine_tasks` (D-1190) | No screen of its own: the same actions, saved offline and sent when a connection returns; the sync line says what the account has not confirmed (built, tasks only, device opt-in as well) | **Extend** | `lib/sync/engine/`, `state/useTaskEngine.ts`, `packages/offline-sync`; `lib/cloud.ts` `pull`; uses the existing `public.tasks` table, no migration |
 | N | Trust Center | `trust_center` (D-057) | Me › You › **Trust & data** → Your data (`privacy`), the center at the top (built) | **Extend** | `components/TrustCenter.tsx`; `lib/workspace-backup.ts` (device scope, eleven stores), `workspace-backup.coverage.test.ts` |
 | O | Visual polish | — (always on, per-commit revert) | Everywhere | — | [DESIGN-SYSTEM-IMPROVEMENTS.md §3](DESIGN-SYSTEM-IMPROVEMENTS.md#3-problems-to-fix) |
 
 All 14 named flags plus the proposed `today_action_center` are added to
-`lib/experience-flags.ts` in Phase B, all `off` by default (D-012). The
+`lib/experience-flags.ts` in Phase B, all `off` by default (D-012). Later modules
+(`crunch_week_forecast`, `course_studio`, `offline_engine_tasks`) were added the
+same way, each `off` until its own variable is set. The
 env vars are `VITE_` + the name in upper case, for example
 `VITE_REGISTRATION_DAY_MODE`.
 

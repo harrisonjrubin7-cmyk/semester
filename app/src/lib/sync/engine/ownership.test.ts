@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MODULE_FLAGS } from '../../experience-flags';
 import { baseOf } from '../../conflicts';
 import { settleDeletions } from '../../deletions';
 import { baseForLegacy, forLegacy, OWNS_TASKS_KEY, setTaskEngine, taskEngineOn } from './ownership';
@@ -7,7 +8,10 @@ function fakeStorage(initial: Record<string, string> = {}) {
   const m = new Map(Object.entries(initial));
   return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k), m };
 }
-afterEach(() => vi.unstubAllGlobals());
+const flag = MODULE_FLAGS.offline_engine_tasks;
+// A build with the module flag on: the cases below are about the device's switch unless they say otherwise.
+beforeEach(() => { MODULE_FLAGS.offline_engine_tasks = 'production'; });
+afterEach(() => { vi.unstubAllGlobals(); MODULE_FLAGS.offline_engine_tasks = flag; });
 
 const mine = { v: 1, tasks: [{ id: 'T1', title: 'x' }], notes: [{ id: 'N1', title: 'n' }] };
 
@@ -27,6 +31,28 @@ describe('the switch', () => {
     vi.stubGlobal('localStorage', { getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); }, removeItem() { throw new Error('denied'); } });
     expect(taskEngineOn()).toBe(false);
     expect(() => setTaskEngine(true)).not.toThrow();
+  });
+
+  it('needs the build\'s module flag as well as the device: either one off and it is off', () => {
+    const cases: [string, boolean][] = [['off', true], ['production', false], ['production', true], ['preview', true], ['sandbox', true]];
+    const out = cases.map(([state, opt]) => {
+      MODULE_FLAGS.offline_engine_tasks = state as never;
+      vi.stubGlobal('localStorage', fakeStorage(opt ? { [OWNS_TASKS_KEY]: 'on' } : {}));
+      return taskEngineOn();
+    });
+    expect(out).toEqual([false, false, true, true, true]);
+  });
+
+  it('is off by default in a build: no variable set means the module is off', () => {
+    expect(flag).toBe('off');
+  });
+
+  it('with the module flag off, hands the old half the very same objects whatever the device says', () => {
+    MODULE_FLAGS.offline_engine_tasks = 'off';
+    vi.stubGlobal('localStorage', fakeStorage({ [OWNS_TASKS_KEY]: 'on' }));
+    expect(forLegacy(mine)).toBe(mine);
+    const base = { 'tasks/T1': 'f' };
+    expect(baseForLegacy(base)).toBe(base);
   });
 
   it('lives under the prefix Erase from this device clears', () => {
