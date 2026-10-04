@@ -28,6 +28,7 @@ export function fakeIndexedDB() {
               oncomplete: null,
               objectStore: () => ({
                 getAll: () => request(() => [...rows.values()]),
+                get: (id: string) => request(() => rows.get(id)),
                 put: (v: { id: string }) => request(() => (rows.set(v.id, structuredClone(v)), v.id)),
                 delete: (id: string) => request(() => void rows.delete(id)),
                 clear: () => request(() => void rows.clear()),

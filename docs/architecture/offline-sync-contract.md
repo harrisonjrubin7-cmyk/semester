@@ -2,7 +2,7 @@
 
 Status: target contract. Current implementation is a PWA/local-first foundation, not a native SQLCipher or CRDT system.
 
-A tested platform-neutral core and a reference design for this contract now exist: [`mobile-offline-reference.md`](mobile-offline-reference.md) and `packages/offline-sync`. They change none of the status below — no native client, SQLCipher binding, gateway endpoint or CRDT service has been built.
+A tested platform-neutral core and a reference design for this contract now exist: [`mobile-offline-reference.md`](mobile-offline-reference.md) and `packages/offline-sync`. They change none of the status below — no native client, SQLCipher binding, gateway endpoint or CRDT service has been built. One device-local, default-off slice now carries personal tasks through the engine over `public.tasks` (§10a of that document); it is not the encrypted native store the contract describes.
 
 ## Current evidence
 

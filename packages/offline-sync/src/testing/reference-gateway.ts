@@ -147,7 +147,7 @@ export class ReferenceGateway implements SyncTransport {
       // No cursor: a new install, or one the server no longer honours. Send the present state, then the feed from here.
       const snap: Change[] = [...this.records].map(([k, r]) => { const [dataClass, id] = k.split('\u0000'); return { dataClass: dataClass as DataClass, id: id!, version: r.version, value: r.value } })
       const visible = snap.filter((c) => !this.o.can || this.o.can(userId, c.dataClass, c.id))
-      return { kind: 'changes', changes: visible, nextCursor: String(this.seq), hasMore: false }
+      return { kind: 'changes', changes: visible, nextCursor: String(this.seq), hasMore: false, snapshot: true }
     }
     const after = Number(req.cursor)
     if (after < this.oldestCursor) return { kind: 'changes', cursorExpired: true }

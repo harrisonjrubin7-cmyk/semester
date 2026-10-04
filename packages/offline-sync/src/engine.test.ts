@@ -419,6 +419,21 @@ describe('the cursor', () => {
     expect((await b.store.entities.get('task', 'Z'))).toBeDefined()
   })
 
+  it('drops a confirmed record the server no longer has when a snapshot arrives, but never one with unsent work', async () => {
+    const a = rig(); const b = rig({ with: a, device: 'dev-b' })
+    await a.engine.write({ dataClass: 'task', entityId: 'GONE', op: 'create', payload: { t: 1 } })
+    await a.engine.write({ dataClass: 'task', entityId: 'KEPT', op: 'create', payload: { t: 2 } })
+    await a.engine.write({ dataClass: 'task', entityId: 'MINE', op: 'create', payload: { t: 3 } })
+    await a.sync(); await b.sync(); await b.engine.write({ dataClass: 'task', entityId: 'MINE', op: 'patch', payload: { t: 4 } })
+    // The server forgets GONE (a swept tombstone) and the feed is compacted: b's cursor is no longer honoured.
+    a.gw.records.delete('task\u0000GONE'); a.gw.external('task', 'LATER', { t: 9 }, hlc(NOW)); a.gw.compactFeed()
+    b.t.now += 1; await b.store.outbox.put({ ...(await b.store.outbox.all())[0]!, nextAttemptAt: Infinity })
+    await b.sync()
+    expect(await b.store.entities.get('task', 'GONE')).toBeUndefined()
+    expect(await b.store.entities.get('task', 'KEPT')).toBeDefined()
+    expect(await b.store.entities.get('task', 'MINE')).toBeDefined()
+  })
+
   it('marks an acknowledged change reconciled once the feed shows it', async () => {
     const r = rig()
     await r.engine.write(task())

@@ -21,6 +21,7 @@ import { newLetter, newPerson, newVisit } from '../../lib/letters';
 import { newRest, readFloor } from '../../lib/rest';
 import { tidy } from '../../lib/windows';
 import { resurface } from '../../lib/postmortem';
+import { weave } from '../../lib/sync/engine/tasks';
 import type { Action, State } from '../shape';
 
 export function mine(state: State, action: Action): State | null {
@@ -168,6 +169,16 @@ export function mine(state: State, action: Action): State | null {
 
     case 'deleteTask':
       return { ...state, tasks: state.tasks.filter((t) => t.id !== action.id) };
+
+    /*
+     * What the engine holds, woven into the list the student has — here, against the list as it is *now*, not as
+     * it was when the engine started asking. An edit made while a sync was in flight is in `state.tasks` already
+     * and is the student's; the weave keeps it and the next pass sends it.
+     */
+    case 'tasksFromEngine': {
+      const next = weave(state.tasks, action.tasks, new Set(action.known), action.adopted);
+      return next ? { ...state, tasks: next } : state;
+    }
 
     case 'addAppointment':
       return {

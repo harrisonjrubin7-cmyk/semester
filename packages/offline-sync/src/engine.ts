@@ -338,6 +338,8 @@ export class SyncEngine {
   private async pull(report: SyncReport): Promise<Partial<SyncReport> | null> {
     const { store, transport, identity } = this.d
     const scope = `${identity.tenantId}:${identity.userId}`
+    // While a snapshot is arriving: every record it names, so what is *not* named can be dropped at the end.
+    let named: Set<string> | null = null
     for (let page = 0; page < 1000; page++) {
       let res: PullResponse
       try {
@@ -349,10 +351,12 @@ export class SyncEngine {
       if (res.kind === 'device_revoked') return { stopped: 'revoked' }
       if (res.cursorExpired) { await store.cursors.set(scope, ''); continue }
       // Changes and the cursor move together: a crash between them would skip or repeat a change.
+      if (res.snapshot && !named) named = new Set()
       await store.transaction(async () => {
-        for (const c of res.changes ?? []) { await this.applyChange(c); report.pulled++ }
+        for (const c of res.changes ?? []) { named?.add(`${c.dataClass}\u0000${c.id}`); await this.applyChange(c); report.pulled++ }
         if (res.revoked?.length) await this.dropRevoked(res.revoked)
         if (res.nextCursor !== undefined) await store.cursors.set(scope, res.nextCursor)
+        if (named && !res.hasMore) await this.pruneUnnamed(named)
       })
       if (!res.hasMore) return null
     }
@@ -392,6 +396,21 @@ export class SyncEngine {
     const first = live[0]!
     await store.outbox.put({ ...first, phase: 'conflict_requires_copy', conflict: { serverVersion: c.version, serverValue: c.value, mine: first.payload } })
     await store.entities.put({ ...e!, phase: 'conflict_requires_copy', commandId: first.id })
+  }
+
+  /**
+   * A snapshot is the present state, so a confirmed record it does not name is gone: deleted somewhere while this
+   * device was away, past the point the server still keeps tombstones. Left alone it would come back to life. A
+   * record with unsent work is never dropped here — that edit is the person's, and the server will decide it.
+   */
+  private async pruneUnnamed(named: Set<string>): Promise<void> {
+    const { store } = this.d
+    const pending = new Set((await store.outbox.all()).map((r) => `${r.dataClass}\u0000${r.entityId}`))
+    for (const e of await store.entities.all()) {
+      const k = `${e.dataClass}\u0000${e.id}`
+      if (named.has(k) || pending.has(k)) continue
+      if (e.phase === 'reconciled' || e.phase === 'acknowledged') await store.entities.remove(e.dataClass, e.id)
+    }
   }
 
   private async dropRevoked(rows: { dataClass: DataClass; id: string }[]): Promise<void> {
