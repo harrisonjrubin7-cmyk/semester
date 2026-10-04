@@ -599,6 +599,7 @@ export interface Persisted {
   typeface: string;
   bodyface: string;
   lineHeight: string;
+  textSpacing: string;
   readingWidth: string;
   iconShape: string;
   /** `device`, `still` or `calm` — see `CALMS` in `lib/look.ts`. */
@@ -1549,6 +1550,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   typeface: 'condensed',
   bodyface: 'barlow',
   lineHeight: 'normal',
+  textSpacing: 'normal',
   readingWidth: 'normal',
   iconShape: 'none',
   calm: 'device',
@@ -1586,6 +1588,7 @@ export function currentLook(state: Persisted): Look {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -2196,6 +2199,7 @@ export function pickPersisted(state: State): Persisted {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,

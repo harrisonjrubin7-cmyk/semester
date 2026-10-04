@@ -80,6 +80,15 @@
       ],
       "default": "normal",
       "variables": 1
+    },
+    "textSpacing": {
+      "modes": [
+        "normal",
+        "open",
+        "wide"
+      ],
+      "default": "normal",
+      "variables": 2
     }
   },
   "primitive": {
@@ -1831,6 +1840,24 @@
         }
       }
     },
+    "tracking-body": {
+      "$type": "dimension",
+      "$value": "0em",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "textSpacing"
+          ],
+          "modes": {
+            "textSpacing": {
+              "normal": "0em",
+              "open": "0.02em",
+              "wide": "0.05em"
+            }
+          }
+        }
+      }
+    },
     "type-2xl": {
       "$type": "dimension",
       "$value": "28px",
@@ -2062,6 +2089,24 @@
           ],
           "scaledBy": "textSize",
           "css": "calc(11.5px * var(--text-scale, 1))"
+        }
+      }
+    },
+    "word-space": {
+      "$type": "dimension",
+      "$value": "0em",
+      "$extensions": {
+        "semester": {
+          "varies": [
+            "textSpacing"
+          ],
+          "modes": {
+            "textSpacing": {
+              "normal": "0em",
+              "open": "0.08em",
+              "wide": "0.16em"
+            }
+          }
         }
       }
     }

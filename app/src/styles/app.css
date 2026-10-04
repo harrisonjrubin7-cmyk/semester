@@ -595,6 +595,10 @@ a:hover {
      line for their own reason still override locally; what this fixes is the
      hundred places that were relying on the browser default. */
   line-height: var(--line-height, 1.55);
+  /* The reader's letter and word spacing (`textSpacing` in lib/look.ts). `.chrome-text`
+     sets its own tracking, so display type is untouched. */
+  letter-spacing: var(--tracking-body, 0);
+  word-spacing: var(--word-space, 0);
   overflow: hidden;
   isolation: isolate;
 }

@@ -1,4 +1,4 @@
-import { ACCENTS, CORNERS, DENSITIES, GROUNDS, SIZES, tokensFor, type Look } from './look';
+import { ACCENTS, CORNERS, DENSITIES, GROUNDS, SIZES, TEXT_SPACINGS, tokensFor, type Look } from './look';
 import { contrast, over } from './contrast';
 
 /**
@@ -71,6 +71,7 @@ const SETTINGS: Array<{ collection: string; key: keyof Look; options: string[]; 
   { collection: 'ground', key: 'ground', options: GROUNDS.map((g) => g.id), default: 'ink' },
   { collection: 'accent', key: 'accent', options: ACCENTS.map((a) => a.id), default: 'sterling' },
   { collection: 'density', key: 'density', options: DENSITIES.map((d) => d.id), default: 'comfortable' },
+  { collection: 'textSpacing', key: 'textSpacing', options: TEXT_SPACINGS.map((t) => t.id), default: 'normal' },
   { collection: 'textSize', key: 'textSize', options: SIZES.map((s) => s.id), default: 'normal' },
   { collection: 'corners', key: 'corners', options: CORNERS.map((c) => c.id), default: 'drawn' },
 ];

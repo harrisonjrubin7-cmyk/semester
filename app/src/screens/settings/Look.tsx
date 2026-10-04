@@ -23,6 +23,7 @@ import {
   READING_WIDTHS,
   accentFromHue,
   SIZES,
+  TEXT_SPACINGS,
   TYPEFACES,
   contrast,
   contrastVerdict,
@@ -502,6 +503,19 @@ export function SettingsLook() {
               <div style={HINT}>
                 Separate from text size on purpose. “I cannot see this” and “this is a wall” are two
                 different complaints, and one control for both fixes neither properly.
+              </div>
+            </CustomRow>
+            <CustomRow>
+              <SectionLabel style={CAP}>Letter and word spacing</SectionLabel>
+              <Segmented
+                options={TEXT_SPACINGS.map((t) => ({ id: t.id, label: t.label }))}
+                value={state.textSpacing}
+                onChange={(textSpacing) => dispatch({ type: 'setLook', look: { textSpacing } })}
+              />
+              <div style={HINT}>
+                {TEXT_SPACINGS.find((t) => t.id === state.textSpacing)?.blurb} Separate from line spacing:
+                crowded letters and crowded lines are different complaints. Headings keep their own
+                spacing.
               </div>
             </CustomRow>
             <CustomRow>
