@@ -33,7 +33,7 @@ means the six commands in `CLAUDE.md`, from `app/`.
 | # | Phase | Commits (each independently revertible) | Done when |
 |---|---|---|---|
 | 0 | **Fence** (this PR) | kernel + rules + census; first slice | Gates green; rules fail on 12 injected faults; parity tests green |
-| 1 | **Bind** | `composition/react.tsx`: a hook filling `LegacyHost` from `state/store` (not mounted); test with a rendered store | Gates green; bundle budget unchanged (hook not imported by a screen) |
+| 1 | **Bind** — *done* | `composition/react.ts`: `hostOver` (pure) + `useDomains` (hook) filling `LegacyHost` from `state/store`; writes go through the reducer as `editTask`; not imported by any screen | Gates green; `hostOver` held to the real reducer (`toggleTask`) on five task cases; mounted under the real `StoreProvider`; build unchanged (nothing imports it) |
 | 2 | **Shadow Today** | `Today.tsx` computes its view both ways behind a dev flag and logs any difference; no behaviour change | A week of shadow runs and the test fixtures show zero diffs, or each diff is a recorded decision |
 | 3 | **Flip Today** | read `today.view()` behind `experience-flags`; keep the legacy path one release; then delete it and lock `screens/Today.tsx` in `legacy.json` | Screenshot compared (`.claude/skills/run`); `lib/` imports in Today = 0; flag removable |
 | 4 | **Tasks and calendar screens** | same four steps for the Work screen, then `Calendar.tsx` (3,006 lines: split views first, then bind) | Both locked |

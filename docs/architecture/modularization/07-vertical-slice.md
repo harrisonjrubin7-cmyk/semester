@@ -52,7 +52,8 @@ time of the first commit.
 
 ## What it deliberately is not
 
-- Not mounted: no screen calls it. That is phase 1–3.
+- No screen calls it yet. Phase 1 (done) binds it to the live store in `composition/react.ts`; phases 2–3 shadow and flip Today.
+- Today's ranking covers `todayActions` only. `TodayActionCenter` also ranks registration and campus-office actions, so the phase 2 shadow comparison is expected to show those as its first differences.
 - Calendar is read-only; adding an event is the next use case (action name
   `calendar.add` not yet in `PERSONAL_ACTIONS`).
 - Policy on the device is advisory; server enforcement of `decide()` per route
@@ -60,3 +61,24 @@ time of the first commit.
 - Events are in-process (`EventSink`); promotion to the outbox is a gateway
   concern (ADR 0008) and the names already match its pattern.
 - Class meetings are not a calendar source yet (`Block` in `lib/types.ts`).
+
+## Phase 1: the store binding
+
+`composition/react.ts`. `hostOver(read, dispatch)` is a plain function of "what
+the store holds now" and "how to dispatch"; `useDomains()` supplies both from
+`useStore`, `useNow`, `useMyCapabilities` and the Today choices library, and
+returns one stable object that reads the latest snapshot through a ref.
+
+Writes go through the reducer so persistence, sync and the unpushed-edits flag
+see them: the tasks adapter's next list becomes `editTask` patches of only the
+changed fields. The reducer's own `toggleTask` is `{ ...t, ...tick(t, !t.done) }`,
+so both paths give the same record — `react.test.ts` checks that against the
+real reducer for plain, undated, weekly, weekly-on-its-last-day and
+daily-with-steps tasks, and for reopening. `react.mount.test.tsx` runs the hook
+under the real `StoreProvider`. Three faults injected into `hostOver` (patch
+carries the wrong fields; dispatcher ignored; tasks read from a frozen
+snapshot) each turned tests red.
+
+`useDeviceLibrary` is called with `TodayActionCenter`'s own key, so the two read
+one store; the backup-coverage census (`workspace-backup.coverage.test.ts`)
+lists the new call site.

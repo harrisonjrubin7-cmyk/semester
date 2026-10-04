@@ -79,6 +79,7 @@ const CALLS: Record<string, number> = {
   'components/institutional/OperationsStudio.tsx': 1,
   'components/soft/SoftTopBody.tsx': 3,
   'components/toolkit/store.ts': 1,
+  'composition/react.ts': 1,
   'lib/advisor-attachments.ts': 1,
   'lib/athletics.hook.ts': 1,
   'lib/life-balance.hook.ts': 1,
