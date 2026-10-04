@@ -76,7 +76,10 @@ repository's own conservative rule.
 ## Status report standard
 
 - One file per review, `STATUS-YYYY-MM-DD.md`, never edited after the next one is
-  written, except to correct an error, and then with a dated note.
+  written, except to correct an error, and then with a dated note. A report
+  written out of cycle on the same date takes a numbered suffix
+  (`STATUS-YYYY-MM-DD-2.md`), says that it is out of cycle, and does not stand in
+  for the weekly one.
 - The headline is at most three sentences and contains no activity.
 - Every outcome row has evidence, date, scope and acceptor (the test refuses a row without them).
 - A figure is a measurement, with its command or run in the row; an unmeasured

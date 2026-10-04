@@ -138,17 +138,20 @@ describe('the pack and the registers it stands on', () => {
     }
   });
 
-  it('reports no outcome in a status report without evidence, a date and an acceptor', () => {
-    const status = read('docs/program/STATUS-2026-10-04.md');
-    const section = status.split('## Verified outcomes')[1]?.split('\n## ')[0] ?? '';
-    const rows = section.split('\n').filter((l) => /^\| V\d{2} \|/.test(l));
-    expect(rows.length).toBeGreaterThan(0);
-    for (const row of rows) {
-      const c = row.split('|').slice(1, -1).map((x) => x.trim());
-      expect(c.length, row).toBe(6);
-      expect(c[3], `${c[0]} has no evidence`).not.toBe('');
-      expect(c[4], `${c[0]} has no date`).toMatch(/^\d{4}-\d{2}-\d{2}/);
-      expect(c[5], `${c[0]} has no acceptor`).not.toBe('');
+  it('reports no outcome in any status report without evidence, a date and an acceptor', () => {
+    const reports = pack.filter((f) => /^STATUS-\d{4}-\d{2}-\d{2}(-\d+)?\.md$/.test(f));
+    expect(reports.length).toBeGreaterThanOrEqual(2);
+    for (const f of reports) {
+      const section = read(`docs/program/${f}`).split('## Verified outcomes')[1]?.split('\n## ')[0] ?? '';
+      const rows = section.split('\n').filter((l) => /^\| V\d{2} \|/.test(l));
+      expect(rows.length, `${f} has no outcome rows`).toBeGreaterThan(0);
+      for (const row of rows) {
+        const c = row.split('|').slice(1, -1).map((x) => x.trim());
+        expect(c.length, `${f}: ${row}`).toBe(6);
+        expect(c[3], `${f} ${c[0]} has no evidence`).not.toBe('');
+        expect(c[4], `${f} ${c[0]} has no date`).toMatch(/^\d{4}-\d{2}-\d{2}/);
+        expect(c[5], `${f} ${c[0]} has no acceptor`).not.toBe('');
+      }
     }
   });
 });
