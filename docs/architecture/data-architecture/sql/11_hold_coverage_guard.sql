@@ -2,16 +2,18 @@
 --
 -- Legal holds are enforced sweep by sweep. Nothing says a NEW sweep must check one, and the
 -- header of 20260930140000_erase_respects_holds.sql already records the failure mode (a later
--- create-or-replace silently dropping the check). Measured on the migrated schema, functions that
--- DELETE and are named like sweeps/purges/retention/forget, and what they check:
---   hold-aware (6):  sweep_abandoned_signups, sweep_ai_runtime_metadata, sweep_audit_retention,
---                    sweep_community_retention, sweep_stale_invites, integration_retention_sweep
---   NOT hold-aware (16), of which
---     covered by the hold-checking erase wrapper (11): erase_account_unheld + ten forget_my_*
---     ephemeral by design (2): sweep_lti_nonce, sweep_lti_link_ticket
---     GAPS (3): gateway_purge_journal (gateway/AI audit, 180 d), purge_financial_records
---       (individual billing records, 7 y), sweep_tombstones (student-deleted work, 90 d)
--- RETENTION.md says of the financial sweep "there is none to gate"; the function exists.
+-- create-or-replace silently dropping the check). When this was first written, on the schema of
+-- 4 October 2026, functions that DELETE and are named like sweeps/purges/retention/forget split
+-- as: 6 hold-aware; 11 reached only through the hold-checking erase wrapper; 2 ephemeral; and 3
+-- GAPS (gateway_purge_journal, purge_financial_records, sweep_tombstones). Those three are fixed
+-- by 20261004150000_holds_reach_the_last_three_sweeps.sql, so this file no longer carries them
+-- as known gaps.
+--
+-- The guard has already earned its place: a fourth sweep, private.productivity_sweep_commands
+-- (20261004090000_productivity_commands.sql), landed on main after that count and was flagged
+-- the first time the guard ran. It deletes a 35-day command window and may be ephemeral like
+-- the gateway's replay window; whether it is, is the owner of that work's decision, so it
+-- is parked below as a dated known gap, not decided here.
 --
 -- Same shape as src/rootunmount.test.ts: a structural check that cannot be fooled by a race.
 -- It reads function SOURCE, so it is a heuristic with a stated name pattern; the exemption table is
@@ -55,8 +57,7 @@ insert into private.hold_exemption(function_name, reason, kind, review_by) value
   ('public.forget_my_support_access','called only by erase_account (hold-checked)', 'covered_by_wrapper', current_date + 365),
   ('public.forget_my_support_shares','called only by erase_account (hold-checked)', 'covered_by_wrapper', current_date + 365),
   ('public.forget_my_support_tickets','called only by erase_account (hold-checked)', 'covered_by_wrapper', current_date + 365),
-  -- the three real gaps, parked for at most 120 days each, then the guard fails
-  ('private.gateway_purge_journal', 'GAP: ages out gateway and AI audit rows without checking a tenant or platform hold', 'known_gap', current_date + 90),
-  ('public.purge_financial_records','GAP: purges individual billing records after seven years without checking an account hold', 'known_gap', current_date + 90),
-  ('public.sweep_tombstones',       'GAP: physically removes student-deleted work after 90 days without checking an account hold', 'known_gap', current_date + 90)
+  -- A sweep that landed after the guard was written: parked with a date until its owner decides
+  -- whether a 35-day command window is ephemeral (exempt) or a record (hold-aware).
+  ('private.productivity_sweep_commands', 'GAP: deletes a 35-day command window without checking a hold; decide whether it is ephemeral', 'known_gap', current_date + 30)
 on conflict do nothing;

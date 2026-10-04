@@ -506,13 +506,29 @@ on both sides of its line.
   an account in a held school: restrictions, safety entries, posts, reports,
   hosted sessions, volunteer tasks and uploaded images, and a case while its
   post's author or a reporter is held.
+- **What it also keeps, in the last three sweeps.**
+  20261004150000_holds_reach_the_last_three_sweeps.sql added the clause to three
+  functions that deleted without asking, found by reading every function that says
+  `delete from` and is named like a sweep, a purge or an erasure:
+  `sweep_tombstones()` keeps the deleted work of a held account, or of one in a held
+  school (the deletion is not undone; the physical removal waits for the release);
+  `purge_financial_records()` keeps everything of an individual subscriber while the
+  account that owns it is held, and a billing account with no owner left (which an
+  account hold cannot name) follows the platform hold only; and
+  `gateway_purge_journal()` keeps a held school's review, audit, intelligence-audit
+  and action rows, and a held account's when the actor is that account's id (the
+  actor is text, so it is cast only when it reads as a UUID). The one-day
+  `gateway_rate_limit` window is replay protection, not a record, and is
+  unconditional. `supabase/hold-blind-sweeps.check.sql` runs each against a held
+  and an unheld twin and checks that a release lets the next sweep remove what
+  was kept; `retention.test.ts` holds each one's last definition to its clauses.
 - **What it does not stop yet.** The escalation deliveries and the volunteer
-  programme's events carry no account and follow the platform gate only; there
-  is no financial sweep to gate; and on-device deletion is not hold-aware. The
-  AI, restriction and safety-entry deletes are exercised against real rows; the
-  rest carry the same clause and are held to it by a test, not exercised.
-  Maturity rows RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed,
-  for that reason.
+  programme's events carry no account and follow the platform gate only; and
+  on-device deletion is not hold-aware. The provider's backups are not reached
+  by a hold either (see *Backups* below). The AI, restriction and safety-entry
+  deletes, and the three above, are exercised against real rows; the rest carry
+  the same clause and are held to it by a test, not exercised. Maturity rows
+  RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed, for that reason.
 
 ## Backups: the provider's copies, and how long a deleted row outlives its deletion
 
