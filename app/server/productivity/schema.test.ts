@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EVENT_TYPES } from '../../../packages/institution/src/index.ts';
 import { LIMITS } from './contract.ts';
@@ -13,8 +13,25 @@ import { EVENT_ID, TASK_ID, createEvent, createTask, harness, person } from './f
  * table — silently, in both cases, until somebody noticed a missing field.
  */
 
-const sql = readFileSync(new URL('../../../supabase/migrations/20261004123000_productivity_commands.sql', import.meta.url), 'utf8');
-const commit = sql.slice(sql.indexOf('create or replace function private.productivity_commit'), sql.indexOf('create or replace function public.productivity_commit'));
+const migrations = new URL('../../../supabase/migrations/', import.meta.url);
+const migration = (name: string) => readFileSync(new URL(name, migrations), 'utf8');
+
+/** The tables and the grants, as the first migration made them. */
+const sql = migration('20261004123000_productivity_commands.sql');
+
+/**
+ * The commit function as it *currently* stands: the latest migration that defines it. A later one
+ * replaces the first (the read-side migration adds the held prediction), so reading the first
+ * would be reading a function that is no longer there.
+ */
+const latestCommit = readdirSync(migrations).filter((f) => f.endsWith('.sql')).sort()
+  .filter((f) => migration(f).includes('create or replace function private.productivity_commit(')).at(-1)!;
+const commitSource = migration(latestCommit);
+const commit = commitSource.slice(
+  commitSource.indexOf('create or replace function private.productivity_commit'),
+  commitSource.includes('create or replace function public.productivity_commit') ? commitSource.indexOf('create or replace function public.productivity_commit') : undefined,
+);
+const reads = migration('20261004150000_productivity_reads.sql');
 
 const keysRead = (variable: string, from: string): Set<string> => {
   const out = new Set<string>();
@@ -117,5 +134,57 @@ describe('what the database promises is what the service relies on', () => {
     expect(sql).toMatch(/grant select on table public\.productivity_task to authenticated;/);
     expect(sql).not.toMatch(/grant (insert|update|delete|all)[^;]* on table public\.productivity_(task|event) to (authenticated|anon)/);
     expect(sql).toMatch(/grant execute on function public\.productivity_commit\([^)]*\) to service_role;/);
+  });
+});
+
+describe('the read functions return the entity the service holds, so the adapter maps nothing', () => {
+  const body = (name: string) => reads.slice(reads.indexOf(`create or replace function ${name}`), reads.indexOf('$$;', reads.indexOf(`create or replace function ${name}`)));
+  const literals = (fn: string) => new Set([...fn.matchAll(/'([A-Za-z]+)',\s/g)].map((m) => m[1]!));
+
+  it.each([['task', 'private.productivity_task_json'], ['event', 'private.productivity_event_json']] as const)('builds a %s with exactly the keys of the entity', async (kind, fn) => {
+    const { task, event } = await produced();
+    const entity = kind === 'task' ? task : event;
+    const built = literals(body(fn));
+    for (const k of Object.keys(entity)) expect(built.has(k), `${fn} does not build ${k}`).toBe(true);
+    // The only literals that are not keys of the entity are the two inside `source`.
+    for (const k of built) if (!(k in entity)) expect(['kind', 'ref'], `${fn} builds ${k}, which the entity has not`).toContain(k);
+  });
+
+  it('is callable by the service role and nobody else', () => {
+    const names = [...reads.matchAll(/create or replace function public\.(productivity_\w+)\(/g)].map((m) => m[1]!);
+    expect(names.sort()).toEqual(['productivity_changes', 'productivity_get', 'productivity_list_events', 'productivity_list_tasks', 'productivity_outbox_stats', 'productivity_tx_state']);
+    for (const n of names) {
+      expect(reads, n).toMatch(new RegExp(`revoke all on function public\\.${n}\\([^)]*\\) from public, anon, authenticated;`));
+      expect(reads, n).toMatch(new RegExp(`grant execute on function public\\.${n}\\([^)]*\\) to service_role;`));
+    }
+    expect(reads).not.toMatch(/grant execute[^;]*to[^;]*(authenticated|anon)\b/);
+    expect(reads.match(/security definer/g)!.length).toBeGreaterThanOrEqual(names.length);
+    expect(reads).not.toMatch(/set search_path\s*=\s*public/);
+  });
+});
+
+describe('the adapter calls functions that exist, with parameters they have', () => {
+  const adapter = readFileSync(new URL('./postgres.ts', import.meta.url), 'utf8');
+  const all = readdirSync(migrations).filter((f) => f.endsWith('.sql')).map(migration).join('\n');
+  const declared = (name: string): Set<string> => {
+    const at = all.lastIndexOf(`create or replace function public.${name}(`);
+    const sig = all.slice(at, all.indexOf(')\nreturns', at));
+    return new Set([...sig.matchAll(/\b(p_[a-z_]+)\b/g)].map((m) => m[1]!));
+  };
+
+  it('names only functions a migration defines', () => {
+    const called = new Set([...adapter.matchAll(/'(productivity_[a-z_]+)'/g)].map((m) => m[1]!));
+    expect(called.size).toBeGreaterThanOrEqual(7);
+    for (const fn of called) expect(all, `${fn} is called and not defined`).toContain(`function public.${fn}(`);
+  });
+
+  it('passes only parameters that some function it calls declares', () => {
+    const called = [...new Set([...adapter.matchAll(/'(productivity_[a-z_]+)'/g)].map((m) => m[1]!))];
+    const known = new Set(called.flatMap((fn) => [...declared(fn)]));
+    for (const m of adapter.matchAll(/\b(p_[a-z_]+)\b/g)) expect(known.has(m[1]!), `${m[1]} is passed and no function declares it`).toBe(true);
+  });
+
+  it('gives the commit exactly the arguments it declares', () => {
+    expect([...declared('productivity_commit')].sort()).toEqual(['p_audit', 'p_command', 'p_entities', 'p_events', 'p_owner', 'p_tenant']);
   });
 });

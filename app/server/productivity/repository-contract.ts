@@ -19,6 +19,8 @@ const A: Scope = { tenantId: 'school-a', ownerId: '11111111-1111-4111-8111-11111
 const B: Scope = { tenantId: 'school-a', ownerId: '22222222-2222-4222-8222-222222222222' };
 const OTHER_TENANT: Scope = { tenantId: 'school-b', ownerId: A.ownerId };
 const ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const COMMAND = 'c0000000-0000-4000-8000-0000000000c1';
+const HASH = 'a'.repeat(64);
 
 const task = (scope: Scope, over: Partial<Task> = {}): Task => ({
   id: ID, tenantId: scope.tenantId, ownerId: scope.ownerId, version: 1, seq: 0,
@@ -31,21 +33,21 @@ export function runRepositoryContract(name: string, make: () => ProductivityRepo
   describe(`${name} satisfies the repository contract`, () => {
     it('commits everything written in a transaction, or nothing', async () => {
       const repo = await make();
-      await expect(repo.transaction(A, (tx) => {
-        tx.save(task(A));
+      await expect(repo.transaction(A, async (tx) => {
+        await tx.save(task(A));
         throw new Error('boom');
       })).rejects.toThrow('boom');
       expect(await repo.get(A, 'task', ID)).toBeNull();
-      await repo.transaction(A, (tx) => void tx.save(task(A)));
+      await repo.transaction(A, async (tx) => void await tx.save(task(A)));
       expect((await repo.get(A, 'task', ID))?.id).toBe(ID);
     });
 
     it('lets a transaction read what it has written but not yet committed', async () => {
       const repo = await make();
-      await repo.transaction(A, (tx) => {
-        expect(tx.entity('task', ID)).toBeNull();
-        tx.save(task(A));
-        expect(tx.entity('task', ID)?.id).toBe(ID);
+      await repo.transaction(A, async (tx) => {
+        expect(await tx.entity('task', ID)).toBeNull();
+        await tx.save(task(A));
+        expect((await tx.entity('task', ID))?.id).toBe(ID);
       });
     });
 
@@ -65,9 +67,9 @@ export function runRepositoryContract(name: string, make: () => ProductivityRepo
     it('serializes "have I seen this command" with "record that I have"', async () => {
       const repo = await make();
       const attempt = () => repo.transaction(A, async (tx) => {
-        if (tx.command('c1')) return 'duplicate';
+        if (await tx.command(COMMAND)) return 'duplicate';
         await new Promise((r) => setTimeout(r, 5));
-        tx.recordCommand({ commandId: 'c1', requestSha256: 'h', storedAt: 'now', result: { commandId: 'c1', status: 'superseded', entity: { type: 'task', id: ID, version: 1 }, supersededFields: [], reason: 'no_change' } });
+        tx.recordCommand({ commandId: COMMAND, requestSha256: HASH, storedAt: '2026-10-05T15:00:00.000Z', result: { commandId: COMMAND, status: 'superseded', entity: { type: 'task', id: ID, version: 1 }, supersededFields: [], reason: 'no_change' } });
         return 'applied';
       });
       expect((await Promise.all([attempt(), attempt(), attempt()])).sort()).toEqual(['applied', 'duplicate', 'duplicate']);
@@ -76,12 +78,12 @@ export function runRepositoryContract(name: string, make: () => ProductivityRepo
     it('hands out gapless sequence numbers, and a rolled-back transaction spends none', async () => {
       const repo = await make();
       const seqs: number[] = [];
-      await repo.transaction(A, (tx) => void seqs.push(tx.save(task(A))));
-      await expect(repo.transaction(A, (tx) => {
-        tx.save(task(A, { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }));
+      await repo.transaction(A, async (tx) => void seqs.push(await tx.save(task(A))));
+      await expect(repo.transaction(A, async (tx) => {
+        await tx.save(task(A, { id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb' }));
         throw new Error('no');
       })).rejects.toThrow();
-      await repo.transaction(A, (tx) => void seqs.push(tx.save(task(A, { id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' }))));
+      await repo.transaction(A, async (tx) => void seqs.push(await tx.save(task(A, { id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc' }))));
       expect(seqs).toEqual([1, 2]);
     });
 
@@ -89,16 +91,16 @@ export function runRepositoryContract(name: string, make: () => ProductivityRepo
       const repo = await make();
       let a = 0;
       let b = 0;
-      await repo.transaction(A, (tx) => { a = tx.save(task(A)); });
-      await repo.transaction(B, (tx) => { b = tx.save(task(B)); });
+      await repo.transaction(A, async (tx) => { a = await tx.save(task(A)); });
+      await repo.transaction(B, async (tx) => { b = await tx.save(task(B)); });
       expect([a, b]).toEqual([1, 1]);
     });
 
     it('shows a scope nothing of another, even with the same record id', async () => {
       const repo = await make();
-      await repo.transaction(A, (tx) => void tx.save(task(A, { title: 'a' })));
-      await repo.transaction(B, (tx) => void tx.save(task(B, { title: 'b' })));
-      await repo.transaction(OTHER_TENANT, (tx) => void tx.save(task(OTHER_TENANT, { title: 'other tenant' })));
+      await repo.transaction(A, async (tx) => void await tx.save(task(A, { title: 'a' })));
+      await repo.transaction(B, async (tx) => void await tx.save(task(B, { title: 'b' })));
+      await repo.transaction(OTHER_TENANT, async (tx) => void await tx.save(task(OTHER_TENANT, { title: 'other tenant' })));
       expect(((await repo.get(A, 'task', ID)) as Task).title).toBe('a');
       expect(((await repo.get(B, 'task', ID)) as Task).title).toBe('b');
       expect((await repo.listTasks(A, { after: null, limit: 10 })).map((t) => t.title)).toEqual(['a']);
@@ -107,14 +109,14 @@ export function runRepositoryContract(name: string, make: () => ProductivityRepo
 
     it('refuses to write an entity into a scope that is not the transaction\'s', async () => {
       const repo = await make();
-      await expect(repo.transaction(A, (tx) => void tx.save(task(B)))).rejects.toThrow();
+      await expect(repo.transaction(A, async (tx) => void await tx.save(task(B)))).rejects.toThrow();
       expect(await repo.get(B, 'task', ID)).toBeNull();
     });
 
     it('keeps tombstones out of reads and in the change feed', async () => {
       const repo = await make();
-      await repo.transaction(A, (tx) => void tx.save(task(A)));
-      await repo.transaction(A, (tx) => void tx.save({ ...(tx.entity('task', ID) as Entity), deletedAt: '2026-10-05T16:00:00.000Z', version: 2 }));
+      await repo.transaction(A, async (tx) => void await tx.save(task(A)));
+      await repo.transaction(A, async (tx) => void await tx.save({ ...((await tx.entity('task', ID)) as Entity), deletedAt: '2026-10-05T16:00:00.000Z', deleteClock: '1790000000001.0000.dev-a', version: 2 }));
       expect(await repo.get(A, 'task', ID)).toBeNull();
       expect(await repo.listTasks(A, { after: null, limit: 10 })).toHaveLength(0);
       const feed = await repo.changes(A, 0, 10);
@@ -124,7 +126,7 @@ export function runRepositoryContract(name: string, make: () => ProductivityRepo
 
     it('does not let a caller reach stored state through what it was handed', async () => {
       const repo = await make();
-      await repo.transaction(A, (tx) => void tx.save(task(A, { title: 'original' })));
+      await repo.transaction(A, async (tx) => void await tx.save(task(A, { title: 'original' })));
       const got = (await repo.get(A, 'task', ID)) as Task;
       got.title = 'mutated by the caller';
       expect(((await repo.get(A, 'task', ID)) as Task).title).toBe('original');

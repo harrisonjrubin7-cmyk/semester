@@ -17,15 +17,17 @@ Every section below says which it is. The summary:
 |---|---|
 | Error envelope, correlation ids, strict validation, body limits, per-identity rate limits, ETags, cursor paging (§1, §7) | Webhook delivery and signing (§1.9) |
 | Four policy actions and their rules; every route asks them (§3) | Domain services other than tasks/calendar (§2) |
-| Command pipeline: idempotent, per-field last-writer-wins, atomic with audit and outbox (§4, §10) | Postgres adapter for `ProductivityRepository` (§10.6) |
+| Command pipeline: idempotent, per-field last-writer-wins, atomic with audit and outbox (§4, §10); the Postgres `ProductivityRepository`, run against a real migrated database (§4.2, §10.7) | An authenticator, a route and a client (§10.6) |
 | Outbox publish loop, dead-lettering, idempotent consumers (existing `events.ts`, exercised here) | Outbox backoff column, operator requeue (§4.4) |
-| Migration, RLS, one atomic commit function, ledger sweep — 48 SQL checks (§5) | File service and malware scanning (§6) |
+| Migration, RLS, one atomic commit function, the read functions, ledger sweep — 66 SQL checks (§5) | File service and malware scanning (§6) |
 | `/healthz`, `/readyz`, `/metrics`, policy-decision metrics (§9) | SLO dashboards, alerting rules, tracing (§9) |
 | OpenAPI 3.1 document held equal to the code (§8) | Consumer-driven contract tests, breaking-change gate in CI (§8) |
 
 **Nothing here is wired to a running client.** No route is mounted, no
 authenticator is bound to Supabase, and the new tables hold nothing until one
-is. §10.6 lists exactly what stands between this and a first request.
+is. The storage adapter exists and is tested against a real database, but
+nothing constructs it. §10.6 lists exactly what stands between this and a first
+request.
 
 ### How this relates to the target-architecture proposal (#1144)
 
@@ -369,6 +371,28 @@ and the retry finds it in the ledger and answers `duplicate`. This is optimistic
 concurrency with the ledger as the arbiter; `repository-contract.ts` states the
 properties any adapter must have.
 
+`postgres.ts` is that adapter. A transaction reads (each read its own call),
+stages every write in memory, and sends the lot to `productivity_commit`; on
+`40001` or `23505` it throws the staged writes away and **re-runs the work from the
+reads**, so a decision is never made on one state and applied to another. Two things
+make it correct rather than merely plausible:
+
+- **The sequence number is predicted and held to.** The service is handed a `seq`
+  when it saves an entity, before the commit allocates it. The adapter predicts it
+  (the owner's counter as read, plus one per entity saved) and the commit refuses
+  with `40001` if the counter is not where the prediction put it, under the lock it
+  already takes. A number returned from `save` is therefore never one that two
+  writers both believed was theirs. A test asserts that the `seq` each caller was
+  *told* equals the `seq` the row was *given*, which the table's own gaplessness
+  would not show.
+- **Reads are finished JSON.** Every read is a function returning the entity in the
+  service's own shape, so the adapter does no row mapping, and `schema.test.ts` holds
+  the keys equal to the TypeScript entity.
+
+Within one process, transactions for one scope also run one at a time, so a single
+person's offline queue does not fight itself; across processes the database is the
+arbiter.
+
 ### 4.3 The outbox, and what "published" means
 
 `drainOutbox` (existing) offers each pending row to `publish`; a throw records
@@ -505,18 +529,23 @@ nonexistent owner is audited and cannot fail on a foreign key.
 
 ### 5.5 Verified
 
-`supabase/productivity-commands.check.sql` — 48 checks, run on PostgreSQL 16
+`supabase/productivity-commands.check.sql` — 66 checks, run on PostgreSQL 16
 (the project runs 17; `SEMESTER_CHECK_PG_ANY=1` says so and the pass is not a
 statement about production): who can call the commit; a first commit writes
 record, ledger, audit and outbox together; a duplicate is `23505`; a stale writer
 is `40001`; the sequence is gapless and a failed commit spends none; a failed
 last step undoes the first; the table constraints; RLS for owner, other person,
-other tenant, ended membership, tombstones; no client write; the sweep. The
+other tenant, ended membership, tombstones; no client write; the sweep; a stale
+sequence prediction is refused; the read functions are scoped, hide tombstones, carry
+them in the feed, and are the service role's alone. The
 **whole** suite (every other check, and the apply-twice idempotency pass across
 352 tables) also passes. Nine SQL mutants were applied (a tenth, "a failed commit spends a
 sequence number", cannot be written: a rolled-back transaction undoes it by
 construction); eight were caught the first time and the ninth exposed a missing
-fixture (an event tombstone) that now exists and catches it.
+fixture (an event tombstone) that now exists and catches it. Five more were applied to
+the read-side migration's checks: four were caught, and the fifth (the outbox stats
+counting every producer) exposed a check that compared the function to a query that
+already filtered, with no other producer's row to prove it; it now has one.
 
 ---
 
@@ -651,7 +680,7 @@ a dependency error and asserts it appears nowhere in the response.
 | Layer | What | Status |
 |---|---|---|
 | **Provider contract** | `openapi.test.ts` holds `docs/api/productivity.v1.openapi.json` equal to the code: routes and methods, command types, limits, field sets, `additionalProperties:false`, and **every emitted error code with its status** (and no documented code that cannot occur). | **Built** |
-| **Repository contract** | `repository-contract.ts` — the same tests any storage adapter runs. | **Built** (memory); **required** of Postgres |
+| **Repository contract** | `repository-contract.ts` — the same tests any storage adapter runs. | **Built**: memory, and Postgres through `supabase/adapter.sh` |
 | **TS ↔ SQL** | `schema.test.ts` — JSON keys, limits and value sets. | **Built** |
 | **Event contract** | `validateEvent` + `events.test.ts` (catalog equals the outbox constraint). | Existing |
 | **Policy contract** | `policy.test.ts` — refusal suite. | Extended here |
@@ -671,7 +700,11 @@ first thirty-one, thirty were caught the first time; the survivor (`not_owner` i
 the policy rule) was unreachable through the service by construction, so it is
 now asked of the decision point directly. Of the SQL, one gap was found
 (an unexercised event tombstone) and closed. Five further mutants of the
-route-to-policy and OpenAPI tests were all caught.
+route-to-policy and OpenAPI tests were all caught. For the Postgres adapter, eleven
+more — six in the adapter (no retry, a stale expected `seq`, one prediction for every
+entity, no per-scope queue, tombstones outside a transaction, a stale counter) and five
+in the read-side SQL (the prediction check, the tombstone flag, a missing owner or tenant
+filter, a missing ledger owner filter) — were run against a real database and all caught.
 
 ---
 
@@ -750,12 +783,17 @@ and the correlation id attached to every span — is specified, not built.
 | `…/service.ts` | Commands, queries, policy, idempotency, merge, audit, outbox |
 | `…/http.ts` | `Request → Response`: routing, envelope, limits, ETags |
 | `…/ops.ts` | `/healthz`, `/readyz`, `/metrics`, `instrument` |
+| `…/postgres.ts` | The Postgres repository: optimistic transactions, predicted `seq`, retry on `40001`/`23505` |
+| `…/psql-rpc.ts` | Test support: an `RpcClient` that calls the real SQL functions through `psql`, one connection per call |
 | `…/repository-contract.ts` | Tests every adapter must pass |
-| `…/*.test.ts` | 186 tests (contract, service, http, repository, schema, openapi) |
+| `…/*.test.ts` | 206 tests in `npm test` (contract, service, http, repository, schema, openapi, adapter protocol) |
+| `…/postgres.integration.test.ts` | 20 tests against a real migrated database; skipped unless run through `supabase/adapter.sh` |
 | `packages/institution/src/policy.ts` (+ test) | Four actions, two rule builders, a refusal suite |
 | `packages/institution/src/events.ts` | Eight event types |
 | `supabase/migrations/20261004123000_productivity_commands.sql` | Tables, RLS, commit function, sweep |
-| `supabase/productivity-commands.check.sql` | 48 SQL checks |
+| `supabase/migrations/20261004150000_productivity_reads.sql` | The read functions, and the commit with its prediction held |
+| `supabase/productivity-commands.check.sql` | 66 SQL checks |
+| `supabase/adapter.sh`, `supabase/adapter/run.sh` | Run the adapter against the database `check.sh` builds |
 | `docs/api/productivity.v1.openapi.json` | The contract |
 
 ### 10.2 One command, end to end
@@ -838,10 +876,12 @@ and SQL drift guards.
 
 ### 10.6 What is **not** done — what stands between this and a first request
 
-1. **A Postgres `ProductivityRepository`.** Reads via PostgREST/`select`; writes
-   buffered and sent to `public.productivity_commit`; retry on `40001`/`23505`;
-   must pass `runRepositoryContract`. The SQL it calls is verified; the adapter
-   is not written.
+1. **~~A Postgres `ProductivityRepository`~~ — written (§10.7).** What is left of it
+   is a first run through a real PostgREST, which can confirm what no `psql`-backed
+   test can: that a raised SQLSTATE arrives in `error.code`, and that nothing in the
+   adapter depends on PostgREST's type rendering or row limits (it is written not
+   to). Construct it with `createClient(url, serviceKey)` from a server-only
+   environment, and set a timeout on that client — the adapter has none of its own.
 2. **An authenticator** that turns a Supabase session into a `Principal`
    (`membership.ts` has the resolution; `consentGrantsFor` needs the share-grant
    reader).
@@ -853,6 +893,45 @@ and SQL drift guards.
 6. **A client** (the offline queue of §10.4) and a decision about the old tables.
 7. **A production-major run** of `check.sh` (these ran on Postgres 16).
 8. **Wiring `Metrics` to a real exporter and an alert on `/readyz`.**
+
+---
+
+### 10.7 The Postgres adapter, and how it was run
+
+`postgres.ts` against the functions in the two productivity migrations. It is held
+by three layers:
+
+- **Always, in `npm test`:** a scripted client pins the protocol — every call carries
+  the scope's tenant and owner; the predicted `seq`s; the `seq` a record was *read at*
+  as what the commit expects; a conflict re-runs the work from the reads, waiting
+  longer each time; `40001` and `23505` are retried and nothing else is; a database
+  error's text is never repeated; one scope runs one transaction at a time.
+- **On demand, against a real database:** `supabase/adapter.sh` builds the same
+  throwaway Postgres as `check.sh` (it uses that script's `SEMESTER_CHECK_THEN`
+  hook) and runs `postgres.integration.test.ts` through a `psql`-backed client. It
+  runs the whole repository contract; the **same script of fourteen commands through
+  the same service against memory and against Postgres**, requiring identical results,
+  records, feeds, lists and cursors; the audit, outbox and ledger rows the database
+  ends up holding; and **processes that share nothing** racing each other — a
+  duplicate command, a burst of twelve from three processes (gapless, and the `seq`
+  each was told is the `seq` stored), an interleaved commit that forces the retry, a
+  delete that wins a race, and a commit whose acknowledgement is lost.
+- **Drift:** `schema.test.ts` holds the read functions' keys equal to the entity, the
+  adapter's function and parameter names equal to the SQL's, and the commit it reads
+  to be the latest definition.
+
+**What this does not prove.** `psql` is a faithful stand-in for the SQL and for the
+SQLSTATE; it is not PostgREST. The adapter uses only `rpc`, passes only JSON, reads only
+JSON and reads errors only by SQLSTATE, so the differences should not be in play — but
+"should" is the word, and the first run against a project is the check. These ran on
+PostgreSQL 16; the project runs 17.
+
+**Costs, stated.** A command is three round trips in the common case (the counter and
+the ledger row in one call, the entity, the commit), more under contention. A read of
+somebody's shared list is two: the audit commit, then the list. Contention on one owner
+is serialized by the counter, so a burst from many processes for *one person* retries;
+that is an owner's own offline queue, and the in-process queue absorbs the usual case.
+None of this has been measured against real latency.
 
 ---
 
