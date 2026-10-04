@@ -82,3 +82,40 @@ snapshot) each turned tests red.
 `useDeviceLibrary` is called with `TodayActionCenter`'s own key, so the two read
 one store; the backup-coverage census (`workspace-backup.coverage.test.ts`)
 lists the new call site.
+
+## Phase 2: the shadow
+
+`composition/shadow.ts` (pure) and `composition/TodayShadow.tsx` (the
+component). The Action Center already computes the legacy candidate list, the
+student's choices and the day's rows; the shadow is handed exactly those, asks
+`today.view()` the same questions, reduces both to ids, and diffs them. Off
+unless the build sets `VITE_TODAY_SHADOW=on`; loaded lazily, so a build
+without it carries none of the code (the budget check is unchanged).
+
+**Known gaps are classified, not hidden.** `KNOWN_GAPS` names three sources the
+slice does not have — registration-day actions, campus office actions, class
+meetings. A legacy-only id from one of them is `explained`, with the reason;
+anything else is `unexplained` and is warned once per distinct finding. The
+comparison tolerates the cut-off effect (the legacy list is four long, so each
+explained entry lets one more of the domain's tail show) and nothing more.
+
+**It found two real differences before it shipped**, by reading the Action
+Center's row logic to build the legacy side: Today leaves done deadlines out
+and scopes the sample's deadlines to the student's own courses, and the
+calendar source did neither. Both are fixed (`Entry.done`; the host scopes
+with the same `ownedScope`), with tests.
+
+Held by: `shadow.test.ts` (comparator rules, including a control for each way
+it can disagree), and `TodayActionCenter.shadow.test.tsx`, which mounts the
+real Action Center on the sample semester at a pinned time (including a day
+with deadlines, with one ticked off) and fails on any unexplained warning. Five
+faults injected into the domain side — ticks ignored, ranking reversed, today's
+actions dropped, appointments missing, the day off by one — each turned it red.
+
+**Not shown:** that the two agree on real students' data over time. The mounted
+test is the sample semester. The flag, and a week of real use with the console
+read, is the remaining evidence before phase 3; telemetry for it is not built
+(the shadow logs to the console only).
+
+The build input is mapped in `pages.yml` and documented in `.env.example`, as
+`deploy.test.ts` requires of every `VITE_` setting; unset means off.

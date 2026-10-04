@@ -23,6 +23,8 @@ export interface LegacyHost {
   readonly tasks: StateAccess<PersonalTask[]>;
   readonly appointments: () => Appointment[];
   readonly deadlines: () => DatedItem[];
+  /** Whether the student ticked this deadline off. */
+  readonly isDone: (id: string) => boolean;
   readonly ranking: () => LegacyRankingInput;
 }
 
@@ -55,7 +57,7 @@ export function composeDomains(host: LegacyHost, platform: Platform = defaultPla
     authorizer.enforce(subject(), { action, resource, correlationId: ids.next() });
 
   const taskDeps = { tasks: legacyTaskRepository(host.tasks), guard, clock, events };
-  const sources = [appointmentSource(host.appointments), deadlineSource(host.deadlines)];
+  const sources = [appointmentSource(host.appointments), deadlineSource(host.deadlines, host.isDone)];
   const tasks = { list: listTasks(taskDeps), complete: completeTask(taskDeps), reopen: reopenTask(taskDeps) };
   const calendar = { agenda: getAgenda({ sources, guard }) };
   const today = { view: getToday({ guard, clock, tasks: tasks.list, agenda: calendar.agenda, ranking: legacyRanking(host.ranking) }) };

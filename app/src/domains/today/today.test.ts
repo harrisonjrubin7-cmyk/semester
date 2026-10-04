@@ -33,7 +33,7 @@ describe('today: the read model', () => {
   });
 
   it('is not quiet for any one thing — each, alone, turns it off (the control the other way)', async () => {
-    const entry = { id: 'e', title: 'T', kind: 'class' as const, on: '2026-10-08', startMin: 600, durationMin: 60, provenance: 'student_entered' as const };
+    const entry = { id: 'e', title: 'T', kind: 'class' as const, on: '2026-10-08', startMin: 600, durationMin: 60, provenance: 'student_entered' as const, done: false };
     const action = { id: 'a', title: 'A', why: 'w', priority: 'normal' as const, dueAt: null };
     const cases: Partial<TodayDeps>[] = [
       { agenda: async () => ok({ ...emptyAgenda, entries: [entry] }) },
@@ -46,6 +46,13 @@ describe('today: the read model', () => {
       expect(r.ok && r.value.quiet).toBe(false);
     }
     expect(isQuiet({ schedule: [], overdue: [], dueToday: [], ranking: none })).toBe(true);
+  });
+
+  it('leaves a finished entry off what is left of the day, and is quiet when only finished things remain', async () => {
+    const done = { id: 'd', title: 'D', kind: 'deadline' as const, on: '2026-10-08', startMin: null, durationMin: 0, provenance: 'imported' as const, done: true };
+    const r = await getToday(deps({ agenda: async () => ok({ ...emptyAgenda, entries: [done] }) }))();
+    expect(r.ok && r.value.schedule).toEqual([]);
+    expect(r.ok && r.value.quiet).toBe(true);
   });
 
   it('carries the pieces through unchanged', async () => {

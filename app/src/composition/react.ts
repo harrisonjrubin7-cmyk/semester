@@ -75,10 +75,14 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
       },
     },
     appointments: () => read().state.appointments,
+    // The sample's deadlines are not the student's until they say so: the same
+    // `ownedScope` the Action Center applies, so the two never disagree on which.
     deadlines: () => {
       const s = read();
-      return datedItems(s.catalog, s.now);
+      const own = s.state.courses.map((c) => c.course.id);
+      return ownedScope(datedItems(s.catalog, s.now), own, s.state.sample, s.catalog.empty).items;
     },
+    isDone: (id) => read().state.done[id] === true,
     ranking: () => {
       const s = read();
       const own = s.state.courses.map((c) => c.course.id);

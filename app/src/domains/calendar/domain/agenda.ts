@@ -27,6 +27,8 @@ export interface Entry {
   /** Minutes it takes up. Zero for an instant, such as a deadline: it marks a moment and occupies none. */
   readonly durationMin: number;
   readonly provenance: Provenance;
+  /** Finished. A done entry is still on the calendar, and not on what is left today. */
+  readonly done: boolean;
 }
 
 const ORDER: Record<EntryKind, number> = { class: 0, appointment: 1, task: 2, deadline: 3 };

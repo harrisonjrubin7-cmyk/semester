@@ -6,7 +6,7 @@ import { fail, ok } from '../../kernel';
 import { agendaFor, conflictsIn, getAgenda, isRealDay, type CalendarSource, type Entry, type Guard } from './index';
 import { appointmentSource, deadlineSource } from './adapters';
 
-const entry = (over: Partial<Entry> = {}): Entry => ({ id: 'e', title: 'T', kind: 'appointment', on: '2026-10-08', startMin: 600, durationMin: 60, provenance: 'student_entered', ...over });
+const entry = (over: Partial<Entry> = {}): Entry => ({ id: 'e', title: 'T', kind: 'appointment', on: '2026-10-08', startMin: 600, durationMin: 60, provenance: 'student_entered', done: false, ...over });
 const allow: Guard = () => ok(undefined);
 
 describe('calendar: ordering a day', () => {
@@ -123,6 +123,11 @@ describe('calendar: deadlines', () => {
   it('trusts only a deadline that was checked against its syllabus, as Today does', async () => {
     const got = await deadlineSource(() => [item({ id: 'a', checked: { confirmed: true } }), item({ id: 'b' })]).entriesOn('2026-10-08');
     expect(got.map((e) => e.provenance)).toEqual(['imported', 'needs_review']);
+  });
+
+  it('carries the student\u2019s own tick, and keeps the deadline on the calendar', async () => {
+    const got = await deadlineSource(() => [item({ id: 'a' }), item({ id: 'b' })], (id) => id === 'a').entriesOn('2026-10-08');
+    expect(got.map((e) => [e.id, e.done])).toEqual([['deadline:a', true], ['deadline:b', false]]);
   });
 
   it('keeps only the day asked for', async () => {

@@ -24,6 +24,7 @@ export function appointmentSource(read: () => Appointment[]): CalendarSource {
         startMin: a.at,
         durationMin: a.at === null ? 0 : appointmentLength(a),
         provenance: 'student_entered',
+        done: false,
       })),
   };
 }
@@ -32,8 +33,9 @@ export function appointmentSource(read: () => Appointment[]): CalendarSource {
  * Course deadlines. `dueAt` is 24×60 when the wording names no hour
  * ("In class"), which the legacy shape uses as "after everything"; here that
  * is an all-day entry. A deadline is an instant: it occupies no minutes.
+ * `isDone` is the student's own tick; the deadline stays on the calendar.
  */
-export function deadlineSource(read: () => DatedItem[]): CalendarSource {
+export function deadlineSource(read: () => DatedItem[], isDone: (id: string) => boolean = () => false): CalendarSource {
   return {
     name: 'Course deadlines',
     entriesOn: async (on) =>
@@ -47,6 +49,7 @@ export function deadlineSource(read: () => DatedItem[]): CalendarSource {
           startMin: i.dueAt < 24 * 60 ? i.dueAt : null,
           durationMin: 0,
           provenance: i.checked?.confirmed ? 'imported' : 'needs_review',
+          done: isDone(i.id),
         })),
   };
 }

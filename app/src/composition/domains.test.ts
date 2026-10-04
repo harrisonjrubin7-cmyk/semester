@@ -24,6 +24,7 @@ function host(over: Partial<{ tasks: PersonalTask[]; appointments: Appointment[]
     tasks: { read: () => tasks, update: (f) => void (tasks = f(tasks)) },
     appointments: () => over.appointments ?? [],
     deadlines: () => over.deadlines ?? [],
+    isDone: () => false,
     ranking: () => ({
       input: { path: { state: 'moving', heading: '', detail: '', creditLine: '', covered: 1, total: 1, percent: 100, unresolved: 0, firstUnresolved: null, source: '' }, upcoming: over.deadlines ?? [], done: {}, reviewDue: 0, catalogEmpty: false },
       choices: over.choices ?? {},

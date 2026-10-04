@@ -52,15 +52,18 @@ export const getToday = (deps: TodayDeps) => async (): Promise<Result<TodayView,
   if (!tasks.ok) return tasks;
   if (!agenda.ok) return agenda;
 
+  // What is left of the day: a finished deadline stays on the calendar, not here.
+  const left = agenda.value.entries.filter((e) => !e.done);
+
   return ok({
     on,
-    schedule: agenda.value.entries,
+    schedule: left,
     conflicts: agenda.value.conflicts,
     overdue: tasks.value.overdue,
     dueToday: tasks.value.dueToday,
     mostImportant: ranking.mostImportant,
     next: ranking.next,
     unavailable: agenda.value.unavailable,
-    quiet: isQuiet({ schedule: agenda.value.entries, overdue: tasks.value.overdue, dueToday: tasks.value.dueToday, ranking }),
+    quiet: isQuiet({ schedule: left, overdue: tasks.value.overdue, dueToday: tasks.value.dueToday, ranking }),
   });
 };
