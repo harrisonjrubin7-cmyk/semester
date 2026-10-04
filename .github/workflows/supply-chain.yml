@@ -1,0 +1,132 @@
+# Sign what main builds, and prove the signature can be checked.
+#
+# For every change to the app's dependencies or source on main, and weekly
+# regardless: build the app from a clean checkout, bundle the result without
+# anything that varies by run (file order, timestamps, owners), and attach to
+# that bundle
+#
+#   · a build-provenance attestation — which workflow, at which commit, on which
+#     runner built these exact bytes, signed with a short-lived Sigstore
+#     certificate bound to this workflow's identity; and
+#   · an SBOM attestation — the CycloneDX inventory of the production
+#     dependencies, bound to the same bytes.
+#
+# Then verify both, in this run, with the same command a customer's security
+# team would use. An attestation nobody has checked is a claim, not a control.
+#
+# ## What this does not yet cover
+#
+# **It attests the bundle this workflow builds, not the bytes `pages.yml`
+# deploys.** The two are built from the same commit with the same command but
+# not the same environment (`pages.yml` bakes in `VITE_BASE` and the demo
+# build), so their hashes differ and pretending otherwise would be the false
+# kind of signing. Moving the attestation into `pages.yml`, onto the artifact it
+# uploads, is the follow-up; it is recorded as risk R-3 in infra/README.md
+# because it changes a production deploy and has to be proven against one.
+#
+# ## Vulnerabilities
+#
+# `ci.yml` already runs `npm audit --audit-level=high` without blocking (its
+# header says why). This workflow adds the one thing that must block: a
+# *critical* advisory in a *production* dependency on main. High and below are
+# tracked against the SLA in docs/infrastructure/VULNERABILITY-MANAGEMENT.md.
+
+name: Supply chain
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'packages/**'
+      - '.github/workflows/supply-chain.yml'
+  schedule:
+    - cron: '41 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: supply-chain-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  attest:
+    name: attest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write       # the Sigstore certificate is issued against this run's OIDC identity
+      attestations: write   # stores the attestation with the repository
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install (exactly the lockfile)
+        working-directory: app
+        run: npm ci
+
+      - name: Critical advisories in production dependencies block
+        working-directory: app
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Inventory
+        working-directory: app
+        run: |
+          npm run --silent sbom > ../sbom.cdx.json
+          jq -e '.bomFormat == "CycloneDX" and (.components | length) > 0' ../sbom.cdx.json >/dev/null
+
+      - name: Build
+        working-directory: app
+        env:
+          VITE_INSTITUTIONAL_PREVIEW: 'false'
+        run: npm run build
+
+      # Everything that would differ between two runs of the same commit is
+      # pinned, so the same commit yields the same bytes and a hash means
+      # something.
+      - name: Bundle deterministically
+        run: |
+          tar --sort=name --mtime='@0' --owner=0 --group=0 --numeric-owner \
+              -C app -cf - dist | gzip -n > app-dist.tar.gz
+          sha256sum app-dist.tar.gz | tee app-dist.tar.gz.sha256
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: app-dist.tar.gz
+
+      - name: Attest the SBOM against the same bytes
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: app-dist.tar.gz
+          sbom-path: sbom.cdx.json
+
+      # Verify as an outsider would: against the repository, and against the
+      # exact workflow that is allowed to have signed it.
+      - name: Verify both attestations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh attestation verify app-dist.tar.gz --repo "$REPO" \
+            --signer-workflow "$REPO/.github/workflows/supply-chain.yml"
+          gh attestation verify app-dist.tar.gz --repo "$REPO" \
+            --signer-workflow "$REPO/.github/workflows/supply-chain.yml" \
+            --predicate-type https://cyclonedx.org/bom
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: supply-chain-${{ github.sha }}
+          path: |
+            app-dist.tar.gz
+            app-dist.tar.gz.sha256
+            sbom.cdx.json
+          retention-days: 400
