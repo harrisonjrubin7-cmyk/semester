@@ -140,3 +140,7 @@ and it needs a read on role grants that doesn't exist yet.
 
 The admissions calendar (§8) and content cadence (§8.1) are operating material, not code. A campaign built
 from them is a `Campaign` whose `funnelStage` matches the calendar row.
+
+## See also
+
+[`GROWTH-OPERATING-PLAN.md`](GROWTH-OPERATING-PLAN.md) is the operating layer over the rules above: funnel, activation milestones, lifecycle map, notification policy, content and ambassador design, loops, experiments, attribution, institutional ABM, dashboards and cadence, with the gates that stop any of it going live early.
