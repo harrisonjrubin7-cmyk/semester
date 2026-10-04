@@ -7,7 +7,7 @@
 #
 # What it answers: whether `app/server/productivity/postgres.ts` does with the real
 # functions in `20261004123000_productivity_commands.sql` and
-# `20261004150000_productivity_reads.sql` what the service's safety arguments assume
+# `20261004180000_productivity_reads.sql` what the service's safety arguments assume
 # — the repository contract, the same script of commands giving the same results in
 # memory and in Postgres, and two processes that share nothing racing each other
 # through the compare-and-swap and the retry.

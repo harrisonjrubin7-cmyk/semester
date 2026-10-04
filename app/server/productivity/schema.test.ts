@@ -31,7 +31,7 @@ const commit = commitSource.slice(
   commitSource.indexOf('create or replace function private.productivity_commit'),
   commitSource.includes('create or replace function public.productivity_commit') ? commitSource.indexOf('create or replace function public.productivity_commit') : undefined,
 );
-const reads = migration('20261004150000_productivity_reads.sql');
+const reads = migration('20261004180000_productivity_reads.sql');
 
 const keysRead = (variable: string, from: string): Set<string> => {
   const out = new Set<string>();

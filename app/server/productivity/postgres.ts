@@ -17,7 +17,7 @@ import type {
  * The Postgres `ProductivityRepository`.
  *
  * It does very little, on purpose. Every read is a function in
- * `20261004150000_productivity_reads.sql` that returns the entity already in the
+ * `20261004180000_productivity_reads.sql` that returns the entity already in the
  * shape the service holds it, and every write is the single atomic
  * `productivity_commit` of `20261004123000_productivity_commands.sql`. So there is no
  * row mapping here to drift from the SQL, and no SQL string here to get wrong; this
