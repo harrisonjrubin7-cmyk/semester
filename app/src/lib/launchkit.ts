@@ -293,8 +293,8 @@ export const UNDERWRITING: readonly Item[] = rows('LK-UW', [
 /** The recommended agreement package, seven documents. */
 export const PACKAGE: readonly Item[] = rows('LK-PKG', [
   ['Pilot agreement or MSA', 'The master terms the order form hangs from.', 'designed',
-    [['docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'twenty-six sections the agreement needs, and a sample scope; an outline for counsel, not agreement language'], ['app/src/lib/gtm/rfp.ts', 'CT-1: “Not yet drafted. Counsel prepares them”']],
-    'No MSA exists; the outline is the whole of it. LEG-002 in the master register: designed.'],
+    [['docs/trust/PILOT-AGREEMENT-OUTLINE.md', 'twenty-six sections the agreement needs, and a sample scope; an outline for counsel, not agreement language'], ['app/src/lib/gtm/rfp.ts', 'CT-1: “None has been reviewed by qualified counsel, approved or signed”']],
+    'No counsel-approved MSA exists: an unapproved draft is in docs/legal-drafts/MASTER-SUBSCRIPTION-AGREEMENT-DRAFT.md, and the outline is the rest of it. LEG-002 in the master register: designed.'],
   ['Order form / pilot SOW', 'Cohort, modules, environments, integrations, roles, milestones, exclusions, fees.', 'building',
     [['app/src/lib/gtm/pilot.ts', 'PilotPlan: dates, workflow, cohort, baseline, sponsor, champion, data plan, 3–5 metrics with baselines, conversion date, agreed annual price, midpoint review'], ['app/src/lib/gtm/pilot.test.ts', 'pilotReadiness refuses a plan missing any of them'], ['app/src/lib/launch/ninety-day.ts', 'charter-drafts: “Draft charter and order form, reviewed by counsel”']],
     'The fields a pilot must carry are code and the database refuses a pilot without them; no order-form document renders them for a signature.'],
