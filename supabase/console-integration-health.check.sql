@@ -220,7 +220,15 @@ begin
   select count(*) into n from public.integration_connections where id = stale and status = 'healthy';
   perform pg_temp.counted('requesting approval did not mutate connector configuration', n, 1);
 
-  update public.approval_request set expires_at = now() - interval '1 second' where ticket = 'INT-100';
+  -- Approval evidence is immutable after it is recorded. Replace the fixture
+  -- with an already-expired request instead of rewriting its pinned expiry.
+  delete from public.approval_request where ticket = 'INT-100';
+  insert into public.approval_request
+    (duty_id, requester, tenant_id, target, evidence, ticket, status, expires_at)
+  select 'integration-config', operator, 'health-north', c.public_id,
+         'Institution approval, scope, fallback, rollback and expiry recorded.',
+         'INT-EXPIRED', 'pending', now() - interval '1 second'
+    from public.integration_connections c where c.id = stale;
   perform pg_temp.become(operator);
   select count(*) into n from public.console_integration_health(false) h
    where h.connection_name = 'Stale Catalog'

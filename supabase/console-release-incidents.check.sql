@@ -89,7 +89,7 @@ begin
       'what_semester_is_doing', 'Monitoring recovery.',
       'next_update', 'This is the resolution update.',
       'where_to_get_help', 'Use the support route.'),
-      '{}'::jsonb, array['Incident commander'], now() - interval '90 minutes', now() + interval '30 minutes');
+      '{}'::jsonb, array['Incident commander'], now() - interval '20 minutes', now() + interval '30 minutes');
 
   insert into public.approval_request
     (duty_id, requester, tenant_id, target, detail, evidence, ticket, status)
