@@ -1,7 +1,7 @@
 # Manual assistive-technology pass: kit for the first run
 
-**Status: prepared 2026-10-04. The pass has NOT been run.** Every result cell below is `Not tested`. This is the kit
-for [`../../accessibility/AT-PASS-PROTOCOL.md`](../../accessibility/AT-PASS-PROTOCOL.md): it pins the build, names
+**Status: prepared 2026-10-04. The pass has NOT been run.** This folder holds working records, not registered evidence: the dated, signed result of the pass is filed as `docs/evidence/accessibility-baseline.md`, the artifact `docs/PROOF-CALENDAR.md` already names for it, and registered in `app/src/lib/ops/evidence.ts` in the same change. Every result cell below is `Not tested`. This is the kit
+for [`../AT-PASS-PROTOCOL.md`](../AT-PASS-PROTOCOL.md): it pins the build, names
 the environments, gives the tester a brief, and lists what the automated sweeps already suspect so a person can
 confirm or clear it first. Nothing here is a result. A cell is filled only by the person who ran that step, in that
 environment, with the versions recorded.

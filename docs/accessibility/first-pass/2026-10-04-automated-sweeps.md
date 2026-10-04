@@ -1,7 +1,7 @@
 # Automated sweeps, 2026-10-04
 
 **Sweep evidence for one commit. Not a screen-reader pass and not a WCAG evaluation.** Per
-[`TESTING-AND-EVIDENCE.md`](../../accessibility/TESTING-AND-EVIDENCE.md) §1, a sweep is regression evidence for a
+[`TESTING-AND-EVIDENCE.md`](../TESTING-AND-EVIDENCE.md) §1, a sweep is regression evidence for a
 named commit and may not be cited as conformance. It finds some failures a person would also find, and misses
 most of what only assistive technology reveals. Companion to [`MANUAL-PASS-KIT.md`](MANUAL-PASS-KIT.md).
 
