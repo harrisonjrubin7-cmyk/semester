@@ -304,15 +304,23 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     ...action,
     evidenceIds: action.evidenceIds.filter((id) => allowedEvidence.has(id)),
   }));
-  await input.audit?.(identity, {
-    category: request.category,
-    provider: route.provider,
-    model: route.model,
-    inputTokens: generated.inputTokens,
-    outputTokens: generated.outputTokens,
-    costCents,
-    policyDecision: `${tenantPolicy.state}:${agent}:${request.mode}`,
-  });
+  // The record is a precondition of the answer, not a courtesy after it: an AI
+  // response nobody can account for is the worse failure, so one whose audit
+  // cannot be written is discarded. The usage was already settled and stays
+  // settled, because the provider did the work.
+  try {
+    await input.audit?.(identity, {
+      category: request.category,
+      provider: route.provider,
+      model: route.model,
+      inputTokens: generated.inputTokens,
+      outputTokens: generated.outputTokens,
+      costCents,
+      policyDecision: `${tenantPolicy.state}:${agent}:${request.mode}`,
+    });
+  } catch {
+    return result(503, { code: 'audit-unavailable', message: 'The response was discarded because it could not be recorded.' });
+  }
   return result(200, {
     version: 1,
     text: generated.text,

@@ -50,7 +50,7 @@ So the design has two kinds of containment and says which a route has: **enforce
 
 ### Making the client door honour the switch
 
-`IR-01`. `ask()` consults a small signed **AI status** document before it sends: `{ killed, tenantStates, routesDisabled,
+**Decided 2026-10-04**, and held by `app/src/lib/aistatus.ts` and its test. `IR-01`. `ask()` consults a small signed **AI status** document before it sends: `{ killed, tenantStates, routesDisabled,
 issuedAt, ttl }`. Fetched at launch and refreshed on a TTL, cached in memory.
 
 | Account | Status unreachable or stale past TTL | Rationale |
@@ -58,7 +58,7 @@ issuedAt, ttl }`. Fetched at launch and refreshed on a TTL, cached in memory.
 | Managed by a school with a policy | **Fail closed**: AI off, with the existing sentence | The school's policy is the contract; stale authority is not authority |
 | Individual, no school | **Fail open with a visible banner** | The student's own key and own device; blocking on a Semester outage would punish the choice that avoided Semester |
 
-An engaged status turns off all four consumer routes, `device-key` included, with
+A **last-known kill is never failed open from**, for either kind of account, until a fresh status releases it. An engaged status turns off all four consumer routes, `device-key` included, with
 `KILLED_MESSAGE`. Tenant policy `allow_device_keys: false` ([chapter 08](08-tenant-ai-console.md)) makes a managed
 account use `institution-gateway` only. The test that today forbids the consumer door from mentioning the switch is
 the one to invert when this lands.
@@ -174,11 +174,11 @@ A switch with no drill is a note in a register. The standard, per route:
 
 | ID | Requirement | State |
 | --- | --- | --- |
-| `IR-01` | The client door honours a signed AI status, fail-closed for managed accounts | designed; not started |
+| `IR-01` | The client door honours a signed AI status, fail-closed for managed accounts | **decision tested** (`aistatus.ts`, three mutations caught); the signed status endpoint and the wiring into `ask()` are not started |
 | `IR-02` | `confirm` reads the switch before the claim | **tested** (this change) |
 | `IR-03` | Severity is graded by tier; tier 3 is never below P1 | designed |
 | `IR-04` | Every signal above has an alert with an owner and a threshold set from a baseline | not started |
-| `IR-05` | Audit-write failure refuses generation at tier 2 and above | not started (`GW-16`) |
+| `IR-05` | Audit-write failure refuses generation at tier 2 and above | **tested on the generation path** (`audit-unavailable`); the confirm path needs a write-ahead audit, not started |
 | `IR-06` | Kill-switch drill on the deployed institutional gateway before the first tenant | not started: not deployed |
 | `IR-07` | Kill-switch drill on every route per quarter, results filed under `docs/evidence/ai/` | one drill, one route |
 | `IR-08` | A second named release reviewer for every system | **blocked**: seats unassigned |

@@ -210,6 +210,6 @@ written, the request is refused. Today `audit` is optional in `respond()`.
 | `GW-13` | Evaluation runs on a separate credential and budget | designed |
 | `GW-14` | Audit carries route, pinned version, prompt and tool-set hash, policy version, zone, retrieval hash | not started |
 | `GW-15` | Prompt cache scoped to one tenant | designed |
-| `GW-16` | Audit write is a precondition of generation at tier 2 and above | not started |
+| `GW-16` | Audit write is a precondition of generation at tier 2 and above | **built on the generation path** (`audit-unavailable`, tested); a missing `audit` hook is still allowed; the confirm path audits after the write and needs a write-ahead record |
 | `GW-17` | Tenant-held provider credentials, encrypted, tenant-scoped | not started |
 | `GW-18` | Response discloses route class and, where relevant, that a fallback processed the request | not started |

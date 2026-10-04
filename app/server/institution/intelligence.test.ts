@@ -230,6 +230,19 @@ describe('governed institution intelligence', () => {
     expect((await service.confirm(identity, action.id, confirmation)).status).toBe(404);
   });
 
+  it('discards an answer whose audit record cannot be written, and shows it when it can', async () => {
+    let writable = false;
+    const audit = vi.fn(async () => { if (!writable) throw new Error('journal down'); });
+    const response = await respond(fixture({ audit }));
+    expect(response.status).toBe(503);
+    expect(response.body).toMatchObject({ code: 'audit-unavailable' });
+    expect(response.body.text).toBeUndefined();
+    writable = true;
+    const ok = await respond(fixture({ audit }));
+    expect(ok.status).toBe(200);
+    expect(ok.body.text).toBe('Review elasticity.');
+  });
+
   it('refuses to generate, and to say what the policy allows, while kill.ai_generation is engaged', async () => {
     const generate = vi.fn();
     const audit = vi.fn();
