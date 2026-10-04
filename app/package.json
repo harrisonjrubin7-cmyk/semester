@@ -28,6 +28,7 @@
     "sweep:contrast": "node scripts/contrast-sweep.mjs",
     "sweep:targets": "node scripts/targets-sweep.mjs",
     "smoke:gateway": "node scripts/gateway-smoke.mjs",
+    "migrate": "node scripts/institution-migration.ts",
     "transcripts": "node scripts/transcripts.mjs",
     "captions": "node scripts/captions.ts",
     "audio": "node scripts/audio.ts",
