@@ -17,6 +17,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
+| `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
@@ -56,6 +57,10 @@ At the root there are also Markdown reports and registers (for example `CLAUDE.m
 | Path | What it holds |
 | --- | --- |
 | `app/src/screens/` | One file per screen. Registered in `app/src/screens.tsx`; navigation in `app/src/lib/nav.ts`. |
+| `app/src/architecture/` | The architecture tests: the import graph, the rules over it (`rules.ts`), the recorded legacy exceptions (`legacy.json`) and the tests that run them on the real tree and on fixtures they must refuse. See `docs/architecture/modularization/06-architecture-tests.md`. |
+| `app/src/kernel/` | What every domain may depend on and nothing more: the clock, errors, id source and the in-process event sink. Strict import rules apply; there is no allowlist. |
+| `app/src/domains/` | The new domain modules, each with a public `index.ts` and `domain/`, `application/` and `adapters/` inside: `calendar`, `identity`, `policy`, `tasks` and `today`. Only a domain's `index.ts` may be imported from outside it. |
+| `app/src/composition/` | The shell that joins the domains to the legacy app: `domains.ts` wires them to a `LegacyHost`, `react.ts` fills that host from the legacy store, and `shadow.ts` and `TodayShadow.tsx` run the new Today read model beside the old one. |
 | `app/src/components/` | React components shared by screens. The largest directory. |
 | `app/src/lib/` | Logic, stores, registers and their tests. Subdirectories include `governance/`, `ops/`, `trust/`, `integration/`, `billing/`, `config/`, `docs/` and others. |
 | `app/src/state/` | The store: context provider, reducer, state shape, persistence, migrations of stored shape. |

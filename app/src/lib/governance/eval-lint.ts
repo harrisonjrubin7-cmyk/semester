@@ -29,13 +29,29 @@
  * pass.
  */
 
-import { detectPii, type PiiKind, type PiiOptions } from '../../community/pii';
 import type { EvalCase } from './model-quality';
 
-export type LintKind = PiiKind | 'ssn' | 'card';
+/**
+ * What the lint needs from the PII detector, and nothing else. `community/pii.ts` (`detectPii`) satisfies it. `lib` may
+ * not import `community` (the architecture test's ratchet), so the detector is handed in where the lint is composed
+ * (`makeEvalLint(detectPii)`) and this file names no area above it.
+ */
+export interface DetectorOptions {
+  /** The tenant's student-id shape, when it has one. */
+  studentId?: RegExp;
+}
+export interface DetectorFinding<K extends string = string> {
+  kind: K;
+  start: number;
+  end: number;
+  confidence: 'high' | 'medium';
+}
+export type Detector<K extends string = string> = (text: string, options?: DetectorOptions) => DetectorFinding<K>[];
 
-export interface LintFinding {
-  kind: LintKind;
+export type LintKind<K extends string = string> = K | 'ssn' | 'card';
+
+export interface LintFinding<K extends string = string> {
+  kind: LintKind<K>;
   text: string;
 }
 
@@ -57,23 +73,6 @@ export function luhn(digits: string): boolean {
   return digits.length >= 13 && sum % 10 === 0;
 }
 
-export function lintText(text: string, options: PiiOptions = {}): LintFinding[] {
-  const out: LintFinding[] = [];
-  for (const f of detectPii(text, options)) {
-    if (f.confidence !== 'high') continue;
-    const found = text.slice(f.start, f.end);
-    if (f.kind === 'email' && RESERVED_EMAIL_DOMAIN.test(found)) continue;
-    if (f.kind === 'phone' && RESERVED_PHONE.test(found)) continue;
-    out.push({ kind: f.kind, text: found });
-  }
-  for (const m of text.matchAll(SSN)) out.push({ kind: 'ssn', text: m[0] });
-  for (const m of text.matchAll(CARD)) {
-    const digits = m[0].replace(/[^\d]/g, '');
-    if (luhn(digits)) out.push({ kind: 'card', text: m[0] });
-  }
-  return out;
-}
-
 /** Everything a case carries: the prompt as built, the tools it offers, the good reply, and every reply a check is shown with. */
 export function caseText(c: EvalCase): string {
   const built = c.build();
@@ -81,4 +80,24 @@ export function caseText(c: EvalCase): string {
   return [built.system, ...built.messages.map((m) => m.content), JSON.stringify(built.tools ?? []), c.good, ...checks].join('\n');
 }
 
-export const lintCase = (c: EvalCase, options: PiiOptions = {}): LintFinding[] => lintText(caseText(c), options);
+/** The lint over a given detector: `lintText` for a string, `lintCase` for everything an evaluation case carries. */
+export function makeEvalLint<K extends string>(detect: Detector<K>) {
+  const lintText = (text: string, options: DetectorOptions = {}): LintFinding<K>[] => {
+    const out: LintFinding<K>[] = [];
+    for (const f of detect(text, options)) {
+      if (f.confidence !== 'high') continue;
+      const found = text.slice(f.start, f.end);
+      if (f.kind === 'email' && RESERVED_EMAIL_DOMAIN.test(found)) continue;
+      if (f.kind === 'phone' && RESERVED_PHONE.test(found)) continue;
+      out.push({ kind: f.kind, text: found });
+    }
+    for (const m of text.matchAll(SSN)) out.push({ kind: 'ssn', text: m[0] });
+    for (const m of text.matchAll(CARD)) {
+      const digits = m[0].replace(/[^\d]/g, '');
+      if (luhn(digits)) out.push({ kind: 'card', text: m[0] });
+    }
+    return out;
+  };
+  const lintCase = (c: EvalCase, options: DetectorOptions = {}): LintFinding<K>[] => lintText(caseText(c), options);
+  return { lintText, lintCase };
+}

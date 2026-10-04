@@ -94,9 +94,9 @@ Two facts the test proves:
 
 ## 5. Read the error envelope
 
-Every refusal has one shape:
+Every refusal has one shape. The type lives in the platform package, and the gateway re-exports it; the top-level `message` is the same sentence, kept for a client written before the envelope:
 
-<!-- from: app/server/institution/gateway.ts -->
+<!-- from: packages/platform/src/gateway/errors.ts -->
 ```ts
 export interface ErrorEnvelope {
   error: {
@@ -106,7 +106,6 @@ export interface ErrorEnvelope {
     retryable: boolean;
     user_action?: UserAction;
   };
-  /** The same sentence, where a client written before the envelope looks for it. */
   message: string;
 }
 ```
