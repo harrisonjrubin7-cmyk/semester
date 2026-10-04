@@ -11,3 +11,5 @@ No experiment launches until analytics consent/privacy, operational ownership, s
 | a clear pilot limitations page improves buyer qualification | qualified discovery | conversion quality, no claim inflation | proposed |
 
 Use [EXPERIMENTATION-PROTOCOL.md](EXPERIMENTATION-PROTOCOL.md); no dark patterns, deceptive urgency, prechecked marketing consent, or inaccessible variants.
+
+Experiment risk classes, design rules, stop conditions and hypotheses H6–H14 are in [GROWTH-OPERATING-PLAN](GROWTH-OPERATING-PLAN.md) section 7.
