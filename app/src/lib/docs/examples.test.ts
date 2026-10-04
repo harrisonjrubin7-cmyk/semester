@@ -777,6 +777,8 @@ describe('examples/event-consumer', () => {
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();
     expect(inserts, 'the producer\'s migration function and the check scripts insert into the outbox').toEqual([
       'supabase/migrations/20261004123000_productivity_commands.sql',
+      // Defines the same commit function again, with the app's task fields; the later definition is the one that applies.
+      'supabase/migrations/20261004190000_productivity_task_carries_the_apps_task.sql',
       'supabase/outbox.check.sql',
     ]);
     expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('**no\nproducer writes to the outbox yet**');

@@ -1350,6 +1350,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'packages/platform/src/isolation/layers.ts',
       'packages/platform/src/testing/memory.ts',
       'supabase/migrations/20261004123000_productivity_commands.sql',
+      'supabase/migrations/20261004190000_productivity_task_carries_the_apps_task.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
