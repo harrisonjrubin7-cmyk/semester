@@ -102,7 +102,7 @@ export const SOURCES: readonly Source[] = [
     lastReviewed: '2026-10-04',
     nextReview: '2027-01-15',
     supersedes: [],
-    decisions: ['DECISIONS §1', 'D-007'],
+    decisions: ['DECISIONS §1', 'D-007', 'D-1151'],
     alsoRead: [
       'docs/strategy/THREE-YEAR-STRATEGY.md',
       'docs/strategy/BOARD-MEMO.md',

@@ -39,7 +39,7 @@ The nineteen categories the closing brief names, in its order.
 
 | Category | Authoritative version | Status | Owner | Version | Last reviewed | Next review | Supersedes | Related decisions |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Company strategy | [`docs/strategy/README.md`](docs/strategy/README.md) | draft | `founder` | 1 | 2026-10-04 | 2027-01-15 | — | `DECISIONS §1`, `D-007` |
+| Company strategy | [`docs/strategy/README.md`](docs/strategy/README.md) | draft | `founder` | 1 | 2026-10-04 | 2027-01-15 | — | `DECISIONS §1`, `D-007`, `D-1151` |
 | Product vision | [`README.md`](README.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-003`, `D-006` |
 | Master readiness register | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](docs/MASTER-LAUNCH-READINESS-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Role launch register | [`docs/ROLE-LAUNCH-REGISTER.md`](docs/ROLE-LAUNCH-REGISTER.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | — |
