@@ -126,6 +126,7 @@ tables to each other.
 | `actions/configure-pages` | GitHub | Pages deploy. |
 | `actions/upload-pages-artifact` | GitHub | Pages deploy. |
 | `actions/deploy-pages` | GitHub | Pages deploy. |
+| `github/codeql-action` | GitHub | Static analysis (SAST) of the source; writes results to the Security tab only. See codeql.yml. |
 | `gitleaks/gitleaks-action` | Gitleaks | Secret scanning; reads the tree, writes nothing. See ci.yml. |
 | `stackhawk/hawkscan-action` | StackHawk | Runs DAST against the ephemeral local preview; receives the StackHawk API key and a read-only repository token. |
 | `actions/download-artifact` | GitHub | infra-apply.yml hands the reviewed plan from the plan job to the apply job. |
