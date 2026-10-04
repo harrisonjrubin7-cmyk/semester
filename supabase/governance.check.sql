@@ -524,6 +524,53 @@ begin
     pg_temp.seen(admin_a, 'select 1 from public.governance_incident_notices'), 4);
   perform pg_temp.counted('another school reads only the one sent to every school (Codex, #828)',
     pg_temp.seen(admin_b, 'select 1 from public.governance_incident_notices'), 1);
+
+  -- launch_delay and change_notice (20261004120000)
+  perform pg_temp.expect_allowed('a launch delay with its check and an unchanged-data answer', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'launch_delay', %L, '{"gate_pending": "Accessibility review", "data_changed": "No"}', array['Founder'], now() + interval '6 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a launch delay without the check not yet complete', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'launch_delay', %L, '{"data_changed": "No"}', array['Founder'], now() + interval '6 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a launch delay whose data answer is not on the list', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'launch_delay', %L, '{"gate_pending": "Accessibility review", "data_changed": "Maybe"}', array['Founder'], now() + interval '6 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a launch delay approved by someone else', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'launch_delay', %L, '{"gate_pending": "Accessibility review", "data_changed": "No"}', array['Incident commander'], now() + interval '6 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a launch delay whose next update is past a week', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'launch_delay', %L, '{"gate_pending": "Accessibility review", "data_changed": "No"}', array['Founder'], now() + interval '8 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_allowed('a change notice with every approver', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'change_notice', %L, '{"effective_date": "1 November", "work_affected": "No"}', array['Product owner', 'Privacy owner', 'Legal'], now() + interval '20 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a change notice without Legal', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'change_notice', %L, '{"effective_date": "1 November", "work_affected": "No"}', array['Product owner', 'Privacy owner'], now() + interval '20 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a change notice without when it takes effect', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'change_notice', %L, '{"work_affected": "No"}', array['Product owner', 'Privacy owner', 'Legal'], now() + interval '20 days')$q$,
+           pg_temp.sections()));
+  perform pg_temp.expect_refused('a change notice whose next update is past 30 days', responder,
+    format($q$insert into public.governance_incident_notices
+                (tenant_id, incident_ref, audience, sections, details, approved_by, next_update_at)
+              values ('gv-a', 'INC-4', 'change_notice', %L, '{"effective_date": "1 November", "work_affected": "No"}', array['Product owner', 'Privacy owner', 'Legal'], now() + interval '31 days')$q$,
+           pg_temp.sections()));
   perform pg_temp.counted('a student reads none',
     pg_temp.seen(student_a, 'select 1 from public.governance_incident_notices'), 0);
 

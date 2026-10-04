@@ -40,6 +40,41 @@ export const ALLOWED_MODELS: readonly string[] = [
   'claude-haiku-4-5',
 ];
 
+/**
+ * Which of those models each plan's shared-key calls may name.
+ *
+ * Every model on the list costs a different amount, and the monthly cap
+ * counts calls, so before this table one account could spend all sixty on the
+ * dearest model: at the cap on Opus 5 about as much as Plus's monthly price,
+ * on Fable 5.1 several times it (`docs/commercial/PRICING-UNIT-ECONOMICS-
+ * ARCHITECTURE.md` §1, F1). A plan now names the models it may use, widening
+ * as it goes: Free the two cheaper ones, Plus adds Opus 5, Pro adds Fable 5.1.
+ *
+ * **These lists are a product decision, written down once, here.** `free` is
+ * also what anything this table does not recognise gets — a plan that cannot
+ * be read must never widen what the key will pay for. Another plan, or
+ * another split, is one edit in this object and the test that holds it.
+ */
+export const PLAN_MODELS = {
+  free: ['claude-haiku-4-5', 'claude-sonnet-5'],
+  plus: ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5'],
+  pro: ['claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5', 'claude-fable-5-1'],
+} as const satisfies Record<string, readonly string[]>;
+
+export type SharedPlan = keyof typeof PLAN_MODELS;
+
+/** The models a plan's shared-key calls may name. Anything unrecognised is Free. */
+export function modelsForPlan(plan: string | null | undefined): readonly string[] {
+  return Object.hasOwn(PLAN_MODELS, plan ?? '') ? PLAN_MODELS[plan as SharedPlan] : PLAN_MODELS.free;
+}
+
+/**
+ * The `error.code` a refusal for a model outside the caller's plan carries,
+ * with `error.allowed_models`, so the app can switch to one the plan covers
+ * instead of showing a person a sentence about a model they never chose.
+ */
+export const MODEL_NOT_ON_PLAN = 'model_not_on_plan';
+
 /** Above the app's largest ask (12 000) so nothing the app does is cut. */
 export const MAX_OUTPUT_TOKENS = 16_000;
 
@@ -57,7 +92,7 @@ const EFFORTS = new Set(['low', 'medium', 'high']);
 
 export type Clamped =
   | { ok: true; body: string; dropped: string[] }
-  | { ok: false; status: number; message: string };
+  | { ok: false; status: number; message: string; code?: string; allowed?: readonly string[] };
 
 const refuse = (status: number, message: string): Clamped => ({ ok: false, status, message });
 
@@ -100,10 +135,15 @@ export function clampRequest(raw: string, bytes: number, options: ClampOptions =
 
   const { model, messages } = parsed;
   if (typeof model !== 'string' || !models.includes(model)) {
-    return refuse(
-      400,
-      `The shared key answers with ${models.join(', ')}. Choose one of those under Ask Claude → Settings, or add your own key.`,
-    );
+    return {
+      ok: false,
+      status: 400,
+      message:
+        `The shared key answers with ${models.join(', ')} on your plan. Choose one of those, ` +
+        'or add your own key under Ask Claude → Settings, which can use any model.',
+      code: MODEL_NOT_ON_PLAN,
+      allowed: models,
+    };
   }
   if (!Array.isArray(messages) || messages.length === 0) {
     return refuse(400, 'The request has no messages.');

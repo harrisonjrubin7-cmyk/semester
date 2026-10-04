@@ -1,5 +1,7 @@
 # Go-to-market positioning
 
+> **Status of the offer described here:** a target, not a current one. Paid institutional pilots are **NO-GO / RED** ([`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)); "paid pilot" must not appear in public copy until that changes. Public wording today is *design-partner discovery and scoping, non-activation*.
+
 ## Positioning
 
 **One sentence:** Semester helps a defined student cohort become ready for registration or term start through one organized planning experience, while giving institutions privacy-conscious aggregate evidence and a controlled path to expand.
