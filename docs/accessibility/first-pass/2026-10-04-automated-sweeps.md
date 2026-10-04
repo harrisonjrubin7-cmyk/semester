@@ -81,6 +81,29 @@ What this run does **not** measure, and so does not claim:
 So the honest summary is: **no contrast failure was found in the shared frame in resting or focus states, one hover
 failure on one dark ground, and nothing is claimed about the 58 unopened destinations.**
 
+## 4b. Probe update, same day
+
+After the first run, `keyboard-pass.mjs` was corrected and extended, and re-run on all 13 screens at both widths (26
+cases) on the same dev server, against `main` at `006d24b`:
+
+- **Names** are now the browser's computed accessible name (DevTools protocol), not `aria-label || textContent`.
+  Unnamed focusable controls: **0**. (A11Y-0005.)
+- **Overlap** is re-measured 250 ms after focus lands. Two stops covered at landing clear by then and are
+  reported as `transient` (Today "Focus on this", Timers "Start"); two Assignments textareas remain covered at
+  320px (A11Y-0004).
+- **Label in name (2.5.3)**, first 40 tab stops: **0 mismatches**. The first version of this check reported 34, almost
+  all because `textContent` joins adjacent inline spans without spaces where the computed name does not; comparing
+  with spaces and punctuation removed on both sides removed them. A control plant shows the check does fire.
+- **Text spacing (1.4.12)**: **7 elements newly clip** (A11Y-0009): the page heading on Assignments, Degree and
+  Meals at 320px (confirmed by screenshot on Assignments: it renders "WORK O…"), a Settings span at 320px, and
+  three single-line labels at 1280px.
+- **Control**: `CONTROL=1` plants seven faults (unnamed button, no focus ring, image with no alt, second `h1`,
+  low-contrast text, label not in name, text clipped by spacing) and exits 3 unless all seven are reported. It
+  passes. With the spacing override neutered in a throwaway copy it exits 3 naming the missed fault; with the
+  label comparison neutered it does the same. The old low-contrast plant was never detected (axe could not
+  determine its background and returned `incomplete`); it now sits fixed on the body with a solid background and is
+  reported as a `color-contrast` violation.
+
 ## 4. Limits of this run
 
 - One browser (Chromium), headless; no Firefox or Safari.
