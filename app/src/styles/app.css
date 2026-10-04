@@ -7624,6 +7624,16 @@ section[data-drop] > .grip + * {
   color: var(--app-accent-deep);
 }
 
+/* Accent-deep is audited to 4.5:1 on the page and the panel, not on the lighter
+   surface a hovered card moves to: on Graphite it is 4.20 to 4.48 and on
+   Industry Dark 3.59 to 3.96. The card still shows its accent border; the
+   reason takes the ground's full-strength ink, which contrast.test.ts holds to
+   4.5:1 on that surface. */
+.journey-card:hover .journey-reason,
+.journey-card:focus-visible .journey-reason {
+  color: var(--app-fg);
+}
+
 .journey-arrow {
   color: var(--app-accent);
   font-size: var(--type-lg);

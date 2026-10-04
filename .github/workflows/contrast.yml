@@ -88,7 +88,15 @@ jobs:
       # The script exits non-zero on a finding *or* on a pass whose setup it
       # could not confirm, so this step failing means one of those two and the
       # log says which.
+      #
+      # `shell: bash` is what lets that be true. A step with no `shell:` runs
+      # as `bash -e {0}`, which has no `pipefail`, so the pipe into `tee` below
+      # reported `tee`'s status and the step was green on every night's run
+      # while the log said `FINDINGS: 159` (run of 3 October 2026). With the
+      # shell named GitHub runs `bash -eo pipefail`, and the script's exit code
+      # is the step's. `workflowshell.test.ts` holds every workflow to this.
       - name: Sweep
+        shell: bash
         working-directory: app
         env:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
@@ -107,6 +115,7 @@ jobs:
       # section, which is why no unit test was ever going to find it.
       - name: Walls
         if: always()
+        shell: bash
         working-directory: app
         env:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
