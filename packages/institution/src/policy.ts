@@ -82,6 +82,26 @@ export const POLICY_ACTIONS = {
     auditEvent: 'grade.passback_requested',
     classificationCeiling: 'education_record',
   },
+  'task.read': {
+    description: 'A person reads a task list: their own, or another person\'s under a live share grant.',
+    auditEvent: 'productivity.shared_read',
+    classificationCeiling: 'student_private',
+  },
+  'task.write': {
+    description: 'A task is created, changed, completed, reopened or deleted by its owner.',
+    auditEvent: 'task.updated',
+    classificationCeiling: 'student_private',
+  },
+  'calendar.event.read': {
+    description: 'A person reads calendar events: their own, or another person\'s under a live share grant.',
+    auditEvent: 'productivity.shared_read',
+    classificationCeiling: 'student_private',
+  },
+  'calendar.event.write': {
+    description: 'A calendar event is created, changed or deleted by its owner, or imported by a bound feed job.',
+    auditEvent: 'calendar_event.updated',
+    classificationCeiling: 'student_private',
+  },
 } as const satisfies Record<string, { description: string; auditEvent: string; classificationCeiling: ResourceClassification }>;
 
 export type PolicyAction = keyof typeof POLICY_ACTIONS;
@@ -210,6 +230,11 @@ export function liveConsentGrant(grant: ConsentGrant, now: number): boolean {
  * is a pure function of what it was shown and a test can show it refusing.
  */
 const RULES: Record<PolicyAction, Rule> = {
+  'task.read': (e) => productivityRead('task')(e),
+  'task.write': (e) => productivityWrite('task')(e),
+  'calendar.event.read': (e) => productivityRead('calendar')(e),
+  'calendar.event.write': (e) => productivityWrite('calendar')(e),
+
   /*
    * A support agent does not get generic student-record access. They get one
    * student's support context when there is a live student-created grant to
@@ -299,6 +324,86 @@ const RULES: Record<PolicyAction, Rule> = {
     if (actor.type === 'user' && actor.mfaLevel !== 'fresh') obligations.unshift({ type: 'require_fresh_mfa' });
     return allow(...obligations);
   },
+};
+
+
+/**
+ * Tasks and calendar events are the student's own. The two read rules and the
+ * two write rules differ only in the vocabulary they speak (which verbs exist,
+ * which scope a share grant must carry, which fields a shared view may show),
+ * so they are built here from one description rather than copied four times.
+ */
+interface ProductivityKind {
+  verbs: Record<string, string>;
+  shareScope: string;
+  sharedFields: string[];
+  importable: boolean;
+}
+
+const PRODUCTIVITY: Record<'task' | 'calendar', ProductivityKind> = {
+  task: {
+    verbs: { create: 'task.created', update: 'task.updated', complete: 'task.completed', reopen: 'task.updated', delete: 'task.deleted' },
+    shareScope: 'tasks:read',
+    // Notes are the part of a task a person writes for themselves.
+    sharedFields: ['id', 'title', 'status', 'dueAt', 'priority', 'courseId', 'version'],
+    importable: false,
+  },
+  calendar: {
+    verbs: { create: 'calendar_event.created', update: 'calendar_event.updated', delete: 'calendar_event.deleted' },
+    shareScope: 'calendar:read',
+    sharedFields: ['id', 'title', 'startsAt', 'endsAt', 'allDay', 'timezone', 'kind', 'version'],
+    importable: true,
+  },
+};
+
+const productivityRead = (kind: 'task' | 'calendar'): Rule => ({ request, now, has }) => {
+  const { actor, resource, context } = request;
+  const k = PRODUCTIVITY[kind];
+  if (actor.type !== 'user') return deny('actor_not_person', 'This is read by a signed-in person, not by a service.');
+  if (!has('productivity:use')) return deny('capability_missing', 'Your account does not include planning tools at this institution.');
+  if (!resource.ownerId) return deny('owner_missing', 'Whose data this is has to be known before it is read.');
+  if (resource.ownerId === actor.id) return allow();
+  // Somebody else's: a grant to *this* person, for *this* scope, still live, and a stated purpose.
+  if (!context.purpose) return deny('purpose_missing', 'Say what the read is for; it is recorded.');
+  const grant = context.consentGrants.find((g) =>
+    g.kind === 'share' && g.grantedTo === actor.id && g.grantedBy === resource.ownerId && g.scopes.includes(k.shareScope));
+  if (!grant) return deny('grant_missing', 'This person has not shared this with you.');
+  if (!liveConsentGrant(grant, now)) return deny('grant_not_live', 'The share has ended. Ask them to share it again.');
+  return allow(
+    { type: 'audit', eventType: POLICY_ACTIONS['task.read'].auditEvent },
+    { type: 'limit_fields', allowlist: k.sharedFields },
+    { type: 'expire_at', at: grant.expiresAt },
+  );
+};
+
+const productivityWrite = (kind: 'task' | 'calendar'): Rule => ({ request, has }) => {
+  const { actor, tenant, resource, context } = request;
+  const k = PRODUCTIVITY[kind];
+  const a = resource.attributes ?? {};
+  const verb = typeof a.command === 'string' ? a.command : '';
+  const eventType = Object.prototype.hasOwnProperty.call(k.verbs, verb) ? k.verbs[verb] : undefined;
+  if (!eventType) return deny('command_unknown', 'That change is not one this tool can make.');
+  if (!resource.ownerId) return deny('owner_missing', 'Whose data this is has to be known before it is changed.');
+  if (!context.idempotencyKey) return deny('idempotency_missing', 'A change needs a command id so a retry cannot apply it twice.');
+  // What the source says stays what the source says; the student's own additions stay theirs.
+  const sourced = resource.sourceKind === 'institution_verified' || resource.sourceKind === 'imported';
+
+  if (actor.type === 'integration') {
+    // A feed job bound to this tenant, importing — never reading, never touching a task.
+    if (!k.importable) return deny('actor_not_permitted', 'Only the person who owns this can change it.');
+    if (tenant.verifiedBy !== 'service_binding') return deny('service_unbound', 'This job is not bound to the tenant it is acting for.');
+    if (!has('calendar:import')) return deny('capability_missing', 'This job is not allowed to import calendars.');
+    if (!context.purpose) return deny('purpose_missing', 'An import says which feed it comes from.');
+    if (resource.sourceKind !== 'imported') return deny('source_mismatch', 'An import can only write imported entries.');
+    return allow({ type: 'audit', eventType });
+  }
+  if (actor.type !== 'user') return deny('actor_not_permitted', 'Only the person who owns this can change it.');
+  if (!has('productivity:use')) return deny('capability_missing', 'Your account does not include planning tools at this institution.');
+  if (resource.ownerId !== actor.id) return deny('not_owner', 'Only the person who owns this can change it. Sharing is read-only.');
+  if (sourced && a.touchesAuthoritative === true) {
+    return deny('source_authoritative', 'This comes from your institution or a linked calendar, so it is changed there. You can still add your own notes.');
+  }
+  return allow({ type: 'audit', eventType });
 };
 
 const isClassification = (value: unknown): value is ResourceClassification =>
