@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:ai",
+  "title": "Semester events: AI",
+  "description": "The 7 AI event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "ai.requested",
+      "properties": {
+        "eventType": {
+          "const": "ai.requested"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "ai.policy_blocked",
+      "properties": {
+        "eventType": {
+          "const": "ai.policy_blocked"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "ai.retrieval_completed",
+      "properties": {
+        "eventType": {
+          "const": "ai.retrieval_completed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "ai.response_completed",
+      "properties": {
+        "eventType": {
+          "const": "ai.response_completed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "ai.feedback_submitted",
+      "properties": {
+        "eventType": {
+          "const": "ai.feedback_submitted"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "ai.incident_detected",
+      "properties": {
+        "eventType": {
+          "const": "ai.incident_detected"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "ai.kill_switch_changed",
+      "properties": {
+        "eventType": {
+          "const": "ai.kill_switch_changed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:identity",
+  "title": "Semester events: Identity",
+  "description": "The 4 Identity event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "identity.user_registered",
+      "properties": {
+        "eventType": {
+          "const": "identity.user_registered"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "identity.session_authenticated",
+      "properties": {
+        "eventType": {
+          "const": "identity.session_authenticated"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "identity.role_granted",
+      "properties": {
+        "eventType": {
+          "const": "identity.role_granted"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "identity.role_revoked",
+      "properties": {
+        "eventType": {
+          "const": "identity.role_revoked"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    }
+  ]
+}
