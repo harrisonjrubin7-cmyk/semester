@@ -60,15 +60,16 @@ export interface ExperienceFlags {
    */
   studentAccounts: FeatureState;
   /**
-   * Today computed a second way, through `src/domains` (step 3 of
+   * Today computed through `src/domains` (steps 3 and 4 of
    * docs/architecture/modular-monolith.md, D-1149).
    *
    * `preview` and `sandbox` run the domain's Today beside the legacy one and
    * report any disagreement to the console; **nothing on screen changes**.
-   * `production` is reserved for step 4, when the screen reads the domain; until
-   * that ships it behaves as `preview`. Never inherited from an institutional
-   * preview: it is a developer's instrument, and a preview account has nothing
-   * to compare.
+   * `production` cuts over: the "Due today" list takes its membership and order
+   * from the domain (the shadow keeps running). A role the domain does not serve
+   * is drawn from the legacy selectors as before. Never inherited from an
+   * institutional preview: it is a developer's instrument, and a preview account
+   * has nothing to compare.
    */
   domainToday: FeatureState;
 }

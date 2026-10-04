@@ -71,6 +71,7 @@ import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { TodayShadow } from '../state/todayshadow';
+import { deadlinesToday, useTodayView } from '../state/todayview';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
@@ -867,7 +868,8 @@ function Feed_next() {
 function Feed_due() {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
-  const today = itemsDueToday(catalog, now);
+  // Step 4 (D-1149): at `domainToday=production` the domain decides which of these are due today and in what order.
+  const today = deadlinesToday(useTodayView(), itemsDueToday(catalog, now));
   const doneCount = today.filter((i) => state.done[i.id]).length;
   const left = today.length - doneCount;
   // Used only by the all-clear line, which names what is next after today.

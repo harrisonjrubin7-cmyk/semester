@@ -35,7 +35,7 @@ import type { Action } from './shape';
 const SETTLE_TIMEOUT_MS = 1000;
 
 /** The store's minute-quantised `now`, as the clock the domains are given. */
-function storeClock(now: () => Date): Clock {
+export function storeClock(now: () => Date): Clock {
   return {
     now: () => now().getTime(),
     local() {
@@ -45,11 +45,44 @@ function storeClock(now: () => Date): Clock {
   };
 }
 
+type Live = { store: ReturnType<typeof useStore>; now: Date };
+
+/**
+ * The host, built outside any component so nothing in it is created during a
+ * render: it is handed the two refs themselves and only ever reads `.current`
+ * when a service is called, from an event handler or a promise.
+ */
+function makeHost(live: { current: Live }, waiting: { current: (() => void)[] }): LegacyHost {
+  return {
+    person: () => ({
+      accountId: live.current.store.account?.id ?? null,
+      role: live.current.store.state.role,
+      schoolId: live.current.store.state.schoolId,
+    }),
+    readOnly: () => READ_ONLY,
+    tasks: {
+      read: () => live.current.store.state.tasks,
+      dispatch: (command) => live.current.store.dispatch(command as Action),
+      settled: () =>
+        new Promise<void>((resolve) => {
+          waiting.current.push(resolve);
+          setTimeout(resolve, SETTLE_TIMEOUT_MS);
+        }),
+    },
+    appointments: () => live.current.store.state.appointments,
+    deadlines: () => datedItems(live.current.store.catalog, live.current.now),
+  };
+}
+
+function makeDomains(live: { current: Live }, waiting: { current: (() => void)[] }): Domains {
+  return createDomains(makeHost(live, waiting), storeClock(() => live.current.now));
+}
+
 export function useDomains(): Domains {
   const store = useStore();
   const now = useNow();
 
-  const live = useRef({ store, now });
+  const live = useRef<Live>({ store, now });
   const waiting = useRef<(() => void)[]>([]);
 
   // After every commit: publish what is on screen, then release anyone waiting for it.
@@ -61,26 +94,5 @@ export function useDomains(): Domains {
   });
 
   // Built once: the host reads through `live`, so nothing here goes stale.
-  return useMemo(() => {
-    const host: LegacyHost = {
-      person: () => ({
-        accountId: live.current.store.account?.id ?? null,
-        role: live.current.store.state.role,
-        schoolId: live.current.store.state.schoolId,
-      }),
-      readOnly: () => READ_ONLY,
-      tasks: {
-        read: () => live.current.store.state.tasks,
-        dispatch: (command) => live.current.store.dispatch(command as Action),
-        settled: () =>
-          new Promise<void>((resolve) => {
-            waiting.current.push(resolve);
-            setTimeout(resolve, SETTLE_TIMEOUT_MS);
-          }),
-      },
-      appointments: () => live.current.store.state.appointments,
-      deadlines: () => datedItems(live.current.store.catalog, live.current.now),
-    };
-    return createDomains(host, storeClock(() => live.current.now));
-  }, []);
+  return useMemo(() => makeDomains(live, waiting), []);
 }

@@ -1,4 +1,4 @@
-import type { Appointment, DatedItem } from '../lib/types';
+import type { Appointment, DatedItem, PersonalTask } from '../lib/types';
 import { entriesFromLegacy } from './calendar';
 import { principalFromLegacy, type LegacyPerson } from './identity';
 import { systemClock, type Clock, type Result } from './kernel';
@@ -38,6 +38,37 @@ export interface LegacyHost {
   deadlines(): readonly DatedItem[];
 }
 
+/** Everything Today reads, as plain values from one render of the legacy store. */
+export interface LegacySnapshot {
+  person: LegacyPerson;
+  readOnly: boolean;
+  tasks: readonly PersonalTask[];
+  appointments: readonly Appointment[];
+  deadlines: readonly DatedItem[];
+}
+
+/**
+ * Today from a snapshot, with nothing live in between.
+ *
+ * `createDomains` reads the store through functions so a service built once
+ * stays current. A *render* wants the opposite: the state of this render, so
+ * what it draws and what it derived cannot differ. Both go through here.
+ */
+export function todayFromLegacy(snapshot: LegacySnapshot, clock: Clock, config?: TodayConfig): Result<TodayView> {
+  const can = bindPolicy(principalFromLegacy(snapshot.person), { readOnly: snapshot.readOnly });
+  return buildToday({
+    clock,
+    can,
+    entries: entriesFromLegacy({
+      deadlines: snapshot.deadlines,
+      tasks: snapshot.tasks,
+      appointments: snapshot.appointments,
+    }),
+    tasks: snapshot.tasks.map(taskFromLegacy),
+    config,
+  });
+}
+
 export interface Domains {
   tasks: TaskService;
   /** Today, derived from the host's live state at the moment of the call. */
@@ -51,12 +82,17 @@ export function createDomains(host: LegacyHost, clock: Clock = systemClock): Dom
   return {
     tasks: createTaskService({ repo: legacyTaskRepository(host.tasks), clock, can }),
     async today(config) {
-      const entries = entriesFromLegacy({
-        deadlines: host.deadlines(),
-        tasks: host.tasks.read(),
-        appointments: host.appointments(),
-      });
-      return buildToday({ clock, can, entries, tasks: host.tasks.read().map(taskFromLegacy), config });
+      return todayFromLegacy(
+        {
+          person: host.person(),
+          readOnly: host.readOnly(),
+          tasks: host.tasks.read(),
+          appointments: host.appointments(),
+          deadlines: host.deadlines(),
+        },
+        clock,
+        config,
+      );
     },
   };
 }

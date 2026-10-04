@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { loadSeed } from '../data/seed';
 import type { Domains } from '../domains/composition';
@@ -27,9 +27,12 @@ const seen = { domains: [] as Domains[], tasks: [] as { id: string; title: strin
 function Probe() {
   const domains = useDomains();
   const { state, dispatch } = useStore();
-  seen.domains.push(domains);
-  seen.tasks = state.tasks;
-  seen.dispatch = dispatch as (a: never) => void;
+  // Recorded after each commit rather than during render, so the render stays pure.
+  useEffect(() => {
+    seen.domains.push(domains);
+    seen.tasks = state.tasks;
+    seen.dispatch = dispatch as (a: never) => void;
+  });
   return <output data-tasks={state.tasks.length} />;
 }
 
