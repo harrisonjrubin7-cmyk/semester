@@ -61,26 +61,26 @@ export interface Item {
 export const ITEMS: readonly Item[] = [
   // ── Before an invitation-only beta carries real student data ──
   {
-    id: 'RM-01', before: 'invitation', owner: 'accessibility', effort: 'S',
+    id: 'TR-01', before: 'invitation', owner: 'accessibility', effort: 'S',
     title: 'Let the nightly contrast sweep fail',
     finding: 'contrast.yml piped the sweep through tee with no pipefail, so every nightly run was green while the log said FINDINGS: 159 (run of 3 October).',
     sources: ['.github/workflows/contrast.yml'],
     fix: 'Name shell: bash on both sweep steps, and hold every workflow to it.',
     moves: ['TC-A11-04'],
-    files: 'The first red nightly run, linked from the fix for RM-02.',
+    files: 'The first red nightly run, linked from the fix for TR-02.',
     done: { proof: 'app/src/lib/workflowshell.test.ts', on: '2026-10-04' },
   },
   {
-    id: 'RM-02', before: 'invitation', owner: 'accessibility', effort: 'S', needs: ['RM-01'],
-    title: 'Fix the Work empty-state text contrast',
-    finding: 'One line, "Going through nothing yet.", painted at 0.40 to 0.52 alpha, produces 156 of the 159 findings across every ground (3.30:1 against a 4.5:1 need); a hover state is the other three.',
-    sources: ['app/src/screens/Work.tsx', 'app/src/lib/contrast.test.ts'],
-    fix: 'Raise the faded rung that secondLine() reads, measured against every surface it can sit on, as the palette rules in CLAUDE.md require; then re-run the sweep green.',
+    id: 'TR-02', before: 'invitation', owner: 'accessibility', effort: 'S', person: true, needs: ['TR-01'],
+    title: 'Fix the last painted-contrast finding, the journey card hover',
+    finding: 'The Work empty-state line that made 156 of the 159 findings on 3 October used faintLine(), the 3:1 rung for large type, on 11px text; commit 545010c (3 October) moved it to secondLine() and a fresh sweep of Work on all 13 grounds reports none. One finding remains and reproduces: .journey-reason on a hovered journey card on Industry Dark paints at 3.96:1 against 4.5 because accent-deep is audited against the page and panel, not against the lighter hover surface (--app-raise). The 26 button-hierarchy walls from 3 October are a second nightly failure, not re-measured here.',
+    sources: ['app/src/styles/app.css', 'app/src/components/JourneyCards.tsx', 'app/src/lib/contrast.test.ts', 'app/src/screens/Work.tsx'],
+    fix: 'Decide the hover treatment (a different hover surface or the reason text in a stronger rung on hover), extend contrast.test.ts to measure accent-deep against --app-raise on every ground and show it red first, then re-run the sweep green; decide the walls with the design lead.',
     moves: ['TC-A11-03', 'TC-A11-04'],
     files: 'The first green nightly run.',
   },
   {
-    id: 'RM-03', before: 'invitation', owner: 'success', effort: 'S',
+    id: 'TR-03', before: 'invitation', owner: 'success', effort: 'S',
     title: 'Bring public accessibility text back inside the evidence',
     finding: 'The company site says axe-core was run on every page and form (no such run is in the tree), calls the nightly sweep a check of painted pixels while it was green with failures, and lists captions and form errors as known issues after both were fixed.',
     sources: ['PUBLIC-CLAIMS-APPROVAL-REGISTER.md', 'company-site/index.html', 'docs/accessibility/AT-PASS-PROTOCOL.md'],
@@ -89,7 +89,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The claims-register diff.',
   },
   {
-    id: 'RM-04', before: 'invitation', owner: 'trust', effort: 'M',
+    id: 'TR-04', before: 'invitation', owner: 'trust', effort: 'M',
     title: 'Reconcile the registers that contradict each other',
     finding: 'The database suites are counted as 36, 78 and 106 in three documents; RET-001 says no legal hold can be placed while legal_holds and four checks exist; MFA is "absent" in two registers and implemented for the console; SOC2-READINESS says no risk register and no tabletop; the threat model says thirteen functions where sixteen exist.',
     sources: ['docs/SECURITY-GAP-ANALYSIS.md', 'docs/SECURITY-THREAT-MODEL.md', 'docs/trust/EVIDENCE-REGISTER.md', 'docs/trust/SOC2-READINESS.md', 'app/src/lib/masterregister.ts'],
@@ -98,7 +98,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The corrected documents.',
   },
   {
-    id: 'RM-05', before: 'invitation', owner: 'security', effort: 'S',
+    id: 'TR-05', before: 'invitation', owner: 'security', effort: 'S',
     title: 'Make the dependency audit block',
     finding: 'The audit step is continue-on-error although the tree reports no vulnerabilities, "could be made blocking by deleting one line".',
     sources: ['.github/workflows/ci.yml'],
@@ -107,7 +107,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The CI run that fails on a planted advisory, then passes.',
   },
   {
-    id: 'RM-06', before: 'invitation', owner: 'founder', effort: 'S', person: true,
+    id: 'TR-06', before: 'invitation', owner: 'founder', effort: 'S', person: true,
     title: 'Decide the severity scale',
     finding: 'Four scales coexist and the trust documents promise no response time while docs/vanderbilt/incident-routing.md promises fifteen minutes.',
     sources: ['app/src/lib/incident-recovery.ts', 'docs/INCIDENT-RECOVERY-PLAYBOOK.md', 'docs/trust/APM-RUNBOOK.md', 'docs/vanderbilt/incident-routing.md', 'SECURITY.md'],
@@ -116,7 +116,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The decision record D-<pull request number>.',
   },
   {
-    id: 'RM-07', before: 'invitation', owner: 'operations', effort: 'S', person: true,
+    id: 'TR-07', before: 'invitation', owner: 'operations', effort: 'S', person: true,
     title: 'Send failures somewhere a second person sees',
     finding: 'The only alert is AI spend; a failed workflow notifies the repository owner by default and nothing else.',
     sources: ['MONITORING.md', 'docs/vanderbilt/incident-routing.md'],
@@ -125,7 +125,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The test alert and the name of the person it reached.',
   },
   {
-    id: 'RM-08', before: 'invitation', owner: 'privacy', effort: 'M',
+    id: 'TR-08', before: 'invitation', owner: 'privacy', effort: 'M',
     title: 'Run erasure and export through the real function',
     finding: 'The erasure drill ran inside a rolled-back block; the delete-account function, storage objects, a held account and an account with community content were not exercised.',
     sources: ['docs/drills/erasure-drill-2026-09-30.md', 'supabase/functions/delete-account/index.ts'],
@@ -134,7 +134,7 @@ export const ITEMS: readonly Item[] = [
     files: 'docs/evidence/privacy/ erasure-through-function record.',
   },
   {
-    id: 'RM-09', before: 'invitation', owner: 'security', effort: 'S',
+    id: 'TR-09', before: 'invitation', owner: 'security', effort: 'S',
     title: 'Inventory and rotate the keys the table omits',
     finding: 'SEMESTER_JOURNAL_KEY and SEMESTER_AUTH_SERVICE_KEY are not in the rotation table, the rotation log is empty, and the journal key has no identifier.',
     sources: ['SECRETS.md', 'app/server/institution/journal-crypto.ts', 'docs/trust/ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md'],
@@ -143,7 +143,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The rotation log entry.',
   },
   {
-    id: 'RM-10', before: 'invitation', owner: 'operations', effort: 'M', person: true,
+    id: 'TR-10', before: 'invitation', owner: 'operations', effort: 'M', person: true,
     title: 'Restore from the provider once, and measure it',
     finding: 'No provider backup or point-in-time restore has ever been done, no recovery time or point is measured, and the plan-tier backup window is assumed rather than read.',
     sources: ['RESTORE.md', 'docs/engineering-operations/DISASTER-RECOVERY-TEST-PLAN.md', 'docs/evidence/restore/2026-09-30-logical-rehearsal.md'],
@@ -152,18 +152,18 @@ export const ITEMS: readonly Item[] = [
     files: 'docs/evidence/operations/ provider-restore-drill.',
   },
   {
-    id: 'RM-11', before: 'invitation', owner: 'trust', effort: 'S', person: true,
+    id: 'TR-11', before: 'invitation', owner: 'trust', effort: 'S', person: true,
     title: 'Keep Community and image posts off until their prerequisites exist',
     finding: 'The escalation sender and the media scanner do not exist, no abuse-material route exists, and Community is not age-gated in SQL.',
     sources: ['docs/COMMUNITY-MEDIA-SAFETY.md', 'docs/CAMPUS-ESCALATION-POLICY.md', 'docs/COMMUNITIES-REGISTER.md'],
-    fix: 'State in the register that Community is held off until RM-34, RM-35 and RM-36 are done, and add a release-profile gate that refuses it.',
+    fix: 'State in the register that Community is held off until TR-34, TR-35 and TR-36 are done, and add a release-profile gate that refuses it.',
     moves: ['TC-TSF-01', 'TC-TSF-03', 'TC-TSF-04', 'TC-TSF-05'],
     files: 'The register line.',
   },
 
   // ── Before an institutional pilot ──
   {
-    id: 'RM-12', before: 'pilot', owner: 'founder', effort: 'M', person: true,
+    id: 'TR-12', before: 'pilot', owner: 'founder', effort: 'M', person: true,
     title: 'Staff the security seat and name a backup for every role',
     finding: 'Security, trust, data and finance seats are vacant; every backup is unassigned; the second reviewer of the AI switch does not exist.',
     sources: ['app/src/lib/launchreadiness.ts', 'docs/engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md', 'docs/trust/AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md'],
@@ -172,7 +172,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The accepted seats, as role labels.',
   },
   {
-    id: 'RM-13', before: 'pilot', owner: 'security', effort: 'L', needs: ['RM-12'],
+    id: 'TR-13', before: 'pilot', owner: 'security', effort: 'L', needs: ['TR-12'],
     title: 'Multi-factor and passkeys for students and platform staff',
     finding: 'Only the console requires fresh aal2; has_capability checks no assurance level; students cannot enrol a factor.',
     sources: ['app/src/components/MfaStep.tsx', 'app/src/lib/console/client.ts', 'docs/trust/PASSWORD-SESSION-AND-MFA-STANDARD.md'],
@@ -181,7 +181,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The new database check and a recorded configuration.',
   },
   {
-    id: 'RM-14', before: 'pilot', owner: 'security', effort: 'M', needs: ['RM-12'],
+    id: 'TR-14', before: 'pilot', owner: 'security', effort: 'M', needs: ['TR-12'],
     title: 'Make break-glass change what it can reach',
     finding: 'private.break_glass_active is consumed by nothing, yet the operations console map marks break-glass done.',
     sources: ['supabase/console-control-plane.check.sql', 'docs/OPERATIONS-CONSOLE-MAP.md'],
@@ -190,7 +190,7 @@ export const ITEMS: readonly Item[] = [
     files: 'Exercise TT-08.',
   },
   {
-    id: 'RM-15', before: 'pilot', owner: 'security', effort: 'M',
+    id: 'TR-15', before: 'pilot', owner: 'security', effort: 'M',
     title: 'Static analysis, Deno dependency updates and function behaviour tests',
     finding: 'No CodeQL or Semgrep runs, Dependabot does not cover Deno imports, video, pipeline or packages, and the Edge Function registry proves a guard is present rather than that it works.',
     sources: ['.github/dependabot.yml', 'docs/trust/SECURITY-TESTING-PLAN.md'],
@@ -199,7 +199,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The first scan result.',
   },
   {
-    id: 'RM-16', before: 'pilot', owner: 'security', effort: 'L', person: true, needs: ['RM-12', 'RM-19'],
+    id: 'TR-16', before: 'pilot', owner: 'security', effort: 'L', person: true, needs: ['TR-12', 'TR-19'],
     title: 'Independent penetration test and authenticated scan',
     finding: 'Never performed; the dynamic scan covers a static preview only.',
     sources: ['docs/trust/PENETRATION-TEST-PLAN.md', 'stackhawk.yml'],
@@ -208,7 +208,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The summary report and the closure list.',
   },
   {
-    id: 'RM-17', before: 'pilot', owner: 'engineering', effort: 'M',
+    id: 'TR-17', before: 'pilot', owner: 'engineering', effort: 'M',
     title: 'Serve the security headers',
     finding: 'HSTS, frame-ancestors and the content policy header are specified for hosts that do not serve production; GitHub Pages sends none.',
     sources: ['app/vercel.json', 'app/public/_headers', 'app/src/lib/hostheaders.test.ts'],
@@ -217,7 +217,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The live header capture.',
   },
   {
-    id: 'RM-18', before: 'pilot', owner: 'engineering', effort: 'M',
+    id: 'TR-18', before: 'pilot', owner: 'engineering', effort: 'M',
     title: 'Close tenant scoping of classmates, rooms and groups',
     finding: 'G-03 is open, legacy tables are incomplete, FORCE ROW LEVEL SECURITY is declared nowhere, and the cross-layer isolation suite does not exist.',
     sources: ['docs/SECURITY-THREAT-MODEL.md', 'docs/security/ferpa-risk-and-permission-matrix.md', 'supabase/tenancy.check.sql'],
@@ -226,7 +226,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The suite run.',
   },
   {
-    id: 'RM-19', before: 'pilot', owner: 'engineering', effort: 'M',
+    id: 'TR-19', before: 'pilot', owner: 'engineering', effort: 'M',
     title: 'Deploy the gateway and configure its production probe',
     finding: 'The gateway is not deployed and the hourly institutional job is skipped for want of two URLs.',
     sources: ['.github/workflows/production-smoke.yml', 'app/api/institution/[...path].ts', 'docs/trust/APM-RUNBOOK.md'],
@@ -235,7 +235,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The first status-history day for the gateway.',
   },
   {
-    id: 'RM-20', before: 'pilot', owner: 'privacy', effort: 'L',
+    id: 'TR-20', before: 'pilot', owner: 'privacy', effort: 'L',
     title: 'Operator side of data-subject requests',
     finding: 'A request can be raised and nothing moves it: no identity verification step, no status transition, no overdue monitor.',
     sources: ['supabase/audit-and-subject-requests.check.sql', 'docs/DATA-RIGHTS-REQUEST-RUNBOOK.md', 'docs/DATA-RETENTION-EXPORT-DELETION.md'],
@@ -244,7 +244,7 @@ export const ITEMS: readonly Item[] = [
     files: 'Exercise TT-06.',
   },
   {
-    id: 'RM-21', before: 'pilot', owner: 'privacy', effort: 'M', person: true,
+    id: 'TR-21', before: 'pilot', owner: 'privacy', effort: 'M', person: true,
     title: 'Counsel decisions that block the privacy operations',
     finding: 'The request clock, retention periods, hold procedure, law-enforcement process and deletion-ledger decision are placeholders or drafts (requires qualified human counsel review).',
     sources: ['LEGAL-REVIEW-QUEUE.md', 'docs/legal-drafts/DATA-SUBJECT-REQUEST-PROCEDURE-DRAFT.md', 'docs/legal-drafts/LEGAL-HOLD-PROCEDURE-DRAFT.md', 'docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md'],
@@ -253,7 +253,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The closed queue rows.',
   },
   {
-    id: 'RM-22', before: 'pilot', owner: 'privacy', effort: 'M', person: true,
+    id: 'TR-22', before: 'pilot', owner: 'privacy', effort: 'M', person: true,
     title: 'Sign provider terms and approve subprocessors',
     finding: 'No provider terms are signed, regions and transfers are not verified, and deletion propagation has no evidence.',
     sources: ['docs/trust/PROVIDER-TERMS.md', 'docs/trust/DPA-CHECKLIST.md', 'docs/SUBPROCESSORS.md'],
@@ -262,7 +262,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The executed terms index and the provider deletion record.',
   },
   {
-    id: 'RM-23', before: 'pilot', owner: 'data', effort: 'M',
+    id: 'TR-23', before: 'pilot', owner: 'data', effort: 'M',
     title: 'Hold backup expiry and financial purges under a legal hold',
     finding: 'Nothing suspends provider backup expiry for a held scope and purge_financial_records() is not stated as hold-gated.',
     sources: ['supabase/legal-holds.check.sql', 'RETENTION.md'],
@@ -271,7 +271,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The check and the rehearsal.',
   },
   {
-    id: 'RM-24', before: 'pilot', owner: 'privacy', effort: 'M',
+    id: 'TR-24', before: 'pilot', owner: 'privacy', effort: 'M',
     title: 'Complete the owed privacy assessments',
     finding: 'Seven surfaces are assessed and six are owed; sharing records no purpose or basis.',
     sources: ['app/src/lib/governance/pia.ts', 'docs/trust/FERPA-CONSENT-WORKFLOW.md'],
@@ -280,7 +280,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The assessments.',
   },
   {
-    id: 'RM-25', before: 'pilot', owner: 'accessibility', effort: 'M', person: true,
+    id: 'TR-25', before: 'pilot', owner: 'accessibility', effort: 'M', person: true,
     title: 'Run the manual assistive-technology pass',
     finding: 'No dated manual result exists; nineteen criteria have no automated evidence.',
     sources: ['docs/accessibility/AT-PASS-PROTOCOL.md', 'docs/compliance/VPAT-ACR-SELF-ASSESSMENT.md'],
@@ -289,7 +289,7 @@ export const ITEMS: readonly Item[] = [
     files: 'docs/evidence/accessibility/ the filled protocol.',
   },
   {
-    id: 'RM-26', before: 'pilot', owner: 'accessibility', effort: 'M',
+    id: 'TR-26', before: 'pilot', owner: 'accessibility', effort: 'M',
     title: 'Widen automated accessibility coverage',
     finding: 'axe covers fifteen jsdom cases and cannot judge contrast or target size; search, directory, mail, ask, help, calls, the console and every signed-in or error state are outside it.',
     sources: ['app/src/a11y/axe.test.tsx', 'app/scripts/accessibility-smoke.mjs', 'app/scripts/targets-sweep.mjs'],
@@ -298,7 +298,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The expanded smoke output.',
   },
   {
-    id: 'RM-27', before: 'pilot', owner: 'operations', effort: 'L', needs: ['RM-07'],
+    id: 'TR-27', before: 'pilot', owner: 'operations', effort: 'L', needs: ['TR-07'],
     title: 'Measure the service-level objectives',
     finding: 'No objective has a measured value; nothing feeds the error-budget calculator.',
     sources: ['app/src/lib/governance/error-budgets.ts', 'docs/engineering-operations/SLO-SLI-DRAFT.md'],
@@ -307,7 +307,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The first measured month.',
   },
   {
-    id: 'RM-28', before: 'pilot', owner: 'operations', effort: 'M', needs: ['RM-07'],
+    id: 'TR-28', before: 'pilot', owner: 'operations', effort: 'M', needs: ['TR-07'],
     title: 'Report client errors and alert on them',
     finding: 'No client error reporting exists; web vitals, API latency, queue depth and denials are not collected.',
     sources: ['docs/trust/APM-RUNBOOK.md', 'docs/trust/LOGGING-MONITORING-AND-ALERTING-STANDARD.md'],
@@ -316,7 +316,7 @@ export const ITEMS: readonly Item[] = [
     files: 'A test alert reaching a named person.',
   },
   {
-    id: 'RM-29', before: 'pilot', owner: 'operations', effort: 'S',
+    id: 'TR-29', before: 'pilot', owner: 'operations', effort: 'S',
     title: 'Engage every switch and read-only mode in production',
     finding: 'Only the AI switch was ever engaged; read-only mode never was.',
     sources: ['docs/FEATURE-FLAG-REGISTRY.md', 'docs/engineering-operations/FEATURE-FLAG-AND-KILL-SWITCH-STANDARD.md'],
@@ -325,7 +325,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The drill records.',
   },
   {
-    id: 'RM-30', before: 'pilot', owner: 'operations', effort: 'M', needs: ['RM-12'],
+    id: 'TR-30', before: 'pilot', owner: 'operations', effort: 'M', needs: ['TR-12'],
     title: 'Hold the first four quarters of exercises',
     finding: 'One document walkthrough has been held; sixteen game days are planned and none held.',
     sources: ['docs/evidence/operations/2026-10-03-founder-readiness-tabletop.md', 'app/src/lib/governance/risk.ts'],
@@ -334,7 +334,7 @@ export const ITEMS: readonly Item[] = [
     files: 'One file per exercise.',
   },
   {
-    id: 'RM-31', before: 'pilot', owner: 'security', effort: 'M', needs: ['RM-12'],
+    id: 'TR-31', before: 'pilot', owner: 'security', effort: 'M', needs: ['TR-12'],
     title: 'Adopt the drafted threat models',
     finding: 'Uploads, family, marketplace, mobile, career, community and support had no threat model; the package drafts them.',
     sources: ['docs/integrated-trust/THREAT-MODELS.md', 'docs/SECURITY-THREAT-MODEL.md'],
@@ -343,7 +343,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The reviewed models.',
   },
   {
-    id: 'RM-32', before: 'pilot', owner: 'engineering', effort: 'M',
+    id: 'TR-32', before: 'pilot', owner: 'engineering', effort: 'M',
     title: 'Meter AI by cost and read tenant policy in the function',
     finding: 'The AI function counts calls, not cost, and does not read the tenant AI policy; prompts are not redacted for personal data.',
     sources: ['supabase/functions/claude/index.ts', 'docs/trust/AI-RISK-ASSESSMENT.md'],
@@ -352,7 +352,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The tests and a run.',
   },
   {
-    id: 'RM-33', before: 'pilot', owner: 'trust', effort: 'M',
+    id: 'TR-33', before: 'pilot', owner: 'trust', effort: 'M',
     title: 'Repeat the adversarial AI run as a gate',
     finding: 'One run of twenty-one cases on one model through the shared-key route; not part of any gate.',
     sources: ['docs/evidence/ai/injection-redteam-2026-09-29T22-58-56-465Z-claude-opus-5.json', 'docs/trust/MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md'],
@@ -361,7 +361,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The run, per change.',
   },
   {
-    id: 'RM-34', before: 'pilot', owner: 'trust', effort: 'M',
+    id: 'TR-34', before: 'pilot', owner: 'trust', effort: 'M',
     title: 'Log moderator reads and make case events immutable',
     finding: 'Reading the queue or a case is not logged; case events can be edited and are deleted with the case; cases have no assignee or clock.',
     sources: ['docs/COMMUNITIES-REGISTER.md', 'supabase/community.check.sql'],
@@ -370,7 +370,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The extended check.',
   },
   {
-    id: 'RM-35', before: 'pilot', owner: 'engineering', effort: 'S', person: true,
+    id: 'TR-35', before: 'pilot', owner: 'engineering', effort: 'S', person: true,
     title: 'Gate Community join and post on minor status',
     finding: 'The Community migration does not reference minor status; only discovery, matching and mentoring are gated.',
     sources: ['supabase/minimum-age.check.sql', 'supabase/community.check.sql'],
@@ -379,7 +379,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The check.',
   },
   {
-    id: 'RM-36', before: 'pilot', owner: 'trust', effort: 'L', person: true, needs: ['RM-12'],
+    id: 'TR-36', before: 'pilot', owner: 'trust', effort: 'L', person: true, needs: ['TR-12'],
     title: 'Build and counsel the community safety prerequisites',
     finding: 'No escalation sender, scanner, hash provider, abuse-material reporting, takedown clock or staffed coverage exists.',
     sources: ['docs/COMMUNITY-MEDIA-SAFETY.md', 'docs/CAMPUS-ESCALATION-POLICY.md', 'supabase/functions/_shared/escalation.ts'],
@@ -388,7 +388,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The community-safety tabletop and counsel record.',
   },
   {
-    id: 'RM-37', before: 'pilot', owner: 'success', effort: 'M',
+    id: 'TR-37', before: 'pilot', owner: 'success', effort: 'M',
     title: 'Name the support owner and hours, and set ticket retention',
     finding: 'Tickets are behind a flag that is off; no owner or hours; no closed-ticket retention.',
     sources: ['docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md', 'supabase/support-tickets.check.sql'],
@@ -397,7 +397,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The first week of queue figures.',
   },
   {
-    id: 'RM-38', before: 'pilot', owner: 'security', effort: 'S',
+    id: 'TR-38', before: 'pilot', owner: 'security', effort: 'S',
     title: 'Assert that impersonation does not exist',
     finding: 'The absence of staff impersonation is true and unguarded.',
     sources: ['docs/OPERATIONS-CONSOLE-MAP.md', 'app/src/lib/ops/boundaries.ts'],
@@ -406,7 +406,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The check.',
   },
   {
-    id: 'RM-39', before: 'pilot', owner: 'trust', effort: 'M',
+    id: 'TR-39', before: 'pilot', owner: 'trust', effort: 'M',
     title: 'Deliver incident messages and give a message a record',
     finding: 'The composer builds text; no subscriber list or delivery exists and posting means editing JSON and waiting for a deploy.',
     sources: ['app/src/lib/governance/incident-comms.ts', 'app/public/status-incidents.json'],
@@ -415,7 +415,7 @@ export const ITEMS: readonly Item[] = [
     files: 'Exercise TT-12 sends.',
   },
   {
-    id: 'RM-40', before: 'pilot', owner: 'accessibility', effort: 'S',
+    id: 'TR-40', before: 'pilot', owner: 'accessibility', effort: 'S',
     title: 'Caption the remaining audio and video',
     finding: 'Forty-eight caption files against fifty-two audio files; video has none.',
     sources: ['app/scripts/captions.ts', 'app/src/lib/webvtt.test.ts'],
@@ -425,7 +425,7 @@ export const ITEMS: readonly Item[] = [
   },
 
   {
-    id: 'RM-49', before: 'pilot', owner: 'engineering', effort: 'M', needs: ['RM-12'],
+    id: 'TR-49', before: 'pilot', owner: 'engineering', effort: 'M', needs: ['TR-12'],
     title: 'Make the combined risk review a release gate',
     finding: 'evaluate() in riskreview.ts is read by its own test and by whoever runs a release; no release profile, workflow or activation check consults it, and none of the governance evaluators is wired to CI.',
     sources: ['app/src/lib/ops/riskreview.ts', 'app/src/lib/governance/release-profiles.ts', 'app/src/lib/governance/activation-control-plane.ts'],
@@ -436,7 +436,7 @@ export const ITEMS: readonly Item[] = [
 
   // ── Before an institution is charged ──
   {
-    id: 'RM-41', before: 'paid', owner: 'engineering', effort: 'L', needs: ['RM-19'],
+    id: 'TR-41', before: 'paid', owner: 'engineering', effort: 'L', needs: ['TR-19'],
     title: 'Load beyond the database',
     finding: 'The harness is database only; the full-stack run has never been run; there is no browser soak, no large-tenant or many-small-tenants case, no upload or AI cost load; the plans scenario still misses its budget intermittently.',
     sources: ['docs/LOAD-AND-SOAK.md', 'docs/LOAD-HARNESS-OPEN-ISSUE-PLANS-P95.md', 'docs/engineering-operations/CAPACITY-AND-SCALING-PLAN.md'],
@@ -445,7 +445,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The measured capacity record.',
   },
   {
-    id: 'RM-42', before: 'paid', owner: 'finance', effort: 'M', person: true, needs: ['RM-27'],
+    id: 'TR-42', before: 'paid', owner: 'finance', effort: 'M', person: true, needs: ['TR-27'],
     title: 'Decide what is committed to customers',
     finding: 'The SLA is not started as a commitment, its numbers differ from the objectives, and the trust documents authorize no clock.',
     sources: ['docs/trust/SLA.md', 'app/src/lib/sla.ts', 'app/src/lib/governance/error-budgets.ts'],
@@ -454,7 +454,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The approved SLA and decision record.',
   },
   {
-    id: 'RM-43', before: 'paid', owner: 'security', effort: 'M',
+    id: 'TR-43', before: 'paid', owner: 'security', effort: 'M',
     title: 'Keep incident evidence beyond the provider window',
     finding: 'Provider logs are kept a month and the access log ninety days; there is no protected evidence store or chain of custody.',
     sources: ['SECURITY.md', 'docs/trust/INCIDENT-RESPONSE-PLAN.md'],
@@ -463,7 +463,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The first export and the custody record.',
   },
   {
-    id: 'RM-44', before: 'paid', owner: 'trust', effort: 'M',
+    id: 'TR-44', before: 'paid', owner: 'trust', effort: 'M',
     title: 'Publish moderation figures from a verified process',
     finding: 'No transparency reporting exists, and the draft procedure forbids publishing any figure without a verified reporting process.',
     sources: ['docs/legal-drafts/LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md'],
@@ -472,7 +472,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The first verified report.',
   },
   {
-    id: 'RM-45', before: 'paid', owner: 'privacy', effort: 'L',
+    id: 'TR-45', before: 'paid', owner: 'privacy', effort: 'L',
     title: 'One full-account export, including device data',
     finding: 'No single export file exists and device-only content is outside it.',
     sources: ['docs/DATA-PORTABILITY-AND-OFFBOARDING.md', 'supabase/deletion.check.sql'],
@@ -481,7 +481,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The export check.',
   },
   {
-    id: 'RM-46', before: 'paid', owner: 'engineering', effort: 'S',
+    id: 'TR-46', before: 'paid', owner: 'engineering', effort: 'S',
     title: 'Enforce the branch ruleset and a second reviewer',
     finding: 'The ruleset is not active and CODEOWNERS names one person, so self-review is impossible.',
     sources: ['.github/rulesets/main.json', 'docs/BRANCH-PROTECTION.md'],
@@ -492,7 +492,7 @@ export const ITEMS: readonly Item[] = [
 
   // ── Before a broad enterprise sale ──
   {
-    id: 'RM-47', before: 'enterprise', owner: 'security', effort: 'L', person: true, needs: ['RM-16', 'RM-27'],
+    id: 'TR-47', before: 'enterprise', owner: 'security', effort: 'L', person: true, needs: ['TR-16', 'TR-27'],
     title: 'An independent attestation',
     finding: 'SOC 2 and ISO 27001 are readiness assessments, HECVAT and VPAT are drafts, and no ACR exists.',
     sources: ['docs/trust/SOC2-READINESS.md', 'docs/compliance/VPAT-ACR-SELF-ASSESSMENT.md', 'docs/market-readiness/HECVAT_READINESS.md'],
@@ -501,7 +501,7 @@ export const ITEMS: readonly Item[] = [
     files: 'The reports, with their scope stated.',
   },
   {
-    id: 'RM-48', before: 'enterprise', owner: 'trust', effort: 'L', person: true,
+    id: 'TR-48', before: 'enterprise', owner: 'trust', effort: 'L', person: true,
     title: 'Marketplace prerequisites before any marketplace',
     finding: 'No orders, payouts, seller verification, buyer-seller disputes or listing reports exist; the register defers it.',
     sources: ['docs/COMMUNITIES-REGISTER.md', 'ops/strategic-boundaries/README.md'],

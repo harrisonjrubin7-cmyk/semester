@@ -269,7 +269,7 @@ function renderDoc(): string {
     '- **Legal conclusions are not made here.** A question that would end in one says *requires qualified human counsel review*, and a pass on it needs a closed row in the [legal review queue](../../LEGAL-REVIEW-QUEUE.md), filed as evidence.',
     '',
     'The evaluator is `evaluate()` in `app/src/lib/ops/riskreview.ts`. It reads no clock, disk or network: the day and the file-existence check are passed in, so the same review always gives the same verdict. ' +
-      'It is not yet a gate in `release-profiles.ts` or in CI — see RM-49 in the [remediation sequence](REMEDIATION-SEQUENCE.md) — so today it is consulted by its own test and by whoever runs a release.',
+      'It is not yet a gate in `release-profiles.ts` or in CI — see TR-49 in the [remediation sequence](REMEDIATION-SEQUENCE.md) — so today it is consulted by its own test and by whoever runs a release.',
     '',
     '## How a review is run',
     '',
@@ -310,7 +310,7 @@ function renderDoc(): string {
     "    'RR-SEC-2': { status: 'pass', reviewer: 'security', reviewedOn: '2026-11-02', expiresOn: '2027-01-15',",
     "                  evidence: ['supabase/rls-coverage.check.sql', 'supabase/tenancy.check.sql'] },",
     "    'RR-SEC-6': { status: 'accepted', acceptedBy: 'founder', reviewedOn: '2026-11-02', until: '2027-01-15',",
-    "                  reason: 'Code scanning lands with RM-15; the pilot window is eight weeks.' },",
+    "                  reason: 'Code scanning lands with TR-15; the pilot window is eight weeks.' },",
     "    'RR-REL-4': { status: 'owed', note: 'Provider restore drill TT-03 is scheduled for week 6.' },",
     '  },',
     "  risks: ['R-01', 'R-08'],",

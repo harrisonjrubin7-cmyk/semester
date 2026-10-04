@@ -19,8 +19,8 @@ import { ITEMS } from './trustremediation';
  * that asserts an outside party's judgement. This test reads every page in the
  * directory, rendered or not, and fails on each of those.
  *
- * The identifiers are the strongest check. `RM-27` in a sentence is only
- * useful if item RM-27 says what the sentence needs it to, and the cheapest
+ * The identifiers are the strongest check. `TR-27` in a sentence is only
+ * useful if item TR-27 says what the sentence needs it to, and the cheapest
  * way for that to break is a renumbering nobody searched for.
  */
 
@@ -88,14 +88,14 @@ describe('integrated trust pages', () => {
       it('mentions only items, controls, playbooks, exercises and questions that exist', () => {
         const body = prose(text);
         const known = {
-          RM: new Set(ITEMS.map((i) => i.id)),
+          TR: new Set(ITEMS.map((i) => i.id)),
           TC: new Set(CONTROLS.map((c) => c.id)),
           IR: new Set(PLAYBOOKS.map((p) => p.id)),
           TT: new Set(EXERCISES.map((e) => e.id)),
           RR: new Set(QUESTIONS.map((q) => q.id)),
         };
         const bad: string[] = [];
-        for (const m of body.matchAll(/\b(RM-\d{2}|TC-[A-Z0-9]{2,3}-\d{2}|IR-\d{2}|TT-\d{2}|RR-[A-Z0-9]{2,3}-\d)\b/g)) {
+        for (const m of body.matchAll(/\b(TR-\d{2}|TC-[A-Z0-9]{2,3}-\d{2}|IR-\d{2}|TT-\d{2}|RR-[A-Z0-9]{2,3}-\d)\b/g)) {
           const id = m[1];
           const kind = id.slice(0, 2) as keyof typeof known;
           if (!known[kind].has(id)) bad.push(id);

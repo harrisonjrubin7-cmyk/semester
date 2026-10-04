@@ -4,11 +4,11 @@ Owner, version, last and next review, status, supersedes and related decisions: 
 
 **Status: designed, exercised once on paper, never run live.** This plan sits over the existing trust documents (`docs/trust/INCIDENT-RESPONSE-PLAN.md`, `SECURITY-INCIDENT-RUNBOOK.md`, `docs/INCIDENT-RECOVERY-PLAYBOOK.md`, `SECURITY.md`) and the typed pieces in the tree (`incident-recovery.ts`, `incident-comms.ts`, the kill switches, the status feed). It does three things they do not: it picks one severity scale, it gives each scenario a playbook that names the controls it relies on and what is true of them today, and it ties every playbook to a rehearsal. The [scenario playbooks](INCIDENT-PLAYBOOKS.md) and the [exercise calendar](TABLETOP-CALENDAR.md) are generated from data and held by tests.
 
-**What this plan cannot yet do.** One person, the founder, holds every role, with no rota and no backup. The backup operator, the second reviewer of the AI switch, customer contacts and counsel are unassigned. No alert reaches anyone but the founder, except AI spend. No incident has been closed through the process. Provider logs are kept about a month. Until [RM-12](REMEDIATION-SEQUENCE.md) staffs the seats and [RM-07](REMEDIATION-SEQUENCE.md) routes alerts, this is a plan for what a second person would do, and the founder should read it as the list of what to ask for help with.
+**What this plan cannot yet do.** One person, the founder, holds every role, with no rota and no backup. The backup operator, the second reviewer of the AI switch, customer contacts and counsel are unassigned. No alert reaches anyone but the founder, except AI spend. No incident has been closed through the process. Provider logs are kept about a month. Until [TR-12](REMEDIATION-SEQUENCE.md) staffs the seats and [TR-07](REMEDIATION-SEQUENCE.md) routes alerts, this is a plan for what a second person would do, and the founder should read it as the list of what to ask for help with.
 
 ## 1. Scale
 
-The code uses SEV1 to SEV4, so this plan does. The crosswalk to the other three scales in use is in the [playbooks](INCIDENT-PLAYBOOKS.md#severity). The first-look times are internal targets: the trust documents record that no acknowledgement or update clock is authorized, and nothing in this plan promises one to a customer. Proposed for decision (RM-06): the founder adopts the crosswalk, and the documents that say otherwise are edited, including the fifteen-minute acknowledgement in `docs/vanderbilt/incident-routing.md`, which no one is staffed to meet.
+The code uses SEV1 to SEV4, so this plan does. The crosswalk to the other three scales in use is in the [playbooks](INCIDENT-PLAYBOOKS.md#severity). The first-look times are internal targets: the trust documents record that no acknowledgement or update clock is authorized, and nothing in this plan promises one to a customer. Proposed for decision (TR-06): the founder adopts the crosswalk, and the documents that say otherwise are edited, including the fifteen-minute acknowledgement in `docs/vanderbilt/incident-routing.md`, which no one is staffed to meet.
 
 ## 2. Roles
 
@@ -41,7 +41,7 @@ Rules: the commander does not also fix; a recorder is named in the first minute 
 
 ## 4. Communications
 
-`app/src/lib/governance/incident-comms.ts` composes a message and refuses one that has a missing section, a bracketed placeholder, a hedge phrase (such as *we believe*, *probably*, *out of an abundance of caution*) or a missing required detail. It knows eleven audiences, their approvers and their update intervals. It composes text only: nothing sends it, there is no subscriber list, and no message has ever been recorded as sent (RM-39).
+`app/src/lib/governance/incident-comms.ts` composes a message and refuses one that has a missing section, a bracketed placeholder, a hedge phrase (such as *we believe*, *probably*, *out of an abundance of caution*) or a missing required detail. It knows eleven audiences, their approvers and their update intervals. It composes text only: nothing sends it, there is no subscriber list, and no message has ever been recorded as sent (TR-39).
 
 **The seven sections every message carries**, in this order: what happened; who is affected; what is impacted; what to do now; what Semester is doing; the next update; where to get help.
 
@@ -83,7 +83,7 @@ The intervals are what the composer enforces; they are not a promise to a custom
 
 **Not allowed in any message:** a cause not yet established; a promise of a time to resolve that is not a plan; a statement that no data was affected when the evidence is not complete; anything a lawyer has not read when the audience is security or privacy.
 
-**Posting to the status page** means editing `app/public/status-incidents.json` (validated by `incidentProblems()`), merging and waiting for the Pages deploy. There is no subscriber notification. Until RM-39, the commander also sends the message by the institution's contact route directly and records that it did.
+**Posting to the status page** means editing `app/public/status-incidents.json` (validated by `incidentProblems()`), merging and waiting for the Pages deploy. There is no subscriber notification. Until TR-39, the commander also sends the message by the institution's contact route directly and records that it did.
 
 ## 5. Evidence
 
@@ -92,9 +92,9 @@ Preserve before changing anything that could alter a record, and keep a chain of
 1. **Time.** All times in UTC, from the same clock; note any drift.
 2. **Capture, read-only.** Export `audit_event`, `console_audit_event`, `support_access_event`, `role_grant_audit_event`, `moderation_audit_event`, `access_log` and the gateway journal for the window, plus Edge Function and auth logs from the provider. Provider logs are kept about a month and `access_log` ninety days: **capture on the first day**, because older material cannot be scoped from records.
 3. **Hash and record.** For each export: file name, source, time taken, who took it, SHA-256 of the file. Write the row in the incident record. Do not edit an export; work on a copy.
-4. **Store.** In a location with restricted access that does not share a failure mode with the system under investigation. Today there is none: a write-once store with an access log is item RM-43. Until then, a private bucket with a short access list and the hashes in the incident record is the minimum; say in the record that it is the minimum.
+4. **Store.** In a location with restricted access that does not share a failure mode with the system under investigation. Today there is none: a write-once store with an access log is item TR-43. Until then, a private bucket with a short access list and the hashes in the incident record is the minimum; say in the record that it is the minimum.
 5. **Custody.** Every transfer is a row: from, to, when, why. A copy given to counsel is a transfer.
-6. **Hold.** An incident that may lead to a claim, a regulator or a student's complaint places a legal hold on the affected scope (`legal_holds`: reason, matter, released by someone else). The hold stops erasure and the retention sweeps. It does not stop the provider's own backup expiry (RM-23), so a hold also exports what the backups would lose.
+6. **Hold.** An incident that may lead to a claim, a regulator or a student's complaint places a legal hold on the affected scope (`legal_holds`: reason, matter, released by someone else). The hold stops erasure and the retention sweeps. It does not stop the provider's own backup expiry (TR-23), so a hold also exports what the backups would lose.
 7. **Do not** repair a record, rotate a log, or run a sweep in the affected scope until steps 2 and 3 are done, unless doing so stops ongoing harm; if it must, record that it did.
 8. **Retention.** Incident evidence has no stated retention period today. Counsel sets it; until then it is kept.
 

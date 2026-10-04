@@ -29,18 +29,18 @@ Pages marked *rendered* are generated from typed data in `app/src/lib/ops/` and 
 
 ## The findings that decide the order
 
-1. **The nightly contrast sweep could not fail.** It piped through `tee` with no `pipefail`; every run was green while the log said `FINDINGS: 159`. Fixed in this change and guarded for every workflow (RM-01). One line of text on the Work screen accounts for 156 of the 159 (RM-02).
-2. **No objective has a measured value, and the only alert is AI spend.** Everything reliability-related rests on RM-27 and RM-07.
-3. **One person holds every role.** Four seats are vacant, so four sections of the risk review are unpassable until they are filled (RM-12).
-4. **Break-glass is a record that widens nothing.** The console map marks it done (RM-14).
-5. **Data-subject requests can be raised and not handled** (RM-20).
-6. **Community is built and must stay off** until its prerequisites exist (RM-11, RM-34 to RM-36).
-7. **The registers contradict each other** in ways a reviewer will find (RM-04).
+1. **The nightly contrast sweep could not fail.** It piped through `tee` with no `pipefail`; every run was green while the log said `FINDINGS: 159`. Fixed in this change and guarded for every workflow (TR-01). The Work empty-state line that made 156 of the 159 was already fixed on main (545010c); one hover state and the 26 hierarchy walls still fail it (TR-02).
+2. **No objective has a measured value, and the only alert is AI spend.** Everything reliability-related rests on TR-27 and TR-07.
+3. **One person holds every role.** Four seats are vacant, so four sections of the risk review are unpassable until they are filled (TR-12).
+4. **Break-glass is a record that widens nothing.** The console map marks it done (TR-14).
+5. **Data-subject requests can be raised and not handled** (TR-20).
+6. **Community is built and must stay off** until its prerequisites exist (TR-11, TR-34 to TR-36).
+7. **The registers contradict each other** in ways a reviewer will find (TR-04).
 
 ## How this plugs into the existing system
 
 - **Capabilities** are the sixty `CAP-nnn` ids in `rollout-capabilities.ts`; the risk review is keyed by them and refers to risks (`risk.ts`) and playbooks.
 - **Owners** are the twelve seats in `launchreadiness.ts`; a vacant seat cannot sign a review.
 - **Evidence** is a file under `docs/evidence/` cited from `ops/evidence.ts`; an exercise or a drill counts when its file exists and states its date.
-- **Decisions** are `docs/decisions/D-<pull request number>.md`; the scale choice in RM-06 and the gate in RM-49 each need one.
-- **Not yet wired.** The risk review's evaluator is read by its own test; no release profile, workflow or activation check consults it (RM-49).
+- **Decisions** are `docs/decisions/D-<pull request number>.md`; the scale choice in TR-06 and the gate in TR-49 each need one.
+- **Not yet wired.** The risk review's evaluator is read by its own test; no release profile, workflow or activation check consults it (TR-49).

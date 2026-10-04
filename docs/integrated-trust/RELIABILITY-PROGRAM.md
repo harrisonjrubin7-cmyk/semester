@@ -21,9 +21,9 @@ The eight objectives in `app/src/lib/governance/error-budgets.ts` are the workin
 
 **Gaps in the set**, each an item in the [remediation sequence](REMEDIATION-SEQUENCE.md):
 
-- *Registration, grade display, billing summary and integration freshness* have no objective, although the audit and the pilot documents treat them as the highest-stakes journeys. Add `registration_validate`, `grade_display`, `billing_summary` and, per connector, a freshness objective (RM-27).
-- *The SLA and the objectives disagree.* The draft SLA states 99.9 % externally for sign-in and the core platform, 99.99 % internally for sign-in, and 99.95 % externally for assignment save; the objectives say 99.95 %, 99.9 % and 99.99 %. Nothing is committed to a customer, the SLA is `NOT_STARTED`, and it must be reconciled to a measured quarter before it is offered (RM-42).
-- *Accessibility, privacy, safety, data-integrity and P0/P1 failures override the numeric budget.* `ERROR-BUDGET-DRAFT.md` says so; `error-budgets.ts` does not implement it. The calculator returns a release rule from counts alone, so a security incident in a month with a healthy budget does not freeze anything. Add the override to `review()` with a test (part of RM-27).
+- *Registration, grade display, billing summary and integration freshness* have no objective, although the audit and the pilot documents treat them as the highest-stakes journeys. Add `registration_validate`, `grade_display`, `billing_summary` and, per connector, a freshness objective (TR-27).
+- *The SLA and the objectives disagree.* The draft SLA states 99.9 % externally for sign-in and the core platform, 99.99 % internally for sign-in, and 99.95 % externally for assignment save; the objectives say 99.95 %, 99.9 % and 99.99 %. Nothing is committed to a customer, the SLA is `NOT_STARTED`, and it must be reconciled to a measured quarter before it is offered (TR-42).
+- *Accessibility, privacy, safety, data-integrity and P0/P1 failures override the numeric budget.* `ERROR-BUDGET-DRAFT.md` says so; `error-budgets.ts` does not implement it. The calculator returns a release rule from counts alone, so a security incident in a month with a healthy budget does not freeze anything. Add the override to `review()` with a test (part of TR-27).
 
 ## 2. From a target to a number
 
@@ -59,7 +59,7 @@ The first measured month is the prerequisite for everything in section 5.
 | Data | Backup or restore job failure; migration deploy failure; sweep failure | Operations | SEV2 |
 | Spend | AI spend at half the cap (exists today, provider-side) | Founder | SEV3 |
 
-Today only the last exists. Routing to "a second person" is item RM-07; routing to an on-call rota is item RM-12. **An alert that reaches only the person who is asleep is not monitoring**, which `MONITORING.md` already says; the program does not count an alert as present until its test alert has reached a person who is not the founder.
+Today only the last exists. Routing to "a second person" is item TR-07; routing to an on-call rota is item TR-12. **An alert that reaches only the person who is asleep is not monitoring**, which `MONITORING.md` already says; the program does not count an alert as present until its test alert has reached a person who is not the founder.
 
 ## 4. Capacity, load, chaos, recovery
 
@@ -79,7 +79,7 @@ One capacity reading exists: on 30 September, 5,000 students opening within ten 
 
 ### 4.2 Load and soak
 
-| Exists | Missing (RM-41) |
+| Exists | Missing (TR-41) |
 | --- | --- |
 | Seven database scenarios against p95 budgets in CI, a four-window soak with a drift rule, and planted-leak and lost-update controls | The edge script that runs the real auth, API and function stack (written, never run) |
 | | A browser soak on the real front end |
@@ -116,8 +116,8 @@ Recovery objectives are not invented here. They are measured in TT-03 and then p
 
 ## 5. Gates
 
-- **Before an institutional pilot:** a first measured month for the eight objectives (RM-27); one alert reaching a person other than the founder (RM-07, RM-28); the provider restore (RM-10); every switch engaged once in production (RM-29); the gateway deployed with its probe running (RM-19).
-- **Before an institution is charged:** a measured quarter before the SLA is reconciled and offered (RM-42); the load shapes in 4.2 run (RM-41); the first four quarters of exercises held (RM-30).
+- **Before an institutional pilot:** a first measured month for the eight objectives (TR-27); one alert reaching a person other than the founder (TR-07, TR-28); the provider restore (TR-10); every switch engaged once in production (TR-29); the gateway deployed with its probe running (TR-19).
+- **Before an institution is charged:** a measured quarter before the SLA is reconciled and offered (TR-42); the load shapes in 4.2 run (TR-41); the first four quarters of exercises held (TR-30).
 - **On every release:** the error-budget state is read; a `breached` or `exhausted` journey freezes releases that touch it; an override incident freezes regardless of the number.
 
 ## 6. What may be said

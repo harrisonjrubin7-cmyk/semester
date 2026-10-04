@@ -2,7 +2,7 @@
 
 Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
 
-**Status: drafted, not reviewed.** These models were written from the repository on 4 October 2026, from the survey recorded in the [domain requirements](DOMAIN-REQUIREMENTS.md). The platform threat model, `docs/SECURITY-THREAT-MODEL.md`, covers identity, tenancy, billing and AI in general; the integration model covers connectors; the AI toolkit model covers the client-only toolkit. Nothing covered uploads, family sharing, listings, the installable app, career records, Community or staff access as a domain. A draft is not a review: the security and privacy seats turn a model into a held one by signing it and tying each high row to a test or check (item RM-31). The security seat has no holder today. No adversarial test has been run against any of this.
+**Status: drafted, not reviewed.** These models were written from the repository on 4 October 2026, from the survey recorded in the [domain requirements](DOMAIN-REQUIREMENTS.md). The platform threat model, `docs/SECURITY-THREAT-MODEL.md`, covers identity, tenancy, billing and AI in general; the integration model covers connectors; the AI toolkit model covers the client-only toolkit. Nothing covered uploads, family sharing, listings, the installable app, career records, Community or staff access as a domain. A draft is not a review: the security and privacy seats turn a model into a held one by signing it and tying each high row to a test or check (item TR-31). The security seat has no holder today. No adversarial test has been run against any of this.
 
 **How to read a row.** *Control* is what must be true. *Today* is what the tree shows: an ID from the [control register](CONTROL-FRAMEWORK.md) where one applies, `none` where nothing exists, and the file that would prove it. *Test that must exist* is the guard whose absence means nobody would notice the control being removed. Severity is the platform's: a threat that can cross a tenant boundary or alter an official record is SEV1 if it happens.
 
@@ -62,7 +62,7 @@ There is no marketplace in the tree. `public.opportunities` has drafts, a modera
 **Assets.** The offline workspace; the sync queue; cached official data; the session token.
 **Boundaries.** Device storage ↔ other apps and users of the device; device ↔ sync service; service worker ↔ network.
 
-Semester is a web app and an installable PWA. There is no native client, no encrypted local database and no Dynamic Type or TalkBack work, so a native threat model is not drafted; it is item RM-48's neighbour and must precede any native build.
+Semester is a web app and an installable PWA. There is no native client, no encrypted local database and no Dynamic Type or TalkBack work, so a native threat model is not drafted; it is item TR-48's neighbour and must precede any native build.
 
 | | Threat | Control | Today | Test that must exist |
 |---|---|---|---|---|
@@ -103,7 +103,7 @@ Community has a privacy model, a media-safety document, a moderation procedure a
 | S | A coordinated report campaign silences someone | Reports from a brigade set aside; automation can only protect | In place (`TRIAGE_THRESHOLDS`) | Keep |
 | R | A decision cannot be explained | Reason code on every decision; appeal to a different reviewer | In place | Keep |
 | D | A posting flood | Rate limits; burst detector | Thirty posts per hour; burst detector at eight in ten minutes | Keep |
-| — | Abuse material, self-harm, threats | Preserve, report, route to a professional, never delete a match | Routing exists; reporting, takedown clock, scanner, escalation sender and coverage do not (TC-TSF-03 to 05) | Community stays off until these exist (RM-11, RM-36) |
+| — | Abuse material, self-harm, threats | Preserve, report, route to a professional, never delete a match | Routing exists; reporting, takedown clock, scanner, escalation sender and coverage do not (TC-TSF-03 to 05) | Community stays off until these exist (TR-11, TR-36) |
 
 ## T7. Support and staff access
 

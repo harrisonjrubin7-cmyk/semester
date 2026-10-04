@@ -8,7 +8,7 @@
 
 ## Severity
 
-Four scales are in use across the trust, engineering and security documents. `app/src/lib/incident-recovery.ts` is the only one a test holds, so this keeps it (SEV1 to SEV4) and lays the others against it. Choosing the scale is the founder's decision (RM-06); until it is made the documents keep disagreeing. The times are internal first-look targets, not a promise to anyone: the trust documents record that no acknowledgement or update clock is authorized while one person holds every role.
+Four scales are in use across the trust, engineering and security documents. `app/src/lib/incident-recovery.ts` is the only one a test holds, so this keeps it (SEV1 to SEV4) and lays the others against it. Choosing the scale is the founder's decision (TR-06); until it is made the documents keep disagreeing. The times are internal first-look targets, not a promise to anyone: the trust documents record that no acknowledgement or update clock is authorized while one person holds every role.
 
 | Severity | Means | P scale | SECURITY.md word | Audit scale | First look (internal) |
 | --- | --- | --- | --- | --- | --- |

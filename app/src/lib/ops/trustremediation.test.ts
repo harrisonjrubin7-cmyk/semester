@@ -28,7 +28,7 @@ const DOC = 'docs/integrated-trust/REMEDIATION-SEQUENCE.md';
 describe('the sequence', () => {
   it('has unique, well-formed ids', () => {
     expect(new Set(ITEMS.map((i) => i.id)).size).toBe(ITEMS.length);
-    for (const i of ITEMS) expect(i.id).toMatch(/^RM-\d{2}$/);
+    for (const i of ITEMS) expect(i.id).toMatch(/^TR-\d{2}$/);
   });
 
   it('tracks every control that is not enforced', () => {

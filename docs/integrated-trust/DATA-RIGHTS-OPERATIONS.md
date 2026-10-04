@@ -19,9 +19,9 @@ Everything about what the law requires — which regimes apply to which student,
 
 `received` → `verifying` → `in_progress` → `completed`, or `refused`. A request is never deleted. The row carries `due_at`, `requested_by`, `verified_at` and the account's tenant.
 
-**Interim until RM-20 builds the operator surface.** The queue is read by a named privacy owner each business day (there is none; the founder does it, and writes down that the founder did). A status change is a service-role statement reviewed by a second person before it runs, with an `audit_event` row written alongside it by hand. This is a stopgap that is stated here so it is not mistaken for the design.
+**Interim until TR-20 builds the operator surface.** The queue is read by a named privacy owner each business day (there is none; the founder does it, and writes down that the founder did). A status change is a service-role statement reviewed by a second person before it runs, with an `audit_event` row written alongside it by hand. This is a stopgap that is stated here so it is not mistaken for the design.
 
-**To be built (RM-20).** A service-role function and console screen that: verifies; assigns; moves status along the allowed transitions only; refuses `completed` without a recorded outcome; refuses `in_progress` for a guardian or institution request that has no `verified_at`; writes the audit event in the same transaction; and raises an alert at seven days to due, two days to due, and overdue, routed to the privacy owner and the incident commander. The check suite gains the transitions and the alert.
+**To be built (TR-20).** A service-role function and console screen that: verifies; assigns; moves status along the allowed transitions only; refuses `completed` without a recorded outcome; refuses `in_progress` for a guardian or institution request that has no `verified_at`; writes the audit event in the same transaction; and raises an alert at seven days to due, two days to due, and overdue, routed to the privacy owner and the incident commander. The check suite gains the transitions and the alert.
 
 ## 3. Identity verification
 
@@ -36,7 +36,7 @@ Everything about what the law requires — which regimes apply to which student,
 ### 4.1 Export (access and portability)
 
 - **What exists.** `export_my_data()` walks `private.account_data_map()` (191 mapped columns on 30 September), returns one JSON file, and records the export. It withholds three categories and names them in the file: blocks others placed on the person, reports others filed about them, and per-case safety scores. Per-feature exports exist (CSV, Markdown, calendar).
-- **What does not.** Device-only content (attachments and drafts in browser storage); a single full-account file that includes it (RM-45); a signed, expiring delivery channel; an accessibility review of the formats.
+- **What does not.** Device-only content (attachments and drafts in browser storage); a single full-account file that includes it (TR-45); a signed, expiring delivery channel; an accessibility review of the formats.
 - **Procedure.** The in-app export is self-service and immediate. A request that asks for more than the file holds (for example material about the person that belongs to a school) is routed to the institution. The exported file is generated on demand and not stored on the server.
 - **Check.** `supabase/deletion.check.sql` fails when a new table that references an account is not in the map.
 
@@ -56,14 +56,14 @@ Recorded, and applied by the privacy owner to the fields or uses named. There is
 4. **What it keeps, on purpose.** Messages in other people's threads (they show a gap); a report the person filed, with the reporter cleared; posts held by an open moderation case, withdrawn and re-attributed to "Deleted account"; moderator decisions; the `data_requests` row with the user cleared; financial records for seven years after their year; the support-access log (FERPA recordkeeping); school offboarding records and holds; known-abuse media; the console audit chain. Each is listed in `RETENTION.md`; the periods are not approved by counsel.
 5. **A known limit.** Four history tables refuse updates, so a staff account that wrote to them cannot be erased; the function fails closed. Resolve by a decision on those tables, not by loosening the refusal.
 6. **After.** Record the outcome on the request. Tell the requester what was removed and what was kept, and that provider backups age out on the provider's schedule (documented as seven days, not read from the dashboard) and that a restore could briefly bring a deleted row back, because there is deliberately no deletion ledger (D-124, which counsel may reopen).
-7. **Providers.** The model, payment, email and hosting providers hold copies under their own terms. No propagation procedure or evidence exists (RM-22). Until it does, the notice says so.
+7. **Providers.** The model, payment, email and hosting providers hold copies under their own terms. No propagation procedure or evidence exists (TR-22). Until it does, the notice says so.
 
 ## 5. Consent
 
 | What | Where it lives | Gap |
 | --- | --- | --- |
 | Capability consent (per capability and policy version) | `consent_record` | The preference record fields in the consent spec are all to be decided |
-| Sharing with an advisor, supporter or family member | `advisor_shares`, `support_shares`, `support_access_grant`, `family_grants` | No purpose, legal basis, signature method or revocation reason; a revoked share can be deleted by the student; reads log reader and time only (RM-24) |
+| Sharing with an advisor, supporter or family member | `advisor_shares`, `support_shares`, `support_access_grant`, `family_grants` | No purpose, legal basis, signature method or revocation reason; a revoked share can be deleted by the student; reads log reader and time only (TR-24) |
 | A guardian of a minor | `guardian_links`; parental consent (COPPA) | Parental consent has not begun counsel review |
 | Marketing | `gtm_consent` (append-only, versioned) | Sending is off; the draft consent text is unapproved |
 | AI training | None needed: no training on student content by default | A policy with no technical control and no signed provider terms |
@@ -88,7 +88,7 @@ The schedule is `RETENTION.md`, tripwired both ways against the schema (`retenti
 - **Placing.** A `hold:place` capability holder places a hold over their own school; the platform service role places a platform hold. A hold needs a reason and a matter reference.
 - **Effect.** It blocks erasure and every retention sweep in scope.
 - **Releasing.** A different person holding `hold:release`, enforced by a constraint. A hold is never edited except to record its release and never deleted.
-- **Gaps.** Provider backup expiry is not suspended by a hold; the monthly financial purge is not stated as hold-gated; device deletion is outside it; escalation deliveries and volunteer events carry no account and are covered only by the platform gate (RM-23).
+- **Gaps.** Provider backup expiry is not suspended by a hold; the monthly financial purge is not stated as hold-gated; device deletion is outside it; escalation deliveries and volunteer events carry no account and are covered only by the platform gate (TR-23).
 - **The procedure** is a draft with every field to be decided (`docs/legal-drafts/LEGAL-HOLD-PROCEDURE-DRAFT.md`; requires qualified human counsel review).
 
 ## 8. Offboarding a school
@@ -98,7 +98,7 @@ A school row is never deleted (a trigger refuses it for every role, because 125 
 ## 9. Rehearsal and evidence
 
 - **Quarterly:** two synthetic accounts in two tenants; one request of each kind through the operator surface; one held account; one guardian request; the overdue alerts. The record goes under `docs/evidence/privacy/` with the date (exercise TT-06 is the first).
-- **The erasure drill of 30 September** ran inside a rolled-back block against production with the owner's written approval: 191 columns checked, no rows left. It did **not** cover the delete-account function end to end, storage objects, a held account, community or media content, backups, provider propagation, the operator workflow or an actual dated request-to-closure case (RM-08).
+- **The erasure drill of 30 September** ran inside a rolled-back block against production with the owner's written approval: 191 columns checked, no rows left. It did **not** cover the delete-account function end to end, storage objects, a held account, community or media content, backups, provider propagation, the operator workflow or an actual dated request-to-closure case (TR-08).
 - **Measures to report monthly** once the surface exists: requests received, by kind; median and longest time to completion; requests past due; refusals and their reasons; holds blocking requests; failures of the erasure function.
 
 ## 10. Roles

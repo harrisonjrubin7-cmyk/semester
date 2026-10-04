@@ -37,7 +37,7 @@ Owner, version, last and next review, status, supersedes and related decisions: 
 
 **Reports.** Anyone may report. A reporter cannot read their own report back, by design. A report about a person rather than a post (a club, an event, an opportunity, a person) is not yet possible because a case requires a post (register SAF-003); four blueprint reasons are missing (commercial solicitation, club or event policy, accessibility barrier, outdated information). These are gaps, listed so they are not lost.
 
-**Transparency.** Counts of reports, cases by severity, removals, restrictions, appeals and their outcomes, escalations and median time to decision are published quarterly once Community is on, from the case tables, verified by hand against a sample first (RM-44). No figure is published from a process that has not been checked.
+**Transparency.** Counts of reports, cases by severity, removals, restrictions, appeals and their outcomes, escalations and median time to decision are published quarterly once Community is on, from the case tables, verified by hand against a sample first (TR-44). No figure is published from a process that has not been checked.
 
 ## 4. Moderator access
 
@@ -45,8 +45,8 @@ Owner, version, last and next review, status, supersedes and related decisions: 
 | --- | --- | --- |
 | Least privilege | Reviewers do not see the reporter; volunteers see a blind view with no name, email, id, reporter or social graph | In place |
 | Time-bound reveal | An alias reveal needs a case, lasts four hours, is decided by a different reviewer, and every look is a case event | In place |
-| Read logging | Opening the queue and opening a case are logged | **Not logged** (TC-TSF-02; RM-34) |
-| Immutable history | Case events cannot be edited and are kept on the retention schedule | **Mutable; deleted with the case** (MOD-004; RM-34) |
+| Read logging | Opening the queue and opening a case are logged | **Not logged** (TC-TSF-02; TR-34) |
+| Immutable history | Case events cannot be edited and are kept on the retention schedule | **Mutable; deleted with the case** (MOD-004; TR-34) |
 | No self-review | A decider never decides their own appeal; a volunteer recuses on knowing the author | In place |
 | Standing identity access | None. Liaisons and administrators have none; a platform support role needs a case | In place for liaisons; a periodic review of who holds the capabilities does not exist |
 | Training | A new reviewer completes calibration (20 items, 85 % to pass) before real work; staff complete a briefing covering minors, crisis language, and abuse material | Calibration is built; the briefing is not |
@@ -56,7 +56,7 @@ Owner, version, last and next review, status, supersedes and related decisions: 
 
 ## 5. Minors
 
-The minimum age is thirteen, enforced in SQL; the birth date is never stored. Minors are kept out of discovery, matching, mentoring and employer visibility. **The Community migration does not reference minor status**, so a minor may join and post (TC-PRV-06; RM-35). The posture for minors in Community — whether they may join at all, whether posts are visible beyond the cohort, and who is told — is an open decision for counsel and the institution (requires qualified human counsel review). Until it is made, Community is not switched on at any tenant that has minors.
+The minimum age is thirteen, enforced in SQL; the birth date is never stored. Minors are kept out of discovery, matching, mentoring and employer visibility. **The Community migration does not reference minor status**, so a minor may join and post (TC-PRV-06; TR-35). The posture for minors in Community — whether they may join at all, whether posts are visible beyond the cohort, and who is told — is an open decision for counsel and the institution (requires qualified human counsel review). Until it is made, Community is not switched on at any tenant that has minors.
 
 ## 6. Marketplace entry criteria
 
@@ -86,4 +86,4 @@ A procedure exists only as a draft with every field to be decided (`docs/legal-d
 
 ## 9. Gates
 
-Community and image posts stay off until: RM-34, RM-35, RM-36 are done; the community-safety tabletop (TT-11) has produced a go decision; counsel has confirmed the abuse-material, takedown and minors sections; and a named trust owner with a backup exists. The register line and a release-profile gate that refuses it are item RM-11.
+Community and image posts stay off until: TR-34, TR-35, TR-36 are done; the community-safety tabletop (TT-11) has produced a go decision; counsel has confirmed the abuse-material, takedown and minors sections; and a named trust owner with a backup exists. The register line and a release-profile gate that refuses it are item TR-11.

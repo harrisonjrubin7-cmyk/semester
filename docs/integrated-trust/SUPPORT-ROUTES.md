@@ -26,7 +26,7 @@ Owner, version, last and next review, status, supersedes and related decisions: 
 
 ## Internal targets
 
-The queue's design carries a first-response target of 24 hours for accessibility and privacy tickets and 72 hours for the rest (`docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md`). They are internal, unprobed, and **not offered to anyone**: nothing here authorizes a response commitment to a customer, and the founder is the only responder. RM-37 names an owner and hours and adds a probe before the flag is switched on for a pilot.
+The queue's design carries a first-response target of 24 hours for accessibility and privacy tickets and 72 hours for the rest (`docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md`). They are internal, unprobed, and **not offered to anyone**: nothing here authorizes a response commitment to a customer, and the founder is the only responder. TR-37 names an owner and hours and adds a probe before the flag is switched on for a pilot.
 
 ## What the agent sees
 
@@ -36,5 +36,5 @@ The ticket queue is identity-free by default. The context an agent can attach is
 
 - A ticket has a type, a severity (SEV1 to SEV4), an owner seat and a status. Reopened tickets and repeat contacts from the same person are measured; a spike in either is a signal to look for a defect, not for a bigger team.
 - Escalation goes to the owner seat in the table, then the incident commander. A ticket that names harm to a person skips the queue and goes to [IR-09](INCIDENT-PLAYBOOKS.md#ir-09).
-- Closed tickets have no retention period today (RM-37).
+- Closed tickets have no retention period today (TR-37).
 - Macros for each route are written once the owner and hours exist; a macro never states a cause not yet established.

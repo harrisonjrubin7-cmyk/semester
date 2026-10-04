@@ -14,7 +14,7 @@ The program's job is to turn "built toward WCAG 2.2 AA" into a record a procurem
 | axe-core | Real `<App/>` at 1280 and 390 pixels, serious and critical only | `app/src/a11y/axe.test.tsx` | Yes | Contrast and target size (reported as incomplete in jsdom); 15 render cases only |
 | Journey smoke | Seven journeys at 1280 and 320 pixels in Chromium: one `main`, one h1, named controls, valid references, no overflow, skip link | `app/scripts/accessibility-smoke.mjs` via `ci.yml` | Yes | Hand-rolled, not axe; no 375 pixels, no tablet, no real device |
 | Token contrast | 11 accents × 13 grounds, both faded strengths, every surface | `app/src/lib/contrast.test.ts` | Yes | What a browser composites |
-| Painted contrast | Thirteen grounds, two widths, hover and focus | `.github/workflows/contrast.yml` nightly | **Yes since 4 October** (it could not before; see RM-01) | 58 of 63 destinations by default; 14,025 gradient-painted elements |
+| Painted contrast | Thirteen grounds, two widths, hover and focus | `.github/workflows/contrast.yml` nightly | **Yes since 4 October** (it could not before; see TR-01) | 58 of 63 destinations by default; 14,025 gradient-painted elements |
 | Target size | Three densities, ten routes | `npm run sweep:targets`, local only | No | Not in any workflow |
 | Keyboard walk | 40 Tab stops on 13 screens, axe with WCAG 2.2 tags | `app/scripts/keyboard-pass.mjs`, not in `package.json` | No | One recorded run (28 September); axe could not judge contrast in it |
 | Manual and assistive technology | The protocol in `docs/accessibility/AT-PASS-PROTOCOL.md` | — | No | **No result exists** |
@@ -26,14 +26,14 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 ### On every change (automated, blocks the merge)
 
 1. The existing guards in section 1, unchanged.
-2. **RM-26:** run axe in the real-browser smoke over every destination and signed-in state, add 375 pixels, and add a text-spacing check (WCAG 1.4.12) and an autocomplete check (1.3.5). Today these 19 criteria have no automated evidence at all: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
+2. **TR-26:** run axe in the real-browser smoke over every destination and signed-in state, add 375 pixels, and add a text-spacing check (WCAG 1.4.12) and an autocomplete check (1.3.5). Today these 19 criteria have no automated evidence at all: 1.2.3, 1.2.4, 1.2.5, 1.3.2, 1.3.3, 1.3.5, 1.4.2, 1.4.5, 1.4.12, 1.4.13, 2.2.1, 2.3.1, 2.5.2, 2.5.3, 2.5.4, 3.1.2, 3.2.1, 3.2.2, 3.3.7. Some can be automated (1.3.5, 1.4.12, 2.5.3, 3.1.2); the rest are manual by nature and belong to section 2.3.
 3. A pull request that adds a component states how it was checked with the keyboard alone (the template already asks).
 
 ### Nightly (automated, now able to fail)
 
 4. The contrast sweep, with its scope widened from the five "chrome" destinations to all sixty-three on a rotating basis (`SWEEP_SCOPE=all` on a third of nights), and gradient-painted elements measured by sampling the screenshot (the `paint.mjs` helper exists) rather than skipped.
 5. The target-size sweep moved into the same workflow.
-6. A failure opens an issue titled with the criterion and the destination, and is owned by the accessibility seat. Until RM-02 lands the sweep fails every night on one line of text; the issue is the record.
+6. A failure opens an issue titled with the criterion and the destination, and is owned by the accessibility seat. Until TR-02 lands the sweep fails every night on one hover state (and the walls sweep on its own findings); the issue is the record.
 
 ### Per release of a high-risk capability, and each quarter (manual, filed)
 
@@ -54,11 +54,11 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 
 8. **Cognitive accessibility review**, by the accessibility seat with one user who did not build the screen, against a fixed list: one primary action per view; plain wording with no retired word; no time limit that cannot be extended (the undo toast lasts eight seconds and is the only timed element found); every error says what happened, what to do and who can help, and keeps the input; no required memory across screens; consistent placement; a way to stop motion and sound; instructions that do not rely on colour, shape or position alone. The access modes (plain language, one step at a time, predictable layout, sensory-friendly) are read by one to three screens each, although the panel says "changes apply everywhere"; the review checks that claim screen by screen and either extends the modes or corrects the sentence.
 9. **Mobile review.** Semester is a web app and an installable app. The review runs the journeys on one real iPhone and one real Android phone at the largest system text size, in portrait and landscape, with the on-screen keyboard open, and records touch-target failures against both the 24-pixel WCAG measure and the 44-pixel design floor. A native app, if one is ever built, adds Dynamic Type, TalkBack and VoiceOver gesture tests before its first release (see T4 in the [threat models](THREAT-MODELS.md) for the matching security prerequisite).
-10. **Content and media.** Every audio file has a caption file and a transcript (48 of 52 today, RM-40); video has captions and, where it carries information that sound does not, a description; charts have a data-table alternative; live call captions are tested with two people.
+10. **Content and media.** Every audio file has a caption file and a transcript (48 of 52 today, TR-40); video has captions and, where it carries information that sound does not, a description; charts have a data-table alternative; live call captions are tested with two people.
 
 ### Once, then each year
 
-11. An external assessor produces an assessment report scoped to named journeys, and the VPAT is built from it (RM-47). Until then the statement of accessibility, a draft, says what is true: built toward WCAG 2.2 AA, tested by machine, not yet by people.
+11. An external assessor produces an assessment report scoped to named journeys, and the VPAT is built from it (TR-47). Until then the statement of accessibility, a draft, says what is true: built toward WCAG 2.2 AA, tested by machine, not yet by people.
 12. A study with disabled participants on the golden path. Recruiting, consent and payment follow the research-consent practice in `docs/` and are the product research seat's, not this program's.
 
 ## 3. Findings, severity and the barrier route
@@ -79,7 +79,7 @@ The barrier route today is an email address and a form that posts to a lead-inta
 
 - A capability's combined risk review asks three accessibility questions ([RR-A11-1 to 3](COMBINED-RISK-REVIEW.md#accessibility)): keyboard-only completion, assistive-technology results for the primary journey, and contrast as painted in empty, error and hover states. Two of the three are blocking and one needs a filed record.
 - A release of a high-risk capability is *no-go* with an open blocker on a primary journey, whatever its other scores.
-- Public accessibility text is checked against this program: any sentence that names a tool, a date or a scope must point at a file. Four statements on the company site did not when this program was written (RM-03).
+- Public accessibility text is checked against this program: any sentence that names a tool, a date or a scope must point at a file. Four statements on the company site did not when this program was written (TR-03).
 
 ## 5. Claim ceiling
 
