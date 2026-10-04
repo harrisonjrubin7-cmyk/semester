@@ -12,7 +12,7 @@
  * published by accident. `docs/releases/README.md` is the procedure.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -34,6 +34,8 @@ const note = draftNote({ date, commit, entries });
 if (!process.argv.includes('--write')) { process.stdout.write(note); process.exit(0); }
 const out = join(root, 'docs', 'releases', 'notes', `${date}.md`);
 if (existsSync(out)) { console.error(`release:draft: ${out} exists; edit it, or choose another --date.`); process.exit(1); }
+// The first note creates the folder: none has been cut yet, so it does not exist.
+mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, note);
 console.log(`release:draft: wrote docs/releases/notes/${date}.md from ${entries.length} entries of "${section}", cut from ${commit}.`);
 console.log('  Edit every TODO(edit), list the note in docs/releases/README.md, then run the docs tests.');
