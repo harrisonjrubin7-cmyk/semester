@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { JOURNEYS } from '../governance/error-budgets';
+import { ADOPTED_JOURNEYS, JOURNEYS } from '../governance/error-budgets';
 import { KILL_SWITCHES } from '../flags';
 import { ALERTS } from './alerts';
 import { CLASS_TARGETS, COMPONENTS, CRITICALITY_ORDER, ROLES, ROLE_HOLDERS, byId, closure, inversions, type Component } from './catalog';
@@ -90,11 +90,11 @@ describe('the catalog is internally consistent', () => {
   it('every journey id used is a real journey, and every journey has a component that can break it', () => {
     const ids = new Set(JOURNEYS.map((j) => j.id));
     for (const c of COMPONENTS) for (const j of c.journeys) expect(ids.has(j), `${c.id} → ${j}`).toBe(true);
-    for (const j of JOURNEYS) expect(COMPONENTS.some((c) => c.journeys.includes(j.id)), j.id).toBe(true);
+    for (const j of ADOPTED_JOURNEYS) expect(COMPONENTS.some((c) => c.journeys.includes(j.id)), j.id).toBe(true);
   });
 
   it('every journey is carried by at least one C0 or C1 component — a student outcome cannot hang only on a deferrable thing', () => {
-    for (const j of JOURNEYS) {
+    for (const j of ADOPTED_JOURNEYS) {
       expect(COMPONENTS.some((c) => c.journeys.includes(j.id) && (c.criticality === 'C0' || c.criticality === 'C1')), j.id).toBe(true);
     }
   });
@@ -183,8 +183,12 @@ describe('alerts', () => {
     }
   });
 
-  it('give every journey a burn alert', () => {
-    for (const j of JOURNEYS) expect(ALERTS.some((a) => a.id === `burn:${j.id}`), j.id).toBe(true);
+  it('give every adopted journey a burn alert, and a proposed one none', () => {
+    for (const j of ADOPTED_JOURNEYS) expect(ALERTS.some((a) => a.id === `burn:${j.id}`), j.id).toBe(true);
+    // A proposed journey has no objective an owner agreed to, so nothing may page for it yet.
+    const proposed = JOURNEYS.filter((j) => j.proposed);
+    expect(proposed.length).toBeGreaterThan(0);
+    for (const j of proposed) expect(ALERTS.some((a) => a.id === `burn:${j.id}`), j.id).toBe(false);
   });
 
   it('cannot be promoted to delivery_tested without evidence that exists', () => {

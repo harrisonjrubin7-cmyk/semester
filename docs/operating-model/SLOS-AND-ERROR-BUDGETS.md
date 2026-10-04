@@ -52,7 +52,7 @@ records incident to be handled as one, whatever the budget says.
 
 | Journey | SLO | Good event | Why |
 | --- | --- | --- | --- |
-| Calendar load | 99.9% | The calendar shows the student’s own events and tasks for the range viewed, each with its source and as-of time | Where a student checks what is due, so a wrong or stale view is a missed deadline |
+| Calendar load | 99.9% | The calendar shows the student’s own events and deadlines for the range viewed, each with its source and as-of time | Where a student checks what is due, so a wrong or stale view is a missed deadline |
 | Course access | 99.9% | An enrolled student opens their course and its current-term materials, and a student who is not enrolled does not | Coursework is unreachable without it, and admitting the wrong person is worse than an outage |
 | Grade retrieval | 99.95% | A released grade is shown for the right student and course with its as-of time, or the student is told the source is unavailable | A wrong or unreleased grade is a record error, and silence is worse than saying the source is down |
 | Registration submission | 99.95% | A registration command is accepted or refused with a reason the student can read, exactly once, and the student sees which | An official write on a deadline: a lost or doubled registration cannot be undone by retrying |

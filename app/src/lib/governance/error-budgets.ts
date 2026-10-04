@@ -75,7 +75,7 @@ export const JOURNEYS: readonly Journey[] = [
   // still counted. Each needs an owner to adopt or change it.
   {
     id: 'calendar_view', name: 'Calendar load', slo: 99.9, proposed: true,
-    good: 'The calendar shows the student’s own events and tasks for the range viewed, each with its source and as-of time',
+    good: 'The calendar shows the student’s own events and deadlines for the range viewed, each with its source and as-of time',
     why: 'Where a student checks what is due, so a wrong or stale view is a missed deadline',
     bad: ['Returns an error', 'Times out', 'Shows data older than its stated as-of time as though it were current', 'Shows an event at the wrong date or time', 'Shows another person’s events'],
   },
@@ -116,6 +116,15 @@ export const JOURNEYS: readonly Journey[] = [
     bad: ['Fails with no degraded state shown', 'Writes to the wrong record', 'Imports a duplicate', 'Is left unreconciled past its window', 'Stops a native feature from working'],
   },
 ];
+
+/**
+ * The journeys an owner has adopted. The SRE catalog, burn alerts and runbook
+ * routes (`lib/sre`) are built from this, not from `JOURNEYS`: a proposed
+ * journey must not put a paging alert in the register that nobody has agreed
+ * to answer. Removing a journey's `proposed` flag is the act of adopting it, and
+ * the SRE tests then demand the component, route and runbook it needs.
+ */
+export const ADOPTED_JOURNEYS: readonly Journey[] = JOURNEYS.filter((j) => !j.proposed);
 
 /**
  * The bad events every durable-write journey counts. An error is the obvious
