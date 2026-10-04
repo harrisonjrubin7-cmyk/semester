@@ -1,5 +1,4 @@
 import { dateToIso } from '../lib/date';
-import { useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../lib/family';
 import { checkSupporterPlan } from '../lib/sharing';

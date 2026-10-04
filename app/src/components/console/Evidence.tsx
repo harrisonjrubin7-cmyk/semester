@@ -1,5 +1,4 @@
 import { Notice, SectionLabel } from '../ui';
-import { useState } from 'react';
 import { ESCALATION } from '../../lib/ops/console';
 import { EVIDENCE, evidenceState } from '../../lib/ops/evidence';
 import { Fields, matches, type ViewProps } from './Fields';
