@@ -178,7 +178,7 @@ as red.
     "integration":  { "result": "green" }
   },
   "suites": {
-    "unit":        { "files": 1266, "tests": 19790, "passed": 19742, "skipped": 48, "failed": 0, "order": ["natural", "shuffled:90417", "TZ:America/Chicago", "TZ:Pacific/Kiritimati"] },
+    "unit":        { "files": 1267, "tests": 19829, "passed": 19781, "skipped": 48, "failed": 0, "order": ["natural", "shuffled:90417", "TZ:America/Chicago", "TZ:Pacific/Kiritimati"] },
     "sql":         { "suites": 106, "checks": 0, "failed": 0 },
     "journeys":    { "catalog": { "automated": 0, "partial": 44, "owed": 0 }, "smokes": { "golden": "green", "sync": "green" } }
   },
@@ -191,9 +191,9 @@ as red.
 }
 ```
 
-(`checks` and the example numbers are illustrative; the generator fills them from
-the real run. The unit figures above are from a real run of this branch's base —
-see the pull request.)
+(`checks` and the non-unit numbers are illustrative; the generator fills them from
+the real run. The `unit` and `skips` figures are from a real ordered run of this
+branch on 2026-10-04: 1,267 files, 19,781 passed, 48 skipped, 0 failed.)
 
 ### Acceptance criteria for the manifest
 
