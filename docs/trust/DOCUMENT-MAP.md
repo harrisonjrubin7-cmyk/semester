@@ -114,6 +114,11 @@ How to read the **Status** column: it is the status the document gives itself, s
 | [ferpa-risk-and-permission-matrix.md](../security/ferpa-risk-and-permission-matrix.md) | Risk and permission matrix for education records. | Engineering and privacy baseline; no FERPA claim |
 | [guardian-data-model.md](../security/guardian-data-model.md) | The guardian and family data model. | Target projection model |
 | [operations-console-access-model.md](../security/operations-console-access-model.md) | What an operator may see and do, for how long. | Access model |
+| [SECURITY-PROGRAM.md](../security/SECURITY-PROGRAM.md) | The security program: claim ceiling, domain threat map, identity, SDLC, data, vendor, evidence and calendar controls, owners, 30/60/90 plan. | Program; no certification claimed |
+| [FINDINGS-REGISTER.md](../security/FINDINGS-REGISTER.md) | Open security findings with evidence, closing condition, due date and owner seat, and the evidence still owed. | Proposed severities; no clock started |
+| [TENANT-ISOLATION-VERIFICATION.md](../security/TENANT-ISOLATION-VERIFICATION.md) | The tenant-isolation architecture and the twelve verification cases, each marked exists, partial or to add. | Specification; not all cases built |
+| [DETECTION-CATALOG.md](../security/DETECTION-CATALOG.md) | Sixteen detections with source, severity and route, and the AI red-team set. | Design; nothing wired yet |
+| [THREAT-RECORD-TEMPLATE.md](../security/THREAT-RECORD-TEMPLATE.md) | The per-change threat record a pull request across a trust boundary carries. | Template |
 | [DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md](../legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md) | The user-facing retention and deletion policy. | Draft; effective date undecided |
 | [COOKIE-AND-STORAGE-NOTICE-DRAFT.md](../legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | The cookie and device-storage notice. | Draft; effective date undecided |
 | [PRIVACY-POLICY-DRAFT.md](../legal/PRIVACY-POLICY-DRAFT.md) | The privacy policy. | Draft; effective date undecided |
