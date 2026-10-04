@@ -510,6 +510,9 @@ describe('"delete my account" really means every row', () => {
     expect(said).not.toMatch(/outlives the button/i);
     expect(said).toMatch(/one step that either happens completely or not at all/i);
     expect(said).toMatch(/download my account data/i);
+    expect(said).toMatch(/pre-classifier legacy support evidence/i);
+    expect(said).toMatch(/detached from your deleted account/i);
+    expect(said).toMatch(/ordinary support staff cannot open it/i);
     expect(said).toContain(SUPPORT);
     // The named tables a person would not have guessed were being kept.
     for (const word of ['display name', 'messages', 'blocked', 'group', 'practice paper']) {
