@@ -54,7 +54,7 @@ describe('makeTaskActions', () => {
       a.reschedule('t1', '2026-09-12');
       expect(dispatch.mock.calls.map((c) => c[0])).toEqual([
         { type: 'toggleTask', id: 't1' },
-        { type: 'editTask', id: 't1', patch: { date: '2026-09-12' } },
+        { type: 'moveTask', id: 't1', date: '2026-09-12' },
       ]);
       expect(calls).toEqual([]);
     }
@@ -77,7 +77,7 @@ describe('makeTaskActions', () => {
     a.reschedule('t1', '2026-09-12');
     await drain(); await drain(); await drain();
     expect(calls).toEqual([]);
-    expect(dispatch.mock.calls.map((c) => c[0].type)).toEqual(['toggleTask', 'editTask']);
+    expect(dispatch.mock.calls.map((c) => c[0].type)).toEqual(['toggleTask', 'moveTask']);
   });
 
   it('does nothing for a task that has gone', async () => {
@@ -100,7 +100,7 @@ describe('makeTaskActions', () => {
     await drain(); await drain(); await drain();
     expect(dispatch.mock.calls.map((c) => c[0])).toEqual([
       { type: 'toggleTask', id: 't1' },
-      { type: 'editTask', id: 't1', patch: { date: '2026-09-12' } },
+      { type: 'moveTask', id: 't1', date: '2026-09-12' },
     ]);
   });
 });
@@ -174,7 +174,7 @@ describe('makeTaskActions.remove and the timed move', () => {
       expect(dispatch.mock.calls.map((c) => c[0])).toEqual([
         { type: 'deleteTask', id: 't1' },
         { type: 'moveTask', id: 't1', date: '2026-09-12', time: '4:00 PM' },
-        { type: 'editTask', id: 't1', patch: { date: '2026-09-13' } },
+        { type: 'moveTask', id: 't1', date: '2026-09-13' },
       ]);
       expect(calls).toEqual([]);
     }
@@ -315,12 +315,12 @@ describe('in a real store, against the legacy reducer', () => {
     expect(tasks[0].done).toBe(false);
   });
 
-  it('reschedules like editTask, and leaves a task’s other fields alone', async () => {
+  it('reschedules like moveTask, and leaves a task’s other fields alone', async () => {
     const rows = seed([{ note: 'keep me', time: 'before work' }]);
     await mount('production', rows);
     await act(async () => actions.reschedule('t0', '2026-09-14'));
     await flush();
-    expect(strip(tasks)).toEqual(strip(legacyOnly(rows, [{ type: 'editTask', id: 't0', patch: { date: '2026-09-14' } }])));
+    expect(strip(tasks)).toEqual(strip(legacyOnly(rows, [{ type: 'moveTask', id: 't0', date: '2026-09-14' }])));
     expect(tasks[0]).toMatchObject({ note: 'keep me', time: 'before work', date: '2026-09-14' });
   });
 

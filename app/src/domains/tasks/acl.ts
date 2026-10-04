@@ -25,6 +25,7 @@ export type NewLegacyTask = Omit<PersonalTask, 'id' | 'created' | 'done'>;
 export type LegacyTaskCommand =
   | { type: 'addTask'; task: NewLegacyTask }
   | { type: 'toggleTask'; id: string }
+  | { type: 'moveTask'; id: string; date: string; time?: string }
   | { type: 'editTask'; id: string; patch: { date?: string | null; time?: string } }
   | { type: 'deleteTask'; id: string };
 
@@ -73,13 +74,19 @@ export function legacyTaskRepository(host: LegacyTaskHost): TaskRepository {
         host.dispatch({ type: 'toggleTask', id: task.id });
         wrote = true;
       }
-      // `editTask` rather than `moveTask`: only it can send a task back to "someday" (date null), and with a
-      // one- or two-field patch it is the same write `moveTask` makes. Compared against the *mapped* date, so a
-      // stored date the domain could not read is never rewritten.
-      const patch: { date?: string | null; time?: string } = {};
-      if (taskFromLegacy(before).dueOn !== task.dueOn) patch.date = task.dueOn;
-      if (before.time !== task.time) patch.time = task.time;
-      if (patch.date !== undefined || patch.time !== undefined) {
+      // A new date goes out as `moveTask`, the one the undo table names, so a move offers "Action moved" as it
+      // always did. `editTask` is left for what `moveTask` cannot say: back to "someday" (date null) or a time
+      // change alone. Compared against the *mapped* date, so a stored date the domain could not read is never
+      // rewritten.
+      const dateChanged = taskFromLegacy(before).dueOn !== task.dueOn;
+      const timeChanged = before.time !== task.time;
+      if (dateChanged && task.dueOn !== null) {
+        host.dispatch({ type: 'moveTask', id: task.id, date: task.dueOn, ...(timeChanged ? { time: task.time } : {}) });
+        wrote = true;
+      } else if (dateChanged || timeChanged) {
+        const patch: { date?: string | null; time?: string } = {};
+        if (dateChanged) patch.date = task.dueOn;
+        if (timeChanged) patch.time = task.time;
         host.dispatch({ type: 'editTask', id: task.id, patch });
         wrote = true;
       }

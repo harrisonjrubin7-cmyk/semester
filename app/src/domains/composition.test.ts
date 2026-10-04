@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { UNDOABLE } from '../lib/undo';
 import { reducer } from '../state/reducer';
 import { DEFAULT_PERSISTED, initialEphemeral, type State } from '../state/shape';
 import type { Role } from '../lib/role';
@@ -173,7 +174,20 @@ describe('the slice running on the legacy store', () => {
     const { h, state, dispatched } = host({ tasks: [legacyTask()] });
     await createDomains(h, clock).tasks.reschedule('t1', '2026-09-14', '4:00 PM');
     expect(state().tasks[0]).toMatchObject({ date: '2026-09-14', time: '4:00 PM', note: 'bring the blue book', steps: [{ id: 's1', text: 'Skim', done: false }] });
-    expect(dispatched).toEqual([{ type: 'editTask', id: 't1', patch: { date: '2026-09-14', time: '4:00 PM' } }]);
+    expect(dispatched).toEqual([{ type: 'moveTask', id: 't1', date: '2026-09-14', time: '4:00 PM' }]);
+  });
+
+  it('sends a new day as moveTask, which the undo table names, so "Action moved" is still offered', async () => {
+    const { h, dispatched } = host({ tasks: [legacyTask()] });
+    await createDomains(h, clock).tasks.reschedule('t1', '2026-09-14');
+    expect(dispatched).toEqual([{ type: 'moveTask', id: 't1', date: '2026-09-14' }]);
+    expect(UNDOABLE).toHaveProperty('moveTask');
+  });
+
+  it('keeps editTask for a time on its own, which moveTask cannot say without a day', async () => {
+    const { h, dispatched } = host({ tasks: [legacyTask()] });
+    await createDomains(h, clock).tasks.reschedule('t1', legacyTask().date, '4:00 PM');
+    expect(dispatched).toEqual([{ type: 'editTask', id: 't1', patch: { time: '4:00 PM' } }]);
   });
 
   it('writes only the field that changed', async () => {

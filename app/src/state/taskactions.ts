@@ -65,8 +65,8 @@ export function makeTaskActions(
   const legacy: TaskActions = {
     add: (task) => dispatch({ type: 'addTask', task }),
     toggle: (id) => dispatch({ type: 'toggleTask', id }),
-    reschedule: (id, date, time) =>
-      dispatch(time === undefined ? { type: 'editTask', id, patch: { date } } : { type: 'moveTask', id, date, time }),
+    // `moveTask` either way: it is the one the undo table names, so a day-only move offers "Action moved" too.
+    reschedule: (id, date, time) => dispatch({ type: 'moveTask', id, date, ...(time === undefined ? {} : { time }) }),
     remove: (id) => dispatch({ type: 'deleteTask', id }),
   };
   if (flag !== 'production') return legacy;
