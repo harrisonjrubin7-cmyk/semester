@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { decodeSnapshot, encodeSnapshot, memoryStore, type StoreSnapshot } from './memory-store.ts'
 import { SyncEngine } from './engine.ts'
 import { ReferenceGateway } from './testing/reference-gateway.ts'
