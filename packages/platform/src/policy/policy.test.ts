@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { POLICY_ACTIONS } from '../seam/institution.ts';
 import { TENANT_A, TENANT_B, harness } from '../testing/memory.ts';
 import { PolicyEngine, requirePolicy, type ActionRule, type PolicyResource } from './engine.ts';
