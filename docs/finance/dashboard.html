@@ -1,0 +1,212 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><title>Semester Scenario Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a planning instrument. Scenario switch on top, the six answers beside it, charts in a two-column grid, every number also in a table. */
+:root{
+  --bg:#f3f6f8; --surface:#ffffff; --ink:#0e1c26; --ink-2:#4a5b68; --ink-3:#6b7a86; --rule:#d9e1e7; --grid:#e8eef2;
+  --accent:#17607a; --accent-ink:#ffffff; --warn-bg:#fff6dd; --warn-ink:#5a4300; --warn-rule:#e6c76a;
+  --good:#0f8a43; --bad:#b4302f;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4; --c6:#8d9aa5;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace; --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c151c; --surface:#142029; --ink:#eef3f6; --ink-2:#b4c1ca; --ink-3:#8fa0ac; --rule:#26363f; --grid:#1d2c35;
+  --accent:#5db4d2; --accent-ink:#06222c; --warn-bg:#2b2410; --warn-ink:#f3dc9a; --warn-rule:#6e5a1f;
+  --good:#46c47c; --bad:#ee7473;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#8d9aa5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c151c; --surface:#142029; --ink:#eef3f6; --ink-2:#b4c1ca; --ink-3:#8fa0ac; --rule:#26363f; --grid:#1d2c35;
+  --accent:#5db4d2; --accent-ink:#06222c; --warn-bg:#2b2410; --warn-ink:#f3dc9a; --warn-rule:#6e5a1f;
+  --good:#46c47c; --bad:#ee7473;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181; --c6:#8d9aa5; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;margin:0;padding-inline:max(16px,3vw);padding-block:20px 56px}
+.wrap{max-width:1180px;margin-inline:auto;display:flex;flex-direction:column;gap:18px}
+h1{font-size:clamp(22px,3.2vw,30px);line-height:1.15;margin:0;font-weight:600;text-wrap:balance}
+h2{font-size:15px;margin:0;font-weight:600}
+.sub{color:var(--ink-2);margin:4px 0 0;max-width:68ch}
+.banner{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-rule);padding:10px 14px;border-radius:6px;font-size:13px}
+.banner b{font-weight:600}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--rule)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;cursor:pointer;min-height:34px}
+.seg button:hover{border-color:var(--accent)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.seg button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.desc{color:var(--ink-2);font-size:13px;margin:0;max-width:90ch;min-height:2.6em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;min-width:0}
+.kpi .l{font-size:12px;color:var(--ink-2)}
+.kpi .v{font-family:var(--mono);font-size:21px;font-weight:500;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .d{font-family:var(--mono);font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.kpi .d.up{color:var(--good)} .kpi .d.dn{color:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:14px 14px 10px;min-width:0;position:relative}
+.card .note{color:var(--ink-3);font-size:12px;margin:2px 0 8px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--sans);font-size:11px;fill:var(--ink-2)}
+svg .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+svg .grid line,.gridline{stroke:var(--grid);stroke-width:1}
+svg .axis{stroke:var(--rule);stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 0;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:5px;z-index:20;max-width:260px;opacity:0;transition:opacity .08s;font-variant-numeric:tabular-nums}
+.tip b{font-weight:600}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--rule);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--rule)}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface)}
+thead th{font-weight:600;color:var(--ink-2);font-size:12px}
+tr.sel td{background:color-mix(in srgb,var(--accent) 10%,var(--surface));font-weight:600}
+details summary{cursor:pointer;color:var(--accent);font-weight:500;padding:6px 0}
+.foot{color:var(--ink-3);font-size:12px;max-width:90ch}
+@media (prefers-reduced-motion:reduce){.tip{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Semester scenario dashboard</h1>
+    <p class="sub">Nine scenarios of the three-year financial model, read from the workbook. Pick one; every figure and chart follows.</p>
+  </header>
+  <div class="banner"><b>Hypotheses, not forecasts.</b> No company cash, revenue, price or customer is evidenced. Only the Plus price and the 26-week pilot are facts. Figures are for founder planning and for questions to an accountant, tax adviser and counsel. Snapshot of <span id="stamp"></span>.</div>
+
+  <div class="bar" id="bar">
+    <div class="seg" id="seg" role="group" aria-label="Scenario"></div>
+    <p class="desc" id="desc"></p>
+  </div>
+
+  <section class="kpis" id="kpis" aria-label="Key results for the chosen scenario"></section>
+
+  <section class="grid">
+    <div class="card"><h2>ARR and revenue by quarter</h2><p class="note">Chosen scenario (solid) against Base (dashed). Quarter 1 is Nov-Jan 2026-27.</p><div id="c-arr"></div><div class="legend" id="l-arr"></div></div>
+    <div class="card"><h2>Cash at quarter end</h2><p class="note">With the placeholder financing rounds. Bars below zero mean the plan is not funded.</p><div id="c-cash"></div><div class="legend" id="l-cash"></div></div>
+    <div class="card"><h2>Revenue by stream, per year</h2><p class="note">$ thousands. Stacks are the revenue streams; AI usage and alumni are grouped together, and incident service credits are netted against institutional.</p><div id="c-str"></div><div class="legend" id="l-str"></div></div>
+    <div class="card"><h2>Peak funding need, all scenarios</h2><p class="note">Cumulative operating cash outflow over 36 months, before financing. Chosen scenario highlighted.</p><div id="c-peak"></div></div>
+    <div class="card"><h2>What moves the go/no-go plan most</h2><p class="note">Change in Year-3 ARR when one input moves, against scenario 8. Pilot conversion and volume are tested both ways; delays and gate slips only hurt.</p><div id="c-sens"></div></div>
+    <div class="card"><h2>Cash saved by each hiring gate</h2><p class="note">36-month people cost avoided by releasing each gate's roles nine months later (scenario 8 against 9).</p><div id="c-gate"></div></div>
+  </section>
+
+  <section>
+    <h2 style="margin-bottom:8px">All scenarios, side by side</h2>
+    <div class="tbl"><table id="tbl"></table></div>
+  </section>
+  <details><summary>Quarterly numbers for the chosen scenario</summary><div class="tbl" style="margin-top:8px"><table id="tq"></table></div></details>
+  <p class="foot">Source: <code>docs/finance/semester-financial-model.xlsx</code>, recalculated once per scenario. Rebuild with <code>python3 docs/finance/tools/build_dashboard.py</code>. A number here is a model output under stated assumptions; the assumption register says which are facts, proposals, hypotheses or questions for a professional.</p>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const D = {"names":["Conservative","Base","Aggressive","Enterprise-delayed","High AI cost","Incident cost","Gated plan","Go/no-go gates","Gates + gated hiring"],"desc":["Fewer students, slower conversion, 40% fewer institutional logos at 85% of price, slower go-live, more churn.","The staged plan of record: every driver at its planning value, no gates, hires on their base months.","More registrations and conversion, 40% more logos at 110% of price, lower churn. An upside, not a target.","Base economics with institutional signing six months later and go-live three months later than planned.","Base with AI token usage 20% higher and vendor prices 15% higher: tests the allowance and gross margin.","Base with a security incident: response cost, service credits and lost sales across the horizon.","CFO-recommended staging of Base: flexible hires held until their gates, so burn follows evidence.","Base economics with every revenue line held until its go/no-go gate month. No paid pilot before Year 2.","Go/no-go gates and flexible hires released nine months after their base month. The lowest peak need."],"scen":[{"rev":[64805.4616686877,510433.123080171,1925067.23761285],"arr3":1527207.74990461,"gm3":-0.0648965993170379,"ebitda":[-2737637.0897811,-8252871.90469562,-11357687.0209659],"peak":22239535.3101999,"mincash":1750355.45913524,"lowmonths":2,"heads3":50,"bm3":9.76395604456897,"streams":{"Student subscription":[7169.88884569622,35633.917274036,88781.8711630111],"Institutional platform":[14794.875,140260.68355,672268.611144357],"Implementation":[42700,261400,793600],"Marketplace":[0,0,35805.2459894063],"Career / employer":[0,70200,311312.7],"AI usage and alumni":[140.697822991524,2938.52225613493,23298.8093160774]},"q":{"rev":[1727.87109556609,9254.84496726574,21636.3284468683,32186.4171589876,43265.352112055,77628.7988029275,147927.477798917,241611.494366271,309214.820660665,378919.788484712,510301.111062616,726631.517404859],"arr":[3404.85875595938,6464.21642248394,8062.16994875651,28837.3155541114,104724.338974161,194121.311699172,248279.910150565,377033.094383584,655312.305648212,1019176.98613997,1231893.6284964,1527207.74990461],"cash":[4075436.48239061,3465037.59095077,2806705.26798728,1750355.45913524,13715147.0878304,11825265.9268552,9770242.6845116,7490719.46988464,13562401.7924714,10858741.5542996,8149417.42699277,5260464.68980014],"ebitda":[-424760.333931475,-607089.980366541,-651322.211834824,-1054464.56364826,-2044569.56940471,-1911240.69492503,-2057685.61891701,-2239376.02144888,-2917114.65486688,-2799920.72021502,-2840202.03327667,-2800449.6126073],"heads":[3,9,10,18,25,32,36,40,44,48,50,50]}},{"rev":[158962.057783855,1386244.79096699,4716500.41297831],"arr3":4339103.43019746,"gm3":0.35896995976621,"ebitda":[-3329554.6307698,-8657307.14263232,-9967188.32725833],"peak":21134025.1187372,"mincash":1195839.86771309,"lowmonths":3,"heads3":50,"bm3":3.02893218169287,"streams":{"Student subscription":[14101.913562216,71841.8221930427,183664.1620825],"Institutional platform":[52933.3333333333,462053.294444445,1971827.21015556],"Implementation":[91333.3333333333,712333.333333333,1801333.33333333],"Marketplace":[0,9667.75376947718,121987.007336984],"Career / employer":[0,117000,540090],"AI usage and alumni":[593.477554972769,13348.58722669487,97598.7000699413]},"q":{"rev":[6951.5382593375,29028.1288737559,58538.2403063231,64444.150344439,105399.309658247,250701.73687176,470011.26996499,560132.474471996,642967.480193467,940147.142752747,1441054.43179382,1692331.35823828],"arr":[6659.167492675,17453.0190916,43539.9164497031,116792.567253205,272573.718018871,432628.316016517,721291.524474756,1244957.74237832,1873267.48013876,2341047.05649895,3076817.12454206,4339103.43019746],"cash":[4074899.40889733,3470835.76960469,2577607.84552554,1195839.86771309,12901184.6864292,10909343.9937174,8802902.36290048,6737932.32994443,13117026.4632036,10645932.37973,8202094.0068196,6365974.88126283],"ebitda":[-424069.918157309,-600180.403448649,-890451.446792194,-1414852.86237165,-2338018.90053839,-2019354.63931001,-2087499.04701648,-2212434.55576744,-2900854.28244446,-2600516.48189752,-2327396.34003618,-2138421.22288017],"heads":[3,9,15,25,32,36,40,44,48,50,50,50]}},{"rev":[231933.874020115,2042968.43185982,7152746.60062573],"arr3":6893501.30475933,"gm3":0.457280024845558,"ebitda":[-3384569.96943343,-8960495.60838307,-9494123.85647861],"peak":20504059.6499169,"mincash":1158177.87936677,"lowmonths":3,"heads3":50,"bm3":1.72600560068656,"streams":{"Student subscription":[25747.786642657,133251.502832694,346238.639501174],"Institutional platform":[76925.3333333333,700138.195555556,3060384.55746163],"Implementation":[127866.666666667,997266.666666667,2521866.66666667],"Marketplace":[0,19757.9259557272,248820.199207021],"Career / employer":[0,163800,772813.125],"AI usage and alumni":[1394.08737745762,28754.14084917243,202623.4127892327]},"q":{"rev":[10107.5824213915,41939.1066791239,84199.2493429795,95687.9355766196,157912.877268871,367541.093688413,684807.827268433,832706.6336341,986276.743145258,1428607.79646302,2159588.28447133,2578273.77654612],"arr":[12153.0419381175,30759.4012410159,72239.5947587216,190271.247659721,431788.427709778,678996.63759455,1124968.68665405,1953403.40681591,2948893.57151275,3684350.99262892,4851064.25693345,6893501.30475933],"cash":[4075695.41048124,3475022.88583708,2573897.85399341,1158177.87936677,12792848.6247691,10718742.0307927,8539298.24205304,6522576.98987332,13024176.5517079,10653406.2570619,8320347.67008751,6995940.35008306],"ebitda":[-423730.234912287,-596275.505236196,-897888.857113613,-1466675.37217133,-2432464.21779703,-2119458.97754486,-2156780.08214938,-2251792.3308918,-2923766.74924753,-2574117.69643551,-2169807.23401773,-1826432.17677784],"heads":[3,9,15,25,32,36,40,44,48,50,50,50]}},{"rev":[86899.7316057391,647829.080696794,2749858.25753135],"arr3":2535321.76008655,"gm3":0.148032555365546,"ebitda":[-2733909.50804118,-8163798.98847399,-10897384.4198448],"peak":21404300.1778676,"mincash":1753767.1446122,"lowmonths":1,"heads3":50,"bm3":5.40186565759145,"streams":{"Student subscription":[14101.913562216,71841.8221930427,183664.1620825],"Institutional platform":[16933.3333333333,208407.790444444,970988.892184853],"Implementation":[55485.7142857143,249014.285714286,994723.80952381],"Marketplace":[0,6224.92627474547,74834.2800947777],"Career / employer":[0,105300,478120.32],"AI usage and alumni":[378.770424475492,7040.25607027542,47526.7936454097]},"q":{"rev":[2582.00196746025,12571.1348274725,28149.465098147,43597.1297126593,66965.4950142467,113042.080768833,183831.755201865,283989.749711849,434712.196788318,594125.754865975,752468.480110662,968551.825766395],"arr":[6635.2360461855,12775.1241985892,16105.5231041264,41310.4597665013,150753.609063707,303249.218796825,430520.113788307,577557.004566764,877374.819476645,1411823.76814282,2006338.41051181,2535321.76008655],"cash":[4076205.65973051,3467213.64297595,2807260.61696512,1753767.1446122,13723067.6941965,11875118.672245,9868542.63100261,7671282.0206177,13739985.2815363,11093027.3375788,8518233.19062524,6095699.82213245],"ebitda":[-424836.456210072,-606489.027457273,-650128.574200811,-1052455.45017303,-2036724.47172598,-1886309.42771044,-2028127.00665062,-2212638.08238695,-2877672.56889116,-2690950.07081826,-2694570.68376115,-2634191.09637425],"heads":[3,9,10,18,25,32,36,40,44,48,50,50]}},{"rev":[158962.057783855,1386244.79096699,4716500.41297831],"arr3":4339103.43019746,"gm3":0.272489249061207,"ebitda":[-3345515.46177876,-8771423.46294425,-10375074.6350131],"peak":21671988.5778129,"mincash":1179879.03670413,"lowmonths":3,"heads3":50,"bm3":3.16075736024233,"streams":{"Student subscription":[14101.913562216,71841.8221930427,183664.1620825],"Institutional platform":[52933.3333333333,462053.294444445,1971827.21015556],"Implementation":[91333.3333333333,712333.333333333,1801333.33333333],"Marketplace":[0,9667.75376947718,121987.007336984],"Career / employer":[0,117000,540090],"AI usage and alumni":[593.477554972769,13348.58722669487,97598.7000699413]},"q":{"rev":[6951.5382593375,29028.1288737559,58538.2403063231,64444.150344439,105399.309658247,250701.73687176,470011.26996499,560132.474471996,642967.480193467,940147.142752747,1441054.43179382,1692331.35823828],"arr":[6659.167492675,17453.0190916,43539.9164497031,116792.567253205,272573.718018871,432628.316016517,721291.524474756,1244957.74237832,1873267.48013876,2341047.05649895,3076817.12454206,4339103.43019746],"cash":[4074101.37308856,3467421.79171072,2570240.28385091,1179879.03670413,12871320.5698173,10858029.4277288,8722739.37640645,6607855.17862355,12917107.064255,10358770.9979918,7811325.8257578,5828011.42218714],"ebitda":[-424867.953966077,-602796.345533857,-894405.030572845,-1423446.13170598,-2351922.18614133,-2040805.08868674,-2116347.4675219,-2262348.72059429,-2970696.53007212,-2687758.46468721,-2431003.13935974,-2285616.50089406],"heads":[3,9,15,25,32,36,40,44,48,50,50,50]}},{"rev":[121947.857600596,1067253.30976542,3726701.26151749],"arr3":3248163.19676697,"gm3":0.248468438255431,"ebitda":[-3354765.14184405,-9906190.92751642,-10022669.8838744],"peak":23220759.5355089,"mincash":1133018.20278664,"lowmonths":7,"heads3":50,"bm3":4.2718867784294,"streams":{"Student subscription":[11946.9292350274,60251.6277188703,152428.984250543],"Institutional platform":[34539.5138888889,313635.4365250003,1481664.33981588],"Implementation":[75055,574796.30952381,1478089.28571429],"Marketplace":[0,4397.10250810265,88689.9596997912],"Career / employer":[0,105300,459018.9],"AI usage and alumni":[406.414476679274,8872.83348963541,66809.79203699151]},"q":{"rev":[4124.38012404847,20866.9642899096,43314.4756233496,53642.0375632879,81598.4414633884,190546.34056759,351248.781121718,443859.746612721,525309.938978785,739740.090121061,1112031.68053994,1349619.5518777],"arr":[5661.23701981871,12988.5736013755,24323.5713281206,80379.0076414936,208990.212913871,350458.670444139,528459.698588928,925158.347362097,1469286.70364105,1885922.89749446,2341596.52517344,3248163.19676697],"cash":[4074142.90842989,3460866.86071016,2548287.53238949,1133018.20278664,12801201.912751,10753830.3897749,7842752.0742454,5202854.16689118,11344492.852887,9435802.71890742,6742852.62036375,4279240.46449112],"ebitda":[-425143.339776794,-604889.203058014,-900280.082624508,-1424452.51638474,-2350961.20830757,-2053575.2283708,-2850435.23452187,-2651219.25631618,-2990598.43005606,-2080747.70294986,-2544286.03034112,-2407037.72052738],"heads":[3,9,15,25,32,36,40,44,48,50,50,50]}},{"rev":[142361.907230496,1242150.16281271,4216242.52659198],"arr3":3877721.29764795,"gm3":0.367290202983211,"ebitda":[-2441195.97919675,-5693128.96614776,-8820387.44780138],"peak":16218655.2375424,"mincash":2081223.44233462,"lowmonths":0,"heads3":48,"bm3":2.99558637874366,"streams":{"Student subscription":[12057.1360956947,61424.7579750515,157032.858580537],"Institutional platform":[47640,415847.965,1774644.48914],"Implementation":[82200,641100,1621200],"Marketplace":[0,7829.47402171425,98794.8190781337],"Career / employer":[0,105300,486081],"AI usage and alumni":[464.771134801546,10647.96581594173,78489.3597933058]},"q":{"rev":[6214.53355717851,25993.044496239,52506.1720673979,57648.1571096809,94247.6168644131,224692.333228111,421538.28467867,501671.928041513,573694.546579996,839915.864888369,1289724.62059151,1512907.4945321],"arr":[5678.1893194886,15096.0780647938,38397.0253790281,103509.535600359,242339.938093219,385310.706415036,644151.467751503,1111932.97845173,1672308.63761443,2090839.59147523,2750197.08140222,3877721.29764795],"cash":[4074849.59179266,3470311.6464161,2831498.50272966,2081223.44233462,14743042.8614773,13614161.9249165,12147989.1437466,10566502.5779301,17451757.5578588,15411068.9702203,13179559.2161606,11281344.7624576],"ebitda":[-424124.997438096,-600930.268500044,-636309.839777654,-779830.873480955,-1377028.44430015,-1153364.58830281,-1449279.42338861,-1713456.51015619,-2367032.25161619,-2156961.34393013,-2127421.558765,-2168972.29349006],"heads":[3,9,10,13,13,18,25,32,36,40,44,48]}},{"rev":[0,418520.07020149,3207398.98584721],"arr3":2954274.83556909,"gm3":0.204445240096002,"ebitda":[-3363892.43749434,-9023593.51638867,-10949651.4526548],"peak":22902187.5367903,"mincash":1136196.81250566,"lowmonths":3,"heads3":50,"bm3":4.24489924360541,"streams":{"Student subscription":[0,42060.8960093906,168227.378510614],"Institutional platform":[0,108538.888888889,858823.416666667],"Implementation":[0,143000,1521000],"Marketplace":[0,4641.73411436243,74417.3166267502],"Career / employer":[0,117000,540090],"AI usage and alumni":[0,3278.551188848343,44840.8740431802]},"q":{"rev":[0,0,0,0,25713.4989756667,77481.2862975766,143948.41723697,171376.867691277,274943.116085171,549882.414774215,1047490.30109468,1335083.15389315],"arr":[0,0,0,0,69446.362708,146295.459989543,244642.267692232,447791.724071678,818773.164415907,1225433.55955974,1718023.32259494,2954274.83556909],"cash":[4079676.42137598,3476697.58981844,2568721.94621687,1136196.81250566,12782790.4665099,10745873.3031912,8557394.70749148,6237580.72731479,12210603.8224447,9486790.28316294,6863254.30340968,4597812.46320971],"ebitda":[-420323.578624024,-602978.831557538,-907975.643601566,-1432614.38371121,-2359461.54330505,-2068953.49961489,-2198968.79244499,-2396209.68102374,-3101822.51160741,-2852528.61345938,-2590978.98912642,-2404321.33846158],"heads":[3,9,15,25,32,36,40,44,48,50,50,50]}},{"rev":[0,418520.07020149,3207398.98584721],"arr3":2954274.83556909,"gm3":0.253067909333022,"ebitda":[-2469628.43749434,-5997195.51638867,-9536486.55265479],"peak":17568360.6367903,"mincash":2030460.81250566,"lowmonths":0,"heads3":48,"bm3":3.68109536496856,"streams":{"Student subscription":[0,42060.8960093906,168227.378510614],"Institutional platform":[0,108538.888888889,858823.416666667],"Implementation":[0,143000,1521000],"Marketplace":[0,4641.73411436243,74417.3166267502],"Career / employer":[0,117000,540090],"AI usage and alumni":[0,3278.551188848343,44840.8740431802]},"q":{"rev":[0,0,0,0,25713.4989756667,77481.2862975766,143948.41723697,171376.867691277,274943.116085171,549882.414774215,1047490.30109468,1335083.15389315],"arr":[0,0,0,0,69446.362708,146295.459989543,244642.267692232,447791.724071678,818773.164415907,1225433.55955974,1718023.32259494,2954274.83556909],"cash":[4079676.42137598,3476697.58981844,2824948.94621687,2030460.81250566,14642013.4665099,13480170.3031912,11949396.7074915,10158242.7273148,16703146.2724448,14473916.0331629,12125506.9034097,9931639.36320971],"ebitda":[-420323.578624024,-602978.831557538,-651748.643601566,-794577.383711213,-1394502.54330505,-1193879.49961489,-1541263.79244499,-1867549.68102374,-2529942.06160741,-2357945.31345938,-2315852.13912642,-2332747.03846158],"heads":[3,9,10,13,13,18,25,32,36,40,44,48]}}],"sens":[{"label":"Pilot-to-annual conversion","lo":-648053.304,"loLabel":"0% convert (plan 50%)","hi":324026.65199999977,"hiLabel":"75% convert"},{"label":"Institutional logo volume","lo":-745977.9882666701,"loLabel":"60% of planned logos","hi":745977.9882666599,"hiLabel":"140% of planned logos"},{"label":"Enterprise signing delay","lo":-1110150.0000000002,"loLabel":"6 months later","hi":null,"hiLabel":null},{"label":"Gate slip, all gates","lo":-1744519.4358630402,"loLabel":"12 months later","hi":null,"hiLabel":null}],"gates":[{"id":"G8","name":"Scale organization","fte":5,"base":22,"saved":776640.6},{"id":"G4","name":"Product depth and measurement","fte":5,"base":15,"saved":771202.2},{"id":"G9","name":"Seed-stage platform and finance","fte":5,"base":8,"saved":768600},{"id":"G1","name":"Platform maturity and accessibility","fte":4,"base":9,"saved":593145},{"id":"G7","name":"Community, marketplace and employer","fte":5,"base":12,"saved":478804.5},{"id":"G2","name":"Integration capacity","fte":3,"base":11,"saved":443100},{"id":"G5","name":"Sales capacity for paid pilots","fte":4,"base":14,"saved":402905.1},{"id":"G3","name":"Trust and compliance operations","fte":2,"base":13,"saved":288451.5},{"id":"G6","name":"Customer-success capacity","fte":2,"base":19,"saved":217474.2},{"id":"G10","name":"Enterprise sales","fte":2,"base":28,"saved":171865.8}],"streamNames":["Student subscription","Institutional platform","Implementation","Marketplace","Career / employer","AI usage and alumni"],"quarters":["Q1 Nov-26","Q2 Feb-27","Q3 May-27","Q4 Aug-27","Q5 Nov-27","Q6 Feb-28","Q7 May-28","Q8 Aug-28","Q9 Nov-28","Q10 Feb-29","Q11 May-29","Q12 Aug-29"],"stamp":"2026-10-04 (model at f318c19)"};
+const $ = (s) => document.querySelector(s);
+const fmtK = (v) => v == null ? "n/a" : (Math.abs(v) < 500 ? "0" : (v < 0 ? "(" : "") + Math.round(Math.abs(v) / 1e3).toLocaleString("en-US") + (v < 0 ? ")" : ""));
+const fmtM = (v, d = 1) => v == null ? "n/a" : (v < 0 ? "-" : "") + "$" + (Math.abs(v) / 1e6).toFixed(d) + "M";
+const pct = (v) => v == null ? "n/a" : Math.round(v * 100) + "%";
+let sel = 1; // Base is index 1 (scenario 2)
+const NS = "http://www.w3.org/2000/svg";
+const tip = $("#tip");
+function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; const w = tip.offsetWidth; let x = e.clientX + 14; if (x + w > innerWidth - 8) x = e.clientX - w - 14; tip.style.left = Math.max(8, x) + "px"; tip.style.top = (e.clientY + 14) + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+function el(n, a = {}, p, t) { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; if (p) p.appendChild(e); return e; }
+function ticks(lo, hi, n = 5) { const span = hi - lo || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / mag, step = (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * mag; const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step, out = []; for (let v = a; v <= b + step / 2; v += step) out.push(+v.toFixed(6)); return out; }
+function chart(host, w, h, m) { host.innerHTML = ""; const s = el("svg", { viewBox: `0 0 ${w} ${h}`, role: "img" }); host.appendChild(s); return { s, w, h, m, iw: w - m.l - m.r, ih: h - m.t - m.b }; }
+const colorVar = { c1: "var(--c1)", c2: "var(--c2)", c3: "var(--c3)", c4: "var(--c4)", c5: "var(--c5)", c6: "var(--c6)" };
+
+function legend(id, items) { $(id).innerHTML = items.map(([c, t, dash]) => `<span><i class="sw" style="background:${c};${dash ? "height:0;border-top:2px dashed " + c + ";background:none;border-radius:0" : ""}"></i>${t}</span>`).join(""); }
+
+function lineChart() {
+  const S = D.scen[sel], B = D.scen[1], q = D.quarters;
+  const all = [...S.q.arr, ...S.q.rev, ...B.q.arr, ...B.q.rev], tk = ticks(0, Math.max(...all)), top = tk[tk.length - 1];
+  const c = chart($("#c-arr"), 560, 270, { l: 52, r: 18, t: 12, b: 28 }); const X = (i) => c.m.l + c.iw * i / 11, Y = (v) => c.m.t + c.ih * (1 - v / top);
+  tk.forEach((t) => { el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(t), y2: Y(t), class: "gridline" }, c.s); el("text", { x: c.m.l - 8, y: Y(t) + 4, "text-anchor": "end", class: "mono" }, c.s, t === 0 ? "0" : fmtK(t)); });
+  q.forEach((n, i) => { if (i % 2 === 0) el("text", { x: X(i), y: c.h - 8, "text-anchor": "middle" }, c.s, n); });
+  const path = (arr) => arr.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join("");
+  if (sel !== 1) { el("path", { d: path(B.q.arr), fill: "none", stroke: "var(--c1)", "stroke-width": 1.5, "stroke-dasharray": "5 4", opacity: .6 }, c.s); el("path", { d: path(B.q.rev), fill: "none", stroke: "var(--c2)", "stroke-width": 1.5, "stroke-dasharray": "5 4", opacity: .6 }, c.s); }
+  el("path", { d: path(S.q.arr), fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round" }, c.s);
+  el("path", { d: path(S.q.rev), fill: "none", stroke: "var(--c2)", "stroke-width": 2, "stroke-linejoin": "round" }, c.s);
+  [[S.q.arr, "var(--c1)", "ARR"], [S.q.rev, "var(--c2)", "Revenue"]].forEach(([a, col, t]) => { el("circle", { cx: X(11), cy: Y(a[11]), r: 4, fill: col, stroke: "var(--surface)", "stroke-width": 2 }, c.s); });
+  const cross = el("line", { y1: c.m.t, y2: c.m.t + c.ih, stroke: "var(--ink-3)", "stroke-width": 1, opacity: 0 }, c.s);
+  const hit = el("rect", { x: c.m.l, y: c.m.t, width: c.iw, height: c.ih, fill: "transparent" }, c.s);
+  hit.addEventListener("mousemove", (e) => { const r = c.s.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * c.w, i = Math.max(0, Math.min(11, Math.round((px - c.m.l) / c.iw * 11))); cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("opacity", 1); showTip(e, `<b>${q[i]}</b><br>ARR ${fmtM(S.q.arr[i], 2)}<br>Revenue ${fmtM(S.q.rev[i], 2)}`); });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
+  legend("#l-arr", [["var(--c1)", "ARR"], ["var(--c2)", "Revenue"]].concat(sel !== 1 ? [["var(--ink-3)", "Base (dashed)", true]] : []));
+}
+
+function cashChart() {
+  const S = D.scen[sel], q = D.quarters, v = S.q.cash, lo = Math.min(0, ...v), hi = Math.max(...v), tk = ticks(lo, hi), a = tk[0], b = tk[tk.length - 1];
+  const c = chart($("#c-cash"), 560, 270, { l: 52, r: 18, t: 12, b: 28 }); const Y = (x) => c.m.t + c.ih * (1 - (x - a) / (b - a)), bw = c.iw / 12 * .62, X = (i) => c.m.l + c.iw * (i + .5) / 12;
+  tk.forEach((t) => { el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(t), y2: Y(t), class: "gridline" }, c.s); el("text", { x: c.m.l - 8, y: Y(t) + 4, "text-anchor": "end", class: "mono" }, c.s, t === 0 ? "0" : fmtK(t)); });
+  v.forEach((x, i) => { const y0 = Y(0), y1 = Y(x), r = el("rect", { x: X(i) - bw / 2, y: Math.min(y0, y1), width: bw, height: Math.max(1, Math.abs(y1 - y0)), rx: 2, fill: x < 0 ? "var(--bad)" : "var(--c1)" }, c.s);
+    r.addEventListener("mousemove", (e) => showTip(e, `<b>${q[i]}</b><br>Cash ${fmtM(x, 2)}`)); r.addEventListener("mouseleave", hideTip); if (i % 2 === 0) el("text", { x: X(i), y: c.h - 8, "text-anchor": "middle" }, c.s, q[i]); });
+  el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(0), y2: Y(0), class: "axis" }, c.s);
+  legend("#l-cash", [["var(--c1)", "Cash in the bank"], ["var(--bad)", "Below zero: unfunded"]]);
+}
+
+function streamChart() {
+  const S = D.scen[sel], names = D.streamNames, cols = ["--c1", "--c2", "--c3", "--c4", "--c5", "--c6"], yrs = ["Year 1", "Year 2", "Year 3"];
+  const tot = [0, 1, 2].map((y) => names.reduce((s, n) => s + S.streams[n][y], 0)), tk = ticks(0, Math.max(...tot) / 1e3), top = tk[tk.length - 1] * 1e3;
+  const c = chart($("#c-str"), 560, 270, { l: 52, r: 18, t: 12, b: 28 }); const Y = (v) => c.m.t + c.ih * (1 - v / top), bw = c.iw / 3 * .5, X = (i) => c.m.l + c.iw * (i + .5) / 3;
+  tk.forEach((t) => { el("line", { x1: c.m.l, x2: c.w - c.m.r, y1: Y(t * 1e3), y2: Y(t * 1e3), class: "gridline" }, c.s); el("text", { x: c.m.l - 8, y: Y(t * 1e3) + 4, "text-anchor": "end", class: "mono" }, c.s, t === 0 ? "0" : t.toLocaleString("en-US")); });
+  [0, 1, 2].forEach((y) => { let base = 0; names.forEach((n, k) => { const v = S.streams[n][y]; if (v <= 0) return; const y1 = Y(base + v), y0 = Y(base), r = el("rect", { x: X(y) - bw / 2, y: y1, width: bw, height: Math.max(0, y0 - y1 - 2), fill: `var(${cols[k]})`, rx: 2 }, c.s);
+      r.addEventListener("mousemove", (e) => showTip(e, `<b>${yrs[y]}: ${n}</b><br>$${Math.round(v / 1e3).toLocaleString("en-US")}k`)); r.addEventListener("mouseleave", hideTip); base += v; });
+    el("text", { x: X(y), y: Y(tot[y]) - 6, "text-anchor": "middle", class: "mono" }, c.s, tot[y] <= 0 ? "0" : fmtK(tot[y])); el("text", { x: X(y), y: c.h - 8, "text-anchor": "middle" }, c.s, yrs[y]); });
+  legend("#l-str", names.map((n, k) => [`var(${cols[k]})`, n]));
+}
+
+function peakChart() {
+  const rows = D.scen.map((s, i) => ({ i, n: D.names[i], v: s.peak })), max = Math.max(...rows.map((r) => r.v)), h = 30 + rows.length * 26;
+  const c = chart($("#c-peak"), 560, h, { l: 196, r: 52, t: 6, b: 6 }); const X = (v) => c.m.l + c.iw * v / max;
+  rows.forEach((r, k) => { const y = c.m.t + k * 26 + 3, on = r.i === sel; el("text", { x: c.m.l - 8, y: y + 12, "text-anchor": "end", style: on ? "fill:var(--ink);font-weight:600" : "" }, c.s, r.n);
+    const b = el("rect", { x: c.m.l, y, width: X(r.v) - c.m.l, height: 17, rx: 3, fill: on ? "var(--accent)" : "var(--c6)", opacity: on ? 1 : .55 }, c.s); b.addEventListener("mousemove", (e) => showTip(e, `<b>${r.n}</b><br>Peak need ${fmtM(r.v, 2)}`)); b.addEventListener("mouseleave", hideTip);
+    el("text", { x: X(r.v) + 6, y: y + 13, class: "mono", style: on ? "fill:var(--ink);font-weight:600" : "" }, c.s, fmtM(r.v)); });
+}
+
+function sensChart() {
+  const rows = D.sens, ext = Math.max(...rows.flatMap((r) => [Math.abs(r.lo), Math.abs(r.hi)])), tk = ticks(-ext / 1e3, ext / 1e3, 4), a = tk[0] * 1e3, b = tk[tk.length - 1] * 1e3, h = 36 + rows.length * 30;
+  const c = chart($("#c-sens"), 560, h, { l: 170, r: 16, t: 8, b: 26 }); const X = (v) => c.m.l + c.iw * (v - a) / (b - a);
+  tk.forEach((t) => { el("line", { x1: X(t * 1e3), x2: X(t * 1e3), y1: c.m.t, y2: c.h - c.m.b, class: "gridline" }, c.s); el("text", { x: X(t * 1e3), y: c.h - 8, "text-anchor": "middle", class: "mono" }, c.s, t === 0 ? "0" : (t > 0 ? "+" : "") + t.toLocaleString("en-US") + "k"); });
+  rows.forEach((r, k) => { const y = c.m.t + k * 30 + 4; el("text", { x: c.m.l - 8, y: y + 12, "text-anchor": "end" }, c.s, r.label);
+    [[r.lo, r.loLabel], [r.hi, r.hiLabel]].forEach(([v, lab]) => { if (v == null || Math.abs(v) < 1) return; const x0 = X(0), x1 = X(v), rc = el("rect", { x: Math.min(x0, x1), y, width: Math.abs(x1 - x0), height: 18, rx: 2, fill: v < 0 ? "var(--c2)" : "var(--c1)" }, c.s);
+      rc.addEventListener("mousemove", (e) => showTip(e, `<b>${r.label}</b><br>${lab}<br>Year-3 ARR ${v > 0 ? "+" : "-"}$${Math.round(Math.abs(v) / 1e3).toLocaleString("en-US")}k`)); rc.addEventListener("mouseleave", hideTip); }); });
+  el("line", { x1: X(0), x2: X(0), y1: c.m.t, y2: c.h - c.m.b, class: "axis" }, c.s);
+}
+
+function gateChart() {
+  const rows = D.gates, max = Math.max(...rows.map((r) => r.saved)), h = 14 + rows.length * 26;
+  const c = chart($("#c-gate"), 560, h, { l: 196, r: 64, t: 6, b: 6 }); const X = (v) => c.m.l + c.iw * v / max;
+  rows.forEach((r, k) => { const y = c.m.t + k * 26 + 3; el("text", { x: c.m.l - 8, y: y + 12, "text-anchor": "end" }, c.s, r.id + " " + r.name);
+    const b = el("rect", { x: c.m.l, y, width: Math.max(1, X(r.saved) - c.m.l), height: 17, rx: 3, fill: "var(--c3)" }, c.s); b.addEventListener("mousemove", (e) => showTip(e, `<b>${r.id} ${r.name}</b><br>${r.fte} FTE, released month ${r.base} in the plan<br>Saves $${Math.round(r.saved / 1e3).toLocaleString("en-US")}k of people cost`)); b.addEventListener("mouseleave", hideTip);
+    el("text", { x: X(r.saved) + 6, y: y + 13, class: "mono" }, c.s, "$" + Math.round(r.saved / 1e3).toLocaleString("en-US") + "k"); });
+}
+
+function kpis() {
+  const S = D.scen[sel], B = D.scen[1];
+  const items = [["Revenue, Year 3", S.rev[2], B.rev[2], fmtM, true], ["ARR, end of Year 3", S.arr3, B.arr3, fmtM, true], ["Peak funding need", S.peak, B.peak, fmtM, false], ["Lowest cash with rounds", S.mincash, B.mincash, fmtM, true]];
+  let h = items.map(([l, v, b, f, upGood]) => { const d = v - b, cls = Math.abs(d) < 1e3 ? "" : ((d > 0) === upGood ? "up" : "dn"); return `<div class="kpi"><div class="l">${l}</div><div class="v">${f(v)}</div><div class="d ${cls}">${sel === 1 ? "Base" : (d >= 0 ? "+" : "-") + f(Math.abs(d)).replace("-", "") + " vs Base"}</div></div>`; }).join("");
+  h += `<div class="kpi"><div class="l">Months below 6-month cash policy</div><div class="v">${S.lowmonths}</div><div class="d ${S.lowmonths === 0 ? "up" : S.lowmonths > B.lowmonths ? "dn" : ""}">${sel === 1 ? "Base" : "Base: " + B.lowmonths}</div></div>`;
+  h += `<div class="kpi"><div class="l">Burn multiple, Year 3</div><div class="v">${typeof S.bm3 === "number" ? S.bm3.toFixed(1) + "x" : "n/a"}</div><div class="d">net burn ÷ net new ARR</div></div>`;
+  $("#kpis").innerHTML = h;
+}
+
+function tables() {
+  const hd = ["Scenario", "Revenue Y3", "ARR Y3", "Gross margin Y3", "EBITDA Y3", "Peak need", "Lowest cash", "Months below policy", "Heads Y3"];
+  $("#tbl").innerHTML = "<thead><tr>" + hd.map((x) => `<th>${x}</th>`).join("") + "</tr></thead><tbody>" + D.scen.map((s, i) => `<tr class="${i === sel ? "sel" : ""}"><td>${i + 1}. ${D.names[i]}</td><td>${fmtM(s.rev[2])}</td><td>${fmtM(s.arr3)}</td><td>${pct(s.gm3)}</td><td>${fmtM(s.ebitda[2])}</td><td>${fmtM(s.peak)}</td><td>${fmtM(s.mincash)}</td><td>${s.lowmonths}</td><td>${Math.round(s.heads3)}</td></tr>`).join("") + "</tbody>";
+  const S = D.scen[sel], q = D.quarters;
+  $("#tq").innerHTML = "<thead><tr><th>$ thousands</th>" + q.map((x) => `<th>${x}</th>`).join("") + "</tr></thead><tbody>" + [["Revenue", S.q.rev], ["ARR, end of quarter", S.q.arr], ["EBITDA", S.q.ebitda], ["Cash, end of quarter", S.q.cash]].map(([n, a]) => `<tr><td>${n}</td>${a.map((v) => `<td>${fmtK(v)}</td>`).join("")}</tr>`).join("") + `<tr><td>Headcount</td>${S.q.heads.map((v) => `<td>${Math.round(v)}</td>`).join("")}</tr></tbody>`;
+}
+
+function render() {
+  document.querySelectorAll("#seg button").forEach((b, i) => b.setAttribute("aria-pressed", i === sel));
+  $("#desc").textContent = D.desc[sel];
+  kpis(); lineChart(); cashChart(); streamChart(); peakChart(); tables();
+  try { localStorage.setItem("sem-dash-sel", sel); } catch (e) {}
+}
+$("#stamp").textContent = D.stamp;
+$("#seg").innerHTML = D.names.map((n, i) => `<button type="button" aria-pressed="false">${i + 1}. ${n}</button>`).join("");
+document.querySelectorAll("#seg button").forEach((b, i) => b.addEventListener("click", () => { sel = i; render(); }));
+try { const s = +localStorage.getItem("sem-dash-sel"); if (s >= 0 && s < D.names.length) sel = s; } catch (e) {}
+sensChart(); gateChart(); render();
+</script>
+</body></html>
