@@ -66,6 +66,7 @@ export function ObjectCard({
   secondary,
   source,
   provenance,
+  now,
   openIn = [],
   context,
   relationships = [],
@@ -86,6 +87,8 @@ export function ObjectCard({
    * design census counts the cards that still do not pass it.
    */
   provenance?: FactProvenance;
+  /** The moment ages are measured against. Only a test or the gallery passes it. */
+  now?: number;
   openIn?: OpenTarget[];
   context?: string;
   relationships?: string[];
@@ -111,7 +114,7 @@ export function ObjectCard({
       </H>
       {provenance && (
         <div>
-          <ProvenanceChips provenance={provenance} />
+          <ProvenanceChips provenance={provenance} now={now} />
         </div>
       )}
       {explanation && <p className="object-card-why">{explanation}</p>}

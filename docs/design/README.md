@@ -32,6 +32,8 @@ documents build on that system and do not replace any of it.
 | Reduced motion and calm mode are honoured | `npm test` | `app/src/a11y/motion.test.ts`, `calm.test.ts` |
 | Contrast on every ground | `npm test` | `app/src/lib/contrast.test.ts` |
 | Adoption figures | `npm run census:design` | `app/scripts/design-census.mjs` |
+| Every design-system component has a story; the gallery does not read the clock | `npm test` | `app/src/gallery/gallery.test.tsx` |
+| Visual regression of the stories against a runner-made baseline (not in CI) | `npm run gallery:shots` | `app/scripts/gallery-shots.mjs` |
 
 ## A coherent screen
 
