@@ -184,7 +184,7 @@ resume on a second device), `smoke:sync` (two-device account lifecycle),
 
 Each is small, independently green, and its own decision where one is needed.
 
-1. `chore(workspace)`: root `package.json`, `pnpm-workspace.yaml`, `turbo.json`; `app/` is a workspace package; **same suite, same counts**.
+1. `chore(workspace)`, **staged (corrected on starting C0)**: this line first said the workspace commit "moves nothing" and makes `app/` a workspace package. That is not behaviour-neutral here: every CI job runs `npm ci` with `working-directory: app` against `app/package-lock.json`, and two Vercel projects use `app` and `company-site` as root directories, so moving the lockfile to the root edits every workflow and depends on dashboard settings. Decided instead: **1a** root `package.json` + lockfile with npm workspaces for `packages/*` only (this is P-01's stated fallback; pnpm and Turborepo are deferred, not rejected); **1b** `app/` joins the workspace, with the workflow edits proven by CI on that PR; **1c** the pnpm/Turborepo decision, taken once 1b has run. Test gate for 1a: same suite, same counts (1,265 files; 19,744 passed, 48 skipped on `main` dac31c9).
 2. `chore(ci)`: required-checks list recorded in `.github/rulesets`; turbo-affected CI; merge queue on.
 3. `refactor(kernel)`: move `policy/events/workflow` to `packages/kernel` with re-exports from `@semester/institution`; `check:server` replaces `check:university`.
 4. `feat(tools)`: `tools/boundaries` + dag + negative fixtures.

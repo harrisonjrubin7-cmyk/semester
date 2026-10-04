@@ -47,9 +47,9 @@ version: 2
 updates:
   # ── The app's own tree ──────────────────────────────────────────────────
   #
-  # `directory: /app` rather than `/`: the repository root has no
-  # `package.json`, which is the same trap `CLAUDE.md` names about `npm test`.
-  # Pointed at the root, Dependabot finds nothing and says so nowhere.
+  # `directory: /app` rather than `/`: the root `package.json` is a workspace
+  # manifest for `packages/*` with no dependencies of its own, so pointed at the
+  # root Dependabot finds nothing to update and says so nowhere.
   - package-ecosystem: npm
     directory: /app
     schedule:
