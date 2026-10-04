@@ -28,6 +28,8 @@ export interface NewTask {
 export interface TaskRepository {
   /** Replace the stored entry with this one. */
   save(next: Task): Promise<void>;
+  /** Remove the entry. Removing one that is already gone is not an error: the person's aim is met. */
+  remove(id: string): Promise<void>;
   get(id: string): Promise<Task | null>;
   list(): Promise<readonly Task[]>;
   /** Store an entry the repository has not seen; the id is minted by the repository. */

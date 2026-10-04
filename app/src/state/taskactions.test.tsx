@@ -22,7 +22,7 @@ import { makeTaskActions, useTaskActions, type TaskActions } from './taskactions
  * legacy reducer alone would have produced for the same presses.
  */
 const dom = (over: Partial<Task> = {}): Task => ({
-  id: 't1', title: 'Read', state: 'open', dueOn: '2026-09-10', courseId: null, repeats: false, ...over,
+  id: 't1', title: 'Read', state: 'open', dueOn: '2026-09-10', courseId: null, time: '', repeats: false, ...over,
 });
 
 function stub(initial: Task[]) {
@@ -34,8 +34,9 @@ function stub(initial: Task[]) {
       list: async () => ({ ok: true as const, value: tasks }),
       complete: vi.fn(async (id: string) => { calls.push(`complete:${id}`); tasks = tasks.map((t) => (t.id === id ? { ...t, state: 'done' as const } : t)); return ok; }),
       reopen: vi.fn(async (id: string) => { calls.push(`reopen:${id}`); tasks = tasks.map((t) => (t.id === id ? { ...t, state: 'open' as const } : t)); return ok; }),
-      reschedule: vi.fn(async (id: string, to: string | null) => { calls.push(`reschedule:${id}:${to}`); return ok; }),
+      reschedule: vi.fn(async (id: string, to: string | null, time?: string) => { calls.push(`reschedule:${id}:${to}${time === undefined ? '' : `@${time}`}`); return ok; }),
       add: vi.fn(async (input: { title: string }) => { calls.push(`add:${input.title}`); return ok; }),
+      remove: vi.fn(async (id: string) => { calls.push(`remove:${id}`); tasks = tasks.filter((t) => t.id !== id); return ok; }),
     },
     settled: async () => undefined,
   } as unknown as Domains;
@@ -159,6 +160,73 @@ describe('makeTaskActions.add', () => {
     expect(log).toHaveBeenCalledTimes(1);
     expect(log.mock.calls[0][0]).toContain('refused an add (validation)');
     expect(dispatch.mock.calls.map((c) => c[0])).toEqual([{ type: 'addTask', task: plain }]);
+  });
+});
+
+describe('makeTaskActions.remove and the timed move', () => {
+  it('is the legacy dispatch, exactly, when the flag is not production', () => {
+    for (const flag of ['off', 'preview', 'sandbox'] as const) {
+      const { domains, dispatch, calls } = stub([dom()]);
+      const a = makeTaskActions(domains, dispatch, flag);
+      a.remove('t1');
+      a.reschedule('t1', '2026-09-12', '4:00 PM');
+      a.reschedule('t1', '2026-09-13');
+      expect(dispatch.mock.calls.map((c) => c[0])).toEqual([
+        { type: 'deleteTask', id: 't1' },
+        { type: 'moveTask', id: 't1', date: '2026-09-12', time: '4:00 PM' },
+        { type: 'editTask', id: 't1', patch: { date: '2026-09-13' } },
+      ]);
+      expect(calls).toEqual([]);
+    }
+  });
+
+  it('removes and moves through the domain at production, passing the time along', async () => {
+    const { domains, dispatch, calls } = stub([dom()]);
+    const a = makeTaskActions(domains, dispatch, 'production');
+    a.reschedule('t1', '2026-09-12', '4:00 PM');
+    a.reschedule('t1', '2026-09-13');
+    a.remove('t1');
+    await drain(); await drain(); await drain(); await drain();
+    expect(calls).toEqual(['reschedule:t1:2026-09-12@4:00 PM', 'reschedule:t1:2026-09-13', 'remove:t1']);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('does nothing for a task that has gone, and moves a repeating task through the legacy reducer', async () => {
+    const gone = stub([]);
+    const g = makeTaskActions(gone.domains, gone.dispatch, 'production');
+    g.remove('x');
+    g.reschedule('x', '2026-09-12', '4 PM');
+    await drain(); await drain();
+    expect(gone.calls).toEqual([]);
+    expect(gone.dispatch).not.toHaveBeenCalled();
+
+    const rep = stub([dom({ repeats: true })]);
+    makeTaskActions(rep.domains, rep.dispatch, 'production').reschedule('t1', '2026-09-12', '4 PM');
+    await drain(); await drain();
+    expect(rep.calls).toEqual([]);
+    expect(rep.dispatch.mock.calls.map((c) => c[0])).toEqual([{ type: 'moveTask', id: 't1', date: '2026-09-12', time: '4 PM' }]);
+  });
+
+  it('never loses a delete to a refusal: it falls back to the legacy dispatch', async () => {
+    const { domains, dispatch } = stub([dom()]);
+    (domains.tasks.remove as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: false, error: { code: 'forbidden', message: 'x', retryable: false } });
+    makeTaskActions(domains, dispatch, 'production', () => undefined).remove('t1');
+    await drain(); await drain(); await drain();
+    expect(dispatch.mock.calls.map((c) => c[0])).toEqual([{ type: 'deleteTask', id: 't1' }]);
+  });
+
+  it('never loses a delete or a move: a refusal or a throw falls back to the legacy dispatch', async () => {
+    const { domains, dispatch } = stub([dom()]);
+    (domains.tasks.remove as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('boom'));
+    (domains.tasks.reschedule as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: false, error: { code: 'validation', message: 'x', retryable: false } });
+    const a = makeTaskActions(domains, dispatch, 'production', () => undefined);
+    a.remove('t1');
+    a.reschedule('t1', '2026-09-12', '4 PM');
+    await drain(); await drain(); await drain(); await drain();
+    expect(dispatch.mock.calls.map((c) => c[0])).toEqual([
+      { type: 'deleteTask', id: 't1' },
+      { type: 'moveTask', id: 't1', date: '2026-09-12', time: '4 PM' },
+    ]);
   });
 });
 
@@ -293,5 +361,25 @@ describe('in a real store, against the legacy reducer', () => {
     expect(tasks.map((t) => t.title)).toEqual([long]);
     expect(warn.mock.calls.filter((c) => String(c[0]).includes('[domainTasks]'))).toHaveLength(1);
     warn.mockRestore();
+  });
+  it('deletes like the legacy reducer', async () => {
+    const rows = seed([{}, { title: 'Keep me' }]);
+    await mount('production', rows);
+    await act(async () => actions.remove('t0'));
+    await flush();
+    expect(strip(tasks)).toEqual(strip(legacyOnly(rows, [{ type: 'deleteTask', id: 't0' }])));
+    expect(tasks.map((t) => t.id)).toEqual(['t1']);
+  });
+
+  it('drops a task on an hour like the legacy moveTask, and keeps its time on a day-only move', async () => {
+    const rows = seed([{ time: '9 AM', note: 'keep me' }]);
+    await mount('production', rows);
+    await act(async () => actions.reschedule('t0', '2026-09-14', '4:00 PM'));
+    await flush();
+    expect(strip(tasks)).toEqual(strip(legacyOnly(rows, [{ type: 'moveTask', id: 't0', date: '2026-09-14', time: '4:00 PM' }])));
+    expect(tasks[0]).toMatchObject({ date: '2026-09-14', time: '4:00 PM', note: 'keep me' });
+    await act(async () => actions.reschedule('t0', '2026-09-16'));
+    await flush();
+    expect(tasks[0]).toMatchObject({ date: '2026-09-16', time: '4:00 PM' });
   });
 });

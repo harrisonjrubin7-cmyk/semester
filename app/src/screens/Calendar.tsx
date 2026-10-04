@@ -180,6 +180,7 @@ function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
   const { state, dispatch, catalog, say, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
@@ -194,12 +195,7 @@ function DayView() {
   const taskDrag = useDragToMove<Movable>({
     onDrop: ({ payload, point }) => {
       if (!point || payload.kind !== 'task') return;
-      dispatch({
-        type: 'moveTask',
-        id: payload.id,
-        date: dateToIso(day),
-        time: timeLabel(point.minutes),
-      });
+      taskActions.reschedule(payload.id, dateToIso(day), timeLabel(point.minutes));
       say(`Moved · ${payload.title} to ${shownTime(timeLabel(point.minutes), point.minutes)}.`, 'mine');
     },
   });

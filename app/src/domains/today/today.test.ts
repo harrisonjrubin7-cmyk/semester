@@ -14,7 +14,7 @@ const entry = (over: Partial<Entry> & { id: string }): Entry => ({
   kind: 'appointment', title: over.id, day: '2026-09-09', startMin: null, endMin: null, courseId: null, source: 'entered', ...over,
 });
 const task = (over: Partial<Task> & { id: string }): Task => ({
-  title: over.id, state: 'open', dueOn: null, courseId: null, repeats: false, ...over,
+  title: over.id, state: 'open', dueOn: null, courseId: null, time: '', repeats: false, ...over,
 });
 const build = (over: Partial<Parameters<typeof buildToday>[0]> = {}) =>
   buildToday({ clock: fixedClock('2026-09-09', 600), can: student, entries: [], tasks: [], ...over });

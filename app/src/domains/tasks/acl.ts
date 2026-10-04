@@ -25,7 +25,8 @@ export type NewLegacyTask = Omit<PersonalTask, 'id' | 'created' | 'done'>;
 export type LegacyTaskCommand =
   | { type: 'addTask'; task: NewLegacyTask }
   | { type: 'toggleTask'; id: string }
-  | { type: 'editTask'; id: string; patch: { date: string | null } };
+  | { type: 'editTask'; id: string; patch: { date?: string | null; time?: string } }
+  | { type: 'deleteTask'; id: string };
 
 export interface LegacyTaskHost {
   /** The tasks as the legacy state holds them *now* (not as they were when the host was built). */
@@ -49,6 +50,7 @@ export function taskFromLegacy(task: PersonalTask): Task {
     state: task.done ? 'done' : 'open',
     dueOn: task.date !== null && isIsoDate(task.date) ? task.date : null,
     courseId: task.courseId,
+    time: task.time,
     repeats: task.repeat !== undefined,
   };
 }
@@ -71,13 +73,22 @@ export function legacyTaskRepository(host: LegacyTaskHost): TaskRepository {
         host.dispatch({ type: 'toggleTask', id: task.id });
         wrote = true;
       }
-      // `editTask` rather than `moveTask`: only it can send a task back to "someday" (date null).
-      // Compared against the *mapped* date, so a stored date the domain could not read is never rewritten.
-      if (taskFromLegacy(before).dueOn !== task.dueOn) {
-        host.dispatch({ type: 'editTask', id: task.id, patch: { date: task.dueOn } });
+      // `editTask` rather than `moveTask`: only it can send a task back to "someday" (date null), and with a
+      // one- or two-field patch it is the same write `moveTask` makes. Compared against the *mapped* date, so a
+      // stored date the domain could not read is never rewritten.
+      const patch: { date?: string | null; time?: string } = {};
+      if (taskFromLegacy(before).dueOn !== task.dueOn) patch.date = task.dueOn;
+      if (before.time !== task.time) patch.time = task.time;
+      if (patch.date !== undefined || patch.time !== undefined) {
+        host.dispatch({ type: 'editTask', id: task.id, patch });
         wrote = true;
       }
       if (wrote) await host.settled?.();
+    },
+    async remove(id) {
+      if (!host.read().some((t) => t.id === id)) return;
+      host.dispatch({ type: 'deleteTask', id });
+      await host.settled?.();
     },
     async create(draft) {
       const known = new Set(host.read().map((t) => t.id));

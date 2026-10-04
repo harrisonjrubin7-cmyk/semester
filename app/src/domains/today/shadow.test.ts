@@ -8,7 +8,7 @@ import { SHADOW_FACTS, compareToday, factsOfView, signatureOf, type TodayFacts }
 const entry = (id: string, day: string, over: Partial<Entry> = {}): Entry => ({
   id, kind: 'deadline', title: id, day, startMin: null, endMin: null, courseId: null, source: 'entered', ...over,
 });
-const task = (id: string, dueOn: string): Task => ({ id, title: id, state: 'open', dueOn, courseId: null, repeats: false });
+const task = (id: string, dueOn: string): Task => ({ id, title: id, state: 'open', dueOn, courseId: null, time: '', repeats: false });
 
 const view = () => {
   const r = buildToday({

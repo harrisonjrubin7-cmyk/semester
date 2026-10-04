@@ -46,8 +46,14 @@ export interface TaskActions {
   add(task: NewLegacyTask): void;
   /** Tick or un-tick, whichever the task is not. */
   toggle(id: string): void;
-  /** Move to a day, as `YYYY-MM-DD`. */
-  reschedule(id: string, date: string): void;
+  /**
+   * Move to a day, as `YYYY-MM-DD`, and optionally to a time of day as written
+   * ("4:00 PM"). Leaving `time` out keeps the time the task has: dropping a task
+   * on a month cell moves the day and nothing else.
+   */
+  reschedule(id: string, date: string, time?: string): void;
+  /** Delete a task. Undo is the reducer's, and is unchanged: the same `deleteTask` reaches it. */
+  remove(id: string): void;
 }
 
 export function makeTaskActions(
@@ -59,7 +65,9 @@ export function makeTaskActions(
   const legacy: TaskActions = {
     add: (task) => dispatch({ type: 'addTask', task }),
     toggle: (id) => dispatch({ type: 'toggleTask', id }),
-    reschedule: (id, date) => dispatch({ type: 'editTask', id, patch: { date } }),
+    reschedule: (id, date, time) =>
+      dispatch(time === undefined ? { type: 'editTask', id, patch: { date } } : { type: 'moveTask', id, date, time }),
+    remove: (id) => dispatch({ type: 'deleteTask', id }),
   };
   if (flag !== 'production') return legacy;
 
@@ -125,14 +133,21 @@ export function makeTaskActions(
         const done = await (task.state === 'done' ? domains.tasks.reopen(id) : domains.tasks.complete(id));
         if (!done.ok && done.error.code !== 'not_found') await viaLegacy(() => legacy.toggle(id));
       }, () => legacy.toggle(id)),
-    reschedule: (id, date) =>
+    reschedule: (id, date, time) =>
       orLegacy(async () => {
         const task = await find(id);
         if (!task) return;
-        if (task.repeats) return viaLegacy(() => legacy.reschedule(id, date));
-        const moved = await domains.tasks.reschedule(id, date);
-        if (!moved.ok && moved.error.code !== 'not_found') await viaLegacy(() => legacy.reschedule(id, date));
-      }, () => legacy.reschedule(id, date)),
+        if (task.repeats) return viaLegacy(() => legacy.reschedule(id, date, time));
+        const moved = await domains.tasks.reschedule(id, date, time);
+        if (!moved.ok && moved.error.code !== 'not_found') await viaLegacy(() => legacy.reschedule(id, date, time));
+      }, () => legacy.reschedule(id, date, time)),
+    remove: (id) =>
+      orLegacy(async () => {
+        const task = await find(id);
+        if (!task) return; // gone since it was drawn
+        const gone = await domains.tasks.remove(id);
+        if (!gone.ok && gone.error.code !== 'not_found') await viaLegacy(() => legacy.remove(id));
+      }, () => legacy.remove(id)),
   };
 }
 

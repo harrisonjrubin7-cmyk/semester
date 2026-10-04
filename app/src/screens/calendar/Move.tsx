@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { revealKindly } from '../../lib/prefers';
 import { useStore } from '../../state/store';
+import { useTaskActions } from '../../state/taskactions';
 import { Blueprint } from '../../components/Blueprint';
 import { isoToDate, longLabel, shownTime } from '../../lib/date';
 import { timeLabel } from '../../lib/drag';
@@ -98,6 +99,7 @@ interface Asking {
 
 export function useCalendarMove() {
   const { state, dispatch, say, adopt } = useStore();
+  const taskActions = useTaskActions();
   const [asking, setAsking] = useState<Asking | null>(null);
   const [refused, setRefused] = useState('');
   /**
@@ -149,12 +151,7 @@ export function useCalendarMove() {
        * no hour in it and sends none, and there the time is left exactly as
        * you wrote it.
        */
-      dispatch({
-        type: 'moveTask',
-        id: what.id,
-        date: to.date,
-        ...(to.at === undefined ? {} : { time: timeLabel(to.at) }),
-      });
+      taskActions.reschedule(what.id, to.date, to.at === undefined ? undefined : timeLabel(to.at));
       say(
         to.at === undefined
           ? `Moved · ${what.title} to ${when}.`

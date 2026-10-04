@@ -32,7 +32,9 @@ export interface TaskService {
   add(input: AddTaskInput): Promise<Result<Outcome<Task, Obligation>>>;
   complete(id: string): Promise<Result<Outcome<Task, Obligation>>>;
   reopen(id: string): Promise<Result<Outcome<Task, Obligation>>>;
-  reschedule(id: string, dueOn: string | null): Promise<Result<Outcome<Task, Obligation>>>;
+  reschedule(id: string, dueOn: string | null, time?: string): Promise<Result<Outcome<Task, Obligation>>>;
+  /** Delete a task. The person's own to-do, so nothing here asks anyone's leave but the policy's. */
+  remove(id: string): Promise<Result<Outcome<{ id: string }, Obligation>>>;
   list(): Promise<Result<readonly Task[]>>;
 }
 
@@ -80,7 +82,15 @@ export function createTaskService({ repo, clock, can }: TaskServiceDeps): TaskSe
     },
     complete: (id) => guarded(id, complete, 'task.completed'),
     reopen: (id) => guarded(id, reopen, 'task.reopened'),
-    reschedule: (id, dueOn) => guarded(id, (task) => reschedule(task, dueOn), 'task.rescheduled'),
+    reschedule: (id, dueOn, time) => guarded(id, (task) => reschedule(task, dueOn, time), 'task.rescheduled'),
+    async remove(id) {
+      const decision = can('task.write');
+      if (!decision.allow) return err('forbidden', decision.message, { reason: decision.reason });
+      const task = await repo.get(id);
+      if (!task) return err('not_found', 'That action isn’t in your list any more.', { id });
+      await repo.remove(id);
+      return ok({ value: { id }, events: [event('task.removed', id)], obligations: decision.obligations });
+    },
     async list() {
       const decision = can('task.read');
       if (!decision.allow) return err('forbidden', decision.message, { reason: decision.reason });

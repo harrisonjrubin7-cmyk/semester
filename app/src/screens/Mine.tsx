@@ -287,7 +287,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           <button
             type="button"
             className="bare"
-            onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
+            onClick={() => taskActions.remove(t.id)}
             aria-label={`Delete ${t.title}`}
             /* Marked so the assistant's floating button lifts clear of it at
                any overlap rather than at half of it — see `tappable` in

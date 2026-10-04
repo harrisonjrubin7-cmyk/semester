@@ -10,7 +10,7 @@ const denied: Can = () => ({ allow: false, reason: 'role_not_served', message: '
 const clock = fixedClock('2026-09-09', 600, 1_000);
 
 const task = (over: Partial<Task> = {}): Task => ({
-  id: 't1', title: 'Read chapter 3', state: 'open', dueOn: '2026-09-10', courseId: null, repeats: false, ...over,
+  id: 't1', title: 'Read chapter 3', state: 'open', dueOn: '2026-09-10', courseId: null, time: '', repeats: false, ...over,
 });
 
 const make = (seed: Task[] = [task()], can: Can = allowed) => {
@@ -41,6 +41,12 @@ describe('the task rules', () => {
       expect(r.ok).toBe(false);
       if (!r.ok) expect(r.error.code).toBe('unsupported');
     }
+  });
+
+  it('sets a time when given one, and keeps the task’s own when not', () => {
+    expect(reschedule(task({ time: '9 AM' }), '2026-09-20', '4:00 PM')).toMatchObject({ ok: true, value: { dueOn: '2026-09-20', time: '4:00 PM' } });
+    expect(reschedule(task({ time: '9 AM' }), '2026-09-20')).toMatchObject({ ok: true, value: { dueOn: '2026-09-20', time: '9 AM' } });
+    expect(reschedule(task({ time: '9 AM' }), '2026-09-20', '')).toMatchObject({ ok: true, value: { time: '' } });
   });
 
   it('reschedules to a real day or to someday, and refuses anything else', () => {
@@ -117,5 +123,31 @@ describe('the task service', () => {
     const { service } = make([task()], keepLocal);
     const r = await service.complete('t1');
     expect(r.ok && r.value.obligations).toEqual(['keep_on_device']);
+  });
+
+  it('removes a task, says so, and removes nothing for a person who may not write', async () => {
+    const { service, repo } = make([task(), task({ id: 't2', title: 'Other' })]);
+    const r = await service.remove('t1');
+    expect(r.ok && r.value.events).toEqual([{ type: 'task.removed', at: 1_000, subject: 't1' }]);
+    expect(repo.snapshot().map((t) => t.id)).toEqual(['t2']);
+
+    const locked = make([task()], denied);
+    const refused = await locked.service.remove('t1');
+    expect(!refused.ok && refused.error.code).toBe('forbidden');
+    expect(locked.repo.snapshot()).toHaveLength(1);
+  });
+
+  it('says not_found for removing a task that is gone', async () => {
+    const { service } = make([]);
+    const r = await service.remove('missing');
+    expect(!r.ok && r.error.code).toBe('not_found');
+  });
+
+  it('moves a task to a day and an hour through the service, keeping an omitted time', async () => {
+    const { service, repo } = make([task({ time: '9 AM' })]);
+    await service.reschedule('t1', '2026-09-12', '4:00 PM');
+    expect(repo.snapshot()[0]).toMatchObject({ dueOn: '2026-09-12', time: '4:00 PM' });
+    await service.reschedule('t1', '2026-09-13');
+    expect(repo.snapshot()[0]).toMatchObject({ dueOn: '2026-09-13', time: '4:00 PM' });
   });
 });

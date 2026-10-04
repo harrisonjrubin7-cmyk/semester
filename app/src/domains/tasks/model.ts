@@ -40,6 +40,12 @@ export interface Task {
   readonly dueOn: IsoDate | null;
   readonly courseId: string | null;
   /**
+   * When in the day, as the person wrote it ("6:30 PM", "before work"). Free
+   * text, shown as written and never parsed — the legacy rule on
+   * `PersonalTask.time`. Empty is "no time".
+   */
+  readonly time: string;
+  /**
    * Whether a rule brings it back. The slice does not own repetition — the
    * legacy engine in `lib/repeat.ts` does — so a repeating task is readable
    * here and refused for writes, which is the honest edge of the boundary.
@@ -83,11 +89,13 @@ export function reopen(task: Task): Result<Task> {
   return next.ok ? ok({ ...task, state: next.value }) : next;
 }
 
-export function reschedule(task: Task, dueOn: string | null): Result<Task> {
+/** `time` is optional: leaving it out keeps the time the task has, as dropping a task on a month cell does. */
+export function reschedule(task: Task, dueOn: string | null, time?: string): Result<Task> {
   const refused = refuseRepeat(task);
   if (refused) return refused;
   const day = validateDueOn(dueOn);
-  return day.ok ? ok({ ...task, dueOn: day.value }) : day;
+  if (!day.ok) return day;
+  return ok({ ...task, dueOn: day.value, ...(time === undefined ? {} : { time }) });
 }
 
 /** Whether a task is still ahead of the person on `today`: open, and dated today or earlier. */

@@ -18,6 +18,9 @@ export function memoryTaskRepository(seed: readonly Task[] = []): TaskRepository
     async list() {
       return [...tasks];
     },
+    async remove(id) {
+      tasks = tasks.filter((t) => t.id !== id);
+    },
     async save(task) {
       tasks = tasks.map((t) => (t.id === task.id ? task : t));
     },
@@ -29,6 +32,7 @@ export function memoryTaskRepository(seed: readonly Task[] = []): TaskRepository
         title: draft.title,
         dueOn: draft.dueOn,
         courseId: draft.courseId,
+        time: draft.time,
       };
       tasks = [...tasks, task];
       return task;

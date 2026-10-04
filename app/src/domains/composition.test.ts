@@ -159,4 +159,26 @@ describe('the slice running on the legacy store', () => {
     await createDomains(h, clock).tasks.add({ title: 'Plain' });
     expect('from' in state().tasks[0]).toBe(false);
   });
+
+  it('deletes through the reducer, and says not_found afterwards', async () => {
+    const { h, state } = host({ tasks: [legacyTask(), legacyTask({ id: 't2' })] });
+    const d = createDomains(h, clock);
+    expect((await d.tasks.remove('t1')).ok).toBe(true);
+    expect(state().tasks.map((t) => t.id)).toEqual(['t2']);
+    const again = await d.tasks.remove('t1');
+    expect(!again.ok && again.error.code).toBe('not_found');
+  });
+
+  it('moves to a day and an hour in one write, leaving steps and notes alone', async () => {
+    const { h, state, dispatched } = host({ tasks: [legacyTask()] });
+    await createDomains(h, clock).tasks.reschedule('t1', '2026-09-14', '4:00 PM');
+    expect(state().tasks[0]).toMatchObject({ date: '2026-09-14', time: '4:00 PM', note: 'bring the blue book', steps: [{ id: 's1', text: 'Skim', done: false }] });
+    expect(dispatched).toEqual([{ type: 'editTask', id: 't1', patch: { date: '2026-09-14', time: '4:00 PM' } }]);
+  });
+
+  it('writes only the field that changed', async () => {
+    const { h, dispatched } = host({ tasks: [legacyTask()] });
+    await createDomains(h, clock).tasks.reschedule('t1', '2026-09-10');
+    expect(dispatched).toEqual([]); // same day, no time given: nothing to write
+  });
 });
