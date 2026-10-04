@@ -26,7 +26,7 @@ The owner decides who counsel is; the privacy seat is held by outside counsel pe
 
 | # | Question | What the repo assumes | Unblocks |
 | --- | --- | --- | --- |
-| C1 | Who answers a data-subject request, and within what time, under which regimes? | Queue exists (`data_subject_request`); no screen; **no one named**; no time is promised anywhere | A screen and a stated response time |
+| C1 | Who answers a data-subject request, and within what time, under which regimes? | Queue and a student intake and tracking screen exist (`data_subject_request`, `DataRightsRequests.tsx`); no answering surface; **no one named**; no response time is decided or promised anywhere | An answering surface and a stated response time |
 | C2 | What is refused or withheld when erasure conflicts with another person's record or a hold? | Erasure fails closed for staff who wrote to four immutable tables | Erasure wording in the Privacy Policy |
 
 ## D. The drafts in `docs/legal/` (they stay there; this brief lives one level up so their "draft" rule holds)
