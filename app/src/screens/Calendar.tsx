@@ -1,6 +1,7 @@
 import { lazy, Suspense, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../state/taskactions';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -643,12 +644,13 @@ function DayView() {
  */
 function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<HTMLElement> }) {
   const taskRow = useRowStyle(8);
-  const { dispatch, courseCode, say } = useStore();
+  const { courseCode, say } = useStore();
+  const taskActions = useTaskActions();
   if (!t.date) return null;
 
   const move = (days: number) => {
     const to = shiftIso(t.date ?? '', days);
-    dispatch({ type: 'editTask', id: t.id, patch: { date: to } });
+    taskActions.reschedule(t.id, to);
     say(`Moved · ${t.title} to ${longLabel(isoToDate(to))}.`, 'mine');
   };
 
@@ -666,7 +668,7 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
         style={{ width: 20, flex: 'none' }}
       >

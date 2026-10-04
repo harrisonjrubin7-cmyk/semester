@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../state/taskactions';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -96,6 +97,7 @@ const submitOnEnter =
  */
 function TaskRow({ task: t }: { task: PersonalTask }) {
   const { state, dispatch, courseCode } = useStore();
+  const taskActions = useTaskActions();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(t.title);
   const [date, setDate] = useState(t.date ?? '');
@@ -316,7 +318,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         /* On a repeating task the tick moves it rather than finishing it, and
            a checkbox that does something other than tick has to say so before
            it is pressed — `tickSays` is the sentence. */

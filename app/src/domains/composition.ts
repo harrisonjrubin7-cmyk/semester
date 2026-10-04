@@ -71,6 +71,12 @@ export function todayFromLegacy(snapshot: LegacySnapshot, clock: Clock, config?:
 
 export interface Domains {
   tasks: TaskService;
+  /**
+   * Resolves once the legacy store has committed whatever was last dispatched.
+   * For a caller that writes through the legacy store itself (the repeating
+   * tasks the domain does not own) and then needs the domain to see the result.
+   */
+  settled(): Promise<void>;
   /** Today, derived from the host's live state at the moment of the call. */
   today(config?: TodayConfig): Promise<Result<TodayView>>;
 }
@@ -81,6 +87,7 @@ export function createDomains(host: LegacyHost, clock: Clock = systemClock): Dom
 
   return {
     tasks: createTaskService({ repo: legacyTaskRepository(host.tasks), clock, can }),
+    settled: async () => host.tasks.settled?.(),
     async today(config) {
       return todayFromLegacy(
         {

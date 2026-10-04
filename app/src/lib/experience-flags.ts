@@ -72,6 +72,14 @@ export interface ExperienceFlags {
    * has nothing to compare.
    */
   domainToday: FeatureState;
+  /**
+   * Ticking a task and moving it a day go through `src/domains/tasks` (step 5 of
+   * docs/architecture/modular-monolith.md, D-1149), which refuses a second
+   * completion and checks the date. Only `production` switches it on; every
+   * other state is the legacy reducer, exactly as before. A repeating task
+   * always takes the legacy path: the domain does not own repetition.
+   */
+  domainTasks: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -107,6 +115,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
     domainToday: featureState(env, 'VITE_DOMAIN_TODAY', false),
+    domainTasks: featureState(env, 'VITE_DOMAIN_TASKS', false),
   };
 }
 

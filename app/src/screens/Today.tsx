@@ -72,6 +72,7 @@ import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { TodayShadow } from '../state/todayshadow';
 import { deadlinesToday, useTodayView } from '../state/todayview';
+import { useTaskActions } from '../state/taskactions';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
@@ -219,6 +220,7 @@ function NextClassCard() {
  */
 function YourTasks() {
   const { state, dispatch, courseCode, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
@@ -269,7 +271,7 @@ function YourTasks() {
             <button
               type="button"
               className="bare"
-              onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+              onClick={() => taskActions.toggle(t.id)}
               aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
               // 20px was the icon's size, not a target. This is the most
               // tapped control in the app and it was less than half the
