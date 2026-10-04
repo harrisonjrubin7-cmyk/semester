@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:catalog",
+  "title": "Any Semester event",
+  "description": "An event valid under exactly one group schema. Load the envelope and every group schema first.",
+  "anyOf": [
+    {
+      "$ref": "urn:semester:events:identity"
+    },
+    {
+      "$ref": "urn:semester:events:student-and-action"
+    },
+    {
+      "$ref": "urn:semester:events:tasks-and-calendar"
+    },
+    {
+      "$ref": "urn:semester:events:lms"
+    },
+    {
+      "$ref": "urn:semester:events:integration"
+    },
+    {
+      "$ref": "urn:semester:events:ai"
+    },
+    {
+      "$ref": "urn:semester:events:support-and-security"
+    },
+    {
+      "$ref": "urn:semester:events:commercial"
+    },
+    {
+      "$ref": "urn:semester:events:credential"
+    }
+  ]
+}

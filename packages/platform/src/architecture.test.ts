@@ -330,7 +330,11 @@ describe('every reference implementation is exercised', () => {
   });
 
   it('every error code is produced somewhere in shipped code or tests (no dead codes in the catalogue)', () => {
-    const everything = sources + tests;
+    // The gateway under app/server speaks some of the catalogue's codes before the platform's own code does
+    // (method_not_supported, too_large, …): they are the live wire, so its sources count as producers.
+    const gatewayDir = join(ROOT, 'app/server/institution');
+    const gateway = existsSync(gatewayDir) ? walk(gatewayDir).map((f) => readFileSync(f, 'utf8')).join('\n') : '';
+    const everything = sources + tests + gateway;
     const missing = Object.keys(ERROR_CODES).filter((code) => !new RegExp(`['"]${code}['"]`).test(everything.replace(/export const ERROR_CODES[\s\S]*?\n\} as const/, '')));
     expect(missing).toEqual([]);
     // …and each code's status is its own: no two codes share a status AND a retryable flag with an identical name pattern.

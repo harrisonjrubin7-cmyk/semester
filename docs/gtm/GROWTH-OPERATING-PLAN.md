@@ -27,6 +27,10 @@ Main already holds most of the *rules* and some of the *code*. Much of the *oper
 | 9 Institutional demand and ABM | `INSTITUTIONAL-GTM-PLAYBOOK.md`, `FIRST-10-INSTITUTIONS-TARGETING-PLAN.md` (5 lines), `gtm/stages.ts`, `rfp.ts` | Committee-based ABM plays, programs, a demand-signal rule (§11) |
 | 10 Dashboards and cadence | `gtm/kpi.ts`, `REVENUE-OPERATIONS-DASHBOARD-SPEC.md` | Six dashboards, owners, labelled attribution, operating rhythm (§12) |
 
+### Overlap with the brand and marketing strategy
+
+[`BRAND-AND-MARKETING-STRATEGY.md`](BRAND-AND-MARKETING-STRATEGY.md) merged on 2026-10-04, written in parallel and without reference to this plan. Where the two overlap, use it for brand, messaging, page briefs, the consent form text, the dated twelve-week calendar from 2026-10-05, its twelve-moment lifecycle table and the copy-level claims register it adopts. Use this plan for the notification caps and policy, activation milestones, product-led loops, experimentation, attribution tiers, institutional ABM, dashboards and the gates. The two agree on the default cap of one marketing email a week. They disagree on one point, recorded as decision 9 in §13.
+
 ## 2. Ground truth that bounds every tactic
 
 | Fact | Source | Consequence |
@@ -149,7 +153,7 @@ Audiences: **S** individual student · **SS** sponsored student · **F** faculty
 | LC-22 | Alumni | S | After export | None | — | — | No alumni marketing without a fresh, separate opt-in | Always |
 | LC-23 | Guardian | G | Student shares or revokes | Email or in-app | Service | Per event | Says what changed in scope | — |
 
-Rules that cross every row: no grades, task titles, health, disability, accommodation, aid, conduct or counselling detail in any subject line, preview text or segment; no message references an exam, deadline or GPA to prompt a return; the student's own reminders are the only deadline messages.
+Rules that cross every row: no grades, task titles, health, disability, accommodation, aid, conduct or counselling detail in any subject line, preview text or segment; no message uses an exam, deadline or GPA as pressure to prompt a return. The one exception is the opt-in exam-period marketing email allowed by decision D-1241: generic dates only, no school-specific claims, and none of the patterns in §6.6. The student's own reminders remain the only school-specific deadline messages.
 
 ## 6. Ethical notification and messaging policy
 
@@ -207,7 +211,7 @@ A preference center reachable from every message and from Account: per-purpose a
 
 ### 6.6 Prohibited patterns
 
-Pre-ticked consent; confirmshaming ("No, I don't care about my grades"); false urgency, countdowns or scarcity; fake social proof or invented counts; streaks, XP, leaderboards, "you're falling behind"; guilt or shame copy; messages timed to exam panic; hidden or delayed unsubscribe; cancelling harder than starting; contact-list import or "invite everyone" prompts; auto-posting on a person's behalf; reward tied to invite counts; dark-mode-only or low-contrast opt-out controls; push used to recover engagement; any content built from academic, health or financial inference. `FORBIDDEN_MECHANICS` is the code-held list; new patterns are added to it with a failing test first.
+Pre-ticked consent; confirmshaming ("No, I don't care about my grades"); false urgency, countdowns or scarcity; fake social proof or invented counts; streaks, XP, leaderboards, "you're falling behind"; guilt or shame copy; messages that use exam pressure as the lever (opt-in, generic-date exam-period email is allowed under D-1241, without urgency, grades or fear); hidden or delayed unsubscribe; cancelling harder than starting; contact-list import or "invite everyone" prompts; auto-posting on a person's behalf; reward tied to invite counts; dark-mode-only or low-contrast opt-out controls; push used to recover engagement; any content built from academic, health or financial inference. `FORBIDDEN_MECHANICS` is the code-held list; new patterns are added to it with a failing test first.
 
 ### 6.7 Send-time checks and stop rules
 
@@ -238,7 +242,7 @@ Capacity rule: with one named owner, plan **one student-facing and one instituti
 
 ### 7.3 Editorial calendar (hypothesis, one academic year)
 
-Dates for registration, finals and commencement vary by school: confirm each against the registrar calendar before scheduling. The finals rule is fixed: supportive resources and export tools, never urgency.
+Dates for registration, finals and commencement vary by school: confirm each against the registrar calendar before scheduling. The dated twelve-week calendar starting 2026-10-05 is in [`BRAND-AND-MARKETING-STRATEGY.md`](BRAND-AND-MARKETING-STRATEGY.md) §5.4; this table is the year-level frame around it. The finals rule is fixed: supportive resources and export tools, never urgency.
 
 | Window | Student theme | Institutional theme | Gate |
 | --- | --- | --- | --- |
@@ -490,6 +494,7 @@ Each becomes `docs/decisions/D-<pull request number>.md` when taken, per `CLAUDE
 6. **Age and minors position for marketing** (counsel).
 7. **Institutional demand-signal reporting** (default off).
 8. **Reviewer assignments**: privacy, accessibility, claims, analyst, moderator, backup.
+9. **Exam-period marketing email: decided 2026-10-04, allowed with safeguards (D-1241).** Opt-in marketing email before midterms, registration and finals is allowed, using generic dates only, subject to every rule in §5 and §6.6 and the one-a-week cap. §5 and §6.6 are reworded to match.
 
 ## 14. Numbers held to code
 

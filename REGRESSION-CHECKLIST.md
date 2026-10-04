@@ -83,6 +83,11 @@ times in the run logs below while the other sat still.
 - [ ] **A3** `cd app && npm run lint` — oxlint clean, `scripts/styles.mjs` clean (no raw
       hex, no off-scale spacing), `scripts/labels.mjs` clean.
 - [ ] **A4** `cd app && npm run build` — exit 0, no TypeScript errors.
+- [ ] **A5** (pull requests) `cd app && npm run docs:impact` — a change under the
+      gateway, an edge function, a screen, a script or an example touches a page
+      that describes it, or the description says `Docs: none because <reason>`.
+      CI runs it as `.github/workflows/docs.yml`. The rest of the documentation
+      gates run inside A1; `docs/documentation/QUALITY-GATES.md` lists them.
 
 ## B. Bundle and load — the prompt's own performance rule
 

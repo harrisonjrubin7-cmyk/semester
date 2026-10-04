@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DEFAULT_ROLLBACK_TRIGGERS, parallelRunStatus, rehearsalReadiness, rollbackDecision, rollbackMode,
+  DEFAULT_ROLLBACK_TRIGGERS, MIN_ROLLBACK_WINDOW_HOURS, archiveReadiness, cutoverPlanProblems, parallelRunStatus, rehearsalReadiness, rollbackDecision, rollbackMode,
 } from './rehearsal.ts';
+import type { CutoverPlan } from './rehearsal.ts';
 import type { ParallelDay, Rehearsal } from './rehearsal.ts';
 
 const NOW = '2026-10-20T00:00:00.000Z';
@@ -92,5 +93,61 @@ describe('parallel run', () => {
     expect(parallelRunStatus([d(1), d(2, { compared: 0 })], { ...opts, minDays: 1, requiredEvents: [] }).streak).toBe(0);
     expect(parallelRunStatus([d(1, { unexplainedHigh: 2 })], { ...opts, minDays: 1, requiredEvents: [] }).streak).toBe(0);
     expect(parallelRunStatus([d(1, { unexplainedHigh: 1 })], { ...opts, minDays: 1, requiredEvents: [] }).streak).toBe(1);
+  });
+});
+
+describe('the cutover plan', () => {
+  const plan = (over: Partial<CutoverPlan> = {}): CutoverPlan => ({
+    windowMinutes: 360, rollbackMinutes: 120, rollbackWindowHours: 96, snapshotRef: 'snap-2026-12-01',
+    triggers: DEFAULT_ROLLBACK_TRIGGERS, decisionOwner: 'registrar',
+    freezeStart: '2026-12-05T00:00:00Z', freezeEnd: '2026-12-05T06:00:00Z', incumbentReadOnlyUntil: '2026-12-20T00:00:00Z',
+    commsApproved: true, supportStaffed: true, ...over,
+  });
+  const codes = (p: CutoverPlan) => cutoverPlanProblems(p).map((x) => x.code);
+
+  it('has nothing wrong with a sound plan', () => {
+    expect(cutoverPlanProblems(plan())).toEqual([]);
+  });
+
+  it('names each way a plan is unsafe', () => {
+    expect(codes(plan({ windowMinutes: 0 }))).toContain('window_unset');
+    expect(codes(plan({ rollbackMinutes: 0 }))).toContain('rollback_time_unset');
+    expect(codes(plan({ rollbackMinutes: 400 }))).toContain('rollback_longer_than_window');
+    expect(codes(plan({ rollbackWindowHours: MIN_ROLLBACK_WINDOW_HOURS - 1 }))).toContain('rollback_window_short');
+    expect(codes(plan({ snapshotRef: ' ' }))).toContain('no_snapshot');
+    expect(codes(plan({ decisionOwner: '' }))).toContain('no_decision_owner');
+    expect(codes(plan({ freezeEnd: '2026-12-04T00:00:00Z' }))).toContain('freeze_invalid');
+    expect(codes(plan({ incumbentReadOnlyUntil: '2026-12-06T00:00:00Z' }))).toContain('incumbent_not_available');
+    expect(codes(plan({ commsApproved: false }))).toContain('comms_not_approved');
+    expect(codes(plan({ supportStaffed: false }))).toContain('support_not_staffed');
+  });
+
+  it('lets triggers be tightened and never loosened below the defaults, or dropped', () => {
+    const tighter = DEFAULT_ROLLBACK_TRIGGERS.map((t) => (t.metric === 'login_failure_rate' ? { ...t, max: 0.01 } : t));
+    expect(codes(plan({ triggers: tighter }))).toEqual([]);
+    const looser = DEFAULT_ROLLBACK_TRIGGERS.map((t) => (t.metric === 'login_failure_rate' ? { ...t, max: 0.2 } : t));
+    expect(cutoverPlanProblems(plan({ triggers: looser }))).toContainEqual({ code: 'trigger_looser', detail: 'login_failure_rate' });
+    const dropped = DEFAULT_ROLLBACK_TRIGGERS.filter((t) => t.metric !== 'permission_widened');
+    expect(cutoverPlanProblems(plan({ triggers: dropped }))).toContainEqual({ code: 'trigger_missing', detail: 'permission_widened' });
+  });
+});
+
+describe('archiving', () => {
+  const state = { cutoverAt: '2026-12-05T06:00:00Z', rollbackWindowHours: 96, sealed: true, retentionConfirmedByCounsel: true, legalHoldsOpen: 0 };
+  const after = '2026-12-10T00:00:00Z';
+
+  it('is ready only after the rollback window, with a sealed archive, counsel-reviewed retention and holds checked', () => {
+    expect(archiveReadiness(state, after)).toEqual({ ready: true, problems: [] });
+  });
+
+  it('waits for the window, and says each other thing it is waiting for', () => {
+    expect(archiveReadiness(state, '2026-12-08T00:00:00Z').problems).toEqual(['rollback_window_open']);
+    expect(archiveReadiness({ ...state, sealed: false }, after).problems).toEqual(['not_sealed']);
+    expect(archiveReadiness({ ...state, retentionConfirmedByCounsel: false }, after).problems).toEqual(['retention_not_confirmed']);
+    expect(archiveReadiness({ ...state, legalHoldsOpen: 2 }, after).problems).toEqual(['legal_hold_open_or_unchecked']);
+  });
+
+  it('treats an unchecked legal hold as open: unknown is not zero', () => {
+    expect(archiveReadiness({ ...state, legalHoldsOpen: null }, after).problems).toEqual(['legal_hold_open_or_unchecked']);
   });
 });

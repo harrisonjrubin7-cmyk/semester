@@ -6,6 +6,8 @@
 | `fill_snapshot.py` | Rewrites the pasted rows for scenarios 8 and 9 (and the comparison block) from a fresh recalculation. |
 | `recalc.py`, `snapshot.py` | Shared helpers: recalculate for a chosen scenario; which cells feed which snapshot column. |
 | `port_gates.py` | The record of the one-time edit that added the go/no-go gates (scenario columns K and L, drivers S-19 and S-20, Assumptions section 13, five gated Revenue rows, two checks). Refuses to run twice. |
+| `add_gate_schedule.py` | The record of the one-time edit that added the `Gate_Schedule` sheet and the gate and effective-start columns on `Headcount`, and pasted the scenario 8 and 9 cost columns. Refuses to run twice. |
+| `build_dashboard.py`, `dashboard_template.html` | Recalculates every scenario, runs four one-input sensitivities on scenario 8, and writes `../dashboard.html` from the template. Reads the workbook; never edits it. |
 
 Requires Python 3 with `openpyxl` and LibreOffice Calc (`soffice`).
 

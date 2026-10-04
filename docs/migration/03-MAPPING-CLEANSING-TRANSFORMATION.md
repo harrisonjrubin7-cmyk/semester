@@ -74,7 +74,35 @@ Review it with the data steward: every distinct issue code, with counts and a
 decision (fix in source, change the rule, descope, accept). A preview with
 issues the team has not decided on does not leave this stage.
 
-## 6. Exit criteria
+## 6. Scope: what may move at all
+
+A mapping decides *how* a field moves. Whether it may move is decided first, by
+rules that are not the institution's to loosen (`scope.ts`, reusing
+`integration/classification.ts` and `integration/catalog.ts`; each domain's
+declaration is in `domain-specs.ts`):
+
+- **Never migrated: T4 and above.** Accommodations, health and counseling,
+  conduct, government identifiers, immigration status, card and bank data,
+  authentication secrets. The platform floor sends these to no destination, so a
+  migration cannot be the way they get in. Every domain lists what stays behind
+  and what happens instead (the owning office keeps it; a hold moves as a code
+  and dates with no reason). An omission nobody wrote down looks, in a year, like
+  a loss.
+- **Needs a named approval: fields the platform never ingests by default.**
+  Grades, GPA, submissions, aid, balances, instructor notes. Moving a transcript
+  is the point of a migration, which is exactly why it is never implicit: each
+  such entity needs `scope.migration.<domain>.<entity>` from the records owner and
+  the privacy lead before the mapping is approved. `scopeProblems(domain,
+  approvals)` lists what is open; each workbook page lists what its domain needs
+  and what is refused, and the mapping sheet written by `init` shows, field by
+  field, whether it is in scope, needs an approval, or is blocked.
+- A school may be stricter than the floor, never looser.
+
+Whether something is an education record, and whether it may move for a given
+institution, is for the institution and counsel. This records the answer and
+enforces it; it does not decide it.
+
+## 7. Exit criteria
 
 - [ ] Spec covers every source field (rule or declared drop with reason)
 - [ ] Code tables approved by the owning office; every observed code present

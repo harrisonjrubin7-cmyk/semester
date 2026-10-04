@@ -68,3 +68,22 @@ describe('the data-quality gate', () => {
     expect(() => tighten(DEFAULT_THRESHOLDS, { high: -1 })).toThrow(RangeError);
   });
 });
+
+describe('the gate refuses a check nobody has seen fail', () => {
+  it('holds the domain on an unproven check, and says which', () => {
+    const g = evaluateGate('finance', full(), DEFAULT_THRESHOLDS, new Set(), { unproven: ['finance.ledger.history'] });
+    expect(g.passed).toBe(false);
+    expect(g.reasons).toContainEqual({ code: 'unproven_check', detail: 'finance.ledger.history' });
+    expect(evaluateGate('finance', full(), DEFAULT_THRESHOLDS, new Set(), { unproven: [] }).passed).toBe(true);
+  });
+
+  it('lets an attested-empty check off the vacuity refusal only, never off the need for the class', () => {
+    const vacuous = [...EVIDENCE_CLASSES.filter((c) => c !== 'history').map((c) => r(c)), r('history', { examined: 0 })];
+    expect(evaluateGate('finance', vacuous).reasons.map((x) => x.code)).toContain('vacuous_check');
+    const attested = evaluateGate('finance', vacuous, DEFAULT_THRESHOLDS, new Set(), { attestedEmpty: new Set(['f.history']) });
+    expect(attested.reasons.map((x) => x.code)).not.toContain('vacuous_check');
+    // The class still has no check that examined anything.
+    expect(attested.reasons).toContainEqual({ code: 'missing_evidence_class', detail: 'history' });
+    expect(attested.passed).toBe(false);
+  });
+});

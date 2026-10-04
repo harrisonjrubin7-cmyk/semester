@@ -30,6 +30,8 @@ export interface ExceptionRow {
   severity: Severity;
   code: string;
   ref: string;
+  /** Carried from the failure: `migration` rows are fixed in the mapping and never waived or descoped. */
+  origin?: 'migration' | 'source';
   state: ExceptionState;
   raisedBy: string;
   raisedAt: string;
@@ -63,7 +65,7 @@ export function raise(queue: readonly ExceptionRow[], results: readonly CheckRes
       if (have.has(key)) continue;
       have.add(key);
       out.push({
-        key, checkId: r.id, domain: r.domain, severity: r.severity, code: f.code, ref: f.ref,
+        key, checkId: r.id, domain: r.domain, severity: r.severity, code: f.code, ref: f.ref, origin: f.origin,
         state: 'open', raisedBy: actor, raisedAt: at,
         history: [{ at, actor, from: null, to: 'open' }],
       });
@@ -104,6 +106,7 @@ export function close(row: ExceptionRow, actor: string, at: string): ExceptionRo
  */
 export function waive(row: ExceptionRow, approver: string, reason: string, expiresAt: string, at: string): ExceptionRow {
   if (row.severity === 'critical') throw new Error('a critical exception cannot be waived');
+  if (row.origin === 'migration') throw new Error('a defect the migration introduced is fixed in the mapping; it cannot be waived');
   if (row.state !== 'triaged') throw new Error(`cannot waive a ${row.state} exception`);
   if (approver === row.raisedBy || approver === row.owner) throw new Error('the approver must be neither the raiser nor the owner');
   if (reason.trim() === '') throw new Error('a waiver must give its reason');
@@ -113,9 +116,40 @@ export function waive(row: ExceptionRow, approver: string, reason: string, expir
 
 export function markOutOfScope(row: ExceptionRow, approver: string, reason: string, at: string): ExceptionRow {
   if (row.state !== 'triaged') throw new Error(`cannot descope a ${row.state} exception`);
+  if (row.origin === 'migration') throw new Error('a defect the migration introduced is fixed in the mapping; it cannot be descoped');
   if (approver === row.raisedBy || approver === row.owner) throw new Error('the approver must be neither the raiser nor the owner');
   if (reason.trim() === '') throw new Error('descoping must give its reason');
   return step(row, 'out_of_scope', approver, at, { resolution: reason });
+}
+
+/** A fix that held is not permanent: if the check finds the same failure again, the exception is open again. */
+export function reopen(row: ExceptionRow, actor: string, at: string, note = 'reopened: the check found it again'): ExceptionRow {
+  if (row.state !== 'verified' && row.state !== 'closed') throw new Error(`cannot reopen a ${row.state} exception`);
+  return step(row, 'open', actor, at, { verifiedByEvidence: undefined }, note);
+}
+
+/**
+ * Fold a run into the queue, so a fix is proven by the next run and not by
+ * anyone saying so.
+ *
+ * - a `resolved` row whose check ran is verified if it no longer fails, and
+ *   sent back to triage if it still does (the actor is `validation`, which can
+ *   never be the owner of the fix);
+ * - a `verified` or `closed` row whose failure is back is reopened;
+ * - every failure not yet in the queue is raised.
+ *
+ * Only checks that appear in `results` count as having run: an exception is
+ * never verified by a run that did not look.
+ */
+export function applyRun(queue: readonly ExceptionRow[], results: readonly CheckResult[], evidenceId: string, at: string): ExceptionRow[] {
+  const ran = new Set(results.map((r) => r.id));
+  const failing = new Set(results.flatMap((r) => r.failures.map((f) => failureKey(r.id, f))));
+  const next = queue.map((row) => {
+    if (row.state === 'resolved' && ran.has(row.checkId)) return verify(row, evidenceId, failing.has(row.key), 'validation', at);
+    if ((row.state === 'verified' || row.state === 'closed') && failing.has(row.key)) return reopen(row, 'validation', at);
+    return row;
+  });
+  return [...next, ...raise(next, results, 'validation', at)];
 }
 
 /**

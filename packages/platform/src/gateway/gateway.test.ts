@@ -26,7 +26,7 @@ describe('error envelope', () => {
   it('is retryable only for 429 and 503, and an unknown outcome says not to retry', () => {
     const retryable = Object.entries(ERROR_CODES).filter(([, v]) => v.retryable).map(([, v]) => v.status).sort();
     expect(retryable).toEqual([429, 503]);
-    expect(ERROR_CODES.outcome_unknown).toEqual({ status: 502, retryable: false });
+    expect(ERROR_CODES.outcome_uncertain).toEqual({ status: 502, retryable: false });
   });
 
   it('flattens anything it did not mean to say — no stack, no query, no connection string', () => {
@@ -46,8 +46,40 @@ describe('error envelope', () => {
     const r = errorResponse(new PlatformError('not_found', 'Gone.'), 'corr-12345678');
     expect(parseErrorEnvelope(r.body)).not.toBeNull();
     expect(parseErrorEnvelope({ error: 'sentence' })).toBeNull();
-    expect(parseErrorEnvelope({ error: { code: 'made_up', message: 'x', correlation_id: 'y', retryable: true } })).toBeNull();
+    // Any snake_case name parses (domains refine statuses); a name that is not one does not.
+    expect(parseErrorEnvelope({ error: { code: 'Made Up', message: 'x', correlation_id: 'y', retryable: true } })).toBeNull();
     expect(parseErrorEnvelope(null)).toBeNull();
+  });
+
+  it('carries a domain\'s specific code at its own status, and retryable follows the status, never the name', () => {
+    const e = PlatformError.specific(409, 'review_changed', 'The action details changed. Prepare a new review.');
+    expect(e).toMatchObject({ code: 'review_changed', status: 409, retryable: false });
+    const r = errorResponse(e, 'corr-12345678');
+    expect(r.status).toBe(409);
+    expect(r.body.error).toEqual({ code: 'review_changed', message: 'The action details changed. Prepare a new review.', correlation_id: 'corr-12345678', retryable: false });
+    // The live gateway says outcome_uncertain at 409 as well as at 502, and neither is blind-retryable.
+    expect(PlatformError.specific(409, 'outcome_uncertain', 'x').retryable).toBe(false);
+    expect(PlatformError.specific(503, 'read_only', 'x').retryable).toBe(true);
+    expect(PlatformError.specific(429, 'slow_down', 'x').retryable).toBe(true);
+  });
+
+  it('refuses a specific code that is not a plain snake_case name or a status that is not an HTTP error', () => {
+    for (const bad of ['Review', 'a', 'has space', 'x'.repeat(60), '1abc', 'a.b', '-ab']) expect(() => PlatformError.specific(400, bad, 'x'), bad).toThrow(/lowercase/);
+    // The live gateway already says policy-disabled; kebab-case is carried, not flattened.
+    expect(PlatformError.specific(503, 'policy-disabled', 'x').code).toBe('policy-disabled');
+    for (const bad of [200, 399, 600, 4.5, NaN]) expect(() => PlatformError.specific(bad, 'fine_code', 'x'), String(bad)).toThrow(/HTTP error/);
+  });
+
+  it('from() picks the catalogue constructor only when code and status agree', () => {
+    expect(PlatformError.from(404, 'not_found', 'x')).toMatchObject({ code: 'not_found', status: 404 });
+    expect(PlatformError.from(409, 'not_found', 'x')).toMatchObject({ code: 'not_found', status: 409 });
+    expect(PlatformError.from(502, 'outcome_uncertain', 'x').status).toBe(502);
+  });
+
+  it('parses an envelope that carries a specific code, and still refuses a malformed one', () => {
+    const r = errorResponse(PlatformError.specific(410, 'review_expired', 'Review expired.'), 'corr-12345678');
+    expect(parseErrorEnvelope(r.body)).not.toBeNull();
+    expect(parseErrorEnvelope({ error: { code: 'Not Snake', message: 'x', correlation_id: 'y', retryable: false } })).toBeNull();
   });
 
   it('survives two bundled copies of the class: it is branded, not instanceof-checked', () => {
@@ -125,11 +157,16 @@ describe('idempotency', () => {
     const { c, store, ctx } = setup();
     let release!: () => void;
     const gate = new Promise<void>((r) => (release = r));
+    // Gate on the first handler actually running. The request is hashed with crypto.subtle before the store is
+    // touched, which is genuinely asynchronous, so waiting a microtask (as this once did) races on a slow runner.
+    let started!: () => void;
+    const running = new Promise<void>((r) => (started = r));
     const first = withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => {
+      started();
       await gate;
       return 1;
     });
-    await Promise.resolve();
+    await running;
     await expect(withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 2)).rejects.toMatchObject({ code: 'idempotency_in_progress', retryAfterSeconds: 60 });
     c.advance(IDEMPOTENCY_LEASE_MS + 1);
     const takeover = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 3);
@@ -160,6 +197,16 @@ describe('idempotency', () => {
     await expect(withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p', 'key-crash-000000001'), 'x.y', {}, async () => { unknown++; throw new Error('boom'); })).rejects.toBeTruthy();
     await expect(withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p', 'key-crash-000000001'), 'x.y', {}, async () => { unknown++; throw new Error('boom'); })).rejects.toBeTruthy();
     expect(unknown).toBe(2);
+  });
+
+  it('replays a stored specific code at its stored status', async () => {
+    const { c, store, ctx } = setup();
+    const refuse = async () => {
+      throw PlatformError.specific(409, 'record_changed', 'This record changed.');
+    };
+    for (let i = 0; i < 2; i++) {
+      await expect(withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p', 'key-specific-00001'), 'x.y', {}, refuse)).rejects.toMatchObject({ code: 'record_changed', status: 409 });
+    }
   });
 
   it('refuses a command with no key', async () => {

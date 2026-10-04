@@ -70,8 +70,8 @@ describe('SDK client', () => {
   });
 
   it('does not retry an unknown-outcome 502 — the caller must reconcile', async () => {
-    const { client, calls } = make([err(new PlatformError('outcome_unknown', 'Check before retrying.'))]);
-    await expect(client.post('/x', {})).rejects.toMatchObject({ code: 'outcome_unknown', retryable: false });
+    const { client, calls } = make([err(new PlatformError('outcome_uncertain', 'Check before retrying.'))]);
+    await expect(client.post('/x', {})).rejects.toMatchObject({ code: 'outcome_uncertain', retryable: false });
     expect(calls).toHaveLength(1);
   });
 
