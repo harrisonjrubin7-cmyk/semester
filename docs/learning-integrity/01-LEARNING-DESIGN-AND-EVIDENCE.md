@@ -62,19 +62,23 @@ specification a study feature is held to.
 | **Planning, not monitoring** | Work-completion planner, workload view | Plans are the student's; the app never reports study hours to anyone | Held: planner (register L03); `learninginsights.ts` refuses time-based figures |
 | **Rereading / highlighting / summary-as-study** | Not offered as study credit | May exist as note-taking; never counted as a study action in a plan | Partial: not counted today, no rule forbids it |
 
-**Why the table leans on retrieval, spacing and interleaving.** These are the
-techniques that reviews of the learning-technique literature rate most useful
-(Dunlosky et al., 2013, *Psychological Science in the Public Interest*), and
-they share a property that matters for product design: they feel harder and
-less fluent than rereading, so a tool optimised for how satisfying a session
-feels will drift away from them. A product that measures satisfaction will
-tune toward the wrong techniques. That is why [07](07-METRICS.md) refuses
-satisfaction and time as success measures.
+**Why the table leans on retrieval and spacing first.** Dunlosky et al.
+(2013, *Psychological Science in the Public Interest*) rated practice testing
+and distributed practice **high** utility; elaborative interrogation,
+self-explanation and interleaved practice **moderate**; and summarisation,
+highlighting, the keyword mnemonic, imagery for text learning and rereading
+**low**. So interleaving is supported but is the weaker of the three the table
+relies on, and it is offered after a block is understood for that reason. The
+high-utility techniques share a property that matters for product design: they
+feel harder and less fluent than rereading, so a tool optimised for how
+satisfying a session feels will drift away from them. That is why
+[07](07-METRICS.md) refuses satisfaction and time as success measures.
 
-*Citations in this pack are from the author's knowledge of the literature and
-have not been re-verified against the sources for this document. Per the
-evidence standard in §4, verify before using any of them in a public or
-contractual claim.*
+*Citation check, 2026-10-04: the four sources in this pack were each located
+and the specific claim made of each was checked against the paper's abstract or
+a search summary of it, not against the full text in every case; see §4 for
+what was and was not confirmed. Verify against the full text before using any
+of them in a public or contractual claim.*
 
 ### Requirements: study
 
@@ -138,20 +142,37 @@ applied to pedagogical ones.
   controlled studies, mostly of memory and, increasingly, of transfer. They
   support "designed around"; they do not on their own support "Semester
   improves grades."
-- Evidence on **generative AI tutoring** is early and mixed, and the pattern
-  matters for design: controlled studies have reported that unrestricted
-  chatbot access can raise practice performance while lowering later
-  unassisted performance, and that tutors built on explicit pedagogy and
-  guardrails can do better than unguided use (Bastani et al., 2024/2025;
-  Kestin et al., 2025, are the two the author would start from). The design
-  inference is the one this pack already makes — cap the help, require the
-  attempt — but it is an inference, not a result about Semester. **It is an E1
-  basis for the hint ladder and nothing more.**
+- Evidence on **generative AI tutoring** is early, and the pattern matters for
+  design. Bastani et al. (2025, *PNAS*, high-school mathematics, nearly 1,000
+  students, randomised) compared a plain GPT-4 chat interface with a version
+  prompted to support learning. Both raised practice performance (reported as
+  +48% and +127%), but once access was removed the plain-chat group scored 17%
+  *worse* than a no-AI control, while the guarded tutor largely removed that
+  harm. Kestin & Miller (2025, *Scientific Reports*, N=194, Harvard physics,
+  crossover) found a purpose-built, pedagogy-driven AI tutor outperformed an
+  in-class active-learning lesson; it did **not** compare against an unguided
+  chatbot, so it shows a well-designed tutor can work, not that guardrails
+  beat their absence. The design inference is the one this pack already makes
+  — cap the help, require the attempt — and it is an inference from one
+  mathematics setting and one physics setting, not a result about Semester.
+  **It is an E1 basis for the hint ladder and nothing more.**
 - AI-writing detectors have no validated universal error rate, and the
   repository's own governance page reaches the same conclusion
   (`app/src/lib/governance/grading-ai.ts`: "There is no universal false-positive
   rate for … any AI-grading tool"). This is why [04](04-ACADEMIC-INTEGRITY-CONTROLS.md)
   does not use detector output as evidence.
+
+### Citation check (2026-10-04)
+
+| Source | Confirmed | Not confirmed | Changed in this pack |
+| --- | --- | --- | --- |
+| Dunlosky, Rawson, Marsh, Nathan & Willingham (2013), *Psychological Science in the Public Interest* 14(1), 4–58 | Exists; full text retrieved and searched for the ratings: practice testing and distributed practice high; elaborative interrogation, self-explanation and interleaved practice moderate; five techniques low | — | **Corrected**: the pack had said retrieval, spacing *and interleaving* were rated most useful; interleaving was moderate |
+| Hattie & Timperley (2007), *Review of Educational Research* 77(1), 81–112 | Exists; the task / process / self-regulation / self levels | Not read in full | None needed; caveat "from memory" removed |
+| Bastani et al. (2025), *PNAS*, "Generative AI without guardrails can harm learning" | Exists; the two-tutor design, +48% / +127% practice, −17% exam for the plain-chat group, harm largely removed by the guarded tutor (author's own and secondary summaries) | Full text not read (publisher page returned 403). A PNAS correction exists; it concerns an author affiliation only | **Rewritten** with the figures and the setting; "2024/2025" dropped |
+| Kestin & Miller (2025), *Scientific Reports* 15, 17458 | Exists; N=194, crossover, AI tutor vs in-class active learning | Full text not read (paywall redirect) | **Corrected**: the pack implied it compared guardrailed with unguided AI; it did not |
+
+Still to do before external use: read Hattie & Timperley, Bastani et al. and
+Kestin & Miller in full; none of the four supports a claim about Semester.
 
 ## 5. Open items for this document
 
