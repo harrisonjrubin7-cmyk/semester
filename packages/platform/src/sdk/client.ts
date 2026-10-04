@@ -23,12 +23,13 @@
  */
 
 import type { IdSource, Rng } from '../kernel/clock.ts';
-import { ERROR_CODES, parseErrorEnvelope, type ErrorCode } from '../gateway/errors.ts';
+import { parseErrorEnvelope } from '../gateway/errors.ts';
 import { HEADERS } from '../gateway/headers.ts';
 import { backoffMs } from '../kernel/backoff.ts';
 
 export class SemesterApiError extends Error {
-  readonly code: ErrorCode | 'network' | 'malformed_response';
+  /** A catalogue code, a domain's specific one, or one the SDK itself raises. */
+  readonly code: string;
   readonly status: number;
   readonly retryable: boolean;
   readonly correlationId: string;
@@ -111,7 +112,8 @@ export function createClient(opts: ClientOptions) {
 
       const env = parseErrorEnvelope(body);
       if (!env) throw new SemesterApiError('malformed_response', 'Semester sent a response we could not read.', res.status, false, correlationId);
-      const retryable = env.error.retryable === true && ERROR_CODES[env.error.code].retryable;
+      // The flag and the status must agree: only 429 and 503 are ever blind-retryable.
+      const retryable = env.error.retryable === true && (res.status === 429 || res.status === 503);
       if (retryable && attempt < maxAttempts) {
         const ra = Number(res.headers.get(HEADERS.retryAfter));
         await opts.sleep(Number.isFinite(ra) && ra > 0 ? Math.min(ra * 1000, 60_000) : backoffMs(attempt, opts.rng));

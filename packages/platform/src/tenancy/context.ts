@@ -71,7 +71,8 @@ export interface RequestContext {
 export function buildRequestContext(
   request: UntrustedRequest,
   identity: TrustedIdentity | null,
-  deps: { clock: Clock; ids: IdSource },
+  /** `requestId`, when the host already minted one for its response header, so the two are the same id. It is the server's, never a client's. */
+  deps: { clock: Clock; ids: IdSource; requestId?: string },
 ): RequestContext {
   if (!identity?.actor?.personId || !isId(identity.actor.personId)) {
     throw new PlatformError('unauthenticated', 'Sign in to continue.', {
@@ -109,7 +110,7 @@ export function buildRequestContext(
     capabilities: Object.freeze([...(identity.capabilities ?? [])]),
     purpose: request.purpose ?? 'service_delivery',
     correlationId: resolveCorrelationId(header(request.headers, HEADERS.correlationId), deps.ids),
-    requestId: mintRequestId(deps.ids),
+    requestId: deps.requestId ?? mintRequestId(deps.ids),
     ...(key !== undefined ? { idempotencyKey: key } : {}),
     receivedAt: now,
   });

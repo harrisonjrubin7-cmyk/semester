@@ -136,7 +136,7 @@ export async function withIdempotency<T>(
     const stored = begun.response;
     if (stored.status >= 400) {
       const b = stored.body as { code?: string; message?: string };
-      throw new PlatformError((b.code as PlatformError['code']) ?? 'internal', b.message ?? 'The request was refused.');
+      throw PlatformError.from(stored.status, b.code ?? 'internal', b.message ?? 'The request was refused.');
     }
     return { value: stored.body as T, replayed: true };
   }
