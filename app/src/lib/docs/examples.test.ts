@@ -772,7 +772,7 @@ describe('examples/event-consumer', () => {
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();
     expect(inserts, 'the producer\'s migration function and the check scripts insert into the outbox').toEqual([
-      'supabase/migrations/20261004090000_productivity_commands.sql',
+      'supabase/migrations/20261004123000_productivity_commands.sql',
       'supabase/outbox.check.sql',
     ]);
     expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('**no\nproducer writes to the outbox yet**');

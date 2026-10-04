@@ -567,7 +567,7 @@ describe('the onboarding page', () => {
     expect(root.private).toBe(true);
     expect(root.workspaces).toEqual(['app', 'packages/*']);
     expect(root.scripts, 'the page says the root defines no scripts').toBeUndefined();
-    expect(onboarding).toContain(`engines: { node: \"${root.engines?.node}\" }`);
+    expect(onboarding).toContain(`engines: { node: "${root.engines?.node}" }`);
     expect(onboarding).toContain('workspace root for `app` and `packages/*` and defines no scripts');
     expect(existsSync(at('package-lock.json')), 'the page says the one lockfile is at the root').toBe(true);
     expect(existsSync(at('app/package-lock.json')), 'the page no longer mentions an app lockfile').toBe(false);
