@@ -13,7 +13,7 @@ import { EVENT_ID, TASK_ID, createEvent, createTask, harness, person } from './f
  * table — silently, in both cases, until somebody noticed a missing field.
  */
 
-const sql = readFileSync(new URL('../../../supabase/migrations/20261004090000_productivity_commands.sql', import.meta.url), 'utf8');
+const sql = readFileSync(new URL('../../../supabase/migrations/20261004123000_productivity_commands.sql', import.meta.url), 'utf8');
 const commit = sql.slice(sql.indexOf('create or replace function private.productivity_commit'), sql.indexOf('create or replace function public.productivity_commit'));
 
 const keysRead = (variable: string, from: string): Set<string> => {

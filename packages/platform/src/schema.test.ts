@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { TENANT_STATUSES, DATA_ZONES, ORG_KINDS } from './tenancy/organization.ts';
 import { AFFILIATION_KINDS, AFFILIATION_SOURCES, AFFILIATION_STATUSES } from './identity/affiliation.ts';
 import { RELATIONSHIP_KINDS, RELATIONSHIP_VERIFICATIONS } from './identity/relationship.ts';

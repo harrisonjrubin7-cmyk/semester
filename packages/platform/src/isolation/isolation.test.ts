@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { fixedClock, sequentialIds } from '../kernel/clock.ts';
 import { utf8 } from '../kernel/canonical.ts';
 import { MemoryAuditLog } from '../identity/audit.ts';

@@ -42,7 +42,7 @@ Verified in the code at the revision above; the cost figures are model output un
 
 | # | Finding | Evidence | Why it matters |
 | --- | --- | --- | --- |
-| F1 | **The shared AI key is capped in calls, not dollars.** Any signed-in account may name any of four models, output is clamped at 16,000 tokens, and the cap is 60 calls a month. At the cap on the app's default model (Opus 5) one account costs about **$7.50 a month — roughly Plus's monthly price ($7.99)**; at the worst the clamp allows (Fable 5.1, long output) about **$66 a month**. | `supabase/functions/_shared/clamp.ts` (`ALLOWED_MODELS`, `MAX_OUTPUT_TOKENS`), `functions/claude/index.ts` (`count_call`, `MONTHLY_CALLS`), `lib/assistant.ts` (default `claude-opus-5`) | The clamp's own comment says it: *"The cap counted calls; the bill counts tokens."* Exposure exists wherever `ANTHROPIC_API_KEY` is set. Section 3.4 and 7 fix it. |
+| F1 | **The shared AI key is capped in calls, not dollars.** Any signed-in account may name any of four models, output is clamped at 16,000 tokens, and the cap is 60 calls a month. At the cap on the app's default model (Opus 5) one account costs about **$7.50 a month — roughly Plus's monthly price ($7.99)**; at the worst the clamp allows (Fable 5.1, long output) about **$66 a month**. | `supabase/functions/_shared/clamp.ts` (`ALLOWED_MODELS`, `MAX_OUTPUT_TOKENS`), `functions/claude/index.ts` (`count_call`, `MONTHLY_CALLS`), `lib/assistant.ts` (default `claude-opus-5`) | The clamp's own comment says it: *"The cap counted calls; the bill counts tokens."* The function serves nobody until `SHARED_AI_PROVIDER=on` and the owner's activation decisions are recorded, so this is exposure waiting at that switch, not spend happening today. **Model access is now restricted by plan** (section 13.1, P0-a). Section 3.4 and 7 fix it. |
 | F2 | **Three catalogs disagree.** `plans.ts` lists Pro at $14.99 / $99 "planned"; the database has a `pro` plan row with **no price row and no `plan_entitlements`**; Plus's entitlement rows list four keys while the page promises graduation scenarios and sharing. | `plans.ts`, `20260929070000_commercial_core.sql`, `20260929131000_plus_price.sql` | A price drifting between page, catalog and Stripe is revenue leakage (section 8, L1). One source of truth, generated into the others. |
 | F3 | **The entitlement order is built but cannot yet charge, grant or count.** It runs in shadow on LTI launches; personal/sponsored grants and usage counters "still need tables". | `ENTITLEMENT-RESOLUTION.md` → "To wire it" | Section 3 and 7 are those tables. |
 | F4 | **The proposed deal-desk minimum contract values are floors on a deal, not prices.** At the assumed active counts they carry the modelled cost only in the lean case; the $200k system minimum cannot cover even lean *variable* cost at 24,000 active students. Price has to scale with active students. | Section 5.3 (`E_budget`) | A per-active component is not optional at campus and system tier. |
@@ -205,9 +205,11 @@ risk, so it is capped and logged); **syllabus import is protected** — a new st
 allowance, because that is the activation job and the first moment of value; heavy tasks that can wait run **batch at
 half price**.
 
-**Shared-key model policy.** Free and Plus default to light/standard classes; premium and Opus/Fable-class models are
-a Pro or sponsored entitlement. Today's four-model picker on the shared key is the single biggest exposure (F1) and a
-two-line change to `ALLOWED_MODELS` per plan, ahead of any of the rest.
+**Shared-key model policy (implemented as P0-a).** `PLAN_MODELS` in `supabase/functions/_shared/clamp.ts` names what
+each plan's shared-key calls may use: **Free** Haiku 4.5 and Sonnet 5; **Plus** adds Opus 5; **Pro** adds Fable 5.1. An
+unreadable or unknown plan is Free, never wider. A refusal costs no call, carries the allowed list, and the app learns
+it and asks again on a covered model. This restricts *which model*; it does not yet meter *dollars* (P0-c), so Plus
+at the call cap on Opus 5 can still exceed the 40% worst-case margin rule — the rule is why P0-c follows.
 
 ## 4. Value-metric analysis
 
@@ -670,7 +672,7 @@ Nothing here is a conclusion. Each row is a design dependency that someone licen
 
 | Step | Change | Proof (per this repo's standard: revert it and watch it fail) |
 | --- | --- | --- |
-| P0-a | Restrict shared-key models by plan class; cap `max_tokens` per plan | A test that names a premium model on a Free token and is refused; revert the clamp change, test goes red |
+| P0-a | **Done:** restrict shared-key models by plan (`PLAN_MODELS`). Not done: a per-plan `max_tokens` ceiling — the app's own largest ask is 12,000, so a lower ceiling needs an audit of every `maxTokens` first | A test that names a premium model on a Free token and is refused; revert the clamp change, test goes red |
 | P0-b | One catalog: a test ties `plans.ts` to the database seed (price, interval, entitlement keys) and fails on Pro today | Fails first on Pro; passes after seeding or removing |
 | P0-c | `rate_card` + dollar-weighted reserve/settle for individuals (units), keeping `count_call`'s atomicity | Concurrency test (20 parallel calls = 20 units); cap test; refusal-doesn't-charge test |
 | P1-a | `entitlement_grants`, `meter_allowances`; wire `individual-plan` and `usage-allowance` steps; **shadow first** (the LTI pattern) | Max-not-sum test (L10); expired-vs-never-bought test |

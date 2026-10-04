@@ -235,6 +235,33 @@ describe('the evidence', () => {
     expect(host.textContent).toContain('Transformation preview: passed');
   });
 
+  it('refuses a date that could be either order until the lead says which, and offers the choice only for date fields', async () => {
+    const DATES: FieldMap[] = [
+      { id: 'f1', source_field: 'Student ID', target_field: 'student_ref', transform: 'trim', required: true, is_key: true },
+      { id: 'f2', source_field: 'Posted', target_field: 'posted_on', transform: 'date_iso', required: false, is_key: false },
+    ];
+    const plain = fake(project({ stage: 'preview', duplicate_rule: 'reject' }), MAPS);
+    await open(plain);
+    expect(host.textContent).not.toContain('Dates written like');
+    act(() => root.unmount());
+    host.replaceChildren();
+    root = createRoot(host);
+
+    const api = fake(project({ stage: 'preview', duplicate_rule: 'reject' }), DATES);
+    await open(api);
+    await pick(0, 'posted.csv', 'Student ID,Posted\n1,3/7/2026\n2,2026-01-05\n');
+    expect(host.textContent).toContain('2 rows read: 1 mapped cleanly, 1 failed');
+    expect(host.textContent).toContain('could be day-first or month-first');
+
+    const order = field(/Dates written like/) as unknown as HTMLSelectElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(order, 'day_first');
+      order.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(host.textContent).toContain('2 rows read: 2 mapped cleanly, 0 failed');
+    expect(host.querySelector('table[aria-label="First mapped rows"]')?.textContent).toContain('2026-07-03');
+  });
+
   it('reconciles the mapped export against Semester’s and names every difference', async () => {
     const api = fake(project({ stage: 'reconciliation', duplicate_rule: 'keep_first' }), MAPS);
     await open(api);
