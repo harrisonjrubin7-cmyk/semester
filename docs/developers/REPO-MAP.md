@@ -16,12 +16,14 @@ Dot-directories are included. Files at the root are listed after the table.
 | `audio/` | Podcast scripts, the manifest and the Python synthesiser that renders them. See [`audio/README.md`](../../audio/README.md). |
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
+| `commercial/` | Go-to-market, institutional-pilot and individual-launch readiness assessments (Phase 0 baseline). They approve no price, claim or sale; the controlling decision is `GO-NO-GO-DECISION.md`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
 | `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
 | `ops/` | Operating registers rendered from data under `app/src/lib/ops/`: billing, claims, customer commitments, master plan, operations console, strategic boundaries. See [`ops/README.md`](../../ops/README.md). |
+| `operations/` | The launch command center and the go/no-go scorecard (Phase 0 baseline): the ordered Phase 1 plan, stop conditions, dated exceptions. Sequences work; approves no launch. |
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |

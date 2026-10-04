@@ -148,6 +148,8 @@ Every file here is a draft with its effective date undecided. None has been revi
 | [ACCESSIBILITY-STATEMENT-DRAFT.md](../legal/ACCESSIBILITY-STATEMENT-DRAFT.md) | The public accessibility statement. | Draft |
 | [INCIDENT-RESPONSE-SUMMARY-DRAFT.md](../legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md) | A public summary of incident response. | Draft |
 | [REFUND-AND-CANCELLATION-POLICY-DRAFT.md](../legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md) | Refunds and cancellation. | Draft |
+| [LEGAL_REVIEW_QUEUE.md](../legal/LEGAL_REVIEW_QUEUE.md) | The program view of the legal review queue: maps the program's counsel list to the controlled queue and adds twelve new items; approves nothing. | Draft working list for counsel |
+| [PUBLIC_CLAIMS_APPROVAL_REGISTER.md](../legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md) | The program view of the public-claims register: the Phase 0 scan of the live site against the controlled register; approves no claim. | Draft working list for counsel |
 | [SUPPORT-POLICY-DRAFT.md](../legal/SUPPORT-POLICY-DRAFT.md) | What support is offered. | Draft |
 
 ## Outside these directories
