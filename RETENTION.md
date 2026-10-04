@@ -174,7 +174,10 @@ rescheduled at a different retention than the one written here, goes red there.
 
 Every remaining table is kept for the life of the account and removed when the
 account is deleted. That path is `deleteEverything` in `app/src/lib/cloud.ts`,
-which sends one delete per table under row-level security, and it is checked two
+which calls the `delete-account` function with the student's own token; the
+function runs `public.erase_account` (every row naming the account, in one
+transaction, refused up front when a legal hold covers the account) and then
+deletes the sign-in. The per-table list is checked two
 ways: `app/src/lib/privacy.test.ts` reads every module that writes a table and
 fails if one is missing from the list, and `supabase/deletion.check.sql` proves
 the policies actually permit each delete against a real Postgres.
@@ -603,8 +606,9 @@ reopen the choice with the legal drafts.
 
 **Not yet true.** No drill has restored production data, so the recovery point
 and time in `RESTORE.md` are unmeasured; the 7 days is the tier's number, not
-one read off the dashboard on a date; and a legal hold, which would have to
-stop a backup expiring, does not exist (`RM-02`).
+one read off the dashboard on a date; and a legal hold does not yet reach the
+provider's backups. Legal holds exist for the live database (see *Legal holds*,
+above), but nothing stops a backup expiring under one (`RM-02`, `RM-04`).
 
 ## Changing any of this
 

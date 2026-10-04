@@ -32,9 +32,9 @@ Accordingly, this pass establishes the tested client and library behaviors only.
 
 ## Rights requests that are not self-service (new in Milestone 1)
 
-`data_subject_request` records a request to export, erase, correct or restrict, its status and a thirty-day due date. A person can raise one about themselves only, in its starting state only, and cannot answer, verify, extend or delete it (`audit-and-subject-requests.check.sql`). A school's auditor sees that school's requests. Deleting the account removes them.
+`data_subject_request` records a request to export, erase, correct or restrict, its status and a due date (the column defaults to thirty days; that default is a database value, not a response time anyone has agreed to — **[COUNSEL REQUIRED]**, P-03). A person can raise one about themselves only, in its starting state only, and cannot answer, verify, extend or delete it (`audit-and-subject-requests.check.sql`). A school's auditor sees that school's requests. Deleting the account removes them.
 
-**There is no screen for it and no one is named to answer.** The table exists so the record is in the right shape when the owner decides who answers; shipping a button that promises a thirty-day reply before that would be a promise nobody has agreed to keep. Guardian and institution requests exist as a value but must not be acted on until a person on the answering side has verified them (`verified_at`).
+**A student intake and tracking screen exists** (`components/DataRightsRequests.tsx` on the Privacy screen, over `lib/data-rights.ts`). **An answering surface does not, and no one is named to answer.** Nothing yet moves a request from received to answered, so no reply is promised: shipping a promise of a reply time before the owner decides who answers would be a promise nobody has agreed to keep. Guardian and institution requests exist as a value but must not be acted on until a person on the answering side has verified them (`verified_at`).
 
 ## Retention of audit evidence
 
@@ -54,8 +54,8 @@ Nothing flows in production (no production adapters). When one does, deletion at
 ## Owner decisions still open
 
 - Assign the named privacy owner and build the trusted handling surface described in
-  [`DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md); the student intake and
-  thirty-day clock now exist, but no operated response-time evidence exists yet.
+  [`DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md); the student intake and tracking
+  screen exists, but no answering surface exists and no response time has been decided (**[COUNSEL REQUIRED]**, P-03).
 - Whether the D-124 "no deletion ledger" decision is reopened by counsel.
 - A full-account export that includes device-held files.
 - The legal retention wording in `docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md` is a draft with open `[DECIDE]` items and needs counsel.

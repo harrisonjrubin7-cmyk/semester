@@ -187,7 +187,7 @@ function render(): string {
     '- An exception record, for the day an institution asserts a school-official or',
     '  emergency basis instead of consent (FERPA-1 in',
     '  [the FERPA, COPPA and 1EdTech readiness register](../FERPA-COPPA-1EDTECH-READINESS.md)).',
-    '- A legal-hold object (operational maturity RM-02).',
+    '- A way to place a legal hold on a share, and a screen or runbook that places one (operational maturity RM-02; the `legal_holds` object exists).',
     '',
   ].join('\n');
 }

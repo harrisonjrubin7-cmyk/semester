@@ -29,6 +29,14 @@ export const LIMITS = {
   notesMax: 4_000,
   locationMax: 200,
   courseIdMax: 64,
+  /** Free text such as "6:30 PM" or "before work". Kept, shown, never parsed. */
+  whenTextMax: 40,
+  plannedFromMax: 200,
+  stepsMax: 50,
+  stepIdMax: 64,
+  stepTextMax: 200,
+  /** Dates a repeating task skips. A daily series cut to the term has far fewer than this. */
+  repeatExceptMax: 400,
   sourceRefMax: 200,
   /** Commands in one request. An offline queue replays in several. */
   batchMax: 50,
@@ -55,13 +63,29 @@ export type EntitySourceKind = (typeof SOURCE_KINDS)[number];
 
 export type EntityType = 'task' | 'calendar_event';
 
+export const REPEAT_EVERY = ['daily', 'weekdays', 'weekly', 'fortnightly', 'monthly'] as const;
+export type RepeatEvery = (typeof REPEAT_EVERY)[number];
+/** The recurrence rule a task carries, the same shape the app's calendar uses for appointments. */
+export interface Repeat {
+  every: RepeatEvery;
+  /** The last day an occurrence may fall on, inclusive. Required: a rule with no end is refused. */
+  until: string;
+  /** Days the rule skips. */
+  except?: string[];
+}
+export interface TaskStep {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 /**
  * The fields a source owns when the record came from one. A student may
  * annotate an imported class meeting (notes, a reminder) but not move it: the
  * institution's calendar is the authority on when the class is.
  */
 export const AUTHORITATIVE_FIELDS: Record<EntityType, readonly string[]> = {
-  task: ['title', 'dueAt', 'courseId'],
+  task: ['title', 'dueAt', 'dueOn', 'courseId'],
   calendar_event: ['title', 'startsAt', 'endsAt', 'allDay', 'timezone', 'location', 'kind'],
 };
 
@@ -91,9 +115,20 @@ export interface Task extends EntityBase {
   notes: string | null;
   status: TaskStatus;
   completedAt: string | null;
+  /** An instant: a deadline at a moment. */
   dueAt: string | null;
+  /** A day, `YYYY-MM-DD`, with no time or zone: what a student means by "due Friday". */
+  dueOn: string | null;
+  /** Free text the student wrote ("6:30 PM", "before work"). Never parsed. */
+  whenText: string | null;
   priority: Priority;
   courseId: string | null;
+  /** The rule that brings it back. Absent is once. */
+  repeat: Repeat | null;
+  /** The pieces it breaks into, in order, one level deep. Replaced as a whole. */
+  steps: TaskStep[];
+  /** What it was made in service of (a deadline's id), kept so a planner can tell it has already been used. */
+  plannedFrom: string | null;
 }
 
 export interface CalendarEvent extends EntityBase {
@@ -111,15 +146,20 @@ export type Entity = Task | CalendarEvent;
 
 // ── Commands ──────────────────────────────────────────────────────────────
 
-export const TASK_FIELDS = ['title', 'notes', 'dueAt', 'priority', 'courseId'] as const;
+export const TASK_FIELDS = ['title', 'notes', 'dueAt', 'dueOn', 'whenText', 'priority', 'courseId', 'repeat', 'steps', 'plannedFrom'] as const;
 export const EVENT_FIELDS = ['title', 'notes', 'startsAt', 'endsAt', 'allDay', 'timezone', 'location', 'kind'] as const;
 
 export type TaskFields = {
   title: string;
   notes?: string | null;
   dueAt?: string | null;
+  dueOn?: string | null;
+  whenText?: string | null;
   priority?: Priority;
   courseId?: string | null;
+  repeat?: Repeat | null;
+  steps?: TaskStep[];
+  plannedFrom?: string | null;
 };
 
 export type EventFields = {
@@ -252,6 +292,86 @@ function rejectUnknown(i: Issues, path: string, obj: Record<string, unknown>, al
   for (const key of Object.keys(obj)) if (!allowed.includes(key)) i.add(`${path}.${key}`, 'is not a field of this command');
 }
 
+const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** A calendar day, `YYYY-MM-DD`, that exists (not the 30th of February). No time and no zone, by design. */
+export function isDay(v: unknown): v is string {
+  if (typeof v !== 'string') return false;
+  const m = DAY.exec(v);
+  if (!m) return false;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() === Number(m[2]) - 1 && d.getUTCDate() === Number(m[3]);
+}
+
+function day(i: Issues, path: string, v: unknown, opts: { nullable: boolean }): string | null | undefined {
+  if (v === undefined) return undefined;
+  if (v === null) {
+    if (!opts.nullable) i.add(path, 'cannot be null');
+    return null;
+  }
+  if (!isDay(v)) {
+    i.add(path, 'must be a day such as 2026-10-08');
+    return undefined;
+  }
+  return v;
+}
+
+function repeatRule(i: Issues, path: string, v: unknown): Repeat | null | undefined {
+  if (v === undefined) return undefined;
+  if (v === null) return null;
+  if (!plain(v)) {
+    i.add(path, 'must be an object or null');
+    return undefined;
+  }
+  rejectUnknown(i, path, v, ['every', 'until', 'except']);
+  const every = oneOf(i, `${path}.every`, v.every, REPEAT_EVERY);
+  if (v.every === undefined) i.add(`${path}.every`, 'is required');
+  if (v.until === undefined) i.add(`${path}.until`, 'is required: a repeating task must say when it stops');
+  else if (!isDay(v.until)) i.add(`${path}.until`, 'must be a day such as 2026-12-18');
+  const out: Repeat = { every: every ?? 'weekly', until: isDay(v.until) ? v.until : '' };
+  if (v.except !== undefined) {
+    if (!Array.isArray(v.except)) i.add(`${path}.except`, 'must be a list of days');
+    else if (v.except.length > LIMITS.repeatExceptMax) i.add(`${path}.except`, `has more than ${LIMITS.repeatExceptMax} days`);
+    else {
+      const days = [...new Set(v.except as unknown[])];
+      for (const [n, d] of days.entries()) if (!isDay(d)) i.add(`${path}.except[${n}]`, 'must be a day such as 2026-10-08');
+      out.except = (days.filter(isDay) as string[]).sort();
+    }
+  }
+  return out;
+}
+
+function taskSteps(i: Issues, path: string, v: unknown): TaskStep[] | undefined {
+  if (v === undefined) return undefined;
+  if (!Array.isArray(v)) {
+    i.add(path, 'must be a list');
+    return undefined;
+  }
+  if (v.length > LIMITS.stepsMax) {
+    i.add(path, `has more than ${LIMITS.stepsMax} steps`);
+    return undefined;
+  }
+  const out: TaskStep[] = [];
+  const seen = new Set<string>();
+  for (const [n, raw] of v.entries()) {
+    const at = `${path}[${n}]`;
+    if (!plain(raw)) {
+      i.add(at, 'must be an object');
+      continue;
+    }
+    rejectUnknown(i, at, raw, ['id', 'text', 'done']);
+    const id = text(i, `${at}.id`, raw.id, LIMITS.stepIdMax, { required: true, nullable: false });
+    const body = text(i, `${at}.text`, raw.text, LIMITS.stepTextMax, { required: true, nullable: false });
+    if (typeof raw.done !== 'boolean') i.add(`${at}.done`, 'must be true or false');
+    if (typeof id === 'string') {
+      if (seen.has(id)) i.add(`${at}.id`, 'is used by another step');
+      seen.add(id);
+    }
+    if (typeof id === 'string' && typeof body === 'string' && typeof raw.done === 'boolean') out.push({ id, text: body, done: raw.done });
+  }
+  return out;
+}
+
 function taskFields(i: Issues, path: string, raw: unknown, mode: 'create' | 'update'): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (!plain(raw)) {
@@ -266,10 +386,20 @@ function taskFields(i: Issues, path: string, raw: unknown, mode: 'create' | 'upd
   if (notes !== undefined) out.notes = notes === '' ? null : notes;
   const dueAt = instant(i, `${path}.dueAt`, raw.dueAt, { required: false, nullable: true });
   if (dueAt !== undefined) out.dueAt = dueAt;
+  const dueOn = day(i, `${path}.dueOn`, raw.dueOn, { nullable: true });
+  if (dueOn !== undefined) out.dueOn = dueOn;
+  const whenText = text(i, `${path}.whenText`, raw.whenText, LIMITS.whenTextMax, { required: false, nullable: true });
+  if (whenText !== undefined) out.whenText = whenText === '' ? null : whenText;
   const priority = oneOf(i, `${path}.priority`, raw.priority, PRIORITIES);
   if (priority !== undefined) out.priority = priority;
   const courseId = text(i, `${path}.courseId`, raw.courseId, LIMITS.courseIdMax, { required: false, nullable: true });
   if (courseId !== undefined) out.courseId = courseId === '' ? null : courseId;
+  const repeat = repeatRule(i, `${path}.repeat`, raw.repeat);
+  if (repeat !== undefined) out.repeat = repeat;
+  const steps = taskSteps(i, `${path}.steps`, raw.steps);
+  if (steps !== undefined) out.steps = steps;
+  const plannedFrom = text(i, `${path}.plannedFrom`, raw.plannedFrom, LIMITS.plannedFromMax, { required: false, nullable: true });
+  if (plannedFrom !== undefined) out.plannedFrom = plannedFrom === '' ? null : plannedFrom;
   if (mode === 'update' && Object.keys(out).length === 0 && i.list.length === 0) i.add(path, 'must change at least one field');
   return out;
 }

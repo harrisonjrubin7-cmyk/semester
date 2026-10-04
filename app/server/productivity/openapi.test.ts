@@ -45,6 +45,13 @@ describe('the OpenAPI document and the router agree', () => {
     expect(s.TaskFields.properties.notes.maxLength).toBe(LIMITS.notesMax);
     expect(s.EventFields.properties.location.maxLength).toBe(LIMITS.locationMax);
     expect(s.TaskFields.properties.courseId.maxLength).toBe(LIMITS.courseIdMax);
+    expect(s.TaskFields.properties.whenText.maxLength).toBe(LIMITS.whenTextMax);
+    expect(s.TaskFields.properties.plannedFrom.maxLength).toBe(LIMITS.plannedFromMax);
+    expect(s.TaskFields.properties.steps.maxItems).toBe(LIMITS.stepsMax);
+    expect(s.TaskFields.properties.steps.items.properties.id.maxLength).toBe(LIMITS.stepIdMax);
+    expect(s.TaskFields.properties.steps.items.properties.text.maxLength).toBe(LIMITS.stepTextMax);
+    expect(s.TaskFields.properties.repeat.oneOf[1].properties.except.maxItems).toBe(LIMITS.repeatExceptMax);
+    expect(s.TaskFields.properties.repeat.oneOf[1].properties.every.enum).toEqual([...contract.REPEAT_EVERY]);
   });
 
   it('allows exactly the fields the validators allow', () => {
