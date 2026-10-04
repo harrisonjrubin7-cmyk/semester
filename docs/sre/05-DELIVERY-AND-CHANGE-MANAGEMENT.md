@@ -10,6 +10,7 @@
 | Web deploy (`pages.yml`) | *exists.* Runs only on a green CI on `main`; refuses a stale release; builds a separate demo; emits an SBOM |
 | Function deploy (`functions.yml`) | *exists.* Same gate; deploys only changed directories, and all importers when `_shared` changes |
 | Schema deploy | *exists as practice.* Supabase Branching applies migrations on merge; **no workflow file**, and on 18 September it failed unseen for three days. Guarded by `ledger.snapshot` and `migrationorder.test.ts`, which check a file against a dated reading — not the deploy itself |
+| Infrastructure apply, drift detection, signed builds | *exists on `main`* (`infra.yml`, `infra-apply.yml`, `drift.yml`, `supply-chain.yml`); coded, not yet verified running in production; see [docs/infrastructure/](../infrastructure/README.md) |
 | Canary | **none.** A release goes to everyone at once |
 | Rollback | manual per layer, measured only for the web bundle (76 to 180 seconds) |
 | Monitor after deploy | the hourly probe |
@@ -62,6 +63,8 @@ The inventory and rotation log are [SECRETS.md](../../SECRETS.md) and stay the r
 - **Public build variables can never carry a secret-shaped value**; CI already scans.
 
 ## 6. Change management
+
+**Two governed paths, one vocabulary.** Changes to Terraform-managed infrastructure (Supabase project settings, Vercel, the repository's own protections) follow [docs/infrastructure/CHANGE-CONTROL.md](../infrastructure/CHANGE-CONTROL.md): a `CC-<pr>.md` change record, then `infra-apply.yml`, with a daily drift check (`pipeline:drift`, [RB-16](runbooks/RB-16-infrastructure-drift.md)) and its own *standard*, *emergency* and *break-glass* paths. The classes below cover everything else: application code, functions, schema, configuration, secrets and data. They use the same words on purpose, and `emergency` means the same thing in both: a fix for something down or exposed now, followed by a record. Nothing here replaces the infrastructure path; `gate()` is not wired to it.
 
 Four classes (`CHANGE_CLASSES`), each saying what must be attached, how many approvals, and whether a freeze blocks it:
 

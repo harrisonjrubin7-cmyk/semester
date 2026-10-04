@@ -1,6 +1,6 @@
 # Runbooks
 
-Fifteen runbooks, one per way the system is expected to hurt. Every alert in the [alert register](../generated/ALERTS.md) and every row in the [service catalog](../generated/SERVICE-CATALOG.md) names one by id. `app/src/lib/sre/sre.test.ts` fails if:
+Sixteen runbooks, one per way the system is expected to hurt. Every alert in the [alert register](../generated/ALERTS.md) and every row in the [service catalog](../generated/SERVICE-CATALOG.md) names one by id. `app/src/lib/sre/sre.test.ts` fails if:
 
 - an index entry has no file, or a file has no index entry;
 - a runbook is missing any of the seven sections, or has them out of order;

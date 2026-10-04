@@ -95,7 +95,7 @@ Each dashboard has the same header: owner role, the alert ids it feeds, the runb
 
 - **Page** only for a symptom that burns budget fast, or for data integrity, security or money. Everything else is a ticket.
 - Every alert has the fields in `alerts.ts`: condition, source, route, component, runbook, state. A test refuses a missing runbook.
-- **State is a ladder, not a checkbox:** `defined` → `manual` → `wired` → `delivery_tested`. Today: 21 defined, 5 manual, 6 wired, 0 delivery-tested. Only the last means a person would have been woken.
+- **State is a ladder, not a checkbox:** `defined` → `manual` → `wired` → `delivery_tested`. Today: 22 defined, 5 manual, 6 wired, 0 delivery-tested. Only the last means a person would have been woken.
 - **Page budget:** more than two pages per person per week is a defect in the alerts, not in the person; the fix is tuning or automation, recorded in the postmortem.
 - **Suppress deliberately.** A suppression has an owner and an end date. Flapping alerts are fixed or deleted, never muted indefinitely.
 - **Inhibit by dependency.** When `supabase-db` is paging, alerts on components whose `dependsOn` includes it are grouped under it, using the catalog edges. One cause should be one page.

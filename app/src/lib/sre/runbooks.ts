@@ -33,6 +33,7 @@ export const RUNBOOKS: readonly Runbook[] = [
   { id: 'RB-13', title: 'Secret exposed or provider key compromised', file: 'RB-13-secret-exposed.md' },
   { id: 'RB-14', title: 'Connector or integration stale or failing', file: 'RB-14-connector-failing.md' },
   { id: 'RB-15', title: 'Capacity peak or cost spike', file: 'RB-15-capacity-or-cost.md' },
+  { id: 'RB-16', title: 'Infrastructure drift detected, or the governed apply will not run', file: 'RB-16-infrastructure-drift.md' },
 ];
 
 export const runbook = (id: string): Runbook | undefined => RUNBOOKS.find((r) => r.id === id);

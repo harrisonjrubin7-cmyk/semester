@@ -2,7 +2,7 @@
 
 # Alert register (generated)
 
-32 alerts. defined 21 · manual 5 · wired 6 · delivery-tested 0.
+33 alerts. defined 22 · manual 5 · wired 6 · delivery-tested 0.
 
 States: **defined** the condition is written and nothing evaluates it; **manual** a person evaluates it on a schedule; **wired** a machine evaluates it; **delivery-tested** a safe trigger reached a named human who acknowledged it.
 
@@ -24,6 +24,7 @@ States: **defined** the condition is written and nothing evaluates it; **manual*
 | `deploy:ci-red-on-main` | ticket | ci | `pipeline:ci` | RB-08 | wired | The CI run on main fails, which also holds the Pages and function deploys |
 | `deploy:functions-failed` | ticket | ci | `pipeline:functions` | RB-08 | defined | The function deploy workflow fails, or functions.snapshot disagrees with what was last deployed |
 | `deploy:stale-release` | ticket | ci | `pipeline:pages` | RB-08 | wired | A deploy was refused because main moved on, and nobody re-ran it |
+| `infra:drift-detected` | ticket | integrity | `pipeline:drift` | RB-16 | defined | The daily drift plan finds production differs from main, or the drift workflow stops running (coded in drift.yml; not verified running) |
 | `job:absent` | ticket | absence | `job:push` | RB-10 | manual | supabase/health.sql block 6: a scheduled job is missing, or has not run within twice its period |
 | `job:integrity-failed` | page | integrity | `job:console-audit-integrity` | RB-10 | defined | console_audit_verify() or the ledger chain verification reports a break |
 | `queue:push-backlog` | ticket | threshold | `queue:push_queue` | RB-07 | defined | Oldest unsent push_queue row older than 30 minutes |

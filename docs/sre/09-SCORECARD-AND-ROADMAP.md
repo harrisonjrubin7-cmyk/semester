@@ -17,16 +17,16 @@ Computed from the registers, never typed. Satisfied of applicable, per criticali
 
 `delivery_tested` is reported separately, as the top of the alert ladder, because it is the one thing that separates "a check runs" from "a person would have been woken".
 
-**Baseline, 2026-10-04:**
+**Baseline, 2026-10-04 (after rebasing onto `d63f9ef`, which added four infrastructure workflows):**
 
 | Class | Components | owner | backup | runbook | alert | measured | drilled |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | C0 | 4 | 4/4 | 0/4 | 4/4 | 0/4 | 0/3 | 1/4 |
-| C1 | 17 | 17/17 | 0/17 | 17/17 | 2/17 | 0/2 | 0/17 |
-| C2 | 28 | 28/28 | 0/28 | 28/28 | 2/28 | 0/4 | — |
-| C3 | 12 | 12/12 | 0/12 | 12/12 | — | — | — |
+| C1 | 18 | 18/18 | 0/18 | 18/18 | 2/18 | 0/2 | 0/18 |
+| C2 | 29 | 29/29 | 0/29 | 29/29 | 2/29 | 0/4 | — |
+| C3 | 14 | 14/14 | 0/14 | 14/14 | — | — | — |
 
-135 open cells. Ownership and runbooks are done — those were writing. Everything else that is open needs a **person, a measurement or a drill**, which is the honest shape of the gap: the paper is complete and the practice is not.
+142 open cells. Ownership and runbooks are done — those were writing. Everything else that is open needs a **person, a measurement or a drill**, which is the honest shape of the gap: the paper is complete and the practice is not.
 
 The scorecard can move, and tests prove it: giving one role a second person turns that role's components green; a promoted alert needs evidence that exists; a journey cannot be marked measured without its id being added to a list a test pins.
 
@@ -38,7 +38,7 @@ Sorted by what hurts a student most per unit of effort. Each item names what it 
 | ---: | --- | --- | --- |
 | 1 | **Set the AI provider's spend cap and a usage alert at half of it; record the three caps in order** | `ai:spend-half-cap`; `aiCapOrder` → `ordered` | ten minutes in a dashboard |
 | 2 | **Verify provider backup and PITR state; run CX-03, the timed isolated restore** | the unknowns behind every C0 RTO and RPO; `recovery:restore-overdue` | a scratch project; ideally a witness |
-| 3 | **A second trained operator** with least-privilege access to RB-01 to RB-05 | 61 `backup` cells; the largest row in DEGRADED-MODE-MAP.md | **a person and a funding decision (Q3)** |
+| 3 | **A second trained operator** with least-privilege access to RB-01 to RB-05 | 65 `backup` cells; the largest row in DEGRADED-MODE-MAP.md | **a person and a funding decision (Q3)** |
 | 4 | **A paging route and delivery tests of `probe:public-failed` and `ai:spend-half-cap`** | `delivery_tested` goes from 0; on-call step 1 | a device that makes noise; an agreed coverage window |
 | 5 | **Watch the schema deploy**: a machine reads the branch record, or compares `ledger.snapshot` with the live ledger | `deploy:schema-failed` from `manual` to `wired`; the 18 September failure | provider API access |
 | 6 | **Structured events and SLI events for sign-in and plan save** | `measured` for two journeys; first real burn alerts | a privacy review of the event definitions |

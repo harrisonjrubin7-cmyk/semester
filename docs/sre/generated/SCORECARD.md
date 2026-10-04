@@ -7,11 +7,11 @@ Satisfied of applicable. This is the baseline; the only direction a cell may mov
 | Class | Components | owner | backup | runbook | alert | measured | drilled |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | C0 | 4 | 4/4 | 0/4 | 4/4 | 0/4 | 0/3 | 1/4 |
-| C1 | 17 | 17/17 | 0/17 | 17/17 | 2/17 | 0/2 | 0/17 |
-| C2 | 28 | 28/28 | 0/28 | 28/28 | 2/28 | 0/4 | — |
-| C3 | 12 | 12/12 | 0/12 | 12/12 | — | — | — |
+| C1 | 18 | 18/18 | 0/18 | 18/18 | 2/18 | 0/2 | 0/18 |
+| C2 | 29 | 29/29 | 0/29 | 29/29 | 2/29 | 0/4 | — |
+| C3 | 14 | 14/14 | 0/14 | 14/14 | — | — | — |
 
-Open cells: 135 (owner 0 · backup 61 · runbook 0 · alert 45 · measured 9 · drilled 20).
+Open cells: 142 (owner 0 · backup 65 · runbook 0 · alert 47 · measured 9 · drilled 21).
 
 Single points of failure: platform, data, security, billing, ai, integrations, support.
 
@@ -40,3 +40,4 @@ Single points of failure: platform, data, security, billing, ai, integrations, s
 | `job:ledger-chain-integrity` | C1 | yes | **no** | yes | **no** | — | **no** |
 | `pipeline:schema-deploy` | C1 | yes | **no** | yes | yes | — | **no** |
 | `pipeline:production-smoke` | C1 | yes | **no** | yes | yes | — | **no** |
+| `pipeline:drift` | C1 | yes | **no** | yes | **no** | — | **no** |

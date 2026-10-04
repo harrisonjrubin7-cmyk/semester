@@ -91,6 +91,8 @@ export const ALERTS: readonly Alert[] = [
   A('deploy:functions-failed', 'ci', 'ticket', 'pipeline:functions', 'RB-08', 'defined', 'The function deploy workflow fails, or functions.snapshot disagrees with what was last deployed'),
   A('deploy:stale-release', 'ci', 'ticket', 'pipeline:pages', 'RB-08', 'wired', 'A deploy was refused because main moved on, and nobody re-ran it'),
 
+  A('infra:drift-detected', 'integrity', 'ticket', 'pipeline:drift', 'RB-16', 'defined', 'The daily drift plan finds production differs from main, or the drift workflow stops running (coded in drift.yml; not verified running)'),
+
   // Scheduled work.
   A('job:absent', 'absence', 'ticket', 'job:push', 'RB-10', 'manual', 'supabase/health.sql block 6: a scheduled job is missing, or has not run within twice its period'),
   A('job:integrity-failed', 'integrity', 'page', 'job:console-audit-integrity', 'RB-10', 'defined', 'console_audit_verify() or the ledger chain verification reports a break'),

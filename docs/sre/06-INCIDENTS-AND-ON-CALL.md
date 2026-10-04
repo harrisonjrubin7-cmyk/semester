@@ -6,6 +6,8 @@ No 24/7 coverage, acknowledgement time, response time or contractual commitment 
 
 ## 1. Where this starts
 
+The infrastructure pages say the same thing in their own words ([OPERATIONS.md](../infrastructure/OPERATIONS.md): "one owner, no rota", "no new pager"); nothing here contradicts them.
+
 One person holds every role. The hourly probe records an outage and nobody is told; the weekly ten minutes in `MONITORING.md` is the detection system; the one alert allowed to wake somebody is the AI provider's spend alert, and it is set in the provider's dashboard, not in this repository. An alert at three in the morning to an audience of one who is asleep is not monitoring. That is the design constraint, and the honest response to it is a ladder, not a rota drawn on paper.
 
 ## 2. Severity

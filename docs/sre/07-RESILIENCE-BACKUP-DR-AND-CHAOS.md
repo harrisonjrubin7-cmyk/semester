@@ -6,6 +6,8 @@ Semester may say it has a tested **logical** database rehearsal and a controlled
 
 ## 1. Targets by class
 
+[docs/infrastructure/DISASTER-RECOVERY.md](../infrastructure/DISASTER-RECOVERY.md) states the same targets for Postgres (RPO at most 5 minutes if point-in-time recovery is on, otherwise the daily backup; RTO at most one hour to a new project) under the same status, "targets stated, nothing proven". They agree with the C0 row below and are not repeated as a second source: when the first drill measures them, both pages are edited from the same evidence.
+
 Targets, written so a drill has something to be measured against. The existing `RECOVERY_OBJECTIVES` in `lib/incident-recovery.ts` classify by data *sensitivity* and leave every number null; these classify by *operational* criticality, which is a different question, and the measured column is the same `unmeasured`.
 
 | Class | RTO target | RPO target | Drill | Measured |

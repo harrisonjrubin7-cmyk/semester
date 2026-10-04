@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-61 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+65 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -65,6 +65,10 @@
 | `pipeline:functions` | Deploy Edge Functions | pipeline | C2 | platform | — | `supabase-edge-runtime` | — | RB-08 |
 | `pipeline:schema-deploy` | Schema deploy (Supabase Branching, db push) | pipeline | C1 | data | — | `supabase-db` | — | RB-09 |
 | `pipeline:production-smoke` | Hourly production probe (the only automated monitor) | pipeline | C1 | platform | — | `github-pages`, `supabase-db` | — | RB-01 |
+| `pipeline:drift` | Daily infrastructure drift check | pipeline | C1 | security | — | — | — | RB-16 |
+| `pipeline:infra-apply` | Infrastructure apply (the one governed way to change production infrastructure) | pipeline | C2 | platform | — | — | — | RB-16 |
+| `pipeline:infra` | Infrastructure pull-request checks (read-only) | pipeline | C3 | platform | — | — | — | RB-08 |
+| `pipeline:supply-chain` | Signed, reproducible build with provenance and SBOM | pipeline | C3 | security | — | — | — | RB-08 |
 | `pipeline:contrast` | Daily contrast sweep | pipeline | C3 | platform | — | — | — | RB-08 |
 | `pipeline:hawkscan` | Dynamic security scan | pipeline | C3 | security | — | — | — | RB-08 |
 

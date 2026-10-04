@@ -11,7 +11,7 @@
 | Edge functions (including the AI route) | 16 | `fn:claude`, `fn:billing-webhook`, `fn:push`, `fn:delete-account` |
 | Scheduled jobs (`pg_cron`) | 21 | `job:push`, `job:console-audit-integrity`, `job:commercial-dunning` — two are parked until their functions exist |
 | Queues and outboxes | 4 | `queue:push_queue`, `queue:support_notification_outbox` |
-| Pipelines and monitors | 7 | `pipeline:ci`, `pipeline:schema-deploy`, `pipeline:production-smoke` |
+| Pipelines and monitors | 11 | `pipeline:ci`, `pipeline:schema-deploy`, `pipeline:production-smoke`, `pipeline:drift`, `pipeline:infra-apply` |
 | Platform and external dependencies | 10 | `supabase-auth`, `supabase-db`, `stripe`, `anthropic`, `github-pages` |
 | Student-facing surfaces | 3 | `web-app`, `status-page`, `institution-gateway` |
 
@@ -38,7 +38,7 @@ Ownership is a **role**, and a role is held by a person or by nobody. Seven role
 | --- | --- | --- |
 | all seven | Harrison Rubin | **none** |
 
-This is not a criticism; it is the state [`DEGRADED-MODE-MAP.md`](../DEGRADED-MODE-MAP.md) and [`ON-CALL-AND-ESCALATION-POLICY.md`](../engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md) already record. What the catalog adds is that it is *counted per component*, so a second person is not a sentence to agree with but 61 cells to turn green.
+This is not a criticism; it is the state [`DEGRADED-MODE-MAP.md`](../DEGRADED-MODE-MAP.md) and [`ON-CALL-AND-ESCALATION-POLICY.md`](../engineering-operations/ON-CALL-AND-ESCALATION-POLICY.md) already record. What the catalog adds is that it is *counted per component*, so a second person is not a sentence to agree with but 65 cells to turn green.
 
 Every row also carries:
 
