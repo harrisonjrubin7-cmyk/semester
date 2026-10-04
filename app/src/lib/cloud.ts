@@ -1102,6 +1102,10 @@ export const OWNED_TABLES: OwnedTable[] = [
   // it from auth.users, but listing it here keeps explicit erasure complete
   // even when account deletion is exercised before the auth row is removed.
   { table: 'productivity_workspace', column: 'user_id' },
+  // Tasks and events written through the command API (`server/productivity/`).
+  // Both cascade from auth.users; the person is `owner_id`, not `user_id`.
+  { table: 'productivity_task', column: 'owner_id' },
+  { table: 'productivity_event', column: 'owner_id' },
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },

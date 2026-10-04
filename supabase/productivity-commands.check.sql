@@ -434,4 +434,36 @@ begin
   perform pg_temp.must('the sweep is not the clients''', not has_function_privilege('authenticated', 'private.productivity_sweep_commands()', 'execute'));
 end $$;
 
+-- ── An account with these rows is not untouched, is exported, and is erased ──
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  nobody constant uuid := '00000000-0000-4000-8000-00000000beef';
+begin
+  perform pg_temp.must('an account holding tasks and events is not untouched', not public.lti_account_untouched(a));
+  perform pg_temp.must('the control: an account holding nothing is', public.lti_account_untouched(nobody));
+end $$;
+
+select pg_temp.become('00000000-0000-4000-8000-00000000c101');
+do $$
+declare dump jsonb;
+begin
+  dump := public.export_my_data();
+  perform pg_temp.must('the export carries the productivity tables',
+    dump::text like '%productivity_task%' and dump::text like '%productivity_event%');
+end $$;
+reset role;
+
+do $$
+declare a constant uuid := '00000000-0000-4000-8000-00000000c101';
+begin
+  perform public.erase_account(a);
+  perform pg_temp.must('erasing the account removes its tasks, events, counter and ledger',
+    not exists (select 1 from public.productivity_task where owner_id = a)
+    and not exists (select 1 from public.productivity_event where owner_id = a)
+    and not exists (select 1 from private.productivity_owner_seq where owner_id = a)
+    and not exists (select 1 from private.productivity_command where owner_id = a));
+end $$;
+
 rollback;

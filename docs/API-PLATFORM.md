@@ -887,8 +887,10 @@ and SQL drift guards.
    reader).
 3. **A route** (`api/productivity/[...path].ts`, mirroring `api/institution`) and
    the `Retry-After`/CORS decisions for the browser client.
-4. **Registration of the new tables** with `lti_account_untouched`, the account
-   export and the erasure path — **required before any client writes** (§11).
+4. ~~Registration of the new tables~~ — done: `lti_account_untouched` lists them
+   (`20261004160000`); export and erasure read the foreign keys to `auth.users`,
+   so they already carried the tables, and `productivity-commands.check.sql`
+   proves both.
 5. **Scheduling** `private.productivity_sweep_commands()` in `scheduler.sql`.
 6. **A client** (the offline queue of §10.4) and a decision about the old tables.
 7. **A production-major run** of `check.sh` (these ran on Postgres 16).
@@ -946,7 +948,7 @@ None of this has been measured against real latency.
 | # | Decision / risk | Recommendation |
 |---|---|---|
 | 1 | **Two models of a task now exist** (`public.tasks` JSON sync; `productivity_task`). Until a client moves, no data is in the new one. | Move one client journey at a time (the repository's own migration rule), backfill with a one-off import that writes through the **command API** (so audit and events exist), and retire the old table only when its usage is zero. |
-| 2 | **Account-link and erasure guards do not know the new tables.** `lti_account_untouched` lists user-owned tables by name; an account holding only these rows could be classified empty. | Add `productivity_task`, `productivity_event` to that list, and to export and erasure, in the migration that first lets a client write. **Do not enable writes first.** |
+| 2 | **Account-link and erasure guards do not know the new tables.** `lti_account_untouched` lists user-owned tables by name; an account holding only these rows could be classified empty. | Done in `20261004160000`: both tables are on that list. Export and erasure needed no change — they walk the foreign keys — and a check shows an account's rows exported and erased. |
 | 3 | **Outbox retries without backoff** (§4.4). | Add `next_attempt_at` and `SKIP LOCKED` before any publisher touches a real bus. |
 | 4 | **Marketplace has no order/dispute/payout model.** | Do not describe it as a marketplace beyond verified listings. |
 | 5 | **Scanning engine and object store are unchosen.** | A security decision, with the §6 requirements as the criteria. |
