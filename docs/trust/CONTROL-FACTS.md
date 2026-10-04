@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 181 |
+| Migration files | 182 |
 | Tables created in `public` and not later dropped | 321 |
 | … of which enable row-level security in a migration | 321 |
 | Tables created in `private` and not later dropped | 31 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-111 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+112 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -39,6 +39,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/advisor-reconciliation.check.sql` | The production-advisor reconciliation of 30 September 2026 (D-1026): that a table with row-level security on and no policy is unreachable by any client role — the fact that lets the advisor's 49 noti… |
 | `supabase/advisor.check.sql` | Advisor Meeting Mode shares (Phase G, D-016): who can share with whom, who can read, and that expiry and revocation stop reading. |
 | `supabase/ai-spend.check.sql` | The dollar meter on the shared key (20261004170000_ai_spend_meter). |
+| `supabase/answer-rights-requests.check.sql` | Answering a rights request: who may, which moves are legal, and what is left behind. |
 | `supabase/approved-source-policy-scope.check.sql` | Disposable/local database only, after applying the source-scope migration. |
 | `supabase/audit-and-subject-requests.check.sql` | The common audit envelope (audit_event) and the rights-request queue (data_subject_request). |
 | `supabase/beta.check.sql` | The invite-only private beta (20260928220000_private_beta.sql). |
@@ -250,15 +251,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 205 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 205 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 207 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 207 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 60 |
 | Register rows in category `sharing` | 19 |
-| Register rows in category `admin` | 74 |
+| Register rows in category `admin` | 76 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
