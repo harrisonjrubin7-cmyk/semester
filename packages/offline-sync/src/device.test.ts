@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { DEFAULT_LEASE_POLICY as P, evaluateAccess, observe, WIPE_TRIGGERS, wipeDevice, type LeaseState, type WipePorts, type WipeReason } from './device.ts'
 
 const NOW = 1_800_000_000_000

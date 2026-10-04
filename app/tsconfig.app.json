@@ -46,8 +46,15 @@
        * lease, key hierarchy, attachment cache and CRDT. Platform-neutral and
        * dependency-free, so a phone, the PWA and the tests all run the same code.
        */
-      "@semester/offline-sync": ["../packages/offline-sync/src/index.ts"]
+      "@semester/offline-sync": ["../packages/offline-sync/src/index.ts"],
+      /*
+       * The platform primitives: tenancy, policy evaluation, the command
+       * pipeline, and the engines every domain shares. Imported through this
+       * alias by the app and the gateway so there is one copy of the
+       * tenant boundary, not one per caller.
+       */
+      "@semester/platform": ["../packages/platform/src/index.ts"]
     }
   },
-  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src"]
+  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src"]
 }

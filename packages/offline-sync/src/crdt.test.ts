@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { AddWinsSet, gateUpdate, TextDoc, type CrdtUpdate, type GateDeps, type TextOp } from './crdt.ts'
 
 /** A small deterministic generator, so a failing seed can be replayed. */

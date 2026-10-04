@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { AttachmentCache, AttachmentError, DEFAULT_QUOTA, memoryBlobs, newKey, open, seal, sha256Hex, unwrapKey, wrapKey, type CachedFile } from './vault.ts'
 
 const NOW = 1_800_000_000_000

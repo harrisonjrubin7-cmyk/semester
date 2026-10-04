@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js'
+import { describe, expect, it } from 'vitest'
 import { PHASE_TO_STATE, STATE_COPY, SYNC_STATES, transition, type QueuePhase, type SyncEvent, type SyncState } from './status.ts'
 
 const EVENTS: SyncEvent['type'][] = ['edit', 'confirm', 'ack', 'reject', 'conflict', 'resolve', 'retry', 'discard']

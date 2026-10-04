@@ -47,11 +47,15 @@ version: 2
 updates:
   # ── The app's own tree ──────────────────────────────────────────────────
   #
-  # `directory: /app` rather than `/`: the repository root has no
-  # `package.json`, which is the same trap `CLAUDE.md` names about `npm test`.
-  # Pointed at the root, Dependabot finds nothing and says so nowhere.
+  # `directory: /`, the workspace root: `app/` and `packages/*` are npm
+  # workspaces with one lockfile at the root, and that is where Dependabot reads
+  # it. Pointed at `/app` it would find a manifest whose lockfile is two levels
+  # up and, as the old comment here said of the root, say nothing about it.
+  # `overrides` live in the root `package.json` too: npm ignores them in a
+  # workspace member, so the two security pins (`lodash-es`, `dompurify`) are
+  # there and not in `app/package.json`.
   - package-ecosystem: npm
-    directory: /app
+    directory: /
     schedule:
       interval: weekly
       # Monday morning, in the timezone the app is actually used in — the same

@@ -929,6 +929,9 @@ export default defineConfig(({ command, mode }) => {
         '@semester/offline-sync': fileURLToPath(
           new URL('../packages/offline-sync/src/index.ts', import.meta.url),
         ),
+        '@semester/platform': fileURLToPath(
+          new URL('../packages/platform/src/index.ts', import.meta.url),
+        ),
       },
     },
     // GitHub Pages serves a project site from /<repo>/, not from the root. The
@@ -995,7 +998,12 @@ export default defineConfig(({ command, mode }) => {
           test: {
             name: 'shared',
             isolate: false,
-            include: [...configDefaults.include, '../packages/institution/src/**/*.test.ts', '../packages/offline-sync/src/**/*.test.ts'],
+            include: [
+              ...configDefaults.include,
+              '../packages/institution/src/**/*.test.ts',
+              '../packages/offline-sync/src/**/*.test.ts',
+              '../packages/platform/src/**/*.test.ts',
+            ],
             // Publication artifacts are outside the repository. Their explicit
             // suite requires the real deliverables; it is not an app regression.
             exclude: [...configDefaults.exclude, ...MOCKS_MODULES, 'scripts/rollout-publication.test.ts'],
