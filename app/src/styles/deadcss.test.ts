@@ -158,7 +158,11 @@ describe('the stylesheets', () => {
     // Named rather than counted: a failure should say which rule to look at,
     // and whether it is dead or merely composed somewhere this cannot see.
     expect([...dead]).toEqual([]);
-  }, 10_000);
+  // This scans the complete source tree and its runtime-composed class names.
+  // The repository now exceeds the original 10-second budget on an otherwise
+  // idle worker, so keep the assertion exact while allowing the census to
+  // finish on the full application.
+  }, 30_000);
 
   it('keeps substring membership, overlapping names and missing-name controls exact', () => {
     const source = 'nav-row-expanded foobar _item ababa prefix-aa-suffix /* mentioned-here */';
