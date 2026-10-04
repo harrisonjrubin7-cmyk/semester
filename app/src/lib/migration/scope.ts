@@ -14,7 +14,7 @@
  */
 import { namesNeverDisplayed, namesNeverIngest } from '../integration/adapter.ts';
 import { routeAllowed, type ClassRoute, type DataClass } from '../integration/classification.ts';
-import type { DomainSpec } from './types.ts';
+import type { DomainSpec } from './engine-types.ts';
 
 export type ScopeReason = 'class_blocked' | 'never_ingest' | 'never_display';
 

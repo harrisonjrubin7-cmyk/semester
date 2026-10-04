@@ -24,9 +24,10 @@
  * carry stays in memory until `quality.ts` redacts it.
  */
 import type {
-  Compare, Crosswalk, Dataset, DomainSpec, EntitySpec, InvariantResult, InvariantSpec, Origin, Pair, RawFinding, Row,
-  Severity,
-} from './types.ts';
+  Compare, Crosswalk, Dataset, DomainSpec, EntitySpec, InvariantKind, InvariantResult, InvariantSpec, Origin, Pair, RawFinding, Row,
+  Gravity,
+} from './engine-types.ts';
+import type { EvidenceClass } from './types.ts';
 
 const SEP = '\u001f';
 const present = (v: unknown) => v !== null && v !== undefined && v !== '';
@@ -98,8 +99,26 @@ function reverseOf(c: Ctx, entity: string): Map<string, string> {
 
 const isExcluded = (c: Ctx, entity: string, sourceKey: string) => c.pair.excluded?.[entity]?.[sourceKey] !== undefined;
 
-function finding(spec: InvariantSpec, key: string, origin: Origin, what: string, severity: Severity = spec.severity): RawFinding {
-  return { invariant: spec.id, key, origin, severity, what };
+/**
+ * What each kind of check proves, in the Migration pack's own evidence classes
+ * (`types.ts`), so the gate that refuses a count-only domain reads these
+ * results the same as any other.
+ */
+export const CLASS_OF_KIND: Readonly<Record<InvariantKind, EvidenceClass>> = {
+  crosswalk: 'key',
+  unique: 'key',
+  reference: 'relationship',
+  preserved: 'semantic',
+  derived: 'outcome',
+  history: 'history',
+  permission: 'permission',
+  order: 'relationship',
+  bounded: 'outcome',
+  temporal: 'semantic',
+};
+
+function finding(spec: InvariantSpec, key: string, origin: Origin, code: string, what: string, gravity: Gravity = spec.gravity, evidenceClass: EvidenceClass = CLASS_OF_KIND[spec.kind]): RawFinding {
+  return { invariant: spec.id, key, origin, gravity, code, evidenceClass, what };
 }
 
 function groupBy(rows: readonly Row[], field: string): Map<string, Row[]> {
@@ -136,21 +155,21 @@ function runCrosswalk(spec: Extract<InvariantSpec, { kind: 'crosswalk' }>, c: Ct
     const sk = keyOf(row, key);
     const tk = cw[sk];
     if (isExcluded(c, spec.entity, sk)) {
-      if (tk !== undefined) findings.push(finding(spec, sk, 'migration', 'a row the institution excluded was migrated'));
+      if (tk !== undefined) findings.push(finding(spec, sk, 'migration', 'excluded_migrated', 'a row the institution excluded was migrated'));
       continue;
     }
-    if (tk === undefined) findings.push(finding(spec, sk, 'migration', 'no crosswalk entry'));
-    else if (!targets.has(tk)) findings.push(finding(spec, sk, 'migration', 'crosswalk points at no target row'));
+    if (tk === undefined) findings.push(finding(spec, sk, 'migration', 'missing_in_target', 'no crosswalk entry'));
+    else if (!targets.has(tk)) findings.push(finding(spec, sk, 'migration', 'missing_in_target', 'crosswalk points at no target row'));
     else claimed.set(tk, [...(claimed.get(tk) ?? []), sk]);
   }
   for (const [tk, sks] of claimed) {
     if (sks.length > 1 && !merged.has(tk)) {
-      for (const sk of sks) findings.push(finding(spec, sk, 'migration', 'two source rows share one target row'));
+      for (const sk of sks) findings.push(finding(spec, sk, 'migration', 'merged_in_target', 'two source rows share one target row'));
     }
   }
   for (const row of rowsOf(c, 'target', spec.entity)) {
     const tk = keyOf(row, key);
-    if (!claimed.has(tk)) findings.push(finding(spec, `target:${tk}`, 'migration', 'target row has no source row'));
+    if (!claimed.has(tk)) findings.push(finding(spec, `target:${tk}`, 'migration', 'no_source', 'target row has no source row'));
   }
   return { examined: source.length, findings };
 }
@@ -176,7 +195,7 @@ function runUnique(spec: Extract<InvariantSpec, { kind: 'unique' }>, c: Ctx): Ou
     if (rows.length < 2) continue;
     for (const row of rows.slice(1)) {
       const tk = keyOf(row, key);
-      findings.push(finding(spec, rev.get(tk) ?? `target:${tk}`, inherited.has(k) ? 'source' : 'migration', `${spec.entity} repeats (${spec.fields.join(', ')})`));
+      findings.push(finding(spec, rev.get(tk) ?? `target:${tk}`, inherited.has(k) ? 'source' : 'migration', 'duplicated_in_target', `${spec.entity} repeats (${spec.fields.join(', ')})`));
     }
   }
   return { examined, findings };
@@ -201,7 +220,7 @@ function runReference(spec: Extract<InvariantSpec, { kind: 'reference' }>, c: Ct
     const sk = rev.get(tk);
     const was = sk === undefined ? undefined : sources.get(sk)?.[spec.field];
     const inherited = present(was) && !sourceParents.has(String(was));
-    findings.push(finding(spec, sk ?? `target:${tk}`, inherited ? 'source' : 'migration', `${spec.entity}.${spec.field} has no ${spec.to}`));
+    findings.push(finding(spec, sk ?? `target:${tk}`, inherited ? 'source' : 'migration', 'orphan', `${spec.entity}.${spec.field} has no ${spec.to}`));
   }
   return { examined, findings };
 }
@@ -218,17 +237,17 @@ function runPreserved(spec: Extract<InvariantSpec, { kind: 'preserved' }>, c: Ct
     if (!mapped || isExcluded(c, spec.entity, sk)) continue;
     examined += 1;
     for (const f of spec.fields) {
-      if (!same(row[f], mapped[f], spec.compare)) findings.push(finding(spec, sk, 'migration', `${spec.entity}.${f} differs`));
+      if (!same(row[f], mapped[f], spec.compare)) findings.push(finding(spec, sk, 'migration', 'value_differs', `${spec.entity}.${f} differs`));
     }
     for (const link of spec.links ?? []) {
       const was = row[link.field];
       if (!present(was)) {
-        if (present(mapped[link.field])) findings.push(finding(spec, sk, 'migration', `${spec.entity}.${link.field} appeared from nowhere`));
+        if (present(mapped[link.field])) findings.push(finding(spec, sk, 'migration', 'wrong_parent', `${spec.entity}.${link.field} appeared from nowhere`, spec.gravity, 'relationship'));
         continue;
       }
       if (isExcluded(c, link.to, String(was))) continue;
       if (String(mapped[link.field] ?? '') !== c.pair.crosswalk[link.to]?.[String(was)]) {
-        findings.push(finding(spec, sk, 'migration', `${spec.entity}.${link.field} now points at a different ${link.to}`));
+        findings.push(finding(spec, sk, 'migration', 'wrong_parent', `${spec.entity}.${link.field} now points at a different ${link.to}`, spec.gravity, 'relationship'));
       }
     }
   }
@@ -264,15 +283,15 @@ function runDerived(spec: Extract<InvariantSpec, { kind: 'derived' }>, c: Ctx): 
     examined += 1;
     const s = aggregate(source.get(sk));
     const t = aggregate(target.get(tk!));
-    if (spec.integer && !integers(source.get(sk))) findings.push(finding(spec, sk, 'source', `${spec.child}.${spec.value} is not a whole number`));
-    if (spec.integer && !integers(target.get(tk!))) findings.push(finding(spec, sk, 'migration', `${spec.child}.${spec.value} is not a whole number`));
-    if (Math.abs(s - t) > spec.tolerance + 1e-9) findings.push(finding(spec, sk, 'migration', `${spec.id}: the outcome differs from the source's`));
+    if (spec.integer && !integers(source.get(sk))) findings.push(finding(spec, sk, 'source', 'not_whole_number', `${spec.child}.${spec.value} is not a whole number`, spec.gravity, 'semantic'));
+    if (spec.integer && !integers(target.get(tk!))) findings.push(finding(spec, sk, 'migration', 'not_whole_number', `${spec.child}.${spec.value} is not a whole number`, spec.gravity, 'semantic'));
+    if (Math.abs(s - t) > spec.tolerance + 1e-9) findings.push(finding(spec, sk, 'migration', 'outcome_differs', `${spec.id}: the outcome differs from the source's`));
     if (spec.stated) {
       const sv = num(row[spec.stated]);
       const tv = num(mapped[spec.stated]);
       const sourceDisagrees = sv !== null && Math.abs(sv - s) > spec.tolerance + 1e-9;
       if (tv !== null && Math.abs(tv - t) > spec.tolerance + 1e-9) {
-        findings.push(finding(spec, sk, sourceDisagrees && sv === tv ? 'source' : 'migration', `${spec.entity}.${spec.stated} disagrees with its own ${spec.child} rows`));
+        findings.push(finding(spec, sk, sourceDisagrees && sv === tv ? 'source' : 'migration', 'outcome_differs', `${spec.entity}.${spec.stated} disagrees with its own ${spec.child} rows`));
       }
     }
   }
@@ -297,13 +316,13 @@ function runHistory(spec: Extract<InvariantSpec, { kind: 'history' }>, c: Ctx): 
     examined += 1;
     const tk = cw[sk];
     if (tk === undefined) {
-      findings.push(finding(spec, sk, 'migration', `${spec.subjectEntity} with history is not in the crosswalk`));
+      findings.push(finding(spec, sk, 'migration', 'missing_in_target', `${spec.subjectEntity} with history is not in the crosswalk`));
       continue;
     }
     const moved = target.get(tk) ?? [];
-    if (moved.length !== events.length) findings.push(finding(spec, sk, 'migration', `${spec.entity} history has a different number of events`));
-    else if (events.some((e, i) => !same(e[spec.value], moved[i][spec.value]))) findings.push(finding(spec, sk, 'migration', `${spec.entity}.${spec.value} differs at some step of the history`));
-    if (new Set(moved.map((e) => String(e[spec.seq]))).size !== moved.length) findings.push(finding(spec, sk, 'migration', `${spec.entity} history order is ambiguous`));
+    if (moved.length !== events.length) findings.push(finding(spec, sk, 'migration', 'history_truncated', `${spec.entity} history has a different number of events`));
+    else if (events.some((e, i) => !same(e[spec.value], moved[i][spec.value]))) findings.push(finding(spec, sk, 'migration', 'history_rewritten', `${spec.entity}.${spec.value} differs at some step of the history`));
+    if (new Set(moved.map((e) => String(e[spec.seq]))).size !== moved.length) findings.push(finding(spec, sk, 'migration', 'history_rewritten', `${spec.entity} history order is ambiguous`));
     if (spec.current) {
       const last = moved.at(-1);
       const row = targetSubjects.get(tk);
@@ -311,7 +330,7 @@ function runHistory(spec: Extract<InvariantSpec, { kind: 'history' }>, c: Ctx): 
         const lastSource = events.at(-1);
         const was = sourceSubjects.get(sk);
         const inherited = !!lastSource && !!was && !same(was[spec.current], lastSource[spec.value]);
-        findings.push(finding(spec, sk, inherited ? 'source' : 'migration', `${spec.subjectEntity}.${spec.current} is not the last ${spec.entity} event`));
+        findings.push(finding(spec, sk, inherited ? 'source' : 'migration', 'history_rewritten', `${spec.subjectEntity}.${spec.current} is not the last ${spec.entity} event`));
       }
     }
   }
@@ -340,14 +359,14 @@ function runPermission(spec: Extract<InvariantSpec, { kind: 'permission' }>, c: 
     const sr = resources ? resources.get(tr) : tr;
     const known = sp !== undefined && sr !== undefined && sourcePairs.has(`${sp}${SEP}${sr}`);
     if (known) kept.add(`${sp}${SEP}${sr}`);
-    else findings.push(finding(spec, sp ?? `target:${tp}`, 'migration', `${spec.entity} grants access the source did not`));
-    if (consent && !consent.has(`${tp}${SEP}${tr}`)) findings.push(finding(spec, sp ?? `target:${tp}`, 'migration', `${spec.entity} grant has no active ${spec.requires!.entity} record`));
+    else findings.push(finding(spec, sp ?? `target:${tp}`, 'migration', 'access_widened', `${spec.entity} grants access the source did not`));
+    if (consent && !consent.has(`${tp}${SEP}${tr}`)) findings.push(finding(spec, sp ?? `target:${tp}`, 'migration', 'access_without_consent', `${spec.entity} grant has no active ${spec.requires!.entity} record`));
   }
   for (const g of sourceGrants) {
     const sp = String(g[spec.principal]);
     const sr = String(g[spec.resource]);
     if (isExcluded(c, spec.principalEntity, sp) || (spec.resourceEntity && isExcluded(c, spec.resourceEntity, sr))) continue;
-    if (!kept.has(`${sp}${SEP}${sr}`)) findings.push(finding(spec, sp, 'migration', `${spec.entity} access the source gave was not carried`, 'major'));
+    if (!kept.has(`${sp}${SEP}${sr}`)) findings.push(finding(spec, sp, 'migration', 'access_narrowed', `${spec.entity} access the source gave was not carried`, 'major'));
   }
   return { examined: Math.max(sourceGrants.length, targetGrants.length), findings };
 }
@@ -368,9 +387,9 @@ function runOrder(spec: Extract<InvariantSpec, { kind: 'order' }>, c: Ctx): Out 
     const expected = sorted.map((r) => cw[keyOf(r, key)]);
     if (expected.some((k) => k === undefined)) continue;
     examined += 1;
-    if (new Set(rows.map((r) => String(r[spec.position]))).size !== rows.length) findings.push(finding(spec, g, 'source', `${spec.entity}.${spec.position} has ties, so the order was never defined`));
+    if (new Set(rows.map((r) => String(r[spec.position]))).size !== rows.length) findings.push(finding(spec, g, 'source', 'order_ambiguous', `${spec.entity}.${spec.position} has ties, so the order was never defined`));
     const actual = [...(targetGroups.get(tg) ?? [])].sort(byPosition(spec.position)).map((r) => keyOf(r, key));
-    if (actual.length !== expected.length || actual.some((k, i) => k !== expected[i])) findings.push(finding(spec, g, 'migration', `${spec.entity} sibling order differs`));
+    if (actual.length !== expected.length || actual.some((k, i) => k !== expected[i])) findings.push(finding(spec, g, 'migration', 'order_differs', `${spec.entity} sibling order differs`));
   }
   return { examined, findings };
 }
@@ -392,15 +411,15 @@ function runBounded(spec: Extract<InvariantSpec, { kind: 'bounded' }>, c: Ctx): 
     const n = target.get(tk)?.length ?? 0;
     const limit = num(cap[spec.capacity]);
     const sourceRow = sk === undefined ? undefined : sourceCaps.get(sk);
-    if (limit === null && n > 0) findings.push(finding(spec, sk ?? `target:${tk}`, 'migration', `${spec.groupEntity}.${spec.capacity} is missing`));
+    if (limit === null && n > 0) findings.push(finding(spec, sk ?? `target:${tk}`, 'migration', 'capacity_missing', `${spec.groupEntity}.${spec.capacity} is missing`));
     else if (limit !== null && n > limit) {
       const sn = sk === undefined ? 0 : source.get(sk)?.length ?? 0;
       const sl = sourceRow ? num(sourceRow[spec.capacity]) : null;
-      findings.push(finding(spec, sk ?? `target:${tk}`, sl !== null && sn > sl ? 'source' : 'migration', `${spec.entity} count exceeds ${spec.groupEntity}.${spec.capacity}`));
+      findings.push(finding(spec, sk ?? `target:${tk}`, sl !== null && sn > sl ? 'source' : 'migration', 'over_capacity', `${spec.entity} count exceeds ${spec.groupEntity}.${spec.capacity}`));
     }
     if (spec.equalToSource && sk !== undefined) {
       const sn = (source.get(sk) ?? []).filter((r) => !isExcluded(c, spec.entity, keyOf(r, memberKey))).length;
-      if (sn !== n) findings.push(finding(spec, sk, 'migration', `${spec.entity} count differs from the source's`));
+      if (sn !== n) findings.push(finding(spec, sk, 'migration', 'count_differs', `${spec.entity} count differs from the source's`));
     }
   }
   return { examined, findings };
@@ -424,7 +443,7 @@ function runTemporal(spec: Extract<InvariantSpec, { kind: 'temporal' }>, c: Ctx)
     if (!inverted(row)) continue;
     const tk = keyOf(row, key);
     const sk = rev.get(tk);
-    findings.push(finding(spec, sk ?? `target:${tk}`, inverted(sk === undefined ? undefined : sources.get(sk)) ? 'source' : 'migration', `${spec.entity}.${spec.start} is not before ${spec.entity}.${spec.end}`));
+    findings.push(finding(spec, sk ?? `target:${tk}`, inverted(sk === undefined ? undefined : sources.get(sk)) ? 'source' : 'migration', 'dates_inverted', `${spec.entity}.${spec.start} is not before ${spec.entity}.${spec.end}`));
   }
   return { examined, findings };
 }
@@ -444,7 +463,7 @@ function runInvariant(spec: InvariantSpec, c: Ctx): InvariantResult {
       case 'temporal': return runTemporal(spec, c);
     }
   })();
-  return { invariant: spec.id, kind: spec.kind, severity: spec.severity, ...out };
+  return { invariant: spec.id, kind: spec.kind, gravity: spec.gravity, ...out };
 }
 
 /** Every invariant of a domain against one pair, in declaration order. */
@@ -455,25 +474,24 @@ export function runDomain(domain: DomainSpec, pair: Pair): InvariantResult[] {
 
 /* ── Row counts: a precondition, never evidence ────────────────────────── */
 
-export interface CountRow {
-  entity: string;
-  source: number;
-  excluded: number;
-  merged: number;
-  expected: number;
-  target: number;
-  ok: boolean;
+export interface Counts {
+  source: Record<string, number>;
+  target: Record<string, number>;
+  /** What the institution excluded or approved merging, per entity: the volume that is *expected* to be missing. */
+  expectedRejected: Record<string, number>;
 }
 
 /**
- * Source minus what the institution excluded, minus what it approved merging,
- * against the target. Equal counts earn nothing by themselves — `quality.ts`
- * requires the semantic checks too — but unequal counts are always a defect.
+ * Volumes per entity, with the rows that are *supposed* to be missing taken
+ * out: source rows the institution excluded, and source rows collapsed into an
+ * approved merge. The comparison itself is `checks.ts` `countParity`, the one
+ * implementation; equal counts earn nothing by themselves (`gate.ts` requires
+ * the other evidence classes) but unequal counts are always a defect.
  */
-export function countParity(domain: DomainSpec, pair: Pair): CountRow[] {
-  return domain.entities.map((e) => {
+export function countsFor(domain: DomainSpec, pair: Pair): Counts {
+  const out: Counts = { source: {}, target: {}, expectedRejected: {} };
+  for (const e of domain.entities) {
     const source = pair.source[e.name] ?? [];
-    const target = pair.target[e.name] ?? [];
     const present = new Set(source.map((r) => keyOf(r, e.key)));
     const excluded = Object.keys(pair.excluded?.[e.name] ?? {}).filter((k) => present.has(k)).length;
     const cw = pair.crosswalk[e.name] ?? {};
@@ -484,9 +502,11 @@ export function countParity(domain: DomainSpec, pair: Pair): CountRow[] {
       if (tk !== undefined && merges.has(tk)) into.set(tk, (into.get(tk) ?? 0) + 1);
     }
     const merged = [...into.values()].reduce((n, k) => n + (k - 1), 0);
-    const expected = source.length - excluded - merged;
-    return { entity: e.name, source: source.length, excluded, merged, expected, target: target.length, ok: expected === target.length };
-  });
+    out.source[e.name] = source.length;
+    out.target[e.name] = (pair.target[e.name] ?? []).length;
+    out.expectedRejected[e.name] = excluded + merged;
+  }
+  return out;
 }
 
 /* ── Proving the probes ────────────────────────────────────────────────── */

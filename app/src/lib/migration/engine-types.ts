@@ -13,6 +13,7 @@
  * CLI, the tests and a future worker share one implementation.
  */
 import type { DataClass } from '../integration/classification.ts';
+import type { DataDomain, EvidenceClass } from './types.ts';
 
 /** A row as extracted or loaded. Field names are the canonical ones on both sides. */
 export type Row = Readonly<Record<string, unknown>>;
@@ -43,8 +44,13 @@ export interface Pair {
   approvedMerges?: Readonly<Record<string, readonly string[]>>;
 }
 
-export type Severity = 'critical' | 'major' | 'minor';
-export const SEVERITIES: readonly Severity[] = ['critical', 'major', 'minor'];
+/**
+ * How bad one finding of a check is, in the engine's own three grades. The
+ * gate speaks `Severity` (`types.ts`: critical, high, medium, low); `adapter.ts`
+ * maps one onto the other so the two vocabularies are never mixed in a record.
+ */
+export type Gravity = 'critical' | 'major' | 'minor';
+export const GRAVITIES: readonly Gravity[] = ['critical', 'major', 'minor'];
 
 /**
  * Whose fault a finding is.
@@ -56,9 +62,6 @@ export const SEVERITIES: readonly Severity[] = ['critical', 'major', 'minor'];
  */
 export type Origin = 'migration' | 'source';
 
-export type DomainId =
-  | 'identity' | 'academic_records' | 'courses' | 'learning_content' | 'enrollments'
-  | 'finance' | 'family' | 'campus_services' | 'career' | 'documents';
 
 export interface FieldSpec {
   name: string;
@@ -83,7 +86,7 @@ export interface ExcludedSpec {
   handling: string;
 }
 
-type Base = { id: string; severity: Severity };
+type Base = { id: string; gravity: Gravity };
 
 /** `how` a value is compared: exact is the default and is almost always right. */
 export type Compare = 'exact' | 'date' | 'number';
@@ -151,7 +154,7 @@ export const INVARIANT_KINDS: readonly InvariantKind[] = [
 ];
 
 export interface DomainSpec {
-  id: DomainId;
+  id: DataDomain;
   label: string;
   /** Grades, billing, registration, access, legal notices: no tolerance for a wrong record. */
   stakes: 'high' | 'standard';
@@ -179,7 +182,16 @@ export interface RawFinding {
   invariant: string;
   key: string;
   origin: Origin;
-  severity: Severity;
+  gravity: Gravity;
+  /**
+   * A stable machine code, in the vocabulary `checks.ts` and `bridge.ts`
+   * already use (`missing_in_target`, `access_widened`, `value_differs` …), so
+   * the Migration Center bridge counts it as missing, extra or differing
+   * without a second table of strings.
+   */
+  code: string;
+  /** What this finding is evidence about; a `preserved` check's link findings are `relationship`, its field findings `semantic`. */
+  evidenceClass: EvidenceClass;
   /** Field and entity names only — never a value. */
   what: string;
 }
@@ -187,7 +199,7 @@ export interface RawFinding {
 export interface InvariantResult {
   invariant: string;
   kind: InvariantKind;
-  severity: Severity;
+  gravity: Gravity;
   /** The population the check looked at. Zero means the check proved nothing. */
   examined: number;
   findings: RawFinding[];
