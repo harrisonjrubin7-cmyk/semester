@@ -376,7 +376,7 @@ sdk.onChange(listener)                           // drives live regions
 
 **Risks.** Passing for done: the core is tested against its own reference gateway, so the protocol is only as right as that gateway's reading of the contract. The web store is weaker than native and must be labelled so. Remote wipe cannot reach an offline device (bounded exposure only). A WebView may fail assistive-technology testing. Tombstone and snapshot growth in the CRDT. The idle lock can lock out a person with a motor or cognitive disability if not configurable with a passcode fallback.
 
-**Files changed.** `packages/offline-sync/**` (new); `app/vite.config.ts` (test include); `app/tsconfig.app.json` (include and alias); `docs/architecture/mobile-offline-reference.md` (this file); `docs/architecture/offline-sync-contract.md` (pointer); `docs/decisions/D-<pull request number>.md`.
+**Files changed.** `packages/offline-sync/**` (new); `app/vite.config.ts` (test include); `app/tsconfig.app.json` (include and alias); `docs/architecture/mobile-offline-reference.md` (this file); `docs/architecture/offline-sync-contract.md` (pointer); `docs/decisions/D-1162.md`.
 
 **Tests added.** `packages/offline-sync/src/*.test.ts`: policy, status, engine, device, vault, crdt, schema (real SQLite), sdk. Each guard was reverted and watched fail (§ the pull request lists the mutations and results); no-op controls stayed green.
 
