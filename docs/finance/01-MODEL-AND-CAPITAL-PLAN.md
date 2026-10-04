@@ -119,7 +119,7 @@ Quarterly cash and runway, Base:
 The repository's standard is that a guard that has never failed is not known to be a guard. So:
 
 1. **Independent re-implementation.** Department, Institution and pilot ARR, revenue and billings, and the student subscriber and revenue schedule, were recomputed from the raw inputs in a separate cohort-by-cohort program (a different algorithm from the workbook's roll-forward). All ten compared series matched the workbook to the cent.
-2. **Cash reconciliation.** Direct-method cash equals the indirect method in all 36 months in all seven scenarios (live check, tolerance $1).
+2. **Cash reconciliation.** Direct-method cash equals the indirect method in all 36 months in all nine scenarios (live check, tolerance $1; `tools/verify_scenarios.py` re-runs it for every scenario).
 3. **Fault injection.** A $5,000 error in one month's cash payments turned the cash-reconciliation check red; removing Department billings turned the deferred-revenue check red; setting the collection profile to 110% turned that check red. Each was restored.
 4. **Snapshot integrity.** `Scenario_Results` carries a check that the pasted row for the active scenario equals the live model.
 5. **Zero formula errors** across 11,705 formulas after full recalculation.
