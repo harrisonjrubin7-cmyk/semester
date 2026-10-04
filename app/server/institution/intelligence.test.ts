@@ -191,6 +191,45 @@ describe('governed institution intelligence', () => {
     expect((await service.confirm(identity, action.id, confirmation)).status).toBe(404);
   });
 
+  it('refuses to confirm an action reviewed before kill.ai_generation was engaged, and leaves it unspent', async () => {
+    const execute = vi.fn().mockResolvedValue({
+      verified: true as const, receiptId: 'receipt-k', message: 'Saved and read back.', recordedAt: '2026-09-23T12:00:01.000Z',
+    });
+    const audit = vi.fn();
+    let engaged = false;
+    const service = createIntelligenceService({
+      status: 'configured-sandbox',
+      killSwitch: async () => engaged,
+      loadPolicy: async () => policy(),
+      loadCoursePolicy,
+      loadApprovedSources: async () => [{ ...sourceScope, id: 'syllabus', evidenceIds: ['evidence-1'], body: 'body' }],
+      modelTask: async () => ({ candidates: [{ model: 'openai:gpt-5-mini', provider: 'openai', estimatedCents: 1 }] }),
+      generate: async () => ({ text: 'Ready.', citedSourceIds: ['syllabus'], inputTokens: 1, outputTokens: 1, providerRequestId: 'r' }),
+      execute,
+      audit,
+    });
+    const identity: UniversityIdentity = { userId: 'student-1', institutionId: 'northstar', roles: ['student'] };
+    const prepared = await service.respond(identity, request({ proposedActions: [{
+      id: 'a', label: 'Save plan', effect: 'Create one plan', target: 'plan:7',
+      class: 'internal-write', reversible: true, evidenceIds: ['evidence-1'],
+    }] }));
+    const action = (prepared.body.actions as Array<{ id: string }>)[0];
+    const confirmation = { confirmed: true, at: new Date().toISOString() };
+
+    engaged = true;
+    const stopped = await service.confirm(identity, action.id, confirmation);
+    expect(stopped.status).toBe(503);
+    expect(stopped.body).toMatchObject({ code: 'ai-generation-killed' });
+    expect(execute).not.toHaveBeenCalled();
+    expect(audit).toHaveBeenCalledWith(identity, expect.objectContaining({ category: 'action', policyDecision: 'kill-switch' }));
+
+    // The refusal did not spend the action: released, the same confirmation runs it once.
+    engaged = false;
+    expect((await service.confirm(identity, action.id, confirmation)).status).toBe(200);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect((await service.confirm(identity, action.id, confirmation)).status).toBe(404);
+  });
+
   it('refuses to generate, and to say what the policy allows, while kill.ai_generation is engaged', async () => {
     const generate = vi.fn();
     const audit = vi.fn();
