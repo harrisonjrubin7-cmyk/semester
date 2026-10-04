@@ -754,7 +754,7 @@ and the correlation id attached to every span — is specified, not built.
 | `…/*.test.ts` | 186 tests (contract, service, http, repository, schema, openapi) |
 | `packages/institution/src/policy.ts` (+ test) | Four actions, two rule builders, a refusal suite |
 | `packages/institution/src/events.ts` | Eight event types |
-| `supabase/migrations/20261004090000_productivity_commands.sql` | Tables, RLS, commit function, sweep |
+| `supabase/migrations/20261004123000_productivity_commands.sql` | Tables, RLS, commit function, sweep |
 | `supabase/productivity-commands.check.sql` | 48 SQL checks |
 | `docs/api/productivity.v1.openapi.json` | The contract |
 

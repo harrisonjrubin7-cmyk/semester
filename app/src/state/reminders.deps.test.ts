@@ -35,10 +35,16 @@ import { describe, expect, it } from 'vitest';
  */
 
 const SOURCE = readFileSync(new URL('./store.tsx', import.meta.url), 'utf8');
+/**
+ * Where the slices are read. The effect hands the whole `state` to
+ * `remindersFor`, so the reads live there; scanning only the effect body would
+ * see none and pass for the wrong reason (`read.length` below guards that).
+ */
+const READS = readFileSync(new URL('./reminders.ts', import.meta.url), 'utf8');
 
 /** The effect, from the line that fires reminders back to its dependencies. */
 function reminderEffect(): { body: string; deps: string[] } {
-  const anchor = SOURCE.indexOf('dueReminders(');
+  const anchor = SOURCE.indexOf('remindersFor(');
   expect(anchor, 'the reminder effect has moved or been renamed').toBeGreaterThan(-1);
   const opens = SOURCE.lastIndexOf('useEffect(() => {', anchor);
   const closes = SOURCE.indexOf('}, [', anchor);
@@ -55,7 +61,8 @@ function reminderEffect(): { body: string; deps: string[] } {
 describe('the reminder interval', () => {
   it('depends on every slice of state it reads', () => {
     const { body, deps } = reminderEffect();
-    const read = [...new Set(body.match(/\bstate\.[A-Za-z][A-Za-z0-9]*/g) ?? [])];
+    expect(body, 'the effect no longer goes through remindersFor').toContain('remindersFor(');
+    const read = [...new Set((body + READS).match(/\bstate\.[A-Za-z][A-Za-z0-9]*/g) ?? [])];
     expect(read.length, 'the effect stopped reading state at all').toBeGreaterThan(3);
     expect(read.filter((slice) => !deps.includes(slice))).toEqual([]);
   });

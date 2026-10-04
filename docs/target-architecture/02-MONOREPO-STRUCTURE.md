@@ -112,7 +112,7 @@ services/core/src/modules/<m>/
   MODULE.md         # purpose, objects owned, SLO, runbook link, data classes
 ```
 
-Enforced by `tools/boundaries` (dependency-cruiser or `eslint-plugin-boundaries`,
+Enforced today, for the zones that exist, by `app/src/lib/importboundaries.ts` (see [09](09-CONVERSION-PLAN.md) §7, PR 4); the module-level rules below wait for modules, and will be enforced by `tools/boundaries` (dependency-cruiser or `eslint-plugin-boundaries`,
 P-01) as a **required CI check**:
 
 | Rule | Why |

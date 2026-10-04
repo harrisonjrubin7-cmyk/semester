@@ -191,8 +191,9 @@ supports an institution's integrity policy and treats students fairly. Items
   **exists** and states the property, not that it was run for this document.
 - **Not verified:** that UI screens match what library headers say they do
   (several libraries are "wired to no screen"); production behaviour (none
-  exists to observe); research citations (from the author's knowledge; verify
-  before external use — see [01 §4](01-LEARNING-DESIGN-AND-EVIDENCE.md));
+  exists to observe); research citations (the four sources were located and the specific claims
+  checked on 2026-10-04; three papers' full text was not read — see
+  [01 §4](01-LEARNING-DESIGN-AND-EVIDENCE.md); verify before external use);
   proposed numbers (30-day retention, 3-day acknowledgements, floors other
   than the repository's ten) are starting points for the owning body.
 - **Not decided here:** every legal conclusion (FERPA and equivalent, ADA /
