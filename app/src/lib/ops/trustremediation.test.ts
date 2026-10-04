@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { SEATS } from '../launchreadiness';
 import { cell, controlLine, isIsoDate, link, renderedFrom, table } from './render';
 import { CONTROLS, PROOF_SHAPE, control } from './trustcontrols';
-import { ITEMS, POINTS, POINT_TITLE, item, ordered, priority } from './trustremediation';
+import { ITEMS, POINTS, POINT_TITLE, item, inOrderOfWork, priority } from './trustremediation';
 
 /**
  * The remediation sequence, held to the register it answers.
@@ -67,12 +67,12 @@ describe('the sequence', () => {
         expect(n, `${i.id} needs itself`).not.toBe(i.id);
       }
     }
-    expect(() => ordered()).not.toThrow();
-    expect(ordered()).toHaveLength(ITEMS.length);
+    expect(() => inOrderOfWork()).not.toThrow();
+    expect(inOrderOfWork()).toHaveLength(ITEMS.length);
   });
 
   it('puts every item after the ones it needs, in the order', () => {
-    const position = new Map(ordered().map((i, n) => [i.id, n]));
+    const position = new Map(inOrderOfWork().map((i, n) => [i.id, n]));
     for (const i of ITEMS) for (const n of i.needs ?? []) expect(position.get(n)!, `${n} before ${i.id}`).toBeLessThan(position.get(i.id)!);
   });
 
@@ -161,6 +161,6 @@ function renderDoc(): string {
     );
   }
 
-  lines.push('## Order of work', '', 'Every item after the ones it needs, nearest point first:', '', ordered().map((i) => i.id).join(' → '), '');
+  lines.push('## Order of work', '', 'Every item after the ones it needs, nearest point first:', '', inOrderOfWork().map((i) => i.id).join(' → '), '');
   return lines.join('\n') + '\n';
 }

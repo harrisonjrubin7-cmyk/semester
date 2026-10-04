@@ -518,7 +518,7 @@ export const priority = (i: Item): 'P0' | 'P1' | 'P2' | 'P3' => PRIORITY[i.befor
 export const open = (): readonly Item[] => ITEMS.filter((i) => !i.done);
 
 /** A dependency order: every item after the ones it needs; ties by id. Throws on a cycle. */
-export function ordered(): Item[] {
+export function inOrderOfWork(): Item[] {
   const out: Item[] = [];
   const state = new Map<string, 'visiting' | 'done'>();
   const visit = (i: Item) => {
