@@ -17,11 +17,11 @@ Both views are `security_invoker=true`, so they evaluate the caller's RLS. Stora
 
 ## What this is not
 - **Not proof of tenant isolation.** 149 public tables have no tenant column; for most that is correct (owner-scoped by `user_id`, or global catalog) but each needs a classification. 16 authenticated-writable tables have neither a tenant nor an owner-like column (inventory query 6); not yet individually read.
-- **No per-object matrix, no negative tests written or run.** The program's Phase 1 gate ("no cross-tenant test failures, no unclassified table") is **not met**: classification is not done, and I ran no cross-tenant test.
+- **No negative tests written or run.** The Phase 1 gate ("no cross-tenant test failures, no unclassified table") is **partly met**: every table now has a class and a test keeps it so, but the classes are unreviewed and I ran no cross-tenant test.
 - Timing/count/error side channels were not examined.
 
 ## Next, in order
-1. Classify all 348 tables (owner-scoped / tenant / global / service-only) into a checked-in register that a test compares to the catalog.
+1. ~~Classify all tables into a checked-in register that a test compares to the catalog.~~ Done: `DATA_CLASSIFICATION_REGISTER.md` and `app/src/lib/tableclassification.test.ts`. The classes are rule-derived and unreviewed (see that page); next is the negative suite per class.
 2. Read the 16 tables in query 6.
 3. Decide on `FORCE ROW LEVEL SECURITY`.
 4. Run the existing suites on PostgreSQL 17 (CI does).

@@ -57,3 +57,27 @@ where n.nspname='public' and c.relkind='r' and has_table_privilege('authenticate
  and not exists(select 1 from pg_attribute a where a.attrelid=c.oid
    and a.attname in ('school_id','tenant_id','institution_id','user_id','student_id','owner','person_id') and not a.attisdropped)
 order by 1;
+
+-- 7. The rule-based classification behind schema/table-classification.json. Heuristic: the 19 objects
+-- it labels 'needs-review' were resolved by reading their policies. Re-run, diff against the register,
+-- and read any new 'needs-review' before adding it.
+with t as (
+ select n.nspname sch, c.relname tbl, c.relkind::text kind,
+  coalesce((select string_agg(a.attname,',') from pg_attribute a where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped and a.attname in ('school_id','tenant_id','institution_id')),'') tc,
+  coalesce((select string_agg(a.attname,',') from pg_attribute a where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped and a.attname in ('user_id','student_id','owner','person_id','account_id','created_by','recipient_id')),'') oc,
+  (select count(*) from pg_policy p where p.polrelid=c.oid) pol,
+  exists(select 1 from pg_policy p where p.polrelid=c.oid and coalesce(pg_get_expr(p.polqual,p.polrelid),'')||coalesce(pg_get_expr(p.polwithcheck,p.polrelid),'') ~ 'auth\.uid') uid_pol,
+  exists(select 1 from pg_policy p where p.polrelid=c.oid and coalesce(pg_get_expr(p.polqual,p.polrelid),'')||coalesce(pg_get_expr(p.polwithcheck,p.polrelid),'') ~ 'private\.|_can\(|has_capability') helper_pol,
+  exists(select 1 from pg_policy p where p.polrelid=c.oid and p.polcmd='r' and pg_get_expr(p.polqual,p.polrelid)='true') read_true,
+  has_table_privilege('anon',c.oid,'select') anon_sel,
+  has_table_privilege('authenticated',c.oid,'select,insert,update,delete') auth_any
+ from pg_class c join pg_namespace n on n.oid=c.relnamespace
+ where n.nspname in ('public','private') and c.relkind in ('r','p','v','m'))
+select case when kind in ('v','m') then 'view'
+ when not anon_sel and not auth_any then 'service-only'
+ when tc<>'' and pol>0 then 'tenant-scoped'
+ when anon_sel and read_true then 'global-public'
+ when oc<>'' and uid_pol then 'person-private'
+ when helper_pol then 'relationship-scoped'
+ else 'needs-review' end cls, count(*) n, string_agg(sch||'.'||tbl, ',' order by sch, tbl) names
+from t group by 1 order by 1;
