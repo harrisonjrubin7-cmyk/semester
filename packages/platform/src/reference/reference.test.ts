@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { verifyAuditChain } from '../identity/audit.ts';
 import { runCommand } from '../gateway/command.ts';
 import { CursorCodec } from '../gateway/pagination.ts';
