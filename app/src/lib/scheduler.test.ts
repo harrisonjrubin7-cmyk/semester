@@ -214,7 +214,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/t\.tenant_id is not null[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)/);
     expect(migration).toMatch(/active legal hold'[\s\S]*?errcode = '55006'/);
     expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) is distinct from who::text[\s\S]*?not t\.retention_classified[\s\S]*?errcode = '55000'/);
-    expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) = who::text[\s\S]*?set retention_subject_id = student_id,[\s\S]*?student_id = null,[\s\S]*?and not retention_classified/);
+    expect(migration).toMatch(/current_setting\('semester\.erasing_account', true\) = who::text[\s\S]*?set retention_subject_id = student_id,[\s\S]*?student_id = null,[\s\S]*?email_notice_enabled = false,[\s\S]*?status = 'closed'[\s\S]*?and not retention_classified/);
     expect(migration).toMatch(/support_ticket_queue\(\)[\s\S]*?where t\.student_id is not null/);
     expect(migration).toMatch(/support_ticket_thread\(want_ticket uuid\)[\s\S]*?t\.student_id is not null/);
     expect(migration).toMatch(/guard_preserved_support_ticket_message[\s\S]*?t\.student_id is null[\s\S]*?errcode = '55000'/);

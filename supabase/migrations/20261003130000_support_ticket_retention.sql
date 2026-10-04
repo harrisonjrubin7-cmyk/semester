@@ -216,7 +216,8 @@ begin
     update public.support_tickets
        set retention_subject_id = student_id,
            student_id = null,
-           email_notice_enabled = false
+           email_notice_enabled = false,
+           status = 'closed'
      where student_id = who
        and not retention_classified;
   end if;

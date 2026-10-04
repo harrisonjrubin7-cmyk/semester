@@ -158,6 +158,7 @@ begin
          and student_id is null
          and retention_subject_id = who
          and not email_notice_enabled
+         and status = 'closed'
     ));
 
   perform set_config('request.jwt.claims', '{}'::text, true);
@@ -255,6 +256,7 @@ begin
          and student_id is null
          and retention_subject_id = legacy_who
          and not email_notice_enabled
+         and status = 'closed'
     ));
 end $$;
 
