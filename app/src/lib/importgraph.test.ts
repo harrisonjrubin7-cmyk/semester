@@ -121,6 +121,7 @@ describe('where an import lands', () => {
   it('follows the workspace aliases to the packages', () => {
     expect(at('app/src/lib/z.ts', '@semester/contract')).toEqual({ kind: 'file', path: 'packages/contract/src/index.ts' });
     expect(at('app/src/lib/z.ts', '@semester/institution')).toEqual({ kind: 'file', path: 'packages/institution/src/index.ts' });
+    expect(at('app/src/lib/z.ts', '@semester/platform')).toEqual({ kind: 'file', path: 'packages/platform/src/index.ts' });
   });
 
   it('tells a built-in, a package, an asset and a missing file apart', () => {

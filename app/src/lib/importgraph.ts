@@ -179,10 +179,17 @@ export function importSpecifiers(source: string): string[] {
   return [...found];
 }
 
-/** `@semester/*` is aliased, in `tsconfig.app.json` and `vite.config.ts`, to the packages' sources. */
+/**
+ * `@semester/*` is aliased, in `tsconfig.app.json` and `vite.config.ts`, to the
+ * packages' sources. This is a copy of that, and a copy can fall behind: it did,
+ * when `packages/platform` arrived. `importboundaries.test.ts` checks it against
+ * `packages/*` and against both configs, so a new package fails there, with the
+ * line to add, instead of having its imports read as a third-party package.
+ */
 export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/contract': 'packages/contract/src/index.ts',
   '@semester/institution': 'packages/institution/src/index.ts',
+  '@semester/platform': 'packages/platform/src/index.ts',
 };
 
 const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.mjs', '.js'];

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BROWSER_ENTRY, GATEWAY_EXTERNAL_EXCEPTIONS, SERVER_USES_CLIENT_LIB, checkBoundaries, type Violation } from './importboundaries';
-import { reachableFrom, treeOf, zoneOf } from './importgraph';
+import { WORKSPACE_ALIASES, reachableFrom, treeOf, zoneOf } from './importgraph';
 
 /**
  * The import boundaries, held — on the repository, and on trees built to break
@@ -84,6 +84,40 @@ describe('the repository', () => {
   it('names its one gateway-dependency exception, and the file still imports it', () => {
     for (const [file, { spec }] of Object.entries(GATEWAY_EXTERNAL_EXCEPTIONS)) {
       expect(real.imports.get(file), `${file} is named as an exception and does not import ${spec}`).toContain(spec);
+    }
+  });
+});
+
+describe('the workspace aliases', () => {
+  /*
+   * `WORKSPACE_ALIASES` is a copy of a map other people edit: the app's own
+   * `tsconfig.app.json` and `vite.config.ts` decide what `@semester/x` means.
+   * `packages/platform` arrived after the map was written and nobody was
+   * told, so an import of it would have been read as a third-party package and
+   * passed every rule. A copy that can fall behind is checked against what it
+   * copies.
+   */
+  const packages = readdirSync(join(root, 'packages'))
+    .filter((d) => statSync(join(root, 'packages', d)).isDirectory())
+    .map((dir) => ({ dir, name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name }));
+  const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
+  const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
+
+  it('names every workspace package, at its source entry', () => {
+    for (const { dir, name } of packages) {
+      expect(WORKSPACE_ALIASES[name], `${name} (packages/${dir}) has no entry in WORKSPACE_ALIASES in lib/importgraph.ts`).toBe(`packages/${dir}/src/index.ts`);
+    }
+  });
+
+  it('names nothing that is not a workspace package', () => {
+    const real = new Set(packages.map((p) => p.name));
+    for (const name of Object.keys(WORKSPACE_ALIASES)) expect(real.has(name), `${name} is aliased and no package has that name`).toBe(true);
+  });
+
+  it('agrees with the app’s tsconfig and vite aliases', () => {
+    for (const { dir, name } of packages) {
+      expect(tsconfig, `${name} is not in tsconfig.app.json paths`).toContain(`"${name}": ["../packages/${dir}/src/index.ts"]`);
+      expect(vite, `${name} is not aliased in vite.config.ts`).toContain(`'${name}'`);
     }
   });
 });
