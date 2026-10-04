@@ -2647,6 +2647,8 @@ export type Action =
   | { type: 'addStep'; id: string; text: string }
   | { type: 'dropStep'; id: string; stepId: string }
   | { type: 'deleteTask'; id: string }
+  /** The engine's tasks, woven into the list (`lib/sync/engine/tasks.ts` `weave`). Never from a screen. */
+  | { type: 'tasksFromEngine'; tasks: PersonalTask[]; known: string[]; adopted: Record<string, string> }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   /*
    * The same shape as `editTask`, and here for the same reason it is.

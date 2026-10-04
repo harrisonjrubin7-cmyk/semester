@@ -130,6 +130,9 @@ export const MODULE_FLAG_ENV = {
   demand_forecasting: 'VITE_DEMAND_FORECASTING',
   semester_wrapped: 'VITE_SEMESTER_WRAPPED',
   offline_mode: 'VITE_OFFLINE_MODE',
+  // Personal tasks through the offline-sync engine (D-1190). Tasks only, on purpose: a flag whose reach grows
+  // silently is the kind this registry exists to prevent, so the next class gets its own.
+  offline_engine_tasks: 'VITE_OFFLINE_ENGINE_TASKS',
   trust_center: 'VITE_TRUST_CENTER',
   // Faculty Course Studio (docs/FACULTY-COURSE-STUDIO-DESIGN.md, D-100 F6):
   // the studio for faculty and, for students, the instructor's published rules
