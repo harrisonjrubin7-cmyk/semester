@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, dirname, resolve } from 'node:path';
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { ERROR_CODES } from './gateway/errors.ts';
 import { ISOLATION_CONTROLS } from './isolation/layers.ts';
 import { API_MAJORS, registryProblems } from './gateway/versioning.ts';
@@ -162,8 +162,7 @@ export function ambientAuthority(files: Record<string, string>): string[] {
 export function extensionlessImports(files: Record<string, string>): string[] {
   const out: string[] = [];
   for (const [file, src] of Object.entries(files)) {
-    // Tests reach vitest by the same relative path the institution package's tests use.
-    for (const spec of importsOf(src)) if (spec.startsWith('.') && !/\.ts$/.test(spec) && !/app\/node_modules\/vitest\/dist\/index\.js$/.test(spec)) out.push(`${file}: "${spec}" needs a .ts extension for NodeNext`);
+    for (const spec of importsOf(src)) if (spec.startsWith('.') && !/\.ts$/.test(spec)) out.push(`${file}: "${spec}" needs a .ts extension for NodeNext`);
   }
   return out;
 }

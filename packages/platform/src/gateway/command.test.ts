@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { openApproval, decide, consume as consumeApproval, type ApprovalRequest } from '../identity/approval.ts';
 import { hashOf } from '../kernel/canonical.ts';
 import { TENANT_A, TENANT_B, harness, type Snapshottable } from '../testing/memory.ts';

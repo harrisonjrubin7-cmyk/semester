@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { ASSESSMENT_SUBMISSION_STATES } from '../../../institution/src/index.ts';
 import { fixedClock, sequenceRng } from '../kernel/clock.ts';
 import { PlatformError } from '../gateway/errors.ts';
