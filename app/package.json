@@ -36,6 +36,7 @@
     "check:video": "tsc -p ../video/tsconfig.json",
     "dev:university": "node --env-file=server/institution/.env server/institution/start.ts",
     "sweep:walls": "node scripts/wallsweep.mjs",
+    "sweep:spacing": "node scripts/spacing-sweep.mjs",
     "smoke:cold": "node scripts/cold-smoke.mjs",
     "smoke:a11y": "node scripts/accessibility-smoke.mjs",
     "smoke:pilot": "node scripts/pilot-smoke.mjs",

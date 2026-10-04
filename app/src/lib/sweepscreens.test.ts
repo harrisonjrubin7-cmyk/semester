@@ -49,7 +49,7 @@ describe('the sweeps walk the registry', () => {
    * ranked above it — an answer that means nothing unless "any screen" is all
    * of them.
    */
-  for (const name of ['contrast-sweep.mjs', 'targets-sweep.mjs', 'wallsweep.mjs']) {
+  for (const name of ['contrast-sweep.mjs', 'targets-sweep.mjs', 'wallsweep.mjs', 'spacing-sweep.mjs']) {
     it(`${name} takes its screens from destinations.mjs`, () => {
       expect(script(name)).toContain("from './destinations.mjs'");
     });

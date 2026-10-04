@@ -29,7 +29,7 @@ What does not exist, and is the subject of this document:
 |---|---|---|
 | One provenance model (three vocabularies today) | `lib/source.ts`, `lib/where.ts`, `lib/status.ts`, `lib/provenance.ts` | §4 |
 | Role and institution rules | no `data-role`/tenant token set; constitution defers it | §3.5, §8 |
-| Dyslexia-aware mode | only separate settings; no preset, no letter/word spacing | §6.6 |
+| Dyslexia-aware mode | an "Easier reading" preset already exists (`lib/accessmode.ts`); no letter/word spacing; the Hyperlegible face is not bundled; **no test that layouts survive WCAG 1.4.12 spacing** (now written: `sweep:spacing`) | §6.6 |
 | Component and token versioning, deprecation | grep of `docs/` finds nothing UI-specific | §7.3–7.4 |
 | Figma ↔ code parity | no Figma, Code Connect, or token export | §7.2 |
 | Visual regression | DD-010 "planned"; no pixel diff in CI | §7.5 |
@@ -137,7 +137,7 @@ Status key: **E** exists and guarded · **P** exists, partial or unguarded ·
 | Support | Help panel, ticket form | P | `GetHelp.tsx`, `AskAHuman.tsx` | Content |
 | Accessibility | Focus ring, reduced-motion, contrast variants | E | tokens + guards | A11y |
 | | Live-region announcer | E | **`Said.tsx` is the app's one live region** (polite, store-driven via `useStore().say`, keyed so a repeated sentence re-announces). 214 files carry their own `role=status/alert` or `aria-live`, most legitimately (field errors, `ErrorState`). Not a gap; the first draft was wrong | A11y |
-| | Readable-density / dyslexia preset | G | §6.6 | A11y |
+| | Reading-comfort preset | P | `PRESETS` in `lib/accessmode.ts` has "Easier reading" (large text, airy lines, narrow measure) and "Focus"/"Lower load"; extend it, do not add a parallel one. Letter/word spacing and a bundled legible face are missing (§6.6) | A11y |
 
 Four gaps mattered because screens were re-implementing them: **Table,
 Combobox, ActionPreview** and the backdrop-dismiss behaviour (plus ApprovalTimeline, still open); a generic Sheet turned out not to be one. Two of the
@@ -364,19 +364,38 @@ screenshot-checked change of its own (Slice 9).
 
 ### 3.5 Density and role
 
-Density is a person's setting. Add a **default** by role, applied only when the
-person has not chosen one:
+**Not built (Slice 5); this records why, and what the decision is.** The first
+draft proposed a density default by role, "applied only when the person has not
+chosen one". Reading the code:
 
-| Role group | Default density | Default disclosure |
+- **Role is the person's own choice** (`lib/role.ts`: `pickable()`, `state.role`, and
+  "selecting a role here never manufactures a grant"). So a default derived from it
+  needs no async lookup and cannot flicker. That removes the risk the first draft
+  assumed.
+- **But "has not chosen" is not representable.** `state.density` is always a string,
+  `'comfortable'` by default, so a role default cannot tell an untouched setting
+  from one the person set to Comfortable on purpose. Making it representable means a
+  data-model change to a persisted, synced look key (an `'auto'` value or a
+  "chosen" flag), with hydration to check on older builds. The migration plan
+  records that check as never done.
+- **It cuts across the app's own rule.** `lib/accessmode.ts`: "Nothing here is
+  switched on because of how somebody uses the app." A role is not behaviour, but a
+  presentation change nobody asked for is the same kind of act.
+
+Options, for the owner (spec §11): **(a)** when a role is picked, *offer* "Use a
+denser layout for this role?" — explicit, no data-model change, consistent with
+the accessmode rule; **(b)** a true default via `'auto'`, with the hydration check;
+**(c)** nothing. Recommendation: (a). The table below is the proposed content of
+the offer, not an automatic default:
+
+| Role group | Offered density | Offered disclosure |
 |---|---|---|
 | Student, applicant, alumni, guardian/family | Comfortable | Guided |
 | Faculty, advisor, TA | Snug | Focused |
 | Registrar, finance, student-affairs, IT, support | Snug (Tight opt-in) | Detailed |
 
-A role is **never** a permission (`lib/role.ts` contract); it selects defaults
-and vocabulary only. Implement as `data-role-group` on the root and a single
-defaults table in `look.ts`, not per-component overrides. Guard: `sweep:targets`
-already runs all three densities; extend it to run each role-group default.
+A role is **never** a permission. Guard when built: `sweep:targets` already runs all
+three densities and covers the offered ones.
 
 ## 4. Status and provenance system
 
@@ -656,28 +675,46 @@ no time limits without extension (2.2.1); errors preserve input; consistent
 help location (3.2.6); undo preferred to confirm for reversible actions; a
 *Focused* workspace mode that hides everything but the current task.
 
-**Dyslexia-aware mode (new).** No dedicated mode exists; the parts do. Specify a
-named **Reading comfort** preset that sets, in one place, existing settings plus
-two new tokens, and is user-adjustable afterward:
+**Reading comfort (revised in Slice 5).** The first draft said no preset exists.
+One does: `PRESETS` in `lib/accessmode.ts` has **Easier reading** (`textSize: large`,
+`lineHeight: airy`, `readingWidth: narrow`), plus Focus and Lower load, applied through
+`setLook` and undone key by key; modes are never inferred from behaviour. That is the
+mechanism to extend. What the draft proposed beyond it, and where each stands:
 
-| Property | Value | Mechanism |
+| Proposed | Status | Why |
 |---|---|---|
-| Body face | Atkinson Hyperlegible | existing `hyperlegible` bodyface (bundling decision still pending in the migration plan: **needs owner decision**) |
-| Line height | 1.75 (Airy) | existing |
-| Reading width | 52–66ch | existing Narrow/Normal |
-| Text size | Large (1.09) minimum | existing |
-| Letter spacing | +0.02em | **new** `--tracking-body` |
-| Word spacing | +0.08em | **new** `--word-space` |
-| Alignment | left, never justified; no italic for body emphasis | rule + lint |
-| Density | Comfortable | existing |
-| Motion/stimulation | Less motion on | existing |
-| Underline/long-caps | none for emphasis; bold only | rule |
+| Atkinson Hyperlegible as the body face | **Blocked: the font is not bundled** | `BODYFACES` offers "Hyperlegible" but nothing loads Atkinson (`typefaces.css` declares Barlow, Barlow Condensed, Cinzel). It draws as the system font unless the reader has it installed, while its description promises otherwise. `lib/fontclaims.test.ts` now records this on a shrink-only ledger and refuses any new unbacked face. Bundling (SIL OFL) is an owner decision, §11 |
+| Letter spacing +0.02em, word spacing +0.08em (`--tracking-body`, `--word-space`) | **Not built** | The app does not yet survive WCAG 1.4.12 (below). Shipping a spacing control now would make the losses reachable by a setting |
+| Comfortable density, Less motion | already settings | add to the existing preset if wanted |
+| Left alignment, no italic emphasis | rule | enforce when the preset is extended |
 
-Offer it as a choice with a preview, not as a diagnosis; do not claim it
-"helps dyslexia". The evidence for any single typeface is weaker than for
-spacing, size and reduced crowding, so ship the spacing controls independently
-and measure with users. This is a specification; **nothing is verified** until
-the AT/user pass in §6.8 runs.
+**WCAG 1.4.12 text spacing: measured, and not met.** `readiness register` has said
+since it was written that there is "no text-spacing (1.4.12) test". `npm run
+sweep:spacing` (`scripts/spacing-sweep.mjs`) is that test, run against the real app in
+Chromium: every destination at 420px and 1280px, the standard's own override
+(line height 1.5, letter 0.12em, word 0.16em, paragraph 2em), reporting only what is
+**new** compared with the same page before. Result on 4 October 2026: all 126 views
+opened, 0 page errors, **6 of 63 screens lose text**, all by `text-overflow: ellipsis`:
+the page title (`h1.chrome-text`: "Calendar" → "Calend…", "Edit the course",
+"Term deadlines", "Take it with you" at 420px),
+the Write templates' lines (`span.paper-line`: "What was covered" → "What was cov…",
+five of them, at both widths), and two quiz rows on Courses and Calendar at 1280px.
+Two of the probe's own first results were wrong and are corrected in the script's
+header: it flagged a button whose label merely wrapped (the line box overflowed; the
+glyphs did not), and every screen that scrolls (it read vertical scrolling as
+clipping). Each was found by looking at the screenshot and fixed before the numbers
+were believed; the built-in control (a fixed-height box that must be flagged and a
+growing one that must not) passes at both widths.
+
+Reporting only what is *new* means truncation that was already there is not listed:
+the Write title reads "Write a docume…" at 420px with no override at all, and the
+spacing makes it worse. That is a pre-existing defect the sweep deliberately does not
+count; a baseline run (spacing off) of the same probe would list it.
+
+Limits, stated once: first view of each screen only, not other tabs, modals, empty or
+error states; overlap is not measured; not a gate (it needs a browser and a dev server,
+like the other sweeps). A clean run would mean "no new clipping or truncation on first
+views", not "AA 1.4.12 met".
 
 ### 6.7 Language and internationalisation
 Today: English strings only, `<html lang="en">` fixed, no RTL. Spec for when
@@ -880,8 +917,19 @@ guard is proven, and is reversible by deleting the file.
 - Not done: `InstructorBook` (editable cells, the faculty gradebook) and `DecisionTable` still hand-write their tables; a visible "this scrolls" affordance on a clipped table (`HorizontalOverflow` exists and is the candidate); the other ~28 `<table>` files; keyboard grid navigation (it is a data table, not an ARIA grid — arrow-key cell navigation is deliberately absent and only needed for editable cells).
 *Exit met:* axe clean on Table (both modes), Combobox (closed and open) and DateField, with a control proving the probe flags a real violation in jsdom; ten deliberate breaks each shown red (lost `aria-sort`, a table that reorders its own rows, a stacked table that drops a column, a scroll region that is not focusable, a row header demoted to a cell in the real gradebook, no blur handling, a pointer press that steals focus, Home/End hijacked, exclusive date bounds, the UTC date trap under `TZ=America/Chicago`), and an eleventh for the stacked-caption CSS rule, a bug no jsdom test could see and only the screenshot found; rendered on Ink and Parchment at 390 and 1000px with no sideways page scroll.
 
-### Slice 5 — Reading comfort preset and role-group defaults
-Preset (§6.6) with its two new tokens `--tracking-body` and `--word-space` (exported by `tokens:export` like any other), and `data-role-group` defaults (§3.5), extending `sweep:targets` to all combinations. Measure with at least a small set of real users; do not market until the AT pass has run.
+### Slice 5 — Reading comfort and role defaults (partly built; PR pending)
+Built:
+- `scripts/spacing-sweep.mjs` / `npm run sweep:spacing`: the missing WCAG 1.4.12 test (§6.6), with a control and two corrected false positives. **It found real losses**; they are listed in §6.6 and are not fixed here.
+- `lib/fontclaims.test.ts`: every offered typeface must be an OS family, bundled, or on a shrink-only ledger. Records "Hyperlegible is not bundled" as the one entry.
+- `sweepscreens.test.ts` now holds the new sweep to the shared screen registry.
+
+Deliberately **not** built, with reasons in §3.5 and §6.6:
+- *Spacing controls (`--tracking-body`, `--word-space`)*: unsafe until the six truncations are fixed.
+- *Atkinson Hyperlegible*: needs the bundling decision.
+- *Role density defaults*: "has not chosen" is not representable without a data-model change, and it cuts across the app's never-inferred rule; the recommendation is to offer, not default.
+- *A new "Reading comfort" preset*: one exists; it should be extended after the above.
+
+*Next, in order:* fix the truncations (the shared header title is one fix for four screens); then the spacing control; then the preset extension. The readiness register's "no 1.4.12 test" line is now out of date; updating it regenerates documents and the claims register, so it is left for the owner of those claims.
 
 ### Slice 6 — Gallery and visual regression
 Dev-only gallery route; Playwright screenshot job with runner-generated baselines (§7.5), non-blocking for two weeks, then blocking for token/layout paths.
@@ -914,6 +962,8 @@ accent until a decision exists).
 | 2 | Atkinson Hyperlegible: bundle with the app? | Yes; needed for the Reading comfort preset and offline |
 | 3 | ~~Canonical breakpoint source~~ | Settled by the code: `lib/media.ts` 600/840/1200/1600. Open: when to move the six queries still at 759/1179/1180 |
 | 4 | Who is the second reviewer / AT pass owner? | Name both; both are currently blank |
+| 4a | Bundle Atkinson Hyperlegible (SIL OFL)? | Yes: it is already offered and currently misdescribed. Needs the font file and an OFL entry in the supply-chain ledger |
+| 4b | Role density: offer on role pick, default via `'auto'`, or nothing? | Offer on role pick (§3.5) |
 | 5 | Tenant theming scope | Logo + one audited accent only, for now |
 | 6 | When does `packages/design-system` extraction start? | After Slice 3 passes |
 | 7 | Which of the two screen rubrics survives? | The 22-point GOVERNANCE one |
