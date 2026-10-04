@@ -180,8 +180,13 @@ function denoEnvNames(files: readonly string[]): string[] {
     for (const m of t.matchAll(/Deno\.env\.get\(\s*'([A-Z][A-Z0-9_]*)'\s*\)/g)) names.add(m[1]);
     for (const m of t.matchAll(/Deno\.env\.get\(\s*([A-Za-z_]\w*)\s*\)/g)) {
       const def = texts.map((x) => new RegExp(`(?:const|let)\\s+${m[1]}\\s*=\\s*'([A-Z][A-Z0-9_]*)'`).exec(x)?.[1]).find(Boolean);
-      if (!def) throw new Error(`Deno.env.get(${m[1]}) is read through a name this scan cannot resolve`);
-      names.add(def);
+      if (def) { names.add(def); continue; }
+      // The one other shape: a reader handed to a function that builds the name from a plan, `env(`PREFIX_${plan.toUpperCase()}`)`,
+      // with the plans as the keys of PLAN_ALLOWANCE_MICROS (the shared key's dollar meter). Every name it can build is read.
+      const family = texts.map((x) => /\benv\(`([A-Z][A-Z0-9_]*_)\$\{\w+\.toUpperCase\(\)\}`\)/.exec(x)?.[1]).find(Boolean);
+      const plans = texts.map((x) => /const PLAN_ALLOWANCE_MICROS[^=]*=\s*\{([^}]*)\}/.exec(x)?.[1]).find(Boolean);
+      if (!family || !plans) throw new Error(`Deno.env.get(${m[1]}) is read through a name this scan cannot resolve`);
+      for (const p of plans.matchAll(/(\w+):/g)) names.add(family + p[1].toUpperCase());
     }
   }
   return [...names].sort();
@@ -391,6 +396,8 @@ interface ProducerFacts {
  * and whether anything publishes what they write. Both are facts about imports
  * and calls, so they are read from the source rather than written down.
  */
+const GATEWAY_PLATFORM_IMPORTERS = ['app/server/institution/adapter.ts', 'app/server/institution/context.ts', 'app/server/institution/gateway.ts'];
+
 function producerFactsOf(uses: readonly EventUse[], files: readonly { path: string; text: string }[]): ProducerFacts {
   // A producer's root: the package (packages/x) or the server module (app/server/x) it lives in, not the folder of the file.
   const rootOf = (file: string): string => {
@@ -402,7 +409,13 @@ function producerFactsOf(uses: readonly EventUse[], files: readonly { path: stri
   for (const dir of dirs) {
     const base = dir.split('/').pop() as string;
     const importsIt = new RegExp(`from\\s+['"][^'"]*/${base}/[^'"]*['"]`);
-    for (const f of files) if (!f.path.startsWith(`${dir}/`) && importsIt.test(f.text)) mounts.add(f.path);
+    for (const f of files) {
+      if (f.path.startsWith(`${dir}/`) || !importsIt.test(f.text)) continue;
+      // The institution gateway takes the error envelope, correlation ids and request context from the platform package
+      // (MIGRATION phase 1). That is the package's gateway half; it does not mount the event producer.
+      if (dir === 'packages/platform' && GATEWAY_PLATFORM_IMPORTERS.includes(f.path)) continue;
+      mounts.add(f.path);
+    }
   }
   const drainCallers = files.filter((f) => f.path !== EVENTS_SRC && f.path !== THIS_TEST && /\bdrainOutbox\s*\(/.test(f.text)).map((f) => f.path).sort();
   return { dirs, mounts: [...mounts].sort(), drainCallers };
@@ -1122,7 +1135,8 @@ describe('ANALYTICS-MARKS.md', () => {
   it('lists exactly the telemetry events the code emits', () => {
     const emitting = ['app/server', 'app/api', 'supabase/functions', 'packages'].flatMap((d) => walk(d, isCode));
     const emitted = new Set<string>();
-    for (const f of emitting) for (const m of read(f).matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'/g)) emitted.add(m[1]);
+    for (const f of emitting) // An object literal that is sent (`event: 'x',`), not a type that names the audit events a vault may write (`event: 'a' | 'b';`).
+    for (const m of read(f).matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'\s*,/g)) emitted.add(m[1]);
     const gatewayRows = tableUnder(md, 'Sent to a server today').map(cellsOf).filter((c) => /^`institution\./.test(c[0]));
     expect(diff(gatewayRows.map((c) => tokens(c[0])[0]), [...emitted])).toEqual(NONE);
     expect(emitted.size).toBe(3);

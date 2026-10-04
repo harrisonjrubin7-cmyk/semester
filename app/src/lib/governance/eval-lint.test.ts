@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { caseText, lintCase, lintText, luhn } from './eval-lint';
+import { detectPii } from '../../community/pii';
+import { caseText, luhn, makeEvalLint } from './eval-lint';
 import { CASES, type EvalCase } from './model-quality';
+
+// The lint takes its detector as an argument; the test composes it with the one the app uses.
+const { lintText, lintCase } = makeEvalLint(detectPii);
 
 /**
  * The evaluation-data lint, and the set it guards. Each kind is planted and

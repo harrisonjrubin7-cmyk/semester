@@ -1,22 +1,30 @@
-"""Build docs/finance/dashboard.html from the finance workbook.
+"""Build docs/finance/dashboard.html: the workbook as an interactive model.
 
-Recalculates the workbook in LibreOffice once for each of the nine scenarios, reads the quarterly, annual and
-snapshot figures, runs seven one-input sensitivities on the go/no-go plan (scenario 8), reads the hiring-gate
-schedule, and injects it all as JSON into dashboard_template.html.
+The page carries the workbook's own formulas (export_model.py) and a small spreadsheet engine (engine.js), so every
+control in the page recalculates the real model in the browser. Nothing here edits the workbook.
+
+Build-time work, all from the workbook:
+  * the formulas and inputs, for the engine;
+  * a catalogue of every changeable input (Assumptions register, scenario drivers, hiring plan) with its default,
+    unit, section and basis, so the page's controls are generated from the workbook rather than written by hand;
+  * the published results for each scenario (recalculated in LibreOffice), so the page can show "published" next to
+    "your inputs";
+  * a layout check that the cells the page reads still hold what it expects.
 
 Usage: python3 build_dashboard.py [--fragment PATH]
-  Writes ../dashboard.html (a standalone page). With --fragment, also writes the template with the data filled in,
-  without the page wrapper, which is what gets published as an artifact.
-Nothing here edits the workbook.
+  Writes ../dashboard.html (a standalone page). With --fragment, also writes the page body without the wrapper,
+  which is what gets published as an artifact.  Prove the engine against the workbook with engine_parity.py.
 """
-import datetime, json, os, subprocess, sys, tempfile
+import datetime, json, os, re, subprocess, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from openpyxl import load_workbook
 from recalc import recalc
+from export_model import export
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODEL = os.path.join(HERE, '..', 'semester-financial-model.xlsx')
 TEMPLATE = os.path.join(HERE, 'dashboard_template.html')
+ENGINE = os.path.join(HERE, 'engine.js')
 OUT = os.path.join(HERE, '..', 'dashboard.html')
 
 NAMES = ['Conservative', 'Base', 'Aggressive', 'Enterprise-delayed', 'High AI cost', 'Incident cost',
@@ -32,96 +40,88 @@ DESC = [
     'Base economics with every revenue line held until its go/no-go gate month. No paid pilot before Year 2.',
     'Go/no-go gates and flexible hires released nine months after their base month. The lowest peak need.',
 ]
-SENS = [  # (label, kind, key, lo value, hi value, lo label, hi label)
-    ('Pilot-to-annual conversion', 'A', 'Pilot → annual agreement conversion', 0.0, 0.75, '0% convert (plan 50%)', '75% convert'),
-    ('Institutional logo volume', 'S', 'Institutional new-logo volume multiplier', 0.6, 1.4, '60% of planned logos', '140% of planned logos'),
-    ('Enterprise signing delay', 'S', 'Enterprise signing delay', 6, None, '6 months later', None),
-    ('Gate slip, all gates', 'S', 'Slip added to every gate month', 12, None, '12 months later', None),
-]
+# Inputs shown as "key levers" at the top of the page: Assumptions IDs, and H<row> for a hire's base pay.
+KEY = ['A-002', 'A-137', 'A-138', 'A-139', 'A-140', 'A-141', 'A-142', 'A-143', 'A-031', 'A-026', 'A-034', 'A-044',
+       'A-011', 'A-012', 'A-160', 'A-162', 'A-163', 'A-164', 'H9', 'H10']
+BASIS = {'FACT', 'PROPOSED', 'HYPOTHESIS', 'VENDOR', 'REVIEW', 'POLICY'}
+
+# (sheet, cell, text the label must start with): the cells dashboard_template.html reads for results.
+LAYOUT = [('Summary', 'A8', '1. Student'), ('Summary', 'A9', '2. Institutional'), ('Summary', 'A10', '3. Implementation'),
+          ('Summary', 'A11', '4. AI usage'), ('Summary', 'A12', '5. Marketplace'), ('Summary', 'A13', '6. Career'),
+          ('Summary', 'A14', '7. Alumni'), ('Summary', 'A15', 'Contra-revenue'), ('Summary', 'A16', 'Total revenue'),
+          ('Summary', 'A23', 'Gross margin'), ('Summary', 'A29', 'EBITDA'), ('Summary', 'A40', 'ARR (recurring only)'),
+          ('Summary', 'A44', 'Headcount'), ('Unit_Economics', 'A61', 'Burn multiple'), ('Unit_Economics', 'A64', 'Peak cumulative'),
+          ('Board_Pack', 'A8', 'Revenue'), ('Board_Pack', 'A12', 'EBITDA'), ('Board_Pack', 'A15', 'Cash, end'),
+          ('Board_Pack', 'A18', 'ARR, end'), ('Board_Pack', 'A25', 'Headcount'),
+          ('Checks', 'A23', 'WARNING: cash stays above zero'), ('Checks', 'A24', 'WARNING: cash stays above the minimum'),
+          ('Gate_Schedule', 'J5', '36-month people cost'), ('Gate_Schedule', 'A6', 'G1'), ('Gate_Schedule', 'A15', 'G10'),
+          ('Scenario_Control', 'B10', 'Institutional new-logo volume'), ('Scenario_Control', 'B12', 'Enterprise signing delay'),
+          ('Scenario_Control', 'B26', 'Slip added to every gate month'), ('Assumptions', 'B40', 'Pilot → annual agreement conversion')]
 
 
-def label_row(ws, label, col=2):
-    for r in range(1, ws.max_row + 1):
-        v = ws.cell(r, col).value
-        if isinstance(v, str) and v.startswith(label):
-            return r
-    raise KeyError(label)
+def check_layout(wb):
+    for sheet, cell, start in LAYOUT:
+        v = str(wb[sheet][cell].value)
+        assert v.startswith(start), f'{sheet}!{cell} is {v!r}, the dashboard expects {start!r}: update LAYOUT and the template'
 
 
-def quarterly(wb, label):
-    ws = wb['Board_Pack']
-    r = next(i for i in range(7, 30) if str(ws.cell(i, 1).value).startswith(label))
-    return [ws.cell(r, c).value for c in range(3, 15)]
+def catalogue(wb):
+    """Every changeable input, from the workbook's own layout."""
+    a = wb['Assumptions']; inputs = []; section = ''
+    for r in range(5, a.max_row + 1):
+        ida, label = a.cell(r, 1).value, a.cell(r, 2).value
+        if isinstance(ida, str) and re.match(r'^\d+\. ', ida):
+            section = ida
+            continue
+        if not (isinstance(ida, str) and re.match(r'^A-\d+$', ida)):
+            continue
+        cells, vals = [], []
+        for c in (4, 5, 6):
+            v = a.cell(r, c).value
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                cells.append(f'{"DEF"[c - 4]}{r}'); vals.append(v)
+        if not cells or ida == 'A-001':
+            continue
+        basis = next((a.cell(r, c).value for c in (5, 6, 7) if a.cell(r, c).value in BASIS), '')
+        inputs.append(dict(id=ida, label=label, unit=a.cell(r, 3).value or '', section=section, basis=basis, cells=cells, vals=vals))
+    sc = wb['Scenario_Control']; drivers = []
+    for r in range(7, 27):
+        drivers.append(dict(id=sc.cell(r, 1).value, row=r, label=sc.cell(r, 2).value, unit=sc.cell(r, 3).value or '',
+                            vals=[sc.cell(r, c).value for c in range(4, 13)]))
+    h = wb['Headcount']; hires = []
+    for r in range(9, 53):
+        hires.append(dict(row=r, role=h.cell(r, 1).value, fn=h.cell(r, 46).value, gate=h.cell(r, 48).value, flex=h.cell(r, 43).value,
+                          qty=h.cell(r, 41).value, start=h.cell(r, 42).value, pay=h.cell(r, 45).value))
+    return inputs, drivers, hires
 
 
-def read_scenario(wb):
+def published(wb):
     s, u, ck = wb['Summary'], wb['Unit_Economics'], wb['Checks']
-    other = lambda c: sum(s.cell(r, c).value or 0 for r in (11, 14))
-    streams = {'Student subscription': [s.cell(8, c).value for c in (3, 4, 5)],
-               'Institutional platform': [(s.cell(9, c).value or 0) + (s.cell(15, c).value or 0) for c in (3, 4, 5)],
-               'Implementation': [s.cell(10, c).value for c in (3, 4, 5)],
-               'Marketplace': [s.cell(12, c).value for c in (3, 4, 5)],
-               'Career / employer': [s.cell(13, c).value for c in (3, 4, 5)],
-               'AI usage and alumni': [other(c) for c in (3, 4, 5)]}
-    assert abs(sum(v[2] for v in streams.values()) - s['E16'].value) < 1, 'streams do not sum to total revenue'
-    return dict(rev=[s.cell(16, c).value for c in (3, 4, 5)], arr3=s['E40'].value, gm3=s['E23'].value,
-                ebitda=[s.cell(29, c).value for c in (3, 4, 5)], peak=u['E64'].value, mincash=ck['B23'].value,
-                lowmonths=ck['B24'].value, heads3=s['E44'].value, bm3=u['E61'].value, streams=streams,
-                q=dict(rev=quarterly(wb, 'Revenue'), arr=quarterly(wb, 'ARR, end'), cash=quarterly(wb, 'Cash, end'),
-                       ebitda=quarterly(wb, 'EBITDA'), heads=quarterly(wb, 'Headcount')))
-
-
-def sens_run(edits):
-    wb = load_workbook(MODEL)
-    for kind, key, val in edits:
-        if kind == 'A':
-            a = wb['Assumptions']; a.cell(label_row(a, key), 4).value = val
-        else:
-            sc = wb['Scenario_Control']; sc.cell(label_row(sc, key), 3 + 8).value = val
-    with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as t:
-        path = t.name
-    wb.save(path)
-    try:
-        return recalc(path, 8)['Summary']['E40'].value
-    finally:
-        os.unlink(path)
+    return dict(rev3=s['E16'].value, arr3=s['E40'].value, peak=u['E64'].value, mincash=ck['B23'].value, lowmonths=ck['B24'].value)
 
 
 def main():
-    scen = []
+    wbv = load_workbook(MODEL, data_only=True)
+    check_layout(wbv)
+    inputs, drivers, hires = catalogue(load_workbook(MODEL))
+    assert all(d['id'] for d in drivers) and len(inputs) > 150, 'catalogue looks wrong'
+    pub = []
     for k in range(1, 10):
-        scen.append(read_scenario(recalc(MODEL, k)))
+        pub.append(published(recalc(MODEL, k)))
         print(f'scenario {k} read', file=sys.stderr)
-    base8 = scen[7]['arr3']
-    assert abs(sens_run([]) - base8) < 1, 'unedited sensitivity run does not reproduce scenario 8'
-    sens = []
-    for label, kind, key, lo, hi, lol, hil in SENS:
-        row = dict(label=label, lo=sens_run([(kind, key, lo)]) - base8, loLabel=lol, hi=None, hiLabel=hil)
-        if hi is not None:
-            row['hi'] = sens_run([(kind, key, hi)]) - base8
-        sens.append(row)
-        print('sensitivity', label, file=sys.stderr)
-    wb = load_workbook(MODEL, data_only=True)
-    g = wb['Gate_Schedule']
-    gates = [dict(id=g.cell(r, 1).value, name=g.cell(r, 2).value, fte=g.cell(r, 6).value, base=g.cell(r, 7).value,
-                  saved=g.cell(r, 14).value) for r in range(6, 16)]
-    gates.sort(key=lambda x: -x['saved'])
     rev = subprocess.run(['git', '-C', HERE, 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
-    data = dict(names=NAMES, desc=DESC, scen=scen, sens=sens, gates=gates,
-                streamNames=list(scen[0]['streams']),
-                quarters=[wb['Board_Pack'].cell(6, c).value.split(' ')[0] + ' ' + wb['Board_Pack'].cell(6, c).value.split(' ')[1]
-                          for c in range(3, 15)],
-                stamp=f'{datetime.date.today().isoformat()} (model at {rev})')
-    body = open(TEMPLATE).read().replace('/*DATA*/', json.dumps(data, separators=(',', ':')))
+    data = dict(names=NAMES, desc=DESC, model=export(MODEL), inputs=inputs, drivers=drivers, hires=hires, key=KEY, pub=pub,
+                stamp=f'{datetime.date.today().isoformat()} (workbook at {rev})')
+    body = open(TEMPLATE).read().replace('/*DATA*/', json.dumps(data, separators=(',', ':'), default=str).replace('</', '<\\/'))
+    body = body.replace('/*ENGINE*/', open(ENGINE).read())
     if '--fragment' in sys.argv:
-        frag = sys.argv[sys.argv.index('--fragment') + 1]
-        open(frag, 'w').write(body)
+        open(sys.argv[sys.argv.index('--fragment') + 1], 'w').write(body)
     title = body.split('<title>')[1].split('</title>')[0]
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
             '</head><body>' + body + '</body></html>')
     open(OUT, 'w').write(page)
-    print('wrote', os.path.normpath(OUT), len(page), 'bytes;', title, file=sys.stderr)
+    print('wrote', os.path.normpath(OUT), f'{len(page):,}', 'bytes;', title, file=sys.stderr)
 
 
 if __name__ == '__main__':
