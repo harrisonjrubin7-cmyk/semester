@@ -722,6 +722,11 @@ jobs:
       # One place, read by both scans, so they cannot drift onto different
       # binaries. See the block above for what the default cost.
       GITLEAKS_VERSION: 8.28.0
+      # From the release's own gitleaks_8.28.0_checksums.txt. The full-tree
+      # scan below downloads a binary and runs it over the whole repository
+      # with the job token in reach; without this, a tampered or substituted
+      # release asset would run unchecked. Bump it with the version above.
+      GITLEAKS_SHA256: a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -758,6 +763,7 @@ jobs:
           cd "$(mktemp -d)"
           curl -fsSL -o gitleaks.tar.gz \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check --strict -
           tar xzf gitleaks.tar.gz gitleaks
           bin="$PWD/gitleaks"
           cd "$GITHUB_WORKSPACE"

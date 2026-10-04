@@ -1359,7 +1359,8 @@ describe('the constants a reader would copy', () => {
   });
 
   it('retryable is true for exactly 429 and 503, and a 429 sends no Retry-After', async () => {
-    expect(src(SRC.gateway)).toMatch(/const retryable = \(status: number\) => status === 429 \|\| status === 503;/);
+    // The envelope moved to @semester/platform (MIGRATION phase 1); the gateway no longer defines the flag, the error class does.
+    expect(src('packages/platform/src/gateway/errors.ts')).toMatch(/get retryable\(\): boolean \{\s*return this\.status === 429 \|\| this\.status === 503;\s*\}/);
     const limited = sandboxGateway({ rateLimiter: { allow: () => false } });
     const reply = await exchange('probe', '', limited, '')('GET', '/status', { token: 'student-token' });
     expect(reply.status).toBe(429);

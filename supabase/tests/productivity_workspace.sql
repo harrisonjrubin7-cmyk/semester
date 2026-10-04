@@ -44,5 +44,6 @@ do $$ begin
  if not exists(select 1 from public.productivity_workspace where user_id='00000000-0000-4000-8000-00000000f101' and revision=2) then raise exception 'owner workspace missing'; end if;
  if public.lti_account_untouched('00000000-0000-4000-8000-00000000f101') then raise exception 'account holding productivity work classified empty'; end if;
  if has_table_privilege('anon','public.productivity_workspace','SELECT') then raise exception 'anonymous read granted'; end if;
+ raise notice 'ok  productivity workspace: owner isolation, revisions, tenant membership, cohort suppression, account link';
 end $$;
 rollback;
