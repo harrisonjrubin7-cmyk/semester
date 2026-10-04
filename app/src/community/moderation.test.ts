@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountReview,
+  APPEAL_RULES,
   blindView,
   decide,
   decideAppeal,
@@ -201,6 +202,27 @@ describe('appeals', () => {
     expect(() => decideAppeal(appealed, pro, 'allow', 'x', now)).toThrow(ModerationRefused);
     expect(() => decideAppeal(appealed, vol1, 'allow', 'x', now)).toThrow(ModerationRefused);
     expect(decideAppeal(appealed, pro2, 'allow', 'context.satire', now).status).toBe('closed');
+  });
+
+  it('can be filed on the last day of the window and not after it', () => {
+    const day = 86_400_000;
+    const lastDay = new Date(now.getTime() + APPEAL_RULES.filingWindowDays * day);
+    expect(fileAppeal(decided, 'student-1', lastDay).status).toBe('appealed');
+    const late = new Date(lastDay.getTime() + 1);
+    expect(() => fileAppeal(decided, 'student-1', late)).toThrow(/window/);
+  });
+
+  it('the window is measured from the decision, not from the report or from today', () => {
+    const reportedLongAgo = decide(
+      openCase({ id: 'c2', targetId: 't', signals: [report('r1', 'harassment_or_bullying', minsAgo(60 * 24 * 90))], now }),
+      pro, 'remove', 'harassment.targeted', now,
+    );
+    expect(fileAppeal(reportedLongAgo, 'student-1', now).status).toBe('appealed');
+  });
+
+  it('the window is one number in two forms, and the notice says it in words', () => {
+    expect([APPEAL_RULES.filingWindowDays, APPEAL_RULES.filingWindowWords]).toEqual([30, 'thirty days']);
+    expect(studentNotice(decided)).toContain(`within ${APPEAL_RULES.filingWindowWords}`);
   });
 
   it('nothing to appeal after "allow"', () => {

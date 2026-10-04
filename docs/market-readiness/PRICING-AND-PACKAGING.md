@@ -2,10 +2,12 @@
 
 All figures require market discovery and finance approval. This document defines logic, not invented price points.
 
+> **Status of the offer described here:** a target, not a current one. Paid institutional pilots are **NO-GO / RED** ([`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)); "paid pilot" must not appear in public copy until that changes. Public wording today is *design-partner discovery and scoping, non-activation*.
+
 ## Price status
 
 - Individual free plan: **[PRICE TO BE CONFIRMED]**; define the safe, useful core before publishing limits.
-- Individual paid plan: **[PRICE TO BE CONFIRMED]**; do not accept payment until billing, tax, cancellation, refund, renewal, support, export, and deletion operations are approved.
+- Individual paid plan: **[PRICE TO BE CONFIRMED]** for publication (Plus is recorded at $7.99/month or $59/year under D-134 and its monthly lifecycle was live-accepted 2026-10-03, but that is not an approved price book; see `docs/commercial/PRICING-AND-PACKAGING.md`); do not accept payment until billing, tax, cancellation, refund, renewal, support, export, and deletion operations are approved.
 - Institutional pilot: **[PRICE TO BE CONFIRMED]** fixed scope/cohort fee plus **[PRICE TO BE CONFIRMED]** implementation fee.
 - Annual institutional license: **[PRICE TO BE CONFIRMED]** minimum platform commitment plus approved student/cohort/module bands.
 - Optional integrations or professional services: **[PRICE TO BE CONFIRMED]** only after feasibility, security, delivery cost, and support scope are approved.

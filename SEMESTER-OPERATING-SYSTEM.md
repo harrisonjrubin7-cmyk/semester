@@ -22,10 +22,10 @@ never a person, and a seat is held only once somebody accepted it in writing.
 
 | Status | Meaning | Entries |
 | --- | --- | ---: |
-| current | Read on the review date, and stands | 57 |
-| draft | The authoritative version, but not yet fit to act on | 2 |
-| missing | No authoritative version exists; the gap says what would close it | 1 |
-| **total** |  | **60** |
+| current | Read on the review date, and stands | 58 |
+| draft | The authoritative version, but not yet fit to act on | 3 |
+| missing | No authoritative version exists; the gap says what would close it | 0 |
+| **total** |  | **61** |
 
 `version` counts reviews of the entry — the decision that this path is the
 authoritative one and its content was read and stands — not the document’s
@@ -39,7 +39,7 @@ The nineteen categories the closing brief names, in its order.
 
 | Category | Authoritative version | Status | Owner | Version | Last reviewed | Next review | Supersedes | Related decisions |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Company strategy | **none** | missing | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `DECISIONS §1`, `D-007` |
+| Company strategy | [`docs/strategy/README.md`](docs/strategy/README.md) | draft | `founder` | 1 | 2026-10-04 | 2027-01-15 | — | `DECISIONS §1`, `D-007`, `D-1151` |
 | Product vision | [`README.md`](README.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-003`, `D-006` |
 | Master readiness register | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](docs/MASTER-LAUNCH-READINESS-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Role launch register | [`docs/ROLE-LAUNCH-REGISTER.md`](docs/ROLE-LAUNCH-REGISTER.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | — |
@@ -77,6 +77,7 @@ What the repository also runs on, and the brief’s list did not name.
 | Launch readiness council | [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Operating rhythm | [`docs/operating-model/OPERATING-RHYTHM.md`](docs/operating-model/OPERATING-RHYTHM.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | — |
 | Engineering gates | [`REGRESSION-CHECKLIST.md`](REGRESSION-CHECKLIST.md) | current | `engineering` | 1 | 2026-09-28 | 2026-12-28 | — | `D-010` |
+| Documentation system | [`docs/documentation/README.md`](docs/documentation/README.md) | current | `engineering` | 1 | 2026-10-04 | 2027-01-04 | — | `D-1188` |
 | Product analytics | [`ANALYTICS.md`](ANALYTICS.md) | current | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `D-005` |
 | Subprocessor register | [`docs/SUBPROCESSORS.md`](docs/SUBPROCESSORS.md) | current | `privacy` | 1 | 2026-09-28 | 2026-12-28 | — | — |
 | Strategic expansion register | [`docs/STRATEGIC-EXPANSION-REGISTER.md`](docs/STRATEGIC-EXPANSION-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | `DECISIONS §1` |
@@ -109,7 +110,7 @@ What the repository also runs on, and the brief’s list did not name.
 
 ## Notes and gaps
 
-- **Company strategy** — *missing.* The one-page strategy memo that docs/operating-model/OPERATING-RHYTHM.md schedules quarterly has not been written. MARKET-POSITION.md is a competitor review with an action plan and DEFENSIBILITY.md is the moat argument; neither states the strategy in one place a new hire could read first. Read next: [`MARKET-POSITION.md`](MARKET-POSITION.md), [`docs/operating-model/DEFENSIBILITY.md`](docs/operating-model/DEFENSIBILITY.md), [`docs/gtm/EXECUTION-PLAN.md`](docs/gtm/EXECUTION-PLAN.md).
+- **Company strategy** — A proposal until the founder approves FD-2026-001 in docs/strategy/FOUNDER-DECISION-LOG.md: no target in it is set, no decision in it is made, and it publishes no claim. It is the one-page strategy memo that docs/operating-model/OPERATING-RHYTHM.md schedules quarterly. Read next: [`docs/strategy/THREE-YEAR-STRATEGY.md`](docs/strategy/THREE-YEAR-STRATEGY.md), [`docs/strategy/BOARD-MEMO.md`](docs/strategy/BOARD-MEMO.md), [`docs/strategy/SCORECARD.md`](docs/strategy/SCORECARD.md), [`MARKET-POSITION.md`](MARKET-POSITION.md), [`docs/operating-model/DEFENSIBILITY.md`](docs/operating-model/DEFENSIBILITY.md), [`docs/gtm/EXECUTION-PLAN.md`](docs/gtm/EXECUTION-PLAN.md).
 - **Product vision** — The opening paragraph is the vision as it is sold today. SEMESTER-MASTER-COMMAND.md is the specification behind it, and says which of its sections were never supplied. Read next: [`SEMESTER-MASTER-COMMAND.md`](SEMESTER-MASTER-COMMAND.md), [`docs/launch/WHAT-IS-SEMESTER.md`](docs/launch/WHAT-IS-SEMESTER.md).
 - **Master readiness register** — Rendered from app/src/lib/masterregister.ts; a test holds every row to the kind of file it cites. Nothing is above `tested` until docs/evidence/ exists. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md), [`docs/GO-NO-GO-CHECKLIST.md`](docs/GO-NO-GO-CHECKLIST.md).
 - **Role launch register** — Rendered from app/src/lib/rolelaunch.ts, which reads the roles out of the migrations. All 63 roles are `modeled`; none is provisionable.
@@ -140,6 +141,7 @@ What the repository also runs on, and the brief’s list did not name.
 - **Launch readiness council** — The seats, the gates and `decide()`. Every owner on this page is one of its seats. Read next: [`docs/GO-NO-GO-CHECKLIST.md`](docs/GO-NO-GO-CHECKLIST.md), [`docs/LAUNCH-DECISIONS.md`](docs/LAUNCH-DECISIONS.md).
 - **Operating rhythm** — Weekly, monthly, quarterly and annual reviews, each with a written output. The proof calendar’s quarterly items are rows of its quarterly table. Read next: [`docs/operating-model/README.md`](docs/operating-model/README.md).
 - **Engineering gates** — The checks every change passes and the baseline figures. CLAUDE.md is the working agreement for agents; the pull-request template is what a reviewer sees. Read next: [`CLAUDE.md`](CLAUDE.md), [`.github/pull_request_template.md`](.github/pull_request_template.md).
+- **Documentation system** — The card every governed page opens with, the gate that holds them, the change obligation (docs:impact) and the generated index. About three hundred older documents are not governed by it and are not moved. Read next: [`docs/README.md`](docs/README.md), [`docs/documentation/QUALITY-GATES.md`](docs/documentation/QUALITY-GATES.md), [`docs/documentation/OWNERSHIP-AND-REVIEW.md`](docs/documentation/OWNERSHIP-AND-REVIEW.md).
 - **Product analytics** — Three marks and nothing else; a fourth is a decision. Every first-year measure that needs a new mark lands the way D-005 says. Read next: [`docs/PRODUCT-ANALYTICS-DATA-ETHICS.md`](docs/PRODUCT-ANALYTICS-DATA-ETHICS.md).
 - **Subprocessor register** — Every third party that touches data, and what it sees. The quarterly vendor review on the proof calendar reads it.
 - **Strategic expansion register** — Rendered from app/src/lib/expansionregister.ts: the phased expansion, each phase gated. The plan of record says what is built next; this says what may be entered at all. Read next: [`docs/PRODUCT-ROADMAP.md`](docs/PRODUCT-ROADMAP.md).

@@ -34,7 +34,19 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
-import { clampRequest } from '../_shared/clamp.ts';
+import { clampRequest, modelsForPlan, type SharedPlan } from '../_shared/clamp.ts';
+import { planFromSubscriptions } from '../_shared/sharedplan.ts';
+import {
+  ALLOWANCE_EXHAUSTED,
+  ALLOWANCE_MESSAGE,
+  UsageScanner,
+  allowanceFor,
+  costMicros,
+  countInputTokens,
+  describeRequest,
+  reserveMicros,
+  usageFromJson,
+} from '../_shared/aispend.ts';
 import { KILLED_MESSAGE, aiGenerationKilled } from '../_shared/killswitch.ts';
 import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
 import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
@@ -121,18 +133,92 @@ Deno.serve(async (req) => {
     return json({ error: { message: KILLED_MESSAGE } }, 503);
   }
 
+  // ── which models their plan covers ──────────────────────────────────────
+  //
+  // Read the way `my_entitlements()` reads it — a subscription that is in
+  // date, in a paying status and still holds entitlements — and before the
+  // body is clamped, so the clamp can name the models this account may use.
+  // The calls are counted, not the dollars, and the models cost very
+  // different amounts: see `PLAN_MODELS` in `../_shared/clamp.ts`.
+  //
+  // A lookup that fails is `free`, never an error and never a wider list: the
+  // student is served on what every account gets, and the log says why. The
+  // cost of that direction is a paying student briefly offered fewer models,
+  // which the refusal's own wording explains; the cost of the other is a
+  // wider list for anyone who can make a query fail.
+  let plan: SharedPlan = 'free';
+  try {
+    const { data, error } = await admin
+      .from('billing_accounts')
+      .select('subscriptions(plan_code, status, current_period_end, subscription_entitlements(entitlement_key))')
+      .eq('user_id', userId);
+    if (error) throw error;
+    plan = planFromSubscriptions(
+      (data ?? []).flatMap((a: { subscriptions?: unknown[] }) => a.subscriptions ?? []),
+    );
+  } catch (e) {
+    console.error('claude: the plan could not be read; serving this account as free', describeThrow(e));
+  }
+
   // ── what they asked for ─────────────────────────────────────────────────
   //
   // Read and rebuilt before the call is counted, so a request the shared key
   // will not pay for is refused without costing one of the caller's sixty. The
-  // rules, and why each exists, are in `../_shared/clamp.ts`: a model the app
-  // offers, `max_tokens` held under a ceiling, the app's own tools and a
-  // five-use web search, and nothing else. A body that cannot be read at all
-  // is the caller's request falling over, and is answered as that.
+  // rules, and why each exists, are in `../_shared/clamp.ts`: a model the
+  // account's plan covers, `max_tokens` held under a ceiling, the app's own
+  // tools and a five-use web search, and nothing else. A body that cannot be
+  // read at all is the caller's request falling over, and is answered as that.
   const raw = await req.text();
-  const clamped = clampRequest(raw, new TextEncoder().encode(raw).length);
-  if (!clamped.ok) return json({ error: { message: clamped.message } }, clamped.status);
+  const clamped = clampRequest(raw, new TextEncoder().encode(raw).length, { models: modelsForPlan(plan) });
+  if (!clamped.ok) {
+    return json(
+      {
+        error: {
+          message: clamped.message,
+          ...(clamped.code ? { code: clamped.code } : {}),
+          ...(clamped.allowed ? { allowed_models: clamped.allowed } : {}),
+        },
+      },
+      clamped.status,
+    );
+  }
   const body = clamped.body;
+
+  // ── how much they may spend ─────────────────────────────────────────────
+  //
+  // The sixty calls below count requests; the bill counts tokens, and the
+  // models differ tenfold in price. So the worst case this request could cost
+  // is *reserved* against the account's dollar allowance first — counted input
+  // plus the whole `max_tokens` plus every search it may run — and the
+  // difference is given back when the call finishes. Reserved by the database
+  // in one statement that holds the row lock (`add_spend`, see
+  // `supabase/migrations/20261004170000_ai_spend_meter.sql`), for the reason
+  // `count_call` is: read-then-write loses updates under the parallel
+  // generations a syllabus import fires. See `../_shared/aispend.ts`.
+  //
+  // Before the call is forwarded, so a disconnect mid-stream still costs the
+  // reservation. A meter that cannot answer refuses, as the call counter does.
+  const month = new Date().toISOString().slice(0, 7);
+  const priced = describeRequest(body, new TextEncoder().encode(body).length);
+  const inputTokens = await countInputTokens(body, priced.estimateTokens, fetch, key);
+  const reserve = reserveMicros({ ...priced, inputTokens });
+  const allowance = allowanceFor(plan, (n) => Deno.env.get(n));
+  const spend = (delta: number, cap: number | null) =>
+    admin.rpc('add_spend', { p_user: userId, p_month: month, p_delta: delta, p_cap: cap });
+  // Giving a reservation back is best-effort: a failure leaves it standing,
+  // which errs towards the owner, and is logged so it can be found.
+  const release = async (micros: number, why: string) => {
+    const { error } = await spend(-micros, null);
+    if (error) console.error('claude: a spend reservation could not be released', { why, micros });
+  };
+
+  const { data: held, error: spendError } = await spend(reserve, allowance);
+  if (spendError || typeof held !== 'number') {
+    return json({ error: { message: 'Usage could not be checked just now. Try again in a moment.' } }, 503);
+  }
+  if (held < 0) {
+    return json({ error: { message: ALLOWANCE_MESSAGE, code: ALLOWANCE_EXHAUSTED } }, 429);
+  }
 
   // ── how much they have used ─────────────────────────────────────────────
   //
@@ -153,7 +239,6 @@ Deno.serve(async (req) => {
   // opened. Counting first means a call reserves its place and then happens;
   // the cost of that is a refused upstream still costing a call, which the
   // previous arrangement deliberately chose as well.
-  const month = new Date().toISOString().slice(0, 7);
   const { data: used, error: meterError } = await admin.rpc('count_call', {
     p_user: userId,
     p_month: month,
@@ -162,10 +247,12 @@ Deno.serve(async (req) => {
   if (meterError || typeof used !== 'number') {
     // Refusing rather than forwarding. A meter that cannot count is a key with
     // no cap on it, and that is the one failure not to be generous about.
+    await release(reserve, 'meter');
     return json({ error: { message: 'Usage could not be checked just now. Try again in a moment.' } }, 503);
   }
 
   if (used > MONTHLY_CALLS) {
+    await release(reserve, 'call cap');
     return json(
       {
         error: {
@@ -228,12 +315,47 @@ Deno.serve(async (req) => {
     );
   }
 
-  return new Response(upstream.body, {
-    status: upstream.status,
-    headers: {
-      ...cors,
-      'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
-      'X-Calls-Remaining': String(Math.max(0, MONTHLY_CALLS - used)),
-    },
-  });
+  const headers = {
+    ...cors,
+    'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
+    'X-Calls-Remaining': String(Math.max(0, MONTHLY_CALLS - used)),
+  };
+
+  // ── settle the reservation ──────────────────────────────────────────────
+  //
+  // A refused upstream (4xx/5xx) produced no tokens, so the reservation is
+  // given back. A success is settled to what it actually used, read from the
+  // usage blocks as the bytes pass — never held, never altered, so streaming
+  // is as it was. A response whose usage could not be read stands at its
+  // reservation, and so does a stream the client abandons before it ends
+  // (`flush` never runs): both err towards the owner.
+  if (!upstream.ok) {
+    await release(reserve, `upstream ${upstream.status}`);
+    return new Response(upstream.body, { status: upstream.status, headers });
+  }
+  const settle = async (actual: number | null) => {
+    if (actual === null) return;
+    const { error } = await spend(actual - reserve, null);
+    if (error) console.error('claude: a spend reservation could not be settled', { reserve, actual });
+  };
+
+  if ((upstream.headers.get('Content-Type') ?? '').includes('text/event-stream') && upstream.body) {
+    const scanner = new UsageScanner();
+    const pass = new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        controller.enqueue(chunk);
+        scanner.push(chunk);
+      },
+      async flush() {
+        scanner.end();
+        await settle(scanner.seen ? costMicros(scanner.usage, priced.model) : null);
+      },
+    });
+    return new Response(upstream.body.pipeThrough(pass), { status: upstream.status, headers });
+  }
+
+  const text = await upstream.text();
+  const usage = usageFromJson(text);
+  await settle(usage ? costMicros(usage, priced.model) : null);
+  return new Response(text, { status: upstream.status, headers });
 });

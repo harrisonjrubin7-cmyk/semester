@@ -33,3 +33,7 @@ The **Student Productivity and Academic Workload Pilot** uses manual setup, opti
 ## Pilot conversion thesis
 
 Conversion is earned when the agreed cohort reaches its activation/readiness targets without breaching privacy, support, accessibility, or reliability guardrails; the sponsor signs an outcome decision; and an annual scope can be supported with the evidence actually collected. The next expansion should be adjacent—another cohort, program, or approved read-only source—not a leap to whole-campus replacement.
+
+## Reconciliation (2026-10-04)
+
+The 14–60 day figures above are the implementation window of each offer. Every pilot, whichever offer it uses, runs exactly 26 weeks (D-134, `PILOT_WEEKS`), and the deal desk's 6-month maximum is only the outer limit. The 50–200 cohort is the target; the hard bounds are 10 to 200 (`docs/PAID-PILOT-FRAMEWORK.md`). Institutional pilots are not offered for activation until the executive go decision allows it; until then the offer is design-partner discovery and scoping.

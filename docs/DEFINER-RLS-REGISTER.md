@@ -65,7 +65,7 @@ The current register also includes 3 callable definers added after that dated ca
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `accept_connection` | `auth.uid()` | `20260922003000_connections.sql` |
-| `appeal_community_decision` | `auth.uid()` | `20260928032000_community.sql` |
+| `appeal_community_decision` | `auth.uid()` | `20261004130000_community_appeal_window.sql` |
 | `apply_to_organization` | `auth.uid()`, `private.verified_student` | `20260921230000_organizations.sql` |
 | `apply_to_volunteer` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `begin_community_image` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -282,7 +282,7 @@ The current register also includes 3 callable definers added after that dated ca
 | `my_age_status` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `my_beta` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
 | `my_capabilities` | `auth.uid()` | `20260928010000_my_capabilities.sql` |
-| `my_community_notices` | `auth.uid()` | `20260928032000_community.sql` |
+| `my_community_notices` | `auth.uid()` | `20261004130000_community_appeal_window.sql` |
 | `my_community_refs` | `auth.uid()` | `20260928032000_community.sql` |
 | `my_community_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `my_course_studio_courses` | `auth.uid()` | `20260928309000_course_studio.sql` |
