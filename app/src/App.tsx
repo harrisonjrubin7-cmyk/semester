@@ -413,9 +413,10 @@ function Header({
             outline: 'none',
             fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            // Wraps rather than truncating: a title the reader's text spacing makes
+            // too long for one line (WCAG 1.4.12) must not lose its end. The header
+            // is a flex row with no fixed height, so it grows with the title.
+            overflowWrap: 'anywhere',
             margin: 0,
             fontWeight: 'inherit',
             letterSpacing: 'inherit',

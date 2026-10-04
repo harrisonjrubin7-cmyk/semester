@@ -75,8 +75,18 @@ const SPACING = `
   p { margin-bottom: 2em !important; }
 `;
 
+/**
+ * Truncation that is the design, each with the reason and where the full text is.
+ * Counted and printed, so an exemption is a visible decision and not a quiet skip.
+ * Anything not named here is a finding.
+ */
+const EXEMPT = [
+  { selector: '.paper-line', why: 'template thumbnail (aria-hidden); the template’s name beside it carries the text' },
+  { selector: '.mcell-name > span', why: 'month-grid cell summary (aria-hidden); the cell’s own label and the day view carry the full title' },
+];
+
 /** What is clipped or overflowing right now, as signatures. */
-const LOSS = () => {
+const LOSS = (exempt) => {
   const label = (el) => {
     const cls = typeof el.className === 'string' && el.className ? '.' + el.className.split(/\s+/).slice(0, 2).join('.') : '';
     const text = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 28);
@@ -84,6 +94,8 @@ const LOSS = () => {
   };
   const clipped = [];
   const ellipsis = [];
+  const skipped = [];
+  const x_label = (el) => (el.className || el.tagName).toString();
   for (const el of document.querySelectorAll('body *')) {
     const r = el.getBoundingClientRect();
     // Visually-hidden text (`.sr-only`) is 1px by design and clips on purpose.
@@ -91,6 +103,10 @@ const LOSS = () => {
     if (!(el.textContent || '').trim()) continue;
     const cs = getComputedStyle(el);
     if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+    if (exempt.some((x) => el.matches(x.selector))) {
+      if (cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) skipped.push(x_label(el));
+      continue;
+    }
     if (cs.textOverflow === 'ellipsis' && el.scrollWidth > el.clientWidth + 1) {
       ellipsis.push(label(el));
       continue;
@@ -137,7 +153,7 @@ const LOSS = () => {
   const sideways = [];
   if (root && root.scrollWidth > root.clientWidth + 1) sideways.push('page');
   if (scroller && scroller.scrollWidth > scroller.clientWidth + 1) sideways.push('.scrollarea');
-  return { clipped, ellipsis, sideways };
+  return { clipped, ellipsis, sideways, skipped };
 };
 
 /** A box that must be flagged once spacing is forced, and one that must not. */
@@ -160,13 +176,14 @@ const diff = (before, after) => ({
   clipped: after.clipped.filter((s) => !before.clipped.includes(s)),
   ellipsis: after.ellipsis.filter((s) => !before.ellipsis.includes(s)),
   sideways: after.sideways.filter((s) => !before.sideways.includes(s)),
+  exempted: Math.max(0, after.skipped.length - before.skipped.length),
 });
 
 async function measure(page) {
-  const before = await page.evaluate(LOSS);
+  const before = await page.evaluate(LOSS, EXEMPT);
   const style = await page.addStyleTag({ content: SPACING });
   await page.waitForTimeout(150);
-  const after = await page.evaluate(LOSS);
+  const after = await page.evaluate(LOSS, EXEMPT);
   await style.evaluate((el) => el.remove());
   return diff(before, after);
 }
@@ -177,6 +194,7 @@ const browser = await chromium.launch(
 
 const dests = destinations();
 const findings = [];
+let exempted = 0;
 const missedAt = [];
 const errs = [];
 let opened = 0;
@@ -220,6 +238,7 @@ for (const width of WIDTHS) {
     if (arrived(screen, label, seen)) opened += 1;
     else missedAt.push(at);
     const d = await measure(page);
+    exempted += d.exempted;
     if (d.clipped.length || d.ellipsis.length || d.sideways.length) findings.push({ at, ...d });
   }
   await ctx.close();
@@ -240,6 +259,8 @@ console.log(`\nSCREENS WITH NEW LOSS: ${screensWith.size} of ${dests.length}   (
 for (const [sig, where] of [...bySig].sort((a, b) => b[1].length - a[1].length)) {
   console.log(`  ${sig}   ×${where.length}   ${where.slice(0, 3).join(', ')}${where.length > 3 ? ', …' : ''}`);
 }
+console.log(`\nEXEMPT truncation that is the design: ${exempted} boxes across the walk`);
+for (const x of EXEMPT) console.log(`  ${x.selector}   ${x.why}`);
 console.log('\nCovers each destination’s first view at each width; not other tabs, modals, empty or error states. Overlap is not measured.');
 
 await browser.close();

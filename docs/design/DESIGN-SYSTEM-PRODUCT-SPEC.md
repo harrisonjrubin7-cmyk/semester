@@ -706,6 +706,18 @@ clipping). Each was found by looking at the screenshot and fixed before the numb
 were believed; the built-in control (a fixed-height box that must be flagged and a
 growing one that must not) passes at both widths.
 
+**Fixed, and re-measured the same day.** The page title now wraps (`overflow-wrap`,
+no `nowrap`/ellipsis; the header is a flex row with no fixed height), which cleared
+the four title findings. The next-deadline title on a Courses card wraps too. Two
+truncations are the design and are exempt **by name, with a reason, counted in the
+output** (`EXEMPT` in the script): `.paper-line` (aria-hidden template thumbnails)
+and `.mcell-name > span` (aria-hidden month-grid summary; the cell's label and the
+day view carry the title). Result: 126 of 126 views opened, 0 page errors,
+**0 of 63 screens with new loss**, 11 exempted boxes; control passes at both widths.
+The reverse was checked: with the title fix reverted the sweep reports the four
+findings again. Still not covered: placeholder text inside inputs (the Courses search
+placeholder is cut at 420px under the override), which is not text content.
+
 Reporting only what is *new* means truncation that was already there is not listed:
 the Write title reads "Write a docume…" at 420px with no override at all, and the
 spacing makes it worse. That is a pre-existing defect the sweep deliberately does not
@@ -919,7 +931,7 @@ guard is proven, and is reversible by deleting the file.
 
 ### Slice 5 — Reading comfort and role defaults (partly built; PR pending)
 Built:
-- `scripts/spacing-sweep.mjs` / `npm run sweep:spacing`: the missing WCAG 1.4.12 test (§6.6), with a control and two corrected false positives. **It found real losses**; they are listed in §6.6 and are not fixed here.
+- `scripts/spacing-sweep.mjs` / `npm run sweep:spacing`: the missing WCAG 1.4.12 test (§6.6), with a control and two corrected false positives. **It found real losses**; they are listed in §6.6 and fixed in Slice 5 (title, deadline row; two by-design truncations exempted by name).
 - `lib/fontclaims.test.ts`: every offered typeface must be an OS family, bundled, or on a shrink-only ledger. Records "Hyperlegible is not bundled" as the one entry.
 - `sweepscreens.test.ts` now holds the new sweep to the shared screen registry.
 
@@ -929,7 +941,7 @@ Deliberately **not** built, with reasons in §3.5 and §6.6:
 - *Role density defaults*: "has not chosen" is not representable without a data-model change, and it cuts across the app's never-inferred rule; the recommendation is to offer, not default.
 - *A new "Reading comfort" preset*: one exists; it should be extended after the above.
 
-*Next, in order:* fix the truncations (the shared header title is one fix for four screens); then the spacing control; then the preset extension. The readiness register's "no 1.4.12 test" line is now out of date; updating it regenerates documents and the claims register, so it is left for the owner of those claims.
+*Next, in order:* the spacing control; then the preset extension. (Truncations: fixed, §6.6.) The readiness register's "no 1.4.12 test" line is now out of date; updating it regenerates documents and the claims register, so it is left for the owner of those claims.
 
 ### Slice 6 — Gallery and visual regression
 Dev-only gallery route; Playwright screenshot job with runner-generated baselines (§7.5), non-blocking for two weeks, then blocking for token/layout paths.
