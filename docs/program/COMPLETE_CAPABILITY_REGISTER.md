@@ -60,7 +60,7 @@ Counts are tallied by script from the rows below (class = the first matching cla
 | I-13 | Secret scanning | Built but not release-ready | `ci.yml` `secrets` (required check); `.gitleaks.toml` (A) | none material | Security |
 | I-14 | SAST | Built but not release-ready | `.github/workflows/codeql.yml` (not a required check) (A) | Make required; triage record | Security |
 | I-15 | Dependency scanning | Built but not release-ready | `ci.yml:98-117` non-blocking at high; `supply-chain.yml` blocks at critical; Dependabot skips Deno (A) | Block at high; cover Deno | Security |
-| I-16 | DAST baseline | Built but not release-ready | `hawkscan.yml`, `stackhawk*.yml`; fails closed without `HAWK_API_KEY` (A) | Secrets configured? A green run? (N) | Security |
+| I-16 | DAST baseline | Built but not release-ready | `hawkscan.yml`, `stackhawk*.yml`; fails closed without `HAWK_API_KEY` (A); **`hawkscan` job succeeded on PR #1254 head `07c7abb`** (V), so the key is configured | Scope and findings of the run not read; independent assessment still absent | Security |
 | I-17 | SBOM | Built but not release-ready | `pages.yml:444`, `supply-chain.yml:87-139` (A) | none material | Security |
 | I-18 | Rate limiting | Built but not release-ready | `app/server/institution/rate-limit.ts`; `20260928230000_direct_rate_limits.sql` (A) | Institution gateway only; Edge Functions unverified (N) | Engineering |
 | I-19 | Load / soak / capacity | Partially implemented | `supabase/load/` pgbench in CI (A) | No HTTP-level test; `sre/capacity.ts` says proof sizes unproven | Reliability |

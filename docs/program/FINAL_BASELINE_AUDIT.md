@@ -36,7 +36,7 @@ Semester is a large, unusually self-honest **planning-and-engineering package fo
 | Tables with RLS | **352 of 352** created in migrations | A |
 | `FORCE ROW LEVEL SECURITY` statements | **0** | **V** |
 | `SECURITY DEFINER` functions | 510 distinct names (278 `public`, 232 `private`); all 278 `public` pin `search_path` | A |
-| DB policy suites | 110 `supabase/*.check.sql` (not run in this baseline; need PostgreSQL 17) | A |
+| DB policy suites | 110 `supabase/*.check.sql`; **passed in the CI `build` job on PR head `07c7abb` (2026-10-04, [run 37240179795](https://github.com/harrisonjrubin7-cmyk/semester/actions/runs/37240179795))**, via `supabase/check.sh` on the PostgreSQL major production runs. Not run locally | **V** (check-run conclusion read; steps per `.github/workflows/ci.yml:494-497`) |
 | Screens | 119 non-test `.tsx` under `app/src/screens`; `Screen` union ≈114 members | A |
 | Screens importing a server-touching module | 48 of 119 (upper bound); ≈71 use only the local store | A |
 | Edge Functions | 16 directories + `_shared` | A |
@@ -55,7 +55,7 @@ Semester is a large, unusually self-honest **planning-and-engineering package fo
 2. **RISK-004 and RISK-008 do not exist under those IDs anywhere in the tree.** Their substance exists under other IDs (`LAUNCH-RISK-REGISTER.md` FR-004; `docs/SECURITY-GAP-ANALYSIS.md`). **V** (grep for both IDs returns nothing).
    - *RISK-004 substance* (runtime role / RLS bypass): **open**. 0 FORCE RLS; servers use `service_role`; no runtime login role migration. `docs/target-architecture/09-CONVERSION-PLAN.md:94` names a future `…force_rls.sql` that does not exist. A.
    - *RISK-008 substance* (tenant AI policy at model invocation): **partly fixed, still open.** Enforced in `app/server/institution/intelligence.ts` `respond()`. Bypassed by `supabase/functions/claude/index.ts` (global kill only, `aiGenerationKilled(admin, null)`; no tenant policy) and by browser-direct calls (`app/src/lib/claude.ts:960`, `:1357`; `app/src/lib/openai.ts:186`). **V** that `converse.ts:226` only uses the gateway when `governed`; **A** for ≈38 other consumer call sites going to `ask()`.
-3. **The restore drill has not run.** `RESTORE.md` L295–307 is blank. `docs/DEFINER-RLS-REGISTER.md` row B13 labels the claim "held" because procedure and tests exist. That label reads as readiness and is not. `STAGING.md` L148/165: steps 2–4 "have never been run". Only `ROLLBACK.md` carries measurements (frontend rollback 76–180 s over four deploys), and those are not database RTO/RPO. **V** (RESTORE.md); A (the rest).
+3. **The production restore drill has not run.** (CI does run a backup-and-restore *rehearsal* on a throwaway PostgreSQL on every push, `supabase/restore.sh`, which passed on `07c7abb`: it rehearses the procedure and measures nothing about the production project.) `RESTORE.md` L295–307 is blank. `docs/DEFINER-RLS-REGISTER.md` row B13 labels the claim "held" because procedure and tests exist. That label reads as readiness and is not. `STAGING.md` L148/165: steps 2–4 "have never been run". Only `ROLLBACK.md` carries measurements (frontend rollback 76–180 s over four deploys), and those are not database RTO/RPO. **V** (RESTORE.md); A (the rest).
 4. **The domain outbox has no publisher.** Events are written (productivity only); nothing in `app/server` or `supabase/functions` sets `published_at`/`dead_lettered_at`. **V** (grep of both trees returns nothing).
 5. **PDP adoption is one route family.** `packages/institution/src/policy.ts` `decide()` is called from `app/server/productivity/service.ts` only; other institution routes and every Edge Function carry their own checks. ADR `docs/architecture/0007-policy-decision-point.md` says adoption is incremental. A.
 6. **Offline engine is tasks-only and flagged off.** `packages/offline-sync` is real; in the app it backs tasks only, behind `VITE_OFFLINE_ENGINE_TASKS`. Everything else is a localStorage working copy mirrored as one JSON blob (`app/src/lib/cloud.ts` header). A.
@@ -121,7 +121,7 @@ No customer, signed pilot, legal entity, bank, insurance, domain-ownership evide
 | Tables (352) / definers (510) | Counted and checked against existing matrices; not classified individually here | **E-2**: delegated to `docs/DEFINER-RLS-REGISTER.md` + `database/`; 25-name reconciliation open |
 | Docs (306 in `docs/`) | Classified by directory/purpose | **E-3** |
 | Design system | Tokens located; brief's spec not compared | **E-4** |
-| DB suites, DAST | Not run (need PG17; need `HAWK_API_KEY`) | **E-5** |
+| DB suites, DAST | Not run locally. **Both ran green in CI on `07c7abb`** (`build`; `hawkscan` job 111547218772). The HawkScan scope and findings were not read | **E-5**, narrowed to: read the HawkScan output |
 | Production catalog | Not read | E-2 |
 
 Dated exceptions E-1…E-5 are in [`../../operations/GO_NO_GO_SCORECARD.md`](../../operations/GO_NO_GO_SCORECARD.md) with owners and expiry.

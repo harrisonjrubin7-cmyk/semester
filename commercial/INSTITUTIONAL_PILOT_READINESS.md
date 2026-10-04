@@ -26,7 +26,7 @@ The program's baseline is a **proposal**. None of it is approved or encoded.
 
 | Proof | State | Evidence | Gap |
 | --- | --- | --- | --- |
-| Tenant isolation across API/RPC/DB/storage/search/queue/worker/AI | **Built, not proven** | 110 `.check.sql` suites (not run in Phase 0); `gateway.test.ts`; `context.test.ts` | No HTTP-level cross-tenant test on a target; storage test not found (N); FORCE RLS 0 (V) — **G-P1** |
+| Tenant isolation across API/RPC/DB/storage/search/queue/worker/AI | **Built, not proven** | 110 `.check.sql` suites (pass in CI `build` on `07c7abb`); `gateway.test.ts`; `context.test.ts` | No HTTP-level cross-tenant test on a target; storage test not found (N); FORCE RLS 0 (V) — **G-P1** |
 | Roles / capabilities | Built | `role_grants`, `capabilities.check.sql` | Target role test — G-P2 |
 | Policy | Partial | PDP in productivity only | G-P3 / PR-05 |
 | Audit | Built | chains, gateway journal | Mutable financial tables outside chain |

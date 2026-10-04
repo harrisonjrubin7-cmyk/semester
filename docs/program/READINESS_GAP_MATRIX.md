@@ -44,7 +44,7 @@ The matrix has four readiness areas. In each, the product must prove one set of 
 
 | Requirement | State | Evidence | Gap ID |
 | --- | --- | --- | --- |
-| Tenant isolation | **BUILT, UNPROVEN end to end** | 110 `.check.sql` suites (not run in this baseline); `FR-004` open | G-P1 no target-tenant HTTP negative test; FORCE RLS 0 (V); storage cross-tenant test not found (N) |
+| Tenant isolation | **BUILT, UNPROVEN end to end** | 110 `.check.sql` suites (pass in CI `build` on `07c7abb`); `FR-004` open | G-P1 no target-tenant HTTP negative test; FORCE RLS 0 (V); storage cross-tenant test not found (N) |
 | Roles | **BUILT** | `role_grants`, `my_capabilities`, `capabilities.check.sql` | G-P2 target role test |
 | Policies | **PARTIAL** | PDP in one route family; hierarchy TS-only | G-P3 PDP adoption; SQL enforcement of hierarchy |
 | Audit | **BUILT** | chains, `gateway_write_audit_v` | G-P4 mutable financial tables outside chain |

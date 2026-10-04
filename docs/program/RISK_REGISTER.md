@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | FR-001 entity/authority | P0 | Confirmed ABSENT; also contradicts `ops/billing/README.md` "legal reviews complete" (C1) |
 | FR-002 no customer | P0 | Confirmed: `ops/customer-commitments/README.md`, `contracts/README.md` |
-| FR-003 DAST/pen test | P0 | `hawkscan.yml` fails closed without `HAWK_API_KEY`; green run not evidenced (N) |
+| FR-003 DAST/pen test | P0 | `hawkscan` job **succeeded** on PR #1254 head `07c7abb` (so its secrets are configured); scope and findings not read; independent pen test still absent |
 | FR-004 tenant isolation | P0 | 0 FORCE RLS (V); no end-to-end HTTP negative test; storage cross-tenant test not found (N) |
 | FR-005 recovery | P0 | `RESTORE.md` L295–307 blank (V); register B13 labels it "held" |
 | FR-006 operations | P0 | No rota; no APM/error tracking in code |

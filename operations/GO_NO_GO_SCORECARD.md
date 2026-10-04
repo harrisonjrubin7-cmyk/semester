@@ -9,7 +9,7 @@ Scoring: **PASS** = current, accepted evidence exists · **BUILT** = code/tests 
 | Gate | M1 individual (invite, unpaid) | M2 individual paid | M3 design-partner (non-activation) | M4 paid institutional | M5 broad / mass-user |
 | --- | --- | --- | --- | --- | --- |
 | G1 Frozen candidate, hosted exact-SHA CI | OPEN (local green only, A) | OPEN | n/a | OPEN | OPEN |
-| G2 Tenant isolation proven on target | n/a | n/a | n/a | **OPEN** (BUILT in suites, not run) | OPEN |
+| G2 Tenant isolation proven on target | n/a | n/a | n/a | **OPEN** (suites pass in CI; no target-tenant test) | OPEN |
 | G3 Restore/rollback exercised | **OPEN** (restore never run, V) | OPEN | n/a | OPEN | OPEN |
 | G4 DAST clean + independent assessment | n/a | OPEN | n/a | OPEN | OPEN |
 | G5 Qualified accessibility review | OPEN | OPEN | n/a | OPEN | OPEN |
@@ -36,8 +36,10 @@ The zeros are not a criticism of the code. Most BUILT items need a human, an out
 | `npm test` (`app/`) | 1,413 files passed, 1 skipped; 22,707 tests passed, 68 skipped; 0 failed; 220 s | A |
 | `npm run lint` | exit 0; **25 warnings of 25 allowed** | A |
 | `npm run check:university` | exit 0 | A |
-| `npm run test:shuffle`, `npm run build` | **not run in Phase 0** | — |
-| `supabase/check.sh` (110 DB suites), DAST | **not run** (need PG17; need `HAWK_API_KEY`) | — |
+| `npm run test:shuffle`, `npm run build` | not run locally; **passed in CI `build` on `07c7abb`** (`ci.yml:267-279`) | V |
+| `supabase/check.sh` (110 DB suites), load, rehearse, restore rehearsal | not run locally; **passed in CI `build` on `07c7abb`** (`ci.yml:494-536`). The restore step is a rehearsal on a throwaway database, not a production drill | V |
+| HawkScan DAST | **`hawkscan` job succeeded** on `07c7abb`; scope and findings not read | V (conclusion) |
+| Other required and advisory checks on `07c7abb` | `account-sync`, `secrets`, `impact`, `CodeQL`, `analyze`, `company_site` all success; `notify`, Supabase Preview, Macroscope skipped | V |
 
 `CLAUDE.md` says green `test` does not imply green `test:shuffle`, and consecutive green shuffle runs are weak evidence of teardown races. Neither is claimed here.
 
@@ -88,7 +90,7 @@ The zeros are not a criticism of the code. Most BUILT items need a human, an out
 | E-2 | Per-table (352) and per-definer (510) classification; 25-name reconciliation; production catalog not re-read | Security | Regenerate `docs/DEFINER-RLS-REGISTER.md`; diff names vs `database/FUNCTION_AUTHORIZATION_MATRIX.md` | **2026-10-11** |
 | E-3 | `docs/` (306 files) classified by directory only | Document control | Index with status per file | 2026-10-18 |
 | E-4 | Design-system spec (Ink/Parchment/Semester blue/status vocabulary) not compared to `app/src/styles/semester.tokens.json` | Design | Recorded comparison | **Phase 2 entry** |
-| E-5 | DB suites and DAST not run | Security + Engineering | PG17 run of `supabase/check.sh`; HawkScan with secrets | before Phase 1 gate |
+| E-5 | HawkScan scope and findings unread (the DB suites and the DAST job themselves passed in CI on `07c7abb`) | Security | Read the HawkScan report; record scope, findings and triage | before Phase 1 gate |
 
 Owners are proposals for the owner to confirm; the repository evidences one person. Expiry past due returns the affected motion to NO-GO.
 
@@ -96,7 +98,7 @@ Owners are proposals for the owner to confirm; the repository evidences one pers
 
 # **PHASE 0 GATE: PASS WITH DATED EXCEPTIONS**
 
-Reasons: every capability, pricing claim and company function is classified with evidence; blockers, risks, legal items and the Phase 1 plan exist; the controlled go/no-go is consistent with the evidence. It is **not** a clean PASS because screens, tables, definers and docs are classified in groups (E-1…E-3), the design spec is unchecked (E-4), and two suites were not run (E-5).
+Reasons: every capability, pricing claim and company function is classified with evidence; blockers, risks, legal items and the Phase 1 plan exist; the controlled go/no-go is consistent with the evidence. It is **not** a clean PASS because screens, tables, definers and docs are classified in groups (E-1…E-3), the design spec is unchecked (E-4), and the HawkScan scope and findings were not read (E-5; the DAST job and the database suites themselves passed in CI on `07c7abb`).
 
 **What this gate does and does not allow:** Phase 1 (security, tenancy, recovery) may begin — it adds no product feature. It does **not** allow Phase 2+ work, any activation, any price or claim publication, or any statement that Semester is launched, pilot-ready, contract-ready, institution-ready, mass-user-ready, secure, accessible, operational or replacement-ready. Several Phase 1 steps need owner authorization first (`LAUNCH_COMMAND_CENTER.md` §3).
 
