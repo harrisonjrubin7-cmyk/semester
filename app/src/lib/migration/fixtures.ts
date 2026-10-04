@@ -12,7 +12,7 @@
  * stated figures are computed from the rows they summarise; capacities are
  * above their counts; consents exist for every grant that needs one.
  */
-import type { DomainSpec, EntitySpec, InvariantSpec, Pair, Row } from './types.ts';
+import type { DomainSpec, EntitySpec, InvariantSpec, Pair, Row } from './engine-types.ts';
 
 const SEP = '\u001f';
 
@@ -58,6 +58,7 @@ function scalar(entity: string, field: string, i: number, filters: Map<string, s
   if (/^(credits|points|installment_count|byte_size)$/.test(field) || field === 'grade_points') return field === 'grade_points' ? 3 + (i % 2) : 3 + (field === 'byte_size' ? 1000 * i : 0);
   if (/_(on|at)$/.test(field)) return `2026-0${(i % 8) + 1}-1${i % 9}`;
   if (/^(attempt)$/.test(field)) return 1;
+  if (field === 'scope_level') return 1 + (i % 3);
   return `${field}-${i}`;
 }
 
@@ -137,6 +138,15 @@ export function syntheticPair(domain: DomainSpec, rows = 8): Pair {
     }
     if (s.kind === 'history') {
       const key = specOf(s.subjectEntity).key[0];
+      // A history that is the entity's whole purpose is generated: three events per subject.
+      // One whose rows other checks already sum, link or order (a ledger, a document's versions)
+      // keeps its rows and is only given an order per subject.
+      const shared = domain.invariants.some((o) => o !== s && o.kind !== 'crosswalk' && o.kind !== 'history' && ((o.kind === 'derived' && o.child === s.entity) || o.entity === s.entity));
+      if (shared) {
+        const seen = new Map<string, number>();
+        patch(s.entity, (list) => list.forEach((r) => { const g = String(r[s.subject]); const n = (seen.get(g) ?? 0) + 1; seen.set(g, n); r[s.seq] = n; }));
+        continue;
+      }
       const events: Record<string, unknown>[] = [];
       for (const subject of source[s.subjectEntity]) {
         ['A', 'B', 'C'].forEach((grade, n) => {

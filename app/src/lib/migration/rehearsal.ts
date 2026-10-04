@@ -145,3 +145,91 @@ export function parallelRunStatus(days: readonly ParallelDay[], opts: ParallelOp
   const missingEvents = opts.requiredEvents.filter((e) => !seen.has(e));
   return { ready: streakDays.length >= opts.minDays && missingEvents.length === 0, streak: streakDays.length, missingEvents };
 }
+
+/* ── The cutover plan and the archive ──────────────────────────────────── */
+
+/** The shortest rollback window worth the name: long enough to span a weekend and the first working day. */
+export const MIN_ROLLBACK_WINDOW_HOURS = 72;
+
+export interface CutoverPlan {
+  /** The agreed unavailability window. */
+  windowMinutes: number;
+  /** How long restoring the legacy system takes, measured in the rollback rehearsal. */
+  rollbackMinutes: number;
+  rollbackWindowHours: number;
+  /** The immutable pre-cutover snapshot a rollback restores. */
+  snapshotRef: string;
+  triggers: readonly Trigger[];
+  decisionOwner: string;
+  freezeStart: string;
+  freezeEnd: string;
+  /** The legacy system is kept read-only and available until at least this. */
+  incumbentReadOnlyUntil: string;
+  commsApproved: boolean;
+  supportStaffed: boolean;
+}
+
+export type PlanProblem =
+  | 'window_unset' | 'rollback_time_unset' | 'rollback_longer_than_window' | 'rollback_window_short' | 'no_snapshot'
+  | 'trigger_missing' | 'trigger_looser' | 'no_decision_owner' | 'freeze_invalid' | 'incumbent_not_available'
+  | 'comms_not_approved' | 'support_not_staffed';
+
+/**
+ * What makes a plan unsafe before anyone rehearses it. Triggers may be
+ * tightened and never loosened below `DEFAULT_ROLLBACK_TRIGGERS`; the comment
+ * on that list says so, and this is where it is enforced.
+ *
+ * Whether Semester's writes can be carried back is not a plan *problem*: the
+ * honest answer is `rollbackMode`, and `roll_forward_only` is a legitimate
+ * plan so long as everyone who signs knows it is the plan.
+ */
+export function cutoverPlanProblems(p: CutoverPlan): { code: PlanProblem; detail?: string }[] {
+  const out: { code: PlanProblem; detail?: string }[] = [];
+  if (!(p.windowMinutes > 0)) out.push({ code: 'window_unset' });
+  if (!(p.rollbackMinutes > 0)) out.push({ code: 'rollback_time_unset' });
+  else if (p.rollbackMinutes > p.windowMinutes) out.push({ code: 'rollback_longer_than_window' });
+  if (!(p.rollbackWindowHours >= MIN_ROLLBACK_WINDOW_HOURS)) out.push({ code: 'rollback_window_short', detail: `${p.rollbackWindowHours}h < ${MIN_ROLLBACK_WINDOW_HOURS}h` });
+  if (!p.snapshotRef.trim()) out.push({ code: 'no_snapshot' });
+  for (const d of DEFAULT_ROLLBACK_TRIGGERS) {
+    const mine = p.triggers.find((t) => t.metric === d.metric);
+    if (!mine) out.push({ code: 'trigger_missing', detail: d.metric });
+    else if (mine.max > d.max) out.push({ code: 'trigger_looser', detail: d.metric });
+  }
+  if (!p.decisionOwner.trim()) out.push({ code: 'no_decision_owner' });
+  const start = Date.parse(p.freezeStart);
+  const end = Date.parse(p.freezeEnd);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) out.push({ code: 'freeze_invalid' });
+  else if (!(Date.parse(p.incumbentReadOnlyUntil) >= end + p.rollbackWindowHours * 3_600_000)) out.push({ code: 'incumbent_not_available' });
+  if (!p.commsApproved) out.push({ code: 'comms_not_approved' });
+  if (!p.supportStaffed) out.push({ code: 'support_not_staffed' });
+  return out;
+}
+
+export interface ArchiveState {
+  cutoverAt: string;
+  rollbackWindowHours: number;
+  /** Source extracts, crosswalks and the evidence ledger are sealed under a digest. */
+  sealed: boolean;
+  /** Counsel has reviewed the retention periods the entries carry. */
+  retentionConfirmedByCounsel: boolean;
+  /** Legal holds open or not yet checked. Unknown is not zero. */
+  legalHoldsOpen: number | null;
+}
+
+export type ArchiveProblem = 'rollback_window_open' | 'not_sealed' | 'retention_not_confirmed' | 'legal_hold_open_or_unchecked';
+
+/**
+ * Archiving is the point where the legacy system may be retired, so it waits
+ * for the rollback window to close, for the evidence to be sealed, for counsel
+ * to have reviewed retention, and for legal holds to have been *checked*. The
+ * programme never deletes from the incumbent; decommissioning is the
+ * institution's act, after this, under its own records schedule.
+ */
+export function archiveReadiness(s: ArchiveState, now: string): { ready: boolean; problems: ArchiveProblem[] } {
+  const problems: ArchiveProblem[] = [];
+  if (Date.parse(now) < Date.parse(s.cutoverAt) + s.rollbackWindowHours * 3_600_000) problems.push('rollback_window_open');
+  if (!s.sealed) problems.push('not_sealed');
+  if (!s.retentionConfirmedByCounsel) problems.push('retention_not_confirmed');
+  if (s.legalHoldsOpen !== 0) problems.push('legal_hold_open_or_unchecked');
+  return { ready: problems.length === 0, problems };
+}

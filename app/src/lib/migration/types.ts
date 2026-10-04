@@ -66,6 +66,13 @@ export type Severity = (typeof SEVERITIES)[number];
 export interface Failure {
   ref: string;
   code: string;
+  /**
+   * Whose fault, when a check can tell. `migration`: the target is wrong and
+   * the source was right, which only a fix in the mapping resolves and which
+   * nobody may waive. `source`: the source already had it, so the institution
+   * decides. Absent when a check cannot distinguish (a bare count).
+   */
+  origin?: 'migration' | 'source';
 }
 
 export interface CheckResult {

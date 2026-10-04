@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DEPENDS_ON, DOMAINS, DOMAIN_IDS } from './domains';
-import { countParity, proveProbes, runDomain, same } from './engine';
+import { DEPENDS_ON, DOMAIN_SPECS as DOMAINS, DOMAIN_IDS } from './domain-specs';
+import { countParity } from './checks';
+import { countsFor, proveProbes, runDomain, same } from './engine';
 import { syntheticPair } from './fixtures';
-import { INVARIANT_KINDS, type DomainSpec, type InvariantSpec, type Pair, type Row } from './types';
+import { INVARIANT_KINDS, type DomainSpec, type InvariantSpec, type Pair, type Row } from './engine-types';
 import { namesNeverIngest } from '../integration/adapter';
 
 const academic = DOMAINS.find((d) => d.id === 'academic_records')!;
@@ -10,6 +11,12 @@ const finance = DOMAINS.find((d) => d.id === 'finance')!;
 const family = DOMAINS.find((d) => d.id === 'family')!;
 const identity = DOMAINS.find((d) => d.id === 'identity')!;
 const enrollments = DOMAINS.find((d) => d.id === 'enrollments')!;
+
+/** Volumes through the pack's own `countParity`, with exclusions and approved merges taken out. */
+const parity = (d: DomainSpec, pair: Pair) => {
+  const c = countsFor(d, pair);
+  return countParity({ id: `${d.id}.count`, domain: d.id, severity: 'low' }, c.source, c.target, c.expectedRejected);
+};
 
 const find = (d: DomainSpec, pair: Pair, id: string) => runDomain(d, pair).find((r) => r.invariant === id)!;
 const edit = (pair: Pair, side: 'source' | 'target', entity: string, change: (rows: Row[]) => Row[]): Pair => ({
@@ -79,7 +86,7 @@ describe('the declarations describe themselves consistently', () => {
     for (const d of DOMAINS) {
       expect(d.owner.length).toBeGreaterThan(5);
       expect(d.acceptance.length).toBeGreaterThanOrEqual(3);
-      if (d.stakes === 'high') expect(d.invariants.some((s) => s.severity === 'critical')).toBe(true);
+      if (d.stakes === 'high') expect(d.invariants.some((s) => s.gravity === 'critical')).toBe(true);
     }
   });
 
@@ -102,7 +109,7 @@ describe('clean data is clean, and the checks looked at something', () => {
     const results = runDomain(d, pair);
     expect(results.flatMap((r) => r.findings.map((f) => `${r.invariant}: ${f.what}`))).toEqual([]);
     expect(results.filter((r) => r.examined === 0).map((r) => r.invariant)).toEqual([]);
-    expect(countParity(d, pair).filter((c) => !c.ok)).toEqual([]);
+    expect(parity(d, pair).failures).toEqual([]);
   });
 });
 
@@ -124,7 +131,7 @@ describe('what row counts cannot see', () => {
     const pair = syntheticPair(academic);
     const [a, b] = [pair.target.course_result[0], pair.target.course_result[1]];
     const swapped = edit(pair, 'target', 'course_result', (rows) => set(set(rows, 0, { grade: b.grade, grade_points: 1 }), 1, { grade: a.grade, grade_points: 0 }));
-    expect(countParity(academic, swapped).every((c) => c.ok)).toBe(true);
+    expect(parity(academic, swapped).failures).toEqual([]);
     expect(find(academic, swapped, 'academic_records.result.preserved').findings.length).toBeGreaterThan(0);
     expect(find(academic, swapped, 'academic_records.student.gpa').findings.length).toBeGreaterThan(0);
   });
@@ -175,7 +182,8 @@ describe('what row counts cannot see', () => {
     expect(find(enrollments, gone, 'enrollments.hold.crosswalk').findings.length).toBeGreaterThan(0);
     const excluded: Pair = { ...gone, excluded: { registration_hold: { [key]: 'released before the extract date, approved by the registrar' } }, crosswalk: { ...gone.crosswalk, registration_hold: Object.fromEntries(Object.entries(gone.crosswalk.registration_hold).filter(([k]) => k !== key)) } };
     expect(find(enrollments, excluded, 'enrollments.hold.crosswalk').findings).toEqual([]);
-    expect(countParity(enrollments, excluded).find((c) => c.entity === 'registration_hold')).toMatchObject({ excluded: 1, ok: true });
+    expect(countsFor(enrollments, excluded).expectedRejected.registration_hold).toBe(1);
+    expect(parity(enrollments, excluded).failures).toEqual([]);
     const movedAnyway: Pair = { ...excluded, crosswalk: gone.crosswalk };
     expect(find(enrollments, movedAnyway, 'enrollments.hold.crosswalk').findings.map((f) => f.what)).toContain('a row the institution excluded was migrated');
   });
@@ -184,9 +192,9 @@ describe('what row counts cannot see', () => {
     const pair = syntheticPair(identity);
     const wider = edit(pair, 'target', 'role_grant', (rows) => [...rows, { ...rows[0], role_scope: 'registrar:all' }]);
     const w = find(identity, wider, 'identity.role_grant.access').findings;
-    expect(w[0]).toMatchObject({ severity: 'critical', origin: 'migration' });
+    expect(w[0]).toMatchObject({ gravity: 'critical', origin: 'migration', code: 'access_widened' });
     const narrower = edit(pair, 'target', 'role_grant', (rows) => rows.slice(1));
-    expect(find(identity, narrower, 'identity.role_grant.access').findings.map((f) => f.severity)).toContain('major');
+    expect(find(identity, narrower, 'identity.role_grant.access').findings.map((f) => f.gravity)).toContain('major');
   });
 });
 

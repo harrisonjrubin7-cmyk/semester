@@ -6,6 +6,7 @@ import { PRIMITIVE_CLASS, WORKBOOKS } from './workbooks.ts';
 import type { Workbook } from './workbooks.ts';
 import { DATA_DOMAINS, EVIDENCE_CLASSES, SEVERITIES } from './types.ts';
 import { DOMAIN_OWNER } from './signoff.ts';
+import { executableSection } from './executable-docs.ts';
 
 const root = join(import.meta.dirname, '../../../..');
 const DIR = 'docs/migration/workbooks';
@@ -23,6 +24,7 @@ function page(w: Workbook): string {
     '## Checks', '',
     'A domain passes only when every evidence class has a check that examined something. Counts are listed first and are never enough.', '',
     ...table(['Check', 'Proves', 'Severity', 'Primitive', 'Compares'], w.checks.map((c) => [`\`${c.id}\``, c.evidenceClass, c.severity, `\`${c.primitive}\``, cell(c.what)])), '',
+    ...executableSection(w.domain),
     '## What a count will not show', '',
     ...w.traps.map((t) => `- ${t}`), '',
     '## Business outcomes to recompute, not copy', '',
