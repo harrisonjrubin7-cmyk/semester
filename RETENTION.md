@@ -266,6 +266,9 @@ behind and a client that believes it succeeded.
 | `ai_usage_reservation` | **five minutes against budget; physically removed after the tenant AI policy's retention-days setting** | metadata-only provider budget reservations. A crashed request stops counting after its explicit expiry; the same daily cleanup removes settled, released and expired rows, with no prompt or academic content stored |
 | `student_context`, `term_plan_courses`, `registration_time_tickets`, `seat_watches`, `graduation_scenarios`, `cost_plans`, `ai_memories`, `weekly_checkins`, `contact_channels`, `onboarding_progress`, `study_match_optins` | account deletion | the student's own planning, preferences and reminders, from `20260926150000_expansion_roles_and_features.sql`. Each is readable and deletable only by its owner (study opt-ins also by other opted-in students in the same section; onboarding progress also by an accepted, unexpired peer mentor). `study_match_optins` also lapses from view after its own expires_at |
 | `productivity_workspace` | account deletion, by explicit erasure and foreign-key cascade from `auth.users` | the student's private productivity workspace and opt-in aggregate-sharing choice. The row is readable and writable only by its owner. Private workspace content is never returned by the institutional aggregate function; when sharing is enabled, that function returns only cohort counts and refuses cohorts smaller than ten |
+| `productivity_task`, `productivity_event` | account deletion, by foreign-key cascade from `auth.users`; a deleted record is kept as a tombstone (`deleted_at`) so the sync feed can tell a device it is gone, and goes with the account | a student's tasks and calendar events, written only through the command API (`app/server/productivity/`, `docs/API-PLATFORM.md`) and readable directly only by their owner while their membership is active; a share to anyone else is decided by the policy decision point and audited, never by a row policy. From `20261004090000_productivity_commands.sql`. **Nothing writes to them yet** — no route is mounted. Before one does, they must be added to lti_account_untouched, the account export and the erasure path, which do not know them |
+| `productivity_command` | **35 days** after the command was applied, by `private.productivity_sweep_commands()` — **not yet scheduled**; with the account by cascade | the idempotency ledger: a command id, a hash of the request and the outcome, no content. Operational, not evidence (the evidence is the `audit_event` row and the outbox event, which this does not touch). Kept five days longer than the 30 days a queued command may be replayed, so no command that could still arrive has lost its record |
+| `productivity_owner_seq` | with the account, by foreign-key cascade | a counter per tenant and person that makes the change feed's sequence gapless. No content |
 | `transfer_evaluations` | account deletion | the student's estimate or request. The institution's decision arrives through the service role and goes with the account |
 | `account_ages` | account deletion, by foreign key to `auth.users` | whether the account is under 13 or a minor, and the day a minor turns 18 — never the date of birth, which the sign-up trigger strips from the account's metadata. Stated once, never changed (D-139) |
 | `skill_records` | account deletion | a skill the student recorded and, if they asked, who verified it. The verifier's deletion clears verified_by and leaves the record |
@@ -464,6 +467,13 @@ can apply this file's policy without reading the payload — but the sweep is
 not written, and a published row is kept until it is. It is owed before the
 first producer lands, and ADR 0008 says so; this entry is so that the producer
 cannot land without somebody reading this.
+
+The first producer has now been written — the productivity command service,
+which appends an event in the same transaction as every change
+(`app/server/productivity/`, `private.productivity_commit`) — but it is not
+mounted, so the tables are still empty. **The sweep is owed before it is.** It
+also wants a retry delay (next_attempt_at) and SKIP LOCKED before a
+publisher runs against a real bus; `docs/API-PLATFORM.md` §4.4 says what.
 
 ## Legal holds
 

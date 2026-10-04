@@ -52,7 +52,7 @@ strategic expansion in [`STRATEGIC-EXPANSION-REGISTER.md`](STRATEGIC-EXPANSION-R
 | Remotion License https://remotion.dev/license |  | 1 |  |
 | **total** | **291** | **297** | **4** |
 
-- `app/` — The app: built and deployed to every user **(ships)**.
+- `app/` — The app: built and deployed to every user (the workspace root lockfile, which also locks packages/*) **(ships)**.
 - `video/` — Local video rendering; never deployed.
 - `pipeline/` — Local course-material pipeline; never deployed.
 

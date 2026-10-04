@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, join, resolve } from 'node:path';
 
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_PORT = 4179;
@@ -37,9 +38,19 @@ export function parsePreviewArgs(argv) {
   return { host, port, hostExplicit };
 }
 
+/**
+ * Where vite's launcher is, wherever npm put it. It lives under `app/node_modules`
+ * when `app/` installs alone and under the workspace root's when it is hoisted,
+ * so a fixed relative path is right in one layout and missing in the other.
+ */
+export function viteBin() {
+  const manifest = createRequire(import.meta.url).resolve('vite/package.json');
+  return join(dirname(manifest), 'bin', 'vite.js');
+}
+
 export function launcherConfig(argv, baseEnv = process.env, execPath = process.execPath) {
   const options = parsePreviewArgs(argv);
-  const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
+  const vite = viteBin();
   return {
     command: execPath,
     args: [vite, '--host', options.host, '--port', String(options.port), '--strictPort'],

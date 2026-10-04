@@ -7,6 +7,8 @@
 | Evidence date | 2026-10-03 at repository revision `a86b3376` |
 | Source | [`../market-readiness/CUSTOMER-SUCCESS-PLAYBOOK.md`](../market-readiness/CUSTOMER-SUCCESS-PLAYBOOK.md) |
 
+Review mechanics, the stakeholder map, success plan, renewal-risk posture, expansion triggers, EBR template, feedback loop and offboarding procedure are in [`../institutional-implementation/`](../institutional-implementation/README.md); this playbook's constraints bind them.
+
 ## Mandate
 
 Customer success owns scope clarity, decision cadence, responsible adoption, evidence quality and clean exit—not unsupported outcome claims, sales pressure or institutional judgment. It does not replace support, incident command, privacy/security/accessibility ownership, implementation, finance, advising or the customer's authoritative systems.
