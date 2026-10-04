@@ -109,11 +109,11 @@ reproduce each with the keyboard and a screen reader, then set the ledger row to
 | A11Y-0003 | Write, Sheet, Deck, Launchpad | 15 cards and buttons hit-tested under an element with no role | Tap or click each starter card and "Look back"; does it respond? A re-check of the first three Write starters with real clicks reached them, so this may be clipped gallery items; check the rest |
 | A11Y-0004 | Assignments ("Work on it"), 320x640 | Four textareas sit half behind the bottom tab bar when focused | Tab through the form; is each field usable, and does a screen-reader user lose context? |
 | A11Y-0007 | Today, Home, Calendar, Courses, Registration, Degree, 1280px | axe `aria-valid-attr-value` `incomplete` | Inspect the element axe names; does the referenced ID exist? |
+| A11Y-0008 | Home, desktop, `industry-dark` theme, hover | `.journey-reason` text measures 3.96:1 against 4.5:1 while hovered | Select the Industry (dark) theme, hover the Home journey cards; compare with a colour picker. SC 1.4.3 |
 
 Not for a tester (engineering): A11Y-0005 (the probe's name and timing weaknesses) and A11Y-0006 (not reproduced).
 
-Contrast: axe's `color-contrast` was `incomplete` on every screen because axe cannot resolve painted backgrounds
-reliably here. `sweep:contrast` measures painted pixels and is the evidence for contrast (see the sweeps page).
+Contrast: axe's `color-contrast` was `incomplete` on every screen. `sweep:contrast` measures painted pixels and is the evidence; it found one hover failure (A11Y-0008) and covered only the shared frame, 5 of 63 destinations (see the sweeps page).
 
 ## 6. After the pass
 

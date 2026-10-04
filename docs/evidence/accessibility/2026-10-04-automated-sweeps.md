@@ -21,11 +21,11 @@ most of what only assistive technology reveals. Companion to [`MANUAL-PASS-KIT.m
 | `keyboard-pass.mjs` | **0** headings other than one `h1`; **0** `main`/skip-link/overflow failures; **0** focus stops without a ring; **0** page errors; axe **serious/critical: 1** (target-size, A11Y-0001); 3 overlap candidates (A11Y-0004, -0006 and a timing artefact, see §2) | 13 screens × desktop 1280×800 and 320×640 |
 | `smoke:a11y` (production build) | `ok`: 7 critical journeys at desktop and 400% reflow; skip focus, landmarks, titles, names and ARIA references verified | 14 |
 | `sweep:targets` | **11 of 2007** phone controls and **13 of 2668** desktop controls under 24×24 CSS px (the AA minimum before the 2.5.8 spacing exception); identical at all three densities. 667 of 2007 phone and 1333 of 2668 desktop under 44px (AAA, an aim) | 63 destinations, phone 420px and desktop, three densities |
-| `sweep:contrast` | See §3 | |
+| `sweep:contrast` (scope `chrome`) | **Exit 1: 1 distinct failure** (hover, `industry-dark`, 3.96:1; A11Y-0008); 0 in resting and focus states; 5 of 63 destinations opened | 62,151 elements, 13 grounds, 3 layouts × phone and desktop |
 
 ## 2. What the sweeps found
 
-Seven ledger rows, `accessibility-issue-ledger.csv`. **None is confirmed by a person.** Two candidates from the
+Eight ledger rows, `accessibility-issue-ledger.csv`. **None is confirmed by a person.** Two candidates from the
 first run were checked by hand against the probe and **withdrawn or reduced**, which is the point of checking:
 
 - *"Two textareas with an empty accessible name on Assignments."* **Withdrawn.** The probe's name is
@@ -49,13 +49,37 @@ What remains, in order of what a person should look at first:
 3. **A11Y-0003:** 15 controls hit-tested under an element with no role; the three tried were reachable by real
    clicks, so this may be clipped gallery items.
 4. **A11Y-0007:** `aria-valid-attr-value` needs review on six screens.
+5. **A11Y-0008:** the one contrast failure, a hover state on the `industry-dark` ground (§3). It is the only item here that a measurement, not a probe heuristic, shows to be below the threshold.
 
 Not in the ledger because the probe cannot see it: everything that needs a human. Alt-text quality, reading order,
 what a screen reader says, whether a custom widget behaves, caption accuracy, and cognitive load.
 
 ## 3. Contrast
 
-**Not complete at the time of this commit.** The full `sweep:contrast` walk (about 30 minutes) was started against the same commit and its result is added to this section when it finishes. Until then no contrast result is claimed from this run; the token audit `lib/contrast.test.ts` (in CI) is the standing evidence.
+`npm run sweep:contrast` (`scope: chrome`, the default) finished with **exit 1 and one distinct failure**, reported
+three times (once per navigation layout):
+
+| Ratio | Needed | Where | Element | Colours |
+| --- | --- | --- | --- | --- |
+| **3.96:1** | 4.5:1 (SC 1.4.3) | `industry-dark` ground, desktop, home, **hover** state, in the `tabs`, `feed` and `shelves` layouts | `.journey-reason`, "Available whenever you need it." | `rgb(156,163,178)` on `rgb(66,66,68)` |
+
+Ledger row **A11Y-0008**. Everything else the sweep measured passed: 11,765 passes over 62,151 elements on 13
+grounds, with 0 findings in the resting, focus and focus-visible states and the 3 findings all in hover. The
+standing token audit `lib/contrast.test.ts` (in CI) did not catch this one because the failing surface is the
+hover-state composite, which is what the painted-pixel sweep exists to find.
+
+What this run does **not** measure, and so does not claim:
+
+- **Only 5 of 63 destinations were opened** (`scope: chrome`: the shared frame, not every screen). The
+  sweep prints the 58 it did not open; a full-screen walk is `SWEEP_SCOPE` other than `chrome`, and is a separate,
+  longer run.
+- 14,025 elements on a gradient (not measurable by the script's method) and 6,422 single glyphs the markup marks
+  as decoration were excluded; 314 elements per ground "measured nothing".
+- Hover and focus states were sampled (962 resting, 10,647 hover, 78 focus passes), not exhaustively.
+- Dark, light and the other grounds were each walked; a user-chosen accent colour was not.
+
+So the honest summary is: **no contrast failure was found in the shared frame in resting or focus states, one hover
+failure on one dark ground, and nothing is claimed about the 58 unopened destinations.**
 
 ## 4. Limits of this run
 
