@@ -251,9 +251,9 @@ export function Courses() {
                       color: 'var(--app-dim)',
                       flex: 1,
                       minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      // Wraps: a deadline's title is the thing the card is for, and
+                      // text spacing (WCAG 1.4.12) must not cut its end off.
+                      overflowWrap: 'anywhere',
                     }}
                   >
                     {next ? next.title : 'Nothing scheduled'}

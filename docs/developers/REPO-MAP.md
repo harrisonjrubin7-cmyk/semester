@@ -66,6 +66,7 @@ At the root there are also Markdown reports and registers (for example `CLAUDE.m
 | `app/src/data/` | Static data: the shipped courses, catalogue, campus and events. |
 | `app/src/content/` | The vocabulary rule: retired terms and the per-file ledger that the terms audit reads. |
 | `app/src/a11y/` | Accessibility checks: label audit, focus, landmarks, axe. |
+| `app/src/gallery/` | The design system's stories (stable components in the states that matter), rendered to static pages for `npm run gallery:shots` and held to every component by `gallery.test.tsx`. |
 | `app/src/site/` | The public site pages, rendered by `app/scripts/build-site.mjs` (`npm run site:build`). |
 | `app/src/styles/` | CSS, design tokens, and the style rules the style audit enforces. |
 | `app/src/assets/` | Bundled images. |

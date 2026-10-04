@@ -14,6 +14,7 @@ flows start and end, how status and trust are shown, and who owns all of it.
 | [STATUS-SOURCE-VISUAL-LANGUAGE.md](STATUS-SOURCE-VISUAL-LANGUAGE.md) | One visual and verbal grammar for state, certainty and provenance |
 | [RECOVERY-STATE-LIBRARY.md](RECOVERY-STATE-LIBRARY.md) | Empty, loading, saving, error, offline, permission and success contracts |
 | [SCREEN-QUALITY-CHECKLIST.md](SCREEN-QUALITY-CHECKLIST.md) | Review and regression gate for every screen and state |
+| [DESIGN-SYSTEM-PRODUCT-SPEC.md](DESIGN-SYSTEM-PRODUCT-SPEC.md) | The system as governed infrastructure: component inventory and contracts, five-axis provenance, versioning and deprecation, Figma parity, visual regression, role density, dyslexia-aware mode, QA and handoff, build plan |
 
 The visual foundations — tokens, grounds, type, spacing — are
 [`app/src/lib/look.ts`](../../app/src/lib/look.ts), described in
@@ -31,6 +32,8 @@ documents build on that system and do not replace any of it.
 | Reduced motion and calm mode are honoured | `npm test` | `app/src/a11y/motion.test.ts`, `calm.test.ts` |
 | Contrast on every ground | `npm test` | `app/src/lib/contrast.test.ts` |
 | Adoption figures | `npm run census:design` | `app/scripts/design-census.mjs` |
+| Every design-system component has a story; the gallery does not read the clock | `npm test` | `app/src/gallery/gallery.test.tsx` |
+| Visual regression of the stories against a runner-made baseline (not in CI) | `npm run gallery:shots` | `app/scripts/gallery-shots.mjs` |
 
 ## A coherent screen
 
