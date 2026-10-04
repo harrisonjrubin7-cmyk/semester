@@ -931,6 +931,12 @@ the ledger row in one call, the entity, the commit), more under contention. A re
 somebody's shared list is two: the audit commit, then the list. Contention on one owner
 is serialized by the counter, so a burst from many processes for *one person* retries;
 that is an owner's own offline queue, and the in-process queue absorbs the usual case.
+There is a limit, and it was found by a test, not by thought: twelve writers for *one*
+person from three processes, retrying without backoff, exhaust the default six attempts
+and some come back `failed`. That is the safe outcome (the client resends and the ledger
+answers), and it is not what happens with the real jittered backoff, under which the same
+burst passed ten runs of ten. Twelve concurrent writers for one student is far past a real
+queue; it is stated so nobody sizes a batch job on the assumption that contention is free.
 None of this has been measured against real latency.
 
 ---

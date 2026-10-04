@@ -43,10 +43,24 @@ async function reset(): Promise<void> {
              private.domain_outbox_events, public.audit_event;`);
 }
 
-/** A repository and the client under it, as one more "process". */
-function process_(): { repo: PostgresProductivityRepository; client: PsqlRpcClient } {
+/**
+ * A repository and the client under it, as one more "process".
+ *
+ * By default it does not wait between attempts, so a test that forces a conflict does not sit
+ * through a backoff. `realBackoff` leaves the production timing and jitter in place, which is what a
+ * test of *many* processes contending for one owner has to use: retries that all fire at once, in
+ * lockstep, are not what production does, and exhaust their attempts for a reason that is the test's.
+ */
+function process_(options: { realBackoff?: boolean; maxAttempts?: number } = {}): { repo: PostgresProductivityRepository; client: PsqlRpcClient } {
   const client = new PsqlRpcClient(target);
-  return { client, repo: new PostgresProductivityRepository({ client, sleep: async () => undefined, random: () => 0 }) };
+  return {
+    client,
+    repo: new PostgresProductivityRepository({
+      client,
+      ...(options.maxAttempts ? { maxAttempts: options.maxAttempts } : {}),
+      ...(options.realBackoff ? {} : { sleep: async () => undefined, random: () => 0 }),
+    }),
+  };
 }
 
 const service = (repo: ProductivityRepository) => new ProductivityService({ repo, now: () => T0 });
@@ -183,7 +197,10 @@ describe.skipIf(!host)('PostgresProductivityRepository, against a migrated datab
     });
 
     it('give a burst of different commands from several processes gapless sequence numbers', async () => {
-      const procs = [process_(), process_(), process_()].map((p) => service(p.repo));
+      // Twelve writers for one person, from three processes, is far past what one student's queue does;
+      // it is here to make the compare-and-swap lose often. The attempts are raised to match, because
+      // running out of them is the correct, safe outcome (`failed`, resend) and not what this asserts.
+      const procs = [process_({ realBackoff: true, maxAttempts: 12 }), process_({ realBackoff: true, maxAttempts: 12 }), process_({ realBackoff: true, maxAttempts: 12 })].map((p) => service(p.repo));
       const ids = Array.from({ length: 12 }, () => randomUUID());
       const commands = ids.map((id, i) => cmd({ type: 'task.create', id, fields: { title: `t${i}` } }, { at: T0 + i }));
       const results = await Promise.all(commands.map((c, i) => procs[i % 3]!.execute(person(), [c], meta)));
