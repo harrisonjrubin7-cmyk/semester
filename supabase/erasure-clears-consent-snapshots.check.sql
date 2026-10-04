@@ -24,9 +24,11 @@
 --     *other* person's copies must still be there (an erasure that wipes the
 --     table passes the property and breaks the audit it is meant to keep).
 --
--- Whether such a copy may lawfully stand is not this file's question, and is
--- queued for counsel (docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md, P-08).
--- What this file establishes is only what the code does.
+-- It failed ("expected 0, got 4") until `public.erase_account` was made to scrub
+-- the id after the erasure (20261004190000, D-1198). Whether a school's audit
+-- may lawfully keep such a copy is not this file's question, and is queued for
+-- counsel (docs/privacy-operations/07-COUNSEL-REVIEW-QUEUE.md, P-08). What this
+-- file establishes is only what the code does.
 --
 -- LOCAL/DISPOSABLE DATABASES ONLY. Inserts synthetic users, then rolls
 -- everything back. Run through `supabase/check.sh

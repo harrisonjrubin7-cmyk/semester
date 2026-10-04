@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 180 |
+| Migration files | 181 |
 | Tables created in `public` and not later dropped | 321 |
 | … of which enable row-level security in a migration | 321 |
 | Tables created in `private` and not later dropped | 31 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-110 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+111 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -59,6 +59,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/deletion.check.sql` | What "Delete my account" actually empties, walked as the account doing it. |
 | `supabase/demand.check.sql` | Course demand forecasting (Phase K, D-051): a student contributes only by consenting, only at their own school, and can stop; a count is published only at ten or more and only from live consent; staf… |
 | `supabase/dining.check.sql` | who may order, give, move and read, in dining. |
+| `supabase/erasure-clears-consent-snapshots.check.sql` | Erasing an account must not leave its consent history behind in a copy. |
 | `supabase/evidence-graphs.check.sql` | Learning, skill and capture evidence must stay inside both its tenant and its person boundary. |
 | `supabase/expansion.check.sql` | Expansion roles and features: every new permission walked as the account it is about, and every refusal attempted as the account that should be refused. |
 | `supabase/export-withholds-guardian-restrictions.check.sql` | An account export must not carry a guardian restriction. |
