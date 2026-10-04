@@ -58,12 +58,23 @@ export interface AuditRow {
  * makes a retry a no-op, the audit row, and the event.
  */
 export interface ProductivityTx {
-  command(commandId: string): StoredCommand | null;
+  /*
+   * Reads and `save` may be asynchronous, because a database adapter has to go and
+   * fetch what the transaction asks about; the in-memory one answers at once. The
+   * service awaits every one of them, so it does not know which it has.
+   */
+  command(commandId: string): StoredCommand | null | Promise<StoredCommand | null>;
   recordCommand(command: StoredCommand): void;
   /** Includes tombstones, so a late edit can be told "gone" rather than "never existed". */
-  entity(type: EntityType, id: string): Entity | null;
-  /** Writes the entity at the next sequence number for this owner, and returns that number. */
-  save(entity: Entity): number;
+  entity(type: EntityType, id: string): Entity | null | Promise<Entity | null>;
+  /**
+   * Stages the entity to be written at the next sequence number for this owner, and
+   * returns that number. A database adapter *predicts* it from the owner's counter as
+   * read, and refuses to commit if the counter has moved: a number handed out here is
+   * never one that a rolled-back or racing transaction could also have been given.
+   * The entity's own `seq` is the one it was read at (0 when it did not exist).
+   */
+  save(entity: Entity): number | Promise<number>;
   audit(row: AuditRow): void;
   emit(event: SemesterEvent): void;
 }
