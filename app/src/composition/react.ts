@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { blocksFor, type Catalog } from '../data/catalog';
 import type { LegacyRankingInput } from '../domains/today/adapters';
 import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, readActionChoices, type Choice } from '../lib/actions';
@@ -125,7 +125,7 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
  * The composed domains, over the live store.
  *
  * Stable across renders: the object is built once and reads the latest
- * snapshot through a ref, so it is safe in an effect's dependency list and
+ * snapshot through a bridge, so it is safe in an effect's dependency list and
  * never re-creates a use case because the clock ticked.
  *
  * Not called by any screen yet (phase 1). Today's ranking here covers
@@ -145,6 +145,19 @@ export interface DomainOptions {
    * second request to the account.
    */
   readonly officeList?: readonly OfficeAction[] | null;
+}
+
+function makeBridge(first: StoreSnapshot, firstDispatch: (a: Action) => void) {
+  let snapshot = first;
+  let dispatch = firstDispatch;
+  return {
+    sync(next: StoreSnapshot, nextDispatch: (a: Action) => void) {
+      snapshot = next;
+      dispatch = nextDispatch;
+    },
+    read: () => snapshot,
+    send: (a: Action) => dispatch(a),
+  };
 }
 
 export function useDomains(platform: Platform = defaultPlatform, options: DomainOptions = {}): Domains {
@@ -168,12 +181,13 @@ export function useDomains(platform: Platform = defaultPlatform, options: Domain
     registration: { active: !!options.registrationDay, data: plan.data, cart: plan.cart, catalog: plan.catalog },
     office,
   };
-  const latest = useRef(snapshot);
-  const dispatch = useRef(store.dispatch);
+  // A bridge the host reads through. It lives as long as the component and is
+  // synced after each commit; the host's closures run later, when a use case
+  // does, never during render, so they see the latest committed snapshot.
+  const [bridge] = useState(() => makeBridge(snapshot, store.dispatch));
   useEffect(() => {
-    latest.current = snapshot;
-    dispatch.current = store.dispatch;
+    bridge.sync(snapshot, store.dispatch);
   });
 
-  return useMemo(() => composeDomains(hostOver(() => latest.current, (a) => dispatch.current(a)), platform), [platform]);
+  return useMemo(() => composeDomains(hostOver(bridge.read, bridge.send), platform), [bridge, platform]);
 }
