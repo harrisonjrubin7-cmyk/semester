@@ -58,8 +58,10 @@ designed state). The audit adds two the guide lacks, and the platform scope
 
 6. **Authority is always legible.** Any fact a person might act on says who
    stands behind it (§4). *Test:* every object card/row that renders an
-   institutional fact accepts a required `provenance` prop; a missing one is a
-   type error, not a review comment.
+   institutional fact takes a `provenance` prop. Target: required, so a missing one
+   is a type error and not a review comment. Today it is optional on `ObjectCard`
+   (36 callers pass nothing); the census counts the gap and the prop becomes
+   required when the count reaches zero.
 7. **Same language, density by role; never personalise an institutional fact.**
    (Adopts `INTERACTION-STANDARDS.md:207`.) A registrar console and a student's
    Today share components and words; they differ in density, default disclosure
@@ -329,78 +331,113 @@ badge list forces contradictions (can something be official *and* stale? yes).
 
 ### 4.2 Model: five orthogonal axes, one display
 
+Implemented in `app/src/lib/factprovenance.ts` as `FactProvenance`. (Not
+`Provenance`: that name is `lib/provenance.ts`'s source/scope/status sentence,
+used by the journal. Different types, different names.)
+
 ```ts
-type Provenance = {
-  origin:    'official' | 'connected' | 'user' | 'ai' | 'sample'   // who produced it
-  assurance: 'verified' | 'unverified' | 'needs_review'            // has someone vouched
-  freshness: 'current' | 'stale' | 'unknown'                       // + observedAt
-  lifecycle?: 'pending' | 'submitted' | 'approved' | 'rejected' | 'revoked'
-  access?:   'restricted'                                           // + who controls it
-  authority?: string       // named office, e.g. "Registrar"; REQUIRED when origin='official'
-  observedAt: string; system?: string
-}
+type Origin = 'official' | 'connected' | 'imported' | 'user' | 'computed'
+            | 'ai' | 'external' | 'sample' | 'unknown'      // who produced it
+type FactProvenance = {
+  origin; assurance: 'verified' | 'unverified' | 'needs_review'
+  freshness: 'current' | 'stale' | 'unknown'; observedAt?: number | null
+  lifecycle?: 'pending' | 'submitted' | 'approved' | 'rejected' | 'revoked'; owner?
+  access?: 'restricted'; controller?; system?; verifiedBy?
+} & (origin extends 'official' ? { authority: string } : {})   // a union in the code
 ```
 
-This is the audit's `SourceMetadata` with `origin` split so it stays honest,
-and it is a **superset mapping**, not a rewrite (§4.4). Rules:
+The first draft of this spec had five origins. Reading the four vocabularies
+it replaces showed that was too few: `imported` is not `student_entered`;
+`Where.made` (rule-based extraction) is not AI, and `status.ts` says the
+student must be able to tell them apart (`computed` vs `ai`); `external`
+exists; and the stored `needs_review` label says nothing about origin, so
+mapping it to any real origin would invent a claim the old badge never made
+(`unknown`). Rules:
 
-1. Axes are independent; the *display* shows the origin chip always, and adds
-   at most two further cues, chosen by this priority: `restricted` > `stale` or
-   `unknown` freshness > `needs_review` > `pending` > `verified`. Everything else
-   goes in the details drawer (`SourceDrawer`), not on the row.
-2. `origin:'official'` without `authority` is a type error. A badge cannot say
-   "Official" without naming who.
-3. `ai` always carries model-agnostic wording ("AI-assisted"), the sources used,
-   and a route to a human for any tier ≥ 2 (audit AI tiers).
-4. `stale` is computed from `observedAt` against a per-source freshness window
-   set by the connector/health state, never hard-coded in a component.
-5. Estimated values (`origin:'ai'` or computed) are styled to draw the eye
-   *more* than official ones (existing `wantsAttention`), since they are the
-   ones to double-check.
-6. Never fabricate freshness: no "live", "current", "up to date" copy unless
-   `freshness='current'` was derived from a real `observedAt`.
+1. Axes are independent. The display shows the origin chip always, plus **at most
+   two** further cues, chosen by this priority: `restricted` > age (`stale`, or
+   `unknown` where a reader expects an age) > `needs_review` > lifecycle >
+   `verified`. Everything else is said in the screen-reader sentence and the
+   Source & details drawer. `verified` is not drawn on an official fact, which is
+   verified by definition.
+2. `origin:'official'` without `authority` is a **type error** (proved: making the
+   field optional fails `tsc` on the guard's `@ts-expect-error`). The stored
+   `institution_verified` label carries no office, so its adapter defaults to
+   "Your institution", which is all the old text ever claimed; callers that know
+   the office pass it.
+3. `ai` is always worded "AI-assisted" and, for tier ≥ 2 outputs, offers a route
+   to a human.
+4. Age is computed from `observedAt` against **the caller's** freshness window
+   (`freshnessState` has no default on purpose). The single exception is
+   `fromWhere('connected')`, where `Where` has already applied its three-day rule.
+5. Estimated and AI facts draw the eye more than official ones (existing
+   `wantsAttention`); a test holds that every kind the old badge drew loud still does.
+6. Never fabricate freshness: absent time is `unknown`, and `unknown` is drawn only
+   for `official` and `connected` origins, where a missing age is itself
+   information (neutral tone, not a warning).
+7. **Chips are role-neutral.** The same chip is read by the student, the
+   faculty member, the advisor and the guardian, so "You"/"Yours" (right for one
+   reader in four) is "Student entered".
+8. **Nothing here changes a stored value, and nothing here produces `official`
+   that was not already `official`.** `where.test.ts` records that no adapter in
+   this build returns `Where.official`; the adapters preserve that, and a test
+   asserts exactly one input maps to each of the two official outputs.
 
-### 4.3 Visual encoding (the tone→token table that is missing today)
+### 4.3 Visual encoding
 
-Every chip is **word + glyph + tone**; tone is never the only carrier
-(`tellings.test.ts`). Colours map only to tokens that already exist and
-already pass contrast on all 13 grounds; no new hue is introduced.
+Every chip is **glyph + word + tone**; tone is never the only carrier
+(`tellings.test.ts`). Tones map to the existing `--status-*` tokens
+(`toneVar`), so no hue is introduced and every ground's contrast audit already
+applies. Origin has a second carrier in *how the chip is drawn*: solid fill and
+heavier edge for an institution's fact, outline for the rest, dashed for a
+sample. Verified in greyscale and in `forced-colors: active` (solid gets a 3px
+edge there, since forced colours drop the fill).
 
-| Cue | Word | Glyph | Tone → token | Notes |
-|---|---|---|---|---|
-| origin official | Official · {authority} | ◆ | accent / `--status-success` family | filled |
-| origin connected | Connected · {system} | ⇄ | neutral | outline |
-| origin user | You | ◇ | neutral | outline |
-| origin ai | AI-assisted | ✦ | attention (`--app-warn`) | wash background |
-| origin sample | Sample | ○ | neutral | dashed border |
-| verified | Verified · {by} | ✓ | success | adds to origin, never replaces it |
-| needs review | Needs review | ? | attention | |
-| stale | Stale · {age} | ↻ | attention | text always includes age |
-| unknown freshness | Age unknown | ? | attention | |
-| pending | Pending · {owner} | … | info | owner + SLA in drawer |
-| restricted | Restricted · {who controls} | ⊘ | neutral, **lock glyph and text** | never a bare lock |
-| blocked / failed | {What failed} | ! | danger (`--app-error`) | |
+| Cue | Word | Glyph | Tone |
+|---|---|---|---|
+| origin official | Institution verified · {authority} (word is one constant; DD-003) | ◆ | success, solid |
+| origin connected | Connected · {system} | ↔ | neutral |
+| origin imported | Imported | ↓ | neutral |
+| origin user | Student entered | ◇ | neutral |
+| origin computed | Estimated | ≈ | attention |
+| origin ai | AI-assisted | ✦ | attention |
+| origin external | External | ↗ | neutral |
+| origin sample | Sample | ◌ | neutral, dashed |
+| origin unknown | Source not recorded | · | neutral |
+| restricted | Restricted · {who} decides | ⊘ | neutral |
+| stale | Out of date | ↻ | attention |
+| age unknown | Age unknown | – | neutral |
+| needs review | Needs review | ? | attention |
+| pending / submitted | Pending · {owner} / Submitted · {owner} | … / ↑ | neutral |
+| approved | Approved | ✔ | success |
+| rejected / revoked | Not approved / Revoked | ✕ / ↩ | attention |
+| verified (non-official) | Verified · {by} | ✓ | success |
 
-Distinguishing "filled / outline / dashed" gives a second non-colour channel
-for origin, readable in forced colours and greyscale. Verify with a greyscale
-screenshot and `forced-colors` run (§9).
+Untested assumption: the glyphs render in the system fonts of every supported
+device. They rendered in Chromium on Linux in the checks for Slice 2; the
+words carry the meaning if one does not, but verify on iOS and Android.
 
-### 4.4 Migration from today's vocabulary
+### 4.4 Migration from today's vocabulary (implemented as adapters)
 
-| Today | Maps to | Open question |
+`fromSourceLabel` and `fromWhere` read the existing vocabularies; the database
+check constraint and `SOURCE_LABELS` are untouched.
+
+| Today | Becomes | Note |
 |---|---|---|
-| `institution_verified` | `origin:'official'`, `assurance:'verified'` | **DD-003**: this spec recommends the user-facing word "Official" plus the named authority, keeping the DB value `institution_verified` unchanged (names, not values) |
-| `imported` | `origin:'connected'` if a refresh operates, else `origin:'user'`-imported + `freshness:'unknown'` | resolves the "Imported vs Synced" copy conflict: say **Imported** unless a continuing refresh exists |
-| `student_entered` | `origin:'user'` | |
-| `estimated` | `origin:'ai'`/computed, `assurance:'unverified'` | |
-| `needs_review` | `assurance:'needs_review'` | |
-| `ai_assisted` / `external` / `unavailable_stale` | `origin:'ai'` / `origin:'connected'` / `freshness:'stale'` | display-only kinds stay out of the DB union (constitution §7) |
-| `Where` (`official, connected, made, yours, sample, stale`) | same axes | retire "Made here"/"Yours" wording |
-| `StatusKey` sync keys (saving, synced, offline, queued, conflict …) | **not provenance**; stay in `Status.tsx` | sync state describes the app, not the datum |
+| `institution_verified` | origin `official`, assurance `verified`, authority "Your institution" unless named | word stays "Institution verified" until DD-003 |
+| `imported` | origin `imported` | resolves "Imported vs Synced": **Imported** unless a refresh operates |
+| `student_entered` | origin `user` | |
+| `estimated` | origin `computed` | |
+| `needs_review` | origin `unknown`, assurance `needs_review` | no invented origin |
+| `ai_assisted` / `external` | origin `ai` / `external` | display-only kinds stay out of the DB union |
+| `unavailable_stale` | origin `connected`, freshness `stale` | |
+| `Where.official / connected / stale / made / yours / sample` | `official` / `connected`+current / `connected`+stale / `computed` / `user` / `sample` | "Made here" and "Yours" are retired by this mapping |
+| `StatusKey` sync keys | **not provenance**; stay in `Status.tsx` | sync state describes the app, not the datum |
 
-Migration is a type-level adapter first (`toProvenance(sourceLabel, …)`), with
-no data or DB change, and the five-value DB constraint untouched. Components
-move one family at a time; `lib/where.ts` is deleted last, under §7.4.
+The adapters are injective on the eight kinds (no two stored or display labels
+map to the same fact), which is what lets the screen say everything the
+database stores. `SourceBadge` itself is **unchanged** in Slice 2; its callers
+move one family at a time, and `lib/where.ts` is deleted last (§7.4).
 
 ### 4.5 Where provenance is mandatory
 
@@ -409,8 +446,8 @@ deadlines imported from an LMS, advisor/faculty notes, anything a guardian is
 shown, every AI output, every record in an institutional queue. Optional on
 purely personal content (a student's own note). Today **5 files** use
 `SourceBadge`; the adoption target is a census-tracked number (§7.6), and the
-rule "an object card renders an institutional fact only with `provenance`" is
-enforced by type.
+rule "an object card renders an institutional fact only with `provenance`" becomes
+a type rule once the callers are migrated (`ObjectCard` takes it optionally today).
 
 ### 4.6 Connector health (from the audit) maps to freshness, not to new chips
 
@@ -759,9 +796,12 @@ guard is proven, and is reversible by deleting the file.
 - Not in this slice (moved): `--tracking-body`/`--word-space` → Slice 5 with the reading-comfort preset; the two unused motion roles → Slice 0 follow-up.
 *Exit met:* each guard shown red against a deliberate break (a stray 777 px query, a fixed-but-unlisted legacy query, range syntax, a changed ground colour, a re-pointed semantic alias) and green when restored.
 
-### Slice 2 — Provenance model
-`lib/provenance.ts` gains the five-axis type and `toProvenance()` adapters from `SourceLabel`/`Where`/`TRUST_KINDS`; `SourceBadge` renders from it with the §4.3 encoding; `provenance` required on `ObjectCard`.
-*Exit:* tests for every axis combination and the priority rule; greyscale and forced-colors screenshots; no DB or stored-value change. Adopt on Gradebook, Today deadlines, Bill, Grades first (highest consequence).
+### Slice 2 — Provenance model (built; PR pending)
+- `lib/factprovenance.ts`: the `FactProvenance` type, cue priority, role-neutral words, the sentence for a screen reader, and `fromSourceLabel` / `fromWhere` adapters (§4.2–4.4).
+- `components/unity/ProvenanceChips.tsx` (+ styles in `unity.css`, reusing `.status-chip` and `--status-*`): origin plus at most two cues, hidden from assistive technology and replaced by one sentence.
+- `ObjectCard` takes an optional `provenance`. **Not made required**: 36 call sites pass nothing today, and making it required is the migration, not this slice.
+- **Not done:** `SourceBadge` still renders from `TrustKind`; no screen has adopted the chips yet (Gradebook, Today deadlines, Bill and Grades are the first candidates); the details drawer does not list cues beyond the two drawn; the design census does not yet count cards without `provenance`.
+*Exit met:* every axis combination and the priority rule are tested; six deliberate breaks were each shown red (three cues, swapped priority, invented origin, assumed freshness, chips exposed to assistive technology, optional authority) and restored; rendered on Ink, Parchment and Fog in colour, greyscale and forced colours.
 
 ### Slice 3 — Announcer, Sheet, ActionPreview
 Build in that order (Sheet and ActionPreview depend on the announcer's policy). Migrate `ExplanationSheet` first as the proof, then `ReviewSheet`, `TileSheet`, `SourceDrawer`.
@@ -801,7 +841,7 @@ accent until a decision exists).
 
 | # | Decision | Recommendation |
 |---|---|---|
-| 1 | DD-003: "Institution verified" → "Official · {authority}" | Yes, keep DB value |
+| 1 | DD-003: "Institution verified" → "Official · {authority}" | Yes, keep the DB value. The word is one constant (`OFFICIAL_WORD` in `lib/factprovenance.ts`), so the change is one line plus the tests that name it |
 | 2 | Atkinson Hyperlegible: bundle with the app? | Yes; needed for the Reading comfort preset and offline |
 | 3 | ~~Canonical breakpoint source~~ | Settled by the code: `lib/media.ts` 600/840/1200/1600. Open: when to move the six queries still at 759/1179/1180 |
 | 4 | Who is the second reviewer / AT pass owner? | Name both; both are currently blank |

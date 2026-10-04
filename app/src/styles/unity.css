@@ -58,6 +58,31 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A fact's provenance: origin first, then at most two cues (lib/factprovenance.ts).
+   The chip itself is .status-chip; these only add the second, non-colour carrier
+   of origin — solid for an institution's, dashed for a sample. */
+.prov,
+.prov-visible {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.prov-chip[data-fill='solid'] {
+  background: var(--surface-quiet);
+  border-color: var(--border-strong);
+}
+
+.prov-chip[data-fill='dashed'] {
+  border-style: dashed;
+}
+
+.prov-age {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
 /* ── Persistent system context ─────────────────────────────────────────── */
 
 .system-context {
@@ -1227,6 +1252,11 @@
   .command-widget-open,
   .focus-bar {
     border: 1px solid CanvasText;
+  }
+
+  /* Forced colours drop the solid chip's fill; a heavier edge keeps origin readable. */
+  .prov-chip[data-fill='solid'] {
+    border-width: 3px;
   }
 }
 
