@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -24,6 +26,7 @@ let host: HTMLDivElement;
 let root: Root;
 let viewportWidth = 1199;
 let installed = false;
+const APP_CSS = readFileSync(join(process.cwd(), 'src', 'styles', 'app.css'), 'utf8');
 
 beforeAll(async () => {
   window.matchMedia = ((query: string) => ({
@@ -72,7 +75,17 @@ function Adopt() {
 
 function ModeProbe() {
   const { state } = useStore();
-  return <output data-testid="workspace-mode">{state.workspaceMode}</output>;
+  useEffect(() => {
+    document.documentElement.setAttribute('data-workspace', state.workspaceMode);
+    return () => document.documentElement.removeAttribute('data-workspace');
+  }, [state.workspaceMode]);
+  const displayMode = window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser';
+  return (
+    <>
+      <output data-testid="workspace-mode">{state.workspaceMode}</output>
+      <output data-testid="display-mode">{displayMode}</output>
+    </>
+  );
 }
 
 /** Reconcile from another local tab without contacting the account. */
@@ -233,17 +246,29 @@ describe('with the flag on', () => {
   });
 
   it.each([
-    { display: 'browser', standalone: false },
-    { display: 'installed app', standalone: true },
-  ])('keeps the selected full-width focus presentation at 1200px in the $display', async ({ standalone }) => {
+    { display: 'browser', standalone: false, expectedMode: 'browser' },
+    { display: 'installed app', standalone: true, expectedMode: 'standalone' },
+  ])('keeps the selected full-width focus presentation at 1200px in the $display', async ({ standalone, expectedMode }) => {
     viewportWidth = 1200;
     installed = standalone;
     await mount(true, true);
     const center = host.querySelector('.today-action-center')!;
+    expect(host.querySelector('[data-testid="display-mode"]')?.textContent).toBe(expectedMode);
     expect(center.classList).not.toContain('is-wide');
     expect(center.children[0]?.classList).toContain('action-center-main');
     expect(center.children[1]?.classList).toContain('today-context');
     expect(center.querySelector('.action-panel-primary button.btn-primary.btn-block')).not.toBeNull();
+
+    await click(button(/^Focus on this$/, center));
+    expect(host.querySelector('[data-testid="workspace-mode"]')?.textContent).toBe('focused');
+    expect(document.documentElement.getAttribute('data-workspace')).toBe('focused');
+    expect(center.querySelector('.action-panel-primary button.btn-primary.btn-block')).not.toBeNull();
+    expect(center.querySelectorAll('.action-panel-secondary')).toHaveLength(2);
+    expect(center.querySelector('.quick-actions')?.closest('.hides-in-focus')).not.toBeNull();
+    expect(center.querySelector('aside.today-context')).not.toBeNull();
+    expect(APP_CSS).toMatch(
+      /:root\[data-workspace='focused'\] \.today-action-center \.action-panel-secondary,\s*:root\[data-workspace='focused'\] \.today-action-center \.today-context \{\s*display: none;/,
+    );
   });
 
   it('says nothing Today does not say about a student', async () => {
