@@ -62,7 +62,7 @@ Gates are evidence thresholds mapped to the repository's existing release profil
 | Gate | Meaning | Target date | Evidence required | Release profile | Decides |
 | --- | --- | --- | --- | --- | --- |
 | **G0** | Clean to engage | 2026-12-15 | IP determination in writing; entity status confirmed; counsel engaged; founder fact sheet; standing funding rule recorded | None (company facts, FR-001) | `founder`, with counsel |
-| **G1** | Clean to validate (invitation-only, unpaid) | 2027-03-31 | Exact-SHA hosted CI; production smoke; counsel-approved terms and public-policy posture; representative-user UAT; account-lifecycle acceptance; accessibility review commissioned; validation support; stop criteria | `invitation-only-individual-validation` | Launch council computed verdict |
+| **G1** | Clean to validate (invitation-only, unpaid) | 2027-03-31 | Exact-SHA hosted CI; production smoke; counsel-approved terms and public-policy posture; representative-user UAT; account-lifecycle acceptance; accessibility review commissioned; validation support; stop criteria; **the shared AI key capped in dollars** (shared-key models restricted by plan, output capped per plan, and a dollar-weighted meter, the first work items in [`PRICING-UNIT-ECONOMICS-ARCHITECTURE.md`](../commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) §13.1), because it is capped only in calls today | `invitation-only-individual-validation` | Launch council computed verdict |
 | **G2** | Clean to activate one named cohort | 2027-07-31 | FR-002 to FR-006, FR-011, FR-012 closed for the cohort; signed charter, data map, roles, UAT, baseline; independent security and target isolation evidence; operated restore and incident drills | Bounded design-partner activation | Launch council computed verdict; customer sponsor accepts |
 | **G3** | Clean to charge | 2028-03-31 | G2 plus measured closeout; price book; tax/accounting/payment controls; insurance; counsel-approved paper; DAST, restore, incident, data-rights, revocation and offboarding exercises on the target | `paid-institutional-manual-pilot` (then `paid-institutional-pilot` for connected data) | Launch council; `finance` and counsel |
 | **G4** | Clean to repeat | 2029-06-30 | G3 plus three scoped deployments, capacity and error-budget acceptance, independent assurance current, claim-specific reference permission | `broad-enterprise-sale` | Separate broad-sale decision |
@@ -83,7 +83,7 @@ The launch council's `decide()` function has no override; a P2 or P3 blocker can
 | Insurance (cyber, technology E&O, general liability), first year | $8k to $25k | A-06 |
 | Accounting, tax, bookkeeping | $8k to $15k | A-06 |
 | Compliance tooling and evidence automation | $0 to $15k | A-06 |
-| Infrastructure, AI inference, tooling | $20k to $50k | A-09 |
+| Infrastructure, AI inference, tooling (**valid only with the dollar cap in force**; uncapped, 100 invited students could cost $9k to $79k a year in AI alone) | $20k to $50k | A-09 |
 | Go-to-market (travel, regional conferences, demo environment) | $10k to $25k | A-06 |
 | Advisor cash stipends (equity is a separate **COUNSEL** matter) | $15k to $40k | A-06 |
 | Payroll: first hire from about 2027-03, fractional design/accessibility, founder stipend | $108k to $227k | A-07 |
@@ -98,6 +98,8 @@ The launch council's `decide()` function has no override; a P2 or P3 blocker can
 | Illustrative revenue (A-08; no price book exists) | $0 | $0.05M to $0.3M | $0.4M to $1.6M |
 | Net funding need | $0.25M to $0.55M | $0.8M to $1.6M | $0.5M to $3.0M |
 | Cumulative net need | $0.25M to $0.55M | $1.05M to $2.15M | **$1.55M to $5.15M** |
+
+**The first cohort is an investment, not revenue.** A no-fee design-partner activation (FD-2026-007) means roughly 120 hours of delivery at the pricing architecture's $110 an hour, about $13k, plus variable cost, which the Year 1 payroll line absorbs without naming. It is also a 100% pilot credit against a deal-desk rule capping credits at 50% of first-year value, so it needs an explicit, recorded exception from finance and counsel.
 
 **Read this candidly.** Under these assumptions the company does not reach break-even inside the horizon. At Year 3 gross spend, break-even needs roughly 18 to 57 annual agreements at an illustrative $60k to $120k each (the low end pairs the lowest spend with the highest price), well above the Year 3 target of 6 (stretch 12). The three years buy **fundable proof**, not profitability. Self-sustaining operation under the base case is a Year 4 to Year 5 outcome and is a **HYPOTHESIS**.
 
