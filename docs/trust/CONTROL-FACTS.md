@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 174 |
+| Migration files | 180 |
 | Tables created in `public` and not later dropped | 321 |
 | … of which enable row-level security in a migration | 321 |
 | Tables created in `private` and not later dropped | 31 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-107 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+110 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -38,6 +38,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |
 | `supabase/advisor-reconciliation.check.sql` | The production-advisor reconciliation of 30 September 2026 (D-1026): that a table with row-level security on and no policy is unreachable by any client role — the fact that lets the advisor's 49 noti… |
 | `supabase/advisor.check.sql` | Advisor Meeting Mode shares (Phase G, D-016): who can share with whom, who can read, and that expiry and revocation stop reading. |
+| `supabase/ai-spend.check.sql` | The dollar meter on the shared key (20261004170000_ai_spend_meter). |
 | `supabase/approved-source-policy-scope.check.sql` | Disposable/local database only, after applying the source-scope migration. |
 | `supabase/audit-and-subject-requests.check.sql` | The common audit envelope (audit_event) and the rights-request queue (data_subject_request). |
 | `supabase/beta.check.sql` | The invite-only private beta (20260928220000_private_beta.sql). |
@@ -60,6 +61,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/dining.check.sql` | who may order, give, move and read, in dining. |
 | `supabase/evidence-graphs.check.sql` | Learning, skill and capture evidence must stay inside both its tenant and its person boundary. |
 | `supabase/expansion.check.sql` | Expansion roles and features: every new permission walked as the account it is about, and every refusal attempted as the account that should be refused. |
+| `supabase/export-withholds-guardian-restrictions.check.sql` | An account export must not carry a guardian restriction. |
 | `supabase/family.check.sql` | What a parent can see, and the four states in which the answer is nothing. |
 | `supabase/familyinvites.check.sql` | the share codes behind supporter sharing. |
 | `supabase/familyshare.check.sql` | what a supporter reads, and the log of it. |
@@ -75,6 +77,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/gtm.check.sql` | The go-to-market foundation: the rules in app/src/lib/gtm, held by the database. |
 | `supabase/help-requests.check.sql` | Help requests: a student asks a person for help, and nothing else happens. |
 | `supabase/hold-aware-sweeps.check.sql` | School and account holds reaching the AI-runtime and Community sweeps: that a school hold keeps that school's AI metadata and every account's Community rows in it; that an account hold keeps that acc… |
+| `supabase/hold-blind-sweeps.check.sql` | A legal hold reaching the last three sweeps that deleted without asking (20261004150000_holds_reach_the_last_three_sweeps.sql): student tombstones, individual subscribers' financial records, and the… |
 | `supabase/hold-gated-sweeps.check.sql` | The AI-runtime and Community sweeps behind a platform-wide legal hold: that each runs when there is no hold, is skipped (and says so) while one is live, runs again once it is released, and that a sch… |
 | `supabase/human-overrides.check.sql` | The shared override log: that a correction of a grade already on the record is logged by the ledger itself, whatever a client does; that the log says what was decided, what replaced it and why; that… |
 | `supabase/identity-provisioning.check.sql` | Institutional identity and SCIM lifecycle checks. |
