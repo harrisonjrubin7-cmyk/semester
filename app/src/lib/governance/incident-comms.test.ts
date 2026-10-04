@@ -12,8 +12,8 @@ const facts: Record<Section, string> = {
 };
 
 describe('incident communications', () => {
-  it('covers the eleven audiences with approvers and an update cadence', () => {
-    expect(Object.keys(AUDIENCE_LABEL)).toHaveLength(11);
+  it('covers the thirteen audiences with approvers and an update cadence', () => {
+    expect(Object.keys(AUDIENCE_LABEL)).toHaveLength(13);
     for (const a of Object.keys(AUDIENCE_LABEL) as Audience[]) {
       expect(AUDIENCES[a].approvers.length, a).toBeGreaterThan(0);
       expect(AUDIENCES[a].updateEveryMinutes, a).toBeGreaterThan(0);
@@ -49,5 +49,27 @@ describe('incident communications', () => {
     expect(compose('security', facts, { data_exposure: 'probably fine' }).ok).toBe(false);
     expect(compose('security', facts, { data_exposure: 'Not indicated' }).ok).toBe(true);
     expect(compose('student_outage', facts, { deadline_contact: '[instructor]' }).ok).toBe(false);
+  });
+
+  it('a launch delay names the check not yet complete and whether anything changed', () => {
+    expect(compose('launch_delay', facts).ok).toBe(false);
+    expect(compose('launch_delay', facts, { gate_pending: 'Accessibility review' }).ok).toBe(false);
+    expect(compose('launch_delay', facts, { gate_pending: 'Accessibility review', data_changed: 'Maybe' }).ok).toBe(false);
+    expect(compose('launch_delay', facts, { gate_pending: '[the check]', data_changed: 'No' }).ok).toBe(false);
+    const m = compose('launch_delay', facts, { gate_pending: 'Accessibility review', data_changed: 'No' });
+    if (!m.ok) throw new Error(JSON.stringify(m));
+    expect(m.subject).toBe('Semester — Launch delay');
+    expect(m.body).toContain('Check not yet complete\nAccessibility review');
+    expect(AUDIENCES.launch_delay.approvers).toEqual(['Founder']);
+  });
+
+  it('a change notice says when it takes effect, whether work is affected, and needs privacy and counsel', () => {
+    expect(compose('change_notice', facts).ok).toBe(false);
+    expect(compose('change_notice', facts, { effective_date: '1 November', work_affected: 'Not sure' }).ok).toBe(false);
+    expect(compose('change_notice', facts, { effective_date: '[date]', work_affected: 'No' }).ok).toBe(false);
+    const m = compose('change_notice', facts, { effective_date: '1 November', work_affected: 'No' });
+    if (!m.ok) throw new Error(JSON.stringify(m));
+    expect(m.body).toContain('Takes effect\n1 November');
+    expect(AUDIENCES.change_notice.approvers).toEqual(['Product owner', 'Privacy owner', 'Legal']);
   });
 });
