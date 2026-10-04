@@ -189,6 +189,7 @@ export function importSpecifiers(source: string): string[] {
 export const WORKSPACE_ALIASES: Readonly<Record<string, string>> = {
   '@semester/contract': 'packages/contract/src/index.ts',
   '@semester/institution': 'packages/institution/src/index.ts',
+  '@semester/offline-sync': 'packages/offline-sync/src/index.ts',
   '@semester/platform': 'packages/platform/src/index.ts',
 };
 

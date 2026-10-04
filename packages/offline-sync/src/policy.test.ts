@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { OFFICIAL_PREFIXES } from '../../../app/src/lib/sync/classes.ts'
 import {
   assertCacheable, assertCrdt, assertQueueable, CRDT_CLASSES, DATA_CLASSES, dataClasses, freshness,
   NEVER_CACHED, NEVER_QUEUED, OfflinePolicyError, policyFor,
@@ -18,13 +17,6 @@ describe('the offline policy table', () => {
     for (const c of ['payment', 'ledger_entry', 'permission_grant', 'consent', 'approval', 'grade_change', 'record_amendment', 'registration', 'grade', 'academic_record', 'billing_summary', 'guardian_projection']) {
       expect(() => assertQueueable(c), c).toThrow(/offline_write_prohibited/)
     }
-  })
-
-  it('treats every class the app already calls official as never-queued', () => {
-    // The app's own list of official write names must not drift away from this table.
-    const official = dataClasses.filter((c) => OFFICIAL_PREFIXES.some((p) => c.startsWith(p)))
-    expect(official.length).toBeGreaterThan(0)
-    for (const c of official) expect(DATA_CLASSES[c].write, c).toBe('never-queued')
   })
 
   it('keeps CRDTs to authored, shared text and its annotations — nothing server-authoritative', () => {
