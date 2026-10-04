@@ -197,3 +197,17 @@ smallest safe D1 slice that needs none of them: one trust vocabulary table
 (ten source kinds plus the missing statuses, with an `announce` string), a
 glyph on `SourceBadge`, and the D6 guards that fail on regression. See
 [DESIGN_MIGRATION_MATRIX.md](DESIGN_MIGRATION_MATRIX.md) §1.
+
+## 10. D1 slice 1, landed (2026-10-04)
+
+The one slice that needs none of U-1..U-6. `lib/source.ts` gains the two
+missing display-only kinds (`connected`, `sample`) and `TRUST_GLYPH`, the ten
+glyphs of the brief; `SourceBadge` draws the glyph (aria-hidden) beside the word;
+`fromSourceLabel` maps the new kinds. `SOURCE_LABELS` (DB-tied) is unchanged.
+Closes VD-002 and the `SourceBadge` half of VD-038. Guard: `source.test.ts` pins
+the ten glyphs and words; `SourceBadge.test.tsx` fails if the glyph is not drawn
+(checked by removing it: red, then restored).
+
+**Still open in VD-001:** `status.ts` still says "Official"/"Yours" and
+`factprovenance.ts` still uses `↔` and `◇`; those tables and the tests that pin
+them (`unity.test.ts`, `decisionlabels.test.ts`) are the next slice.
