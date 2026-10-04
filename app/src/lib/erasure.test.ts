@@ -268,4 +268,26 @@ describe('erasure and export are one list', () => {
     const explained = /'withheld', jsonb_build_array\(([\s\S]*?)\)\s*\)/.exec(fn)?.[1] ?? '';
     expect(explained.split(/',\s*\n/).length).toBe(3 + tables.length);
   });
+
+  it('the erasure wrapper checks the hold, erases, and only then scrubs the audit snapshots', () => {
+    /*
+     * `20261004190000` replaces `public.erase_account` (the wrapper that
+     * `20260930140000` put in front of `erase_account_unheld`) to clear the
+     * erased id from `tenant_policy_audit_event`'s JSON. The order is the point:
+     * deleting the account cascades to its consent rows, and the audit trigger
+     * writes a fresh `delete` snapshot for each, so a scrub that ran first
+     * would leave exactly those behind (watched: "expected 0, got 2"). The
+     * database check `erasure-clears-consent-snapshots.check.sql` is the guard
+     * that runs it; this one stops the wrapper losing a step unnoticed.
+     */
+    const next = readFileSync(join(MIGRATIONS, '20261004190000_erasure_scrubs_audit_copies.sql'), 'utf8');
+    const fn = /create or replace function public\.erase_account[\s\S]*?\nend \$\$;/.exec(next)?.[0] ?? '';
+    expect(fn.length, 'the probe found the wrapper').toBeGreaterThan(300);
+    const at = (needle: string) => fn.indexOf(needle);
+    expect(at('private.account_is_held(target)'), 'still refuses a held account').toBeGreaterThan(-1);
+    expect(at('private.account_is_held(target)')).toBeLessThan(at('private.erase_account_unheld(target)'));
+    expect(at('private.erase_account_unheld(target)')).toBeLessThan(at('private.scrub_audit_snapshots(target)'));
+    // The scrub is reachable only through the wrapper.
+    expect(next).toMatch(/revoke all on function private\.scrub_audit_snapshots\(uuid\) from public, anon, authenticated, service_role;/);
+  });
 });

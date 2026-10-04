@@ -114,6 +114,7 @@ A before-delete trigger on `auth.users` is the backstop for holds.
 | --- | --- |
 | Only single-column FKs to `auth.users`, schemas `public` and `private`, are mapped | Verified: of 39 person-shaped columns with no such FK, none is an erasure gap (checked: billing ids, staff-actor columns on append-only history, composite-FK children cascaded through a mapped parent) |
 | Staff who wrote to four append-only history tables cannot be erased; the function fails closed | Known, documented |
+| The id inside JSON copies, which `account_data_map()` cannot see (FK columns only) | Consent snapshots in `tenant_policy_audit_event` are scrubbed after the erasure by the wrapper (`scrub_audit_snapshots`, `20261004190000`, D-1198); the order matters, since the cascade writes `delete` snapshots. Other JSON copies are not looked for; counsel P-08 |
 | Storage objects | **Not exercised.** The 2026-09-30 drill had none and says storage deletion is unproven |
 | The `delete-account` Edge Function end to end | **Not exercised** by the drill (it ran a rolled-back block) |
 | Device-held files (`semester-files`, drafts, snapshots) | Not in the server export or erasure; `eraseDevice()` is a separate client path |
