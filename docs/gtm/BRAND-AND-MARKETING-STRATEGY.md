@@ -42,7 +42,7 @@ These came from reading the sources against each other. Each is a conflict betwe
 | # | Finding | Evidence | What to do |
 | --- | --- | --- | --- |
 | F1 | **"Paid pilot" is the lead offer in positioning copy, and the go/no-go marks it RED.** | [`GO-TO-MARKET-POSITIONING.md`](../market-readiness/GO-TO-MARKET-POSITIONING.md): "A paid pilot starts with one cohort". [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md): paid institutional pilot **NO-GO / RED**; "accepting payment" is explicitly not authorized. | Public copy says **design-partner pilot, non-activation** until the paid profile converts. Keep "paid pilot" inside internal planning only. Founder to reconcile the two documents. |
-| F2 | **The pricing page publishes prices and a savings figure; the claim register treats price and savings as prohibited until approved.** | `company-site/index.html:621–624` and `site.js:146`: Plus $7.99/month, $59/year, "Annual · save 37%". CLM-015 and [`PRICING-AND-PACKAGING.md`](../market-readiness/PRICING-AND-PACKAGING.md): every figure `[PRICE TO BE CONFIRMED]`. | Page is labelled "Planned" and says checkout is unavailable, which mitigates it. Still: get Founder/Finance/Legal to approve the figures or remove them. **The arithmetic also disagrees:** $7.99 × 12 = $95.88, and $59 is 38.5% below that, not 37%. [`MARKET-POSITION.md`](../../MARKET-POSITION.md) §13 records a further, unreconciled $72/yr figure. |
+| F2 | **The pricing page printed a savings figure the catalog prices do not give. Fixed in this PR.** | `company-site/index.html` said "Annual · save 37%"; $7.99 × 12 = $95.88 and $59 is 38.5% below that. The prices themselves are **decided**: D-134 (owner, 29 Sep 2026) set Plus at $7.99 a month or $59 a year "everywhere", and `plans.test.ts` holds the page to the catalog. | The label is now "save 38%" (rounded down: a saving may be understated, never overstated) and `companysitepricing.test.ts` holds it to `plans.ts`; it failed on 37 before the fix. **Still open:** CLM-015 and [`PRICING-AND-PACKAGING.md`](../market-readiness/PRICING-AND-PACKAGING.md) mark price and savings `[PRICE TO BE CONFIRMED]` / prohibited, and [`MARKET-POSITION.md`](../../MARKET-POSITION.md) §13 still lists a $72/yr figure. Those documents and D-134 disagree; the founder reconciles them. An earlier draft of this row recommended removing the prices, which would have reversed D-134 and was withdrawn. |
 | F3 | **The hero button is open signup; the approved motion is invitation-only.** | Hero: "Start planning free →" to `#/signup`. The banner says sign-up "may ask for an invite". Go/no-go: individual acquisition is invitation-only, unpaid. | Verify what the signup route actually does today. If it is open, either gate it or change the button to "Request an invite". Not verified here. |
 | F4 | **"Student OS" as a public category name implies replacement.** | Audit thesis names "replaces all school and education systems". CLM-006: replacement claims **PROHIBITED**. | Public category line stays "student action platform" (the site's current title). "Student OS" stays a founder-level and investor-level direction, labelled as roadmap (CLM-017). Founder decision D1. |
 | F5 | **"Only free, unlimited planner" is false in this repository.** | `supabase/functions/claude/index.ts:45`: the shared key is capped at 60 calls per account per month by default. Already recorded in [`MARKET-POSITION.md`](../../MARKET-POSITION.md) §7. | The word "unlimited" is banned anywhere near AI. The free list says "Unlimited courses and syllabi" — true as written, but a syllabus read uses an AI call (§8, M-02). Product to confirm the sentence cannot be read as unlimited reading. |
@@ -213,7 +213,7 @@ Home ─────────────── who is this for? (Student · 
 │    └─ Contact → discovery
 ├─ Trust Center  (see 4.5)
 ├─ Availability  (every capability + its status word)
-├─ Pricing       (see F2: hold until approved)
+├─ Pricing       (see F2: D-134 prices, labelled planned)
 ├─ Resources · Community (honest "not switched on") · Founder's letter
 └─ Status · Contact · Legal
 ```
@@ -235,7 +235,7 @@ Each brief: job, audience, one primary action, required claims (§8), required q
 | Demo | Synthetic walk-through, captioned | Contact | M-22 | Real data; a school's name |
 | Trust Center | See 4.5 | Request the trust room | M-15–M-20, M-27 | Any certification |
 | Availability | One row per capability with its status word | — | all status words | A capability above its register word |
-| Pricing | **Hold or reduce** to "Free during the private beta; paid plans are planned" until F2 is resolved | Request an invite | M-13 | $ figures, "save N%" |
+| Pricing | Keep the D-134 prices, each marked planned and not on sale | Request an invite | M-13, M-14 | "Save N%" not matching the catalog; any "buy" button |
 | Request an invite | Collect the minimum, with unbundled optional marketing consent | Submit | consent text (§7.2) | A pre-checked box |
 | Community | Say plainly nothing is running; offer the ambassador interest form only when the programme is open | — | M-36 | A "join our community" implying one exists |
 | Founder's letter | Honest origin; what is built and not | Request an invite | M-12 | A university's name as endorsement (see 5.5) |
@@ -492,7 +492,7 @@ A person is suppressed, and stays so, if any of: opted out of marketing; withdre
 
 **The default when evidence or authority is unclear is: do not publish.** Several roles above are unassigned today, so most rows in §8 cannot reach "approved" until a person holds each seat. That is the real critical path for marketing, and no amount of copywriting shortens it.
 
-**Questions to take to counsel** (collected from this document): the founder-affiliation sentence (5.5); ambassador classification, pay and minors (6.3); referral and endorsement disclosure (6.2); marketing consent, age and jurisdiction logic (7.2); whether the price points on the pricing page may stay (F2); whether the privacy sentence in M-17 can be made without a legal entity (F6); comparative claims (§9).
+**Questions to take to counsel** (collected from this document): the founder-affiliation sentence (5.5); ambassador classification, pay and minors (6.3); referral and endorsement disclosure (6.2); marketing consent, age and jurisdiction logic (7.2); whether D-134 satisfies CLM-015's price approval (F2); whether the privacy sentence in M-17 can be made without a legal entity (F6); comparative claims (§9).
 
 ---
 
@@ -535,7 +535,7 @@ Paths are repository paths; `app/src/lib/` is shortened to `lib/`.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | M-12 | "Semester is in a private beta." | — | CLM-003 (verified status) | Founder | 2027-01-03 | Low | Remove the moment the status changes |
 | M-13 | "Free during the private beta; paid plans are planned." | — | Pricing page; `ops/claims` `no-sale` | Founder; Finance; Legal | 2026-12-03 | Med | Do not say "free forever" or "always free" |
-| M-14 ✋ | "$7.99 a month", "$59 a year", "save 37%" | **PROHIBITED until approved** | CLM-015; F2 | Founder; Finance; Tax; Legal | 2026-11-03 | High | Currently on the page. Arithmetic gives 38.5%, not 37% |
+| M-14 ✋ | "$7.99 a month", "$59 a year", "save 38%" | **Decided (D-134); approval record open** | CLM-015; D-134; `plans.test.ts`, `companysitepricing.test.ts` | Founder; Finance; Tax; Legal | 2026-11-03 | High | Always with "planned; not yet on sale". The saving was 37% before this PR; arithmetic gives 38.5% |
 | M-14b | "Plus checkout is not available yet" | — | `ops/claims` `no-sale` | Founder | 2026-12-03 | Low | Keep adjacent to any price mention |
 
 **C. Trust, security, accessibility, AI**
@@ -661,7 +661,7 @@ These are the marketing share of tasks already in [`90-DAY-LAUNCH-PROGRAM.md`](.
 
 | Window | Marketing work | Closes with |
 | --- | --- | --- |
-| Days 1–30 | Resolve F1–F3 and F6; assign the empty review seats; approve or pull the price figures; build the §8 register into `ops/claims` data so a test holds it; trust center "Not yet in place"; calendar weeks 1–4 | Founder sign-off on D1–D8; a claims row for every sentence on the home, pricing and institutions pages |
+| Days 1–30 | Resolve F1–F3 and F6; assign the empty review seats; reconcile CLM-015 with D-134; build the §8 register into `ops/claims` data so a test holds it; trust center "Not yet in place"; calendar weeks 1–4 | Founder sign-off on D1–D8; a claims row for every sentence on the home, pricing and institutions pages |
 | Days 31–60 | Demo and role pages on synthetic data; captioned demo video; use-case pages; calendar weeks 5–8; qualify first ten accounts by warm path | A demo that runs on synthetic data only; trust center reviewed by a person outside the team |
 | Days 61–90 | Cohort comms (school-sent, from templates); ambassador pilot only if counsel clears it; calendar weeks 9–12; first baseline for the §10 metrics | Go/no-go for G1 for one named cohort |
 
@@ -670,7 +670,7 @@ These are the marketing share of tasks already in [`90-DAY-LAUNCH-PROGRAM.md`](.
 | # | Decision | Recommendation |
 | --- | --- | --- |
 | D1 | Public category name | "Student action platform". Keep "Student OS" off public pages (F4) |
-| D2 | Price figures on the pricing page | Remove the $ and "save N%" until approved, or approve them with the arithmetic fixed (F2) |
+| D2 | Reconcile CLM-015 / `PRICING-AND-PACKAGING.md` with D-134 | The prices stand (D-134, planned, not on sale). Either record D-134 as the approval CLM-015 asks for, or revise D-134. The "save N%" figure is corrected |
 | D3 | Hero CTA | "Request an invite" until signup is confirmed gated (F3) |
 | D4 | "Paid pilot" in positioning | Internal only; public says design-partner pilot (F1) |
 | D5 | Referral reward | None at G1 (§6.2) |
