@@ -8035,11 +8035,6 @@ section[data-drop] > .grip + * {
   margin: 0 0 var(--sp-7);
 }
 
-.today-action-center.is-wide {
-  grid-template-columns: minmax(0, 1fr) 260px;
-  align-items: start;
-}
-
 .action-center-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -9577,10 +9572,6 @@ section[data-drop] > .grip + * {
 :root[data-workspace='focused'] .today-action-center .action-panel-secondary,
 :root[data-workspace='focused'] .today-action-center .today-context {
   display: none;
-}
-
-:root[data-workspace='focused'] .today-action-center.is-wide {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 .course-mastery {
