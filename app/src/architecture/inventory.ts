@@ -16,7 +16,7 @@ import { areaOf, type Tree } from './rules.ts';
 
 export const DOMAINS = [
   'identity', 'policy', 'tasks', 'calendar', 'today', 'academic', 'learning', 'productivity', 'ai',
-  'campus', 'community', 'family', 'career', 'commercial', 'institution', 'trust-ops', 'platform',
+  'campus', 'community', 'family', 'career', 'finance', 'admin', 'support-trust', 'platform',
 ] as const;
 export type DomainName = (typeof DOMAINS)[number];
 
@@ -31,19 +31,19 @@ export const OWNERSHIP: readonly (readonly [DomainName, RegExp])[] = [
   ['platform', /^(kernel|composition|architecture)\//],
 
   // Trust, governance and operating documentation kept as code.
-  ['trust-ops', /^lib\/(governance|ops|trust|launch|verify|equity|record|history|k12)\//],
-  ['trust-ops', /^lib\/[a-z0-9-]*(register|scorecard|readiness|launchkit|operationalreality|masterregister|oneos|onesystem|blueprint|supplychain|benchmark|learningregister|knownlimitations|incident|postmortem|sla|trustdashboard|trustlink|trustroom|support|supporttickets|tickethandoff|trouble|audit|diagnose|statusnotice|syncstatus|handoff-status|perfbudget|previewsecurity|cspheader|usage|counts|failure|fault)[a-z0-9.-]*\.tsx?$/],
-  ['trust-ops', /^screens\/(TrustRoom|Support|Help|Reports|Proof|Update|Changes|WhatsNew)\.tsx$/],
+  ['support-trust', /^lib\/(governance|ops|trust|launch|verify|equity|record|history|k12)\//],
+  ['support-trust', /^lib\/[a-z0-9-]*(register|scorecard|readiness|launchkit|operationalreality|masterregister|oneos|onesystem|blueprint|supplychain|benchmark|learningregister|knownlimitations|incident|postmortem|sla|trustdashboard|trustlink|trustroom|support|supporttickets|tickethandoff|trouble|audit|diagnose|statusnotice|syncstatus|handoff-status|perfbudget|previewsecurity|cspheader|usage|counts|failure|fault)[a-z0-9.-]*\.tsx?$/],
+  ['support-trust', /^screens\/(TrustRoom|Support|Help|Reports|Proof|Update|Changes|WhatsNew)\.tsx$/],
 
   // Institution and integrations.
-  ['institution', /^(lib|components)\/(integration|migration|console|institutional|enrollment\/)/],
-  ['institution', /^lib\/(university|institution|institutional|interop|migrate|ltiarrival|ltilanding|ltiscore|canvas|connectregister|office-actions|officeagenda|registrar|agreement|adopt|adoptpieces|expansion|replaceregister|definerregister)[a-z0-9.-]*\.tsx?$/],
-  ['institution', /^screens\/(University|Registrar|Console|Agreements|Data|Import)\.tsx$/],
+  ['admin', /^(lib|components)\/(integration|migration|console|institutional|enrollment\/)/],
+  ['admin', /^lib\/(university|institution|institutional|interop|migrate|ltiarrival|ltilanding|ltiscore|canvas|connectregister|office-actions|officeagenda|registrar|agreement|adopt|adoptpieces|expansion|replaceregister|definerregister)[a-z0-9.-]*\.tsx?$/],
+  ['admin', /^screens\/(University|Registrar|Console|Agreements|Data|Import)\.tsx$/],
 
   // Commercial.
-  ['commercial', /^lib\/(billing|gtm|finance)\//],
-  ['commercial', /^lib\/(bill|cost|spend|subscribe|plans|membership|deal|price|beta|pilot|launchpad)[a-z0-9.-]*\.tsx?$/],
-  ['commercial', /^screens\/(Bill|Costs|Springboard)\.tsx$/],
+  ['finance', /^lib\/(billing|gtm|finance)\//],
+  ['finance', /^lib\/(bill|cost|spend|subscribe|plans|membership|deal|price|beta|pilot|launchpad)[a-z0-9.-]*\.tsx?$/],
+  ['finance', /^screens\/(Bill|Costs|Springboard)\.tsx$/],
 
   // Identity, then policy.
   ['identity', /^lib\/(role|rolelaunch|rolespec|capabilities|profile|session|session\.place|account|age|aboutme|password|oauthscopes|school|schoolclaim|schoollinks|schoolpack|school-records-hook|findschool|fromschool|joined|invite|institutional-access|privacy|data-rights|mecontrols|orgs|consent|deletions|readonly)[a-z0-9.-]*\.tsx?$/],

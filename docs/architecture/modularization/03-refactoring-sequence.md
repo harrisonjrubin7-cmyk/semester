@@ -6,8 +6,9 @@ that can be reverted alone; no step moves data.
 
 ## Repository restructuring
 
-The earlier audit proposed `apps/` + `services/` + `packages/`. That layout is
-the **destination if and only if** an [extraction trigger](../0011-modular-monolith-before-services.md)
+The earlier audit proposed `apps/` + `services/` + `packages/`, and the CTO
+pack's [02](../../target-architecture/02-MONOREPO-STRUCTURE.md) refines it. That
+layout is the **destination if and only if** an [extraction trigger](../0011-modular-monolith-before-services.md)
 fires. Until then:
 
 ```

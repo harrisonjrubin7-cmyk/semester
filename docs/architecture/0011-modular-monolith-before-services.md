@@ -63,6 +63,16 @@ candidates: identity, tasks, calendar, today, productivity.
    path remains for one release.
 4. Delete the in-process adapter; the port is unchanged.
 
+## Relation to D-1144
+
+The CTO target-architecture pack (D-1144, status *proposed*) reaches the same
+direction for the server side and also proposes three separate deployables
+(`ai-gateway`, `integration-hub`, `sync-gateway`). This record does not
+conflict: the first two are among those already satisfying a trigger (above),
+and `sync-gateway` is for that pack's P-02 review to justify against these
+triggers. This ADR covers the client tree and the existing gateway; it takes no
+position on a container-hosted `core`.
+
 ## Consequences
 
 - The earlier audit's repository layout (`apps/`, `services/`) is a destination,

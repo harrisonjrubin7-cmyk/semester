@@ -31,6 +31,15 @@ Does not exist yet: any screen reading the new modules; a React binding for
 service. [03](03-refactoring-sequence.md) says in what order and what proves
 each step.
 
+## Relationship to D-1144
+
+The CTO pack ([`docs/target-architecture/`](../../target-architecture/README.md),
+[D-1144](../../decisions/D-1144.md)) landed on `main` mid-way. It is the
+server-side, docs-only proposal for the same direction; this is the
+client-side, measured, enforced half, with code. The mapping and the points
+this leaves to its review are in the last section of
+[02](02-target-architecture.md).
+
 ## On the earlier "rebuild from scratch" prompt
 
 The audit that prompted this work (a Perplexity export) recommends a

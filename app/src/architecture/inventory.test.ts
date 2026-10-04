@@ -28,7 +28,7 @@ describe('the legacy inventory', () => {
   it('assigns the first matching owner and leaves the rest unassigned', () => {
     expect(ownerOf('lib/chores.ts')).toBe('tasks');
     expect(ownerOf('lib/calsource.ts')).toBe('calendar');
-    expect(ownerOf('lib/governance/risk.ts')).toBe('trust-ops');
+    expect(ownerOf('lib/governance/risk.ts')).toBe('support-trust');
     expect(ownerOf('lib/zzz-nothing.ts')).toBe('unassigned');
     expect(row('lib/mystery.ts').domain).toBe('unassigned');
   });

@@ -41,7 +41,8 @@ domains/tasks/
 
 ## Domains and ownership
 
-Seventeen owners, assigned mechanically per file
+Seventeen owners, named to match the CTO pack's module map
+([`docs/target-architecture/04`](../../target-architecture/04-DOMAIN-BOUNDARIES-AND-OWNERSHIP.md), D-1144) where the two overlap, assigned mechanically per file
 (`src/architecture/inventory.ts`, output in `legacy-inventory.csv`). The five
 in bold exist in this pull request.
 
@@ -60,9 +61,9 @@ in bold exist in this pull request.
 | community | groups, mail, moderation | `community/`, `lib/mail*` |
 | family | guardian relationships and sharing | `lib/family*` |
 | career | opportunities, credentials, pathways | `lib/career*` |
-| commercial | plans, billing, packaging | `lib/billing/`, `gtm/`, `plans` |
-| institution | integrations, migration, console | `lib/integration/`, `university*` |
-| trust-ops | governance, evidence, support, launch | `lib/governance/`, `ops/`, `trust/` |
+| finance | plans, billing, packaging (marketplace not built) | `lib/billing/`, `gtm/`, `plans` |
+| admin | integrations, migration, console, configuration | `lib/integration/`, `university*` |
+| support-trust | governance, evidence, support, launch | `lib/governance/`, `ops/`, `trust/` |
 | platform | storage, sync, routing, design tokens | `lib/cloud`, `state/`, `look`, `nav` |
 
 The domain list is the one in the earlier audit, reduced to what the code
@@ -118,3 +119,30 @@ Both structures run at once. Legacy code may import a slice's `index.ts`
 (that is how a screen migrates); a slice reaches legacy only through its
 adapters, which read the **same** stores the legacy screens write. So there is
 no data migration in the first phases, and rolling back a screen is a flag.
+
+## Relationship to the CTO target-architecture pack (D-1144)
+
+[`docs/target-architecture/`](../../target-architecture/README.md) landed on
+`main` while this was in progress. It proposes the same direction (modular
+monolith, strangler conversion, extraction by written trigger) for a **new
+server-side `services/core`**, with the same boundary rules (index-only
+imports, no cycles, pure `packages/domain-*`, a negative test per rule). This
+work enforces those rules **today, on the existing client tree**, and supplies
+what the pack says it lacks: measurements, a working slice, and the tests.
+They are two halves of one plan; neither supersedes the other.
+
+| This plan | CTO pack | Note |
+|---|---|---|
+| `domains/<d>/domain/` | `packages/domain-*` | Same purity rule. When a slice is needed by a second consumer, lift `domain/` unchanged; the rule already forbids what blocks the move. |
+| `application/` + ports | `services/core/.../commands, queries` | Same shape; a server module can implement the same ports. |
+| `adapters/` (ACL over legacy) | the strangler's anti-corruption layer (09) | Same pattern. |
+| `tasks`, `calendar` | `productivity` (task, event, time block) | Two slices of one module. |
+| `today` | a screen composing modules (04 rule 1) | A read model over productivity and academic. |
+| `policy` | platform `policy` (`decide`) | The slice is its first caller. |
+| `finance`, `admin`, `support-trust` | same names | Renamed from the first draft to match. |
+| enforced by `src/architecture/` (vitest) | enforced by `tools/boundaries` (P-01, proposed) | Same rules, same negative-test discipline; this is an implementation of P-01 for the client, not a competitor. If P-01 chooses dependency-cruiser, the rules and fixtures port over. |
+
+**Not taken a position on here:** the container-hosted `core`, the new
+`sync-gateway`, and the three-deployables-from-day-one choice. Those are the
+pack's P-02 review. [ADR 0011](../0011-modular-monolith-before-services.md)
+only requires that any extraction cite a trigger, which the pack also requires.
