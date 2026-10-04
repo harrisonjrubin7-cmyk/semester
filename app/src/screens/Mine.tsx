@@ -34,6 +34,10 @@ import { PrintButton } from '../components/PrintButton';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { SaveState } from '../components/unity/Status';
+import { ReadState } from '../components/unity/ReadState';
+import { useOnline } from '../lib/offline-mode';
+import { countSources, tasksEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
 
 /**
  * Everything you added yourself.
@@ -388,9 +392,20 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 }
 
 function Tasks({ rows }: { rows?: PersonalTask[] }) {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, loading } = useStore();
   const now = useNow();
+  const online = useOnline();
   const [open, setOpen] = useState(false);
+  // The list region's own rule, unchanged: empty means no tasks and no form
+  // open, because an open form is somebody about to fill it.
+  const env = tasksEnvelope({
+    loading,
+    empty: state.tasks.length === 0 && !open,
+    count: state.tasks.length,
+    sources: countSources(state.tasks.map((): SourceLabel => 'student_entered')),
+    online,
+    now: now.getTime(),
+  });
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
   const [time, setTime] = useState('');
@@ -525,13 +540,17 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
         </ActionButton>
       )}
 
-      {state.tasks.length === 0 && !open && (
-        <EmptyState
-          title="Nothing of your own yet."
-          body="Actions you add here are yours — they sit alongside coursework on Today without pretending to be it."
-        />
-      )}
-
+      <ReadState
+        env={env}
+        now={now.getTime()}
+        what="your actions"
+        empty={{
+          title: 'Nothing of your own yet.',
+          body: 'Actions you add here are yours — they sit alongside coursework on Today without pretending to be it.',
+        }}
+      >
+        {() => (
+      <>
       {groups.map((g) =>
         g.tasks.length === 0 ? null : (
           <div key={g.label}>
@@ -546,6 +565,9 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
           </div>
         ),
       )}
+      </>
+        )}
+      </ReadState>
       <div style={{ height: 22 }} />
     </div>
   );

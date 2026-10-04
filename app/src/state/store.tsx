@@ -7,7 +7,6 @@
  * localStorage save, the reminders and the account sync.
  */
 
-import { storedWindow } from '../lib/registration-window';
 import {
   createContext,
   useCallback,
@@ -41,12 +40,8 @@ import {
 import { READ_ONLY } from '../lib/readonly';
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
-import { nextPayment } from '../lib/bill';
-import { classesToNudge, dueReminders, fire } from '../lib/notify';
-import { atRiskToday } from '../lib/atrisk';
-import { beginNow, planFrom } from '../lib/start';
-import { myReminders } from '../lib/myrules';
-import { datedItems, railFor } from '../lib/select';
+import { fire } from '../lib/notify';
+import { remindersFor } from './reminders';
 import { save, trouble } from '../lib/keep';
 import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
@@ -208,6 +203,12 @@ interface Store {
   tint: (id: string | null | undefined) => CourseTint;
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
+  /**
+   * The sample course is still arriving. An empty catalogue now means "not
+   * yet", not "nothing there"; a screen that reads the second while this is
+   * true draws its first-run for a moment it should have drawn a loading state.
+   */
+  loading: boolean;
   /**
    * What went wrong saving to this device, in a sentence, or empty.
    *
@@ -1455,66 +1456,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (catalog.empty) return;
     const check = () => {
       const at = new Date();
-      const items = datedItems(catalog, at);
-      fire(
-        dueReminders(at, state.notifs, {
-          items,
-          done: state.done,
-          classes: classesToNudge(railFor(catalog, at, state.appointments)),
-          muted: state.mutedCourses,
-          registrar: state.registrar,
-          registrationOpens: storedWindow(),
-          /*
-           * The four lists `nextPayment` reads, named rather than passed as
-           * the whole store. `Held` in `lib/bill.ts` is structural, so this
-           * satisfies it — and it is the difference between a dependency
-           * array that can be checked and one that says `state` and so
-           * re-creates this interval on every keystroke anywhere in the app.
-           */
-          bill: nextPayment(
-            {
-              charges: state.charges,
-              aid: state.aid,
-              payments: state.payments,
-              plans: state.plans,
-            },
-            state.term,
-            at,
-          ),
-          quiet: state.quiet,
-          atRisk: atRiskToday(
-            railFor(catalog, at, state.appointments),
-            state.attendance,
-            state.attendPolicy,
-            courseCode,
-          ),
-          // What has to begin, worked out here for the same reason `atRisk`
-          // and `bill` are: `lib/notify.ts` decides when to say a thing and
-          // never what is true. `planFrom` is the one calibration, so the
-          // reminder and the card on Today cannot disagree about the date.
-          starts: beginNow(
-            planFrom({
-              items,
-              done: state.done,
-              spent: state.spent,
-              windows: state.windows,
-              now: at,
-            }),
-          ),
-        }),
+      // Two calls, as before: the built-in rules and the student's own are
+      // capped separately by `fire`, and merging them would change that.
+      const { rules, mine } = remindersFor(
+        {
+          notifs: state.notifs, mutedCourses: state.mutedCourses, appointments: state.appointments,
+          registrar: state.registrar, myRules: state.myRules, attendance: state.attendance,
+          attendPolicy: state.attendPolicy, done: state.done, quiet: state.quiet, term: state.term,
+          charges: state.charges, aid: state.aid, payments: state.payments, plans: state.plans,
+          spent: state.spent, windows: state.windows,
+        },
+        catalog,
+        at,
+        courseCode,
       );
-      // The student's own rules, fired through the same `fire` — which keeps
-      // the seen list, so a custom reminder is subject to the same "once" as
-      // every built-in one. They add and never subtract: see `lib/myrules.ts`.
-      fire(
-        myReminders(at, state.myRules, items, state.done).map((f) => ({
-          id: f.id,
-          rule: 'today' as const,
-          title: f.title,
-          body: f.body,
-          why: 'Why: you set this up yourself, under “Your own reminders” in Settings.',
-        })),
-      );
+      fire(rules);
+      fire(mine);
     };
     check();
     const id = setInterval(check, 60_000);
@@ -1874,8 +1831,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
-    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, loading: awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
+    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
   );
   /*
    * The clock is published beside the store, not inside it.

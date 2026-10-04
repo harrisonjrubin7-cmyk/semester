@@ -15,7 +15,7 @@
 
 A bottom-up, three-year, month-by-month model of what it costs to build, launch, sell, support and scale Semester, and what that could earn, with every input labelled and every professional question flagged. It covers the seven revenue streams in the rebuild audit (student subscription, institutional platform, implementation services, AI usage, marketplace, career/employer, alumni), the cost lines that make them work, the unit economics that decide whether to keep spending, and the governance, controls and reporting a board expects.
 
-The model is a workbook with live formulas: [`semester-financial-model.xlsx`](semester-financial-model.xlsx). Choose one of seven scenarios in `Scenario_Control!D3` and every sheet recalculates. The documents in this folder explain it and carry the parts that are not arithmetic.
+The model is a workbook with live formulas: [`semester-financial-model.xlsx`](semester-financial-model.xlsx). Choose one of nine scenarios in `Scenario_Control!D3` and every sheet recalculates (1 to 7 as analysed below; 8 and 9 hold the revenue motions behind the go/no-go gates, see [`10-GO-NO-GO-GATES.md`](10-GO-NO-GO-GATES.md)). The documents in this folder explain it and carry the parts that are not arithmetic.
 
 | File | What it answers | Brief item |
 | --- | --- | --- |
@@ -29,6 +29,7 @@ The model is a workbook with live formulas: [`semester-financial-model.xlsx`](se
 | [`07-SCENARIOS-AND-SENSITIVITY.md`](07-SCENARIOS-AND-SENSITIVITY.md) | Six requested scenarios plus a gated plan, results, sensitivities and responses | 8 |
 | [`08-FINANCE-CONTROLS-AND-OPERATIONS.md`](08-FINANCE-CONTROLS-AND-OPERATIONS.md) | Systems, processes, close calendar, control list, segregation of duties, 90-day setup plan | 9 |
 | [`09-BOARD-REPORTING-PACKAGE.md`](09-BOARD-REPORTING-PACKAGE.md) | Founder flash, quarterly board pack, KPI definitions, decision log | 10 |
+| [`10-GO-NO-GO-GATES.md`](10-GO-NO-GO-GATES.md) | The model with every revenue motion behind its go/no-go gate (scenarios 8 and 9), the gate inputs, and the guard that re-proves every scenario | 1, 8 |
 | [`assumption-register.md`](assumption-register.md) | All inputs with value, basis, and who validates | 1 |
 
 ## What the model says (Base scenario)
@@ -44,7 +45,7 @@ The model is a workbook with live formulas: [`semester-financial-model.xlsx`](se
 | Headcount, end of year | 25 | 44 | 50 |  |
 | Cash, end of year (with assumed rounds) | 1,196 | 6,738 | 6,366 |  |
 
-Base is the assumptions as entered, with staged hiring: every role in the plan, flexible roles released on schedule. It is a hypothesis about what the audit's full-scope thesis costs, not a prediction of what will happen. All seven scenarios:
+Base is the assumptions as entered, with staged hiring: every role in the plan, flexible roles released on schedule. It is a hypothesis about what the audit's full-scope thesis costs, not a prediction of what will happen. All nine scenarios (8 and 9 hold the revenue motions behind `GO-NO-GO-DECISION.md`; Base books revenue that decision does not yet authorize, and scenario 8 shows what that costs, see [10](10-GO-NO-GO-GATES.md)):
 
 | Scenario | Revenue Y3 | ARR end Y3 | Gross margin Y3 | EBITDA Y3 | Peak funding need | Lowest cash with assumed rounds | Months below 6-month cash policy |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -55,6 +56,8 @@ Base is the assumptions as entered, with staged hiring: every role in the plan, 
 | High-AI-cost | 4,717 | 4,339 | 27% | (10,375) | 21,672 | 1,180 | 3 |
 | Incident-cost | 3,727 | 3,248 | 25% | (10,023) | 23,221 | 1,133 | 7 |
 | Gated plan (CFO rec.) | 4,216 | 3,878 | 37% | (8,820) | 16,219 | 2,081 | 0 |
+| Go/no-go gates, hiring unchanged (8) | 3,207 | 2,954 | 20% | (10,950) | 22,902 | 1,136 | 3 |
+| Go/no-go gates + gated hiring (9) | 3,207 | 2,954 | 25% | (9,536) | 17,568 | 2,030 | 0 |
 
 ## What the CFO concludes
 
