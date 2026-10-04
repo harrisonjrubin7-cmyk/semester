@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent, type RefObject } from 'react';
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type PointerEvent, type RefObject } from 'react';
 
 /*
  * `hasOpenModal` stood here, and the shortcuts never called it.
@@ -240,4 +240,49 @@ export function useModal<T extends HTMLElement = HTMLDivElement>({
   };
 
   return { ref, onKeyDown };
+}
+
+/**
+ * Closing a dialog by pressing outside it, without closing it by accident.
+ *
+ * Four dialogs closed on `onClick` of their backdrop and stopped the click at
+ * the panel. That looks like it means "a click outside". It means "a click
+ * whose target is the backdrop", and the browser fires `click` on the nearest
+ * common ancestor of where the press started and where it ended — so pressing
+ * inside the panel, dragging a selection out past its edge and letting go over
+ * the backdrop dispatches a click on the backdrop, and the dialog closes under
+ * someone who was selecting the text they came to copy (the source drawer's
+ * excerpt) or typing. Checked in Chromium: `stopPropagation` on the panel does
+ * not prevent it, because the click never passes through the panel.
+ *
+ * So a dismissal needs the press *and* the release to have been on the
+ * backdrop itself. Pointer events say where each happened; the click only
+ * confirms. If no pointer events came before it — a script, a test, an
+ * assistive technology activating the element — there is nothing to
+ * contradict the click and it dismisses, as it always did.
+ *
+ * Spread the result on the backdrop: `<div className="…wash" {...useScrim(onClose)}>`.
+ */
+export function useScrim(onDismiss: () => void): {
+  onPointerDown: (e: PointerEvent<HTMLElement>) => void;
+  onPointerUp: (e: PointerEvent<HTMLElement>) => void;
+  onClick: (e: MouseEvent<HTMLElement>) => void;
+} {
+  // `null` is "no pointer event seen"; `false` is "it started (or ended) inside the panel".
+  const press = useRef<{ down: boolean | null; up: boolean | null }>({ down: null, up: null });
+  return {
+    onPointerDown: (e) => {
+      press.current = { down: e.target === e.currentTarget, up: null };
+    },
+    onPointerUp: (e) => {
+      press.current.up = e.target === e.currentTarget;
+    },
+    onClick: (e) => {
+      const { down, up } = press.current;
+      press.current = { down: null, up: null };
+      if (e.target !== e.currentTarget) return;
+      if (down === false || up === false) return;
+      onDismiss();
+    },
+  };
 }

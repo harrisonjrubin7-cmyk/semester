@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useModal } from '../a11y/modal';
+import { useModal, useScrim } from '../a11y/modal';
 import type { Action } from '../lib/actions';
 import { DESKTOP, useMedia } from '../lib/media';
 import { SourceBadge } from './SourceBadge';
@@ -40,6 +40,7 @@ export function ExplanationSheet({
   const headingId = useId();
   const first = useRef<HTMLHeadingElement>(null);
   const { ref: modalRef, onKeyDown: modalKeys } = useModal<HTMLDivElement>({ onClose, initial: first, on: !wide });
+  const scrim = useScrim(onClose);
   const e = action.explanation;
 
   // The drawer is not a dialog, so `useModal` does not manage it: take focus
@@ -115,7 +116,7 @@ export function ExplanationSheet({
   }
 
   const sheet = (
-    <div className="explain-wash" onClick={onClose}>
+    <div className="explain-wash" {...scrim}>
       <div
         ref={modalRef}
         className="explain-sheet"

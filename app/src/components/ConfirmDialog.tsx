@@ -1,7 +1,7 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { offlineModeOn, useOnline } from '../lib/offline-mode';
 import { createPortal } from 'react-dom';
-import { useModal } from '../a11y/modal';
+import { useModal, useScrim } from '../a11y/modal';
 
 /**
  * A preview, then a choice (DESIGN-SYSTEM-IMPROVEMENTS §4.9).
@@ -36,13 +36,14 @@ export function ConfirmDialog({
   const titleId = useId();
   const cancel = useRef<HTMLButtonElement>(null);
   const { ref, onKeyDown } = useModal<HTMLDivElement>({ onClose: onCancel, initial: cancel });
+  const scrim = useScrim(onCancel);
   // Offline mode (Phase M): an official hand-off is never queued. Offline, the
   // dialog says so and its confirm does nothing — see lib/offline-mode.ts.
   const online = useOnline();
   const handoffBlocked = tone === 'external' && offlineModeOn() && !online;
 
   const dialog = (
-    <div className="dialog-backdrop" onClick={onCancel}>
+    <div className="dialog-backdrop" {...scrim}>
       <div
         ref={ref}
         className="dialog"

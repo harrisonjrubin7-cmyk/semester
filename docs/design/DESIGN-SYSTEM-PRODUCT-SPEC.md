@@ -124,7 +124,7 @@ Status key: **E** exists and guarded · **P** exists, partial or unguarded ·
 | Feedback | Loading/Error/Success/Permission/Offline | E | `unity/States.tsx` | Components |
 | | Toast (Undone, Said) | E | `lib/undo.ts` | Components |
 | Overlay | ConfirmDialog, TypeToConfirm, Popover | E | `ConfirmDialog.tsx`, `a11y/modal.ts` | A11y |
-| | Generic Sheet / Drawer | P | `ExplanationSheet` already implements the contract (modal bottom sheet <1200px, docked non-modal drawer ≥1200px); `ReviewSheet`, `TileSheet`, `SourceDrawer` are separate. Slice 3 extracts, it does not invent | Components |
+| | Sheet / Drawer | **not a primitive** | Fifteen overlays already share `useModal` (trap, Escape, focus return); the "sheets" are four different presentations. See §2.3. `useScrim` (built, Slice 3) is the shared behaviour they were missing | A11y |
 | Data | Table (responsive) | E (Slice 4) | `unity/Table.tsx`; adopted by `StudentGrades`. Thirty-odd files still hand-write `<table>`; `InstructorBook` (editable cells) and `DecisionTable` are next | Components |
 | | HorizontalOverflow | E | `HorizontalOverflow.tsx` | Components |
 | | Charts | E | `DATA-VISUALIZATION-SYSTEM.md`, `--chart-*` | Foundations |
@@ -140,7 +140,7 @@ Status key: **E** exists and guarded · **P** exists, partial or unguarded ·
 | | Readable-density / dyslexia preset | G | §6.6 | A11y |
 
 Four gaps mattered because screens were re-implementing them: **Table,
-Combobox, Sheet, ActionPreview** (plus ApprovalTimeline, still open). Two of the
+Combobox, ActionPreview** and the backdrop-dismiss behaviour (plus ApprovalTimeline, still open); a generic Sheet turned out not to be one. Two of the
 six the first draft named were not gaps: the announcer exists (`Said`), and the
 date control is the native input. Verify a "G" with a grep before building it.
 
@@ -167,15 +167,34 @@ Telemetry events (snake_case object_verb)
 
 ### 2.3 Worked contracts for the first three new primitives
 
-**`Sheet`** — *revised from the first draft, not built (Slice 3).* The contract
-already exists in `components/ExplanationSheet.tsx`, and a primitive must
-capture it rather than invent one: below 1200px a **modal** bottom sheet (portalled
-into `.device`, trapped by `useModal`, the first heading takes focus, the handle is
-drawn but is never the only way out); at 1200px and wider a **docked, non-modal
-drawer** (the page beside it stays usable; Escape and focus-return still work).
-The first draft said "side ≥ 840", which was wrong. It will be built on
-`a11y/modal.ts`, and `ExplanationSheet` moves onto it first, with its existing
-`ActionCenter` tests unchanged as the proof of no behaviour change.
+**`Sheet` — dropped as a primitive (Slice 3), with evidence.** The first draft
+proposed one component to replace "four bespoke sheets". Reading them:
+
+- `ReviewSheet` is **not an overlay**; it is an in-page review list (a "sheet" as in a
+  document). The first draft was wrong to list it.
+- The overlays are four *presentations*: `ExplanationSheet` and `CourseDetailV2`
+  (modal bottom sheet below 1200px, docked non-modal drawer from 1200px),
+  `UnityLayer`'s private `Sheet` (a scrim with a window or pane), `TileSheet`
+  (a full-screen "folder" with swipe-to-dismiss), and `ConfirmDialog` (a dialog).
+- What they share is already one primitive: **`useModal`**, used by 15 files, which is
+  documented as "one trap, in one place". What remains per overlay is ~10 lines of
+  attributes plus its own design.
+
+A wrapper would unify those ten lines at the price of touching four designs with
+no visual test, and add no capability. So none was built. What *was* missing
+was a behaviour, found by reading how they close:
+
+**`useScrim`** — *built*, `a11y/modal.ts`. Four dialogs closed on `onClick` of the
+backdrop with `stopPropagation` on the panel. The browser fires `click` on the
+nearest common ancestor of the press and the release, so pressing inside a panel,
+dragging a selection out and letting go over the backdrop dispatched a click on the
+backdrop and **closed the dialog under the reader** (the source drawer's excerpt is
+selectable text people copy). Reproduced in Chromium: `stopPropagation` on the panel
+does not prevent it, because the click never passes through the panel. A dismissal now
+needs the press *and* the release on the backdrop, via pointer events; a click with no
+pointer events before it (a script, an assistive technology) still dismisses as it
+always did. Adopted in `ExplanationSheet`, `CourseDetailV2`, `ConfirmDialog` and
+`UnityLayer`; a tree-wide test fails on a new `…wash|backdrop|scrim… onClick=`.
 
 **`Table`** — *built (Slice 4)*, `components/unity/Table.tsx`.
 
@@ -220,16 +239,32 @@ native `<select>`.
 **`DateField`** — *built (Slice 4)*, `components/unity/DateField.tsx`, with
 `lib/datefield.ts`. See §2.4.
 
-**`ActionPreview`** — *revised from the first draft, not built (Slice 3).*
-`ConfirmDialog` already is the preview-then-choice dialog (`preview: ReactNode`,
-focus starts on Cancel), and `docs/ACTION-EXPLAINABILITY-AND-STUDENT-CONTROL.md`
-already defines the impact shape `{ says, doesNotChange, subjectTo }`. So
-`ActionPreview` is the structured *content* of that slot, not a second dialog, and
-it uses that shape (not a parallel `effects` list). It also follows the repo's
-existing policy (`lib/undo.ts`): a reversible action should be done with an undo
-toast and no dialog at all; the preview is for what leaves something behind or
-leaves Semester. Authority is a `FactProvenance` (§4), so "who must approve" reads
-in the one vocabulary.
+**`ActionPreview`** — *built (Slice 3, ships unadopted)*, `components/unity/ActionPreview.tsx`.
+`ConfirmDialog` already is the preview-then-choice dialog (`preview: ReactNode`, focus
+starts on Cancel, Tab trapped), so this is the *content* of that slot, not a second
+dialog. About thirty callers hand-write their previews; the sample read consistently
+had a bold subject, what will happen to whom, and what stays, and one
+(`OfficeActionDesk`) typed "Institution verified · scope · source" by hand where the
+provenance chips now exist. The shape follows the explainability doc's impact fields
+(`says`, `doesNotChange`, `subjectTo`) and adds the part that was always optional and
+should not be:
+
+```ts
+type Recovery = { kind: 'undo'; how?: string } | { kind: 'request'; how: string }
+              | { kind: 'none'; how?: string }
+ActionPreview({ subject?, says, exactly?, doesNotChange?, subjectTo?, recovery, provenance? })
+```
+`recovery` is **required in the type** (proved: making it optional fails `tsc`), and a
+`request` recovery must say how, because "it can be reversed" with no way to ask is
+the sentence that sends someone to support. Rendered as a definition list in the order
+people ask: what happens, exactly what, what stays the same, can I take it back.
+Reversible work should not use a dialog at all: `lib/undo.ts` offers an undo toast,
+because a confirmation clicked through a hundred times stops asking.
+
+*Adoption is a content decision, not a refactor.* None of the thirty dialogs states
+whether it can be undone, so moving one onto `ActionPreview` means writing a sentence
+about reversibility that the product has never claimed. That belongs to DS-Content and
+the screen's owner, one dialog at a time, not to a mechanical migration.
 
 ### 2.4 Why there is no custom calendar
 
@@ -580,7 +615,7 @@ Route changes move focus to the page `h1`. Guard: `focus.test.ts`, `modal.test.t
 ### 6.2 Keyboard
 Everything reachable and operable; order follows reading order. Composite widgets
 use the ARIA authoring pattern keys (roving tabindex for tabs/segmented/menus,
-Arrow/Home/End; Escape closes the topmost layer only). No hover-, drag- or
+Arrow/Home/End; Escape closes the topmost layer only). Pressing outside a dialog dismisses it only if the press *and* the release were outside (`useScrim`), so a selection that overshoots does not close it. No hover-, drag- or
 swipe-only action; every drag has a single-pointer alternative (2.5.7,
 `dragging.test.ts`). Shortcuts are optional, discoverable and remappable
 (2.1.4).
@@ -831,9 +866,12 @@ guard is proven, and is reversible by deleting the file.
 - **Not done:** `SourceBadge` still renders from `TrustKind`; no screen has adopted the chips yet (Gradebook, Today deadlines, Bill and Grades are the first candidates); the details drawer does not list cues beyond the two drawn; the design census does not yet count cards without `provenance`.
 *Exit met:* every axis combination and the priority rule are tested; six deliberate breaks were each shown red (three cues, swapped priority, invented origin, assumed freshness, chips exposed to assistive technology, optional authority) and restored; rendered on Ink, Parchment and Fog in colour, greyscale and forced colours.
 
-### Slice 3 — Sheet and ActionPreview (revised; not built)
-The Announcer is dropped: it exists (`Said`). `Sheet` extracts `ExplanationSheet`'s contract (§2.3) and `ExplanationSheet` migrates first, proved by its unchanged tests; then `ReviewSheet`, `TileSheet`, `SourceDrawer`. `ActionPreview` is content for `ConfirmDialog`'s `preview` slot using the `says / doesNotChange / subjectTo` impact shape, and defers to undo-first for reversible actions.
-*Exit:* each passes the §9.1 gate including a reverted-fix red run; zero behaviour change in migrated screens, shown by their existing tests.
+### Slice 3 — Scrim dismissal and ActionPreview (built; PR pending)
+- **The Sheet primitive was dropped** (§2.3): the overlays share `useModal` already and differ in design; `ReviewSheet` is not an overlay. The Announcer was dropped earlier (`Said` exists).
+- `useScrim` (`a11y/modal.ts`) fixes a real bug: a dialog closing when a selection is released over its backdrop. Adopted at all four such backdrops; `a11y/scrim.test.tsx` holds the behaviour and fails on any new bare-`onClick` backdrop.
+- `components/unity/ActionPreview.tsx`; **ships unadopted**, for the reason in §2.3.
+- Not done: `TileSheet` and `Command` have swipe/outside behaviours of their own and were not touched; `ApprovalTimeline` is still unbuilt; no dialog yet states its reversibility.
+*Exit met:* the scrim bug reproduced in Chromium, then the real hook driven by real mouse input in the same browser (backdrop press+release closes; inner click, a drag from panel to backdrop, and a drag from backdrop to panel do not); the hook's behaviour and the tree-wide rule each shown red against a deliberate break; `ActionPreview` four deliberate breaks red (a dropped row, an empty label, a changed sentence, an optional `recovery` rejected by the compiler); existing suites for the four dialogs unchanged and green; axe clean; rendered on Parchment at 390px.
 
 ### Slice 4 — Table, Combobox, DateField (built; PR pending)
 - `components/unity/Table.tsx`; `StudentGrades` adopted, with a characterization test written first against the old markup and passing unchanged after (and the 17 existing gradebook tests untouched).

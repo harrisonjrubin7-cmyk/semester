@@ -1243,6 +1243,37 @@
   backdrop-filter: none;
 }
 
+/* ActionPreview (components/unity/ActionPreview.tsx): what happens, before it does. */
+.action-preview {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.action-preview-subject,
+.action-preview-caveat {
+  margin: 0;
+}
+
+.action-preview-caveat {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+.action-preview-facts {
+  display: grid;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+}
+
+.action-preview-facts dt {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+.action-preview-facts dd {
+  margin: 0 0 var(--sp-3);
+}
+
 /* Combobox (components/unity/Combobox.tsx): a text box with a list under it. */
 .combo {
   position: relative;
