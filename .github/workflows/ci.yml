@@ -63,6 +63,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # Two repository-only tools, downloaded to a temporary directory with
+      # pinned versions and SHA-256 hashes. They never enter node_modules or
+      # the deployed bundle. actionlint validates all workflow expressions and
+      # embedded shell; OSV-Scanner covers every supported lockfile, including
+      # video/ and pipeline/, which the app-only npm audit below does not see.
+      - name: Verify workflows and all lockfiles
+        run: ./scripts/developer-tools.sh
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
