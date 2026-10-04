@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:integration",
+  "title": "Semester events: Integration",
+  "description": "The 6 Integration event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "connector.sync_started",
+      "properties": {
+        "eventType": {
+          "const": "connector.sync_started"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "connector.sync_completed",
+      "properties": {
+        "eventType": {
+          "const": "connector.sync_completed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "connector.sync_failed",
+      "properties": {
+        "eventType": {
+          "const": "connector.sync_failed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "source.updated",
+      "properties": {
+        "eventType": {
+          "const": "source.updated"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "source.stale",
+      "properties": {
+        "eventType": {
+          "const": "source.stale"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares operational for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "operational"
+        }
+      }
+    },
+    {
+      "title": "reconciliation.discrepancy_detected",
+      "properties": {
+        "eventType": {
+          "const": "reconciliation.discrepancy_detected"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    }
+  ]
+}

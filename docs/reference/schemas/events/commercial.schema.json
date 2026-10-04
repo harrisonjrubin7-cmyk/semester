@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:commercial",
+  "title": "Semester events: Commercial",
+  "description": "The 5 Commercial event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "subscription.activated",
+      "properties": {
+        "eventType": {
+          "const": "subscription.activated"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares commercial for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "commercial"
+        }
+      }
+    },
+    {
+      "title": "entitlement.changed",
+      "properties": {
+        "eventType": {
+          "const": "entitlement.changed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares commercial for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "commercial"
+        }
+      }
+    },
+    {
+      "title": "invoice.paid",
+      "properties": {
+        "eventType": {
+          "const": "invoice.paid"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares commercial for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "commercial"
+        }
+      }
+    },
+    {
+      "title": "payment.failed",
+      "properties": {
+        "eventType": {
+          "const": "payment.failed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares commercial for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "commercial"
+        }
+      }
+    },
+    {
+      "title": "renewal.started",
+      "properties": {
+        "eventType": {
+          "const": "renewal.started"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "internal",
+            "student_private",
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares commercial for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "commercial"
+        }
+      }
+    }
+  ]
+}
