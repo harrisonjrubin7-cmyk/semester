@@ -45,14 +45,17 @@ export function ReadState<T>({
   const p = present(env, now);
   const first = p.recovery[0];
   const recover = first && onRecover ? { label: first.label, run: () => onRecover(first.action) } : undefined;
+  const gutter = inset ? { paddingInline: 'calc(18px * var(--density, 1))' } : undefined;
   const notes = p.limitations.map((l) => (
-    <p key={l} className="state-body" style={inset ? { paddingInline: 'calc(18px * var(--density, 1))' } : undefined}>
+    <p key={l} className="state-body" style={{ fontSize: 'var(--type-sm)', ...gutter }}>
       {l}
     </p>
   ));
   const label = isSourceLabel(env.source.kind) ? env.source.kind : null;
   const badge = label && (
-    <SourceBadge label={label} at={env.observedAt ? Date.parse(env.observedAt) : null} now={now} unknownAge={!env.observedAt} />
+    <div style={gutter}>
+      <SourceBadge label={label} at={env.observedAt ? Date.parse(env.observedAt) : null} now={now} unknownAge={!env.observedAt} />
+    </div>
   );
   const reference = env.supportReference ?? env.correlationId;
 

@@ -2135,6 +2135,7 @@ export function Today() {
       what="today"
       empty={{ title: 'Nothing on today yet.', body: 'Add a course or an action to start.' }}
       emptyNode={<FirstRun where="on today"><DailyPlanSlot /></FirstRun>}
+      inset
     >
       {() => (shape === 'feed' ? <FeedHome /> : <TabHome />)}
     </ReadState>
