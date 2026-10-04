@@ -1,0 +1,67 @@
+# Does this pull request document itself?
+#
+# `npm run docs:impact` (app/scripts/docs-impact.mjs, rules in
+# app/src/lib/docs/impact.ts, explained in
+# docs/documentation/OWNERSHIP-AND-REVIEW.md) lists what the branch changed and
+# fails if it touched a path whose documentation it did not touch, unless the
+# pull request description says, on a line of its own,
+#
+#     Docs: none because <the reason>
+#
+# ## Why this is not a step in ci.yml
+#
+# It needs two things that job does not have. It needs the pull request's
+# description, which only exists on the `pull_request` event; and it needs to
+# re-run when that description is *edited*, because the usual way out of a red
+# result is to add the waiver line. ci.yml's trigger has no `edited` type, and
+# adding one would re-run the whole build every time somebody fixed a typo in a
+# title. A workflow of its own re-runs this one cheap check and nothing else.
+#
+# ## What it does not need
+#
+# No `npm ci`. The script imports one TypeScript file that depends on nothing,
+# and Node 22 strips the types itself. The whole job reads a git diff.
+#
+# ## What holds the facts, as against the judgement
+#
+# A route, error code, event type, function or variable that exists and is not
+# documented fails the *test suite* (docs/reference/ is generated or held), not
+# this job. This job is for the half a test cannot see: whether the page that
+# explains a screen or a procedure moved when the screen or the procedure did.
+
+name: Docs
+
+on:
+  pull_request:
+    branches: ['main']
+    types: [opened, synchronize, reopened, edited]
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  impact:
+    runs-on: ubuntu-latest
+    steps:
+      # The whole history, because the script asks git for the merge base.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+
+      # The description goes in through the environment, never interpolated
+      # into the command line: it is text anybody who can open a pull request
+      # writes.
+      - name: Does the change document itself?
+        working-directory: app
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE: origin/${{ github.base_ref }}
+        run: node scripts/docs-impact.mjs --base "$BASE"
