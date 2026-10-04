@@ -244,7 +244,7 @@ function field(key, unit, opt = {}) {
   const inp = h("input", { type: "text", inputmode: "decimal", "aria-label": opt.aria || key, autocomplete: "off" });
   const rs = h("button", { type: "button", class: "rs", title: "Put back the workbook value", "aria-label": "Reset to the workbook value" }, "↺");
   const wrap = h("div", { class: "in" }, inp, h("span", { class: "u" }, unitLabel(unit)), rs);
-  const f = { key, unit, inp, rs };
+  const f = { key, unit, inp, rs, owner: opt.owner || null };
   const show = () => { const v = key in ov ? ov[key] : defaults[key]; inp.value = fmtDisp(unit, v); const on = key in ov; inp.classList.toggle("chg", on); rs.classList.toggle("on", on); inp.classList.remove("bad"); };
   f.show = show; fields.push(f); show();
   inp.addEventListener("change", () => { const v = fromDisp(unit, inp.value); if (v === null) { inp.classList.add("bad"); return; } setCell(key, v); fields.filter((x) => x.key === key).forEach((x) => x.show()); changed(); });
@@ -269,14 +269,14 @@ function buildAll() {
 }
 function filterAll() { const q = $("#q").value.trim().toLowerCase(); document.querySelectorAll("#all .sec").forEach((sec) => { let any = false; sec.querySelectorAll(".rowf").forEach((r) => { const ok = !q || r.dataset.t.includes(q); r.hidden = !ok; any = any || ok; }); sec.hidden = !any; }); }
 function buildDrivers() {
-  const root = $("#drv"); root.innerHTML = ""; fields.splice(0, fields.length, ...fields.filter((f) => !f.key.startsWith("Scenario_Control!")));
+  const root = $("#drv"); root.innerHTML = ""; fields.splice(0, fields.length, ...fields.filter((f) => f.owner !== "drv"));
   const col = SE.colName(4 + sel); $("#drvname").textContent = (sel + 1) + ". " + D.names[sel];
-  D.drivers.forEach((d) => root.appendChild(h("div", { class: "rowf" }, h("span", { class: "id def" }, d.id), h("span", { class: "nm" }, d.label), h("div", { class: "ins" }, h("div", { class: "fld" }, field("Scenario_Control!" + col + d.row, d.unit, { aria: d.label }))), h("span", { class: "def" }, (d.unit || "")))));
+  D.drivers.forEach((d) => root.appendChild(h("div", { class: "rowf" }, h("span", { class: "id def" }, d.id), h("span", { class: "nm" }, d.label), h("div", { class: "ins" }, h("div", { class: "fld" }, field("Scenario_Control!" + col + d.row, d.unit, { aria: d.label, owner: "drv" }))), h("span", { class: "def" }, (d.unit || "")))));
 }
 function buildHires() {
-  const t = $("#hire"); t.innerHTML = ""; fields.splice(0, fields.length, ...fields.filter((f) => !f.key.startsWith("Headcount!")));
+  const t = $("#hire"); t.innerHTML = ""; fields.splice(0, fields.length, ...fields.filter((f) => f.owner !== "hire"));
   t.appendChild(h("thead", {}, h("tr", {}, ["Role", "Function", "Gate", "Flexible", "Qty", "Start month", "Base pay $"].map((x) => h("th", {}, x)))));
-  const b = h("tbody"); D.hires.forEach((r) => b.appendChild(h("tr", {}, h("td", { title: r.role }, r.role), h("td", {}, r.fn), h("td", {}, r.gate === "-" ? "" : r.gate), h("td", {}, r.flex ? "yes" : ""), h("td", {}, field("Headcount!AO" + r.row, "", { aria: r.role + " quantity" })), h("td", {}, field("Headcount!AP" + r.row, "", { aria: r.role + " start month" })), h("td", {}, field("Headcount!AS" + r.row, "", { aria: r.role + " base pay" }))))); t.appendChild(b);
+  const b = h("tbody"); D.hires.forEach((r) => b.appendChild(h("tr", {}, h("td", { title: r.role }, r.role), h("td", {}, r.fn), h("td", {}, r.gate === "-" ? "" : r.gate), h("td", {}, r.flex ? "yes" : ""), h("td", {}, field("Headcount!AO" + r.row, "", { aria: r.role + " quantity", owner: "hire" })), h("td", {}, field("Headcount!AP" + r.row, "", { aria: r.role + " start month", owner: "hire" })), h("td", {}, field("Headcount!AS" + r.row, "", { aria: r.role + " base pay", owner: "hire" }))))); t.appendChild(b);
 }
 function buildSeg() { $("#seg").innerHTML = D.names.map((n, i) => `<button type="button" aria-pressed="false">${i + 1}. ${n}</button>`).join(""); document.querySelectorAll("#seg button").forEach((b, i) => b.addEventListener("click", () => { sel = i; buildDrivers(); persist(); recompute(); })); }
 
