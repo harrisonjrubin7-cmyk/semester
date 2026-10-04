@@ -7,7 +7,7 @@ import { styleFor } from '../lib/house';
 import { harvestPrompt } from '../lib/harvest';
 import type { Intake } from '../lib/intake';
 import { studyPrompt, type StudioControls } from '../lib/studystudio';
-import { inputFor } from '../../server/institution/providers/openai';
+import { SOURCE_DATA_RULE, inputFor } from '../../server/institution/providers/openai';
 import { systemPrompt } from './prompt';
 import { CLOSE, DATA_RULE, OPEN, disarm, fence } from './untrusted';
 
@@ -176,6 +176,8 @@ describe('the two builders that carry material as JSON', () => {
     const request = (body: string) =>
       ({ mode: 'policy', question: 'What does the policy say?', sources: [{ id: 'src-1', body }] }) as unknown as Parameters<typeof inputFor>[0];
     const benign = inputFor(request(BENIGN));
+    // The instruction turn says what the sources are, once, before any of them.
+    expect(benign[0].content[0].text).toContain(SOURCE_DATA_RULE);
     for (const needle of CORPUS) {
       const input = inputFor(request(needle));
       expect(input[0]).toEqual(benign[0]);
