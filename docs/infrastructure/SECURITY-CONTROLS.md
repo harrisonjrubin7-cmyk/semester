@@ -20,8 +20,8 @@ GitHub Actions allow-list and `sha_pinning_required` set by Terraform.
 The register stays [`SECRETS.md`](../../SECRETS.md). Added by this work:
 `INFRA_GITHUB_TOKEN`, `VERCEL_API_TOKEN`, `TF_STATE_ACCESS_KEY_ID` /
 `TF_STATE_SECRET_ACCESS_KEY` (environment secrets) and `TF_STATE_BUCKET`,
-`TF_STATE_REGION`, `TF_STATE_ENDPOINT` (environment variables). **Add these to
-`SECRETS.md` when activating** (ACTIVATION step 3). Terraform reads sensitive
+`TF_STATE_REGION`, `TF_STATE_ENDPOINT` (environment variables). They are
+registered in `SECRETS.md` (a test fails if a workflow reads one that is not). Terraform reads sensitive
 values from `TF_VAR_*`; a `.tfvars` file in git holds identifiers only, and a
 test fails on anything secret-shaped.
 

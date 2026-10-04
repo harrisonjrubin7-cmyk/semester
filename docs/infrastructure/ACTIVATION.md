@@ -17,7 +17,7 @@ A step is done when its check passes, not when the command ran.
 3. **Secrets and variables** in those environments: `TF_STATE_BUCKET`,
    `TF_STATE_REGION`, `TF_STATE_ENDPOINT` (variables); the secrets listed in
    SECURITY-CONTROLS. Prefer a GitHub App installation token for
-   `INFRA_GITHUB_TOKEN`. Then **`SECRETS.md`**: add the new rows (owner, revoked-by).
+   `INFRA_GITHUB_TOKEN`. The rows are already in `SECRETS.md`; record each secret's owner and first-rotated date there.
 4. **Confirm the platform root through the pipeline.** Dispatch `infra-apply.yml`
    for `platform` (record `Roots: platform`); it must plan empty. Review the ruleset: it must show no change
    if `main.json` already matches GitHub. Any difference is real drift found.
