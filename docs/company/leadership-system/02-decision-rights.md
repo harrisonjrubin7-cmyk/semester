@@ -39,7 +39,7 @@ Codes: **D** decides · **R** prepares and recommends · **A** must approve in w
 | 9 | Public claim, new or changed | A | D only for classified claims with evidence | R (claim owner) | V (any reviewer named on the claim's row) | A (counsel for legal-sensitive categories) | I | A if it names a customer |
 | 10 | Release, standard | C | — | D (engineering) | V (automated gates) | — | — | — |
 | 11 | Release touching a trust floor (identity, tenancy, data classes, AI routes) | B | C | R | V (security and privacy reviewer) | assessor evidence where required | I | — |
-| 12 | Architecture standard | B | C | D | V (security, on trust floors) | — | — | — |
+| 12 | Architecture standard (process: [architecture review](../../target-architecture/08-ORGANIZATION-AND-MILESTONES.md#5-architecture-review-process)) | B | C | D | V (security, on trust floors) | — | — | — |
 | 13 | New data class, or classification floor change | A | C | R (privacy/data) | V (privacy; two-key) | A (counsel for minors, regulated data) | I | A for tenant data |
 | 14 | New vendor or subprocessor receiving student data | B | C | R (vendor owner) | V (security and privacy) | A (counsel on data-processing terms) | I | I (tenant notice per contract) |
 | 15 | New AI use case, provider or model change | A | C | R | V (AI quorum; **any member** may engage the kill switch) | C | I | C |

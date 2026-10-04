@@ -6,6 +6,19 @@
 
 # Part A — Organization design by stage
 
+## Relationship to the CTO architecture pack
+
+[`docs/target-architecture/08-ORGANIZATION-AND-MILESTONES.md`](../../target-architecture/08-ORGANIZATION-AND-MILESTONES.md) (merged in #1144, after this work began) already proposes the **engineering** team topology, a technical staffing sequence and the architecture-review process. This page does not restate them.
+
+| Topic | Where it lives | Note |
+| --- | --- | --- |
+| Engineering team topology, collapsing rules, architecture review | The CTO pack | **Authoritative for engineering.** The "Team topology" section below covers only company-level shape |
+| First technical hires | Both | **They agree on hire #1:** a platform/SRE engineer who becomes the second operator, to retire the single-holder production risk. Order after that is the CTO pack's for engineering and this page's for the rest |
+| What triggers a hire | This page | The CTO pack's staffing table is a *funded-build* hypothesis keyed to T0 (the day the first engineer beyond the founder starts). This page keys hires to **evidence and a named risk**, so a hire is justified even before funding and is not forced by it |
+| Non-engineering functions (counsel, finance, support, implementation, go-to-market, trust) | This page | The CTO pack names counsel, a support lead, finance/revenue operations and an implementation lead as gates and defers them to the CEO and CFO: this page is that input |
+| Headcount | Reconcile at each stage review | Ranges here are company-wide `[HYPOTHESIS]`; the CTO pack's S1/S2 tech counts fall inside the Seed and Series A ranges |
+| Contract engineers | CTO pack | Contract engineers do not hold production access or approve changes; the [delegation matrix](02-decision-rights.md#delegation-matrix) applies the same rule |
+
 ## The starting point
 
 All 15 company-side seats have the same person as primary and no backup ([`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../../OWNER-AND-ACCOUNTABILITY-MATRIX.md)). The 12 launch-council seats ([`launchreadiness.ts`](../../../app/src/lib/launchreadiness.ts)) are held or vacant, and none has signed. A conventional org chart of function-by-function executives (as in the audit's role map) would be a list of vacancies. This design is organised around **seats, risks and triggers** instead.
@@ -77,6 +90,8 @@ Which seat is held by whom as the company grows. "Fractional" means a part-time 
 | Communications | Founder | Founder | Communications owner | Communications org |
 
 ## Team topology
+
+Company-level shape only; for the engineering team structure and collapsing rules see the [CTO pack](../../target-architecture/08-ORGANIZATION-AND-MILESTONES.md#2-team-topology-team-topologies-vocabulary).
 
 - **Platform-trust squad** (from Seed): identity, tenancy, policy, audit and authorization. Every domain depends on it, so it has a standing owner from the first non-founder engineer on. This follows the audit's identity-policy-audit spine.
 - **Domain squads** (from Series A, on commitment): a squad per domain in a committed motion, for example Academic core, Learning, Productivity, or Campus. A squad owns its service, data, runbook, SLO and support routing.

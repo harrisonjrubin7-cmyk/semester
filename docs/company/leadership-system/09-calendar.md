@@ -174,6 +174,10 @@
 | No blackout commitments | See capacity planning |
 | No claim without its row | [Claims](06-domain-governance.md#public-claims) |
 
+## Reconciling with the engineering milestones
+
+The [CTO pack](../../target-architecture/08-ORGANIZATION-AND-MILESTONES.md#4-delivery-milestones) counts engineering milestones M0–M7 from **T0**, the day the first engineer beyond the founder starts. That clock is separate from this calendar's M1–M12 (the date this system is adopted), and the two are not meant to line up: T0 is set by the hiring trigger, not the calendar. Note the name clash: its "M0–M7" are engineering milestones, this page's "Month 1–12" are calendar months. Governance gates apply on both clocks; an engineering milestone does not waive a gate here, and a calendar month does not pull an engineering exit gate forward.
+
 ## Reconciling with the 90-day program
 
 The [90-day launch program](../../90-DAY-LAUNCH-PROGRAM.md) and the proof calendar are *product and evidence* schedules. This calendar adds *governance, people and continuity*. When they disagree on timing, the evidence-and-gates schedule wins and this calendar moves; a governance item is never allowed to pull forward a gate.
