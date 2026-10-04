@@ -928,6 +928,9 @@ export default defineConfig(({ command, mode }) => {
         '@semester/institution': fileURLToPath(
           new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
+        '@semester/offline-sync': fileURLToPath(
+          new URL('../packages/offline-sync/src/index.ts', import.meta.url),
+        ),
         '@semester/platform': fileURLToPath(
           new URL('../packages/platform/src/index.ts', import.meta.url),
         ),
@@ -1000,6 +1003,7 @@ export default defineConfig(({ command, mode }) => {
             include: [
               ...configDefaults.include,
               '../packages/institution/src/**/*.test.ts',
+              '../packages/offline-sync/src/**/*.test.ts',
               '../packages/platform/src/**/*.test.ts',
             ],
             // Publication artifacts are outside the repository. Their explicit

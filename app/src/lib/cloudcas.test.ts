@@ -311,3 +311,34 @@ describe('a push sends only the courses that changed', () => {
     expect(courseData('hist')).toEqual({ code: 'HIST', note: 'phone' });
   });
 });
+
+describe('while the engine owns this device’s tasks', () => {
+  const owns = (on: boolean) =>
+    vi.stubGlobal('localStorage', { getItem: (k: string) => (on && k === 'semester.engine.tasks' ? 'on' : null), setItem() {}, removeItem() {} });
+
+  it('does not read the account’s old copy of them back, and still sends this device’s', async () => {
+    vi.stubEnv('VITE_OFFLINE_ENGINE_TASKS', 'production');
+    const { push, pull } = await load();
+    owns(true);
+    await push('u', { v: 1, tasks: [{ id: 'T1', title: 'mine' }] }, []);
+    // What is stored carries them — a device that has not opted in keeps receiving them.
+    expect(stateData()).toEqual({ v: 1, tasks: [{ id: 'T1', title: 'mine' }] });
+    // What is read back does not: another device's stale mirror must not resurrect what the engine deleted.
+    expect((await pull('u')).state).toEqual({ v: 1 });
+  });
+
+  it('reads them as ever when the build\'s module flag is off, even on a device that opted in', async () => {
+    const { push, pull } = await load();
+    owns(true);
+    await push('u', { v: 1, tasks: [{ id: 'T1', title: 'mine' }] }, []);
+    expect((await pull('u')).state).toEqual({ v: 1, tasks: [{ id: 'T1', title: 'mine' }] });
+  });
+
+  it('reads them as ever with the device switch off', async () => {
+    vi.stubEnv('VITE_OFFLINE_ENGINE_TASKS', 'production');
+    const { push, pull } = await load();
+    owns(false);
+    await push('u', { v: 1, tasks: [{ id: 'T1', title: 'mine' }] }, []);
+    expect((await pull('u')).state).toEqual({ v: 1, tasks: [{ id: 'T1', title: 'mine' }] });
+  });
+});

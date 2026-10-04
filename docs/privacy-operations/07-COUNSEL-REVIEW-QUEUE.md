@@ -33,6 +33,7 @@ Priority follows `LEGAL-REVIEW-QUEUE.md` (L0 blocks a motion; L1 blocks a featur
 | P-17 | L1 | **Family/supporter model for adults:** bearer-code claim without identity check | Documented design (D-037) | n/a | Family launch | **NEW** |
 | P-18 | L2 | International users, GDPR applicability, cross-border transfers | Not designed | Intended countries | Any non-US user | LRQ L2 |
 | P-19 | L2 | Research and interview consent (discovery interviews) | None | Pilot plan | First interview | CB F1 |
+| P-21 | L1 | **Access requests and withheld records:** may a person's export or access response leave out a school's guardian restriction (a court-order flag and staff note about a guardian link), say only that one exists, or must it include it? | Withheld whole from both the student's and the guardian's export (D-1240); the file says a restriction was left out | The restriction's purpose; which regimes apply; school process | Answering access requests for K-12 accounts | **NEW** (08 C4) |
 | P-20 | L2 | Dedicated privacy and security contact address replacing a personal mailbox; **who is the accountable person** | Personal Gmail | n/a | Any public notice | **NEW** |
 
 ## Standing instructions for the preparer

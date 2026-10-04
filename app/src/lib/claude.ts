@@ -127,6 +127,14 @@ export const NOT_ACTIVATED_MARK = "switched off until Semester's agreements";
 export const NOT_ACTIVATED_CODE = 'shared_provider_not_activated';
 
 /**
+ * The phrase `functions/_shared/aispend.ts` puts in the refusal for a spent
+ * monthly allowance, matched for the reason above and held in step by
+ * `aispend.test.ts`. That refusal is a 429 and must not be told "wait a
+ * moment": nothing about waiting renews it.
+ */
+export const ALLOWANCE_MARK = 'shared AI allowance';
+
+/**
  * Turn a failed call into a sentence that names the fix.
  *
  * The failure worth spelling out is the shared route against a project where
@@ -154,6 +162,8 @@ export function explainAskError(
     // are not all recorded. The function's own sentence already says what to
     // do, and "no key" or "not an API" would both be wrong here.
     if (status === 501 && detail.includes(NOT_ACTIVATED_MARK)) return detail;
+    // Spent for the month. Its own sentence says what renews it and what to do.
+    if (status === 429 && detail.includes(ALLOWANCE_MARK)) return detail;
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
       return (
         'The shared key is not switched on for this deployment yet — the `claude` ' +

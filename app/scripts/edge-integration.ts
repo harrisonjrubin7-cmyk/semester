@@ -33,11 +33,18 @@ export const SOURCES = [
   'src/lib/integration/adapter.ts',
   'src/lib/integration/catalog.ts',
   'src/lib/integration/classification.ts',
+  'src/lib/integration/crypto.ts',
+  'src/lib/integration/fallback.ts',
   'src/lib/integration/freshness.ts',
   'src/lib/integration/governance-envelope.ts',
+  'src/lib/integration/health.ts',
+  'src/lib/integration/oauth.ts',
   'src/lib/integration/pipeline.ts',
+  'src/lib/integration/provider-client.ts',
+  'src/lib/integration/rate-control.ts',
   'src/lib/integration/redact.ts',
   'src/lib/integration/retry.ts',
+  'src/lib/integration/vault.ts',
 ] as const;
 
 const SPECIFIER = /(\bfrom\s+|\bimport\s*\(\s*)(['"])([^'"]+)\2/g;

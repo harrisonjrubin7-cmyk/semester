@@ -82,6 +82,26 @@ Each phase ends only when its **exit gate** passes. A phase may be shipped alone
   equivalence test green; no new route reads a tenant from a body.
 - *Rollback:* revert the adapter; the old builder is still in git.
 
+**Status (first slice landed, see D-1228).** Done: the gateway's error builder and
+correlation id now come from `@semester/platform`, held by
+`app/server/institution/envelope.test.ts` (the old builder is kept there verbatim as the
+golden; every status default and every specific code in the source is compared
+byte for byte, with a control that the comparison can fail), and every gateway request
+carries a `RequestContext` (`app/server/institution/context.ts`, set on
+`AdapterContext.request`). Findings the equivalence work surfaced, all fixed on the
+platform side rather than the gateway's: the catalogue had named the 502 code
+`outcome_unknown` where the live wire says `outcome_uncertain`, lacked `refused`,
+`method_not_supported`, `expired`, `too_large` and `unsupported_media_type`, and could
+not carry the gateway's domain codes (`review_expired`, `record_changed`, kebab-case
+`policy-disabled`…), so `PlatformError.specific` was added. **Behaviour that did change:**
+a client that sends `X-Tenant-Id` disagreeing with its session is now refused
+(`tenant_mismatch`), and an identity whose tenant or user id falls outside the platform's
+id alphabet is refused rather than passed through; every id in the repository's fixtures
+fits. **Not done:** `lib/university.ts` is not on the SDK (it reads three older response
+shapes and mints its own correlation id; moving it is its own change with its own
+equivalence test), the edge functions have not adopted the envelope, and `environment`,
+tenant status and `verifiedBy` in the context are approximations the file says so about.
+
 ### Phase 2 — Capability resolution, side by side
 
 - Export a recorded sample of `(person, grants, node)` and compare
@@ -134,7 +154,7 @@ declared and its tests pass **through the pipeline**.
 3. **Institution gateway writes** (registration, money, advising…). These keep
    the **prepare → review → commit** two-phase pattern (ARCHITECTURE.md invariant
    5): prepare and commit become two commands; the journal remains the record of the
-   reviewed action; the unknown-outcome → `outcome_unknown` → reconcile path is
+   reviewed action; the unknown-outcome → `outcome_uncertain` → reconcile path is
    unchanged. `runCommand` is not a way to skip the review.
 4. **Grades and records** last, behind `requiresApproval` where the institution's
    policy says so.

@@ -120,3 +120,15 @@ describe('organization directory', () => {
     expect(d.add({ id: 'a/b', tenantId: 'tenant-a', kind: 'group', parentId: null, name: 'Slash' })).toMatchObject({ ok: false });
   });
 });
+
+describe('request context: a host that already minted the request id', () => {
+  it('uses the id the host passes, so the response header and the context agree', () => {
+    const ctx = buildRequestContext({ headers: {} }, identity(), { ...deps, requestId: 'req-from-the-host' });
+    expect(ctx.requestId).toBe('req-from-the-host');
+  });
+
+  it('still never takes a request id from the client', () => {
+    const ctx = buildRequestContext({ headers: { 'x-request-id': 'attacker-chosen-id' } }, identity(), { ...deps, requestId: 'req-from-the-host' });
+    expect(ctx.requestId).toBe('req-from-the-host');
+  });
+});
