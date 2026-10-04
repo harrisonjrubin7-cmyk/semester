@@ -34,6 +34,35 @@ alter table public.productivity_task
   ),
   add column if not exists planned_from text check (planned_from is null or length(planned_from) between 1 and 200);
 
+-- ## What this redefines, and from what
+--
+-- Two functions, each taken from the definition that applies *now*, not from the
+-- first migration: `private.productivity_commit` from `20261004180000_productivity_reads.sql`
+-- (which added the held-prediction guard a database adapter relies on), and
+-- `private.productivity_task_json` from the same file, which the reads return.
+-- Copying the older commit function would have silently dropped that guard, so
+-- `schema.test.ts` holds that the latest definition still carries it.
+
+create or replace function private.productivity_task_json(t public.productivity_task)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'id', t.id, 'tenantId', t.tenant_id, 'ownerId', t.owner_id,
+    'version', t.version, 'seq', t.seq,
+    'source', jsonb_strip_nulls(jsonb_build_object('kind', t.source_kind, 'ref', t.source_ref)),
+    'clocks', t.field_clocks,
+    'createdAt', private.productivity_iso(t.created_at), 'updatedAt', private.productivity_iso(t.updated_at),
+    'deletedAt', private.productivity_iso(t.deleted_at), 'deleteClock', t.delete_clock,
+    'title', t.title, 'notes', t.notes, 'status', t.status,
+    'completedAt', private.productivity_iso(t.completed_at), 'dueAt', private.productivity_iso(t.due_at),
+    'dueOn', to_char(t.due_on, 'YYYY-MM-DD'), 'whenText', t.when_text,
+    'priority', t.priority, 'courseId', t.course_id,
+    'repeat', t.repeat_rule, 'steps', t.steps, 'plannedFrom', t.planned_from)
+$$;
+
 create or replace function private.productivity_commit(
   p_tenant text,
   p_owner uuid,
@@ -101,6 +130,12 @@ begin
       raise exception 'entity changed since it was read' using errcode = '40001';
     end if;
     next_seq := next_seq + 1;
+    -- A caller that predicted this position (a database adapter does, because it has to
+    -- hand a sequence number back before the commit) is held to it: if the counter has
+    -- moved since it read it, the number it promised is not the one that is free.
+    if e ? 'seq' and (e->>'seq')::bigint <> next_seq then
+      raise exception 'sequence moved since it was predicted' using errcode = '40001';
+    end if;
     seqs := seqs || next_seq;
 
     if kind = 'task' then
