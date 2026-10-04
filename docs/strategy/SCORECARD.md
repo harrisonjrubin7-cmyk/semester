@@ -21,6 +21,18 @@ The repository already defines 23 first-year measures in four groups and states:
 
 Every number below is labelled **PROPOSED**. Where there is no benchmark, it says so: those figures are hypotheses placed on the table so the review has something to argue with, and they are replaced by the first cohort's own baseline.
 
+### One word, three meanings: "active"
+
+Three things in this package and its neighbours are called "active", and they must not be added together or compared.
+
+| Term | Defined by | Used for | Rule |
+| --- | --- | --- | --- |
+| **Weekly active** (S2) | Distinct accounts with an `opened` row in the week | Adoption and return | Product analytics under D-005 |
+| **Cohort weekly action rate** (S1) | Share of a consenting cohort of 10 or more completing a planned, source-attributed action in the week | The north star | Cohort-level only; never per student |
+| **Billing active student** | An active-subject period for pricing and meters, proposed in the pricing architecture and pending privacy review (its decision 5) | What an institution is charged for | Defined by that review; a billing definition must not become a new analytics mark by the back door |
+
+Reports state which one they mean. "Active students" with no qualifier means the billing sense when it concerns price and the weekly sense when it concerns adoption.
+
 ### Reading states (no fake success)
 
 A scorecard cell is never blank and never zero by default. The vocabulary is the one in [`INSTITUTIONAL-TRUST-SCORECARD.md`](../INSTITUTIONAL-TRUST-SCORECARD.md) (Green, Yellow, Red, Gray), so that two scorecards never use different words for the same state. **That document stays the detailed catalog for safety, privacy, recovery, accessibility and trust metrics and wins on their definitions; P2, P3, P5 and P6 below are strategy-level read-outs of it, not replacements.** The two additions here are **NO READING** (its Gray, named plainly) and **STALE**.
@@ -98,7 +110,7 @@ Columns: **ID**, metric (the bold name is the exact first-year measure name wher
 
 ### 3.4 Business
 
-Dollar figures are **illustrative**. No price book exists (A-08), so revenue targets are stated as agreement counts times an illustrative annual contract value of $60k to $120k, and become dollar targets only after FD-2026-007.
+Dollar figures are **illustrative**. No price book exists (A-08), so revenue targets are stated as agreement counts times an illustrative annual contract value of $60k to $120k **per department of about 750 active students** (the cost floors are in [`PRICING-UNIT-ECONOMICS-ARCHITECTURE.md`](../commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) §5.3), and become dollar targets only after FD-2026-007. An agreement count is reported with the active-student count behind it, because price has to scale with active students at campus and system tier.
 
 | ID | Metric | State today | Owner | Cadence | Y1 | Y2 | Y3 | Red line |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -108,8 +120,8 @@ Dollar figures are **illustrative**. No price book exists (A-08), so revenue tar
 | B4 | **Gross margin** | defined | `finance` | Quarterly from first revenue | Reported once there is revenue | Subscription and services reported separately | Subscription margin 65% or more (hypothesis) | Below 40% with no path |
 | B5 | **CAC payback** | defined | `finance` | Quarterly from first sale | None | Baseline | 24 months or fewer (hypothesis) | Above 36 months |
 | B6 | **Runway** | defined (financial workspace) | `finance` | Monthly | 12 months or more after the first raise; rules in [`BOARD-MEMO.md`](BOARD-MEMO.md) §6.4 | Same | Same | Under 9 months |
-| B7 | **AI cost per active student-month** *(new)* | NO READING; AI cost controls exist in [`COMMERCIAL-GOVERNANCE.md`](../operating-model/COMMERCIAL-GOVERNANCE.md) | `engineering` | Monthly | Baseline in the invitation cohort; cap set in FD-2026-010 | Within the cap | Within the cap | Cap exceeded for 2 months |
-| B8 | **Services share of revenue** *(new)* | NO READING | `finance` | Quarterly | Not applicable | 60% or less | 40% or less (productisation proof) | Above 70% in Year 3 |
+| B7 | **AI cost per active student-month** *(new)* | NO READING; AI cost controls exist in [`COMMERCIAL-GOVERNANCE.md`](../operating-model/COMMERCIAL-GOVERNANCE.md). The pricing architecture's modelled prior is $0.27 (lean), $0.50 (base) and $0.99 (heavy), not a measurement | `engineering` | Monthly | Baseline in the invitation cohort, **after the dollar cap is in force**; cap set in FD-2026-010 | Within the cap | Within the cap | Cap exceeded for 2 months |
+| B8 | **Services share of revenue** *(new)*, services priced at delivery cost and not waived | NO READING; the pricing architecture finds the $10k implementation floor below modelled delivery cost at every tier | `finance` | Quarterly | Not applicable | 60% or less | 40% or less (productisation proof) | Above 70% in Year 3 |
 
 ### 3.5 Learning velocity
 

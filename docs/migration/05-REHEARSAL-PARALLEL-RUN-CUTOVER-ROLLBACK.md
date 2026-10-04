@@ -63,6 +63,15 @@ that day's data, plus `permission` for any role or consent change that day.
 "Explained" is a status in the exception queue with an owner and a reason; an
 unexplained difference is an open exception.
 
+`observations.ts` does the comparing that turns raw outcomes into those days
+(`compareDay`): numbers are exact unless the institution sets a tolerance, an
+unexplained difference defaults to critical so the reader has to argue it
+*down*, and a difference counts as explained only by a recorded decision with a
+named approver and a reason that says something. `earliestExit` answers the
+calendar question first: the streak must contain the first occurrence of every
+required event, so it says *no date* when the calendar has none rather than a
+date that quietly skips the event.
+
 The Center's own parallel-run stage requires `parallel_runs_required` passing
 periods; these daily results roll up into those periods (`period_label`) via
 `bridge.ts`.
@@ -113,6 +122,19 @@ Elevated staffing and a shortened exception SLA for a stated period (default
 two weeks). The Center's **monitoring** stage records each check. Daily:
 the outcome and permission checks on the live target; login and enrollment
 mismatch rates; support tickets tagged migration.
+
+### 3.4 The plan, checked
+
+`cutoverPlanProblems(plan)` names what makes a plan unsafe before anyone
+rehearses it: no window or no measured rollback time; rollback longer than the
+window; a rollback window under 72 hours; no immutable pre-cutover snapshot; any
+default rollback trigger missing or *loosened* (triggers may be tightened, never
+loosened below `DEFAULT_ROLLBACK_TRIGGERS`); nobody owning the decision; an
+invalid change freeze; the legacy system not kept available for the whole window;
+communications not approved; support not staffed. Whether Semester's writes can
+be carried back is not a plan problem. That is `rollbackMode`, and
+`roll_forward_only` is a legitimate plan so long as everyone who signs knows it is
+the plan.
 
 ## 4. Rollback
 

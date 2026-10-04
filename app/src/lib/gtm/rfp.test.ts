@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LIBRARY, NEEDS_EVIDENCE, REGULATED, SECTIONS, renderLibrary, unsupportedClaims } from './rfp';
+import { claim } from '../ops/claims';
+import { LIBRARY, NEEDS_EVIDENCE, REGULATED, SECTIONS, overstatesClaim, renderLibrary, unsupportedClaims } from './rfp';
 
 /**
  * The RFP library may not say more than the tree can show.
@@ -114,6 +115,49 @@ describe('the RFP response library', () => {
 
     it('appears nowhere in an answer unless negated', () => {
       for (const a of LIBRARY) expect(unsupportedClaims(a.answer), a.id).toEqual([]);
+    });
+  });
+
+  describe('against the site-claims register and the capability registry', () => {
+    // Each answer that speaks for something the site-claims register also states.
+    const SAME_THING: Record<string, string> = {
+      'SEC-1': 'sso', 'INT-1': 'lti', 'INT-2': 'scim', 'INT-3': 'sis',
+      'SEC-4': 'pen-test', 'SEC-5': 'soc2', 'AX-2': 'vpat', 'PF-1': 'dpa',
+    };
+
+    it('tells an overstatement from a fair answer (the control)', () => {
+      expect(overstatesClaim('tenant-configuration', 'in-preparation')).toBe(true);
+      expect(overstatesClaim('available', 'planned')).toBe(true);
+      expect(overstatesClaim('planned', 'planned')).toBe(false);
+      expect(overstatesClaim('tenant-configuration', 'institution-configured')).toBe(false);
+    });
+
+    it('never says more than the register behind the same claim', () => {
+      for (const [id, claimId] of Object.entries(SAME_THING)) {
+        const a = LIBRARY.find((x) => x.id === id);
+        expect(a, `${id} is in the library`).toBeTruthy();
+        expect(overstatesClaim(a!.status, claim(claimId).status), `${id} is ${a!.status} but claim ${claimId} is ${claim(claimId).status}`).toBe(false);
+      }
+    });
+
+    const registry = JSON.parse(read('docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json')) as { capabilities: { id: string; status: string }[] };
+    const status = (id: string) => registry.capabilities.find((c) => c.id === id)?.status;
+
+    it('reads the capability registry, and sees both a blocked and a design-partner capability', () => {
+      expect(status('institutional-integrations')).toBe('BLOCKED');
+      expect(status('pilot-control-plane')).toBe('DESIGN_PARTNER');
+    });
+
+    it('asserts no institutional integration while the capability registry has them blocked', () => {
+      if (status('institutional-integrations') !== 'BLOCKED') return;
+      for (const id of ['SEC-1', 'INT-1', 'INT-2', 'INT-3']) {
+        expect(LIBRARY.find((a) => a.id === id)!.status, id).not.toMatch(/^(available|tenant-configuration|approved-integration)$/);
+      }
+    });
+
+    it('does not offer an institutional pilot as available while the pilot control plane is below pilot-ready', () => {
+      if (status('pilot-control-plane') !== 'DESIGN_PARTNER') return;
+      expect(LIBRARY.find((a) => a.id === 'IM-1')!.status).toBe('planned');
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { close, dispositioned, markOutOfScope, overdue, raise, resolve, assignOwner, verify, waive } from './exceptions.ts';
+import { applyRun, close, dispositioned, markOutOfScope, overdue, raise, reopen, resolve, assignOwner, verify, waive } from './exceptions.ts';
 import type { ExceptionRow } from './exceptions.ts';
 import { failureKey } from './gate.ts';
 import type { CheckResult, Severity } from './types.ts';
@@ -81,5 +81,66 @@ describe('the exception queue', () => {
     const triaged = assignOwner(crit, 'o', 'lead', later(1));
     expect(overdue([triaged], later(20)).length).toBe(0);
     expect(overdue([triaged], later(26)).length).toBe(1);
+  });
+});
+
+describe('a defect the migration introduced', () => {
+  const introduced = (severity: Severity = 'high'): ExceptionRow => raise([], [{ ...result(severity), failures: [{ ref: 'r1', code: 'value_differs', origin: 'migration' }] }], 'analyst', T)[0];
+  const triaged = (row: ExceptionRow) => assignOwner(row, 'owner', 'lead', later(1));
+
+  it('carries its origin from the failure into the row', () => {
+    expect(introduced().origin).toBe('migration');
+    expect(open().origin).toBeUndefined();
+  });
+
+  it('is fixed in the mapping: it cannot be waived or descoped, even at a severity a waiver could otherwise cover', () => {
+    const row = triaged(introduced('medium'));
+    expect(() => waive(row, 'bursar', 'we would like this to go away today', later(500), later(2))).toThrow(/introduced/);
+    expect(() => markOutOfScope(row, 'bursar', 'not worth the effort this term', later(2))).toThrow(/introduced/);
+  });
+
+  it('may still be waived when the source already had it', () => {
+    const row = triaged(raise([], [{ ...result('medium'), failures: [{ ref: 'r1', code: 'value_differs', origin: 'source' }] }], 'analyst', T)[0]);
+    expect(waive(row, 'bursar', 'the registrar corrects this at source in November', later(500), later(2)).state).toBe('waived');
+  });
+});
+
+describe('a fix is proven by the next run', () => {
+  const failing = (ref = 'r1'): CheckResult => ({ id: 'finance.x', domain: 'finance', evidenceClass: 'semantic', severity: 'high', examined: 10, failures: [{ ref, code: 'value_differs' }] });
+  const clean = (): CheckResult => ({ ...failing(), failures: [] });
+  const resolved = (): ExceptionRow => resolve(assignOwner(open(), 'owner', 'lead', later(1)), 'corrected the code table', 'owner', later(2));
+
+  it('verifies a resolved row when the check ran and no longer fails, naming the evidence', () => {
+    const [row] = applyRun([resolved()], [clean()], 'ev-9', later(3));
+    expect(row).toMatchObject({ state: 'verified', verifiedByEvidence: 'ev-9' });
+    expect(row.history.at(-1)!.actor).toBe('validation');
+  });
+
+  it('sends it back to triage when the same failure is still there', () => {
+    const [row] = applyRun([resolved()], [failing()], 'ev-9', later(3));
+    expect(row.state).toBe('triaged');
+  });
+
+  it('does not verify a row on a run that never ran its check', () => {
+    const other: CheckResult = { ...clean(), id: 'finance.other' };
+    expect(applyRun([resolved()], [other], 'ev-9', later(3))[0].state).toBe('resolved');
+  });
+
+  it('reopens a verified or closed row when its failure comes back, and raises anything new', () => {
+    const verified = verify(resolved(), 'ev-9', false, 'reviewer', later(3));
+    const next = applyRun([verified], [failing(), failing('r2')], 'ev-10', later(4));
+    expect(next.map((r) => [r.ref, r.state])).toEqual([['r1', 'open'], ['r2', 'open']]);
+    expect(next[0].history.at(-1)!.note).toMatch(/found it again/);
+    const closed = close(verified, 'reviewer', later(5));
+    expect(applyRun([closed], [failing()], 'ev-11', later(6))[0].state).toBe('open');
+  });
+
+  it('refuses to reopen something that was never fixed', () => {
+    expect(() => reopen(open(), 'x', later(1))).toThrow();
+  });
+
+  it('is idempotent: running the same results twice raises nothing twice', () => {
+    const once = applyRun([], [failing()], 'ev-1', later(1));
+    expect(applyRun(once, [failing()], 'ev-2', later(2))).toHaveLength(1);
   });
 });

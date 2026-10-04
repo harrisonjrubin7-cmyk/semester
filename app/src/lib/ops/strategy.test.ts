@@ -306,6 +306,34 @@ describe('the strategy package', () => {
     });
   });
 
+  describe('stays consistent with the pricing architecture', () => {
+    const PRICING = 'docs/commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md';
+
+    it('cites it, and the claims it leans on are still there', () => {
+      expect(existsSync(join(root, PRICING)), `${PRICING} is gone`).toBe(true);
+      const pricing = read(PRICING);
+      for (const f of ['README.md', 'BOARD-MEMO.md', 'FOUNDER-DECISION-LOG.md', 'SCORECARD.md', 'RISK-REGISTER.md', 'MARKET-ENTRY-PLAN.md'] as const) {
+        expect(doc(f).includes('PRICING-UNIT-ECONOMICS-ARCHITECTURE.md'), `${f} does not cite the pricing architecture`).toBe(true);
+      }
+      // the cost floor and the shared-key finding the assumptions rest on
+      expect(pricing.includes('$54,292') && pricing.includes('$110,763'), 'the department cost floors changed').toBe(true);
+      expect(pricing.includes('capped in calls, not dollars'), 'the shared-key finding changed').toBe(true);
+    });
+
+    it('treats a package label as a claim: the rule exists and the decision log points at it', () => {
+      expect(doc('MARKET-ENTRY-PLAN.md').includes('## 3a. Package labels are claims')).toBe(true);
+      expect(doc('FOUNDER-DECISION-LOG.md').includes('MARKET-ENTRY-PLAN.md) §3a')).toBe(true);
+      expect(doc('MARKET-ENTRY-PLAN.md').includes('may not say "Replace"')).toBe(true);
+    });
+
+    it('sizes the illustrative contract value, and gates G1 on a dollar cap', () => {
+      expect(doc('README.md').includes('department of about 750 active students')).toBe(true);
+      expect(doc('SCORECARD.md').includes('department of about 750 active students')).toBe(true);
+      const g1 = rows(doc('BOARD-MEMO.md'), /^\*\*G1\*\*$/)[0]?.join(' ') ?? '';
+      expect(g1.includes('capped in dollars'), 'G1 does not require the dollar cap').toBe(true);
+    });
+  });
+
   describe('the register of authoritative documents', () => {
     it('points company strategy at the package, no longer at nothing', () => {
       const s = SOURCES.find((x) => x.id === 'strategy');

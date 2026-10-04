@@ -43,7 +43,7 @@ unmutated) is checked first. **53 mutations in total.**
 | `08_partitioning` | partitions | ahead-creation is idempotent; **pruning read from `EXPLAIN`**; held tenant blocks detach | 2 |
 | `09_data_quality` | rule engine | every kind, pass and fail; blocking view; wrong column fails loudly; repaired data turns green | 2 |
 | `10_row_conventions` | stamp, guard | forged `created_at`/`row_version` overwritten; tenant immutable; legacy rows keep NULL; append-only scopes | 5 |
-| `11_hold_coverage` | hold guard | silent on the real schema; **finds exactly the 3 real gaps** when exemptions are removed; new blind sweep flagged; expired exemption ignored | 4 |
+| `11_hold_coverage` | hold guard | silent on the real schema; the three original gaps are fixed (`20261004150000`); with exemptions removed it finds only the newer `productivity_sweep_commands`; new blind sweep flagged; expired exemption ignored | 4 |
 | `12_dq_cross_tenant_rules` | generated rules | 35 rules match the catalog, all execute and pass on empty; **one fires on a real cross-tenant pair**; stale rules fail on an empty job table | 2 |
 | `13_governance_kpis` | KPI view | plant one of each thing (an orphan registry row, live and expired exemptions, a known gap, a failing block rule, a hold, an overdue rights request, a restore with a 1-hour RPO, a pending and a parked event) and require each column to move by exactly that amount; nothing unplanted moves | 4 |
 
@@ -81,7 +81,7 @@ Reported because it is the argument for running one:
 | T9 | Export: a `manifest.json` whose counts equal `account_data_map` rows; device files included or explicitly listed as device-only | L6 | extend `export_my_data` | portability claim |
 | T10 | Offboarding rehearsal with two real people; `tenant_data_manifest` is the verification; purge to zero | L6/L9 | `docs/evidence/offboarding/` | the first school's exit |
 | T11 | **Restore drill** on a branch of the real project, writing a `restore_event` with a measured RPO | L9 | `supabase/restore-drill.sh` + evidence | any RPO/RTO statement |
-| T12 | Hold-coverage guard wired as a failing check (after the 3 gaps are fixed) | L1 | `check.sh` | merging the guard |
+| T12 | Hold-coverage guard wired as a failing check (the 3 gaps are fixed; `productivity_sweep_commands` remains) | L1 | `check.sh` | merging the guard |
 | T13 | `NOT VALID` linter: a `not valid` with no later `validate`; `create index` without `concurrently`; `add column … not null` without a default | L1 | CI script over new migrations | first populated-table migration |
 | T14 | Load tests: search at 100 k documents per tenant, retrieval at 1 M chunks, RLS-helper policies at pilot size, partition pruning at 100 M rows | L7 | replica | each volume step |
 | T15 | Relevance golden set: queries with expected top results, shared between client `find.ts` and server `search.query` so the two rankers cannot drift | L2 | both | merging results |
