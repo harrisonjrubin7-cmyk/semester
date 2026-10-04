@@ -72,6 +72,7 @@ sc['A3'] = 'Active scenario (enter 1–9)'
 for dv in sc.data_validations.dataValidation:
     if 'D3' in str(dv.sqref):
         dv.formula2 = '9'
+        dv.error = 'Enter a scenario number from 1 to 9'
 
 # 4. Assumptions: gate months (Semester model month 1 = Nov 2026; gates carry the GO-NO-GO-DECISION.md motions)
 a = wb['Assumptions']
