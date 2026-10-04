@@ -208,8 +208,7 @@ half price**.
 **Shared-key model policy (implemented as P0-a).** `PLAN_MODELS` in `supabase/functions/_shared/clamp.ts` names what
 each plan's shared-key calls may use: **Free** Haiku 4.5 and Sonnet 5; **Plus** adds Opus 5; **Pro** adds Fable 5.1. An
 unreadable or unknown plan is Free, never wider. A refusal costs no call, carries the allowed list, and the app learns
-it and asks again on a covered model. This restricts *which model*; it does not yet meter *dollars* (P0-c), so Plus
-at the call cap on Opus 5 can still exceed the 40% worst-case margin rule — the rule is why P0-c follows.
+it and asks again on a covered model. This restricts *which model*; dollars are metered separately (P0-c, below: shipped as a reserve/settle meter with proposed allowances Free $0.75, Plus $2.00, Pro $4.00 a month), which is what holds the 40% worst-case margin rule.
 
 ## 4. Value-metric analysis
 
@@ -674,7 +673,7 @@ Nothing here is a conclusion. Each row is a design dependency that someone licen
 | --- | --- | --- |
 | P0-a | **Done:** restrict shared-key models by plan (`PLAN_MODELS`). Not done: a per-plan `max_tokens` ceiling — the app's own largest ask is 12,000, so a lower ceiling needs an audit of every `maxTokens` first | A test that names a premium model on a Free token and is refused; revert the clamp change, test goes red |
 | P0-b | One catalog: a test ties `plans.ts` to the database seed (price, interval, entitlement keys) and fails on Pro today | Fails first on Pro; passes after seeding or removing |
-| P0-c | `rate_card` + dollar-weighted reserve/settle for individuals (units), keeping `count_call`'s atomicity | Concurrency test (20 parallel calls = 20 units); cap test; refusal-doesn't-charge test |
+| P0-c (built: `add_spend` + `_shared/aispend.ts`; rate card is a code constant, not a table; allowances are proposals) | `rate_card` + dollar-weighted reserve/settle for individuals (units), keeping `count_call`'s atomicity | Concurrency test (20 parallel calls = 20 units); cap test; refusal-doesn't-charge test |
 | P1-a | `entitlement_grants`, `meter_allowances`; wire `individual-plan` and `usage-allowance` steps; **shadow first** (the LTI pattern) | Max-not-sum test (L10); expired-vs-never-bought test |
 | P1-b | `usage_events`, rollups, `active_subject_period`; privacy review gate | Idempotency, late-event, sealed-rollup tests |
 | P1-c | Tenant AI pool + alerts at 80% / 100% from the existing `ai_policy` budget | Alert fires at the threshold; overage requires a written clause |

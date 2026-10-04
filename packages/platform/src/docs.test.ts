@@ -103,8 +103,9 @@ describe('README', () => {
     expect(listed.sort()).toEqual([...dirs].sort());
   });
 
-  it('says plainly that nothing has adopted it yet', () => {
-    expect(flat(readme)).toMatch(/not yet adopted by any route/i);
+  it('says plainly how little has adopted it: the gateway\'s envelope and context, and no route uses commands, policy or engines', () => {
+    expect(flat(readme)).toMatch(/adopted by one surface so far/i);
+    expect(flat(readme)).toContain('no route uses commands, policy, idempotency or any engine yet');
   });
 
   it('says how it relates to the constitution and the target-architecture pack, and both exist', () => {

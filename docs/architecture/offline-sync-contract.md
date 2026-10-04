@@ -2,6 +2,8 @@
 
 Status: target contract. Current implementation is a PWA/local-first foundation, not a native SQLCipher or CRDT system.
 
+A tested platform-neutral core and a reference design for this contract now exist: [`mobile-offline-reference.md`](mobile-offline-reference.md) and `packages/offline-sync`. They change none of the status below — no native client, SQLCipher binding, gateway endpoint or CRDT service has been built.
+
 ## Current evidence
 
 - Implemented: service worker/PWA, browser offline detection, cached assets/media, local student-state stores, export/restore paths, some queued replay and merge tests.
