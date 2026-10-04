@@ -29,6 +29,8 @@ and sponsors all add to that. Source: [`app/src/lib/governance/deal-desk.ts`](..
 deal; product when custom work is committed; legal for non-standard paper; security/privacy when the deal changes what
 data flows.
 
+**Seats and where else approval is written.** `deal-desk.ts` is the canonical ladder for amounts and discounts. `docs/legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md` routes non-standard language, and `docs/market-readiness/LEGAL-AND-COMMERCIAL-READINESS.md` routes novel terms; neither sets an amount. No `sales_lead` seat exists yet, and the finance, CEO and board seats have no named holder. Proposed interim rule, for the owner to confirm: until a seat is filled, a deal that needs it goes to the next approver above it, so today even a discount of up to 10% goes to finance, and nothing is quoted off the ladder. This is a policy proposal, not a delegation of authority.
+
 ## AI cost controls
 
 Education pricing can't absorb unconstrained inference, media generation, code execution and data processing. Some of

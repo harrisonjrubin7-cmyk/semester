@@ -35,6 +35,22 @@ There is no separate `closed_won` or `implementation_pending` value in the imple
 
 Movement requires the exit evidence; never advance to improve a forecast. The implemented transition helper does not permit backward moves. When required evidence later fails, pause the account, record the correction and block forward movement; close the opportunity when the decision is no longer valid, and create a fresh `target_account` only if a later authorized motion begins. Record stage-entered time, next action/date, owner, amount/currency/status, probability source, scope, risk, decision date and evidence links. Any amount, probability or close date without authority is labeled **assumption** and excluded from actual revenue/customer claims.
 
+## Vocabulary crosswalk
+
+`stages.ts` is the only stage vocabulary a pipeline record may use. Other documents describe the same journey in other words; they are views of it, never second stage lists.
+
+| Other vocabulary | Where | Reads as |
+| --- | --- | --- |
+| seven gated stages | `INSTITUTIONAL-GTM-PLAYBOOK.md` | the seven stages that carry an exit gate in `SALES_EXIT`: `qualified`, `outcome_workshop`, `proposal`, `pilot_or_implementation_SOW`, `contracted`, `live`, `renewal`. The other nine are gated by [`ACCOUNT-SCORING-AND-FORECAST.md`](ACCOUNT-SCORING-AND-FORECAST.md) |
+| pilot lifecycle `discovery → configure → train → launch → hypercare → learn → decide` | `PAID-PILOT-FRAMEWORK.md` | delivery of one pilot: `configure` and `train` happen in `implementation`, `launch` is the launch-council GO that enters `live`, `hypercare` and `learn` run in `live`, and `decide` ends in a signed verdict that opens `renewal` |
+| fourteen tenant rollout states | `operating-model/PILOT-TO-PRODUCTION.md` | the database-enforced state of a customer tenant, which tracks delivery after `contracted`; it is not a sales stage |
+| funnel steps | `GROWTH-FUNNEL-SPEC.md` | a reporting view: `technical_review` and `security_privacy_accessibility_review` may be reported as one step, and launch, activation and outcome review are measures, not stages |
+| the five-option conversion list | `operating-model/PILOT-TO-PRODUCTION.md` | the four final verdicts of `pilotVerdict` (convert, expand, pause, stop) plus an extension, which is not a verdict; see `PILOT-TO-ANNUAL-CONVERSION.md` |
+
+**`renewal` has two meanings today, kept apart.** The stage `renewal` is entered by a signed final pilot verdict. The renewal of an annual contract is its own renewal opportunity, created by the commercial trigger 120 days before the term ends (`docs/COMMERCIAL-CORE.md`), and is reported as a renewal motion, not as a second move of the pilot opportunity.
+
+**"Agreed price" is private.** `annualPriceAgreed` in `pilotReadiness` means the quote or order for that account states a price both sides accepted. It does not make a price public, and CLM-015 stays prohibited until the claims owner approves exact wording.
+
 ## Forecast and hygiene
 
 Pipeline amount uses the approved quoted scope, never an invented price. Weighted pipeline is amount × explicitly approved probability and remains a planning estimate—not booked, billed, collected or recognized revenue. Separate new, renewal, expansion and services motions; do not double-count a pilot and its hypothetical annual conversion. Review stale next actions, duplicate accounts, expired proposals, missing authority, unsupported close dates and consent/suppression weekly.

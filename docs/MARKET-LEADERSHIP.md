@@ -362,7 +362,7 @@ price book yet. **Held**: a decision on main keeps it out for now.
 
 | Revenue line | Buyer | What they buy | Why it compounds | Standing | Note |
 | --- | --- | --- | --- | --- | --- |
-| **Individual student plan** | Student | Personal Academic OS: planning, study, work completion, portfolio | Bottom-up adoption and product learning | held (D-009) | Plans are shown as placeholders; no checkout until a server-side environment and explicit approval. Export, deletion and saved plans are never paywalled. |
+| **Individual student plan** | Student | Personal Academic OS: planning, study, work completion, portfolio | Bottom-up adoption and product learning | held (D-009) | Plus is priced $7.99 a month or $59 a year (D-134) and its individual billing lifecycle was live-accepted on 2026-10-03 (docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md); checkout stays held by the governed acquisition control, and the price is not a public claim until approved. Export, deletion and saved plans are never paywalled. |
 | **Department or programme plan** | Department, transfer center, advising, career office, student affairs | One module plus the governed student experience | Creates institutional champions | proposed | The deal desk’s department floor is a proposed default; no price book exists. |
 | **Institution platform licence** | University | The connected student, learning, community, support and governance platform | Expands modules and embeds shared infrastructure | proposed | Campus and system floors proposed in the deal desk. |
 | **Enterprise implementation** | IT, academic affairs, student success | SSO, integrations, migration, configuration, training, launch support | Reduces risk and speeds adoption | proposed | An implementation fee floor is proposed; waivable only as capped pilot credit. |
@@ -371,7 +371,7 @@ price book yet. **Held**: a decision on main keeps it out for now.
 | **Community and student-life operations** | Student affairs, campus life | Clubs, events, mentorship, engagement, moderation | Extends daily student relevance | proposed | No unmoderated marketplace or public feed (boundary). |
 | **Career and opportunity network** | Career services, experiential learning | Portfolio, skills evidence, alumni and employer workflows, opportunities | Connects academic work to workforce outcomes | proposed | Employers never receive student-level data (deal desk, marketplace rule). |
 | **Premium support and success** | Institution | Dedicated support, training, implementation, advisory | Protects renewals and expands accounts | proposed | No 24/7 or emergency response is promised (SUP-002 designed). |
-| **Approved payments and transactions** | Institution or authorized campus unit | Ticketing, dues, approved payments | Later-stage transactional revenue | held (D-009) | Billing stays out: no Stripe keys, checkout or webhooks. |
+| **Approved payments and transactions** | Institution or authorized campus unit | Ticketing, dues, approved payments | Later-stage transactional revenue | held (D-009) | Campus payments, ticketing and dues stay out: no institutional or campus-transaction billing exists. Individual Plus billing is a separate line (D-134; accepted 2026-10-03). |
 | **Approved employer and partner services** | Employers, partners, institutions | Verified events, office hours, opportunities — never student-data access | Expands the ecosystem without selling student data | proposed | Sponsorship is a separate opt-in that reads nothing about the student (DO-NOT-BUILD rule 10). |
 
 ### The lines not crossed
@@ -534,7 +534,7 @@ The decision holds until the owner reopens it (the decision log’s rule).
 
 | The documents ask | Decision on main | Held as |
 | --- | --- | --- |
-| Payments and approved campus transactions as a module and a revenue line | D-009: billing stays out; no checkout, keys or webhooks without a server-side environment and explicit approval | Two revenue lines held; the bill screen reads a statement |
+| Payments and approved campus transactions as a module and a revenue line | D-009 kept billing out until a server-side environment and explicit approval; individual Plus billing has since been live-accepted (2026-10-03) with checkout held by the acquisition control, and campus payments and transactions remain out | Campus payments held; individual Plus billing accepted but its checkout held; the bill screen reads a statement |
 | One Operations Console | DO-NOT-BUILD rule 1 and D-110: no new top-level navigation; the console’s controls are data before the console | ONE-13 held |
 | An external immutable audit archive and a customer trust dashboard as a separate service | ADR 0003: no application server beyond the gateway; no second database | Trust Evidence panels named against the data that exists; no service |
 | Five student destinations as the navigation | D-003: the five are the primary tab bar behind journeyNavigation; the shelves stay | ONE-04 and ONE-05 partial, not held |

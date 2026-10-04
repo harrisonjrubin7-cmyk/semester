@@ -22,6 +22,8 @@ These use #817's `PilotDecision` vocabulary.
 
 A pilot that can't stop is a free trial with extra steps.
 
+An "extend" option in the operating-model rollout is not a fifth verdict: it is a new written term recorded as a non-final renewal opportunity (`commercial/RENEWAL-AND-EXPANSION-PLAYBOOK.md`) and does not lengthen the 26-week pilot.
+
 ## The decision meeting
 
 Held with the champion and the sponsor. On the table:

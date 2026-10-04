@@ -13,9 +13,9 @@
 
 | Term | Controlled proposal |
 | --- | --- |
-| institution/cohort | one approved institution or program; proposed 50–200 participants, subject to privacy, support, capacity and customer approval |
+| institution/cohort | one approved institution or program; proposed 50–200 participants (target; the hard bounds are 10–200, see `docs/PAID-PILOT-FRAMEWORK.md`), subject to privacy, support, capacity and customer approval |
 | milestone | one bounded registration-readiness or term-start workflow |
-| timing | proposed 30–60 day implementation plus an agreed measurement window and fixed decision/offboarding date |
+| timing | proposed 30–60 day implementation window inside a pilot that always runs 26 weeks (D-134, `PILOT_WEEKS`; the deal desk's 6-month maximum is only the outer limit), plus an agreed measurement window and fixed decision/offboarding date |
 | inputs | manual/student-controlled or explicitly approved read-only sources first |
 | included | onboarding, Today/This Week, course/task/workload planning, non-authoritative readiness checklist, support discovery, controlled reminders, privacy-thresholded aggregate review, weekly decisions and offboarding |
 | excluded | system-of-record replacement; official registration/grade/aid/advising decisions; high-impact individual scoring; admissions, discipline, disability, health, counseling, immigration or conduct decisions; unapproved writeback/integrations |
