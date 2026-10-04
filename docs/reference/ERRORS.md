@@ -684,6 +684,7 @@ Returned flat, as `{"code", "message"}`, by `/v1/intelligence/respond`, `/policy
 | `invalid-provider-response` | 503 | yes | The provider's answer was empty, cited an unrequested source, or was not metered. |
 | `cost-ceiling-exceeded` | 503 | yes | The response cost more than the ceiling and was discarded. |
 | `usage-not-recorded` | 503 | yes | Usage could not be settled, so the response was discarded. |
+| `audit-unavailable` | 503 | yes | The response could not be recorded in the audit log, so it was discarded. |
 | `ai-generation-killed` | 503 | yes | The kill switch for AI generation is engaged for the school or for everyone. |
 | `action-not-found` | 404 | yes | No proposed action with that id for this account, or it was already claimed or expired. |
 | `confirmation-required` | 409 | yes | The confirmation is missing, not `confirmed: true`, older than five minutes, in the future, or the action expired. |

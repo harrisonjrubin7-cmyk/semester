@@ -11,6 +11,10 @@
 
 > The model's outputs are only as good as the inputs this form replaces. Entering a number does not make it approved: prices need the deal desk and counsel, financing terms need counsel and the board, and tax and accounting treatment needs the qualified professionals named in [`06-CONTRACT-FINANCE-AND-ADVISOR-ROUTING.md`](06-CONTRACT-FINANCE-AND-ADVISOR-ROUTING.md).
 
+## Try numbers in the live dashboard first
+
+[`dashboard.html`](dashboard.html) runs this model in the page. Every input in this form is a control there (opening cash, rounds, prices, gate months, founder pay and the whole register). Change one, see the plan recalculate, save the set as a named plan, and change it again whenever you like. The dashboard's changes do not alter the workbook. When you want a set to become the workbook's own inputs, press Copy my changes and send me the text; it is a list of cell addresses and values, and applying it to the workbook is the scripted step below.
+
 ## How to use it
 
 1. For each row, write the value, **the source** (a bank statement, a quote, a signed decision, an invoice) and **the date**. "Don't know" is a valid answer and keeps the placeholder.

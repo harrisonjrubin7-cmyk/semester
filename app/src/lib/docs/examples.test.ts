@@ -763,17 +763,26 @@ describe('examples/event-consumer', () => {
     ]);
     // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
+    // The institution gateway takes the error envelope, correlation ids and request context from the platform package
+    // (MIGRATION phase 1). Those three files may import it; none of them may import the productivity service.
+    const gatewayFiles = ['app/server/institution/adapter.ts', 'app/server/institution/context.ts', 'app/server/institution/gateway.ts'];
     const mounts = code
       .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
       .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
+      .filter((c) => !(gatewayFiles.includes(c.file) && !/from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)))
       .map((c) => c.file);
     expect(mounts, 'something now imports the productivity service or the platform package').toEqual([]);
     // Nothing publishes: drainOutbox has no caller outside the library.
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();
+    // Still one producer: `private.productivity_commit`. It is defined in the commands migration and redefined, same
+    // signature, in the reads migration (which adds the sequence prediction), so both files carry the insert. The
+    // productivity check script inserts a row of its own to prove the outbox counts.
     expect(inserts, 'the producer\'s migration function and the check scripts insert into the outbox').toEqual([
       'supabase/migrations/20261004123000_productivity_commands.sql',
+      'supabase/migrations/20261004180000_productivity_reads.sql',
       'supabase/outbox.check.sql',
+      'supabase/productivity-commands.check.sql',
     ]);
     expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('**no\nproducer writes to the outbox yet**');
   });
