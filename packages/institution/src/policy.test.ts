@@ -342,3 +342,129 @@ describe('applyObligations', () => {
     expect(out).toEqual({ chunkId: 'c1', anchor: 'p3' });
   });
 });
+
+/**
+ * Tasks and calendar. The service forces the owner of every write to be the
+ * verified actor, so most of these refusals are unreachable through it — and
+ * that is why they are asked here, of the decision point itself: the rule must
+ * hold on its own, for the day another caller asks it a different question.
+ */
+describe('tasks and calendar', () => {
+  const OWNER = 'student-a';
+  const reader = 'advisor-1';
+  const share: ConsentGrant = { id: 'share-9', kind: 'share', grantedBy: OWNER, grantedTo: reader, scopes: ['tasks:read', 'calendar:read'], expiresAt: later(60), revokedAt: null };
+
+  type Over = Omit<Partial<AuthorizationRequest>, 'resource'> & { resource?: Partial<AuthorizationRequest['resource']> };
+
+  function write(over: Over = {}): AuthorizationRequest {
+    const { resource, ...rest } = over;
+    return {
+      actor: { id: OWNER, type: 'user', authenticatedAt: later(-5) },
+      tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+      action: 'task.write',
+      resource: { type: 'task', id: 't-1', ownerId: OWNER, classification: 'student_private', sourceKind: 'student_entered', attributes: { command: 'update', touchesAuthoritative: false }, ...resource },
+      context: {
+        membershipIds: ['m-1'], roleGrants: [], capabilities: ['productivity:use'], consentGrants: [], featureFlags: [],
+        policyVersions: {}, idempotencyKey: 'cmd-1', correlationId,
+      },
+      ...rest,
+    };
+  }
+
+  function read(over: Partial<AuthorizationRequest> = {}): AuthorizationRequest {
+    return {
+      actor: { id: reader, type: 'user', authenticatedAt: later(-5) },
+      tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+      action: 'task.read',
+      resource: { type: 'task', ownerId: OWNER, classification: 'student_private' },
+      context: {
+        membershipIds: ['m-2'], roleGrants: [], capabilities: ['productivity:use'], consentGrants: [share], featureFlags: [],
+        policyVersions: {}, purpose: 'advising check-in', correlationId,
+      },
+      ...over,
+    };
+  }
+
+  const refuses = (req: AuthorizationRequest, code: string) => {
+    const d = decide(req, NOW);
+    expect(d).toMatchObject({ allow: false, reasonCode: code });
+  };
+
+  it('allows an owner to change their own task, and says which event to record', () => {
+    expect(decide(write(), NOW)).toEqual({ allow: true, obligations: [{ type: 'audit', eventType: 'task.updated' }] });
+    expect(decide(write({ resource: { attributes: { command: 'complete' } } }), NOW)).toMatchObject({ obligations: [{ eventType: 'task.completed' }] });
+    expect(decide(write({ resource: { attributes: { command: 'delete' } } }), NOW)).toMatchObject({ obligations: [{ eventType: 'task.deleted' }] });
+  });
+
+  it.each([
+    ['somebody else\'s task, even with a share', { resource: { ownerId: 'student-b' } }, 'not_owner'],
+    ['no command at all', { resource: { attributes: {} } }, 'command_unknown'],
+    ['a verb tasks do not have', { resource: { attributes: { command: 'archive' } } }, 'command_unknown'],
+    ['a verb that is an object property, not a verb', { resource: { attributes: { command: 'toString' } } }, 'command_unknown'],
+    ['no owner', { resource: { ownerId: undefined } }, 'owner_missing'],
+    ['no command id', { context: { ...write().context, idempotencyKey: undefined } }, 'idempotency_missing'],
+    ['no planning capability', { context: { ...write().context, capabilities: [] } }, 'capability_missing'],
+    ['an education record', { resource: { classification: 'education_record' } }, 'classification_exceeds_action'],
+    ['a service', { actor: { id: 'svc', type: 'service', authenticatedAt: later(-5) } }, 'actor_not_permitted'],
+    ['an integration', { actor: { id: 'job', type: 'integration', authenticatedAt: later(-5) } }, 'actor_not_permitted'],
+  ])('refuses a write that is %s', (_name, over, code) => {
+    expect(decide(write(), NOW)).toMatchObject({ allow: true });
+    refuses(write(over as Over), code);
+  });
+
+  it('keeps a source\'s fields the source\'s, for institution-verified and imported alike', () => {
+    for (const sourceKind of ['institution_verified', 'imported'] as const) {
+      refuses(write({ resource: { sourceKind, attributes: { command: 'update', touchesAuthoritative: true } } }), 'source_authoritative');
+      expect(decide(write({ resource: { sourceKind, attributes: { command: 'update', touchesAuthoritative: false } } }), NOW)).toMatchObject({ allow: true });
+    }
+  });
+
+  it('lets only a bound job with the capability and a purpose import, and only into calendars, and only imported entries', () => {
+    const job = (over: Omit<Over, 'context'> & { context?: Partial<AuthorizationRequest['context']> } = {}): AuthorizationRequest => {
+      const base = write({
+        actor: { id: 'job', type: 'integration', authenticatedAt: later(-5) },
+        tenant: { id: 'school-a', environment: 'production', verifiedBy: 'service_binding' },
+        action: 'calendar.event.write',
+        resource: { type: 'calendar_event', sourceKind: 'imported', attributes: { command: 'create' } },
+      });
+      return { ...base, ...over, resource: { ...base.resource, ...over.resource }, context: { ...base.context, capabilities: ['calendar:import'], membershipIds: [], purpose: 'feed:canvas', ...over.context } };
+    };
+    expect(decide(job(), NOW)).toEqual({ allow: true, obligations: [{ type: 'audit', eventType: 'calendar_event.created' }] });
+    refuses(job({ tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' } }), 'service_unbound');
+    refuses(job({ context: { ...job().context, capabilities: [] } }), 'capability_missing');
+    refuses(job({ context: { ...job().context, purpose: undefined } }), 'purpose_missing');
+    refuses(job({ resource: { type: 'calendar_event', ownerId: OWNER, sourceKind: 'student_entered', attributes: { command: 'update' } } }), 'source_mismatch');
+    refuses({ ...job(), action: 'task.write', resource: { type: 'task', ownerId: OWNER, sourceKind: 'imported', attributes: { command: 'create' } } }, 'actor_not_permitted');
+  });
+
+  it('shows another person\'s tasks only to the person they shared with, for the scope, for a purpose, until it ends', () => {
+    expect(decide(read(), NOW)).toMatchObject({ allow: true });
+    refuses(read({ context: { ...read().context, purpose: undefined } }), 'purpose_missing');
+    refuses(read({ context: { ...read().context, consentGrants: [] } }), 'grant_missing');
+    refuses(read({ context: { ...read().context, consentGrants: [{ ...share, scopes: ['calendar:read'] }] } }), 'grant_missing');
+    refuses(read({ context: { ...read().context, consentGrants: [{ ...share, grantedTo: 'someone-else' }] } }), 'grant_missing');
+    refuses(read({ context: { ...read().context, consentGrants: [{ ...share, grantedBy: 'student-b' }] } }), 'grant_missing');
+    refuses(read({ context: { ...read().context, consentGrants: [{ ...share, kind: 'support_access' }] } }), 'grant_missing');
+    refuses(read({ context: { ...read().context, consentGrants: [{ ...share, revokedAt: later(-1) }] } }), 'grant_not_live');
+    refuses(read({ context: { ...read().context, consentGrants: [{ ...share, expiresAt: later(0) }] } }), 'grant_not_live');
+    refuses(read({ actor: { id: reader, type: 'service', authenticatedAt: later(-5) } }), 'actor_not_person');
+  });
+
+  it('limits a shared view to the fields the kind allows, audits it, and ends it with the grant', () => {
+    const d = decide(read(), NOW);
+    expect(d).toMatchObject({ allow: true });
+    if (!d.allow) return;
+    expect(d.obligations).toEqual([
+      { type: 'audit', eventType: 'productivity.shared_read' },
+      { type: 'limit_fields', allowlist: ['id', 'title', 'status', 'dueAt', 'priority', 'courseId', 'version'] },
+      { type: 'expire_at', at: share.expiresAt },
+    ]);
+    const cal = decide(read({ action: 'calendar.event.read', resource: { type: 'calendar_event', ownerId: OWNER, classification: 'student_private' } }), NOW);
+    expect(cal).toMatchObject({ allow: true });
+    if (cal.allow) expect(cal.obligations.find((o) => o.type === 'limit_fields')).toMatchObject({ allowlist: expect.not.arrayContaining(['location', 'notes']) });
+  });
+
+  it('lets a person read their own with no obligations', () => {
+    expect(decide(read({ actor: { id: OWNER, type: 'user', authenticatedAt: later(-5) }, context: { ...read().context, consentGrants: [], purpose: undefined } }), NOW)).toEqual({ allow: true, obligations: [] });
+  });
+});
