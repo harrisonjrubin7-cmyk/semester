@@ -1591,26 +1591,26 @@ finding; a dispute with a customer; a request from law enforcement.
 
 ### 10.3 Legal and counsel review queue
 
-[`LEGAL-REVIEW-QUEUE.md`](../LEGAL-REVIEW-QUEUE.md) is the company's queue, with rows L0–L2 and the intake template at
-[`legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md`](legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md). It has a records,
-retention, deletion, legal-hold and law-enforcement row (L1) and an accessibility row (L0). It has **no rows specific to the
-operations designed here.** The matters below need a row and an owner; they are **proposed additions**, not edited into the
-queue by this document.
+[`LEGAL-REVIEW-QUEUE.md`](../LEGAL-REVIEW-QUEUE.md) is the company's queue: rows L0–L2, a working queue `Q-00` to
+`Q-24` with owner, facts and the external-counsel question, and the intake template at
+[`legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md`](legal-drafts/LEGAL-REVIEW-INTAKE-TEMPLATE.md). This document first proposed twelve
+matters for it. Checked against the queue as it stood on 2026-10-04, six were already rows and six were not, and the six that were
+not are now `Q-19` to `Q-24`.
 
-| # | Matter | Why counsel | Blocks |
+| Matter | Why counsel | Blocks | Queue row |
 | --- | --- | --- | --- |
-| Q1 | Support-access consent and the institution's role: when a student's grant suffices for `education-record` data; school-official status | FERPA and contract analysis; per tenant | Any A2 on education records |
-| Q2 | Mandatory reporting, duty-of-care and duty-to-warn determinations | Differs by jurisdiction, role and the institution | Safety playbook go-live |
-| Q3 | The imminent-harm exception (§5.3) | Overrides a two-person rule | Exception go-live |
-| Q4 | Law-enforcement, subpoena, preservation and emergency-disclosure procedure | Verification, scope, notice to the user, records | Any disclosure |
-| Q5 | Evidence standard, notices and appeals language | Fairness and defensibility of platform enforcement | T&S launch |
-| Q6 | Handling of E2 material and any statutory reporting and preservation duty | Statutory; counsel owns | Media upload at scale |
-| Q7 | Marketplace platform role (merchant of record, agent, facilitator), consumer-protection and tax | Defines the dispute remedy and liability | Any marketplace transaction |
-| Q8 | Vendor or partner support staff (T1 or after-hours safety triage) | Subprocessor terms; binding §3 on their staff | Any outsourced support |
-| Q9 | Reviewer wellbeing, background checks, employment and volunteer status | Employment and labor law | Staffing T&S |
-| Q10 | Retention periods in §10.1 | Schedule approval | Ticket flag; production personal data |
-| Q11 | Breach and incident notification determinations | Fixed external duties | Security and privacy audiences |
-| Q12 | Staff-misuse sanctions and any external report | Employment and criminal-law exposure | — |
+| Support-access consent and the institution's role: when a student's grant suffices for `education-record` data; school-official status | FERPA and contract analysis; per tenant | Any A2 on education records | `Q-04` (school official or vendor, per tenant); the support-access question is a facet of it |
+| Mandatory reporting, duty-of-care and duty-to-warn determinations | Differs by jurisdiction, role and the institution | Safety playbook go-live | **`Q-19`, added** |
+| The imminent-harm exception (§5.3) | Overrides a two-person rule | Exception go-live | **`Q-19`, added** |
+| Law-enforcement, subpoena, preservation and emergency-disclosure procedure | Verification, scope, notice to the user, records | Any disclosure | `Q-17` (litigation and subpoena response), `Q-08` |
+| Evidence standard, notices and appeals language | Fairness and defensibility of platform enforcement | T&S launch | **`Q-20`, added** |
+| Handling of E2 material and any statutory reporting and preservation duty | Statutory; counsel owns | Media upload at scale | **`Q-21`, added** |
+| Marketplace platform role (merchant of record, agent, facilitator), consumer-protection and tax | Defines the dispute remedy and liability | Any marketplace transaction | `Q-11`, `Q-13` |
+| Vendor or partner support staff (T1 or after-hours safety triage) | Subprocessor terms; binding §3 on their staff | Any outsourced support | **`Q-22`, added** |
+| Reviewer wellbeing, background checks, employment and volunteer status | Employment and labor law | Staffing T&S | **`Q-23`, added** |
+| Retention periods in §10.1 | Schedule approval | Ticket flag; production personal data | `Q-08` |
+| Breach and incident notification determinations | Fixed external duties | Security and privacy audiences | `Q-16`, `Q-05` |
+| Staff-misuse sanctions and any external report | Employment and criminal-law exposure | — | **`Q-24`, added** |
 
 **Requirements of the queue as a tool (T12).**
 
@@ -1686,12 +1686,12 @@ risk. Exit evidence is what must be filed, in the repository's convention.
 | Switch | Needs (in addition to its own existing gates) |
 | --- | --- |
 | **`VITE_SUPPORT_TICKETS` for a real cohort** | G-01 (backup), G-02, G-03, G-04, G-05, G-06; Core + S1 certification for everyone on the queue; published hours; one end-to-end exercise (alert → ticket → incident → status → closure) |
-| **Any staff A2 grant** | G-07, G-08, G-09, G-10; S2 certification; counsel position on Q1; a second person who can review |
+| **Any staff A2 grant** | G-07, G-08, G-09, G-10; S2 certification; counsel position on `Q-04` (and its support-access facet); a second person who can review |
 | **Any A3 / break-glass in production** | Two named humans who are not the requester; G-11; a drill; privacy owner assigned |
-| **Community moderation with professional review** | G-01 (independent professional), G-13, G-16, G-24; TS-1/TS-2 certified; Q5 |
-| **Institution escalation** | Existing: flag, agreement, two professionals; plus Q2, Q4, G-14 decision, a verified campus crisis contact |
+| **Community moderation with professional review** | G-01 (independent professional), G-13, G-16, G-24; TS-1/TS-2 certified; `Q-20` |
+| **Institution escalation** | Existing: flag, agreement, two professionals; plus `Q-19`, `Q-17`, G-14 decision, a verified campus crisis contact |
 | **Volunteer moderation** | Existing flag refuses `production`; plus a senior reviewer, 20+ onboarding items per school, G-24 |
-| **Any marketplace transaction** | G-25 entire, Q7, provider approval, Finance two-person control, a drill |
+| **Any marketplace transaction** | G-25 entire, `Q-11`, provider approval, Finance two-person control, a drill |
 | **Any public claim about support** | The measured evidence is filed under `docs/evidence/`, the public-claims register is updated, counsel has approved the wording |
 
 ### 11.3 Sequence, by dependency
@@ -1717,7 +1717,7 @@ Each has a recommendation. None is decided here.
 | D4 | Imminent-harm exception | Adopt, after counsel approves the situations and wording |
 | D5 | Appeal window and deadline | 30 days / 10 business days |
 | D6 | Whether any staff may read student records before G-07 to G-10 exist | No |
-| D7 | Whether to use a vendor for T1 or after-hours safety triage | Not before Phase C, and only with Q8 resolved |
+| D7 | Whether to use a vendor for T1 or after-hours safety triage | Not before Phase C, and only with `Q-22` resolved |
 | D8 | Make detector-rule changes two-person | Yes |
 | D9 | Where the CSAT survey is not sent | Safety, harassment, marketplace-safety and privacy-incident cases |
 | D10 | Whether small-cell threshold is 10 | Yes; revisit with counsel for any institution requiring a different figure |
