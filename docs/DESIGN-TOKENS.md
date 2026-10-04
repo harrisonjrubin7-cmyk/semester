@@ -275,3 +275,12 @@ Airy 1.75, Loose 1.95 (`LINE_HEIGHTS` in `lib/look.ts`).
 | --- | --- |
 | `--ease` | `cubic-bezier(0.22, 1, 0.36, 1)` |
 | `--fast` | `130ms var(--ease)` |
+
+## Machine-readable export
+
+`app/design-tokens/semester.tokens.json` is these tokens as data — per-ground,
+per-accent, per-density, per-corner values as modes, the semantic layer as
+references, and the ink contrast of each ground. It is generated, never edited:
+`npm run tokens:export` (from `app/`) rewrites it and
+`src/lib/tokenexport.test.ts` fails when it differs from `lib/look.ts` and the
+stylesheets. What it does not model is in the header of `lib/tokenexport.ts`.

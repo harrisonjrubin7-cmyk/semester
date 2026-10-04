@@ -33,7 +33,7 @@ What does not exist, and is the subject of this document:
 | Component and token versioning, deprecation | grep of `docs/` finds nothing UI-specific | §7.3–7.4 |
 | Figma ↔ code parity | no Figma, Code Connect, or token export | §7.2 |
 | Visual regression | DD-010 "planned"; no pixel diff in CI | §7.5 |
-| Breakpoint tokens | literals only; three docs disagree | §3.4 |
+| Breakpoint guard beyond `app.css` `min-width` | `lib/media.ts` and `tiers.test.ts` exist; 19 stale or off-class queries unchecked | §3.4 |
 | Generic Sheet, Table, Combobox, Toast primitives | none found | §2 |
 | A manual assistive-technology pass | AT-PASS-PROTOCOL: **not run** | §6.8 |
 
@@ -43,7 +43,7 @@ These are real and each one will produce a wrong implementation if ignored.
 
 1. **Danger colour.** `DESIGN-TOKEN-ARCHITECTURE` says `--status-danger` aliases `--app-warn`; `DESIGN-TOKENS` and DD-006 say `--app-error`. The stylesheet wins; treat the architecture doc as stale.
 2. **Status colour vocabulary.** `STATUS-SOURCE-VISUAL-LANGUAGE` names Slate/Brass/Sage/Rose/Gray; the token docs say one warn colour plus shared accent; the constitution uses accent / `--app-passing` / warn / red. Four vocabularies, no tone→token table. §4.3 supplies the table.
-3. **Breakpoints.** `lib/media.ts` has 760/1180 (+600 height); `RESPONSIVE-CONTRACTS.md` has 320–599/600–1023/1024+; `GOVERNANCE` screenshots at 375/768/1280. §3.4 reconciles: bands are test widths, 760/1180 are the layout switches.
+3. **Breakpoints.** `lib/media.ts` is the source: 600 / 840 / 1200 / 1600 (+ height 600), checked against `app.css` by `tiers.test.ts`. The constitution (760/1180) and `RESPONSIVE-CONTRACTS.md` (320–599/600–1023/1024+) are stale, and **the first draft of this spec repeated the 760/1180 figures** before Slice 1 read the code; they are corrected below. The CSS still carries 19 non-class queries, six of them at the pre-move 759/1179/1180 edges (§3.4).
 4. **Navigation.** `UNIFIED-SEMESTER-SYSTEM` has 5 destinations; the constitution has 7 areas. Not a design-system question; flagged to the product owner, and this spec avoids depending on either.
 5. **Provenance naming.** "Institution verified" vs "Official" is open (DD-003); "Imported" vs "Synced" differs between the copy guide and content standards. §4.4 recommends a resolution but it is the owner's call.
 6. **Metrics disagree** (hex literals 28 vs 30; frameless screens 7 vs 9). They were measured at different commits and are undated. §7.6 makes the census emit a commit hash and date.
@@ -152,7 +152,7 @@ States covered: default, hover, focus-visible, active, disabled, loading,
        error, read-only, restricted, empty (list the ones that do not apply)
 Tokens consumed (semantic only; none of --space-*, --radius-*, --shadow-*)
 Keyboard map, focus order, focus return, announced text
-Responsive rule at <760, 760–1179, >=1180, and 200% text / 400% reflow
+Responsive rule at compact <600, medium 600–839, expanded 840–1199, large >=1200, and 200% text / 400% reflow
 Reduced-motion / calm / forced-colors behaviour
 Density behaviour: comfortable/snug/tight, and per role (§8)
 Content rules: label grammar, max length, truncation, i18n expansion budget
@@ -170,7 +170,7 @@ type SheetProps = {
   label: string                       // required; accessible name
   open: boolean
   onClose: (reason: 'escape' | 'outside' | 'button' | 'route') => void
-  presentation?: 'auto' | 'bottom' | 'side'   // auto: bottom <760, side >=760
+  presentation?: 'auto' | 'bottom' | 'side'   // auto: bottom <840 (tab-bar tiers), side >=840
   size?: 'sm' | 'md' | 'lg'
   returnFocusTo?: RefObject<HTMLElement>      // default: the opener
   dismissible?: boolean                        // false only for TypeToConfirm flows
@@ -190,7 +190,7 @@ type TableProps<Row> = {
                    priority: 1 | 2 | 3; numeric?: boolean; sortable?: boolean }>
   rows: Row[]; rowKey: (r: Row) => string
   rowAction?: (r: Row) => { label: string; run: () => void }   // first action survives compaction
-  compact: 'scroll' | 'stack'         // <760: scroll region (not the document) or stacked rows
+  compact: 'scroll' | 'stack'         // <840: scroll region (not the document) or stacked rows
   selection?: 'none' | 'single' | 'multi'
   empty: ReactNode                    // required EmptyState content
 }
@@ -240,7 +240,7 @@ is a component token or a local variable, not a semantic token.
 | Radius | `--r-sm/md/lg` by Corners setting | none |
 | Elevation | `--lift-1..3`, 4 semantic names, glass policy | none |
 | Motion | 15 `--motion-*`/5 durations, 2 easings | delete or use `--motion-insert`/`--motion-panel` (currently unused by any rule) |
-| Breakpoints | **literals** | §3.4 |
+| Breakpoints | `lib/media.ts` constants + `tiers.test.ts`; stylesheet queries guarded by `breakpoints.test.ts` | ledger of 19 shrinks (§3.4) |
 | Density | `--density` 1 / .86 / .74, per person | add a **role default** (§3.5), never a role override of the person's choice |
 | Semantic state | attention, danger, success, info, neutral | fix doc drift (§0.1.1) |
 | Target | 24 / 32 / 40 / 44 | none |
@@ -262,21 +262,41 @@ adding a build dependency is deferred until a native target exists.
 
 ### 3.4 Breakpoints
 
-Media queries cannot read custom properties, so a breakpoint "token" is a
-documented constant plus a guard, not a CSS variable:
+**Implemented (Slice 1).** The breakpoints already have one source,
+`lib/media.ts`, and `lib/tiers.test.ts` holds `app.css`'s `min-width` queries to
+it. Media queries cannot read custom properties, so a breakpoint "token" is a
+documented constant plus a guard; no CSS variable is added.
 
-| Name | Value | Meaning | Source |
+| Window class | Width | Shell | Constant |
 |---|---|---|---|
-| `compact` | < 760 | phone shell | `TABLET_AT` |
-| `medium` | 760–1179 | tablet shell | |
-| `wide` | ≥ 1180 | desktop shell | `DESKTOP_AT` |
-| `short` | height < 600 | landscape phone | `TALL_AT` |
+| compact | < 600 | phone, tab bar | |
+| medium | 600–839 | phone tab bar, rail collapsed to icons | `MEDIUM_AT` 600 |
+| expanded | 840–1199 | rail beside the column, touch sizes | `TABLET_AT` 840 |
+| large | ≥ 1200 | desktop window | `DESKTOP_AT` 1200 |
+| extra-large | ≥ 1600 | wider measure and canvas | `EXTRA_LARGE_AT` 1600 |
+| handheld | height < 600 **and** coarse pointer | a phone on its side is a phone at any width | `TALL_AT` 600 |
 
-`RESPONSIVE-CONTRACTS` bands (320/600/1024) are **verification widths**, not
-layout switches. Add `styles/breakpoints.test.ts`: every `@media` width in the
-CSS must be one of the four above or appear on a ledger (19 legacy ones
-today, ratcheting down, same mechanism as `hex.test.ts`). `lib/media.ts` is
-the single source; CSS literals are checked against it.
+`RESPONSIVE-CONTRACTS` bands (320/600/1024) are *verification widths* for
+screenshots, not layout switches.
+
+`styles/breakpoints.test.ts` extends the existing guard to every stylesheet and
+to `max-width` and `max-height`: a width or height condition must be a class
+edge (`min-width` at the edge, `max-width` at the pixel before it) or be on a
+shrink-only ledger with the file and a reason. It found 19 off-edge queries,
+which matches the constitution's "19 legacy breakpoints":
+
+| Where | Queries | Why it is on the ledger |
+|---|---|---|
+| `features.css` | `min-width: 1180`, `max-width: 1179` ×2, `max-width: 759` ×3 | written against the **old** 760/1180 edges |
+| `unity.css` | `max-width: 759` | same |
+| `app.css` | 520, 559, 560 ×3, 640 ×2 (small-phone tweaks); 600 and 900 written inclusive; 1100 (no class) | narrow adjustments / off-by-one / no class behind it |
+| `form-usability.css`, `unity.css` | `max-width: 639` | small-phone adjustment |
+
+The six at the old edges are a **real layout inconsistency**, not just tidiness:
+between 760 and 839 px, and again 1180–1199 px, those blocks lay a screen out
+for a different window class than the shell around it. The guard freezes them;
+moving each to the class edge changes what is drawn at those widths, so it is a
+screenshot-checked change of its own (Slice 9).
 
 ### 3.5 Density and role
 
@@ -642,7 +662,7 @@ imports. **Adoption numbers go in release notes; they are never claimed as
 ## 8. Device and audience patterns
 
 ### 8.1 Shells
-| | Compact < 760 | Medium 760–1179 | Wide ≥ 1180 |
+| | Compact + medium < 840 | Expanded 840–1199 | Large ≥ 1200 |
 |---|---|---|---|
 | Navigation | bottom bar (5) + sheet launcher | rail + sheet | persistent rail + contextual panel |
 | Content | single column, `--layout-measure` | one column + optional side panel | up to `--layout-operational` (1180px) |
@@ -732,9 +752,12 @@ guard is proven, and is reversible by deleting the file.
 3. Resolve the pending owner decisions listed in §11.
 *Exit:* docs agree with the stylesheet; one canonical QA list.
 
-### Slice 1 — Token export and breakpoint guard
-`tokens:export` + snapshot test; `lib/media.ts` constants + `breakpoints.test.ts` with a ledger; `--tracking-body`/`--word-space`; delete or use the two unused motion roles.
-*Exit:* JSON validates against the DTCG schema; export round-trips; ledger counts recorded.
+### Slice 1 — Token export and breakpoint guard (built; PR pending)
+- `lib/tokenexport.ts` + `npm run tokens:export` → `design-tokens/semester.tokens.json`. Variables are *discovered*: `tokensFor` is asked for every option of ground, accent, density, text size and corners, and a key whose value changes becomes a variable with modes (a variable that varies with several settings records each). The semantic layer is `tokens.css` as references; `app.css`'s `--sp-*`, `--type-*`, `--leading-*`, `--lift-*` are included with their multiplier. Ink variables carry per-ground contrast.
+- `lib/tokenexport.test.ts`: snapshot, mode completeness, reference resolution, "exports everything `tokens.css` defines", control cases, determinism.
+- `styles/breakpoints.test.ts`: §3.4.
+- Not in this slice (moved): `--tracking-body`/`--word-space` → Slice 5 with the reading-comfort preset; the two unused motion roles → Slice 0 follow-up.
+*Exit met:* each guard shown red against a deliberate break (a stray 777 px query, a fixed-but-unlisted legacy query, range syntax, a changed ground colour, a re-pointed semantic alias) and green when restored.
 
 ### Slice 2 — Provenance model
 `lib/provenance.ts` gains the five-axis type and `toProvenance()` adapters from `SourceLabel`/`Where`/`TRUST_KINDS`; `SourceBadge` renders from it with the §4.3 encoding; `provenance` required on `ObjectCard`.
@@ -749,7 +772,7 @@ Gradebook is the first consumer (faculty value, highest density). Stacked and sc
 *Exit:* axe, sort announcements, keyboard grid navigation, horizontal-scroll region not document.
 
 ### Slice 5 — Reading comfort preset and role-group defaults
-Preset (§6.6) and `data-role-group` defaults (§3.5), extending `sweep:targets` to all combinations. Measure with at least a small set of real users; do not market until the AT pass has run.
+Preset (§6.6) with its two new tokens `--tracking-body` and `--word-space` (exported by `tokens:export` like any other), and `data-role-group` defaults (§3.5), extending `sweep:targets` to all combinations. Measure with at least a small set of real users; do not market until the AT pass has run.
 
 ### Slice 6 — Gallery and visual regression
 Dev-only gallery route; Playwright screenshot job with runner-generated baselines (§7.5), non-blocking for two weeks, then blocking for token/layout paths.
@@ -780,7 +803,7 @@ accent until a decision exists).
 |---|---|---|
 | 1 | DD-003: "Institution verified" → "Official · {authority}" | Yes, keep DB value |
 | 2 | Atkinson Hyperlegible: bundle with the app? | Yes; needed for the Reading comfort preset and offline |
-| 3 | Canonical breakpoint source | `lib/media.ts` 760/1180; bands are test widths |
+| 3 | ~~Canonical breakpoint source~~ | Settled by the code: `lib/media.ts` 600/840/1200/1600. Open: when to move the six queries still at 759/1179/1180 |
 | 4 | Who is the second reviewer / AT pass owner? | Name both; both are currently blank |
 | 5 | Tenant theming scope | Logo + one audited accent only, for now |
 | 6 | When does `packages/design-system` extraction start? | After Slice 3 passes |
