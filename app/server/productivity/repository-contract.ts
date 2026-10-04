@@ -25,7 +25,8 @@ const HASH = 'a'.repeat(64);
 const task = (scope: Scope, over: Partial<Task> = {}): Task => ({
   id: ID, tenantId: scope.tenantId, ownerId: scope.ownerId, version: 1, seq: 0,
   source: { kind: 'student_entered' }, clocks: {}, createdAt: '2026-10-05T15:00:00.000Z', updatedAt: '2026-10-05T15:00:00.000Z',
-  deletedAt: null, deleteClock: null, title: 't', notes: null, status: 'open', completedAt: null, dueAt: null, priority: 'normal', courseId: null,
+  deletedAt: null, deleteClock: null, title: 't', notes: null, status: 'open', completedAt: null, dueAt: null, dueOn: null, whenText: null, priority: 'normal', courseId: null,
+  repeat: null, steps: [], plannedFrom: null,
   ...over,
 });
 

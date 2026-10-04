@@ -13,6 +13,7 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import {
   AUTHORITATIVE_FIELDS,
+  TASK_FIELDS,
   LIMITS,
   clampClock,
   encodeCursor,
@@ -311,10 +312,12 @@ export class ProductivityService {
           const task: Task = {
             ...base, source: { kind: 'student_entered' },
             title: f.title, notes: f.notes ?? null, status: 'open', completedAt: null,
-            dueAt: f.dueAt ?? null, priority: f.priority ?? 'normal', courseId: f.courseId ?? null,
-            clocks: stamp(['title', 'notes', 'status', 'dueAt', 'priority', 'courseId'], clock),
+            dueAt: f.dueAt ?? null, dueOn: f.dueOn ?? null, whenText: f.whenText ?? null,
+            priority: f.priority ?? 'normal', courseId: f.courseId ?? null,
+            repeat: f.repeat ?? null, steps: f.steps ?? [], plannedFrom: f.plannedFrom ?? null,
+            clocks: stamp(['status', ...TASK_FIELDS], clock),
           };
-          return await finish(task, ['title', 'notes', 'dueAt', 'priority', 'courseId'].filter((k) => k in f || k === 'title'), []);
+          return await finish(task, TASK_FIELDS.filter((k) => k in f || k === 'title'), []);
         }
         const f = command.fields;
         const bad = spanIssue(f.startsAt, f.endsAt);
