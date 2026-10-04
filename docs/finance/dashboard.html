@@ -206,7 +206,7 @@ function render() {
 $("#stamp").textContent = D.stamp;
 $("#seg").innerHTML = D.names.map((n, i) => `<button type="button" aria-pressed="false">${i + 1}. ${n}</button>`).join("");
 document.querySelectorAll("#seg button").forEach((b, i) => b.addEventListener("click", () => { sel = i; render(); }));
-try { const s = +localStorage.getItem("sem-dash-sel"); if (s >= 0 && s < D.names.length) sel = s; } catch (e) {}
+try { const raw = localStorage.getItem("sem-dash-sel"), s = raw === null ? NaN : +raw; if (Number.isInteger(s) && s >= 0 && s < D.names.length) sel = s; } catch (e) {}
 sensChart(); gateChart(); render();
 </script>
 </body></html>
