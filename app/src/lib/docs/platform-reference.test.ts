@@ -180,8 +180,20 @@ function denoEnvNames(files: readonly string[]): string[] {
     for (const m of t.matchAll(/Deno\.env\.get\(\s*'([A-Z][A-Z0-9_]*)'\s*\)/g)) names.add(m[1]);
     for (const m of t.matchAll(/Deno\.env\.get\(\s*([A-Za-z_]\w*)\s*\)/g)) {
       const def = texts.map((x) => new RegExp(`(?:const|let)\\s+${m[1]}\\s*=\\s*'([A-Z][A-Z0-9_]*)'`).exec(x)?.[1]).find(Boolean);
-      if (!def) throw new Error(`Deno.env.get(${m[1]}) is read through a name this scan cannot resolve`);
-      names.add(def);
+      if (def) {
+        names.add(def);
+        continue;
+      }
+      // The one other way a name is read: `allowanceFor(plan, (n) => Deno.env.get(n))`, which asks for
+      // `AI_ALLOWANCE_MICROS_<PLAN>` for the plan it is given. Resolve it from the plans the source lists, not from a copy here.
+      const viaAllowance = new RegExp(`allowanceFor\\([^()]*,\\s*\\(\\s*${m[1]}\\s*\\)\\s*=>\\s*Deno\\.env\\.get\\(\\s*${m[1]}\\s*\\)`).test(t);
+      const plans = texts
+        .map((x) => /PLAN_ALLOWANCE_MICROS:[^=]*=\s*\{([^}]*)\}/.exec(x)?.[1])
+        .find(Boolean)
+        ?.matchAll(/^\s*([a-z]+):\s*[\d_]+,/gm);
+      const keys = plans ? [...plans].map((k) => k[1]) : [];
+      if (!viaAllowance || keys.length === 0) throw new Error(`Deno.env.get(${m[1]}) is read through a name this scan cannot resolve`);
+      for (const key of keys) names.add(`AI_ALLOWANCE_MICROS_${key.toUpperCase()}`);
     }
   }
   return [...names].sort();
@@ -402,7 +414,17 @@ function producerFactsOf(uses: readonly EventUse[], files: readonly { path: stri
   for (const dir of dirs) {
     const base = dir.split('/').pop() as string;
     const importsIt = new RegExp(`from\\s+['"][^'"]*/${base}/[^'"]*['"]`);
-    for (const f of files) if (!f.path.startsWith(`${dir}/`) && importsIt.test(f.text)) mounts.add(f.path);
+    // Importing the package is not mounting the producer inside it: the institution gateway imports `packages/platform`
+    // for its error envelope and request context, and never reaches the event builder. A file mounts a producer root only
+    // if it imports the root *and* names something a producer file there exports.
+    const exported = new Set<string>();
+    for (const u of uses) {
+      if (!u.file.endsWith('.ts') || !u.file.startsWith(`${dir}/`)) continue;
+      const text = files.find((f) => f.path === u.file)?.text ?? '';
+      for (const m of text.matchAll(/^export\s+(?:async\s+)?(?:function|class|const|interface|type)\s+([A-Za-z0-9_]+)/gm)) exported.add(m[1]);
+    }
+    const namesOne = (text: string) => [...exported].some((name) => new RegExp(`\\b${name}\\b`).test(text));
+    for (const f of files) if (!f.path.startsWith(`${dir}/`) && importsIt.test(f.text) && namesOne(f.text)) mounts.add(f.path);
   }
   const drainCallers = files.filter((f) => f.path !== EVENTS_SRC && f.path !== THIS_TEST && /\bdrainOutbox\s*\(/.test(f.text)).map((f) => f.path).sort();
   return { dirs, mounts: [...mounts].sort(), drainCallers };
@@ -1119,10 +1141,25 @@ describe('ANALYTICS-MARKS.md', () => {
     expect(callers).toEqual(['app/src/state/store.tsx']);
   });
 
+  /**
+   * `event: 'x.y'` as an object-literal property is an emission; the same words in a type (`event: 'x.y' | 'x.z';`,
+   * `event: 'x.y';`) only describe one. Counting the type would list events nothing writes, such as the vault's audit event.
+   */
+  const emittedEventNames = (text: string): string[] => [...text.matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'\s*[,}]/g)].map((m) => m[1]);
+
+  it('counts an event only where it is emitted, not where a type names it (control)', () => {
+    expect(emittedEventNames("console.info(JSON.stringify({ event: 'a.b', ...rest }))")).toEqual(['a.b']);
+    expect(emittedEventNames("log({ event: 'a.c' })")).toEqual(['a.c']);
+    expect(emittedEventNames("interface E { event: 'a.d';\n x: string }")).toEqual([]);
+    expect(emittedEventNames("interface E { event: 'a.e' | 'a.f';\n x: string }")).toEqual([]);
+    // and the one that tripped it: the vault's audit event type, which the vault passes to a callback as an argument
+    expect(emittedEventNames(read('supabase/functions/_shared/integration/vault.ts'))).toEqual([]);
+  });
+
   it('lists exactly the telemetry events the code emits', () => {
     const emitting = ['app/server', 'app/api', 'supabase/functions', 'packages'].flatMap((d) => walk(d, isCode));
     const emitted = new Set<string>();
-    for (const f of emitting) for (const m of read(f).matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'/g)) emitted.add(m[1]);
+    for (const f of emitting) for (const name of emittedEventNames(read(f))) emitted.add(name);
     const gatewayRows = tableUnder(md, 'Sent to a server today').map(cellsOf).filter((c) => /^`institution\./.test(c[0]));
     expect(diff(gatewayRows.map((c) => tokens(c[0])[0]), [...emitted])).toEqual(NONE);
     expect(emitted.size).toBe(3);
@@ -1346,16 +1383,24 @@ describe('EVENTS.md and its schemas (generated)', () => {
   it('the mount and publisher probes see a mount and a caller, and ignore the producer itself (control)', () => {
     const uses = [{ file: 'app/server/thing/service.ts', why: 'calls the library' }];
     const files = [
-      { path: 'app/server/thing/service.ts', text: "import { x } from './repo.ts'" },
-      { path: 'app/api/thing.ts', text: "import { svc } from '../server/thing/service.ts'" },
+      { path: 'app/server/thing/service.ts', text: "import { x } from './repo.ts';\nexport function createThing() {}" },
+      { path: 'app/api/thing.ts', text: "import { createThing } from '../server/thing/service.ts'" },
       { path: 'app/server/publisher.ts', text: 'await drainOutbox(store, send)' },
       { path: 'app/server/other.ts', text: "import { y } from '../thing-other/y.ts'" },
     ];
     expect(producerFactsOf(uses, files)).toEqual({ dirs: ['app/server/thing'], mounts: ['app/api/thing.ts'], drainCallers: ['app/server/publisher.ts'] });
     // A package is one root however deep the file sits, and a folder name shared with unrelated code is not a mount.
     const pkg = [{ file: 'packages/kit/src/events/emit.ts', why: 'calls the library' }];
-    const near = [{ path: 'app/src/lib/events/x.ts', text: "import { y } from '../events/z.ts'" }, { path: 'app/src/a.ts', text: "import { k } from '../../packages/kit/src/index.ts'" }];
+    const near = [
+      { path: 'packages/kit/src/events/emit.ts', text: 'export function eventFromKit() {}' },
+      { path: 'app/src/lib/events/x.ts', text: "import { y } from '../events/z.ts'" },
+      { path: 'app/src/a.ts', text: "import { eventFromKit } from '../../packages/kit/src/index.ts'" },
+    ];
     expect(producerFactsOf(pkg, near)).toEqual({ dirs: ['packages/kit'], mounts: ['app/src/a.ts'], drainCallers: [] });
+    // Importing the package is not mounting the producer inside it: a file that takes only the error envelope is not a mount
+    // (this is the institution gateway's case), while one that names the event builder is.
+    const envelopeOnly = [...near, { path: 'app/src/b.ts', text: "import { errorShape } from '../../packages/kit/src/index.ts'" }];
+    expect(producerFactsOf(pkg, envelopeOnly).mounts).toEqual(['app/src/a.ts']);
     expect(producerFactsOf(uses, files.slice(0, 1))).toEqual({ dirs: ['app/server/thing'], mounts: [], drainCallers: [] });
   });
 

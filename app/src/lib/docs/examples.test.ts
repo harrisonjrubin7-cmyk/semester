@@ -761,13 +761,20 @@ describe('examples/event-consumer', () => {
       'packages/platform/src/seam/institution.ts',
       'packages/platform/src/testing/memory.ts',
     ]);
-    // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
-    // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
-    const mounts = code
-      .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
-      .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
-      .map((c) => c.file);
-    expect(mounts, 'something now imports the productivity service or the platform package').toEqual([]);
+    // Nothing outside the producers' own folders imports the productivity service, so no entry point runs it.
+    const outside = code.filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'));
+    const mountsProducer = outside.filter((c) => /from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)).map((c) => c.file);
+    expect(mountsProducer, 'something now imports the productivity service').toEqual([]);
+    // packages/platform is the tenancy kernel. Since phase 1 of the gateway migration the institution gateway imports its
+    // error envelope, correlation ids and request context, and only those three files do. None of them reaches the
+    // event builder or the tenant outbox, so importing the package still does not make an entry point produce or publish.
+    const platformImporters = outside.filter((c) => /from\s+['"][^'"]*\/platform\/[^'"]*['"]/.test(c.text));
+    expect(platformImporters.map((c) => c.file).sort(), 'something new imports the platform package: say what for on the page').toEqual([
+      'app/server/institution/adapter.ts',
+      'app/server/institution/context.ts',
+      'app/server/institution/gateway.ts',
+    ]);
+    for (const c of platformImporters) expect(c.text, `${c.file} reaches the platform event code`).not.toMatch(/\b(eventFromContext|TenantOutbox)\b/);
     // Nothing publishes: drainOutbox has no caller outside the library.
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();

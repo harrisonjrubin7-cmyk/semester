@@ -17,6 +17,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
+| `database/` | Catalog-derived isolation evidence for the production database, read on 2026-10-04 and read-only: `database/TENANT_ISOLATION_MATRIX.md`, `database/GRANT_ALLOWLIST.md`, `database/FUNCTION_AUTHORIZATION_MATRIX.md` and `database/DATA_CLASSIFICATION_REGISTER.md`. Nothing in it was applied to any database, and its README says which of the requested artifacts are not written. See [`database/README.md`](../../database/README.md). |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
@@ -70,6 +71,10 @@ At the root there are also Markdown reports and registers (for example `CLAUDE.m
 | `app/src/site/` | The public site pages, rendered by `app/scripts/build-site.mjs` (`npm run site:build`). |
 | `app/src/styles/` | CSS, design tokens, and the style rules the style audit enforces. |
 | `app/src/assets/` | Bundled images. |
+| `app/src/kernel/` | The few things every domain shares and nothing a domain owns: `Result`, domain errors and the error envelope, clocks, id sources and a domain-event sink. It depends on nothing else in the app. |
+| `app/src/domains/` | Vertical slices (`calendar`, `identity`, `policy`, `tasks`, `today`), each with `domain/`, `application/`, `adapters/` and a public `index.ts`. Other slices may import a slice only through its `index.ts` (`app/src/architecture/architecture.test.ts`). |
+| `app/src/composition/` | The shell between the slices and the legacy app. `domains.ts` and `react.ts` wire the slices to what only the legacy app has; `shadow.ts` and `TodayShadow.tsx` compare the new Today with the old one on the same state without changing what a student sees. |
+| `app/src/architecture/` | The rules that keep the tree from sliding back into a screen-centric monolith, written as functions of the import graph (`rules.ts`, `graph.ts`, `tree.ts`) and run by `architecture.test.ts`. `legacy.json` records the legacy exceptions, which may only be removed. |
 
 Files directly in `app/src/` include `main.tsx`, `App.tsx`, `screens.tsx`, `headers.ts` and several tests that read the whole tree, such as `isolation.test.ts`, `donotbuild.test.ts` and `rootunmount.test.ts`.
 
