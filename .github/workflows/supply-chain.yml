@@ -39,6 +39,8 @@ on:
     paths:
       - 'app/**'
       - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/supply-chain.yml'
   schedule:
     - cron: '41 6 * * 1'
