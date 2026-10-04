@@ -30,6 +30,7 @@ through outside parties ([02](02-DEPENDENCIES-AND-CRITICAL-PATH.md)).
 | [05 Acceptance and evidence](05-ACCEPTANCE-AND-EVIDENCE.md) | per-workstream acceptance criteria; what exists and why it does not yet close a gate |
 | [06 Tenant launch and follow-up](06-TENANT-LAUNCH-AND-FOLLOW-UP.md) | the 90-day tasks mapped to the nodes; who signs what; stop conditions; follow-up cadence |
 | [Status 2026-10-04](STATUS-2026-10-04.md) | the first report |
+| [Status 2026-10-04, second](STATUS-2026-10-04-2.md) | an out-of-cycle update after `main` moved; the weekly report is due 2026-10-11 |
 
 ## What this pack stands on, and does not replace
 
