@@ -121,7 +121,14 @@ walks a second tenant** (CLAUDE.md; ADR 0002):
 Strangler: a route moves to `runCommand` only when its domain's rules are
 declared and its tests pass **through the pipeline**.
 
-1. **Productivity** (tasks, notes) — the reference slice; lowest blast radius.
+1. **Productivity** (tasks, calendar). Main gained a tenant-scoped tasks/calendar
+   command service (`app/server/productivity/`, conventions in `docs/API-PLATFORM.md`)
+   while this package was in review, built on the same institution primitives and
+   adding policy actions `task.read`/`task.write`/`calendar.event.*`. It is the first
+   real domain and supersedes `reference/tasks.ts` as the adoption target: this step
+   compares its idempotency, audit and outbox handling with `runCommand` and converges
+   them (the reference slice's list action was renamed `task.list` to stay clear of the
+   institution's `task.read`). Lowest blast radius.
 2. **Support access and shares** — the consent and audit semantics are already
    written; this moves them onto the shared records.
 3. **Institution gateway writes** (registration, money, advising…). These keep

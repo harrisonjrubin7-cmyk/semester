@@ -49,7 +49,7 @@ export interface Task extends TenantRow {
 export const TASK_RULES: readonly ActionRule[] = [
   { action: 'task.create', capability: null, ownerMay: true, classificationCeiling: 'student_private' },
   { action: 'task.complete', capability: null, ownerMay: true, classificationCeiling: 'student_private' },
-  { action: 'task.read', capability: null, ownerMay: true, classificationCeiling: 'student_private' },
+  { action: 'task.list', capability: null, ownerMay: true, classificationCeiling: 'student_private' },
 ];
 
 interface CreateInput {
@@ -123,7 +123,7 @@ export async function listTasks(
   ctx: RequestContext,
   req: { limit?: unknown; cursor?: string | null },
 ): Promise<Page<Task>> {
-  await requirePolicy(deps.policy, ctx, 'task.read', { type: 'task', tenantId: ctx.tenantId, ownerId: ctx.actor.personId, classification: 'student_private' });
+  await requirePolicy(deps.policy, ctx, 'task.list', { type: 'task', tenantId: ctx.tenantId, ownerId: ctx.actor.personId, classification: 'student_private' });
   // The repository is already tenant-scoped; the owner filter is the *product* rule on top.
   const mine = (await repo.list(scopeOf(ctx))).filter((t) => t.ownerId === ctx.actor.personId);
   return paginate(mine, (t) => t.createdAt, req, { codec: deps.codec, tenantId: ctx.tenantId, query: { resource: 'tasks', owner: ctx.actor.personId } });
