@@ -739,10 +739,11 @@ describe('examples/event-consumer', () => {
     expect(Object.keys(EVENT_TYPES).every((t) => /^[a-z_]+\.[a-z_]+$/.test(t))).toBe(true);
   });
 
-  it('has one producer, the productivity command service, which nothing mounts and nothing publishes', () => {
+  it('has one producer, the productivity command service, which one route mounts behind a flag that is off, and nothing publishes', () => {
     // The guide says the outbox runs in memory only in these examples, and that the one producer in the repository
-    // is not reachable from anything that runs. This fails when either stops being true, so that someone revisits
-    // the guide in the same change.
+    // is reachable from exactly one route, switched off unless a deployment sets SEMESTER_PRODUCTIVITY=on, and
+    // that nothing publishes what it writes. This fails when any of that stops being true, so that someone
+    // revisits the guide in the same change.
     const code: { file: string; text: string }[] = [];
     for (const dir of ['app/src', 'app/server', 'app/api', 'supabase/functions', 'packages']) {
       for (const file of walk(dir)) {
@@ -771,7 +772,9 @@ describe('examples/event-consumer', () => {
       .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
       .filter((c) => !(gatewayFiles.includes(c.file) && !/from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)))
       .map((c) => c.file);
-    expect(mounts, 'something now imports the productivity service or the platform package').toEqual([]);
+    expect(mounts, 'something else now imports the productivity service or the platform package').toEqual(['app/api/productivity/[...path].ts']);
+    // The route is off unless the deployment says on: the one entry point that mounts the producer must check the switch first.
+    expect(read('app/api/productivity/[...path].ts')).toContain('if (!productivityEnabled(process.env)) throw');
     // Nothing publishes: drainOutbox has no caller outside the library.
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();
