@@ -201,6 +201,12 @@ interface Store {
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
   /**
+   * The sample course is still arriving. An empty catalogue now means "not
+   * yet", not "nothing there"; a screen that reads the second while this is
+   * true draws its first-run for a moment it should have drawn a loading state.
+   */
+  loading: boolean;
+  /**
    * What went wrong saving to this device, in a sentence, or empty.
    *
    * On the context rather than in a toast because it is not an event — it is
@@ -1449,7 +1455,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const at = new Date();
       // Two calls, as before: the built-in rules and the student's own are
       // capped separately by `fire`, and merging them would change that.
-      const { rules, mine } = remindersFor(state, catalog, at, courseCode);
+      const { rules, mine } = remindersFor(
+        {
+          notifs: state.notifs, mutedCourses: state.mutedCourses, appointments: state.appointments,
+          registrar: state.registrar, myRules: state.myRules, attendance: state.attendance,
+          attendPolicy: state.attendPolicy, done: state.done, quiet: state.quiet, term: state.term,
+          charges: state.charges, aid: state.aid, payments: state.payments, plans: state.plans,
+          spent: state.spent, windows: state.windows,
+        },
+        catalog,
+        at,
+        courseCode,
+      );
       fire(rules);
       fire(mine);
     };
@@ -1805,8 +1822,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
-    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, loading: awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
+    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
   );
   /*
    * The clock is published beside the store, not inside it.

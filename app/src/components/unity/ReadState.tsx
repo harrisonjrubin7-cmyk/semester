@@ -20,6 +20,8 @@ export function ReadState<T>({
   now,
   what,
   empty,
+  emptyNode,
+  inset = false,
   onRecover,
   children,
 }: {
@@ -29,6 +31,13 @@ export function ReadState<T>({
   what: string;
   /** The empty state's own words; the envelope's limitations ride beneath it. */
   empty: { title: string; body: string };
+  /**
+   * The screen's own first-run, when it has a richer one than a title and a
+   * sentence. Drawn instead of the plain empty state, with the same trigger.
+   */
+  emptyNode?: ReactNode;
+  /** Side padding for the notes under content, for screens whose content draws edge to edge. */
+  inset?: boolean;
   /** Runs a recovery action by its id. Absent means the action is not offered. */
   onRecover?: (action: string) => void;
   children: (data: T) => ReactNode;
@@ -37,7 +46,7 @@ export function ReadState<T>({
   const first = p.recovery[0];
   const recover = first && onRecover ? { label: first.label, run: () => onRecover(first.action) } : undefined;
   const notes = p.limitations.map((l) => (
-    <p key={l} className="state-body">
+    <p key={l} className="state-body" style={inset ? { paddingInline: 'calc(18px * var(--density, 1))' } : undefined}>
       {l}
     </p>
   ));
@@ -68,6 +77,7 @@ export function ReadState<T>({
         />
       );
     case 'empty':
+      if (emptyNode !== undefined) return <>{emptyNode}</>;
       return (
         <>
           <EmptyState
@@ -88,7 +98,9 @@ export function ReadState<T>({
           <PermissionNotice changed={`${what[0].toUpperCase()}${what.slice(1)} are waiting for approval.`} why="Nothing here is final until it is approved." />
         ) : p.surface === 'degraded' ? (
           <PermissionNotice
-            changed={p.state === 'stale' ? `${what[0].toUpperCase()}${what.slice(1)} may be out of date.` : `${what[0].toUpperCase()}${what.slice(1)} are only partly available.`}
+            changed={`${what[0].toUpperCase()}${what.slice(1)} ${
+              p.state === 'stale' ? 'may be out of date.' : p.state === 'syncing' ? 'are still updating.' : 'are only partly available.'
+            }`}
             why="What you see is the last thing we knew."
             control={recover}
           />

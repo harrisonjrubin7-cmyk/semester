@@ -61,7 +61,7 @@ function reminderEffect(): { body: string; deps: string[] } {
 describe('the reminder interval', () => {
   it('depends on every slice of state it reads', () => {
     const { body, deps } = reminderEffect();
-    expect(body, 'the effect no longer goes through remindersFor').toContain('remindersFor(state');
+    expect(body, 'the effect no longer goes through remindersFor').toContain('remindersFor(');
     const read = [...new Set((body + READS).match(/\bstate\.[A-Za-z][A-Za-z0-9]*/g) ?? [])];
     expect(read.length, 'the effect stopped reading state at all').toBeGreaterThan(3);
     expect(read.filter((slice) => !deps.includes(slice))).toEqual([]);

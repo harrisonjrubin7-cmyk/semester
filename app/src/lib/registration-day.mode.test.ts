@@ -193,6 +193,6 @@ describe('the two reminders', () => {
       expect(readFileSync(file, 'utf8'), file).toContain('registrationOpens: storedWindow()');
     }
     // The tick's source is built in reminders.ts; the provider must still go through it.
-    expect(readFileSync('src/state/store.tsx', 'utf8')).toContain('remindersFor(state');
+    expect(readFileSync('src/state/store.tsx', 'utf8')).toContain('remindersFor(');
   });
 });

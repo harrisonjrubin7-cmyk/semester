@@ -19,8 +19,19 @@ import { datedItems, railFor } from '../lib/select';
 import { beginNow, planFrom } from '../lib/start';
 import type { State } from './shape';
 
+/**
+ * The slices of state reminders are worked out from, named — not the whole
+ * store — so a caller that lists them can be checked against its effect's
+ * dependency array (`reminders.deps.test.ts`) and the linter alike.
+ */
+export type ReminderSlices = Pick<
+  State,
+  | 'notifs' | 'mutedCourses' | 'appointments' | 'registrar' | 'myRules' | 'attendance' | 'attendPolicy'
+  | 'done' | 'quiet' | 'term' | 'charges' | 'aid' | 'payments' | 'plans' | 'spent' | 'windows'
+>;
+
 export function remindersFor(
-  state: State,
+  state: ReminderSlices,
   catalog: Catalog,
   at: Date,
   courseCode: (id: string) => string,

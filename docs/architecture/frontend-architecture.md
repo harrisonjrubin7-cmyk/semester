@@ -141,8 +141,11 @@ Additive, one journey at a time, nothing removed or renamed (`ADDITIVE-UNIVERSIT
 
 1. **Contract** — `ReadEnvelope`, `present()`, `ReadState`. *Built here.*
 2. **Notifications** — real reminders replace static demo data. *Built here.*
-3. **Today / tasks / calendar** — wrap their existing selectors in envelopes; render stale/empty/offline through
-   `ReadState`. Their local reads are `authority: derived|student`, so they cannot claim `verified`.
+3. **Today / tasks / calendar** — `lib/read/surfaces.ts` builds an envelope for each; the screens render through
+   `ReadState` with their existing content as the children. *Built here.* Their reads are `authority:
+   derived|student`, so they cannot claim `verified`. Each screen keeps its own empty rule (`nothingOnToday`,
+   `nothingYet`, "no tasks and no form open"); the envelope adds loading, the source mix and the calendar's offline
+   limitation. Sync and offline for the student's own data stay in the shell, said once.
 4. **School-sourced facts** — `From your school` cards take `institution`/`sis` authority from the gateway, the
    first place `verified` is reachable.
 5. **Role workspaces** — only past the role-launch gate.
@@ -156,14 +159,14 @@ untouched; only the screen's source of data changed.
 | Slice item | State |
 | --- | --- |
 | Authenticated student shell | Exists (Supabase auth, `App.tsx`); unchanged |
-| Today | Exists; not yet on envelopes (step 3) |
-| Tasks | Exists (`Work.tsx`); not yet on envelopes (step 3) |
-| Calendar | Exists (`Calendar.tsx`); not yet on envelopes (step 3) |
-| **Notifications** | **Built here**: real, ordered by tier, with why-lines, put-away, offline and permission limitations |
-| **Source labels** | **Built here** for notifications: authority `derived`, label `estimated`, never institution-verified |
-| Accessibility | Renderer reuses the audited state components; screen covered by the app-wide axe sweep |
-| Offline states | **Built here** for notifications (list kept, "nothing external can arrive"); other screens per §4 |
+| **Today** | **Built here**: `todayEnvelope`; loading instead of a first-run flash; source mix beneath |
+| **Tasks** | **Built here**: `tasksEnvelope` on the Actions list in Mine; the add form is untouched |
+| **Calendar** | **Built here**: `calendarEnvelope`; offline says the campus feed cannot refresh and that the last-refresh time is not recorded |
+| **Notifications** | **Built here**: real reminders, tier-ordered, why-lines, put-away, offline and permission limitations |
+| **Source labels** | **Built here**: one vocabulary in words on every surface; a date not checked against a syllabus is called out |
+| Accessibility | Renderer reuses the audited state components; screens covered by the app-wide axe sweep |
+| Offline states | Calendar and notifications say what offline changes; Today and tasks are fully local and say nothing extra |
 
-This is one screen on one contract, not the whole slice. Today, tasks and calendar remain to be moved onto the
-envelope, and no server-owned notification feed exists: what is listed is worked out on the device, which the
-screen says.
+What the envelope does **not** yet do on these screens: freshness of the campus feed (no refresh time is stored), a
+server-owned feed of notifications, or any `verified` claim. The first place `verified` becomes reachable is a
+school-sourced fact from the gateway (step 4 above).
