@@ -539,6 +539,13 @@ begin
     raise exception 'integration:configure over this exact school is required.' using errcode = '42501';
   end if;
   if duty.id = 'integration-config'
+     and coalesce(detail ->> 'requested_change', '') not in (
+       'configure', 'rotate-credential-reference', 'disable'
+     ) then
+    raise exception 'requested_change must be configure, rotate-credential-reference or disable.'
+      using errcode = '22023';
+  end if;
+  if duty.id = 'integration-config'
      and coalesce(detail ->> 'requested_change', '') <> 'disable' then
     if coalesce(detail ->> 'credential_expiry', '') !~ '^\d{4}-\d{2}-\d{2}$' then
       raise exception 'A future credential expiry date is required.' using errcode = '22023';

@@ -195,6 +195,21 @@ begin
     perform public.request_approval(
       'integration-config', 'health-north',
       (select c.public_id from public.integration_connections c where c.id = healthy),
+      jsonb_build_object('requested_change', 'arbitrary-operation', 'credential_expiry', (current_date + 30)::text),
+      'Institution approval and rollback references.', 'INT-UNSUPPORTED', null
+    );
+  exception when invalid_parameter_value then denied := true;
+  end;
+  reset role;
+  if not denied then raise exception 'FAILED: unsupported integration change entered the approval queue'; end if;
+  raise notice 'ok  integration change kinds are allowlisted at the write boundary';
+
+  denied := false;
+  perform pg_temp.become(operator);
+  begin
+    perform public.request_approval(
+      'integration-config', 'health-north',
+      (select c.public_id from public.integration_connections c where c.id = healthy),
       jsonb_build_object('requested_change', 'configure', 'credential_expiry', (current_date - 1)::text),
       'Institution approval and rollback references.', 'INT-EXPIRED-CREDENTIAL', null
     );
@@ -223,6 +238,7 @@ begin
   -- Approval evidence is immutable after it is recorded. Replace the fixture
   -- with an already-expired request instead of rewriting its pinned expiry.
   delete from public.approval_request where ticket = 'INT-100';
+  perform set_config('request.jwt.claims', '', true);
   insert into public.approval_request
     (duty_id, requester, tenant_id, target, evidence, ticket, status, expires_at)
   select 'integration-config', operator, 'health-north', c.public_id,

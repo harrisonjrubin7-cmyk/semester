@@ -239,12 +239,17 @@ values
   ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG-DEPLOYMENT', 'production browser verification', repeat('a', 40), 'deployment-0', now());
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text;
+declare operator uuid := (select v from ids where k = 'operator'); state text; action text;
 begin
   perform pg_temp.become(operator);
-  select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
+  select r.state, r.next_safe_action into state, action
+    from public.console_release_incidents(false) r where item_kind = 'release';
   perform pg_temp.nobody();
   perform pg_temp.said('verification for a different deployment cannot clear the release', state, 'deployed_unverified');
+  if action not ilike 'Run the production smoke%' then
+    raise exception 'FAILED: mismatched verification did not direct a new production check: %', action;
+  end if;
+  raise notice 'ok  unbound verification guidance matches the deployed_unverified state';
 end $$;
 
 insert into public.platform_release_evidence
@@ -268,6 +273,22 @@ begin
   perform pg_temp.counted('recovery is not communication-complete without a post-recovery notice', n, 1);
   if leaked like '%NOTICE-BODY-CANARY%' then raise exception 'FAILED: notice body leaked'; end if;
   raise notice 'ok  incident notice bodies are not returned';
+end $$;
+
+delete from public.approval_request where ticket = 'INC-100';
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); action text; status text;
+begin
+  perform pg_temp.become(operator);
+  select r.next_safe_action, r.rollback_status into action, status
+    from public.console_release_incidents(false) r where r.item_id = 'incident-rollback';
+  perform pg_temp.nobody();
+  perform pg_temp.said('a rollback without approval is not presented as approved', status, 'documented');
+  if action not ilike 'Request rollback approval%' then
+    raise exception 'FAILED: an unapproved rollback was directed to execution: %', action;
+  end if;
+  raise notice 'ok  rollback execution waits for an executed approval';
 end $$;
 
 do $$

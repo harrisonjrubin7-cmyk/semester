@@ -222,6 +222,12 @@ begin
         when not (select current from gate_state where gate = 'production_deployment')
           then 'Use the release approval path; execution and post-deploy verification remain separate.'
         when not (select current from gate_state where gate = 'production_verification')
+          or (select g.commit_sha from gate_state g where g.gate = 'production_verification')
+             is distinct from (select g.commit_sha from gate_state g where g.gate = 'production_deployment')
+          or (select g.deployment_id from gate_state g where g.gate = 'production_verification')
+             is distinct from (select g.deployment_id from gate_state g where g.gate = 'production_deployment')
+          or (select g.observed_at from gate_state g where g.gate = 'production_verification')
+             < (select g.observed_at from gate_state g where g.gate = 'production_deployment')
           then 'Run the production smoke, rollback-readiness and readback checks against the exact deployed commit.'
         else 'Continue monitoring until the evidence window expires; a green row is not institutional activation.'
       end::text as next_safe_action,
@@ -250,7 +256,7 @@ begin
            else 'current' end::text as communication_status,
       notice.sent_at::timestamptz as last_notice_at,
       notice.next_update_at::timestamptz,
-      case when rollback_approval.status in ('pending', 'approved', 'executed') then rollback_approval.status
+      case when rollback_approval.status is not null then rollback_approval.status
            when i.rollback_ref is not null then 'documented'
            else 'not_requested' end::text as rollback_status,
       i.release_commit::text,
@@ -264,7 +270,8 @@ begin
       coalesce(i.rollback_ref, 'No rollback reference recorded.')::text as evidence,
       case when i.status = 'recovered' then 'Confirm the resolution notice, preserve evidence and schedule the post-incident review.'
            when i.status = 'rollback' and rollback_approval.status in ('pending', 'approved') then 'Keep the release unchanged while rollback approval awaits execution.'
-           when i.status = 'rollback' then 'Use the approved rollback path, then verify customer workflows and publish the next update.'
+           when i.status = 'rollback' and rollback_approval.status = 'executed' then 'Use the executed rollback authorization, then verify customer workflows and publish the next update.'
+           when i.status = 'rollback' then 'Request rollback approval and keep the release unchanged until that approval is executed.'
            when notice.sent_at is null or notice.next_update_at <= now() then 'Publish the required audience update through the incident communications procedure.'
            else 'Maintain the narrow mitigation and update at the promised cadence.' end::text as next_safe_action,
       'restricted'::text as classification,
