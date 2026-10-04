@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FeatureState } from '../intelligence/contracts';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 import type { Action } from '../state/shape';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
+import { makeBridge, type Bridge } from './bridge';
 import type { Domains } from './domains';
-import { useTaskDomains } from './react';
+import type { StoreSnapshot } from './react';
 
 /** What the reducer's `addTask` takes: a task before it has an id, a creation time or a state. */
 export type NewTaskInput = Extract<Action, { type: 'addTask' }>['task'];
@@ -60,7 +61,7 @@ export interface TaskActions {
 }
 
 export function makeTaskActions(
-  domains: Domains,
+  domains: Domains | null,
   dispatch: (action: Action) => void,
   flag: FeatureState,
   log: (message: string) => void = (message) => console.warn(message),
@@ -72,7 +73,9 @@ export function makeTaskActions(
     reschedule: (id, date, time) => dispatch({ type: 'moveTask', id, date, ...(time === undefined ? {} : { time }) }),
     remove: (id) => dispatch({ type: 'deleteTask', id }),
   };
-  if (flag !== 'production') return legacy;
+  // No domains yet (they load lazily, and only for a build that switches them on): the legacy dispatch, which is what
+  // every press did before.
+  if (flag !== 'production' || domains === null) return legacy;
 
   // One at a time, so each press sees the store as the last one left it.
   let tail: Promise<void> = Promise.resolve();
@@ -144,8 +147,58 @@ export function makeTaskActions(
   };
 }
 
+/**
+ * The domains for a caller that only writes tasks, loaded when the flag asks for them.
+ *
+ * **Not imported at the top of this file.** `composition/domains.ts` pulls in
+ * every slice and its legacy adapters, about 30 KB, and this hook sits in the
+ * shell (`QuickAdd`, `BreakItUp`, `UnityLayer`), so a static import put that on
+ * the first load of every build, flag on or off. A build without the flag never
+ * fetches it; a build with it fetches it once, and until it arrives a press takes
+ * the legacy path, which is the safe one. The snapshot has no grants or choices:
+ * `today` is not asked for here and its ranking inputs are empty by construction.
+ */
+function useTaskDomains(enabled: boolean): Domains | null {
+  const store = useStore();
+  const now = useNow();
+  const snapshot: StoreSnapshot = {
+    state: store.state,
+    catalog: store.catalog,
+    accountId: store.account?.id ?? null,
+    schoolId: store.school.id,
+    now,
+    grants: [],
+    choices: {},
+  };
+  const bridge = useRef<Bridge<StoreSnapshot> | null>(null);
+  const latest = useRef({ snapshot, dispatch: store.dispatch });
+  const [domains, setDomains] = useState<Domains | null>(null);
+
+  // After every commit: publish what is on screen, and release anyone waiting for it.
+  useEffect(() => {
+    latest.current = { snapshot, dispatch: store.dispatch };
+    bridge.current?.sync(snapshot, store.dispatch);
+  });
+
+  useEffect(() => {
+    if (!enabled) return;
+    let live = true;
+    void Promise.all([import('./domains'), import('./react')]).then(([{ composeDomains }, { hostOver }]) => {
+      if (!live) return;
+      const made = makeBridge(latest.current.snapshot, latest.current.dispatch);
+      bridge.current = made;
+      setDomains(composeDomains(hostOver(made.read, made.send, made.settled)));
+    });
+    return () => {
+      live = false;
+    };
+  }, [enabled]);
+
+  return enabled ? domains : null;
+}
+
 export function useTaskActions(flag: FeatureState = EXPERIENCE_FLAGS.domainTasks): TaskActions {
-  const domains = useTaskDomains();
+  const domains = useTaskDomains(flag === 'production');
   const { dispatch } = useStore();
   return useMemo(() => makeTaskActions(domains, dispatch, flag), [domains, dispatch, flag]);
 }

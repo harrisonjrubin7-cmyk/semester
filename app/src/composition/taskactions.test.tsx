@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -115,6 +117,28 @@ describe('makeTaskActions', () => {
       { type: 'toggleTask', id: 't1' },
       { type: 'moveTask', id: 't1', date: '2026-09-12' },
     ]);
+  });
+});
+
+describe('before the domains have loaded', () => {
+  it('takes the legacy path at production, for every action, so no press is lost to a chunk still arriving', () => {
+    const { dispatch } = stub([dom()]);
+    const a = makeTaskActions(null, dispatch, 'production');
+    a.toggle('t1');
+    a.reschedule('t1', '2026-09-12', '4 PM');
+    a.remove('t1');
+    a.add({ title: 'x', date: null, time: '', note: '', courseId: null });
+    expect(dispatch.mock.calls.map((c) => c[0].type)).toEqual(['toggleTask', 'moveTask', 'deleteTask', 'addTask']);
+  });
+
+  it('is not imported by the shell: this file must not statically import the composition root or the hook over it', () => {
+    // 30 KB of first load for a flag that is off. Dynamic `import()` is the only way in; a type import is erased.
+    const source = readFileSync(join(process.cwd(), 'src/composition/taskactions.ts'), 'utf8');
+    const staticValueImports = source
+      .split('\n')
+      .filter((line) => /^import\s/.test(line) && !/^import\s+type\s/.test(line))
+      .filter((line) => /from\s+'\.\/(domains|react)'/.test(line) || /from\s+'\.\.\/(domains|composition)/.test(line));
+    expect(staticValueImports).toEqual([]);
   });
 });
 
@@ -285,6 +309,9 @@ describe('in a real store, against the legacy reducer', () => {
         </StoreProvider>,
       );
     });
+    // A production build fetches the domains lazily, and a press before they arrive takes the legacy path,
+    // which would make every comparison below pass for the wrong reason. Wait for them.
+    if (flag === 'production') await act(async () => void (await new Promise((r) => setTimeout(r, 400))));
   }
   /** Let queued presses run: each waits for a commit, and a commit needs the `act` scope to close. */
   async function flush() {

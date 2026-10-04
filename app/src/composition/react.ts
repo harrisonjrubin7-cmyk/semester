@@ -12,6 +12,7 @@ import { ownedScope } from '../lib/standing';
 import { pathSnapshot } from '../lib/today-decision';
 import type { PersonalTask } from '../lib/types';
 import { useNow, useStore, type Action, type State } from '../state/store';
+import { makeBridge } from './bridge';
 import { composeDomains, defaultPlatform, type Domains, type LegacyHost, type Platform } from './domains';
 
 /**
@@ -153,38 +154,6 @@ export interface DomainOptions {
   readonly officeList?: readonly OfficeAction[] | null;
 }
 
-/** A write the store ignored (a dispatch that changes nothing never commits) must not hang its caller. */
-const SETTLE_TIMEOUT_MS = 1000;
-
-function makeBridge(first: StoreSnapshot, firstDispatch: (a: Action) => void) {
-  let snapshot = first;
-  let dispatch = firstDispatch;
-  let waiting: (() => void)[] = [];
-  return {
-    sync(next: StoreSnapshot, nextDispatch: (a: Action) => void) {
-      snapshot = next;
-      dispatch = nextDispatch;
-      // The snapshot now holds what was dispatched, so whoever was waiting for it may read.
-      const release = waiting;
-      waiting = [];
-      for (const resolve of release) resolve();
-    },
-    read: () => snapshot,
-    send: (a: Action) => dispatch(a),
-    /**
-     * `dispatch` schedules the reducer; it does not run it. Straight after
-     * `addTask` the snapshot still holds the old list, so the adapter could not
-     * find the task it had just added. This resolves on the next sync, the
-     * moment the snapshot holds the result.
-     */
-    settled: () =>
-      new Promise<void>((resolve) => {
-        waiting.push(resolve);
-        setTimeout(resolve, SETTLE_TIMEOUT_MS);
-      }),
-  };
-}
-
 export function useDomains(platform: Platform = defaultPlatform, options: DomainOptions = {}): Domains {
   const store = useStore();
   const now = useNow();
@@ -223,28 +192,4 @@ function useBridgedDomains(snapshot: StoreSnapshot, platform: Platform): Domains
     bridge.sync(snapshot, dispatch);
   });
   return useMemo(() => composeDomains(hostOver(bridge.read, bridge.send, bridge.settled), platform), [bridge, platform]);
-}
-
-/**
- * The domains for a caller that only writes tasks.
- *
- * `useDomains` also reads the capability grants, the device library, the
- * registration plan and the office feed, because Today's ranking needs them.
- * A task row needs none of that, and one of these sits in every screen that
- * adds or ticks a task, so this builds the same snapshot without them. **Do not
- * ask it for `today`**: its ranking inputs are empty by construction.
- */
-export function useTaskDomains(platform: Platform = defaultPlatform): Domains {
-  const store = useStore();
-  const now = useNow();
-  const snapshot: StoreSnapshot = {
-    state: store.state,
-    catalog: store.catalog,
-    accountId: store.account?.id ?? null,
-    schoolId: store.school.id,
-    now,
-    grants: [],
-    choices: {},
-  };
-  return useBridgedDomains(snapshot, platform);
 }
