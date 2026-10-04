@@ -8,6 +8,8 @@
  *    equality is reported as `row_count_only` so the reason is readable.
  * 2. **A check that examined nothing is not a pass.** An empty extract makes
  *    every comparison trivially true; that is a broken probe, not a clean one.
+ *    Nor is a check nobody has seen fail: `options.unproven` names the ones
+ *    that were not shown to catch a defect of their own kind.
  * 3. **Critical failures are never tolerated or waived.** Thresholds apply to
  *    the rest, and only to failures nobody has dispositioned.
  *
@@ -40,7 +42,7 @@ export function failureKey(checkId: string, f: Failure): string {
   return `${checkId}|${f.ref}|${f.code}`;
 }
 
-export type ReasonCode = 'no_checks' | 'row_count_only' | 'missing_evidence_class' | 'vacuous_check' | 'critical_failure' | 'rate_exceeded';
+export type ReasonCode = 'no_checks' | 'row_count_only' | 'missing_evidence_class' | 'vacuous_check' | 'unproven_check' | 'critical_failure' | 'rate_exceeded';
 
 export interface Reason {
   code: ReasonCode;
@@ -57,11 +59,27 @@ export interface GateResult {
   open: Record<Severity, number>;
 }
 
+export interface GateOptions {
+  /**
+   * Check ids the institution attests, in writing, have no population (no
+   * waitlists this term). Only exempts the check from the vacuity refusal; an
+   * evidence class still needs *some* check that examined something.
+   */
+  attestedEmpty?: ReadonlySet<string>;
+  /**
+   * Checks that were not proven to detect a defect of their own kind on this
+   * data (`engine.ts` `proveProbes`). A check that has never failed is not
+   * known to be a check, so the gate does not take its silence as a pass.
+   */
+  unproven?: readonly string[];
+}
+
 export function evaluateGate(
   domain: DataDomain,
   results: readonly CheckResult[],
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   dispositioned: ReadonlySet<string> = new Set(),
+  options: GateOptions = {},
 ): GateResult {
   const mine = results.filter((r) => r.domain === domain);
   const reasons: Reason[] = [];
@@ -72,8 +90,9 @@ export function evaluateGate(
   }
 
   for (const r of mine) {
-    if (r.examined === 0) reasons.push({ code: 'vacuous_check', detail: r.id });
+    if (r.examined === 0 && !options.attestedEmpty?.has(r.id)) reasons.push({ code: 'vacuous_check', detail: r.id });
   }
+  for (const id of options.unproven ?? []) reasons.push({ code: 'unproven_check', detail: id });
 
   const covered = EVIDENCE_CLASSES.filter((c) => mine.some((r) => r.evidenceClass === c && r.examined > 0));
   if (covered.length === 1 && covered[0] === 'count') {

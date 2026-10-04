@@ -135,6 +135,12 @@ open formats it came in: see
 The workbooks are symmetrical on purpose: the checks that prove a safe move in
 prove a safe move out.
 
+`archiveReadiness` is the check: the rollback window has closed, the evidence is
+sealed under a digest, counsel has reviewed the retention periods the entries
+carry, and legal holds were *checked* (an unchecked hold is not zero). The
+programme never deletes from the incumbent; decommissioning is the institution's
+act, after this, under its own records schedule.
+
 ## 6. Open items for the first institution
 
 - Records-schedule dates for the evidence ledger and for extracts.
@@ -144,4 +150,3 @@ prove a safe move out.
 - The agreed cutover window and the staffing for hypercare.
 - Whether `rehearsal` becomes a Center stage (a production schema change that
   needs the owner's approval).
-- Whether the Center's `date_iso` gets the explicit slash-date setting.

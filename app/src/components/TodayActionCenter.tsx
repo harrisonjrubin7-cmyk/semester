@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { blocksFor } from '../data/catalog';
 import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, rank, readActionChoices } from '../lib/actions';
 import { clock, dateToIso } from '../lib/date';
@@ -28,6 +28,7 @@ import { useNow, useStore } from '../state/store';
 import { ActionCenter } from './ActionCenter';
 import { QuickActions } from './QuickActions';
 import { SourceBadge } from './SourceBadge';
+import { shadowEnabled } from '../composition/shadow';
 import { Meter } from './ui';
 
 /** How far ahead the commitment rows look. "In 9 days" is the furthest the brief's example reaches. */
@@ -56,6 +57,9 @@ function sourceWords(source: SourceLabel | undefined): string {
   if (!source) return '';
   return source === 'needs_review' ? ` · ${SOURCE_TEXT[source]} · date not checked` : ` · ${SOURCE_TEXT[source]}`;
 }
+
+/** Phase 2 of the Today migration: the domain layer run beside this one, drawing nothing. Off unless the build opts in. */
+const TodayShadow = lazy(() => import('../composition/TodayShadow'));
 
 export function TodayActionCenter({
   registrationDay = false,
@@ -187,6 +191,11 @@ export function TodayActionCenter({
 
   return (
     <section className="today-action-center" aria-label="Today">
+      {shadowEnabled() && (
+        <Suspense fallback={null}>
+          <TodayShadow actions={actions} choices={choices} rows={rows} now={now} registrationDay={registrationDay} officeList={officeList} />
+        </Suspense>
+      )}
       <div className="action-center-main">
         <section className="action-panel action-panel-primary" aria-label="Your next best step">
           <div className="action-panel-heading">

@@ -43,6 +43,29 @@ describe('the bridge to the Migration Center', () => {
     expect(run(results, dispo).rows_differing).toBe(0);
   });
 
+  /*
+   * The Center gates a validation run on `rows_failed` alone. A failing case
+   * counted only as missing, extra or differing is invisible to that rule, so a
+   * validation with an open critical failure was recorded as one the Center
+   * passes. Found while wiring the engine's results through this bridge.
+   */
+  it('cannot let a validation with an open failure pass the Center, whatever the failure is', () => {
+    const results = [...all().filter((x) => x.evidenceClass !== 'semantic'), r('semantic', { severity: 'critical', failures: [{ ref: 'a', code: 'value_differs' }] })];
+    const c = run(results, new Set(), 'validation');
+    expect(c.rows_failed).toBeGreaterThan(0);
+    expect(passes('validation', c)).toBe(false);
+    for (const code of ['missing_in_target', 'no_source', 'access_widened', 'history_truncated']) {
+      const one = [...all().filter((x) => x.evidenceClass !== 'key'), r('key', { failures: [{ ref: 'a', code }] })];
+      expect(passes('validation', run(one, new Set(), 'validation')), code).toBe(false);
+    }
+  });
+
+  it('still lets a validation pass once every failing case is dispositioned', () => {
+    const results = [...all().filter((x) => x.evidenceClass !== 'semantic'), r('semantic', { failures: [{ ref: 'a', code: 'value_differs' }] })];
+    const dispo = new Set([failureKey('fin.semantic', { ref: 'a', code: 'value_differs' })]);
+    expect(passes('validation', run(results, dispo, 'validation'))).toBe(true);
+  });
+
   it('states which kinds of data each retired system holds, and every kind is held by some system', () => {
     expect(Object.keys(SYSTEM_HOLDS).sort()).toEqual([...CENTER_DOMAINS].sort());
     const held = new Set(Object.values(SYSTEM_HOLDS).flat());

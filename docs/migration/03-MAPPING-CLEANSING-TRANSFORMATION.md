@@ -25,7 +25,7 @@ the evidence.
 | Situation | Behaviour | Why |
 | --- | --- | --- |
 | Code not in the code table | Issue `unknown_code`; no value written | A default grade, status or role is a silent decision |
-| `a/b/yyyy` date | Read only if the spec says `month_first` or `day_first`; else `bad_date` | `03/04/2025` is two different days. (The Center's `date_iso` assumes month-first; see [README findings](README.md#findings-while-building-this)) |
+| `a/b/yyyy` date | Read only if the spec says `month_first` or `day_first`; else `bad_date` | `03/04/2025` is two different days. The Center's `date_iso` now behaves the same way: it refuses an ambiguous slash date until the order is chosen ([README findings](README.md#findings-while-building-this)) |
 | Impossible date (`2025-02-30`) | `bad_date` | Never normalised |
 | Money | Integer minor units, or `bad_amount`. More than two decimals is an error, never rounded | A float or a rounded cent is a ledger difference nobody can explain |
 | Empty required field | `missing_required` | Not defaulted |
@@ -74,7 +74,35 @@ Review it with the data steward: every distinct issue code, with counts and a
 decision (fix in source, change the rule, descope, accept). A preview with
 issues the team has not decided on does not leave this stage.
 
-## 6. Exit criteria
+## 6. Scope: what may move at all
+
+A mapping decides *how* a field moves. Whether it may move is decided first, by
+rules that are not the institution's to loosen (`scope.ts`, reusing
+`integration/classification.ts` and `integration/catalog.ts`; each domain's
+declaration is in `domain-specs.ts`):
+
+- **Never migrated: T4 and above.** Accommodations, health and counseling,
+  conduct, government identifiers, immigration status, card and bank data,
+  authentication secrets. The platform floor sends these to no destination, so a
+  migration cannot be the way they get in. Every domain lists what stays behind
+  and what happens instead (the owning office keeps it; a hold moves as a code
+  and dates with no reason). An omission nobody wrote down looks, in a year, like
+  a loss.
+- **Needs a named approval: fields the platform never ingests by default.**
+  Grades, GPA, submissions, aid, balances, instructor notes. Moving a transcript
+  is the point of a migration, which is exactly why it is never implicit: each
+  such entity needs `scope.migration.<domain>.<entity>` from the records owner and
+  the privacy lead before the mapping is approved. `scopeProblems(domain,
+  approvals)` lists what is open; each workbook page lists what its domain needs
+  and what is refused, and the mapping sheet written by `init` shows, field by
+  field, whether it is in scope, needs an approval, or is blocked.
+- A school may be stricter than the floor, never looser.
+
+Whether something is an education record, and whether it may move for a given
+institution, is for the institution and counsel. This records the answer and
+enforces it; it does not decide it.
+
+## 7. Exit criteria
 
 - [ ] Spec covers every source field (rule or declared drop with reason)
 - [ ] Code tables approved by the owning office; every observed code present

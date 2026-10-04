@@ -32,6 +32,40 @@ A domain passes only when every evidence class has a check that examined somethi
 | `documents.permission.read_access` | permission | critical | `permissionParity` | Who can open each document class equals the source's |
 | `documents.outcome.retrieval` | outcome | high | `outcomeParity` | A sample of documents opens and its digest equals the source's; a destruction run computes the same due set as the legacy schedule |
 
+## What the engine runs
+
+`institution-migration validate` executes these against the source, target and crosswalk files. Each is **proven on the real data** by injecting a defect of its own kind and requiring the check to notice; a check that examined nothing holds the domain. Stakes: **high** (no major defect tolerated; minor at 0.5%).
+
+| Check | Kind | If it fails | What it asks |
+| --- | --- | --- | --- |
+| `documents.document.crosswalk` | crosswalk | critical | Every document maps to exactly one target document; no two collapse into one; nothing appears from nowhere. |
+| `documents.document.content` | preserved | critical | document: checksum, byte_size, mime_type mean the same thing after the move. |
+| `documents.document.owner` | preserved | critical | document:  mean the same thing after the move. |
+| `documents.document.hold` | preserved | critical | document: legal_hold, retention_class mean the same thing after the move. |
+| `documents.document.metadata` | preserved | high | document: kind, title, access_level mean the same thing after the move. |
+| `documents.document.created` | preserved | high | document: created_on mean the same thing after the move (compared as date). |
+| `documents.document.person` | reference | critical | Every document.owner_person_id points at a real person, and none that were fine in the source are orphaned. |
+| `documents.version.crosswalk` | crosswalk | high | Every document_version maps to exactly one target document_version; no two collapse into one; nothing appears from nowhere. |
+| `documents.version.preserved` | preserved | high | document_version: checksum, version_no mean the same thing after the move. |
+| `documents.version.order` | order | high | document_version keeps its sibling order within each document_id. |
+| `documents.version.history` | history | high | document_version: every event of each document, in order, with the same values. |
+| `documents.access.crosswalk` | crosswalk | critical | Every document_access maps to exactly one target document_access; no two collapse into one; nothing appears from nowhere. |
+| `documents.access.grant` | permission | critical | document_access: nobody gains access they did not have; lost access is reported. |
+
+**Evidence classes the engine covers on its own:** `count`, `key`, `semantic`, `relationship`, `history`, `permission`.
+**Still needs results from outside the two extracts:** `outcome`, supplied as `external-checks.json` (see the workbook checks above for what to run). The gate refuses the domain until they arrive.
+
+## What stays behind
+
+| What | Class | What happens instead |
+| --- | --- | --- |
+| documents of sensitive kinds | T4 | Documents of kind medical form, accommodation letter, conduct notice or counseling note are not migrated, whatever system they sit in. They are listed by kind and count in the source inventory so their absence is a decision. |
+| unreadable or corrupt source files | T3 | Never repaired in flight. Listed as exceptions; the institution decides to re-scan, accept the loss in writing, or exclude. |
+
+## Scope approvals
+
+No field here is refused or needs a named approval.
+
 ## What a count will not show
 
 - Re-encoding or OCR "improves" a file and breaks its digest and its signature validity.

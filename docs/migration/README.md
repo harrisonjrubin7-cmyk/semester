@@ -40,6 +40,14 @@ This pack extends two things already on `main`; it does not replace them.
 
 | Added here | Where |
 | --- | --- |
+| The ten domains as an executable declaration: entities, keys, field classes, what stays behind, and the checks | `domain-specs.ts` |
+| An engine that runs ten kinds of check against source, target and crosswalk files, and proves each on the real data by injecting a defect of its own kind | `engine.ts` |
+| The seam from the engine to this pack's gate: stable failure codes, evidence classes, salted references, stakes-based thresholds | `adapter.ts` |
+| A scope gate: nothing in T4 or above moves, and fields the platform never ingests by default need a named approval | `scope.ts` |
+| The parallel-run comparison and the calendar feasibility check | `observations.ts` |
+| Synthetic fixtures, generated from the declaration, for tests and the first rehearsal of the tooling | `fixtures.ts` |
+| Workbook templates an institution fills in, and the engine's section of each workbook page | `templates.ts`, `executable-docs.ts` |
+| A command line over a working directory (`init`, `validate`, `queue`, `exception`, `sign`, `signoffs`, `plan`, `verify`) | `app/scripts/institution-migration.ts` |
 | Methodology, ten workbooks, acceptance criteria | this directory |
 | Check primitives that prove each evidence class | `app/src/lib/migration/checks.ts` |
 | The data-quality gate: refuses counts-only, empty probes, critical failures; thresholds tighten only | `gate.ts` |
@@ -63,12 +71,14 @@ This pack extends two things already on `main`; it does not replace them.
 
 ## Findings while building this
 
-- **The Center's date cleaning reads `03/04/2025` as March 4, silently.**
-  `isoDate` in `center.ts` treats any `a/b/yyyy` as month-first with no setting.
-  A source that writes day-first produces valid, wrong dates that pass
-  validation. `mapping.ts` refuses a slash date unless the spec says which
-  order. The Center is not changed here (its tests and the screen pin the
-  current behaviour); a follow-up should add the same setting there.
+- **The Center's date cleaning read `03/04/2025` as March 4, silently. Fixed.**
+  `isoDate` in `center.ts` treated any `a/b/yyyy` as month-first with no
+  setting, so a day-first source produced valid, wrong dates that passed
+  validation. It now reads a slash date only when it cannot mean the other
+  thing (one part above 12, or both equal) or when the lead has chosen the
+  order on the evidence screen; otherwise the row fails as ambiguous. The
+  choice is made while previewing and is not stored (storing it would be a
+  schema change). `mapping.ts` takes the same setting.
 - **The Center has no stage for a rehearsal.** Its stages go from
   reconciliation to parallel run. Rehearsal evidence lives in the ledger
   (`evidence.ts`, kind `rehearsal`) until the owner approves a migration that
@@ -80,15 +90,33 @@ This pack extends two things already on `main`; it does not replace them.
   `bridge.ts` `toRunCounts(kind, …)` writes it to `rows_failed` for validation
   and to `rows_differing` for the rest. `bridge.test.ts` holds all four kinds.
 
+- **A validation with an open critical failure was recorded as one the Center
+  passes.** `toRunCounts` put open failing cases in missing/extra/differing, but
+  the Center gates a validation on `rows_failed` alone, and only structural
+  reasons were written there. Found when the engine's results were first run
+  through the bridge; fixed, with `bridge.test.ts` holding it.
+- **The gate could be passed on classes no check had been shown able to fail.**
+  `evaluateGate` now takes the checks that were not proven (`options.unproven`)
+  and holds the domain on each.
+- **A defect the migration introduced could be waived.** Only critical ones were
+  refused. A row now carries its `origin`, and an introduced defect is fixed in
+  the mapping, never waived or descoped.
+- **A fix that held was never reopened if the failure came back.** `raise`
+  skipped any key already in the queue. `applyRun` reopens it.
+- **Nothing refused accommodations, health or conduct data, or grades without an
+  approval.** `mapping.ts` had no notion of data classes. `scope.ts` does.
+
 ## Verifying the tooling
 
 From `app/`:
 
 ```bash
-npx vitest run src/lib/migration            # 114 tests
+npx vitest run src/lib/migration            # 206 tests
+npx vitest run scripts/institution-migration.test.ts   # the command line, end to end
 MIGRATION_DOCS=write npx vitest run src/lib/migration/workbooks.test.ts   # regenerate workbooks/
 ```
 
-Each guard was reverted in turn and its test watched go red (15 mutations, all
-red; one deliberate no-op control stayed green). See
+Each guard was reverted in turn and its test watched go red (15 mutations, then
+21 more after the engine was merged in; all red, and a deliberate no-op control
+stayed green). See
 [04 §7](04-VALIDATION-AND-RECONCILIATION.md#7-how-the-tooling-itself-was-proved).

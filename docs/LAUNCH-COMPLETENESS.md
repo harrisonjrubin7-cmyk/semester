@@ -308,7 +308,7 @@ All 81: tested 41 · building 8 · designed 27 · not-started 4 · held 1.
 
 ## 5. The student-data migration playbook
 
-Customer data migration does not exist ([`docs/market-readiness/MIGRATION_PLAYBOOK.md`](market-readiness/MIGRATION_PLAYBOOK.md)). This is its shape, for the first pilot, even one that uses only curated or manual data. The principle: migrate only data needed for the approved scope.
+No production load path for customer data exists ([`docs/market-readiness/MIGRATION_PLAYBOOK.md`](market-readiness/MIGRATION_PLAYBOOK.md)); the Migration Center records evidence and roster staging is a foundation. This is its shape, for the first pilot, even one that uses only curated or manual data. The principle: migrate only data needed for the approved scope.
 
 **Sequence:** Discover → Classify → Minimize → Map → Transform → Sample import → Validate → Reconcile → Parallel run → Cutover → Archive/export legacy data → Monitor and correct.
 
@@ -344,7 +344,7 @@ Customer data migration does not exist ([`docs/market-readiness/MIGRATION_PLAYBO
 | Data quality rules | [`app/src/lib/registration.ts`](../app/src/lib/registration.ts) | Rejects incomplete, duplicate and invalid rows atomically. |
 | Duplicate and identity resolution rules | **none** | Account linking is by ticket (FERPA-IDENTITY-GUARDRAILS). |
 | Sample data set and expected results | **none** | None. |
-| Migration runbook | **none** | MIGRATION_PLAYBOOK says customer migration does not exist. |
+| Migration runbook | **none** | MIGRATION_PLAYBOOK: evidence path and roster staging exist; no production load path for any domain. |
 | Rollback plan | **none** | ROLLBACK.md is for releases, not imports. |
 | Reconciliation report | [`docs/INTEGRATION-QUALITY-AND-RECONCILIATION.md`](INTEGRATION-QUALITY-AND-RECONCILIATION.md) | For integrations, not a one-time import. |
 | Exception register | **none** | None. |

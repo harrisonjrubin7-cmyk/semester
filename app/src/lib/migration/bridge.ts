@@ -9,7 +9,9 @@
  * worked around: instead the semantic gate runs first, and what it found is
  * written *into the counts* so the generated `passed` agrees with it.
  *
- * - an open failing case counts as a missing, extra or differing row by kind;
+ * - an open failing case counts as a missing, extra or differing row by kind
+ *   (and, for a validation, as a failed row too, since that is all the Center
+ *   reads there);
  * - a gate that fails for a structural reason — an evidence class nobody
  *   checked, a check that looked at nothing — contributes one failed row per
  *   reason, so a perfect-looking count cannot pass a domain that was never
@@ -72,8 +74,10 @@ export function toRunCounts(kind: RunKind, results: readonly CheckResult[], gate
       else differing++;
     }
   }
-  const structural = gate.reasons.filter((r) => r.code === 'no_checks' || r.code === 'row_count_only' || r.code === 'missing_evidence_class' || r.code === 'vacuous_check').length;
-  const asFailed = kind === 'validation' ? structural : 0;
+  const structural = gate.reasons.filter((r) => r.code === 'no_checks' || r.code === 'row_count_only' || r.code === 'missing_evidence_class' || r.code === 'vacuous_check' || r.code === 'unproven_check').length;
+  // The Center gates a validation on `rows_failed` and nothing else, so an open failing case has to be a
+  // failed row there, not only a missing/extra/differing one that rule never reads.
+  const asFailed = kind === 'validation' ? structural + missing + extra + differing : 0;
   const asDiffering = kind === 'validation' ? 0 : structural;
   return {
     rows_in: examined,

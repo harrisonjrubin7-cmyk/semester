@@ -1,4 +1,4 @@
-# What production's migration ledger holds, read on 1 October 2026 (see below); first read 21 September.
+# What production's migration ledger holds, read on 4 October 2026 (see below); first read 21 September.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
 # version, then name. This is a reading, not a wish — `app/src/lib/migrationorder.test.ts`
@@ -95,6 +95,17 @@
 # tracked forward repair `20261001075026_k12_guardians_repair`. The version is
 # represented by an inert file because a build from empty already runs the
 # executable SQL at its original version.
+
+# ## The reading of 4 October
+#
+# Read through the Supabase connector (`list_migrations`) on the live `semester`
+# project, ending at `20261004123000  productivity_commands`. The snapshot had
+# stopped at `20261001075026`, so twenty applied rows were missing, every one of
+# which has a file here. Nothing disagrees with the directory: the clash on
+# `20261004090000` was resolved in the right direction, because production had
+# already applied `order_form_never_downgrades_plan` at that version and
+# `productivity_commands` was the pending one that moved (to `20261004123000`).
+# `MIGRATION-HISTORY.md` has the entry.
 
 20260901000100  schema
 20260901000200  classmates
@@ -250,3 +261,23 @@
 20260930233000  data_subject_request_intake
 20260930234000  data_subject_request_intake
 20261001075026  k12_guardians_repair
+20261001152756  productivity_workspace
+20261001153124  productivity_workspace
+20261001160447  productivity_account_link_guard
+20261001160550  productivity_account_link_guard
+20261001160755  productivity_preserve_all_owned_work
+20261001160823  productivity_preserve_all_owned_work
+20261001170000  integration_governance_writes
+20261001171000  productivity_workspace_covering_index
+20261001184000  productivity_workspace_tenant_index
+20261001185348  approved_source_policy_scope
+20261001193951  productivity_workspace_covering_index
+20261001221500  support_reply_audit
+20261002003000  support_notification_outbox
+20261002091500  set_based_course_plan_contribution
+20261003083000  billing_tax_integrity
+20261003090000  billing_invoice_event_precedence
+20261003120000  support_notification_consent_boundary
+20261004090000  order_form_never_downgrades_plan
+20261004120000  incident_notice_launch_delay_and_change
+20261004123000  productivity_commands
