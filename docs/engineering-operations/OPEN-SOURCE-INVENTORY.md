@@ -5,7 +5,7 @@
 | Status | **CONTROLLED DIRECT INVENTORY — TRANSITIVE SBOM/LICENSE REVIEW INCOMPLETE** |
 | Owner | Harrison Rubin — engineering supply-chain primary; backup reviewer and qualified license counsel unassigned |
 | Evidence date | 2026-10-03 at repository revision `62d37c2f` |
-| Machine sources | `app/package.json`, `app/package-lock.json`, workflow action revisions and repository license files |
+| Machine sources | `app/package.json`, the root `package.json` and `package-lock.json` (npm workspace root), workflow action revisions and repository license files |
 
 ## Direct runtime packages
 

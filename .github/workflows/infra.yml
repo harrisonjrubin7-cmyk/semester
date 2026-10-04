@@ -1,0 +1,109 @@
+# Verify infrastructure changes. Read-only: nothing here has a credential for
+# any environment, so nothing here can change one.
+#
+# Three questions, asked on every pull request that touches the paths below:
+#
+#   1. Does the Terraform format, initialise (against the committed provider
+#      hashes) and validate?
+#   2. Do the policy's own tests pass, and does every workflow in this
+#      repository pass the policy?
+#   3. Does a governed change carry its change record?
+#
+# A fourth — "what would this change do to production?" — needs the state and a
+# credential and therefore lives in `drift.yml` and `infra-apply.yml`, which
+# run from main only. See docs/infrastructure/CHANGE-CONTROL.md.
+
+name: Infrastructure
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - 'scripts/infra/**'
+      - '.github/workflows/**'
+      - '.github/rulesets/**'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - 'scripts/infra/**'
+      - '.github/workflows/**'
+      - '.github/rulesets/**'
+  workflow_dispatch:
+
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Pinned by version and by hash. A download that does not match is a failed
+  # build, not a warning.
+  OPA_VERSION: '1.0.0'
+  OPA_SHA256: '3985fb4814b3860511beac516f59c5509eee9fdc83dbe910b67f3999f743b901'
+  TERRAFORM_VERSION: '1.15.9'
+
+jobs:
+  policy:
+    name: policy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install OPA
+        run: |
+          curl -fsSL -o opa "https://openpolicyagent.org/downloads/v${OPA_VERSION}/opa_linux_amd64_static"
+          echo "${OPA_SHA256}  opa" | sha256sum --check --strict
+          chmod +x opa
+          sudo mv opa /usr/local/bin/opa
+
+      - name: Policy tests, then every workflow against the policy
+        run: scripts/infra/policy.sh
+
+  terraform:
+    name: terraform (${{ matrix.root }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [platform, staging, production]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Format
+        run: terraform fmt -recursive -check -diff infra/terraform
+
+      # `-lockfile=readonly` makes a provider hash that is missing or changed
+      # a failure. A lockfile that quietly updates itself pins nothing.
+      - name: Initialise without a backend, against the committed lockfile
+        working-directory: infra/terraform/envs/${{ matrix.root }}
+        run: terraform init -backend=false -lockfile=readonly -input=false
+
+      - name: Validate
+        working-directory: infra/terraform/envs/${{ matrix.root }}
+        run: terraform validate
+
+  change-record:
+    name: change record
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: A governed change carries its record
+        env:
+          BASE: ${{ github.base_ref }}
+          PR: ${{ github.event.pull_request.number }}
+        run: scripts/infra/check-change-record.sh "$BASE" "$PR"
