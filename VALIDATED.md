@@ -12,12 +12,13 @@ command under it can.**
 
 ## How to read this
 
-Everything in the left column was measured on **`1c305ee`, 21 September 2026**,
-with the command beside it. Everything in the right column has **no evidence in
+Everything in the left column was re-measured on **`006d24b`, 4 October 2026**
+(first measured on `1c305ee`, 21 September, whose values are kept beside the new
+ones so the drift is visible), with the command beside it. Everything in the right column has **no evidence in
 this repository or anywhere else**, and saying so is the point of the document.
 
 **Every figure carries a commit, because these move.** The test count alone took
-six values in one afternoon — 11,236 → 11,265 → 11,414 → 11,648 → 11,788 → 12,046 — and the
+six values in one afternoon — 11,236 → 11,265 → 11,414 → 11,648 → 11,788 → 12,046 — and 20,932 by 4 October; the
 number of files the RLS suite lives in went 13 → 14 → 17 → 19 in a few hours. A figure without a commit beside it is not a fact about the product,
 it is a fact about the afternoon somebody wrote the slide.
 
@@ -27,12 +28,12 @@ it is a fact about the afternoon somebody wrote the slide.
 
 | Claim | Evidence | Re-check with |
 | --- | --- | --- |
-| **The product is built and runs** | 12,046 tests passing across 615 files, 10 skipped, 0 failing | `cd app && npm test` |
-| **The tests do not depend on each other** | The same suite passes in a randomised order (seed 1790028722879), which is a different fault from a broken test and a real one | `npm run test:shuffle` |
-| **It compiles and ships** | Typecheck, lint (including style and accessible-label audits) and production build all exit 0 | `npx tsc -b`, `npm run lint`, `npm run build` |
-| **Row-level security is enforced and checked** | 93 `create policy` statements; **241 assertions across 19 `.check.sql` files** that create real users and assert a stranger can neither read nor write, then roll back | `grep -c 'create policy' supabase/migrations/*` |
-| **The schema can be rebuilt from the repository** | 37 migrations, **none empty**; the 15 migrations applied to production outside the repo are recorded byte-for-byte in `supabase/history/` | `find supabase/migrations -name '*.sql' -empty` |
-| **Every commit is gated** | `ci.yml` runs six checks on every pull request: typecheck, lint, university typecheck, video typecheck, the suite, and the suite again in other timezones | `.github/workflows/ci.yml` |
+| **The product is built and runs** | 20,932 tests passing across 1,326 files, 48 skipped, 0 failing (21 Sept: 12,046 across 615, 10 skipped) | `cd app && npm test` |
+| **The tests do not depend on each other** | The same suite passes in a randomised order (seed 1791130996145; 21 Sept: 1790028722879), which is a different fault from a broken test and a real one. A green shuffle is weak evidence about the timing class of failure (a React root left mounted), which a seed does not reproduce; `src/rootunmount.test.ts` is the guard for that | `npm run test:shuffle` |
+| **It compiles and ships** | Typecheck, lint (including style and accessible-label audits) and production build all exit 0 on `006d24b` | `cd app && npx tsc -b`, `npm run lint`, `npm run build` |
+| **Row-level security is enforced and checked** | 537 `create policy` statements (21 Sept: 93); **107 `.check.sql` suites** (21 Sept: 19) holding 661 `raise notice 'ok …'` pass markers, which create real users and assert a stranger can neither read nor write, then roll back. The 21 September figure of 241 assertions has no recorded counting method and `1c305ee` is not in this clone, so 661 is **not comparable** to it. The suites run in CI against a throwaway Postgres (`ci.yml`, step "Check the database policies"); they were not run locally for this re-measurement | `grep -c 'create policy' supabase/migrations/*` (sum the lines); `ls supabase/*.check.sql \| wc -l`; `cat supabase/*.check.sql \| grep -c "raise notice 'ok"` |
+| **The schema can be rebuilt from the repository** | 174 migrations (21 Sept: 37), **none empty**; migrations applied to production outside the repo are recorded byte-for-byte in `supabase/history/`, which holds 14 `.sql` files today. The 21 September row said 15; that directory's own README says ten were read out of production on 21 September, so the earlier figure does not match it and the count is not carried forward | `find supabase/migrations -name '*.sql' -empty`; `ls supabase/history/*.sql \| wc -l` |
+| **Every commit is gated** | `ci.yml` runs on every pull request and push, with three gating jobs (`build`, `account-sync`, `secrets`) and a notification job. `build` has 24 steps, among them typecheck, lint, university typecheck, video typecheck, the suite, the suite in other timezones and in a different order, performance budgets, accessibility journeys, the database policy checks, and a backup-and-restore rehearsal (21 Sept: six checks). Other workflows (company-site build, HawkScan) run beside it | `.github/workflows/ci.yml` |
 | **The instrument for the missing number is already built** | `ANALYTICS.md` defines activation, weekly active use and **30-day retention**, with the SQL for each; `lib/activity.ts` and `supabase/migrations/20260921151000_activity.sql` implement them. One table, three marks, no screen names or titles or counts | `cat ANALYTICS.md` |
 | **The engineering culture is real, not claimed** | Structural guards catch defects that runtime probes miss — during this review two of them caught errors in work being written *for* this review, and a third caught a broken citation on `main` | `app/src/lib/migrationcitations.test.ts` |
 
