@@ -248,12 +248,12 @@ describe('erasure and export are one list', () => {
 
   it('the export that replaced it keeps one list, and leaves out a school\'s guardian restrictions', () => {
     /*
-     * `20261004150000` replaces `private.account_export` to stop the cascade walk
+     * `20261004160000` replaces `private.account_export` to stop the cascade walk
      * carrying `guardian_link_restrictions` into the person's file. The test above
      * reads the original migration only, so it would go on passing against a
      * function that no longer runs. This reads the one that does.
      */
-    const next = readFileSync(join(MIGRATIONS, '20261004150000_export_withholds_guardian_restrictions.sql'), 'utf8');
+    const next = readFileSync(join(MIGRATIONS, '20261004160000_export_withholds_guardian_restrictions.sql'), 'utf8');
     const fn = new RegExp('create or replace function private\\.account_export[\\s\\S]*?\\nend \\$\\$;').exec(next)?.[0] ?? '';
     expect(fn.length, 'the probe found the function').toBeGreaterThan(1000);
     expect(fn).toContain('private.account_data_map()');
