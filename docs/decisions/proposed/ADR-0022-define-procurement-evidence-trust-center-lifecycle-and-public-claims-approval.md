@@ -55,10 +55,10 @@ Positive: an unapproved price or "24/7" fails a test. Negative: copy changes nee
 - **Cost / commercial:** prices follow ADR-0016; sales timelines follow ADR-0015.
 
 ## Implementation
-1. Add risky-pattern lint to the site test (`company-site/site.test.tsx` or equivalent) with claim-id allowlist. 2. Resolve C-01 to C-08 individually. 3. Move the four Phase 0 views out of the test-conflict (rename `-DRAFT.md` or relocate) so CI stays green. 4. Add claim expiry to the publication guard. 5. Name backup claim owner. 6. Generate `CONTROL-FACTS.md` in the gate.
+1. Add risky-pattern lint to the site test (`app/src/site/site.test.tsx`) with claim-id allowlist. 2. Resolve C-01 to C-08 individually. 3. Move the four Phase 0 views out of the test-conflict (rename `-DRAFT.md` or relocate) so CI stays green. 4. Add claim expiry to the publication guard. 5. Name backup claim owner. 6. Generate `CONTROL-FACTS.md` in the gate.
 
 ## Tests and verification
-- `company-site/site.claims.test.ts` (proposed): fails on today's `index.html:660` price and `site.js:32-33` "24/7"; passes after resolution. Control: a string with an `available` claim id passes.
+- `app/src/site/site.claims.test.ts` (proposed): fails on today's `index.html:660` price and `site.js:32-33` "24/7"; passes after resolution. Control: a string with an `available` claim id passes.
 - `claims.test.ts` case: claim with evidence 1 day past expiry blocks publication (exists for `available`; add for withdrawal).
 - Revert test: restore the "save 38%" string and the lint must fail.
 - Drift test: `CONTROL-FACTS.md` counts equal tree counts.
