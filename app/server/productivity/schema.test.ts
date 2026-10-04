@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { EVENT_TYPES } from '../../../packages/institution/src/index.ts';
-import { LIMITS } from './contract.ts';
+import { LIMITS, REPEAT_EVERY } from './contract.ts';
 import { EVENT_ID, TASK_ID, createEvent, createTask, harness, person } from './fixtures.ts';
 
 /**
@@ -32,6 +32,8 @@ const commit = commitSource.slice(
   commitSource.includes('create or replace function public.productivity_commit') ? commitSource.indexOf('create or replace function public.productivity_commit') : undefined,
 );
 const reads = migration('20261004180000_productivity_reads.sql');
+/** The migration that adds the app's task fields, which holds their column constraints. */
+const fieldsSql = migration('20261004191000_productivity_task_carries_the_apps_task.sql');
 
 const keysRead = (variable: string, from: string): Set<string> => {
   const out = new Set<string>();
@@ -99,6 +101,16 @@ describe('the limits are the same in both places', () => {
     has(`interval '${LIMITS.eventMaxDays} days'`);
   });
 
+  it('holds the new task fields to the bounds the validators enforce', () => {
+    const has = (s: string) => expect(fieldsSql, s).toContain(s);
+    has(`length(when_text) between 1 and ${LIMITS.whenTextMax}`);
+    has(`length(planned_from) between 1 and ${LIMITS.plannedFromMax}`);
+    has(`jsonb_array_length(steps) <= ${LIMITS.stepsMax}`);
+    has(`in (${REPEAT_EVERY.map((e) => `'${e}'`).join(', ')})`);
+    // `coalesce(…, false)`: a check passes on null, so without it a rule with no `until` would be stored.
+    expect(fieldsSql).toMatch(/coalesce\([\s\S]*?false\s*\)/);
+  });
+
   it('keeps the ledger five days longer than a command can be replayed', () => {
     expect(LIMITS.ledgerRetentionDays - LIMITS.commandMaxAgeMs / 86_400_000).toBe(5);
     expect(sql).toContain(`interval '${LIMITS.ledgerRetentionDays} days'`);
@@ -130,6 +142,9 @@ describe('what the database promises is what the service relies on', () => {
     const lock = commit.indexOf('from private.productivity_owner_seq');
     expect(commit.slice(lock, commit.indexOf('end if;', lock))).toContain('for update');
   });
+  it('keeps the held-prediction guard in the commit function that applies last, so a later copy of an older definition cannot drop it', () => {
+    expect(commit).toMatch(/if e \? 'seq' and \(e->>'seq'\)::bigint <> next_seq then\s*raise exception 'sequence moved since it was predicted' using errcode = '40001'/);
+  });
   it('lets no client role write the tables or call the commit', () => {
     expect(sql).toMatch(/grant select on table public\.productivity_task to authenticated;/);
     expect(sql).not.toMatch(/grant (insert|update|delete|all)[^;]* on table public\.productivity_(task|event) to (authenticated|anon)/);
@@ -138,7 +153,15 @@ describe('what the database promises is what the service relies on', () => {
 });
 
 describe('the read functions return the entity the service holds, so the adapter maps nothing', () => {
-  const body = (name: string) => reads.slice(reads.indexOf(`create or replace function ${name}`), reads.indexOf('$$;', reads.indexOf(`create or replace function ${name}`)));
+  // A later migration may redefine a read function (this one's task fields do), so read the definition that applies last.
+  const latestSourceOf = (name: string): string => {
+    const files = readdirSync(migrations).filter((f) => f.endsWith('.sql') && migration(f).includes(`create or replace function ${name}`)).sort();
+    return migration(files.at(-1)!);
+  };
+  const body = (name: string) => {
+    const source = latestSourceOf(name);
+    return source.slice(source.indexOf(`create or replace function ${name}`), source.indexOf('$$;', source.indexOf(`create or replace function ${name}`)));
+  };
   const literals = (fn: string) => new Set([...fn.matchAll(/'([A-Za-z]+)',\s/g)].map((m) => m[1]!));
 
   it.each([['task', 'private.productivity_task_json'], ['event', 'private.productivity_event_json']] as const)('builds a %s with exactly the keys of the entity', async (kind, fn) => {

@@ -616,3 +616,68 @@ describe('ApiError', () => {
     expect(clock(2) < clock(10)).toBe(true);
   });
 });
+
+describe('the fields the app\'s task carries, through the service', () => {
+  const scope = { tenantId: 'school-a', ownerId: ALICE };
+  const rich = {
+    dueOn: '2026-10-09', whenText: 'before work', plannedFrom: 'deadline-1',
+    repeat: { every: 'weekly', until: '2026-12-18' },
+    steps: [{ id: 's1', text: 'Skim', done: true }, { id: 's2', text: 'Notes', done: false }],
+  };
+  const update = (changes: Record<string, unknown>, at: number, device = 'dev-a') =>
+    cmd({ type: 'task.update', id: TASK_ID, changes }, { at, deviceId: device });
+  const stored = async (h: ReturnType<typeof harness>) => (await h.repo.get(scope, 'task', TASK_ID)) as unknown as Record<string, unknown>;
+
+  it('stores them on create, and a task made without them has none (the control)', async () => {
+    const h = harness();
+    expect(only(await h.service.execute(person(), [createTask(rich)], h.meta)).status).toBe('applied');
+    expect(await stored(h)).toMatchObject(rich);
+    const bare = harness();
+    await bare.service.execute(person(), [createTask()], bare.meta);
+    expect(await stored(bare)).toMatchObject({ dueOn: null, whenText: null, repeat: null, steps: [], plannedFrom: null });
+  });
+
+  it('replaces the steps as a whole, and clears a repeat rule with null', async () => {
+    const h = harness();
+    await h.service.execute(person(), [createTask(rich)], h.meta);
+    const r = only(await h.service.execute(person(), [update({ steps: [{ id: 's1', text: 'Skim', done: true }], repeat: null }, T0 + 1)], h.meta));
+    expect(r).toMatchObject({ status: 'applied', appliedFields: expect.arrayContaining(['steps', 'repeat']) });
+    expect(await stored(h)).toMatchObject({ steps: [{ id: 's1', text: 'Skim', done: true }], repeat: null });
+  });
+
+  it('knows the same steps said again are no change, however the keys are ordered', async () => {
+    const h = harness();
+    await h.service.execute(person(), [createTask(rich)], h.meta);
+    const reordered = [{ done: true, text: 'Skim', id: 's1' }, { text: 'Notes', done: false, id: 's2' }];
+    const r = only(await h.service.execute(person(), [update({ steps: reordered, repeat: { until: '2026-12-18', every: 'weekly' } }, T0 + 1)], h.meta));
+    expect(r).toMatchObject({ status: 'superseded', reason: 'no_change' });
+    expect((await stored(h)).version).toBe(1);
+  });
+
+  it('merges across devices by field: free text from one, steps from the other, and the later steps win the list', async () => {
+    const h = harness();
+    await h.service.execute(person(), [createTask(rich)], h.meta);
+    await h.service.execute(person(), [update({ steps: [{ id: 'a', text: 'from A', done: false }] }, T0 + 10, 'dev-a')], h.meta);
+    await h.service.execute(person(), [update({ whenText: 'after class', steps: [{ id: 'b', text: 'from B, older', done: false }] }, T0 + 5, 'dev-b')], h.meta);
+    expect(await stored(h)).toMatchObject({ whenText: 'after class', steps: [{ id: 'a', text: 'from A', done: false }] });
+  });
+
+  it('keeps what a person wrote in them out of the audit row and the event', async () => {
+    const h = harness();
+    await h.service.execute(person(), [createTask({
+      whenText: 'after my therapy', steps: [{ id: 's1', text: 'ask about the diagnosis', done: false }], plannedFrom: 'private-deadline-id',
+    })], h.meta);
+    const everything = JSON.stringify([h.repo.auditRows, h.repo.outbox.rows]);
+    for (const secret of ['therapy', 'diagnosis', 'private-deadline-id']) expect(everything, secret).not.toContain(secret);
+    // What is kept is which fields changed, by name.
+    expect(h.repo.auditRows[0]).toMatchObject({ fields: expect.arrayContaining(['whenText', 'steps', 'plannedFrom']) });
+  });
+
+  it('shows them to a reader, and to nobody in another tenant', async () => {
+    const h = harness();
+    await h.service.execute(person(), [createTask(rich)], h.meta);
+    expect(await h.service.get(person(), 'task', TASK_ID, h.meta)).toMatchObject(rich);
+    // The control for the sentence's second half: the same task asked for from another tenant is not there.
+    await expect(h.service.get(person(ALICE, 'school-b'), 'task', TASK_ID, h.meta)).rejects.toBeInstanceOf(ApiError);
+  });
+});

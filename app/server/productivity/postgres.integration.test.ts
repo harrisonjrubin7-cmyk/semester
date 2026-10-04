@@ -117,6 +117,31 @@ describe.skipIf(!host)('PostgresProductivityRepository, against a migrated datab
       for (const ask of asks) expect(await ask(pg)).toEqual(await ask(mem));
     });
 
+    it('carry the app\'s task fields identically: the day, the free text, the repeat rule, the steps and the source', async () => {
+      await reset();
+      const mem = service(new MemoryProductivityRepository());
+      const pg = service(process_().repo);
+      const u = person();
+      const two = [{ id: 's1', text: 'Skim', done: true }, { id: 's2', text: 'Notes', done: false }];
+      const commands: Command[] = [
+        createTask({ dueOn: '2026-10-09', whenText: 'before work', plannedFrom: 'deadline-1', repeat: { every: 'weekly', until: '2026-12-18', except: ['2026-11-27'] }, steps: two }),
+        cmd({ type: 'task.update', id: TASK_ID, changes: { steps: [two[0]], repeat: null } }, { at: T0 + 1 }),
+        cmd({ type: 'task.update', id: TASK_ID, changes: { whenText: null, dueOn: '2026-10-10' } }, { at: T0 + 2 }),
+        // The same steps again with the keys in another order: a database that compared text would call this a change.
+        cmd({ type: 'task.update', id: TASK_ID, changes: { steps: [{ done: true, text: 'Skim', id: 's1' }] } }, { at: T0 + 3 }),
+      ];
+      const a = await mem.execute(u, commands, meta);
+      const b = await pg.execute(u, commands, meta);
+      expect(b).toEqual(a);
+      expect(b.map((r) => r.status)).toEqual(['applied', 'applied', 'applied', 'superseded']);
+      // What came back from the real database is the entity the service holds, with nothing lost on the way.
+      expect(await pg.get(u, 'task', TASK_ID, meta)).toMatchObject({
+        dueOn: '2026-10-10', whenText: null, repeat: null, steps: [two[0]], plannedFrom: 'deadline-1',
+      });
+      expect(await pg.listTasks(u, { after: null }, meta)).toEqual(await mem.listTasks(u, { after: null }, meta));
+      expect(await pg.changes(u, { after: null, limit: 100 }, meta)).toEqual(await mem.changes(u, { after: null, limit: 100 }, meta));
+    });
+
     it('page the same way, by sort key and by sequence', async () => {
       await reset();
       const mem = service(new MemoryProductivityRepository());
