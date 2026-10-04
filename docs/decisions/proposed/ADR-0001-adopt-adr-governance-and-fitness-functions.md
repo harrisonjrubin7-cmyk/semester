@@ -64,7 +64,7 @@ How does a proposed architectural decision become binding, stay linked to the co
 4. After the ruleset is applied (ADR-0012), add the check to its required contexts.
 
 ## Tests and verification
-- `check-adr-links` must fail on: an ADR file in `proposed/` whose Status says Accepted; two files numbered `ADR-0003`; a relative link to a missing file; `ADR-0099` cited with no file. Revert each fix and watch it go red (`CLAUDE.md` "A guard that has never failed").
+- `check-adr-links` must fail on: an ADR file in `proposed/` whose Status says Accepted; two files numbered `ADR-0003`; a relative link to a missing file; an ADR number cited that has no file. Revert each fix and watch it go red (`CLAUDE.md` "A guard that has never failed").
 - Control: run it on the current tree; it must pass for the 13 ADRs and report the known dead links in `docs/architecture/` rather than skip the folder.
 - `decisionlog.test.ts` must still fail when a `D-` number is written twice.
 
@@ -82,3 +82,5 @@ Delete the check step and the folders' status rule; ADR files remain as notes. C
 
 ## Addenda
 (none)
+
+- 2026-10-04 (Phase 1 step 0b): the first mechanism is implemented as `app/src/lib/ops/adrprogram.ts` with `app/src/lib/ops/adrprogram.test.ts`, not as `scripts/architecture/check-adr-links.mjs`. Reason: CI already runs `vitest` from `app/` in the `Test` step, so a library plus a guard with controls (the shape of `decisionlog.ts`) runs on every pull request with no new CI step. It checks the ADR program's own rules: file name and heading number, one file per number, Status against folder, every ADR linked from `ADR_INDEX.md` and `DECISION_BACKLOG.md`, relative links that resolve, and `ADR-nnnn` cited only if it exists. It does not yet check `docs/architecture/*.md` links or "Accepted needs a `D-<pr>`"; those remain open here. It is not yet a required status (ADR-0012).

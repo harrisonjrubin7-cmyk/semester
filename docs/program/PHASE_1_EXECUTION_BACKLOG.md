@@ -10,7 +10,7 @@ These are not new scope; each is a precondition the audit found missing, and eac
 | # | Slice | Why now (evidence) | Proof |
 |---|---|---|---|
 | 0a | Apply and read back a `main` ruleset (`.github/rulesets/main.json`: `build`, `secrets`, `account-sync`) | R-014: `rules/branches/main` = `[]` | dated `gh api` readback filed under `docs/evidence/` |
-| 0b | Diagnose why `main` CI fails ~half the time (`build:Test` 40/100, Supabase start 15/100) | R-015: no reliable green SHA to attach evidence to | 10 consecutive green `main` runs, cause recorded |
+| 0b | Diagnose why `main` CI failed in a block on 2026-10-04 | R-015: no reliable green SHA to attach evidence to | **Diagnosed 2026-10-04**: two causes in [`docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md`](../evidence/operations/2026-10-04-main-ci-red-diagnosis.md). Open: 10 consecutive green `main` runs (4 now) and the owner's decisions on 0a and the drift gate |
 | 0c | Accept or reject ADR-0001 (ADR governance) and the decision-log exemption | every later step cites an ADR | `docs/decisions/accepted/ADR-0001-*.md` with owner approval |
 | 0d | Name a second person for gate seats | R-018: four-eyes controls not independent | updated `OWNER-AND-ACCOUNTABILITY-MATRIX.md` |
 
