@@ -27,6 +27,21 @@ Harrison Rubin is the named primary for every company-side seat below under the 
 | Support | intake, triage, privacy/security routing, service communications | named primary/backup; staffed hours; tested channel | PRIMARY: Harrison Rubin; BACKUP: UNASSIGNED | any supported launch until hours, backup and channel test exist |
 | Communications | approved public/customer messaging and crisis coordination | named owner/backup; approval chain | PRIMARY: Harrison Rubin; BACKUP: UNASSIGNED | public/company claims until approval chain is complete |
 
+## Growth and lifecycle reviewer roles
+
+Added 2026-10-04 for [`docs/gtm/GROWTH-OPERATING-PLAN.md`](docs/gtm/GROWTH-OPERATING-PLAN.md). Names are recorded as the founder gave them.
+
+| Role | Named person | Backup | Gate it feeds in the plan |
+| --- | --- | --- | --- |
+| Privacy reviewer | Harrison Rubin | UNASSIGNED | consent texts, retention sweep, any new analytics field |
+| Accessibility reviewer | Harrison Rubin | UNASSIGNED | message templates and every experiment variant |
+| Claims reviewer | Harrison Rubin | UNASSIGNED | every public asset |
+| Analyst | Harrison Rubin | UNASSIGNED | dashboards and experiment readouts |
+| Moderator | Harrison Rubin | UNASSIGNED | opening any community space |
+| Backup experiment owner | Harrison Rubin | UNASSIGNED | any experiment |
+
+What this does and does not satisfy: it closes the unnamed-seat gap only. One person holding the owner and the reviewer seats cannot meet the plan's owner-is-not-approver rule, cannot supply independent review, and is not backup coverage; the backup experiment owner is the same person as the experiment owner. Those gates stay open until a second person holds the relevant seat.
+
 ## Customer-side seats required for an institutional pilot
 
 | Seat | Accountable for | Minimum evidence | Current state |
