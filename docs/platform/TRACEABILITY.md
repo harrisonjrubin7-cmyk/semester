@@ -50,8 +50,10 @@ names a test file; a claim with no test says so.
 
 ### Risks and unresolved questions
 
-- **Nothing is adopted.** The package changes no behaviour of the running app, so
-  it also proves nothing about production. Value arrives with MIGRATION phase 1+.
+- **Almost nothing is adopted.** Only the institution gateway's error envelope,
+  correlation ids and request context run through it (phase 1, equivalence-tested);
+  commands, policy, idempotency and every engine are still proven in memory only,
+  so they prove nothing about production.
 - **The SQL contract has never executed.** It was parsed (libpg_query) and mirrored
   against the TypeScript; PostgreSQL 17 was not available. Treat every constraint
   as a hypothesis until `supabase/check.sh` runs it.
@@ -91,7 +93,7 @@ carries a plain-language `message` and an optional `user_action`
 (`open_screen`, `retry_later`, `contact_support`, `external_link`), so a screen
 never has to invent an error sentence, and an offline/denied/pending state has a
 code to render (`pending_approval`, `consent_required`, `entitlement_required`,
-`outcome_unknown`). Notification *timing* respects quiet hours and never sends
+`outcome_uncertain`). Notification *timing* respects quiet hours and never sends
 marketing then. Whether those states are rendered accessibly is each screen's work
 and is not claimed here.
 

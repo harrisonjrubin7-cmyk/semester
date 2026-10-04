@@ -30,6 +30,10 @@ The model is a workbook with live formulas: [`semester-financial-model.xlsx`](se
 | [`08-FINANCE-CONTROLS-AND-OPERATIONS.md`](08-FINANCE-CONTROLS-AND-OPERATIONS.md) | Systems, processes, close calendar, control list, segregation of duties, 90-day setup plan | 9 |
 | [`09-BOARD-REPORTING-PACKAGE.md`](09-BOARD-REPORTING-PACKAGE.md) | Founder flash, quarterly board pack, KPI definitions, decision log | 10 |
 | [`10-GO-NO-GO-GATES.md`](10-GO-NO-GO-GATES.md) | The model with every revenue motion behind its go/no-go gate (scenarios 8 and 9), the gate inputs, and the guard that re-proves every scenario | 1, 8 |
+| [`11-PILOT-EVIDENCE-PLAN.md`](11-PILOT-EVIDENCE-PLAN.md) | How to measure institutional logo volume, pilot conversion and sales-cycle length inside what the go/no-go decision authorizes, what each reading would change, and what small samples can and cannot show | 1, 8 |
+| [`12-GATED-HIRING-SCHEDULE.md`](12-GATED-HIRING-SCHEDULE.md) | Ten hiring gates: roles, release authority, evidence, plan month, 36-month cost and the quarterly cash effect of waiting | 6, 8 |
+| [`13-REAL-NUMBERS-INTAKE.md`](13-REAL-NUMBERS-INTAKE.md) | The form for replacing placeholder cash, prices, rounds, vendor costs and gate months with the company's own figures | 1 |
+| [`dashboard.html`](dashboard.html) | A standalone page with a scenario toggle and charts, generated from the workbook by `tools/build_dashboard.py` | 5, 8 |
 | [`assumption-register.md`](assumption-register.md) | All inputs with value, basis, and who validates | 1 |
 
 ## What the model says (Base scenario)

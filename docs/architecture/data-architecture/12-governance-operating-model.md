@@ -129,7 +129,7 @@ to move by exactly that amount) unless marked.
 | `tables_unregistered`, `registry_orphans` | Schema and registry out of step | **0** (CI) |
 | `convention_violations` | Tables breaking their class's rules, after exemptions | **0** or each exempted |
 | `exemptions_expired`, `exemptions_expiring_30d` | Parked problems coming due | expired = 0 |
-| `hold_blind_sweeps`, `hold_known_gaps` | Deleting sweeps that ignore a hold | 0 and 0 (today 3 gaps, parked ≤ 90 days) |
+| `hold_blind_sweeps`, `hold_known_gaps` | Deleting sweeps that ignore a hold | 0 and 0 (today 1 known gap, `productivity_sweep_commands`, parked ≤ 90 days) |
 | `dq_blocking_failed`, `dq_rules_never_run` | Data in a state its owner said it must not be; rules that have never been exercised | 0 and 0 |
 | `rights_requests_overdue` | Requests past their due date | **0**; today no answerer is named |
 | `last_production_restore`, `last_measured_rpo` | Whether recovery is a fact or a belief | a date within 180 days and a number |
@@ -159,7 +159,7 @@ Ordered by what unblocks something, each item with its evidence. Dates are for t
 
 | By | Item | Evidence |
 | --- | --- | --- |
-| **Day 30** | Fix the three hold-blind sweeps and make the guard fail the build | `hold_blind_sweeps = 0` without exemptions |
+| **Day 30** | Fix the hold-blind sweeps (three done in `20261004150000`; `productivity_sweep_commands` remains) and make the guard fail the build | `hold_blind_sweeps = 0` without exemptions |
 | | Decide Path A (retire, gate, or limit) | decision record |
 | | Schedule `sweep_outbox` and confirm its windows | job exists; `outbox_*` KPIs |
 | | Confirm registry rows for **identity, governance, academic** (the three domains the rest depend on) | `registry_confirmed` for those domains |

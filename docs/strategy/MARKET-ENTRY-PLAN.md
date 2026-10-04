@@ -47,6 +47,19 @@ These are the sentences that will be tempting in a sales room. Each row is a sta
 | "Best", "only", "first", "most", "free forever", "unlimited" | Superlatives need dated, equivalent-scope comparative evidence | Describe the workflow and its boundary | A dated method exists (A-17) |
 | "Family members can see how you're doing" | Guardian visibility without consent contradicts the model | "Students decide what a family member can see, and can change it at any time." | The family module is activated with its consent controls |
 
+## 3a. Package labels are claims
+
+The pricing architecture ([`PRICING-UNIT-ECONOMICS-ARCHITECTURE.md`](../commercial/PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) §3.2) proposes three institutional packages, **Start**, **Operate** and **Replace**, mirroring the operating modes, and says the Replace package may be quoted before replacement is earned while its claims are not. A buyer reads the label as the claim. So:
+
+| Rule | Why |
+| --- | --- |
+| Internal names and SKUs (`native_lms`, `university_os`, `semester_access`) may stay as they are | They are identifiers, not statements |
+| **A buyer-facing label, quote line or proposal heading may not say "Replace" or "replacement", or name a record system as replaced,** until the replacement ladder's R4 evidence exists for that named domain at that institution | The label is the claim; the claims register governs it |
+| Before R4, the same scope is described by what it does at its rung, for example "native modules for named domains, alongside your system of record" (R1 to R3) | Keeps the quote honest and the thesis intact |
+| Mapping: Start to R1 and R2 in Coexistence; Operate to R0 plus R2 in Connected mode; Replace to R4 only | So a package name can be checked against a rung |
+
+This is part of FD-2026-011. It changes no price and no SKU.
+
 ## 4. The replacement ladder
 
 How the thesis ("replace fragmented systems") is reached without ever claiming ahead of the evidence. A rung is a property of **one named domain at one named institution**, never of the product in general.

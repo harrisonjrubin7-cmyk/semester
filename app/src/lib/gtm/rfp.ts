@@ -25,6 +25,8 @@
  * company can defend. Where the honest answer is "no", it says no.
  */
 
+import type { ClaimStatus as SiteClaimStatus } from '../ops/claims';
+
 export const STATUSES = [
   'available',
   'tenant-configuration',
@@ -105,6 +107,18 @@ export function unsupportedClaims(text: string): string[] {
   return found;
 }
 
+/** Statuses that tell a reader the thing can be used, not merely that it is being built. */
+export const ASSERTS: readonly ClaimStatus[] = ['available', 'tenant-configuration', 'approved-integration', 'feature-flagged-pilot'];
+
+/**
+ * An answer that asserts availability while the site-claims register
+ * (`lib/ops/claims.ts`) still calls the same thing in preparation or planned.
+ * The two read as one voice to a buyer, so the register is the ceiling.
+ */
+export function overstatesClaim(answer: ClaimStatus, register: SiteClaimStatus): boolean {
+  return ASSERTS.includes(answer) && (register === 'in-preparation' || register === 'planned');
+}
+
 export const LIBRARY: readonly Answer[] = [
   // ── Executive summary ───────────────────────────────────────────────────
   {
@@ -174,9 +188,9 @@ export const LIBRARY: readonly Answer[] = [
   },
   // ── Security ────────────────────────────────────────────────────────────
   {
-    id: 'SEC-1', section: 'security', status: 'tenant-configuration',
+    id: 'SEC-1', section: 'security', status: 'planned',
     question: 'Do you support institutional single sign-on?',
-    answer: 'SAML single sign-on through the platform’s SSO, bound to one authorized identity provider per institution, with first sign-in bound to a provisioned membership. It is enabled per institution after an acceptance test with its identity team; no institution is live yet.',
+    answer: 'Not yet available. SAML single sign-on is built in the repository, bound to one authorized identity provider per institution, with first sign-in bound to a provisioned membership. It is enabled for no institution and has not been tested against a real identity provider, so it is offered only after an acceptance test with an institution’s identity team.',
     evidence: ['supabase/migrations/20260924150142_institution_identity_provisioning.sql', 'supabase/migrations/20260924154500_bind_institution_sso_membership.sql', 'docs/vanderbilt/identity-scim-acceptance.md'],
     hecvat: ['IAM-1'],
   },
@@ -219,8 +233,8 @@ export const LIBRARY: readonly Answer[] = [
   {
     id: 'PF-1', section: 'privacy-ferpa', status: 'planned',
     question: 'Will you sign a data protection agreement with FERPA school-official terms?',
-    answer: 'A DPA is drafted by counsel on request; none has been signed yet. Semester does not claim FERPA compliance on its own authority; it describes its controls and the institution’s counsel decides.',
-    evidence: [],
+    answer: 'A data processing addendum draft and a checklist exist; counsel has not approved the draft and none has been signed. Semester does not claim FERPA compliance on its own authority; it describes its controls and the institution’s counsel decides.',
+    evidence: ['docs/legal-drafts/DATA-PROCESSING-ADDENDUM-DRAFT.md', 'docs/trust/DPA-CHECKLIST.md'],
     hecvat: ['PRIV-4'],
   },
   {
@@ -290,9 +304,9 @@ export const LIBRARY: readonly Answer[] = [
   },
   // ── Integrations ────────────────────────────────────────────────────────
   {
-    id: 'INT-1', section: 'integrations', status: 'tenant-configuration',
+    id: 'INT-1', section: 'integrations', status: 'planned',
     question: 'Do you support LTI 1.3?',
-    answer: 'Yes: launch, deep linking and assignment scores, registered per institution. Names and Roles (the course roster) is deliberately not requested.',
+    answer: 'Not yet available to an institution. LTI 1.3 launch, deep linking and assignment scores are built and tested against a test platform, to be registered per institution; no real learning system has launched it. Names and Roles (the course roster) is deliberately not requested.',
     evidence: ['supabase/functions/lti/index.ts', 'supabase/lti.check.sql', 'app/src/lib/ltikey.test.ts'],
   },
   {
@@ -315,9 +329,9 @@ export const LIBRARY: readonly Answer[] = [
   },
   // ── Implementation ──────────────────────────────────────────────────────
   {
-    id: 'IM-1', section: 'implementation', status: 'available',
+    id: 'IM-1', section: 'implementation', status: 'planned',
     question: 'Describe your implementation approach.',
-    answer: 'A time-boxed paid pilot of 26 weeks with a written plan: an executive sponsor and an operational champion at the institution, a minimum-necessary data plan, a measured baseline and success criteria agreed before launch, and a signed decision to convert, expand, pause or stop.',
+    answer: 'The approach is a time-boxed pilot of 26 weeks with a written plan: an executive sponsor and an operational champion at the institution, a minimum-necessary data plan, a measured baseline and success criteria agreed before launch, and a signed decision to convert, expand, pause or stop. Institutional pilots are not yet offered for activation; until the company’s go decision, the offer is design-partner discovery and scoping.',
     evidence: ['docs/PAID-PILOT-FRAMEWORK.md', 'docs/market-readiness/IMPLEMENTATION_PLAYBOOK.md'],
   },
   // ── Support / SLA ───────────────────────────────────────────────────────

@@ -10,6 +10,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { MOCK_SIS, SIS_FIXTURES } from '../../src/lib/integration/mock-sis.ts';
 import { mockBatch } from '../../src/lib/integration/mock-adapter.ts';
 import type { ExternalRecord } from '../../src/lib/integration/pipeline.ts';
+import { ProviderHttpError, GuardRefusal, classifyFailure } from '../../src/lib/integration/provider-client.ts';
+import { ReauthorizationRequired } from '../../src/lib/integration/oauth.ts';
 import { reconcile, reconcilePlan, runSync } from './worker.ts';
 import { fakeDb, type Row, type Tables } from './fakedb.ts';
 
@@ -45,7 +47,7 @@ function world(over: { status?: string; approved?: boolean; scopes?: Row[]; swit
 
 const batch = (records: ExternalRecord[], key = 'evt-1') => async () => mockBatch(records, key);
 const req = (records: ExternalRecord[], extra: Partial<Parameters<typeof runSync>[1]> = {}) =>
-  ({ connectionPublicId: PUB, adapter: MOCK_SIS, trigger: 'scheduled' as const, fetchBatch: batch(records), allowMock: true, ...extra });
+  ({ connectionPublicId: PUB, adapter: MOCK_SIS, trigger: 'scheduled' as const, fetchBatch: batch(records), allowMock: true, classify: classifyFailure, ...extra });
 
 describe('what the worker refuses to run', () => {
   it('a mock against a real connection, unless told', async () => {
@@ -289,6 +291,45 @@ describe('a run', () => {
     const last = await runSync(fakeDb(t), req([], { fetchBatch: down, attempt: 5 }), now);
     expect(last).toMatchObject({ next: { kind: 'dead_letter' } });
     expect(t.integration_dead_letter_events).toHaveLength(1);
+  });
+});
+
+describe('what a failed pull is recorded as', () => {
+  const failWith = (error: unknown, attempt = 1) => {
+    const t = world({ status: 'healthy' });
+    const fetchBatch = async () => { throw error; };
+    return runSync(fakeDb(t), req([], { fetchBatch, attempt }), now).then((report) => ({ t, report }));
+  };
+
+  it('dead-letters a dead grant on the first attempt, as authentication, with a code the dashboard can group on', async () => {
+    const { t, report } = await failWith(new ReauthorizationRequired('invalid_grant'));
+    expect(report).toMatchObject({ outcome: 'provider_failed', next: { kind: 'dead_letter' } });
+    expect(t.integration_sync_errors[0]).toMatchObject({ error_category: 'authentication', error_code: 'reauthorization_required', retryable: false });
+    expect(t.integration_dead_letter_events).toHaveLength(1);
+  });
+
+  it('carries the provider\u2019s Retry-After into the retry time, when it asks for longer than back-off would', async () => {
+    const { t, report } = await failWith(new ProviderHttpError(429, 600_000), 1);
+    expect(report).toMatchObject({ next: { kind: 'retry', attempt: 2 } });
+    const retryAt = (report as { next: { retryAt: Date } }).next.retryAt;
+    expect(retryAt.getTime() - now().getTime()).toBeGreaterThanOrEqual(600_000);
+    expect(t.integration_sync_errors[0]).toMatchObject({ error_category: 'rate_limit', error_code: 'http_429', retryable: true });
+    expect(t.integration_dead_letter_events ?? []).toHaveLength(0);
+  });
+
+  it('treats a held call as a retryable wait, and an open breaker as an outage, with the breaker\u2019s wait', async () => {
+    const wait = await failWith(new GuardRefusal('rate_limited', now().getTime() + 300_000));
+    expect(wait.t.integration_sync_errors[0]).toMatchObject({ error_category: 'rate_limit', error_code: 'rate_limited', retryable: true });
+    const open = await failWith(new GuardRefusal('circuit_open', now().getTime() + 300_000));
+    expect(open.t.integration_sync_errors[0]).toMatchObject({ error_category: 'provider_unavailable', error_code: 'circuit_open', retryable: true });
+    const retryAt = (open.report as { next: { retryAt: Date } }).next.retryAt;
+    expect(retryAt.getTime() - now().getTime()).toBeGreaterThanOrEqual(300_000);
+  });
+
+  it('still calls an error nothing recognises a provider outage, and scrubs it', async () => {
+    const { t } = await failWith(new Error('boom for student 000123456'));
+    expect(t.integration_sync_errors[0]).toMatchObject({ error_category: 'provider_unavailable', error_code: 'provider_error', retryable: true });
+    expect(t.integration_sync_errors[0].sanitized_message).toBe('boom for student [id]');
   });
 });
 

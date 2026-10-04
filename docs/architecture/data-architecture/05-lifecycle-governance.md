@@ -75,16 +75,16 @@ nothing in this table is changed by this document.
 | Record | Clock | Basis / owner | Enforced by | Status |
 | --- | --- | --- | --- | --- |
 | Student work (`notes`, `tasks`, `state`, …) | **none: until deleted** | The promise (5.1) | the absence of a clock; registry check | built |
-| Student-deleted work (tombstones) | 90 days | So every device learns of a delete | weekly job `tombstones` → `sweep_tombstones` | built; **not hold-aware** (gap) |
+| Student-deleted work (tombstones) | 90 days | So every device learns of a delete | weekly job `tombstones` → `sweep_tombstones` | built; hold-aware (fixed by `20261004150000_holds_reach_the_last_three_sweeps.sql`) |
 | `access_log` (who read your rows) | 90 days | Privacy screen | pruned on write | built |
 | `activity` (the pilot's instrument) | 400 days | `ANALYTICS.md` | pruned on write | built |
 | `audit_event` and the three audit-event tables | 3 years | Audit | daily `audit-retention`; hold-aware | built |
-| `gateway_audit`, `gateway_intelligence_audit` | 180 days | metadata only | hourly `gateway_purge_journal` | built; **not hold-aware** (gap) |
+| `gateway_audit`, `gateway_intelligence_audit` | 180 days | metadata only | hourly `gateway_purge_journal` | built; hold-aware (fixed by `20261004150000_holds_reach_the_last_three_sweeps.sql`) |
 | `ai_policy.retention_days` (0–3650, default 30) | per tenant | Tenant AI policy | applied to AI usage metadata only; **not** to the audit tables (fixed 180 d) | built, inconsistent |
 | `gateway_review` | 1 day past expiry / 90 days completed | Two-phase actions | `gateway_purge_journal` | built |
 | Invitations | 90 days; unconfirmed signups 30 days | | `sweep_stale_invites`, `sweep_abandoned_signups` | built; hold-aware |
 | Integration mirrored records | 30 days after `external_deleted_at`; snapshots by `retention_expires_at` | Source deleted it | `integration_retention_sweep` | built; hold-aware |
-| Financial records (individual billing) | 7 years | D-132 | `purge_financial_records` | built; **not hold-aware** (gap; `RETENTION.md` says "none to gate", stale) |
+| Financial records (individual billing) | 7 years | D-132 | `purge_financial_records` | built; hold-aware (fixed by `20261004150000_holds_reach_the_last_three_sweeps.sql`) |
 | Institutional records (`grade_entries`, ledgers) | **school's rule** | The institution | none | **grade_entries has no clock** (`RETENTION.md`: "not yet set here"); **counsel** |
 | Ledger chains and manifests | never | Evidence | immutability triggers | built |
 | `domain_outbox_events`, `domain_event_receipts` | scrub 30 d, envelope by class | ADR 0008 | `sweep_outbox` | **proposed, tested** |
@@ -141,8 +141,8 @@ before-delete trigger on `auth.users`, hold-aware rewrites of six sweeps, and tw
 (`legal-holds.check.sql`, `hold-gated-sweeps.check.sql`).
 
 **The gap, measured structurally.** Of 22 deleting functions named like sweeps, purges or erasures, 6 are
-hold-aware, 11 are reachable only through the hold-checking erase wrapper, 2 are ephemeral by design, and **3 are
-neither**: `gateway_purge_journal`, `purge_financial_records`, `sweep_tombstones`. The header of
+hold-aware, 11 are reachable only through the hold-checking erase wrapper, 2 are ephemeral by design, and **3 were
+neither** (fixed by `20261004150000`): `gateway_purge_journal`, `purge_financial_records`, `sweep_tombstones`. The header of
 `20260930140000_erase_respects_holds.sql` already names the failure mode (a later `create or replace`
 silently dropping a check) and nothing guards it.
 
@@ -193,7 +193,7 @@ deletion, **provider backups**.
 
 | Export | Built | Gap |
 | --- | --- | --- |
-| Account export | `export_my_data()` → `private.account_export`: mapped columns with `exported = true` (149 of 150 `clear`, 110 of 112 `delete`), plus cascade children to depth 4, plus `invites`, `beta_invitations`, and the auth record without credentials. Format `semester.account-export` v1. Logs a `data_requests` row. | No `manifest.json`; device files are not included; `blocks.blocked`, `reports.about`, `community_safety_entries.user_id` are erased but withheld from the export by design (stated in the output's `withheld` array) |
+| Account export | `export_my_data()` → `private.account_export`: mapped columns with `exported = true` (149 of 150 `clear`, 110 of 112 `delete`), plus cascade children to depth 4, plus `invites`, `beta_invitations`, and the auth record without credentials. Format `semester.account-export` v1. Logs a `data_requests` row. | No `manifest.json`; device files are not included; `blocks.blocked`, `reports.about`, `community_safety_entries.user_id` are erased but withheld from the export by design, and so is the whole `guardian_link_restrictions` table (`private.export_withheld_tables()`, `20261004160000`); all four are stated in the output's `withheld` array |
 | Tenant export | Offboarding step 6 *records* a hash and counts of an export made elsewhere | **No generator.** `tenant_data_manifest` (proposed) is what the counts must equal |
 | Institution portability | `DATA-PORTABILITY-AND-OFFBOARDING.md` plans a package; `institution_offboarding_requests`/`offboarding_exports`/`data_deletion_confirmations` do not exist as such | `school_offboarding` is the realisation; the per-category deletion confirmation is not built |
 | Career and alumni portability | Credentials are held, not issued, by Semester; skill claims carry their issuer's state | A portable, signed credential export is not built |
@@ -221,6 +221,6 @@ Derived stores must not be a way to keep what was erased. The rule for each:
 | Outbox sweep, holds | `tests/03_outbox_sweep.test.sql` + 3 mutations | red on each mutation |
 | Tenant manifest | `tests/04_lifecycle.test.sql` + mutation (leaks other tenants) | red |
 | Restore record | same file + mutation (production restore closes without sweeps) | red |
-| Hold coverage guard | `tests/11_hold_coverage.test.sql` + 4 mutations | red; finds the 3 real gaps |
+| Hold coverage guard | `tests/11_hold_coverage.test.sql` + 4 mutations | red; silent on the real schema after the fix; finds only the newer `productivity_sweep_commands` when exemptions are removed |
 | Erasure, export, holds on a live project | **not run** | the repository's own pass says so |
 | Provider backup, PITR, restore time | **not run** | no drill has touched production |

@@ -980,6 +980,20 @@ is intentionally inert: its executable SQL already lives at the original
 version for clean builds, while the stub ensures `db push` can reconcile every
 version production knows.
 
+### The reading of 4 October
+
+The ledger was read again through the Supabase connector, ending at
+`20261004123000  productivity_commands`. The snapshot had stopped at
+`20261001075026`; the twenty rows after it, from
+`20261001152756  productivity_workspace` on, were applied by the deploy and each
+has a file in `supabase/migrations/`. No row is missing a file.
+
+It also settles a clash. Two files carried `20261004090000`, so `db push` would
+have applied one and skipped the other. Production already held
+`order_form_never_downgrades_plan` at that version, so that file kept it and
+`productivity_commands` moved to `20261004123000` (`bf7ea52`), above
+`20261004120000`. The ledger now shows it applied there.
+
 ## What this costs, and what it does not fix
 
 Steps 1–4 touch no live system and can be abandoned at any point with nothing
