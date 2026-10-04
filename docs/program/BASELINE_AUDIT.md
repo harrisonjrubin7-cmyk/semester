@@ -54,7 +54,7 @@ All commands run from the repository root on 2026-10-04. Tracked-file counts use
 | Root Markdown files | 70 | `ls *.md \| wc -l` |
 | Decision records `docs/decisions/D-*.md` | 61 | `ls docs/decisions/D-*.md \| wc -l` |
 | Accepted architecture records `docs/architecture/0001..0012` | 12 | `ls docs/architecture/[0-9]*.md \| wc -l` |
-| Proposed ADRs in `docs/decisions/proposed/` | 17 at time of writing (`ADR-0001..0009`, `0014..0021`); sibling work is still adding files, so re-run the command | `ls docs/decisions/proposed \| wc -l` |
+| Proposed ADRs in `docs/decisions/proposed/` | 25 (`ADR-0001..0025`, all `Status | Proposed`, none ratified; `grep -h "^| Status" docs/decisions/proposed/ADR-0*.md \| sort \| uniq -c`) | `ls docs/decisions/proposed \| wc -l` |
 | Public-claims entries marked `available` | 0 | `grep -c "status: 'available'" app/src/lib/ops/claims.ts` |
 | Capability rows marked `currentState: 'verified'` in code | 60 (a register value, not a production check) | `grep -c "currentState: 'verified'" app/src/lib/rollout-capabilities.ts` |
 | `FORCE ROW LEVEL SECURITY` declarations in migrations | 0 | `grep -rhiE 'force row level security' supabase/migrations \| wc -l` |
