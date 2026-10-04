@@ -27,6 +27,10 @@ Main already holds most of the *rules* and some of the *code*. Much of the *oper
 | 9 Institutional demand and ABM | `INSTITUTIONAL-GTM-PLAYBOOK.md`, `FIRST-10-INSTITUTIONS-TARGETING-PLAN.md` (5 lines), `gtm/stages.ts`, `rfp.ts` | Committee-based ABM plays, programs, a demand-signal rule (§11) |
 | 10 Dashboards and cadence | `gtm/kpi.ts`, `REVENUE-OPERATIONS-DASHBOARD-SPEC.md` | Six dashboards, owners, labelled attribution, operating rhythm (§12) |
 
+### Overlap with the brand and marketing strategy
+
+[`BRAND-AND-MARKETING-STRATEGY.md`](BRAND-AND-MARKETING-STRATEGY.md) merged on 2026-10-04, written in parallel and without reference to this plan. Where the two overlap, use it for brand, messaging, page briefs, the consent form text, the dated twelve-week calendar from 2026-10-05, its twelve-moment lifecycle table and the copy-level claims register it adopts. Use this plan for the notification caps and policy, activation milestones, product-led loops, experimentation, attribution tiers, institutional ABM, dashboards and the gates. The two agree on the default cap of one marketing email a week. They disagree on one point, recorded as decision 9 in §13.
+
 ## 2. Ground truth that bounds every tactic
 
 | Fact | Source | Consequence |
@@ -238,7 +242,7 @@ Capacity rule: with one named owner, plan **one student-facing and one instituti
 
 ### 7.3 Editorial calendar (hypothesis, one academic year)
 
-Dates for registration, finals and commencement vary by school: confirm each against the registrar calendar before scheduling. The finals rule is fixed: supportive resources and export tools, never urgency.
+Dates for registration, finals and commencement vary by school: confirm each against the registrar calendar before scheduling. The dated twelve-week calendar starting 2026-10-05 is in [`BRAND-AND-MARKETING-STRATEGY.md`](BRAND-AND-MARKETING-STRATEGY.md) §5.4; this table is the year-level frame around it. The finals rule is fixed: supportive resources and export tools, never urgency.
 
 | Window | Student theme | Institutional theme | Gate |
 | --- | --- | --- | --- |
@@ -490,6 +494,7 @@ Each becomes `docs/decisions/D-<pull request number>.md` when taken, per `CLAUDE
 6. **Age and minors position for marketing** (counsel).
 7. **Institutional demand-signal reporting** (default off).
 8. **Reviewer assignments**: privacy, accessibility, claims, analyst, moderator, backup.
+9. **Exam-period marketing email.** The brand strategy's lifecycle table (§5.7, row 8) allows opt-in marketing email before midterms, registration and finals, with generic dates. §6.6 of this plan prohibits messages timed to exam panic and §5 forbids referencing an exam or deadline to prompt a return. The two cannot both stand: choose one, or limit row 8 to the student's own reminders.
 
 ## 14. Numbers held to code
 

@@ -163,6 +163,6 @@ edited.
 See [08 §8](08-GOVERNANCE-AND-REQUIREMENTS-TRACE.md). In one line: the cited
 files exist and say what the pack says they say (checked by a test for
 existence, by reading for content); no cited test was run for this pack;
-the four research citations were checked on 2026-10-04 (one error and one
-overreach corrected; three papers not read in full, see 01 §4) and still need a
-full read before external use; every legal conclusion is for qualified counsel.
+the four research citations were each checked against a full-text copy on
+2026-10-04 (one error and one overreach corrected, see 01 §4);
+every legal conclusion is for qualified counsel.
