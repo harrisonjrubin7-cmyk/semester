@@ -42,6 +42,19 @@ export interface Journey {
   good: string;
   /** Why this journey gets this objective. */
   why: string;
+  /**
+   * A figure written by the repository's authors that no owner has yet
+   * approved. It is computed and reviewed like any other, but it is a target
+   * somebody still has to adopt, and the doc lists it apart from the adopted
+   * ones so it is never quoted as a commitment.
+   */
+  proposed?: true;
+  /**
+   * The bad events specific to this journey, for the ones that are not
+   * durable writes (`BAD_WRITE_OUTCOMES` is the list for those). Absent means
+   * the shared write list applies.
+   */
+  bad?: readonly string[];
 }
 
 export const JOURNEYS: readonly Journey[] = [
@@ -53,6 +66,55 @@ export const JOURNEYS: readonly Journey[] = [
   { id: 'ask_semester', name: 'Ask Semester', slo: 99.5, good: 'A policy-compliant answer or a safe fallback', why: 'AI must fail safely, not block core work' },
   { id: 'assignment_draft_save', name: 'Assignment draft save', slo: 99.99, good: 'The draft is durably stored during a committed window', why: 'Losing student work is high impact' },
   { id: 'privacy_request_intake', name: 'Data export or delete request intake', slo: 99.99, good: 'The request is accepted and tracked', why: 'A privacy workflow must not fail' },
+
+  // Proposed. The brief for the platform named these journeys and this file had
+  // no objective for them. The figures follow one rule, not a measurement:
+  // money, records and anything that can disclose another person's data sit at
+  // 99.95; a read the student relies on daily at 99.9; a journey that depends on
+  // a system Semester does not run at 99.5, where the part Semester owns is
+  // still counted. Each needs an owner to adopt or change it.
+  {
+    id: 'calendar_view', name: 'Calendar load', slo: 99.9, proposed: true,
+    good: 'The calendar shows the student’s own events and tasks for the range viewed, each with its source and as-of time',
+    why: 'Where a student checks what is due, so a wrong or stale view is a missed deadline',
+    bad: ['Returns an error', 'Times out', 'Shows data older than its stated as-of time as though it were current', 'Shows an event at the wrong date or time', 'Shows another person’s events'],
+  },
+  {
+    id: 'course_access', name: 'Course access', slo: 99.9, proposed: true,
+    good: 'An enrolled student opens their course and its current-term materials, and a student who is not enrolled does not',
+    why: 'Coursework is unreachable without it, and admitting the wrong person is worse than an outage',
+    bad: ['Returns an error', 'Times out', 'Refuses a student who is enrolled', 'Admits a student who is not enrolled', 'Omits materials that exist for the term'],
+  },
+  {
+    id: 'grade_retrieval', name: 'Grade retrieval', slo: 99.95, proposed: true,
+    good: 'A released grade is shown for the right student and course with its as-of time, or the student is told the source is unavailable',
+    why: 'A wrong or unreleased grade is a record error, and silence is worse than saying the source is down',
+    bad: ['Returns an error', 'Times out', 'Shows a grade that has not been released', 'Shows the wrong student’s or the wrong course’s grade', 'Shows a stale grade as though it were current'],
+  },
+  {
+    id: 'registration_submit', name: 'Registration submission', slo: 99.95, proposed: true,
+    good: 'A registration command is accepted or refused with a reason the student can read, exactly once, and the student sees which',
+    why: 'An official write on a deadline: a lost or doubled registration cannot be undone by retrying',
+    bad: ['Returns an error', 'Times out', 'Is lost', 'Is applied to the wrong section', 'Is applied twice', 'Is left pending with no reconciliation', 'Refuses without a reason the student can read'],
+  },
+  {
+    id: 'billing_statement_payment', name: 'Billing statement and payment', slo: 99.95, proposed: true,
+    good: 'The student sees an accurate balance with its as-of time, and a payment they submit is recorded exactly once',
+    why: 'Money: a wrong balance or a doubled charge is a financial error with a deadline attached',
+    bad: ['Returns an error', 'Times out', 'Shows a balance that does not match the ledger', 'Records a payment twice', 'Loses a payment that the processor accepted', 'Leaves a payment unconfirmed with no reconciliation'],
+  },
+  {
+    id: 'communication_delivery', name: 'Communication delivery', slo: 99.9, proposed: true,
+    good: 'A notification or announcement reaches the recipient’s chosen channel within its latency target, or the sender is told it failed',
+    why: 'Deadlines and changes reach students only if the message does',
+    bad: ['Is lost with no failure shown to the sender', 'Reaches the wrong recipient', 'Reaches a recipient who opted out of it', 'Is delivered twice', 'Arrives after its latency target'],
+  },
+  {
+    id: 'integration_sync', name: 'Connected-source sync', slo: 99.5, proposed: true,
+    good: 'A scheduled sync completes and reconciles, or the student sees it degraded with the time of the last good sync, and native features keep working',
+    why: 'Connected systems are not Semester’s to run, so this is looser, but a silent failure is never acceptable',
+    bad: ['Fails with no degraded state shown', 'Writes to the wrong record', 'Imports a duplicate', 'Is left unreconciled past its window', 'Stops a native feature from working'],
+  },
 ];
 
 /**

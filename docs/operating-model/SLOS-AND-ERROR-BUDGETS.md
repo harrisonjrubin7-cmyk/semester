@@ -36,6 +36,92 @@ A durable write is bad when it:
 The one permitted exclusion: The student intentionally cancelled the operation. A fault Semester caused stays bad
 even when a third-party system was involved in the workflow.
 
+## Proposed journeys
+
+The platform brief names journeys this file had no objective for: calendar, course access, grade retrieval,
+registration, billing, communications and integrations. These seven are **proposed**. Nobody has adopted them, and
+the figures are a rule, not a measurement: money, records and anything that can show another person's data sit at
+99.95%; a read the student relies on daily at 99.9%; a journey that depends on a system Semester does not run at
+99.5%, where the part Semester owns still counts. An owner adopts or changes each one; until then none may be quoted
+to a customer, and a proposed journey's release rule is a recommendation, not a freeze. They are computed and
+reviewed exactly like the adopted eight.
+
+The adopted writes count the six bad outcomes above. These journeys are mostly reads and commands, so each names its
+own bad events, below. Showing one student another person's data, or an unreleased grade, is also a privacy or
+records incident to be handled as one, whatever the budget says.
+
+| Journey | SLO | Good event | Why |
+| --- | --- | --- | --- |
+| Calendar load | 99.9% | The calendar shows the student’s own events and tasks for the range viewed, each with its source and as-of time | Where a student checks what is due, so a wrong or stale view is a missed deadline |
+| Course access | 99.9% | An enrolled student opens their course and its current-term materials, and a student who is not enrolled does not | Coursework is unreachable without it, and admitting the wrong person is worse than an outage |
+| Grade retrieval | 99.95% | A released grade is shown for the right student and course with its as-of time, or the student is told the source is unavailable | A wrong or unreleased grade is a record error, and silence is worse than saying the source is down |
+| Registration submission | 99.95% | A registration command is accepted or refused with a reason the student can read, exactly once, and the student sees which | An official write on a deadline: a lost or doubled registration cannot be undone by retrying |
+| Billing statement and payment | 99.95% | The student sees an accurate balance with its as-of time, and a payment they submit is recorded exactly once | Money: a wrong balance or a doubled charge is a financial error with a deadline attached |
+| Communication delivery | 99.9% | A notification or announcement reaches the recipient’s chosen channel within its latency target, or the sender is told it failed | Deadlines and changes reach students only if the message does |
+| Connected-source sync | 99.5% | A scheduled sync completes and reconciles, or the student sees it degraded with the time of the last good sync, and native features keep working | Connected systems are not Semester’s to run, so this is looser, but a silent failure is never acceptable |
+
+### Calendar load
+
+- Returns an error
+- Times out
+- Shows data older than its stated as-of time as though it were current
+- Shows an event at the wrong date or time
+- Shows another person’s events
+
+### Course access
+
+- Returns an error
+- Times out
+- Refuses a student who is enrolled
+- Admits a student who is not enrolled
+- Omits materials that exist for the term
+
+### Grade retrieval
+
+- Returns an error
+- Times out
+- Shows a grade that has not been released
+- Shows the wrong student’s or the wrong course’s grade
+- Shows a stale grade as though it were current
+
+### Registration submission
+
+- Returns an error
+- Times out
+- Is lost
+- Is applied to the wrong section
+- Is applied twice
+- Is left pending with no reconciliation
+- Refuses without a reason the student can read
+
+### Billing statement and payment
+
+- Returns an error
+- Times out
+- Shows a balance that does not match the ledger
+- Records a payment twice
+- Loses a payment that the processor accepted
+- Leaves a payment unconfirmed with no reconciliation
+
+### Communication delivery
+
+- Is lost with no failure shown to the sender
+- Reaches the wrong recipient
+- Reaches a recipient who opted out of it
+- Is delivered twice
+- Arrives after its latency target
+
+### Connected-source sync
+
+- Fails with no degraded state shown
+- Writes to the wrong record
+- Imports a duplicate
+- Is left unreconciled past its window
+- Stops a native feature from working
+
+A refusal for a stated policy reason (a hold, a full section) is a *good* registration event, not a bad one: the
+objective is that the system answers exactly once and says why, not that every request succeeds.
+
 ## The budget, worked
 
 100,000 eligible plan saves in thirty days at 99.95% allow **50** bad saves. Forty bad saves leave 20% of the budget,
