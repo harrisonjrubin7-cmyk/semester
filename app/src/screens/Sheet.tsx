@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
@@ -940,6 +940,7 @@ function layoutOf(sheet: SheetModel): SheetLayout {
 }
 
 function Grid({ sheet }: { sheet: SheetModel }) {
+  const now = useNow();
   const { state, dispatch, say } = useStore();
   const [sel, setSel] = useState<Range>(() => oneCell('A1'));
   /** Which cell has the text cursor in it, so it shows its formula not its answer. */
@@ -1466,7 +1467,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addChart = () => {
     const where = rangeLabel(sel);
-    setCharts([...charts, suggestChart(sheet.cells, where, Date.now(), over)]);
+    setCharts([...charts, suggestChart(sheet.cells, where, now.getTime(), over)]);
     say(`Chart of ${where} added under the grid.`);
   };
 
@@ -1536,7 +1537,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addPivot = () => {
     const where = many(sel) ? rangeLabel(sel) : rangeLabel(fullRange());
-    setPivots([...pivots, suggestPivot(sheet.cells, where, Date.now(), over)]);
+    setPivots([...pivots, suggestPivot(sheet.cells, where, now.getTime(), over)]);
     say(`Summary of ${where} added under the grid.`);
   };
 
