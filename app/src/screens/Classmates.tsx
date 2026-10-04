@@ -31,8 +31,9 @@ import { markRead, marks as storedMarks, remember, type Marks } from '../lib/roo
 import { Rooms } from '../components/room/Rooms';
 import { Talk } from '../components/room/Talk';
 
-async function loadClassmates(accountId: string, term: string) {
-  const [profile, rooms] = await Promise.all([myProfile(accountId), myRooms(accountId, term)]);
+async function loadClassmates(account: { id: string } | null, term: string) {
+  if (!account) return null;
+  const [profile, rooms] = await Promise.all([myProfile(account.id), myRooms(account.id, term)]);
   // Fetch every room's last lines together; one request per room makes the
   // conversation list wait on a chain of phone round trips.
   const messages = rooms.length > 0 ? bucket(await across(term, rooms), (message) => message.code) : {};
@@ -110,7 +111,8 @@ export function Classmates() {
   const refresh = useCallback(async () => {
     if (!account || !ok) return;
     try {
-      const loaded = await loadClassmates(account.id, term);
+      const loaded = await loadClassmates(account, term);
+      if (!loaded) return;
       setProfile(loaded.profile);
       setHandle(loaded.profile?.handle ?? '');
       setRooms(loaded.rooms);
@@ -125,9 +127,9 @@ export function Classmates() {
   useEffect(() => {
     if (!account || !ok) return;
     let live = true;
-    void loadClassmates(account.id, term)
+    void loadClassmates(account, term)
       .then((loaded) => {
-        if (!live) return;
+        if (!live || !loaded) return;
         setProfile(loaded.profile);
         setHandle(loaded.profile?.handle ?? '');
         setRooms(loaded.rooms);
