@@ -159,11 +159,11 @@ canary followed) is a point-in-time artifact, not a standing guarantee.
 
 | ID | Requirement | State |
 | --- | --- | --- |
-| `RP-01` | Retrieval service with the `RetrievalSet` contract, including `dropped` | designed |
-| `RP-02` | Classification gate on the server over every chunk and the question; `classification` column on sources | not started |
-| `RP-03` | `authority` and `origin` reach the model and the provenance panel | not started: read, then dropped |
-| `RP-04` | A real `verified_at` and `verified_by`; `validUntil`; stale sources excluded and reported | not started: `verifiedAt` is `updated_at` |
-| `RP-05` | Chunking, top-*k* and a per-mode input cap, checked before the call; reservation sized from it | not started |
+| `RP-01` | Retrieval service with the `RetrievalSet` contract, including `dropped` | **the assembly step is tested as a pure function** (`assemble`, `packages/institution/src/retrieval.ts`: items, `dropped` with reasons and no text, a `key` for the audit, a `crossTenant` flag); the index and the service around it are not built, and nothing is wired |
+| `RP-02` | Classification gate on the server over every chunk and the question; `classification` column on sources | **the gate is tested as a pure function** and held equal to the toolkit's `gate(tier, 'ai', courseAllowsAi)` for every tier, both course policies and an unclassified source (`ai-retrieval.test.ts`); the column does not exist and the question is not yet gated, so nothing is wired |
+| `RP-03` | `authority` and `origin` reach the model and the provenance panel | **carried on every assembled item** (tested); the loader still drops `authority` and the provider does not yet print it |
+| `RP-04` | A real `verified_at` and `verified_by`; `validUntil`; stale sources excluded and reported | **exclusion and reporting tested** (last valid day sent, the day after dropped as `stale`; unverified dropped when required; an undated source flagged); the columns do not exist and `verifiedAt` is still `updated_at` |
+| `RP-05` | Chunking, top-*k* and a per-mode input cap, checked before the call; reservation sized from it | **the count and size bound is tested** (overflow dropped as `budget`, text never truncated); no chunker exists and the reservation is not yet sized from it |
 | `RP-06` | Authorisation as an index pre-filter built from identity; post-check at assembly; divergence is a P0 signal | designed |
 | `RP-07` | Embeddings and indexes follow their source's classification, retention, deletion, hold and zone | designed |
 | `RP-08` | Resolve the assistant's T3 lookups: either route `read_grades` and `read_attendance` through the gate with explicit per-school consent, or document them as the student's own data under the student's own key and refuse them on any institution-directed consumer route | not started; recorded as the `reconcile` on `AI-01.1` |
