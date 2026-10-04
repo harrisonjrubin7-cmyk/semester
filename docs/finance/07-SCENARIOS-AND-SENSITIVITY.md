@@ -9,7 +9,9 @@
 
 > This document organizes planning assumptions and questions for the founder and for qualified professionals. It is not accounting, tax, legal, insurance or investment advice, and it states no legal, tax or accounting conclusion. Every item marked **[REQUIRES QUALIFIED REVIEW]** needs the named professional before anyone relies on it.
 
-## 1. The seven scenarios
+## 1. The seven scenarios (and two more)
+
+Scenarios 8 and 9, added after the go/no-go decision of 3 Oct 2026 was read against Base, hold the revenue motions behind their gates; they are described and compared in [`10-GO-NO-GO-GATES.md`](10-GO-NO-GO-GATES.md). Everything below is scenarios 1 to 7 and is unchanged.
 
 Six are requested by the brief. The seventh, the gated plan, is the CFO's recommended response to what the first six show. One selector switches them all; every number below comes from recalculating the workbook once per scenario.
 
