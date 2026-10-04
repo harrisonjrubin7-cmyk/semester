@@ -12,9 +12,9 @@ All figures were measured on that commit by reading imports as text (1,412 produ
 |---|---|---|---|
 | `lib/` | 764 (594 flat + 27 folders) | 201,540 | Everything that is not a screen: rules, selectors, adapters, registers, and record-keeping |
 | `components/` | 389 | 77,958 | Shared UI, much of it a screen's private parts |
-| `screens/` | 120 | 69,956 | Routes (152 entries, 89 lazy) |
+| `screens/` | 120 | 69,956 | Routes (89 top-level screen files, 100 lazy imports in the registry) |
 | `state/` | 18 | 9,537 | One reducer, one store, 11 slices |
-| `ai/`, `community/`, `data/`, `site/`, `insights/` | 113 | ~31,000 | Separate trees, no declared boundary |
+| `ai/`, `community/`, `data/`, `site/`, `insights/` | 103 | ~31,000 | Separate trees, no declared boundary |
 | Tests | 1,219 files | n/a | 19,838 passing assertions in the last full run |
 
 The server side is healthier than the client: 171 migrations, 106 `*.check.sql` suites that walk a second account, 15 edge functions, and a gateway (`app/server/institution`) that is already prepare-only with a policy decision point, event outbox and workflow machines (`packages/institution`, ADRs 0007 to 0010).
@@ -40,7 +40,7 @@ One `State` carries persisted data and ephemeral UI state together. Persisted sh
 
 ### Time, errors, configuration
 
-- 194 files read `Date.now()` or `new Date()`; 99 of them are in `lib/`. A shared clock exists (`state/clock`), and `test:zones` runs the suite twice because of this. Domains take an injected `Clock` instead.
+- 194 files read `Date.now()` or `new Date()`; 99 of them are in `lib/`. A shared `useNow()` exists in the store, and `test:zones` runs the suite twice because of this. Domains take an injected `Clock` instead.
 - Errors are a mix: thrown `Error`, `ReadOnly`, `{ok:false, why}` (`lib/actions.ts`), and server `Refusal`. The gateway has an envelope (ADR 0010); the client has no equivalent.
 - Configuration is env-driven flags (`experience-flags.ts`, 28 flags, 7 kill switches) read in many places. The flag *model* is sound (`off / preview / sandbox / production`); the *reading* is scattered.
 
@@ -51,7 +51,7 @@ One `State` carries persisted data and ephemeral UI state together. Persisted sh
 | Whole-state coupling makes every change global | fan-in 338, 317 `useStore` callers | Domains own data through ports; screens move to domain hooks |
 | Date/zone bugs | 194 clock readers, two-zone test run | Injected `Clock`; purity rule |
 | Authoritative logic only in the client | section above | Classify per rule: advisory (stay) or authoritative (server, via port) |
-| Concurrent sessions converge | CLAUDE.md, 340 merges in a month | Small slices, index-only imports, ratchets that shrink |
+| Concurrent sessions converge | CLAUDE.md, 340 commits on main since 1 September | Small slices, index-only imports, ratchets that shrink |
 | Cycles hide ownership | 59 files in 12 cycles | Cycle ratchet; break largest first |
 | Document sprawl | 69 root `.md`, 100 `docs/` files | One plan, one ADR; no new root docs |
 
