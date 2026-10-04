@@ -13,6 +13,11 @@ import { WhatChanged } from '../components/WhatChanged';
 import { DayPlanNote } from '../components/DayPlanNote';
 import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { countSources, itemSources, todayEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
+import { DEADLINE_HORIZON_DAYS } from '../lib/today-actions';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
@@ -2115,19 +2120,36 @@ export function nothingOnToday(
 }
 
 export function Today() {
-  const { state, catalog } = useStore();
+  const { state, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
-  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today"><DailyPlanSlot /></FirstRun>;
-  // Step 3 of the modularization (D-1149): compare the domain's Today with this one. Draws nothing.
-  // Not on the first-run branch above: with nothing entered there is nothing to compare.
+  const empty = nothingOnToday(shape, catalog, state);
+  const sources = useMemo(() => {
+    const near = datedItems(catalog, now).filter((i) => !i.isPast && !state.done[i.id] && i.daysAway <= DEADLINE_HORIZON_DAYS);
+    return countSources([...itemSources(near), ...state.tasks.map((): SourceLabel => 'student_entered')]);
+  }, [catalog, now, state.done, state.tasks]);
+  const env = todayEnvelope({ loading, empty, count: Object.values(sources).reduce((a, b) => a + b, 0), sources, online, now: now.getTime() });
   return (
-    <>
-      {shape === 'feed' ? <FeedHome /> : <TabHome />}
-      {moduleOn(EXPERIENCE_FLAGS.domainToday) && <TodayShadow />}
-    </>
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="today"
+      empty={{ title: 'Nothing on today yet.', body: 'Add a course or an action to start.' }}
+      emptyNode={<FirstRun where="on today"><DailyPlanSlot /></FirstRun>}
+      inset
+    >
+      {() => (
+        <>
+          {shape === 'feed' ? <FeedHome /> : <TabHome />}
+          {/* Steps 3 and 4 of the modularization (D-1149): compare the domain's Today with this one. Draws nothing. */}
+          {moduleOn(EXPERIENCE_FLAGS.domainToday) && <TodayShadow />}
+        </>
+      )}
+    </ReadState>
   );
 }
 

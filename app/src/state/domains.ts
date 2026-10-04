@@ -93,6 +93,9 @@ export function useDomains(): Domains {
     for (const resolve of release) resolve();
   });
 
-  // Built once: the host reads through `live`, so nothing here goes stale.
+  // Built once: the host reads through `live`, so nothing here goes stale. The two refs are handed over
+  // as objects and `.current` is only read when a service is called from a handler or a promise, never
+  // during render, which is what this rule exists to catch.
+  // oxlint-disable-next-line react/refs
   return useMemo(() => makeDomains(live, waiting), []);
 }

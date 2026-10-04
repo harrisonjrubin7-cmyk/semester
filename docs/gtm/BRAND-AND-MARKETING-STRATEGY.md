@@ -27,7 +27,7 @@
 | 5 | Launch, demand, calendar, social, PR, community, lifecycle | [`social.ts`](../../app/src/lib/gtm/social.ts) pillars, platforms and funnels; [`CONTENT-AND-CHANNEL-PLAN.md`](../market-readiness/CONTENT-AND-CHANNEL-PLAN.md); [`EMAIL-LIFECYCLE.md`](../market-readiness/EMAIL-LIFECYCLE.md) (7 lines); [`CAMPUS-LAUNCH-KIT.md`](../market-readiness/CAMPUS-LAUNCH-KIT.md) (5 lines) | A gated launch sequence, a 12-week calendar, PR, community stance, a full lifecycle table (§5) |
 | 6 | Growth loops, referral, ambassadors, retention | [`INDIVIDUAL-GROWTH-STRATEGY.md`](../market-readiness/INDIVIDUAL-GROWTH-STRATEGY.md), [`STUDENT-AMBASSADOR-PLAYBOOK.md`](../market-readiness/STUDENT-AMBASSADOR-PLAYBOOK.md), [`REFERRAL-AND-SHARING-SAFETY.md`](../market-readiness/REFERRAL-AND-SHARING-SAFETY.md), `referral_codes`/`referrals` tables | Named loops built on features that exist; the referral reward decision; ambassador counsel questions (§6) |
 | 7 | Marketing operations | **Code:** `campaign.ts` `activationGate`, `messaging.ts`, `utm.ts`, `kpi.ts`, `sponsor.ts`, and `gtm_*` tables ([`docs/gtm/EXECUTION-PLAN.md`](EXECUTION-PLAN.md)); [`MARKETING-COMMUNICATIONS-CONSENT-DRAFT.md`](../legal-drafts/MARKETING-COMMUNICATIONS-CONSENT-DRAFT.md) | A runbook over that code: QA checklist, suppression, review SLAs, lead-scoring rules (§7) |
-| 8 | Public claims register | [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) (CLM-001–017, topic-level) and the data-driven site register in `ops/claims.ts` | A **copy-level** register: exact words, evidence, owner, review date, risk (§8) |
+| 8 | Public claims register | [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) (CLM-001–018, topic-level) and the data-driven site register in `ops/claims.ts` | A **copy-level** register: exact words, evidence, owner, review date, risk (§8) |
 | 9 | Competitive and category | [`COMPETITION.md`](../../COMPETITION.md), [`COMPETITIVE-REVIEW.md`](../../COMPETITIVE-REVIEW.md), [`MARKET-POSITION.md`](../../MARKET-POSITION.md) — internal, feature-level | Public-safe positioning and the category narrative (§9) |
 | 10 | Metrics | [`METRIC-DICTIONARY.md`](../market-readiness/METRIC-DICTIONARY.md), [`METRICS-AND-ANALYTICS-PLAN.md`](../market-readiness/METRICS-AND-ANALYTICS-PLAN.md), [`EVENT-TAXONOMY.md`](../market-readiness/EVENT-TAXONOMY.md), `kpi.ts` | **Awareness, CAC and brand trust** are absent; added with definitions (§10) |
 
@@ -500,7 +500,7 @@ A person is suppressed, and stays so, if any of: opted out of marketing; withdre
 
 ### 8.1 How to read it
 
-This is the **copy-level** register: the actual sentences marketing wants to use. It sits *under* [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) (topics CLM-001–017) and the site register in `ops/claims.ts` (status words). It adds no capability and approves nothing.
+This is the **copy-level** register: the actual sentences marketing wants to use. It sits *under* [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) (topics CLM-001–018) and the site register in `ops/claims.ts` (status words). It adds no capability and approves nothing.
 
 - **Status** is the *word* the claim may carry, never higher than the evidence supports: `Limited beta` · `Built and tested, not yet deployed` · `In preparation` · `Planned` · `—` (statement of fact about status) · **`PROHIBITED`**. No row is "Available now": the site register holds none.
 - **Owner** is the approval seat (roles). Where the register says counsel or a specialist is unassigned, the row says so.
@@ -523,8 +523,9 @@ Paths are repository paths; `app/src/lib/` is shortened to `lib/`.
 | M-05 | "AI questions go to the provider in your settings — Anthropic unless you chose another — and only when you press the button." | In preparation | Script; `lib/privacy.ts` `CLAIMS` (privacy text written as data, held by `privacy.test.ts`); CLM-011 | Privacy; AI governance | 2026-12-03 | Med | **Re-verify against the Privacy screen on the day of use** (the script's own rule). Names a provider — recheck on any provider change |
 | M-06 | "There is no third-party analytics in the app." | In preparation | Script; observability decision in [`SEMESTER_MARKET_READINESS.md`](../../SEMESTER_MARKET_READINESS.md) | Privacy; Engineering | 2026-12-03 | Med | **Scope to the app.** The company site is not verified |
 | M-07 | "Take everything with you, or delete it, any time." | In preparation | `lib/export.ts`, `lib/erase.ts`, `cloud.ts deleteEverything`; `ops/claims` `export-delete` | Privacy; Product | 2026-12-03 | Med | Backups expire on their own schedule and legal holds apply ([`TRUST-CENTER-CONTENT.md`](../market-readiness/TRUST-CENTER-CONTENT.md)); `RETENTION.md` notes no time-based purge sweep for contacts |
-| M-08 | "Semester doesn't submit anything to your school or change your records." | In preparation | Known limitations; script | Product; Legal | 2026-12-03 | Low | True of the current build; revisit if write-back ever ships |
-| M-09 | "Every fact says where it came from." | In preparation | Design guide principle 2; `lib/source.test.ts` | Product | 2026-12-03 | Med | Describe the five labels; do not imply the facts are correct |
+| M-08 | "Semester doesn't submit anything to your school or change your records." | In preparation | Known limitations; script | Product; Legal | 2026-12-03 | Med | True of the current build; revisit if write-back ever ships |
+| M-09 | "Where a fact carries a source label, the label says where it came from." | In preparation | Design guide principle 2; `lib/source.test.ts`; CLM-018 (proposed, not approved); [`CLM-018-SOURCE-LABEL-EVIDENCE.md`](../CLM-018-SOURCE-LABEL-EVIDENCE.md) | Product | 2026-12-03 | Med | Name the surface that shows the label. Describe the labels (imported, entered by you, estimated, AI-assisted); do not imply the facts are correct. Do not extend to "every fact" (M-09b) |
+| M-09b | "Every fact says where it came from." and any "every", "all" or "always" form of it | **PROHIBITED** | CLM-018 evidence §1: coverage of all facts is not shown; labels appear on the listed surfaces only | — | — | Prohibited | This sentence stood as M-09 until 2026-10-04. Use M-09 |
 | M-10 | "AI features have a monthly limit per account." | — | `supabase/functions/claude/index.ts:45` (default 60, set by `MONTHLY_CALL_LIMIT`); known limitations | Product | 2027-01-03 | Low | **Do not publish the number**: it is an environment variable and may differ. "AI answers can be wrong" is a required adjacent disclosure |
 | M-11 | "Add a calendar link you already have." | In preparation | `lib/feedlink.ts`; [`COMPETITION.md`](../../COMPETITION.md) | Product; Security | 2026-12-03 | Med | A student-pasted link, not an integration with the school. Never "integrates with Canvas/Brightspace" (CLM-005) |
 | M-11b ✋ | Anything saying Semester reads a student's learning-system account with a token | Built — not verified | `lib/canvas.ts` | Product; Security; Legal | 2026-11-03 | High | Credential handling and the learning-system vendor's terms are unreviewed. Hold |
@@ -536,7 +537,7 @@ Paths are repository paths; `app/src/lib/` is shortened to `lib/`.
 | M-12 | "Semester is in a private beta." | — | CLM-003 (verified status) | Founder | 2027-01-03 | Low | Remove the moment the status changes |
 | M-13 | "Free during the private beta; paid plans are planned." | — | Pricing page; `ops/claims` `no-sale` | Founder; Finance; Legal | 2026-12-03 | Med | Do not say "free forever" or "always free" |
 | M-14 ✋ | "$7.99 a month", "$59 a year", "save 38%" | **Decided (D-134); approval record open** | CLM-015; D-134; `plans.test.ts`, `companysitepricing.test.ts` | Founder; Finance; Tax; Legal | 2026-11-03 | High | Always with "planned; not yet on sale". The saving was 37% before this PR; arithmetic gives 38.5% |
-| M-14b | "Plus checkout is not available yet" | — | `ops/claims` `no-sale` | Founder | 2026-12-03 | Low | Keep adjacent to any price mention |
+| M-14b | "Plus checkout is not available yet" | — | `ops/claims` `no-sale` | Founder | 2026-12-03 | Med | Keep adjacent to any price mention |
 
 **C. Trust, security, accessibility, AI**
 
@@ -555,12 +556,12 @@ Paths are repository paths; `app/src/lib/` is shortened to `lib/`.
 
 | ID | Exact words | Status | Evidence | Owner | Review by | Risk | Qualifier |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| M-21 | "We're looking for a student-success, advising or first-year team to scope a design-partner pilot beside your existing systems." | — | CLM-004; go/no-go (non-activation GREEN) | Founder; Legal | 2026-11-03 | Med | "Scope", not "launch". No "paid". No dates. No live data |
+| M-21 | "We're looking for a student-success, advising or first-year team to scope a design-partner pilot beside your existing systems." | — | CLM-004; go/no-go (non-activation GREEN) | Founder; Legal | 2026-11-03 | High | "Scope", not "launch". No "paid". No dates. No live data |
 | M-22 | "Semester sits beside your learning management system and student information system. It does not replace them." | — | CLM-004/006; positioning | Founder | 2027-01-03 | Low | The true, safe form of the thesis |
 | M-23 | "Your official systems remain the record." | — | `ops/claims` `student-terms`; known limitations | Product | 2027-01-03 | Low | — |
 | M-24 | Availability of SSO, SCIM, LTI, OneRoster, SIS or LMS integration | **PROHIBITED as current availability** | CLM-005; `ops/claims` (`oneroster` Not started; `grade-passback` Planned) | — | — | Prohibited | Roadmap wording only: "Planned", no date, non-binding (CLM-017) |
 | M-25 | "Semester replaces your LMS / gradebook / SIS / registrar" | **PROHIBITED** | CLM-006 | — | — | Prohibited | Also applies to "Student OS" used as a capability claim (F4) |
-| M-26 | The phrase "Student OS" or "operating system" in public copy | ✋ **Decision D1** | Audit thesis; CLM-006 | Founder; Legal | 2026-11-03 | High | Founder- and investor-level only, labelled as direction |
+| M-26 | The phrase "Student OS" or "operating system" in public copy | **Decided (D-1148)** | Audit thesis; CLM-006; D-1148 | Founder; Legal | 2026-11-03 | High | Not a public descriptor; the public descriptor is "student action platform". Founder- and investor-level only, labelled as direction |
 
 **E. Reputation, outcomes, comparison**
 
@@ -575,6 +576,19 @@ Paths are repository paths; `app/src/lib/` is shortened to `lib/`.
 | M-34 | Family or guardian access to a student's records | **PROHIBITED** | High-risk class; family access is not inferred | — | — | Prohibited | Say only that sharing is the student's choice |
 | M-35 | Alumni network, credentials wallet, employer marketplace, "verified talent" | Planned | `ops/claims` (`credentials` Planned: "No badge is issued") | Product | 2026-12-03 | Med | Roadmap block only; no interest capture until consent operates |
 | M-36 | "Join our community / ambassadors / events" | — | [`CHANGELOG.md`](../../CHANGELOG.md): nothing is switched on | Founder | 2026-12-03 | Med | Only when a programme actually exists |
+
+**F. Brand lines (from [`BRAND-PLATFORM.md`](../BRAND-PLATFORM.md))**
+
+| ID | Exact words (or class) | Status | Evidence | Owner | Review by | Risk | Qualifier / channel limit |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| M-37 | "One clear next step." | In preparation | CLM-001; brand line T1; the campaign name in §5.2 | Product; Legal | 2027-01-03 | Low | Describes the exercised experience only; beta label beside it. Never paired with an outcome ("faster", "better grades") |
+| M-38 ✋ | "Know what's next. Know where it came from." | In preparation | CLM-001; CLM-018 (proposed, not approved); brand line T2 | Product; Accessibility; Legal | 2026-12-03 | Med | ✋ Blocked until CLM-018 is approved and Product confirms the "institution verified" data path. Only beside a surface that shows a source label; never a site-wide promise (M-09b) |
+| M-39 ✋ | "Your semester, with sources." | In preparation | CLM-018 (proposed, not approved); brand line T3 | Product; Accessibility; Legal | 2026-12-03 | Med | ✋ Same blocker and limit as M-38 |
+| M-40 | "Beside your systems, not instead of them." | — | CLM-004; CLM-006; M-22; brand line T4 | Founder; Legal | 2026-11-03 | High | Institutional audiences only. "In a bounded pilot" in the same view (CLM-004). Not a statement that any integration exists (CLM-005) |
+| M-41 | "Status is part of the product." | In preparation | `ops/claims` status words; the site's product status map; CLM-003; brand line T5 | Product | 2026-12-03 | Med | Only on a page that shows its status map. Implies no availability |
+| M-42 ✋ | "You decide what's shared." | In preparation | CLM-002 (conditional); brand line T6 | Privacy; Product; Legal | 2026-11-03 | High | ✋ Privacy review of the sharing paths that are actually exercised. Not extended to guardians or institutions (M-34) |
+| M-43 ✋ | "Help students see what to do next, and where the facts behind it come from." | In preparation | CLM-001; CLM-018 (proposed, not approved); brand mission | Founder; Product; Legal | 2026-12-03 | Med | ✋ Internal until CLM-018 is approved. A mission statement, not a capability claim; keep it away from feature pages |
+| M-44 ✋ | "Semester turns your semester into one clear next step. Where it can, it shows the source of each fact. Your school's official systems stay official. You decide what is shared." | In preparation | CLM-001; CLM-002; CLM-004; CLM-006; CLM-018 (proposed, not approved); brand short narrative | Founder; Privacy; Legal | 2026-11-03 | High | ✋ Each sentence carries its own row's blocker (M-38, M-42). Do not shorten by dropping "Where it can" |
 
 ### 8.3 Withdrawal and incidents
 
@@ -669,7 +683,7 @@ These are the marketing share of tasks already in [`90-DAY-LAUNCH-PROGRAM.md`](.
 
 | # | Decision | Recommendation |
 | --- | --- | --- |
-| D1 | Public category name | "Student action platform". Keep "Student OS" off public pages (F4) |
+| D1 | Public category name | **Decided 2026-10-04 (D-1148):** "Student action platform". "Student OS" stays off public pages (F4, M-26) |
 | D2 | Reconcile CLM-015 / `PRICING-AND-PACKAGING.md` with D-134 | The prices stand (D-134, planned, not on sale). Either record D-134 as the approval CLM-015 asks for, or revise D-134. The "save N%" figure is corrected |
 | D3 | Hero button | Keep "Start planning free" if production invite-only is confirmed on and the app can be used locally; otherwise "Request an invite" (F3) |
 | D4 | "Paid pilot" in public copy | Not until the paid profile converts; the positioning doc now says so (F1) |

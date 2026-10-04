@@ -140,8 +140,8 @@ Constraints (each testable):
 1. **Feedback about the task and process, with a next step** — what holds, the
    first place it goes wrong, one question to take away — rather than about the
    person. (The model is the well-known task / process / self-regulation /
-   self distinction from Hattie & Timperley, 2007; cited from memory, verify
-   before external use.) `app/src/lib/socratic.ts` encodes the one-thing-wrong
+   self distinction from Hattie & Timperley, 2007; see the citation check in
+   [01 §4](01-LEARNING-DESIGN-AND-EVIDENCE.md).) `app/src/lib/socratic.ts` encodes the one-thing-wrong
    contract for the tutor (`FEEDBACK`).
 2. **One main thing.** A list of every flaw is a rewrite with extra steps.
 3. **Tied to criteria the student could see in advance.** A rubric that arrives
