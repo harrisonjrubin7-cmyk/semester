@@ -241,6 +241,11 @@ begin
   reset role;
   perform set_config('request.jwt.claims', '', true);
 
+  -- erase_account clears application data; the delete-account Edge Function
+  -- then removes the auth user. Exercise that second step here as well so the
+  -- preserved ticket proves it no longer depends on the auth row.
+  delete from auth.users where id = legacy_who;
+
   perform pg_temp.must('whole-account erasure removes the former signed-deployment auth account',
     not exists (select 1 from auth.users where id = legacy_who));
   perform pg_temp.must('a later tenant hold cannot lose an unclassified former-deployment ticket',
