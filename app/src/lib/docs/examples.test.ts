@@ -782,7 +782,7 @@ describe('examples/event-consumer', () => {
       'supabase/migrations/20261004123000_productivity_commands.sql',
       'supabase/migrations/20261004180000_productivity_reads.sql',
       // Defines the same commit function again, with the app's task fields; the later definition is the one that applies.
-      'supabase/migrations/20261004190000_productivity_task_carries_the_apps_task.sql',
+      'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
       'supabase/outbox.check.sql',
       'supabase/productivity-commands.check.sql',
     ]);

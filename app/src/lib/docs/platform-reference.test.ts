@@ -1353,7 +1353,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // The same producer again: the reads migration redefines private.productivity_commit (same signature) to hold
       // the sequence prediction, so the outbox insert appears in both files. It is not a second producer.
       'supabase/migrations/20261004180000_productivity_reads.sql',
-      'supabase/migrations/20261004190000_productivity_task_carries_the_apps_task.sql',
+      'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

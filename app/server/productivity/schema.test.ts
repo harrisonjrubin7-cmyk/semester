@@ -33,7 +33,7 @@ const commit = commitSource.slice(
 );
 const reads = migration('20261004180000_productivity_reads.sql');
 /** The migration that adds the app's task fields, which holds their column constraints. */
-const fieldsSql = migration('20261004190000_productivity_task_carries_the_apps_task.sql');
+const fieldsSql = migration('20261004191000_productivity_task_carries_the_apps_task.sql');
 
 const keysRead = (variable: string, from: string): Set<string> => {
   const out = new Set<string>();
