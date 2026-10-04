@@ -34,6 +34,8 @@ Rendered from `AUDIENCES` in `app/src/lib/governance/incident-comms.ts`. The com
 | Community safety incident | Trust & Safety lead | 60 | yes | Campus crisis contact |
 | Scheduled maintenance | Operations lead | 1440 | no | — |
 | Feature rollback | Product owner | 1440 | yes | What you will see instead; Is your work affected (Yes / No) |
+| Launch delay | Founder | 10080 | yes | Check not yet complete; Has any account or data changed (Yes / No) |
+| Change notice | Product owner, Privacy owner, Legal | 43200 | yes | Takes effect; Is your work affected (Yes / No) |
 
 ## Index
 

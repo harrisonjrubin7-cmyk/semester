@@ -86,6 +86,10 @@ jobs:
 
       - name: Plan
         id: plan
+        # `shell: bash` runs with pipefail, so a failed `terraform plan` fails
+        # this step at the plan, not by accident at the `show` after it.
+        # `workflowshell.test.ts` requires it of any step that pipes into tee.
+        shell: bash
         working-directory: infra/terraform/envs/${{ inputs.root }}
         env:
           TF_IN_AUTOMATION: '1'
