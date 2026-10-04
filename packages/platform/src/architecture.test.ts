@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, dirname, resolve } from 'node:path';
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { ERROR_CODES } from './gateway/errors.ts';
 import { ISOLATION_CONTROLS } from './isolation/layers.ts';
 import { API_MAJORS, registryProblems } from './gateway/versioning.ts';
