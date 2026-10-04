@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { fixedClock } from '../kernel/clock.ts';
 import { REDACTED, redact } from './redact.ts';
 import {
