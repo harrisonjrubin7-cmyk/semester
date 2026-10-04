@@ -22,7 +22,7 @@ Nothing here is evidence. A scenario written down is not a scenario run, and a m
 | 4 | Scorecard and evidence repository | [`EVIDENCE-REGISTER.md`](../EVIDENCE-REGISTER.md) with expiry, `docs/evidence/`, [`operating-model/RELEASE-CERTIFICATION.md`](../operating-model/RELEASE-CERTIFICATION.md), `release-readiness.ts` dimensions | none |
 | 5 | Pilot exit and production cutover | [`operating-model/PILOT-TO-PRODUCTION.md`](../operating-model/PILOT-TO-PRODUCTION.md) (phases, migration acceptance, cutover checklist, conversion options), [`BETA_EXIT_CRITERIA.md`](../../BETA_EXIT_CRITERIA.md), [`institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md`](../institutional-readiness/PILOT-CLOSEOUT-AND-CONVERSION-PLAN.md) | none |
 | 6 | Tabletop exercises | one: [`2026-10-03 founder tabletop`](../evidence/operations/2026-10-03-founder-readiness-tabletop.md), cross-tenant AI disclosure, document walkthrough only | six scenarios and a run protocol (§4) |
-| 7 | Customer communications | [`launch/ANNOUNCEMENT-TEMPLATES.md`](ANNOUNCEMENT-TEMPLATES.md) (invitation, reminder, faculty note, paused), [`operating-model/INCIDENT-COMMUNICATIONS.md`](../operating-model/INCIDENT-COMMUNICATIONS.md) (11 audiences, outage), [`market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md`](../market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md) | launch-date delay and change notices (§5) |
+| 7 | Customer communications | [`launch/ANNOUNCEMENT-TEMPLATES.md`](ANNOUNCEMENT-TEMPLATES.md) (invitation, reminder, faculty note, paused), [`operating-model/INCIDENT-COMMUNICATIONS.md`](../operating-model/INCIDENT-COMMUNICATIONS.md) (13 audiences incl. launch delay and change notice, outage), [`market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md`](../market-readiness/INCIDENT_COMMUNICATION_TEMPLATES.md) | none for the notices; they are now audiences in `incident-comms.ts` (§5) |
 | 8 | Dependencies and critical path | [`EXTERNAL-EVIDENCE-QUEUE.md`](../finalization/EXTERNAL-EVIDENCE-QUEUE.md) (18 items, no ordering), [`DEGRADED-MODE-MAP.md`](../DEGRADED-MODE-MAP.md) (runtime dependencies) | ordering, chains, binding constraint (§6) |
 | 9 | Post-launch monitoring at 24 h, 7 d, 30 d, 90 d | [`MONITORING.md`](../../MONITORING.md) (weekly operator check), [`90-DAY-LAUNCH-PROGRAM.md`](../90-DAY-LAUNCH-PROGRAM.md) (the program, not the watch) | the four windows (§7) |
 | 10 | Lessons learned | post-incident review in [`INCIDENT-RECOVERY-PLAYBOOK.md`](../INCIDENT-RECOVERY-PLAYBOOK.md); monthly themes in [`OPERATING-RHYTHM.md`](../operating-model/OPERATING-RHYTHM.md) | launch, pilot and waiver reviews (§8) |
@@ -120,11 +120,11 @@ Feeds: FR-005, FR-006, FR-011; also creates the freeze calendar the map says is 
 
 Launch and reminder notices: [`ANNOUNCEMENT-TEMPLATES.md`](ANNOUNCEMENT-TEMPLATES.md). Outages, security, privacy, accessibility, AI, integration, maintenance and rollback: [`INCIDENT-COMMUNICATIONS.md`](../operating-model/INCIDENT-COMMUNICATIONS.md), which enforces its seven-part frame through `compose()` and records sends in `governance_incident_notices`.
 
-Two notices have no home. Neither is an audience in `incident-comms.ts`, so **`compose()` does not check them**; they are held to the same seven-part frame by review until someone adds them. That code change is not made here.
+The launch delay and the change notice are audiences in `incident-comms.ts` (`launch_delay`, `change_notice`), so `compose()` refuses them with a section missing, a placeholder left in, or a required field blank or off its list, and `governance_incident_notices` holds the same rules again (approvers, cadence, required details). The templates below are the shape `compose()` produces; the required fields are the last two headings in each.
 
 Rules for both: no date unless a current, evidence-gated decision backs it; a delay is stated as a gate not yet evidenced, never as a promise to be ready by a later date; no outcome or readiness claim beyond [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md); the customer's name appears only with their written permission.
 
-**Launch delay.** Approver: founder, plus the customer's sponsor sees it first. Cadence: at each gate review while the delay stands, and no later than the next steering meeting.
+**Launch delay.** Approver: Founder; the customer's sponsor sees it first. Cadence: no later than a week, the steering meeting's.
 
 ```text
 Subject: Semester — Launch is on hold
@@ -149,9 +149,15 @@ By [TIME/DATE OF NEXT GATE REVIEW], even if nothing has changed.
 
 Where to get help
 [SUPPORT ROUTE].
+
+Check not yet complete
+[PLAIN-LANGUAGE GATE]
+
+Has any account or data changed
+No
 ```
 
-**Change notice** (terms, data use, a feature, AI behavior, a provider). Approver: product owner; privacy owner when data use changes; counsel review before sending when it changes terms, data use or AI behavior. Cadence: advance notice period set by the contract or counsel, never shorter than the rollback audience's 24 h.
+**Change notice** (terms, data use, AI behavior, a provider). Approvers: Product owner, Privacy owner and Legal, every time; a change that needs neither belongs to feature rollback or scheduled maintenance. Cadence: no later than 30 days, the longest notice period the registry allows.
 
 ```text
 Subject: Semester — A change to [WHAT]
@@ -176,6 +182,12 @@ Next update
 
 Where to get help
 [SUPPORT ROUTE].
+
+Takes effect
+[DATE]
+
+Is your work affected
+No
 ```
 
 ## 6. Dependencies and critical path
@@ -261,4 +273,4 @@ The playbook already requires a post-incident review for SEV1 and SEV2 within fi
 - It does not change a decision. Individual validation stays conditional, discovery stays non-activation, paid and broad motions stay NO-GO until [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md) says otherwise.
 - It does not give legal conclusions. Counsel reviews anything that changes terms, data use, notification duties or contract positions.
 - It does not set recovery objectives, durations, thresholds or dates.
-- It does not change `incident-comms.ts`; the delay and change notices are unchecked by code until that is done.
+- It does not run the new audiences against a real database: see the pull request for which checks ran.

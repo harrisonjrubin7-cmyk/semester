@@ -25,7 +25,9 @@ export type Audience =
   | 'marketplace_sponsor'
   | 'community_safety'
   | 'scheduled_maintenance'
-  | 'feature_rollback';
+  | 'feature_rollback'
+  | 'launch_delay'
+  | 'change_notice';
 
 export const AUDIENCE_LABEL: Record<Audience, string> = {
   student_outage: 'Student-facing outage',
@@ -39,6 +41,8 @@ export const AUDIENCE_LABEL: Record<Audience, string> = {
   community_safety: 'Community safety incident',
   scheduled_maintenance: 'Scheduled maintenance',
   feature_rollback: 'Feature rollback',
+  launch_delay: 'Launch delay',
+  change_notice: 'Change notice',
 };
 
 export type Section =
@@ -114,6 +118,17 @@ export const AUDIENCES: Record<Audience, AudiencePolicy> = {
   scheduled_maintenance: { approvers: ['Operations lead'], updateEveryMinutes: 1440, notifyInstitution: false, requires: [] },
   feature_rollback: { approvers: ['Product owner'], updateEveryMinutes: 1440, notifyInstitution: true,
     requires: [{ key: 'instead', heading: 'What you will see instead' }, { key: 'work_affected', heading: 'Is your work affected', oneOf: ['Yes', 'No'] }] },
+  // Not incidents: the start of a cohort is on hold, or something is about to
+  // change. The delay is told as a gate not yet evidenced, never as a promise
+  // of a later date, and a weekly cadence is the steering meeting's.
+  launch_delay: { approvers: ['Founder'], updateEveryMinutes: 10080, notifyInstitution: true,
+    requires: [{ key: 'gate_pending', heading: 'Check not yet complete' }, { key: 'data_changed', heading: 'Has any account or data changed', oneOf: ['Yes', 'No'] }] },
+  // Every approver, every time: a change to terms, data use or AI behaviour
+  // needs the privacy owner and counsel, and one that needs neither belongs to
+  // `feature_rollback` or `scheduled_maintenance`. The cadence is the longest
+  // notice period, so a contract that asks for more is a change to this line.
+  change_notice: { approvers: ['Product owner', 'Privacy owner', 'Legal'], updateEveryMinutes: 43200, notifyInstitution: true,
+    requires: [{ key: 'effective_date', heading: 'Takes effect' }, { key: 'work_affected', heading: 'Is your work affected', oneOf: ['Yes', 'No'] }] },
 };
 
 export type Composed =
