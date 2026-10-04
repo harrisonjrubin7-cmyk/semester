@@ -61,7 +61,7 @@ Positive: regressions in landmarks, labels, focus and contrast stop at merge. Ne
 
 ## Tests and verification
 - Remove an `aria-label` from a labelled control: `app/src/a11y/labels.test.ts` fails; restore.
-- Remove the landmark from `Shell`: landmarks test fails. Drop a ramp ground below contrast: `contrast.test.ts` fails.
+- Remove the main landmark from the app shell: `app/src/a11y/landmarks.test.ts` fails. Drop a ramp ground below contrast: `contrast.test.ts` fails.
 - Add a new critical-journey route with no contract: `designcontracts.test.ts` fails.
 - Control: a known-good journey passes `smoke:a11y`; a deliberate focus trap in a modal fails `modal.test.ts`.
 - Meta: with the ruleset applied, a branch with the a11y failure cannot merge.
