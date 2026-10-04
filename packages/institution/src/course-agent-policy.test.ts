@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { courseAgentPolicy } from './course-agent-policy.ts';
 
 describe('published course policy for learning agents', () => {
