@@ -40,4 +40,4 @@ For each exact variant record: claim text, ordinary audience takeaway, product/v
 
 ## Withdrawal and incident rule
 
-Expired, contradicted, over-broad or unapproved claims must be removed from every channel and logged. A material false claim enters legal/security/privacy/customer-communication escalation as applicable. The default when evidence or authority is unclear is do not publish.
+Expired, contradicted, over-broad or unapproved claims must be removed from every channel and logged. A material false claim enters legal/security/privacy/customer-communication escalation as applicable. The default when evidence or authority is unclear is do not publish. The procedure, the channel inventory and the log of withdrawals are in [`docs/CLAIM-WITHDRAWAL-RUNBOOK.md`](docs/CLAIM-WITHDRAWAL-RUNBOOK.md).

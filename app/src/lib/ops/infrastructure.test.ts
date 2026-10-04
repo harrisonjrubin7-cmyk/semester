@@ -161,3 +161,26 @@ describe('the pipeline', () => {
     for (const f of ['infra.yml', 'infra-apply.yml']) expect(wf(f), f).toMatch(/OPA_SHA256: '[0-9a-f]{64}'/);
   });
 });
+
+describe('the state-store bootstrap', () => {
+  const policy = JSON.parse(read('infra/bootstrap/state-iam-policy.json')) as { Statement: { Effect: string; Action: string[]; Resource: string | string[] }[] };
+
+  it('grants the state credential this bucket and nothing else', () => {
+    for (const s of policy.Statement) {
+      expect(s.Effect).toBe('Allow');
+      for (const a of s.Action) expect(a, 'a wildcard action').not.toMatch(/\*/);
+      for (const r of [s.Resource].flat()) {
+        expect(r, 'resources are named for the bucket placeholder').toMatch(/^arn:aws:s3:::BUCKET_NAME(\/(platform|staging|production)\/terraform\.tfstate\*)?$/);
+      }
+    }
+  });
+
+  it('never lets the credential change the bucket itself', () => {
+    const actions = policy.Statement.flatMap((s) => s.Action);
+    expect(actions.filter((a) => /Put(Bucket|Lifecycle)|Delete(Bucket|Object(Version)?s?Tagging)|PutBucketPolicy/.test(a))).toEqual([]);
+  });
+
+  it('refuses plain-HTTP requests at the bucket', () => {
+    expect(read('infra/bootstrap/bucket-policy.json')).toMatch(/aws:SecureTransport[\s\S]*false/);
+  });
+});

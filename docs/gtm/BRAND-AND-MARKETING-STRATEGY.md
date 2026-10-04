@@ -76,7 +76,7 @@ Make the semester legible, so a student can act on what matters next. Not "disru
 | The scatter | A semester arrives in pieces: a syllabus, a portal, an email, a calendar, a conversation. | Observable; make no prevalence statistic |
 | The cost | The work of assembling it falls on the student, every term, alone. | Framing, not a measured claim |
 | The turn | What if the assembling was done once, shown honestly, and left in your hands? | Brand statement |
-| The proof | Upload a syllabus; check the dates; keep what's right. Every fact says where it came from. | M-02, M-09 — only inside the beta |
+| The proof | Upload a syllabus; check the dates; keep what's right. Where a fact carries a source label, the label says where it came from. | M-02, M-09 — only inside the beta |
 | The limit | It does not submit anything to your school or change a record. It can be wrong; you check. | M-08; [`KNOWN-LIMITATIONS.md`](../launch/KNOWN-LIMITATIONS.md) |
 | The invitation | We are in a private beta. Ask for an invite. | CLM-003 |
 
@@ -592,7 +592,7 @@ Paths are repository paths; `app/src/lib/` is shortened to `lib/`.
 
 ### 8.3 Withdrawal and incidents
 
-Taken from the existing register's rule: **an expired, contradicted, over-broad or unapproved claim comes down from every channel the same day and is logged.** Concretely: (1) search for the sentence across site, social, email templates, decks, ambassador kit and the trust center; (2) remove or correct; (3) record channel, time and owner; (4) if it was materially false, escalate to legal, security or privacy as applicable and tell affected readers; (5) find why the register let it through.
+The procedure, channel inventory and log are in [`CLAIM-WITHDRAWAL-RUNBOOK.md`](../CLAIM-WITHDRAWAL-RUNBOOK.md). Taken from the existing register's rule: **an expired, contradicted, over-broad or unapproved claim comes down from every channel the same day and is logged.** Concretely: (1) search for the sentence across site, social, email templates, decks, ambassador kit and the trust center; (2) remove or correct; (3) record channel, time and owner; (4) if it was materially false, escalate to legal, security or privacy as applicable and tell affected readers; (5) find why the register let it through.
 
 **A claim also expires when its dependency does.** If a gate closes (go/no-go changes, evidence ages out), every row resting on it drops to its previous status in the same change.
 

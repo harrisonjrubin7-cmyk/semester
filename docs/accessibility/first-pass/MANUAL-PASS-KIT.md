@@ -108,10 +108,11 @@ reproduce each with the keyboard and a screen reader, then set the ledger row to
 | A11Y-0002 | hub, support, launchpad, links | 11 phone / 13 desktop controls under 24x24 (entry titles, "Open ... ↗" links, a select, "Saved") | Measure each with the spacing exception in mind; SC 2.5.8 |
 | A11Y-0003 | Write, Sheet, Deck, Launchpad | 15 cards and buttons hit-tested under an element with no role | Tap or click each starter card and "Look back"; does it respond? A re-check of the first three Write starters with real clicks reached them, so this may be clipped gallery items; check the rest |
 | A11Y-0004 | Assignments ("Work on it"), 320x640 | Four textareas sit half behind the bottom tab bar when focused | Tab through the form; is each field usable, and does a screen-reader user lose context? |
+| A11Y-0009 | Assignments, Degree, Meals h1 at 320px, with the text-spacing override | The page heading truncates to an ellipsis ("WORK O…") | Apply a text-spacing bookmarklet (line height 1.5, letter 0.12em, word 0.16em) at 320px; is any of the heading lost? SC 1.4.12 |
 | A11Y-0007 | Today, Home, Calendar, Courses, Registration, Degree, 1280px | axe `aria-valid-attr-value` `incomplete` | Inspect the element axe names; does the referenced ID exist? |
 | A11Y-0008 | Home, desktop, `industry-dark` theme, hover | `.journey-reason` text measures 3.96:1 against 4.5:1 while hovered | Select the Industry (dark) theme, hover the Home journey cards; compare with a colour picker. SC 1.4.3 |
 
-Not for a tester (engineering): A11Y-0005 (the probe's name and timing weaknesses) and A11Y-0006 (not reproduced).
+Not for a tester (engineering): A11Y-0005 (the probe's name and timing weaknesses, now fixed) and A11Y-0006 (resolved as transient).
 
 Contrast: axe's `color-contrast` was `incomplete` on every screen. `sweep:contrast` measures painted pixels and is the evidence; it found one hover failure (A11Y-0008) and covered only the shared frame, 5 of 63 destinations (see the sweeps page).
 

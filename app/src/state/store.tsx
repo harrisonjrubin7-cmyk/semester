@@ -92,6 +92,9 @@ import {
   type Conflict,
 } from '../lib/conflicts';
 import { coursesDeletedHere, settleDeletions } from '../lib/deletions';
+import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
+import { withEngine } from '../lib/sync/engine/tasks';
+import { useTaskEngine } from './useTaskEngine';
 import {
   STORAGE_KEY,
   initialEphemeral,
@@ -955,8 +958,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * keeps one of each pair; the other is written down so the student
          * can choose it instead. See `lib/conflicts.ts`.
          */
-        const here = pickPersisted(latest.current) as unknown as Record<string, unknown>;
-        const agreedOn = readBase();
+        const here = forLegacy(pickPersisted(latest.current) as unknown as Record<string, unknown>);
+        const agreedOn = baseForLegacy(readBase());
         /*
          * What was deleted, on either side, since the two agreed — the one
          * thing the merge below cannot see, because a union cannot express a
@@ -1010,7 +1013,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // and for what this device deleted, which the account still holds
         // until the push that follows tells it. The untrimmed copy, so that
         // deletion is still a deletion if that push has to wait.
-        writeBase(baseOf(theirsAll as Record<string, unknown>));
+        writeBase(baseOf(forLegacy(theirsAll as Record<string, unknown>)));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -1220,7 +1223,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           inFlight.current = false;
           markSeen(seen);
           // And the account now holds what was sent.
-          writeBase(baseOf({ ...rest, courses } as Record<string, unknown>));
+          writeBase(baseOf(forLegacy({ ...rest, courses } as Record<string, unknown>)));
           // Only if nothing changed while it was on its way: an edit made
           // after this push left is still waiting, and says so.
           if (editNow.current === sentAt) markUnpushed(false);
@@ -1707,7 +1710,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
         // The first version this device and the account agree on.
-        writeBase(baseOf(theirs as Record<string, unknown>));
+        writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
       }
       setAsking(null);
     },
@@ -1816,9 +1819,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * "Synced" — which would be true of the account and not of the student's
    * work. Anything worse (offline, an error) still says the worse thing.
    */
+  const taskEngine = useTaskEngine({
+    accountId: account?.id ?? null,
+    online,
+    tasks: state.tasks,
+    apply: (tasks, known, adopted) => dispatch({ type: 'tasksFromEngine', tasks, known, adopted }),
+  });
   const shownSync = useMemo(
-    () => (review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync),
-    [sync, review.length],
+    () => withEngine(review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync, taskEngine.summary),
+    [sync, review.length, taskEngine.summary],
   );
 
   const value = useMemo(

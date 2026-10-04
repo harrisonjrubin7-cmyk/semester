@@ -43,8 +43,8 @@ build that fails on any finding. Until then, G3 runs them for the exact commit a
 
 | New guard | Closes | Notes |
 | --- | --- | --- |
-| Text-spacing run: inject the 1.4.12 overrides and fail on clipping or overlap | U-6 | In `keyboard-pass.mjs` |
-| Label-in-name: accessible name must contain the visible text | U-16 | Cheap in the DOM walk; runs in the label audit and axe (`label-content-name-mismatch` is an axe rule) |
+| ~~Text-spacing run~~ **Done in `keyboard-pass.mjs` (2026-10-04):** injects the 1.4.12 overrides and reports what is newly clipped; planted and detected | U-6 | Sweep, not a CI step |
+| ~~Label-in-name~~ **Done in `keyboard-pass.mjs` (2026-10-04)** for the first 40 tab stops, using the browser's computed name; planted and detected. Not yet a static check across the whole app | U-16 | Sweep, not a CI step |
 | `autocomplete` on credential and profile fields | U-23, U-26 | Static check beside `labels.mjs` |
 | Hover/focus content dismissible | U-8 | Browser-driven; a plant for the control |
 | Reading order versus DOM order spot check | U-3 | Heuristic, advisory not blocking |

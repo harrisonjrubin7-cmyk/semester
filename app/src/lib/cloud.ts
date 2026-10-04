@@ -42,6 +42,7 @@ import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
 import { READ_ONLY, ReadOnly } from './readonly';
+import { forLegacy } from './sync/engine/ownership';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -659,8 +660,12 @@ export async function pull(userId: string): Promise<Snapshot> {
   for (const r of rows) acked.set(ackKey(userId, r.id), { at: r.updated_at, data: canon(r.data) });
   const stamps = [stateAt, ...rows.map((r) => r.updated_at)].filter(Boolean) as string[];
 
+  // While the engine owns this device's tasks (`lib/sync/engine/ownership.ts`), the account's old copy of them is
+  // not read back: the engine is the one source. What this device pushes still carries them, so a device that
+  // has not opted in keeps receiving them.
+  const held = stateRow.data?.data as CloudState | undefined;
   return {
-    state: (stateRow.data?.data as CloudState) ?? null,
+    state: held ? forLegacy(held as unknown as Record<string, unknown>) as unknown as CloudState : null,
     courses: rows.map((r) => ({ id: r.id, data: r.data })),
     updated: stamps.length ? Math.max(...stamps.map((s) => new Date(s).getTime())) : 0,
     seen: {
