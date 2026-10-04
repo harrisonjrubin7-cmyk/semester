@@ -19,7 +19,8 @@ const task = (over: Partial<Task> = {}): Task => ({
   id: ID, tenantId: SCOPE.tenantId, ownerId: SCOPE.ownerId, version: 1, seq: 0,
   source: { kind: 'student_entered' }, clocks: { title: '1790000000000.0000.dev-a' },
   createdAt: '2026-10-05T15:00:00.000Z', updatedAt: '2026-10-05T15:00:00.000Z', deletedAt: null, deleteClock: null,
-  title: 't', notes: null, status: 'open', completedAt: null, dueAt: null, priority: 'normal', courseId: null, ...over,
+  title: 't', notes: null, status: 'open', completedAt: null, dueAt: null, dueOn: null, whenText: null, priority: 'normal', courseId: null,
+  repeat: null, steps: [], plannedFrom: null, ...over,
 });
 
 type Reply = { data?: unknown; error?: { code?: string; message?: string } | null };
