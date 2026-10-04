@@ -318,8 +318,14 @@ comment on function public.console_release_incidents(boolean) is
 -- as the dedicated release workspace. Preserve the established non-release
 -- queue behind a private function, then replace the public RPC with a wrapper
 -- that recomputes release gates from the stricter schema above.
-alter function public.console_command_center(boolean) set schema private;
-alter function private.console_command_center(boolean) rename to console_command_center_legacy;
+do $$
+begin
+  if to_regprocedure('private.console_command_center_legacy(boolean)') is null
+     and to_regprocedure('public.console_command_center(boolean)') is not null then
+    execute 'alter function public.console_command_center(boolean) set schema private';
+    execute 'alter function private.console_command_center(boolean) rename to console_command_center_legacy';
+  end if;
+end $$;
 revoke all on function private.console_command_center_legacy(boolean) from public, anon, authenticated;
 
 create or replace function public.console_command_center(include_demo boolean default false)

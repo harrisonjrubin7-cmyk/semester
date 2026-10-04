@@ -7,11 +7,11 @@
 -- data-deletion approval for this exact request and tenant.
 
 alter table public.data_subject_request
-  add column resolution_evidence text
+  add column if not exists resolution_evidence text
     check (resolution_evidence is null or resolution_evidence ~ '^[A-Za-z0-9._:/-]{3,200}$'),
-  add column completion_certificate_id uuid;
+  add column if not exists completion_certificate_id uuid;
 
-create table public.privacy_completion_certificate (
+create table if not exists public.privacy_completion_certificate (
   id uuid primary key default gen_random_uuid(),
   request_id uuid not null unique,
   request_ref text not null check (request_ref ~ '^DSR-[A-F0-9]{10}$'),
@@ -26,13 +26,13 @@ create table public.privacy_completion_certificate (
   issued_at timestamptz not null default now()
 );
 
-create index privacy_completion_certificate_by_subject
+create index if not exists privacy_completion_certificate_by_subject
   on public.privacy_completion_certificate (subject, issued_at desc);
-create index privacy_completion_certificate_by_tenant
+create index if not exists privacy_completion_certificate_by_tenant
   on public.privacy_completion_certificate (tenant_id, issued_at desc);
-create index privacy_completion_certificate_by_approval
+create index if not exists privacy_completion_certificate_by_approval
   on public.privacy_completion_certificate (approval_request);
-create index privacy_completion_certificate_by_issuer
+create index if not exists privacy_completion_certificate_by_issuer
   on public.privacy_completion_certificate (issued_by);
 
 create or replace function private.refuse_privacy_certificate_change()
@@ -62,6 +62,7 @@ begin
 end $$;
 
 revoke all on function private.refuse_privacy_certificate_change() from public, anon, authenticated;
+drop trigger if exists privacy_completion_certificate_immutable on public.privacy_completion_certificate;
 create trigger privacy_completion_certificate_immutable
   before update or delete on public.privacy_completion_certificate
   for each row execute function private.refuse_privacy_certificate_change();

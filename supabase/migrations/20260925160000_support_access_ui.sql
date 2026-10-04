@@ -111,7 +111,12 @@ begin
   return created;
 end $$;
 
-create or replace function public.support_access_windows()
+-- A later migration expands this table return shape. Dropping here makes this
+-- foundational migration replay-safe before that later migration reapplies the
+-- expanded contract.
+drop function if exists public.support_access_windows();
+
+create function public.support_access_windows()
 returns table (
   grant_id uuid,
   side text,

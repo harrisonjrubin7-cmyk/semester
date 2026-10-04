@@ -7,20 +7,40 @@
 -- expiry, revocation and fresh MFA before delegating to the existing audited
 -- aggregate reader. Raw student content is never returned by either route.
 
-alter table public.support_tickets
-  add constraint support_tickets_id_student_unique unique (id, student_id);
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.support_tickets'::regclass
+       and conname = 'support_tickets_id_student_unique'
+  ) then
+    alter table public.support_tickets
+      add constraint support_tickets_id_student_unique unique (id, student_id);
+  end if;
+end $$;
 
 alter table public.support_access_grant
-  add column ticket_id uuid,
-  add constraint support_access_ticket_student_fk
-    foreign key (ticket_id, student_id)
-    references public.support_tickets(id, student_id) on delete cascade;
+  add column if not exists ticket_id uuid;
 
-create index support_access_by_ticket_supporter
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.support_access_grant'::regclass
+       and conname = 'support_access_ticket_student_fk'
+  ) then
+    alter table public.support_access_grant
+      add constraint support_access_ticket_student_fk
+      foreign key (ticket_id, student_id)
+      references public.support_tickets(id, student_id) on delete cascade;
+  end if;
+end $$;
+
+create index if not exists support_access_by_ticket_supporter
   on public.support_access_grant (ticket_id, supporter_id, created_at desc)
   where ticket_id is not null;
 
-create index support_access_ticket_student_fk_idx
+create index if not exists support_access_ticket_student_fk_idx
   on public.support_access_grant (ticket_id, student_id);
 
 create or replace function private.support_grant_current(want_id uuid)
@@ -133,7 +153,7 @@ create or replace trigger close_revokes_case_support_access
   after update of status on public.support_tickets
   for each row execute function private.revoke_case_support_access_on_close();
 
-create function public.available_case_supporters()
+create or replace function public.available_case_supporters()
 returns table (supporter_id uuid, label text)
 language sql
 stable
@@ -165,9 +185,9 @@ as $$
    order by 2, 1;
 $$;
 
-drop function public.create_support_access(uuid, text, integer);
+drop function if exists public.create_support_access(uuid, text, integer);
 
-create function public.create_support_access(
+create or replace function public.create_support_access(
   want_supporter uuid,
   want_reason text,
   want_days integer,
@@ -268,7 +288,7 @@ begin
   return created;
 end $$;
 
-drop function public.support_access_windows();
+drop function if exists public.support_access_windows();
 
 create function public.support_access_windows()
 returns table (
@@ -330,7 +350,7 @@ as $$
    order by g.created_at desc;
 $$;
 
-create function public.support_case_access(want_ticket uuid)
+create or replace function public.support_case_access(want_ticket uuid)
 returns table (
   ticket_id uuid,
   grant_id uuid,
@@ -403,7 +423,7 @@ begin
     left join public.consent_record c on c.id = g.consent_id;
 end $$;
 
-create function public.read_support_case_signals(want_ticket uuid)
+create or replace function public.read_support_case_signals(want_ticket uuid)
 returns table (
   course_id text,
   evidence_count bigint,

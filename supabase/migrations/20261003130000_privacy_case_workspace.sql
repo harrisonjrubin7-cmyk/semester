@@ -6,12 +6,12 @@
 -- `data_request:handle` grants, in addition to the platform console shell.
 
 alter table public.data_subject_request
-  add column assigned_to uuid references auth.users(id) on delete set null,
-  add column assigned_at timestamptz,
-  add column verified_by uuid references auth.users(id) on delete set null,
-  add column verification_basis text
+  add column if not exists assigned_to uuid references auth.users(id) on delete set null,
+  add column if not exists assigned_at timestamptz,
+  add column if not exists verified_by uuid references auth.users(id) on delete set null,
+  add column if not exists verification_basis text
     check (verification_basis is null or length(trim(verification_basis)) between 3 and 200),
-  add column verification_evidence text
+  add column if not exists verification_evidence text
     check (verification_evidence is null or verification_evidence ~ '^[A-Za-z0-9._:/-]{3,200}$');
 
 -- Older requests may have a timestamp without the actor or evidence that the
@@ -22,15 +22,31 @@ update public.data_subject_request
  where verified_at is not null
    and (verified_by is null or verification_basis is null or verification_evidence is null);
 
-alter table public.data_subject_request
-  add constraint data_subject_request_assignment_pair
-    check ((assigned_to is null) = (assigned_at is null)),
-  add constraint data_subject_request_verification_complete
-    check (
-      (verified_at is null and verified_by is null and verification_basis is null and verification_evidence is null)
-      or
-      (verified_at is not null and verified_by is not null and verification_basis is not null and verification_evidence is not null)
-    );
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.data_subject_request'::regclass
+       and conname = 'data_subject_request_assignment_pair'
+  ) then
+    alter table public.data_subject_request
+      add constraint data_subject_request_assignment_pair
+      check ((assigned_to is null) = (assigned_at is null));
+  end if;
+  if not exists (
+    select 1 from pg_constraint
+     where conrelid = 'public.data_subject_request'::regclass
+       and conname = 'data_subject_request_verification_complete'
+  ) then
+    alter table public.data_subject_request
+      add constraint data_subject_request_verification_complete
+      check (
+        (verified_at is null and verified_by is null and verification_basis is null and verification_evidence is null)
+        or
+        (verified_at is not null and verified_by is not null and verification_basis is not null and verification_evidence is not null)
+      );
+  end if;
+end $$;
 
 create or replace function private.clear_privacy_request_user_links()
 returns trigger
@@ -55,10 +71,10 @@ create trigger clear_privacy_request_user_links
   before delete on auth.users
   for each row execute function private.clear_privacy_request_user_links();
 
-create index data_subject_request_by_assignee
+create index if not exists data_subject_request_by_assignee
   on public.data_subject_request (assigned_to, due_at);
 
-create index data_subject_request_by_verifier
+create index if not exists data_subject_request_by_verifier
   on public.data_subject_request (verified_by);
 
 create or replace function public.console_privacy_requests(include_demo boolean default false)
