@@ -683,7 +683,7 @@ mechanism to extend. What the draft proposed beyond it, and where each stands:
 
 | Proposed | Status | Why |
 |---|---|---|
-| Atkinson Hyperlegible as the body face | **Blocked: the font is not bundled** | `BODYFACES` offers "Hyperlegible" but nothing loads Atkinson (`typefaces.css` declares Barlow, Barlow Condensed, Cinzel). It draws as the system font unless the reader has it installed, while its description promises otherwise. `lib/fontclaims.test.ts` now records this on a shrink-only ledger and refuses any new unbacked face. Bundling (SIL OFL) is an owner decision, §11 |
+| Atkinson Hyperlegible as the body face | **Built** | Bundled (SIL OFL, four Latin files, ~71 kB, fetched only when the face is picked; `src/styles/fonts-hyperlegible/OFL.txt` credits it; kept apart because the company site mirrors `fonts/` byte for byte). Verified in Chromium: the face reports `loaded` once selected. `lib/fontclaims.test.ts` keeps the check: every offered face must be an OS family or bundled, and every `@font-face` must have a file; its ledger is now empty |
 | Letter and word spacing (`--tracking-body`, `--word-space`) | **Built** (`textSpacing` look key: Normal 0/0, Open 0.02/0.08em, Wide 0.05/0.16em) | Offered only after the sweep came back clean; a test refuses any step above the 0.12em / 0.16em the sweep measures. Set on `.device`, inherited by body text; `.chrome-text` keeps its own tracking, and components that set their own `letter-spacing` do not follow it |
 | Comfortable density, Less motion | already settings | add to the existing preset if wanted |
 | Left alignment, no italic emphasis | rule | enforce when the preset is extended |
@@ -941,7 +941,7 @@ Deliberately **not** built, with reasons in §3.5 and §6.6:
 - *Role density defaults*: "has not chosen" is not representable without a data-model change, and it cuts across the app's never-inferred rule; the recommendation is to offer, not default.
 - *A new "Reading comfort" preset*: one exists; it should be extended after the above.
 
-*Next, in order:* role density offer on role pick; bundling Atkinson Hyperlegible. (Truncations: fixed, §6.6. Spacing control and the Easier reading preset's `textSpacing: 'open'`: built.) The readiness register's "no 1.4.12 test" line is now out of date; updating it regenerates documents and the claims register, so it is left for the owner of those claims.
+*Next, in order:* (Role density offer: built as option (a), `denserLayoutFor` in `lib/role.ts`, shown beside the role picker; choosing a role never changes density, which a test pins. Atkinson Hyperlegible: bundled, four Latin files, `fontclaims` ledger now empty.) Remaining: second reviewer and assistive-technology pass. (Truncations: fixed, §6.6. Spacing control and the Easier reading preset's `textSpacing: 'open'`: built.) The readiness register's "no 1.4.12 test" line is now out of date; updating it regenerates documents and the claims register, so it is left for the owner of those claims.
 
 ### Slice 6 — Gallery and visual regression
 Dev-only gallery route; Playwright screenshot job with runner-generated baselines (§7.5), non-blocking for two weeks, then blocking for token/layout paths.

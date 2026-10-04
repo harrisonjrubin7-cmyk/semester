@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BODYFACES, TYPEFACES } from './look';
 
@@ -7,7 +7,7 @@ import { BODYFACES, TYPEFACES } from './look';
  *
  * "Hyperlegible" is offered to the reader for whom reading is tiring, described
  * as Atkinson Hyperlegible, and set as `"Atkinson Hyperlegible", system-ui,
- * sans-serif`. Nothing loads Atkinson: `typefaces.css` declares Barlow, Barlow
+ * sans-serif`. Nothing loaded Atkinson (it now does, from `hyperlegible.css`): `typefaces.css` declares Barlow, Barlow
  * Condensed and Cinzel. So for everyone who does not happen to have it
  * installed — nearly everyone — the choice silently draws the system font while
  * its description promises something else, and the person who picked it for
@@ -46,10 +46,7 @@ export function unbacked(stacks: string[], have: Set<string>, ledger: Set<string
 }
 
 /** Offered but not bundled, and why. Delete the entry when the font ships. */
-const LEDGER: Record<string, string> = {
-  'atkinson hyperlegible':
-    'Offered as the legibility body face but not bundled: it draws as the system font unless the reader has it installed. Bundling it (SIL OFL) is an owner decision recorded in the design-system spec, §11.',
-};
+const LEDGER: Record<string, string> = {};
 
 const styles = new URL('../styles/', import.meta.url);
 const sheets = readdirSync(styles).filter((f) => f.endsWith('.css')).map((f) => readFileSync(new URL(f, styles), 'utf8'));
@@ -60,10 +57,21 @@ describe('every offered typeface can be drawn', () => {
   it('reads the stylesheets, and finds the faces the app does bundle', () => {
     expect(have.has('barlow')).toBe(true);
     expect(have.has('barlow condensed')).toBe(true);
+    expect(have.has('atkinson hyperlegible')).toBe(true);
   });
 
   it('has no face that is neither an OS family, bundled, nor on the ledger', () => {
     expect(unbacked(offered, have, new Set(Object.keys(LEDGER))), 'bundle it with an @font-face, or list it with a reason').toEqual([]);
+  });
+
+  it('has a file behind every @font-face it declares', () => {
+    const missing: string[] = [];
+    for (const f of readdirSync(styles).filter((n) => n.endsWith('.css'))) {
+      for (const m of readFileSync(new URL(f, styles), 'utf8').matchAll(/url\('(\.\/fonts[a-z-]*\/[^']+)'\)/g)) {
+        if (!existsSync(new URL(m[1], styles))) missing.push(m[1]);
+      }
+    }
+    expect(missing).toEqual([]);
   });
 
   it('lists only what is still true: offered, and still not bundled', () => {
@@ -77,6 +85,6 @@ describe('every offered typeface can be drawn', () => {
 
   it('is not vacuous: it flags a face with nothing behind it', () => {
     expect(unbacked(['"Comic Neue", system-ui'], have, new Set())).toEqual(['comic neue']);
-    expect(unbacked(['"Atkinson Hyperlegible", system-ui'], have, new Set())).toEqual(['atkinson hyperlegible']);
+    expect(unbacked(['"Atkinson Hyperlegible", system-ui'], new Set(), new Set())).toEqual(['atkinson hyperlegible']);
   });
 });
