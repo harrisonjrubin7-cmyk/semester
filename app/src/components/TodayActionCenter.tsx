@@ -26,6 +26,7 @@ import { useNow, useStore } from '../state/store';
 import { ActionCenter } from './ActionCenter';
 import { QuickActions } from './QuickActions';
 import { SourceBadge } from './SourceBadge';
+import { useCommitmentRows } from '../composition/commitmentrows';
 import { shadowEnabled } from '../composition/shadow';
 import { Meter } from './ui';
 
@@ -104,10 +105,13 @@ export function TodayActionCenter({
     [upcoming, state.done, now, choices],
   );
 
-  const rows = useMemo(
+  const legacyRows = useMemo(
     () => legacyCommitmentRows({ catalog, now, ownIds, sample: state.sample, tasks: state.tasks, appointments: state.appointments, done: state.done, upcoming }),
     [catalog, now, ownIds, state.appointments, state.done, state.sample, state.tasks, upcoming],
   );
+
+  // The rows that draw: the screen's own, or the domain's when a build asks for them and they are current.
+  const rows = useCommitmentRows(legacyRows);
 
   const commitments = useMemo(() => planCommitments(rows, now.getTime(), leadingId), [rows, now, leadingId]);
 
@@ -136,7 +140,7 @@ export function TodayActionCenter({
     <section className="today-action-center" aria-label="Today">
       {shadowEnabled() && (
         <Suspense fallback={null}>
-          <TodayShadow actions={actions} choices={choices} rows={rows} now={now} registrationDay={registrationDay} officeList={officeList} />
+          <TodayShadow actions={actions} choices={choices} rows={legacyRows} now={now} registrationDay={registrationDay} officeList={officeList} />
         </Suspense>
       )}
       <div className="action-center-main">
