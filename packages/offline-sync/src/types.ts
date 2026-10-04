@@ -112,6 +112,11 @@ export interface PullResponse {
   hasMore?: boolean
   /** The cursor is older than the server keeps; start over from a snapshot. */
   cursorExpired?: boolean
+  /**
+   * `changes` is the whole present state, not a delta (a new install, or a cursor the server no longer
+   * honours). Anything the device holds that is confirmed and absent from it was deleted meanwhile.
+   */
+  snapshot?: boolean
 }
 
 export interface SyncTransport {

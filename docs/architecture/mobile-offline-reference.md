@@ -17,7 +17,7 @@ D-055 / D-056 (offline reuses the device as the queue; high-risk actions are ref
 | --- | --- | --- |
 | Client | React 19 / Vite PWA, no native wrapper | unchanged; core is importable by the PWA now |
 | Local store | IndexedDB `semester-store`, ~60 localStorage feature stores, **no encryption** | schema, key hierarchy and open sequence for SQLCipher, tested against real SQLite |
-| Sync | `cloud.ts` compare-and-swap on `updated_at`, whole-student blob + per-course rows; no cursor, no idempotency key | command queue, idempotency, cursor, backoff, reconciliation — **not yet wired to `cloud.ts`** |
+| Sync | `cloud.ts` compare-and-swap on `updated_at`, whole-student blob + per-course rows; no cursor, no idempotency key | command queue, idempotency, cursor, backoff, reconciliation. **Wired for personal tasks only, behind a device-local opt-in, over `public.tasks`** (§10a); everything else still rides `cloud.ts` |
 | Conflicts | `merge.ts` per-field, `conflicts.ts` whole-version choice, base fingerprint | same philosophy, formalised per data class; HLC for clock-ordered classes |
 | Devices | `push_devices` (Web Push endpoint only); `signOutOtherDevices()` | registration, trust states, lease, wipe — types and decision logic only |
 | CRDT | none | reference sequence CRDT, add-wins set, and the server gate every update must pass |
@@ -354,11 +354,43 @@ sdk.onChange(listener)                           // drives live regions
 ### Adoption path (does not replace `cloud.ts` yet)
 
 1. Contract-only: classify every IndexedDB/localStorage/Cache API write against `policy.ts` (delivery step 1 of the contract), centralise logout/revoke/tenant-switch purge on `wipeDevice`.
-2. Introduce the sync envelope beside today's sync, **without enabling new offline classes** (step 2).
+2. Introduce the sync envelope beside today's sync, **without enabling new offline classes** (step 2). *Started: §10a carries personal tasks through the engine over `public.tasks`, device-local opt-in, default off.*
 3. Native secure-storage spike with synthetic data: SQLCipher, keystore wrapping, wipe, physical-device benchmarks (step 3).
 4. Student-owned single-user data (tasks, plans, notes) on the encrypted store, with export/deletion/conflict semantics proven (step 4).
 5. CRDT pilot on student-authored shared documents only (step 5).
 6. Source-derived metadata, allowlisted and expiring, after institutional approval (step 6).
+
+## 10a. The first wired slice: personal tasks through the engine
+
+Status: **built, default off, behind a registered module flag and a per-device opt-in.** It replaces nothing for anyone who has not turned both on. The flag's rollout plan, success criteria, rollback and review date are in `docs/FEATURE-FLAG-REGISTRY.md`; setting `VITE_OFFLINE_ENGINE_TASKS` back to `off` returns every device to the account sync with no task lost, because the old half has pushed the task list in its blob all along. A task *deleted* while the engine was on can reappear on a device that had not opted in; the old merge has no record of that deletion.
+
+**What it is.** `app/src/lib/sync/engine/` carries the student's tasks (the product calls them *actions*) through `SyncEngine` instead of the account's `state` blob, over the existing `public.tasks` table (`20260901000700_records.sql`: own-row RLS, `deleted_at` tombstone, `touch_updated_at` trigger, `(user_id, updated_at)` index — created for this and unused until now). **No migration, no new function, no new policy.**
+
+| Piece | File | What it does |
+| --- | --- | --- |
+| Version codec | `stamp.ts` | `updated_at` ⇄ integer microseconds, exact, so a compare-and-swap can name the stamp the database wrote |
+| Table port | `rows.ts` | five questions the transport asks (`get`, `insert`, `updateIf`, `byCommand`, `since`); `supabaseTaskRows` is the one file that talks to PostgREST |
+| Transport | `tasks-transport.ts` | the engine's "server": idempotency, ordering, snapshot and cursor, over that port |
+| Store on disk | `persistent.ts` | the engine's queue, rows and cursor as one IndexedDB record per account (`semester-engine`), written through on every commit; cleared by Erase from this device |
+| Bridge | `tasks.ts` | adopts the student's list into engine writes, hands engine tasks back, `weave`s them against the live list, and folds the engine's counts into the sync line |
+| Ownership | `ownership.ts` | the two switches — the build's module flag `offline_engine_tasks` (`VITE_OFFLINE_ENGINE_TASKS`) and the device's opt-in `semester.engine.tasks = on` — and what the old sync half may see |
+| Hook | `state/useTaskEngine.ts` | adopt → send and take → weave, one pass at a time, 800 ms after the list settles and every 60 s |
+
+**One owner, with a one-way mirror.** While a device has opted in, the engine is the only source of its tasks: `cloud.ts`'s `pull` no longer reads the account's old copy back (a stale mirror from another device must not resurrect what the engine deleted), and the old merge's base and local view leave tasks out (`forLegacy`, `baseForLegacy`). What the device *pushes* still carries its tasks, so a device that has not opted in keeps receiving them. The mirror is write-only: **edits made to tasks on a device that has not opted in do not reach an opted-in one.** Opt in on every device of an account, or accept that the others are read-through. With the switch off every call site receives the very same object it always did (`ownership.test.ts` asserts identity), and the whole existing suite passes unchanged.
+
+**What the interim transport can and cannot promise** (it is the table, not the gateway):
+
+- *Idempotency without a receipts table.* A command leaves its id in `data._cmd`. A repeat finds it and answers `duplicate`; a lost answer is found the same way by `status`. If another device has written the row since, the id is gone: the repeat is not recognised, but it is a patch of the same fields to the same values applied over the newer row, so it cannot double-apply.
+- *Ordering is arrival order.* The database stamps each write and a patch is applied over the row's current state (compare-and-swap, retried up to four times). The later arrival wins a field; no device clock is consulted. A task never reaches `conflicted` through a patch. A create over an existing id does, and **there is no screen to resolve it yet** — ids are random, so this is a collision, not a workflow, but the state is surfaced on the sync line and the choice API (`resolveConflict`) is there for the screen that follows.
+- *Not enforced here:* permission epoch, tenant, policy version, a server clock for expiry. Row-level security scopes rows to the person; the rest waits for the gateway.
+- *Tombstones are removed after 90 days when `sweep_tombstones` runs* (whether and when it is scheduled is not established here). A device away longer than 80 days is sent a fresh snapshot, and anything confirmed that the snapshot does not name is dropped (`pruneUnnamed`) — otherwise a swept deletion would come back to life.
+- *Unencrypted at rest on the web.* The store is IndexedDB, labelled "Saved in this browser" (§1). Tasks are the class the contract allows there; nothing in this slice widens what is cached.
+
+**The seam, and the bug it was built to avoid.** The student can edit between the moment the engine is asked and the moment it answers. `weave` therefore replaces the list's copy of a task with the engine's **only if the list's copy is unchanged since it was adopted**; an edit made in between stays and is sent on the next pass. (A first version took the engine's copy unconditionally and lost that edit; the reducer test that would have enshrined it was rewritten, and a mutation that restores it is red.)
+
+**Visible state.** `withEngine` folds the engine's counts into the existing sync line, the same move the store already makes for waiting choices: pending tasks make "Synced" read "Queued"; refused ones say *"N actions were not accepted by your account. Still saved on this device."*; a conflict says both versions are kept. Per-row labels (`TaskSync.states()`) exist but **no screen shows them yet**.
+
+**Not in this slice:** notes, appointments and practice papers (the other three `public.*` tables and their policy classes); a per-school switch or tenant policy (the flag is a build decision); a screen for conflicts and rejections; the receipts table and gateway that make idempotency and ordering real; any native client.
 
 ## 11. Gaps that remain, open questions, and items for qualified counsel
 
