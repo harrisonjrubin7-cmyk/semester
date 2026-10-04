@@ -137,7 +137,7 @@ written as that role's story reaches G3. Roles and their first journeys:
 ### 4.3 The record
 
 Every pass writes one row per step × environment (the form is §4 of the AT-PASS-PROTOCOL), and every finding goes
-to the issue ledger (§6 below, ISSUE-PROCESS §2). Both are stored in `docs/evidence/accessibility/` with the
+to the issue ledger (§6 below, ISSUE-PROCESS §2). The working records are kept in [`first-pass/`](first-pass/); the dated result is filed as `docs/evidence/accessibility-baseline.md` (the artifact `docs/PROOF-CALENDAR.md` names, registered in `app/src/lib/ops/evidence.ts`) with the
 commit under test, so the pass can be reproduced and an institution can be shown it. Results are one of **Pass**,
 **Fail**, **Pass with workaround**, **Not tested**, **Not applicable**. "Not tested" is a legitimate result and an
 honest one; blank is not.
@@ -201,10 +201,10 @@ this page; each is "no" until its evidence exists.
 | Artifact | Contents | Status | Where it lives | Tier |
 | --- | --- | --- | --- | --- |
 | Accessibility statement | Commitment, scope, standard, known limitations, contact, fix times, feedback and escalation route | Draft only (ACCESSIBILITY-STATEMENT-DRAFT.md) | Public site, once published | Public |
-| ACR (VPAT 2.x, WCAG 2.2 edition) | Per-criterion result with scope, version, date, evaluator | **Does not exist** | `docs/evidence/accessibility/` | Public once exists |
+| ACR (VPAT 2.x, WCAG 2.2 edition) | Per-criterion result with scope, version, date, evaluator | **Does not exist** | `docs/evidence/` (registered) | Public once exists |
 | HECVAT accessibility rows | A11Y-1 `READY`; A11Y-2, A11Y-3, A11Y-4 `NOT_STARTED` | As stated | `market-readiness/HECVAT_READINESS.md` | NDA |
-| Review packet | The program, the criteria, the guard list, sweep and pass records for a named commit, the open-finding ledger, the audit report, the role journey scripts | To assemble when item 2 completes | `docs/evidence/accessibility/` | NDA |
-| Open-finding ledger | CSV: WCAG 2.2 criterion, severity, evidence, role, owner, remediation, retest, status, dates | Template in ISSUE-PROCESS §7 | `docs/evidence/accessibility/` | NDA |
+| Review packet | The program, the criteria, the guard list, sweep and pass records for a named commit, the open-finding ledger, the audit report, the role journey scripts | To assemble when item 2 completes | `docs/evidence/` (registered) | NDA |
+| Open-finding ledger | CSV: WCAG 2.2 criterion, severity, evidence, role, owner, remediation, retest, status, dates | Template in ISSUE-PROCESS §7 | `docs/evidence/` (registered) | NDA |
 | Section 508 / EN 301 549 mapping | WCAG rows mapped to 508 Chapter 5 and EN 301 549 clause 9 and 11 | Not started | In the ACR | Public once exists |
 | Audit contract and report | Scope, method, testers, severity scale | Not started | Evidence folder | NDA |
 | Accommodation and alternate-format SOP | The tenant-side workflow Semester supports (ISSUE-PROCESS §6) | Drafted | Customer success | Public summary |

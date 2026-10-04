@@ -344,21 +344,62 @@ export interface Cell {
 
 const MONTHS: Record<string, number> = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
 
-function isoDate(raw: string): string | null {
-  const s = raw.trim();
-  let y: number, m: number, d: number;
-  let hit: RegExpMatchArray | null;
-  if ((hit = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$/))) [y, m, d] = [+hit[1], +hit[2], +hit[3]];
-  else if ((hit = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) [y, m, d] = [+hit[3], +hit[1], +hit[2]];
-  else if ((hit = s.match(/^(\d{1,2}) ([A-Za-z]{3})[a-z]* (\d{4})$/)) && MONTHS[hit[2].toLowerCase()]) [y, m, d] = [+hit[3], MONTHS[hit[2].toLowerCase()], +hit[1]];
-  else return null;
+/**
+ * How a file writes `a/b/yyyy`. Nothing in the project row says, so it is a
+ * choice made while previewing and never stored: the counts recorded are the
+ * same shape either way.
+ */
+export type SlashOrder = 'month_first' | 'day_first';
+
+export const SLASH_ORDER_LABEL: Record<SlashOrder, string> = {
+  month_first: 'Month first (3/7/2026 is 7 March)',
+  day_first: 'Day first (3/7/2026 is 3 July)',
+};
+
+/** What a slash date turned out to be: a date, not a date, or two dates the file does not say between. */
+type Slash = { iso: string } | { error: 'not a date' | 'ambiguous' };
+
+function validIso(y: number, m: number, d: number): string | null {
   const t = new Date(Date.UTC(y, m - 1, d));
   if (t.getUTCFullYear() !== y || t.getUTCMonth() !== m - 1 || t.getUTCDate() !== d) return null;
   return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+/**
+ * `a/b/yyyy` is two different days to two different schools: `3/7/2026` is
+ * 7 March in one and 3 July in the other. Reading it one way by default makes a
+ * valid, wrong date that every later check accepts. So the order is the
+ * caller's to give. Without it a slash date is read only when it cannot mean
+ * the other thing — one part above 12, or both parts equal — and otherwise is
+ * refused as ambiguous.
+ */
+function slashDate(a: number, b: number, y: number, order: SlashOrder | undefined): Slash {
+  const monthFirst = validIso(y, a, b);
+  const dayFirst = validIso(y, b, a);
+  if (order === 'month_first') return monthFirst ? { iso: monthFirst } : { error: 'not a date' };
+  if (order === 'day_first') return dayFirst ? { iso: dayFirst } : { error: 'not a date' };
+  if (monthFirst && dayFirst) return a === b ? { iso: monthFirst } : { error: 'ambiguous' };
+  const only = monthFirst ?? dayFirst;
+  return only ? { iso: only } : { error: 'not a date' };
+}
+
+function isoDate(raw: string, order?: SlashOrder): Slash {
+  const s = raw.trim();
+  let hit: RegExpMatchArray | null;
+  if ((hit = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$/))) {
+    const iso = validIso(+hit[1], +hit[2], +hit[3]);
+    return iso ? { iso } : { error: 'not a date' };
+  }
+  if ((hit = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))) return slashDate(+hit[1], +hit[2], +hit[3], order);
+  if ((hit = s.match(/^(\d{1,2}) ([A-Za-z]{3})[a-z]* (\d{4})$/)) && MONTHS[hit[2].toLowerCase()]) {
+    const iso = validIso(+hit[3], MONTHS[hit[2].toLowerCase()], +hit[1]);
+    return iso ? { iso } : { error: 'not a date' };
+  }
+  return { error: 'not a date' };
+}
+
 /** One value through one cleaning rule. An empty value is never an error here; `required` decides that. */
-export function transform(raw: string, t: Transform): Cell {
+export function transform(raw: string, t: Transform, order?: SlashOrder): Cell {
   const v = raw ?? '';
   if (t === 'none') return { value: v };
   const trimmed = v.trim();
@@ -377,8 +418,9 @@ export function transform(raw: string, t: Transform): Cell {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? { value: e } : { value: trimmed, error: 'not an email address' };
     }
     case 'date_iso': {
-      const iso = isoDate(trimmed);
-      return iso ? { value: iso } : { value: trimmed, error: 'not a date' };
+      const d = isoDate(trimmed, order);
+      if ('iso' in d) return { value: d.iso };
+      return { value: trimmed, error: d.error === 'ambiguous' ? 'could be day-first or month-first; say which, or use YYYY-MM-DD' : 'not a date' };
     }
     case 'integer': {
       const n = trimmed.replace(/,/g, '');
@@ -418,8 +460,11 @@ const keyOf = (row: Record<string, string>, keys: readonly string[]) => JSON.str
  * `keep_first` and `keep_last` a repeat is dropped instead, counted as a
  * duplicate and not as a failure. A column the mapping names and the file
  * lacks fails every row, because that is what importing it would do.
+ *
+ * `order` says how the file writes `a/b/yyyy`; without it an ambiguous slash
+ * date fails the row (see `slashDate`).
  */
-export function preview(table: Table, maps: readonly FieldMap[], rule: DuplicateRule | null): Preview {
+export function preview(table: Table, maps: readonly FieldMap[], rule: DuplicateRule | null, order?: SlashOrder): Preview {
   const index = new Map(table.headers.map((h, i) => [h.trim().toLowerCase(), i]));
   const missingColumns = [...new Set(maps.map((m) => m.source_field).filter((f) => !index.has(f.trim().toLowerCase())))];
   const keys = maps.filter((m) => m.is_key).map((m) => m.target_field);
@@ -437,7 +482,7 @@ export function preview(table: Table, maps: readonly FieldMap[], rule: Duplicate
         ok = false;
         continue;
       }
-      const cell = transform(cells[at] ?? '', m.transform);
+      const cell = transform(cells[at] ?? '', m.transform, order);
       row[m.target_field] = cell.value;
       if (cell.error) {
         issues.push({ row: n, field: m.target_field, problem: cell.error });

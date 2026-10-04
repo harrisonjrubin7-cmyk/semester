@@ -189,8 +189,10 @@ describe('the two reminders', () => {
   it('is passed by all three places that build the notifier source', () => {
     // The in-page tick and both push fillers. The notes in PushSwitch record
     // a field that reached one caller and not the others; this is that check.
-    for (const file of ['src/state/store.tsx', 'src/components/PushTop.tsx', 'src/components/PushSwitch.tsx']) {
+    for (const file of ['src/state/reminders.ts', 'src/components/PushTop.tsx', 'src/components/PushSwitch.tsx']) {
       expect(readFileSync(file, 'utf8'), file).toContain('registrationOpens: storedWindow()');
     }
+    // The tick's source is built in reminders.ts; the provider must still go through it.
+    expect(readFileSync('src/state/store.tsx', 'utf8')).toContain('remindersFor(');
   });
 });

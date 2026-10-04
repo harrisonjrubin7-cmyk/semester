@@ -54,6 +54,7 @@ import {
   strictRefused,
   structuredRefused,
 } from './assistant';
+import { modelOnSharedKey, modelsFromRefusal, rememberSharedModels } from './sharedmodels';
 
 export interface Turn {
   role: 'user' | 'assistant';
@@ -923,6 +924,15 @@ export async function ask(options: AskOptions): Promise<string> {
     });
   }
 
+  /*
+   * On the shared key the model is the one chosen unless the account's plan is
+   * known not to cover it — see `sharedmodels.ts`. Everything below that names
+   * a model (the body, the tool grammar, the search tool, the record of what
+   * answered) uses this one, so what is sent, what is kept and what the student
+   * is told are the same model.
+   */
+  const model = taking === 'shared' ? modelOnSharedKey(s.model) : s.model;
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'anthropic-version': '2023-06-01',
@@ -949,7 +959,7 @@ export async function ask(options: AskOptions): Promise<string> {
       headers,
       signal: options.signal,
       body: JSON.stringify({
-        model: s.model,
+        model,
         max_tokens: options.maxTokens ?? 1400,
         // A cached system prompt is sent as a block so the breakpoint can sit
         // on it. Plain string otherwise, which is the shorter wire form.
@@ -967,8 +977,8 @@ export async function ask(options: AskOptions): Promise<string> {
         ...(options.tools?.length || options.search
           ? {
               tools: [
-                ...(options.tools?.length ? strictly(options.tools, s.model) : []),
-                ...(options.search ? [searchTool(s.model)] : []),
+                ...(options.tools?.length ? strictly(options.tools, model) : []),
+                ...(options.search ? [searchTool(model)] : []),
               ],
             }
           : {}),
@@ -991,12 +1001,30 @@ export async function ask(options: AskOptions): Promise<string> {
 
   if (!res.ok || !res.body) {
     let detail = `${res.status}`;
+    let refusal: unknown = null;
     try {
       // Anthropic nests it; Supabase's gateway does not. Read either.
       const body = (await res.json()) as { error?: { message?: string }; message?: string };
+      refusal = body;
       detail = body.error?.message ?? body.message ?? detail;
     } catch {
       /* keep the status */
+    }
+
+    /*
+     * The shared key naming the models this account's plan covers.
+     *
+     * The default model is Opus 5 and a Free account's list does not hold it,
+     * so this is the first thing most students meet. The refusal comes before
+     * the call is counted, so it costs nothing: take the list, remember it, and
+     * ask again on a model the plan covers. Only when that actually changes the
+     * model — a list that still holds the one just refused would loop, and is
+     * the function contradicting itself, which is shown as the error it is.
+     */
+    const covered = taking === 'shared' ? modelsFromRefusal(res.status, refusal) : null;
+    if (covered) {
+      rememberSharedModels(covered);
+      if (modelOnSharedKey(s.model) !== model) return ask(options);
     }
     // A route that will not take a constrained shape says so with a 400
     // naming the parameter. Remember it and try once more without — the
@@ -1018,10 +1046,10 @@ export async function ask(options: AskOptions): Promise<string> {
     if (
       res.status === 400 &&
       options.tools?.length &&
-      !strictRefused(s.model) &&
+      !strictRefused(model) &&
       aboutStrictTools(detail)
     ) {
-      rememberStrictRefused(s.model);
+      rememberStrictRefused(model);
       return ask(options);
     }
 
@@ -1279,7 +1307,7 @@ export async function ask(options: AskOptions): Promise<string> {
      */
     record({
       at: Date.now(),
-      model: s.model,
+      model,
       from: options.about || UNNAMED,
       ...(options.courseId ? { courseId: options.courseId } : {}),
       use: counted,

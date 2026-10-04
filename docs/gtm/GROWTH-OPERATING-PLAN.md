@@ -3,7 +3,7 @@
 | Control | Value |
 | --- | --- |
 | Status | **CONTROLLED PLAN — NON-ACTIVATION PREPARATION ONLY; NO BROAD, PAID OR PUBLIC CAMPAIGN AUTHORIZED** |
-| Owner | Harrison Rubin — growth, lifecycle, content and claims owner; privacy, accessibility and claims reviewers, analyst, moderator and backup operator **unassigned** |
+| Owner | Harrison Rubin — growth, lifecycle, content and claims owner; privacy, accessibility and claims reviewers, analyst, moderator and backup experiment owner **all named as Harrison Rubin on 2026-10-04 ([matrix](../../OWNER-AND-ACCOUNTABILITY-MATRIX.md)); no independent second person or backup is assigned** |
 | Evidence date | 2026-10-04 at repository revision `7287ddc` |
 | Governs | Adoption, activation, retention, referral, institutional demand and brand trust. Never governs a claim: [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) does |
 | Reads with | [`EXECUTION-PLAN.md`](EXECUTION-PLAN.md) (the GTM code), [`GROWTH-FUNNEL-SPEC.md`](../commercial/GROWTH-FUNNEL-SPEC.md), [`ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md`](../ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md), [`PRODUCT-ANALYTICS-DATA-ETHICS.md`](../PRODUCT-ANALYTICS-DATA-ETHICS.md), [`LAUNCH-CAMPAIGN-PLAN.md`](../commercial/LAUNCH-CAMPAIGN-PLAN.md) |
@@ -199,7 +199,7 @@ Held to code in §14: the daily caps and the quiet-hour window.
 - Left-aligned, short paragraphs, headings that are real headings, plain language. Reading level is a stated target to test, not a claim.
 - Captions and transcripts on all video; no autoplay; no content that expires in a way that excludes people who check slowly.
 - Respect the person's stated language and reduced-motion and text-size preferences; test with a screen reader and at 200% zoom before approval.
-- Message templates pass the accessibility reviewer role in `activationGate`. That reviewer is unassigned: **a template cannot go live until the role is filled.**
+- Message templates pass the accessibility reviewer role in `activationGate`. That role is held by the same person as the owner, so the owner-is-not-approver rule cannot pass: **a template cannot go live until a second person holds the accessibility reviewer seat.**
 
 ### 6.5 User controls
 
@@ -468,7 +468,7 @@ Every dashboard: labels its attribution model; suppresses cells under 10; logs a
 | Per term | Growth owner | Calendar, cohort retrospective, ambassador review |
 | Quarterly | Founder | Strategy, ICP, pricing status and gates; feeds [`QUARTERLY-OPERATING-REVIEW.md`](../company/QUARTERLY-OPERATING-REVIEW.md) |
 
-**Bus-factor risk:** the owner is one named person; the privacy, accessibility and claims reviewers, the analyst, the moderator and the backup experiment owner are all unassigned. Several controls in this plan (owner ≠ approver, reviewer sign-offs) cannot be satisfied until at least two more people hold those roles. Filling them is the first growth task.
+**Bus-factor risk:** the owner is one named person; the privacy, accessibility and claims reviewers, the analyst, the moderator and the backup experiment owner are all that same person (recorded 2026-10-04), with no backup. Several controls in this plan (owner ≠ approver, reviewer sign-offs) cannot be satisfied until at least two more people hold those roles. Filling them is the first growth task.
 
 ### 12.3 30 / 60 / 90
 

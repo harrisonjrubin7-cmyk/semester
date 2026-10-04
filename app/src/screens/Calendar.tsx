@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
+import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
@@ -8,6 +8,10 @@ import { MarkClass } from '../components/MarkClass';
 import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { calendarEnvelope, countSources, itemSources } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { CallIcon, ChevronLeft, ChevronRight } from '../components/Icons';
@@ -2827,7 +2831,29 @@ function CampusList() {
 }
 
 export function Calendar() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
+  const empty = nothingYet(catalog, state);
+  const sources = useMemo(
+    () =>
+      countSources([
+        ...itemSources(catalog.items.filter((i) => !state.done[i.id])),
+        ...state.tasks.map((): SourceLabel => 'student_entered'),
+        ...state.appointments.map((): SourceLabel => 'student_entered'),
+        ...state.feedEvents.map((): SourceLabel => 'imported'),
+      ]),
+    [catalog, state.done, state.tasks, state.appointments, state.feedEvents],
+  );
+  const env = calendarEnvelope({
+    loading,
+    empty,
+    count: Object.values(sources).reduce((a, b) => a + b, 0),
+    sources,
+    online,
+    now: now.getTime(),
+    hasCampusFeed: state.feedEvents.length > 0,
+  });
   /*
    * The week chip says what it will draw.
    *
@@ -2837,9 +2863,17 @@ export function Calendar() {
    * supposed to say where you are going.
    */
   const wide = useMedia(WIDE);
-  if (nothingYet(catalog, state)) return <FirstRun where="on the calendar" />;
 
   return (
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="your calendar"
+      empty={{ title: 'Nothing on your calendar yet.', body: 'Add a course or an event to start.' }}
+      emptyNode={<FirstRun where="on the calendar" />}
+      inset
+    >
+      {() => (
     /*
      * `wide`, and no filter of its own.
      *
@@ -2918,6 +2952,8 @@ export function Calendar() {
         <MonthView />
       )}
     </Page>
+      )}
+    </ReadState>
   );
 }
 
