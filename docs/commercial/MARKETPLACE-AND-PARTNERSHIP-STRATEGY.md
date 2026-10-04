@@ -502,7 +502,7 @@ Nothing in sections 1–10 may open for real students, providers or money until 
 | G-LEGAL | Items 1–6, 12, 15 answered and recorded with counsel's name and date | M4 | **Not met** |
 | G-EXIT | Offboarding exercised end to end on a staged provider | M5 | **Not met** |
 
-**Decisions requested from the owner.** On 4 Oct 2026 the owner accepted (a) to (d) as written: (a) the marketplace stays held until G-OWN, G-DATA, G-TERMS and G-QUEUE are met; (b) "no pay-to-win placement or paid ranking" moves from *proposed* to a held boundary, with a test still owed; (c) the class model, with Class E staying prohibited; (d) the processor-holds-funds principle as a precondition for M4. They are recorded together as one decision, as `docs/decisions/` asks. (e) naming counsel and the backup owners is **still open**.
+**Decisions requested from the owner.** On 4 Oct 2026 the owner accepted (a) to (d) as written: (a) the marketplace stays held until G-OWN, G-DATA, G-TERMS and G-QUEUE are met; (b) "no pay-to-win placement or paid ranking" moves from *proposed* to a held boundary, with a test still owed; (c) the class model, with Class E staying prohibited; (d) the processor-holds-funds principle as a precondition for M4. They are recorded together as one decision, [`D-1236`](../decisions/D-1236.md), as `docs/decisions/` asks. (e) naming counsel and the backup owners is **still open**.
 
 ## 13. Preamble outputs
 
