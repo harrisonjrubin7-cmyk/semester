@@ -1,0 +1,18 @@
+{
+  "exceptions": [
+    {
+      "workflow": "functions.yml",
+      "match": "deploys but no job declares",
+      "expires": "2026-12-31",
+      "record": "infra/changes/CC-1170.md",
+      "reason": "Edge Functions hold the service-role key and deploy from CI success without a GitHub environment, so no reviewer or scoped secret stands between a green main and production. Fixing it adds an approval to every function deploy; that is a decision for the maintainer, recorded rather than made by a policy PR."
+    },
+    {
+      "workflow": "pages.yml",
+      "match": "`id-token: write` at the top level",
+      "expires": "2026-12-31",
+      "record": "infra/changes/CC-1170.md",
+      "reason": "actions/deploy-pages needs id-token on the deploy job. It is granted workflow-wide today; narrowing it to the job is a one-line move that has to be proven against a real Pages deploy, which this change cannot do."
+    }
+  ]
+}
