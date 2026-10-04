@@ -136,7 +136,7 @@ Keep it; add rules:
 5. **Debt is paid in slices that ship**; no "refactor sprint" without a user- or
    operator-visible result.
 6. **Documentation debt counts:** a doc that disagrees with the code is a
-   defect with an owner. about 300 top-level and `docs/` documents already exist; the target is *fewer,
+   defect with an owner. About 300 top-level and `docs/` documents already exist; the target is *fewer,
    generated, tested* (`npm run registers`) — consolidation is a tracked item,
    with `SIMPLIFY-AUDIT.md` as the starting inventory.
 7. **Quarterly debt review** at the architecture group; two lowest-value items
