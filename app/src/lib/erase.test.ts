@@ -152,6 +152,7 @@ describe('every database the app opens is one the sweep clears', () => {
     const hist = await import('./history/history');
     const db = await import('../state/persist/db');
     const persist = await import('../state/persist');
+    const vault = await import('./vault/idb');
 
     const calls: string[] = [];
     vi.spyOn(persist, 'stopWriting').mockImplementation(() => undefined);
@@ -169,6 +170,9 @@ describe('every database the app opens is one the sweep clears', () => {
     });
     vi.spyOn(outbox, 'clearOutbox').mockImplementation(async () => {
       calls.push('semester-outbox');
+    });
+    vi.spyOn(vault, 'eraseVaults').mockImplementation(async () => {
+      calls.push('semester-vault');
     });
     vi.spyOn(engine, 'clearEngineStore').mockImplementation(async () => {
       calls.push('semester-engine');
