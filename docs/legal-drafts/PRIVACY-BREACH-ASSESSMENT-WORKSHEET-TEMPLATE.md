@@ -71,7 +71,7 @@ Score each 0–3 and keep the reasoning; counsel reviews. The score informs, nev
 | Law enforcement | Crime suspected | `[DECIDE]` | | Counsel | `LAW-ENFORCEMENT-REQUEST-PROCEDURE-DRAFT.md` |
 | Media/public | Only if counsel and executive approve | `[DECIDE]` | | Executive + counsel | Use status-page policy |
 
-Decision record fields: decision, decider (role), date/time, basis cited by counsel, dissent. Store under `docs/evidence/privacy/` without personal data.
+Decision record fields: decision, decider (role), date/time, basis cited by counsel, dissent. Keep in the restricted privacy records store (never the repo); quote only ids and counts elsewhere.
 
 ## Step 4 — Notice skeletons (counsel approves before sending)
 
@@ -114,4 +114,4 @@ Root cause; control gap; user remediation; counsel sign-off that notification de
 
 ## Activation blockers
 
-Counsel review of the decision table; named incident roles; at least one tabletop recorded in `docs/evidence/privacy/`; resolution of the 72-hour commitment question.
+Counsel review of the decision table; named incident roles; at least one tabletop filed and registered as evidence (see the pack's Evidence handling); resolution of the 72-hour commitment question.

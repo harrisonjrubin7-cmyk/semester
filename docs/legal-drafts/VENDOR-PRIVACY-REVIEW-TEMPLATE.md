@@ -23,7 +23,7 @@ No vendor receives personal data until it has a completed review record. The rec
 | Change | §3 triggers re-review | Updated record |
 | Offboard | §4 | Deletion confirmation |
 
-## 2. Review record (one per vendor; store under `docs/evidence/privacy/vendors/`)
+## 2. Review record (one per vendor; keep in the restricted privacy records store, not the repo)
 
 | Field | Value |
 | --- | --- |
@@ -56,7 +56,7 @@ Risk tier for review depth: **High** (student records, minors, AI prompts, payme
 | Vendor incident | Start the breach worksheet (Step 0) |
 | New data field sent to a vendor | Core review required before merge |
 | Vendor acquired or discontinued | Treat as change; plan §4 |
-| Monthly | Check each vendor's public change feed/status; record in `docs/evidence/privacy/` |
+| Monthly | Check each vendor's public change feed/status; record in the privacy records store |
 | Institution objection to a vendor | Counsel; consider tenant-level disable |
 
 Customer notification of subprocessor changes: **COUNSEL-REQUIRED** (contract-driven; no promised period exists today).

@@ -118,7 +118,7 @@ Until filled, the only clock in use is the internal queue marker.
 
 **E. Institution/guardian holding notice.** "We received a request relating to a student account. We can't act on it until `[verification]`. We haven't disclosed whether an account exists."
 
-## 9. Request log (one row per request; store under `docs/evidence/privacy/` as an export, never the personal data itself)
+## 9. Request log (one row per request; keep in the restricted privacy records store, see the pack's Evidence handling; never in the repo)
 
 | Field | Value |
 | --- | --- |
@@ -141,7 +141,7 @@ Retention of the log itself: `[DECIDE]` (counsel) — keep the minimum personal 
 
 - Monthly: sample `[N]` closed requests; check every row has verification, second review and a sent message.
 - Ageing report: open requests past the internal marker are reviewed weekly; a miss is logged and, if it could be a statutory miss, raised to counsel and linked in the breach worksheet only if personal data was exposed.
-- Quarterly rehearsal per the runbook: one access, one erasure on a test account, one guardian-originated, one with a hold. Save results to `docs/evidence/privacy/`.
+- Quarterly rehearsal per the runbook: one access, one erasure on a test account, one guardian-originated, one with a hold. Save results as a dated, personal-data-free record under `docs/evidence/privacy/` with an evidence-register entry (see the pack's Evidence handling).
 - Metrics (no personal data): volume by type, median and 90th-percentile time to verify and to close, refusal rate by code, verification-failure rate.
 
 ## Product-behavior mapping and gaps
@@ -156,4 +156,4 @@ Retention of the log itself: `[DECIDE]` (counsel) — keep the minimum personal 
 
 ## Activation blockers
 
-Counsel approval of §1, §5, §7 and §8; a named owner; an operator screen; one executed rehearsal recorded in `docs/evidence/privacy/`.
+Counsel approval of §1, §5, §7 and §8; a named owner; an operator screen; one executed rehearsal filed and registered as evidence.

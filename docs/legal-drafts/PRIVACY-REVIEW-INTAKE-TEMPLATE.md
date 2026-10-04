@@ -46,7 +46,7 @@ Before any new use of personal data is built, switched on, or advertised, answer
 | 18 | Which counsel questions does it raise? (add to the queue) | | |
 | 19 | Decision: approve / approve with conditions / reject / defer. Conditions and owners | | |
 
-Outputs: completed intake saved with the PR or under `docs/evidence/privacy/`; `pia.ts` row; `RETENTION.md` edit if tables added (the tripwire test fails otherwise); `docs/SUBPROCESSORS.md` regeneration if a vendor is added; queue rows for open legal questions.
+Outputs: completed intake kept in the privacy records store (the PR links its id, not its content); `pia.ts` row; `RETENTION.md` edit if tables added (the tripwire test fails otherwise); `docs/SUBPROCESSORS.md` regeneration if a vendor is added; queue rows for open legal questions.
 
 ## Add-on A — Analytics and telemetry
 

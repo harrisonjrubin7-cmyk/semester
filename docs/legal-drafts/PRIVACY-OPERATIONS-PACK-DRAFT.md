@@ -39,7 +39,7 @@ Semester already has a large privacy document set. This pack does **not** restat
 | [`MINORS-AND-GUARDIAN-OPERATIONS-DRAFT.md`](MINORS-AND-GUARDIAN-OPERATIONS-DRAFT.md) | Age gate, under-13 handling, dual enrollment, guardian verification and revocation |
 | [`VENDOR-PRIVACY-REVIEW-TEMPLATE.md`](VENDOR-PRIVACY-REVIEW-TEMPLATE.md) | Vendor review record, change notification, deletion propagation |
 | [`PROCESSING-REGISTER-EXPANSION-DRAFT.md`](PROCESSING-REGISTER-EXPANSION-DRAFT.md) | Missing processing activities and a field-to-tier seed map |
-| `docs/evidence/privacy/README.md` | The evidence folder the runbook already promises |
+| Evidence-handling rules (below) | Where each kind of record lives |
 
 ## Operating rules (apply to every document above)
 
@@ -47,9 +47,20 @@ Semester already has a large privacy document set. This pack does **not** restat
 2. **No promised response time.** The `data_subject_request` table carries a thirty-day due date as an internal queue marker. `docs/COUNSEL-BRIEF.md` C1 says no time is promised; keep it that way until counsel answers.
 3. **Qualify the in-app promises.** `app/src/lib/privacy.ts` says no archive is kept after deletion and nothing is used to train anything. Those lines are test-held and sit in tension with provider backup tails in `RETENTION.md`. Do not repeat them elsewhere without the backup-tail qualifier. **COUNSEL-REQUIRED:** exact wording.
 4. **Name roles, not people.** Use role titles. Do not assert staffing that does not exist.
-5. **Evidence or it did not happen.** A procedure is "exercised" only with a dated record under `docs/evidence/privacy/`.
+5. **Evidence or it did not happen.** A procedure is "exercised" only with a dated record (see Evidence handling).
 6. **Generated files stay generated.** Add a PIA surface in `pia.ts` then `npm run registers` from `app/`; add a subprocessor in `subprocessors.ts`. Never hand-edit the rendered files.
 7. **Behavior before wording.** If a procedure cannot be run today (no operator screen, no owner), the notice must not describe it as running.
+
+## Evidence handling
+
+Two stores, because the repo enforces one of them.
+
+| Record | Where | Why |
+| --- | --- | --- |
+| Dated rehearsal and tabletop results (DSR rehearsal, breach tabletop, deletion-propagation exercise) with no personal data | `docs/evidence/privacy/YYYY-MM-DD-<name>.md`, **plus** an entry in the evidence register (`app/src/lib/ops/evidence.ts`) | `app/src/lib/ops/evidence.test.ts` fails on any file under `docs/evidence/` that has no register record, and on a record whose file does not state its date. The existing rights runbook already points rehearsals here |
+| Request logs, breach log, vendor review records, completed review intakes, counsel decision notes | A restricted privacy records store `[DECIDE: location, access list, retention]`, not the repository | They can hold sensitive detail and privileged material. Only ids, counts and role titles may be quoted in the repo |
+
+Counsel answers go to `docs/decisions/D-<pull request number>.md` as `CLAUDE.md` requires.
 
 ## Governance cadence
 
@@ -57,7 +68,7 @@ Semester already has a large privacy document set. This pack does **not** restat
 | --- | --- | --- |
 | Per request | Work the DSR kit | Log row plus evidence |
 | Per change | Privacy review intake before merge of any new data use | Completed intake; `pia.ts` row if a surface |
-| Monthly | Vendor change check, open-request ageing, consent-withdrawal sample | Dated note in `docs/evidence/privacy/` |
+| Monthly | Vendor change check, open-request ageing, consent-withdrawal sample | Dated note in the privacy records store |
 | Quarterly | DSR and breach tabletop rehearsal; inventory vs. schema reconciliation | Dated rehearsal record |
 | Pre-launch / per geography | Counsel queue review | Queue rows closed or re-dated |
 
