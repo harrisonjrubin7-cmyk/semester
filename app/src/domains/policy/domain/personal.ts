@@ -16,7 +16,7 @@ import type { AuthorizationDecision } from '@semester/institution';
  * the same kind of decision as adding one to `POLICY_ACTIONS` in the package:
  * it is a statement that the action exists.
  */
-export const PERSONAL_ACTIONS = ['tasks.read', 'tasks.create', 'tasks.complete', 'tasks.reopen', 'calendar.read', 'today.view'] as const;
+export const PERSONAL_ACTIONS = ['tasks.read', 'tasks.create', 'tasks.complete', 'tasks.reopen', 'tasks.reschedule', 'tasks.remove', 'calendar.read', 'today.view'] as const;
 export type PersonalAction = (typeof PERSONAL_ACTIONS)[number];
 
 export const isPersonalAction = (value: unknown): value is PersonalAction =>

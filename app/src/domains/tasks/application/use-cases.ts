@@ -1,5 +1,5 @@
 import { fail, ok, type Clock, type DomainError, type EventSink, type Result } from '../../../kernel';
-import { complete, isOverdue, openTasks, reopen, type Task } from '../domain/task';
+import { complete, draftTask, isOverdue, openTasks, reopen, reschedule, type NewTask, type Task } from '../domain/task';
 import type { Guard, TaskRepository } from './ports';
 
 export interface TaskDeps {
@@ -46,6 +46,46 @@ export const reopenTask = (deps: TaskDeps) => async (id: string): Promise<Result
   if (!change.ok) return change;
   await deps.tasks.apply(id, change.value);
   deps.events.publish({ type: 'tasks.reopened', at: deps.clock.now(), payload: { taskId: id } });
+  return ok({ taskId: id });
+};
+
+/** Tick or un-tick, whichever the task is not. The intent is read from the task as stored, not from the button. */
+export const toggleTask = (deps: TaskDeps) => async (id: string): Promise<Result<{ taskId: string }, DomainError>> => {
+  const allowed = deps.guard('tasks.read');
+  if (!allowed.ok) return allowed;
+  const task = await deps.tasks.find(id);
+  if (!task) return fail('not_found', 'tasks.not_found', 'That action is not in your list any more.');
+  const done = await (task.done ? reopenTask(deps)(id) : completeTask(deps)(id));
+  return done.ok ? ok({ taskId: id }) : done;
+};
+
+/** Add a task. Ask, check the title and the day, store, say so. */
+export const addTask = (deps: TaskDeps) => async (input: NewTask): Promise<Result<Task, DomainError>> => {
+  const allowed = deps.guard('tasks.create');
+  if (!allowed.ok) return allowed;
+  const draft = draftTask(input);
+  if (!draft.ok) return draft;
+  const task = await deps.tasks.create(draft.value);
+  deps.events.publish({ type: 'tasks.created', at: deps.clock.now(), payload: { taskId: task.id } });
+  return ok(task);
+};
+
+/** Move a task to a day, and optionally a time. */
+export const rescheduleTask = (deps: TaskDeps) => async (id: string, dueOn: string | null, time?: string): Promise<Result<{ taskId: string }, DomainError>> => {
+  const found = await load(deps, id, 'tasks.reschedule');
+  if (!found.ok) return found;
+  const change = reschedule(found.value, dueOn, time);
+  if (!change.ok) return change;
+  await deps.tasks.apply(id, change.value);
+  deps.events.publish({ type: 'tasks.rescheduled', at: deps.clock.now(), payload: { taskId: id, dueOn } });
+  return ok({ taskId: id });
+};
+
+export const removeTask = (deps: TaskDeps) => async (id: string): Promise<Result<{ taskId: string }, DomainError>> => {
+  const found = await load(deps, id, 'tasks.remove');
+  if (!found.ok) return found;
+  await deps.tasks.remove(id);
+  deps.events.publish({ type: 'tasks.removed', at: deps.clock.now(), payload: { taskId: id } });
   return ok({ taskId: id });
 };
 

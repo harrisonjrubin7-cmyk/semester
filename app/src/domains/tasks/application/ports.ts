@@ -1,4 +1,4 @@
-import type { TaskChange, Task } from '../domain/task';
+import type { NewTask, TaskChange, Task } from '../domain/task';
 import type { DomainError, Result } from '../../../kernel';
 
 /**
@@ -11,6 +11,9 @@ export interface TaskRepository {
   find(id: string): Promise<Task | undefined>;
   /** Apply a change the domain has already decided on. The repository does not second-guess it. */
   apply(id: string, change: TaskChange): Promise<void>;
+  /** Store a new task and return it as stored, with the id the store gave it. */
+  create(draft: NewTask): Promise<Task>;
+  remove(id: string): Promise<void>;
 }
 
 /**
