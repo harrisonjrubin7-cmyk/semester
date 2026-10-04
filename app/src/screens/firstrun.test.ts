@@ -35,12 +35,21 @@ const OWN = /state\.(tasks|appointments|feedEvents)\b/;
 const gates = readdirSync(DIR)
   .filter((f) => f.endsWith('.tsx'))
   .map((f) => ({ file: f, src: readFileSync(new URL(f, DIR), 'utf8') }))
-  .flatMap(({ file, src }) =>
-    src
-      .split('\n')
-      .filter((line) => line.includes('return <FirstRun'))
-      .map((line) => ({ file, line, showsOwn: OWN.test(src) })),
-  );
+  .flatMap(({ file, src }) => {
+    const lines = src.split('\n');
+    return lines.flatMap((line) => {
+      if (line.includes('return <FirstRun')) return [{ file, line, showsOwn: OWN.test(src) }];
+      // Today and Calendar draw it as the `emptyNode` of a `ReadState`, and the
+      // question that decides it is the line that sets `empty` — so that is the
+      // line asked about. A screen with an `emptyNode` and no such line has
+      // lost its gate, and `undefined` fails the pairing test below.
+      if (line.includes('emptyNode={<FirstRun')) {
+        const asks = lines.find((l) => /^\s*const empty = /.test(l)) ?? '';
+        return [{ file, line: asks, showsOwn: OWN.test(src) }];
+      }
+      return [];
+    });
+  });
 
 describe('the FirstRun gate', () => {
   it('is on the screens it is supposed to be on', () => {

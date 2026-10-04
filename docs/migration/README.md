@@ -63,12 +63,14 @@ This pack extends two things already on `main`; it does not replace them.
 
 ## Findings while building this
 
-- **The Center's date cleaning reads `03/04/2025` as March 4, silently.**
-  `isoDate` in `center.ts` treats any `a/b/yyyy` as month-first with no setting.
-  A source that writes day-first produces valid, wrong dates that pass
-  validation. `mapping.ts` refuses a slash date unless the spec says which
-  order. The Center is not changed here (its tests and the screen pin the
-  current behaviour); a follow-up should add the same setting there.
+- **The Center's date cleaning read `03/04/2025` as March 4, silently. Fixed.**
+  `isoDate` in `center.ts` treated any `a/b/yyyy` as month-first with no
+  setting, so a day-first source produced valid, wrong dates that passed
+  validation. It now reads a slash date only when it cannot mean the other
+  thing (one part above 12, or both equal) or when the lead has chosen the
+  order on the evidence screen; otherwise the row fails as ambiguous. The
+  choice is made while previewing and is not stored (storing it would be a
+  schema change). `mapping.ts` takes the same setting.
 - **The Center has no stage for a rehearsal.** Its stages go from
   reconciliation to parallel run. Rehearsal evidence lives in the ledger
   (`evidence.ts`, kind `rehearsal`) until the owner approves a migration that
