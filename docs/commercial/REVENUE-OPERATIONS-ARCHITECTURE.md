@@ -2,13 +2,13 @@
 
 | Control | Value |
 | --- | --- |
-| Status | **PROPOSED DESIGN — NOTHING HERE IS OPERATING, APPROVED OR LIVE** |
-| Owner | Harrison Rubin — company-side revenue-operations owner; finance operator, deal desk, accountant, tax reviewer, counsel and backup for every role below unassigned |
+| Status | **PROPOSED DESIGN — NOTHING HERE IS OPERATING OR LIVE; THE OWNER'S DECISIONS ARE RECORDED IN `D-1154`** |
+| Owner | Harrison Rubin — company-side revenue-operations owner; accountant of record; second approver Bramm Rubin (both recorded in `D-1154`); finance operator, deal desk, qualified accountant, tax reviewer, counsel and backups unassigned |
 | Evidence date | 2026-10-04; drafted at repository revision `7287ddc`, finding 6 re-read at `c2e582b` (see below) |
 | Repository basis | `supabase/migrations/20260929070000_commercial_core.sql`, `20260929080000_commercial_automation.sql`, `20260928004730_tenant_plan.sql`, `20260927235000_governance_registries.sql`, `20260928090000_gtm_foundation.sql`, `20260930110000_ledger_chains.sql`, `app/src/lib/gtm/stages.ts`, `supabase/functions/_shared/entitlement.ts` |
 | Extends | [`CRM-DATA-MODEL`](CRM-DATA-MODEL.md), [`SALES-PIPELINE-DEFINITIONS`](SALES-PIPELINE-DEFINITIONS.md), [`ORDERING-AND-BILLING-OPERATIONS`](ORDERING-AND-BILLING-OPERATIONS.md), [`PRICING-AND-PACKAGING`](PRICING-AND-PACKAGING.md), [`REVENUE-OPERATIONS-DASHBOARD-SPEC`](REVENUE-OPERATIONS-DASHBOARD-SPEC.md), [`REVENUE-RECOGNITION-REVIEW-CHECKLIST`](REVENUE-RECOGNITION-REVIEW-CHECKLIST.md), [`RENEWAL-AND-EXPANSION-PLAYBOOK`](RENEWAL-AND-EXPANSION-PLAYBOOK.md), [`ANALYTICS-AND-METRICS-DICTIONARY`](ANALYTICS-AND-METRICS-DICTIONARY.md), [`../COMMERCIAL-CORE.md`](../COMMERCIAL-CORE.md), [`../ENTITLEMENT-RESOLUTION.md`](../ENTITLEMENT-RESOLUTION.md), [`PRICING-UNIT-ECONOMICS-ARCHITECTURE`](PRICING-UNIT-ECONOMICS-ARCHITECTURE.md) (pricing-side structure, meters and leakage controls; this document is the finance-operations side), [`../company/FINANCIAL-CONTROLS.md`](../company/FINANCIAL-CONTROLS.md), [`../legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md`](../legal-drafts/CONTRACT-DEVIATION-APPROVAL-MATRIX.md) |
 
-> This is an operating design for qualified finance, accounting, tax and legal review. It is not accounting, tax or legal advice. Every price, discount, approval threshold, SLA and probability below is a placeholder or a labeled proposal. None is approved.
+> This is an operating design for qualified finance, accounting, tax and legal review. It is not accounting, tax or legal advice. Except where `D-1154` records an owner decision (the individual price of $15 a month, institution prices matched to LMS vendors, and the roles and system choices in §12), every price, discount, approval threshold, SLA and probability below is a placeholder or a labeled proposal and is not approved.
 
 ## What this adds
 
@@ -37,8 +37,8 @@ Read from the migrations and functions, not inferred from the documents. Nothing
 4. **Money fields are thin.** `contracts` carries no value. `quote_lines` stores one `unit_amount_cents`, so a list price and a discount cannot both be recorded. `invoices` has no amount-paid or balance, and `status` has no partially-paid state.
 5. **The financial tables are mutable and outside the tamper-evidence chain.** I found no history or immutability trigger on `quotes`, `quote_lines`, `contracts`, `invoices` or `credits_refunds`. The hash chain, its HMAC-signed daily manifests and its nightly verifier exist (`20260930110000_ledger_chains.sql`, `20260930150000_ledger_chain_seals.sql`), but they accept only two ledgers, `academic_record` and `student_account`.
 6. **A later order form could overwrite an earlier plan. Fixed on main after this document was drafted.** `tenant_plan` is one row per school (`tenant_id` primary key), and `apply_signed_contract` upserted it from the contract just signed with no comparison to the current row, so a department pilot ending in December signed after a campus agreement ending the next June replaced the campus tier and end date. `supabase/migrations/20261004090000_order_form_never_downgrades_plan.sql` (commit `44e3303`, which cites this finding) now refuses, as its header describes, an order form whose tier is lower or whose end date is earlier than a current plan's; a higher tier, longer term or renewal goes through, and lowering a plan is a deliberate service-role write. I read the migration and did not run it. Still open: a school with two funded scopes (a campus licence plus a department add-on) cannot be represented, because one tier and one date range is all a school row holds.
-7. **A signed order form writes `tenant_plan.status = 'active'`** (never `trial`), dated from `effective_at`. [`ORDERING-AND-BILLING-OPERATIONS`](ORDERING-AND-BILLING-OPERATIONS.md) says signature is separate from launch GO. Today the separation rests on `starts_at` and the module step, and the entitlement order runs in shadow and enforces nothing; a school with no plan row passes ([`ENTITLEMENT-RESOLUTION`](../ENTITLEMENT-RESOLUTION.md)).
-8. **Two documents disagree about the individual price.** [`COMMERCIAL-CORE`](../COMMERCIAL-CORE.md) and `ops/billing` print $7.99/month and $59/year as catalog prices; [`PRICING-AND-PACKAGING`](PRICING-AND-PACKAGING.md) says no price is approved and a price in code is not the price book. This document uses no number and treats price approval as open.
+7. **A signed order form writes `tenant_plan.status = 'active'`** (never `trial`), dated from `effective_at`. The owner has decided this is intended (`D-1154`), so no code change follows. [`ORDERING-AND-BILLING-OPERATIONS`](ORDERING-AND-BILLING-OPERATIONS.md) says signature is separate from launch GO. Today the separation rests on `starts_at` and the module step, and the entitlement order runs in shadow and enforces nothing; a school with no plan row passes ([`ENTITLEMENT-RESOLUTION`](../ENTITLEMENT-RESOLUTION.md)).
+8. **Two documents disagree about the individual price.** [`COMMERCIAL-CORE`](../COMMERCIAL-CORE.md) and `ops/billing` print $7.99/month and $59/year as catalog prices; [`PRICING-AND-PACKAGING`](PRICING-AND-PACKAGING.md) says no price is approved and a price in code is not the price book. The owner has since decided the individual price is $15 a month with a yearly bundle price still to be stated (`D-1154`); the catalog, pricing page and tests still print $7.99 / $59 and billing stays held, so nothing is charged at either figure. This document uses no price.
 
 ## 1. Systems of record
 
@@ -46,7 +46,7 @@ The rule: **one system owns each object, and everything else holds a derived, la
 
 | Object | System of record | Status |
 | --- | --- | --- |
-| prospect, stakeholder, stage, decision log | `gtm_*` tables (Supabase) | exists; an external CRM is an **open decision** — pick one system, never both |
+| prospect, stakeholder, stage, decision log | `gtm_*` tables (Supabase) | exists; **decided (`D-1154`): these tables are the single CRM**, no external CRM now. Revisit at a second seller, calendar/email sync, or volume |
 | price book, quote, order form, amendment | commercial core (Supabase) | exists, with gaps in §2 |
 | entitlement, tenant plan | `tenant_plan`, `subscription_entitlements` | exists |
 | payment, refund, dispute facts | Stripe (processor), mirrored by `payment_events` | exists; production unconfigured |
@@ -200,7 +200,7 @@ States reuse the repository vocabulary; none is invented. A **handoff** is an ev
 | Finance → Success | invoice overdue | days past due, dispute state | success | collections escalation to the customer's executive |
 | Any → Closed | disqualification or loss | reason, learning, future-contact rule | pipeline owner | re-entry as a fresh `target_account` |
 
-**Single-person reality.** Every role above is currently unassigned and the owner is one person. Until a second person exists, the compensating control is: every approval is recorded as self-approved, flagged, and sampled monthly by the outside accountant. A self-approved exception is never retroactively blessed by the same person.
+**Single-person reality.** Most roles above are unassigned and the owner is effectively one person. The owner has named Bramm Rubin as second approver and Harrison Rubin as accountant of record (`D-1154`), but no authority matrix or threshold exists yet, and the accountant of record is also the seller, so there is no independent review. Until a second person actually approves, the compensating control is: every approval is recorded as self-approved, flagged, and sampled monthly by the outside accountant. A self-approved exception is never retroactively blessed by the same person.
 
 **Proposed time boxes** (unapproved; calibrate after the first real cases): acknowledge an inbound institutional lead in two business days; deal-desk decision in three; invoice within five business days of signature; handoff to implementation the same day as signature.
 
@@ -470,7 +470,7 @@ A closed period is frozen. A change reopens it with a reason and approver, and t
 
 ## 11. Required finance/legal/accounting review points
 
-Nothing below is a conclusion. Each is a gate that blocks the action named until the named reviewer decides, in writing, and the decision is recorded.
+Harrison Rubin is accountant of record (`D-1154`). That names who keeps the records; it does not satisfy a gate that calls for a qualified accountant or tax adviser, and the owner is also the seller, so rows 6, 7, 8, 12 and 18 stay open until a qualified person decides them. Nothing below is a conclusion. Each is a gate that blocks the action named until the named reviewer decides, in writing, and the decision is recorded.
 
 | # | Decision or event | Reviewer | Decides | Blocks |
 | ---: | --- | --- | --- | --- |
@@ -512,20 +512,24 @@ Ordered by risk to money and to the record, not by effort. Each step needs its o
 | 10 | Widen the ledger chain to a `commercial` ledger (the nightly verifier already runs) | §8 | engineering |
 | 11 | Accounting export and period close | §6 | accountant selected first |
 
-### Decisions needed from the owner
+### Decisions recorded, and what is still open
 
-1. Which single system holds the CRM: the `gtm_*` tables, or an external CRM (§1).
-2. The accounting system and who the accountant is.
-3. Whether the $7.99 / $59 catalog values are approved prices, or still proposals (finding 8).
-4. Whether a signed order form should create an `active` plan immediately, or a `trial`/pending state until launch GO (finding 7).
-5. Which unit prices an institutional contract: enrolled student, active student, sponsored seat, or platform fee (§5).
-6. Who the second person is for approvals, and what the interim compensating control will be (§4).
+Recorded in `D-1154` on 2026-10-04.
+
+| # | Question | Answer | Still open |
+| ---: | --- | --- | --- |
+| 1 | Which system holds the CRM | the `gtm_*` tables, one system, no external CRM now (chosen by Claude on the owner's delegation) | revisit triggers in `D-1154` |
+| 2 | Accounting system and accountant | accountant of record is Harrison Rubin | the accounting system; a qualified accountant for the §11 gates |
+| 3 | Are $7.99 / $59 the approved prices | no: individual price is $15 a month with a yearly bundle (finding 8) | which plan carries $15; the yearly price; the catalog, page and test change |
+| 4 | Plan on signature | signed order form activates the approved plan immediately (finding 7) | whether module and launch gates are enforced, since entitlement runs in shadow |
+| 5 | Institutional unit and price | match Blackboard, Canvas and comparable systems | the number, its source, the unit, and a check against the cost floor |
+| 6 | Second approver | Bramm Rubin | thresholds, discount bands, authority matrix |
 
 ## Evidence state
 
 **Repository evidence.** The tables, functions and documents cited above exist at revision `7287ddc`. Findings 2 through 8 were read from the migrations and functions; none was reproduced because no database was available in the authoring session. Finding 6 was re-read against main at `c2e582b` after its fix landed; the fix was also read and not run.
 
-**Operational evidence.** No operating CRM, price book, issued institutional invoice, collected payment, accounting system, accountant, deal desk, collections process, close or audit is evidenced. All roles are unassigned.
+**Operational evidence.** No operating CRM, approved institutional price book, issued institutional invoice, collected payment, accounting system, qualified accountant, deal desk, collections process, close or audit is evidenced. The owner has recorded decisions on price, plan activation, approver, accountant of record and CRM (`D-1154`); none of them is in operation.
 
 **Not read.** The source audit PDF has 86 pages. Pages 1–10 were read in full; the remainder was searched for revenue, pricing, billing, hierarchy and KPI passages only.
 
@@ -533,8 +537,8 @@ Ordered by risk to money and to the record, not by effort. Each step needs its o
 
 ## Claim ceiling
 
-Semester may say it has a proposed revenue-operations design, built on a repository-tested commercial core, with identified gaps and a staged plan. It may use this document to scope work and brief reviewers.
+Semester may say it has a proposed revenue-operations design, built on a repository-tested commercial core, with identified gaps and a staged plan, and that the owner has recorded decisions on price, plan activation, approvers, accountant of record and CRM. It may use this document to scope work and brief reviewers.
 
 ## Prohibited claims
 
-Do not claim live billing, issued or collected institutional invoices, a price book, discount authority, an operating deal desk, collections, reconciliation, a close, revenue recognition, ARR/MRR, retention, forecast accuracy or any customer, from this document or the tables it describes. Do not fill a `[PLACEHOLDER]` with an estimate.
+Do not claim live billing, issued or collected institutional invoices, a price book, discount authority, an operating deal desk, collections, reconciliation, a close, revenue recognition, ARR/MRR, retention, forecast accuracy or any customer, from this document or the tables it describes. Do not describe $15 a month as a live or charged price while the catalog, pricing page and billing hold are unchanged, and do not state an institutional price that has no source. Do not fill a `[PLACEHOLDER]` with an estimate.
