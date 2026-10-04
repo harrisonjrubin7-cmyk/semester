@@ -1,0 +1,7 @@
+{
+  "name": "semester",
+  "private": true,
+  "description": "Workspace root. Holds the packages/* workspaces only; app/ and the rest keep their own manifests and lockfiles (see docs/target-architecture/09-CONVERSION-PLAN.md, wave C0). Every script runs from app/, not here.",
+  "workspaces": ["packages/*"],
+  "engines": { "node": ">=22" }
+}

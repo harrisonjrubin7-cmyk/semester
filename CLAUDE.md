@@ -56,8 +56,10 @@ new section in the log and any number written twice.
 
 ## The gates, and what each is for
 
-Every command runs from `app/`, not the repository root — the root has no
-`package.json` with these scripts, so `npm test` there silently does nothing.
+Every command runs from `app/`, not the repository root — the root
+`package.json` is a workspace manifest for `packages/*` only and defines none of
+these scripts, so `npm test` there fails with "Missing script" instead of
+running the suite.
 [REGRESSION-CHECKLIST.md](REGRESSION-CHECKLIST.md) says the same thing at more
 length, and holds the baseline figures.
 
