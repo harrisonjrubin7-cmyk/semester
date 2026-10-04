@@ -26,6 +26,9 @@ import { createTaskService, legacyTaskRepository, taskFromLegacy, type LegacyTas
  * beside the legacy code and the parity tests hold the two to the same answers.
  */
 
+/** The clock a host hands in; re-exported so a hook need not reach into the kernel. */
+export type { Clock } from './kernel';
+
 export interface LegacyHost {
   person(): LegacyPerson;
   readOnly(): boolean;

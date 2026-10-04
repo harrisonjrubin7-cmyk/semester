@@ -115,13 +115,15 @@ Every step ships alone, is flag-guarded where it changes behaviour, and has a va
 |---|---|---|---|
 | 0 | **Guard first.** Layer rules and ratchets | `architecture.test.ts`, `legacy-baseline.json` | merged; baseline matches tree *(this PR)* |
 | 1 | **Kernel and first slice** | `domains/` with identity, policy, tasks, calendar, Today | `composition.test.ts` drives the real reducer; six mutations red *(this PR)* |
-| 2 | **Hooks, not screens.** `useDomains()` builds `LegacyHost` from `useStore()` | one hook, one test | the hook returns the same `today()` as the slice test; no screen changes |
+| 2 | **Hooks, not screens.** `useDomains()` builds `LegacyHost` from `useStore()` | `state/domains.ts`, `state/domains.test.tsx` *(done)* | built once; a write resolves only after the store commits it; reads see changes it did not make; no screen changes |
 | 3 | **Shadow.** Today computes both ways in development and logs disagreement | flag `domainToday=preview` | zero disagreement across the parity fixtures and one week of dogfood |
 | 4 | **Cut over Today's data** (not its JSX): the screen reads `TodayView` instead of five selectors | flag `domainToday=production` | `screens/Today.tsx` import count falls from 65 and the 2,124-line file loses the derivation code; Today's existing tests unchanged |
 | 5 | **Writes.** Task actions go through `TaskService`; `toggleTask` callers in screens are replaced | per screen | `grep toggleTask screens/` empty for tasks; repeat tasks still legacy |
 | 6 | **Calendar reads**, then writes (drag, double-tap add) | `calendar-direct` skill's behaviour, behind domain | `Calendar.tsx` loses `select` imports; clashes come from the domain |
 | 7 | **Delete the duplicates** that steps 4 to 6 orphaned | removal PRs | `census:exports` shows the old selectors test-only, then gone; ratchets shrink in the same PR |
 | 8 | Next domain (coursework), repeating steps 2 to 7 | | `ALLOWED` gains one row |
+
+**What step 2 taught.** React's `dispatch` only schedules the reducer, so the adapter could not find a task it had just added. `LegacyTaskHost.settled()` lets a write wait for the commit; the hook implements it, and a plain synchronous host omits it. A second write started before the first commits still reads the old list, so callers await one write before the next.
 
 **Safe coexistence.** The domain and the legacy store never hold two copies of a fact: domains read the live legacy state through functions (`LegacyHost` fields are functions for exactly this reason, tested) and write through legacy commands. Only when a capability's screens are all cut over does its storage move behind a repository that is no longer the legacy reducer, and then the key is versioned (`.v2`, the #762 precedent). Rollback at every step is the flag.
 

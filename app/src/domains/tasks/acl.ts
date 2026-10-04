@@ -28,6 +28,15 @@ export interface LegacyTaskHost {
   /** The tasks as the legacy state holds them *now* (not as they were when the host was built). */
   read(): readonly PersonalTask[];
   dispatch(command: LegacyTaskCommand): void;
+  /**
+   * Resolves once the legacy store has committed what was just dispatched.
+   *
+   * Optional, because the reducer is synchronous and a test host has nothing to
+   * wait for. A React host needs it: `dispatch` only *schedules* the reducer, so
+   * a read straight afterwards still sees the old list, and `create` would
+   * report that the store did not record a task it was about to record.
+   */
+  settled?(): Promise<void>;
 }
 
 export function taskFromLegacy(task: PersonalTask): Task {
@@ -53,10 +62,19 @@ export function legacyTaskRepository(host: LegacyTaskHost): TaskRepository {
     async save(task) {
       const before = host.read().find((t) => t.id === task.id);
       if (!before) return;
+      let wrote = false;
       // `toggleTask` flips, so it is only dispatched when the stored state differs.
-      if ((before.done ? 'done' : 'open') !== task.state) host.dispatch({ type: 'toggleTask', id: task.id });
+      if ((before.done ? 'done' : 'open') !== task.state) {
+        host.dispatch({ type: 'toggleTask', id: task.id });
+        wrote = true;
+      }
       // `editTask` rather than `moveTask`: only it can send a task back to "someday" (date null).
-      if (taskFromLegacy(before).dueOn !== task.dueOn) host.dispatch({ type: 'editTask', id: task.id, patch: { date: task.dueOn } });
+      // Compared against the *mapped* date, so a stored date the domain could not read is never rewritten.
+      if (taskFromLegacy(before).dueOn !== task.dueOn) {
+        host.dispatch({ type: 'editTask', id: task.id, patch: { date: task.dueOn } });
+        wrote = true;
+      }
+      if (wrote) await host.settled?.();
     },
     async create(draft) {
       const known = new Set(host.read().map((t) => t.id));
@@ -64,6 +82,7 @@ export function legacyTaskRepository(host: LegacyTaskHost): TaskRepository {
         type: 'addTask',
         task: { title: draft.title, date: draft.dueOn, time: '', note: '', courseId: draft.courseId },
       });
+      await host.settled?.();
       const added = host.read().find((t) => !known.has(t.id));
       if (!added) throw new Error('The legacy store did not record the new entry.');
       return taskFromLegacy(added);

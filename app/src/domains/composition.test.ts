@@ -122,4 +122,27 @@ describe('the slice running on the legacy store', () => {
     const r = await createDomains(h, clock).tasks.complete('t1');
     expect(r.ok && r.value.obligations).toEqual(['keep_on_device']);
   });
+
+  it('waits for a host that commits later, so a write resolves only once it is recorded', async () => {
+    // A React host: dispatch is queued and the list changes on the next "commit".
+    let committed: PersonalTask[] = [];
+    let queue: (() => void)[] = [];
+    let state: State = blank();
+    const h: LegacyHost = {
+      ...host().h,
+      tasks: {
+        read: () => committed,
+        dispatch: (command) => queue.push(() => { state = reducer(state, command as never); }),
+        settled: () => new Promise<void>((resolve) => setTimeout(() => {
+          for (const run of queue) run();
+          queue = [];
+          committed = state.tasks;
+          resolve();
+        }, 0)),
+      },
+    };
+    const r = await createDomains(h, clock).tasks.add({ title: 'Deferred' });
+    expect(r.ok && r.value.value.title).toBe('Deferred');
+    expect(committed).toHaveLength(1);
+  });
 });
