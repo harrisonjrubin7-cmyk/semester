@@ -49,6 +49,7 @@ const EMPTY_VERIFY = { basis: '', evidence: '' };
 const EMPTY_RESOLUTION = { outcome: 'completed' as PrivacyRequestOutcome, resolution: '', evidence: '' };
 const EMPTY_APPROVAL = { evidence: '', ticket: '' };
 const SAFE_TICKET = /^[A-Za-z0-9._:-]{3,80}$/;
+const authorizationDenied = (message: string) => /required|permission|denied|not authorized/i.test(message);
 
 /**
  * Data-rights operations with an identity-minimized queue and an explicit
@@ -92,9 +93,20 @@ export function PrivacyRequests({
       return true;
     } catch (error) {
       if (sequence !== queueRequest.current) return false;
-      const detail = said(error, 'Could not read privacy requests.');
-      setQueueError(detail);
-      onStatus(detail);
+      const message = said(error, 'Could not read privacy requests.');
+      if (authorizationDenied(message)) {
+        detailRequest.current += 1;
+        openRequest.current = null;
+        setRequests(null);
+        setOpenId(null);
+        setDetail(null);
+        setDetailFailed(false);
+        setVerification(EMPTY_VERIFY);
+        setResolution(EMPTY_RESOLUTION);
+        setApproval(EMPTY_APPROVAL);
+      }
+      setQueueError(message);
+      onStatus(message);
       return false;
     }
   }, [env, includeDemo, onStatus, read]);
@@ -224,7 +236,7 @@ export function PrivacyRequests({
     }
   });
 
-  const denied = /required|permission|denied|not authorized/i.test(queueError);
+  const denied = authorizationDenied(queueError);
 
   return (
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>

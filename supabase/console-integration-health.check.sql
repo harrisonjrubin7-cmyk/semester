@@ -168,6 +168,20 @@ begin
   reset role;
   perform pg_temp.counted('all five declared health states are derived from telemetry', n, 5);
 
+  update public.integration_connections
+     set last_successful_sync_at = now() + interval '1 hour'
+   where id = healthy;
+  perform pg_temp.become(operator);
+  select count(*) into n from public.console_integration_health(false) h
+   where h.connection_name = 'Healthy SIS'
+     and h.health_state = 'failed'
+     and h.minutes_since_success is null;
+  reset role;
+  perform pg_temp.counted('future-dated success evidence fails closed without negative freshness', n, 1);
+  update public.integration_connections
+     set last_successful_sync_at = now() - interval '10 minutes'
+   where id = healthy;
+
   perform pg_temp.become(mixed_operator);
   select count(*) into n from public.console_integration_health(false) h
    where (h.tenant_id = 'health-north' and h.can_request)

@@ -163,6 +163,21 @@ describe('privacy request workspace', () => {
     expect(readDetail).not.toHaveBeenCalled();
   });
 
+  it('purges the queue and sensitive detail when access is revoked on refresh', async () => {
+    await draw([request({ assignedTo: 'op-1', assignedToMe: true, status: 'verifying' })]);
+    await press('Open case');
+    await press('View request detail');
+    expect(host.textContent).toContain('Delete eligible account data.');
+
+    read.mockRejectedValueOnce(new Error('data_request:handle over an exact school is required.'));
+    await press('Refresh privacy requests');
+
+    expect(host.textContent).toContain('Access denied.');
+    expect(host.textContent).not.toContain('DSR-1234567890');
+    expect(host.textContent).not.toContain('Delete eligible account data.');
+    expect(host.textContent).not.toContain(detail.subjectReference);
+  });
+
   it('claims through the privileged boundary and never opens detail implicitly', async () => {
     await draw();
     await press('Claim request');

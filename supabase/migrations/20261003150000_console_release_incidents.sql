@@ -283,7 +283,7 @@ begin
       select n.sent_at, n.next_update_at
       from public.governance_incident_notices n
       where n.incident_ref = i.public_id
-        and n.tenant_id is not distinct from i.tenant_id
+        and (n.tenant_id is null or n.tenant_id is not distinct from i.tenant_id)
       order by n.sent_at desc, n.id desc
       limit 1
     ) notice on true

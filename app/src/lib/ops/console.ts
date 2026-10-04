@@ -658,6 +658,23 @@ export const VIEWS: readonly View[] = [
   { id: 'break-glass', view: 'Break-glass', shows: 'Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else' },
   { id: 'audit', view: 'Audit', shows: 'The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so' },
   {
+    id: 'tenant-operations',
+    view: 'Tenant operations',
+    shows: 'Metadata-only rollout, configuration, integration, support-access and operational facts for exact schools covered by live tenant implementation grants; no student records or illustrative production data',
+    detail: {
+      capability: 'Tenant operations',
+      status: 'done',
+      replacement: 'a server-derived, exact-school operational summary available only when the operator has both the platform console shell and a live `tenant:implement` grant. Production excludes demo tenants and the browser supplies no tenant identifier',
+      holders: [
+        { path: 'supabase/migrations/20261003050000_console_tenant_operations.sql', how: 'Metadata-only fact union, server-derived exact-school scope, demo separation and restricted provenance fields' },
+        { path: 'supabase/console-tenant-operations.check.sql', how: 'Shell-plus-domain authorization, wrong-tenant and expired-grant denial, demo separation and metadata-only response checks' },
+        { path: 'app/src/lib/console/client.ts', how: 'loadTenantOperations calls the scoped RPC without accepting a tenant identifier or caching rows' },
+        { path: 'app/src/components/console/TenantOperations.tsx', how: 'Grouped facts with provenance, classification, owner, freshness, visibility reason and limitation' },
+        { path: 'app/src/components/console/TenantOperations.test.tsx', how: 'Loading, denial, empty, stale, future-date, scope and filter behavior' },
+      ],
+    },
+  },
+  {
     id: 'privacy',
     view: 'Privacy requests',
     shows: 'An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions',

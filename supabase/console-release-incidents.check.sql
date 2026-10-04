@@ -91,6 +91,19 @@ begin
       'where_to_get_help', 'Use the support route.'),
       '{}'::jsonb, array['Incident commander'], now() - interval '20 minutes', now() + interval '30 minutes');
 
+  insert into public.governance_incident_notices
+    (tenant_id, incident_ref, audience, sections, details, approved_by, sent_at, next_update_at)
+  values
+    (null, 'incident-live', 'admin_outage', jsonb_build_object(
+      'what_happened', 'A service interruption is under investigation.',
+      'who_is_affected', 'Institution administrators.',
+      'what_is_impacted', 'Today and Plan.',
+      'what_to_do_now', 'Use the documented fallback.',
+      'what_semester_is_doing', 'Investigating the interruption.',
+      'next_update', 'Another update will follow.',
+      'where_to_get_help', 'Use the support route.'),
+      '{}'::jsonb, array['Incident commander'], now() - interval '20 minutes', now() + interval '30 minutes');
+
   insert into public.approval_request
     (duty_id, requester, tenant_id, target, detail, evidence, ticket, status)
   values
@@ -264,7 +277,7 @@ values
   ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), 'deployment-1', now());
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; incident_count bigint; leaked text;
+declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; incident_count bigint; global_notice_count bigint; leaked text;
 begin
   perform pg_temp.become(operator);
   select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
@@ -273,10 +286,13 @@ begin
   select string_agg(row_to_json(r)::text, '') into leaked from public.console_release_incidents(false) r;
   select count(*) into n from public.console_release_incidents(false) r
    where r.item_id = 'incident-recovered' and r.communication_status = 'missing';
+  select count(*) into global_notice_count from public.console_release_incidents(false) r
+   where r.item_id = 'incident-live' and r.communication_status = 'current';
   perform pg_temp.nobody();
   perform pg_temp.said('exact current post-deploy evidence verifies the release summary', state, 'verified');
   perform pg_temp.counted('incident, rollback and recovered states are explicit', incident_count, 3);
   perform pg_temp.counted('recovery is not communication-complete without a post-recovery notice', n, 1);
+  perform pg_temp.counted('a platform-wide notice covers a tenant incident', global_notice_count, 1);
   if leaked like '%NOTICE-BODY-CANARY%' then raise exception 'FAILED: notice body leaked'; end if;
   raise notice 'ok  incident notice bodies are not returned';
 end $$;

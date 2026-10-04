@@ -35,6 +35,7 @@ Under any production write: *Production change. This will affect a live customer
 | **Approvals** | Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement |
 | **Break-glass** | Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else |
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
+| **Tenant operations** | Metadata-only rollout, configuration, integration, support-access and operational facts for exact schools covered by live tenant implementation grants; no student records or illustrative production data |
 | **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
 | **Integration health** | Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals |
 | **Release & incidents** | Evidence-derived release, deployment-verification and incident lifecycle states with customer impact, communication cadence, rollback status and request-only approvals; never a self-certified GO decision |
@@ -90,6 +91,16 @@ The capability behind each view, and its holders, from the same file.
 - [`supabase/scheduler.sql`](../supabase/scheduler.sql) — The console-audit-integrity job at 03:23 seals yesterday and verifies the chain.
 - [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadAudit and auditStatus.
 - [`app/src/screens/Console.tsx`](../app/src/screens/Console.tsx) — The Audit view shows the chain status and says that every read is itself logged.
+
+### Tenant operations
+
+**Tenant operations** (done) — a server-derived, exact-school operational summary available only when the operator has both the platform console shell and a live `tenant:implement` grant. Production excludes demo tenants and the browser supplies no tenant identifier.
+
+- [`supabase/migrations/20261003050000_console_tenant_operations.sql`](../supabase/migrations/20261003050000_console_tenant_operations.sql) — Metadata-only fact union, server-derived exact-school scope, demo separation and restricted provenance fields.
+- [`supabase/console-tenant-operations.check.sql`](../supabase/console-tenant-operations.check.sql) — Shell-plus-domain authorization, wrong-tenant and expired-grant denial, demo separation and metadata-only response checks.
+- [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadTenantOperations calls the scoped RPC without accepting a tenant identifier or caching rows.
+- [`app/src/components/console/TenantOperations.tsx`](../app/src/components/console/TenantOperations.tsx) — Grouped facts with provenance, classification, owner, freshness, visibility reason and limitation.
+- [`app/src/components/console/TenantOperations.test.tsx`](../app/src/components/console/TenantOperations.test.tsx) — Loading, denial, empty, stale, future-date, scope and filter behavior.
 
 ### Privacy requests
 

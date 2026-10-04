@@ -112,7 +112,7 @@ begin
       coalesce(owners.freshness_target_minutes,
         case when c.freshness_target is null then null
              else (extract(epoch from c.freshness_target) / 60)::integer end) as target_minutes,
-      case when c.last_successful_sync_at is null then null
+      case when c.last_successful_sync_at is null or c.last_successful_sync_at > now() then null
            else (extract(epoch from now() - c.last_successful_sync_at) / 60)::integer end as since_success,
       latest.status as run_status,
       latest.started_at as run_at,
@@ -129,6 +129,7 @@ begin
         then 'expired' else approval.status end as approval_status,
       case
         when c.status in ('disconnected', 'configuring') then 'unconfigured'
+        when c.last_successful_sync_at > now() then 'failed'
         when c.status = 'error' or latest.status = 'failed' or coalesce(problems.critical_errors, 0) > 0 then 'failed'
         when c.approved_at is not null
          and c.status in ('healthy', 'degraded')

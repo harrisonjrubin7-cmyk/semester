@@ -210,7 +210,7 @@ describe('the fourteen capabilities', () => {
 
   it('lists the views the screen offers, each once, and each in the map', () => {
     expect(new Set(VIEWS.map((v) => v.id)).size).toBe(VIEWS.length);
-    expect(VIEWS.map((v) => v.view)).toEqual(['Command center', 'Approvals', 'Break-glass', 'Audit', 'Privacy requests', 'Integration health', 'Release & incidents', 'Customers', 'Figures', 'Evidence', 'Views']);
+    expect(VIEWS.map((v) => v.view)).toEqual(['Command center', 'Approvals', 'Break-glass', 'Audit', 'Tenant operations', 'Privacy requests', 'Integration health', 'Release & incidents', 'Customers', 'Figures', 'Evidence', 'Views']);
     for (const v of VIEWS) {
       expect(v.shows.length, v.id).toBeGreaterThan(40);
       if (v.detail) {
