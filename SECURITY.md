@@ -25,6 +25,12 @@ function starts reading a secret this document does not know how to rotate.
 the repository, the Supabase project and the only mailbox
 (`harrisonjrubin7@gmail.com`) a student is given to write to.
 
+That mailbox is the owner's personal address and is the one contact for
+security reports, privacy questions and rights requests alike. No dedicated
+address has been decided or published (**[COUNSEL REQUIRED]**, P-20, owner to
+decide); the policy drafts and `security.txt` use this one until then, and
+nothing here promises how fast it is read.
+
 The same single point of failure [`ROLLBACK.md`](ROLLBACK.md) names, and it is
 worse here: a rollback can wait an hour with no one harmed, and a live read of
 other people's rows cannot. During a pilot there is nobody else to page, so the
@@ -77,6 +83,14 @@ which [`docs/SUPPLY-CHAIN.md`](docs/SUPPLY-CHAIN.md) renders, and
 [`app/src/lib/security.test.ts`](app/src/lib/security.test.ts) holds this table
 to that one — the day counts cannot drift apart without a test going red.
 
+This is the scale for vulnerability reports and advisories only. Other scales
+stay in their own lanes: `INCIDENT-RECOVERY-PLAYBOOK.md` (SEV1–4) for service
+recovery, the trust incident runbook (P0/P1) for a suspected security incident,
+and the Community runbook for its own queues. Where a privacy incident needs a
+level, use the overlay in
+[`docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md`](docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md)
+§4, which maps to all of them and implies no notice duty.
+
 | Severity | What it looks like here | First response | Fixed within | Escalate to |
 | --- | --- | --- | ---: | --- |
 | **Critical** | Another account's rows readable; a service-role or signing key out; an exploit in the wild against a package or Action this project ships | The same day: rotate, close the gate or roll back before anything else ships (the moves above) | 2 days | Owner; every affected account, per *Telling people* |
@@ -99,9 +113,9 @@ commitment to a customer until a contract or
 still says that no response time is promised. And a target for *fixing* is not
 a target for *acknowledging*: with one person reading the mailbox, the honest
 acknowledgement clock is "when the owner next reads mail", and this file does
-not dress that up as a number. The 72-hour clock under *Telling people* is the
-one clock in this file that is a commitment rather than a target, and it is
-about notice, not repair.
+not dress that up as a number. The 72-hour clock under *Telling people* is
+about notice, not repair, and it is a target pending counsel, not a commitment:
+no notice deadline has been approved (**[COUNSEL REQUIRED]**, P-02).
 
 The row this closes in the HECVAT register is `VULN-1`
 ([`docs/market-readiness/HECVAT_READINESS.md`](docs/market-readiness/HECVAT_READINESS.md)),
@@ -230,12 +244,14 @@ like this is to describe what you wish you could see:
 The part the old commitment was about, and the part that has to survive the
 owner wanting it to be smaller than it was.
 
-**Within 72 hours of confirming that rows were readable by somebody they do not
-belong to, every affected account is emailed** — addresses are in `auth.users`
+**Target, pending counsel (P-02), not a commitment — [COUNSEL REQUIRED].** The
+aim is: Within 72 hours of confirming that rows were readable by somebody they do not
+belong to, every affected account is emailed — addresses are in `auth.users`
 and reachable from the dashboard, so the mechanism is a query and a mail merge
-rather than a project. Seventy-two hours is the commitment because it is the
-tightest clock any of the regimes below sets, and one clock is easier to keep
-than three.
+rather than a project. Seventy-two hours is the working target because it is the
+tightest clock any of the regimes below is believed to set (not verified), and one clock is easier to keep
+than three. No notice deadline has been approved, and nothing here promises
+one to a customer or a user.
 
 What the mail says, in this order: **what was readable, for how long, whether
 it was read, and what the person should do.** "Whether it was read" is usually

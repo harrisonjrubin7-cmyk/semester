@@ -19,6 +19,8 @@
 
 P0 includes suspected cross-tenant exposure, high-impact secret compromise, destructive integrity loss, broad auth/outage, or active exploitation; treat suspected exposure as P0 until disproven. P0/P1 pauses launch or active pilot until accountable owners approve safe recovery. Exact response or notice times remain contractual/legal and operational decisions, not promises in this runbook.
 
+P0/P1 is this runbook's scale. `SECURITY.md` (Critical–Low) is for vulnerability reports, `docs/INCIDENT-RECOVERY-PLAYBOOK.md` (SEV1–4) is for service recovery, and the privacy overlay (PX-0–3) in `docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md` §4 maps onto all of them; each stays in its lane.
+
 ## Control and evidence map
 
 | Control | Code/config evidence | Operational evidence | Status | Owner | Missing test/proof |
