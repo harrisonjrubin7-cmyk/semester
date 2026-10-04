@@ -392,7 +392,12 @@ interface ProducerFacts {
  * and calls, so they are read from the source rather than written down.
  */
 function producerFactsOf(uses: readonly EventUse[], files: readonly { path: string; text: string }[]): ProducerFacts {
-  const dirs = [...new Set(uses.filter((u) => u.file.endsWith('.ts')).map((u) => u.file.split('/').slice(0, -1).join('/')))].sort();
+  // A producer's root: the package (packages/x) or the server module (app/server/x) it lives in, not the folder of the file.
+  const rootOf = (file: string): string => {
+    const parts = file.split('/');
+    return parts.slice(0, file.startsWith('packages/') ? 2 : file.startsWith('app/server/') ? 3 : parts.length - 1).join('/');
+  };
+  const dirs = [...new Set(uses.filter((u) => u.file.endsWith('.ts')).map((u) => rootOf(u.file)))].sort();
   const mounts = new Set<string>();
   for (const dir of dirs) {
     const base = dir.split('/').pop() as string;
@@ -1327,10 +1332,13 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(uses.map((u) => u.file)).toEqual([
       'app/server/productivity/memory.ts',
       'app/server/productivity/service.ts',
+      'packages/platform/src/events/emit.ts',
+      'packages/platform/src/isolation/layers.ts',
+      'packages/platform/src/testing/memory.ts',
       'supabase/migrations/20261004090000_productivity_commands.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
-    expect(facts.dirs).toEqual(['app/server/productivity']);
+    expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
     expect(facts.mounts, 'something now imports the producer').toEqual([]);
     expect(facts.drainCallers, 'something now publishes the outbox').toEqual([]);
   });
@@ -1344,6 +1352,10 @@ describe('EVENTS.md and its schemas (generated)', () => {
       { path: 'app/server/other.ts', text: "import { y } from '../thing-other/y.ts'" },
     ];
     expect(producerFactsOf(uses, files)).toEqual({ dirs: ['app/server/thing'], mounts: ['app/api/thing.ts'], drainCallers: ['app/server/publisher.ts'] });
+    // A package is one root however deep the file sits, and a folder name shared with unrelated code is not a mount.
+    const pkg = [{ file: 'packages/kit/src/events/emit.ts', why: 'calls the library' }];
+    const near = [{ path: 'app/src/lib/events/x.ts', text: "import { y } from '../events/z.ts'" }, { path: 'app/src/a.ts', text: "import { k } from '../../packages/kit/src/index.ts'" }];
+    expect(producerFactsOf(pkg, near)).toEqual({ dirs: ['packages/kit'], mounts: ['app/src/a.ts'], drainCallers: [] });
     expect(producerFactsOf(uses, files.slice(0, 1))).toEqual({ dirs: ['app/server/thing'], mounts: [], drainCallers: [] });
   });
 

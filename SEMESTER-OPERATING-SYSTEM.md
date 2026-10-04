@@ -23,8 +23,8 @@ never a person, and a seat is held only once somebody accepted it in writing.
 | Status | Meaning | Entries |
 | --- | --- | ---: |
 | current | Read on the review date, and stands | 58 |
-| draft | The authoritative version, but not yet fit to act on | 2 |
-| missing | No authoritative version exists; the gap says what would close it | 1 |
+| draft | The authoritative version, but not yet fit to act on | 3 |
+| missing | No authoritative version exists; the gap says what would close it | 0 |
 | **total** |  | **61** |
 
 `version` counts reviews of the entry — the decision that this path is the
@@ -39,7 +39,7 @@ The nineteen categories the closing brief names, in its order.
 
 | Category | Authoritative version | Status | Owner | Version | Last reviewed | Next review | Supersedes | Related decisions |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Company strategy | **none** | missing | `founder` | 1 | 2026-09-28 | 2026-12-28 | — | `DECISIONS §1`, `D-007` |
+| Company strategy | [`docs/strategy/README.md`](docs/strategy/README.md) | draft | `founder` | 1 | 2026-10-04 | 2027-01-15 | — | `DECISIONS §1`, `D-007`, `D-1151` |
 | Product vision | [`README.md`](README.md) | current | `product` | 1 | 2026-09-28 | 2026-12-28 | — | `D-003`, `D-006` |
 | Master readiness register | [`docs/MASTER-LAUNCH-READINESS-REGISTER.md`](docs/MASTER-LAUNCH-READINESS-REGISTER.md) | current | `founder` | 1 | 2026-09-28 | 2026-10-28 | — | — |
 | Role launch register | [`docs/ROLE-LAUNCH-REGISTER.md`](docs/ROLE-LAUNCH-REGISTER.md) | current | `security` | 1 | 2026-09-28 | 2026-10-28 | — | — |
@@ -110,7 +110,7 @@ What the repository also runs on, and the brief’s list did not name.
 
 ## Notes and gaps
 
-- **Company strategy** — *missing.* The one-page strategy memo that docs/operating-model/OPERATING-RHYTHM.md schedules quarterly has not been written. MARKET-POSITION.md is a competitor review with an action plan and DEFENSIBILITY.md is the moat argument; neither states the strategy in one place a new hire could read first. Read next: [`MARKET-POSITION.md`](MARKET-POSITION.md), [`docs/operating-model/DEFENSIBILITY.md`](docs/operating-model/DEFENSIBILITY.md), [`docs/gtm/EXECUTION-PLAN.md`](docs/gtm/EXECUTION-PLAN.md).
+- **Company strategy** — A proposal until the founder approves FD-2026-001 in docs/strategy/FOUNDER-DECISION-LOG.md: no target in it is set, no decision in it is made, and it publishes no claim. It is the one-page strategy memo that docs/operating-model/OPERATING-RHYTHM.md schedules quarterly. Read next: [`docs/strategy/THREE-YEAR-STRATEGY.md`](docs/strategy/THREE-YEAR-STRATEGY.md), [`docs/strategy/BOARD-MEMO.md`](docs/strategy/BOARD-MEMO.md), [`docs/strategy/SCORECARD.md`](docs/strategy/SCORECARD.md), [`MARKET-POSITION.md`](MARKET-POSITION.md), [`docs/operating-model/DEFENSIBILITY.md`](docs/operating-model/DEFENSIBILITY.md), [`docs/gtm/EXECUTION-PLAN.md`](docs/gtm/EXECUTION-PLAN.md).
 - **Product vision** — The opening paragraph is the vision as it is sold today. SEMESTER-MASTER-COMMAND.md is the specification behind it, and says which of its sections were never supplied. Read next: [`SEMESTER-MASTER-COMMAND.md`](SEMESTER-MASTER-COMMAND.md), [`docs/launch/WHAT-IS-SEMESTER.md`](docs/launch/WHAT-IS-SEMESTER.md).
 - **Master readiness register** — Rendered from app/src/lib/masterregister.ts; a test holds every row to the kind of file it cites. Nothing is above `tested` until docs/evidence/ exists. Read next: [`docs/LAUNCH-READINESS-COUNCIL.md`](docs/LAUNCH-READINESS-COUNCIL.md), [`docs/GO-NO-GO-CHECKLIST.md`](docs/GO-NO-GO-CHECKLIST.md).
 - **Role launch register** — Rendered from app/src/lib/rolelaunch.ts, which reads the roles out of the migrations. All 63 roles are `modeled`; none is provisionable.

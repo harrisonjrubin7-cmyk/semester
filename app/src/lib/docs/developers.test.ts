@@ -531,7 +531,7 @@ describe('the testing guide', () => {
 
   it('names the other workflows by their file, name and trigger', () => {
     const table = rows(section(guide, '## What CI runs').split('Other workflows:')[1]);
-    expect(table.length).toBe(6);
+    expect(table.length).toBe(10);
     for (const [name, file, trigger] of table) {
       const f = file.replace(/`/g, '');
       const yml = read(`.github/workflows/${f}`);
@@ -539,6 +539,8 @@ describe('the testing guide', () => {
       if (/Nightly/.test(trigger)) expect(yml, f).toContain("cron: '0 7 * * *'");
       if (/Hourly/.test(trigger)) expect(yml, f).toMatch(/cron: '\d+ \* \* \* \*'/);
       if (/After `CI`/.test(trigger)) expect(yml, f).toMatch(/workflows: \['CI'\]/);
+      if (/07:17 UTC/.test(trigger)) expect(yml, f).toContain("cron: '17 7 * * *'");
+      if (/Monday at 06:41 UTC/.test(trigger)) expect(yml, f).toContain("cron: '41 6 * * 1'");
       if (/workflow_dispatch|by hand/.test(trigger)) expect(yml, f).toContain('workflow_dispatch');
     }
     expect(readdirSync(at('.github/workflows')).filter((f) => f.endsWith('.yml'))).toHaveLength(table.length + 1);

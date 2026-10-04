@@ -757,10 +757,17 @@ describe('examples/event-consumer', () => {
       'app/src/lib/integration/lmsmatrix.ts',
       'app/server/productivity/memory.ts',
       'app/server/productivity/service.ts',
+      'packages/platform/src/events/emit.ts',
+      'packages/platform/src/seam/institution.ts',
+      'packages/platform/src/testing/memory.ts',
     ]);
-    // Nothing outside the producer's folder imports it, so no entry point runs it.
-    const mounts = code.filter((c) => !c.file.startsWith('app/server/productivity/') && /from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)).map((c) => c.file);
-    expect(mounts, 'something now imports the productivity service').toEqual([]);
+    // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
+    // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
+    const mounts = code
+      .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
+      .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
+      .map((c) => c.file);
+    expect(mounts, 'something now imports the productivity service or the platform package').toEqual([]);
     // Nothing publishes: drainOutbox has no caller outside the library.
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();

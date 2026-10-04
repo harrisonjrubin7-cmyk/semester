@@ -92,7 +92,7 @@ replaced, before Semester is a company above that threshold.
 | Locked version added | package-lock.json, installed by npm ci |
 | CI scan and test | ci.yml — npm audit --audit-level=high, the suite |
 | SBOM updated | pages.yml — npm run sbom on every deploy |
-| Release artifact and provenance retained | **nothing yet** |
+| Release artifact and provenance retained | supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3) |
 | Advisory monitoring | .github/dependabot.yml |
 | Impact assessment: which services and tenants | **nothing yet** |
 | Patch, mitigate, roll back or disable | ROLLBACK.md, feature flags (docs/FEATURE-FLAG-REGISTRY.md) |
@@ -128,4 +128,8 @@ tables to each other.
 | `actions/deploy-pages` | GitHub | Pages deploy. |
 | `gitleaks/gitleaks-action` | Gitleaks | Secret scanning; reads the tree, writes nothing. See ci.yml. |
 | `stackhawk/hawkscan-action` | StackHawk | Runs DAST against the ephemeral local preview; receives the StackHawk API key and a read-only repository token. |
+| `actions/download-artifact` | GitHub | infra-apply.yml hands the reviewed plan from the plan job to the apply job. |
+| `actions/attest-build-provenance` | GitHub | Signs which workflow built the app bundle, at which commit (Sigstore). See supply-chain.yml. |
+| `actions/attest-sbom` | GitHub | Binds the CycloneDX SBOM to the same bundle (Sigstore). See supply-chain.yml. |
+| `hashicorp/setup-terraform` | HashiCorp | Installs a pinned Terraform for the infrastructure plans; holds no credential itself. See infra.yml. |
 | `supabase/setup-cli` | Supabase | Installs the CLI that deploys the Edge Functions; Supabase already holds the data. |

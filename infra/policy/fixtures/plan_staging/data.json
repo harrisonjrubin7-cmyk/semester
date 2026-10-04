@@ -1,0 +1,234 @@
+{
+ "format_version": "1.2",
+ "resource_changes": [
+  {
+   "address": "module.edge.vercel_firewall_config.this",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "enabled": true,
+     "ip_rules": null,
+     "managed_rulesets": {
+      "ai_bots": {
+       "action": "deny",
+       "active": true
+      },
+      "bot_filter": null,
+      "bot_protection": {
+       "action": "challenge",
+       "active": true
+      },
+      "owasp": {
+       "gen": {
+        "action": "deny",
+        "active": null
+       },
+       "java": {
+        "action": "deny",
+        "active": null
+       },
+       "lfi": {
+        "action": "deny",
+        "active": null
+       },
+       "ma": {
+        "action": "deny",
+        "active": null
+       },
+       "php": {
+        "action": "deny",
+        "active": null
+       },
+       "rce": {
+        "action": "deny",
+        "active": null
+       },
+       "rfi": {
+        "action": "deny",
+        "active": null
+       },
+       "sd": {
+        "action": "deny",
+        "active": null
+       },
+       "sqli": {
+        "action": "deny",
+        "active": null
+       },
+       "xss": {
+        "action": "deny",
+        "active": null
+       }
+      }
+     },
+     "project_id": "REPLACE-IN-CHANGE-RECORD",
+     "rules": {
+      "rule": [
+       {
+        "action": {
+         "action": "rate_limit",
+         "action_duration": null,
+         "rate_limit": {
+          "action": "deny",
+          "algo": "fixed_window",
+          "keys": [
+           "ip"
+          ],
+          "limit": 300,
+          "window": 60
+         },
+         "redirect": null
+        },
+        "active": true,
+        "condition_group": [
+         {
+          "conditions": [
+           {
+            "key": null,
+            "neg": null,
+            "op": "pre",
+            "type": "path",
+            "value": "/api/institution/",
+            "values": null
+           }
+          ]
+         }
+        ],
+        "description": "Refuse floods at the edge before a function is invoked.",
+        "name": "rate-limit-institution-gateway"
+       }
+      ]
+     }
+    },
+    "after_unknown": {
+     "managed_rulesets": {
+      "ai_bots": {},
+      "bot_protection": {},
+      "owasp": {
+       "gen": {},
+       "java": {},
+       "lfi": {},
+       "ma": {},
+       "php": {},
+       "rce": {},
+       "rfi": {},
+       "sd": {},
+       "sqli": {},
+       "xss": {}
+      }
+     },
+     "rules": {
+      "rule": [
+       {
+        "action": {
+         "rate_limit": {
+          "keys": [
+           false
+          ]
+         }
+        },
+        "condition_group": [
+         {
+          "conditions": [
+           {}
+          ]
+         }
+        ],
+        "id": true
+       }
+      ]
+     },
+     "team_id": true
+    },
+    "before": null
+   },
+   "mode": "managed",
+   "module_address": "module.edge",
+   "name": "this",
+   "provider_name": "registry.terraform.io/vercel/vercel",
+   "type": "vercel_firewall_config"
+  },
+  {
+   "address": "module.edge.vercel_project_deployment_retention.this",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "expiration_canceled": "1m",
+     "expiration_errored": "1m",
+     "expiration_preview": "1m",
+     "expiration_production": "1y",
+     "project_id": "REPLACE-IN-CHANGE-RECORD"
+    },
+    "after_unknown": {
+     "team_id": true
+    },
+    "before": null
+   },
+   "mode": "managed",
+   "module_address": "module.edge",
+   "name": "this",
+   "provider_name": "registry.terraform.io/vercel/vercel",
+   "type": "vercel_project_deployment_retention"
+  },
+  {
+   "address": "module.supabase.supabase_project.this[0]",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "database_password": "<redacted>",
+     "name": "semester-staging",
+     "organization_id": "org",
+     "region": "us-east-1",
+     "timeouts": null
+    },
+    "after_unknown": {
+     "id": true,
+     "instance_size": true,
+     "legacy_api_keys_enabled": true
+    },
+    "before": null
+   },
+   "index": 0,
+   "mode": "managed",
+   "module_address": "module.supabase",
+   "name": "this",
+   "provider_name": "registry.terraform.io/supabase/supabase",
+   "type": "supabase_project"
+  },
+  {
+   "address": "module.supabase.supabase_settings.this",
+   "change": {
+    "actions": [
+     "create"
+    ],
+    "after": {
+     "api": null,
+     "auth": null,
+     "database": null,
+     "network": "{\"db_allowed_cidrs\":[\"203.0.113.0/24\"],\"db_allowed_cidrs_v6\":[]}",
+     "pooler": null,
+     "ssl_enforcement": true,
+     "storage": null,
+     "timeouts": null
+    },
+    "after_unknown": {
+     "id": true,
+     "project_ref": true
+    },
+    "before": null
+   },
+   "mode": "managed",
+   "module_address": "module.supabase",
+   "name": "this",
+   "provider_name": "registry.terraform.io/supabase/supabase",
+   "type": "supabase_settings"
+  }
+ ],
+ "terraform_version": "1.9.8"
+}
