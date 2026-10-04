@@ -5,8 +5,9 @@
  * engine carries them as rows of `public.tasks`. A task written through both would exist in two places with two
  * clocks, and every deletion would be a race between them: the blob's union merge cannot express a delete, so
  * the old half would put back what the engine removed. So while the engine owns tasks, the old half does not
- * see them at all — not in what it pushes, not in what it takes, and not in the base it compares against
- * (`lib/deletions.ts` reads a task missing from the account as a deletion, which is exactly the wrong thing).
+ * take them back and does not count them in the base it compares against (`lib/deletions.ts` reads a task
+ * missing from the account as a deletion, which is exactly the wrong thing). It does still *push* them, though:
+ * a write-only mirror, so that a device on the same account that has not opted in keeps receiving tasks.
  *
  * ## The switch
  *
