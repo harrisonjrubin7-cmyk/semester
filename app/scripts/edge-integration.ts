@@ -31,6 +31,7 @@ export const SOURCES = [
   'server/integration/registry.ts',
   'server/integration/worker.ts',
   'src/lib/integration/adapter.ts',
+  '../packages/institution/src/ai-data-class.ts',
   'src/lib/integration/catalog.ts',
   'src/lib/integration/classification.ts',
   'src/lib/integration/crypto.ts',

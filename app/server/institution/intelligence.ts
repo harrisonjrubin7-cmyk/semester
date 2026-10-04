@@ -14,6 +14,7 @@ import type {
   InstitutionModelProvider,
   ProviderGenerationRequest,
 } from './providers/types.ts';
+import { checkProviderRequest } from './ai-data-class.ts';
 import { MemoryIntelligenceActionStore, type IntelligenceActionStore } from './intelligence-action-store.ts';
 
 export interface ApprovedIntelligenceSource {
@@ -218,6 +219,21 @@ export async function respond(input: IntelligenceRespondInput): Promise<Intellig
     sources,
     maxOutputTokens: MAX_OUTPUT_TOKENS,
   };
+  // The last point before budget is reserved and a provider is reached. Every
+  // field the request carries must be declared at or under the AI data-class
+  // ceiling; one that is not is refused by name, and audited the same way, with
+  // no content in either. See `ai-data-class.ts`.
+  const carried = checkProviderRequest(providerRequest);
+  if (!carried.ok) {
+    await input.audit?.(identity, {
+      category: request.category, provider: route.provider, model: route.model,
+      inputTokens: 0, outputTokens: 0, costCents: 0, policyDecision: `data-class-refused:${carried.highest}`,
+    });
+    return result(403, {
+      code: 'data-class-refused',
+      message: 'This request includes material above the data class Semester Intelligence accepts, so it was not sent.',
+    });
+  }
   let reservation: IntelligenceBudgetReservation | null = null;
   if (input.reserveBudget) {
     try {

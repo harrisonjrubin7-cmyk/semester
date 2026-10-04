@@ -28,9 +28,31 @@
  *  - Everything else at the top level (`mcp_servers`, `container`,
  *    `service_tier`, `speed`, `inference_geo`, `fallbacks`, …) is dropped.
  *
+ * And what the request may *carry* (privacy finding C7). Rebuilt fields are
+ * each given a data class (`SHARED_KEY_FIELD_CLASS`), and the request is
+ * refused, before it is counted, if it holds something above `AI_DATA_CEILING`
+ * (T2) that this function can see:
+ *
+ *  - **data_class** — the tier the caller attached, if any (the toolkit gate's
+ *    tier). Above the ceiling, or not one of T0-T6, is refused. It is never
+ *    forwarded.
+ *  - **tools** — a client tool is offered only if `aitools.ts` classes it at or
+ *    under the ceiling. `read_grades` and `read_attendance` (T3) are dropped,
+ *    and so is any tool nobody classified.
+ *  - **messages** — a `tool_use` or `tool_result` block that names such a tool,
+ *    or a result that cannot be tied to a tool, is refused.
+ *
+ * Prose is not read; see `packages/institution/src/ai-data-class.ts` for why. A
+ * refusal names fields and never contents, and carries `audit` so the caller
+ * can log it the same way.
+ *
  * Pure, and free of Deno APIs, so the app's test suite can import it the way
  * it imports `ltideeplink.ts`.
  */
+
+import { AI_DATA_CEILING, aiClassVerdict, type FieldClaim } from './integration/ai-data-class.ts';
+import type { DataClass } from './integration/ai-data-class.ts';
+import { TOOL_DATA_CLASS } from './aitools.ts';
 
 /** The models `lib/assistant.ts` offers. Kept in step by `claudeclamp.test.ts`. */
 export const ALLOWED_MODELS: readonly string[] = [
@@ -90,9 +112,53 @@ export const MAX_BODY_BYTES = 24 * 1024 * 1024;
 const SEARCH_TYPES = new Set(['web_search_20260209', 'web_search_20250305']);
 const EFFORTS = new Set(['low', 'medium', 'high']);
 
+/**
+ * The `error.code` of a refusal because the request holds something above the
+ * data-class ceiling. Its `audit` is what the function logs: field names and
+ * the highest class, never a value from the request.
+ */
+export const DATA_CLASS_REFUSED = 'data_class_refused';
+
+/**
+ * The class of each field the clamp can put in the forwarded body. Prose
+ * (`messages`, `system`) is declared as the product says it is, a student's
+ * own academic work, T2; everything else is the app's own configuration.
+ * A field added to the rebuilt body without a row here is refused as
+ * unclassified, and `claudeclass.test.ts` fails on the same.
+ */
+export const SHARED_KEY_FIELD_CLASS: Readonly<Record<string, DataClass>> = {
+  model: 'T0',
+  max_tokens: 'T0',
+  messages: 'T2',
+  system: 'T2',
+  stream: 'T0',
+  stop_sequences: 'T0',
+  thinking: 'T0',
+  tools: 'T0',
+  tool_choice: 'T0',
+  output_config: 'T0',
+};
+
+export interface DataClassAudit {
+  fields: string[];
+  highest: DataClass;
+}
+
 export type Clamped =
   | { ok: true; body: string; dropped: string[] }
-  | { ok: false; status: number; message: string; code?: string; allowed?: readonly string[] };
+  | { ok: false; status: number; message: string; code?: string; allowed?: readonly string[]; audit?: DataClassAudit };
+
+export const DATA_CLASS_MESSAGE =
+  'That request includes material marked as above what the shared key accepts, so it was not sent ' +
+  'and was not counted. Remove it and try again.';
+
+const classRefusal = (fields: string[], highest: DataClass, status = 422): Clamped => ({
+  ok: false,
+  status,
+  message: DATA_CLASS_MESSAGE,
+  code: DATA_CLASS_REFUSED,
+  audit: { fields, highest },
+});
 
 const refuse = (status: number, message: string): Clamped => ({ ok: false, status, message });
 
@@ -106,6 +172,34 @@ function isClientTool(t: Record<string, unknown>): boolean {
     isObject(t.input_schema) &&
     (t.type === undefined || t.type === 'custom')
   );
+}
+
+/** A tool's declared class, or undefined when nobody classified it. */
+const toolClass = (name: unknown): DataClass | undefined =>
+  typeof name === 'string' && Object.hasOwn(TOOL_DATA_CLASS, name) ? TOOL_DATA_CLASS[name] : undefined;
+
+/**
+ * What the history says about the tools whose answers it holds. A name nobody
+ * classified is reported as `(unlisted)`, not echoed: it is caller-supplied.
+ */
+function historyClaims(messages: unknown[]): FieldClaim[] {
+  const names = new Map<string, string>();
+  const claims: FieldClaim[] = [];
+  for (const m of messages) {
+    if (!isObject(m) || !Array.isArray(m.content)) continue;
+    for (const block of m.content) {
+      if (!isObject(block)) continue;
+      if (block.type === 'tool_use') {
+        const name = typeof block.name === 'string' ? block.name : '';
+        if (typeof block.id === 'string') names.set(block.id, name);
+        claims.push([`tool_use:${toolClass(name) ? name : '(unlisted)'}`, toolClass(name)]);
+      } else if (block.type === 'tool_result') {
+        const name = typeof block.tool_use_id === 'string' ? names.get(block.tool_use_id) : undefined;
+        claims.push([`tool_result:${toolClass(name) ? name : '(unlisted)'}`, toolClass(name)]);
+      }
+    }
+  }
+  return claims;
 }
 
 export interface ClampOptions {
@@ -149,6 +243,14 @@ export function clampRequest(raw: string, bytes: number, options: ClampOptions =
     return refuse(400, 'The request has no messages.');
   }
 
+  // ── what the request carries ────────────────────────────────────────────
+  const claims: FieldClaim[] = historyClaims(messages);
+  if (parsed.data_class !== undefined) {
+    claims.push(['data_class', typeof parsed.data_class === 'string' ? parsed.data_class : undefined]);
+  }
+  const carried = aiClassVerdict(claims, AI_DATA_CEILING);
+  if (!carried.ok) return classRefusal(carried.fields, carried.highest);
+
   const asked = parsed.max_tokens;
   if (typeof asked !== 'number' || !Number.isInteger(asked) || asked < 1) {
     return refuse(400, 'The request needs a whole-number max_tokens.');
@@ -181,7 +283,9 @@ export function clampRequest(raw: string, bytes: number, options: ClampOptions =
     for (const t of parsed.tools) {
       if (!isObject(t)) continue;
       if (isClientTool(t)) {
-        kept.push(t);
+        const cls = toolClass(t.name);
+        if (cls && aiClassVerdict([[String(t.name), cls]], AI_DATA_CEILING).ok) kept.push(t);
+        else dropped.push(`tool:${cls ? String(t.name) : '(unlisted)'}`);
       } else if (typeof t.type === 'string' && SEARCH_TYPES.has(t.type)) {
         const uses = typeof t.max_uses === 'number' ? Math.min(t.max_uses, MAX_SEARCHES) : MAX_SEARCHES;
         kept.push({ type: t.type, name: 'web_search', max_uses: Math.max(1, uses) });
@@ -208,9 +312,16 @@ export function clampRequest(raw: string, bytes: number, options: ClampOptions =
 
   const handled = new Set([
     'model', 'max_tokens', 'messages', 'system', 'stream', 'stop_sequences',
-    'thinking', 'tools', 'tool_choice', 'output_config',
+    'thinking', 'tools', 'tool_choice', 'output_config', 'data_class',
   ]);
   for (const k of Object.keys(parsed)) if (!handled.has(k)) dropped.push(k);
+
+  // A field in the rebuilt body that nobody classified is refused, not sent.
+  const unclassified = aiClassVerdict(
+    Object.keys(out).map((k): FieldClaim => [k, Object.hasOwn(SHARED_KEY_FIELD_CLASS, k) ? SHARED_KEY_FIELD_CLASS[k] : undefined]),
+    AI_DATA_CEILING,
+  );
+  if (!unclassified.ok) return classRefusal(unclassified.fields, unclassified.highest, 500);
 
   return { ok: true, body: JSON.stringify(out), dropped };
 }
