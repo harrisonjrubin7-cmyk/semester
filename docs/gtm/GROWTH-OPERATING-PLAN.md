@@ -20,7 +20,7 @@ Main already holds most of the *rules* and some of the *code*. Much of the *oper
 | 2 Activation milestones | `STUDENT-ONBOARDING-PLAYBOOK.md` (`student_activated` vs `student_first_win`), `ANALYTICS-EVENTS.md` | Milestones per persona and per product domain, each marked measurable today or not (§4) |
 | 3 Lifecycle map | `EMAIL-LIFECYCLE.md` (7 lines), `notify.ts` | Eight stages × six audiences, with trigger, channel, cap and suppression (§5) |
 | 4 Notification policy | `ETHICAL-ENGAGEMENT-AND-NOTIFICATIONS.md`, `gtm/messaging.ts`, `notify.ts` | One policy: channels, consent purposes, caps, accessibility, controls, stop rules (§6) |
-| 5 Content, social, ambassadors, community, briefs | `CONTENT-AND-CHANNEL-PLAN.md` (11 lines), `CONTENT-AND-COMMUNITY-PLAN.md`, `gtm/social.ts` pillars, `referral.ts`, AMB rows in the connect register | Editorial calendar, social operating rules, ambassador program design, seven campaign briefs (§7) |
+| 5 Content, social, ambassadors, community, briefs | `CONTENT-AND-CHANNEL-PLAN.md` (11 lines), `CONTENT-AND-COMMUNITY-PLAN.md`, `gtm/social.ts` pillars, `referral.ts`, AMB rows in the connect register | Editorial calendar, social operating rules, ambassador program design, eight campaign briefs (§7) |
 | 6 Product-led loops | `SEMESTER-WRAPPED.md`, `referral.ts`, ICS feed | Seven loops, each with the value it must create and the kill rule (§8) |
 | 7 Experimentation | `EXPERIMENTATION-PROTOCOL.md` (7 lines), `GROWTH-EXPERIMENT-BACKLOG.md` (5 rows) | Power reality for 50–200-person cohorts, template, veto guardrails, numeric stop conditions, ten more hypotheses (§9) |
 | 8 Attribution and privacy | `ANALYTICS.md` (three marks), `utm.ts`, CSP test, `ANALYTICS-EVENTS.md` | Three attribution tiers that respect the three-mark limit, data-minimisation table, the gaps (§10) |
@@ -90,6 +90,18 @@ Institutional stages are the implemented `SALES_STAGES` in `app/src/lib/gtm/stag
 ### Volume arithmetic
 
 The 1,000-student plan is 3–5 cohorts of 50–200 plus referrals and orientation workshops. No single campus-wide blast. Each 100–250 students passes the stage gate in `FIRST-1,000-STUDENTS-ADOPTION-PLAN.md` before the next opens. No conversion rate is assumed anywhere in this plan: none has been measured (`GROWTH-FUNNEL-SPEC.md` evidence state).
+
+What binds the next block is support capacity, not demand, so a channel decision is arithmetic. Every term is an input to be measured from the first cohort; none is a forecast and none may be quoted.
+
+```text
+Activated(c)  = Reached(c) × StartRate(c) × SetupCompletion(c)
+FirstWin(c)   = Activated(c) × FirstWinRate(c)
+Retained4(c)  = FirstWin(c) × Week4Return(c)
+SupportLoad   = Σc Activated(c) × ContactsPerActivated(c)
+Admit(c)      = min( Demand(c), (SupportCapacity − SupportLoad) / ContactsPerActivated(c) )
+
+The next block opens only when Retained4, SupportLoad and the trust guardrails are all within thresholds set from the previous block.
+```
 
 ## 4. Activation milestones
 
@@ -196,12 +208,17 @@ Quiet hours are evaluated in the **recipient's** time zone. Caps are per person 
 
 Held to code in §14: the daily caps and the quiet-hour window.
 
+**Timing.** Exam-period marketing email is allowed when opted in (decision 9, D-1241). Whatever the window, the dates come from the institution's calendar or a generic convention, never from a student's own deadlines: those are product data, not growth data.
+
+**Sunset and fatigue (proposal, §13 item 1).** Three consecutive marketing-class sends with no click and no in-app action afterward trigger one question: keep receiving these? No answer means stop. A person with no `opened` mark for 90 days is removed from marketing-class sends, evaluated at send time and not held as a profile; the account is untouched and only that person can opt back in. When reminders are repeatedly dismissed, offer a one-time "want fewer?" prompt in-app; it can only lower the caps, never raise them.
+
 ### 6.4 Accessibility of messages
 
 - Text first. Every email is complete as plain text; images carry alt text or are decorative and marked so.
 - Meaning never by colour or an image alone; descriptive link text, never "click here"; one clear action.
 - Left-aligned, short paragraphs, headings that are real headings, plain language. Reading level is a stated target to test, not a claim.
 - Captions and transcripts on all video; no autoplay; no content that expires in a way that excludes people who check slowly.
+- SMS and push say who is writing and carry their whole meaning in one plain sentence, with no emoji or symbol as the only carrier; SMS says how to stop.
 - Respect the person's stated language and reduced-motion and text-size preferences; test with a screen reader and at 200% zoom before approval.
 - Message templates pass the accessibility reviewer role in `activationGate`. That role is held by the same person as the owner, so the owner-is-not-approver rule cannot pass: **a template cannot go live until a second person holds the accessibility reviewer seat.**
 
@@ -218,6 +235,22 @@ Pre-ticked consent; confirmshaming ("No, I don't care about my grades"); false u
 Every send decision records campaign, template and version, consent version and an audit event. A send is refused for: no current consent, a stale consent version, a withdrawn topic, suppression, quiet hours, a reached cap, an inactive campaign or no template version (`decideSend`, `gtm_communication_events`).
 
 **Stop a channel** when any hold: complaint rate at or above the mailbox providers' published threshold (verify the current figure; plan to stay well under it), a rise in unsubscribes or notification disablement the experiment owner cannot explain within one review, any accessibility barrier found in a live message, any message that reached a suppressed person, an unresolved P0 or P1, or inability to honour a withdrawal within one send cycle.
+
+### 6.8 What the code enforces and what it does not
+
+So nobody assumes a guard exists that does not. Anything in a "No" row stays out of external material until it is built and shown to fail without it.
+
+| Rule | Enforced today? | Where |
+| --- | --- | --- |
+| Consent per channel and topic; latest record wins; suppression refuses even transactional email | Yes | `gtm/messaging.ts` `decideSend` |
+| SMS and push quiet hours; one frequency cap per decision | Yes | same |
+| An audit event on every send decision | Yes | `communication.send_decision` |
+| Daily in-app caps by tier | Yes | `notify.ts` |
+| No streak, leaderboard or shame wording in rendered strings | Yes | `community/engagement.test.ts` |
+| Opt-out alert above 0.1% of at least 1,000 delivered | Yes | `gtm/kpi.ts` `optOutAlert` |
+| Lifecycle email cap of 1 a week **and** 4 in 30 days; SMS 2 a week | **No.** `decideSend` takes one `FrequencyCap`, so two windows need a second check | Proposed, §6.3 |
+| Sunset after 90 days; one win-back per term | No | Proposed, §6.3 and LC-13 |
+| Marketing consent defaults off, confirmed opt-in, preference center | No: no sender or preference center exists | G2 inputs, §2 |
 
 ## 7. Content, social, ambassadors, community and campaigns
 
@@ -289,6 +322,22 @@ Dates for registration, finals and commencement vary by school: confirm each aga
 
 The in-app community is governed by [`COMMUNITY-PRIVACY-MODEL.md`](../COMMUNITY-PRIVACY-MODEL.md), [`CAMPUS-MODERATION-SOP.md`](../CAMPUS-MODERATION-SOP.md), [`COMMUNITY-MEDIA-SAFETY.md`](../COMMUNITY-MEDIA-SAFETY.md) and [`VOLUNTEER-MODERATOR-PROGRAM.md`](../VOLUNTEER-MODERATOR-PROGRAM.md). For brand channels, publish before opening: be respectful; no harassment, doxxing or sharing others' academic records; no content that helps anyone cheat or misrepresent their work (Semester is a study tool, not an essay mill); no medical, legal or mental-health advice, with resources linked instead; report, block and appeal routes; moderators named, trained and backed up; hours stated. **Do not open a space without a staffed moderator and an escalation owner.** Do not optimise comparison, popularity or outrage.
 
+Draft public text, for counsel to review before publication, including how it sits beside the terms and each institution's own conduct rules:
+
+> **How we keep this a good place to be**
+> 1. Be kind and specific. Disagree with ideas, not people. No harassment, threats, slurs or pile-ons.
+> 2. Keep other people's information theirs. Do not post anyone's schedule, grades, location, photos or messages without their say-so.
+> 3. Do your own work. Do not buy, sell or trade assignments, exam answers or exam content. Study together; submit your own.
+> 4. No pressure, scams or spam. Anyone paid by Semester or anyone else says so when they promote something.
+> 5. Be honest about what you know. Do not present guesses about policy, grades or deadlines as fact; your school's official sources win.
+> 6. Say what AI helped with, and check it before you rely on it.
+> 7. If someone might be in danger, get help: local emergency services or your campus crisis resources. We will point you to them; we are not a crisis service.
+> 8. Make it accessible: describe images, caption videos, avoid walls of emoji.
+> 9. Reports are read by a person. You can report any post or person, and we tell you what happened where safety allows. Nobody is penalised for reporting in good faith.
+> 10. You can appeal a removal or a limit and ask for a second look.
+
+Enforcement ladder: a removal with the rule cited, then a time-limited restriction, then an account limitation, then removal; severe cases (threats, exploitation, doxxing) skip steps. Every step is logged with the rule, the reviewer and the appeal route. **Limit:** an appeal should be decided by someone other than the original moderator, and today one person holds every role (§12.2), so until a second person exists an appeal goes to the founder with the original decision visible.
+
 ### 7.7 Campaign briefs
 
 Each brief is a `Campaign` object that must pass `activationGate`. Claim IDs are from the claims register; a brief cannot use a claim whose approval state forbids the channel.
@@ -301,6 +350,7 @@ Each brief is a `Campaign` object that must pass `activationGate`. Claim IDs are
 | B4 | What we will never measure | All | Students suspect analytics are surveillance | "Here is the list, and the code that enforces it" | CLM-009 qualified to named controls | Read the trust page | Trust-page reads → qualified conversations | Cite `FORBIDDEN` and its test only; no "secure" or "compliant" | G5 |
 | B5 | A pilot beside your systems | P5, P6 | Rip-and-replace is a non-starter | "26 weeks, a named cohort, read-only, with an exit" | CLM-004 conditional | Request scoping | Qualified accounts; committee coverage | No customer or outcome claims; no integration availability (CLM-005) | G0 discovery |
 | B6 | Take it with you | P1, P2 | Graduation breaks continuity | "Your work is yours: export it, keep it, or leave" | CLM-001, 002 | Export | Exports completed; not signups | No retention pressure on leavers | G5 |
+| B8 | Study week, calmly | P1, P2 | Finals are when students are most overloaded and easiest to target | "Study methods and where to get help, with nothing to buy" | None about the product beyond CLM-001 | None, or read the method | Saves and shares; never activation | This brief carries no promotion and no upgrade surface; no countdowns; stop on any complaint of feeling targeted | G1 in-app only, G5 public |
 | B7 | Beta invitations | Invited P1 | Early users want a say | "Help shape it; leave any time with your data" | CLM-003 | Accept invite | Accepted invites → first win | Invite-only; 4 statements from `PRIVATE-BETA-PROGRAM.md` are the only claims | G1 |
 
 ## 8. Product-led growth loops
@@ -313,11 +363,15 @@ A loop is allowed only if the sender gains something real, the receiver is not s
 | L2 Plan template | Student chooses to share a content-free plan structure | Shows a method they like | A working starting point | Structure only; no names, titles of private tasks or grades | Shares → activated | Any share containing personal content |
 | L3 Study-time coordination | Student invites a named classmate to find shared time | Easier group scheduling | Meeting set quickly | An invitation the sender writes and sends; no contact import | Invites → accepted | Any import of contacts; any unsolicited reminder |
 | L4 Referral link | Student shares a code | Helps a friend | Starts with a friend | A code in a URL; removed from the address bar on read | Came in, still here (`referral.ts`) | Pressure, rewards by count, or any identity disclosure |
-| L5 Calendar feed | Student subscribes a feed or exports ICS | Their plan in their own calendar | Shared availability if they choose | A feed they control and can revoke | Subscriptions revoked or kept | Token exposure |
+| L5 Calendar feed | Student subscribes a feed or exports ICS | Their plan in their own calendar | Shared availability if they choose | A feed they control and can revoke (`replaceFeed`) | Subscriptions revoked or kept | Token exposure; any prompt to share the URL beyond the student's own calendar apps, because it exposes every deadline in the account (`SHARE_WARNING` in `subscribe.ts`) |
 | L6 Wrapped export | Student confirms a private recap | Reflection | Optional audience | A text or image they previewed and approved | Exports confirmed (device-side only) | Anything not previewed; any comparison |
 | L7 Cohort evidence | Pilot outcome review | Champion defends the purchase | Next department sees real data | Aggregates at n ≥ 10 with method and caveats | Referrals from champion | Small cell; outcome claims beyond the data |
 
 Anti-spam guardrails for every loop: invitations are written and sent by a person through their own share sheet or link; no automatic reminders to non-users; at most one Semester-originated message to a non-user, and only on explicit request; sender sees how many acted, never who; a recipient can decline once and permanently.
+
+Also rejected: any unlock or reward for inviting ("invite 3 friends"), an invitation that spoofs a person ("Sam invited you"), a plan public by default, and anything that makes a classmate's non-use visible to anyone.
+
+Loop health is reported with the result, never optimised for volume: invitee activation and Day-30 retention against the organic baseline; shares revoked or expired before first view (students are using the controls); and **unwanted share or invite reports per 1,000 shares, the guardrail**. A confirmed non-consensual share pauses that loop pending review.
 
 ## 9. Experimentation framework
 
@@ -329,6 +383,14 @@ Cohorts are 50–200 students. For a two-arm test on a binary outcome with a 40%
 - Prefer within-cohort before/after with a matched comparison group, reporting intervals not p-values. "Not significant" is not "no effect" (existing protocol).
 - Triangulate with representative usability sessions and the clarity check before trusting a small difference.
 - Never run tests whose only plausible winner is the manipulative variant.
+
+### 9.1a Design rules
+
+- **Randomise by cohort where students interact.** Classmates share information, so individual randomisation inside a cohort contaminates the comparison; compare cohorts or stagger starts.
+- **Holdouts, never withholding service.** Every lifecycle program keeps a defined control so its effect can be estimated; a holdout never withholds a service or critical message.
+- **Check the plumbing first.** Assignment logging, sample-ratio mismatch and event loss are checked before any outcome is read.
+- **Novelty and carry-over.** Allow a washout; do not read the first-session spike as a result.
+- **Pre-specify and do not peek.** One primary metric and a fixed horizon; an interim look is for harm only.
 
 ### 9.2 Pre-registration template
 
@@ -486,7 +548,7 @@ Every dashboard: labels its attribution model; suppresses cells under 10; logs a
 
 Each becomes `docs/decisions/D-<pull request number>.md` when taken, per `CLAUDE.md`. None is taken here.
 
-1. **Lifecycle email default cap** (≤ 1 a week, ≤ 4 in 30 days) and **win-back** (one per term, 21-day trigger).
+1. **Lifecycle email default cap** (≤ 1 a week, ≤ 4 in 30 days), **win-back** (one per term, 21-day trigger) and the **90-day sunset** (§6.3). The two-window cap needs a code change first (§6.8).
 2. **Analytics Tier 1**: the cookieless public-site counter and optional "how did you hear" answer (needs an `ANALYTICS.md` question and a reviewed PR).
 3. **Which proposed marks** (`acted`, `plan`, `backup`, `path`, `agenda`) to move from definition to implementation, in order.
 4. **Prospect retention period** (12 months after last interaction proposed).
@@ -495,6 +557,7 @@ Each becomes `docs/decisions/D-<pull request number>.md` when taken, per `CLAUDE
 7. **Institutional demand-signal reporting** (default off).
 8. **Reviewer assignments**: privacy, accessibility, claims, analyst, moderator, backup.
 9. **Exam-period marketing email: decided 2026-10-04, allowed with safeguards (D-1241).** Opt-in marketing email before midterms, registration and finals is allowed, using generic dates only, subject to every rule in §5 and §6.6 and the one-a-week cap. §5 and §6.6 are reworded to match.
+10. **Whether tip and education email is marketing for consent** (counsel). Until answered it is treated as marketing, so it needs the separate opt-in in §6.2.
 
 ## 14. Numbers held to code
 
@@ -538,6 +601,8 @@ A test (`app/src/lib/gtm/growthplan.test.ts`) fails if this table drifts from th
 - Small cohorts cannot detect small effects.
 - Ambassador compensation and disclosure are unwritten.
 - Whether Advisor Meeting Mode has shipped is unconfirmed.
+- `decideSend` takes one frequency cap, so the proposed two-window email cap and sunset are not enforceable until it is extended (§6.8).
+- An appeal cannot be decided by a different person while one person holds every role (§7.6).
 - The claims register's price row (CLM-015) predates the live Plus acceptance and needs a dated re-review.
 
 ### Files changed
@@ -546,7 +611,7 @@ A test (`app/src/lib/gtm/growthplan.test.ts`) fails if this table drifts from th
 
 ### Tests added
 
-`growthplan.test.ts`: the numbers in §14 equal the code; every claim ID cited exists in the register; every repository link resolves; every `FORBIDDEN` id appears in the plan.
+`growthplan.test.ts`: the numbers in §14 equal the code; every claim ID cited exists in the register; every repository link resolves; every `FORBIDDEN` id appears in the plan; the stage chain in §3 equals `SALES_STAGES`; the paid-acquisition flag stated in §2 equals `plans.ts`; every backticked file the plan names exists; the opt-out alert threshold quoted in §6.8 matches `optOutAlert`.
 
 ### Accessibility implications
 
