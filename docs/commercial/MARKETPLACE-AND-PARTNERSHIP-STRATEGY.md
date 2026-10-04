@@ -15,7 +15,7 @@
 
 - **Fact.** The marketplace does not exist. `docs/PLATFORM-CONSTITUTION.md` J-14: "The sponsorship gate is built and tested; … no marketplace." I-03 (workflow marketplace) is `absent`.
 - **Fact.** Role `marketplace_partner` exists with no surface (`app/src/lib/rolelaunch.ts`, `supabase/migrations/20260926150000_expansion_roles_and_features.sql`); its stated limit is "Student data absent authorized interaction".
-- **Fact.** D-009 held billing out; D-128 stepped aside for **one** plan (Semester Plus, Stripe *test* keys). `docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md` says that policy must be reviewed before a live key is set. The register at `docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json` has `individual-ga` **BLOCKED** ("payments/tax/refund operations, support capacity"), `support` **INTERNAL** ("staffed queue, backup owner"), and no row for a marketplace.
+- **Fact.** D-009 held billing out; D-128 stepped aside for **one** plan (Semester Plus, Stripe *test* keys). `docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md` says that policy must be reviewed before a live key is set. The register at `docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json` has `individual-ga` **BLOCKED** ("payments/tax/refund operations, support capacity"), `support` **INTERNAL** ("staffed queue, backup owner"). A `marketplace` row at **BLOCKED** was added alongside this page, so the register now states the claim ceiling for it.
 - **Fact.** The lines not crossed (`docs/MARKET-LEADERSHIP.md`): no student data sold; employers never receive student-level data; no targeted ads from education records (DO-NOT-BUILD 10); *no pay-to-win placement is recorded as "proposed", not as a held boundary*.
 - **Fact.** Four existing designs this page must be consistent with, none built: [`PROVIDER-MATURITY-CERTIFICATION-PARTNERSHIPS.md`](../PROVIDER-MATURITY-CERTIFICATION-PARTNERSHIPS.md) (`provider_registry`, evidence-row-or-no-claim), [`EXTENSION-ECOSYSTEM-GOVERNANCE.md`](../EXTENSION-ECOSYSTEM-GOVERNANCE.md) (`extension_catalog`, `tenant_extensions`, `extension:approve`, offboarding before approval), `app/src/lib/gtm/sponsor.ts` (approved and prohibited categories, protected surfaces), and [`CAMPUS-ESCALATION-POLICY.md`](../CAMPUS-ESCALATION-POLICY.md) (two different professionals, written reasons, an allowlisted payload).
 - **Fact.** `docs/operating-model/COMMERCIAL-GOVERNANCE.md`: marketplace revenue share is "set by finance; sponsors never receive student-level data"; payout reconciliation is monthly; payee changes are verified out-of-band.
@@ -516,11 +516,11 @@ Nothing in sections 1–10 may open for real students, providers or money until 
 
 ### Risks and unresolved questions
 
-Regulatory (section 11); revenue incentive vs safety (8.4); empty marketplace and low liquidity (a thin directory is worse than none — phase on named cohorts); accessibility of third-party content; provider concentration; fraud and chargebacks outrunning the staffed queue; a first outage in the payment or webhook path; scope pressure to open M4 for revenue before G-RISK; the "no pay-to-win" rule being only *proposed*; the capability register not yet listing a marketplace row.
+Regulatory (section 11); revenue incentive vs safety (8.4); empty marketplace and low liquidity (a thin directory is worse than none — phase on named cohorts); accessibility of third-party content; provider concentration; fraud and chargebacks outrunning the staffed queue; a first outage in the payment or webhook path; scope pressure to open M4 for revenue before G-RISK; the "no pay-to-win" rule being only *proposed*.
 
 ### Files changed or proposed
 
-*Changed:* this page. *Proposed, not built:* `supabase/migrations/<ts>_marketplace.sql` and `supabase/marketplace.check.sql`; `provider_registry`, `provider_certifications` (provider-maturity doc); `extension_catalog`, `tenant_extensions`, `extension_reviews`, `extension_offboarding_records` (extension doc); `marketplace_listing`, `marketplace_order`, `marketplace_entitlement`, `marketplace_dispute`, `marketplace_payout`, `marketplace_case`; flag `module.marketplace` in `app/src/lib/flags.ts`; `docs/trust/MARKETPLACE-PROVIDER-TERMS-DRAFT.md`; runbooks listed under *Operational*; a `marketplace` row in `docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json` at `BLOCKED`; a held-boundary entry for no paid ranking.
+*Changed:* this page; `docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json` (one new row, `marketplace`, `BLOCKED`). *Proposed, not built:* `supabase/migrations/<ts>_marketplace.sql` and `supabase/marketplace.check.sql`; `provider_registry`, `provider_certifications` (provider-maturity doc); `extension_catalog`, `tenant_extensions`, `extension_reviews`, `extension_offboarding_records` (extension doc); `marketplace_listing`, `marketplace_order`, `marketplace_entitlement`, `marketplace_dispute`, `marketplace_payout`, `marketplace_case`; flag `module.marketplace` in `app/src/lib/flags.ts`; `docs/trust/MARKETPLACE-PROVIDER-TERMS-DRAFT.md`; runbooks listed under *Operational*; a held-boundary entry for no paid ranking.
 
 ### Tests added
 
@@ -553,7 +553,7 @@ Runbooks to write and rehearse (named owner each): provider onboarding and re-ve
 | --- | --- | --- | --- | --- |
 | J-14 | Ethical revenue and marketplace controls | `partial` (unchanged) | `app/src/lib/gtm/sponsor.ts`; this page | No marketplace; no per-item why/who/paid/data/hide card |
 | I-03 | Education workflow marketplace | `absent` (unchanged) | — | Depends on extension governance |
-| (new, proposed) | Marketplace and provider governance | `BLOCKED` in the capability register | This page | Gates G-OWN … G-EXIT |
+| `marketplace` (new) | Marketplace and provider governance | `BLOCKED` in the capability register | This page; `docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json` | Gates G-OWN … G-EXIT |
 | (existing) | Provider maturity and partnerships | designed | `docs/PROVIDER-MATURITY-CERTIFICATION-PARTNERSHIPS.md` | Waits for #779's catalog |
 | (existing) | Extension ecosystem governance | designed | `docs/EXTENSION-ECOSYSTEM-GOVERNANCE.md` | Waits for classification |
 
