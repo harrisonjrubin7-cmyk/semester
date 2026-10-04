@@ -962,14 +962,16 @@ and QA (§7.6). Volunteers already get blind control items that look identical t
 
 As built: only a decided case can be appealed; only one appeal; a decision of `allow` or
 `close_no_action` is not appealable; an appeal is always professional; a reviewer who took
-part in the decision may not decide the appeal (`moderation.ts`). Granted appeals reverse
-the safety state; they do not delete it.
+part in the decision may not decide the appeal (`moderation.ts`). **An appeal must be filed within
+thirty days of the decision** (`APPEAL_RULES` in `moderation.ts`; `appeal_community_decision` and
+`my_community_notices` in `20261004130000_community_appeal_window.sql`; held to each other by
+`appealwindow.test.ts`). The student notice says so in words, and the database no longer offers an
+appeal it would refuse. Granted appeals reverse the safety state; they do not delete it.
 
-Gaps (**DECISION**; the code has no clock):
+Still missing (**DECISION**; the code has no deadline for *deciding* an appeal):
 
 | Missing | Proposal |
 | --- | --- |
-| A filing window | 30 days from the notice |
 | A decision deadline | 10 business days, with the person told if it will be exceeded and why |
 | Notice of new evidence | The appellant may add a statement and evidence; both go to the case |
 | Independent senior path | An appeal of a P0 account restriction is decided by a senior reviewer who took no part |
@@ -1189,7 +1191,7 @@ what must exist before the matching tier of work is staffed.
 | T8 | **Redaction engine** | Layers R0–R8 of §3.7 applied in one place, not per screen | R0, R6, R8 **BUILT**; remainder **SPECIFIED** |
 | T9 | **Evidence vault** | Classes E0–E3; capture by the system; SHA-256; custody log; **no download**; view-only with reason; hold-aware | Case store and hashes **BUILT**; E2 stop-view and custody log fields **SPECIFIED** |
 | T10 | **Moderation console** | Blind views, recusal, reason codes, ladder enforcement, two-person escalation, gold-set cases, appeals by a different professional | **BUILT** (`app/src/community/*`, volunteer console, safety read) |
-| T11 | **Appeals module** | Filing window, deadline, new evidence, notice of outcome | One appeal and independence **BUILT**; clocks **SPECIFIED** |
+| T11 | **Appeals module** | Filing window, deadline, new evidence, notice of outcome | One appeal, independence and the thirty-day filing window **BUILT**; decision deadline **SPECIFIED** |
 | T12 | **Counsel queue** | Items held by reference, privilege marking, decision recorded in the system, linked case, SLA | Template **BUILT** (docs); tool **SPECIFIED** |
 | T13 | **Audit viewer** | Search the hash-chained events by case, grant, requester, subject; verify the chain; export to counsel by request | Chain, manifests, nightly verification **BUILT**; viewer for support grants **SPECIFIED** |
 | T14 | **Student-visible access history** | Show a person who looked at their data, what, when, and why | Supporter event log **BUILT**; staff **SPECIFIED** |
@@ -1277,7 +1279,7 @@ describes whether anything can compute the metric today.
 | **Time to resolution** | `resolved_at − created_at`, excluding *waiting on person* | By category; reopened tickets measured to final resolution | Support lead | Weekly | **SPECIFIED** |
 | **Time to containment (T&S)** | Report received → first protective action | P0/P1 only; automated holds count as zero-minute but reviewed | T&S lead | Weekly | Event times **BUILT** in case events |
 | **Time to human review (T&S)** | Report received → first human decision | By severity | T&S lead | Weekly | **BUILT** events; no reader |
-| **Appeal turnaround** | Appeal filed → appeal decided | All appeals | Senior reviewer | Monthly | Events **BUILT**; no clock |
+| **Appeal turnaround** | Appeal filed → appeal decided | All appeals | Senior reviewer | Monthly | Events **BUILT**; no decision deadline, so nothing can read an overdue one |
 | **Backlog age** | Open cases by age band and severity | Includes *waiting on person* separately | Support / T&S leads | Daily | **SPECIFIED** |
 | **QA score** | Rubric result (§7.3) | Sampled cases | QA reviewer | Weekly | **SPECIFIED** |
 | **CSAT** | % satisfied on the one-question survey (§7.4) | Responding resolved tickets; **excluded** on safety, harassment, privacy-incident cases | Support lead | Monthly | **SPECIFIED** |
@@ -1664,7 +1666,7 @@ risk. Exit evidence is what must be filed, in the repository's convention.
 | G-10 | Certification gates capabilities | Access without training is the failure | Support / T&S leads | Seat refused with a lapsed record | Any A2 |
 | G-11 | Cascade deletion of approval rows with a staff account | Misuse evidence could be removed by leaving | Security | Hold-before-offboard procedure and/or retained rows | A3 |
 | G-12 | Attachment scan and quarantine for tickets | Metadata strip exists; scan does not | Security | Test | Attachments on |
-| G-13 | Appeal filing window and decision deadline | The code has no clock | T&S lead | Decision; function; test | T&S launch |
+| G-13 | Appeal **decision deadline** (the thirty-day filing window is built) | A reviewer's queue has no overdue state for an appeal | T&S lead | Decision; function; test | T&S launch |
 | G-14 | Imminent-harm exception and welfare-check procedure | A two-person rule can be too slow | Counsel + T&S | Counsel memo; drill | Safety playbook |
 | G-15 | Wire moderation into `human_overrides` | Override patterns have no producer in this domain | T&S lead | Producer + test | Quarterly review |
 | G-16 | Professional-grade gold set and QA module | Consistency is claimed, not measured | QA reviewer | Gold set; first calibration | T&S launch |
@@ -1715,7 +1717,7 @@ Each has a recommendation. None is decided here.
 | D2 | Ticket retention | 12 months after close for text; aggregate only thereafter; counsel to confirm |
 | D3 | A2 default and max duration | 30 min / 4 h, no extension |
 | D4 | Imminent-harm exception | Adopt, after counsel approves the situations and wording |
-| D5 | Appeal window and deadline | 30 days / 10 business days |
+| D5 | Appeal window and deadline | 30 days / 10 business days. **The 30-day filing window is built.** The 10-business-day decision deadline is not: it needs a reader (an overdue state in the reviewer queue) to be more than a number |
 | D6 | Whether any staff may read student records before G-07 to G-10 exist | No |
 | D7 | Whether to use a vendor for T1 or after-hours safety triage | Not before Phase C, and only with `Q-22` resolved |
 | D8 | Make detector-rule changes two-person | Yes |
@@ -1743,6 +1745,6 @@ This document relies on, and does not replace:
 | Training and launch content | [`LAUNCH-CONTENT-AND-TRAINING.md`](LAUNCH-CONTENT-AND-TRAINING.md) |
 
 **Where this document differs from a source.** It proposes (does not apply) these changes: an appeal
-clock (the code has none); a staffed-hours ticket clock (the code is wall-clock); two-person detector tuning (today one
+decision deadline (the filing window is now built; there is no deadline for deciding); a staffed-hours ticket clock (the code is wall-clock); two-person detector tuning (today one
 senior reviewer, stamped); and moving the support-access duty from a registered requirement to a built
 staff-session mechanism. It treats the one-person staffing reality as a constraint rather than assuming a team.
