@@ -22,11 +22,14 @@ import { TodayDecisionSurface } from './TodayDecisionSurface';
 
 let host: HTMLDivElement;
 let root: Root;
-let wide = false;
+let viewportWidth = 1199;
+let installed = false;
 
 beforeAll(async () => {
   window.matchMedia = ((query: string) => ({
-    matches: wide && query.includes('min-width: 1200px'),
+    matches: query.includes('display-mode: standalone')
+      ? installed
+      : viewportWidth >= Number(query.match(/min-width:\s*(\d+)px/)?.[1] ?? Number.POSITIVE_INFINITY),
     addEventListener: () => {},
     removeEventListener: () => {},
   })) as unknown as typeof window.matchMedia;
@@ -55,7 +58,8 @@ afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
   localStorage.clear();
-  wide = false;
+  viewportWidth = 1199;
+  installed = false;
   vi.useRealTimers();
 });
 
@@ -191,7 +195,7 @@ describe('with the flag on', () => {
   });
 
   it('explains in a drawer beside the page on a desktop, with a context pane', async () => {
-    wide = true;
+    viewportWidth = 1200;
     await mount(true);
     expect(host.querySelector('aside.today-context')).not.toBeNull();
     await click(button(/^Why this\?$/, host.querySelector('.action-center article')!));
@@ -202,7 +206,7 @@ describe('with the flag on', () => {
   });
 
   it('does not present missing account freshness as current', async () => {
-    wide = true;
+    viewportWidth = 1200;
     await mount(true);
     const context = host.querySelector('aside.today-context')!;
     expect(context.querySelector('[data-source="unavailable_stale"]')).not.toBeNull();
@@ -211,12 +215,35 @@ describe('with the flag on', () => {
   });
 
   it('does not present a local cross-tab hydrate as an account sync', async () => {
-    wide = true;
+    viewportWidth = 1200;
     await mount(true, false, true);
     const context = host.querySelector('aside.today-context')!;
     expect(context.querySelector('[data-source="unavailable_stale"]')).not.toBeNull();
     expect(context.querySelector('[data-source="imported"]')).toBeNull();
     expect(context.textContent).toContain('No account sync recorded on this device.');
+  });
+
+  it('keeps the selected single-column presentation at 1199px', async () => {
+    viewportWidth = 1199;
+    await mount(true, true);
+    const center = host.querySelector('.today-action-center')!;
+    expect(center.classList).not.toContain('is-wide');
+    expect(center.firstElementChild?.classList).toContain('action-center-main');
+    expect(center.querySelector('aside.today-context')).toBeNull();
+  });
+
+  it.each([
+    { display: 'browser', standalone: false },
+    { display: 'installed app', standalone: true },
+  ])('keeps the selected full-width focus presentation at 1200px in the $display', async ({ standalone }) => {
+    viewportWidth = 1200;
+    installed = standalone;
+    await mount(true, true);
+    const center = host.querySelector('.today-action-center')!;
+    expect(center.classList).not.toContain('is-wide');
+    expect(center.children[0]?.classList).toContain('action-center-main');
+    expect(center.children[1]?.classList).toContain('today-context');
+    expect(center.querySelector('.action-panel-primary button.btn-primary.btn-block')).not.toBeNull();
   });
 
   it('says nothing Today does not say about a student', async () => {

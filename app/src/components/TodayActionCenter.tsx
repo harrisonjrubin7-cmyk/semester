@@ -47,7 +47,7 @@ const ACCOUNT_SYNC_FRESH_MS = 24 * 60 * 60 * 1000;
  * - at most one urgent commitment and four time-first rows, never repeating
  *   the item the Action Center leads with;
  * - five quick actions;
- * - on a desktop, a context pane beside the column.
+ * - on a desktop, a context pane after the column.
  *
  * With the flag off none of this renders, and Today is the #761 briefing.
  */
@@ -186,7 +186,7 @@ export function TodayActionCenter({
   const showClosure = closure?.line ?? null;
 
   return (
-    <section className={`today-action-center${wide ? ' is-wide' : ''}`} aria-label="Today">
+    <section className="today-action-center" aria-label="Today">
       <div className="action-center-main">
         <section className="action-panel action-panel-primary" aria-label="Your next best step">
           <div className="action-panel-heading">
