@@ -197,12 +197,12 @@ written, the request is refused. Today `audit` is optional in `respond()`.
 | --- | --- | --- |
 | `GW-01` | One request contract and pipeline for all three route classes | designed |
 | `GW-02` | Provider-agnostic: a second provider is a route row and an adapter, not a fork | not started: runtime refuses non-OpenAI |
-| `GW-03` | Routes pin a version identifier; an alias cannot be activated | not started |
-| `GW-04` | Data zone on tenants and regions on routes; no route outside the zone | not started: no field exists |
+| `GW-03` | Routes pin a version identifier; an alias cannot be activated | **tested as a pure rule** (`isPinned`, refusal `alias`); not wired. The model ids in today's gateway tests (`openai:gpt-5-mini`) are aliases and would be refused |
+| `GW-04` | Data zone on tenants and regions on routes; no route outside the zone | **tested on the route table** (`regions`, refusal `zone`, no cross-zone fallback); `ai_policy` still has no zone column, and nothing is wired |
 | `GW-05` | `zero_retention` and `training: none` are attested with a contract reference | not started |
-| `GW-06` | Route selection filters on policy, zone, capability, tier approval and evidence, then ranks | partial: allow-list and cost only |
-| `GW-07` | Failover rules F1–F8 | not started |
-| `GW-08` | Fallback list approved per tenant in advance | not started |
+| `GW-06` | Route selection filters on policy, zone, capability, tier approval and evidence, then ranks | **tested as pure functions** (`selectRoutes`: ten refusal reasons, deterministic rank); the runtime still calls `chooseModel` |
+| `GW-07` | Failover rules F1–F8 | **F1–F6 and F8 tested as pure functions** (`afterFailure`, `selectRoutes`, `reserveCents`); F7 (`fellBack`) computed, not surfaced; no second provider is installed |
+| `GW-08` | Fallback list approved per tenant in advance | **tested** (a route off the list is never a fallback); the list is not stored anywhere yet |
 | `GW-09` | Per-route circuit breaker, visible and manually settable | not started |
 | `GW-10` | Tenant isolation proven through the AI path | not started |
 | `GW-11` | Per-feature state, per-feature budget | not started |
