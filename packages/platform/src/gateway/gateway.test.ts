@@ -157,11 +157,16 @@ describe('idempotency', () => {
     const { c, store, ctx } = setup();
     let release!: () => void;
     const gate = new Promise<void>((r) => (release = r));
+    // Gate on the first handler actually running. The request is hashed with crypto.subtle before the store is
+    // touched, which is genuinely asynchronous, so waiting a microtask (as this once did) races on a slow runner.
+    let started!: () => void;
+    const running = new Promise<void>((r) => (started = r));
     const first = withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => {
+      started();
       await gate;
       return 1;
     });
-    await Promise.resolve();
+    await running;
     await expect(withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 2)).rejects.toMatchObject({ code: 'idempotency_in_progress', retryAfterSeconds: 60 });
     c.advance(IDEMPOTENCY_LEASE_MS + 1);
     const takeover = await withIdempotency(store, { clock: c }, ctx(TENANT_A, 'p'), 'x.y', {}, async () => 3);
