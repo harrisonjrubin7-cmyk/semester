@@ -74,11 +74,9 @@ feel harder and less fluent than rereading, so a tool optimised for how
 satisfying a session feels will drift away from them. That is why
 [07](07-METRICS.md) refuses satisfaction and time as success measures.
 
-*Citation check, 2026-10-04: the four sources in this pack were each located
-and the specific claim made of each was checked against the paper's abstract or
-a search summary of it, not against the full text in every case; see §4 for
-what was and was not confirmed. Verify against the full text before using any
-of them in a public or contractual claim.*
+*Citation check, 2026-10-04: the four sources in this pack were each checked
+against a full-text copy; see §4 for what was confirmed, what was corrected and
+the caveats on each. None supports a claim about Semester.*
 
 ### Requirements: study
 
@@ -148,7 +146,7 @@ applied to pedagogical ones.
   prompted to support learning. Both raised practice performance (reported as
   +48% and +127%), but once access was removed the plain-chat group scored 17%
   *worse* than a no-AI control, while the guarded tutor largely removed that
-  harm. Kestin & Miller (2025, *Scientific Reports*, N=194, Harvard physics,
+  harm. Kestin et al. (2025, *Scientific Reports*, N=194, Harvard physics,
   crossover) found a purpose-built, pedagogy-driven AI tutor outperformed an
   in-class active-learning lesson; it did **not** compare against an unguided
   chatbot, so it shows a well-designed tutor can work, not that guardrails
@@ -164,21 +162,26 @@ applied to pedagogical ones.
 
 ### Citation check (2026-10-04)
 
-| Source | Confirmed | Not confirmed | Changed in this pack |
-| --- | --- | --- | --- |
-| Dunlosky, Rawson, Marsh, Nathan & Willingham (2013), *Psychological Science in the Public Interest* 14(1), 4–58 | Exists; full text retrieved and searched for the ratings: practice testing and distributed practice high; elaborative interrogation, self-explanation and interleaved practice moderate; five techniques low | — | **Corrected**: the pack had said retrieval, spacing *and interleaving* were rated most useful; interleaving was moderate |
-| Hattie & Timperley (2007), *Review of Educational Research* 77(1), 81–112 | Exists; the task / process / self-regulation / self levels | Not read in full | None needed; caveat "from memory" removed |
-| Bastani et al. (2025), *PNAS*, "Generative AI without guardrails can harm learning" | Exists; the two-tutor design, +48% / +127% practice, −17% exam for the plain-chat group, harm largely removed by the guarded tutor (author's own and secondary summaries) | Full text not read (publisher page returned 403). A PNAS correction exists; it concerns an author affiliation only | **Rewritten** with the figures and the setting; "2024/2025" dropped |
-| Kestin & Miller (2025), *Scientific Reports* 15, 17458 | Exists; N=194, crossover, AI tutor vs in-class active learning | Full text not read (paywall redirect) | **Corrected**: the pack implied it compared guardrailed with unguided AI; it did not |
+Each source was checked against a full-text copy; where that copy is not the
+published version, the table says so.
 
-Still to do before external use: read Hattie & Timperley, Bastani et al. and
-Kestin & Miller in full; none of the four supports a claim about Semester.
+| Source | Confirmed | Caveat | Changed in this pack |
+| --- | --- | --- | --- |
+| Dunlosky, Rawson, Marsh, Nathan & Willingham (2013), *Psychological Science in the Public Interest* 14(1), 4–58 | Full text: practice testing and distributed practice high; elaborative interrogation, self-explanation and interleaved practice moderate; summarisation, highlighting, keyword mnemonic, imagery for text, rereading low | — | **Corrected**: the pack had said retrieval, spacing *and interleaving* were rated most useful; interleaving was moderate |
+| Hattie & Timperley (2007), *Review of Educational Research* 77(1), 81–112 | Full-text copy: task, process, self-regulation and self levels; "praise at the self level is rarely effective"; the three questions (where am I going, how am I going, where to next) | A review and conceptual model, not a trial | None needed; caveat "from memory" removed |
+| Bastani et al. (2025), *PNAS*, "Generative AI without guardrails can harm learning" | Author-hosted full text: field experiment in a Turkish high school, nearly 1,000 students in grades 9–11, four 90-minute sessions; +48% (GPT Base) and +127% (GPT Tutor) on practice; −17% on the later exam for GPT Base, largely mitigated by GPT Tutor | Read from the author-hosted version, not the published PNAS text. A PNAS correction exists and concerns an author affiliation only | **Rewritten** with the figures and setting; "2024/2025" dropped |
+| Kestin, Miller, Klales, Milbourne & Ponti (2025), *Scientific Reports* 15, 17458 | Open-access full text: randomised crossover, N=194, AI tutor vs in-class active learning; median post-test 4.5 vs 3.5; effect size 0.63 (linear), larger under quantile regression; no unguided-chatbot arm | Single institution; custom-built platform with pre-written solutions; new material at the "understand and apply" level, so it may not generalise to synthesis or review | **Corrected**: the pack implied a comparison with unguided AI; there was none. Author shorthand changed from "Kestin & Miller" to "Kestin et al." |
+
+None of the four supports a claim about Semester. They are an E1 basis for the
+design, no more.
 
 ## 5. Open items for this document
 
 1. A named learning scientist and an academic-governance body do not exist
    yet; LI-EVD-04 cannot be met until they do (see [08](08-GOVERNANCE-AND-REQUIREMENTS-TRACE.md) §1).
-2. Every citation above needs verification against the primary source before
-   external use.
+2. The four citations were checked on 2026-10-04 (§4). Bastani et al. was read
+   from the author-hosted version, so quote figures from the published PNAS
+   text before using them externally, and re-check the sources before any
+   public or contractual claim.
 3. There is no mechanism to collect outcome data beyond what an instructor
    already holds in graded work; see the tension stated in [07 §6](07-METRICS.md).
