@@ -52,3 +52,19 @@ describe('text spacing', () => {
     expect(css).toMatch(/word-spacing:\s*var\(--word-space,\s*0\);/);
   });
 });
+
+describe('display type keeps its own spacing', () => {
+  const css = readFileSync(join(__dirname, '../styles/app.css'), 'utf8');
+  const app = readFileSync(join(__dirname, '../App.tsx'), 'utf8');
+
+  it('.chrome-text resets word spacing', () => {
+    const block = /\.chrome-text\s*\{[^}]*font-family:\s*var\(--font-display\)[^}]*\}/.exec(css)?.[0] ?? '';
+    expect(block).toMatch(/word-spacing:\s*0;/);
+  });
+
+  it('the page title neither inherits letter spacing nor word spacing', () => {
+    const h1 = /<h1[\s\S]*?data-page-title[\s\S]*?>/.exec(app)?.[0] ?? '';
+    expect(h1).toMatch(/letterSpacing:\s*0,/);
+    expect(h1).toMatch(/wordSpacing:\s*0,/);
+  });
+});

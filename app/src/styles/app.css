@@ -2127,6 +2127,8 @@ a:hover {
      negative tracking is what makes a large heading look set rather than
      typed. */
   letter-spacing: -0.012em;
+  /* Display type is not body text: the reader's spacing (`textSpacing`) stops here. */
+  word-spacing: 0;
 }
 @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
   .chrome-text {

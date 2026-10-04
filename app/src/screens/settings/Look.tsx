@@ -514,8 +514,8 @@ export function SettingsLook() {
               />
               <div style={HINT}>
                 {TEXT_SPACINGS.find((t) => t.id === state.textSpacing)?.blurb} Separate from line spacing:
-                crowded letters and crowded lines are different complaints. Headings keep their own
-                spacing.
+                crowded letters and crowded lines are different complaints. The big display
+                headings keep their own spacing.
               </div>
             </CustomRow>
             <CustomRow>

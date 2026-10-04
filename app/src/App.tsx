@@ -419,7 +419,10 @@ function Header({
             overflowWrap: 'anywhere',
             margin: 0,
             fontWeight: 'inherit',
-            letterSpacing: 'inherit',
+            // 0, not `inherit`: the reader's letter spacing (`textSpacing`) is set on the
+            // device and would otherwise reach the display heading through the header.
+            letterSpacing: 0,
+            wordSpacing: 0,
           }}
         >
           {title}
