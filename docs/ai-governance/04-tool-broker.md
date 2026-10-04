@@ -47,7 +47,7 @@ that emits an unknown name gets a refusal, and the proposal is recorded as an an
 | `kill` | Its own disable key (`S3`, [chapter 07](07-incident-response-and-shutdown.md)) |
 | `eval` | The evaluation suite that covers it ([chapter 06](06-evaluation-framework.md)) |
 
-The sixteen consumer tools and six lookups become the first rows (counted from `TOOLS` and `LOOKUPS`). Their `Undo` and `reach` already are the
+The sixteen consumer tools and six lookups are the first rows (counted from `TOOLS` and `LOOKUPS`), in `ai-tools.ts`. The columns held in code today are name, kind, action tier, reach, undo, data tier and approval; the strict argument schema, `preview`, `precondition`, rate class and kill key are the server half, still to do. Their `Undo` and `reach` already are the
 `inverse` and `reach` fields; this is migration, not invention.
 
 ## Pipeline for one model-proposed call
@@ -156,7 +156,7 @@ Today the gateway rate-limits **requests per identity per minute** (`PostgresRat
 
 | ID | Requirement | State |
 | --- | --- | --- |
-| `TB-01` | A typed tool registry; nothing callable that is not in it | partial: consumer `TOOLS` and `LOOKUPS` are typed; the server has none |
+| `TB-01` | A typed tool registry; nothing callable that is not in it | **tested for the consumer tools**: 22 rows in `app/src/lib/governance/ai-tools.ts`, held to `TOOLS`, `LOOKUPS`, the role lists and app mode, and each row's `reach` and `undo` read back out of its branch of `readProposal`. Metadata only: nothing at runtime reads it. The server has no registry |
 | `TB-02` | Strict argument schemas; identity values injected, never read from model output | partial: consumer tools validated in `readProposal`; no server schema |
 | `TB-03` | The tool runs as the user through the policy decision point | not started |
 | `TB-04` | Per-tool disable key | not started |

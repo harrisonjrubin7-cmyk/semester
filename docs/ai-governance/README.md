@@ -103,14 +103,17 @@ kill reach and the gate lists will tell the next person when it stops being true
 - T3 data reaching a model has a written reconciliation, and nothing else has one;
 - the routes a server kill switch can reach are computed, and the consumer door is held to *not* reading it;
 - launch requirements are cumulative, never duplicated, and **printed in chapter 10 exactly as the code has them**;
-- the inventory chapter names every system and door, and the shutdown chapter names every uncontained route.
+- the inventory chapter names every system and door, and the shutdown chapter names every uncontained route;
+- `ai-tools.ts`: every tool a model may be offered has a registry row and every row a tool; each row's reach and undo
+  match the source; a tool that sends cannot carry the approval of a tap; and the two tools that carry education
+  records are named in the reconciliation and offered to no institutional role.
 
 ## Build order
 
 | Phase | Deliver | Exit gate |
 | --- | --- | --- |
 | **0** (this change) | Inventory guard, two fixes, the design | Gates green; both fixes shown to fail on revert |
-| **1** Foundations (**begun**: `GW-16` on the generation path, and the `IR-01` decision as tested code; the rest below is open) | Gateway contract and route table; audit as a precondition (`GW-16`); the server data-class gate (`RP-02`); AI policy through the Studio (`TC-02`); consumer tools as registry rows (`TB-01`); a filed baseline evaluation run and ratified thresholds (`EV-01`, `EV-02`); named owners | A baseline on file; no direct `ai_policy` writes; audit failure refuses generation |
+| **1** Foundations (**begun**: `GW-16` on the generation path, the `IR-01` decision as tested code, and `TB-01` for the 22 consumer tools; the rest below is open) | Gateway contract and route table; audit as a precondition (`GW-16`); the server data-class gate (`RP-02`); AI policy through the Studio (`TC-02`); consumer tools as registry rows (`TB-01`); a filed baseline evaluation run and ratified thresholds (`EV-01`, `EV-02`); named owners | A baseline on file; no direct `ai_policy` writes; audit failure refuses generation |
 | **2** Institutional route to pilot-readiness | Retrieval with authority, freshness and bounds; server-rendered, hash-bound previews; a second provider and the failover rules; the gateway **deployed** with its drill; an independent live red-team of the institutional route | Tier 2 gate met for `AI-03.3`; kill-switch drill on the deployed gateway |
 | **3** Containment and the console | Client door honouring a signed AI status (`IR-01`); policy pack; report path and owner; console sections 1–8 | Drill on every route; a report taken to closure |
 | **4** Approvals and automation | Human-approval queue; adapters with readback and compensation; institutional automation; the support assistant | Tier 3 gate met, with an independent red-team and a second named release reviewer |
