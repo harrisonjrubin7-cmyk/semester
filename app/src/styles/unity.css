@@ -1243,6 +1243,61 @@
   backdrop-filter: none;
 }
 
+/* Combobox (components/unity/Combobox.tsx): a text box with a list under it. */
+.combo {
+  position: relative;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.combo-label {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+.combo-hint {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+.combo-list {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  z-index: var(--layer-menu);
+  margin: var(--sp-2) 0 0;
+  padding: var(--sp-2);
+  list-style: none;
+  max-height: 40vh;
+  overflow-y: auto;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-surface);
+  box-shadow: var(--elevation-floating);
+}
+
+.combo-option {
+  display: grid;
+  gap: var(--sp-1);
+  min-height: var(--target-primary);
+  padding: var(--sp-3) var(--sp-4);
+  border-inline-start: 3px solid transparent;
+  cursor: pointer;
+}
+
+/* The row the arrow keys are on: an edge and a weight, not a colour alone. */
+.combo-option[aria-selected='true'] {
+  border-inline-start-color: var(--focus-color);
+  background: var(--surface-quiet);
+  font-weight: 600;
+}
+
+.combo-detail {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
 @media (forced-colors: active) {
   .status-chip,
   .context-bar,
@@ -1252,6 +1307,15 @@
   .command-widget-open,
   .focus-bar {
     border: 1px solid CanvasText;
+  }
+
+  .combo-list {
+    border: 1px solid CanvasText;
+  }
+
+  .combo-option[aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
   }
 
   /* Forced colours drop the solid chip's fill; a heavier edge keeps origin readable. */

@@ -34,7 +34,7 @@ What does not exist, and is the subject of this document:
 | Figma ↔ code parity | no Figma, Code Connect, or token export | §7.2 |
 | Visual regression | DD-010 "planned"; no pixel diff in CI | §7.5 |
 | Breakpoint guard beyond `app.css` `min-width` | `lib/media.ts` and `tiers.test.ts` exist; 19 stale or off-class queries unchecked | §3.4 |
-| Generic Sheet, Table, Combobox, Toast primitives | none found | §2 |
+| Shared Table, Combobox, DateField primitives (Slice 4, built); generic Sheet and ActionPreview (Slice 3, revised, not built) | thirty files wrote their own `<table>`; three hand-rolled comboboxes; four sheets | §2 |
 | A manual assistive-technology pass | AT-PASS-PROTOCOL: **not run** | §6.8 |
 
 ### 0.1 Contradictions found in the existing docs (fix before building on them)
@@ -112,7 +112,8 @@ Status key: **E** exists and guarded · **P** exists, partial or unguarded ·
 | | Breadcrumbs / back-to-parent | G | back rule is in guide; no component | Components |
 | Input | Field + FieldMessage | E | `FieldMessage.tsx`, `fielderror.test.ts` | Components |
 | | Toggle, Segmented, TickBox, Chips | E | `ui.tsx` | Components |
-| | Combobox, date/time picker | P | `DeadlinePicker.tsx` is domain-specific | Components |
+| | Combobox | E (Slice 4) | `unity/Combobox.tsx` + `lib/combobox.ts`; three hand-rolled ones remain to migrate (`desk/TopBar.tsx` is the full ARIA pattern; `Command.tsx`, `TabFind.tsx` are listbox-in-dialog) | Components |
+| | Date | E (Slice 4) | native `<input type=date>` (56 files) is the right control; `unity/DateField.tsx` adds label, hint, range-in-words and the message wiring. `DeadlinePicker.tsx` is a *chip picker for which deadline*, not a calendar. No custom calendar: see §2.4 | Components |
 | | File upload | P | `FilePick` | Components |
 | | Rich text / sheet cell | G | editors are screen-specific | Components |
 | Action | ActionButton (+ `.btn*`) | E | `ui.tsx`, `industry.css`; **1,089 raw `<button>`s remain** (census) | Components |
@@ -123,8 +124,8 @@ Status key: **E** exists and guarded · **P** exists, partial or unguarded ·
 | Feedback | Loading/Error/Success/Permission/Offline | E | `unity/States.tsx` | Components |
 | | Toast (Undone, Said) | E | `lib/undo.ts` | Components |
 | Overlay | ConfirmDialog, TypeToConfirm, Popover | E | `ConfirmDialog.tsx`, `a11y/modal.ts` | A11y |
-| | Generic Sheet / Drawer | G | four bespoke sheets share only the trap | Components |
-| Data | Table (responsive) | G | only `DecisionTable`, gradebook | Components |
+| | Generic Sheet / Drawer | P | `ExplanationSheet` already implements the contract (modal bottom sheet <1200px, docked non-modal drawer ≥1200px); `ReviewSheet`, `TileSheet`, `SourceDrawer` are separate. Slice 3 extracts, it does not invent | Components |
+| Data | Table (responsive) | E (Slice 4) | `unity/Table.tsx`; adopted by `StudentGrades`. Thirty-odd files still hand-write `<table>`; `InstructorBook` (editable cells) and `DecisionTable` are next | Components |
 | | HorizontalOverflow | E | `HorizontalOverflow.tsx` | Components |
 | | Charts | E | `DATA-VISUALIZATION-SYSTEM.md`, `--chart-*` | Foundations |
 | Workflow | Approval timeline, exception queue | G | audit-required; institutional console has bespoke | Components |
@@ -135,12 +136,13 @@ Status key: **E** exists and guarded · **P** exists, partial or unguarded ·
 | | Data-scope picker, feedback control | G | | Trust |
 | Support | Help panel, ticket form | P | `GetHelp.tsx`, `AskAHuman.tsx` | Content |
 | Accessibility | Focus ring, reduced-motion, contrast variants | E | tokens + guards | A11y |
-| | Live-region announcer | G | each component hand-rolls `aria-live` | A11y |
+| | Live-region announcer | E | **`Said.tsx` is the app's one live region** (polite, store-driven via `useStore().say`, keyed so a repeated sentence re-announces). 214 files carry their own `role=status/alert` or `aria-live`, most legitimately (field errors, `ErrorState`). Not a gap; the first draft was wrong | A11y |
 | | Readable-density / dyslexia preset | G | §6.6 | A11y |
 
-Six gaps matter most because screens are re-implementing them now: **Sheet,
-Table, ActionPreview, Announcer, Combobox/DatePicker, ApprovalTimeline.** They
-are the first library work (§10).
+Four gaps mattered because screens were re-implementing them: **Table,
+Combobox, Sheet, ActionPreview** (plus ApprovalTimeline, still open). Two of the
+six the first draft named were not gaps: the announcer exists (`Said`), and the
+date control is the native input. Verify a "G" with a grep before building it.
 
 ### 2.2 API contract template (every library component must publish this)
 
@@ -165,57 +167,82 @@ Telemetry events (snake_case object_verb)
 
 ### 2.3 Worked contracts for the first three new primitives
 
-**`Sheet`** (replaces `ExplanationSheet`, `ReviewSheet`, `TileSheet`, `SourceDrawer` shells)
+**`Sheet`** — *revised from the first draft, not built (Slice 3).* The contract
+already exists in `components/ExplanationSheet.tsx`, and a primitive must
+capture it rather than invent one: below 1200px a **modal** bottom sheet (portalled
+into `.device`, trapped by `useModal`, the first heading takes focus, the handle is
+drawn but is never the only way out); at 1200px and wider a **docked, non-modal
+drawer** (the page beside it stays usable; Escape and focus-return still work).
+The first draft said "side ≥ 840", which was wrong. It will be built on
+`a11y/modal.ts`, and `ExplanationSheet` moves onto it first, with its existing
+`ActionCenter` tests unchanged as the proof of no behaviour change.
+
+**`Table`** — *built (Slice 4)*, `components/unity/Table.tsx`.
 
 ```ts
-type SheetProps = {
-  label: string                       // required; accessible name
-  open: boolean
-  onClose: (reason: 'escape' | 'outside' | 'button' | 'route') => void
-  presentation?: 'auto' | 'bottom' | 'side'   // auto: bottom <840 (tab-bar tiers), side >=840
-  size?: 'sm' | 'md' | 'lg'
-  returnFocusTo?: RefObject<HTMLElement>      // default: the opener
-  dismissible?: boolean                        // false only for TypeToConfirm flows
-  children: ReactNode
-}
-```
-Built on `a11y/modal.ts` (trap, Escape, focus return); inert background;
-`--layer-overlay`; 280 ms `--motion-sheet`, zero under reduced motion/calm;
-never mounted inside the scroll pane (`stacking.test.ts`).
-
-**`Table`** (responsive; the first real consumer is Gradebook)
-
-```ts
+type Column<Row> = { id: string; header: string; cell: (r: Row) => ReactNode
+                     numeric?: boolean; sortable?: boolean; rowHeader?: boolean }
 type TableProps<Row> = {
-  caption: string                     // required, visible or visually hidden
-  columns: Array<{ id: string; header: string; cell: (r: Row) => ReactNode;
-                   priority: 1 | 2 | 3; numeric?: boolean; sortable?: boolean }>
-  rows: Row[]; rowKey: (r: Row) => string
-  rowAction?: (r: Row) => { label: string; run: () => void }   // first action survives compaction
-  compact: 'scroll' | 'stack'         // <840: scroll region (not the document) or stacked rows
-  selection?: 'none' | 'single' | 'multi'
-  empty: ReactNode                    // required EmptyState content
+  caption: string; captionHidden?: boolean       // the table's name, drawn or not
+  columns: Column<Row>[]; rows: Row[]; rowKey: (r: Row) => string
+  sort?: { id: string; dir: 'ascending' | 'descending' } | null
+  onSort?: (columnId: string) => void             // a request; the caller reorders
+  compact?: 'scroll' | 'stack'                    // default 'scroll'
+  empty: ReactNode                                // required
 }
 ```
-Real `<table>` semantics when columns are compared; stacked layout keeps row
-identity and the first action (guide: lists vs tables). Sort state is exposed
-via `aria-sort` and announced.
+Changes from the first draft, each for a reason found in the code:
 
-**`ActionPreview`** (the consequence-before-commit pattern, §5.4)
+- **No column `priority`.** Dropping columns on a phone is hiding data, which
+  `widthgate.test.ts` forbids ("width may change how something is reached, never
+  whether"). Both compact modes keep every cell: `scroll` keeps the columns in a
+  named, focusable region (the page does not scroll sideways); `stack` makes each
+  row a block with the column label on every cell and the table roles written out
+  (CSS `display: block` makes some screen readers stop calling it a table).
+- **No `rowAction`, no `selection`.** Nothing needs either yet; a prop nobody passes
+  is a promise nobody has tested.
+- **Sorting is the caller's.** The table shows the order it is given and reports a
+  request; it never reorders. Outcomes are said through `useStore().say` like every
+  other outcome, because the app has one live region and this file must not add a second.
+- Reuses the existing `.integration-table` look, so adopting it changes no pixels.
 
-```ts
-type ActionPreviewProps = {
-  action: string                      // verb + object: "Submit grade change for MATH 2300"
-  effects: Array<{ who: string; what: string }>   // who is affected, what changes
-  reversible: { kind: 'undo' | 'request' | 'none'; window?: string; how: string }
-  authority: Provenance               // who must/does approve
-  needs?: 'confirm' | 'type-to-confirm' | 'second-person'
-  onCommit: () => Promise<CommandResult>   // maps the audit's CommandResult states
-}
-```
-Renders inside `ConfirmDialog`/`Sheet`. `status: 'pending_approval'` renders
-the approval timeline with owner, SLA and cancel/edit rules (audit interface
-state matrix, "Approval pending").
+**`Combobox`** — *built (Slice 4)*, `components/unity/Combobox.tsx` with the key
+arithmetic pure in `lib/combobox.ts`. The ARIA editable combobox with list
+autocomplete: real focus never leaves the box, `aria-activedescendant` names the
+row, `aria-expanded` follows the list. Arrows wrap; Enter chooses only when a row
+is the cursor (otherwise it is the form's); one Escape puts the list away and keeps
+the text, the next clears it (TopBar's behaviour); **Home and End stay with the
+text caret.** It does not filter (the caller owns matching, `lib/typeahead.ts` is
+one), does not announce result counts (the live region is for outcomes, not
+keystrokes), and is not a menu. For choosing one of a few known options, use a
+native `<select>`.
+
+**`DateField`** — *built (Slice 4)*, `components/unity/DateField.tsx`, with
+`lib/datefield.ts`. See §2.4.
+
+**`ActionPreview`** — *revised from the first draft, not built (Slice 3).*
+`ConfirmDialog` already is the preview-then-choice dialog (`preview: ReactNode`,
+focus starts on Cancel), and `docs/ACTION-EXPLAINABILITY-AND-STUDENT-CONTROL.md`
+already defines the impact shape `{ says, doesNotChange, subjectTo }`. So
+`ActionPreview` is the structured *content* of that slot, not a second dialog, and
+it uses that shape (not a parallel `effects` list). It also follows the repo's
+existing policy (`lib/undo.ts`): a reversible action should be done with an undo
+toast and no dialog at all; the preview is for what leaves something behind or
+leaves Semester. Authority is a `FactProvenance` (§4), so "who must approve" reads
+in the one vocabulary.
+
+### 2.4 Why there is no custom calendar
+
+`DESIGN-SYSTEM-GUIDE.md`: native input semantics where they exist. The native date
+control is right on every platform, including a phone's own picker, and a hand-built
+calendar grid is the widget most often broken for screen readers and switch users.
+56 files use it. What the native control does not do is what `DateField` adds: a
+visible label, a hint, the range checked in words (a keyboard user can type past
+`min`/`max`), no complaint until the person has left the box, and the message wired
+the one way `FieldMessage` wires it. Dates are handled as `YYYY-MM-DD` strings and
+built from parts, never `new Date('2026-10-04')` (UTC midnight, the evening before
+in every timezone west of Greenwich; guarded under `TZ=America/Chicago`). A custom
+calendar needs an owner decision and the AT pass first.
 
 ## 3. Token architecture
 
@@ -569,9 +596,10 @@ signal (`tellings.test.ts`); §4.3 adds shape and fill as a second channel.
 ### 6.4 Screen reader
 One `main`, one visible `h1`, landmarks, document title per screen. Every
 control has a programmatic name (`lint:labels`). Status changes use the shared
-**Announcer** (gap, §2): `polite` for save/sync/progress, `assertive` only for
-blocking errors; one live region per page, messages de-duplicated and rate-limited
-so a sync burst does not flood a user. Tables expose caption, headers and sort.
+**`Said`** (the one live region, `useStore().say`): `polite`, outcomes only, never
+keystrokes; keyed on the time so a repeated sentence re-announces. Blocking errors
+use `role="alert"` in the component that owns them (`ErrorState`). Whether to add
+rate-limiting for a sync burst is open: it has not been shown to be a problem. Tables expose caption, headers and sort.
 Provenance chips read as one phrase ("Official, from the Registrar, verified,
 updated today"), not four fragments; glyphs are `aria-hidden`.
 
@@ -803,13 +831,16 @@ guard is proven, and is reversible by deleting the file.
 - **Not done:** `SourceBadge` still renders from `TrustKind`; no screen has adopted the chips yet (Gradebook, Today deadlines, Bill and Grades are the first candidates); the details drawer does not list cues beyond the two drawn; the design census does not yet count cards without `provenance`.
 *Exit met:* every axis combination and the priority rule are tested; six deliberate breaks were each shown red (three cues, swapped priority, invented origin, assumed freshness, chips exposed to assistive technology, optional authority) and restored; rendered on Ink, Parchment and Fog in colour, greyscale and forced colours.
 
-### Slice 3 — Announcer, Sheet, ActionPreview
-Build in that order (Sheet and ActionPreview depend on the announcer's policy). Migrate `ExplanationSheet` first as the proof, then `ReviewSheet`, `TileSheet`, `SourceDrawer`.
+### Slice 3 — Sheet and ActionPreview (revised; not built)
+The Announcer is dropped: it exists (`Said`). `Sheet` extracts `ExplanationSheet`'s contract (§2.3) and `ExplanationSheet` migrates first, proved by its unchanged tests; then `ReviewSheet`, `TileSheet`, `SourceDrawer`. `ActionPreview` is content for `ConfirmDialog`'s `preview` slot using the `says / doesNotChange / subjectTo` impact shape, and defers to undo-first for reversible actions.
 *Exit:* each passes the §9.1 gate including a reverted-fix red run; zero behaviour change in migrated screens, shown by their existing tests.
 
-### Slice 4 — Table and Combobox/DatePicker
-Gradebook is the first consumer (faculty value, highest density). Stacked and scroll compact modes both tested at 320.
-*Exit:* axe, sort announcements, keyboard grid navigation, horizontal-scroll region not document.
+### Slice 4 — Table, Combobox, DateField (built; PR pending)
+- `components/unity/Table.tsx`; `StudentGrades` adopted, with a characterization test written first against the old markup and passing unchanged after (and the 17 existing gradebook tests untouched).
+- `components/unity/Combobox.tsx` + `lib/combobox.ts`; **ships dark**: no screen uses it yet. Migrating `TopBar` (it has `TopBar.test.tsx`), then `Command` and `TabFind`, is the next step and the proof.
+- `components/unity/DateField.tsx` + `lib/datefield.ts`; ships dark.
+- Not done: `InstructorBook` (editable cells, the faculty gradebook) and `DecisionTable` still hand-write their tables; a visible "this scrolls" affordance on a clipped table (`HorizontalOverflow` exists and is the candidate); the other ~28 `<table>` files; keyboard grid navigation (it is a data table, not an ARIA grid — arrow-key cell navigation is deliberately absent and only needed for editable cells).
+*Exit met:* axe clean on Table (both modes), Combobox (closed and open) and DateField, with a control proving the probe flags a real violation in jsdom; ten deliberate breaks each shown red (lost `aria-sort`, a table that reorders its own rows, a stacked table that drops a column, a scroll region that is not focusable, a row header demoted to a cell in the real gradebook, no blur handling, a pointer press that steals focus, Home/End hijacked, exclusive date bounds, the UTC date trap under `TZ=America/Chicago`), and an eleventh for the stacked-caption CSS rule, a bug no jsdom test could see and only the screenshot found; rendered on Ink and Parchment at 390 and 1000px with no sideways page scroll.
 
 ### Slice 5 — Reading comfort preset and role-group defaults
 Preset (§6.6) with its two new tokens `--tracking-body` and `--word-space` (exported by `tokens:export` like any other), and `data-role-group` defaults (§3.5), extending `sweep:targets` to all combinations. Measure with at least a small set of real users; do not market until the AT pass has run.
