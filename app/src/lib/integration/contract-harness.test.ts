@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AdapterDeclaration } from './adapter';
+import type { ProviderClient } from './provider-client';
 import { contractFailures, runContract, type ContractSubject } from './contract-harness';
 import { MOCK_ASSIGNMENT, MOCK_LMS } from './mock-adapter';
 import { ingest, type ExternalRecord, type ProviderBatch } from './pipeline';
@@ -12,8 +13,10 @@ const second: ExternalRecord = {
 /** A well-behaved two-page adapter over the mock LMS declaration. */
 function goodAdapter(over: { declaration?: Partial<AdapterDeclaration>; pull?: ContractSubject['pull'] } = {}): ContractSubject {
   const declaration = { ...MOCK_LMS, ...over.declaration };
-  const pull: ContractSubject['pull'] = async ({ cursor }) => {
+  const pull: ContractSubject['pull'] = async ({ cursor }, client) => {
     const first = cursor.watermark === undefined;
+    // Every provider call goes through the client, as the tick requires.
+    await client.call(async () => undefined);
     return {
       idempotencyKey: first ? 'evt-page-0001' : 'evt-page-0002',
       eventType: 'assignment.updated', eventVersion: '1', trigger: 'scheduled',
@@ -34,7 +37,7 @@ async function cleanReference(input: Parameters<typeof ingest>[0]) {
 
 const ALL = [
   'declaration', 'native_fallback', 'live_not_mock', 'cursor_chain', 'declared_entities_only',
-  'ingest_clean', 'idempotent_replay', 'never_ingest_dropped', 'no_secret_in_output', 'disable_safe',
+  'ingest_clean', 'idempotent_replay', 'never_ingest_dropped', 'provider_calls_guarded', 'no_secret_in_output', 'disable_safe',
 ];
 
 const failed = async (subject: ContractSubject, live = false) =>
@@ -49,21 +52,32 @@ describe('the connector contract harness', () => {
 
   it('fails exactly the promise an adapter breaks', async () => {
     // Each case is broken in one way and must trip that check and no other.
-    const sameCursor: ContractSubject['pull'] = async ({ cursor }) => ({
+    const sameCursor: ContractSubject['pull'] = async ({ cursor }, client) => (await client.call(async () => undefined), {
       idempotencyKey: 'evt-stuck-01', eventType: 'x', eventVersion: '1', trigger: 'scheduled',
       cursorBefore: cursor, cursorAfter: { watermark: 'stuck' }, records: [MOCK_ASSIGNMENT],
     });
-    const leaky: ContractSubject['pull'] = async (request) => {
-      const batch = await goodAdapter().pull(request);
+    const leaky: ContractSubject['pull'] = async (request, client) => {
+      const batch = await goodAdapter().pull(request, client);
       return { ...batch, records: batch.records.map((r) => ({ ...r, fields: { ...r.fields, debug: 'Bearer abcdefghijklmnop0123' } })) };
     };
-    const empty: ContractSubject['pull'] = async ({ cursor }) => ({
+    const empty: ContractSubject['pull'] = async ({ cursor }, client) => (await client.call(async () => undefined), {
       idempotencyKey: 'evt-empty-01', eventType: 'x', eventVersion: '1', trigger: 'scheduled',
       cursorBefore: cursor, cursorAfter: { watermark: 'e' }, records: [],
     });
     expect(await failed(goodAdapter({ declaration: { credentialsReference: 'a-raw-secret-not-a-pointer' } }))).toEqual(['declaration']);
     expect(await failed(goodAdapter({ pull: sameCursor }))).toEqual(['cursor_chain']);
     expect(await failed(goodAdapter({ pull: leaky }))).toEqual(['no_secret_in_output']);
+    // Echoes the credential it was handed into what it returns.
+    const echoes: ContractSubject['pull'] = async (request, client) => {
+      const batch = await goodAdapter().pull(request, client);
+      const token = await client.call(async (auth) => auth.accessToken ?? auth.secret ?? '');
+      return { ...batch, records: batch.records.map((r) => ({ ...r, fields: { ...r.fields, note: `via ${token}` } })) };
+    };
+    expect(await failed(goodAdapter({ pull: echoes }))).toEqual(['no_secret_in_output']);
+    // Calls its provider some other way, round the guard, the vault and OAuth.
+    const unguarded: ProviderClient = { call: (fn) => fn({ accessToken: null, secret: null }) };
+    const bypass: ContractSubject['pull'] = async (request) => goodAdapter().pull(request, unguarded);
+    expect(await failed(goodAdapter({ pull: bypass }))).toEqual(['provider_calls_guarded']);
     expect(await failed(goodAdapter({ pull: empty }))).toEqual(['never_ingest_dropped']);
     expect(await failed(goodAdapter(), true)).toEqual(['live_not_mock']);
   });
@@ -96,8 +110,8 @@ describe('the connector contract harness', () => {
   });
 
   it('fails an adapter that returns an entity its mapping never declared', async () => {
-    const stray: ContractSubject['pull'] = async (request) => {
-      const batch = await goodAdapter().pull(request);
+    const stray: ContractSubject['pull'] = async (request, client) => {
+      const batch = await goodAdapter().pull(request, client);
       return { ...batch, records: [...batch.records, { entityType: 'roster', id: 'r1', fields: { name: 'x' } }] };
     };
     const ids = await failed(goodAdapter({ pull: stray }));
@@ -109,7 +123,7 @@ describe('the connector contract harness', () => {
     const boom: ContractSubject['pull'] = async () => { throw new Error('connect ECONNREFUSED https://idp?code=SECRET'); };
     const checks = await runContract(goodAdapter({ pull: boom }), { live: false });
     const ids = contractFailures(checks).map((c) => c.id).sort();
-    expect(ids).toEqual(['cursor_chain', 'declared_entities_only', 'idempotent_replay', 'ingest_clean', 'never_ingest_dropped', 'no_secret_in_output'].sort());
+    expect(ids).toEqual(['cursor_chain', 'declared_entities_only', 'idempotent_replay', 'ingest_clean', 'never_ingest_dropped', 'provider_calls_guarded', 'no_secret_in_output'].sort());
     expect(checks.find((c) => c.id === 'declaration')?.ok).toBe(true);
     // The detail names the class of error, not its message: nothing from the provider.
     expect(JSON.stringify(checks)).not.toContain('SECRET');
@@ -123,7 +137,8 @@ describe('the connector contract harness', () => {
   });
 
   it('passes the same batch to the pipeline it will meet in production', async () => {
-    const batch: ProviderBatch = await goodAdapter().pull({ connectionPublicId: 'c', tenantId: 't', cursor: {}, trigger: 'scheduled' });
+    const batch: ProviderBatch = await goodAdapter().pull(
+      { connectionPublicId: 'c', tenantId: 't', cursor: {}, trigger: 'scheduled' }, { call: (fn) => fn({ accessToken: null, secret: null }) });
     expect(batch.records[0].entityType).toBe('assignment');
   });
 });

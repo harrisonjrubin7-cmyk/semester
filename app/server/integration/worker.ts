@@ -32,8 +32,24 @@ import { hasGovernanceEnvelope } from '../../src/lib/integration/governance-enve
 import { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 import { payloadHash, redactReference, sanitizeMessage } from '../../src/lib/integration/redact.ts';
 import { afterFailure, type NextStep } from '../../src/lib/integration/retry.ts';
-import type { ConnectionStatus } from '../../src/lib/integration/catalog.ts';
+import type { ConnectionStatus, ErrorCategory } from '../../src/lib/integration/catalog.ts';
 import type { DataClass } from '../../src/lib/integration/classification.ts';
+
+/**
+ * What a failed pull means. The worker decides what happens next from it, and
+ * knows nothing about how it was reached: the classifier is handed in, because
+ * the gateway may not import more client source than the boundary ledger
+ * records (`importboundaries.ts`), and the code that knows a 401 from a 429 is
+ * `provider-client.ts`, which the Edge Function composes in.
+ */
+export interface Failure {
+  category: ErrorCategory;
+  /** A short machine code for `integration_sync_errors.error_code`. */
+  code: string;
+  /** The provider's own request to wait, in milliseconds, when it made one. */
+  retryAfterMs?: number;
+}
+export type FailureClassifier = (error: unknown, now: Date) => Failure;
 
 export interface SyncRequest {
   connectionPublicId: string;
@@ -41,6 +57,8 @@ export interface SyncRequest {
   trigger: 'webhook' | 'scheduled' | 'manual' | 'replay';
   /** Fetch one batch from the provider. Throwing is a provider failure. */
   fetchBatch: () => Promise<ProviderBatch>;
+  /** Turns what `fetchBatch` threw into a category. Required: there is no default that is safe. */
+  classify: FailureClassifier;
   /** Which attempt this is, for retry and dead-lettering. 1-based. */
   attempt?: number;
   /** Only tests and the sandbox tenant set this. */
@@ -162,10 +180,15 @@ export async function runSync(db: SupabaseClient, req: SyncRequest, now: () => D
   try {
     batch = await req.fetchBatch();
   } catch (e) {
-    const next = afterFailure('provider_unavailable', req.attempt ?? 1, now());
+    // What the failure was decides what happens next: a dead grant or a refused
+    // credential is `authentication` and dead-letters at once, a throttle is
+    // `rate_limit` and carries the provider's wait, and only an outage or an
+    // unknown error is `provider_unavailable`.
+    const failure = req.classify(e, now());
+    const next = afterFailure(failure.category, req.attempt ?? 1, now(), undefined, undefined, failure.retryAfterMs);
     await db.from('integration_sync_errors').insert({
-      tenant_id: c.tenant_id, sync_run_id: runId, connection_id: c.id, error_category: 'provider_unavailable',
-      sanitized_message: sanitizeMessage(e), severity: 'error', retryable: next.kind === 'retry',
+      tenant_id: c.tenant_id, sync_run_id: runId, connection_id: c.id, error_category: failure.category,
+      error_code: failure.code, sanitized_message: sanitizeMessage(e), severity: 'error', retryable: next.kind === 'retry',
       retry_count: Math.max(0, (req.attempt ?? 1) - 1),
     });
     if (next.kind === 'dead_letter') {

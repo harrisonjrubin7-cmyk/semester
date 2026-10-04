@@ -16,7 +16,8 @@
  *   declared_entities_only it returns only entities its mapping declares
  *   ingest_clean           its own batch goes through the pipeline without error
  *   never_ingest_dropped   a forbidden field is refused, not stored
- *   no_secret_in_output    nothing token-shaped comes out of a pull
+ *   provider_calls_guarded every provider call goes through `client.call`
+ *   no_secret_in_output    nothing token-shaped, and not the canary credential, comes out
  *   disable_safe           kill switch → paused, with the native route intact
  *
  * `contract-harness.test.ts` runs this against the mock adapters and, as
@@ -27,6 +28,7 @@ import { validateDeclaration, type AdapterDeclaration } from './adapter.ts';
 import { ingest, type IngestStore, type ProviderBatch } from './pipeline.ts';
 import { NATIVE_FALLBACK } from './fallback.ts';
 import { connectionHealth, degradedExperience } from './health.ts';
+import type { CallAuth, ProviderClient } from './provider-client.ts';
 
 export interface ContractPullRequest {
   connectionPublicId: string;
@@ -37,7 +39,7 @@ export interface ContractPullRequest {
 
 export interface ContractSubject {
   declaration: AdapterDeclaration;
-  pull(request: ContractPullRequest): Promise<ProviderBatch>;
+  pull(request: ContractPullRequest, client: ProviderClient): Promise<ProviderBatch>;
 }
 
 export interface ContractOptions {
@@ -54,6 +56,8 @@ export interface ContractCheck {
   detail: string;
 }
 
+/** The credential the harness hands every adapter. It must never appear in what comes back. */
+const CANARY = 'canary-credential-7f3a9c1e5b2d';
 const TENANT = 'contract-tenant';
 const CONNECTION = 'contract-connection';
 const TOKEN_SHAPED = /(bearer\s+[a-z0-9._~+/-]{10,}|access_token|refresh_token|client_secret|api[_-]?key\s*[:=]|password\s*[:=])/i;
@@ -95,14 +99,26 @@ export async function runContract(subject: ContractSubject, options: ContractOpt
   const request = (cursor: Record<string, unknown>): ContractPullRequest =>
     ({ connectionPublicId: CONNECTION, tenantId: TENANT, cursor, trigger: 'scheduled' });
 
+  // A client that records its use. An adapter that never calls it has made its
+  // provider calls some other way, round the guard, the vault and OAuth.
+  let guardedCalls = 0;
+  const auth: CallAuth = d.authentication === 'oauth2' || d.authentication === 'oidc'
+    ? { accessToken: CANARY, secret: null } : { accessToken: null, secret: CANARY };
+  const client: ProviderClient = {
+    async call(fn) {
+      guardedCalls++;
+      return fn(auth);
+    },
+  };
+
   let first: ProviderBatch | null = null;
   let second: ProviderBatch | null = null;
   try {
-    first = await subject.pull(request({}));
-    second = await subject.pull(request(first.cursorAfter));
+    first = await subject.pull(request({}), client);
+    second = await subject.pull(request(first.cursorAfter), client);
   } catch (error) {
     const why = `pull threw ${error instanceof Error ? error.constructor.name : typeof error}`;
-    for (const id of ['cursor_chain', 'idempotent_replay', 'declared_entities_only', 'ingest_clean', 'never_ingest_dropped', 'no_secret_in_output']) {
+    for (const id of ['cursor_chain', 'idempotent_replay', 'declared_entities_only', 'ingest_clean', 'never_ingest_dropped', 'provider_calls_guarded', 'no_secret_in_output']) {
       check(id, false, why);
     }
     first = null;
@@ -149,9 +165,12 @@ export async function runContract(subject: ContractSubject, options: ContractOpt
       check('never_ingest_dropped', false, 'the fixture returned no record to probe with');
     }
 
+    check('provider_calls_guarded', guardedCalls > 0, 'a pull made no call through client.call, so nothing it did was rate limited or authorized');
+
     const output = JSON.stringify(first) + JSON.stringify(second);
-    check('no_secret_in_output', !TOKEN_SHAPED.test(output) && !(d.credentialsReference && output.includes(d.credentialsReference)),
-      'a pull returned something token-shaped or the credential pointer');
+    check('no_secret_in_output',
+      !TOKEN_SHAPED.test(output) && !output.includes(CANARY) && !(d.credentialsReference && output.includes(d.credentialsReference)),
+      'a pull returned something token-shaped, the credential it was given, or the credential pointer');
   }
 
   let disableSafe = false;

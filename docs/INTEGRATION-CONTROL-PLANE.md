@@ -161,6 +161,48 @@ it was last updated."* The staff line is the operator's next step for that reaso
 glyph, never colour alone. `officialCurrent` is true only when the connection is healthy **and** the data is live
 or recent.
 
+## How a pull gets its credentials and calls the provider
+
+`tick.ts` takes a `runtime` (a client factory and a failure classifier) and builds one `ProviderClient` per pull
+from it, passing it as the second argument: `adapter.pull(request, client)`. The implementation is
+`providerRuntime()` in `provider-client.ts`; the Edge Function composes it, and so do the tests. It is handed in and
+not imported because `app/src/lib/importboundaries.ts` holds the gateway to the client source it already imports
+(a ratchet that may shrink and not grow), so `tick.ts` and `worker.ts` define the ports they need (`ProviderRuntime`,
+`ProviderClient`, `FailureClassifier`) and import nothing new. There is no default runtime, on purpose.
+Every provider call goes through `client.call(fn)`, which, in order:
+
+1. asks the connection's `ConnectionGuard` and refuses, before any credential is touched, when the answer is no;
+2. gets the credential: one lease per pull from the `LeaseBroker`, and for OAuth the access token from the
+   `TokenManager`, which refreshes with the leased client secret and stops on a dead grant;
+3. runs `fn` with a `CallAuth` valid for that call, then tells the guard how it went.
+
+An adapter that authenticates with OAuth registers an `oauth: { refresh(refreshToken, clientSecret) }` binding; it
+never reads the vault itself.
+
+**Fail closed.** An adapter that declares a `credentialsReference`, run where no credential services were provided,
+gets `CredentialRefused` and never calls its provider. The production Edge Function composes `providerRuntime()` with
+none today (see below),
+so a real adapter registered before its secret store, token store and audit sink exist dead-letters on its first
+pull with `credential_not_configured` and says why.
+
+**What a failure becomes.** The worker no longer calls every failed pull `provider_unavailable`. The classifier it is
+handed (`classifyFailure`) decides, and the existing ladder (failures counted from stored runs, the fifth dead-letters, a dead letter holds
+the connection) is told the truth:
+
+| What happened | Recorded as | Ladder |
+| --- | --- | --- |
+| Provider rejected the grant (401, 403, `invalid_grant`, a refused credential) | `authentication`, code `http_401`, `reauthorization_required`, `credential_<reason>` | Not retryable: dead-letters on the first attempt and holds the connection for an operator |
+| Provider throttled (429), or the guard held the call | `rate_limit`, code `http_429`, `rate_limited`, `penalized`, `concurrency` | Retryable; the provider's wait is carried into `retryAt` when it is longer than back-off |
+| Breaker open | `provider_unavailable`, code `circuit_open` | Retryable, with the breaker's remaining wait |
+| Provider 5xx or 408, or an error nothing recognises | `provider_unavailable`, code `http_5xx`, `provider_error` | Retryable |
+| Provider rejected our request (other 4xx) | `schema_validation`, code `http_4xx` | Not retryable |
+| The credential platform could not audit a lease | `provider_unavailable`, code `audit_unavailable` | Retryable: the platform is down, not misconfigured |
+
+**What the guard protects.** The calls *inside* a pull, which is where a provider is hammered: an adapter walking
+fifty pages against a failing provider stops after five failures, and a 429 stops the pull and carries the wait.
+The guard lives for one pull. Between pulls, the stored run history and the dead-letter hold do the work, as they
+did before; this adds no second ladder.
+
 ## Contract tests and the sandbox
 
 `runContract(adapter, { live })` is the conformance suite. It tests the framework's promises, not the provider's
@@ -176,8 +218,11 @@ behaviour — that is what a sandbox tenant is for.
 | `declared_entities_only` | It returns only entities its mapping declares |
 | `ingest_clean` | Its own batch goes through the pipeline without error |
 | `never_ingest_dropped` | A forbidden field (`grade`) is refused **and** not stored |
-| `no_secret_in_output` | Nothing token-shaped, and not the credential pointer, comes out of a pull |
+| `provider_calls_guarded` | Every provider call goes through `client.call`; a pull that never uses the client has stepped round the guard, the vault and OAuth |
+| `no_secret_in_output` | Nothing token-shaped, not the credential pointer, and not the canary credential the harness hands every adapter, comes out of a pull |
 | `disable_safe` | Kill switch → paused, with the native route intact |
+
+The suite has eleven checks. The harness gives the adapter a recording client and a canary credential, so a pull that echoes its credential into what it returns, or never calls the client, fails.
 
 `contract-harness.test.ts` runs it against a well-behaved adapter and against adapters broken in exactly one way
 each, asserting that the *one* check fails. The `ingest` function is injectable, so the `never_ingest_dropped`
@@ -212,7 +257,7 @@ Before an adapter is added to the registry. Each line is a yes or no with the ev
       is on the dashboard.
 - [ ] The grant can be revoked from Semester (`TokenManager.revoke`) or `declaration.disconnect` says where.
 - [ ] Inbound traffic is signature-verified with a rotating secret and a replay window.
-- [ ] Outbound calls go through a `ConnectionGuard`; the provider's published limit is in `rateLimitPerMinute`.
+- [ ] Every outbound call goes through `client.call`; the provider's published limit is in `rateLimitPerMinute`.
 - [ ] A person-level record names a subject and requires consent (`consentRequired`).
 - [ ] `retentionDays` is set and the retention sweep covers its tables.
 - [ ] Errors reaching the dashboard pass `sanitizeMessage`; no payload, token or student identifier is logged.
@@ -258,7 +303,8 @@ Reports carry redacted record references and field names, never values.
 ## Adding a connector
 
 1. Write the declaration (`AdapterDeclaration`). It must pass `validateDeclaration`.
-2. Write `pull(request)`: fetch and parse only. Mapping, classification, consent, idempotency and provenance are the
+2. Write `pull(request, client)`: fetch and parse only, every provider call through `client.call`. For OAuth, also
+   register an `oauth.refresh` binding. Mapping, classification, consent, idempotency and provenance are the
    pipeline's.
 3. Add a contract test that calls `runContract` with `live: true`, and list its path in `contractTests`.
 4. Run it against a sandbox tenant and record the evidence.
@@ -270,10 +316,18 @@ Reports carry redacted record references and field names, never values.
 
 - **No live adapter exists.** The registry is empty. No provider endpoint has been exercised, and no school has
   supplied credentials, a contract or a sandbox.
-- **The new libraries are not yet wired into the worker.** `server/integration/worker.ts` still uses only
-  `afterFailure` from `retry.ts`. Calling `ConnectionGuard`, `LeaseBroker` and `TokenManager` from `runSync`, and
-  feeding `connectionHealth` from the stored rows, is the first follow-up. Until then they are tested building
-  blocks, not behaviour a school can observe.
+- **No credential backend exists in production.** The guard, lease broker and token manager are wired into the
+  tick and worker, but the Edge Function provides no `SecretBackend`, no `TokenStore` and no audit sink, because
+  each needs storage this change does not create: a Vault-backed secret read, a table for OAuth tokens (tokens
+  belong in the secret manager, not in `integration_connections`), and a lease audit table
+  (`tenant_policy_audit_event` accepts four fixed entity types and is not one). Until they exist, every adapter
+  that declares a credential fails closed. That is the safe default, and the next piece of work.
+- **The breaker and the Retry-After wait are per pull, in memory.** The tick runs in a fresh process every 15
+  minutes, so they cannot carry across ticks. A throttled pull also counts toward the five-attempt ladder like any
+  failed run, so five throttled pulls in a row (about 75 minutes) dead-letter a connection. And `retryAt` is
+  computed and returned but not stored, so the tick does not yet wait the provider's full Retry-After. Making the
+  wait durable needs a column on the connection; it is a migration, so it is not done here.
+- **`connectionHealth` is still not fed from stored rows**, so the dashboard's status words are the worker's own.
 - **There is no webhook HTTP route.** `acceptWebhook` is the verifier; the route that calls it, and the writer for
   `integration_webhook_events`, do not exist yet.
 - **Email and reporting are not tenant connectors**, for the reasons in the family table. Making them one is a
