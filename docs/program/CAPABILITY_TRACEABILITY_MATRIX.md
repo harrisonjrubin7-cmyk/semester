@@ -44,7 +44,7 @@ Probe limits, stated because CLAUDE.md asks for it: the `.from()` write/read spl
 |---|---|---|
 | `Screen` union ids (routes `#/<id>`) | 89 | `app/src/lib/types.ts` `export type Screen` (parsed) |
 | Rows in `SCREENS` table | 87 (union minus `home`, `onboarding`) | `app/src/screens.tsx:151` |
-| Top-level screen files in `app/src/screens/` | 89 `.tsx`/test-free files counted by script | `ls app/src/screens` (152 entries incl. tests and folders) |
+| Top-level non-test screen files in `app/src/screens/` | 89 (script count of `src/screens/*.tsx` excluding tests) | `ls app/src/screens` shows 152 entries including tests and folders |
 | `DESTINATIONS` entries with a `screen:` key | 64 (+ community pushed at runtime, `app/src/lib/nav.ts:1026`) | `grep -cE "^\s+screen: '" app/src/lib/nav.ts` |
 | Non-test source files in `app/src` | 1,534; test files 1,333 | `find app/src -name '*.ts*'` |
 | `lib/` non-test modules | 837; test files 944 | `find app/src/lib` |
@@ -113,7 +113,7 @@ Absences that matter: no table named for assignment, submission, rubric, assessm
 
 **Governed (definer function) path:** 154 distinct `.rpc()` functions, e.g. `registration_enroll`, `gradebook_enter`, `gradebook_release`, `dining_place_order`, `decide_approval`, `console_act`, `make_family_share`, `export_my_data`, `raise_my_data_subject_request` (names from the python regex over `app/src`; definitions in `supabase/migrations`, authorization posture in `docs/DEFINER-RLS-REGISTER.md` and `database/FUNCTION_AUTHORIZATION_MATRIX.md`).
 
-**Gateway path (`/api/institution/*`):** prepare-only actions, SSO config, SCIM, intelligence; 4 browser routes named in `app/server/institution/gateway.ts` (`/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/v1/intelligence/actions/:id/confirm`) plus the per-area service routes. All 0 adapters are registered, so the gateway answers 503 for services (`app/server/institution/adapters.ts` header).
+**Gateway path (`/api/institution/*`):** prepare-only actions, SSO config, SCIM, intelligence; 4 browser routes named in `app/server/institution/gateway.ts` (`/v1/auth/config`, `/v1/intelligence/policy`, `/v1/intelligence/respond`, `/v1/intelligence/actions/:id/confirm`) plus the per-area service routes. No adapter is registered, so the gateway answers 503 for services (`app/server/institution/adapters.ts` header).
 
 Observation, not a defect claim: several rows in the direct-write list are administrative (migration approvals, config versions, workflow versions, record changes, campaign reviews, module-mode approvals). Whether each has an RLS policy plus an audit trigger is a per-table question that `database/TENANT_ISOLATION_MATRIX.md` says is **not** yet written ("Per-object matrix is not written"). This document does not assert either way.
 
@@ -149,7 +149,7 @@ Columns: **ID | Domain | User | UI path | State / persistence | Server / API con
 | CAP-009 | Progress | S | `#/me` | ST | none | none | n/a (device) | `app/src/lib/progress.test.ts` | smoke only | OPERATIONAL-UNDER-GOVERNED | - | none |
 | CAP-012 | Links | S | `#/links` | ST | none | none | n/a (device) | `app/src/screens/links.test.tsx` | smoke only | OPERATIONAL-UNDER-GOVERNED | - | none |
 | CAP-017 | Settings | S | `#/settings` | ST (`state/slices/settings.ts`) | none | `state` | n/a (device) | `app/src/lib/settings.test.ts` | smoke only | OPERATIONAL-UNDER-GOVERNED | Settings sync as part of one blob | none |
-| CAP-018 | Alerts | S | `#/notifs`, `#/hub` | ST + push | EF `push`; BR `push_queue`, `push_devices` | `push_queue`, `push_devices` | RLS; `supabase/` push check not located | `app/src/lib/notify.test.ts` | smoke only | PARTIAL | No delivery ledger/receipts (`docs/product/capability-registry.md` "Notification delivery/inbox: Delivery ledger, retries and staffed ownership"); `notifs` screen has no test file | Add delivery receipt design |
+| CAP-018 | Alerts | S | `#/notifs`, `#/hub` | ST + push | EF `push`; BR `push_queue`, `push_devices` | `push_queue`, `push_devices` | RLS; no push-specific `*.check.sql` found by `ls supabase/*.check.sql | grep push` | `app/src/lib/notify.test.ts` | smoke only | PARTIAL | No delivery ledger/receipts (`docs/product/capability-registry.md` "Notification delivery/inbox: Delivery ledger, retries and staffed ownership"); `notifs` screen has no test file | Add delivery receipt design |
 | CAP-031 | Create | S | `#/create` | ST + IDBF | none | none | n/a (device) | `app/src/screens/create-routes.test.ts` | smoke only | OPERATIONAL-UNDER-GOVERNED | Fronts docs/sheets/decks which have no server copy except inside `state` blob | see CAP-035/036 |
 | CAP-032 | Analyse data | S | `#/analyse` | ST | none | none | n/a (device) | none found (`ls lib/analyse*.test.*` empty) | smoke only | OPERATIONAL-UNDER-GOVERNED | no direct test file | add test |
 | CAP-033 | Graphs/diagrams | S | `#/draw`, `#/equations` | ST | none | none | n/a (device) | none found for `draw`/`equations` | smoke only | OPERATIONAL-UNDER-GOVERNED | no direct test file | add test |
@@ -277,7 +277,7 @@ Columns: **ID | Domain | User | UI path | State / persistence | Server / API con
 | CAP-088 | Operator console (proposed) | O | `#/console` `screens/Console.tsx` | server | RPC `console_act`, `console_approvals`, `console_audit_read`, `console_break_glass`, `console_command_center` | `console_action_record`, `console_duty`, `private.console_audit_*` | MFA recency check (migration `20260929100000_console_control_plane.sql`); `supabase/console-control-plane.check.sql`, `console-approvals.check.sql` | `app/src/screens/console.test.tsx` | one operator (Harrison Rubin) | PARTIAL | one person holds requester and approver seats (`OWNER-AND-ACCOUNTABILITY-MATRIX.md` decision rights) | second seat |
 | CAP-089 | Configuration Studio (proposed) | I | University tab | server | BR `school_config_versions` insert/update/delete (`config/api.ts`) | `school_config_versions` | `supabase/configuration-studio.check.sql` | `app/src/lib/config/*.test.ts` | flag `VITE_CONFIGURATION_STUDIO` | PARTIAL | direct browser write | policy/audit review |
 | CAP-090 | Workflow builder (proposed) | I | University tab | server | BR `workflow_versions` (`workflow/api.ts`) | `workflow_versions` | `app/src/lib/workflow` + packages `workflow.ts` state machines | `packages/institution/src/workflow.test.ts` | flag `VITE_WORKFLOW_BUILDER` | PARTIAL | `@semester/platform` workflow engine unmounted | - |
-| CAP-091 | Migration Center (proposed) | I | University tab | server | BR `migration_projects/runs/field_maps/approvals` (`migration/api.ts`) | `migration_*` (4) | `supabase/migration-center.check.sql` if present; not confirmed | `app/src/lib/migration/*.test.ts` | flag `VITE_MIGRATION_CENTER` | PARTIAL | direct writes; no live source | - |
+| CAP-091 | Migration Center (proposed) | I | University tab | server | BR `migration_projects/runs/field_maps/approvals` (`migration/api.ts`) | `migration_*` (4) | `supabase/migration-center.check.sql` | `app/src/lib/migration/*.test.ts` | flag `VITE_MIGRATION_CENTER` | PARTIAL | direct writes; no live source | - |
 | CAP-092 | Integration control plane + sync worker (proposed) | I/O | University -> Control | server | EF `integration-tick`; `app/server/integration/{tick,worker}.ts`; RPC `integration_set_paused`, `integration_request_replay` | `integration_*` (17), `private.integration_simulation_runs` | `supabase/integration-control-plane.check.sql`, `integration-rls-matrix.check.sql`, `integration-tick-auth.check.sql` | `app/server/integration/tick.test.ts`, `app/src/components/institutional/IntegrationDashboard.test.tsx` | `ADAPTERS = []`: runs nothing | PARTIAL | no live adapter | - |
 | CAP-093 | Tenant feature policy, module modes (proposed) | I/O | University -> Modules | server | RPC `effective_module_modes`, `feature_state`; BR `module_mode_request/approval` | `tenant_feature_policy`, `tenant_module_mode`, `tenant_rollout*`, `feature_kill_switch` | `supabase/tenant-rollout.check.sql`, `feature_cohorts.check.sql` | `app/src/lib/modulegate.ts` callers | flags are mostly build-time (73 `VITE_*`) | PARTIAL | server per-tenant switch exists beside a build-time layer; two systems | Decide single source |
 | CAP-094 | Audit ledger / record ledger (proposed) | I/O | University -> Records | server | `private.ledger_chain*`; RPC `console_audit_status` | `private.ledger_chain`, `_key`, `_manifest`, `_verification`, `audit_event` | `supabase/ledger-chains.check.sql`, `ledger-seals.check.sql` | `app/src/components/institutional/RecordLedger.tsx` callers | none | PARTIAL | production search/export "Implemented foundation" only (`docs/product/capability-registry.md`) | - |
@@ -306,14 +306,25 @@ Columns: **ID | Domain | User | UI path | State / persistence | Server / API con
 
 ## 7. Counts of labels
 
-Counted over the rows above with `grep -c` per label on this file (60 repository IDs plus the proposed IDs). The count is in section 8 of `findings-product.md`; labels used: `OPERATIONAL-UNDER-GOVERNED`, `PARTIAL`, `CLIENT-ONLY-DEMO`, `DOCUMENTED-UNIMPLEMENTED`, `UNKNOWN-INVESTIGATE`. Not used: `OPERATIONAL-VERIFIED` (no production-use evidence found), `RETIRE-CANDIDATE` (no evidence-backed retire case; `call` is queued as UNKNOWN-INVESTIGATE).
+Counted with `grep -E "^\| CAP-" | grep -c "| <label> |"` over section 6 (105 rows: the 60 repository IDs plus 45 proposed IDs; proposed IDs are not contiguous, `CAP-074` and others are unused).
+
+| Label | Rows |
+|---|---|
+| OPERATIONAL-UNDER-GOVERNED | 46 |
+| PARTIAL | 45 |
+| CLIENT-ONLY-DEMO | 10 |
+| DOCUMENTED-UNIMPLEMENTED | 3 |
+| UNKNOWN-INVESTIGATE | 1 |
+| OPERATIONAL-VERIFIED, RETIRE-CANDIDATE | 0 |
+
+Not used: `OPERATIONAL-VERIFIED` (no production-use evidence found), `RETIRE-CANDIDATE` (no evidence-backed retire case; `call` is queued as UNKNOWN-INVESTIGATE).
 
 ## Open questions / not verified
 
 1. Whether production runs the Vercel gateway, and what `VITE_UNIVERSITY_GATEWAY_URL` is set to (repo has the build step, `.github/workflows/pages.yml:124`, not the value).
 2. Any row's actual production use: no telemetry or run logs are in the repo; `production-smoke.yml` results were not read.
 3. Per-table RLS policy and audit coverage for the 50 direct-write tables: `database/TENANT_ISOLATION_MATRIX.md` says the per-object matrix is not written; I did not write it.
-4. Some check-suite names (`migration-center`, push) are cited only where found by `ls`; where I wrote "not confirmed" or "not located" I did not find them.
+4. No push-specific check suite was found (`CAP-018`); other check-suite names were confirmed by `ls`.
 5. Whether capability rows beyond `CAP-060` should be adopted into `app/src/lib/rollout-capabilities.ts` (owner decision; the registry is test-guarded and I did not touch it).
 6. Test paths are nearest-by-name, not coverage; `none found` means `ls lib/<name>*.test.*` returned nothing, and an indirect test may exist.
 7. Customer-side seats, legal, accessibility and security posture are out of this document's scope.
