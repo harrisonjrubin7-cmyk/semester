@@ -93,7 +93,7 @@ This is the honest half, and it is the half worth leading with.
 | **LTV:CAC ≈ 17x** | **Modeled, not observed.** Every input is an assumption. |
 | **Year-2 break-even** | **Modeled.** Depends on the above. |
 | **Ambassador growth engine (60–270x organic ratio)** | **Never run once**, at any campus, with any ambassador. |
-| **Payment processing** | **Does not exist.** Verified: no payment code in `app/src`. The product cannot take money today. |
+| **Payment processing** | **Built and accepted once; not validated.** The original row here ("does not exist, no payment code in `app/src`") was true on 21 September and is no longer. Checkout, Stripe portal, cancellation and the webhook exist (`app/src/lib/membership.ts`, `components/MembershipPanel.tsx`, `supabase/functions/billing-*`), and one live $7.99 monthly Plus checkout, receipt, entitlement and end-of-period cancellation passed on 3 October ([`docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md`](docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md)). That purchase was the acceptance run, not a customer, so it is not a willingness-to-pay observation. Not exercised: the $59 annual charge, a refund, a failed renewal, a dispute, tax in a registered jurisdiction. The record states checkout is held by the governed acquisition control and that it is not authorisation to enable it; Pro and institution billing are not on sale. Re-check with `ls supabase/functions \| grep billing`. |
 | **Unit-cost model under real usage** | **Untested.** The shared AI key is metered at 60 generations per account per month; nobody has ever hit that ceiling because nobody has ever used it. |
 | **Deploy safety** | **No staging environment.** CI passing is not the same as a deploy being gated on it. |
 | **Trademark** | **"Semester" is likely unregistrable** — *merely descriptive* under 15 U.S.C. §1052(e)(1) for software that plans a semester. The clearance search has not been run. |
@@ -147,8 +147,10 @@ Rivals that paywall the syllabus upload itself cannot say either half.
 4. **Branch protection: require branches to be up to date before merging.** Sixty
    seconds. Three separate collisions landed on `main` during this review alone,
    each one green on its own branch.
-5. **Stripe, before charging anyone.** Pricing is modelled; collection does not
-   exist.
+5. **Finish the billing evidence, before charging anyone.** Collection now
+   exists and passed one live acceptance purchase (see the payment row above).
+   What is missing is the rest of the lifecycle (annual, refund, failed renewal,
+   dispute, tax) and approval from the acquisition control to turn checkout on.
 
 The first item is worth more than the other four combined.
 
