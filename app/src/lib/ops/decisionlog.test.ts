@@ -11,6 +11,16 @@ import { DIR, FILE, LAST_IN_LOG, LOG, duplicates, headings, sources, written } f
 
 const root = join(import.meta.dirname, '../../../..');
 
+const ADR_SIDECARS = new Set([
+  'ADR_TEMPLATE.md',
+  'ADR_INDEX.md',
+  'DECISION_BACKLOG.md',
+  'proposed',
+  'accepted',
+  'superseded',
+  'deprecated',
+]);
+
 describe('the decision record', () => {
   it('has no number written down twice, in the log or across the files', () => {
     const all = sources(root).flatMap(([, text]) => headings(text));
@@ -26,6 +36,10 @@ describe('the decision record', () => {
   it('names each decision file for the one decision it holds, numbered past the log', () => {
     for (const f of readdirSync(join(root, DIR))) {
       if (f === 'README.md') continue;
+      // The ADR program (docs/decisions/README.md, "ADR program") keeps its own
+      // template, index, backlog and status folders here; ADR files live in the
+      // folders and are numbered ADR-nnnn, a separate namespace from D-n.
+      if (ADR_SIDECARS.has(f)) continue;
       const m = FILE.exec(f);
       expect(m, `${DIR}/${f} is not named D-<pull request number>.md`).not.toBeNull();
       const n = Number(m![1]);
