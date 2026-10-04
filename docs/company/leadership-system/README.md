@@ -22,7 +22,7 @@ The governance, hiring and operating-cadence system Semester needs in order to s
 
 ## Baseline: what is true today
 
-`[FACT]` — read from `origin/main` at `7287ddc` (2026-10-04). Everything below is a repository statement, not a company record.
+`[FACT]` — first read from `origin/main` at `7287ddc` and **re-checked at `3aa6138`** (2026-10-04, after 139 further commits). One figure changed (claims, below); the rest held. Everything below is a repository statement, not a company record.
 
 | Fact | Source |
 | --- | --- |
@@ -32,13 +32,26 @@ The governance, hiring and operating-cadence system Semester needs in order to s
 | Individual students: conditional go (invitation-only, unpaid). Design-partner engagement: go for non-activation only. Paid pilot: no-go. Broad enterprise sale: no-go | [`GO-NO-GO-DECISION.md`](../../../GO-NO-GO-DECISION.md) |
 | 0 of 19 scheduled proof artifacts are filed under `docs/evidence/` | [`PROOF-CALENDAR.md`](../../PROOF-CALENDAR.md) |
 | 23 first-year measures: 3 measured, 4 instrumented, 16 defined; **no target set** | [`COMPANY-FIRST-YEAR-MEASURES.md`](../../COMPANY-FIRST-YEAR-MEASURES.md) |
-| Public claims: 17 classified; no unrestricted campaign approved; qualified counsel unassigned | [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) |
+| Public claims: 18 classified (CLM-018 was added after the first read); no unrestricted campaign approved; qualified counsel unassigned | [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) |
+| Six growth and lifecycle reviewer roles (privacy, accessibility, claims, analyst, moderator, backup experiment owner) were added on 2026-10-04, all held by the same person with no backup; the matrix itself says that cannot satisfy an owner-is-not-approver rule | [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../../OWNER-AND-ACCOUNTABILITY-MATRIX.md#growth-and-lifecycle-reviewer-roles) |
 | Decision log closed at D-160; new decisions are `docs/decisions/D-<pull request number>.md` | [`docs/decisions/README.md`](../../decisions/README.md) |
 | Two-person rules already hold in the database for approvals, break-glass, module mode, migration cutover, school exit, legal-hold release | [`DECISION-RIGHTS.md`](../../DECISION-RIGHTS.md) |
 
 `[UNKNOWN]` — not in the repository, and this system cannot assume them: legal entity and who the directors/managers are, ownership and IP chain (including any university claim on student-created work), runway, whether anyone besides the founder is paid, advisor roster, counsel.
 
 **The structural problem this system exists to solve:** a company-side seat held by one person with no backup is both a continuity risk and an independence risk. The same person builds, reviews and accepts. Every section below is organised around retiring that, in the order that retires the most risk per hour spent.
+
+## Related work already on main, and how this system fits
+
+Three other proposals landed while this was being written. None is adopted either. Rather than add a competing authority table, this system **defers** where they already decide something and says where it differs.
+
+| Other proposal | What it decides | How this system fits |
+| --- | --- | --- |
+| [CTO architecture pack](../../target-architecture/08-ORGANIZATION-AND-MILESTONES.md) (#1144) | Engineering team topology, technical hiring order, architecture review | Authoritative for engineering. Agrees hire #1 is a platform/SRE second operator. See [04](04-organization-and-hiring.md#relationship-to-the-cto-architecture-pack) |
+| [Finance operating model](../../finance/README.md) | Spending approval matrix in dollars, runway triggers, hiring gates, finance board pack | **Authoritative for money.** The delegation table in [02](02-decision-rights.md#delegation-matrix) now points to its matrix instead of competing with it; board cadence is aligned in [01](01-board.md#relationship-to-the-finance-reporting-package) |
+| [Data governance operating model](../../architecture/data-architecture/12-governance-operating-model.md) | Data stewardship seats and machine-checked governance KPIs | Same constraint, same answer (name an external second signature when a seat is single-held). Referenced from [06](06-domain-governance.md#privacy-and-data) |
+
+**Where this system and the finance model still differ, and are left for the founder:** the finance model assumes budget-owner roles such as CFO, CRO and COO and a faster headcount path than the evidence triggers here would release; its "Board" approvals have no body to give them until a board exists. [F13](#founder-decisions-required) and [F14](#founder-decisions-required) ask the founder to settle both.
 
 ## Design rules
 
@@ -86,14 +99,16 @@ Each is a decision only the founder can make. Open the pull request first, then 
 | F2 | Confirm entity, governing body and who holds director/manager authority `[COUNSEL]` | Unknown; blocks board work | Month 1 |
 | F3 | Name up to five advisors and open outreach (roles in [01](01-board.md#advisory-council)) | None | Month 2 |
 | F4 | Nominate the interim operator for continuity ([08](08-continuity.md)) | None; continuity unmitigated | Month 1 |
-| F5 | Set delegation thresholds (as % of trailing monthly burn) | Founder approves everything; advisors consulted above [PROPOSE] values | Month 2 |
+| F5 | Adopt, change or replace the finance model's dollar spending matrix, or restate its tiers as a percentage of trailing monthly burn | Founder approves everything; the finance matrix's tiers are the reference | Month 2 |
 | F6 | Set targets for the first-year measures (the founder owns these; nothing here sets them) | No target | Month 3 |
 | F7 | Weekly capacity in hours and academic-calendar blackout weeks | Assume reduced capacity in exam windows | Month 1 |
 | F8 | Stage-trigger thresholds ([04](04-organization-and-hiring.md#stage-triggers)) | Evidence triggers qualitative only | Month 3 |
 | F9 | Where `FD-` records live (controlled system, not this repository) | Founder's private store | Month 2 |
 | F10 | Compensation philosophy: cash/equity menu, location tiers `[COUNSEL]` | No offers made | Before first offer |
 | F11 | Whether student advisory members are paid `[COUNSEL]` | Paid stipend, not volunteers | Month 3 |
-| F12 | Hiring budget and the runway rule that gates it | No hiring until runway is stated | Month 2 |
+| F12 | Hiring budget and the runway rule that gates it. The finance model already proposes runway triggers (12, 9, 6 and 3 months); adopt, change or replace them | No hiring until runway is stated | Month 2 |
+| F13 | Which twelve months is the plan year. The finance model starts its year in November; the [calendar](09-calendar.md) locks its first plan at the end of Month 3 | Plan year starts at Month 4 | Month 2 |
+| F14 | Until a board exists, who gives the "Board" approvals the finance model requires (financing, major commitments, equity grants): the founder with advisors consulted and counsel, or nobody until a board forms `[COUNSEL]` | Founder, with the consults in [01](01-board.md#reserved-matters) recorded | Month 1 |
 
 ## Professional-review queue `[COUNSEL]`
 

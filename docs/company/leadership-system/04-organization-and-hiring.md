@@ -19,6 +19,17 @@
 | Headcount | Reconcile at each stage review | Ranges here are company-wide `[HYPOTHESIS]`; the CTO pack's S1/S2 tech counts fall inside the Seed and Series A ranges |
 | Contract engineers | CTO pack | Contract engineers do not hold production access or approve changes; the [delegation matrix](02-decision-rights.md#delegation-matrix) applies the same rule |
 
+## Relationship to the finance operating model
+
+[`docs/finance/`](../../finance/README.md) (on main) holds a financial plan with a headcount path (3 people in the first quarter rising to 50 by the twelfth), budget-owner roles (CTO, CRO, COO, CFO and others) and **hiring gates** for flexible roles in [`05-BUDGET-GOVERNANCE.md` §6](../../finance/05-BUDGET-GOVERNANCE.md#6-gating-milestones-for-flexible-hires-the-gated-plan). It is a planning model of hypotheses, not an approved budget, and it fits this page like this:
+
+| Topic | Treatment |
+| --- | --- |
+| Hiring gates | They are evidence-based, as the triggers here are (for example, a signed design-partner agreement before mobile and accessibility engineers; a contract in legal review before the privacy and security hires). **Where a gate here and a gate there differ, the stricter one applies.** The stricter release also needs the runway rule ([F12](README.md#founder-decisions-required)) |
+| Headcount | The finance path is a funded case. The ranges below describe stages by evidence and are expected to run slower until triggers fire. Reconcile the two when the first plan locks ([03](03-okrs-planning-metrics.md#annual-planning-process)) |
+| Role names (CFO, CRO, COO and so on) | Read them as **budget-owner seats**, not as hiring commitments. Titles are assigned at Series A; before that a function lead holds the seat, and the founder holds it where no one else does |
+| Hire approval | The finance matrix requires gate evidence for flexible roles and board approval above a cost threshold; without a board, see [F14](README.md#founder-decisions-required) |
+
 ## The starting point
 
 All 15 company-side seats have the same person as primary and no backup ([`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](../../../OWNER-AND-ACCOUNTABILITY-MATRIX.md)). The 12 launch-council seats ([`launchreadiness.ts`](../../../app/src/lib/launchreadiness.ts)) are held or vacant, and none has signed. A conventional org chart of function-by-function executives (as in the audit's role map) would be a list of vacancies. This design is organised around **seats, risks and triggers** instead.

@@ -74,15 +74,22 @@ Codes: **D** decides · **R** prepares and recommends · **A** must approve in w
 
 ## Delegation matrix
 
-Dollar values would be invented, so authority is set as **a percentage of trailing-three-month average monthly burn (TMB)**. It scales with the company and survives changing runway. Dollar limits and approval workflow live in [`EXPENSE-APPROVAL-POLICY.md`](../EXPENSE-APPROVAL-POLICY.md) and [`FINANCIAL-CONTROLS.md`](../FINANCIAL-CONTROLS.md); this table sets the structure. Percentages are `[PROPOSE]` starting values for the founder to set (F5).
+**Money is not decided here.** [`docs/finance/05-BUDGET-GOVERNANCE.md`](../../finance/05-BUDGET-GOVERNANCE.md#4-spending-approval-matrix-proposed) (on main) already proposes a full spending approval matrix in dollars: spend tiers, unbudgeted-spend limits, discounts, refunds, write-offs, payment release, hires outside plan, and incident emergency spend. Two competing authority tables would be the bureaucracy this system forbids, so **that matrix governs money once the founder adopts it**, and its own §9 already says thresholds are revisited at each financing.
+
+What this page adds is how that matrix meets the reality of one person and no board:
+
+| Issue | Treatment |
+| --- | --- |
+| Its approvers are roles that do not exist yet (CFO, CRO, COO, "board designate") | At pre-seed the **finance seat** is the founder, and the independent approver is the CPA or the operator advisor. Its principle that no one approves their own spend becomes: **founder expenses are approved by a named advisor or the CPA**, not by the founder |
+| Its "Board" approvals (major commitments, equity grants, financing) have no body to give them | [F14](README.md#founder-decisions-required) and the consults in [01 reserved matters](01-board.md#reserved-matters) |
+| Dollar thresholds are sized for a seed-stage company | If the founder wants authority to scale automatically with the company, the alternative is to express each tier as a percentage of **trailing-three-month average monthly burn (TMB)** instead of a dollar figure. Either way is the founder's call (F5); this page does not add a third set of numbers |
+| Hiring gates and runway triggers | Defined in [05 §5–§6](../../finance/05-BUDGET-GOVERNANCE.md#5-cash-and-performance-triggers-proposed); the [hiring plan](04-organization-and-hiring.md#relationship-to-the-finance-operating-model) uses them |
+
+The rows below are the **non-financial** delegations the finance matrix does not cover.
 
 | Authority | IC (as DRI) | Function lead | Founder | Above the founder |
 | --- | --- | --- | --- | --- |
-| Spend within an approved budget line, per item | ≤ 0.5% TMB | ≤ 3% | ≤ 20% | Advisors consulted above 20%; board approves above 50% (Seed+) |
-| Unbudgeted spend, per item | None | ≤ 1% | ≤ 5% | Advisors consulted above 5% |
-| Commitments longer than 12 months, or auto-renewing | None | None | Allowed with counsel on terms | Same |
-| Discount from list | Within deal-desk bands | Within bands | Beyond bands, with deal-desk record | Pricing outside the price book: board consulted |
-| Hiring | Request only | Within the approved plan | Within the approved plan | Outside plan: advisors consulted |
+| Commitments longer than 12 months, or auto-renewing | None | None | Allowed with counsel on terms, and within the finance matrix | Same |
 | Production write access | Two-person for destructive actions; least privilege by role | Same | Same | — |
 | Grant access to student data | Never self-grant | Per role design, time-bound | Break-glass only, reviewed afterward | — |
 | Contract liability beyond standard terms | None | None | Only after counsel review | Board consulted |

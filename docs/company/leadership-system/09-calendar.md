@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | **Weekly, Monday** | Weekly operating review (45–60 min); Trust Review (30 min) | Top three issues; trust-ledger lines |
 | **Weekly, Friday** | Written team update | One page |
-| **Business day 5** | Monthly advisor note | 1–2 pages |
+| **Business day 10** | Monthly advisor note, after the finance close | 1–2 pages |
 | **Mid-month** | Monthly company review; scorecard; 13-week cash view | Decisions; the company note |
 | **Monthly** | Key-person register and seat-without-backup count | Number moves down |
 | **Quarterly, final two weeks** | QBR; board or advisor quarterly meeting (packet sent 5 business days before); trust and access review; decision review | Locked next-quarter OKRs and stop list |
@@ -173,6 +173,10 @@
 | No hire without a trigger | A named risk and trigger per requisition ([04](04-organization-and-hiring.md#hiring-governance)) |
 | No blackout commitments | See capacity planning |
 | No claim without its row | [Claims](06-domain-governance.md#public-claims) |
+
+## Reconciling with the finance model's year
+
+The [finance model](../../finance/05-BUDGET-GOVERNANCE.md#3-planning-cycle) starts its model year in **November** and plans in September–October. This calendar locks its first plan at the end of Month 3 (December if adopted now) and starts the plan year at Month 4. They do not match, and only the founder can choose which twelve months to plan ([F13](README.md#founder-decisions-required)). The monthly report is already aligned: **business day 10**, after the finance close.
 
 ## Reconciling with the engineering milestones
 

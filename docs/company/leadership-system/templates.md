@@ -4,7 +4,7 @@
 
 ## Monthly advisor note
 
-Due business day 5. One to two pages. Details: [`BOARD-OR-ADVISOR-UPDATE-TEMPLATE.md`](../BOARD-OR-ADVISOR-UPDATE-TEMPLATE.md).
+Due business day 10, aligned to the finance close. One to two pages. Details: [`BOARD-OR-ADVISOR-UPDATE-TEMPLATE.md`](../BOARD-OR-ADVISOR-UPDATE-TEMPLATE.md).
 
 ```
 Period:            [month]            Prepared by: [name]

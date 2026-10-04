@@ -73,15 +73,29 @@ Items that need more than the founder's signature. At pre-seed the advisors are 
 | Pause, sale, merger or wind-down | Counsel + advisors consulted | Board approves | Board approves |
 | Activation of the continuity plan ([08](08-continuity.md)) | Interim operator acts; advisors informed | Chair informed | Chair informed |
 
+## Relationship to the finance reporting package
+
+[`docs/finance/09-BOARD-REPORTING-PACKAGE.md`](../../finance/09-BOARD-REPORTING-PACKAGE.md) landed on main while this was written and defines the **financial** content and cadence: a monthly founder flash on business day 10, a 10–12 page quarterly pack, and a 48-hour event note. This page is the **governance and decision layer** on top of it, so the two are one packet, not two:
+
+| Topic | Finance package | This page | Resolution |
+| --- | --- | --- | --- |
+| Monthly report | Business day 10, after the close | Needs the closed books to carry real numbers | **Business day 10**, so the numbers come from the closed books. Bad news does not wait: the 24-hour notice below still applies |
+| Quarterly pack | 10–12 pages; sent 5 days before the meeting | ≤ 6 core pages + appendix | The **core packet below is the cover and decision layer**; the finance package's pages 3–7, 11 and 12 (P&L, ARR, cash, unit economics, AI economics, controls, scenarios) are the numeric appendix and the detail behind section 7 |
+| Event note | One page within 48 hours of a trigger | 5-sentence notice within 24 hours | **Both**: the 24-hour notice is the heads-up, the finance package's one-page note within 48 hours is the follow-up |
+| KPI scorecard | Twelve finance KPIs with proposed amber and red bands | A cross-company scorecard | The company scorecard in [03](03-okrs-planning-metrics.md#operating-metrics) takes its finance rows from the finance package's section 4, not a second definition |
+| Runway and spend triggers | 12, 9, 6 and 3 months, with actions | "Below the approved trigger" | Use [`05-BUDGET-GOVERNANCE.md`](../../finance/05-BUDGET-GOVERNANCE.md#5-cash-and-performance-triggers-proposed) once adopted; at 3 months it activates the [continuity plan](08-continuity.md) |
+
+That package assumes a board that approves financing, major commitments and equity grants. Until one exists, who gives those approvals is [F14](README.md#founder-decisions-required) and `[COUNSEL]`; the consults in [reserved matters](#reserved-matters) are the starting point.
+
 ## Reporting cadence
 
 | Report | Audience | When | Length | Contents |
 | --- | --- | --- | --- | --- |
-| **Monthly note** | Advisors / board | By the 5th business day | 1–2 pages | Scorecard, three wins, three misses, runway, asks ([template](templates.md#monthly-advisor-note)) |
+| **Monthly note** | Advisors / board | Business day 10, aligned to the finance close | 1–2 pages | Scorecard, three wins, three misses, runway, asks ([template](templates.md#monthly-advisor-note)); finance detail from the [monthly flash](../../finance/09-BOARD-REPORTING-PACKAGE.md#2-monthly-founder-flash-two-pages) |
 | **Quarterly packet** | Advisors / board | Sent 5 business days before the meeting | ≤ 6 pages + appendix | [Board packet](#board-packet) |
 | **Annual strategy session** | Advisors / board | Once a year, after the Q-end review | Half to full day | Strategy memo, plan, org and hiring, governance review |
 | **Committee report** | Board | Quarterly | 1 page | Findings, exceptions, decisions requested |
-| **No-surprises notice** | Advisors / board chair | Within 24 hours of a trigger | 5 sentences | Triggers: material security or privacy incident; unsupported public claim found live; loss or incapacity of a Tier-1 key person; legal threat or regulator contact; a customer escalation to its executive sponsor; runway below the approved trigger |
+| **No-surprises notice** | Advisors / board chair | Within 24 hours of a trigger; followed by the finance package's one-page event note within 48 hours | 5 sentences | Triggers: material security or privacy incident; unsupported public claim found live; loss or incapacity of a Tier-1 key person; legal threat or regulator contact; a customer escalation to its executive sponsor; runway below the approved trigger |
 
 A note that is late twice in a row is a signal about capacity, not discipline. It is raised in the next QBR as a capacity item ([03](03-okrs-planning-metrics.md#quarterly-business-review)).
 

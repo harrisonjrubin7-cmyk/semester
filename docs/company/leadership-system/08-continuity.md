@@ -96,7 +96,7 @@ The interim operator cannot sign contracts, raise capital, change pricing, appro
 | **A critical hire leaves** | Revoke access the same day; hand over owned runbooks | Backup takes over; backfill per hiring plan | Seat map and owner matrix updated; access audit |
 | **Advisor or counsel unavailable** | Use the listed alternate | Contact package names two alternates per role | Package updated |
 | **Founder conflict of interest** | Recuse; operator advisor or counsel decides | Conflict recorded | Decision record with recusal |
-| **Cash constraint** | Invoke the approved runway trigger ([`BUDGET-AND-CASH-RUNWAY-TEMPLATE.md`](../BUDGET-AND-CASH-RUNWAY-TEMPLATE.md)) | Freeze non-essential spend; narrow scope; protect safety and data obligations first | Authorised forecast and obligations review |
+| **Cash constraint** | Invoke the approved runway trigger: the finance model proposes 12, 9, 6 and 3 months, and at 3 months activates this plan ([`05-BUDGET-GOVERNANCE.md` §5](../../finance/05-BUDGET-GOVERNANCE.md#5-cash-and-performance-triggers-proposed); template: [`BUDGET-AND-CASH-RUNWAY-TEMPLATE.md`](../BUDGET-AND-CASH-RUNWAY-TEMPLATE.md)) | Freeze non-essential spend; narrow scope; protect safety and data obligations first | Authorised forecast and obligations review |
 | **Vendor failure** | Fail closed or degrade; contact vendor | Replacement per vendor register | Integrity and reconciliation checks |
 | **Wind-down or transition** | Counsel-led preservation and notices | Export and return of data; deletion per schedule; contract, vendor and account closure | Stakeholder-approved closure register; student data handled per the offboarding and retention rules |
 

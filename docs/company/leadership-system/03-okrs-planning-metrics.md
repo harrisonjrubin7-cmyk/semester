@@ -134,7 +134,7 @@ One page. A metric is introduced at its stage and not before: tracking a number 
 | Platform | P0/P1 incidents; time to notice and resolve | Engineering/Security | Incident log | Weekly | Pre-seed | defined |
 | Trust | Open P0/P1 risks; exceptions with expiry; claims expiring; data-rights clocks | Security/Privacy | [Trust ledger](06-domain-governance.md#trust-ledger) | Weekly | Pre-seed | defined |
 | AI | Quality, cost per successful outcome, safety events, human overrides | AI owner | Evaluation harness | Monthly | Seed | defined |
-| Finance | Cash, burn, runway, committed spend | Founder/Finance | Accounting records, 13-week view | Monthly | Pre-seed | not yet available |
+| Finance | Cash, burn, runway, committed spend (finance KPIs and their amber/red bands are defined in the [finance package §4](../../finance/09-BOARD-REPORTING-PACKAGE.md#4-kpi-scorecard-and-thresholds), not redefined here) | Founder/Finance | Accounting records, 13-week view | Monthly | Pre-seed | not yet available |
 | Finance | Gross margin, AI cost per outcome | Finance | Accounting + usage | Monthly | Seed | defined |
 | Finance | CAC, payback, net revenue retention | Revenue/Finance | CRM + billing | Quarterly | Series A (only once there is a repeatable motion) | defined |
 | Company | Seats with a named, accepted backup (n of 15) | Founder | Owner matrix | Monthly | Pre-seed | measured by hand |

@@ -88,6 +88,7 @@ Each domain: **owner decides**, **independent check can stop**, **evidence requi
 | --- | --- |
 | **Owner / stop** | Privacy owner decides within procedure; **counsel** is the independent check for novel questions, minors, regulated data and notification duties `[COUNSEL]` |
 | **Evidence** | Data inventory and lineage, classification, retention and deletion schedules, privacy impact assessment for any new data use, consent records, data-rights clocks, subprocessor register ([`DATA-INVENTORY-AND-LINEAGE.md`](../../DATA-INVENTORY-AND-LINEAGE.md), [`PRIVACY-IMPACT-ASSESSMENT.md`](../../operating-model/PRIVACY-IMPACT-ASSESSMENT.md), [`SUBPROCESSORS.md`](../../SUBPROCESSORS.md)) |
+| **Data seats and checks** | [`12-governance-operating-model.md`](../../architecture/data-architecture/12-governance-operating-model.md) defines the data stewardship seats and machine-checked governance KPIs for the same one-person constraint: make the machine do the nagging, and name an external second signature where a seat is single-held. This page does not restate it |
 | **Rhythm** | Weekly clock check; quarterly review of vendors and retention; privacy impact assessment before a new data use |
 | **Rule** | The student controls sharing and AI context; institutional visibility needs explicit policy; guardian visibility needs verified relationship and consent |
 | **Decision** | Class A for a new data class or classification floor |
@@ -107,7 +108,7 @@ Each domain: **owner decides**, **independent check can stop**, **evidence requi
 | | |
 | --- | --- |
 | **Owner / stop** | Founder decides the price book; the **deal desk** applies it. Finance/CPA is the independent check on revenue recognition and tax |
-| **Evidence** | An approved price book; discount bands; cost per AI outcome and gross margin; [deal-desk record](../../operating-model/COMMERCIAL-GOVERNANCE.md) for every exception |
+| **Evidence** | An approved price book; discount bands and approvers from the [finance spending matrix](../../finance/05-BUDGET-GOVERNANCE.md#4-spending-approval-matrix-proposed) (the discount tiers are decided there, not here); cost per AI outcome and gross margin; [deal-desk record](../../operating-model/COMMERCIAL-GOVERNANCE.md) for every exception |
 | **Rules** | Free or institution-sponsored access to core accessibility and safety is never gated. Premium AI has guardrails and budget controls so a student is never surprised by a bill. Marketplace pricing only after consumer protection, provider governance, refund, tax and operational capacity are mature. Pricing is not stated publicly until approved (CLM-015 is **prohibited** today) |
 | **Rhythm** | Quarterly pricing and package review; discount-band review at each QBR |
 | **Decision** | Class B (A for a multi-year or non-standard commercial structure) |
