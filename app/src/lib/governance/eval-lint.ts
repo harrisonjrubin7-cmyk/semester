@@ -29,7 +29,7 @@
  * pass.
  */
 
-import { detectPii, type PiiKind, type PiiOptions } from '../../community/pii';
+import { detectPii, type PiiKind, type PiiOptions } from '../pii';
 import type { EvalCase } from './model-quality';
 
 export type LintKind = PiiKind | 'ssn' | 'card';

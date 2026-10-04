@@ -17,6 +17,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
+| `database/` | Catalog-derived isolation evidence for production, read read-only on 2026-10-04: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and the SQL that regenerates them. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
 | `docs/` | Documentation: registers, runbooks, architecture records, decision records, design standards. Indexed by `docs/README.md`, which is written outside this page's slice and may not be in your checkout yet. |
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
@@ -59,6 +60,10 @@ At the root there are also Markdown reports and registers (for example `CLAUDE.m
 | `app/src/components/` | React components shared by screens. The largest directory. |
 | `app/src/lib/` | Logic, stores, registers and their tests. Subdirectories include `governance/`, `ops/`, `trust/`, `integration/`, `billing/`, `config/`, `docs/` and others. |
 | `app/src/state/` | The store: context provider, reducer, state shape, persistence, migrations of stored shape. |
+| `app/src/kernel/` | The few things every domain shares (a result type, a clock, ids, events, errors), and nothing a domain owns. It depends on nothing else in the app. |
+| `app/src/domains/` | The new bounded slices (`calendar`, `identity`, `policy`, `tasks`, `today`). Each has a public `index.ts`; other slices import only that. |
+| `app/src/composition/` | Where the domains are wired to the legacy code: the one place that knows both (`domains.ts`, `react.ts`, the `Today` shadow). |
+| `app/src/architecture/` | The architecture tests' machinery: the import graph, the rules, the legacy-inventory classifier, and `legacy.json`, the ratchet of upward imports that may only shrink. |
 | `app/src/ai/` | The assistant interface. Screens must not import it statically. |
 | `app/src/intelligence/` | Semester Intelligence: agent and mode pickers, disclosure, contracts. |
 | `app/src/community/` | Community, circles and moderation logic. |

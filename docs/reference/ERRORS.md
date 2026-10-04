@@ -679,6 +679,7 @@ Returned flat, as `{"code", "message"}`, by `/v1/intelligence/respond`, `/policy
 | `course-policy-unavailable` | 503 | yes | The course policy service is missing or failed. |
 | `model-unavailable` | 503 | yes | No tenant-approved model fits the cost ceiling. |
 | `budget-unavailable` | 503 | yes | The budget service failed. |
+| `audit-unavailable` | 503 | yes | The response was discarded because it could not be recorded. |
 | `budget-exhausted` | 429 | yes | The institution AI budget is spent. |
 | `provider-unavailable` | 503 | yes | The model provider failed or timed out (20 seconds). |
 | `invalid-provider-response` | 503 | yes | The provider's answer was empty, cited an unrequested source, or was not metered. |

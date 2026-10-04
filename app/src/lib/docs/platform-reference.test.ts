@@ -172,16 +172,47 @@ function closure(fn: string): string[] {
   return [...seen].map((f) => f.slice(root.length + 1)).sort();
 }
 
-/** Names read through `Deno.env.get`, including the one read through a named constant. */
+/**
+ * Names read through `Deno.env.get`, including the one read through a named constant, and the family a
+ * forwarding callback reads (see `envNamesIn`).
+ */
 function denoEnvNames(files: readonly string[]): string[] {
-  const texts = files.map(read);
+  return envNamesIn(files.map(read));
+}
+
+/**
+ * The scan fails closed: a read it cannot resolve could hide an undocumented variable, so it throws rather than
+ * skip it. Two shapes are resolved. A name read through a named constant (`const SWITCH = 'NAME'`). And an
+ * environment handed to code that builds the name, `(n) => Deno.env.get(n)`: the callee's only such shape is a
+ * template `env(`PREFIX_${key.toUpperCase()}`)` over the keys of a `Record<Type, number> = {…}` table in the same
+ * file (the shared AI allowance, `AI_ALLOWANCE_MICROS_FREE|PLUS|PRO`), which expands to one name per key.
+ */
+export function envNamesIn(texts: readonly string[]): string[] {
   const names = new Set<string>();
+  const families = (): string[] => {
+    const out: string[] = [];
+    for (const x of texts) {
+      for (const m of x.matchAll(/\benv\(\s*`([A-Z][A-Z0-9_]*_)\$\{\s*\w+\.toUpperCase\(\)\s*\}`\s*\)/g)) {
+        const table = /Record<\w+,\s*number>\s*=\s*\{([^}]*)\}/.exec(x)?.[1];
+        if (!table) throw new Error(`env(\`${m[1]}\${…}\`) builds a name over a table this scan cannot find`);
+        for (const k of table.matchAll(/(\w+)\s*:/g)) out.push(`${m[1]}${k[1]!.toUpperCase()}`);
+      }
+    }
+    return out;
+  };
   for (const t of texts) {
-    for (const m of t.matchAll(/Deno\.env\.get\(\s*'([A-Z][A-Z0-9_]*)'\s*\)/g)) names.add(m[1]);
+    for (const m of t.matchAll(/Deno\.env\.get\(\s*'([A-Z][A-Z0-9_]*)'\s*\)/g)) names.add(m[1]!);
     for (const m of t.matchAll(/Deno\.env\.get\(\s*([A-Za-z_]\w*)\s*\)/g)) {
-      const def = texts.map((x) => new RegExp(`(?:const|let)\\s+${m[1]}\\s*=\\s*'([A-Z][A-Z0-9_]*)'`).exec(x)?.[1]).find(Boolean);
-      if (!def) throw new Error(`Deno.env.get(${m[1]}) is read through a name this scan cannot resolve`);
-      names.add(def);
+      const id = m[1]!;
+      const def = texts.map((x) => new RegExp(`(?:const|let)\\s+${id}\\s*=\\s*'([A-Z][A-Z0-9_]*)'`).exec(x)?.[1]).find(Boolean);
+      if (def) {
+        names.add(def);
+        continue;
+      }
+      const forwards = new RegExp(`\\(\\s*${id}\\s*\\)\\s*=>\\s*Deno\\.env\\.get\\(\\s*${id}\\s*\\)`).test(t);
+      const family = forwards ? families() : [];
+      if (family.length === 0) throw new Error(`Deno.env.get(${id}) is read through a name this scan cannot resolve`);
+      for (const n of family) names.add(n);
     }
   }
   return [...names].sort();
@@ -402,7 +433,20 @@ function producerFactsOf(uses: readonly EventUse[], files: readonly { path: stri
   for (const dir of dirs) {
     const base = dir.split('/').pop() as string;
     const importsIt = new RegExp(`from\\s+['"][^'"]*/${base}/[^'"]*['"]`);
-    for (const f of files) if (!f.path.startsWith(`${dir}/`) && importsIt.test(f.text)) mounts.add(f.path);
+    // A package has many modules, and most importers want one that writes no events (the gateway takes its error
+    // envelope). Importing the root is a mount only if the importer uses a name the producer files themselves export,
+    // or takes the whole namespace, which cannot be told apart from using them.
+    const producers = new Set(uses.map((u) => u.file));
+    const exported = new Set<string>();
+    for (const f of files) {
+      if (!producers.has(f.path) || !f.path.startsWith(`${dir}/`)) continue;
+      for (const m of f.text.matchAll(/\bexport\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|const|let|class|interface|type|enum)\s+(\w+)/g)) exported.add(m[1]!);
+    }
+    const names = [...exported].map((n) => new RegExp(`\\b${n}\\b`));
+    for (const f of files) {
+      if (f.path.startsWith(`${dir}/`) || !importsIt.test(f.text)) continue;
+      if (/import\s+\*\s+as\s/.test(f.text) || names.some((r) => r.test(f.text))) mounts.add(f.path);
+    }
   }
   const drainCallers = files.filter((f) => f.path !== EVENTS_SRC && f.path !== THIS_TEST && /\bdrainOutbox\s*\(/.test(f.text)).map((f) => f.path).sort();
   return { dirs, mounts: [...mounts].sort(), drainCallers };
@@ -1121,8 +1165,9 @@ describe('ANALYTICS-MARKS.md', () => {
 
   it('lists exactly the telemetry events the code emits', () => {
     const emitting = ['app/server', 'app/api', 'supabase/functions', 'packages'].flatMap((d) => walk(d, isCode));
+    // A value in an object literal is emitted; a literal in a type (`event: 'a' | 'b';`) only describes one.
     const emitted = new Set<string>();
-    for (const f of emitting) for (const m of read(f).matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'/g)) emitted.add(m[1]);
+    for (const f of emitting) for (const m of read(f).matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'(?!\s*[|;])/g)) emitted.add(m[1]);
     const gatewayRows = tableUnder(md, 'Sent to a server today').map(cellsOf).filter((c) => /^`institution\./.test(c[0]));
     expect(diff(gatewayRows.map((c) => tokens(c[0])[0]), [...emitted])).toEqual(NONE);
     expect(emitted.size).toBe(3);
@@ -1346,7 +1391,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
   it('the mount and publisher probes see a mount and a caller, and ignore the producer itself (control)', () => {
     const uses = [{ file: 'app/server/thing/service.ts', why: 'calls the library' }];
     const files = [
-      { path: 'app/server/thing/service.ts', text: "import { x } from './repo.ts'" },
+      { path: 'app/server/thing/service.ts', text: "import { x } from './repo.ts'\nexport const svc = 1;" },
       { path: 'app/api/thing.ts', text: "import { svc } from '../server/thing/service.ts'" },
       { path: 'app/server/publisher.ts', text: 'await drainOutbox(store, send)' },
       { path: 'app/server/other.ts', text: "import { y } from '../thing-other/y.ts'" },
@@ -1354,8 +1399,14 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(producerFactsOf(uses, files)).toEqual({ dirs: ['app/server/thing'], mounts: ['app/api/thing.ts'], drainCallers: ['app/server/publisher.ts'] });
     // A package is one root however deep the file sits, and a folder name shared with unrelated code is not a mount.
     const pkg = [{ file: 'packages/kit/src/events/emit.ts', why: 'calls the library' }];
-    const near = [{ path: 'app/src/lib/events/x.ts', text: "import { y } from '../events/z.ts'" }, { path: 'app/src/a.ts', text: "import { k } from '../../packages/kit/src/index.ts'" }];
+    const kit = { path: 'packages/kit/src/events/emit.ts', text: 'export function emitThing() {}' };
+    const near = [kit, { path: 'app/src/lib/events/x.ts', text: "import { y } from '../events/z.ts'" }, { path: 'app/src/a.ts', text: "import { emitThing } from '../../packages/kit/src/index.ts'" }];
     expect(producerFactsOf(pkg, near)).toEqual({ dirs: ['packages/kit'], mounts: ['app/src/a.ts'], drainCallers: [] });
+    // Importing the package for something that is not a producer (the gateway's error envelope) is not a mount; a namespace import is.
+    const other = [kit, { path: 'app/src/b.ts', text: "import { errorResponse } from '../../packages/kit/src/index.ts'" }];
+    expect(producerFactsOf(pkg, other).mounts).toEqual([]);
+    const ns = [kit, { path: 'app/src/c.ts', text: "import * as kit from '../../packages/kit/src/index.ts'" }];
+    expect(producerFactsOf(pkg, ns).mounts).toEqual(['app/src/c.ts']);
     expect(producerFactsOf(uses, files.slice(0, 1))).toEqual({ dirs: ['app/server/thing'], mounts: [], drainCallers: [] });
   });
 

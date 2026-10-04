@@ -96,7 +96,7 @@ Two facts the test proves:
 
 Every refusal has one shape:
 
-<!-- from: app/server/institution/gateway.ts -->
+<!-- from: packages/platform/src/gateway/errors.ts -->
 ```ts
 export interface ErrorEnvelope {
   error: {
@@ -106,10 +106,11 @@ export interface ErrorEnvelope {
     retryable: boolean;
     user_action?: UserAction;
   };
-  /** The same sentence, where a client written before the envelope looks for it. */
   message: string;
 }
 ```
+
+The top-level `message` repeats the same sentence, for a client written before the envelope existed.
 
 The client turns it into a thrown `GatewayError`:
 

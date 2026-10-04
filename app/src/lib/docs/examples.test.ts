@@ -763,9 +763,18 @@ describe('examples/event-consumer', () => {
     ]);
     // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
+    // The package has many modules, and the gateway imports it for its error envelope, which writes no events. So an
+    // import of the platform package is a mount only if the importer uses a name the event-building files export (or
+    // takes the whole namespace, which cannot be told apart); any import of the productivity service is one.
+    const platformProducers = new Set(['packages/platform/src/events/emit.ts', 'packages/platform/src/seam/institution.ts', 'packages/platform/src/testing/memory.ts']);
+    const producerNames = [...platformProducers].flatMap((f) => [...read(f).matchAll(/\bexport\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|const|let|class|interface|type|enum)\s+(\w+)/g)].map((m) => new RegExp(`\\b${m[1]}\\b`)));
     const mounts = code
       .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
-      .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
+      .filter(
+        (c) =>
+          /from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text) ||
+          (/from\s+['"][^'"]*\/platform\/[^'"]*['"]/.test(c.text) && (/import\s+\*\s+as\s/.test(c.text) || producerNames.some((r) => r.test(c.text)))),
+      )
       .map((c) => c.file);
     expect(mounts, 'something now imports the productivity service or the platform package').toEqual([]);
     // Nothing publishes: drainOutbox has no caller outside the library.
