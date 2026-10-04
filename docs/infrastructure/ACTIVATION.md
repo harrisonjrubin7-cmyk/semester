@@ -4,7 +4,8 @@ Nothing in `infra/` has run. Do these in order; each is its own change record.
 A step is done when its check passes, not when the command ran.
 
 1. **State store.** Provision the bucket to the requirements in
-   DISASTER-RECOVERY. Check: versioning on, public access blocked, a
+   DISASTER-RECOVERY; the exact commands and the scoped IAM policy are in
+   [`infra/bootstrap/`](../../infra/bootstrap/README.md). Check: versioning on, public access blocked, a
    credential that can touch only that bucket.
 2. **Bootstrap the platform root, once, locally.** The pipeline's own
    environments (`infrastructure-plan`, `infrastructure-production`) are

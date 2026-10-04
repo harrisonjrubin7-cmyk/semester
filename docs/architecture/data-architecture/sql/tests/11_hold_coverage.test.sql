@@ -8,11 +8,13 @@ do $$ begin
   end if;
 end $$;
 
--- 2. Control: the detector is not blind. Remove the three gap exemptions and exactly those three appear.
+-- 2. Control: the detector is not blind. Remove the known-gap exemption and exactly that sweep appears. The
+--    three sweeps that were gaps when this was written (gateway_purge_journal, purge_financial_records,
+--    sweep_tombstones) are NOT listed: 20261004150000 fixed them, which is what this assertion now shows.
 delete from private.hold_exemption where kind = 'known_gap';
 do $$ declare got text; begin
   select string_agg(function_name, ',' order by function_name) into got from private.sweeps_without_hold_awareness();
-  if got is distinct from 'private.gateway_purge_journal,public.purge_financial_records,public.sweep_tombstones'
+  if got is distinct from 'private.productivity_sweep_commands'
   then raise exception 'FAIL detector returned: %', got; end if;
 end $$;
 
@@ -22,7 +24,7 @@ create function public.sweep_zz_aware() returns int language sql as $f$ with d a
 create function public.zz_unrelated_name() returns int language sql as $f$ with d as (delete from public.profiles where false returning 1) select count(*)::int from d $f$;
 do $$ declare got text; begin
   select string_agg(function_name, ',' order by function_name) into got from private.sweeps_without_hold_awareness();
-  if got is distinct from 'private.gateway_purge_journal,public.purge_financial_records,public.sweep_tombstones,public.sweep_zz_blind'
+  if got is distinct from 'private.productivity_sweep_commands,public.sweep_zz_blind'
   then raise exception 'FAIL new blind sweep not isolated: %', got; end if;                         -- aware one and the oddly named one are absent
   insert into private.hold_exemption values ('public.sweep_zz_blind','test: deliberate, reviewed by the steward','ephemeral', current_date - 1);
   if not exists (select 1 from private.sweeps_without_hold_awareness() where function_name = 'public.sweep_zz_blind')
