@@ -122,7 +122,7 @@ Semester's to supply on the spot, not a request: an accessible version is the de
 
 ## 7. The ledger and its metrics
 
-The ledger is a CSV under `docs/evidence/accessibility/` with the §2 columns, plus opened, triaged, fixed and
+The ledger is a CSV, working copy [`first-pass/accessibility-issue-ledger.csv`](first-pass/accessibility-issue-ledger.csv), with the §2 columns, plus opened, triaged, fixed and
 verified dates. It is the same file the Vanderbilt packet plan seeds (headers only; no pre-filled passing rows).
 
 Metrics reported monthly (PROGRAM §9): open by severity and age; time to fix by severity; **recurrence** (a new
