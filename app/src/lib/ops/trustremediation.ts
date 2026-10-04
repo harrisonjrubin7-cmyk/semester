@@ -71,13 +71,14 @@ export const ITEMS: readonly Item[] = [
     done: { proof: 'app/src/lib/workflowshell.test.ts', on: '2026-10-04' },
   },
   {
-    id: 'TR-02', before: 'invitation', owner: 'accessibility', effort: 'S', person: true, needs: ['TR-01'],
+    id: 'TR-02', before: 'invitation', owner: 'accessibility', effort: 'S', needs: ['TR-01'],
     title: 'Fix the last painted-contrast finding, the journey card hover',
-    finding: 'The Work empty-state line that made 156 of the 159 findings on 3 October used faintLine(), the 3:1 rung for large type, on 11px text; commit 545010c (3 October) moved it to secondLine() and a fresh sweep of Work on all 13 grounds reports none. One finding remains and reproduces: .journey-reason on a hovered journey card on Industry Dark paints at 3.96:1 against 4.5 because accent-deep is audited against the page and panel, not against the lighter hover surface (--app-raise). The 26 button-hierarchy walls from 3 October are a second nightly failure, not re-measured here.',
+    finding: 'Of the 159 findings on 3 October, 156 came from the Work empty-state line, which commit 545010c had already moved from the 3:1 faint rung to the audited dim rung. The other three were .journey-reason on a hovered journey card on Industry Dark at 3.96:1 against 4.5: accent-deep is audited on the page and the panel, not on the lighter surface a hovered card moves to. Measured across every accent, the raise also fails on Graphite (4.20 to 4.48) and on Industry Dark (3.59 to 3.96). The 26 button-hierarchy walls reported then measure 0 on current main (63 of 63 destinations, both controls passing).',
     sources: ['app/src/styles/app.css', 'app/src/components/JourneyCards.tsx', 'app/src/lib/contrast.test.ts', 'app/src/screens/Work.tsx'],
-    fix: 'Decide the hover treatment (a different hover surface or the reason text in a stronger rung on hover), extend contrast.test.ts to measure accent-deep against --app-raise on every ground and show it red first, then re-run the sweep green; decide the walls with the design lead.',
+    fix: 'A hovered or focused card keeps its accent border and sets the reason in the ground\'s full-strength ink; contrast.test.ts works out from the palette whether that override is needed and requires the stylesheet rule if so, and holds the ink to 4.5:1 on the raise on every ground. The palette is untouched. The guard was shown red against the stylesheet without the rule and green with it; the browser sweep of the home screen on Industry Dark and Graphite, which reported the hover finding before, reports none.',
     moves: ['TC-A11-03', 'TC-A11-04'],
     files: 'The first green nightly run.',
+    done: { proof: 'app/src/lib/contrast.test.ts', on: '2026-10-04' },
   },
   {
     id: 'TR-03', before: 'invitation', owner: 'success', effort: 'S',

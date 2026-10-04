@@ -430,7 +430,7 @@ export const CONTROLS: readonly Control[] = [
     mechanism: 'ci',
     state: 'partial',
     proof: ['.github/workflows/contrast.yml', 'app/src/lib/workflowshell.test.ts'],
-    gap: 'Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; it still fails nightly on one hover state and the button-hierarchy walls (TR-02).',
+    gap: 'Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.',
     owner: 'accessibility',
   },
   {

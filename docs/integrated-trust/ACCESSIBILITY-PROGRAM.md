@@ -33,7 +33,7 @@ The table is why the claim ceiling reads as it does: of the layers that fail a b
 
 4. The contrast sweep, with its scope widened from the five "chrome" destinations to all sixty-three on a rotating basis (`SWEEP_SCOPE=all` on a third of nights), and gradient-painted elements measured by sampling the screenshot (the `paint.mjs` helper exists) rather than skipped.
 5. The target-size sweep moved into the same workflow.
-6. A failure opens an issue titled with the criterion and the destination, and is owned by the accessibility seat. Until TR-02 lands the sweep fails every night on one hover state (and the walls sweep on its own findings); the issue is the record.
+6. A failure opens an issue titled with the criterion and the destination, and is owned by the accessibility seat. The sweep's last reported finding, a hovered journey card, is fixed (TR-02), so a red night after that is a new finding and the issue is its record.
 
 ### Per release of a high-risk capability, and each quarter (manual, filed)
 

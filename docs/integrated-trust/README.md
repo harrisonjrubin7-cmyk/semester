@@ -29,7 +29,7 @@ Pages marked *rendered* are generated from typed data in `app/src/lib/ops/` and 
 
 ## The findings that decide the order
 
-1. **The nightly contrast sweep could not fail.** It piped through `tee` with no `pipefail`; every run was green while the log said `FINDINGS: 159`. Fixed in this change and guarded for every workflow (TR-01). The Work empty-state line that made 156 of the 159 was already fixed on main (545010c); one hover state and the 26 hierarchy walls still fail it (TR-02).
+1. **The nightly contrast sweep could not fail.** It piped through `tee` with no `pipefail`; every run was green while the log said `FINDINGS: 159`. Fixed in this change and guarded for every workflow (TR-01). The Work empty-state line that made 156 of the 159 was already fixed on main (545010c); the other three, a hovered journey card, are fixed here with a guard (TR-02), and the 26 hierarchy walls reported then measure zero now. The first green nightly run is the proof still owed.
 2. **No objective has a measured value, and the only alert is AI spend.** Everything reliability-related rests on TR-27 and TR-07.
 3. **One person holds every role.** Four seats are vacant, so four sections of the risk review are unpassable until they are filled (TR-12).
 4. **Break-glass is a record that widens nothing.** The console map marks it done (TR-14).

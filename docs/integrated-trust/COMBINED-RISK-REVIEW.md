@@ -187,7 +187,7 @@ Blocking questions unresolved:
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; it still fails nightly on one hover state and the button-hierarchy walls (TR-02).
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
@@ -213,7 +213,7 @@ Blocking questions unresolved:
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; it still fails nightly on one hover state and the button-hierarchy walls (TR-02).
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
@@ -240,7 +240,7 @@ Blocking questions unresolved:
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; it still fails nightly on one hover state and the button-hierarchy walls (TR-02).
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
@@ -267,7 +267,7 @@ Blocking questions unresolved:
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; it still fails nightly on one hover state and the button-hierarchy walls (TR-02).
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
@@ -294,7 +294,7 @@ Blocking questions unresolved:
 - **RR-PRV-6** (privacy, owed): TC-PRV-08 is partial: The list is real; approval is not: no provider terms are signed, regions and transfers are not verified, and deletion propagation to providers has no evidence.
 - **RR-A11-1** (accessibility, owed): TC-A11-02 is enforced in the repository; the owning seat has not reviewed it.
 - **RR-A11-2** (accessibility, known-gap): TC-A11-06 is absent: No dated manual or assistive-technology result exists; nineteen of the fifty-five WCAG 2.2 A and AA criteria in the protocol have no automated evidence at all.
-- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; it still fails nightly on one hover state and the button-hierarchy walls (TR-02).
+- **RR-A11-3** (accessibility, owed): TC-A11-04 is partial: Opens five of sixty-three destinations by default and cannot measure 14,025 elements painted on gradients; its last reported finding (a hovered journey card) is fixed and guarded (TR-02), and the first green nightly run is the proof still owed.
 - **RR-REL-1** (operations, owed): TC-REL-02 is partial: Nothing feeds it real events, so no objective has a measured value and no release has ever been frozen by it.
 - **RR-REL-2** (operations, owed): TC-REL-05 is partial: Drilled once on the deployed AI function; the other seven switches and read-only mode have never been engaged against production.
 - **RR-REL-3** (operations, known-gap): TC-REL-06 is absent: The only alert is AI spend, provider-side; there is no error reporting in the client and no routing to a person other than the founder.
