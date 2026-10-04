@@ -29,7 +29,7 @@ Not run on this page's behalf: the full `npm test`, `npm run test:shuffle` and `
 You need Git, Node.js 22 and npm.
 
 - CI installs Node with `node-version: 22` (the major only) in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml).
-- `app/package.json` declares no `engines` field and the repository has no `.nvmrc`. Nothing selects a Node version for you.
+- The root `package.json` declares `engines: { node: ">=22" }`; `app/package.json` declares no `engines` field and the repository has no `.nvmrc`. Nothing pins a patch version for you.
 - `jsdom` 30.1.1, which the tests use, declares `node: ^22.22.2 || ^24.15.0 || >=26.0.0`. On Node 22.22.0 `npm ci` prints four `EBADENGINE` warnings and still installs. Use Node 22.22.2 or later to avoid them.
 - The institution gateway uses `node:sqlite`, which Node 22 prints as an experimental warning when it starts.
 
@@ -40,7 +40,7 @@ git clone https://github.com/harrisonjrubin7-cmyk/semester.git
 cd semester
 ```
 
-The repository has no `package.json` at its root. Every npm command on this page runs from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says, unless a step says otherwise. At the root, `npm test` finds no script and silently does nothing.
+The repository's root `package.json` is a workspace root for `packages/*` only and defines no scripts. Every npm command on this page runs from `app/`, as [`CLAUDE.md`](../../CLAUDE.md) says, unless a step says otherwise. At the root, `npm test` finds no script and silently does nothing.
 
 ## 3. Check main first
 

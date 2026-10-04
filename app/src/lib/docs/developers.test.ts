@@ -560,7 +560,13 @@ describe('the onboarding page', () => {
     expect(onboarding).toContain('`node-version: 22`');
     expect(JSON.parse(read('app/package.json')).engines, 'the page says no engines field').toBeUndefined();
     expect(existsSync(at('.nvmrc')), 'the page says there is no .nvmrc').toBe(false);
-    expect(existsSync(at('package.json')), 'the page says the root has no package.json').toBe(false);
+    // The root manifest is a workspace root for packages/* and nothing else (PR 1180): no scripts, so `npm test` there still does nothing.
+    const root = JSON.parse(read('package.json')) as { private?: boolean; workspaces?: string[]; scripts?: object; engines?: { node?: string } };
+    expect(root.private).toBe(true);
+    expect(root.workspaces).toEqual(['packages/*']);
+    expect(root.scripts, 'the page says the root defines no scripts').toBeUndefined();
+    expect(onboarding).toContain(`engines: { node: \"${root.engines?.node}\" }`);
+    expect(onboarding).toContain('workspace root for `packages/*` only and defines no scripts');
     const lock = JSON.parse(read('app/package-lock.json')).packages['node_modules/jsdom'];
     expect(onboarding).toContain(lock.engines.node);
   });
