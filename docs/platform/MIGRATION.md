@@ -82,7 +82,7 @@ Each phase ends only when its **exit gate** passes. A phase may be shipped alone
   equivalence test green; no new route reads a tenant from a body.
 - *Rollback:* revert the adapter; the old builder is still in git.
 
-**Status (first slice landed, see D-<its PR>).** Done: the gateway's error builder and
+**Status (first slice landed, see D-1228).** Done: the gateway's error builder and
 correlation id now come from `@semester/platform`, held by
 `app/server/institution/envelope.test.ts` (the old builder is kept there verbatim as the
 golden; every status default and every specific code in the source is compared
