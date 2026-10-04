@@ -65,7 +65,7 @@ const CLAIM = [
   /\b(?:fully|completely) (?:secure|compliant|private)\b/i,
   /\bwe (?:guarantee|ensure) (?:your )?(?:data|privacy|security)\b/i,
 ];
-const HEDGE = /\b(?:not|no|never|neither|nor|without|isn['’]t|aren['’]t|doesn['’]t|hasn['’]t|haven['’]t|cannot|can['’]t|pending|planned|until|before|unless|if|would|should|must|may|might|whether|claims? register|counsel)\b/i;
+const HEDGE = /\b(?:not|no|never|neither|nor|without|isn['’]t|aren['’]t|doesn['’]t|hasn['’]t|haven['’]t|cannot|can['’]t|pending|planned|until|before|unless|if|would|should|must|may|might|whether|claims? register|counsel)\b|\?/i;
 
 function claims(page: string): string[] {
   // A sentence wraps across lines in Markdown, so units are paragraphs (and single table rows), not lines.
@@ -276,6 +276,8 @@ describe('the probes, against inputs that must fail and inputs that must pass', 
     expect(claims(good + 'Semester is not SOC 2 certified.')).toEqual([]);
     expect(claims(good + 'No claim of FERPA compliance is made until counsel has reviewed it.')).toEqual([]);
     expect(claims(good + 'Row-level security separates one account from another.')).toEqual([]);
+    // A question asks; it does not claim. The reviewer-question map quotes "Are you FERPA compliant?" verbatim.
+    expect(claims(good + '| Q24 | Are you FERPA compliant, and will you act as a school official? |\n')).toEqual([]);
     // A sentence wrapped across lines is one sentence: the hedge on the first line covers the second.
     expect(claims(good + 'The product is not\nSOC 2 certified.')).toEqual([]);
     expect(claims(good + 'The product is\nFERPA compliant.')).toHaveLength(1);

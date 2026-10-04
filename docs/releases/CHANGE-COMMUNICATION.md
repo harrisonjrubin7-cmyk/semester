@@ -57,7 +57,7 @@ the day the change reaches the live page.
 3. **Say what the reader must do, even if it is nothing.**
 4. **No claim outruns its evidence.** A notice that says a change "improves
    privacy" or "makes the AI safer" is a claim and follows the
-   [claims register](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md); say what the change
+   [claims register](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md); say what the change
    does instead.
 5. **Name the support route and its status honestly.** If the support seat is the
    founder, acting, a notice does not promise response times.

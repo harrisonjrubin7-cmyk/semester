@@ -106,6 +106,7 @@ Other workflows:
 | Deploy Edge Functions | `functions.yml` | After `CI` completes on `main`, or by hand | Deploys the function directories the merge touched, only if CI succeeded. |
 | Contrast | `contrast.yml` | Nightly at 07:00 UTC, or by hand | The contrast sweep in a real browser against the dev server. Not a required check. |
 | Production smoke | `production-smoke.yml` | Hourly, or by hand | Probes the deployed public app and, when configured, the institutional gateway; records each hour on the `status-data` branch. |
+| Docs | `docs.yml` | Pull request opened, updated, reopened or edited | Runs `npm run docs:impact`: fails a pull request that changes a gateway, edge function, screen, script or example without touching a page that describes it, unless its description says `Docs: none because …`. Needs no install. |
 | HawkScan | `hawkscan.yml` | Pull request and push to `main`, or by hand | Dynamic application scan through StackHawk; pull requests from forks do not run it. |
 
 ## Where the policy tests live

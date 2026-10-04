@@ -19,7 +19,7 @@ You say one of these:
 ## Check
 
 1. Open **Connect accounts** and find **Connected calendars**. Each row says when it was last read: "never checked", "checked today", "checked yesterday" or "checked N days ago".
-2. In the code this page was written from, Semester reads a subscribed calendar when you add it with **Subscribe** and when you press **REFRESH** on its row. Nothing re-reads it in the background. A calendar that is days old has simply not been refreshed.
+2. In the code this page was written from, Semester reads a subscribed calendar when you add it with **Subscribe** and when you press **REFRESH** on its row. Nothing re-reads it in the background. A calendar that is days old has not been refreshed.
 3. A calendar you added as a file has no REFRESH button, because there is nowhere to read it from again. Add the new file; adding the same calendar again refreshes it rather than duplicating it.
 4. Feed events appear on **Calendar** under Campus, marked with where they came from. They never overwrite a deadline the syllabus stated.
 

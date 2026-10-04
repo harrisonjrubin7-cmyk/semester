@@ -142,11 +142,11 @@ carries a card).
    the gate parses it. A sample nobody ran is a guess with syntax highlighting.
 5. **No claim outruns its evidence.** Security, privacy, accessibility and
    compliance statements in any page follow
-   [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md)
+   [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md)
    and the claims register. A page may say what a control *is* and where its
    evidence *is*; it may not say a company is compliant, certified or secure.
    Legal conclusions are for qualified counsel (see
-   [`LEGAL-REVIEW-QUEUE.md`](../LEGAL-REVIEW-QUEUE.md)).
+   [`LEGAL-REVIEW-QUEUE.md`](../../LEGAL-REVIEW-QUEUE.md)).
 6. **A broken guard is not a guard.** Every test that holds a page has been
    shown to fail against a deliberate break (a renamed route, a deleted
    event) and then restored. The pull request says so, as

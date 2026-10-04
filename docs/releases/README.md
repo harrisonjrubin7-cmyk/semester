@@ -25,7 +25,7 @@ not built, so for now an institution administrator is told by a person, using a
 | --- | --- | --- | --- |
 | [`CHANGELOG.md`](../../CHANGELOG.md) | People testing Semester, and everyone below as the source | In the pull request that makes the change | The `screens` rule of `docs:impact`; the changelog's own three rules |
 | The *What changed* screen in the app ([`whatsnew.ts`](../../app/src/lib/whatsnew.ts)) | Students and staff, filtered to the modules their school has switched on | In the pull request, when a person can notice the change | [`whatsnew.test.ts`](../../app/src/lib/whatsnew.test.ts): a date, a real screen, a sentence about what to do |
-| A release note in [`notes/`](notes/) | A cohort, or one institution | At a cut, from the changelog | [`releases.test.ts`](../../app/src/lib/docs/releases.test.ts): every change it names is a changelog heading; no `TODO(edit)` left |
+| A release note in `docs/releases/notes/` | A cohort, or one institution | At a cut, from the changelog | [`releases.test.ts`](../../app/src/lib/docs/releases.test.ts): every change it names is a changelog heading; no `TODO(edit)` left |
 | The [status page](../../app/public/status.html) and its [feed](../../app/public/status-feed.xml) | Anyone, during an incident or planned maintenance | When an incident is declared or closes | [`statushistory.test.ts`](../../app/src/lib/statushistory.test.ts) |
 
 Incidents are communicated by [`INCIDENT-COMMUNICATIONS.md`](../operating-model/INCIDENT-COMMUNICATIONS.md),

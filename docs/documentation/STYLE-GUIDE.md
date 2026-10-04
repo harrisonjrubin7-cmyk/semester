@@ -62,8 +62,8 @@ compliant, certified or conformant, or use "bank-grade", "military-grade",
 "100% secure" and similar. A sentence that states an absence or a condition — "no
 SOC 2 report exists", "FERPA posture is pending counsel review" — is the honest
 form and passes. The rule, its sources and who approves a claim are in
-[`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) and
-[`LEGAL-REVIEW-QUEUE.md`](../LEGAL-REVIEW-QUEUE.md).
+[`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) and
+[`LEGAL-REVIEW-QUEUE.md`](../../LEGAL-REVIEW-QUEUE.md).
 
 ## Status words
 

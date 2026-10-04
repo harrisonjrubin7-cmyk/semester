@@ -106,7 +106,7 @@ Four things can be wrong with a page, and a different reader catches each.
 | --- | --- | --- |
 | The page disagrees with the code or the product | The author, running the thing — and the gate where the page is `generated` or `held` | Before the pull request is opened |
 | The page is unclear, long or in the wrong voice | A reviewer who did not write it, against the [style guide](STYLE-GUIDE.md) | In review |
-| The page makes a claim about security, privacy, accessibility, AI or compliance | The `privacy` seat (qualified counsel for legal conclusions); the claim wording check in the gate catches only the obvious ones | Before merge, and listed in [`LEGAL-REVIEW-QUEUE.md`](../LEGAL-REVIEW-QUEUE.md) if it states a legal position |
+| The page makes a claim about security, privacy, accessibility, AI or compliance | The `privacy` seat (qualified counsel for legal conclusions); the claim wording check in the gate catches only the obvious ones | Before merge, and listed in [`LEGAL-REVIEW-QUEUE.md`](../../LEGAL-REVIEW-QUEUE.md) if it states a legal position |
 | The page cannot be used by someone who is not the author | A person from the page's audience, working only from the page | Before a help page or guide is first relied on; see [Where the system is thin](README.md#where-the-system-is-thin) |
 
 The last row has not happened for any page yet. The first pilot cohort is where
@@ -173,8 +173,8 @@ Pages are versioned by the repository, and nothing else.
 ### Retiring a page
 
 Nothing is deleted (D-002). A page that no longer describes the product gets one
-line under its card — `**Status:** superseded by [the new page](path.md) on
-YYYY-MM-DD.` — and its card's `Truth` becomes `reviewed` with `Held by` set to
+line under its card, in the form `**Status:** superseded by [new page](path.md) on YYYY-MM-DD.`,
+and its card's `Truth` becomes `reviewed` with `Held by` set to
 `—`, because nothing should still be holding a page that is wrong on purpose.
 The page keeps its place in [`INDEX.md`](INDEX.md), marked superseded, and the
 page that replaces it takes over the inbound links.
