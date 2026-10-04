@@ -58,8 +58,9 @@ The resolution used throughout: **the ambition is internal; the public brand
 speaks to the next step, the source and the student's control.** The company can
 grow into larger sentences as evidence arrives, and §8 defines how a sentence
 earns its place. "Student OS" is therefore an *internal and analyst-facing
-category label*, not a public descriptor, until the claim-owner and counsel
-decide otherwise (it implies replacement; see §1.5).
+category label*, not a public descriptor. The owner decided on 2026-10-04 to
+keep **"student action platform"** as the public descriptor
+([`D-1148`](decisions/D-1148.md)); "Student OS" implies replacement (see §1.8).
 
 ### 0.4 What was and was not verified
 
@@ -222,7 +223,7 @@ wrong, is pending, or is uncertain — has three parts:
 | Layer | Rule | Today |
 | --- | --- | --- |
 | **Master brand** | "Semester" in running text, always. The wordmark lockup is set in capitals by the typeface treatment (`SEMESTER`); the capitals are a logo, not a spelling. Never "the Semester app" in a headline | existing brand page |
-| **Descriptor** | A category line may follow the name. Current public descriptor: *"The student action platform"* (site title). **"Student OS" is not a public descriptor** pending claim-owner/counsel decision | proposed rule |
+| **Descriptor** | A category line may follow the name. **Public descriptor: *"the student action platform"*** (site title; owner decision [`D-1148`](decisions/D-1148.md)). **"Student OS" is not a public descriptor** | decided |
 | **Destinations** | Today, My Path, Search, Plan, Me — the five canonical destinations. No sixth global product for a specialist feature | design guide |
 | **Named tools** | Plain nouns: Course Studio, Study Studio. Test: could a student guess what it does? | existing |
 | **Assistant** | **Ask Semester.** No human name, no avatar face, no pronoun "I" in marketing. Always labelled as AI where it speaks | proposed rule |
@@ -1036,7 +1037,7 @@ depends on a claim waits for the claim.
 1. The existing identity (§0.2) is intended and stays; this is codification and
    extension, not a rebrand.
 2. The register is current as of its 2026-10-03 assessment date.
-3. "Student OS" is an internal category label, not an approved public descriptor.
+3. "Student OS" is an internal category label, not a public descriptor; the public descriptor is "student action platform" (`D-1148`).
 4. Brand work is subordinate to the register: the brand does not decide claims.
 5. No audience research, trademark search or live competitor review was performed.
 
@@ -1045,7 +1046,7 @@ depends on a claim waits for the claim.
 | # | Risk or question | Owner needed |
 | --- | --- | --- |
 | 1 | Approvers beyond the claim-owner are unassigned, so Tier 2/3 cannot operate | Founder |
-| 2 | Public descriptor: keep "student action platform", or decide on a new category line with counsel | Claim owner + counsel |
+| 2 | ~~Public descriptor~~ — **resolved 2026-10-04**: keep "student action platform" (`D-1148`). Revisit only through the register | — |
 | 3 | Trademark clearance for "Semester" and product names is unknown | Counsel |
 | 4 | Faint rung ≈ 3.3–3.7:1 in the app; extent of text use unmeasured (B-21) | A11y |
 | 5 | Non-Latin scripts unsupported by shipped fonts (§4.6) | Design Systems |
