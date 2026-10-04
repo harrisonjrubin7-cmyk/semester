@@ -39,7 +39,7 @@ extends it**; it does not replace it.
 | Provenance ladder: Official, Connected, Made here, Yours, Sample, Out of date | `app/src/lib/where.ts`, [`TRUST-CUES-AND-SOURCE-PRESENTATION.md`](TRUST-CUES-AND-SOURCE-PRESENTATION.md) | `where.test.ts` |
 | Nine owned terms (Student Action Layer, Source-Aware Student Experience, …) | `app/src/lib/vocabulary.ts` | `vocabulary.test.ts` |
 | Public brand page: casing rule, product names, "demo data" rule, no "certified/guaranteed" | `company-site/index.html` (`data-page="brand"`) | site tests |
-| Seventeen claim rows with approval state | [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) | `salecopy.test.ts` and related |
+| Eighteen claim rows with approval state (`CLM-018` is proposed, not approved) | [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../PUBLIC-CLAIMS-APPROVAL-REGISTER.md) | `salecopy.test.ts` and related |
 
 **Two consequences.** First, every visual recommendation below is either an
 existing rule restated with its measured evidence, or a clearly marked
@@ -97,8 +97,10 @@ keep **"student action platform"** as the public descriptor
 
 - **Purpose (internal):** Make academic life legible: what matters, why, and what
   to do about it.
-- **Mission (candidate):** Give every student one clear next step, and show where
-  every fact behind it came from.
+- **Mission (candidate):** Help students see what to do next, and where the facts
+  behind it come from. *(Register row `M-43`; internal until `CLM-018` is
+  approved. The first draft said "every student" and "every fact"; the evidence
+  does not support the second.)*
 - **Vision (internal only — do not publish):** Every part of a student's
   educational life works in one governed place. *Reason for the restriction:*
   stated as fact it runs into `CLM-005`, `CLM-006` and `CLM-017`.
@@ -139,17 +141,21 @@ glowing orbs, a named, human-seeming assistant).
 
 ### 1.5 Promise
 
-The brand promise is a **design commitment the product can be held to**, not an
-outcome:
+The brand promise is a **design standard the product is held to**, not an outcome
+and not yet a public claim:
 
-> **Every fact in Semester shows where it came from and how far to rely on it.**
+> **Where Semester shows a fact, it shows where it came from and how far to rely on it.**
 
-*Candidate; requires a new register row (proposed `CLM-018`: "source-aware
-presentation") scoped to the surfaces where the provenance ladder is actually
-rendered.* The repository's own trust-cues document records that `official` is
-reserved and no code path returns it today, and that `faculty-approved`,
-`course-provided` and `updated-today` are defined but unused. The public form of
-the promise therefore must not imply those labels appear on screens.
+*Corrected 2026-10-04.* The first draft said "Every fact in Semester…". The
+evidence check for the proposed register row `CLM-018`
+([`CLM-018-SOURCE-LABEL-EVIDENCE.md`](CLM-018-SOURCE-LABEL-EVIDENCE.md)) found
+source labels on 30 component and screen files, not on every screen, so the
+unscoped sentence is unsupported (it stood as `M-09` in the copy register and is
+now `M-09b`, prohibited). The **public** form is the `CLM-018` wording, scoped to
+"where Semester shows a source label", and it is proposed, not approved. The
+trust-cues document also records that `official` is reserved and no code path
+returns it today; the public promise must not imply that label, or the unused
+`faculty-approved`, `course-provided` and `updated-today`, appear on screens.
 
 Explicitly *not* promised: grades, retention, time saved, wellbeing, or
 replacing any official system (`CLM-006`, `CLM-014`).
@@ -170,9 +176,10 @@ Three beats. No statistics, no named customers, no outcomes.
    their plans, drafts and sharing. Where Semester is unsure, it says so and
    points to the official or human route.
 
-Short form (40 words, candidate): *Semester turns your semester into one clear
-next step. Every fact shows its source. Your school's official systems stay
-official. You decide what is shared.*
+Short form (candidate; register row `M-44`, blocked until `CLM-018` and the
+sharing review clear): *Semester turns your semester into one clear next step.
+Where it can, it shows the source of each fact. Your school's official systems
+stay official. You decide what is shared.*
 
 ### 1.7 Voice
 
@@ -247,7 +254,7 @@ exact variant and channel.
 | # | Line | Audience | Rationale | Claim check | Status |
 | --- | --- | --- | --- | --- | --- |
 | T1 | **One clear next step.** | Student, general | Already the site's H1 idea; action-first | `CLM-001` (describe the exercised experience only) | Primary candidate |
-| T2 | **Know what's next. Know where it came from.** | Student, trust | Joins the two halves of the promise | `CLM-018` proposed | Candidate pending `CLM-018` |
+| T2 | **Know what's next. Know where it came from.** | Student, trust | Joins the two halves of the promise | `CLM-018` proposed | Candidate; register row `M-38` ✋ pending `CLM-018` |
 | T3 | **Your semester, with sources.** | Student, social | Short, ownable, slightly dry | Same | Candidate |
 | T4 | **Beside your systems, not instead of them.** | Institution, sales | Turns the `CLM-006` prohibition into a stance | `CLM-004` — *must carry "in a bounded pilot" in the same view* | Sales-only, qualified |
 | T5 | **Status is part of the product.** | Institution, trust centre | Already on the site; unusual and true to the design | `CLM-007` / `CLM-009` if tied to specifics | Candidate |
@@ -1023,6 +1030,14 @@ written to be checkable.
 | B-40 | Review-capacity measurement (before setting any SLA) | P1 | Ops | Real turnaround recorded for a month before a target is set | 1 |
 | B-41 | Perception test (student and institutional buyers) | P2 | Research | Method and sample recorded; findings never cited beyond their scope | 1 |
 | B-42 | Trademark clearance request to counsel | P0 | Legal | Counsel's written result; filed in the IP inventory | 3 |
+
+**Progress, 2026-10-04 (draft; nothing here is approved).**
+
+| ID | State | What was done, and what is still open |
+| --- | --- | --- |
+| B-10 | Delivered as a draft | A copy-level register already existed (`M-01`–`M-36`, §8 of [`BRAND-AND-MARKETING-STRATEGY.md`](gtm/BRAND-AND-MARKETING-STRATEGY.md)), so no second library was built. Added brand-line rows `M-37`–`M-44`, split the unsupported "every fact" sentence out as prohibited `M-09b`, recorded `D-1148` against `M-26`/`D1`, and added `app/src/lib/gtm/copyregister.test.ts` (six rules, each seen failing). It found three rows whose review date disagreed with their risk (`M-08`, `M-14b`, `M-21`); their risk was raised to match the earlier date. **Open:** moving the register into `ops/claims` data, which the strategy proposes |
+| B-11 | Delivered as a draft | `CLM-018` added as **proposed, not approved**, with [`CLM-018-SOURCE-LABEL-EVIDENCE.md`](CLM-018-SOURCE-LABEL-EVIDENCE.md) and `app/src/lib/ops/clm018.test.ts` (five assertions, each seen failing). **Open:** four components print "Institution verified" unconditionally; Product and Engineering must confirm the data path before approval |
+| B-42 | Request drafted | [`TRADEMARK-CLEARANCE-COUNSEL-REQUEST-DRAFT.md`](legal-drafts/TRADEMARK-CLEARANCE-COUNSEL-REQUEST-DRAFT.md). **No clearance search was run and no counsel has been engaged.** The USPTO site answers from this environment, but programmatic search did not work (HTTP 405) |
 
 **Order of work.** B-42, B-10, B-11 and B-39 first: they decide *what may be said
 and who may say it*. Then B-01–B-06, B-21, B-34–B-38. Everything visual that

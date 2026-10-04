@@ -45,7 +45,7 @@ Read from the tree on 2026-10-04.
 | Contrast on every ground and accent, in CI: `lib/contrast.test.ts`, `.github/workflows/contrast.yml` | Native iOS and Android clients: none exist, so the matrix below covers the web app on phones |
 | axe-core over the rendered app, zero serious or critical, in `npm test`: `a11y/axe.test.tsx` (jsdom: contrast and layout rules cannot answer) | Any of: `smoke:a11y`, `sweep:contrast`, `sweep:targets`, `keyboard-pass` in CI beyond the one run noted in `ACCESSIBILITY_READINESS.md` |
 | Text size, line spacing and density answer settings: `styles/textscale.test.ts`, `styles/density.test.ts` | A message catalogue, locale choice for the interface, plain-language mode (see the localization page) |
-| Skip link keeps the route: `a11y/skiplink.test.tsx` | A named accessibility owner. The governance page says "Accessibility lead"; nobody holds it |
+| Skip link keeps the route: `a11y/skiplink.test.tsx` | A named accessibility owner. Held since 2026-10-04 by @harrisonjrubin7-cmyk; no champions, panel or mailbox yet |
 
 The two columns decide the program. Automated guards are strong and stay. The gap is the human half: people
 using assistive technology, in the real journeys, with the results written down.
@@ -339,7 +339,7 @@ Ordered by what moves the evidence, not by size. Dates are for the owner to set;
 
 | # | Work | Closes | Owner | Depends on |
 | --- | --- | --- | --- | --- |
-| 1 | **Name the accessibility lead and three champions** (engineering, product, content) | Governance rows with no holder | Founder | None |
+| 1 | ~~Name the accessibility lead~~ **done 2026-10-04** (@harrisonjrubin7-cmyk). Still to name: three champions (engineering, product, content) | Governance rows with no holder | Accessibility lead | None |
 | 2 | **Run the manual AT pass** on the eight golden-path steps, rows E1 to E8, E10, E11 | A11Y-3; feeds A11Y-2 | Accessibility lead, with a paid AT user | 1; a seeded account |
 | 3 | **Publish the accessibility contact and the severity-to-fix-time table** (the one in ISSUE-PROCESS §3) | A11Y-4 | Accessibility lead | 1; a mailbox that someone reads |
 | 4 | **Publish the statement** (the draft here) only after 2 and 3, edited to what was found | Public trust, procurement question | Accessibility lead and counsel | 2, 3 |
@@ -361,7 +361,7 @@ wasted on defects a person with NVDA would have found in an afternoon.
 
 | Seat | Owns | Today |
 | --- | --- | --- |
-| Accessibility lead | This program, the backlog, the ACR, the statement, the audit contract, the panel | **Unassigned** |
+| Accessibility lead | This program, the backlog, the ACR, the statement, the audit contract, the panel | **@harrisonjrubin7-cmyk, from 2026-10-04** |
 | Engineering champion | Shared components, the lint and test guards, CI sweeps, the component rows | Unassigned |
 | Product champion | G0 design review, acceptance criteria in stories, the reading and calm settings | Unassigned |
 | Content champion | The content standard, caption and transcript pipeline, alt-text, translation provenance | Unassigned |
