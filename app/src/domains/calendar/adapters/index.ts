@@ -1,1 +1,2 @@
-export { appointmentSource, deadlineSource } from './legacy';
+export { appointmentSource, classSource, deadlineSource } from './legacy';
+export type { ClassMeeting } from './legacy';

@@ -193,7 +193,7 @@ export function TodayActionCenter({
     <section className="today-action-center" aria-label="Today">
       {shadowEnabled() && (
         <Suspense fallback={null}>
-          <TodayShadow actions={actions} choices={choices} rows={rows} now={now} />
+          <TodayShadow actions={actions} choices={choices} rows={rows} now={now} registrationDay={registrationDay} officeList={officeList} />
         </Suspense>
       )}
       <div className="action-center-main">

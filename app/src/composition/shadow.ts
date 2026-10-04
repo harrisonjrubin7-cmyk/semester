@@ -30,15 +30,17 @@ export interface ShadowDiff {
 
 /**
  * Differences that are the domain layer's *missing sources*, not disagreement.
- * Each is a statement about work not yet done, so deleting one means doing it.
+ * Each entry is a statement about work not yet done, so deleting one means
+ * doing it.
+ *
+ * **Empty.** It had three — registration-day actions, campus office actions
+ * and class meetings — and the slice now has all three sources. The mechanism
+ * stays, taking its list as a parameter, so the next source that is genuinely
+ * missing can be named instead of hidden; but nothing is excused today, and a
+ * test asserts it.
  */
-export const KNOWN_GAPS: readonly (readonly [RegExp, string])[] = [
-  [/^regday:/, 'registration-day actions are ranked by the Action Center; the slice has no registration source yet'],
-  [/^office:/, 'campus office actions are ranked by the Action Center; the slice has no office-action source yet'],
-  [/^class:/, 'class meetings are on the legacy day; the calendar slice has no class source yet'],
-];
+export const KNOWN_GAPS: readonly (readonly [RegExp, string])[] = [];
 
-const gapOf = (id: string): string | null => KNOWN_GAPS.find(([re]) => re.test(id))?.[1] ?? null;
 
 /** `appointment:abc:2026-10-08` → `appointment:abc`; the day is the comparison's, not part of the identity. */
 const dropDay = (key: string): string => key.replace(/^(appointment:[^:@]+)[:@].*$/, '$1');
@@ -59,7 +61,8 @@ export function legacyDay(rows: readonly { id: string }[]): string[] {
 
 const only = (a: readonly string[], b: readonly string[]): string[] => a.filter((x) => !b.includes(x));
 
-export function diffToday(domain: Side, legacy: Side): ShadowDiff {
+export function diffToday(domain: Side, legacy: Side, gaps: readonly (readonly [RegExp, string])[] = KNOWN_GAPS): ShadowDiff {
+  const gapOf = (id: string): string | null => gaps.find(([re]) => re.test(id))?.[1] ?? null;
   const explained: string[] = [];
   const unexplained: string[] = [];
   const note = (id: string, where: string) => {

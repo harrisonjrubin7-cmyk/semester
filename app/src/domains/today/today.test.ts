@@ -9,6 +9,10 @@ import type { Agenda } from '../calendar';
 import type { TaskList } from '../tasks';
 import { getToday, isQuiet, type Guard, type Ranking, type TodayDeps } from './index';
 import { legacyRanking } from './adapters';
+import { officeActionToAction, type OfficeAction } from '../../lib/office-actions';
+import type { CatalogCourse } from '../../lib/registration';
+import { registrationActions } from '../../lib/registration-actions';
+import { EMPTY_REGISTRATION_DAY, type RegistrationDayData } from '../../lib/registration-day';
 
 const clock = fixedClock('2026-10-08');
 const allow: Guard = () => ok(undefined);
@@ -129,5 +133,79 @@ describe('today: the legacy ranking', () => {
   it('translates an action into the six fields Today draws, and nothing it does not', async () => {
     const ours = await legacyRanking(() => ({ input, choices: {} }))(now);
     expect(Object.keys(ours.mostImportant!).sort()).toEqual(['dueAt', 'id', 'priority', 'title', 'why']);
+  });
+});
+
+// ── the two candidate sources that were once missing ───────────────────────
+
+const course = (id: string): CatalogCourse => ({
+  id, code: 'PSY 220', section: '01', title: 'Methods', term: 'Spring 2027', department: 'PSY', credits: 3,
+  instructor: '', location: '', description: '', prerequisites: '', seats: 10, meetings: [{ days: [1, 3], start: 540, end: 590 }],
+});
+const regDay = (patch: Partial<RegistrationDayData> = {}): RegistrationDayData => ({ ...EMPTY_REGISTRATION_DAY, opensAt: '2026-10-10T08:00', ...patch });
+const office = (id: string, over: Partial<OfficeAction> = {}): OfficeAction => ({
+  id, office: 'financial_aid', officeLabel: 'Financial Aid', type: 'deadline', audience: 'tenant', program: null, eligibility: null,
+  title: `Verify ${id}`, why: 'Aid is held until it is done.', dueAt: clock.now() + 2 * 86_400_000, url: 'https://example.edu/aid', sourceNote: 'Checklist',
+  updatedAt: Date.parse('2026-10-01T09:00:00Z'), publishedAt: null, doneAt: null, ...over,
+});
+
+describe('today: registration and office actions in the ranking', () => {
+  const input: TodayActionInput = { path: path(), upcoming: [dated('e1', 2, true)], done: {}, reviewDue: 3, catalogEmpty: false };
+  const now = clock.now();
+  const cart = [course('psy')];
+  const reg = { active: true, data: regDay(), cart, catalog: cart };
+  const sources = [office('a1'), office('a2', { dueAt: null })];
+
+  /** The Action Center's own recipe, written out, as the thing to match. */
+  const legacy = (r: typeof reg | undefined, o: OfficeAction[] | null, choices: Record<string, Choice> = {}) =>
+    rank(
+      [
+        ...todayActions(input),
+        ...(r?.active ? registrationActions(r.data, r.cart, r.catalog, new Date(now)) : []),
+        ...(o ?? []).filter((a) => a.doneAt === null).map((a) => officeActionToAction(a, now)),
+      ],
+      choices,
+      now,
+    );
+  const ours = (r: typeof reg | undefined, o: OfficeAction[] | null, choices: Record<string, Choice> = {}) =>
+    legacyRanking(() => ({ input, choices, registration: r, office: o }))(now);
+
+  it('ranks the same ones in the same order as the Action Center, with both sources on', async () => {
+    const direct = legacy(reg, sources);
+    const got = await ours(reg, sources);
+    expect(got.mostImportant?.id).toBe(direct.mostImportant?.action.id);
+    expect(got.next.map((n) => n.id)).toEqual(direct.next.map((n) => n.action.id));
+    // The control: the new candidates are really in play — without them the answer is different.
+    const without = await ours(undefined, null);
+    const all = [got.mostImportant, ...got.next].map((n) => n?.id);
+    expect(all.some((id) => id?.startsWith('regday:') || id?.startsWith('office:'))).toBe(true);
+    expect([without.mostImportant, ...without.next].map((n) => n?.id)).not.toEqual(all);
+  });
+
+  it('proposes no registration action when the mode is not surfaced, however the data looks', async () => {
+    const got = await ours({ ...reg, active: false }, null);
+    const direct = legacy({ ...reg, active: false }, null);
+    expect([got.mostImportant, ...got.next].map((n) => n?.id)).toEqual([direct.mostImportant?.action.id, ...direct.next.map((n) => n.action.id)]);
+    expect([got.mostImportant, ...got.next].some((n) => n?.id.startsWith('regday:'))).toBe(false);
+  });
+
+  it('leaves out an office action the student marked done, and none at all while the feed is not ready', async () => {
+    // A lean day, so nothing else crowds the top four and presence is a fair question.
+    const lean: TodayActionInput = { path: path({ state: 'moving', unresolved: 0, firstUnresolved: null }), upcoming: [], done: {}, reviewDue: 0, catalogEmpty: false };
+    const run = (o: OfficeAction[] | null) => legacyRanking(() => ({ input: lean, choices: {}, office: o }))(now);
+    const idsOf = (r: Awaited<ReturnType<typeof run>>) => [r.mostImportant, ...r.next].flatMap((n) => (n ? [n.id] : []));
+    const got = idsOf(await run([office('a1', { doneAt: now - 1 }), office('a2')]));
+    expect(got).toContain('office:a2');
+    expect(got).not.toContain('office:a1');
+    expect(idsOf(await run(null)).some((id) => id.startsWith('office:'))).toBe(false);
+  });
+
+  it('honours a snooze on a registration or office action, as it does on any other', async () => {
+    const top = legacy(reg, sources).mostImportant!.action.id;
+    const snoozed: Record<string, Choice> = { [top]: { status: 'snoozed', snoozedUntil: now + 86_400_000, history: [] } };
+    const direct = legacy(reg, sources, snoozed);
+    const got = await ours(reg, sources, snoozed);
+    expect(got.mostImportant?.id).toBe(direct.mostImportant?.action.id);
+    expect(got.mostImportant?.id).not.toBe(top);
   });
 });

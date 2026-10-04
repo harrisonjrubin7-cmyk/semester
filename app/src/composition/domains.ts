@@ -1,6 +1,6 @@
 import { nullSink, systemClock, systemIds, type Clock, type EventSink, type IdSource } from '../kernel';
 import { getAgenda } from '../domains/calendar';
-import { appointmentSource, deadlineSource } from '../domains/calendar/adapters';
+import { appointmentSource, classSource, deadlineSource, type ClassMeeting } from '../domains/calendar/adapters';
 import { currentSubject } from '../domains/identity';
 import { legacyIdentity, type LegacyIdentity } from '../domains/identity/adapters';
 import { createAuthorizer, type InstitutionalContext } from '../domains/policy';
@@ -23,6 +23,8 @@ export interface LegacyHost {
   readonly tasks: StateAccess<PersonalTask[]>;
   readonly appointments: () => Appointment[];
   readonly deadlines: () => DatedItem[];
+  /** The student's class meetings on a day, with how long each runs. */
+  readonly classes: (date: Date) => readonly ClassMeeting[];
   /** Whether the student ticked this deadline off. */
   readonly isDone: (id: string) => boolean;
   readonly ranking: () => LegacyRankingInput;
@@ -57,7 +59,7 @@ export function composeDomains(host: LegacyHost, platform: Platform = defaultPla
     authorizer.enforce(subject(), { action, resource, correlationId: ids.next() });
 
   const taskDeps = { tasks: legacyTaskRepository(host.tasks), guard, clock, events };
-  const sources = [appointmentSource(host.appointments), deadlineSource(host.deadlines, host.isDone)];
+  const sources = [classSource(host.classes), appointmentSource(host.appointments), deadlineSource(host.deadlines, host.isDone)];
   const tasks = { list: listTasks(taskDeps), complete: completeTask(taskDeps), reopen: reopenTask(taskDeps) };
   const calendar = { agenda: getAgenda({ sources, guard }) };
   const today = { view: getToday({ guard, clock, tasks: tasks.list, agenda: calendar.agenda, ranking: legacyRanking(host.ranking) }) };

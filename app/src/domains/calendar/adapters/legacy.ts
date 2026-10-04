@@ -1,6 +1,6 @@
 import { dateToIso, isoToDate } from '../../../lib/date';
 import { appointmentLength, appointmentsOn } from '../../../lib/select';
-import type { Appointment, DatedItem } from '../../../lib/types';
+import type { Appointment, Block, DatedItem } from '../../../lib/types';
 import type { Entry } from '../domain/agenda';
 import type { CalendarSource } from '../application/get-agenda';
 
@@ -50,6 +50,44 @@ export function deadlineSource(read: () => DatedItem[], isDone: (id: string) => 
           durationMin: 0,
           provenance: i.checked?.confirmed ? 'imported' : 'needs_review',
           done: isDone(i.id),
+        })),
+  };
+}
+
+/** A class meeting as the legacy catalogue yields it for one day, with how long it runs. */
+export interface ClassMeeting {
+  readonly block: Block;
+  readonly minutes: number;
+}
+
+/**
+ * Class meetings, from the timetable the syllabus produced.
+ *
+ * The id is the one the Action Center has always given a class on a day
+ * (`class:<day>:<course>:<minute>`), so a snooze, a deep link or a comparison
+ * made against the old rows still means the same thing.
+ *
+ * An optional session and a cancelled one are not on the day — the rule the
+ * Action Center applies — so they are not entries. That is Today's reading of
+ * "a class"; the calendar screen draws a cancelled one struck through, which
+ * an `Entry` cannot yet say. The host decides *whose* classes these are (the
+ * sample's are not the student's until they say so) before they get here.
+ */
+export function classSource(read: (date: Date) => readonly ClassMeeting[]): CalendarSource {
+  return {
+    name: 'Your classes',
+    entriesOn: async (on) =>
+      read(isoToDate(on))
+        .filter(({ block }) => !block.optional && !block.canceled)
+        .map(({ block, minutes }): Entry => ({
+          id: `class:${on}:${block.c}:${block.at}`,
+          title: block.title,
+          kind: 'class',
+          on,
+          startMin: block.at,
+          durationMin: minutes,
+          provenance: 'imported',
+          done: false,
         })),
   };
 }

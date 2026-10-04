@@ -4,7 +4,11 @@ import { isoToDate } from '../../lib/date';
 import type { Appointment, DatedItem } from '../../lib/types';
 import { fail, ok } from '../../kernel';
 import { agendaFor, conflictsIn, getAgenda, isRealDay, type CalendarSource, type Entry, type Guard } from './index';
-import { appointmentSource, deadlineSource } from './adapters';
+import { appointmentSource, classSource, deadlineSource } from './adapters';
+import { buildCatalog, blocksFor } from '../../data/catalog';
+import { loadSeed } from '../../data/seed';
+import { lengthOf } from '../../lib/select';
+import type { Block } from '../../lib/types';
 
 const entry = (over: Partial<Entry> = {}): Entry => ({ id: 'e', title: 'T', kind: 'appointment', on: '2026-10-08', startMin: 600, durationMin: 60, provenance: 'student_entered', done: false, ...over });
 const allow: Guard = () => ok(undefined);
@@ -133,5 +137,36 @@ describe('calendar: deadlines', () => {
   it('keeps only the day asked for', async () => {
     const got = await deadlineSource(() => [item({ id: 'a' }), item({ id: 'b', date: isoToDate('2026-10-09') })]).entriesOn('2026-10-08');
     expect(got.map((e) => e.id)).toEqual(['deadline:a']);
+  });
+});
+
+describe('calendar: class meetings over the legacy timetable', () => {
+  const block = (over: Partial<Block> = {}): Block => ({ time: '9:00a', at: 540, title: 'ECON 1010', meta: 'Room 4', c: 'econ', ...over });
+
+  it('names a class the way the Action Center always has, so a snooze or a link keeps its meaning', async () => {
+    const [e] = await classSource(() => [{ block: block(), minutes: 75 }]).entriesOn('2026-09-29');
+    expect(e).toMatchObject({ id: 'class:2026-09-29:econ:540', kind: 'class', startMin: 540, durationMin: 75, provenance: 'imported', done: false });
+  });
+
+  it('leaves out an optional session and a cancelled one, as Today does', async () => {
+    const got = await classSource(() => [{ block: block({ at: 540 }), minutes: 50 }, { block: block({ at: 600, optional: true }), minutes: 50 }, { block: block({ at: 660, canceled: true }), minutes: 50 }]).entriesOn('2026-09-29');
+    expect(got.map((e) => e.startMin)).toEqual([540]);
+  });
+
+  it('asks the legacy timetable for the day it was asked about, as a local date', async () => {
+    const asked: string[] = [];
+    await classSource((d) => { asked.push(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`); return []; }).entriesOn('2026-09-29');
+    expect(asked).toEqual(['2026-9-29']);
+  });
+
+  // The real timetable: the shipped sample semester, a Tuesday with classes.
+  it('gives the same classes, at the same minutes and lengths, as blocksFor on the seeded semester', async () => {
+    const cat = buildCatalog(await loadSeed());
+    const date = new Date(2026, 8, 29);
+    const legacy = blocksFor(cat, date).filter((b) => !b.optional && !b.canceled);
+    expect(legacy.length, 'the control: that Tuesday has classes').toBeGreaterThan(0);
+    const got = await classSource((d) => blocksFor(cat, d).map((b) => ({ block: b, minutes: lengthOf(cat, b) }))).entriesOn('2026-09-29');
+    expect(got.map((e) => e.id)).toEqual(legacy.map((b) => `class:2026-09-29:${b.c}:${b.at}`));
+    expect(got.map((e) => e.durationMin)).toEqual(legacy.map((b) => lengthOf(cat, b)));
   });
 });

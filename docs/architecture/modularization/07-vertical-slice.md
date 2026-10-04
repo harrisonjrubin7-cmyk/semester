@@ -53,14 +53,13 @@ time of the first commit.
 ## What it deliberately is not
 
 - No screen calls it yet. Phase 1 (done) binds it to the live store in `composition/react.ts`; phases 2–3 shadow and flip Today.
-- Today's ranking covers `todayActions` only. `TodayActionCenter` also ranks registration and campus-office actions, so the phase 2 shadow comparison is expected to show those as its first differences.
 - Calendar is read-only; adding an event is the next use case (action name
   `calendar.add` not yet in `PERSONAL_ACTIONS`).
 - Policy on the device is advisory; server enforcement of `decide()` per route
   is phase 5.
 - Events are in-process (`EventSink`); promotion to the outbox is a gateway
   concern (ADR 0008) and the names already match its pattern.
-- Class meetings are not a calendar source yet (`Block` in `lib/types.ts`).
+- The calendar draws a cancelled class struck through; an `Entry` cannot yet say "cancelled", so Today's rule (optional and cancelled sessions are not on the day) is applied in the class adapter.
 
 ## Phase 1: the store binding
 
@@ -92,12 +91,15 @@ student's choices and the day's rows; the shadow is handed exactly those, asks
 unless the build sets `VITE_TODAY_SHADOW=on`; loaded lazily, so a build
 without it carries none of the code (the budget check is unchanged).
 
-**Known gaps are classified, not hidden.** `KNOWN_GAPS` names three sources the
-slice does not have — registration-day actions, campus office actions, class
-meetings. A legacy-only id from one of them is `explained`, with the reason;
-anything else is `unexplained` and is warned once per distinct finding. The
-comparison tolerates the cut-off effect (the legacy list is four long, so each
-explained entry lets one more of the domain's tail show) and nothing more.
+**Gaps are classified, not hidden — and there are none.** `KNOWN_GAPS` once
+named three sources the slice lacked (registration-day actions, campus office
+actions, class meetings). All three are built, the list is empty, and a test
+asserts it, with a control that the former gap ids are now *unexplained* if they
+differ. The mechanism remains (`diffToday` takes its gap list as a parameter),
+so the next genuinely missing source can be named instead of hidden. The
+comparison still tolerates the cut-off effect (the legacy list is four long,
+so an entry that is explained lets one more of the domain's tail show) and
+nothing more.
 
 **It found two real differences before it shipped**, by reading the Action
 Center's row logic to build the legacy side: Today leaves done deadlines out
@@ -119,3 +121,28 @@ read, is the remaining evidence before phase 3; telemetry for it is not built
 
 The build input is mapped in `pages.yml` and documented in `.env.example`, as
 `deploy.test.ts` requires of every `VITE_` setting; unset means off.
+
+## The three gaps, closed
+
+- **Class meetings** (`calendar/adapters`): `classSource` over `blocksFor` and
+  `lengthOf`, with the Action Center's own id (`class:<day>:<course>:<minute>`).
+  Held to `blocksFor` on the seeded semester, on a Tuesday that has classes.
+- **Registration-day actions** and **campus office actions**
+  (`today/adapters`): `legacyRanking` now collects candidates in the Action
+  Center's own order — `todayActions`, `registrationActions` while the mode is
+  surfaced, and `officeActionToAction` for each office action not marked done —
+  and ranks them with the one legacy `rank`. The registration inputs are two
+  device-library reads (`useRegistrationPlan`); the office feed is a network
+  fetch, so `TodayShadow` is handed the Action Center's own list and makes no
+  second request (`useDomains` fetches its own only when no list is given).
+  Both candidate sources stay legacy functions; the slice collects them.
+
+Held by unit tests (the candidate recipe against the legacy one, with both
+sources on, the mode not surfaced, an office action marked done and a snooze)
+and by `TodayActionCenter.shadow.sources.test.tsx`, which mounts the real Action
+Center on the sample semester and requires, for each source, that the
+comparison *contained* it. Eight faults injected into the domain side (no class
+source, a class minute off by one, optional sessions kept, no registration
+candidates, registration ignoring the surfaced flag, no office candidates, the
+done filter dropped, the shared feed not reaching the shadow) each turned a
+test red.

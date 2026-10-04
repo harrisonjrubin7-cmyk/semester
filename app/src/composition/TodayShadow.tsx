@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { rank, type Action, type Choice } from '../lib/actions';
+import type { OfficeAction } from '../lib/office-actions';
 import { diffToday, domainSide, legacyDay, type ShadowDiff } from './shadow';
 import { useDomains } from './react';
 
@@ -23,6 +24,10 @@ export interface TodayShadowProps {
   /** The Action Center's commitment rows; only today's are compared. */
   readonly rows: readonly { id: string; at: number }[];
   readonly now: Date;
+  /** Registration Day Mode as the Action Center surfaces it. */
+  readonly registrationDay?: boolean;
+  /** The office feed the Action Center already fetched, so shadowing makes no second request. */
+  readonly officeList?: readonly OfficeAction[] | null;
 }
 
 const DAY = 86_400_000;
@@ -39,7 +44,7 @@ export function legacySide({ actions, choices, rows, now }: TodayShadowProps) {
 }
 
 export default function TodayShadow(props: TodayShadowProps) {
-  const domains = useDomains();
+  const domains = useDomains(undefined, { registrationDay: props.registrationDay, officeList: props.officeList ?? null });
   const reported = useRef(new Set<string>());
   const { actions, choices, rows, now } = props;
 
@@ -59,7 +64,7 @@ export default function TodayShadow(props: TodayShadowProps) {
       const signature = `${diff.unexplained.join('|')}#${diff.explained.join('|')}#${side.day.join('|')}`;
       if (reported.current.has(signature)) return;
       reported.current.add(signature);
-      if (diff.unexplained.length === 0) console.debug('[today-shadow] agrees with the Action Center', { explained: diff.explained, day: side.day });
+      if (diff.unexplained.length === 0) console.debug('[today-shadow] agrees with the Action Center', { explained: diff.explained, day: side.day, ranked });
       else console.warn('[today-shadow] unexplained differences', diff.unexplained, { explained: diff.explained });
     });
     return () => {

@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
-import type { Catalog } from '../data/catalog';
+import { blocksFor, type Catalog } from '../data/catalog';
+import type { LegacyRankingInput } from '../domains/today/adapters';
 import { ACTIONS_PREFIX, EMPTY_ACTION_CHOICES, readActionChoices, type Choice } from '../lib/actions';
 import { useMyCapabilities, type Grant } from '../lib/capabilities';
 import { useDeviceLibrary } from '../lib/device-library';
-import { datedItems, upcomingItems } from '../lib/select';
+import { useOfficeActions } from '../lib/office-actions.hook';
+import type { OfficeAction } from '../lib/office-actions';
+import { useRegistrationPlan } from '../lib/registration-plan';
+import { datedItems, lengthOf, upcomingItems } from '../lib/select';
 import { ownedScope } from '../lib/standing';
 import { pathSnapshot } from '../lib/today-decision';
 import type { PersonalTask } from '../lib/types';
@@ -28,6 +32,10 @@ export interface StoreSnapshot {
   readonly grants: readonly Grant[];
   /** What the student has snoozed or dismissed on Today, from the device library. */
   readonly choices: Record<string, Choice>;
+  /** Registration Day Mode, as the Action Center reads it. Absent when not surfaced. */
+  readonly registration?: LegacyRankingInput['registration'];
+  /** The campus office feed as fetched; `null` while loading, signed out, or failed. */
+  readonly office?: readonly OfficeAction[] | null;
 }
 
 /** The fields of `next` that differ from `current`: the `patch` an `editTask` action carries. */
@@ -83,6 +91,15 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
       return ownedScope(datedItems(s.catalog, s.now), own, s.state.sample, s.catalog.empty).items;
     },
     isDone: (id) => read().state.done[id] === true,
+    // The sample's classes are not the student's until they say so — the rule
+    // `TodayActionCenter` applies to the rows it draws.
+    classes: (date) => {
+      const s = read();
+      const own = s.state.courses.map((c) => c.course.id);
+      return blocksFor(s.catalog, date)
+        .filter((b) => !s.state.sample || !b.c || own.includes(b.c))
+        .map((block) => ({ block, minutes: lengthOf(s.catalog, block) }));
+    },
     ranking: () => {
       const s = read();
       const own = s.state.courses.map((c) => c.course.id);
@@ -97,6 +114,8 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
           catalogEmpty: scope.empty,
         },
         choices: s.choices,
+        registration: s.registration,
+        office: s.office,
       };
     },
   };
@@ -114,12 +133,29 @@ export function hostOver(read: () => StoreSnapshot, dispatch: (action: Action) =
  * office actions, so phase 2's shadow comparison is expected to show those as
  * its first differences.
  */
-export function useDomains(platform: Platform = defaultPlatform): Domains {
+export interface DomainOptions {
+  /** Registration Day Mode is surfaced (the flag and the mode's own gate, as `TodayDecisionSurface` computes it). */
+  readonly registrationDay?: boolean;
+  /** The office feed is enabled. Without `officeList`, the hook fetches it itself. */
+  readonly officeActions?: boolean;
+  readonly officeAccountId?: string | null;
+  /**
+   * The feed, when the caller already holds it. Then nothing is fetched here:
+   * `TodayShadow` is handed the Action Center's own, so shadowing costs no
+   * second request to the account.
+   */
+  readonly officeList?: readonly OfficeAction[] | null;
+}
+
+export function useDomains(platform: Platform = defaultPlatform, options: DomainOptions = {}): Domains {
   const store = useStore();
   const now = useNow();
   const grants = useMyCapabilities();
   const accountId = store.account?.id ?? null;
   const library = useDeviceLibrary(`${ACTIONS_PREFIX}:${accountId || 'device'}`, readActionChoices, EMPTY_ACTION_CHOICES);
+  const plan = useRegistrationPlan();
+  const own = useOfficeActions(options.officeList === undefined && !!options.officeActions, options.officeAccountId);
+  const office = options.officeList !== undefined ? options.officeList : own.state.kind === 'ready' ? own.state.actions : null;
 
   const snapshot: StoreSnapshot = {
     state: store.state,
@@ -129,6 +165,8 @@ export function useDomains(platform: Platform = defaultPlatform): Domains {
     now,
     grants,
     choices: library.value.choices,
+    registration: { active: !!options.registrationDay, data: plan.data, cart: plan.cart, catalog: plan.catalog },
+    office,
   };
   const latest = useRef(snapshot);
   const dispatch = useRef(store.dispatch);

@@ -4,6 +4,7 @@ import { isoToDate } from '../lib/date';
 import { todayActions } from '../lib/today-actions';
 import type { Appointment, DatedItem, PersonalTask } from '../lib/types';
 import { MemorySink, counterIds, fixedClock } from '../kernel';
+import type { ClassMeeting } from '../domains/calendar/adapters';
 import { composeDomains, type LegacyHost } from './domains';
 
 /**
@@ -17,7 +18,7 @@ const appt = (over: Partial<Appointment>): Appointment => ({ id: 'a', title: 'A'
 const due = (id: string, daysAway: number): DatedItem =>
   ({ id, title: `Essay ${id}`, date: isoToDate('2026-10-08'), dueShort: 'Today', dueAt: 17 * 60, daysAway, checked: { confirmed: true } }) as unknown as DatedItem;
 
-function host(over: Partial<{ tasks: PersonalTask[]; appointments: Appointment[]; deadlines: DatedItem[]; choices: Record<string, Choice>; user: string | null }> = {}) {
+function host(over: Partial<{ tasks: PersonalTask[]; appointments: Appointment[]; deadlines: DatedItem[]; choices: Record<string, Choice>; user: string | null; classes: ClassMeeting[] }> = {}) {
   let tasks = over.tasks ?? [];
   const h: LegacyHost = {
     identity: () => ({ role: 'student', userId: over.user ?? null, schoolId: null, grants: [] }),
@@ -25,6 +26,7 @@ function host(over: Partial<{ tasks: PersonalTask[]; appointments: Appointment[]
     appointments: () => over.appointments ?? [],
     deadlines: () => over.deadlines ?? [],
     isDone: () => false,
+    classes: () => over.classes ?? [],
     ranking: () => ({
       input: { path: { state: 'moving', heading: '', detail: '', creditLine: '', covered: 1, total: 1, percent: 100, unresolved: 0, firstUnresolved: null, source: '' }, upcoming: over.deadlines ?? [], done: {}, reviewDue: 0, catalogEmpty: false },
       choices: over.choices ?? {},
