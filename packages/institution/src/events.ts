@@ -78,6 +78,16 @@ export const EVENT_TYPES = {
   'action.updated': spec(1, 'student_private', 'student_record'),
   'action.completed': spec(1, 'student_private', 'student_record'),
   'plan.updated': spec(1, 'student_private', 'student_record'),
+  // Tasks and calendar. Payloads carry ids, versions and the names of the
+  // fields that changed, never what they were changed to.
+  'task.created': spec(1, 'student_private', 'student_record'),
+  'task.updated': spec(1, 'student_private', 'student_record'),
+  'task.completed': spec(1, 'student_private', 'student_record'),
+  'task.deleted': spec(1, 'student_private', 'student_record'),
+  'calendar_event.created': spec(1, 'student_private', 'student_record'),
+  'calendar_event.updated': spec(1, 'student_private', 'student_record'),
+  'calendar_event.deleted': spec(1, 'student_private', 'student_record'),
+  'productivity.shared_read': spec(1, 'student_private', 'audit'),
   'agenda.shared': spec(1, 'student_private', 'audit'),
   'share.revoked': spec(1, 'student_private', 'audit'),
   // LMS

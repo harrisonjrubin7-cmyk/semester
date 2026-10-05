@@ -548,7 +548,7 @@ a:hover {
   border-radius: var(--r-sm);
   border: 1px solid var(--app-accent);
   background: var(--app-panel);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: calc(13px * var(--text-scale, 1));
   letter-spacing: 0.08em;
@@ -595,6 +595,10 @@ a:hover {
      line for their own reason still override locally; what this fixes is the
      hundred places that were relying on the browser default. */
   line-height: var(--line-height, 1.55);
+  /* The reader's letter and word spacing (`textSpacing` in lib/look.ts). `.chrome-text`
+     sets its own tracking, so display type is untouched. */
+  letter-spacing: var(--tracking-body, 0);
+  word-spacing: var(--word-space, 0);
   overflow: hidden;
   isolation: isolate;
 }
@@ -2123,6 +2127,8 @@ a:hover {
      negative tracking is what makes a large heading look set rather than
      typed. */
   letter-spacing: -0.012em;
+  /* Display type is not body text: the reader's spacing (`textSpacing`) stops here. */
+  word-spacing: 0;
 }
 @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
   .chrome-text {
@@ -2504,6 +2510,38 @@ a:hover {
 .field-message-icon {
   flex: none;
   margin-top: var(--sp-1);
+}
+
+/*
+ * The list of everything a failed submit found — `ErrorSummary` in
+ * `components/FieldMessage.tsx`. A border and a heading say it is a problem;
+ * the warning colour only reinforces the border. Each link is a full-height
+ * target, so the list is usable on a phone without precision.
+ */
+.error-summary {
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--app-warn);
+  border-radius: var(--r-md);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+.error-summary-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-sm);
+  color: var(--app-warn);
+}
+.error-summary ul {
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+.error-summary a {
+  display: inline-block;
+  min-height: 44px;
+  padding-block: var(--sp-2);
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /*
@@ -5606,9 +5644,9 @@ section[data-drop] > .grip + * {
   padding-inline: var(--sp-4);
   border-left: 2px solid var(--app-accent);
   border-radius: var(--r-sm);
-  background: var(--app-ground);
-  color: var(--app-ink);
-  font-family: var(--app-font);
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-body);
   font-size: var(--type-xs);
   line-height: var(--leading-snug);
 }
@@ -7624,6 +7662,16 @@ section[data-drop] > .grip + * {
   color: var(--app-accent-deep);
 }
 
+/* Accent-deep is audited to 4.5:1 on the page and the panel, not on the lighter
+   surface a hovered card moves to: on Graphite it is 4.20 to 4.48 and on
+   Industry Dark 3.59 to 3.96. The card still shows its accent border; the
+   reason takes the ground's full-strength ink, which contrast.test.ts holds to
+   4.5:1 on that surface. */
+.journey-card:hover .journey-reason,
+.journey-card:focus-visible .journey-reason {
+  color: var(--app-fg);
+}
+
 .journey-arrow {
   color: var(--app-accent);
   font-size: var(--type-lg);
@@ -8035,11 +8083,6 @@ section[data-drop] > .grip + * {
   margin: 0 0 var(--sp-7);
 }
 
-.today-action-center.is-wide {
-  grid-template-columns: minmax(0, 1fr) 260px;
-  align-items: start;
-}
-
 .action-center-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -8376,7 +8419,7 @@ section[data-drop] > .grip + * {
   padding: var(--sp-5);
   border: 1px solid var(--app-line);
   border-radius: var(--r-sm);
-  background: var(--app-raised);
+  background: var(--app-raise);
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
 }
@@ -9579,10 +9622,6 @@ section[data-drop] > .grip + * {
   display: none;
 }
 
-:root[data-workspace='focused'] .today-action-center.is-wide {
-  grid-template-columns: minmax(0, 1fr);
-}
-
 .course-mastery {
   margin-top: var(--sp-5);
   padding: var(--sp-5);
@@ -10412,14 +10451,14 @@ button.adband-bar {
   padding: var(--sp-5) var(--sp-6);
   border: 1px solid var(--app-line);
   border-radius: var(--r-sm);
-  background: var(--app-paper);
+  background: var(--app-panel);
   color: var(--app-dim);
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
 }
 
 .course-capture-policy strong {
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: var(--type-base);
 }
@@ -10429,7 +10468,7 @@ button.adband-bar {
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: var(--sp-3);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-size: var(--type-sm-plus);
   line-height: var(--leading-normal);
 }
@@ -10658,7 +10697,7 @@ button.adband-bar {
   border: 1px solid var(--app-line);
   border-left: 4px solid var(--app-dim);
   border-radius: var(--r-sm);
-  background: var(--app-paper);
+  background: var(--app-panel);
 }
 
 .trust-scorecard-row > div {
@@ -10861,6 +10900,82 @@ button.adband-bar {
 .integration-table thead th {
   color: var(--app-dim);
   font-weight: 500;
+}
+
+/* The shared Table (components/unity/Table.tsx). The look above is the existing
+   integration table's; these are what it adds. */
+.table-caption {
+  caption-side: top;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: start;
+  color: var(--app-dim);
+}
+
+.table-ui [data-numeric] {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-sort {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  width: auto;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.table-sort-mark {
+  font-size: var(--type-xs);
+}
+
+/* Stacked: every cell stays, one labelled line per column. The header row is
+   kept for assistive technology and drawn nowhere. */
+@media (max-width: 839px) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr {
+    display: block;
+  }
+
+  /* A table-caption inside a block table gets wrapped in an anonymous shrink-to-fit table, and the
+     caption wraps in a sliver. Block it so it takes the width like everything else. */
+  .table-stack caption {
+    display: block;
+  }
+
+  .table-stack tr {
+    padding-block: var(--sp-3);
+    border-bottom: 1px solid var(--app-line-soft);
+  }
+
+  .table-stack th,
+  .table-stack td {
+    display: grid;
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+    gap: var(--sp-3);
+    border-bottom: 0;
+    white-space: normal;
+  }
+
+  .table-stack th::before,
+  .table-stack td::before {
+    content: attr(data-label);
+    color: var(--app-dim);
+  }
+
+  .table-stack [data-numeric] {
+    text-align: start;
+  }
 }
 
 .integration-dead-letters {
@@ -11180,14 +11295,14 @@ button.adband-bar {
 .standards-audit-summary, .standards-audit-filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-6); margin: var(--sp-7) 0; }
 .standards-audit-summary p { flex-basis: 100%; margin: 0; }
 .standards-audit label { display: flex; flex-direction: column; gap: var(--sp-3); }
-.standards-audit select, .standards-audit input[type="search"] { max-width: 100%; padding: var(--sp-4); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-border); border-radius: var(--r-md); min-height: 44px; }
-.standards-audit button { min-height: 44px; padding: var(--sp-4) var(--sp-6); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-border); border-radius: var(--r-md); cursor: pointer; }
+.standards-audit select, .standards-audit input[type="search"] { max-width: 100%; padding: var(--sp-4); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); min-height: 44px; }
+.standards-audit button { min-height: 44px; padding: var(--sp-4) var(--sp-6); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); cursor: pointer; }
 .standards-audit-views { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
 .standards-audit-views button[aria-pressed="true"] { border-color: var(--app-fg); font-weight: 600; }
 .standards-audit-table { overflow: auto; max-width: 100%; margin: var(--sp-7) 0; }
 .standards-audit table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: var(--type-md); line-height: 1.6; }
 .standards-audit caption { text-align: left; padding-bottom: var(--sp-5); }
-.standards-audit td, .standards-audit th { padding: var(--sp-6); border-bottom: 1px solid var(--app-border); text-align: left; vertical-align: top; }
+.standards-audit td, .standards-audit th { padding: var(--sp-6); border-bottom: 1px solid var(--app-line); text-align: left; vertical-align: top; }
 .standards-audit summary { min-height: 44px; cursor: pointer; }
 .standards-audit a { overflow-wrap: anywhere; text-decoration: underline; }
 .standards-audit li { margin-bottom: var(--sp-5); }

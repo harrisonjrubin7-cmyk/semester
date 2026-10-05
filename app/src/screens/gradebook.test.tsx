@@ -372,6 +372,26 @@ describe('a student’s course', () => {
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'courses' });
   });
 
+  it('draws the released grades as one captioned table of item, grade, released and regrade', async () => {
+    await render();
+    const table = host.querySelector('table')!;
+    expect(table.querySelector('caption')?.textContent).toMatch(/^Your released grades in /);
+    expect([...table.querySelectorAll('thead th')].map((th) => [th.textContent, th.getAttribute('scope')])).toEqual([
+      ['Item', 'col'],
+      ['Grade', 'col'],
+      ['Released', 'col'],
+      ['Regrade', 'col'],
+    ]);
+    const row = table.querySelector('tbody tr')!;
+    expect(row.querySelector('th')?.textContent).toBe('Midterm');
+    expect(row.querySelector('th')?.getAttribute('scope')).toBe('row');
+    const cells = [...row.querySelectorAll('td')];
+    expect(cells).toHaveLength(3);
+    expect(cells[0].textContent).toContain('70 of 100');
+    expect(cells[2].querySelector('button')?.textContent).toBe('Ask about Midterm');
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(1);
+  });
+
   it('files a regrade request with a reason', async () => {
     await render();
     await press('Ask about Midterm');

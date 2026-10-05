@@ -161,21 +161,44 @@ run_invariants() {
 # window ends, so a count that keeps rising is a connection somebody leaked.
 clients() { psql -Atc "select count(*) from pg_stat_activity where datname = current_database() and pid <> pg_backend_pid() and backend_type = 'client backend'"; }
 
+# One soak window: every scenario once, then the invariants and the open
+# connections. Also what runs again, with the next window numbers, when a drift
+# has to be confirmed.
+soak_window() {
+  echo "· soak window $window of $total_windows"
+  run_pass
+  run_invariants
+  now=$(clients)
+  if [ "${now:-0}" -gt $((baseline + 2)) ]; then
+    echo "  ✗ connections: $now open after window $window against $baseline before the first"
+    failed=1
+  fi
+}
+
 if [ "$soak" -gt 0 ]; then
   echo "· soak: $soak windows of ${seconds}s"
   baseline=$(clients)
-  for window in $(seq 1 "$soak"); do
-    echo "· soak window $window of $soak"
-    run_pass
-    run_invariants
-    now=$(clients)
-    if [ "${now:-0}" -gt $((baseline + 2)) ]; then
-      echo "  ✗ connections: $now open after window $window against $baseline before the first"
-      failed=1
-    fi
-  done
+  total_windows=$soak
+  for window in $(seq 1 "$soak"); do soak_window; done
   echo "· soak: did anything get slower the longer it ran"
-  "$here_load/drift.sh" < "$windows" || failed=1
+  if ! "$here_load/drift.sh" < "$windows"; then
+    # A drift seen once, on a shared runner, may be the runner. The check compares
+    # the best of the first windows with the best of the last, and with four windows
+    # each end is two, so a lucky pair against a stalled pair reads as a leak (main's
+    # run 4205, then #1280 twice, a different scenario each time). A leak is still
+    # there when the soak runs on. So run as many windows again and judge the whole
+    # run by the same rule, and fail only if the drift persists (D-1280). The limits
+    # are not changed, and a scenario that really gets slower keeps getting slower
+    # and fails here too, as does a typical window over budget (re-judged over the
+    # longer run). An error, a broken invariant and a leaked connection do not wait
+    # for this: they fail in the window they happen in.
+    echo "· soak: drift seen over $soak windows; running $soak more to see whether it persists"
+    total_windows=$((soak * 2))
+    for window in $(seq $((soak + 1)) "$total_windows"); do soak_window; done
+    echo "· soak: the same check over all $total_windows windows"
+    "$here_load/drift.sh" < "$windows" || failed=1
+    soak=$total_windows
+  fi
 else
   run_pass
   run_invariants

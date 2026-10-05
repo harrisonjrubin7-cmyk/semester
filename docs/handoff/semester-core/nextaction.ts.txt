@@ -1,0 +1,28 @@
+import { Origin, rank } from './provenance';
+export interface Item { id: string; title: string; dueAt?: number; weight?: number; effortMin?: number; origin: Origin; blocks?: string[]; kind: 'assignment' | 'hold' | 'bill' | 'task' | 'event' | 'decision'; done?: boolean; snoozedUntil?: number }
+export interface Why { score: number; reasons: string[] }
+const HOUR = 3600e3;
+/**
+ * Score = urgency × consequence × confidence − effort penalty.
+ * urgency: 1 at ≥14 days, rising to 10 inside 24 h; overdue = 12.
+ * consequence: grade weight (0–1 → 1–4) or blocking (holds, bills that block registration) = 5.
+ * confidence: official 1.0 → stale 0.6; AI/estimated never outrank an official item of equal urgency.
+ */
+export function score(it: Item, now: number): Why {
+  const reasons: string[] = [];
+  const hrs = it.dueAt == null ? 24 * 14 : (it.dueAt - now) / HOUR;
+  const urgency = hrs < 0 ? 12 : hrs < 24 ? 10 : hrs < 72 ? 6 : hrs < 168 ? 3 : hrs < 336 ? 1.5 : 1;
+  if (hrs < 0) reasons.push('Overdue'); else if (hrs < 24) reasons.push('Due within 24 hours'); else if (hrs < 72) reasons.push('Due in ' + Math.ceil(hrs / 24) + ' days');
+  let consequence = 1 + 3 * Math.min(1, it.weight ?? 0);
+  if (it.weight) reasons.push(Math.round(it.weight * 100) + '% of your grade');
+  if (it.blocks?.length) { consequence = 5; reasons.push('Blocks ' + it.blocks.join(', ')); }
+  const confidence = 1 - Math.min(0.4, rank(it.origin) * 0.08);
+  const effort = Math.min(1.5, (it.effortMin ?? 30) / 120);
+  return { score: +(urgency * consequence * confidence - effort).toFixed(3), reasons };
+}
+export function order(items: Item[], now: number, limit = 5): (Item & Why)[] {
+  return items.filter((i) => !i.done && !(i.snoozedUntil && i.snoozedUntil > now))
+    .map((i) => ({ ...i, ...score(i, now) }))
+    .sort((a, b) => b.score - a.score || (a.dueAt ?? Infinity) - (b.dueAt ?? Infinity) || a.id.localeCompare(b.id))
+    .slice(0, limit);
+}

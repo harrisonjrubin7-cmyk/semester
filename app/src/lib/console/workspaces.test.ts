@@ -19,7 +19,7 @@ const grant = (capability: string, scopeKind = 'platform', scopeId = ''): Grant 
 describe('console workspace registry', () => {
   it('preserves the current view order and declares a classification for every view', () => {
     expect(CONSOLE_WORKSPACES.map(({ id }) => id)).toEqual([
-      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'evidence', 'views',
+      'command', 'support', 'approvals', 'breakglass', 'audit', 'tenant-operations', 'privacy', 'integration-health', 'release-incidents', 'customers', 'figures', 'finance', 'evidence', 'views',
     ]);
     expect(CONSOLE_WORKSPACES.every(({ classification }) => classification.length > 0)).toBe(true);
   });

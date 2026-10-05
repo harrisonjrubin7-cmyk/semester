@@ -154,7 +154,7 @@ const AREA_LIST: readonly (Area & { rows: readonly Row[] })[] = [
       ['Guided tenant setup and an SSO wizard', D, [['docs/SSO-TENANT-ONBOARDING.md', 'a checklist'], ['supabase/tenant-sso-policy.check.sql', 'the policy the wizard would write']], 'No wizard; the SSO tables have no screen.', ['M8', 'L9', 'E'], ['oneos:ic-tenant']],
       ['Every pilot runs 26 weeks: the Registration and Path Pilot length', T, [['app/src/lib/gtm/pilot.ts', 'PILOT_WEEKS'], ['app/src/lib/gtm/pilot.test.ts', 'exactly 182 days, or refused']], 'The owner set it (D-134). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document.', ['E', 'P', 'V']],
       ['Pilot dashboard', B, [['app/src/lib/gtm/pilot.ts', 'readiness and verdict']], 'No screen reads the pilot tables.', ['M8', 'L9']],
-      ['Institution data migration: plans, catalog, directories, events', N, [['docs/market-readiness/MIGRATION_PLAYBOOK.md', 'customer data migration does not exist']], 'Student-side import only; no SIS, ERP, Google or Microsoft mapping template.', ['R22']],
+      ['Institution data migration: plans, catalog, directories, events', N, [['docs/market-readiness/MIGRATION_PLAYBOOK.md', 'no production load path; evidence path and roster staging only']], 'Student-side import only; no SIS, ERP, Google or Microsoft mapping template.', ['R22']],
       ['Parallel-run mode', N, [], 'Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it.', ['R22']],
     ],
   },

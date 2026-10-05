@@ -25,6 +25,8 @@ This matrix routes nonstandard customer language to the people who can assess it
 | support, uptime, response, RTO/RPO | Operations/Support, Engineering, Finance, counsel | measured capability, owners, monitoring and remedies | noncontractual target only |
 | IP, feedback, publicity, reference/outcome | counsel, Product/Communications, rights holder | ownership/license and separate permission | no transfer or public use |
 
+Amounts and discount percentages are not set here. They follow the ladder in `app/src/lib/governance/deal-desk.ts`, mirrored in `docs/operating-model/COMMERCIAL-GOVERNANCE.md`, which also lists the seats that are unfilled; this matrix routes the language of a deviation.
+
 ## Deviation record
 
 Record customer request, baseline language, proposed response, reason, affected users/data/systems, legal and operational risk, security/privacy/accessibility/AI impact, financial exposure, implementation work, dependencies, compensating controls, approvers and dissent, effective/expiry dates, renewal treatment, precedent status, obligations, verification, and rollback/exit.

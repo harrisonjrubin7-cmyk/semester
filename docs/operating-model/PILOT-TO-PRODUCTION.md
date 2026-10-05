@@ -170,6 +170,8 @@ Add programs, courses and campuses in waves; move from read to scoped writes onl
 - Pause
 - Terminate and export/offboard
 
+`pilotVerdict` records four final verdicts: convert, expand, pause and stop. "Terminate and export/offboard" is `stop`. "Extend" is not a verdict: it is a new written term recorded by the renewal playbook as a non-final `pending` renewal opportunity (`docs/commercial/RENEWAL-AND-EXPANSION-PLAYBOOK.md`), and it does not lengthen the 26-week pilot.
+
 ## Migration acceptance criteria
 
 - Course, section and roster IDs reconcile to the approved source

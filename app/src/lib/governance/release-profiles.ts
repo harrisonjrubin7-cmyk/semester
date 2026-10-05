@@ -393,6 +393,8 @@ export const REPOSITORY_RELEASE_EVIDENCE: readonly ReleaseEvidence[] = [
 
 export interface ReleaseProfileDecision {
   profileId: ReleaseProfileId;
+  /** Exact deployment, tenant, cohort and configuration evaluated. */
+  target: Readonly<ReleaseTarget> | null;
   technicalStatus: 'ready' | 'not-ready';
   rolloutStatus: 'authorized' | 'held';
   missingTechnical: readonly TechnicalReleaseGate[];
@@ -404,7 +406,7 @@ export interface ReleaseProfileDecision {
   claim: string;
 }
 
-function sameTarget(actual: ReleaseTarget | undefined, expected: ReleaseTarget): boolean {
+export function sameReleaseTarget(actual: Readonly<ReleaseTarget> | null | undefined, expected: ReleaseTarget): boolean {
   return Boolean(actual
     && actual.environment === expected.environment
     && actual.deployedSha === expected.deployedSha
@@ -584,7 +586,7 @@ function latestCurrentEvidence(
   if (decisionTime === null) return [];
   const matching = evidence
     .filter((item) => item.gate === gate
-      && (!target || sameTarget(item.target, target))
+      && (!target || sameReleaseTarget(item.target, target))
       && (!sourceSha || (SHA.test(item.sourceSha ?? '') && item.sourceSha === sourceSha)))
     .map((item) => ({ item, checked: evidenceTime(item.checkedAt), expires: evidenceTime(item.expiresAt) }));
   if (matching.some(({ checked }) => checked === null)) return [];
@@ -695,6 +697,7 @@ export function evaluateReleaseProfile(
         : 'go';
   return {
     profileId: profile.id,
+    target: targetBound && target ? Object.freeze({ ...target }) : null,
     technicalStatus,
     rolloutStatus,
     missingTechnical,

@@ -564,6 +564,13 @@ declare
     -- `audit-and-subject-requests.check.sql` proves the caller and tenant
     -- boundaries and that anon cannot execute it.
     'raise_my_data_subject_request(requested_kind text, requested_detail text)',
+    -- 20261004200000_answer_data_subject_requests.sql: the two ways a rights
+    -- request is answered. Each refuses 42501 unless the caller holds
+    -- `data_request:handle` (the data_steward role) and is not the requester,
+    -- and each refuses an illegal move with 23514.
+    -- `answer-rights-requests.check.sql` attempts every refusal by code.
+    'verify_data_subject_request(request_id uuid, rung text)',
+    'answer_data_subject_request(request_id uuid, new_status text, resolution_text text)',
 
     -- The three in 20260929100000_console_control_plane.sql. Each checks
     -- `console:operate` itself and raises 42501 without it (never

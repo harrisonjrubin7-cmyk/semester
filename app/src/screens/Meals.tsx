@@ -7,7 +7,7 @@ import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
-import { FieldMessage, useFieldErrors } from '../components/FieldMessage';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import { readTerm } from '../lib/term';
 import { termEnds as lastDayOfTerm } from '../lib/registrar';
@@ -192,6 +192,7 @@ function MealsDetails() {
       )}
 
       <SectionLabel>Log what it says</SectionLabel>
+      <ErrorSummary {...fields.summary({ swipes: 'Meal swipes left', cash: 'Commodore Cash', dining: 'Meal money' })} />
       <div id={hint} style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         Leave a field blank if your plan does not have it. Two readings a few days apart is what
         turns a balance into a rate.
