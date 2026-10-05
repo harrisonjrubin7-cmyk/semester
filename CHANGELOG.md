@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your browser stops filling your own details into other people's boxes
+
+Fields that take someone else's email address (an email's To, Cc and Bcc, a contact's, a family member's) now tell the browser not to autofill them, so your own address no longer appears in them. The two assistant key boxes in Settings tell it not to offer to save a key as a login. The two name boxes about you (on Profile, and what a call shows as your name) now say what they are for, so a browser or screen reader can help. Nothing was removed and you do not have to do anything.
+
 ### The operations console has a Releases and flags tab
 
 For operators holding the console grant: a new **Releases and flags** tab, between Finance model and Evidence, lists every feature flag and the state this build was made with — Off, Preview, Sandbox or On in production — most live first, with a filter box. It is read-only: a flag is fixed when a build is made, so there is nothing to switch here, and the tab says so. A flag the registry does not describe says that instead of guessing. Nothing else in the console moves, and you do not have to do anything.

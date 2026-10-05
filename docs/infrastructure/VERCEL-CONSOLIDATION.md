@@ -63,6 +63,16 @@ Root Directory = repository root and framework preset `services` (was `app` /
 `vite`). Revert by setting Root Directory back to `app` and the framework to
 `vite`. Verification is the first build after this change, recorded in §6.1.
 
+**Regression found after #1292 merged (5 October):** with Root Directory at the
+repository root, `/lab` worked (404 → 200) but the app on `semester-rose.vercel.app`
+stopped sending its CSP, Permissions-Policy, nosniff and referrer headers; only
+Vercel's default HSTS remained. Services read headers and function limits from
+their own entry in the **root** `vercel.json`, not from the `vercel.json` in
+their folder. The root file now carries them (`services.app.headers`,
+`services.app.functions`, `services.company-site.headers`, `.rewrites`), and
+`app/src/lib/servicesconfig.test.ts` fails if the two copies diverge. The live
+domain was not affected: it is still on `semester-shared-core`.
+
 ## 3. Things that cannot be moved from here
 
 | Item | Why it is external | Needed from the owner |

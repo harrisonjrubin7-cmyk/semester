@@ -28,7 +28,7 @@ const PROVIDER_URL = /['"`]https:\/\/api\.(?:anthropic|openai)\.com/;
 const DOORS: Record<string, string> = {
   'app/src/lib/claude.ts': 'consumer door: the student\'s own Anthropic key from the browser (P5), and the ping at the end of the file',
   'app/src/lib/openai.ts': 'consumer door: the student\'s own OpenAI key (P6)',
-  'supabase/functions/claude/index.ts': 'shared-key function (P1): activation gate, kill row, clamp, spend meter',
+  'supabase/functions/_shared/upstream.ts': 'where the shared-key function (P1, supabase/functions/claude) sends: Anthropic, or Vercel AI Gateway when AI_GATEWAY_API_KEY is set; the activation gate, kill row, clamp and spend meter all sit in front of it in claude/index.ts',
   'supabase/functions/_shared/aispend.ts': 'token counting for the spend meter on the shared-key function; no completion',
 };
 

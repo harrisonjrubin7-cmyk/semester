@@ -118,7 +118,22 @@ declare
       'Intended. Senior reviewers run the volunteer program from the Volunteers screen (docs/VOLUNTEER-MODERATOR-PROGRAM.md): record training, send back to calibration, revoke.',
     'community_volunteers/trust_safety_reviewer',
       'TO NARROW. The policy admits community:review, which a plain reviewer holds, but the program is the senior reviewer''s (docs/SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md, volunteer program). The row holds status, training dates and a free-text revoked_reason, across every school. Needs the privacy owner: narrow to community:review_senior, or write down why plain reviewers need the roster.');
-  floor_probed int := 56;     -- the sweep may probe more over time, never fewer
+  floor_probed int := 64;     -- the sweep may probe more over time, never fewer
+
+  -- Tables the generic row builder cannot fill: a value only the table's own
+  -- rules accept. `set` overrides a column; `before` is SQL run first (a
+  -- parent row); `no_owner_read` is for a table a student is deliberately not
+  -- allowed to read, where the owner read-back is replaced by a row-exists check.
+  fixtures jsonb := jsonb_build_object(
+    'enrollments', jsonb_build_object('set', jsonb_build_object('term', '''2026FA''', 'code', '''vanderbilt/ECON 2001''')),
+    'messages', jsonb_build_object('set', jsonb_build_object('term', '''2026FA''', 'code', '''vanderbilt/ECON 2000''')),
+    'message_reactions', jsonb_build_object('set', jsonb_build_object('term', '''2026FA''', 'code', '''vanderbilt/ECON 2000''')),
+    'group_members', jsonb_build_object('set', jsonb_build_object('group_id', '''00000000-0000-0000-0000-00000000f001''')),
+    'grade_entries', jsonb_build_object('set', jsonb_build_object('status', '''released''', 'action', '''entered''', 'score', '1', 'version', '1')),
+    'family_invites', jsonb_build_object('set', jsonb_build_object('code', '''ABCDEFGH''', 'access', '''selected''',
+      'categories', '''{finances}''', 'resource_ids', '''{x}''', 'institution_id', '''vanderbilt''')),
+    'referral_codes', jsonb_build_object('set', jsonb_build_object('code', '''ABCDEFGH''')),
+    'grade_passbacks', jsonb_build_object('no_owner_read', true));
 
   roles text[]; r text; t record; col record;
   stu uuid; owner_col text;
@@ -134,6 +149,13 @@ begin
   perform pg_temp.answered_count('there are fourteen company roles', cardinality(roles), 14);
 
   stu := pg_temp.newuser('student@company-roles.test');
+  -- A student the class rooms will show to their owner: an adult by their own
+  -- sign-up answer, and enrolled in a class that has a group in it.
+  insert into private.account_ages (user_id, source) values (stu, 'sign_up')
+  on conflict (user_id) do update set minor_until = null, under_minimum = false;
+  insert into public.enrollments (user_id, term, code) values (stu, '2026FA', 'vanderbilt/ECON 2000');
+  insert into public.groups (id, term, code, name, created_by)
+  values ('00000000-0000-0000-0000-00000000f001', '2026FA', 'vanderbilt/ECON 2000', 'fixture', stu);
   foreach r in array roles loop
     users := users || jsonb_build_object(r, pg_temp.newuser(r || '@company-roles.test'));
     insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
@@ -171,7 +193,7 @@ begin
       no_read := no_read + 1; continue;
     end if;
 
-    over := '{}'::jsonb; ok := false;
+    over := coalesce(fixtures->t.table_name->'set', '{}'::jsonb); ok := false;
     for attempt in 1..6 loop
       cols := quote_ident(owner_col); vals := quote_literal(stu::text) || '::uuid'; ok := true;
       for col in select column_name, data_type, udt_name, ordinal_position
@@ -220,6 +242,10 @@ begin
     exception when insufficient_privilege then n := 0;
     end;
     execute 'reset role';
+    -- A table the owner is deliberately not let read: the row must exist instead.
+    if n < 1 and coalesce((fixtures->t.table_name->>'no_owner_read')::boolean, false) then
+      execute format('select count(*) from public.%I where %I = %L', t.table_name, owner_col, stu) into n;
+    end if;
     if n < 1 then inconclusive := inconclusive + 1; unprobed := unprobed || ' ' || t.table_name || '(owner cannot read it back)'; continue; end if;
     probed := probed + 1;
 

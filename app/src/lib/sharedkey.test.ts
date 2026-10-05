@@ -86,8 +86,12 @@ describe('the function checks the key first, and logs a throw by its kind', () =
   });
 
   it('sends the key it checked', () => {
-    expect(code).toMatch(/const key = sharedKey\(Deno\.env\.get\('ANTHROPIC_API_KEY'\)\);/);
-    expect(code).toMatch(/'x-api-key': key,/);
+    // The key that is shape-checked is the one the upstream is built from and
+    // the one that is sent: the gateway's when it is set, Anthropic's otherwise.
+    expect(code).toMatch(/const gatewayKey = sharedKey\(Deno\.env\.get\('AI_GATEWAY_API_KEY'\)\);/);
+    expect(code).toMatch(/const key = gatewayKey \|\| sharedKey\(Deno\.env\.get\('ANTHROPIC_API_KEY'\)\);/);
+    expect(code).toMatch(/chooseUpstream\(\{ gateway: gatewayKey, anthropic: key \}\)/);
+    expect(code).toMatch(/headers: upstreamTo\.headers,/);
   });
 
   it('logs a thrown send by its kind and never by its message', () => {

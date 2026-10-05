@@ -21,6 +21,8 @@
  * Deploy:
  *     psql "$DATABASE_URL" -f supabase/migrations/20260921142822_usage_atomic.sql
  *     supabase secrets set ANTHROPIC_API_KEY=sk-ant-…
+ *     # or, to route through Vercel AI Gateway instead (it wins when both are set):
+ *     supabase secrets set AI_GATEWAY_API_KEY=vck_…
  *     supabase functions deploy claude
  *
  * and it still serves nobody until the owner's decisions in
@@ -62,7 +64,7 @@ import {
 import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
 import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
 
-const ANTHROPIC = 'https://api.anthropic.com/v1/messages';
+import { chooseUpstream } from '../_shared/upstream.ts';
 
 /** Calls per account per calendar month. Raise it in the dashboard, not here. */
 const MONTHLY_CALLS = Number(Deno.env.get('MONTHLY_CALL_LIMIT') ?? '60');
@@ -98,8 +100,13 @@ Deno.serve(async (req) => {
     return json({ error: { message: NOT_ACTIVATED_MESSAGE, code: NOT_ACTIVATED } }, 501);
   }
 
-  const key = sharedKey(Deno.env.get('ANTHROPIC_API_KEY'));
-  if (!key) {
+  // The gateway when `AI_GATEWAY_API_KEY` is set, Anthropic directly otherwise.
+  // See `../_shared/upstream.ts`.
+  const gatewayKey = sharedKey(Deno.env.get('AI_GATEWAY_API_KEY'));
+  // `sharedKey` answers '' for an unset secret, never null, so this is `||`.
+  const key = gatewayKey || sharedKey(Deno.env.get('ANTHROPIC_API_KEY'));
+  const upstreamTo = chooseUpstream({ gateway: gatewayKey, anthropic: key });
+  if (!key || !upstreamTo) {
     return json(
       { error: { message: 'This deployment has no shared key. Add your own under Ask Claude → Settings.' } },
       501,
@@ -114,7 +121,7 @@ Deno.serve(async (req) => {
   // `../_shared/sharedkey.ts` for the day this was found.
   const shape = keyShape(key);
   if (!shape.sendable) {
-    console.error('claude: ANTHROPIC_API_KEY is set but cannot be sent', shape);
+    console.error('claude: the shared key is set but cannot be sent', { ...shape, gateway: upstreamTo.gateway });
     return json({ error: { message: KEY_UNUSABLE_MESSAGE } }, 503);
   }
 
@@ -253,7 +260,10 @@ Deno.serve(async (req) => {
   // reservation. A meter that cannot answer refuses, as the call counter does.
   const month = new Date().toISOString().slice(0, 7);
   const priced = describeRequest(body, new TextEncoder().encode(body).length);
-  const inputTokens = await countInputTokens(body, priced.estimateTokens, fetch, key);
+  // The count is Anthropic's endpoint, which the gateway key must not be sent to.
+  const inputTokens = upstreamTo.gateway
+    ? priced.estimateTokens
+    : await countInputTokens(body, priced.estimateTokens, fetch, key);
   const reserve = reserveMicros({ ...priced, inputTokens });
   const allowance = allowanceFor(plan, (n) => Deno.env.get(n));
   const spend = (delta: number, cap: number | null) =>
@@ -357,14 +367,10 @@ Deno.serve(async (req) => {
 
   let upstream: Response;
   try {
-    upstream = await fetch(ANTHROPIC, {
+    upstream = await fetch(upstreamTo.url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': key,
-        'anthropic-version': '2023-06-01',
-      },
-      body,
+      headers: upstreamTo.headers,
+      body: upstreamTo.body(body),
     });
   } catch (e) {
     // Deliberately not the thrown message: it carries the upstream host and,

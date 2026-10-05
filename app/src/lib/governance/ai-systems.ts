@@ -72,8 +72,8 @@ export const DOORS: readonly Door[] = [
     id: 'DOOR-2',
     name: 'The shared-key function',
     routes: ['shared-key'],
-    files: ['supabase/functions/claude/index.ts'],
-    note: 'Verifies the JWT, reads the kill switch, meters a monthly cap, refuses until the activation gate is recorded. Anthropic only.',
+    files: ['supabase/functions/claude/index.ts', 'supabase/functions/_shared/upstream.ts'],
+    note: 'Verifies the JWT, reads the kill switch, meters a monthly cap, refuses until the activation gate is recorded. Anthropic, directly or through Vercel AI Gateway when AI_GATEWAY_API_KEY is set.',
   },
   {
     id: 'DOOR-3',
