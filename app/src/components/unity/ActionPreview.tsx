@@ -39,7 +39,9 @@ export function recoveryLine(r: Recovery): string {
  * goes inside it, and `docs/ACTION-EXPLAINABILITY-AND-STUDENT-CONTROL.md`
  * already names it — what it says, what it does not change, what it is subject
  * to — to which this adds the one part that was always optional and should not
- * be: whether it can be taken back.
+ * be: whether it can be taken back. `whoCanHelp` closes the seventh question
+ * every screen has to answer; it stays optional because a local, undoable
+ * action has nobody to ask.
  *
  * Order is the order a person asks the questions: what is it, what happens,
  * what exactly, what stays, can I take it back. A definition list, so a screen
@@ -60,6 +62,7 @@ export function ActionPreview({
   doesNotChange,
   subjectTo,
   recovery,
+  whoCanHelp,
   provenance,
 }: {
   /** The thing acted on — a share, a draft, a course. Drawn in bold. */
@@ -73,6 +76,8 @@ export function ActionPreview({
   /** The caveat: "Subject to your school’s official audit." */
   subjectTo?: ReactNode;
   recovery: Recovery;
+  /** The person or office to ask if this goes wrong or is unclear: "Your advisor, or the Registrar’s office (Mon–Fri, 9–5)." */
+  whoCanHelp?: ReactNode;
   provenance?: FactProvenance;
 }) {
   return (
@@ -100,6 +105,12 @@ export function ActionPreview({
         ) : null}
         <dt>Taking it back</dt>
         <dd>{recoveryLine(recovery)}</dd>
+        {whoCanHelp ? (
+          <>
+            <dt>Who can help</dt>
+            <dd>{whoCanHelp}</dd>
+          </>
+        ) : null}
       </dl>
       {subjectTo ? <p className="action-preview-caveat">{subjectTo}</p> : null}
     </div>
