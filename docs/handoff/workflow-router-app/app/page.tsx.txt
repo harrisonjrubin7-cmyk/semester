@@ -1,0 +1,5 @@
+import Link from 'next/link';
+export default function Home() {
+  return (<div className="grid gap-6"><h1 className="text-3xl font-semibold">AI Workflow Router &amp; Benchmark Lab</h1><p className="max-w-[62ch] text-neutral-700">Route a Semester workflow to Claude Artifacts, ChatGPT Canvas or v0, compare their limits, and record graded benchmark runs with evidence.</p>
+    <div className="flex gap-3"><Link className="min-h-11 rounded bg-slate-800 px-4 py-3 text-white" href="/workflow-router">Open the router</Link><Link className="min-h-11 rounded border px-4 py-3" href="/benchmark">Benchmark lab</Link></div></div>);
+}

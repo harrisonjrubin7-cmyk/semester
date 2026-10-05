@@ -1,0 +1,19 @@
+create schema if not exists market;
+create table market.listings(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), seller uuid not null default auth.uid(), title text not null, category text not null check (category in ('textbooks','gear','housing','services','tickets')), price_cents int not null check (price_cents >= 0), status text not null default 'pending_check' check (status in ('pending_check','live','held','sold','removed')), integrity_score real, created_at timestamptz default now());
+create table market.offers(id uuid primary key default gen_random_uuid(), listing_id uuid not null references market.listings on delete cascade, buyer uuid not null default auth.uid(), amount_cents int not null check (amount_cents > 0), status text not null default 'open' check (status in ('open','accepted','declined','paid','completed','disputed','refunded')), processor_ref text, created_at timestamptz default now());
+create table market.drops(id uuid primary key default gen_random_uuid(), institution_id uuid not null default core.my_institution(), listing_id uuid references market.listings, seller_is_official boolean not null default false, ends_at timestamptz not null, approved boolean not null default false);
+create table market.bids(id bigserial primary key, drop_id uuid references market.drops on delete cascade, bidder uuid not null default auth.uid(), amount_cents int not null, at timestamptz default now());
+alter table market.listings enable row level security; alter table market.offers enable row level security; alter table market.drops enable row level security; alter table market.bids enable row level security;
+create policy l_read on market.listings for select using (institution_id = core.my_institution() and core.feature_on('marketplace') and (status = 'live' or seller = auth.uid() or core.my_role() in ('moderator','student_affairs')));
+-- new listings always start pending_check; a worker runs the integrity classifier and sets live/held
+create policy l_create on market.listings for insert with check (seller = auth.uid() and status = 'pending_check' and core.feature_on('marketplace'));
+create policy l_seller_update on market.listings for update using (seller = auth.uid()) with check (seller = auth.uid() and status in ('pending_check','sold','removed'));
+create policy l_mod on market.listings for update using (core.my_role() in ('moderator','student_affairs') and institution_id = core.my_institution());
+create policy o_parties on market.offers for select using (buyer = auth.uid() or exists(select 1 from market.listings l where l.id = listing_id and l.seller = auth.uid()));
+create policy o_create on market.offers for insert with check (buyer = auth.uid() and status = 'open' and exists(select 1 from market.listings l where l.id = listing_id and l.status = 'live' and l.seller <> auth.uid()));
+create policy d_read on market.drops for select using (institution_id = core.my_institution() and approved);
+create policy b_create on market.bids for insert with check (bidder = auth.uid() and exists(select 1 from market.drops d where d.id = drop_id and d.approved and d.ends_at > now()));
+create policy b_read on market.bids for select using (exists(select 1 from market.drops d where d.id = drop_id and d.institution_id = core.my_institution()));
+-- Bids must exceed current max
+create or replace function market.check_bid() returns trigger language plpgsql as $$ begin if new.amount_cents <= coalesce((select max(amount_cents) from market.bids where drop_id = new.drop_id),0) then raise exception 'Bid must be higher than the current bid'; end if; return new; end $$;
+create trigger bid_higher before insert on market.bids for each row execute function market.check_bid();
