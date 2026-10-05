@@ -37,6 +37,10 @@ const setValue = (el: HTMLInputElement | HTMLSelectElement, value: string) => {
 const scenarioSelect = () => host.querySelector('select') as HTMLSelectElement;
 const tile = (label: string) => [...host.querySelectorAll('.portal-panel')].find((p) => p.textContent?.startsWith(label))?.textContent ?? '';
 
+// The export tests replace navigator.clipboard. Leave it as found, and writable while replaced:
+// a read-only leftover makes any later file's `Object.assign(navigator, { clipboard })` throw under test:shuffle.
+const ownClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+
 beforeEach(() => {
   host = document.createElement('div');
   document.body.append(host);
@@ -46,6 +50,8 @@ afterEach(() => {
   act(() => root.unmount());
   host.remove();
   vi.restoreAllMocks();
+  if (ownClipboard) Object.defineProperty(navigator, 'clipboard', ownClipboard);
+  else Reflect.deleteProperty(navigator, 'clipboard');
 });
 
 describe('the finance model dashboard', () => {
@@ -247,7 +253,7 @@ describe('exports', () => {
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: (b: Blob) => { urls.push(`${b.type}:${b.size}`); return 'blob:x'; }, revokeObjectURL: (u: string) => { revoked.push(u); } }));
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { names.push(this.download); });
     const copied: string[] = [];
-    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (t: string) => { copied.push(t); return Promise.resolve(); } } });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, writable: true, value: { writeText: (t: string) => { copied.push(t); return Promise.resolve(); } } });
 
     render();
     click('Exports');
@@ -268,7 +274,7 @@ describe('exports', () => {
   });
 
   it('says so when the browser refuses the clipboard', async () => {
-    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => Promise.reject(new Error('denied')) } });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, writable: true, value: { writeText: () => Promise.reject(new Error('denied')) } });
     render();
     click('Exports');
     await act(async () => { click('Copy assumptions as a prompt'); });
