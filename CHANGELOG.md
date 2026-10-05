@@ -26,7 +26,7 @@ will happily serve you the copy you already had.
 
 ### Forms that find several problems now list them together
 
-On **Costs** (the bill and the out-of-pocket form), pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
+On **Costs** (the bill and the out-of-pocket form), **Meals** and **Housing**, pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
 
 ### Support and the assistant now point you to a person
 
