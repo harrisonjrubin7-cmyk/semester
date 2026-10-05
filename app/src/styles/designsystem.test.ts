@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildTokenExport, serialise } from '../lib/tokenexport';
 import {
-  ALLOWED_RAW, AXES, MAPPING_SCHEMA, existsIn, findings, ledgerOf, overLedger, renderLedger, renderReport,
+  ALLOWED_RAW, AXES, escapeCell, MAPPING_SCHEMA, existsIn, findings, ledgerOf, overLedger, renderLedger, renderReport,
   resolves, scan, scanCss, scanTsx, totals, validateMapping, type ReportInput, type TokenFile,
 } from './designsystem';
 import { sources } from './rules';
@@ -299,6 +299,16 @@ describe('the report', () => {
     const a = { file: 'src/a11y/focus.test.ts', passed: 3, failed: 0 };
     const b = { file: 'src/styles/tokens.test.ts', passed: 8, failed: 0 };
     expect(renderReport(input({ contracts: [a, b] }))).toBe(renderReport(input({ contracts: [b, a] })));
+  });
+
+  it('escapes a backslash before a pipe, so a cell cannot be split by its own content', () => {
+    expect(escapeCell('a|b')).toBe('a\\|b');
+    // Pipe-only escaping turns `\|` into `\\|`, which closes the escape and leaves the pipe live.
+    expect(escapeCell('a\\|b')).toBe('a\\\\\\|b');
+    expect(escapeCell('line\nbreak')).toBe('line break');
+    const text = renderReport(input({ mapping: { ...input().mapping, findings: [{ severity: 'minor', where: 'x\\|y', what: 'z' }] } }));
+    const row = text.split('\n').find((l) => l.includes('x\\\\\\|y'))!;
+    expect(row.split(/(?<!\\)\|/).length).toBe(6);
   });
 
   it('carries no clock and no absolute path', () => {

@@ -494,6 +494,9 @@ export function findings(i: ReportInput): Finding[] {
   return out.sort((a, b) => rank[a.severity] - rank[b.severity] || (a.where < b.where ? -1 : a.where > b.where ? 1 : 0));
 }
 
+/** A Markdown table cell. Backslash first: escaping only the pipe lets `\\|` close the escape and split the cell. */
+export const escapeCell = (c: string) => c.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
+
 /** Markdown with no clock, no commit and no path outside the repository, so the same tree gives the same bytes. */
 export function renderReport(i: ReportInput): string {
   const all = findings(i);
@@ -502,7 +505,7 @@ export function renderReport(i: ReportInput): string {
   const files = Object.keys(ledgerOf(i.hits)).length;
   const m = i.mapping;
   const tbl = (head: string[], rows: string[][]) =>
-    [`| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.map((c) => c.replace(/\|/g, '\\|').replace(/\n/g, ' ')).join(' | ')} |`)].join('\n');
+    [`| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.map((c) => escapeCell(c)).join(' | ')} |`)].join('\n');
   const verdict = count('blocker') + count('major') === 0 ? 'PASS' : 'FAIL';
 
   return [
