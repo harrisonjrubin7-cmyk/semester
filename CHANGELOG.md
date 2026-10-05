@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Forms that find several problems now list them together
+
+On **Costs** (the bill and the out-of-pocket form), pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
+
 ### Support and the assistant now point you to a person
 
 On **Support**, each tab has a line under its introduction: "Not sure which door fits? See who can help with what". It opens Help, where the offices and what to bring are listed. In the assistant, under the sources of an answer, there is a new "Not sure it's right? See who can help" link to the same place, because an assistant answer is not an official answer. Nothing was removed and you do not have to do anything.
