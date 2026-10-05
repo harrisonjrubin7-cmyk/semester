@@ -43,7 +43,7 @@ PostgreSQL 17 was installed from the PostgreSQL apt repository, as CI does (`ci.
 $ su postgres -c "cd <repo> && supabase/check.sh"       # every suite, 184 migrations
   ✓ company-roles-student-data.check.sql — 4 checks
   ✓ ai-audit-content-free.check.sql — 3 checks
-· every policy check passed                              # 114 suites, 26 s
+· every policy check passed                              # 115 suites, 20 s
 ```
 
 **Red then green, per guard** (each by a temporary migration or a temporary copy of the suite, deleted afterwards; none committed):
