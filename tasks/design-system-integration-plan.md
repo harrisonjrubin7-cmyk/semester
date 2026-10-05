@@ -1,19 +1,23 @@
 # Design-system integration plan
 
-**Date** 2026-10-05 · **Base** `origin/main` `d577a348` · **Branch** `cursor/full-semester-system-integration-83d9`
+**Date** 2026-10-05 · **Base** `origin/main` `3bd382dc` · **Branch** `cursor/full-semester-system-integration-83d9`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
 ## What was read
 
 - Root `CLAUDE.md`.
-- `origin/main` through `d577a348`. While this branch was open, main took #1297 (shared-key gateway fallback), #1298 (the student-data sweep now probes all 64 owner-keyed tables; `D-1298`), and #1299 (input purpose, WCAG 1.3.5).
+- `origin/main` through `3bd382dc`. After the inventory commit, main took #1303 (`D-1303`: the student-data sweep keys on fifteen owner-column names and probes 79 tables) and #1305 (Phase 0 reconciliation of the three supplied design PDFs).
 - Committed handoff: `docs/handoff/` (139 files). `docs/handoff/IN-THIS-REPO.md` and `docs/decisions/D-1287.md` say `ui_kits/`, `templates/`, and fonts are not in the repository.
 - The Desktop zip and `/Users/harrisonrubin/Documents/Cursor/Semester-Handoff` are not mounted on this machine. Prototype HTML was not copied.
 
 ## A scanner was drafted and not kept
 
-The stream 01 report, as it stood at `86434cb5`, named a free-text prompt scan as the next slice. A scan was written on this branch (shared key, institution gateway, and `ask()`). Before it was pushed, `D-1298` landed and withdrew that work: the class gate is a declared-field ceiling and does not read free text; a content scanner would be heuristic and would contradict that design. Revisit only if the AI provider terms leave free text reaching a provider. The draft was discarded. This change is the inventory only.
+The stream 01 report, as it stood at `86434cb5`, named a free-text prompt scan as the next slice. A scan was written on this branch (shared key, institution gateway, and `ask()`). Before it was pushed, `D-1298` landed and withdrew that work: the class gate is a declared-field ceiling and does not read free text; a content scanner would be heuristic and would contradict that design. Revisit only if the AI provider terms leave free text reaching a provider. The draft was discarded.
+
+## This slice
+
+`ActionPreview` is the confirmation body for leaving a university and for staff approving a join request (`app/src/components/SchoolClaim.tsx`). The membership test requires the recovery sentence. Other confirmations are unchanged. Owner-column widening and the Phase 0 documents were already on main and are not repeated. A blanket revoke of anon execute on `private` is not done: `rls-coverage.check.sql` says it would break `private.form_open()`.
 
 ## Recount (this tree)
 

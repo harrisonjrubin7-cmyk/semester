@@ -4,7 +4,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ## Inventory
 
-- [x] Fetch `origin/main` (`d577a348`) and read what landed after `86434cb5`.
+- [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
 - [x] Recount screens (119), components (382), `app/src` tests (1356), migrations (184), handoff files (139).
 - [x] Read `CLAUDE.md`, `D-1287`, `D-1294`, `D-1298`, the stream 01 diff and report, and `REPO_AUDIT.md`.
 - [x] Record that the Desktop zip and `ui_kits/` are not on this machine.
@@ -15,11 +15,11 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 - [ ] Privacy owner narrows or writes down `community_volunteers` / `trust_safety_reviewer`.
 - [x] Probe the eight tables that were inconclusive. Done on main (`D-1298`): 64 tables, floor 64.
-- [ ] Sweep owner columns other than `user_id` and `student_id`.
+- [x] Sweep the fifteen owner-column names in `D-1303` (79 tables). `created_by`, `subject`, `owner_id` and `account_id` stay out: they mostly name staff.
 - [ ] Decide whether the shared-key path keeps a per-request audit row.
 - [ ] `student-files` and `course-materials` buckets, with retention and course scope.
 - [ ] Provenance ladder, conflict resolution, projection-lag freshness, consequence pattern.
-- [ ] Blanket anon revoke, only after a policy review. Suggested next, not decided.
+- [x] Blanket anon revoke of `private` helpers — not done. `rls-coverage.check.sql` says it would break `private.form_open()`.
 
 ## Not pursued
 
@@ -30,6 +30,11 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Handoff migrations `010`–`080` — not applied.
 - [x] Free-text prompt scanner — `D-1298`.
 - [x] `Cross-Origin-Opener-Policy` — deliberately not added.
+
+## This slice
+
+- [x] Leave-university and approve-join confirmations use `ActionPreview`, including whether the action can be taken back.
+- [x] `SchoolMembership.test.tsx` requires those sentences.
 
 ## Named screens still absent
 

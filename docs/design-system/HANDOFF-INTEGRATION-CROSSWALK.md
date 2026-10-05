@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Date** 2026-10-05 · **Base** `origin/main` `d577a348`
+**Date** 2026-10-05 · **Base** `origin/main` `3bd382dc`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -76,7 +76,7 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | `core.profiles` | Duplicate or superseded. `public.profiles` and membership exist. |
 | Per-field visibility, campus directory | Roadmap or business concept. `D-1287`. |
 | `feature_on` | Duplicate or superseded. `feature_state` exists. |
-| Blanket anon revoke | Existing but incomplete. DDL is stripped. Anon DML grants remain behind RLS. Suggested next, not decided. |
+| Blanket anon revoke | Not pursued as a blanket. `supabase/rls-coverage.check.sql` records why: `private.form_open()` admits a visitor with no account, and revoking anon execute on `private` would break that form. Anon DML grants remain behind RLS. |
 | `community.events` | Roadmap or business concept. Reuse `community_sessions`. |
 | `ops.social_posts`, crisis-mode settings | Roadmap or business concept until stream 08. |
 | `ai_policy.student_id_pattern` | Not authorized with the scanner. `D-1298` withdrew the row. |
@@ -90,13 +90,17 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | Next-action scoring | Existing but incomplete. |
 | Access matrix | Duplicate or superseded as a second matrix. |
 | Break-glass two-person | Existing and verified in SQL. `decide_approval` plus `console-approvals.check.sql`. |
-| Consequence pattern | Existing but incomplete. |
+| Consequence pattern | Existing but incomplete. `ActionPreview` is now the preview inside the leave-university and approve-join dialogs (`SchoolClaim.tsx`, `SchoolMembership.test.tsx`). Other confirmations still write their own sentences. |
 | AI class gate | Existing and verified. Ceiling T2. It does not read prose. |
 | Approvals state machine | Existing and verified in SQL. |
 | Red-team corpus for blocked prompts | Not ported. It depended on the scanner `D-1298` declined. |
 | CI grep guards | Existing and verified. `boundaries.test.ts`. |
 | COOP header | Blocked on an LTI new-window test. Not added. |
-| Company-role student reads | Existing and verified by `company-roles-student-data.check.sql`. Slice 2 probes 64 tables. One row is to narrow and was not changed. |
+| Company-role student reads | Existing and verified by `company-roles-student-data.check.sql`. Slice 2 probes 64 tables. Slice 3 (`D-1303`) keys on fifteen owner-column names and probes 79. `created_by`, `subject`, `owner_id` and `account_id` stay unswept because they mostly name the staff who wrote the row. `course_review_authors` / `moderator` is recorded, not changed: the privacy owner decides whether each read is audited. `community_volunteers` / `trust_safety_reviewer` is still to narrow. |
+
+## Phase 0 documents already on main
+
+`docs/master/SEMESTER_PDF_RECONCILIATION.md`, `SEMESTER_SOURCE_OF_TRUTH.md`, `SEMESTER_MASTER_CURRENT_STATE.md`, `SEMESTER_GAP_AND_STATUS_REGISTER.md`, `SEMESTER_ROLE_SCREEN_WORKFLOW_MATRIX.md` and `SEMESTER_EXECUTION_ROADMAP.md` landed in #1305. They do not replace this page. The matrix §3 is the component-name map: 18 PDF names match an export, 13 have an equivalent under another name, and the rest are not created here. A new shared component still needs `docs/design/GOVERNANCE.md` §2. The roadmap's projection worker and `ops_*` read models are not started.
 
 ## Blocked outside the repository
 

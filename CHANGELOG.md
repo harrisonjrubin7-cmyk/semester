@@ -32,6 +32,10 @@ For operators holding the console grant: a new **Launch readiness** tab, after R
 
 If a link sends someone who has never used Semester to a particular screen (`?continue=calendar`), setting up no longer drops them on the import screen instead: the run, or Skip, ends on the screen the link named. Only the screens a `?screen=` link may already open are accepted, and a link can say where to go but cannot say who somebody is or what they may open. Nothing changes for anyone arriving without such a link, and you do not have to do anything.
 
+### Leaving a university, and approving someone, says whether you can take it back
+
+The confirmation before you leave a university, and the one before staff approve a join request, now says what happens, what stays, and that you can undo it (claim the university again, or remove the person later). Nothing else about claiming a university changed.
+
 ### Your browser stops filling your own details into other people's boxes
 
 Fields that take someone else's email address (an email's To, Cc and Bcc, a contact's, a family member's) now tell the browser not to autofill them, so your own address no longer appears in them. The two assistant key boxes in Settings tell it not to offer to save a key as a login. The two name boxes about you (on Profile, and what a call shows as your name) now say what they are for, so a browser or screen reader can help. Nothing was removed and you do not have to do anything.
