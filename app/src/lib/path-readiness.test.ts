@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_MEETINGS } from './advisor-meeting';
-import { EMPTY_REGISTRATION_DAY } from './registration-day';
-import { overallReadiness, pathReadiness, readinessCount, type PathReadinessInput } from './path-readiness';
+import { CHECKLIST, EMPTY_REGISTRATION_DAY } from './registration-day';
+import { overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
 import type { CatalogCourse } from './registration';
 
 const course = (id: string, start: number, end: number): CatalogCourse => ({
@@ -48,7 +48,7 @@ describe('overall readiness', () => {
   });
   const overall = (over: Partial<PathReadinessInput>) => {
     const input = base(over);
-    return overallReadiness(pathReadiness(input), input.catalog.length);
+    return overallReadiness(pathReadiness(input), readinessFacts(input));
   };
 
   it('says information is unavailable, not "not started", when there is no catalog to check against', () => {
@@ -70,15 +70,41 @@ describe('overall readiness', () => {
 
   it('counts steps: getting ready, then almost ready, then ready', () => {
     const items = pathReadiness(base({ catalog: [a, b, c] }));
+    const facts = { catalogSize: 3, conflicts: 0, unchecked: 0 };
     const withReady = (n: number) => items.map((item, i) => ({ ...item, state: i < n ? ('ready' as const) : ('not_started' as const) }));
-    expect(overallReadiness(withReady(2), 3)).toMatchObject({ state: 'getting_ready' });
-    expect(overallReadiness(withReady(6), 3)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('Two steps left') });
-    expect(overallReadiness(withReady(7), 3)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('One step left') });
-    expect(overallReadiness(withReady(8), 3)).toMatchObject({ state: 'ready' });
+    expect(overallReadiness(withReady(2), facts)).toMatchObject({ state: 'getting_ready' });
+    expect(overallReadiness(withReady(6), facts)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('Two steps left') });
+    expect(overallReadiness(withReady(7), facts)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('One step left') });
+    expect(overallReadiness(withReady(8), facts)).toMatchObject({ state: 'ready' });
   });
 
   it('ready still says the official system decides', () => {
     const items = pathReadiness(base({ catalog: [a] })).map((item) => ({ ...item, state: 'ready' as const }));
-    expect(overallReadiness(items, 1).why).toContain('official system still decide');
+    expect(overallReadiness(items, { catalogSize: 1, conflicts: 0, unchecked: 0 }).why).toContain('official system still decide');
+  });
+
+  it('is unavailable, not ready, when a selected section has no meeting times to check', () => {
+    const noTimes: CatalogCourse = { ...course('d', 0, 0), meetings: [] };
+    const everyOtherStepDone = {
+      pathConfigured: true,
+      requirementTotal: 4,
+      cart: [a, noTimes],
+      catalog: [a, noTimes, c],
+      registration: { ...EMPTY_REGISTRATION_DAY, opensAt: '2026-10-02T09:00', checks: CHECKLIST.map((item) => item.id), backups: { [a.id]: [c.id], [noTimes.id]: [c.id] } },
+      meetings: { version: 1 as const, meetings: [{ id: 'm', title: 'Plan', date: null, agenda: [{ id: 'x', text: 'Review plan' }], questions: [], attach: { scenario: null, courses: [], followUps: false }, followUps: [], notes: '', created: 1 }] },
+      institution: 'Northstar University',
+    };
+    const o = overall(everyOtherStepDone);
+    expect(o.state).toBe('unavailable');
+    expect(o.why).toContain('no meeting times');
+    // The step itself says so too, instead of "No conflicts found".
+    const step = pathReadiness(base(everyOtherStepDone)).find((item) => item.id === 'schedule')!;
+    expect(step.state).toBe('attention');
+    expect(step.detail).toContain('cannot be checked');
+  });
+
+  it('a real conflict still blocks even when another section has no times', () => {
+    const noTimes: CatalogCourse = { ...course('d', 0, 0), meetings: [] };
+    expect(overall({ cart: [a, b, noTimes], catalog: [a, b, noTimes] }).state).toBe('blocked');
   });
 });

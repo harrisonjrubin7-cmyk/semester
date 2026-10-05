@@ -27,16 +27,16 @@ A screen that cannot name a component for a row has a gap in that row; §3 recor
 | 1 | Today dashboard | Student OS | `screens/Today.tsx`, `components/TodayActionCenter.tsx` | `student/Today.jsx` |
 | 2 | Action Center | Student OS | `components/ActionCenter.tsx` | catalogued only (`master-catalog`, `one-place`); archetype in `every-screen` |
 | 3 | Academic Path | Planning | `screens/Degree.tsx`, `screens/Pathway.tsx` | `student/Degree.jsx` |
-| 4 | Term Plan | Planning | exists under another name: the planner in `screens/Registration.tsx` (nav label "Registration") + `lib/registration.ts` plans; only the name differs | `student/Registration.jsx`, `student/Calendar.jsx` |
-| 5 | Registration Readiness | Planning | `components/RegistrationReadiness.tsx`, `screens/Registration.tsx` | `student/Registration.jsx` |
+| 4 | Term Plan | Planning | exists under another name: the planner is screen `yes` (nav label "Registration"), `screens/Yes.tsx` rendering `components/RegistrationPortal.tsx`, with plans from `lib/registration.ts`. `screens/Registration.tsx` is a different thing: the separately gated official enrollment transaction, not the planner | `student/Registration.jsx`, `student/Calendar.jsx` |
+| 5 | Registration Readiness | Planning | `components/RegistrationReadiness.tsx`, drawn inside `components/PathSnapshotCard.tsx` on My Path (`screens/Degree.tsx`); the planner it links to is screen `yes` | `student/Registration.jsx` |
 | 6 | Course Home | Student OS | `components/CourseDetailV2.tsx`, `screens/Courses.tsx` | `student/Course.jsx` |
 | 7 | Course Studio | Course Studio | `components/CourseStudio.tsx` | `staff/Faculty.jsx` |
 | 8 | Student AI Copilot | Student OS | `ai/Chat.tsx`, `ai/Turns.tsx`, `ai/Actions.tsx` | `student/Assistant.jsx` |
 | 9 | Support Center | Success/support | `screens/Support.tsx`, `components/SupportAccess.tsx`, `AskAHuman.tsx` | `student/HelpSupport.jsx` |
 | 10 | Advisor Caseload | Success/support | advisor workspace in `components/institutional/RoleWorkspace.tsx`; student-side `AdvisorMeeting.tsx`, `AdvisorSharedView.tsx`. **A caseload list is blocked on data**: it needs institution-provided advisor–student relationships under consent, and the app has no live source | `staff/Advisor.jsx` |
 | 11 | Registrar Console | Control plane | `screens/Registrar.tsx` | `staff/Registrar.jsx` |
-| 12 | Tenant Overview | Control plane | exists: `components/console/Customers.tsx` (tenants, commitments, contracts, purpose-gated reads) and `components/institutional/ControlPlane.tsx` (policy, access, evidence) | `console/ConsoleApp.jsx`, `console/Screens.jsx` |
-| 13 | Operations Inbox | Operations | exists: `components/console/CommandCenter.tsx` (the live exception queue), `SupportQueue.tsx`, `Approvals.tsx`, `Audit.tsx`, `Evidence.tsx` | `console/SupportQueue.jsx`, `console/Approvals.jsx` |
+| 12 | Tenant Overview | Control plane | partial: `components/console/Customers.tsx` (tenants, commitments, contracts, purpose-gated reads) and `components/institutional/ControlPlane.tsx` (policy, access, evidence) exist, but neither gives the brief's health band and top driver, connector freshness or support handoff, and no per-tenant health score composes those | `console/ConsoleApp.jsx`, `console/Screens.jsx` |
+| 13 | Operations Inbox | Operations | partial: `components/console/CommandCenter.tsx` is a live exception queue that only sorts and shows read-only cards; claiming, SLA handling and actions are split across `SupportQueue.tsx` and `Approvals.tsx`, with `Audit.tsx` and `Evidence.tsx` alongside. There is no single cross-queue inbox | `console/SupportQueue.jsx`, `console/Approvals.jsx` |
 | 14 | Trust Center | Public/trust | `screens/TrustRoom.tsx`, `institutional/TrustDashboard.tsx`; policy in `docs/TRUST-CENTER.md` | `compliance/Compliance.jsx` |
 | 15 | Institutional Pilot page | Public/sales | exists on the public site as several routed pages in `company-site/index.html`: `launch`, `institutions`, `design-partners`, `implementation-readiness`, `launch-estimator`, `procurement-tracker`; framework in `docs/PAID-PILOT-FRAMEWORK.md` | `company-site/Pages.jsx`, `business/Pilot One-Pager.html` |
 | 16 | Marketing homepage | Public/sales | `company-site/index.html`, `site.css` | `company-site/Site.jsx` |
@@ -60,8 +60,8 @@ Cells name components. **Gap** marks a row with no component today.
 | Support Center | `PageHeader` "Support" | Open request status | Start request; `SupportHandoff` | Office hours/policies `official` | Last staff update age | Named office + reference | `DecisionTrail` of the request |
 | Advisor Caseload | `PageHeader` + cohort in `ContextBar` | Students needing contact today (`HealthBadge` with driver) | Message/schedule via `ActionPreview` (consent shown by `ConsentBadge`) | `SourceBadge` per field; consent gate | Data age per student; `HealthBadge` unknown band | Escalate: `SupportHandoff` student support | `DataTable`; `DecisionTrail`. **Blocked on institution advisor–student data and consent** |
 | Registrar Console | `PageHeader`; term + environment in `SystemContextBar` | Exceptions awaiting decision | Decide with `ActionPreview`; `ApprovalBanner` | System-of-record rows `official` | Sync age; conflicts as `SaveState` Conflict | Registrar lead; audit contact | `DecisionTrail`; `DataTable` |
-| Tenant Overview | `PageHeader` + tenant/environment | Health band and the top driver | Open the one failing area | Contract/config `official`; connector health as freshness | Connector age; `HealthBadge` unknown | Support/CSM `SupportHandoff` | `DataTable`; `PolicyBadge`. **Exists as `console/Customers.tsx` + `ControlPlane.tsx`** |
-| Operations Inbox | `PageHeader` + queue scope | Oldest breaching item | Claim, resolve, escalate (`ActionPreview` for customer-visible) | Policy-tagged items (`PolicyBadge`) | Item age vs SLA as word | On-call `SupportHandoff` | `DecisionTrail`. **Exists as `console/CommandCenter.tsx`; queues are separate tabs** |
+| Tenant Overview | `PageHeader` + tenant/environment | Health band and the top driver | Open the one failing area | Contract/config `official`; connector health as freshness | Connector age; `HealthBadge` unknown | Support/CSM `SupportHandoff` | `DataTable`; `PolicyBadge`. **Partial: records and policy exist; no health band, driver, freshness or handoff** |
+| Operations Inbox | `PageHeader` + queue scope | Oldest breaching item | Claim, resolve, escalate (`ActionPreview` for customer-visible) | Policy-tagged items (`PolicyBadge`) | Item age vs SLA as word | On-call `SupportHandoff` | `DecisionTrail`. **Partial: read-only exception queue; actions and SLA live in other tabs** |
 | Trust Center | `PageHeader` "Trust" | What data is used and who sees it | Open a policy; request evidence | Evidence `official` with date; claims only from the approved register | Unverified claims are not shown (`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`) | Security contact `SupportHandoff` | `PolicyBadge`, subprocessors, `DecisionTrail` of changes |
 | Institutional Pilot page | `PageHeader` | What a pilot is and costs | Request a pilot (form with `ErrorSummary`) | Only claims in the approved register | Pilot figures labelled `sample` unless measured | Named contact | Pilot framework doc. **Exists as routed pages on the company site** |
 | Marketing homepage | Wordmark + nav | One-sentence position | One primary: request a pilot | Customer/compliance claims only if approved | n/a — no live data; no unsupported claims | Contact | Trust Center, Pilot page |
@@ -70,16 +70,16 @@ Cells name components. **Gap** marks a row with no component today.
 
 ## 4. The seven packs and what is actually missing
 
-An earlier version of this page listed five screens as unbuilt. Checked against the code, four exist under other names; the table below is the corrected reading.
+An earlier version of this page listed five screens as unbuilt. Checked against the code, two exist under other names (Term Plan, the Pilot page) and two exist in part (Tenant Overview, Operations Inbox). The table below is the corrected reading.
 
 | Pack | Screens | Actually missing |
 |---|---|---|
 | Student OS | Today, Action Center, Course Home, AI Copilot | Action Center kit prototype is archetype-only |
-| Planning/registration | Academic Path, Term Plan, Registration Readiness | Nothing; "Term Plan" is the Registration planner's name in the brief. Readiness now opens with an overall status |
+| Planning/registration | Academic Path, Term Plan, Registration Readiness | Nothing structural; "Term Plan" is the planner's name in the brief (screen `yes`). Readiness now opens with an overall status |
 | Course Studio | Course Studio | Review/approval state (`ApprovalBanner`) not wired on publish |
 | Student success/support | Support Center, Advisor Caseload | The caseload **list**: blocked on institution-provided advisor–student data and consent, not on design |
-| Institutional control plane | Registrar Console, Tenant Overview | Nothing; `console/Customers.tsx` and `institutional/ControlPlane.tsx` |
-| Operations command center | Operations Inbox | One view across queues; today the queues are separate tabs of the console |
+| Institutional control plane | Registrar Console, Tenant Overview | The tenant health band, top driver, connector freshness and support handoff; no per-tenant health score exists to show |
+| Operations command center | Operations Inbox | One inbox across queues with claim, SLA and actions; today the exception queue is read-only and the queues are separate tabs |
 | Public company/sales/trust | Trust Center, Pilot page, Marketing homepage | Nothing structural; every claim on them must still pass the claims register |
 
 Naming is the commonest gap: the brief's names are not the app's. Renaming is a product decision and is not made here. Building any screen follows `/build-semester-ui`: search `components/ui.tsx`, `components/unity/`, the gallery and the nearest screen first, and add no new shared component without the case in `GOVERNANCE.md` §2.

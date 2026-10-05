@@ -31,6 +31,7 @@ export interface PathReadinessItem {
  */
 export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   const plan = readiness(input.registration, input.cart, input.catalog);
+  const unchecked = uncheckedSections(input.cart);
   const checked = CHECKLIST.filter((item) => input.registration.checks.includes(item.id)).length;
   const latestMeeting = [...input.meetings.meetings].sort((a, b) => b.created - a.created)[0];
   const hasAgenda = Boolean(latestMeeting && (latestMeeting.agenda.length || latestMeeting.questions.length));
@@ -62,8 +63,14 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
     {
       id: 'schedule',
       label: 'Schedule conflicts',
-      detail: !input.cart.length ? 'Add courses before checking the schedule.' : plan.conflicts ? `${plan.conflicts} conflict${plan.conflicts === 1 ? '' : 's'} need attention.` : 'No meeting-time conflicts found in the imported schedule.',
-      state: !input.cart.length ? 'not_started' : plan.conflicts ? 'attention' : 'ready',
+      detail: !input.cart.length
+        ? 'Add courses before checking the schedule.'
+        : plan.conflicts
+          ? `${plan.conflicts} conflict${plan.conflicts === 1 ? '' : 's'} need attention.`
+          : unchecked
+            ? `${unchecked} selected section${unchecked === 1 ? ' has' : 's have'} no meeting times, so conflicts cannot be checked for ${unchecked === 1 ? 'it' : 'them'}.`
+            : 'No meeting-time conflicts found in the imported schedule.',
+      state: !input.cart.length ? 'not_started' : plan.conflicts || unchecked ? 'attention' : 'ready',
       destination: 'yes',
     },
     {
@@ -101,6 +108,11 @@ export function readinessCount(items: readonly PathReadinessItem[]): { ready: nu
   return { ready: items.filter((item) => item.state === 'ready').length, total: items.length };
 }
 
+/** Selected sections with no meeting times: they cannot be conflict-checked, whatever else is true. */
+export function uncheckedSections(cart: readonly CatalogCourse[]): number {
+  return cart.filter((course) => !course.meetings.length).length;
+}
+
 /**
  * The one line above the steps: where the student stands as a whole.
  *
@@ -112,9 +124,11 @@ export function readinessCount(items: readonly PathReadinessItem[]): { ready: nu
  * - `blocked`: a meeting-time conflict in the chosen schedule. Computed, not
  *   assumed. Holds and prerequisites live in the official system and are not
  *   known here, so they can never produce this state.
- * - `unavailable`: no course catalog is loaded, so sections, conflicts and
- *   backups cannot be checked at all. That is a gap in what Semester knows,
- *   not in what the student has done.
+ * - `unavailable`: no course catalog is loaded, or a selected section has no
+ *   meeting times, so conflicts cannot be checked (the planner itself warns
+ *   "Conflicts cannot be checked for those sections"). That is a gap in what
+ *   Semester knows, not in what the student has done, and it must stop the
+ *   headline from saying Ready.
  * - `ready`, `almost_ready`, `getting_ready`: by how many of the steps are done.
  *
  * Preparation only. None of these says the registration will succeed.
@@ -127,14 +141,41 @@ export interface OverallReadiness {
   why: string;
 }
 
-export function overallReadiness(items: readonly PathReadinessItem[], catalogSize: number): OverallReadiness {
-  const schedule = items.find((item) => item.id === 'schedule');
-  if (schedule?.state === 'attention') return { state: 'blocked', label: 'Blocked', why: `${schedule.detail} Fix it before you register.` };
-  if (catalogSize === 0) {
+/** What the overall status is read from, besides the steps themselves. */
+export interface ReadinessFacts {
+  /** Sections in the loaded catalog. Zero means nothing can be selected or checked. */
+  catalogSize: number;
+  /** Meeting-time overlaps the app computed in the chosen schedule. */
+  conflicts: number;
+  /** Selected sections with no meeting times (see `uncheckedSections`). */
+  unchecked: number;
+}
+
+export function readinessFacts(input: PathReadinessInput): ReadinessFacts {
+  return {
+    catalogSize: input.catalog.length,
+    conflicts: readiness(input.registration, input.cart, input.catalog).conflicts,
+    unchecked: uncheckedSections(input.cart),
+  };
+}
+
+export function overallReadiness(items: readonly PathReadinessItem[], facts: ReadinessFacts): OverallReadiness {
+  if (facts.conflicts > 0) {
+    const schedule = items.find((item) => item.id === 'schedule');
+    return { state: 'blocked', label: 'Blocked', why: `${schedule?.detail ?? 'Two selected sections overlap.'} Fix it before you register.` };
+  }
+  if (facts.catalogSize === 0) {
     return {
       state: 'unavailable',
       label: 'Information unavailable',
       why: 'No course catalog is loaded, so sections, conflicts and backups cannot be checked here.',
+    };
+  }
+  if (facts.unchecked > 0) {
+    return {
+      state: 'unavailable',
+      label: 'Information unavailable',
+      why: `${facts.unchecked} selected section${facts.unchecked === 1 ? ' has' : 's have'} no meeting times, so a conflict cannot be ruled out. Check the official listing.`,
     };
   }
   const left = items.filter((item) => item.state !== 'ready');
