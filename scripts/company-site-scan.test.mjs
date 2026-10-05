@@ -866,11 +866,26 @@ test('complete finding detail replaces a self-consistent 10-path plugin with bot
 test('the pages CLI follows the alert URI page token and does not print the API key', async t => {
   const scan = cleanReport().scan.id;
   const key = 'synthetic-key-value';
+  // The findings route rejects X-ApiKey with 401. Login exchanges it for this bearer.
+  const access = 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln';
   const hash = index => createHash('sha256').update(`page-${index}`).digest('hex');
   const seen = [];
   const server = createServer((request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
-    seen.push({ path: url.pathname, pageSize: url.searchParams.get('pageSize'), pageToken: url.searchParams.get('pageToken'), key: request.headers['x-apikey'] });
+    const apiKey = request.headers['x-apikey'] ?? null;
+    const authorization = request.headers.authorization ?? null;
+    seen.push({ path: url.pathname, pageSize: url.searchParams.get('pageSize'), pageToken: url.searchParams.get('pageToken'), apiKey, authorization });
+    if (url.pathname === '/api/v1/auth/login') {
+      response.setHeader('content-type', 'application/json');
+      response.end(JSON.stringify(apiKey === key ? { token: access } : {}));
+      return;
+    }
+    // Control: the request that CI answered 401 must not succeed here either.
+    if (authorization !== `Bearer ${access}` || apiKey) {
+      response.writeHead(401);
+      response.end('{}');
+      return;
+    }
     const token = url.searchParams.get('pageToken');
     const body = token === '0'
       ? { applicationScanAlertUris: [{ requestMethod: 'GET', uri: '/synthetic-email-1', status: 'RISK_ACCEPTED', findingHash: hash(1), scan: { id: scan } }], totalCount: 2, nextPageToken: 1 }
@@ -901,9 +916,13 @@ test('the pages CLI follows the alert URI page token and does not print the API 
   });
   const result = { status, stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8') };
   assert.equal(result.status, 0, result.stderr);
-  assert.doesNotMatch(`${result.stdout}${result.stderr}`, new RegExp(key));
-  assert.deepEqual(seen.map(call => [call.pageSize, call.pageToken, call.key]), [['100', '0', key], ['100', '1', key]]);
-  assert.match(seen[0].path, new RegExp(`/api/v1/scan/${scan}/alert/100009$`));
+  assert.doesNotMatch(`${result.stdout}${result.stderr}`, new RegExp(`${key}|${access}`));
+  assert.deepEqual(seen[0], { path: '/api/v1/auth/login', pageSize: null, pageToken: null, apiKey: key, authorization: null });
+  assert.deepEqual(seen.slice(1).map(call => [call.pageSize, call.pageToken, call.apiKey, call.authorization]), [
+    ['100', '0', null, `Bearer ${access}`],
+    ['100', '1', null, `Bearer ${access}`],
+  ]);
+  assert.match(seen[1].path, new RegExp(`/api/v1/scan/${scan}/alert/100009$`));
   const completed = JSON.parse(result.stdout);
   assert.equal(completed.findings[0].total_paths, 2);
   assert.deepEqual(completed.findings[0].paths.map(path => path.uri), ['/synthetic-email-1', '/synthetic-email-2']);

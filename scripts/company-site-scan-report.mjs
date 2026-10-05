@@ -343,25 +343,41 @@ export function apiBase() {
   return url.origin;
 }
 
-export async function fetchAlertPages(scan, pluginId, fetchImpl = globalThis.fetch) {
-  if (!uuid.test(scan ?? '') || !/^[a-z\d._:-]{1,128}$/i.test(pluginId ?? '')) throw new Error('Finding evidence did not include a safe plugin identifier');
+const jwtIdentity = /^[A-Za-z0-9_-]{1,4096}\.[A-Za-z0-9_-]{1,4096}\.[A-Za-z0-9_-]{1,4096}$/;
+
+// GET /api/v1/scan/{scan}/alert/{plugin} rejects X-ApiKey with 401. The key is
+// only valid on GET /api/v1/auth/login, which returns the bearer used below.
+async function accessToken(fetchImpl) {
   const apiKey = process.env.HAWK_API_KEY;
   if (!/^[^\s]{8,}$/.test(apiKey ?? '')) throw new Error('API key unavailable');
+  const response = await fetchImpl(new URL('/api/v1/auth/login', apiBase()), {
+    headers: { Accept: 'application/json', 'X-ApiKey': apiKey },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!response.ok) throw new Error(`API login failed (${response.status})`);
+  const body = await response.json();
+  if (typeof body?.token !== 'string' || !jwtIdentity.test(body.token)) throw new Error('API login returned no access token');
+  return body.token;
+}
+
+export async function fetchAlertPages(scan, pluginId, fetchImpl = globalThis.fetch) {
+  if (!uuid.test(scan ?? '') || !/^[a-z\d._:-]{1,128}$/i.test(pluginId ?? '')) throw new Error('Finding evidence did not include a safe plugin identifier');
+  const token = await accessToken(fetchImpl);
   const pages = [];
-  let token = '0';
+  let pageToken = '0';
   for (let index = 0; index < alertPageLimit; index += 1) {
     const url = new URL(`/api/v1/scan/${scan}/alert/${encodeURIComponent(pluginId)}`, apiBase());
     url.searchParams.set('pageSize', '100');
-    url.searchParams.set('pageToken', token);
-    const response = await fetchImpl(url, { headers: { Accept: 'application/json', 'X-ApiKey': apiKey }, signal: AbortSignal.timeout(30000) });
+    url.searchParams.set('pageToken', pageToken);
+    const response = await fetchImpl(url, { headers: { Accept: 'application/json', Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(30000) });
     if (!response.ok) throw new Error(`alert page request failed (${response.status})`);
     const page = await response.json();
     pages.push(page);
     const next = page?.nextPageToken;
     if (next === null || next === undefined || next === '') return pages;
     const advanced = String(next);
-    if (advanced === token) throw new Error('Alert page evidence has an unconsumed continuation');
-    token = advanced;
+    if (advanced === pageToken) throw new Error('Alert page evidence has an unconsumed continuation');
+    pageToken = advanced;
   }
   throw new Error('Alert page evidence has an unconsumed continuation');
 }
