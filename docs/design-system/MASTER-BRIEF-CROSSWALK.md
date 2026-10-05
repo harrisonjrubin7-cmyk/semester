@@ -51,6 +51,6 @@
 
 ## 4. What would make this finished
 
-1. Owner decides which of the five missing named screens to build first (Term Plan, Advisor Caseload, Tenant Overview, Operations Inbox, Pilot page).
+1. Owner decides whether to rename the app's screens to the brief's names. Four of the five "missing" named screens exist under other names (see `SCREEN-PACKS.md` §2); the fifth, an Advisor Caseload list, is blocked on institution data and consent, not on design.
 2. Adopt `ActionPreview` (it has `whoCanHelp` now, but no screen uses it yet; 23 dialogs implement their own).
 3. Wire the matrix's test requirements into the gallery stories (`gallery.test.tsx` already requires a story per component).
