@@ -67,8 +67,8 @@ cp .env.example .env.local   # then fill in the two Supabase values
    - Site URL: your production URL
    - Redirect URLs: `http://localhost:3000/**`, `https://<your-app>.vercel.app/lab/**` and each Vercel preview pattern you use
 5. **Email templates** (Authentication → Email Templates) so magic links work across browsers, using the token-hash flow handled by `app/auth/confirm/route.ts`:
-   - *Magic Link*: `<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/benchmark">Sign in</a>`
-   - *Confirm signup*: `<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/benchmark">Confirm</a>`
+   - *Magic Link*: `<a href="{{ .SiteURL }}/lab/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/benchmark">Sign in</a>`
+   - *Confirm signup*: `<a href="{{ .SiteURL }}/lab/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/benchmark">Confirm</a>`
 
    The route also accepts the default PKCE `?code=` link (same browser only).
 6. Enable the **Email** provider. Password sign-in is also available on `/auth/sign-in`.
