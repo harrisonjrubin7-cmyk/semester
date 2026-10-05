@@ -9,10 +9,15 @@ import {
   type ModuleFlag,
   type ModuleFlags,
 } from '../../lib/experience-flags';
+import { UNBUILT, TOOLKIT_FLAGS, type ToolkitFlags } from '../../lib/toolkit/flags';
+import { COMMUNITY_FLAGS, COMMUNITY_FLAG_SPECS, type CommunityFlag, type CommunityFlags } from '../../community/flags';
+import { LANGUAGE_FLAG } from '../../lib/locale';
 import { matches, type ViewProps } from './Fields';
 
 /**
- * What this build ships: every feature flag, and the state it was built in.
+ * What this build ships: the feature flags it was built with, from the four
+ * registries that hold them (experience, module, toolkit and community) and the
+ * one standalone language flag, and the state each was built in.
  *
  * Read-only on purpose. A flag is fixed when a build is made (a `VITE_*`
  * variable, read once into `lib/experience-flags.ts`), and a school's own
@@ -68,6 +73,27 @@ const FLAG_LABELS: Record<keyof ExperienceFlags, { label: string; about?: string
   },
 };
 
+/**
+ * The toolkit's flags, named. A `Record` over `ToolkitFlags`, so a new toolkit
+ * flag is a compile error until it is named here, as with the experience flags.
+ * What is said about a flag is only what `lib/toolkit/flags.ts` says of it.
+ */
+const TOOLKIT_LABELS: Record<keyof ToolkitFlags, { label: string; about?: string }> = {
+  aiToolkit: { label: 'AI Toolkit', about: 'The master switch. With it off, every other toolkit flag reads off whatever it was set to.' },
+  researchStudio: { label: 'Toolkit: research studio' },
+  dataStudio: { label: 'Toolkit: data studio' },
+  dataUpload: { label: 'Toolkit: data upload' },
+  subjectWorkbenches: { label: 'Toolkit: subject workbenches' },
+  aiDisclosure: { label: 'Toolkit: AI disclosure' },
+  codeExecution: { label: 'Toolkit: code execution' },
+  externalConnectors: { label: 'Toolkit: external connectors' },
+};
+
+const UNBUILT_ABOUT = 'Cannot be switched on from this build: nothing is built behind it yet, so it reads off whatever the environment says.';
+
+/** `communityFeed` → `feed`, `moderationConsole` → `moderation console`: the words after the `Community:` prefix. */
+const communityWords = (key: string): string => key.replace(/([A-Z])/g, ' $1').toLowerCase().replace(/^community /, '');
+
 const MODULE_ABOUT: Partial<Record<ModuleFlag, string>> = {
   today_action_center: 'The shared Action Center on Today. On by default; the variable is kept as a rollback.',
   offline_engine_tasks: 'Personal actions through the offline-sync engine. Actions only, on purpose.',
@@ -84,13 +110,19 @@ const humanise = (name: string): string => {
 
 interface Row {
   id: string;
-  group: 'Experience' | 'Module';
+  group: 'Experience' | 'Module' | 'Toolkit' | 'Community' | 'Language';
   label: string;
   state: FeatureState;
   about?: string;
 }
 
-export function flagRows(experience: ExperienceFlags, modules: ModuleFlags): Row[] {
+export function flagRows(
+  experience: ExperienceFlags,
+  modules: ModuleFlags,
+  toolkit: ToolkitFlags,
+  community: CommunityFlags,
+  language: FeatureState,
+): Row[] {
   const rows: Row[] = [
     ...(Object.keys(FLAG_LABELS) as (keyof ExperienceFlags)[]).map((key) => ({
       id: `experience.${key}`,
@@ -106,6 +138,23 @@ export function flagRows(experience: ExperienceFlags, modules: ModuleFlags): Row
       state: modules[name],
       about: MODULE_ABOUT[name],
     })),
+    ...(Object.keys(TOOLKIT_LABELS) as (keyof ToolkitFlags)[]).map((key) => ({
+      id: `toolkit.${key}`,
+      group: 'Toolkit' as const,
+      label: TOOLKIT_LABELS[key].label,
+      state: toolkit[key],
+      about: (UNBUILT as readonly string[]).includes(key) ? UNBUILT_ABOUT : TOOLKIT_LABELS[key].about,
+    })),
+    ...(Object.keys(COMMUNITY_FLAG_SPECS) as CommunityFlag[]).map((key) => ({
+      id: `community.${key}`,
+      group: 'Community' as const,
+      label: `Community: ${communityWords(key)}`,
+      state: community[key],
+      about: COMMUNITY_FLAG_SPECS[key].highRisk
+        ? `${COMMUNITY_FLAG_SPECS[key].purpose} High risk: never follows the preview default, and production is refused.`
+        : COMMUNITY_FLAG_SPECS[key].purpose,
+    })),
+    { id: 'language', group: 'Language', label: 'Language', state: language },
   ];
   return rows.sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state] || a.label.localeCompare(b.label));
 }
@@ -122,15 +171,24 @@ export function Releases({
   filter,
   experience = EXPERIENCE_FLAGS,
   modules = MODULE_FLAGS,
-}: Pick<ViewProps, 'env' | 'filter'> & { experience?: ExperienceFlags; modules?: ModuleFlags }) {
-  const all = flagRows(experience, modules);
+  toolkit = TOOLKIT_FLAGS,
+  community = COMMUNITY_FLAGS,
+  language = LANGUAGE_FLAG,
+}: Pick<ViewProps, 'env' | 'filter'> & {
+  experience?: ExperienceFlags;
+  modules?: ModuleFlags;
+  toolkit?: ToolkitFlags;
+  community?: CommunityFlags;
+  language?: FeatureState;
+}) {
+  const all = flagRows(experience, modules, toolkit, community, language);
   const rows = all.filter((r) => matches(filter, r.label, r.id, STATE_WORD[r.state], r.group, r.about));
   const live = all.filter((r) => r.state !== 'off').length;
 
   return (
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
       <Notice>
-        Read-only. These are the states this {env.toLowerCase()} build was made with. A flag is fixed when the build is made, and a school’s own
+        Read-only. These are the states this {env.toLowerCase()} build was made with, from the experience, module, toolkit and community flag registries and the language flag. A flag is fixed when the build is made, and a school’s own
         policy can narrow it further at run time, so nothing here changes either. To change one, set its build variable and make a new build.
       </Notice>
       <SectionLabel aside={`${live} of ${all.length} not off`}>Feature flags</SectionLabel>

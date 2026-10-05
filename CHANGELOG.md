@@ -30,7 +30,7 @@ Fields that take someone else's email address (an email's To, Cc and Bcc, a cont
 
 ### The operations console has a Releases and flags tab
 
-For operators holding the console grant: a new **Releases and flags** tab, between Finance model and Evidence, lists every feature flag and the state this build was made with — Off, Preview, Sandbox or On in production — most live first, with a filter box. It is read-only: a flag is fixed when a build is made, so there is nothing to switch here, and the tab says so. A flag the registry does not describe says that instead of guessing. Nothing else in the console moves, and you do not have to do anything.
+For operators holding the console grant: a new **Releases and flags** tab, between Finance model and Evidence, lists the feature flags this build was made with (the experience, module, toolkit and community flags, and the language flag) and the state of each — Off, Preview, Sandbox or On in production — most live first, with a filter box. It is read-only: a flag is fixed when a build is made, so there is nothing to switch here, and the tab says so. A flag the registry does not describe says that instead of guessing. Nothing else in the console moves, and you do not have to do anything.
 
 ### Forms that find several problems now list them together
 
