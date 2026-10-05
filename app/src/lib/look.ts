@@ -107,6 +107,7 @@ export const ACCENTS: Accent[] = [
   { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#b69291', shade: '#6f3f3f' },
   { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#98a380', shade: '#4f5a37' },
   { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#969bbd', shade: '#454a72' },
+  { id: 'semester', label: 'Semester indigo', base: '#a5b4fc', bright: '#c7d2fe', deep: '#8f9cf0', shade: '#4338ca' },
   { id: 'gold', label: 'Old gold', base: '#d6c089', bright: '#efe1bc', deep: '#b19d72', shade: '#695a2f' },
 ];
 
@@ -447,6 +448,17 @@ export const GROUNDS: Ground[] = [
     dimAlpha: 0.7,
     // As Parchment above: 0.52 is the floor a faint label needs here.
     faintAlpha: 0.52,
+  },
+  {
+    id: 'semester',
+    label: 'Semester',
+    blurb: 'Cool slate and white, with indigo for the one action that matters.',
+    light: true,
+    // Muted surface, page, then the white surface every card and field sits on.
+    ramp: ['#f1f5f9', '#f8fafc', '#ffffff', '#ffffff', '#ffffff'],
+    fg: '#0f172a',
+    dimAlpha: 0.8,
+    faintAlpha: 0.62,
   },
 ];
 
