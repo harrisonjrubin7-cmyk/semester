@@ -125,7 +125,7 @@ dated evidence, then the document**, and the disagreement is a row in the
   rows**; the company site has two public stacks. They were linked from the
   register, not otherwise reconciled.
 
-No landed commit applied branch protection, fixed `fetchcal`, built the
+No landed commit applied branch protection, fixed `fetchcal` (that is the follow-up PR to this one), built the
 cross-tenant sweep, or created a `docs/finish-line/`. The grep for those was run
 again immediately before pushing.
 

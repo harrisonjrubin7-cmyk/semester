@@ -31,6 +31,48 @@
  * against the same list, and this is the copy with the tests.
  */
 
+// --- host rule: begin (identical in publichost.ts and fetchcal/index.ts; hostrule.test.ts holds them equal)
+
+/**
+ * The eight 16-bit groups of an IPv6 literal, or null if `h` is not one.
+ *
+ * A URL's `hostname` always arrives with an embedded IPv4 address already
+ * rewritten to hex (`[::ffff:169.254.169.254]` becomes `[::ffff:a9fe:a9fe]`),
+ * so the dotted form can only be recognised by text that no URL ever produces.
+ * Reading the groups is what makes the rule see the address that will be dialled.
+ */
+function v6Groups(h: string): number[] | null {
+  if (!h.includes(':')) return null;
+  let s = h;
+  const dotted = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(s);
+  if (dotted) {
+    const o = dotted.slice(1).map(Number);
+    if (o.some((n) => n > 255)) return null;
+    s = s.slice(0, dotted.index) + ((o[0] << 8) | o[1]).toString(16) + ':' + ((o[2] << 8) | o[3]).toString(16);
+  }
+  const parts = s.split('::');
+  if (parts.length > 2) return null;
+  const head = parts[0] ? parts[0].split(':') : [];
+  const rest = parts.length === 2 && parts[1] ? parts[1].split(':') : [];
+  const fill = parts.length === 2 ? 8 - head.length - rest.length : 0;
+  if (fill < 0) return null;
+  const all = [...head, ...Array<string>(fill).fill('0'), ...rest];
+  if (all.length !== 8 || !all.every((g) => /^[0-9a-f]{1,4}$/.test(g))) return null;
+  return all.map((g) => parseInt(g, 16));
+}
+
+/** Whether an IPv4 address, given by its first two octets, is private, loopback, link-local or shared. */
+function privateV4(a: number, b: number): boolean {
+  if (a === 10 || a === 127 || a === 0) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  // 169.254.0.0/16 — link-local, and where every cloud keeps its metadata.
+  if (a === 169 && b === 254) return true;
+  // 100.64.0.0/10 — carrier-grade NAT, and what Tailscale hands out.
+  if (a === 100 && b >= 64 && b <= 127) return true;
+  return false;
+}
+
 /** Hosts nothing on the public internet is called, refused by name and by literal. */
 export function privateHost(host: string): boolean {
   const h = host.toLowerCase().replace(/^\[|\]$/g, '');
@@ -40,23 +82,26 @@ export function privateHost(host: string): boolean {
   // IPv6: loopback, the unspecified address, and the unique-local and
   // link-local blocks.
   if (h === '::1' || h === '::' || /^f[cd][0-9a-f]{2}:/.test(h) || /^fe80:/.test(h)) return true;
-  // An IPv4 address written inside IPv6, which is the same machine by another
-  // spelling: ::ffff:127.0.0.1.
-  const mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(h);
-  if (mapped) return privateHost(mapped[1]);
-  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
-  if (v4) {
-    const [a, b] = [Number(v4[1]), Number(v4[2])];
-    if (a === 10 || a === 127 || a === 0) return true;
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    // 169.254.0.0/16 — link-local, and where every cloud keeps its metadata.
-    if (a === 169 && b === 254) return true;
-    // 100.64.0.0/10 — carrier-grade NAT, and what Tailscale hands out.
-    if (a === 100 && b >= 64 && b <= 127) return true;
+  const g = v6Groups(h);
+  if (g) {
+    const zero = (from: number, to: number) => g.slice(from, to).every((x) => x === 0);
+    const low = () => privateV4(g[6] >> 8, g[6] & 255);
+    // An IPv4 address carried inside IPv6 is the same machine by another
+    // spelling: ::ffff:a.b.c.d (mapped), ::a.b.c.d (compatible) and
+    // 64:ff9b::a.b.c.d (NAT64) in the last 32 bits, 2002:aabb:ccdd:: (6to4) in
+    // bits 16 to 48.
+    if (zero(0, 5) && g[5] === 0xffff) return low();
+    if (zero(0, 6)) return low();
+    if (g[0] === 0x64 && g[1] === 0xff9b && zero(2, 6)) return low();
+    if (g[0] === 0x2002) return privateV4(g[1] >> 8, g[1] & 255);
+    return false;
   }
+  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
+  if (v4) return privateV4(Number(v4[1]), Number(v4[2]));
   return false;
 }
+
+// --- host rule: end
 
 /**
  * A calendar address this may fetch, or why not.

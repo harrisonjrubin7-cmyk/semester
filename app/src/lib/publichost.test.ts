@@ -33,6 +33,47 @@ describe('privateHost', () => {
     expect(privateHost('2606:4700::1111')).toBe(false);
   });
 
+  /**
+   * A URL's `hostname` rewrites an IPv4 address carried inside IPv6 to hex:
+   * `https://[::ffff:169.254.169.254]/` arrives as `[::ffff:a9fe:a9fe]`. The rule used to recognise
+   * only the dotted spelling, which no URL produces, so the cloud metadata address and loopback
+   * passed as "public" through this form. These go through `new URL` the way a request does.
+   */
+  describe('an IPv4 address carried inside IPv6, as a URL spells it', () => {
+    const viaUrl = (literal: string) => new URL(`https://[${literal}]/x`).hostname;
+
+    it.each([
+      ['mapped loopback', '::ffff:127.0.0.1'],
+      ['mapped cloud metadata', '::ffff:169.254.169.254'],
+      ['mapped private 10/8', '::ffff:10.0.0.1'],
+      ['mapped private 192.168/16', '::ffff:192.168.1.1'],
+      ['mapped, already hex', '::ffff:a9fe:a9fe'],
+      ['compatible loopback', '::127.0.0.1'],
+      ['compatible cloud metadata', '::169.254.169.254'],
+      ['NAT64 of cloud metadata', '64:ff9b::169.254.169.254'],
+      ['NAT64 of loopback', '64:ff9b::7f00:1'],
+      ['6to4 of cloud metadata', '2002:a9fe:a9fe::1'],
+      ['6to4 of loopback', '2002:7f00:1::'],
+    ])('refuses %s', (_name, literal) => {
+      expect(privateHost(viaUrl(literal)), `${literal} -> ${viaUrl(literal)}`).toBe(true);
+    });
+
+    it.each([
+      ['mapped public', '::ffff:8.8.8.8'],
+      ['NAT64 of a public address', '64:ff9b::808:808'],
+      ['6to4 of a public address', '2002:808:808::1'],
+      ['an ordinary global address', '2606:4700::1111'],
+      ['a documentation-range address', '2001:db8::1'],
+    ])('still allows %s', (_name, literal) => {
+      expect(privateHost(viaUrl(literal)), `${literal} -> ${viaUrl(literal)}`).toBe(false);
+    });
+
+    it('goes through publicCalendarUrl the way a request does', () => {
+      expect(publicCalendarUrl('https://[::ffff:169.254.169.254]/latest/meta-data/').ok).toBe(false);
+      expect(publicCalendarUrl('https://[::ffff:7f00:1]:8443/').ok).toBe(false);
+    });
+  });
+
   it('refuses the names a local network hands out', () => {
     expect(privateHost('printer.local')).toBe(true);
     expect(privateHost('db.internal')).toBe(true);
