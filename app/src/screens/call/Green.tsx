@@ -247,6 +247,7 @@ export function Green({
       <SectionLabel>What they will call you</SectionLabel>
       <input
         aria-label="What the call shows as your name"
+        autoComplete="nickname"
         className="input"
         value={name}
         onChange={(e) => setName(e.target.value)}
