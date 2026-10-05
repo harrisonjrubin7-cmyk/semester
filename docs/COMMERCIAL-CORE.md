@@ -5,8 +5,12 @@ renew. Schema: `supabase/migrations/20260929070000_commercial_core.sql`.
 Proof: `supabase/commercial.check.sql` (29 checks), plus the updated allowlists
 in `grants`, `capabilities` and `rls-coverage`. What runs it is below.
 
-Nothing here charges anyone yet. Stripe is wired but not connected: nothing
-happens until the secrets under "Off until the owner sets these" are set. The
+Individual Semester Plus billing was live-accepted on 2026-10-03
+([record](evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md)); checkout stays held
+by the governed acquisition control, the $59 annual charge, refunds, failed
+renewals and disputes were not exercised, and nothing here charges an
+institution. Each function still answers 503 until its secrets under "Off until
+the owner sets these" are set. The
 seed priced Plus at $3.99/month and $29.99/year; `20260929131000_plus_price.sql`
 retired those rows and set Plus at $7.99/month and $59/year (D-134), the
 figures the pricing page prints. `plans.test.ts` holds the two to each other.
@@ -55,6 +59,7 @@ signup → Free (no subscription row needed)
 
 ```
 payment fails        → subscription past_due, one open dunning_case, action 'notice'
+tax needs an address → subscription stays active, `billing_issue = address_required`, no dunning
 further failures     → same case, action 'retry'
 grace (14 days)      → paid features keep working
 final notice         → exact restriction date sent (worker writes 'final_notice')
@@ -79,8 +84,13 @@ role's alone; nothing is callable by a visitor or a signed-in account.
    it, hashes the body, and applies the event: `checkout.session.completed` →
    `complete_checkout`; `customer.subscription.*` → `sync_provider_subscription`
    (an older event never overwrites a newer one); `invoice.paid` /
-   `invoice.payment_failed` → `upsert_provider_invoice` then
-   `apply_payment_event`; refunds and disputes by kind. `apply_payment_event`
+   `invoice.payment_failed` / `invoice.finalization_failed` →
+   `upsert_provider_invoice_v2` (subtotal and tax separately) then
+   `apply_payment_event`; a missing tax address is kept distinct from a card
+   failure, leaves access active, and asks the student to update their address
+   in Stripe without opening dunning. The issue is tied to that invoice, so an
+   unrelated invoice cannot clear it. Failed finalization remains `draft` until
+   a later provider event advances it. Refunds and disputes are applied by kind. `apply_payment_event`
    runs last and is the idempotency key, so a half-applied event is finished by
    the provider's retry. An invoice event that arrives before the checkout
    event that creates its subscription is answered 500 with nothing recorded,
@@ -158,20 +168,23 @@ or leads go unanswered.
 
 | Secret | Function | What it does |
 | --- | --- | --- |
-| `STRIPE_SECRET_KEY` (preferred), `STRIPE_API_KEY` (legacy deployed name) | billing-checkout, billing-cancel | Stripe secret key. The functions prefer the canonical name and fall back to the legacy name; if neither is set, checkout and cancel answer 503 |
+| `STRIPE_SECRET_KEY` (preferred), `STRIPE_API_KEY` (legacy deployed name) | billing-checkout, billing-cancel, billing-portal | Stripe secret key. The functions prefer the canonical name and fall back to the legacy name; if neither is set, checkout, cancel and billing history answer 503 |
 | `STRIPE_WEBHOOK_SECRET` | billing-webhook | The webhook endpoint's signing secret. Unset: webhook answers 503 |
-| `ALLOWED_ORIGIN` | billing-checkout, billing-cancel | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
+| `ALLOWED_ORIGIN` | billing-checkout, billing-cancel, billing-portal | The app's origin(s), comma-separated, read strictly (unset or `*` allows nobody) |
 | `SITE_ORIGINS` | lead-intake | Origins to add, comma-separated. The site's own are built in (`SITE_PRODUCTION_ORIGINS`), so unset adds nothing and still serves the site |
 | `RESEND_API_KEY` | lead-intake | Resend key; with `LEAD_NOTIFY_EMAIL`, every lead is emailed |
 | `LEAD_NOTIFY_EMAIL` | lead-intake | The owner's inbox: set it to `harrisonjrubin7@gmail.com`. Configuration, never code |
 | `LEAD_NOTIFY_FROM` | lead-intake | Optional: a verified Resend sender (default Resend's onboarding sender, which only delivers to the Resend account's own address) |
-| `CHECKOUT_RETURN_URL` | billing-checkout | Optional: where Stripe returns the student (default: the calling origin) |
+| `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | App route where Stripe returns the student. Activation supplies the production Account route; the portal refuses to fall back to an origin root |
+| `STRIPE_PORTAL_CONFIGURATION_ID` | billing-portal | Active `bpc_…` configuration created or selected by the activation tool; sessions always name it explicitly |
+| `STRIPE_PRODUCT_TAX_CODE` | billing-checkout | Owner/accountant-approved `txcd_…` classification for Semester Plus software; sent on every inline Stripe Product and required before checkout opens |
+| `BILLING_LIVE_ENABLED` | billing-checkout | Explicit operations setting. `false` closes checkout; `true` is necessary but cannot override the current code-level paid-acquisition hold. The activation tool keeps it false while credentials, tax code, and provider inventory are changing |
 | `LEAD_IP_SALT` | lead-intake | Optional: the key the IP address is hashed with (default: the service key) |
 
 The Stripe webhook to register (Developers → Webhooks) is
 `https://<project-ref>.supabase.co/functions/v1/billing-webhook` with
 `checkout.session.completed`, `customer.subscription.updated`,
-`customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
+`customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `invoice.finalization_failed`,
 `charge.refunded` and `charge.dispute.created`. The two jobs are in
 `supabase/scheduler.sql`, applied by hand like the rest of that file.
 
@@ -187,7 +200,8 @@ Before the first live charge, what was open is closed:
   on the Account screen.
 - **The financial-retention period is seven years** after the end of the year
   a record was made (D-132), enforced by `purge_financial_records()` — below.
-  The consent wording the app sends is versioned `plus-v1`.
+  The consent wording the app sends is versioned `plus-v2`; it names applicable
+  sales tax shown before purchase as well as the recurring catalog price.
 
 ## Financial retention
 

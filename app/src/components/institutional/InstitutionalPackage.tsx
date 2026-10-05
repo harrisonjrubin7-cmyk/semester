@@ -6,7 +6,7 @@ export function InstitutionalPackage() {
   return (
     <section aria-label="Semester Institutional package">
       <SectionLabel>{INSTITUTIONAL_PACKAGE.name}</SectionLabel>
-      <h2 style={{ marginBlock: 'var(--sp-3)' }}>Replace the LMS and gradebook without a big-bang cutover</h2>
+      <h2 style={{ marginBlock: 'var(--sp-3)' }}>Add a governed student operating layer without replacing systems of record</h2>
       <p>{INSTITUTIONAL_PACKAGE.promise}</p>
       <Notice>
         The package simplifies buying, not governance. Data access, write authority and the change of system of record

@@ -17,7 +17,7 @@
 **Who we are:** [DECIDE: legal entity name — e.g. "Semester, LLC", a Tennessee
 limited liability company — or the individual operator's name until one is
 formed] ("Semester", "we"). Contact: harrisonjrubin7@gmail.com
-[DECIDE: replace with a dedicated support and privacy address before launch].
+[COUNSEL REQUIRED: this is the owner's personal mailbox; no dedicated support and privacy address is decided (P-20)].
 
 ## 1. The short version
 
@@ -110,7 +110,7 @@ needs.
 | Vercel | Runs the institutional gateway | Only for school deployments |
 | Anthropic | AI answers, when you use AI features without your own key | Only when you press an AI button |
 | Stripe | Payments for a paid plan: the checkout page you type your card into, and recurring billing. Semester never sees your card | Only if you subscribe to a paid plan |
-| Resend | Delivers the message you send through a form on Semester's website to our team | Only when you send such a form |
+| Resend | Delivers a company-site form to our team; sends a generic notice to your account email when Semester support replies (the reply body and app context stay in Semester) | Only when you send such a form, or support replies to your in-app question |
 
 **Services you or your school choose to connect.** These receive information
 only because you, or your school, turned them on:
@@ -165,7 +165,7 @@ and change there first.]
 - **Correct**: edit anything you entered, in the app.
 - **Stop syncing**: sign out. The app keeps working on your device.
 - **Ask us**: email the address above. We will answer within
-  [DECIDE: e.g. 30] days.
+  [COUNSEL REQUIRED: no response time is decided; do not publish a number until counsel sets it (P-03)] days.
 
 Depending on where you live, you may have further rights, such as to know,
 access, correct, delete or port your information, or to object to or limit
@@ -180,9 +180,12 @@ will help your school respond.
 ## 8. Children
 
 Semester is not directed to children under 13, and we do not knowingly
-collect personal information from them. [DECIDE with counsel: the minimum age
-in the Terms (13 or 18), whether a sign-up age question is needed, and how
-dual-enrollment students who are minors are handled — see COPPA-1 to COPPA-5
+collect personal information from them. The product's recorded setting is a
+minimum age of 13, enforced when an age is stated (D-139), and a student aged
+13 to 17 is kept out of the features where strangers reach them. [COUNSEL
+REQUIRED: whether 13 stays the minimum age in the Terms or becomes 18,
+whether a sign-up age question is needed for everyone, and how dual-enrollment
+students who are minors are handled — see COPPA-1 to COPPA-5
 in `docs/FERPA-COPPA-1EDTECH-READINESS.md`.] If you believe a child under 13
 has given us information, contact us and we will delete it.
 

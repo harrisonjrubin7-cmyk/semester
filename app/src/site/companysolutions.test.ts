@@ -15,7 +15,8 @@ import { mayTakeDistrictData } from '../lib/k12/edition';
 
 const root = join(__dirname, '..', '..', '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
-const SITE = 'company-site/index.html';
+const SITE = 'company-site/site.js';
+const SITE_HTML = 'company-site/index.html';
 const cut = (html: string) => html.slice(html.indexOf(START), html.indexOf(END) + END.length);
 
 describe('the copy in the company site', () => {
@@ -97,7 +98,7 @@ describe('what the pages say', () => {
   });
 
   it('is reachable: a route key, the dropdown, the footer, and the sitemap', () => {
-    const html = read(SITE);
+    const html = read(SITE_HTML);
     expect(Object.keys(SOLUTIONS).sort()).toEqual(['advancement', 'k12']);
     expect(html).toContain('<a href="#k12"><b>K–12 (planned)</b>');
     expect(html).toContain('<a href="#advancement"><b>Advancement (planned)</b>');

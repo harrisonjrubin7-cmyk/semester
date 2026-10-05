@@ -258,7 +258,7 @@ export function Chat() {
                     i === talk.turns.length - 1 && !talk.busy ? (
                       <>
                         {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
-                          <IntelligenceDisclosure response={talk.response} />
+                          <IntelligenceDisclosure response={talk.response} onAskHuman={() => dispatch({ type: 'go', screen: 'help' })} />
                         ) : (
                           <Using read={talk.read} />
                         )}

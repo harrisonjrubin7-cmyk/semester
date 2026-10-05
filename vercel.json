@@ -1,0 +1,45 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "app": {
+      "root": "app",
+      "framework": "vite"
+    },
+    "workflow-lab": {
+      "root": "workflow-lab",
+      "framework": "nextjs",
+      "installCommand": "npm ci",
+      "buildCommand": "npm run build"
+    },
+    "company-site": {
+      "root": "company-site"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "(www\\.)?semester\\.website" }],
+      "destination": {
+        "service": "company-site"
+      }
+    },
+    {
+      "source": "/lab",
+      "destination": {
+        "service": "workflow-lab"
+      }
+    },
+    {
+      "source": "/lab/(.*)",
+      "destination": {
+        "service": "workflow-lab"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "app"
+      }
+    }
+  ]
+}

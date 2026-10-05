@@ -174,7 +174,10 @@ rescheduled at a different retention than the one written here, goes red there.
 
 Every remaining table is kept for the life of the account and removed when the
 account is deleted. That path is `deleteEverything` in `app/src/lib/cloud.ts`,
-which sends one delete per table under row-level security, and it is checked two
+which calls the `delete-account` function with the student's own token; the
+function runs `public.erase_account` (every row naming the account, in one
+transaction, refused up front when a legal hold covers the account) and then
+deletes the sign-in. The per-table list is checked two
 ways: `app/src/lib/privacy.test.ts` reads every module that writes a table and
 fails if one is missing from the list, and `supabase/deletion.check.sql` proves
 the policies actually permit each delete against a real Postgres.
@@ -266,6 +269,9 @@ behind and a client that believes it succeeded.
 | `ai_usage_reservation` | **five minutes against budget; physically removed after the tenant AI policy's retention-days setting** | metadata-only provider budget reservations. A crashed request stops counting after its explicit expiry; the same daily cleanup removes settled, released and expired rows, with no prompt or academic content stored |
 | `student_context`, `term_plan_courses`, `registration_time_tickets`, `seat_watches`, `graduation_scenarios`, `cost_plans`, `ai_memories`, `weekly_checkins`, `contact_channels`, `onboarding_progress`, `study_match_optins` | account deletion | the student's own planning, preferences and reminders, from `20260926150000_expansion_roles_and_features.sql`. Each is readable and deletable only by its owner (study opt-ins also by other opted-in students in the same section; onboarding progress also by an accepted, unexpired peer mentor). `study_match_optins` also lapses from view after its own expires_at |
 | `productivity_workspace` | account deletion, by explicit erasure and foreign-key cascade from `auth.users` | the student's private productivity workspace and opt-in aggregate-sharing choice. The row is readable and writable only by its owner. Private workspace content is never returned by the institutional aggregate function; when sharing is enabled, that function returns only cohort counts and refuses cohorts smaller than ten |
+| `productivity_task`, `productivity_event` | account deletion, by foreign-key cascade from `auth.users`; a deleted record is kept as a tombstone (`deleted_at`) so the sync feed can tell a device it is gone, and goes with the account | a student's tasks and calendar events, written only through the command API (`app/server/productivity/`, `docs/API-PLATFORM.md`) and readable directly only by their owner while their membership is active; a share to anyone else is decided by the policy decision point and audited, never by a row policy. From `20261004123000_productivity_commands.sql`. **Nothing writes to them yet** — no route is mounted. They are in lti_account_untouched (migration 20261004181000); the account export and erasure walk the foreign keys to `auth.users` and so already carry them, which `productivity-commands.check.sql` proves |
+| `productivity_command` | **35 days** after the command was applied, by `private.productivity_sweep_commands()` — **not yet scheduled**; with the account by cascade | the idempotency ledger: a command id, a hash of the request and the outcome, no content. Operational, not evidence (the evidence is the `audit_event` row and the outbox event, which this does not touch). Kept five days longer than the 30 days a queued command may be replayed, so no command that could still arrive has lost its record |
+| `productivity_owner_seq` | with the account, by foreign-key cascade | a counter per tenant and person that makes the change feed's sequence gapless. No content |
 | `transfer_evaluations` | account deletion | the student's estimate or request. The institution's decision arrives through the service role and goes with the account |
 | `account_ages` | account deletion, by foreign key to `auth.users` | whether the account is under 13 or a minor, and the day a minor turns 18 — never the date of birth, which the sign-up trigger strips from the account's metadata. Stated once, never changed (D-139) |
 | `skill_records` | account deletion | a skill the student recorded and, if they asked, who verified it. The verifier's deletion clears verified_by and leaves the record |
@@ -292,12 +298,12 @@ behind and a client that believes it succeeded.
 | `course_demand_snapshots`, `outcome_aggregates` | **replaced on every refresh; removed with the school** | aggregates of ten or more students, enforced by a check constraint, counting only students who opted in (since D-051, only while their `demand_consents` row is live). No row names a person, so no account's deletion takes one — the next refresh simply counts one fewer |
 | `help_destinations` | **kept until an implementer retires it or the school is removed** | which offices a university chose to reach through Semester, their official link and hours. Institutional configuration, not a student's data |
 | `help_requests`, `help_request_events` | account deletion (through its own function, since no API role may delete these rows), or the destination's or school's removal; events go with their request | a question the student wrote, the named context fields they ticked, and the display name and confirmed email shown to them when they sent it (requests from before that snapshot existed were filled from the identity they would have shown). Withdrawal — at any status, closed included — empties all of those at once and leaves only the fact and dates; the events are the student's record of every open and answer. **No time-based purge of closed requests exists yet** — a university that needs one must set the period before production |
-| `support_tickets`, `support_ticket_messages` | account deletion (through forget_my_support_tickets(), since no API role holds any grant on these rows); messages go with their ticket | a question the student wrote to Semester's own support, the app details they ticked from a closed list of six (version, device class, screen name, signed in, sync state, offline), and the replies. Support staff read these through functions that return no account id, name or address. **No time-based purge of closed tickets exists yet** — the period must be set before a production launch opens them |
+| `support_tickets`, `support_ticket_messages`, `support_notification_outbox` | account deletion (through forget_my_support_tickets(), since no API role holds any grant on these rows); messages and their delivery intents go with their ticket | a question the student wrote to Semester's own support, the app details they ticked from a closed list of six (version, device class, screen name, signed in, sync state, offline), the replies, and the retry/acceptance state for each generic email notice. The outbox stores no email address or message body. Support staff read tickets through functions that return no account id, name or address. **No time-based purge of closed tickets exists yet** — the period must be set before a production launch opens them |
 | `integration_connections`, `integration_scopes`, `integration_mappings` | **kept until an integration administrator removes it or the school is removed** | institutional configuration. The owner's or approver's account deletion clears owner_account_id / approved_by and leaves the row. No credential is stored — credentials_reference is a pointer into a secret manager, and revoking there is the disconnect |
 | `integration_sync_runs`, `integration_sync_errors`, `integration_webhook_events`, `integration_dead_letter_events` | **runs and errors 180 days; events 30 days after processing; dead letters 90 days after resolution — by the integration retention sweep, skipped for a connection on legal hold; all go with the connection or the school** | operational logs: counts, categories, sanitized messages, payload *hashes and references* — never a payload, never an external id in the clear. The sweep runs daily at 03:29 UTC as the integration-retention job in supabase/scheduler.sql (INTEGRATION-OPERATOR-RUNBOOK.md §8) |
 | `source_records`, `source_freshness_events` | **kept until the school is removed** | where an institutional fact comes from and how fresh it was. Classified T0–T3 only; nothing T4+ can be stored |
 | `source_snapshots` | **retention_expires_at when set, removed by the sweep; otherwise with its source record** | a content *hash* and a storage reference, never the content |
-| `canonical_entity_references` | **account deletion of the subject, by cascade, or deleted by the student at any time from the privacy page; tenant-wide rows with the school** | provenance for one imported fact. A row about one student has subject_user_id, is readable only by that student, and goes with their account. Tenant-wide rows (a term, a catalog entry) name nobody. A row the source deleted is kept 30 days, values cleared, then swept. |
+| `canonical_entity_references` | **account deletion of the subject, by cascade, or deleted by the student at any time from the privacy page; tenant-wide rows with the school** | provenance for one imported fact. A row about one student has subject_user_id, is readable only by that student, and goes with their account. Tenant-wide rows (a term, a catalog entry) name nobody. Adapter-backed rows carry a server-declared retentionExpiresAt and are removed by the daily integration-retention sweep once it passes; source-deleted rows are also removed after 30 days. Connection holds and central account, tenant or platform legal holds skip both deadlines until released. The sweep still visits surviving rows after a connection is removed. Legacy rows without a valid deadline and direct LTI tenant-lifetime references retain the account/school lifecycle policy. |
 | `feature_kill_switch`, `data_classification_rules` | **kept until changed or the school is removed** | safety configuration. Engaging a switch records who (engaged_by, cleared on their account deletion) and why; every change to a school row is kept in `tenant_policy_audit_event` |
 | `governance_policy_nodes` | **kept until changed or removed, or the school is removed** | institutional configuration. A system node belongs to no school and is kept until the platform removes it. A node with children cannot be removed until they are. The creator's account deletion clears created_by and leaves the node. Every change to a school's node is kept in `tenant_policy_audit_event` |
 | `governance_steward_assignments` | **kept until the school is removed**; no API role may delete one | the name of the staff member who holds a stewardship role, and optionally their account. Revoking keeps the row, because the record of who was accountable, and when, is the point. Deleting that person's account clears person_account and assigned_by but **keeps the name they held the role under**. **No time-based purge of revoked assignments exists yet**, and a university that needs one must set the period before production |
@@ -465,6 +471,13 @@ not written, and a published row is kept until it is. It is owed before the
 first producer lands, and ADR 0008 says so; this entry is so that the producer
 cannot land without somebody reading this.
 
+The first producer has now been written — the productivity command service,
+which appends an event in the same transaction as every change
+(`app/server/productivity/`, `private.productivity_commit`) — but it is not
+mounted, so the tables are still empty. **The sweep is owed before it is.** It
+also wants a retry delay (next_attempt_at) and SKIP LOCKED before a
+publisher runs against a real bus; `docs/API-PLATFORM.md` §4.4 says what.
+
 ## Legal holds
 
 A hold is the one instruction a clock has to obey. `supabase/migrations/20260930100000_legal_holds.sql`
@@ -496,13 +509,29 @@ on both sides of its line.
   an account in a held school: restrictions, safety entries, posts, reports,
   hosted sessions, volunteer tasks and uploaded images, and a case while its
   post's author or a reporter is held.
+- **What it also keeps, in the last three sweeps.**
+  20261004150000_holds_reach_the_last_three_sweeps.sql added the clause to three
+  functions that deleted without asking, found by reading every function that says
+  `delete from` and is named like a sweep, a purge or an erasure:
+  `sweep_tombstones()` keeps the deleted work of a held account, or of one in a held
+  school (the deletion is not undone; the physical removal waits for the release);
+  `purge_financial_records()` keeps everything of an individual subscriber while the
+  account that owns it is held, and a billing account with no owner left (which an
+  account hold cannot name) follows the platform hold only; and
+  `gateway_purge_journal()` keeps a held school's review, audit, intelligence-audit
+  and action rows, and a held account's when the actor is that account's id (the
+  actor is text, so it is cast only when it reads as a UUID). The one-day
+  `gateway_rate_limit` window is replay protection, not a record, and is
+  unconditional. `supabase/hold-blind-sweeps.check.sql` runs each against a held
+  and an unheld twin and checks that a release lets the next sweep remove what
+  was kept; `retention.test.ts` holds each one's last definition to its clauses.
 - **What it does not stop yet.** The escalation deliveries and the volunteer
-  programme's events carry no account and follow the platform gate only; there
-  is no financial sweep to gate; and on-device deletion is not hold-aware. The
-  AI, restriction and safety-entry deletes are exercised against real rows; the
-  rest carry the same clause and are held to it by a test, not exercised.
-  Maturity rows RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed,
-  for that reason.
+  programme's events carry no account and follow the platform gate only; and
+  on-device deletion is not hold-aware. The provider's backups are not reached
+  by a hold either (see *Backups* below). The AI, restriction and safety-entry
+  deletes, and the three above, are exercised against real rows; the rest carry
+  the same clause and are held to it by a test, not exercised. Maturity rows
+  RM-02, RM-04, RM-05 and RM-08 are partly answered, not closed, for that reason.
 
 ## Backups: the provider's copies, and how long a deleted row outlives its deletion
 
@@ -577,8 +606,9 @@ reopen the choice with the legal drafts.
 
 **Not yet true.** No drill has restored production data, so the recovery point
 and time in `RESTORE.md` are unmeasured; the 7 days is the tier's number, not
-one read off the dashboard on a date; and a legal hold, which would have to
-stop a backup expiring, does not exist (`RM-02`).
+one read off the dashboard on a date; and a legal hold does not yet reach the
+provider's backups. Legal holds exist for the live database (see *Legal holds*,
+above), but nothing stops a backup expiring under one (`RM-02`, `RM-04`).
 
 ## Changing any of this
 
@@ -598,3 +628,5 @@ stop a backup expiring, does not exist (`RM-02`).
 | `productivity_workspace` | Until the student deletes the cloud copy or deletes their account; no automatic expiry | Owner-scoped delete; foreign-key cascade when the authentication account is deleted |
 
 Cloud workspaces include private reflections and history. Sharing institution aggregate counts is opt-in, requires active membership, and is suppressed below ten consenting members. Administrators receive counts only. Device copies and exported files remain under the student's control. Source checks store no page bodies or URLs server-side.
+
+Connection legal holds also prevent deletion of the connection, including cascaded deletion, until the hold is explicitly released. This keeps the connection hold attached to its surviving evidence.

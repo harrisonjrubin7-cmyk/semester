@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "assessedAt": "2026-10-02",
+  "repositoryBaseline": "92eeafd9",
+  "allowedStatuses": ["BLOCKED", "INTERNAL", "DESIGN_PARTNER", "PILOT_READY", "GENERAL_AVAILABILITY", "ENTERPRISE_READY"],
+  "claimRule": "No status above DESIGN_PARTNER is valid without named-tenant or production evidence outside the repository.",
+  "capabilities": [
+    {"id":"account-auth","name":"Individual account creation and sign-in","status":"DESIGN_PARTNER","owner":"product","evidence":["app/src/lib/cloud.ts","app/src/lib/cloud.test.ts"],"blockers":["target-environment acceptance","in-force terms","staffed support"]},
+    {"id":"manual-setup","name":"Manual course, calendar, and task setup","status":"DESIGN_PARTNER","owner":"product","evidence":["app/src/screens","app/src/lib"],"blockers":["representative UAT","critical-path accessibility test"]},
+    {"id":"daily-planning","name":"Today, This Week, workload and next-action planning","status":"DESIGN_PARTNER","owner":"product","evidence":["docs/TODAY-ACTION-CENTER.md","docs/DECISION_PRODUCTIVITY_DELIVERY.md"],"blockers":["field outcome evidence"]},
+    {"id":"tenant-isolation","name":"Tenant and resource isolation","status":"DESIGN_PARTNER","owner":"security","evidence":["supabase","docs/SCHOOL-MEMBERSHIP-ENFORCEMENT.md"],"blockers":["named-tenant acceptance","independent review"]},
+    {"id":"role-access","name":"Role, capability, expiry, revocation and audit controls","status":"DESIGN_PARTNER","owner":"security","evidence":["docs/ROLE-PERMISSION-MATRIX.md","app/src/lib/capabilities.ts"],"blockers":["production access review"]},
+    {"id":"pilot-control-plane","name":"Pilot/cohort configuration and activation governance","status":"DESIGN_PARTNER","owner":"operations","evidence":["app/src/lib/gtm/pilot.ts","docs/ACTIVATION-CONTROL-PLANE.md"],"blockers":["named cohort","signed charter","operator acceptance"]},
+    {"id":"data-rights","name":"Data export, deletion, retention and offboarding","status":"DESIGN_PARTNER","owner":"privacy","evidence":["supabase/migrations/20260929010000_account_erasure_and_export.sql","docs/DATA-RIGHTS-REQUEST-RUNBOOK.md"],"blockers":["target-environment end-to-end evidence","backup exception verification"]},
+    {"id":"audit","name":"Privileged and sensitive-action audit trails","status":"DESIGN_PARTNER","owner":"security","evidence":["app/src/lib/audit.ts","supabase"],"blockers":["production sample and reviewer sign-off"]},
+    {"id":"degraded-mode","name":"Read-only, degraded and rollback controls","status":"DESIGN_PARTNER","owner":"engineering","evidence":["app/src/lib/readonly.ts","docs/DEGRADED-MODE-MAP.md","ROLLBACK.md"],"blockers":["production-path drill"]},
+    {"id":"support","name":"Customer support operations","status":"INTERNAL","owner":"success","evidence":["docs/market-readiness/SUPPORT_PLAYBOOK.md","docs/SUPPORT-RELIABILITY-AND-ABUSE-PREVENTION.md"],"blockers":["staffed queue","backup owner","response evidence"]},
+    {"id":"institutional-integrations","name":"Institutional SSO, SIS, LMS, registration and degree-audit connections","status":"BLOCKED","owner":"data","evidence":["docs/UNIVERSITY_CONNECTIONS.md","app/server/institution"],"blockers":["customer approval","live credentials","acceptance testing","support ownership"]},
+    {"id":"aggregate-reporting","name":"Privacy-conscious institutional aggregate reporting","status":"DESIGN_PARTNER","owner":"data","evidence":["docs/PRODUCT-ANALYTICS-DATA-ETHICS.md","app/src/lib/gtm/kpi.ts"],"blockers":["approved measures","live baseline","disclosure review"]},
+    {"id":"ai-assistance","name":"Governed learning assistance","status":"DESIGN_PARTNER","owner":"product","evidence":["docs/market-readiness/AI_GOVERNANCE.md","docs/AI-RECOMMENDATION-EVALUATION-HARNESS.md"],"blockers":["provider/data-use approval","target evaluation","operational oversight"]},
+    {"id":"high-impact-ai","name":"AI decisions in admissions, aid, discipline, grading or accommodations","status":"BLOCKED","owner":"product","evidence":["docs/ai-toolkit/CLINICAL-LEGAL-FINANCIAL-BOUNDARIES.md"],"blockers":["prohibited for the initial offer"]},
+    {"id":"institutional-contracting","name":"Paid institutional contracting","status":"BLOCKED","owner":"founder","evidence":["docs/trust/PILOT-AGREEMENT-OUTLINE.md","docs/trust/DPA-CHECKLIST.md"],"blockers":["counsel-approved paper","insurance decision","executed agreement"]},
+    {"id":"individual-ga","name":"Broad paid individual availability","status":"BLOCKED","owner":"founder","evidence":["docs/legal","docs/PUBLIC-SITE.md"],"blockers":["consumer legal approval","payments/tax/refund operations","support capacity"]},
+    {"id":"marketplace","name":"Provider marketplace, orders, payouts and partner access","status":"BLOCKED","owner":"founder","evidence":["docs/commercial/MARKETPLACE-AND-PARTNERSHIP-STRATEGY.md","docs/PLATFORM-CONSTITUTION.md"],"blockers":["no marketplace tables or flag","named owners and backups","staffed trust-and-safety queue","counsel-approved provider terms","payment processor and tax position","payout, refund and dispute runbooks rehearsed"]}
+  ]
+}

@@ -11,6 +11,7 @@ import { Library } from './sheet/Library';
 import { FUNCTIONS, fnDoc } from '../lib/functions';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
+import { HorizontalOverflow } from '../components/HorizontalOverflow';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
 import {
@@ -746,7 +747,8 @@ function Gallery({
   onTemplate: (id: string) => void;
 }) {
   return (
-    <div
+    <HorizontalOverflow
+      label="Start a new sheet"
       style={{
         display: 'flex',
         gap: 'var(--sp-4)',
@@ -793,7 +795,7 @@ function Gallery({
           <div style={{ ...secondLine(), fontSize: 'var(--type-xs)' }}>{template.says}</div>
         </Blueprint>
       ))}
-    </div>
+    </HorizontalOverflow>
   );
 }
 

@@ -70,8 +70,8 @@ export const PRESETS: readonly { id: string; label: string; blurb: string; look:
   {
     id: 'reading',
     label: 'Easier reading',
-    blurb: 'Larger text, more space between lines, and a shorter line length.',
-    look: { textSize: 'large', lineHeight: 'airy', readingWidth: 'narrow' },
+    blurb: 'Larger text, more space between lines, letters and words, and a shorter line length.',
+    look: { textSize: 'large', lineHeight: 'airy', textSpacing: 'open', readingWidth: 'narrow' },
   },
   {
     id: 'low-load',

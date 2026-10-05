@@ -5,19 +5,19 @@
 
 # Data inventory and lineage
 
-What the schema holds, read from a database built by applying every migration: **301 tables in `public`**. This is the *structural* inventory. Field-level classification, retention and the reason each table exists are in [RETENTION.md](../RETENTION.md) (a row per table, held in both directions by `retention.test.ts`), [operating-model/DATA-STEWARDSHIP.md](operating-model/DATA-STEWARDSHIP.md) (tiers T0–T6) and [DEFINER-RLS-REGISTER.md](DEFINER-RLS-REGISTER.md). This page does not restate them.
+What the schema holds, read from a database built by applying every migration: **302 tables in `public`**. This is the *structural* inventory. Field-level classification, retention and the reason each table exists are in [RETENTION.md](../RETENTION.md) (a row per table, held in both directions by `retention.test.ts`), [operating-model/DATA-STEWARDSHIP.md](operating-model/DATA-STEWARDSHIP.md) (tiers T0–T6) and [DEFINER-RLS-REGISTER.md](DEFINER-RLS-REGISTER.md). This page does not restate them.
 
 ## Summary
 
 | Measure | Count |
 | --- | --- |
-| Tables in `public` | 301 |
-| Row-level security on | 301 |
+| Tables in `public` | 302 |
+| Row-level security on | 302 |
 | **Row-level security off** | 0 |
-| RLS on, **no policy** (deny by default; reached only by definer functions or the service role) | 31 |
+| RLS on, **no policy** (deny by default; reached only by definer functions or the service role) | 32 |
 | Owned by an account (foreign key to `auth.users`) | 190 |
 | Carry a `tenant_id` | 151 |
-| **Neither** account-owned nor tenant-scoped | 63 |
+| **Neither** account-owned nor tenant-scoped | 64 |
 | Writable directly by a signed-in client role (before RLS) | 119 |
 
 Account-owned tables are walked by `private.account_data_map()`, which derives them from the catalog, so export and erasure cover a new one automatically (`erasure.test.ts`, `deletion.check.sql`). A table that is neither account-owned nor tenant-scoped is not necessarily wrong — a catalog, a platform configuration table, a counter — but each is a place where nothing in the schema says whose data it is, so each is listed for review.
@@ -28,14 +28,14 @@ None. `supabase/rls-coverage.check.sql` fails the build if this list is ever not
 
 ## Neither account-owned nor tenant-scoped (review)
 
-`access_gate`, `app_capabilities`, `app_roles`, `beta_cohorts`, `beta_exit_requests`, `beta_feature_flags`, `beta_feedback`, `checkout_sessions`, `commercial_plans`, `commercial_prices`, `commercial_products`, `community_case_events`, `community_detector_rules`, `community_escalation_deliveries`, `community_identity_grants`, `community_media_deletions`, `community_retention_runs`, `community_signals`, `community_volunteer_events`, `compliance_controls`, `compliance_frameworks`, `console_duty`, `control_evidence`, `credits_refunds`, `cta_routes`, `customer_commitment`, `customer_contract`, `dining_hours`, `dining_menu_items`, `dunning_actions`, `dunning_cases`, `entitlement_definitions`, `form_publications`, `form_responses`, `gtm_decision_log`, `gtm_pilot_metrics`, `gtm_pilot_outcomes`, `gtm_pilots`, `gtm_stakeholders`, `implementation_milestones`, `institution_action_offices`, `invites`, `invoice_lines`, `invoices`, `lti_line_item`, `lti_nonce`, `moderation_audit_event`, `payment_events`, `plan_entitlements`, `provider_registry`, `qbrs`, `quote_lines`, `role_capabilities`, `schools`, `site_leads`, `student_payment_plan_installments`, `subscription_entitlements`, `subscriptions`, `support_ticket_messages`, `trust_artifacts`, `trust_room_access_log`, `trust_room_grant_items`, `trust_room_requests`
+`access_gate`, `app_capabilities`, `app_roles`, `beta_cohorts`, `beta_exit_requests`, `beta_feature_flags`, `beta_feedback`, `checkout_sessions`, `commercial_plans`, `commercial_prices`, `commercial_products`, `community_case_events`, `community_detector_rules`, `community_escalation_deliveries`, `community_identity_grants`, `community_media_deletions`, `community_retention_runs`, `community_signals`, `community_volunteer_events`, `compliance_controls`, `compliance_frameworks`, `console_duty`, `control_evidence`, `credits_refunds`, `cta_routes`, `customer_commitment`, `customer_contract`, `dining_hours`, `dining_menu_items`, `dunning_actions`, `dunning_cases`, `entitlement_definitions`, `form_publications`, `form_responses`, `gtm_decision_log`, `gtm_pilot_metrics`, `gtm_pilot_outcomes`, `gtm_pilots`, `gtm_stakeholders`, `implementation_milestones`, `institution_action_offices`, `invites`, `invoice_lines`, `invoices`, `lti_line_item`, `lti_nonce`, `moderation_audit_event`, `payment_events`, `plan_entitlements`, `provider_registry`, `qbrs`, `quote_lines`, `role_capabilities`, `schools`, `site_leads`, `student_payment_plan_installments`, `subscription_entitlements`, `subscriptions`, `support_notification_outbox`, `support_ticket_messages`, `trust_artifacts`, `trust_room_access_log`, `trust_room_grant_items`, `trust_room_requests`
 
 
 ## RLS on with no policy (deny by default)
 
 Counted from `pg_policy` in the built database. [DEFINER-RLS-REGISTER.md](DEFINER-RLS-REGISTER.md) reports 45 from a static parse of the migrations; the two disagree, and the catalog count here is the one to trust for these migrations. The register's count should be reconciled (its own note DR-03 says policies created in loops are invisible to the parser).
 
-`access_gate`, `app_admins`, `beta_cohorts`, `beta_exit_requests`, `beta_feature_flags`, `beta_feedback`, `beta_invitations`, `beta_known_issues`, `beta_memberships`, `beta_programs`, `community_media_deletions`, `community_safety_entries`, `gtm_communication_events`, `gtm_consent`, `gtm_conversion_events`, `gtm_prospects`, `gtm_suppression`, `invites`, `lti_identity`, `lti_line_item`, `lti_link_ticket`, `lti_nonce`, `lti_platform`, `payment_events`, `registration_completions`, `registration_holds`, `registration_requests`, `scim_credential`, `site_leads`, `support_ticket_messages`, `support_tickets`
+`access_gate`, `app_admins`, `beta_cohorts`, `beta_exit_requests`, `beta_feature_flags`, `beta_feedback`, `beta_invitations`, `beta_known_issues`, `beta_memberships`, `beta_programs`, `community_media_deletions`, `community_safety_entries`, `gtm_communication_events`, `gtm_consent`, `gtm_conversion_events`, `gtm_prospects`, `gtm_suppression`, `invites`, `lti_identity`, `lti_line_item`, `lti_link_ticket`, `lti_nonce`, `lti_platform`, `payment_events`, `registration_completions`, `registration_holds`, `registration_requests`, `scim_credential`, `site_leads`, `support_notification_outbox`, `support_ticket_messages`, `support_tickets`
 
 
 ## Every table
@@ -319,6 +319,7 @@ Counted from `pg_policy` in the built database. [DEFINER-RLS-REGISTER.md](DEFINE
 | `success_plans` | yes | 1 | — | yes | yes | — |
 | `support_access_event` | yes | 1 | yes | — | yes | — |
 | `support_access_grant` | yes | 4 | yes | yes | yes | yes |
+| `support_notification_outbox` | yes | 0 | — | — | — | — |
 | `support_share_events` | yes | 1 | — | yes | yes | — |
 | `support_shares` | yes | 3 | yes | yes | yes | yes |
 | `support_ticket_messages` | yes | 0 | — | — | — | — |

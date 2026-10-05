@@ -7,6 +7,7 @@
  *
  * Put a table name in `tables.__fail` to make its upserts fail.
  */
+import { intervalMinutes } from '../../src/lib/integration/freshness.ts';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type Row = Record<string, unknown>;
@@ -100,5 +101,42 @@ export function fakeDb(tables: Tables) {
     };
     return q;
   };
-  return { from } as unknown as SupabaseClient;
+  const rpc = async (name: string, args: Row) => {
+    const failing = (tables.__fail as unknown as string[] | undefined) ?? [];
+    if (failing.includes(name)) return { data: null, error: { message: 'connection reset by peer' } };
+    let count = 0;
+    for (const row of tables.canonical_entity_references ?? []) {
+      if (row.tenant_id !== args.want_tenant || row.connection_id !== args.want_connection
+        || row.source_system !== args.want_source || row.external_deleted_at != null) continue;
+      const display = row.display as Row;
+      if (name === 'integration_refresh_governance') {
+        const hit = (args.want_records as Row[]).find((x) => x.entity === row.canonical_entity_type
+          && x.id === row.source_record_id && x.timestamp === row.source_timestamp);
+        if (!hit) continue;
+        let prior;
+        try { prior = typeof display._governance === 'string' ? JSON.parse(display._governance) : null; } catch { continue; }
+        if (!prior || !Number.isFinite(Date.parse(prior.retrievedAt))
+          || !Number.isFinite(Date.parse(prior.expiresAt)) || Date.parse(prior.expiresAt) <= Date.parse(prior.retrievedAt)) continue;
+        const connection = (tables.integration_connections ?? []).find((c) => c.id === args.want_connection
+          && c.tenant_id === args.want_tenant);
+        const override = intervalMinutes(String(connection?.freshness_target ?? ''));
+        row.display = { ...display, _governance: prior ? JSON.stringify({ ...prior,
+          retrievedAt: args.want_at,
+          expiresAt: new Date(Date.parse(String(args.want_at))
+            + (override !== null ? override * 60_000
+              : Date.parse(prior.expiresAt) - Date.parse(prior.retrievedAt))).toISOString(),
+        }) : hit.governance };
+        row.freshness_status = 'live';
+      } else if (name === 'integration_tombstone_references') {
+        if (row.canonical_entity_type !== args.want_entity || !(args.want_ids as string[]).includes(String(row.source_record_id))) continue;
+        row.display = typeof display._governance === 'string' ? { _governance: display._governance } : {};
+        row.external_deleted_at = args.want_at;
+        row.freshness_status = 'unavailable';
+      } else throw new Error(`fakeDb: unknown rpc ${name}`);
+      row.updated_at = args.want_at;
+      count++;
+    }
+    return { data: count, error: null };
+  };
+  return { from, rpc } as unknown as SupabaseClient;
 }

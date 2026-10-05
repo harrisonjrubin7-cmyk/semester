@@ -300,13 +300,13 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'a11y-app',
     capabilityIds: ['CAP-001', 'CAP-017', 'CAP-020', 'CAP-021', 'CAP-025', 'CAP-031'],
-    claim: 'Every screen of the app is scanned for serious and critical accessibility violations on every change.',
-    scope: 'axe-core over every route, desktop and phone, in CI. Automated checks find a minority of barriers; the rest need a person.',
+    claim: 'The main student screens are scanned for serious and critical accessibility violations on every change.',
+    scope: 'axe-core in a simulated browser over twelve screens at desktop width and three at phone width, in CI. It cannot check colour contrast or layout, and automated checks find a minority of barriers; the rest need a person.',
     status: 'in-preparation',
     owner: 'accessibility',
     pages: ['/accessibility/'],
     audiences: ['students', 'departments', 'reviewers'],
-    evidence: [{ path: 'app/src/a11y/axe.test.tsx', shows: 'No serious or critical violation on any route, and the probe is shown a planted one first' }],
+    evidence: [{ path: 'app/src/a11y/axe.test.tsx', shows: 'No serious or critical violation on the twelve desktop and three phone screens it lists, and the probe is shown a planted one first' }],
     rows: ['A11Y-001', 'A11Y-002', 'A11Y-003', 'A11Y-004', 'A11Y-005'],
   },
   {
@@ -515,8 +515,8 @@ export const CLAIMS: readonly Claim[] = [
   {
     id: 'no-sale',
     capabilityIds: ['CAP-010'],
-    claim: 'Plus can be bought from the Account screen, and nowhere else; Pro is not on sale',
-    scope: 'Checkout and cancellation are built (D-128, D-132) and run on Stripe test keys; no live payment has been taken and the first end-to-end check is not recorded. The public site sells nothing. The refund policy is still a proposal.',
+    claim: 'Individual paid acquisition is held; Plus and Pro are planned, not on sale',
+    scope: 'Checkout and cancellation are built, but new checkout is disabled while required approvals remain open. Existing subscribers keep cancellation and billing-history access. No live payment evidence authorizes broad acquisition, and the refund policy is still a proposal.',
     status: 'in-preparation',
     owner: 'founder',
     pages: ['/pricing/'],

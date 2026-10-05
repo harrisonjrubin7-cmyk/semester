@@ -18,8 +18,9 @@ import type { DataClass } from './classification.ts';
 import { withinCeiling } from './classification.ts';
 import type { ConflictKind, ConnectionStatus, ErrorCategory, Freshness } from './catalog.ts';
 import { namesNeverIngest, type AdapterDeclaration, type EntityMapping, type FieldMapping } from './adapter.ts';
-import { freshnessFromAge } from './freshness.ts';
+import { MAX_FRESHNESS_MINUTES, freshnessFromAge } from './freshness.ts';
 import { redactReference, sanitizeMessage } from './redact.ts';
+import { governanceEnvelope, type GovernanceEnvelope } from './governance-envelope.ts';
 
 export interface ExternalRecord {
   entityType: string;
@@ -49,6 +50,8 @@ export interface ConnectionState {
   approved: boolean;
   approvedScopes: readonly string[];
   classificationCeiling: DataClass;
+  /** Effective, server-read connection override; otherwise the adapter default. */
+  freshnessTargetMinutes?: number;
 }
 
 export interface CanonicalReference {
@@ -67,6 +70,9 @@ export interface CanonicalReference {
   confidence: number;
   externalDeletedAt: string | null;
   values: Record<string, unknown>;
+  governance: GovernanceEnvelope;
+  /** Refresh clocks without replacing the provider values or identity. */
+  metadataOnly: boolean;
 }
 
 export interface IngestStore {
@@ -74,6 +80,8 @@ export interface IngestStore {
   claimIdempotencyKey(connection: string, key: string): Promise<boolean>;
   /** The last source timestamp stored for this external record, if any. */
   lastSourceTimestamp(connection: string, entity: string, id: string): Promise<string | null>;
+  /** A legacy row must be fully remapped before current provenance is assigned. */
+  requiresGovernanceRemap?(connection: string, entity: string, id: string): Promise<boolean>;
   /** Map a provider person reference to a Semester account, or null. */
   resolveSubject(tenantId: string, subject: string): Promise<string | null>;
   /** Whether the account has a live consent for this purpose. */
@@ -166,8 +174,16 @@ function mapFields(mapping: EntityMapping, rec: ExternalRecord): Checked {
 export async function ingest(input: IngestInput): Promise<IngestResult> {
   const { adapter, connection, batch, store, now } = input;
   const received = batch.records.length;
+  const freshnessTargetMinutes = connection.freshnessTargetMinutes ?? adapter.freshnessTargetMinutes;
   const refuse = (message: string, category: ErrorCategory = 'scope_failure') =>
     empty('refused', received, [{ category, entityType: null, reference: 'redacted', message, retryable: false }]);
+
+  if (!Number.isFinite(now.getTime()) || !Number.isFinite(adapter.retentionDays) || adapter.retentionDays <= 0 || adapter.retentionDays > 36500
+    || !Number.isFinite(adapter.freshnessTargetMinutes) || adapter.freshnessTargetMinutes <= 0 || adapter.freshnessTargetMinutes > MAX_FRESHNESS_MINUTES
+    || !Number.isFinite(freshnessTargetMinutes) || freshnessTargetMinutes <= 0 || freshnessTargetMinutes > MAX_FRESHNESS_MINUTES
+    || !adapter.sourceOfTruth.trim()) {
+    return refuse('Invalid adapter governance or processing clock.', 'schema_validation');
+  }
 
   // Connection gate. A mock adapter never runs against a real tenant connection.
   if (input.killSwitchEngaged) return refuse('Integration sync is stopped by a kill switch.', 'provider_unavailable');
@@ -232,16 +248,16 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       reject('timestamp_regression', 'the provider sent an older version than the one stored');
       continue;
     }
-    if (previous && rec.updatedAt && Date.parse(rec.updatedAt) === Date.parse(previous) && !rec.deleted) {
-      result.unchanged += 1;
-      continue;
-    }
+    const remap = await store.requiresGovernanceRemap?.(connection.publicId, rec.entityType, rec.id) ?? false;
+    const unchanged = Boolean(!remap && previous && rec.updatedAt && Date.parse(rec.updatedAt) === Date.parse(previous) && !rec.deleted);
+    // Reconfirmed records still refresh their persisted governance clocks.
+    if (unchanged) result.unchanged += 1;
 
     // Freshness is the age of Semester's copy, not of the provider's edit: a
     // record confirmed this minute is live however long ago it last changed.
     // It decays from here as `freshnessFromAge` is re-read against the
     // connection's last successful sync.
-    const freshness = freshnessFromAge(now, adapter.freshnessTargetMinutes, now, true);
+    const freshness = freshnessFromAge(now, freshnessTargetMinutes, now, true);
     result.references.push({
       tenantId: connection.tenantId,
       canonicalEntity: mapping.canonicalEntity,
@@ -256,9 +272,13 @@ export async function ingest(input: IngestInput): Promise<IngestResult> {
       mappingVersion: mapping.version,
       confidence: 1,
       externalDeletedAt: rec.deleted ? now.toISOString() : null,
-      values: rec.deleted ? {} : checked.values,
+      values: rec.deleted || unchanged ? {} : checked.values,
+      metadataOnly: unchanged,
+      governance: governanceEnvelope(adapter, mapping, connection.publicId, now, freshnessTargetMinutes),
     });
-    if (previous) result.updated += 1; else result.created += 1;
+    if (!unchanged) {
+      if (previous) result.updated += 1; else result.created += 1;
+    }
   }
 
   if (result.rejected === received && received > 0) {

@@ -8,7 +8,9 @@
  * ## Why this exists
  *
  * `SEMESTER-OPERATING-SYSTEM.md` has listed the "Security/compliance evidence
- * index" as missing since it was written: `docs/evidence/` does not exist, the
+ * index" as missing since it was written: `docs/evidence/` did not exist then
+ * (it now holds a few dated files from operating particular controls, none of
+ * them indexed here by control), the
  * master register lets no row above `tested` until it does, and the trust
  * package is the set of documents a reviewer reads rather than proof any of
  * them is operated. Three documents of 28 September 2026 ask for exactly the
@@ -21,8 +23,8 @@
  * ## The three statuses
  *
  *   - `produced`: an artifact under `docs/evidence/` from operating the
- *     control. None today, and the test refuses the word while the directory
- *     is absent.
+ *     control. A row may use the word only if it cites a file there; the test
+ *     refuses it otherwise.
  *   - `defined`: the control and its test exist, so the artifact can be
  *     produced by running something; the row says what. Cites code or a test.
  *   - `owed`: neither the control nor its evidence exists. Cites at most a
@@ -91,7 +93,7 @@ export const SCHEMA: readonly { field: string; here: string }[] = [
   { field: 'System or process in scope', here: 'What the tree holds' },
   { field: 'Control frequency', here: 'Frequency' },
   { field: 'Evidence description, type and collection method', here: 'Evidence' },
-  { field: 'Evidence location, date, review and expiry date, reviewer, hash', here: `Under ${EVIDENCE_DIR}/ when produced; none is` },
+  { field: 'Evidence location, date, review and expiry date, reviewer, hash', here: `Under ${EVIDENCE_DIR}/ when produced; a few dated files are there, but this register does not yet index them by control` },
   { field: 'Result or status', here: 'Status' },
   { field: 'Exception, remediation owner and target date', here: 'The risk register’s exception record, which is empty' },
   { field: 'Customer visibility and sensitivity', here: 'Visibility' },
@@ -417,7 +419,7 @@ export interface Blocker {
 /** The documents' automated release gate: the dashboard blocks a release when any of these is true. */
 export const BLOCKERS: readonly Blocker[] = [
   { condition: 'A P0 or P1 release-blocking finding is open.', path: 'app/src/lib/governance/release-readiness.ts', how: 'A promotion needs the readiness total above the stage threshold and no dimension under the floor; a finding is not yet an object the score reads.' },
-  { condition: 'A required control has no current evidence.', path: null, how: 'Nothing reads evidence freshness, because no evidence exists to be fresh; the operations-console controls define the freshness ladder a console would apply.' },
+  { condition: 'A required control has no current evidence.', path: null, how: 'Nothing reads evidence freshness: the few dated files under docs/evidence/ carry no expiry that anything checks; the operations-console controls define the freshness ladder a console would apply.' },
   { condition: 'A data-flow change lacks privacy approval.', path: 'app/src/lib/governance/config-tiers.ts', how: 'A configuration request is classified by tier and the privacy reviewer is required at the tiers that touch data; a code change to a data flow is reviewed by the pull-request template’s questions, not a gate.' },
   { condition: 'An AI, provider, model or tool change lacks evaluation approval.', path: 'app/src/lib/governance/ai-lifecycle.ts', how: 'G3 requires every AI_RELEASE_GATE item; the gate is data a reviewer reads, not a check CI runs.' },
   { condition: 'A critical accessibility regression is unresolved.', path: 'app/src/a11y/axe.test.tsx', how: 'axe-core and the accessibility smoke fail the build on a regression they can see; a manual finding has no register to block from.' },
@@ -445,7 +447,7 @@ export const RETENTION_CLASSES: readonly RetentionClass[] = [
   { cls: 'Course content', examples: 'Instructor materials, source documents, syllabus data', approach: 'Customer-controlled course lifecycle plus a configured archive period', today: 'Until the student deletes it; no institutional archive period exists', names: ['courses'], configurable: false },
   { cls: 'Assessment, submission and grade records', examples: 'Submissions, feedback, grade ledger, audit history', approach: 'The institution’s records schedule; never deleted contrary to academic-record requirements', today: 'Until the student deletes it; no records schedule can be configured', names: ['sittings'], configurable: false },
   { cls: 'Community and club content', examples: 'Profiles, posts, memberships, event activity', approach: 'Active lifecycle plus a configured archive period; moderation evidence only as needed', today: 'Until deleted; moderation audit events kept three years', names: ['moderation_audit_event'], configurable: false },
-  { cls: 'Support data', examples: 'Tickets, diagnostic logs, support-access records', approach: 'A defined support and security period; minimal attachments', today: 'Support windows are time-limited and every read is logged; no ticket system exists', names: ['support_access'], configurable: false },
+  { cls: 'Support data', examples: 'Tickets, diagnostic logs, support-access records', approach: 'A defined support and security period; minimal attachments', today: 'The identity-free ticket queue is built and capability-gated; support access is time-limited and every read is logged. Per-ticket email notices are off by default, contain no reply text, and use a durable delivery outbox only after student opt-in.', names: ['support_access', 'support_tickets', 'support_ticket_messages', 'support_notification_outbox'], configurable: false },
   { cls: 'Basic-needs and referral metadata', examples: 'Consent, recipient, status, limited referral record', approach: 'Minimum necessary; sensitive intake stays with the official service', today: 'Nothing is taken in: the navigator is a directory and stores no referral', names: ['help_request'], configurable: false },
   { cls: 'AI data', examples: 'Prompts, outputs, policy decisions, evaluation samples', approach: 'Minimum period for operation, safety and support; production usage apart from de-identified evaluation', today: 'Gateway intelligence audit metadata 180 days, never prompts or prose; unconfirmed actions one day after expiry', names: ['gateway_intelligence_audit', 'gateway_intelligence_action'], configurable: false },
   { cls: 'Security and audit logs', examples: 'Authentication, access, administrative actions, security events', approach: 'Per security and contractual requirements; access restricted', today: 'Access log 90 days; activity 400 days; grant, moderation and provisioning audit 3 years', names: ['access_log', 'activity', 'role_grant_audit_event'], configurable: false },

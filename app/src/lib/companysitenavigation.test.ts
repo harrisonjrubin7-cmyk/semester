@@ -10,7 +10,10 @@ import { describe, expect, it } from 'vitest';
  */
 
 const root = join(import.meta.dirname, '../../..');
-const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+const site = [
+  readFileSync(join(root, 'company-site/index.html'), 'utf8'),
+  readFileSync(join(root, 'company-site/site.js'), 'utf8'),
+].join('\n');
 
 const between = (start: string, end: string) => {
   const from = site.indexOf(start);

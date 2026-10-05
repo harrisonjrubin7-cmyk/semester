@@ -1,6 +1,14 @@
 # Data retention, export and deletion
 
-Full-beta Milestone 1. A synthesis of what the tree does, at `fd056fc`, with each claim pointing at its source. The per-table schedule is [RETENTION.md](../RETENTION.md), which `retention.test.ts` holds to the migrations in both directions; this page does not restate it, and if the two disagree, RETENTION.md wins and this page is wrong.
+Full-beta Milestone 1. A synthesis of what the tree does, revalidated at `d246a348`, with each claim pointing at its source. The per-table schedule is [RETENTION.md](../RETENTION.md), which `retention.test.ts` holds to the migrations in both directions; this page does not restate it, and if the two disagree, RETENTION.md wins and this page is wrong.
+
+## Repository validation — 2026-10-03
+
+The P02 validation pass exercised consent, privacy, export, revocation, account deletion, deletion state, browser recovery, recovery drafts, academic recovery, plan recovery, incident recovery, FERPA consent, the call-consent screen, Trust Center and Advisor Meeting. The focused Vitest run passed **18 files and 397 tests**.
+
+This is repository evidence, not proof of live account operation. The isolated two-device account-sync journey could not run on this host because neither the Supabase CLI nor Docker is installed. The focused deletion, subject-request and hold-aware database suites also could not run because the required PostgreSQL 17 server is absent; the checker exited 2 before creating a database or executing a suite. No production service or data was contacted.
+
+Accordingly, this pass establishes the tested client and library behaviors only. It does **not** establish provider-backed cross-device sync, a live deletion execution, restoration of provider data, an operated rights-request response, institutional acceptance, or production activation. Those remain separate gates.
 
 ## The three promises
 
@@ -24,9 +32,9 @@ Full-beta Milestone 1. A synthesis of what the tree does, at `fd056fc`, with eac
 
 ## Rights requests that are not self-service (new in Milestone 1)
 
-`data_subject_request` records a request to export, erase, correct or restrict, its status and a thirty-day due date. A person can raise one about themselves only, in its starting state only, and cannot answer, verify, extend or delete it (`audit-and-subject-requests.check.sql`). A school's auditor sees that school's requests. Deleting the account removes them.
+`data_subject_request` records a request to export, erase, correct or restrict, its status and a due date (the column defaults to thirty days; that default is a database value, not a response time anyone has agreed to — **[COUNSEL REQUIRED]**, P-03). A person can raise one about themselves only, in its starting state only, and cannot answer, verify, extend or delete it (`audit-and-subject-requests.check.sql`). A school's auditor sees that school's requests. Deleting the account removes them.
 
-**There is no screen for it and no one is named to answer.** The table exists so the record is in the right shape when the owner decides who answers; shipping a button that promises a thirty-day reply before that would be a promise nobody has agreed to keep. Guardian and institution requests exist as a value but must not be acted on until a person on the answering side has verified them (`verified_at`).
+**A student intake and tracking screen exists** (`components/DataRightsRequests.tsx` on the Privacy screen, over `lib/data-rights.ts`). **An answering surface does not, and no one is named to answer.** Nothing yet moves a request from received to answered, so no reply is promised: shipping a promise of a reply time before the owner decides who answers would be a promise nobody has agreed to keep. Guardian and institution requests exist as a value but must not be acted on until a person on the answering side has verified them (`verified_at`).
 
 ## Retention of audit evidence
 
@@ -46,8 +54,8 @@ Nothing flows in production (no production adapters). When one does, deletion at
 ## Owner decisions still open
 
 - Assign the named privacy owner and build the trusted handling surface described in
-  [`DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md); the student intake and
-  thirty-day clock now exist, but no operated response-time evidence exists yet.
+  [`DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md); the student intake and tracking
+  screen exists, but no answering surface exists and no response time has been decided (**[COUNSEL REQUIRED]**, P-03).
 - Whether the D-124 "no deletion ledger" decision is reopened by counsel.
 - A full-account export that includes device-held files.
 - The legal retention wording in `docs/legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md` is a draft with open `[DECIDE]` items and needs counsel.

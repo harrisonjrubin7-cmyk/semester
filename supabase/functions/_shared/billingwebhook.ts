@@ -8,8 +8,9 @@
  *
  *   checkout.session.completed      complete_checkout → an active subscription
  *   customer.subscription.*         sync_provider_subscription (newer events only)
- *   invoice.paid / payment_succeeded upsert_provider_invoice, then payment_succeeded
- *   invoice.payment_failed          upsert_provider_invoice, then payment_failed → dunning
+ *   invoice.paid / payment_succeeded atomic invoice snapshot + payment_succeeded
+ *   invoice.payment_failed          atomic invoice snapshot + payment_failed → dunning
+ *   invoice.finalization_failed     tax outage recorded; missing location requests an address update
  *   charge.refunded                 refund
  *   charge.dispute.created          chargeback
  *   anything else                   recorded as `other`
@@ -51,10 +52,13 @@ export interface WebhookDeps {
     ref: string, status: SubscriptionStatus, periodStart: string | null, periodEnd: string | null,
     cancelAtPeriodEnd: boolean | null, eventAt: string,
   ): Promise<unknown>;
-  upsertInvoice(
-    subscriptionRef: string, invoiceRef: string, amountCents: number | null, currency: string | null,
-    issuedAt: string | null, dueAt: string | null,
-  ): Promise<string | null>;
+  applyInvoiceEvent(
+    eventId: string, kind: PaymentKind, subscriptionRef: string, invoiceRef: string,
+    invoiceStatus: 'draft' | 'open' | 'paid',
+    subtotalCents: number | null, taxCents: number | null, currency: string | null,
+    issuedAt: string | null, dueAt: string | null, snapshotAt: string, snapshotRank: number,
+    amountCents: number | null, sha256: string,
+  ): Promise<string>;
   applyEvent(eventId: string, kind: PaymentKind, invoiceId: string | null, amountCents: number | null, sha256: string): Promise<string>;
 }
 
@@ -78,6 +82,15 @@ const ref = (v: unknown): string | null => str(v) ?? str(obj(v).id);
 /** The subscription an invoice bills, wherever this API version keeps it. */
 function invoiceSubscription(o: Obj): string | null {
   return ref(o.subscription) ?? ref(obj(obj(o.parent).subscription_details).subscription);
+}
+
+/** Tax total across current and older Stripe invoice response shapes. */
+function invoiceTax(o: Obj): number {
+  for (const key of ['total_taxes', 'total_tax_amounts']) {
+    const rows = o[key];
+    if (Array.isArray(rows)) return rows.reduce((sum, row) => sum + (num(obj(row).amount) ?? 0), 0);
+  }
+  return num(o.tax) ?? 0;
 }
 
 export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Promise<Response> {
@@ -132,23 +145,41 @@ export async function handleBillingWebhook(req: Request, deps: WebhookDeps): Pro
           eventAt,
         );
       }
-    } else if (type === 'invoice.paid' || type === 'invoice.payment_succeeded' || type === 'invoice.payment_failed') {
+    } else if (type === 'invoice.paid' || type === 'invoice.payment_succeeded' ||
+               type === 'invoice.payment_failed' || type === 'invoice.finalization_failed') {
+      const finalizationFailed = type === 'invoice.finalization_failed';
+      const needsCustomerLocation = finalizationFailed &&
+        obj(o.automatic_tax).status === 'requires_location_inputs';
+      // A Stripe Tax service failure is operational, not a failed customer
+      // payment. Missing customer location is also not a card failure: keep a
+      // distinct issue for the Account screen and never start dunning for it.
       const failed = type === 'invoice.payment_failed';
-      kind = failed ? 'payment_failed' : 'payment_succeeded';
-      amount = num(failed ? o.amount_due : o.amount_paid);
+      kind = needsCustomerLocation ? 'address_required' : failed ? 'payment_failed' : 'payment_succeeded';
+      if (finalizationFailed && !needsCustomerLocation) kind = 'other';
+      const paid = type === 'invoice.paid' || type === 'invoice.payment_succeeded';
+      // Stripe may deliver finalization failures after a later payment event.
+      // The database uses this lifecycle rank before event time when deciding
+      // whether the snapshot may replace stored invoice amounts.
+      const snapshotRank = paid ? 2 : type === 'invoice.payment_failed' ? 1 : 0;
+      const invoiceStatus = finalizationFailed ? 'draft' : paid ? 'paid' : 'open';
+      amount = num(paid ? o.amount_paid : o.amount_due);
       const sub = invoiceSubscription(o);
       const id = str(o.id);
       if (sub && id) {
-        invoiceId = await deps.upsertInvoice(
-          sub, id, num(o.amount_due), str(o.currency), isoFromSeconds(o.created),
-          isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created),
+        const tax = invoiceTax(o);
+        const subtotal = num(o.total_excluding_tax) ?? num(o.subtotal_excluding_tax) ??
+          num(o.subtotal) ?? Math.max((num(o.amount_due) ?? 0) - tax, 0);
+        const outcome = await deps.applyInvoiceEvent(
+          eventId, kind, sub, id, invoiceStatus, subtotal, tax, str(o.currency), isoFromSeconds(o.created),
+          isoFromSeconds(o.due_date) ?? isoFromSeconds(o.created), eventAt, snapshotRank, amount, sha,
         );
-        if (invoiceId === null) {
+        if (outcome === 'not_ready') {
           // The subscription is not stored yet: its checkout event is still on
           // its way. Nothing is recorded, so the provider's retry is not a duplicate.
           console.error('billing-webhook: an invoice arrived before its subscription; asked for a retry');
           return reply(500, { error: 'Not ready for this event.' });
         }
+        return reply(200, { received: true, outcome });
       }
     } else if (type === 'charge.refunded') {
       kind = 'refund';

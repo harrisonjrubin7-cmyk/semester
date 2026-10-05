@@ -217,7 +217,7 @@ Extend responsibly through standards, partners, and geography.
 | BCP-006 | Domain and DNS recovery | not-started | — | Registrar access and recovery are undocumented. |
 | BCP-007 | Identity-provider lockout recovery | designed | `docs/superpowers/specs/2026-09-24-vanderbilt-production-readiness-design.md` — break-glass admin accounts with MFA and audit | Not built; GitHub and Supabase account lockout not covered. |
 | BCP-008 | Legal counsel continuity | not-started | — | No counsel engaged. |
-| BCP-009 | Customer communication tree | tested | `app/src/lib/governance/incident-comms.ts` — eleven audiences, approvers, cadence<br>`app/src/lib/governance/incident-comms.test.ts` — held | Incident-scoped; no company-event (ownership, closure) path. |
+| BCP-009 | Customer communication tree | tested | `app/src/lib/governance/incident-comms.ts` — thirteen audiences, approvers, cadence<br>`app/src/lib/governance/incident-comms.test.ts` — held | Incident-scoped; no company-event (ownership, closure) path. |
 | BCP-010 | Media and crisis communications | not-started | `docs/operating-model/TRUST-BRAND-AND-LEGAL.md` — points crisis comms at incident comms | No media plan. |
 | BCP-011 | Annual company continuity exercise | designed | `docs/trust/SOC2-READINESS.md` — incident and DR tabletop planned | None run. |
 

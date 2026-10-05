@@ -23,6 +23,10 @@
 --   * signing an order form writes the tenant's plan, one implementation
 --     project and one renewal at ends_at − 120 days, and signing it again
 --     writes nothing; an MSA triggers nothing; a pilot needs an end date;
+--   * a later order form cannot lower a current plan's tier or shorten its
+--     end date (the signing is refused and the plan is untouched), a
+--     legitimate upgrade goes through, and replaying an older order form
+--     over that upgrade changes nothing;
 --   * account health is written once a day per institution, from allowed
 --     signals, and anything not healthy waits for a person.
 
@@ -76,6 +80,16 @@ exception when others then
   return true;
 end $$;
 
+-- Refused, and for the stated reason: `refused` alone would also pass on a typo.
+create or replace function pg_temp.refused_for(statement text, reason text)
+returns boolean language plpgsql as $$
+begin
+  execute statement;
+  return false;
+exception when others then
+  return sqlerrm like '%' || reason || '%';
+end $$;
+
 do $$
 declare
   ana uuid; ben uuid;
@@ -83,6 +97,7 @@ declare
   lead record; o text; n bigint; t text; j jsonb;
   plus_price uuid; quote_price uuid; co record; ana_sub uuid; again uuid; inv uuid; inv2 uuid;
   gtm uuid; acct uuid; q uuid; k uuid; msa uuid; pilot uuid; ends timestamptz;
+  lower_k uuid; short_k uuid; up_k uuid; before_plan text;
   base timestamptz := now();
 begin
   insert into public.schools (id, name, email_domains) values
@@ -98,6 +113,9 @@ begin
      or not pg_temp.refused($q$select * from public.begin_checkout(gen_random_uuid(), gen_random_uuid(), 'plus-v1')$q$)
      or not pg_temp.refused($q$select public.complete_checkout(gen_random_uuid(), 'sub_x', 'cus_x', null)$q$)
      or not pg_temp.refused($q$select public.upsert_provider_invoice('sub_x', 'in_x', 1, 'usd', now(), now())$q$)
+     or not pg_temp.refused($q$select public.upsert_provider_invoice_v2('sub_x', 'in_x', 1, 0, 'usd', now(), now())$q$)
+     or not pg_temp.refused($q$select public.apply_invoice_payment_event_v2('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 1, 0, 'usd', now(), now(), 1, repeat('a', 64))$q$)
+     or not pg_temp.refused($q$select public.apply_invoice_payment_event_v3('stripe', 'evt_x', 'other', 'sub_x', 'in_x', 'draft', 1, 0, 'usd', now(), now(), now(), 0::smallint, 1, repeat('a', 64))$q$)
      or not pg_temp.refused($q$select public.sync_provider_subscription('sub_x', 'active', null, null, false, now())$q$) then
     raise exception 'FAILED: a signed-in account called a service-only commercial function';
   end if;
@@ -252,15 +270,42 @@ begin
   select public.sync_provider_subscription('sub_nobody', 'active', null, null, false, base) into t;
   perform pg_temp.answered('an unknown subscription is reported, not invented', t, 'unknown');
 
-  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 799, 'USD', base, base) into inv;
-  select public.upsert_provider_invoice('sub_test_1', 'in_test_1', 799, 'USD', base, base) into inv2;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 799, 65, 'USD', base, base) into inv;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_test_1', 825, 75, 'USD', base, base) into inv2;
   perform pg_temp.answered('a provider invoice is recorded once', (inv = inv2)::text, 'true');
-  select public.upsert_provider_invoice('sub_nobody', 'in_test_2', 799, 'usd', base, base) into inv2;
+  perform pg_temp.answered('a recovered provider invoice refreshes subtotal and tax separately',
+    (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '825:75');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_snapshot_new', 'other', 'sub_test_1', 'in_test_1',
+    'open', 900, 90, 'USD', base, base, base + interval '2 minutes', 1::smallint, 990, repeat('7', 64)) into t;
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_snapshot_late_old', 'other', 'sub_test_1', 'in_test_1',
+    'draft', 1, 0, 'USD', base, base, base + interval '3 minutes', 0::smallint, 1, repeat('8', 64)) into t;
+  perform pg_temp.answered('a late finalization snapshot cannot replace a newer payment-stage snapshot',
+    (select subtotal_cents || ':' || tax_cents from public.invoices where id = inv), '900:90');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_draft_status', 'other', 'sub_test_1', 'in_status_test',
+    'draft', 799, 0, 'USD', base, base, base, 0::smallint, 799, repeat('3', 64)) into t;
+  perform pg_temp.answered('a failed-finalization snapshot remains a draft',
+    (select status from public.invoices where provider_ref = 'in_status_test'), 'draft');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_open_status', 'other', 'sub_test_1', 'in_status_test',
+    'open', 799, 0, 'USD', base, base, base + interval '1 minute', 1::smallint, 799, repeat('4', 64)) into t;
+  perform pg_temp.answered('a later provider snapshot advances the draft to open',
+    (select status from public.invoices where provider_ref = 'in_status_test'), 'open');
+  select public.apply_invoice_payment_event_v3('stripe', 'evt_paid_status', 'payment_succeeded', 'sub_test_1', 'in_paid_status',
+    'paid', 799, 65, 'USD', base, base, base + interval '2 minutes', 2::smallint, 864, repeat('5', 64)) into t;
+  perform pg_temp.answered('a paid snapshot advances with its paid date atomically',
+    (select (status = 'paid' and paid_at is not null)::text from public.invoices where provider_ref = 'in_paid_status'), 'true');
+  select public.upsert_provider_invoice_v2('sub_nobody', 'in_test_2', 799, 0, 'usd', base, base) into inv2;
   perform pg_temp.answered('and one for an unknown subscription is not recorded', inv2::text, null);
 
   -- ── Dunning ─────────────────────────────────────────────────────────────
-  select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 799, repeat('e', 64)) into t;
+  select public.upsert_provider_invoice_v2('sub_test_1', 'in_address_needed', 864, 65, 'usd', base, base) into inv2;
+  select public.apply_payment_event('stripe', 'evt_auto_fail', 'payment_failed', inv, 864, repeat('e', 64)) into t;
   perform pg_temp.answered('a failed renewal opens dunning', t, 'dunning');
+  select public.apply_payment_event('stripe', 'evt_address_needed', 'address_required', inv2, 864, repeat('a', 64)) into t;
+  perform pg_temp.answered('a later missing tax location has its own remediation state', t, 'address_required');
+  perform pg_temp.answered('and is shown alongside the earlier card failure',
+    (select status || ':' || billing_issue from public.subscriptions where id = ana_sub), 'past_due:address_required');
+  perform pg_temp.counted('without opening a second dunning case',
+    (select count(*) from public.dunning_cases where subscription_id = ana_sub and status = 'open'), 1);
   select public.run_dunning(base + interval '1 day') into j;
   perform pg_temp.answered('a day later, nothing is due', j::text, '{"reminders": 0, "restricted": 0, "final_notices": 0}');
   select public.run_dunning(base + interval '4 days') into j;
@@ -300,6 +345,11 @@ begin
   perform pg_temp.counted('as recovered, with the recovery on record', n, 1);
   perform pg_temp.answered('and the subscription is active again',
     (select status from public.subscriptions where id = ana_sub), 'active');
+  perform pg_temp.answered('while a different invoice still needs an address',
+    (select billing_issue from public.subscriptions where id = ana_sub), 'address_required');
+  select public.apply_payment_event('stripe', 'evt_address_ok', 'payment_succeeded', inv2, 864, repeat('6', 64)) into t;
+  perform pg_temp.answered('paying the affected invoice clears its address issue',
+    (select billing_issue from public.subscriptions where id = ana_sub), null);
 
   select public.apply_payment_event('stripe', 'evt_auto_late_fail', 'payment_failed', inv, 799, repeat('9', 64)) into t;
   perform pg_temp.answered('a failure reported for an invoice already paid is only recorded', t, 'recorded');
@@ -370,6 +420,57 @@ begin
   end if;
   reset role;
   raise notice 'ok  a pilot order form needs an end date before it is signed';
+
+  -- ── A later order form never lowers a current plan ─────────────────────
+  -- north-auto is department, ending `ends` (base + 365 days).
+  set local role service_role;
+  select tier || '/' || ends_at into before_plan from public.tenant_plan where tenant_id = 'north-auto';
+  select count(*) into n from public.tenant_plan_history where tenant_id = 'north-auto';
+
+  insert into public.quotes (billing_account_id, version, status, exclusions) values (acct, 3, 'accepted', 'Lower tier, longer.')
+  returning id into q;
+  insert into public.quote_lines (quote_id, plan_code, description, unit_amount_cents) values (q, 'registration_pilot', 'Pilot', 0);
+  insert into public.contracts (billing_account_id, quote_id, kind, status, ends_at)
+  values (acct, q, 'order_form', 'draft', base + interval '800 days') returning id into lower_k;
+  if not pg_temp.refused_for(format($q$update public.contracts set status = 'signed', signed_at = now(), effective_at = now() where id = %L$q$, lower_k),
+                             'would lower') then
+    raise exception 'FAILED: a pilot order form lowered a department plan, or was refused for another reason';
+  end if;
+  perform pg_temp.answered('a lower-tier later order is refused, and the plan is untouched',
+    (select tier || '/' || ends_at from public.tenant_plan where tenant_id = 'north-auto'), before_plan);
+  perform pg_temp.answered('the refused contract stays unsigned',
+    (select status from public.contracts where id = lower_k), 'draft');
+
+  insert into public.quotes (billing_account_id, version, status, exclusions) values (acct, 4, 'accepted', 'Same tier, shorter.')
+  returning id into q;
+  insert into public.quote_lines (quote_id, plan_code, description, unit_amount_cents) values (q, 'department_launch', 'Department Launch', 1500000);
+  insert into public.contracts (billing_account_id, quote_id, kind, status, ends_at)
+  values (acct, q, 'order_form', 'draft', base + interval '100 days') returning id into short_k;
+  if not pg_temp.refused_for(format($q$update public.contracts set status = 'signed', signed_at = now(), effective_at = now() where id = %L$q$, short_k),
+                             'would shorten') then
+    raise exception 'FAILED: a shorter order form cut a plan''s end date, or was refused for another reason';
+  end if;
+  perform pg_temp.answered('a shorter later order is refused, and the plan is untouched',
+    (select tier || '/' || ends_at from public.tenant_plan where tenant_id = 'north-auto'), before_plan);
+  select count(*) into n from public.tenant_plan_history where tenant_id = 'north-auto' and reason = format('Order form %s signed.', short_k);
+  perform pg_temp.counted('and wrote no history row', n, 0);
+
+  insert into public.quotes (billing_account_id, version, status, exclusions) values (acct, 5, 'accepted', 'Upgrade.')
+  returning id into q;
+  insert into public.quote_lines (quote_id, plan_code, description, unit_amount_cents) values (q, 'semester_access', 'Semester Access', 5000000);
+  insert into public.contracts (billing_account_id, quote_id, kind, status, ends_at)
+  values (acct, q, 'order_form', 'draft', base + interval '730 days') returning id into up_k;
+  update public.contracts set status = 'signed', signed_at = now(), effective_at = now() where id = up_k;
+  perform pg_temp.answered('a legitimate upgrade is applied: higher tier, longer term',
+    (select tier || '/' || (ends_at = base + interval '730 days')::text from public.tenant_plan where tenant_id = 'north-auto'), 'campus/true');
+
+  -- Replaying the older order form over the upgrade must neither lower the
+  -- plan nor raise: it was applied once and is skipped.
+  reset role;
+  perform private.apply_signed_contract(k);
+  perform pg_temp.answered('replaying the first order form leaves the upgrade in place',
+    (select tier || '/' || (ends_at = base + interval '730 days')::text from public.tenant_plan where tenant_id = 'north-auto'), 'campus/true');
+  raise notice 'ok  a later order form raises a plan, never lowers it';
 
   -- ── Account health ──────────────────────────────────────────────────────
   set local role service_role;

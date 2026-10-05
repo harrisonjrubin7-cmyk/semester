@@ -103,6 +103,9 @@ export function validateDeclaration(d: AdapterDeclaration): string[] {
   if (d.modes.length === 0) errors.push('at least one sync mode is required');
   if (d.freshnessTargetMinutes <= 0) errors.push('freshness target must be positive');
   if (d.rateLimitPerMinute <= 0) errors.push('a rate limit is required');
+  if (!Number.isFinite(d.retentionDays) || d.retentionDays <= 0 || d.retentionDays > 36500) errors.push('retention must be a finite positive duration of at most 100 years');
+  if (!Number.isFinite(d.freshnessTargetMinutes) || d.freshnessTargetMinutes > 525600) errors.push('freshness must be finite and at most one year');
+  if (!d.sourceOfTruth.trim()) errors.push('a source owner is required');
   for (const s of d.scopes) {
     if (!/^scope\.[a-z_]+\.[a-z0-9_]+$/.test(s)) errors.push(`scope ${s} is not scope.<domain>.<name>`);
     if (namesNeverIngest(s.replace(/^scope\.[a-z_]+\./, ''))) errors.push(`scope ${s} names something never ingested`);
@@ -115,6 +118,7 @@ export function validateDeclaration(d: AdapterDeclaration): string[] {
     }
     if (e.classification === 'T3' && !e.personal) errors.push(`${e.externalEntity}: an education record must be personal`);
     for (const f of e.fields) {
+      if (f.canonical === '_governance') errors.push(`${e.externalEntity}: _governance is reserved for server metadata`);
       if (namesNeverIngest(f.external) || namesNeverIngest(f.canonical)) {
         errors.push(`${e.externalEntity}.${f.external}: never ingested`);
       } else if (namesNeverDisplayed(f.canonical)) {

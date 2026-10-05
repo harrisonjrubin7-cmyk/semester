@@ -447,19 +447,21 @@ declare
     'leave_beta(want_reason text, want_keeps_account boolean)',
     'forget_my_beta()',
 
-    -- The nine in 20260928210000_support_tickets.sql. The tables have no grant,
-    -- so these are the only way in. The first six act on the caller's own
-    -- tickets; the last three check `support:ticket` and return no column
+    -- The support-ticket RPCs. The tables have no grant, so these are the only
+    -- way in. Student routes act only on the caller's own tickets; the last
+    -- three check `support:ticket` and return no column
     -- that names the student.
-    'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb)',
+    'open_support_ticket(want_category text, want_subject text, want_body text, want_context jsonb, want_email_notice boolean)',
     'my_support_tickets()',
+    'my_support_email_notices()',
     'my_support_thread(want_ticket uuid)',
     'reply_to_my_ticket(want_ticket uuid, want_body text)',
     'close_my_ticket(want_ticket uuid)',
     'forget_my_support_tickets()',
+    'set_support_email_notice(want_ticket uuid, want_enabled boolean)',
     'support_ticket_queue()',
     'support_ticket_thread(want_ticket uuid)',
-    'support_reply(want_ticket uuid, want_body text, want_status text)',
+    'support_reply(want_ticket uuid, want_body text, want_status text, want_operation uuid)',
 
     -- The four in 20260928090000_gtm_foundation.sql. Contacts, consent and
     -- sends have no API grant at all, so these are the only way a school's
@@ -559,6 +561,13 @@ declare
     -- `audit-and-subject-requests.check.sql` proves the caller and tenant
     -- boundaries and that anon cannot execute it.
     'raise_my_data_subject_request(requested_kind text, requested_detail text)',
+    -- 20261004200000_answer_data_subject_requests.sql: the two ways a rights
+    -- request is answered. Each refuses 42501 unless the caller holds
+    -- `data_request:handle` (the data_steward role) and is not the requester,
+    -- and each refuses an illegal move with 23514.
+    -- `answer-rights-requests.check.sql` attempts every refusal by code.
+    'verify_data_subject_request(request_id uuid, rung text)',
+    'answer_data_subject_request(request_id uuid, new_status text, resolution_text text)',
 
     -- The three in 20260929100000_console_control_plane.sql. Each checks
     -- `console:operate` itself and raises 42501 without it (never

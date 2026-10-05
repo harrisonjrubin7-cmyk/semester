@@ -140,7 +140,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     const names = jobs(scheduler()).map((j) => j.name);
     expect(names.length).toBeGreaterThan(8);
     expect(names).toEqual(expect.arrayContaining(['push', 'tombstones', 'integration-sync']));
-    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan']));
+    expect(parked(scheduler())).toEqual(new Set(['push', 'escalation-delivery', 'media-scan', 'support-reply-notify']));
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {
@@ -151,7 +151,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
 
   it('finds the cron-invoked Edge Functions', () => {
     const invoked = deployable().filter((d) => CRON_INVOKED.test(functionCode(d)));
-    expect(invoked.sort()).toEqual(['integration-tick', 'push']);
+    expect(invoked.sort()).toEqual(['integration-tick', 'push', 'support-reply-notify']);
   });
 });
 
@@ -217,6 +217,13 @@ describe('the live check and the deploy notes cannot drift from scheduler.sql', 
     const sql = scheduler();
     const fromFile = new Map(jobs(sql).map((j) => [j.name, parked(sql).has(j.name)]));
     expect(Object.fromEntries(healthExpected())).toEqual(Object.fromEntries(fromFile));
+  });
+
+  it('surfaces support-notification dead letters even when pg_cron itself succeeds', () => {
+    const sql = read(join(SUPABASE, 'health.sql'));
+    expect(sql).toMatch(/from public\.support_notification_outbox/);
+    expect(sql).toMatch(/dead_lettered_at is not null/);
+    expect(sql).toMatch(/latest_error/);
   });
 
   it('scheduler.sql names each job once', () => {

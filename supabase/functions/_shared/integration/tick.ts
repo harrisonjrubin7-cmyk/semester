@@ -41,8 +41,9 @@ import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import type { AdapterDeclaration } from './adapter.ts';
 import type { ConnectionStatus } from './catalog.ts';
 import type { ProviderBatch } from './pipeline.ts';
+import { intervalMinutes } from './freshness.ts';
 import { DEFAULT_RETRY } from './retry.ts';
-import { runSync, type SyncReport } from './worker.ts';
+import { runSync, type FailureClassifier, type SyncReport } from './worker.ts';
 
 /** The pg_cron job's cadence, in minutes. `scheduler.sql` must agree. */
 export const TICK_MINUTES = 15;
@@ -56,10 +57,55 @@ export interface PullRequest {
   trigger: 'scheduled' | 'replay';
 }
 
+/** What one provider call is given. Valid for that call; adapter code must not keep it. */
+export interface CallAuth {
+  /** OAuth 2 / OIDC bearer token, or null. */
+  accessToken: string | null;
+  /** The leased secret for `api_key`, `sftp`, `mtls` and the like, or null. */
+  secret: string | null;
+}
+
+/** How an adapter that authenticates with OAuth gets a new access token. */
+export interface OAuthBinding {
+  refresh(refreshToken: string, clientSecret: string): Promise<{ accessToken: string; refreshToken?: string; expiresInSeconds: number }>;
+}
+
+/**
+ * The client an adapter makes its provider calls through. Each call is
+ * admitted by the connection's rate limit, Retry-After wait and circuit
+ * breaker, and is handed its credential. An adapter that calls the provider any
+ * other way has stepped round all three; `contract-harness.ts` fails it.
+ */
+export interface ProviderClient {
+  call<T>(fn: (auth: CallAuth) => Promise<T>): Promise<T>;
+}
+
 /** A live adapter: its declaration, and how to fetch one batch. */
 export interface RegisteredAdapter {
   declaration: AdapterDeclaration;
-  pull(request: PullRequest): Promise<ProviderBatch>;
+  pull(request: PullRequest, client: ProviderClient): Promise<ProviderBatch>;
+  /** How this adapter gets a new OAuth access token. Required when it authenticates with OAuth. */
+  oauth?: OAuthBinding;
+}
+
+/**
+ * What the tick needs from the provider-call machinery, handed in by whoever
+ * composes it. It is a port and not an import because the gateway may not take
+ * on more client source than `importboundaries.ts` records; the
+ * implementation is `providerRuntime()` in `provider-client.ts`, composed by
+ * the Edge Function (and by the tests). There is no default, on purpose: a
+ * tick with no runtime would hand adapters no guard and no credential rules.
+ */
+export interface ProviderRuntime {
+  /** The client for one pull of one connection. */
+  clientFor(context: {
+    adapter: RegisteredAdapter;
+    tenantId: string;
+    connectionPublicId: string;
+    now: () => Date;
+  }): ProviderClient;
+  /** What a failed pull means. */
+  classify: FailureClassifier;
 }
 
 export interface TickOptions {
@@ -71,6 +117,14 @@ export interface TickOptions {
   maxRuns?: number;
   /** Tests only: let mock adapters run. Passed through to `runSync`. */
   allowMock?: boolean;
+  /**
+   * The provider-call machinery: guard, credentials and failure
+   * classification. The production Edge Function composes one with no
+   * credential services, so an adapter that declares a `credentialsReference`
+   * is refused on its first call (dead-lettered as `authentication`) rather
+   * than calling its provider anonymously. See `provider-client.ts`.
+   */
+  runtime: ProviderRuntime;
 }
 
 export interface TickSummary {
@@ -117,18 +171,7 @@ export function adapterFor(adapters: readonly RegisteredAdapter[], c: Pick<Conne
   return hits.length === 1 ? hits[0] : null;
 }
 
-/**
- * A Postgres interval as PostgREST returns it (`IntervalStyle = postgres`):
- * `01:00:00`, `2 days`, `1 day 06:30:00`, `1 mon`. Null for anything else, so a
- * value this cannot read falls back to the adapter's target rather than to 0.
- */
-export function intervalMinutes(value: string | null): number | null {
-  if (!value) return null;
-  const m = /^(?:(\d+) years? ?)?(?:(\d+) mons? ?)?(?:(\d+) days? ?)?(?:(\d+):(\d{2}):(\d{2})(?:\.\d+)?)?$/.exec(value.trim());
-  if (!m || m[0] === '') return null;
-  const [, y, mo, d, h, mi] = m.map((x) => Number(x ?? 0));
-  return ((y * 365 + mo * 30 + d) * 24 + h) * 60 + mi;
-}
+export { intervalMinutes } from './freshness.ts';
 
 /**
  * Minutes between scheduled pulls: half the freshness target, never under one
@@ -193,7 +236,14 @@ export async function tick(db: SupabaseClient, options: TickOptions): Promise<Ti
     try {
       report = await runSync(db, {
         connectionPublicId: c.public_id, adapter: adapter.declaration, trigger, attempt, allowMock: options.allowMock,
-        fetchBatch: () => adapter.pull({ connectionPublicId: c.public_id, tenantId: c.tenant_id, cursor: c.cursor_state ?? {}, trigger }),
+        classify: options.runtime.classify,
+        // The client is built per pull, so what the guard remembers lasts one
+        // pull. What carries a failure from tick to tick is the stored run
+        // history and the dead-letter hold below, not memory in this process.
+        fetchBatch: () => adapter.pull(
+          { connectionPublicId: c.public_id, tenantId: c.tenant_id, cursor: c.cursor_state ?? {}, trigger },
+          options.runtime.clientFor({ adapter, tenantId: c.tenant_id, connectionPublicId: c.public_id, now }),
+        ),
       });
     } catch {
       // `runSync` throws only when it refuses to write something it should

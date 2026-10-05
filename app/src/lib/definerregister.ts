@@ -118,6 +118,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['accept_family_grant', 'sharing', ['auth.uid()']],
   ['activate_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['adopt_lti_identity', 'integration', ['auth.uid()']],
+  ['answer_data_subject_request', 'admin', ['auth.uid()', 'private.has_capability', 'req.subject = me']],
   ['answer_help_request', 'admin', ['auth.uid()', 'private.answers_for']],
   ['answer_mentor_request', 'admin', ['auth.uid()', 'private.subject_has_capability']],
   ['appeal_community_decision', 'self-service', ['auth.uid()']],
@@ -244,6 +245,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
   ['my_volunteer_standing', 'read-helper', ['auth.uid()']],
@@ -298,6 +300,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_member_capabilities', 'admin', ['private.org_can']],
   ['set_member_standing', 'admin', ['auth.uid()', 'private.org_can']],
   ['set_school_enforcement', 'admin', ['private.is_app_admin']],
+  ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
@@ -310,6 +313,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['support_ticket_thread', 'admin', ['private.support_agent']],
   ['trust_room_grant', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
+  ['verify_data_subject_request', 'admin', ['auth.uid()', 'private.has_capability', 'req.subject = me']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['volunteer_attest', 'self-service', ['auth.uid()']],
   ['volunteer_decide', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
@@ -330,6 +334,7 @@ export const NOT_YET_APPLIED: readonly string[] = [
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
+  '20261004200000_answer_data_subject_requests.sql',
 ];
 
 /**
@@ -341,6 +346,10 @@ export const NOT_YET_APPLIED: readonly string[] = [
  * the files in `NOT_YET_APPLIED`.
  */
 export const SINCE_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261004200000_answer_data_subject_requests.sql',
+    functions: ['answer_data_subject_request', 'verify_data_subject_request'],
+  },
   {
     file: '20260930234000_data_subject_request_intake.sql',
     functions: ['raise_my_data_subject_request'],
@@ -436,6 +445,14 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261001153124_productivity_workspace.sql',
     functions: ['productivity_readiness_aggregate'],
+  },
+  {
+    file: '20261002003000_support_notification_outbox.sql',
+    functions: ['my_support_email_notices'],
+  },
+  {
+    file: '20261003120000_support_notification_consent_boundary.sql',
+    functions: ['set_support_email_notice'],
   },
 ];
 

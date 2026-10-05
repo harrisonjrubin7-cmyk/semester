@@ -40,8 +40,12 @@ export interface BeginRow {
 }
 
 export interface CheckoutDeps {
+  /** Explicit operations gate; only the literal production value `true` opens checkout. */
+  liveEnabled: boolean;
   /** `STRIPE_SECRET_KEY`; unset turns checkout off. */
   stripeKey: string | undefined;
+  /** Owner/accountant-approved Stripe Tax code for Semester Plus software. */
+  taxCode: string | undefined;
   /** `ALLOWED_ORIGIN`, read strictly. */
   allowedOrigin: string | undefined;
   /** `CHECKOUT_RETURN_URL`, where Stripe sends the person back; defaults to the calling origin. */
@@ -57,6 +61,8 @@ export const MAX_CHECKOUT_BODY_BYTES = 2048;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** The same shape `checkout_sessions.consent_text_version` checks. */
 export const CONSENT_VERSION = /^[a-z0-9][a-z0-9._-]{0,39}$/;
+/** The first wording that explicitly consents to applicable sales tax. */
+export const TAX_CONSENT_VERSION = 'plus-v2';
 
 /** Where Stripe returns the person, with `checkout=success|cancel` added. */
 export function returnTo(base: string, outcome: 'success' | 'cancel'): string {
@@ -66,23 +72,47 @@ export function returnTo(base: string, outcome: 'success' | 'cancel'): string {
 }
 
 /** The Checkout Session parameters, as Stripe's form API reads them. */
-export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: string): Record<string, unknown> {
+export function sessionParams(row: BeginRow, successUrl: string, cancelUrl: string, taxCode: string): Record<string, unknown> {
   return {
     mode: 'subscription',
     client_reference_id: row.checkout_id,
     customer: row.customer_ref ?? undefined,
     customer_email: row.customer_ref ? undefined : row.email ?? undefined,
+    // Automatic Tax must be allowed to persist the address collected by
+    // Checkout when an existing Customer is reused. Without this, Stripe
+    // rejects the Session instead of letting a former subscriber return.
+    // Source: https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-customer_update
+    customer_update: row.customer_ref ? { address: 'auto' } : undefined,
     line_items: [{
       quantity: 1,
       price_data: {
         currency: row.currency,
         unit_amount: row.amount_cents,
         recurring: { interval: row.billing_interval },
-        product_data: { name: `Semester ${row.plan_name}` },
+        // Name the reviewed software classification on every inline product;
+        // never inherit an unrelated account default.
+        // Source: https://docs.stripe.com/tax/tax-codes
+        product_data: { name: `Semester ${row.plan_name}`, tax_code: taxCode },
       },
     }],
-    metadata: { semester_checkout_id: row.checkout_id },
-    subscription_data: { metadata: { semester_checkout_id: row.checkout_id } },
+    // The contract marker lets the activation gate distinguish current,
+    // tax-aware sessions from older open links that must be expired before
+    // billing can be enabled.
+    metadata: {
+      semester_checkout_id: row.checkout_id,
+      semester_tax_contract: TAX_CONSENT_VERSION,
+      semester_tax_code: taxCode,
+    },
+    subscription_data: { metadata: {
+      semester_checkout_id: row.checkout_id,
+      semester_tax_contract: TAX_CONSENT_VERSION,
+      semester_tax_code: taxCode,
+    } },
+    // Stripe Checkout collects the location it needs and carries the tax
+    // result onto the subscription and its invoices. Collection still follows
+    // the merchant account's reviewed registrations; this does not invent one.
+    // Source: https://docs.stripe.com/api/checkout/sessions/create#create_checkout_session-automatic_tax
+    automatic_tax: { enabled: true },
     success_url: successUrl,
     cancel_url: cancelUrl,
   };
@@ -95,13 +125,23 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   const reply = (status: number, body: unknown, extra: Record<string, string> = {}) =>
     new Response(body === null ? null : JSON.stringify(body), {
       status,
-      headers: { ...cors, 'Cache-Control': 'no-store', ...(body === null ? {} : { 'Content-Type': 'application/json' }), ...extra },
+      headers: {
+        ...cors,
+        'Cache-Control': 'no-store',
+        'X-Semester-Billing-Contract': TAX_CONSENT_VERSION,
+        ...(body === null ? {} : { 'Content-Type': 'application/json' }),
+        ...extra,
+      },
     });
 
   // A preflight from an allowed page succeeds even while checkout is off, so
   // the page can read the 503's sentence rather than a bare network error.
   if (req.method === 'OPTIONS') return allowed ? reply(204, null) : reply(403, null);
-  if (!stripeMode(deps.stripeKey)) return reply(503, { error: 'Checkout is not available yet.' });
+  if (deps.liveEnabled !== true) return reply(503, { error: 'Checkout is not available yet.' });
+  const taxCode = deps.taxCode;
+  if (!stripeMode(deps.stripeKey) || !taxCode || !/^txcd_[0-9]{8}$/.test(taxCode)) {
+    return reply(503, { error: 'Checkout is not available yet.' });
+  }
   if (!allowed) return reply(403, { error: 'This page is not allowed to start a checkout.' });
   if (req.method !== 'POST') return reply(405, { error: 'Method not allowed.' }, { Allow: 'POST, OPTIONS' });
 
@@ -120,7 +160,7 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
   }
   const { price_id: priceId, consent, consent_text_version: version } = body;
   if (typeof priceId !== 'string' || !UUID.test(priceId)) return reply(400, { error: 'Choose a plan.' });
-  if (consent !== true || typeof version !== 'string' || !CONSENT_VERSION.test(version)) {
+  if (consent !== true || version !== TAX_CONSENT_VERSION || !CONSENT_VERSION.test(version)) {
     return reply(400, { error: 'Agree to the recurring charge to continue.' });
   }
 
@@ -140,9 +180,12 @@ export async function handleBillingCheckout(req: Request, deps: CheckoutDeps): P
         Authorization: `Bearer ${deps.stripeKey}`,
         'Content-Type': 'application/x-www-form-urlencoded',
         // One session per checkout row, however often the button is pressed.
-        'Idempotency-Key': `checkout-${row.checkout_id}`,
+        // Versioned for the tax-aware parameter contract. This avoids Stripe
+        // rejecting a retry that reuses a pre-tax session's key with new
+        // automatic-tax, product-code, or customer-update parameters.
+        'Idempotency-Key': `checkout-v2-${taxCode}-${row.checkout_id}`,
       },
-      body: formEncode(sessionParams(row, returnTo(base, 'success'), returnTo(base, 'cancel'))),
+      body: formEncode(sessionParams(row, returnTo(base, 'success'), returnTo(base, 'cancel'), taxCode)),
     });
     if (!res.ok) return reply(502, { error: 'The payment provider did not answer. Nothing was charged.' });
     const session = (await res.json()) as { id?: unknown; url?: unknown; livemode?: unknown };

@@ -92,7 +92,7 @@ export function showsAvatar({ atRoot, phone, counting }: Row): boolean {
  * rule spread across the elements it governs cannot be checked, and the one
  * that was spread is the one that was wrong.
  *
- * ## `add` is the one that is simply yes
+ * ## `add` yields only to the same action in the page
  *
  * It used to ask about the *sidebar* rather than the workspace, because that
  * column drew a New button and this `+` would have been a second one beside
@@ -100,10 +100,11 @@ export function showsAvatar({ atRoot, phone, counting }: Row): boolean {
  * went — it opened the capture box, which the search home already opens from
  * the `+` beside its field.
  *
- * So the premise is gone and the question with it. Nothing else in any
- * navigation's chrome carries the capture box, which makes this `+` the only
- * pointing route to it and an unconditional yes. Held that way in
- * `lib/onframe.test.ts` rather than left as a constant nobody rechecks:
+ * So the premise is gone and the question with it on ordinary screens. The
+ * workspace Search home is the deliberate exception: its field already has a
+ * `+` that opens this capture box. Nothing else in any navigation's chrome
+ * carries it, so the header yields only when that action is already inline.
+ * Held in `lib/onframe.test.ts` rather than left as a condition nobody rechecks:
  * two correct removals landing in the same week — the sidebar's New, and this
  * one deferring to it — would otherwise have left a wide workspace with no way
  * to reach the capture box except the keyboard.
@@ -120,6 +121,8 @@ export interface Frame extends Row {
    * it. See `components/desk/TopBar.tsx`.
    */
   desk: boolean;
+  /** The current screen already exposes the same capture action in its body. */
+  hasInlineAdd?: boolean;
 }
 
 /** Which of the row's five controls the header draws. */
@@ -138,7 +141,7 @@ export interface Drawn {
 
 export function headerRow(f: Frame): Drawn {
   return {
-    add: true,
+    add: !f.hasInlineAdd,
     search: !f.desk,
     apps: !f.desk,
     alerts: f.atRoot && !f.desk,

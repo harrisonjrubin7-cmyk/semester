@@ -135,11 +135,13 @@ export function navigate(state: State, action: Action): State | null {
     case 'customize':
       return { ...state, customize: action.open };
 
-    case 'go':
-      return push(
-        action.courseId ? { ...state, guideId: action.courseId } : state,
-        screenForRole(action.screen, state.role),
-      );
+    case 'go': {
+      const recoveryIntent = action.recoveryIntent ?? null;
+      let next = state;
+      if (action.courseId && action.courseId !== state.guideId) next = { ...next, guideId: action.courseId };
+      if (recoveryIntent !== state.recoveryIntent) next = { ...next, recoveryIntent };
+      return push(next, screenForRole(action.screen, state.role));
+    }
 
     /**
      * The browser went somewhere, so the app follows it there.
@@ -178,6 +180,7 @@ export function navigate(state: State, action: Action): State | null {
       const field = action.id || library ? NAMED[landed] : undefined;
       return {
         ...state,
+        recoveryIntent: null,
         screen: landed,
         history: back ? state.history.slice(0, -1) : state.history,
         // `|| null` for the library case: landing on the shelf means no file
@@ -190,17 +193,22 @@ export function navigate(state: State, action: Action): State | null {
     case 'back': {
       const history = [...state.history];
       const prev = history.pop();
-      return { ...dismiss(state), screen: prev ?? 'home', history };
+      return { ...dismiss(state), recoveryIntent: null, screen: prev ?? 'home', history };
     }
 
     case 'openItem':
-      return push({ ...state, itemId: action.id, opened: rememberOpened(state.opened, { kind: 'item', id: action.id }) }, 'item');
+      return push({
+        ...state,
+        recoveryIntent: state.screen === 'behind' ? state.recoveryIntent : null,
+        itemId: action.id,
+        opened: rememberOpened(state.opened, { kind: 'item', id: action.id }),
+      }, 'item');
 
     case 'openCourse':
-      return push({ ...state, courseId: action.id, opened: rememberOpened(state.opened, { kind: 'course', id: action.id }) }, 'course');
+      return push({ ...state, recoveryIntent: null, courseId: action.id, opened: rememberOpened(state.opened, { kind: 'course', id: action.id }) }, 'course');
 
     case 'openEvent':
-      return push({ ...state, eventId: action.id }, 'event');
+      return push({ ...state, recoveryIntent: null, eventId: action.id }, 'event');
 
     case 'openCall': {
       /*
@@ -209,7 +217,7 @@ export function navigate(state: State, action: Action): State | null {
        * from the lobby changes the code without changing the screen, and the
        * early return would drop the code on the floor.
        */
-      const next = { ...state, callCode: action.code };
+      const next = { ...state, recoveryIntent: null, callCode: action.code };
       return state.screen === 'call' ? next : push(next, 'call' as Screen);
     }
 
@@ -217,6 +225,7 @@ export function navigate(state: State, action: Action): State | null {
       return push(
         {
           ...state,
+          recoveryIntent: null,
           guideId: action.id,
           mode: action.mode ?? state.mode,
           // Search can name a unit, and landing on the guide with it already

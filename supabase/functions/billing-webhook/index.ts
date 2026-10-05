@@ -39,10 +39,15 @@ Deno.serve((req) =>
         want_ref: ref, want_status: status, want_period_start: start, want_period_end: end,
         want_cancel_at_period_end: cancelAtPeriodEnd, want_event_at: eventAt,
       }),
-    upsertInvoice: (subscriptionRef, invoiceRef, amount, currency, issuedAt, dueAt) =>
-      call<string | null>('upsert_provider_invoice', {
-        want_subscription_ref: subscriptionRef, want_invoice_ref: invoiceRef, want_amount_cents: amount,
+    applyInvoiceEvent: (eventId, kind, subscriptionRef, invoiceRef, invoiceStatus, subtotal, tax, currency, issuedAt, dueAt, snapshotAt, snapshotRank, amount, sha) =>
+      call<string>('apply_invoice_payment_event_v3', {
+        want_provider: 'stripe', want_event_id: eventId, want_kind: kind,
+        want_subscription_ref: subscriptionRef, want_invoice_ref: invoiceRef,
+        want_invoice_status: invoiceStatus,
+        want_subtotal_cents: subtotal, want_tax_cents: tax,
         want_currency: currency, want_issued_at: issuedAt, want_due_at: dueAt,
+        want_snapshot_at: snapshotAt, want_snapshot_rank: snapshotRank,
+        want_amount_cents: amount, want_payload_sha256: sha,
       }),
     applyEvent: (eventId, kind, invoiceId, amount, sha) =>
       call<string>('apply_payment_event', {

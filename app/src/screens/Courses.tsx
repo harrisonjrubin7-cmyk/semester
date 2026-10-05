@@ -251,9 +251,9 @@ export function Courses() {
                       color: 'var(--app-dim)',
                       flex: 1,
                       minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      // Wraps: a deadline's title is the thing the card is for, and
+                      // text spacing (WCAG 1.4.12) must not cut its end off.
+                      overflowWrap: 'anywhere',
                     }}
                   >
                     {next ? next.title : 'Nothing scheduled'}
@@ -711,6 +711,11 @@ export function ItemDetail() {
     <div style={{ padding: 'var(--page-pad)' }}>
       <Folding name="ItemDetail">
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
+        {state.recoveryIntent === 'short_task' ? (
+          <div className="portal-notice" role="status">
+            <strong>2–25 minute recovery start.</strong> Pick one small action—open the source, write the first line, or identify the first question—then stop when the timebox ends. The official requirement and due date stay unchanged.
+          </div>
+        ) : null}
         {/*
           What this is, which course it is in, and on whose word — the shared
           Context Bar rather than a chip, a kicker and a title of its own. The

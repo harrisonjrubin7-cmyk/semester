@@ -60,7 +60,19 @@ function backend() {
     now: () => NOW,
     completeCheckout: async (_c, sub) => { calls.push('complete'); maybeFail('complete'); if (sub) db.subs.add(sub); return 'ok'; },
     syncSubscription: async () => { calls.push('sync'); maybeFail('sync'); return 'ok'; },
-    upsertInvoice: async (sub, invoiceRef) => { calls.push('invoice'); maybeFail('upsert'); return db.subs.has(sub) ? `inv-${invoiceRef}` : null; },
+    applyInvoiceEvent: async (eventId, _kind, sub) => {
+      calls.push('invoice');
+      maybeFail('upsert');
+      if (!db.subs.has(sub)) return 'not_ready';
+      calls.push('apply');
+      maybeFail('apply');
+      // The production RPC serializes the invoice snapshot and this key in
+      // one transaction; this fake models the same all-or-nothing boundary.
+      if (db.applied.has(eventId)) return 'duplicate';
+      db.applied.set(eventId, 1);
+      db.recorded.set(eventId, (db.recorded.get(eventId) ?? 0) + 1);
+      return 'recorded';
+    },
     applyEvent: async (eventId) => {
       calls.push('apply');
       maybeFail('apply');

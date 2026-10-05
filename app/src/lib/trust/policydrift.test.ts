@@ -23,7 +23,10 @@ import { PLANS } from '../plans';
  */
 
 const root = join(import.meta.dirname, '../../../..');
-const site = readFileSync(join(root, 'company-site/index.html'), 'utf8');
+const site = [
+  readFileSync(join(root, 'company-site/index.html'), 'utf8'),
+  readFileSync(join(root, 'company-site/site.js'), 'utf8'),
+].join('\n');
 const draft = readFileSync(join(root, 'docs/legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md'), 'utf8');
 const plus = PLANS.find((p) => p.id === 'plus')!;
 

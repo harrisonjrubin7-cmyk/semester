@@ -20,6 +20,7 @@ import {
   type Profile,
   type Reaction,
 } from '../../lib/classmates';
+import { useNow } from '../../state/store';
 import {
   clockAt,
   conversation,
@@ -119,6 +120,7 @@ export function Talk({
   onPaper: (code: string) => void;
   paperOf: (body: string) => string | null;
 }) {
+  const now = useNow();
   const [messages, setMessages] = useState<Message[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
   const [present, setPresent] = useState<string[]>([]);
@@ -135,17 +137,17 @@ export function Talk({
   /*
    * Where you were when you walked in.
    *
-   * A ref, read once, and never written again — which is the whole of what
-   * "frozen at open" means. `mark` moves forward as you read, because the list
-   * outside has to stop counting what is on your screen; an effect that copied
-   * it into here on every change would drag the NEW rule down the transcript
-   * behind you until it was above nothing.
+   * State with a lazy initializer records the opening mark once without
+   * reading a mutable ref during render. `mark` moves forward as you read,
+   * because the list outside has to stop counting what is on your screen; an
+   * effect that copied it into here on every change would drag the NEW rule
+   * down the transcript behind you until it was above nothing.
    *
    * Nothing resets it, because nothing has to: the screen mounts this with the
    * room's key, so opening a different room is a different component with a
    * different mark rather than this one being told to forget.
    */
-  const opened = useRef(mark);
+  const [openedAt] = useState(() => mark);
 
   useEffect(() => {
     let live = true;
@@ -222,9 +224,9 @@ export function Talk({
   );
 
   const handles = useMemo(() => people.map((p) => p.handle).filter(Boolean), [people]);
-  const days = useMemo(() => conversation(messages as Say[], new Date()), [messages]);
+  const days = useMemo(() => conversation(messages as Say[], now), [messages, now]);
   const tallies = useMemo(() => tally(reactions, me, nameOf), [reactions, me, nameOf]);
-  const seen = unread(messages as Say[], opened.current, me, myHandle, handles);
+  const seen = unread(messages as Say[], openedAt, me, myHandle, handles);
   const hits = useMemo(() => findSaid(messages as Say[], query), [messages, query]);
   const files = useMemo(
     () => shared(messages as Say[], nameOf, paperOf),

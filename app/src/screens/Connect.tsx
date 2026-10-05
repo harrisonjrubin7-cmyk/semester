@@ -196,7 +196,7 @@ export function Connect() {
         kind,
         name: title,
         url: from,
-        synced: Date.now(),
+        synced: now.getTime(),
         status: `${said(events.length)} read`,
         count: events.length,
       },
@@ -508,7 +508,7 @@ export function Connect() {
       */}
       <SectionLabel>Calendars</SectionLabel>
       <Blueprint
-        style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
+        style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', outline: dropping ? '2px dashed var(--app-fg)' : undefined }}
         onDragOver={(e) => {
           e.preventDefault();
           setDropping(true);
@@ -1033,7 +1033,7 @@ export function Connect() {
                   {!token ? (
                     <button
                       type="button"
-                      className="btn btn-primary"
+                      className="btn btn-secondary"
                       disabled={busy === id}
                       onClick={() => void connect(id)}
                       style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}

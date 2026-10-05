@@ -13,6 +13,7 @@ import {
   render,
   sheetLiterals,
   sources,
+  undefinedScaleTokens,
 } from './rules';
 import { BUDGET } from './budget';
 
@@ -48,6 +49,10 @@ describe('the style rule', () => {
     // The rule that matters most and shows least: a cycle does not fail, it
     // silently deletes the token for a whole subtree. See `cycles`.
     expect(cycles(src).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([]);
+  });
+
+  it('uses only spacing tokens the scale defines', () => {
+    expect(undefinedScaleTokens(src).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([]);
   });
 
   it('leaves the Typeface and Corners settings to the student', () => {
@@ -108,6 +113,32 @@ describe('the style rule', () => {
  * message it produces is checked, not just the fact that it produced one.
  */
 describe('what it catches', () => {
+  it('reports an undefined spacing token and ignores prose about one', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'spacing-token-'));
+    mkdirSync(join(dir, 'styles'), { recursive: true });
+    writeFileSync(
+      join(dir, 'styles', 'x.css'),
+      ':root{--sp-1:2px}\n/* var(--sp-3) is documentation */\n.a{padding:var(--sp-2)}\n',
+    );
+    const found = undefinedScaleTokens(dir);
+    expect(found.map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([
+      'styles/x.css:3 var(--sp-2)',
+    ]);
+    expect(found[0].says).toContain('undefined');
+  });
+
+  it('does not treat a component-scoped custom property as part of the global spacing scale', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoped-spacing-token-'));
+    mkdirSync(join(dir, 'styles'), { recursive: true });
+    writeFileSync(
+      join(dir, 'styles', 'x.css'),
+      ':root{--sp-1:2px}\n.component-a{--sp-9:18px}\n.component-b{padding:var(--sp-9)}\n',
+    );
+    expect(undefinedScaleTokens(dir).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([
+      'styles/x.css:3 var(--sp-9)',
+    ]);
+  });
+
   it('a token defined as itself, naming the token and what it costs', () => {
     const dir = mkdtempSync(join(tmpdir(), 'cycle-'));
     mkdirSync(join(dir, 'styles'), { recursive: true });

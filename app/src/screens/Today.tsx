@@ -13,6 +13,11 @@ import { WhatChanged } from '../components/WhatChanged';
 import { DayPlanNote } from '../components/DayPlanNote';
 import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { countSources, itemSources, todayEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
+import { DEADLINE_HORIZON_DAYS } from '../lib/today-actions';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
@@ -70,6 +75,7 @@ import { JourneyCards } from '../components/JourneyCards';
 import { journeysFor, recommendJourney } from '../lib/journeys';
 import { offered } from '../lib/nav';
 import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { useTaskActions } from '../composition/taskactions';
 import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
 import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
 import { DeadlineHorizon } from '../components/DeadlineHorizon';
@@ -217,6 +223,7 @@ function NextClassCard() {
  */
 function YourTasks() {
   const { state, dispatch, courseCode, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
@@ -267,7 +274,7 @@ function YourTasks() {
             <button
               type="button"
               className="bare"
-              onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+              onClick={() => taskActions.toggle(t.id)}
               aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
               // 20px was the icon's size, not a target. This is the most
               // tapped control in the app and it was less than half the
@@ -821,7 +828,14 @@ function TabHome() {
         <OperatingRhythm />
       </div>
       <div className="hides-in-focus">
-        <details className="today-more">
+        {tab === 'week' && <ThisWeek />}
+        {tab === 'week' && <WeekHorizon />}
+
+        {tab === 'hours' && <HoursToday />}
+
+        {tab === 'done' && <DoneToday />}
+
+        <details key={tab} className="today-more">
           <summary>More from Today</summary>
           <CommandCenter />
           <FlightPlanHomeSlot />
@@ -829,13 +843,6 @@ function TabHome() {
           {tab === 'today' && <TodayFeed />}
           {tab === 'today' && <DailyPlanSlot />}
         </details>
-
-        {tab === 'week' && <ThisWeek />}
-        {tab === 'week' && <WeekHorizon />}
-
-        {tab === 'hours' && <HoursToday />}
-
-        {tab === 'done' && <DoneToday />}
       </div>
     </Page>
   );
@@ -2110,13 +2117,31 @@ export function nothingOnToday(
 }
 
 export function Today() {
-  const { state, catalog } = useStore();
+  const { state, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
-  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today"><DailyPlanSlot /></FirstRun>;
-  return shape === 'feed' ? <FeedHome /> : <TabHome />;
+  const empty = nothingOnToday(shape, catalog, state);
+  const sources = useMemo(() => {
+    const near = datedItems(catalog, now).filter((i) => !i.isPast && !state.done[i.id] && i.daysAway <= DEADLINE_HORIZON_DAYS);
+    return countSources([...itemSources(near), ...state.tasks.map((): SourceLabel => 'student_entered')]);
+  }, [catalog, now, state.done, state.tasks]);
+  const env = todayEnvelope({ loading, empty, count: Object.values(sources).reduce((a, b) => a + b, 0), sources, online, now: now.getTime() });
+  return (
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="today"
+      empty={{ title: 'Nothing on today yet.', body: 'Add a course or an action to start.' }}
+      emptyNode={<FirstRun where="on today"><DailyPlanSlot /></FirstRun>}
+      inset
+    >
+      {() => (shape === 'feed' ? <FeedHome /> : <TabHome />)}
+    </ReadState>
+  );
 }
 
 /** Re-exported for the Me screen's load bars. */

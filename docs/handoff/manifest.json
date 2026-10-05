@@ -1,0 +1,93 @@
+{
+  "version": "2026-10-05",
+  "entry": "handoff/BUILD.md",
+  "scripts": [
+    "handoff/preflight.sh",
+    "handoff/install.sh",
+    "handoff/verify.sh"
+  ],
+  "migrationOrder": [
+    "010_platform_core",
+    "020_community",
+    "030_marketplace",
+    "040_ops",
+    "050_security_hardening",
+    "060_command_functions",
+    "070_ai_gateway",
+    "080_sources_storage_delegations"
+  ],
+  "files": [
+    {
+      "from": "semester-core/*.ts.txt",
+      "to": "<APP>/src/lib/core/",
+      "check": "unit tests"
+    },
+    {
+      "from": "semester-platform/supabase/migrations/010–080",
+      "to": "supabase/migrations/",
+      "check": "db reset + RLS/security/command tests"
+    },
+    {
+      "from": "semester-platform/supabase/seed.sql.txt",
+      "to": "supabase/seed.sql",
+      "check": "db reset"
+    },
+    {
+      "from": "semester-platform/lib/**",
+      "to": "<APP>/lib/",
+      "check": "typecheck"
+    },
+    {
+      "from": "semester-platform/app/api/**",
+      "to": "<APP>/app/api/",
+      "check": "typecheck + build"
+    },
+    {
+      "from": "semester-platform/tests/**",
+      "to": "<APP>/tests/",
+      "check": "vitest"
+    },
+    {
+      "from": "semester-platform/middleware.security.ts.txt",
+      "to": "<APP>/middleware.security.ts (merge into middleware.ts)",
+      "check": "build; headers present"
+    },
+    {
+      "from": "semester-platform/.env.example.txt, .env.test.txt",
+      "to": "<APP>/",
+      "check": "—"
+    },
+    {
+      "from": "semester-platform/.github/ci-security-job.yml.txt",
+      "to": ".github/ (merge into ci.yml)",
+      "check": "CI"
+    },
+    {
+      "from": "claude-code-toolkit/**",
+      "to": "repo root per its EXECUTE.md",
+      "check": "design-system:check"
+    }
+  ],
+  "pilotCriticalPath": [
+    "00",
+    "01",
+    "02",
+    "03",
+    "06",
+    "05",
+    "09",
+    "10"
+  ],
+  "humanOnly": [
+    "insurance",
+    "DPA",
+    "HECVAT",
+    "attorney review",
+    "IdP metadata",
+    "contacts",
+    "baseline approval",
+    "PR approvals",
+    "cutover approval",
+    "AI provider terms"
+  ]
+}

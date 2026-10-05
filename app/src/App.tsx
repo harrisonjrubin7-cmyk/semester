@@ -157,7 +157,12 @@ function Loading() {
  */
 function SkipLink() {
   return (
-    <a className="skip-link" href="#main">
+    <a className="skip-link" href="#main" onClick={(event) => {
+      const main = event.currentTarget.ownerDocument.getElementById('main');
+      if (!main) return;
+      event.preventDefault();
+      main.focus();
+    }}>
       Skip to content
     </a>
   );
@@ -229,12 +234,14 @@ function Header({
    * One fact now rather than a list: is this the workspace, whose bar carries
    * these controls. It was briefly two — the sidebar was the second, because
    * that column drew New and this header's `+` stood down for it. The column
-   * no longer draws New, so the `+` is unconditional again; `headerRow` in
-   * `lib/header.ts` has that argument. What always stays is what no other
+   * no longer draws New, so the `+` is normally present again. Search is the
+   * one exception because its field already carries the same capture action;
+   * `headerRow` in `lib/header.ts` has that argument. What always stays is what no other
    * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
-}: { desk?: boolean } = {}) {
+  screenOwnsTitle = false,
+}: { desk?: boolean; screenOwnsTitle?: boolean } = {}) {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const { kicker, title } = useHeader();
@@ -286,7 +293,13 @@ function Header({
    * of the same control. `lib/header.ts` answers for all five now, and the
    * markup below asks rather than decides.
    */
-  const row = headerRow({ atRoot, phone, counting, desk });
+  const row = headerRow({
+    atRoot,
+    phone,
+    counting,
+    desk,
+    hasInlineAdd: desk && state.screen === 'search',
+  });
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -300,8 +313,25 @@ function Header({
   useEffect(() => {
     if (wasOn.current === state.screen) return;
     wasOn.current = state.screen;
-    heading.current?.focus({ preventScroll: true });
-  }, [state.screen]);
+
+    const focusTitle = () => {
+      const title = screenOwnsTitle
+        ? document.querySelector<HTMLHeadingElement>('h1[data-page-title]')
+        : heading.current;
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const shell = document.querySelector('.device');
+    if (!shell) return;
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(shell, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [screenOwnsTitle, state.screen]);
 
   return (
     // A real <header>, and the screen's name is the page's <h1>. Both were
@@ -333,6 +363,7 @@ function Header({
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
+        {!screenOwnsTitle && <>
         {upTo ? (
           <button
             type="button"
@@ -382,16 +413,21 @@ function Header({
             outline: 'none',
             fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            // Wraps rather than truncating: a title the reader's text spacing makes
+            // too long for one line (WCAG 1.4.12) must not lose its end. The header
+            // is a flex row with no fixed height, so it grows with the title.
+            overflowWrap: 'anywhere',
             margin: 0,
             fontWeight: 'inherit',
-            letterSpacing: 'inherit',
+            // 0, not `inherit`: the reader's letter spacing (`textSpacing`) is set on the
+            // device and would otherwise reach the display heading through the header.
+            letterSpacing: 0,
+            wordSpacing: 0,
           }}
         >
           {title}
         </h1>
+        </>}
       </div>
 
       {/*
@@ -862,7 +898,7 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header desk />}
+            <Header desk screenOwnsTitle={ownTitle} />
             <SystemContextBar />
             <Said />
             {/* The sample banner belongs over records, which is what it is
@@ -1480,7 +1516,7 @@ function AppFrame() {
             that is 800 tall and mostly thumb.
           */}
           <TabStrip />
-          {!ownTitle && <Header />}
+          <Header screenOwnsTitle={ownTitle} />
           <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1587,7 +1623,7 @@ function AppFrame() {
         again.
       */}
       <TabStrip />
-      {!ownTitle && <Header />}
+      <Header screenOwnsTitle={ownTitle} />
       <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />

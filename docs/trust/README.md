@@ -58,6 +58,28 @@ The documents here fill items those indexes list. The NDA-gated room in
 | [`AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md`](AI-MODEL-TRAINING-AND-DATA-USE-POLICY.md) | The no-training-by-default policy in full and the eleven implementation requirements, each held to the tree. A draft for counsel, rendered from `app/src/lib/trust/ai-training-policy.ts` |
 | [`COMPLIANCE-CROSSWALK.md`](COMPLIANCE-CROSSWALK.md) | HECVAT 4, the four 1EdTech TrustEd Apps rubrics and EDUCAUSE 2026 as one control library: every domain rests on rows of the four readiness registers and every 0–4 score is computed by the test, capped at 2 until `docs/evidence/` exists. Also Semester through a university's own vendor intake. Rendered from `app/src/lib/trust/compliance-crosswalk.ts` |
 | [`EVIDENCE-REGISTER.md`](EVIDENCE-REGISTER.md) | The evidence index the operating system listed as missing: for every control, the artifact that would prove it operates, its owner seat, frequency and visibility, and what the tree holds today. No evidence has been produced, and the word is refused by test until `docs/evidence/` exists. Rendered from `app/src/lib/trust/evidence-register.ts` |
+| [`SECURITY-OVERVIEW.md`](SECURITY-OVERVIEW.md) | How the security model works as built, each statement with the evidence that holds it and what is not shown. Opens with what has not been done |
+| [`CONTROL-FACTS.md`](CONTROL-FACTS.md) | Counts rendered from the tree: tables with row-level security, check suites, headers, event classes, edge functions, definer functions. Rendered by `app/src/lib/docs/trust-docs.test.ts` |
+| [`REVIEWER-QUESTION-MAP.md`](REVIEWER-QUESTION-MAP.md) | The questions a security or procurement reviewer asks, the page that answers each, and its status. Holds no answers |
+| [`DOCUMENT-MAP.md`](DOCUMENT-MAP.md) | Every document in `docs/trust`, `docs/security`, `docs/compliance` and `docs/legal`, grouped by what a reviewer wants |
+
+## Controlled readiness library
+
+These additional documents define the controlled security, privacy, data, AI,
+resilience and assurance program. Their individual status and evidence sections
+govern what may be claimed; an indexed document is not proof that its control
+operates in a target environment.
+
+- Program and risk: [`INFORMATION-SECURITY-PROGRAM.md`](INFORMATION-SECURITY-PROGRAM.md), [`RISK-TREATMENT-PLAN.md`](RISK-TREATMENT-PLAN.md), [`SECURITY-QUESTIONNAIRE.md`](SECURITY-QUESTIONNAIRE.md), and [`THREAT-MODEL.md`](THREAT-MODEL.md).
+- Identity and access: [`ACCESS-CONTROL-POLICY.md`](ACCESS-CONTROL-POLICY.md), [`IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md`](IDENTITY-AND-ACCESS-MANAGEMENT-STANDARD.md), and [`PASSWORD-SESSION-AND-MFA-STANDARD.md`](PASSWORD-SESSION-AND-MFA-STANDARD.md).
+- Engineering and release: [`SECURE-DEVELOPMENT-LIFECYCLE.md`](SECURE-DEVELOPMENT-LIFECYCLE.md), [`CHANGE-MANAGEMENT-POLICY.md`](CHANGE-MANAGEMENT-POLICY.md), [`RELEASE-MANAGEMENT-POLICY.md`](RELEASE-MANAGEMENT-POLICY.md), [`VULNERABILITY-MANAGEMENT-POLICY.md`](VULNERABILITY-MANAGEMENT-POLICY.md), and [`SECURITY-TESTING-PLAN.md`](SECURITY-TESTING-PLAN.md).
+- Cryptography, assets and telemetry: [`ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md`](ENCRYPTION-AND-KEY-MANAGEMENT-STANDARD.md), [`ASSET-INVENTORY.md`](ASSET-INVENTORY.md), and [`LOGGING-MONITORING-AND-ALERTING-STANDARD.md`](LOGGING-MONITORING-AND-ALERTING-STANDARD.md).
+- Incident and resilience: [`INCIDENT-RESPONSE-PLAN.md`](INCIDENT-RESPONSE-PLAN.md), [`SECURITY-INCIDENT-RUNBOOK.md`](SECURITY-INCIDENT-RUNBOOK.md), [`BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md`](BACKUP-RESTORE-AND-ROLLBACK-RUNBOOK.md), and [`BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md`](BUSINESS-CONTINUITY-AND-DISASTER-RECOVERY-PLAN.md).
+- Data governance: [`STUDENT-DATA-GOVERNANCE-PROGRAM.md`](STUDENT-DATA-GOVERNANCE-PROGRAM.md), [`DATA-INVENTORY.md`](DATA-INVENTORY.md), [`PERSONAL-DATA-PROCESSING-REGISTER.md`](PERSONAL-DATA-PROCESSING-REGISTER.md), [`DATA-FLOW-MAP.md`](DATA-FLOW-MAP.md), [`DATA-CLASSIFICATION-STANDARD.md`](DATA-CLASSIFICATION-STANDARD.md), and [`DATA-MINIMIZATION-STANDARD.md`](DATA-MINIMIZATION-STANDARD.md).
+- Data lifecycle and rights: [`DATA-RETENTION-AND-DELETION-STANDARD.md`](DATA-RETENTION-AND-DELETION-STANDARD.md), [`DATA-EXPORT-STANDARD.md`](DATA-EXPORT-STANDARD.md), [`DATA-SUBJECT-REQUEST-RUNBOOK.md`](DATA-SUBJECT-REQUEST-RUNBOOK.md), and [`CONSENT-AND-PREFERENCE-MANAGEMENT-SPEC.md`](CONSENT-AND-PREFERENCE-MANAGEMENT-SPEC.md).
+- Vendor governance: [`VENDOR-SECURITY-REVIEW-PROGRAM.md`](VENDOR-SECURITY-REVIEW-PROGRAM.md) and [`SUBPROCESSOR-GOVERNANCE-PROGRAM.md`](SUBPROCESSOR-GOVERNANCE-PROGRAM.md).
+- AI governance: [`AI-GOVERNANCE-PROGRAM.md`](AI-GOVERNANCE-PROGRAM.md), [`AI-SYSTEM-INVENTORY.md`](AI-SYSTEM-INVENTORY.md), [`AI-RISK-ASSESSMENT.md`](AI-RISK-ASSESSMENT.md), [`AI-DATA-USE-STANDARD.md`](AI-DATA-USE-STANDARD.md), [`AI-HUMAN-OVERSIGHT-STANDARD.md`](AI-HUMAN-OVERSIGHT-STANDARD.md), [`AI-TRANSPARENCY-AND-USER-NOTICE.md`](AI-TRANSPARENCY-AND-USER-NOTICE.md), [`MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md`](MODEL-AND-PROMPT-CHANGE-MANAGEMENT.md), and [`AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md`](AI-INCIDENT-AND-KILL-SWITCH-RUNBOOK.md).
+- Readiness matrices: [`EDUCATION-PRIVACY-READINESS-MATRIX.md`](EDUCATION-PRIVACY-READINESS-MATRIX.md), [`NIST-800-53-READINESS-MATRIX.md`](NIST-800-53-READINESS-MATRIX.md), and [`HECVAT-READINESS-MATRIX.md`](HECVAT-READINESS-MATRIX.md).
 
 ## What blocks a signature, and none of it is code
 
@@ -91,3 +113,7 @@ list.
 
 Today the first three are true, and the rest are not yet. That is the point to
 start sending this package: when they are all true, not before.
+
+## Standards and privacy implementation audit
+
+- [Standards and privacy audit](STANDARDS-PRIVACY-AUDIT.md): the interactive 1EdTech / NIST Rev. 5 matrix, education-data boundary map, RFP exports, source-document inventory and outstanding institution activation gates.

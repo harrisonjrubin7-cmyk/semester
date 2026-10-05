@@ -45,11 +45,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
         if: steps.config.outputs.enabled == 'true'
-        working-directory: app
         run: npm ci
 
       - name: Build scan target
@@ -79,3 +78,101 @@ jobs:
           APP_HOST: http://localhost:4173
         with:
           apiKey: ${{ secrets.HAWK_API_KEY }}
+
+  company_site:
+    needs: hawkscan
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+
+      - name: Check company scan configuration
+        env:
+          HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
+        run: |
+          test -n "$HAWK_API_KEY" && test -n "$STACKHAWK_APPLICATION_ID"
+          node --test scripts/company-site-scan.test.mjs
+
+      - name: Start isolated company-site target with production headers
+        env:
+          COMPANY_SCAN_KEY: ${{ runner.temp }}/company-site-scan.key
+          COMPANY_SCAN_CERT: ${{ runner.temp }}/company-site-scan.crt
+          COMPANY_SCAN_EVIDENCE: ${{ runner.temp }}/company-site-responses.jsonl
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          openssl req -x509 -newkey rsa:2048 -sha256 -nodes \
+            -keyout "$COMPANY_SCAN_KEY" -out "$COMPANY_SCAN_CERT" -days 1 \
+            -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
+          node scripts/company-site-scan-server.mjs > "$RUNNER_TEMP/company-site-target.log" 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --cacert "$COMPANY_SCAN_CERT" https://localhost:4186/product > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/company-site-target.log"
+          exit 1
+
+      - name: Install pinned HawkScan CLI
+        uses: stackhawk/hawkscan-action@29a62fe1e926ea50ac87a1b64efc59b82ffd5b7d # v2.2.0
+        with:
+          apiKey: ${{ secrets.HAWK_API_KEY }}
+          installCLIOnly: true
+          version: 6.5.0
+          configurationFiles: stackhawk-company-site.yml
+
+      - name: Install checksum-pinned HawkOp evidence CLI
+        run: |
+          archive="$RUNNER_TEMP/hawkop-v0.11.0-x86_64-unknown-linux-gnu.tar.gz"
+          curl --proto '=https' --tlsv1.2 --fail --silent --show-error --location \
+            'https://download.stackhawk.com/hawkop/cli/hawkop-v0.11.0-x86_64-unknown-linux-gnu.tar.gz' \
+            --output "$archive"
+          echo "8e37168b6361b39d6a67eb1426b31328b2a8bb8472a53b8c7dcffd35ffa720c3  $archive" | sha256sum --check --strict
+          tar --extract --gzip --file "$archive" --directory "$RUNNER_TEMP" hawkop
+          "$RUNNER_TEMP/hawkop" --version
+
+      - name: Validate company-site scan
+        env:
+          HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
+          APP_HOST: https://localhost:4186
+        run: |
+          hawk version
+          hawk config --help > /dev/null
+          API_KEY="$HAWK_API_KEY" hawk validate config stackhawk-company-site.yml
+
+      - name: Run company-site HawkScan
+        id: company_scan
+        env:
+          HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
+          APP_HOST: https://localhost:4186
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          HAWK_AGENT: Codex
+        run: |
+          echo 'StackHawk | Scanning isolated company frontend; production backends are out of scope'
+          test "$(git rev-parse HEAD)" = "$COMMIT_SHA"
+          echo "StackHawk | Actual checkout: $COMMIT_SHA"
+          # Exclude target readiness probes. From here only the scanner visits it.
+          node -e "require('node:fs').writeFileSync(process.env.RUNNER_TEMP + '/company-site-responses.jsonl', '')"
+          API_KEY="$HAWK_API_KEY" hawk scan stackhawk-company-site.yml --json-output > "$RUNNER_TEMP/company-site-scan.json"
+
+      - name: Verify company-site scan evidence
+        if: always() && steps.company_scan.outcome != 'skipped' && steps.company_scan.outcome != ''
+        env:
+          HAWK_API_KEY: ${{ secrets.HAWK_API_KEY }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          scan_id=$(node scripts/company-site-scan-report.mjs id "$RUNNER_TEMP/company-site-scan.json")
+          echo "StackHawk | Scan id: $scan_id"
+          "$RUNNER_TEMP/hawkop" scan get "$scan_id" --detail full --format json > "$RUNNER_TEMP/company-site-findings.json"
+          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings.json"
+          API_KEY="$HAWK_API_KEY" hawk op scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
+          node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl"

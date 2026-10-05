@@ -29,8 +29,9 @@ In-app tickets are built but not switched on yet. When they are, you can open
 a ticket about your account, sync, a bug, accessibility, privacy, how to do
 something, or anything else — up to five a day — and follow it to resolution.
 The system is set to aim for a first response within 24 hours for
-accessibility and privacy, and 72 hours for everything else. [DECIDE: whether
-those become commitments when tickets are switched on.]
+accessibility and privacy, and 72 hours for everything else. [COUNSEL REQUIRED:
+whether those become commitments when tickets are switched on; no response
+time is decided, and this is not the privacy-request clock (P-03).]
 
 ## 3. We do not look at your data to help you — unless you let us
 

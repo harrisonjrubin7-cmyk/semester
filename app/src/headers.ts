@@ -69,9 +69,10 @@ export interface HeaderCtx {
  * all read. A screen added to `DESTINATIONS` is now named in the header for
  * free, and `header.test.ts` fails if one ever is not.
  *
- * `Today` remains the answer for anything genuinely unlisted — the two shell
- * screens and onboarding — which is the honest last resort rather than the
- * first one.
+ * `Today` remains the answer only for a genuinely unknown runtime route (for
+ * example, a stale bookmark whose name is no longer in the `Screen` union).
+ * Shell-owned routes have explicit metadata below because this value also
+ * drives the document title even when their visible header is suppressed.
  */
 export function fallbackHeader(screen: Screen, today: string): Head {
   const known = destination(screen);
@@ -79,8 +80,8 @@ export function fallbackHeader(screen: Screen, today: string): Head {
   return { kicker: 'In the app', title: known.short ?? known.label };
 }
 
-/** The six screens that take their name from `DESTINATIONS`, or wear the last
- *  resort. Shared, so the six are provably one rule and not six copies. */
+/** Screens that take their name from `DESTINATIONS`, with a safe last resort
+ * for a stale runtime route. */
 const fromRegistry = (c: HeaderCtx): Head => fallbackHeader(c.screen, c.today);
 
 /*
@@ -281,16 +282,16 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   account: () => ({ kicker: 'Your semester, everywhere', title: 'Account' }),
   slides: (c) => ({ kicker: c.about('deck'), title: 'Slides' }),
   import: () => ({ kicker: 'Syllabus in, course out', title: 'New course' }),
-  // The six with no line of their own: four that the registry names —
-  // Everything, How this works, Your data, Privacy — and the two shell
-  // screens, which are the workspace looking at itself and are deliberately
-  // not destinations. Onboarding is the seventh: it draws no header at all.
+  // The registry names the three navigable utility pages. Shell-owned routes
+  // still need explicit names: they do not draw this header, but `useHeader`
+  // also supplies the document title announced by browsers and assistive
+  // technology.
   data: fromRegistry,
   help: fromRegistry,
   privacy: fromRegistry,
-  directory: fromRegistry,
-  search: fromRegistry,
-  onboarding: fromRegistry,
+  directory: () => ({ kicker: 'Semester', title: 'All apps' }),
+  search: () => ({ kicker: 'Semester', title: 'Search' }),
+  onboarding: () => ({ kicker: 'Semester', title: 'Welcome' }),
 };
 
 /**

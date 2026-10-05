@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { isSemesterAgent, type SemesterAgent } from '../../../packages/institution/src/agents';
+import { isSemesterAgent, type SemesterAgent } from '../../../packages/institution/src/agent-ids';
 import type { Turn } from '../lib/claude';
 import type { Local } from '../lib/localask';
 import type { Read } from '../lib/mode';

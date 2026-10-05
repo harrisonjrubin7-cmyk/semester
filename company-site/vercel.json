@@ -7,7 +7,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com; connect-src 'self' https://lzrqvlugnawcgywkhqlz.supabase.co https://harrisonjrubin7-cmyk.github.io https://raw.githubusercontent.com; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' mailto:; object-src 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'sha256-SVFDjwcaISDaY5H6B2mrchJ9EY15yZYVbKL0eOOd8Tc=' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self'; font-src 'self'; img-src 'self' data: https://i.ytimg.com; connect-src 'self' https://lzrqvlugnawcgywkhqlz.supabase.co https://harrisonjrubin7-cmyk.github.io https://raw.githubusercontent.com; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' mailto:; object-src 'none'; upgrade-insecure-requests"
         },
         {
           "key": "Strict-Transport-Security",

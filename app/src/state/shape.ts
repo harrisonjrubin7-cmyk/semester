@@ -73,6 +73,7 @@ import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
+import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
@@ -598,6 +599,7 @@ export interface Persisted {
   typeface: string;
   bodyface: string;
   lineHeight: string;
+  textSpacing: string;
   readingWidth: string;
   iconShape: string;
   /** `device`, `still` or `calm` — see `CALMS` in `lib/look.ts`. */
@@ -860,6 +862,8 @@ export interface Ephemeral {
   /** Whether the one-line capture box is open. See `lib/capture.ts`. */
   quickAdd: boolean;
   screen: Screen;
+  /** Student-selected recovery context carried to the next screen only. */
+  recoveryIntent: RecoveryIntent | null;
   /** Back stack, so Back walks history rather than one remembered screen. */
   history: Screen[];
   courseId: CourseId;
@@ -1546,6 +1550,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   typeface: 'condensed',
   bodyface: 'barlow',
   lineHeight: 'normal',
+  textSpacing: 'normal',
   readingWidth: 'normal',
   iconShape: 'none',
   calm: 'device',
@@ -1583,6 +1588,7 @@ export function currentLook(state: Persisted): Look {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -1619,6 +1625,7 @@ export function initialEphemeral(): Ephemeral {
     quickAdd: false,
     undone: null,
     screen: 'home',
+    recoveryIntent: null,
     history: [],
     courseId: 'core',
     itemId: 'bus-ga1',
@@ -2192,6 +2199,7 @@ export function pickPersisted(state: State): Persisted {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -2224,7 +2232,7 @@ export type Action =
    * guide was last looked at. It sets `guideId` only; `courseId`, which is the
    * course *page*, is not a tool's idea of where it is.
    */
-  | { type: 'go'; screen: Screen; courseId?: CourseId }
+  | { type: 'go'; screen: Screen; courseId?: CourseId; recoveryIntent?: RecoveryIntent }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
@@ -2639,6 +2647,8 @@ export type Action =
   | { type: 'addStep'; id: string; text: string }
   | { type: 'dropStep'; id: string; stepId: string }
   | { type: 'deleteTask'; id: string }
+  /** The engine's tasks, woven into the list (`lib/sync/engine/tasks.ts` `weave`). Never from a screen. */
+  | { type: 'tasksFromEngine'; tasks: PersonalTask[]; known: string[]; adopted: Record<string, string> }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   /*
    * The same shape as `editTask`, and here for the same reason it is.

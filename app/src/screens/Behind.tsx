@@ -58,6 +58,7 @@ const GROUPS: { where: Step['where']; label: string; note: string }[] = [
   },
   { where: 'today', label: 'Today', note: '' },
   { where: 'fits', label: 'Fits in the hours you have', note: '' },
+  { where: 'available', label: 'Other unfinished work', note: 'Available to choose for a short first pass; its full effort has not been compared with this week.' },
   {
     where: 'tight',
     label: 'Past the hours you have',
@@ -80,7 +81,23 @@ export function Behind() {
 
   const items = datedItems(catalog, now);
   const b = howBehind(items, state.done, state.spent, week);
-  const steps = triage(items, state.done, state.spent, week);
+  const triageSteps = triage(items, state.done, state.spent, week);
+  const shortTaskFallback = state.recoveryIntent === 'short_task' && triageSteps.length === 0;
+  const steps = shortTaskFallback
+    ? items
+      .filter((item) => !state.done[item.id])
+      .sort((a, b) => Math.abs(a.daysAway) - Math.abs(b.daysAway))
+      .map((item): Step => ({
+        id: item.id,
+        title: item.title,
+        courseId: item.c,
+        where: item.daysAway < 0 ? 'gone' : item.daysAway === 0 ? 'today' : 'available',
+        minutes: null,
+        daysAway: item.daysAway,
+        worth: 0,
+        says: `${item.dueShort}; outside the usual one-week triage window.`,
+      }))
+    : triageSteps;
   const attendance = misses(
     catalog.courses.map((c) => c.id),
     state.attendPolicy,
@@ -102,11 +119,27 @@ export function Behind() {
             textWrap: 'pretty',
           }}
         >
-          {behindLine(b)}
+          {shortTaskFallback && steps.length > 0
+            ? `Showing ${steps.length} unfinished ${steps.length === 1 ? 'item' : 'items'} to choose a short first pass, including work outside the usual one-week triage window.`
+            : behindLine(b)}
         </div>
       </Blueprint>
 
       <FlightPlanRecoverySlot />
+
+      {state.recoveryIntent === 'short_task' ? (
+        <Blueprint style={{ marginTop: 'var(--sp-4)', padding: 'var(--sp-5)' }}>
+          <div className="kicker">Your 2–25 minute start</div>
+          {steps.length > 0 ? (
+            <p style={{ marginBottom: 0 }}>Choose one item below. The item will keep this recovery choice visible so you can timebox a first pass without changing its official requirement or due date.</p>
+          ) : (
+            <>
+              <p>No unfinished coursework is available here. Nothing needs to be reopened to fill this time.</p>
+              <button type="button" className="bare tappable" onClick={() => dispatch({ type: 'go', screen: 'home' })}>Open Today for another action</button>
+            </>
+          )}
+        </Blueprint>
+      ) : null}
 
       {/*
         Before the deadlines, because a bad week is often not about the

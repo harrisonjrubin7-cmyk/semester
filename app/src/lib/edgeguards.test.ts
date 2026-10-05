@@ -40,7 +40,7 @@ describe('the registry and the directory', () => {
 
 describe('each function carries the evidence for its guard', () => {
   for (const g of EDGE_GUARDS) {
-    it(`${g.fn} (${g.guard})`, () => {
+    it(`${g.fn} (${g.guards.join(' or ')})`, () => {
       const src = source(g.fn);
       for (const e of g.evidence) expect(src, `${g.fn} should match ${e}`).toMatch(e);
     });
@@ -50,13 +50,13 @@ describe('each function carries the evidence for its guard', () => {
 describe('a function that answers anyone says so, and why', () => {
   it('gives a reason for every public function, and only for them', () => {
     for (const g of EDGE_GUARDS) {
-      if (g.guard === 'public') expect(g.why && g.why.length > 40, `${g.fn} needs a reason`).toBe(true);
+      if (g.guards.includes('public')) expect(g.why && g.why.length > 40, `${g.fn} needs a reason`).toBe(true);
       else expect(g.why, `${g.fn} is not public`).toBeUndefined();
     }
   });
 
   it('keeps the public list short enough to read', () => {
-    expect(EDGE_GUARDS.filter((g) => g.guard === 'public').map((g) => g.fn)).toEqual(['lead-intake']);
+    expect(EDGE_GUARDS.filter((g) => g.guards.includes('public')).map((g) => g.fn)).toEqual(['lead-intake']);
   });
 });
 

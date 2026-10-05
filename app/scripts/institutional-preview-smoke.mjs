@@ -10,7 +10,7 @@ const appRoot = join(here, '..');
 const host = '127.0.0.1';
 const port = Number(process.env.INSTITUTIONAL_SMOKE_PORT || 4180);
 const base = `http://${host}:${port}/`;
-const vite = join(appRoot, 'node_modules', 'vite', 'bin', 'vite.js');
+const vite = join(dirname(createRequire(import.meta.url).resolve('vite/package.json')), 'bin', 'vite.js');
 const expectedPreview = process.env.EXPECT_INSTITUTIONAL_PREVIEW !== 'false';
 
 if (!Number.isInteger(port) || port < 1 || port > 65_535) {
@@ -129,10 +129,17 @@ try {
       if (expectedPreview) {
         await page.locator('nav[aria-label="Primary"]').waitFor({ state: 'visible', timeout: 10_000 });
         await page.getByText('Demo environment', { exact: false }).first().waitFor({ state: 'visible' });
-        if (probe.module) await page.getByText(probe.module, { exact: false }).first().waitFor({ state: 'visible' });
         const workspace = page.locator('details.institutional-workspace-disclosure');
         await workspace.locator('summary').click();
         await workspace.locator('[aria-label="Current journey"]').waitFor({ state: 'visible' });
+        if (probe.module) {
+          const module = page.getByText(probe.module, { exact: false }).first();
+          if (!(await module.isVisible())) {
+            const collapsed = module.locator('xpath=ancestor::details[not(@open)][1]');
+            if (await collapsed.count()) await collapsed.locator('summary').first().click();
+          }
+          await module.waitFor({ state: 'visible' });
+        }
       }
 
       const result = await page.evaluate(() => ({
@@ -219,6 +226,9 @@ try {
       const previewControls = page.locator('aside[aria-label="Demo environment"]');
       await previewControls.locator('summary').click();
       await previewControls.locator('select').nth(0).selectOption('cedar-coast');
+      if ((await previewControls.locator('details').getAttribute('open')) === null) {
+        await previewControls.locator('summary').click();
+      }
       await page.getByText('Cedar Coast College', { exact: false }).first().waitFor();
       if (await page.getByText('Help with Evidence & sampling practice', { exact: false }).count()) {
         findings.push('context isolation: Northstar draft leaked into Cedar Coast');
@@ -236,7 +246,7 @@ try {
         const roleSelect = previewControls.locator('select').nth(1);
         await roleSelect.selectOption(`cedar-coast-${role}`);
         await page.getByText(title, { exact: true }).waitFor();
-        await page.getByText(applicableFunction, { exact: true }).waitFor();
+        await page.getByLabel('Available functions').getByText(applicableFunction, { exact: true }).waitFor();
         const visibleRoleHeadings = await page.locator('section[aria-label*="workspace for"] .section-label').allTextContents();
         if (visibleRoleHeadings.length !== 1 || visibleRoleHeadings[0]?.trim() !== title) {
           findings.push(`role workspace ${role}: visible headings were ${JSON.stringify(visibleRoleHeadings)}`);

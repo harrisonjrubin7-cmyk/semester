@@ -1,5 +1,15 @@
 # Semester — Market Readiness Scorecard
 
+> **Current assessment (2026-10-02):** use
+> [`docs/market-readiness/MARKET-READINESS-EXECUTIVE-SUMMARY.md`](docs/market-readiness/MARKET-READINESS-EXECUTIVE-SUMMARY.md),
+> [`docs/market-readiness/MARKET-READINESS-SCORECARD.md`](docs/market-readiness/MARKET-READINESS-SCORECARD.md),
+> [`docs/market-readiness/REPOSITORY-CONTROLLED-COMPLETION-SCORECARD.md`](docs/market-readiness/REPOSITORY-CONTROLLED-COMPLETION-SCORECARD.md),
+> and the machine-readable
+> [`CAPABILITY-STATUS-REGISTRY.json`](docs/market-readiness/CAPABILITY-STATUS-REGISTRY.json).
+> The historical scorecard below is retained because its probes and correction
+> history are enforced by tests; its 2026-09-22 counts and gaps are not the
+> current launch decision.
+
 The single index of what is true about this repository's readiness for a real
 university deployment. Every status below is a claim about code that exists in
 this tree, and every `READY` carries the evidence that earned it.

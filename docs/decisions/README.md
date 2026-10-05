@@ -39,3 +39,23 @@ Prefer one.
 - no number is written down twice, anywhere;
 - the log takes no new sections;
 - each file here holds exactly the one decision it is named for.
+
+## ADR program (Phase 0, 4 October 2026)
+
+`D-<pull request number>` stays the record of *what was decided and shipped*.
+The ADR program adds a second, separate namespace, `ADR-nnnn`, for the
+architecturally significant decisions that are **still being made**: the 25
+in [`DECISION_BACKLOG.md`](DECISION_BACKLOG.md). The two do not share numbers
+and `written(root, 'ADR-0001')` stays false by design.
+
+- Template: [`ADR_TEMPLATE.md`](ADR_TEMPLATE.md). Index: [`ADR_INDEX.md`](ADR_INDEX.md).
+- An ADR lives in the folder of its status: `proposed/`, `accepted/`,
+  `superseded/`, `deprecated/`. Moving a file is how its status changes; the
+  status field inside it must agree.
+- **Link the two when an ADR is accepted.** The pull request that accepts or
+  implements an ADR writes its `D-<pr number>.md` as usual and the ADR cites it
+  (and vice versa). A Proposed ADR has no D-number yet; that is correct.
+- Governance: [`../governance/ADR_REVIEW_POLICY.md`](../governance/ADR_REVIEW_POLICY.md),
+  [`../governance/DECISION_RIGHTS.md`](../governance/DECISION_RIGHTS.md).
+- Nothing here is accepted. Every ADR in `proposed/` is a proposal drafted from
+  repository evidence and awaits its named owner's review.

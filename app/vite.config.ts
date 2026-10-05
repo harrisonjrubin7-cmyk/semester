@@ -703,6 +703,8 @@ function vercelUncovered(extra: string): string[] {
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/TodayActionCenter.shadow.sources.test.tsx',
+  'src/composition/react.mount.test.tsx',
   'src/components/ProductivityPreparation.test.tsx',
   'src/lib/productivity-cloud.test.ts',
   'src/components/ProductivityWorkspace.test.tsx',
@@ -742,6 +744,7 @@ const MOCKS_MODULES = [
   'src/components/SemesterWrapped.test.tsx',
   'src/components/TrustCenter.test.tsx',
   'src/components/rework.test.tsx',
+  'src/components/room/Talk.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/components/QuizFeedback.test.tsx',
@@ -779,6 +782,7 @@ const MOCKS_MODULES = [
   'src/components/betapanel.test.tsx',
   'src/components/institutional-preview-bar.test.tsx',
   'src/components/supportticketspanel.test.tsx',
+  'src/components/console/supportqueue.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/components/institutional/ControlPlane.test.tsx',
@@ -924,6 +928,12 @@ export default defineConfig(({ command, mode }) => {
         '@semester/institution': fileURLToPath(
           new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
+        '@semester/offline-sync': fileURLToPath(
+          new URL('../packages/offline-sync/src/index.ts', import.meta.url),
+        ),
+        '@semester/platform': fileURLToPath(
+          new URL('../packages/platform/src/index.ts', import.meta.url),
+        ),
       },
     },
     // GitHub Pages serves a project site from /<repo>/, not from the root. The
@@ -949,12 +959,15 @@ export default defineConfig(({ command, mode }) => {
     /*
      * The test suite, which had no configuration at all and was paying for it.
      *
-     * 363 files, and vitest was spawning one worker per file: 363 spawns at
-     * ~224ms each, which is 27 of the suite's 47 seconds spent starting
-     * processes rather than running tests. Vitest says so itself at the foot
-     * of every run, and has done for as long as there have been this many
-     * files. CI pays it three times — `npm test`, then `test:zones` runs the
-     * whole suite again in Chicago and again in Kiritimati.
+     * The suite is now more than twelve hundred files. Leaving Vitest to use
+     * every reported CPU made the slow structural scans and async component
+     * tests compete with seven other transforms and miss their otherwise
+     * ordinary five-second test budget. The same files passed alone and failed
+     * under the full run, so the failure was runner contention rather than a
+     * product assertion. Four workers keeps useful parallelism without making
+     * the suite's own source-tree reads fight an eight-way transform storm.
+     * CI pays for this suite three times — `npm test`, then `test:zones` runs
+     * it again in Chicago and Kiritimati — so this is a cap, not serial mode.
      *
      * `isolate: false` reuses a worker across files instead of starting one
      * per file. What it gives up is the guarantee that each file gets a fresh
@@ -974,14 +987,28 @@ export default defineConfig(({ command, mode }) => {
      * listed.
      */
     test: {
+      // Five seconds is Vitest's small-unit default. This suite also contains
+      // deliberately medium-sized component and whole-source-tree checks. The
+      // release gate is their assertions, not whether a loaded workstation can
+      // finish each one inside the framework's unrelated default stopwatch.
+      maxWorkers: 4,
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
       projects: [
         {
           extends: true,
           test: {
             name: 'shared',
             isolate: false,
-            include: [...configDefaults.include, '../packages/institution/src/**/*.test.ts'],
-            exclude: [...configDefaults.exclude, ...MOCKS_MODULES],
+            include: [
+              ...configDefaults.include,
+              '../packages/institution/src/**/*.test.ts',
+              '../packages/offline-sync/src/**/*.test.ts',
+              '../packages/platform/src/**/*.test.ts',
+            ],
+            // Publication artifacts are outside the repository. Their explicit
+            // suite requires the real deliverables; it is not an app regression.
+            exclude: [...configDefaults.exclude, ...MOCKS_MODULES, 'scripts/rollout-publication.test.ts'],
           },
         },
         {

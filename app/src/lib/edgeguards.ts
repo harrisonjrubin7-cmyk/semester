@@ -39,7 +39,7 @@ export type Guard =
 
 export interface EdgeGuard {
   fn: string;
-  guard: Guard;
+  guards: readonly Guard[];
   /** Source patterns that must all appear in `supabase/functions/<fn>/index.ts`. */
   evidence: readonly RegExp[];
   /** Required when the guard is `public`. */
@@ -49,23 +49,25 @@ export interface EdgeGuard {
 const USER = [/\.auth\.getUser\(/] as const;
 
 export const EDGE_GUARDS: readonly EdgeGuard[] = [
-  { fn: 'billing-cancel', guard: 'user-token', evidence: USER },
-  { fn: 'billing-checkout', guard: 'user-token', evidence: USER },
-  { fn: 'billing-webhook', guard: 'signature', evidence: [/STRIPE_WEBHOOK_SECRET/] },
-  { fn: 'calendar', guard: 'link-token', evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/] },
-  { fn: 'canvas', guard: 'user-token', evidence: USER },
-  { fn: 'claude', guard: 'user-token', evidence: USER },
-  { fn: 'delete-account', guard: 'user-token', evidence: USER },
-  { fn: 'productivity-sourcecheck', guard: 'user-token', evidence: USER },
-  { fn: 'fetchcal', guard: 'user-token', evidence: USER },
-  { fn: 'integration-tick', guard: 'scheduler-token', evidence: [/serveTick\(/] },
+  { fn: 'billing-cancel', guards: ['user-token'], evidence: USER },
+  { fn: 'billing-checkout', guards: ['user-token'], evidence: USER },
+  { fn: 'billing-portal', guards: ['user-token'], evidence: USER },
+  { fn: 'billing-webhook', guards: ['signature'], evidence: [/STRIPE_WEBHOOK_SECRET/] },
+  { fn: 'calendar', guards: ['link-token'], evidence: [/TOKEN\.test\(/, /rpc\('read_feed'/] },
+  { fn: 'canvas', guards: ['user-token'], evidence: USER },
+  { fn: 'claude', guards: ['user-token'], evidence: USER },
+  { fn: 'delete-account', guards: ['user-token'], evidence: USER },
+  { fn: 'productivity-sourcecheck', guards: ['user-token'], evidence: USER },
+  { fn: 'fetchcal', guards: ['user-token'], evidence: USER },
+  { fn: 'integration-tick', guards: ['scheduler-token'], evidence: [/serveTick\(/] },
   {
     fn: 'lead-intake',
-    guard: 'public',
+    guards: ['public'],
     evidence: [/rpc\('submit_site_lead'/],
     why: 'A visitor to the public site has no account. The only write is submit_site_lead, which rate-limits and validates in the database (private.site_lead_hits).',
   },
-  { fn: 'lti', guard: 'flow-state', evidence: [/spend_lti_nonce/, /jwtVerify\(/, /checkHeader\(/] },
-  { fn: 'push', guard: 'shared-secret', evidence: [/CRON_SECRET/, /Bearer \$\{CRON_SECRET\}/] },
-  { fn: 'trust-room', guard: 'link-token', evidence: [/handleTrustRoom\(/, /rpc\('trust_room_open'/] },
+  { fn: 'lti', guards: ['flow-state'], evidence: [/spend_lti_nonce/, /jwtVerify\(/, /checkHeader\(/] },
+  { fn: 'push', guards: ['shared-secret'], evidence: [/CRON_SECRET/, /Bearer \$\{CRON_SECRET\}/] },
+  { fn: 'support-reply-notify', guards: ['user-token', 'shared-secret'], evidence: [...USER, /CRON_SECRET/, /handleSupportNotice\(/] },
+  { fn: 'trust-room', guards: ['link-token'], evidence: [/handleTrustRoom\(/, /rpc\('trust_room_open'/] },
 ];

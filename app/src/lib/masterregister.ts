@@ -456,8 +456,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support ticket UAT',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: six app-context keys, every detail unticked by default, 24h/72h targets (#839)' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, and the preview shows all of it' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s probes and key to .env.production (#902, #908)' }],
-    gap: 'Tickets are off by default (VITE_SUPPORT_TICKETS), have no staff screen and no notification to the student, and no ticket id is shown in the app. The status page is live at /status.html and linked from Help (#922; held by help.statuslink.test.ts). No support ticket UAT.',
+    evidence: [{ path: 'app/src/lib/supporttickets.ts', shows: 'Support tickets: stable SUP references, six app-context keys, every detail unticked by default, 24h/72h targets, and capability-gated staff RPC clients' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks: no identity reaches the queue, five a day, only the student closes' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent, the preview shows all of it, and the student sees the ticket reference' }, { path: 'app/src/components/console/supportqueue.test.tsx', shows: 'The Operations Console reads the identity-free queue, shows SLA state and approved context, and records replies and resolution state' }, { path: 'app/src/lib/supportnotify.test.ts', shows: 'The generic email hint is origin-, auth- and capability-gated and excludes the reply body' }, { path: 'app/src/lib/help-routes.ts', shows: 'Help requests to campus offices with minimal context, withdrawable, DB-enforced' }, { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' }, { path: 'app/src/lib/statuspage.test.ts', shows: 'Holds the page\'s probes and key to .env.production (#902, #908)' }],
+    gap: 'Tickets remain off unless VITE_SUPPORT_TICKETS is enabled. The reply-notification function is built but not deployed or receipt-tested, and no production support UAT has been recorded. The status page is live at /status.html and linked from Help (#922; held by help.statuslink.test.ts).',
   },
   {
     id: 'LMS-001',
@@ -786,7 +786,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Migration discovery report',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Customer data migration: NOT_STARTED; nothing supports it' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3 course-migration milestones and evidence' }],
+    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Customer data migration: evidence path (Migration Center) and roster staging built; no discovery scanner and no load path' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3 course-migration milestones and evidence' }],
     gap: 'No scanner of legacy courses/tools/content/links/assessments and no risk report. Needs tooling and a migration discovery report.',
   },
   {
@@ -796,7 +796,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Migration UAT',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'No import format, dry-run, provenance, rollback or reconciliation' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: course shells, pages, files and media imported' }],
+    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Rosters only have a manifest, dry-run, rollback and reconciliation; no content import and no provenance' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: course shells, pages, files and media imported' }],
     gap: 'No content migration from Canvas/Brightspace/Blackboard and no native content model to receive it. Needs importers and migration UAT.',
   },
   {
@@ -816,7 +816,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Reconciliation UAT',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: grade ledger reconciled before any passback' }, { path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Reconciliation report: none' }],
+    evidence: [{ path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: grade ledger reconciled before any passback' }, { path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Reconciliation counts exist in the Migration Center and for rosters; no grade import or reconciliation' }],
     gap: 'No gradebook structure or historical grade import, security model or reconciliation. Needs definition, build and reconciliation UAT.',
   },
   {
@@ -1496,8 +1496,8 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Support UAT',
     severity: 'P0',
     status: 'tested',
-    evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'Two tables with RLS and no grants; nine definer functions; 24h/72h first-response targets computed from the category' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks, three of which fail against a faithful revert' }, { path: 'app/src/lib/supporttickets.ts', shows: 'Client and the six context keys' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent' }, { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'T1-T3 support tiers' }, { path: 'docs/launch/FAQ.md', shows: 'FAQ as a starting knowledge base' }],
-    gap: 'Off by default; no staff screen (an agent answers from the SQL editor), no notification to the student, no retention for closed tickets, no support address separate from a personal mailbox, no owner or hours, no customer comms workflow, no support UAT.',
+    evidence: [{ path: 'supabase/migrations/20260928210000_support_tickets.sql', shows: 'Two tables with RLS and no grants; nine definer functions; 24h/72h first-response targets computed from the category' }, { path: 'supabase/support-tickets.check.sql', shows: '25 checks, three of which fail against a faithful revert' }, { path: 'app/src/lib/supporttickets.ts', shows: 'Student and support RPC clients, stable SUP references and the six context keys' }, { path: 'app/src/components/supportticketspanel.test.tsx', shows: 'Nothing unticked is sent and students can retain a ticket reference' }, { path: 'app/src/components/console/supportqueue.test.tsx', shows: 'Identity-free staff queue, SLA state, approved diagnostic context, replies and resolution states' }, { path: 'app/src/lib/supportnotify.test.ts', shows: 'Generic reply notification without identity or reply content in the staff browser' }, { path: 'docs/market-readiness/SUPPORT_PLAYBOOK.md', shows: 'T1-T3 support tiers' }, { path: 'docs/launch/FAQ.md', shows: 'FAQ as a starting knowledge base' }],
+    gap: 'Off by default; notification code is not deployed or receipt-tested; no retention for closed tickets, no support address separate from a personal mailbox, no owner or hours, no customer comms workflow, and no production support UAT.',
   },
   {
     id: 'SUP-002',

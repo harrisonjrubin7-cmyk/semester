@@ -16,7 +16,8 @@ LOAD_SOAK_WINDOWS=8 LOAD_SECONDS=30 supabase/load.sh   # eight windows of thirty
 ```
 
 Soak is **off unless `LOAD_SOAK_WINDOWS` is set**, and with it off the runner does
-exactly what it did before. CI runs four windows of six seconds.
+exactly what it did before. CI runs four windows of six seconds, and runs four more if
+the drift check fails, failing only if the drift persists over the eight (D-1280).
 
 After every window it checks the invariants and the number of other sessions open in
 the database (a count that keeps rising is a connection someone leaked: more than two
@@ -29,6 +30,12 @@ either. A scenario drifts when the later best is more than **2 times** the earli
 more than **5 ms** higher (`SOAK_RATIO`, `SOAK_MIN_DELTA_MS`), so a 0.3 ms path that
 became 0.9 ms is not a finding. With fewer than four windows it says it cannot see a
 trend and passes.
+
+A drift seen once may be the runner: with four windows each end of the comparison is
+two windows, and a fast pair at the start against a stalled pair at the end reads as
+a leak. So when `drift.sh` fails, `run.sh` runs as many windows again and judges all of
+them by the same rule and limits; a scenario that really gets slower keeps getting slower
+and fails, one that does not, passes (D-1280).
 
 ## Budgets in a soak
 

@@ -58,3 +58,20 @@ app/public/video/broll/
 # And the explainers, which are 8–15 minutes each. The chapters.txt beside
 # them is derived from the same plan and re-written every render.
 app/public/video/explainer/
+
+# Terraform: providers and local state are never committed. `.terraform.lock.hcl`
+# is — it pins the provider hashes, which is the supply-chain control.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+plan.bin
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+
+# Visual-regression screenshots and the runner's own baseline (scripts/gallery-shots.mjs)
+.gallery/
+# Generated design-system reports (uploaded as CI artifacts, not committed)
+app/reports/

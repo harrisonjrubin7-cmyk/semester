@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -27,7 +27,9 @@ import { StandardsCrosswalk } from '../components/console/StandardsCrosswalk';
 import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
+import { SupportQueue } from '../components/console/SupportQueue';
 import { said, when } from '../components/console/Fields';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The operations console.
@@ -50,22 +52,25 @@ import { said, when } from '../components/console/Fields';
  * browser storage; `console.test.tsx` asserts it.
  */
 
+const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
 
-type Tab = 'command' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
+type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'finance' | 'evidence' | 'views';
 
-const TABS: readonly { id: Tab; label: string }[] = [
+const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'command', label: 'Command center' },
   { id: 'approvals', label: 'Approvals' },
   { id: 'breakglass', label: 'Break-glass' },
   { id: 'audit', label: 'Audit' },
   { id: 'customers', label: 'Customers' },
   { id: 'figures', label: 'Figures' },
+  { id: 'finance', label: 'Finance model' },
   { id: 'evidence', label: 'Evidence' },
   { id: 'views', label: 'Views' },
 ];
 
-const isTab = (v: unknown): v is Tab => typeof v === 'string' && TABS.some((t) => t.id === v);
+const isTab = (tabs: readonly { id: Tab }[], v: unknown): v is Tab => typeof v === 'string' && tabs.some((t) => t.id === v);
 
 /** Preference keys, under `operator_preference`. */
 const PREF_TAB = 'console.tab';
@@ -118,6 +123,12 @@ export function Console() {
 
 function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
   const env = environment();
+  const mayAnswerSupport = grants.some((grant) => grant.capability === 'support:ticket' && grant.scopeKind === 'platform');
+  const tabs = useMemo<readonly { id: Tab; label: string }[]>(() => [
+    CORE_TABS[0],
+    ...(EXPERIENCE_FLAGS.supportTickets !== 'off' && mayAnswerSupport ? [{ id: 'support' as const, label: 'Support' }] : []),
+    ...CORE_TABS.slice(1),
+  ], [mayAnswerSupport]);
   const [tab, setTab] = useState<Tab>('command');
   const [filter, setFilter] = useState('');
   const [scope, setScope] = useState('All');
@@ -127,6 +138,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
   const [support, setSupport] = useState<SupportGrant[] | null | string>(null);
   const [status, setStatus] = useState('');
   const [gate, setGate] = useState<{ run: () => Promise<void> } | null>(null);
+  const [gateRunning, setGateRunning] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   const onStatus = useCallback((s: string) => setStatus(s), []);
@@ -162,7 +174,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     loadPreferences().then(
       (p) => {
         if (!live) return;
-        if (isTab(p[PREF_TAB])) setTab(p[PREF_TAB]);
+        if (isTab(tabs, p[PREF_TAB])) setTab(p[PREF_TAB]);
         setViews(readViews(p[PREF_VIEWS]));
       },
       (e: unknown) => { if (live) setStatus(said(e, 'Could not load your preferences.')); },
@@ -172,7 +184,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, []);
+  }, [tabs]);
 
   const choose = (next: Tab) => {
     setTab(next);
@@ -202,8 +214,15 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
 
   const verified = () => {
     const pending = gate;
-    setGate(null);
-    void readMfa().then(() => pending?.run().catch((e: unknown) => setStatus(said(e, 'The change was not recorded.'))));
+    if (!pending) return;
+    setGateRunning(true);
+    void readMfa()
+      .then(() => pending.run())
+      .catch((e: unknown) => setStatus(said(e, 'The change was not recorded.')))
+      .finally(() => {
+        setGate(null);
+        setGateRunning(false);
+      });
   };
 
   const sessionEnds = session instanceof Date ? `At session end, ${when(session.toISOString())}` : 'At session end';
@@ -217,7 +236,14 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           {status}
         </p>
       )}
-      {gate && <MfaStep onVerified={verified} onCancel={() => setGate(null)} />}
+      {gate && (gateRunning
+        ? <p role="status">Finishing the verified change…</p>
+        : <MfaStep onVerified={verified} onCancel={() => setGate(null)} />)}
+      <div
+        data-console-content
+        inert={gate ? true : undefined}
+        aria-hidden={gate ? true : undefined}
+      >
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', alignItems: 'end', marginBottom: 'var(--sp-4)' }}>
         <label style={{ display: 'grid', gap: 'var(--sp-2)', flex: 1 }}>
           Filter this view
@@ -229,14 +255,20 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           </button>
         )}
       </div>
-      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={TABS} />
+      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={tabs} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
         {tab === 'command' && <CommandCenter {...viewProps} />}
+        {tab === 'support' && <SupportQueue {...viewProps} />}
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
+        {tab === 'finance' && (
+          <Suspense fallback={<p role="status">Loading the finance model…</p>}>
+            <FinancialModel />
+          </Suspense>
+        )}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views
@@ -246,11 +278,12 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
             onSave={(v) => keepViews([...views.filter((x) => x.name !== v.name), v], `Saved the view “${v.name}”.`)}
             onApply={(v) => {
               setFilter(v.filter);
-              if (isTab(v.tab)) choose(v.tab);
+              if (isTab(tabs, v.tab)) choose(v.tab);
             }}
             onDelete={(name) => keepViews(views.filter((x) => x.name !== name), `Deleted the view “${name}”.`)}
           />
         )}
+      </div>
       </div>
     </Page>
   );

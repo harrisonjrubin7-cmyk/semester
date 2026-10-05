@@ -186,6 +186,18 @@ describe('what it says about getting something back', () => {
   });
 });
 
+describe('student-controlled academic recovery', () => {
+  it('states the privacy boundary before a student chooses a recovery path', () => {
+    show();
+    const t = text();
+    expect(t).toContain('will not notify faculty, advisors, or staff because you use Recovery Mode');
+    expect(t).toContain('Your plan stays private unless you choose what to share');
+    expect(t).toContain('I have too many urgent actions');
+    expect(t).toContain('I am waiting on someone or a system');
+    expect(t).toContain('I only have a few minutes');
+  });
+});
+
 // The sentence and the feature, held to each other. Read from the source
 // because the failure is a claim the code no longer supports, and there is no
 // runtime state in which that shows.

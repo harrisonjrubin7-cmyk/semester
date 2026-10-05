@@ -1,0 +1,18 @@
+# Insert into .github/workflows/ci.yml, job "build", directly after the existing
+#   - working-directory: app
+#     run: npm run lint
+# step. No secrets, no Figma credentials, no write access.
+      - name: Design-system audit
+        working-directory: app
+        run: npm run design-system:check
+      - name: Design-system report
+        if: always()
+        working-directory: app
+        run: npm run design-system:report
+      - name: Upload design-system report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-system-report
+          path: app/reports/design-system/
+          if-no-files-found: ignore

@@ -59,6 +59,7 @@ vi.mock('../lib/cloud', () => ({
 }));
 vi.mock('../lib/capabilities', () => ({ loadMyCapabilities: mock.caps }));
 vi.mock('../lib/environment', async (orig) => ({ ...(await orig<object>()), environment: () => mock.env }));
+vi.mock('../lib/experience-flags', () => ({ EXPERIENCE_FLAGS: { supportTickets: 'production' } }));
 vi.mock('../lib/console/client', async (orig) => ({
   ...(await orig<object>()),
   loadDuties: mock.duties,
@@ -93,6 +94,7 @@ let host: HTMLDivElement;
 let root: Root;
 
 const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeId: '' }];
+const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -198,6 +200,19 @@ async function render() {
   });
   await flush();
 }
+
+describe('support tab capability gate', () => {
+  it('does not offer support to console operators without support:ticket', async () => {
+    await render();
+    expect(button('Support')).toBeUndefined();
+  });
+
+  it('offers support to a platform support operator', async () => {
+    mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
+    await render();
+    expect(button('Support')).toBeDefined();
+  });
+});
 
 const buttons = () => [...host.querySelectorAll('button')];
 const button = (text: string) => buttons().find((b) => b.textContent?.trim() === text) as HTMLButtonElement | undefined;
@@ -408,11 +423,21 @@ describe('approvals', () => {
     expect(mock.decide).not.toHaveBeenCalled();
     const step = host.querySelector('[aria-label="Second factor"]') as Element;
     expect(step).toBeTruthy();
+    expect(button('Approve')).toBeDefined();
+    expect(host.querySelector('[aria-label="Console views"]')).not.toBeNull();
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
     type(step.querySelector('input'), '123456');
+    let finishDecision: (() => void) | undefined;
+    mock.decide.mockImplementationOnce(() => new Promise<void>((resolve) => { finishDecision = resolve; }));
     await submit(step.querySelector('form'));
     expect(mock.verify).toHaveBeenCalledWith('f-1', 'ch-1', '123456');
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(true);
+    expect(host.textContent).toContain('Finishing the verified change');
+    await act(async () => { finishDecision?.(); });
+    await flush();
     expect(mock.decide).toHaveBeenCalledExactlyOnceWith('req-1', 'approve');
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    expect(host.querySelector('[data-console-content]')?.hasAttribute('inert')).toBe(false);
   });
 
   it('offers no decision where the server says the caller cannot decide, and says why', async () => {
@@ -425,10 +450,12 @@ describe('approvals', () => {
   it('runs nothing when the second factor is cancelled', async () => {
     mock.mfa.mockResolvedValue(STALE);
     await render();
+    type(field('Evidence attached'), 'Draft evidence survives MFA.');
     await press('Approve');
     await press('Cancel');
     expect(mock.decide).not.toHaveBeenCalled();
     expect(host.querySelector('[aria-label="Second factor"]')).toBeNull();
+    expect(field('Evidence attached').value).toBe('Draft evidence survives MFA.');
   });
 
   it('offers the action only to the requester or an approver who decided it', async () => {

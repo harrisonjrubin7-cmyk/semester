@@ -51,7 +51,7 @@ The fields the documents ask every row to carry, and where each is on this page.
 | System or process in scope | What the tree holds |
 | Control frequency | Frequency |
 | Evidence description, type and collection method | Evidence |
-| Evidence location, date, review and expiry date, reviewer, hash | Under docs/evidence/ when produced; none is |
+| Evidence location, date, review and expiry date, reviewer, hash | Under docs/evidence/ when produced; a few dated files are there, but this register does not yet index them by control |
 | Result or status | Status |
 | Exception, remediation owner and target date | The risk register’s exception record, which is empty |
 | Customer visibility and sensitivity | Visibility |
@@ -147,7 +147,7 @@ is true. Nothing computes the gate yet; each line says what would hold it today.
 | Condition | Held today by | How |
 | --- | --- | --- |
 | A P0 or P1 release-blocking finding is open. | [`app/src/lib/governance/release-readiness.ts`](../../app/src/lib/governance/release-readiness.ts) | A promotion needs the readiness total above the stage threshold and no dimension under the floor; a finding is not yet an object the score reads. |
-| A required control has no current evidence. | **nothing** | Nothing reads evidence freshness, because no evidence exists to be fresh; the operations-console controls define the freshness ladder a console would apply. |
+| A required control has no current evidence. | **nothing** | Nothing reads evidence freshness: the few dated files under docs/evidence/ carry no expiry that anything checks; the operations-console controls define the freshness ladder a console would apply. |
 | A data-flow change lacks privacy approval. | [`app/src/lib/governance/config-tiers.ts`](../../app/src/lib/governance/config-tiers.ts) | A configuration request is classified by tier and the privacy reviewer is required at the tiers that touch data; a code change to a data flow is reviewed by the pull-request template’s questions, not a gate. |
 | An AI, provider, model or tool change lacks evaluation approval. | [`app/src/lib/governance/ai-lifecycle.ts`](../../app/src/lib/governance/ai-lifecycle.ts) | G3 requires every AI_RELEASE_GATE item; the gate is data a reviewer reads, not a check CI runs. |
 | A critical accessibility regression is unresolved. | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | axe-core and the accessibility smoke fail the build on a regression they can see; a manual finding has no register to block from. |
@@ -175,7 +175,7 @@ schedule; today nothing is customer-configurable and no legal hold exists.
 | **Course content** | Instructor materials, source documents, syllabus data | Customer-controlled course lifecycle plus a configured archive period | Until the student deletes it; no institutional archive period exists | `courses` | no |
 | **Assessment, submission and grade records** | Submissions, feedback, grade ledger, audit history | The institution’s records schedule; never deleted contrary to academic-record requirements | Until the student deletes it; no records schedule can be configured | `sittings` | no |
 | **Community and club content** | Profiles, posts, memberships, event activity | Active lifecycle plus a configured archive period; moderation evidence only as needed | Until deleted; moderation audit events kept three years | `moderation_audit_event` | no |
-| **Support data** | Tickets, diagnostic logs, support-access records | A defined support and security period; minimal attachments | Support windows are time-limited and every read is logged; no ticket system exists | `support_access` | no |
+| **Support data** | Tickets, diagnostic logs, support-access records | A defined support and security period; minimal attachments | The identity-free ticket queue is built and capability-gated; support access is time-limited and every read is logged. Per-ticket email notices are off by default, contain no reply text, and use a durable delivery outbox only after student opt-in. | `support_access`, `support_tickets`, `support_ticket_messages`, `support_notification_outbox` | no |
 | **Basic-needs and referral metadata** | Consent, recipient, status, limited referral record | Minimum necessary; sensitive intake stays with the official service | Nothing is taken in: the navigator is a directory and stores no referral | `help_request` | no |
 | **AI data** | Prompts, outputs, policy decisions, evaluation samples | Minimum period for operation, safety and support; production usage apart from de-identified evaluation | Gateway intelligence audit metadata 180 days, never prompts or prose; unconfirmed actions one day after expiry | `gateway_intelligence_audit`, `gateway_intelligence_action` | no |
 | **Security and audit logs** | Authentication, access, administrative actions, security events | Per security and contractual requirements; access restricted | Access log 90 days; activity 400 days; grant, moderation and provisioning audit 3 years | `access_log`, `activity`, `role_grant_audit_event` | no |

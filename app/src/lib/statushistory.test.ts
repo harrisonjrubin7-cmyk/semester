@@ -280,7 +280,7 @@ const CASES: [number | undefined, number | undefined][] = [[24, 24], [23, 24], [
 
 describe('the pages', () => {
   const app = read('app/public/status.html');
-  const site = read('company-site/index.html');
+  const site = `${read('company-site/index.html')}\n${read('company-site/site.js')}`;
 
   it('both draw a day the way the module does, including a day nobody checked', () => {
     for (const html of [app, site]) {

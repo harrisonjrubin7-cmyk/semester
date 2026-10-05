@@ -22,8 +22,10 @@ reading:
     delete-account    ACTIVE, v72, verify_jwt off   platform
     billing-cancel    ACTIVE, v2, verify_jwt off    platform
     billing-checkout  ACTIVE, v32, verify_jwt off   platform
+    billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
     billing-webhook   ACTIVE, v32, verify_jwt off   platform
     lead-intake       ACTIVE, v32, verify_jwt off   platform
+    support-reply-notify PENDING, live evidence absent; merge/deploy, activate the `support-reply-notify` scheduler job, and receipt UAT required
 
     productivity-sourcecheck ACTIVE, v2, verify_jwt off   manual (first deploy)
 
@@ -449,39 +451,47 @@ immutable tenant history tables cannot be erased this way yet — the history
 triggers refuse the clear its `on delete set null` asks for, the transaction
 rolls back, and the student-facing answer is that nothing was deleted.
 
-## Live on merge, off until configured: `billing-checkout`, `billing-webhook`, `billing-cancel`
+## Live on merge, off until configured: `billing-checkout`, `billing-webhook`, `billing-cancel`, `billing-portal`
 
-The commercial core's three payment functions (`docs/COMMERCIAL-CORE.md`). The
-rules are in `_shared/billingcheckout.ts`, `_shared/billingwebhook.ts` and
-`_shared/billingcancel.ts`,
+The commercial core's four payment functions (`docs/COMMERCIAL-CORE.md`). The
+rules are in `_shared/billingcheckout.ts`, `_shared/billingwebhook.ts`,
+`_shared/billingcancel.ts` and `_shared/billingportal.ts`,
 driven by `app/src/lib/billing/`; the database side is
 `migrations/20260929080000_commercial_automation.sql` and
 `commercial-automation.check.sql`.
 
-**All three answer 503 until their secret is set**, so merging deploys
+**All four answer 503 until their secret is set**, so merging deploys
 functions that charge nobody:
 
     STRIPE_SECRET_KEY       billing-checkout,  the secret API key (sk_live_… or sk_test_…)
-                            billing-cancel
+                            billing-cancel, billing-portal
     STRIPE_WEBHOOK_SECRET   billing-webhook    the endpoint's signing secret (whsec_…)
     ALLOWED_ORIGIN          billing-checkout,  the app's origin(s), read strictly: unset or * allows nobody
-                            billing-cancel
-    CHECKOUT_RETURN_URL     billing-checkout   optional; where Stripe returns the student (default: the calling origin)
+                            billing-cancel, billing-portal
+    CHECKOUT_RETURN_URL     billing-checkout,  where Stripe returns the student; required by billing-portal
+                            billing-portal      so subpath deployments cannot fall back to the origin root
+    STRIPE_PORTAL_CONFIGURATION_ID
+                            billing-portal     active bpc_… configuration selected by the activation tool
+    STRIPE_PRODUCT_TAX_CODE billing-checkout   owner/accountant-approved txcd_… software classification
 
-**`verify_jwt` is off on all three.** Stripe has no Supabase token: the webhook's
+**`verify_jwt` is off on all four.** Stripe has no Supabase token: the webhook's
 credential is the `Stripe-Signature` HMAC over the raw body, checked before the
 body is parsed, with a five-minute tolerance. The checkout and the cancel check the
 caller's access token themselves after answering the CORS preflight, which
 carries none. The cancel uses no service key: it reads the subscription and
 calls `request_cancellation` *as the caller*, over the anon key, after telling
 Stripe.
-The webhook sends no CORS header at all and refuses anything with an `Origin`.
+The portal also checks the caller's token itself and resolves the Stripe
+customer only from that person's RLS-scoped individual billing account. It
+creates a short-lived Stripe-hosted URL for invoice history and payment-method
+management; the browser never supplies a customer id. The webhook sends no
+CORS header at all and refuses anything with an `Origin`.
 
 The webhook endpoint to register in Stripe (Developers → Webhooks) is
 `https://<project-ref>.supabase.co/functions/v1/billing-webhook`, with
 `checkout.session.completed`, `customer.subscription.updated`,
 `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
-`charge.refunded` and `charge.dispute.created`.
+`invoice.finalization_failed`, `charge.refunded` and `charge.dispute.created`.
 
 **Live since #942's merge**, and `billing-cancel` since #971's. Each went up
 with a `pending` row in `functions.snapshot`, like trust-room did. The checkout
