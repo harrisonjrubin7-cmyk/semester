@@ -37,13 +37,24 @@ The heuristic is a regular expression over `prosrc`, so a gate hidden behind a h
 | `community_session_counts(want_community)` | session ids and participant counts | `private.community_role(want_community) is not null` | membership-scoped |
 | `kill_switch_engaged(want_switch, want_tenant)` | boolean | **none**: any signed-in user can probe any switch key and any tenant id | **lead** (below) |
 
+## Live set against the repo allowlist (2026-10-05)
+
+`supabase/grants.check.sql` is a whole-schema allowlist: every function in `public` a client can call must be named there with a written reason. It is the control this page should have started from.
+
+| Comparison (by function name, extension functions excluded) | Result |
+| --- | --- |
+| Callable by `authenticated` on the live project, not in the allowlist | **0** |
+| In the allowlist (220 names), absent from the live `public` schema | **0** |
+
+Limits: matched on name, so an overload that differs only in its arguments would not show; the allowlist proves the surface is the one the repo decided, not that each body is correct. D-1306 says the matching change for `anon` is not yet applied to production, so `anon` was checked separately above (0 executable definer functions) and not through this allowlist.
+
 ## Findings
 
 | # | Finding | Severity (judged) | Next action |
 | --- | --- | --- | --- |
 | R-1 | No confirmed unauthenticated or cross-tenant access path among the 11 functions read. | — | none |
-| R-2 | `kill_switch_engaged(text, text)` lets any authenticated user learn whether a named switch is engaged for an arbitrary tenant id. It returns a boolean, but it also lets a user confirm which switch keys and tenant ids exist. | low; information disclosure | Decide whether the app needs it (a client may gate UI on it). If so, restrict `want_tenant` to the caller's own tenants. Needs a migration test on a dev branch first. |
-| R-3 | 268 of 279 definer functions were **not** read; the heuristic cleared them on a name match only. | unknown | Read all 207 authenticated-executable bodies; sort by whether the gate sits in a `private.*` helper and read each helper. |
+| R-2 | `kill_switch_engaged(text, text)` lets any authenticated user learn whether a named switch is engaged for an arbitrary tenant id. **Correction (2026-10-05):** this is a documented, deliberate grant. `supabase/grants.check.sql` names it and says it "answers a boolean about a switch key and a school and returns no row". The first version of this page called it a lead without having read that file. What is left is narrow: a user can still probe which switch keys and tenant ids exist. | low; accepted by design | Only if the owner wants the probe closed: restrict `want_tenant` to the caller's own tenants. Needs a migration test on a dev branch first. |
+| R-3 | The first pass said 268 of 279 definer bodies were unread. **Narrowed (2026-10-05):** the live set callable by `authenticated` equals the allowlist `supabase/grants.check.sql` enforces, with no drift either way (see below). Bodies are still not read in full. | unknown for bodies; none for reachability | Read the bodies, helper first, if a body-level claim is needed. |
 | R-4 | 63 `rls_enabled_no_policy` tables (30 `private`, 33 `public`) remain unverified as reached only through definer RPCs. | unknown | Join the 33 public ones against `pg_policies` and the REST/GraphQL grants. |
 
 Human review items: R-2's fix changes behavior a client may rely on, so engineering decides; none of this is a security sign-off.
