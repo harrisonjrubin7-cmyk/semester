@@ -128,8 +128,13 @@ describe('what the Claude configuration points at', () => {
 });
 
 describe('the Figma MCP configuration', () => {
-  it('names the remote Figma server and nothing else', () => {
-    expect(JSON.parse(read('.mcp.json'))).toEqual({ mcpServers: { figma: { type: 'http', url: 'https://mcp.figma.com/mcp' } } });
+  it('names the remote Figma and Middleware servers and nothing else', () => {
+    expect(JSON.parse(read('.mcp.json'))).toEqual({
+      mcpServers: {
+        figma: { type: 'http', url: 'https://mcp.figma.com/mcp' },
+        middleware: { type: 'http', url: 'https://mcp.middleware.io/mcp' },
+      },
+    });
   });
 
   it('carries no credential, header, environment or local path', () => {
