@@ -343,7 +343,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * Delete an entry when the file is applied, and the next reading's count moves.
  */
 export const NOT_YET_APPLIED: readonly string[] = [
-  '20261003150000_console_release_incidents.sql',
+  '20261005126000_console_release_incidents.sql',
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
@@ -368,7 +368,7 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
     functions: ['raise_my_data_subject_request'],
   },
   {
-    file: '20261003150000_console_release_incidents.sql',
+    file: '20261005126000_console_release_incidents.sql',
     functions: ['console_command_center'],
   },
   {
@@ -456,19 +456,19 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
-    file: '20261003150000_console_release_incidents.sql',
+    file: '20261005126000_console_release_incidents.sql',
     functions: ['console_release_incidents'],
   },
   {
-    file: '20261003140000_console_integration_health.sql',
+    file: '20261005125000_console_integration_health.sql',
     functions: ['console_integration_health'],
   },
   {
-    file: '20261003131000_privacy_case_actions.sql',
+    file: '20261005124000_privacy_case_actions.sql',
     functions: ['claim_privacy_request', 'my_privacy_completion_certificates', 'read_privacy_request_detail', 'resolve_privacy_request', 'verify_privacy_request'],
   },
   {
-    file: '20261003130000_privacy_case_workspace.sql',
+    file: '20261005123000_privacy_case_workspace.sql',
     functions: ['console_privacy_requests'],
   },
   {
@@ -480,15 +480,15 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['my_support_email_notices'],
   },
   {
-    file: '20261003040000_console_scoped_tenant_access.sql',
+    file: '20261005120000_console_scoped_tenant_access.sql',
     functions: ['console_tenant_access'],
   },
   {
-    file: '20261003050000_console_tenant_operations.sql',
+    file: '20261005121000_console_tenant_operations.sql',
     functions: ['console_tenant_operations'],
   },
   {
-    file: '20261003060000_support_case_access.sql',
+    file: '20261005122000_support_case_access.sql',
     functions: ['available_case_supporters', 'read_support_case_signals', 'support_case_access'],
   },
   {

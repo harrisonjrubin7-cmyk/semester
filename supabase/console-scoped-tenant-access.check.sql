@@ -1,4 +1,4 @@
--- Scoped Operations Console read template (20261003040000).
+-- Scoped Operations Console read template (20261005120000).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 
 begin;

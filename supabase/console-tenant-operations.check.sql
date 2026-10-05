@@ -1,4 +1,4 @@
--- Tenant/pilot operations workspace (20261003050000).
+-- Tenant/pilot operations workspace (20261005121000).
 -- LOCAL/DISPOSABLE DATABASES ONLY; the transaction is always rolled back.
 
 begin;

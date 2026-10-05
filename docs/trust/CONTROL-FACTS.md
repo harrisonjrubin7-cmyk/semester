@@ -60,8 +60,8 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-control-plane.check.sql` | The operations console's control plane: preferences, seats, fresh MFA, the duty matrix, the audit chain, figures with provenance, and the demo flag. |
 | `supabase/console-integration-health.check.sql` | Credential-free, exact-school integration health. |
 | `supabase/console-release-incidents.check.sql` | Release and incident console read model. |
-| `supabase/console-scoped-tenant-access.check.sql` | Scoped Operations Console read template (20261003040000). |
-| `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261003050000). |
+| `supabase/console-scoped-tenant-access.check.sql` | Scoped Operations Console read template (20261005120000). |
+| `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/coursestudio.check.sql` | who may publish for a course, and who reads it. |
 | `supabase/definer-sweep.check.sql` | Every definer function a signed-in account can call, called by one that holds nothing. |
 | `supabase/deletion.check.sql` | What "Delete my account" actually empties, walked as the account doing it. |

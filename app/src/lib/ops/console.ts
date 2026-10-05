@@ -666,7 +666,7 @@ export const VIEWS: readonly View[] = [
       status: 'done',
       replacement: 'a server-derived, exact-school operational summary available only when the operator has both the platform console shell and a live `tenant:implement` grant. Production excludes demo tenants and the browser supplies no tenant identifier',
       holders: [
-        { path: 'supabase/migrations/20261003050000_console_tenant_operations.sql', how: 'Metadata-only fact union, server-derived exact-school scope, demo separation and restricted provenance fields' },
+        { path: 'supabase/migrations/20261005121000_console_tenant_operations.sql', how: 'Metadata-only fact union, server-derived exact-school scope, demo separation and restricted provenance fields' },
         { path: 'supabase/console-tenant-operations.check.sql', how: 'Shell-plus-domain authorization, wrong-tenant and expired-grant denial, demo separation and metadata-only response checks' },
         { path: 'app/src/lib/console/client.ts', how: 'loadTenantOperations calls the scoped RPC without accepting a tenant identifier or caching rows' },
         { path: 'app/src/components/console/TenantOperations.tsx', how: 'Grouped facts with provenance, classification, owner, freshness, visibility reason and limitation' },
@@ -683,8 +683,8 @@ export const VIEWS: readonly View[] = [
       status: 'done',
       replacement: 'an identity-minimized queue over `public.data_subject_request`, available only when the operator has both the platform console shell and a live `data_request:handle` grant for an exact school. Sensitive detail is never loaded with the queue',
       holders: [
-        { path: 'supabase/migrations/20261003130000_privacy_case_workspace.sql', how: 'Metadata-only queue, exact-school authorization, demo separation, assignment fields, legal-hold state and deletion-approval state' },
-        { path: 'supabase/migrations/20261003131000_privacy_case_actions.sql', how: 'Fresh-MFA claim, audited detail read, identity verification, resolution, live-hold and exact executed-approval enforcement, and immutable completion certificates' },
+        { path: 'supabase/migrations/20261005123000_privacy_case_workspace.sql', how: 'Metadata-only queue, exact-school authorization, demo separation, assignment fields, legal-hold state and deletion-approval state' },
+        { path: 'supabase/migrations/20261005124000_privacy_case_actions.sql', how: 'Fresh-MFA claim, audited detail read, identity verification, resolution, live-hold and exact executed-approval enforcement, and immutable completion certificates' },
         { path: 'supabase/privacy-case-workspace.check.sql', how: 'Wrong-role, expired-grant, wrong-tenant, demo, assignment and identity-minimization checks' },
         { path: 'supabase/privacy-case-actions.check.sql', how: 'Stale-MFA, ownership, failed-audit, live-hold, approval, certificate and audit-first paths' },
         { path: 'app/src/components/console/PrivacyRequests.tsx', how: 'Metadata queue, explicit claim/detail/verification/approval/resolution controls, overdue and hold states, and fail-closed loading, denial and error behavior' },
@@ -702,7 +702,7 @@ export const VIEWS: readonly View[] = [
       status: 'done',
       replacement: 'a credential-free summary over connector configuration, sync freshness, data quality, failures, ownership and customer impact, available only with both the platform console shell and a live `integration:view` grant for an exact school. The browser cannot submit a tenant id to the reader',
       holders: [
-        { path: 'supabase/migrations/20261003140000_console_integration_health.sql', how: 'Server-derived tenant scope, explicit demo gate, allowlisted fields, computed five-state health and exact configuration-approval status' },
+        { path: 'supabase/migrations/20261005125000_console_integration_health.sql', how: 'Server-derived tenant scope, explicit demo gate, allowlisted fields, computed five-state health and exact configuration-approval status' },
         { path: 'supabase/console-integration-health.check.sql', how: 'Exact-school, demo, shell/domain denial, five-state, pending-approval and planted-secret redaction checks' },
         { path: 'app/src/components/console/IntegrationHealth.tsx', how: 'Health evidence, cautious impact, next safe action and a structured request-only `integration-config` approval; no configuration mutation or credential field' },
         { path: 'app/src/components/console/IntegrationHealth.test.tsx', how: 'Healthy, degraded, stale, failed, unconfigured, denial, demo and exact approval-request coverage' },
@@ -719,7 +719,7 @@ export const VIEWS: readonly View[] = [
       status: 'done',
       replacement: 'a platform-scoped, restricted summary over current release evidence, exact deployment and verification commits, incident impact and communication cadence. It requires both the console shell and `incident:communicate` at platform scope, and exposes approval requests rather than deployment or rollback execution',
       holders: [
-        { path: 'supabase/migrations/20261003150000_console_release_incidents.sql', how: 'Conservative seven-gate release state, exact-commit deployment verification, service-recorded incidents, server-derived scope and allowlisted metadata' },
+        { path: 'supabase/migrations/20261005126000_console_release_incidents.sql', how: 'Conservative seven-gate release state, exact-commit deployment verification, service-recorded incidents, server-derived scope and allowlisted metadata' },
         { path: 'supabase/console-release-incidents.check.sql', how: 'Missing and mismatched evidence, release candidate, deployment, verification, incident, rollback, recovery, demo, role and planted-notice redaction checks' },
         { path: 'app/src/components/console/ReleaseIncidents.tsx', how: 'Six required lifecycle states plus verified evidence, customer impact, communication cadence and structured request-only release or rollback approvals' },
         { path: 'app/src/components/console/ReleaseIncidents.test.tsx', how: 'Lifecycle, denial, empty, demo, no-direct-execution and exact approval-request coverage' },

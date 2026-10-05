@@ -591,7 +591,7 @@ declare
     -- console-command-center.check.sql.
     'console_command_center(include_demo boolean)',
 
-    -- The bounded tenant access inventory in 20261003040000. The tenant and
+    -- The bounded tenant access inventory in 20261005120000. The tenant and
     -- optional subject are filters, not authority: the function checks a live
     -- platform or exact-tenant capability before reading. Demo inclusion has
     -- the separate tenant:implement gate. Its feature suite attempts no grant,
@@ -619,7 +619,7 @@ declare
     -- keeps subject ids and request content out of its result.
     'console_privacy_requests(include_demo boolean)',
 
-    -- The privacy lifecycle in 20261003131000. Claim, sensitive-detail read,
+    -- The privacy lifecycle in 20261005124000. Claim, sensitive-detail read,
     -- identity verification and resolution all require fresh MFA, the
     -- platform console shell and an exact-school data_request:handle grant.
     -- Completed erasure additionally requires no legal hold and an executed

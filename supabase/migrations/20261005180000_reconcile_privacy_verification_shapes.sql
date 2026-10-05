@@ -1,6 +1,6 @@
 -- Two verification contracts share data_subject_request, and both stay.
 --
--- The console path (20261003130000) records an account id, a basis and an
+-- The console path (20261005123000) records an account id, a basis and an
 -- evidence reference together, or it records nothing. The platform-scope path
 -- (20261004200000, D-1258) records a rung and a SHA-256 pseudonym and
 -- deliberately does not store an account id. The earlier check allowed only
