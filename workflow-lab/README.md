@@ -65,7 +65,7 @@ cp .env.example .env.local   # then fill in the two Supabase values
    `seed.sql` is generated from `lib/benchmark/benchmark.config.ts` (`npm run seed:generate`); a test fails if they drift.
 4. **Auth configuration** (Authentication → URL Configuration):
    - Site URL: your production URL
-   - Redirect URLs: `http://localhost:3000/**`, `https://<your-app>.vercel.app/**` and each Vercel preview pattern you use
+   - Redirect URLs: `http://localhost:3000/**`, `https://<your-app>.vercel.app/lab/**` and each Vercel preview pattern you use
 5. **Email templates** (Authentication → Email Templates) so magic links work across browsers, using the token-hash flow handled by `app/auth/confirm/route.ts`:
    - *Magic Link*: `<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/benchmark">Sign in</a>`
    - *Confirm signup*: `<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/benchmark">Confirm</a>`
@@ -126,7 +126,7 @@ Classes: `none`, `local-preview`, `browser-local`, `session`, `database`, `proje
 
 ## Vercel deployment
 
-1. Import the GitHub repo in Vercel; set **Root Directory** to `workflow-lab`. Framework: Next.js (auto-detected; `vercel.json` pins it).
+1. Deployed as the `workflow-lab` service of the root `vercel.json` (Vercel services), served under `/lab` (`basePath` in `next.config.ts`, `lib/base-path.ts`). Plain `<a href>`, `<form action>` and `NextResponse.redirect` URLs must go through `withBasePath`; `<Link>` and `redirect()` are prefixed by Next.
 2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for Production and Preview (and optionally `NEXT_PUBLIC_SITE_URL` for Production).
 3. Add the production and preview URLs to Supabase Auth redirect URLs.
 4. Deploy a preview, sign in via magic link, create a suite, record a run, grade it; then promote.

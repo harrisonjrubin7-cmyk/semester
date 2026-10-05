@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { withBasePath } from "@/lib/base-path";
 import { getUser } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,7 +26,7 @@ export async function AuthButton() {
         <span className="sr-only">Signed in as </span>
         {user.email}
       </span>
-      <form action="/auth/sign-out" method="post">
+      <form action={withBasePath("/auth/sign-out")} method="post">
         <button type="submit" className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-2">
           Sign out
         </button>

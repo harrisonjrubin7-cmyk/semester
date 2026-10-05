@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { withBasePath } from "@/lib/base-path";
 import { createClient } from "@/lib/supabase/server";
 
 /** POST only: a link or image tag must not be able to sign a user out. */
@@ -8,5 +9,5 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
   if (supabase) await supabase.auth.signOut();
-  return NextResponse.redirect(new URL("/", request.nextUrl.origin), { status: 303 });
+  return NextResponse.redirect(new URL(withBasePath("/"), request.nextUrl.origin), { status: 303 });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/base-path";
 import { useMemo, useState } from "react";
 import { Badge, PlatformBadge } from "@/components/ui/badge";
 import { Drawer } from "@/components/ui/drawer";
@@ -24,7 +25,7 @@ export function BenchmarkDashboard({ bundle, viewer, exportSuiteId }: { bundle: 
   const [view, setView] = useState<View>(null);
   const summary = useMemo(() => buildSummary(bundle), [bundle]);
   const current = view ? summary.tasks.find((t) => t.task.number === view.number) : undefined;
-  const exportHref = (format: string) => `/api/exports/benchmark?suite=${encodeURIComponent(exportSuiteId)}&format=${format}`;
+  const exportHref = (format: string) => `${withBasePath("/api/exports/benchmark")}?suite=${encodeURIComponent(exportSuiteId)}&format=${format}`;
   const graded = summary.tasks.filter((t) => t.status === "graded").length;
 
   return (
