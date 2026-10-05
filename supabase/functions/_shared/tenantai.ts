@@ -167,3 +167,64 @@ export async function loadSchoolAi(db: PolicyReader, school: string, userId: str
     return null;
   }
 }
+
+/** The account's meter is in micro-dollars and the school's in cents: a cent is ten thousand of them. */
+export const MICROS_PER_CENT = 10_000;
+
+/** Whole cents for an amount of micro-dollars, rounded up, never below zero. */
+export const centsForMicros = (micros: number): number => (micros > 0 ? Math.ceil(micros / MICROS_PER_CENT) : 0);
+
+/** What a school's meter does for one request. Nothing here throws out of the response path. */
+export interface TenantMeter {
+  /** 'held': reserved. 'full': the school has no room or no budget. 'error': it could not be asked. */
+  reserve(): Promise<'held' | 'full' | 'error'>;
+  /** Gives the reservation back; does nothing if it was never held. */
+  release(why: string): Promise<void>;
+  /** Settles to `actualMicros` (null: at the reservation), never above what was reserved. */
+  settle(actualMicros: number | null, usage?: { inputTokens: number; outputTokens: number }): Promise<void>;
+}
+
+export function tenantMeter(db: PolicyReader, school: string, reserveMicros: number, newId: () => string = () => crypto.randomUUID()): TenantMeter {
+  const id = newId();
+  const reservedCents = centsForMicros(reserveMicros);
+  let held = false;
+  return {
+    async reserve() {
+      try {
+        const { data, error } = await db.rpc('reserve_ai_budget', { want_tenant: school, want_reservation: id, want_cents: reservedCents });
+        if (error || typeof data !== 'boolean') return 'error';
+        held = data;
+        return data ? 'held' : 'full';
+      } catch {
+        return 'error';
+      }
+    },
+    async release(why) {
+      if (!held) return;
+      held = false;
+      try {
+        const { error } = await db.rpc('release_ai_budget', { want_tenant: school, want_reservation: id });
+        if (error) console.error('claude: a school reservation could not be released', { why, school });
+      } catch {
+        console.error('claude: a school reservation could not be released', { why, school });
+      }
+    },
+    async settle(actualMicros, usage) {
+      if (!held) return;
+      held = false;
+      const cents = actualMicros === null ? reservedCents : Math.min(reservedCents, centsForMicros(actualMicros));
+      try {
+        const { error } = await db.rpc('settle_ai_budget', {
+          want_tenant: school,
+          want_reservation: id,
+          want_actual_cents: cents,
+          want_input_tokens: usage?.inputTokens ?? 0,
+          want_output_tokens: usage?.outputTokens ?? 0,
+        });
+        if (error) console.error('claude: a school reservation could not be settled', { school, cents });
+      } catch {
+        console.error('claude: a school reservation could not be settled', { school, cents });
+      }
+    },
+  };
+}
