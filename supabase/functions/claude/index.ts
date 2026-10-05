@@ -103,7 +103,8 @@ Deno.serve(async (req) => {
   // The gateway when `AI_GATEWAY_API_KEY` is set, Anthropic directly otherwise.
   // See `../_shared/upstream.ts`.
   const gatewayKey = sharedKey(Deno.env.get('AI_GATEWAY_API_KEY'));
-  const key = gatewayKey ?? sharedKey(Deno.env.get('ANTHROPIC_API_KEY'));
+  // `sharedKey` answers '' for an unset secret, never null, so this is `||`.
+  const key = gatewayKey || sharedKey(Deno.env.get('ANTHROPIC_API_KEY'));
   const upstreamTo = chooseUpstream({ gateway: gatewayKey, anthropic: key });
   if (!key || !upstreamTo) {
     return json(

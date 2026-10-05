@@ -47,6 +47,12 @@ describe('where the request goes', () => {
     expect(u.body(body)).toBe(body);
   });
 
+  it('is Anthropic when the gateway key is the empty string an unset secret reads as', () => {
+    const u = chooseUpstream({ gateway: '', anthropic: 'sk-ant-y' })!;
+    expect(u.gateway).toBe(false);
+    expect(u.headers['x-api-key']).toBe('sk-ant-y');
+  });
+
   it('is nowhere when neither key is set', () => {
     expect(chooseUpstream({})).toBeNull();
     expect(chooseUpstream({ gateway: null, anthropic: null })).toBeNull();
