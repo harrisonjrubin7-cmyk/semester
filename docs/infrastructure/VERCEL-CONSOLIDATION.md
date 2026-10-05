@@ -73,6 +73,31 @@ their folder. The root file now carries them (`services.app.headers`,
 `app/src/lib/servicesconfig.test.ts` fails if the two copies diverge. The live
 domain was not affected: it is still on `semester-shared-core`.
 
+### 2.2 The live domain and the canonical build use different backends
+
+Measured 5 October by reading the Supabase project host out of each live
+bundle (the host is a public client value; no key was read):
+
+| Served from | Supabase project |
+| --- | --- |
+| `www.semesterintel.tech` (`semester-shared-core`) | **`Semester2`** (`kpuulmni…`) |
+| `semester-rose.vercel.app` (`semester`) | `semester` (`lzrqvlug…`), set by the committed `app/.env.production` |
+
+`VITE_SUPABASE_URL` / `VITE_SUPABASE_KEY` are not set on any Vercel project, so
+the backend is whatever each build's source says. Moving
+`www.semesterintel.tech` to `semester` therefore **switches every visitor's
+backend** from `Semester2` to the production project. `Semester2` holds 4 auth
+users (none signed in since 23 September), 1 saved-state row, no storage
+objects. Those accounts do not exist on the production project, so after the
+move they could not sign in there. Nothing is copied or merged by moving the
+domain, and nothing is deleted.
+
+Before the domain moves, someone who knows who those four accounts are must say
+whether they are test accounts (then nothing is lost) or people (then their data
+needs a deliberate port, not a copy). Also confirm the Google and Microsoft
+OAuth clients in `app/.env.production` list `https://www.semesterintel.tech` as
+a redirect URI, since sign-in on that host has so far gone through `Semester2`.
+
 ## 3. Things that cannot be moved from here
 
 | Item | Why it is external | Needed from the owner |
@@ -152,6 +177,7 @@ Do not start until every box in §6.1 is ticked. Nothing here has been run.
 - [ ] `GET /api/institution/health` returns the same status as the live site
       (503) or better. Not worse.
 - [ ] Which scope owns `semester.website` is known (§3).
+- [x] The four `Semester2` accounts are test accounts and the OAuth redirect URIs include `www.semesterintel.tech` (§2.2; both stated by the owner on 5 October, not verified from here).
 
 ### 6.2 Move
 
