@@ -25,6 +25,7 @@ import { Customers } from '../components/console/Customers';
 import { Figures } from '../components/console/Figures';
 import { StandardsCrosswalk } from '../components/console/StandardsCrosswalk';
 import { Evidence } from '../components/console/Evidence';
+import { Releases } from '../components/console/Releases';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
 import { SupportQueue } from '../components/console/SupportQueue';
@@ -54,9 +55,9 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 
-const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
+const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
-type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'finance' | 'evidence' | 'views';
+type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'finance' | 'releases' | 'evidence' | 'views';
 
 const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'command', label: 'Command center' },
@@ -66,6 +67,7 @@ const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'customers', label: 'Customers' },
   { id: 'figures', label: 'Figures' },
   { id: 'finance', label: 'Finance model' },
+  { id: 'releases', label: 'Releases and flags' },
   { id: 'evidence', label: 'Evidence' },
   { id: 'views', label: 'Views' },
 ];
@@ -269,6 +271,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
             <FinancialModel />
           </Suspense>
         )}
+        {tab === 'releases' && <Releases env={env} filter={filter} />}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views
