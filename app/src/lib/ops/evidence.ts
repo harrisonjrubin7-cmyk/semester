@@ -195,6 +195,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     note: 'One reachability observation, not availability history, institutional gateway monitoring, alert delivery, authenticated UAT, SLA evidence or named-tenant acceptance.',
   },
   {
+    id: 'main-ci-red-diagnosis-2026-10-04',
+    artifact: 'Diagnosis of the block of red CI runs on main on 4 October 2026, read from the Actions run history and two failing jobs\' logs',
+    path: 'docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md',
+    produced: '2026-10-04',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SEC-003'],
+    note: 'Two of 26 failing runs were read; no ruleset, required status or workflow was changed. Branch protection and merge gating remain unapplied.',
+  },
+  {
     id: 'founder-assurance-run-2026-10-03',
     artifact: 'Founder-operated repository assurance run across AI containment, prompt-injection, institutional policy, authentication and membership suites',
     path: 'docs/evidence/security/2026-10-03-founder-assurance-run.md',
