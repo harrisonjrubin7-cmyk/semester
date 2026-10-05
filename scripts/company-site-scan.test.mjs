@@ -6,11 +6,12 @@ import { request as httpsRequest } from 'node:https';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { assertCompleteFindingEvidence, evaluate, evidenceDiagnostics, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { apiBase, assemblePluginPaths, assertCompleteFindingEvidence, completeFindingDetail, evaluate, evidenceDiagnostics, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { createServer } from 'node:http';
 import * as findingEvidence from './company-site-scan-report.mjs';
 
 const root = new URL('../', import.meta.url);
@@ -53,6 +54,18 @@ test('the company configuration does not reuse the app environment or suppress f
   assert.match(config, /failureThreshold: low/);
   assert.match(config, /pscans\.maxAlertsPerRule=0/);
   assert.doesNotMatch(config, /excludePaths|excludePlugins/);
+  const forms = [...`${read('company-site/index.html')}\n${read('company-site/site.js')}`.matchAll(/<form\b[^>]*>/gs)].map(match => {
+    const id = match[0].match(/\bid="([^"]+)"/);
+    assert.ok(id, 'every company form has an id so the CSRF rule can name it');
+    assert.doesNotMatch(match[0], /\bmethod\s*=\s*["']?post/i, id[1]);
+    return id[1];
+  });
+  assert.ok(forms.length > 1);
+  const listed = config.match(/^ {4}- rules\.csrf\.ignorelist=(\S+)$/m)?.[1].split(',') ?? [];
+  assert.deepEqual([...listed].sort(), [...new Set(forms)].sort(), 'the ignore list is exactly the static form ids');
+  assert.equal(new Set(listed).size, listed.length);
+  assert.ok(!listed.includes('session-form'), 'a form that is not on the site stays under plugin 20012');
+  assert.doesNotMatch(read('company-site/site.js'), /credentials\s*:\s*['"]include['"]/);
   for (const path of companyAssets) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
   for (const path of capturePaths) assert.match(config, new RegExp(`\\s- ${path.replaceAll('.', '\\.')}(?:\\n|$)`), path);
 });
@@ -691,22 +704,24 @@ test('the reconcile CLI rejects an explicitly unconsumed continuation rather tha
 
 test('the workflow requires independent reconciliation and keeps its failure after later URI and receipt checks', () => {
   const verification = companyJob.split('      - name: Verify company-site scan evidence')[1] ?? '';
-  assert.match(verification, /node scripts\/company-site-scan-report\.mjs reconcile "\$RUNNER_TEMP\/company-site-scan\.json" "\$RUNNER_TEMP\/company-site-findings\.json" \|\| evidence_status=1/);
-  assert.match(verification, /node scripts\/company-site-scan-report\.mjs hashes "\$RUNNER_TEMP\/company-site-findings\.json" \|\| evidence_status=1/);
+  assert.match(verification, /node scripts\/company-site-scan-report\.mjs pages "\$scan_id" "\$RUNNER_TEMP\/company-site-findings\.json" > "\$RUNNER_TEMP\/company-site-findings-complete\.json" \|\| evidence_status=1/);
+  assert.match(verification, /node scripts\/company-site-scan-report\.mjs reconcile "\$RUNNER_TEMP\/company-site-scan\.json" "\$RUNNER_TEMP\/company-site-findings-complete\.json" \|\| evidence_status=1/);
+  assert.match(verification, /node scripts\/company-site-scan-report\.mjs hashes "\$RUNNER_TEMP\/company-site-findings-complete\.json" \|\| evidence_status=1/);
   assert.match(verification, /node scripts\/company-site-scan-report\.mjs verify "\$RUNNER_TEMP\/company-site-scan\.json" "\$RUNNER_TEMP\/company-site-uris\.json" "\$RUNNER_TEMP\/company-site-responses\.jsonl" \|\| evidence_status=1/);
   assert.match(verification, /exit "\$evidence_status"/);
+  assert.ok(verification.indexOf(' pages ') < verification.indexOf(' hashes '), 'full alert pages are assembled before the structural hash check');
   assert.ok(verification.indexOf(' reconcile ') < verification.indexOf('hawk op scan uris'), 'the independent check precedes URI retrieval');
   assert.ok(verification.indexOf('hawk op scan uris') < verification.indexOf(' verify '), 'response/URI verification still runs after reconciliation');
 
   // Execute only the extracted status aggregation, substituting constant local
   // true/false commands for every real collector. No scanner or vendor API runs.
   const lines = verification.split('\n').map(line => line.trim());
-  const statusLines = lines.filter(line => line === 'evidence_status=0' || line === 'exit "$evidence_status"' || /^node scripts\/company-site-scan-report\.mjs (?:hashes|reconcile|verify) /.test(line));
-  assert.equal(statusLines.length, 5);
+  const statusLines = lines.filter(line => line === 'evidence_status=0' || line === 'exit "$evidence_status"' || /^node scripts\/company-site-scan-report\.mjs (?:pages|hashes|reconcile|verify) /.test(line));
+  assert.equal(statusLines.length, 6);
   const simulate = failed => {
     const script = statusLines.map(line => {
       if (!line.startsWith('node ')) return line;
-      const mode = line.match(/company-site-scan-report\.mjs (hashes|reconcile|verify) /)?.[1];
+      const mode = line.match(/company-site-scan-report\.mjs (pages|hashes|reconcile|verify) /)?.[1];
       assert.ok(mode);
       assert.match(line, / \|\| evidence_status=1$/);
       return `${mode === failed ? 'false' : 'true'} || evidence_status=1`;
@@ -714,7 +729,7 @@ test('the workflow requires independent reconciliation and keeps its failure aft
     assert.doesNotMatch(script, /hawk|node|API_KEY|RUNNER_TEMP/);
     return spawnSync('bash', ['-c', script], { encoding: 'utf8' });
   };
-  for (const failed of ['hashes', 'reconcile', 'verify']) {
+  for (const failed of ['pages', 'hashes', 'reconcile', 'verify']) {
     const result = simulate(failed);
     assert.equal(result.error, undefined);
     assert.equal(result.status, 1, `${failed}: ${result.stderr}`);
@@ -756,4 +771,156 @@ test('invalid/missing scan IDs and malformed structured output fail closed', () 
   assert.throws(() => scanId({ scan: { id: 'not-a-scan' } }));
   assert.throws(() => parseJson('No result'));
   assert.deepEqual(parseJson('skills update available\n{"scan":{}}'), { scan: {} });
+});
+
+const categoryFixture = () => {
+  const fixture = reconciliationFixture();
+  assert.equal(/^(?:CWE-)?([1-9]\d*)$/i.test('Information Leakage'), false, 'control: a WASC category is not a CWE token');
+  fixture.summary.findings[0].cweId = 'Information Leakage';
+  fixture.summary.findings[1].cweId = 'HTTP Header Protection';
+  fixture.detail.findings[0].category = 'Information Leakage';
+  fixture.detail.findings[0].cwe_id = 'CWE-311';
+  fixture.detail.findings[1].category = 'HTTP Header Protection';
+  fixture.detail.findings[1].cwe_id = 'CWE-352';
+  return fixture;
+};
+
+test('reconciliation accepts Hawk 6.5.0 WASC categories in the summary field named cweId', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = categoryFixture();
+  assert.deepEqual(reconcile(summary, detail), detail.findings);
+});
+
+test('reconciliation still rejects a 10-path page when the summary identity is a category', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = categoryFixture();
+  detail.findings[0].total_paths = 10;
+  detail.findings[0].paths = detail.findings[0].paths.slice(0, 10);
+  assert.doesNotThrow(() => detail.findings.forEach(assertCompleteFindingEvidence), 'control: the self-count check still accepts the short page');
+  assert.throws(() => reconcile(summary, detail), /count mismatch.*summary 14, detail 10/i);
+});
+
+test('reconciliation rejects category identities that cannot be paired with a real detail CWE', () => {
+  const reconcile = reconciliationValidator();
+  const mutations = [
+    summary => { summary.findings[0].cweId = 'Unknown'; },
+    summary => { summary.findings[0].cweId = '../secret'; },
+    summary => { summary.findings[1].cweId = 'CWE-352'; },
+    (summary, detail) => { detail.findings[0].category = 'Session Management'; },
+    (summary, detail) => { delete detail.findings[0].cwe_id; },
+    (summary, detail) => { detail.findings[0].cwe_id = 'not-a-cwe'; },
+  ];
+  for (const mutate of mutations) {
+    const { summary, detail } = categoryFixture();
+    mutate(summary, detail);
+    assert.throws(() => reconcile(summary, detail), /CWE|group|identity|reconcil|finding/i);
+  }
+});
+
+test('alert page assembly rejects a 10-uri page whose totalCount is 14', () => {
+  const scan = cleanReport().scan.id;
+  const record = index => ({
+    requestMethod: 'GET', uri: `/synthetic-email-${index}`, status: 'RISK_ACCEPTED',
+    findingHash: createHash('sha256').update(`email-${index}`).digest('hex'), scan: { id: scan },
+  });
+  const first = Array.from({ length: 10 }, (_, index) => record(index + 1));
+  const rest = Array.from({ length: 4 }, (_, index) => record(index + 11));
+  assert.throws(() => assemblePluginPaths([{ applicationScanAlertUris: first, totalCount: 14, nextPageToken: '' }], scan), /count mismatch/i);
+  assert.throws(() => assemblePluginPaths([{ applicationScanAlertUris: first, totalCount: 14, nextPageToken: '1' }], scan), /continuation/i);
+  const paths = assemblePluginPaths([
+    { applicationScanAlertUris: first, totalCount: 14, nextPageToken: 1 },
+    { applicationScanAlertUris: rest, totalCount: 14, nextPageToken: null },
+  ], scan);
+  assert.equal(paths.length, 14);
+  assert.equal(paths[13].uri, '/synthetic-email-14');
+  assert.throws(() => assemblePluginPaths([
+    { applicationScanAlertUris: [{ ...first[0], scan: { id: '87654321-1234-1234-1234-123456789abc' } }], totalCount: 1, nextPageToken: '' },
+  ], scan), /scan association/i);
+});
+
+test('complete finding detail replaces a self-consistent 10-path plugin with both alert pages', async () => {
+  const scan = cleanReport().scan.id;
+  const { detail } = reconciliationFixture();
+  const truncated = structuredClone(detail);
+  truncated.findings[0].total_paths = 10;
+  truncated.findings[0].paths = truncated.findings[0].paths.slice(0, 10);
+  assert.doesNotThrow(() => truncated.findings.forEach(assertCompleteFindingEvidence), 'control: hawkop self-count still looks complete');
+  const pagesFor = plugin => {
+    const finding = detail.findings.find(item => item.plugin_id === plugin);
+    const records = finding.paths.map(path => ({
+      method: path.method, uri: path.uri, status: path.status, finding_hash: path.finding_hash, scan: { id: scan },
+    }));
+    const mid = Math.ceil(records.length / 2);
+    return [
+      { applicationScanAlertUris: records.slice(0, mid), totalCount: records.length, nextPageToken: records.length > mid ? '1' : '' },
+      ...(records.length > mid ? [{ applicationScanAlertUris: records.slice(mid), totalCount: records.length, nextPageToken: '' }] : []),
+    ];
+  };
+  const completed = await completeFindingDetail(truncated, scan, pagesFor);
+  assert.equal(completed.findings[0].paths.length, 14);
+  assert.equal(completed.findings[0].total_paths, 14);
+  assert.equal(truncated.findings[0].paths.length, 10, 'paging must not rewrite the truncated vendor file');
+  assert.deepEqual(completed.findings[1].paths.map(path => path.uri), detail.findings[1].paths.map(path => path.uri));
+});
+
+test('the pages CLI follows the alert URI page token and does not print the API key', async t => {
+  const scan = cleanReport().scan.id;
+  const key = 'synthetic-key-value';
+  const hash = index => createHash('sha256').update(`page-${index}`).digest('hex');
+  const seen = [];
+  const server = createServer((request, response) => {
+    const url = new URL(request.url, 'http://127.0.0.1');
+    seen.push({ path: url.pathname, pageSize: url.searchParams.get('pageSize'), pageToken: url.searchParams.get('pageToken'), key: request.headers['x-apikey'] });
+    const token = url.searchParams.get('pageToken');
+    const body = token === '0'
+      ? { applicationScanAlertUris: [{ requestMethod: 'GET', uri: '/synthetic-email-1', status: 'RISK_ACCEPTED', findingHash: hash(1), scan: { id: scan } }], totalCount: 2, nextPageToken: 1 }
+      : { applicationScanAlertUris: [{ requestMethod: 'GET', uri: '/synthetic-email-2', status: 'RISK_ACCEPTED', findingHash: hash(2), scan: { id: scan } }], totalCount: 2, nextPageToken: '' };
+    response.setHeader('content-type', 'application/json');
+    response.end(JSON.stringify(body));
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => server.close());
+  const fixture = mkdtempSync(join(tmpdir(), 'semester-alert-pages-'));
+  t.after(() => rmSync(fixture, { recursive: true, force: true }));
+  const detailFile = join(fixture, 'detail.json');
+  writeFileSync(detailFile, JSON.stringify({
+    findings: [{ plugin_id: '100009', cwe_id: 'CWE-311', severity: 'low', total_paths: 1, paths: [{ method: 'GET', uri: '/truncated', status: 'UNKNOWN', finding_hash: hash(0) }] }],
+  }));
+  const reportScript = fileURLToPath(new URL('./company-site-scan-report.mjs', import.meta.url));
+  // spawn, not spawnSync: a synchronous child would stall this process's HTTP server.
+  const child = spawn(process.execPath, [reportScript, 'pages', scan, detailFile], {
+    env: { ...process.env, HAWK_API_KEY: key, STACKHAWK_API_BASE: `http://127.0.0.1:${server.address().port}` },
+  });
+  const stdout = [];
+  const stderr = [];
+  child.stdout.on('data', chunk => stdout.push(chunk));
+  child.stderr.on('data', chunk => stderr.push(chunk));
+  const status = await new Promise((resolve, reject) => {
+    child.on('error', reject);
+    child.on('exit', resolve);
+  });
+  const result = { status, stdout: Buffer.concat(stdout).toString('utf8'), stderr: Buffer.concat(stderr).toString('utf8') };
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(`${result.stdout}${result.stderr}`, new RegExp(key));
+  assert.deepEqual(seen.map(call => [call.pageSize, call.pageToken, call.key]), [['100', '0', key], ['100', '1', key]]);
+  assert.match(seen[0].path, new RegExp(`/api/v1/scan/${scan}/alert/100009$`));
+  const completed = JSON.parse(result.stdout);
+  assert.equal(completed.findings[0].total_paths, 2);
+  assert.deepEqual(completed.findings[0].paths.map(path => path.uri), ['/synthetic-email-1', '/synthetic-email-2']);
+  assert.match(result.stderr, /Paged finding evidence: 1 findings, 2 instances/);
+});
+
+test('the API base used for alert pages is the StackHawk host unless a loopback test server is named', () => {
+  const previous = process.env.STACKHAWK_API_BASE;
+  try {
+    delete process.env.STACKHAWK_API_BASE;
+    assert.equal(apiBase(), 'https://api.stackhawk.com');
+    process.env.STACKHAWK_API_BASE = 'https://evil.example';
+    assert.throws(() => apiBase(), /unsupported API base/);
+    process.env.STACKHAWK_API_BASE = 'http://127.0.0.1:9';
+    assert.equal(apiBase(), 'http://127.0.0.1:9');
+  } finally {
+    if (previous === undefined) delete process.env.STACKHAWK_API_BASE;
+    else process.env.STACKHAWK_API_BASE = previous;
+  }
 });

@@ -187,13 +187,37 @@ function assertFindingEnvelope(report, source) {
   }
 }
 
-function findingGroup(finding, source) {
-  const cwe = source === 'summary' ? finding?.cweId : finding?.cwe_id;
-  const match = /^(?:CWE-)?([1-9]\d*)$/i.exec(String(cwe ?? ''));
-  if (!match || !Number.isSafeInteger(Number(match[1]))) throw new Error(`${source} finding has unsupported CWE identity`);
+const cweIdentity = /^(?:CWE-)?([1-9]\d*)$/i;
+// HawkScan 6.5.0 writes the WASC category (for example "Information Leakage")
+// into the summary field named cweId. A category is not a CWE number.
+const categoryIdentity = /^(?!Unknown$)(?!Server$)[A-Za-z][A-Za-z ]{1,80}$/;
+
+function cweNumber(value) {
+  const match = cweIdentity.exec(String(value ?? ''));
+  if (!match || !Number.isSafeInteger(Number(match[1]))) return null;
+  return Number(match[1]);
+}
+
+function evidenceMode(findings) {
+  const classified = findings.map(finding => cweNumber(finding?.cweId) !== null);
+  if (classified.every(Boolean)) return 'cwe';
+  if (classified.some(Boolean)) throw new Error('summary finding has unsupported CWE identity');
+  return 'category';
+}
+
+function findingGroup(finding, source, mode) {
   const severity = String(finding?.severity ?? '').toUpperCase();
   if (!['LOW', 'MEDIUM', 'HIGH'].includes(severity)) throw new Error(`${source} finding has unsupported severity`);
-  return `CWE-${Number(match[1])}/${severity}`;
+  if (mode === 'cwe') {
+    const raw = source === 'summary' ? finding?.cweId : finding?.cwe_id;
+    const cwe = cweNumber(raw);
+    if (cwe === null) throw new Error(`${source} finding has unsupported CWE identity`);
+    return `CWE-${cwe}/${severity}`;
+  }
+  const category = source === 'summary' ? finding?.cweId : finding?.category;
+  if (typeof category !== 'string' || !categoryIdentity.test(category)) throw new Error(`${source} finding has unsupported CWE identity`);
+  if (source === 'detail' && cweNumber(finding?.cwe_id) === null) throw new Error('detail finding has unsupported CWE identity');
+  return `category:${category}/${severity}`;
 }
 
 function findingPathCounts(records, source) {
@@ -229,9 +253,10 @@ export function assertReconciledFindingEvidence(summary, detail) {
   if (('scanId' in detail && detail.scanId !== id) || ('scan' in detail && detail.scan?.id !== id)) {
     throw new Error('Detail finding evidence claims a mismatched scan association');
   }
+  const mode = evidenceMode(summary.findings);
   const groups = new Map();
   for (const finding of summary.findings) {
-    const key = findingGroup(finding, 'summary');
+    const key = findingGroup(finding, 'summary', mode);
     if (groups.has(key)) throw new Error('Ambiguous duplicate summary finding group');
     if (!Number.isInteger(finding.count) || finding.count < 1 || !Array.isArray(finding.paths) || finding.paths.length !== finding.count) {
       throw new Error(`Incomplete independent summary count for ${key}`);
@@ -242,7 +267,7 @@ export function assertReconciledFindingEvidence(summary, detail) {
   const plugins = new Set();
   const hashes = new Set();
   for (const finding of detail.findings) {
-    const key = findingGroup(finding, 'detail');
+    const key = findingGroup(finding, 'detail', mode);
     if (seenGroups.has(key)) throw new Error('Ambiguous duplicate detail finding group');
     seenGroups.add(key);
     const plugin = finding?.plugin_id;
@@ -266,6 +291,99 @@ export function assertReconciledFindingEvidence(summary, detail) {
   return detail.findings;
 }
 
+const pageTokenIdentity = /^\d{1,6}$/;
+const alertPageLimit = 50;
+
+function alertUriRecord(uri, scan) {
+  if (!uri || typeof uri !== 'object') throw new Error('Unsupported alert page schema');
+  if (uri.scan && typeof uri.scan === 'object' && 'id' in uri.scan && uri.scan.id !== scan) {
+    throw new Error('Detail finding evidence claims a mismatched scan association');
+  }
+  const method = uri.requestMethod ?? uri.method;
+  const hash = uri.findingHash ?? uri.finding_hash;
+  if (typeof method !== 'string' || typeof uri.uri !== 'string' || typeof hash !== 'string') {
+    throw new Error('Unsupported alert page schema');
+  }
+  return { method, uri: uri.uri, status: typeof uri.status === 'string' ? uri.status : 'UNKNOWN', finding_hash: hash };
+}
+
+export function assemblePluginPaths(pages, scan) {
+  if (!uuid.test(scan ?? '')) throw new Error('Scan did not return a valid scan ID');
+  if (!Array.isArray(pages) || !pages.length) throw new Error('Incomplete finding evidence: no alert pages');
+  if (pages.length > alertPageLimit) throw new Error('Alert page evidence has an unconsumed continuation');
+  const paths = [];
+  let total = null;
+  for (let index = 0; index < pages.length; index += 1) {
+    const page = pages[index];
+    if (!page || typeof page !== 'object' || Array.isArray(page) || !Array.isArray(page.applicationScanAlertUris)) {
+      throw new Error('Unsupported alert page schema');
+    }
+    if (!Number.isInteger(page.totalCount) || page.totalCount < 1) throw new Error('Incomplete finding evidence: alert page omitted totalCount');
+    if (total === null) total = page.totalCount;
+    else if (page.totalCount !== total) throw new Error('Finding count mismatch between alert pages');
+    const next = page.nextPageToken;
+    const continued = next !== null && next !== undefined && next !== '';
+    if (continued && !pageTokenIdentity.test(String(next))) throw new Error('Unsupported alert page schema');
+    if (index < pages.length - 1 && !continued) throw new Error('Alert pages ended before the reported total');
+    if (index === pages.length - 1 && continued) throw new Error('Alert page evidence has an unconsumed continuation');
+    for (const uri of page.applicationScanAlertUris) paths.push(alertUriRecord(uri, scan));
+  }
+  if (paths.length !== total) throw new Error(`Finding count mismatch: alert pages ${paths.length}, totalCount ${total}`);
+  return paths;
+}
+
+export function apiBase() {
+  const raw = process.env.STACKHAWK_API_BASE;
+  if (!raw) return 'https://api.stackhawk.com';
+  const url = new URL(raw);
+  const loopback = url.hostname === '127.0.0.1' || url.hostname === 'localhost';
+  if ((url.protocol !== 'https:' && !(loopback && url.protocol === 'http:')) || (!loopback && url.origin !== 'https://api.stackhawk.com')) {
+    throw new Error('unsupported API base');
+  }
+  return url.origin;
+}
+
+export async function fetchAlertPages(scan, pluginId, fetchImpl = globalThis.fetch) {
+  if (!uuid.test(scan ?? '') || !/^[a-z\d._:-]{1,128}$/i.test(pluginId ?? '')) throw new Error('Finding evidence did not include a safe plugin identifier');
+  const apiKey = process.env.HAWK_API_KEY;
+  if (!/^[^\s]{8,}$/.test(apiKey ?? '')) throw new Error('API key unavailable');
+  const pages = [];
+  let token = '0';
+  for (let index = 0; index < alertPageLimit; index += 1) {
+    const url = new URL(`/api/v1/scan/${scan}/alert/${encodeURIComponent(pluginId)}`, apiBase());
+    url.searchParams.set('pageSize', '100');
+    url.searchParams.set('pageToken', token);
+    const response = await fetchImpl(url, { headers: { Accept: 'application/json', 'X-ApiKey': apiKey }, signal: AbortSignal.timeout(30000) });
+    if (!response.ok) throw new Error(`alert page request failed (${response.status})`);
+    const page = await response.json();
+    pages.push(page);
+    const next = page?.nextPageToken;
+    if (next === null || next === undefined || next === '') return pages;
+    const advanced = String(next);
+    if (advanced === token) throw new Error('Alert page evidence has an unconsumed continuation');
+    token = advanced;
+  }
+  throw new Error('Alert page evidence has an unconsumed continuation');
+}
+
+export async function completeFindingDetail(detail, scan, fetchPages = pluginId => fetchAlertPages(scan, pluginId)) {
+  assertFindingEnvelope(detail, 'detail');
+  if (!uuid.test(scan ?? '')) throw new Error('Scan did not return a valid scan ID');
+  if (('scanId' in detail && detail.scanId !== scan) || ('scan' in detail && detail.scan?.id !== scan)) {
+    throw new Error('Detail finding evidence claims a mismatched scan association');
+  }
+  const findings = findingsFromEvidence(detail);
+  if (!findings.length) return { ...detail, findings };
+  const completed = [];
+  for (const finding of findings) {
+    const plugin = finding?.plugin_id;
+    if (typeof plugin !== 'string' || !/^[a-z\d._:-]{1,128}$/i.test(plugin)) throw new Error('Finding evidence did not include a safe plugin identifier');
+    const paths = assemblePluginPaths(await fetchPages(plugin), scan);
+    completed.push({ ...finding, total_paths: paths.length, paths });
+  }
+  return { ...detail, findings: completed };
+}
+
 function printResult(result) {
   console.log(`StackHawk | Quality gate: ${result.expectedCount - result.untouched.length}/${result.expectedCount} sitemap routes observed; ${result.paths.size} target paths total`);
   console.log('StackHawk | Scope: public company frontend; live APIs, authentication and backend data are not scanned');
@@ -277,7 +395,15 @@ function printResult(result) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try {
+  const runCli = async () => {
+    if (process.argv[2] === 'pages') {
+      const detail = parseJson(readFileSync(process.argv[4], 'utf8'));
+      const completed = await completeFindingDetail(detail, process.argv[3]);
+      const findings = completed.findings ?? [];
+      console.error(`StackHawk | Paged finding evidence: ${findings.length} findings, ${findings.reduce((count, finding) => count + finding.paths.length, 0)} instances`);
+      process.stdout.write(`${JSON.stringify(completed)}\n`);
+      return;
+    }
     const report = parseJson(readFileSync(process.argv[3], 'utf8'));
     if (process.argv[2] === 'id') {
       evidenceDiagnostics(report).forEach(shape => console.error(`StackHawk | Scan report shape: ${shape}`));
@@ -313,9 +439,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       console.log(`StackHawk | URI schema: ${Array.isArray(uris) ? 'array' : safeText(Object.keys(uris ?? {}).join(', '))}; records=${Array.isArray(list) ? list.length : 'unsupported'}; first record=${list?.[0] && typeof list[0] === 'object' ? safeText(Object.keys(list[0]).join(', ')) : typeof list?.[0]}`);
       printResult(result);
       if (result.gaps.length) process.exitCode = 1;
-    } else throw new Error('Use id, plugin-ids, hashes, reconcile or verify with scan evidence files');
-  } catch (error) {
+    } else throw new Error('Use id, plugin-ids, hashes, pages, reconcile or verify with scan evidence files');
+  };
+  runCli().catch(error => {
     console.error(`StackHawk | Evidence unavailable: ${safeText(error.message)}`);
     process.exitCode = 1;
-  }
+  });
 }

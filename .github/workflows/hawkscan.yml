@@ -175,8 +175,12 @@ jobs:
           echo "StackHawk | Scan id: $scan_id"
           "$RUNNER_TEMP/hawkop" scan get "$scan_id" --detail full --format json > "$RUNNER_TEMP/company-site-findings.json"
           evidence_status=0
-          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings.json" || evidence_status=1
-          node scripts/company-site-scan-report.mjs reconcile "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-findings.json" || evidence_status=1
+          # hawkop 0.11.0 --detail full requests the alert-URI API at its default
+          # page size of 10 and reports that page as the whole finding. Walk
+          # pageSize=100 until nextPageToken is empty before reconciliation.
+          node scripts/company-site-scan-report.mjs pages "$scan_id" "$RUNNER_TEMP/company-site-findings.json" > "$RUNNER_TEMP/company-site-findings-complete.json" || evidence_status=1
+          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings-complete.json" || evidence_status=1
+          node scripts/company-site-scan-report.mjs reconcile "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-findings-complete.json" || evidence_status=1
           API_KEY="$HAWK_API_KEY" hawk op scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
           node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl" || evidence_status=1
           exit "$evidence_status"
