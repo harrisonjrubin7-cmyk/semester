@@ -14,7 +14,7 @@ the plan in the request; each branch is a small reviewed PR that rebases onto `o
 | D-4 | Analytics: first-party, consent-gated collection, or none beyond lead attribution | Contract and no-op sink first; collection only after the preconditions | analytics events |
 | D-5 | Pricing display: request-pricing only until a price book and an approval record exist | Yes | pricing page |
 | D-6 | Name reviewers for Security, Privacy, Accessibility, Legal and counsel | — | all publish gates |
-| D-7 | A monitored non-personal mailbox for security, privacy, accessibility and contact | — | vulnerability reporting, JSON-LD, form fallback |
+| D-7 | **Resolved by the owner:** `harrisonjrubin7@gmail.com` is the non-personal company mailbox for security, privacy, accessibility and contact. Remaining: confirm who monitors it and who else has access, and whether to give security reports a dedicated alias later | Use it as is | none; was blocking vulnerability reporting |
 
 Each becomes `docs/decisions/D-<PR number>.md` once its PR exists (CLAUDE.md).
 

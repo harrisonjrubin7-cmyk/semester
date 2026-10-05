@@ -73,8 +73,9 @@ signed URL from the private `trust-packet` bucket. Public page lists titles and 
 ## 7. Vulnerability reporting
 
 Publish `/.well-known/security.txt` (contact, policy, expiry). The in-page report form
-needs the `security_report` route (audit F-01). A monitored, non-personal mailbox must
-exist before this is advertised; today the contact is the founder's personal address.
+needs the `security_report` route (audit F-01). The contact mailbox is
+`harrisonjrubin7@gmail.com`, which the owner has confirmed is a non-personal company mailbox, so it may be
+used for `security.txt`. Before advertising it, confirm it is monitored and who else has access.
 
 ## 8. Accessibility statement
 

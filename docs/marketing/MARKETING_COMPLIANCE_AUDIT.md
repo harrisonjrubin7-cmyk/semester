@@ -53,7 +53,7 @@ register has no row at status "Available now".
 | 21 | accessibility page ~1443 | "We design and test toward WCAG 2.2 AA…" | `VR` `A` | Acceptable "toward" form (CLM-007) **only** with the scope and the no-ACR statement kept adjacent |
 | 22 | accessibility page ~1446, 1458 | "1 high-impact known issue · 4 lower-impact known issues"; "axe-core (WCAG 2.0–2.2 A/AA and best practice)… No manual screen-reader pass yet" | `VR` `A` | Counts need a ledger link (`accessibility-issue-ledger.csv`) and a date. Evidence is desktop, 28 Sep |
 | 23 | footer 3223; ~1443 | "Built at Vanderbilt"; "Founded 2026, Vanderbilt University" | `L` | University name and affiliation; C-11. Requires institutional permission (CLM-013-adjacent) and trademark review |
-| 24 | index.html:247 / schema | JSON-LD `Organization` with `email: harrisonjrubin7@gmail.com`, founder, 3 `sameAs` | `ME` `P` | Personal address in structured data; entity facts unapproved (company-site-audit gap) |
+| 24 | index.html:247 / schema | JSON-LD `Organization` with `email: harrisonjrubin7@gmail.com`, founder, 3 `sameAs` | `ME` | Contact address in structured data is the company mailbox (owner-confirmed non-personal); the entity facts (founder, `sameAs`) are still unapproved (company-site-audit gap) |
 | 25 | pricing, Pro button | "Join the waitlist" | `U` | Links to the contact form; **no waitlist exists** |
 | 26 | pricing | Free: "Unlimited courses. Reading a syllabus uses AI, which has a monthly limit per account" | `VR` | Honest; limit is 60 generations per account per month (`supabase/functions/claude/index.ts:36`). Re-verify the number at each review |
 | 27 | status page | "Up means this browser reached the service just now. It is not an uptime percentage" | `VR` | Good; CLM-016 satisfied |
@@ -89,7 +89,7 @@ register has no row at status "Available now".
 | F-05 | `app/src/site` never sets canonical/OG/sitemap (no `SITE_ORIGIN`) | Medium |
 | F-06 | CSP `script-src` still allows cdnjs and jsdelivr plus an unused hash | Low–Medium |
 | F-07 | All product CTAs point to a personal GitHub Pages host | Medium (trust, link rot, no custom domain) |
-| F-08 | Personal Gmail used as the public contact, the form fallback and the JSON-LD email | Medium (privacy, continuity) |
+| F-08 | One mailbox (`harrisonjrubin7@gmail.com`, owner-confirmed non-personal) is the public contact, the form fallback and the JSON-LD email. Not a defect in itself; the open question is operational: who monitors it, who else has access, and whether a stated response time can be kept | Low (continuity) |
 | F-09 | "Join the waitlist" with no waitlist | Medium (deceptive-path pattern) |
 | F-10 | `claims_register` and `content_register` empty and unread; the markdown is the only control | Medium: the "publishes only approved content" requirement has no runtime enforcement |
 | F-11 | `sitemap.xml` is hand-maintained and omits two views | Low |
