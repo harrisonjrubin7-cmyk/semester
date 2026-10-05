@@ -299,7 +299,7 @@ describe('the shared-key function asks before it spends anything', () => {
 
   it('asks before the plan is read, the body is clamped, a dollar is reserved or a call is counted', () => {
     const ask = at('schoolAiDecision(facts)');
-    for (const later of ["from('billing_accounts')", 'clampRequest(', "rpc('add_spend'", "rpc('count_call'", 'fetch(ANTHROPIC']) {
+    for (const later of ["from('billing_accounts')", 'clampRequest(', "rpc('add_spend'", "rpc('count_call'", 'fetch(upstreamTo.url']) {
       expect(ask, `the school's decision is asked after ${later}`).toBeLessThan(at(later));
     }
   });
@@ -309,7 +309,7 @@ describe('the shared-key function asks before it spends anything', () => {
     const tenantReserve = at('tenant.reserve()');
     expect(tenantReserve, 'the school is asked after the account\'s reservation').toBeGreaterThan(reserve);
     expect(tenantReserve, 'the school is asked before the call is counted').toBeLessThan(at("rpc('count_call'"));
-    expect(tenantReserve).toBeLessThan(at('fetch(ANTHROPIC'));
+    expect(tenantReserve).toBeLessThan(at('fetch(upstreamTo.url'));
     const afterReserve = source.slice(tenantReserve, at("rpc('count_call'"));
     expect(afterReserve).toMatch(/release\(reserve[\s\S]{0,250}403/);
     // Every place the account's reservation is given back gives the school's back too.

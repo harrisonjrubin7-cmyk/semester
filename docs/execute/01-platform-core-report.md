@@ -19,7 +19,7 @@
 
 ## What was added
 
-- `supabase/company-roles-student-data.check.sql` — a sweep, not named cases. For each of the 73 tables in `public` that name their owner in a `user_id` or `student_id` uuid column: **56** are probed with a student-owned row (read back by the owner as a control, then read by each of the fourteen company roles — `app_roles.global` — holding a live platform grant); **9** have no `SELECT` grant for a signed-in client at all; **8** are inconclusive and named (`enrollments`, `family_invites`, `grade_entries`, `grade_passbacks`, `group_members`, `message_reactions`, `messages`, `referral_codes`: each needs related rows before its owner can read it, so they are not counted as safe). The answer must equal a written list of exceptions, in both directions, and the probed count has a floor of 56 so it can only go up.
+- `supabase/company-roles-student-data.check.sql` — a sweep, not named cases. For each of the 73 tables in `public` that name their owner in a `user_id` or `student_id` uuid column: **64** are probed with a student-owned row (read back by the owner as a control — or, for `grade_passbacks`, which a student is deliberately not let read, checked to exist — then read by each of the fourteen company roles — `app_roles.global` — holding a live platform grant); **9** have no `SELECT` grant for a signed-in client at all; **0** are inconclusive. Slice 1 probed 56 and named eight it could not fill; slice 2 gave those a per-table `fixtures` entry (the value only that table's rules accept, a parent group, an adult enrolled student) and the sweep found no further company-role read. The answer must equal a written list of exceptions, in both directions, and the probed count has a floor of 64 so it can only go up.
 - `supabase/ai-audit-content-free.check.sql` — pins the column sets of `private.gateway_intelligence_audit` and `private.gateway_audit`, so adding a column that could hold a prompt or an answer is a decision made in the file, not a line in a migration. `gateway_intelligence_action` and `gateway_review` carry a `sealed_body` (a sealed, expiring proposal awaiting confirmation); they are not audit rows and are named in the file as not covered.
 
 Both are picked up by `supabase/check.sh`, which CI already runs; no workflow changed.
@@ -53,7 +53,7 @@ $ su postgres -c "cd <repo> && supabase/check.sh"       # every suite, 184 migra
 | A policy gives `support_agent` a read of `activity` | `FAILED: a company role reads a student's row, and it is not on the list: activity/support_agent` — one role named, the other thirteen not |
 | The volunteers policy is narrowed to own-row | `FAILED: on the list but no longer true — remove it: community_volunteers/trust_safety_senior community_volunteers/trust_safety_reviewer` |
 | The fixture grants are revoked (every count would be zero) | `FAILED: a live platform grant of account_executive does not answer true for account:manage` |
-| The probe floor raised above what it reaches | `FAILED: only 56 tables probed, the floor is 999 …` naming the tables not probed |
+| The probe floor raised above what it reaches | `FAILED: only 64 tables probed, the floor is 999 …` naming the tables not probed |
 | A `prompt` column added to `gateway_intelligence_audit` | `FAILED: … changed shape (+prompt)` |
 | `correlation_id` dropped from `gateway_audit` | `FAILED: … changed shape (-correlation_id)` |
 
@@ -70,14 +70,27 @@ The diff said the grep guards were missing (they exist), left `approvals.ts` as 
 ## Open gaps, highest priority first
 
 1. **The `community_volunteers` / `trust_safety_reviewer` read** — privacy owner's decision (above). P1.
-2. **The 8 inconclusive tables** — each needs a fixture with its related rows, then joins the sweep. `messages` and `grade_entries` matter most. P1.
+2. ~~The 8 inconclusive tables~~ — done in slice 2 (D-1298 below): all 64 probed, none inconclusive. The sweep still keys on `user_id`/`student_id`; other owner columns (`owner_id`, `created_by`, `account_id`, `subject`) are not swept. P2.
 3. **Owner columns beyond `user_id` / `student_id`** (`created_by`, `subject`, `owner_id`, `account_id`, ...) are not swept. P2.
 4. **The sweep reads through the table only.** What a `security definer` function a company role may call returns is each feature suite's job. P2.
 5. **Shared-key Edge path** keeps no per-request row. Decide whether it should. P2.
-6. **Not started from the work list:** the semester-core ports (provenance ladder and conflict resolution, freshness/projection-lag state, consequence pattern, access matrix), the free-text redaction scan and its red-team corpus (the one `AI never receives student records` gap: the repo gates by declared field class and does not read free text), the blanket anon revoke (defence in depth), `student-files` and `course-materials` buckets, the outbox worker and projections. Each is its own change.
+6. **Not started from the work list:** the semester-core ports (provenance ladder and conflict resolution, freshness/projection-lag state, consequence pattern, access matrix), the free-text redaction scan (deliberately not built: the repo gates by declared field class and says it does not read free text; see the slice 2 decision), the blanket anon revoke (defence in depth), `student-files` and `course-materials` buckets, the outbox worker and projections. Each is its own change.
 
 ## What the next slice needs
 
 - A decision on item 1 above, so the `TO NARROW` entry can be closed by a migration and a suite edit.
-- Whoever picks up item 6: start with the free-text redaction scan; it is the largest gap against the rule the handoff stresses most.
+- Whoever picks up item 6: the free-text redaction scan is *not* the largest gap — it contradicts the repo's declared-field-class design (D-1298). Start with the blanket anon revoke or the owner-column widening.
 - To run the policy suites in a session container: install `postgresql-17` from the PGDG repository, then `su postgres -c "cd <repo> && supabase/check.sh [suite ...]"`.
+
+## Slice 3 — the sweep widened to other owner columns
+
+`supabase/company-roles-student-data.check.sql` now also keys on `student`, `subject_user_id`, `person_id`, `author`, `author_id`, `owner`, `recipient`, `requester`, `donor`, `target_student`, `auth_user_id`, `person_account` and `reader_id`. **79** tables are probed (was 64); 15 are named as unprobed because their owner cannot read the row back (mostly event tables written by staff or the system: `*_share_events`, `capture_*`, `registration_audit_event`, `skill_claim*` and similar), not counted as safe.
+
+Two new company-role reads, both on the list with a reason:
+
+| Read | Verdict |
+| --- | --- |
+| `approval_request` by five console roles (`data_steward`, `incident_responder`, `platform_admin`, `support_agent`, `trust_officer`) | Intended. `console:operate` reads every request; `requester` is the staff member who asked, a column-name match and not a student record. |
+| `course_review_authors` by `moderator` | Intended read, **enforcement open**. `docs/ROLE-LAUNCH-REGISTER.md` promises "author access strictly audited"; the table read writes no audit row. Privacy owner: audit each authorship read, or serve it through a definer function that does. |
+
+Proof: floor 80 fails ("only 79 tables probed"); deleting one new exception fails ("not on the list: approval_request/support_agent"); all 115 suites pass.

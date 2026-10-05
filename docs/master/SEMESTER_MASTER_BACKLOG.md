@@ -137,3 +137,18 @@ Rendered from `domains.py` (each domain's `nxt` list) and the cross-cutting list
 | D22-1 | Library discovery integration after a partner library asks | `product` | Test in `app/src/lib/research.test.ts` and an evidence file under `docs/evidence/` | D22 Library and research |
 | D35-1 | Do not build; revisit when D34 has 3 certified integrations | `founder` | Test in `none` and an evidence file under `docs/evidence/` | D35 Marketplace and partners |
 | X-17 | Marketplace: do nothing until D34 has three certified integrations | `founder` | ADR-0024; D-1236 gates | cross-cutting |
+
+## Phase 0 additions (2026-10-05, branch `claude/sharp-pasteur-qrutl6`)
+
+Ordered tasks from [`SEMESTER_EXECUTION_ROADMAP.md`](SEMESTER_EXECUTION_ROADMAP.md); gaps behind them in [`SEMESTER_GAP_AND_STATUS_REGISTER.md`](SEMESTER_GAP_AND_STATUS_REGISTER.md).
+
+1. Read the 18 sensitive `SECURITY DEFINER` RPCs and the `anon` grants flagged by the advisor; fix or revoke with a migration test on a dev branch.
+2. Reconcile with draft PR #1304 before writing any design-mapping doc.
+3. Verify whether `lead-intake` records consent and checks suppression.
+4. Build the projection worker, watermarks and read-model registry over `domain_outbox_events`.
+5. Add `ops_operations_inbox`, `ops_tenant_overview`, `ops_projection_dashboard` with capability checks.
+6. Map the 13 equivalent-named components; add missing primitives only with a GOVERNANCE §2 case.
+7. Add Tenant directory/360, Pilot and Integration-ops tabs to the Console.
+8. Run `npm run build`, `test:shuffle`, secret scan and migration validation to complete the evidence register.
+9. Obtain the two PDFs not attached and reconcile them.
+10. Triage the stale draft PRs listed in the gap register.

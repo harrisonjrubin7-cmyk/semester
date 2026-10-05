@@ -10,8 +10,10 @@
 --
 -- ## What it does
 --
--- For every table in `public` that names its owner in a `user_id` or
--- `student_id` uuid column, it
+-- For every table in `public` that names its owner in a uuid column called
+-- `user_id`, `student_id`, `student`, `subject_user_id`, `person_id`, `author`,
+-- `author_id`, `owner`, `recipient`, `requester`, `donor`, `target_student`,
+-- `auth_user_id`, `person_account` or `reader_id` (`owner_columns` below), it
 --
 --   1. writes one row owned by a synthetic student (foreign keys and triggers
 --      are off for that insert, so the row can stand alone; NOT NULL and CHECK
@@ -36,8 +38,12 @@
 --     here (`rls-coverage` pins the definers' search_path; what each returns is
 --     the job of the suite for its feature).
 --   * It does not cover tables that name their owner some other way
---     (`created_by`, `subject`, `owner_id`, ...). Widening the column list is
---     the next step; the probed count below only ever goes up.
+--     (`created_by`, `subject`, `owner_id`, `account_id`: mostly the staff who
+--     wrote a row, not the person it is about). The probed count only goes up.
+--   * Where a table has several owner columns they are all set to the one
+--     student, so a policy that reads through any of them is found; a
+--     fixture may override one (`mentor_requests.requester`) where the table
+--     forbids two of them being the same person.
 --   * A table that needs related rows before its owner can read it (a message
 --     needs a room) is inconclusive, not safe. They are counted and named.
 --
@@ -109,7 +115,16 @@ declare
   -- Where a company role may read a student's row, and why. Empty is the goal.
   -- Keys are 'table/role'. Every entry is a decision somebody should be able
   -- to defend; an entry nobody can defend is a bug waiting for a migration.
+  console_reason constant text :=
+    'Intended, and not student data in practice. console:operate reads every approval request (20260929110000, "operators, requesters and approvers read requests"); `requester` is the company staff member who asked for the approval, so the sweep finding its own fixture student there is a column-name match, not a student record.';
   exceptions jsonb := jsonb_build_object(
+    'approval_request/data_steward', console_reason,
+    'approval_request/incident_responder', console_reason,
+    'approval_request/platform_admin', console_reason,
+    'approval_request/support_agent', console_reason,
+    'approval_request/trust_officer', console_reason,
+    'course_review_authors/moderator',
+      'Intended read, enforcement open. The policy admits review:moderate to see who wrote a course review, and docs/ROLE-LAUNCH-REGISTER.md says moderators get "author access strictly audited". The read itself writes no audit row, so "strictly audited" is a claim the table does not enforce. Needs the privacy owner: audit each authorship read, or return authorship through a definer function that does.',
     'billing_accounts/finance_operator',
       'Intended. billing:operate at platform scope is the company''s own billing duty (private.can_read_billing, docs/COMMERCIAL-CORE.md). The row is the subscription account, not an education record; an individual subscriber''s row points at them through user_id, which is on delete set null.',
     'data_requests/data_steward',
@@ -118,8 +133,36 @@ declare
       'Intended. Senior reviewers run the volunteer program from the Volunteers screen (docs/VOLUNTEER-MODERATOR-PROGRAM.md): record training, send back to calibration, revoke.',
     'community_volunteers/trust_safety_reviewer',
       'TO NARROW. The policy admits community:review, which a plain reviewer holds, but the program is the senior reviewer''s (docs/SUPPORT-AND-TRUST-SAFETY-OPERATING-MODEL.md, volunteer program). The row holds status, training dates and a free-text revoked_reason, across every school. Needs the privacy owner: narrow to community:review_senior, or write down why plain reviewers need the roster.');
-  floor_probed int := 56;     -- the sweep may probe more over time, never fewer
+  floor_probed int := 79;     -- the sweep may probe more over time, never fewer
 
+  -- Tables the generic row builder cannot fill: a value only the table's own
+  -- rules accept. `set` overrides a column; `before` is SQL run first (a
+  -- parent row); `no_owner_read` is for a table a student is deliberately not
+  -- allowed to read, where the owner read-back is replaced by a row-exists check.
+  fixtures jsonb := jsonb_build_object(
+    'enrollments', jsonb_build_object('set', jsonb_build_object('term', '''2026FA''', 'code', '''vanderbilt/ECON 2001''')),
+    'messages', jsonb_build_object('set', jsonb_build_object('term', '''2026FA''', 'code', '''vanderbilt/ECON 2000''')),
+    'message_reactions', jsonb_build_object('set', jsonb_build_object('term', '''2026FA''', 'code', '''vanderbilt/ECON 2000''')),
+    'group_members', jsonb_build_object('set', jsonb_build_object('group_id', '''00000000-0000-0000-0000-00000000f001''')),
+    'grade_entries', jsonb_build_object('set', jsonb_build_object('status', '''released''', 'action', '''entered''', 'score', '1', 'version', '1')),
+    'family_invites', jsonb_build_object('set', jsonb_build_object('code', '''ABCDEFGH''', 'access', '''selected''',
+      'categories', '''{finances}''', 'resource_ids', '''{x}''', 'institution_id', '''vanderbilt''')),
+    'referral_codes', jsonb_build_object('set', jsonb_build_object('code', '''ABCDEFGH''')),
+    'grade_passbacks', jsonb_build_object('no_owner_read', true),
+    'dining_ledger', jsonb_build_object('set', jsonb_build_object('term', '''card''', 'kind', '''campus_cents''')),
+    'dining_orders', jsonb_build_object('set', jsonb_build_object('items', '''{00000000-0000-0000-0000-00000000f003}''')),
+    'dining_plans', jsonb_build_object('set', jsonb_build_object('swipe_kind', '''weekly''', 'swipes_per_week', '5', 'term', '''2026FA''', 'time_zone', '''America/Chicago''')),
+    'dining_pool_donations', jsonb_build_object('set', jsonb_build_object('consent_version', '''dining-share-v1''')),
+    'institution_actions', jsonb_build_object('set', jsonb_build_object('audience_kind', '''student''')),
+    'mentor_requests', jsonb_build_object('set', jsonb_build_object('requester', '''00000000-0000-0000-0000-00000000f002''')),
+    'registration_overrides', jsonb_build_object('set', jsonb_build_object('waives', '''{capacity}''')));
+
+  -- Where a table says whose row it is. `user_id` and `student_id` are the
+  -- plain cases; the rest are what other tables call the same thing.
+  owner_columns constant text[] := array['user_id', 'student_id', 'student', 'subject_user_id',
+    'person_id', 'author', 'author_id', 'owner', 'recipient', 'requester', 'donor', 'target_student',
+    'auth_user_id', 'person_account', 'reader_id'];
+  extra text[]; why text;
   roles text[]; r text; t record; col record;
   stu uuid; owner_col text;
   users jsonb := '{}';
@@ -134,6 +177,13 @@ begin
   perform pg_temp.answered_count('there are fourteen company roles', cardinality(roles), 14);
 
   stu := pg_temp.newuser('student@company-roles.test');
+  -- A student the class rooms will show to their owner: an adult by their own
+  -- sign-up answer, and enrolled in a class that has a group in it.
+  insert into private.account_ages (user_id, source) values (stu, 'sign_up')
+  on conflict (user_id) do update set minor_until = null, under_minimum = false;
+  insert into public.enrollments (user_id, term, code) values (stu, '2026FA', 'vanderbilt/ECON 2000');
+  insert into public.groups (id, term, code, name, created_by)
+  values ('00000000-0000-0000-0000-00000000f001', '2026FA', 'vanderbilt/ECON 2000', 'fixture', stu);
   foreach r in array roles loop
     users := users || jsonb_build_object(r, pg_temp.newuser(r || '@company-roles.test'));
     insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
@@ -157,26 +207,36 @@ begin
 
   -- ── The sweep ───────────────────────────────────────────────────────────
   for t in
-    select c.table_name, min(case when c.column_name = 'user_id' then 'user_id' else 'student_id' end) as owner_col
+    select c.table_name,
+           -- The first column named is the one read back; the rest are set to the
+           -- same student, so a policy that reads through any of them is found.
+           (array_agg(c.column_name::text order by (c.column_name = 'user_id') desc,
+                      (c.column_name = 'student_id') desc, c.column_name))[1] as owner_col,
+           array_agg(c.column_name::text order by c.column_name) as owner_cols
       from information_schema.columns c
       join pg_tables p on p.tablename = c.table_name and p.schemaname = 'public'
-     where c.table_schema = 'public' and c.column_name in ('user_id', 'student_id') and c.data_type = 'uuid'
+     where c.table_schema = 'public' and c.data_type = 'uuid'
+       and c.column_name = any (owner_columns)
      group by c.table_name
      order by 1
   loop
-    owner_col := t.owner_col;
+    owner_col := t.owner_col; extra := array_remove(t.owner_cols, owner_col);
 
     -- A table no signed-in client may select from has no path to read here.
     if not has_table_privilege('authenticated', format('public.%I', t.table_name), 'select') then
       no_read := no_read + 1; continue;
     end if;
 
-    over := '{}'::jsonb; ok := false;
+    over := coalesce(fixtures->t.table_name->'set', '{}'::jsonb); ok := false; why := null;
     for attempt in 1..6 loop
       cols := quote_ident(owner_col); vals := quote_literal(stu::text) || '::uuid'; ok := true;
+      foreach k in array extra loop
+        cols := cols || ', ' || quote_ident(k);
+        vals := vals || ', ' || coalesce(over->>k, quote_literal(stu::text) || '::uuid');
+      end loop;
       for col in select column_name, data_type, udt_name, ordinal_position
                    from information_schema.columns
-                  where table_schema = 'public' and table_name = t.table_name and column_name <> owner_col
+                  where table_schema = 'public' and table_name = t.table_name and column_name <> all (t.owner_cols)
                     and ((is_nullable = 'NO' and column_default is null and is_identity = 'NO' and is_generated = 'NEVER')
                          or over ? column_name)
                   order by ordinal_position loop
@@ -195,7 +255,7 @@ begin
         execute 'set local session_replication_role = origin';
         select pg_get_constraintdef(oid) into cd from pg_constraint
          where conname = cn and conrelid = format('public.%I', t.table_name)::regclass;
-        ok := false;
+        ok := false; why := 'check ' || coalesce(cn, '?');
         -- col = ANY (ARRAY['a', 'b', ...]): take the first.
         m := regexp_match(cd, '\(?(\w+) = ANY \(\(?ARRAY\[''([^'']*)''');
         if m is not null then over := over || jsonb_build_object(m[1], quote_literal(m[2])); continue; end if;
@@ -205,12 +265,13 @@ begin
         exit;
       when others then
         execute 'set local session_replication_role = origin';
+        why := left(sqlerrm, 90);
         ok := false; exit;
       end;
     end loop;
     if not ok then
       inconclusive := inconclusive + 1;
-      unprobed := unprobed || ' ' || t.table_name; continue;
+      unprobed := unprobed || ' ' || t.table_name || coalesce('(' || why || ')', ''); continue;
     end if;
 
     -- Control: the owner reads it back.
@@ -220,6 +281,10 @@ begin
     exception when insufficient_privilege then n := 0;
     end;
     execute 'reset role';
+    -- A table the owner is deliberately not let read: the row must exist instead.
+    if n < 1 and coalesce((fixtures->t.table_name->>'no_owner_read')::boolean, false) then
+      execute format('select count(*) from public.%I where %I = %L', t.table_name, owner_col, stu) into n;
+    end if;
     if n < 1 then inconclusive := inconclusive + 1; unprobed := unprobed || ' ' || t.table_name || '(owner cannot read it back)'; continue; end if;
     probed := probed + 1;
 
