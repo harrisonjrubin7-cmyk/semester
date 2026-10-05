@@ -29,6 +29,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |
 | `infra/` | Infrastructure as code: Terraform modules and environments (`platform`, `staging`, `production`), the Rego policy that checks plans and workflows, and one change record per governed pull request. Nothing in it has been applied yet. See [`infra/README.md`](../../infra/README.md). |
+| `workflow-lab/` | Standalone Next.js (App Router) + Supabase app: the AI workflow router and the 12-workflow benchmark lab. Its own `package.json` and lockfile (not an npm workspace); CI is `.github/workflows/workflow-lab.yml`. See [`workflow-lab/README.md`](../../workflow-lab/README.md). |
 | `video/` | Remotion project that renders lessons to video. Has its own `package.json`; CI typechecks it with `npm run check:video`. See [`video/README.md`](../../video/README.md). |
 | `.claude/` | Agent configuration checked into the repository: `commands/` and `skills/` (`run`, `add-course`). |
 | `.github/` | `CODEOWNERS`, `dependabot.yml`, `pull_request_template.md`, `rulesets/main.json` and the workflows. |
