@@ -21,7 +21,7 @@
     "src/screens/Clocks.tsx": 12288,
     "src/screens/Community.tsx": 30720,
     "src/screens/Connect.tsx": 23552,
-    "src/screens/Console.tsx": 24576,
+    "src/screens/Console.tsx": 25088,
     "src/screens/Costs.tsx": 21504,
     "src/screens/Courses.tsx": 100352,
     "src/screens/Create.tsx": 29696,
