@@ -46,6 +46,18 @@ Probed 5 October, unauthenticated.
 | `semester-rose.vercel.app` | 200, the app | canonical project already serves current `main` |
 | `www.semester.website` | 200, "Semester · The student action platform" | **a company site is live on Vercel from a project this audit cannot see** (§3) |
 
+### 2.1 The services config is not in effect yet
+
+`semester` has **Root Directory = `app`** (shown by the Vercel bot on #1292).
+Vercel reads `vercel.json` from the root directory, so the root-level `services`
+and `rewrites` from #1288 are not applied. Measured: `semester-rose.vercel.app/lab`
+and `/lab/auth/sign-in` both return **404** on the production deploy of `main`
+at `4358847`. The `company-site` service added in #1292 is inert for the same
+reason. Before either works, the project's Root Directory must be the repository
+root (empty) with the Services preset, and `app/vercel.json`'s headers and
+function limits must be confirmed to apply per service. This is a project
+setting, not a code change; it is step 1 of §6.1, and it was not changed here.
+
 ## 3. Things that cannot be moved from here
 
 | Item | Why it is external | Needed from the owner |
@@ -111,7 +123,7 @@ Do not start until every box in §6.1 is ticked. Nothing here has been run.
 
 ### 6.1 Before
 
-- [ ] This pull request is merged and `semester` has a green production deploy.
+- [ ] This pull request is merged. **Set `semester`'s Root Directory to the repository root with the Services preset**, redeploy, and confirm `/lab` is no longer 404 on `semester-rose.vercel.app` and that the app's CSP/HSTS headers and the two 30 s function limits from `app/vercel.json` are still present.
 - [ ] `MERGE` variables in §5 set on `semester` for Production (and Preview for
       the `SEMESTER_*`/`OPENAI_API_KEY` set), then **redeploy** production.
 - [ ] Supabase Auth: Site URL and Redirect URLs include
@@ -164,7 +176,7 @@ migrations that exist only on `Semester2`.
 | `www.semesterintel.tech/*` | same | domain moves projects; no URL changes | after §6 |
 | `semesterintel.tech/*` | `www.semesterintel.tech/*` | 308, domain setting | after §6 |
 | `semester-shared-core.vercel.app/*`, `semester-rose.vercel.app/*` | `www.semesterintel.tech/*` | redirect once the domain is on `semester` | after §6 |
-| `www.semester.website/*` | same | host rewrite to `company-site` (this PR) | blocked on §3 |
+| `www.semester.website/*` | same | host rewrite to `company-site` (this PR), inert until §2.1 | blocked on §2.1 and §3 |
 | `semester-company-site*.vercel.app` | — | none, previews only | retire |
 | `harrisonjrubin7-cmyk.github.io/semester/#/…` | app origin | change the links in `company-site/`; hash routes cannot be redirected | owner decision |
-| `/lab`, `/lab/*` | same | already routed (#1288) | done |
+| `/lab`, `/lab/*` | same | routed in `vercel.json` by #1288, **not effective** until Root Directory changes (§2.1; `/lab` is 404 today) | blocked |
