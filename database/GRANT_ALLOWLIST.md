@@ -18,7 +18,7 @@ Each carries DELETE, INSERT, UPDATE, SELECT, TRUNCATE, TRIGGER, REFERENCES (some
 
 Verified false alarm, recorded so nobody re-raises it: INSERT policies showed `true` only because a null USING was coalesced. Query 3 finds no insert/update policy with a null or literal-true `WITH CHECK` on any anon-insertable table.
 
-## Step 1, in the repository (D-1304); not yet applied to production
+## Step 1, in the repository (D-1306); not yet applied to production
 `supabase/migrations/20261005200000_anon_keeps_only_its_public_catalog.sql` revokes every `anon` privilege on every `public` table and view, then grants back exactly the allowlist above (SELECT on the pricing catalog, `form_publications`, `published_forms` and `schools`; INSERT on `form_responses`). `proposed/anon_grant_reduction.sql` is superseded by it and left for the record. `supabase/client-privileges.check.sql` holds the result: `anon` has a row privilege only on the allowlist, and a table added by a later migration fails the suite until that migration revokes Supabase's default from `anon`. Q1 is not answered here: `schools` stays readable by `anon`, as it is, pending product and counsel.
 
 Nothing in the app relied on the dropped privileges: every policy on these tables answered a signed-out caller with zero rows, so a screen that read one before sign-in got nothing and now gets a permission error instead. Five suites asserted exactly that ("a signed-out visitor sees none") and now accept the refusal as well as the empty answer (`family`, `organizations`, `referrals`, `reports`, `rls-coverage`); the assertion that `anon` gets no row is unchanged.

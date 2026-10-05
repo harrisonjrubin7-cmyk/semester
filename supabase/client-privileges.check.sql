@@ -13,7 +13,7 @@
 -- thought of. The default-privilege check is the part a list could never do: it creates a table and
 -- reads what it was given.
 --
--- Since D-1304 it also holds the other half: `anon` holds a row privilege only on the public catalog,
+-- Since D-1306 it also holds the other half: `anon` holds a row privilege only on the public catalog,
 -- the open forms and the school list; a migration that adds a table revokes the default.
 --
 -- ## Controls
@@ -49,7 +49,7 @@ $$;
 
 -- What a signed-out visitor is meant to hold on `public`, and nothing else: the pricing catalog, the
 -- open forms, the school list, and the right to answer an open form. Every other table's policies key
--- on `auth.uid()`, so `anon` has no use for a grant on it (D-1304).
+-- on `auth.uid()`, so `anon` has no use for a grant on it (D-1306).
 create function pg_temp.anon_allowed() returns table (relname text, privilege text)
 language sql stable as $$
   select * from (values
@@ -130,7 +130,7 @@ begin
   end if;
   raise notice 'ok  SELECT, INSERT, UPDATE and DELETE are still held where policies rely on them';
 
-  -- 6. anon holds a row privilege only where a signed-out visitor needs it (D-1304).
+  -- 6. anon holds a row privilege only where a signed-out visitor needs it (D-1306).
   select string_agg(format('%s: anon holds %s', relname, privilege), '; ' order by relname, privilege)
     into found from pg_temp.anon_extra() where relname <> 'zz_client_privileges_probe';  -- the probe is this suite's own
   if found is not null then

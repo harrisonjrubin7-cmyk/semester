@@ -10,7 +10,7 @@
 -- policy added or edited wrongly later finds a privilege missing instead of a privilege waiting.
 --
 -- `20261005000000_client_roles_lose_table_ddl_privileges.sql` did the same for TRUNCATE, TRIGGER,
--- REFERENCES and MAINTAIN, on both client roles, and left this open as a decision. D-1304 makes it.
+-- REFERENCES and MAINTAIN, on both client roles, and left this open as a decision. D-1306 makes it.
 --
 -- What `anon` keeps, because a signed-out visitor needs it (the allowlist in
 -- `database/GRANT_ALLOWLIST.md`):
