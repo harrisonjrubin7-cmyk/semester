@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --border: #dde1e7;
+  --text: #14171c;
+  --muted: #5a6472;
+  --accent: #3b4ccf;
+  --accent-soft: #e9ebfb;
+  --accent-fg: #ffffff;
+  --ok: #17703f;
+  --ok-soft: #e1f4ea;
+  --warn: #8a5300;
+  --warn-soft: #fdf0d8;
+  --bad: #a31f2d;
+  --bad-soft: #fbe6e8;
+  --p-claude: #a14a14;
+  --p-claude-soft: #fbece0;
+  --p-canvas: #11705a;
+  --p-canvas-soft: #def5ee;
+  --p-v0: #4a3fb0;
+  --p-v0-soft: #ebe8fb;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1116;
+    --surface: #161a21;
+    --surface-2: #1d222b;
+    --border: #2b323d;
+    --text: #e8ebf0;
+    --muted: #9aa4b2;
+    --accent: #8f9bff;
+    --accent-soft: #232a52;
+    --accent-fg: #0e1116;
+    --ok: #5fd08f;
+    --ok-soft: #12301f;
+    --warn: #f0b858;
+    --warn-soft: #36290f;
+    --bad: #ff8d98;
+    --bad-soft: #3a161b;
+    --p-claude: #f0a46b;
+    --p-claude-soft: #3a2314;
+    --p-canvas: #5fd6b8;
+    --p-canvas-soft: #12332b;
+    --p-v0: #aaa1ff;
+    --p-v0-soft: #26214f;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html { background: var(--bg); }
+body { background: var(--bg); color: var(--text); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+dialog::backdrop { background: rgb(8 10 14 / 0.55); }
+dialog { color: var(--text); }
+
+.table-wrap { overflow-x: auto; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
