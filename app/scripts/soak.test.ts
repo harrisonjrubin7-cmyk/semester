@@ -276,3 +276,52 @@ describe('the document', () => {
     expect(ci).toContain("LOAD_SECONDS: '6'");
   });
 });
+
+describe('run.sh, confirming a drift before failing on it (D-1280)', () => {
+  // The soak block of run.sh, lifted as it is and run with the database taken
+  // out: `run_pass` writes one number per window from a series, and the rest of
+  // the block (the window function, the confirmation loop, drift.sh) is the real
+  // one. `plans` is the scenario; its budget is 60 ms.
+  const runSh = readFileSync(join(import.meta.dirname, '../../supabase/load/run.sh'), 'utf8');
+  const block = runSh.slice(runSh.indexOf('soak_window() {'), runSh.indexOf('\nelse\n  run_pass'));
+
+  function soak(series: number[]): { failed: number; windows: number; out: string } {
+    const harness = [
+      'set -uo pipefail',
+      `here_load=${JSON.stringify(join(import.meta.dirname, '../../supabase/load'))}`,
+      `vals=(${series.join(' ')}); soak=4; seconds=1; failed=0; windows=$(mktemp); window=1`,
+      'run_pass() { printf "plans %s %s 60 0\\n" "$window" "${vals[$((window-1))]}" >> "$windows"; }',
+      'run_invariants() { :; }',
+      'clients() { echo 0; }',
+      block + '\nfi',
+      'echo "failed=$failed"',
+      'echo "windows=$(wc -l < "$windows" | tr -d " ")"',
+    ].join('\n');
+    const r = spawnSync('bash', ['-c', harness], { encoding: 'utf8' });
+    return { failed: Number(/failed=(\d)/.exec(r.stdout)?.[1]), windows: Number(/windows=(\d+)/.exec(r.stdout)?.[1]), out: r.stdout };
+  }
+
+  it('does not run on when the first four windows show no drift', () => {
+    const r = soak([30, 31, 29, 32, 99, 99, 99, 99]);
+    expect(r.failed).toBe(0);
+    expect(r.windows).toBe(4);
+    expect(r.out).not.toMatch(/to see whether it persists/);
+  });
+
+  it('runs four more windows when drift is seen, and passes when it does not persist: a lucky early pair against a stall', () => {
+    // The shape of the CI run that failed (17.4 ms early, then 131.2 and 52.8), with ordinary windows after.
+    const r = soak([33, 17.4, 131.2, 52.8, 30, 28, 41, 30]);
+    expect(r.out).toMatch(/drifted from 17\.4 ms to 52\.8 ms over 4 windows/);
+    expect(r.out).toMatch(/running 4 more to see whether it persists/);
+    expect(r.out).toMatch(/✓ plans: .* over 8 windows, no drift/);
+    expect(r.windows).toBe(8);
+    expect(r.failed).toBe(0);
+  });
+
+  it('still fails a scenario that keeps getting slower: a leak is there when the soak runs on', () => {
+    const r = soak([10, 12, 25, 40, 55, 70, 90, 110]);
+    expect(r.out).toMatch(/running 4 more to see whether it persists/);
+    expect(r.out).toMatch(/✗ plans: p95 drifted from 10\.0 ms to 90\.0 ms over 8 windows/);
+    expect(r.failed).toBe(1);
+  });
+});
