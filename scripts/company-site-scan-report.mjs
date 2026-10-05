@@ -291,6 +291,26 @@ export function assertReconciledFindingEvidence(summary, detail) {
   return detail.findings;
 }
 
+function countedTotal(page) {
+  const candidates = [page.totalCount, page.total_count, page.alert?.uriCount, page.uriCount];
+  for (const candidate of candidates) {
+    const value = typeof candidate === 'string' && /^\d{1,9}$/.test(candidate) ? Number(candidate) : candidate;
+    if (Number.isInteger(value) && value > 0) return value;
+  }
+  return null;
+}
+
+function alertPageShape(page) {
+  const keys = page && typeof page === 'object' && !Array.isArray(page)
+    ? [
+      ...Object.keys(page),
+      ...(page.alert && typeof page.alert === 'object' ? Object.keys(page.alert).map(key => `alert.${key}`) : []),
+    ].sort()
+    : [typeof page];
+  const next = page?.nextPageToken;
+  const nextKind = next === null || next === undefined || next === '' ? 'empty' : pageTokenIdentity.test(String(next)) ? 'page' : typeof next;
+  return `${keys.join(',')}; next=${nextKind}`;
+}
 const pageTokenIdentity = /^\d{1,6}$/;
 const alertPageLimit = 50;
 
@@ -381,13 +401,14 @@ export async function fetchAlertPages(scan, pluginId, fetchImpl = globalThis.fet
     const page = await response.json();
     const uris = page?.applicationScanAlertUris;
     if (!page || typeof page !== 'object' || Array.isArray(page) || !Array.isArray(uris)) {
-      const keys = page && typeof page === 'object' && !Array.isArray(page) ? Object.keys(page).sort().join(',') : typeof page;
-      throw new Error(`Unsupported alert page schema (${safeText(keys)})`);
+      throw new Error(`Unsupported alert page schema (${safeText(alertPageShape(page))})`);
     }
-    if (!Number.isInteger(page.totalCount) || page.totalCount < 1) throw new Error('Incomplete finding evidence: alert page omitted totalCount');
-    if (total === null) total = page.totalCount;
-    else if (page.totalCount !== total) throw new Error('Finding count mismatch between alert pages');
-    pages.push(page);
+    const totalCount = countedTotal(page);
+    if (totalCount === null) throw new Error(`Incomplete finding evidence: alert page omitted totalCount (${safeText(alertPageShape(page))}; uris=${uris.length})`);
+    const normalized = page.totalCount === totalCount ? page : { ...page, totalCount };
+    if (total === null) total = totalCount;
+    else if (totalCount !== total) throw new Error('Finding count mismatch between alert pages');
+    pages.push(normalized);
     collected += uris.length;
     const next = page.nextPageToken;
     const continued = next !== null && next !== undefined && next !== '';

@@ -874,6 +874,47 @@ test('alert paging stops once totalCount is in hand instead of following an incr
   }
 });
 
+test('alert paging uses alert.uriCount when totalCount is the unset zero default', async () => {
+  const scan = cleanReport().scan.id;
+  const record = index => ({
+    requestMethod: 'GET', uri: `/synthetic-email-${index}`, status: 'RISK_ACCEPTED',
+    findingHash: createHash('sha256').update(`count-${index}`).digest('hex'), scan: { id: scan },
+  });
+  const tokens = [];
+  const fetchImpl = async url => {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln' }) };
+    const pageToken = parsed.searchParams.get('pageToken');
+    tokens.push(pageToken);
+    const body = pageToken === '0'
+      ? { applicationScanAlertUris: [record(1)], totalCount: 0, alert: { uriCount: 2 }, nextPageToken: 1 }
+      : { applicationScanAlertUris: [record(2)], totalCount: 0, alert: { uriCount: '2' }, nextPageToken: 2 };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const previous = process.env.HAWK_API_KEY;
+  process.env.HAWK_API_KEY = 'synthetic-key-value';
+  try {
+    const pages = await fetchAlertPages(scan, '100009', fetchImpl);
+    assert.deepEqual(tokens, ['0', '1']);
+    assert.equal(assemblePluginPaths(pages, scan).length, 2);
+    await assert.rejects(
+      fetchAlertPages(scan, '100009', async url => {
+        if (new URL(url).pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln' }) };
+        return { ok: true, status: 200, json: async () => ({ applicationScanAlertUris: [{ uri: '/secret-path', requestMethod: 'GET', findingHash: 'ab' }], nextPageToken: 4, alert: { name: 'Information Leak' } }) };
+      }),
+      error => {
+        assert.match(error.message, /omitted totalCount/);
+        assert.match(error.message, /alert\.name/);
+        assert.doesNotMatch(error.message, /secret-path|Information Leak/);
+        return true;
+      },
+    );
+  } finally {
+    if (previous === undefined) delete process.env.HAWK_API_KEY;
+    else process.env.HAWK_API_KEY = previous;
+  }
+});
+
 test('complete finding detail replaces a self-consistent 10-path plugin with both alert pages', async () => {
   const scan = cleanReport().scan.id;
   const { detail } = reconciliationFixture();
