@@ -132,9 +132,9 @@ Erases every row about the caller in one transaction, then removes their sign-in
 Fetches a calendar link the browser cannot fetch, because calendar servers send no CORS headers. **Status** LIVE (truth-table row "Plan: calendar").
 
 - **Request.** `POST` with a bearer token and JSON `{"url": "https://…"}`.
-- **Rules.** `https` only; the host must not be private (the same rule as `canvas`); redirects are followed but the final address is checked by the same rule. Timeout 15000 ms. Response limit 1,000,000 bytes. The body must contain `BEGIN:VCALENDAR` in its first 4096 characters.
-- **Responses.** 200 `text/calendar` (`Cache-Control: no-store`); 400 not JSON, not a web address, not `https`, a private host, or a redirect to one; 401 no or invalid session; 405; 413 larger than the limit; 422 the address answered something that is not a calendar; 502 unreachable or an error status.
-- **Source.** [`index.ts`](../../supabase/functions/fetchcal/index.ts), [`publichost.test.ts`](../../app/src/lib/publichost.test.ts).
+- **Rules.** `https` only; the host must not be private (the same rule as `canvas`, which reads an IPv4 address carried inside IPv6 as the address it is); redirects are walked one hop at a time with `redirect: 'manual'` and each hop's address is checked **before** it is requested, up to 5 hops. Timeout 15000 ms for the whole chain. A public name that resolves to a private address is not caught, because no DNS answer is available before the request. Response limit 1,000,000 bytes. The body must contain `BEGIN:VCALENDAR` in its first 4096 characters.
+- **Responses.** 200 `text/calendar` (`Cache-Control: no-store`); 400 not JSON, not a web address, not `https`, a private host, a redirect to one, or more than 5 redirects; 401 no or invalid session; 405; 413 larger than the limit; 422 the address answered something that is not a calendar; 502 unreachable or an error status.
+- **Source.** [`index.ts`](../../supabase/functions/fetchcal/index.ts), [`_shared/safefetch.ts`](../../supabase/functions/_shared/safefetch.ts), [`safefetch.test.ts`](../../app/src/lib/safefetch.test.ts), [`publichost.test.ts`](../../app/src/lib/publichost.test.ts), [`hostrule.test.ts`](../../app/src/lib/hostrule.test.ts).
 
 ## `integration-tick`
 
