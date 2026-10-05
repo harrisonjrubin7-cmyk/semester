@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-113 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+115 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -38,6 +38,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |
 | `supabase/advisor-reconciliation.check.sql` | The production-advisor reconciliation of 30 September 2026 (D-1026): that a table with row-level security on and no policy is unreachable by any client role — the fact that lets the advisor's 49 noti… |
 | `supabase/advisor.check.sql` | Advisor Meeting Mode shares (Phase G, D-016): who can share with whom, who can read, and that expiry and revocation stop reading. |
+| `supabase/ai-audit-content-free.check.sql` | The AI audit tables hold no prompt and no answer. |
 | `supabase/ai-spend.check.sql` | The dollar meter on the shared key (20261004170000_ai_spend_meter). |
 | `supabase/answer-rights-requests.check.sql` | Answering a rights request: who may, which moves are legal, and what is left behind. |
 | `supabase/approved-source-policy-scope.check.sql` | Disposable/local database only, after applying the source-scope migration. |
@@ -51,6 +52,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/commercial-automation.check.sql` | The commercial core's moving parts (20260929080000_commercial_automation): checkout, the webhook's writes, the dunning worker, contract → tenant, site lead intake and the nightly account-health job. |
 | `supabase/commercial.check.sql` | The commercial core: catalog, billing accounts, subscriptions, invoices, dunning, cancellation, delivery records and the governance registers. |
 | `supabase/community.check.sql` | Community: every permission in 20260928032000_community.sql walked as the account it is about, and every refusal attempted as the account that should be refused. |
+| `supabase/company-roles-student-data.check.sql` | No company role reads a student's rows. |
 | `supabase/configuration-studio.check.sql` | The Configuration Studio (D-1011): who may draft and who may publish a school's configuration, that whoever drafted it does not publish it, that a published version is never edited or deleted, that e… |
 | `supabase/connections.check.sql` | Does '20260922003000_connections.sql' do what it says? |
 | `supabase/console-approvals.check.sql` | The operations console's writes: approvals, the fail-closed action, break-glass, and the commercial core (20260929110000). |
