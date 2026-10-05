@@ -244,3 +244,16 @@ Effect on section 4: the rows `profiles.visibility`, `core.directory` and `commu
 - This pull request merged (stream 00 and D-1287).
 - Docker running, or CI, for `supabase db reset` (it cannot run in the session container).
 - Nothing further from section 5: the four questions are answered.
+
+## 8. Corrections since this was written
+
+Found when stream 01's first slice ran against the repo's database
+([`01-platform-core-report.md`](01-platform-core-report.md)). Where this section and a row above disagree, this section is right.
+
+| Row | Said | Is |
+| --- | --- | --- |
+| D · `.github/ci-security-job.yml` (grep guards) | "Missing: grep guards (service-role key in client code, student fields in `track()`)" | **Covered.** `app/src/lib/ops/boundaries.test.ts` "no service-role credentials in browsers" scans everything a browser loads, has a control, and checks no `VITE_` variable undoes it. There is no `track()`; the server takes three marks, enforced by a check constraint on `activity.mark`. |
+| D · `approvals.step` | "Check console-approvals migration first" | **Covered in SQL.** `decide_approval` calls `private.assert_fresh_mfa()` (default `15 minutes`), refuses self-approval, and needs two distinct approvers; `console-approvals.check.sql` tests all three. |
+| §6 · `audit.ai_usage` | "whether per-request rows are persisted … and whether any test asserts the prompt and answer are never stored" | The institution gateway persists a content-free row per request in `private.gateway_intelligence_audit`; the shared-key Edge path keeps monthly totals only. The shape is now pinned by `supabase/ai-audit-content-free.check.sql`. |
+| §6 · "Company staff never read student tables" | "no single negative test" | Now `supabase/company-roles-student-data.check.sql`. It found four reads, three intended and one to narrow (`community_volunteers` / `trust_safety_reviewer`). |
+| D · `middleware.security.ts` | the missing COOP header is "the one header worth adding" | **Deliberately not added**: it may break LTI new-window launches and cannot be tested here. See the report. |
