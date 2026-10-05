@@ -1287,7 +1287,7 @@ function Worked({ example }: { example: Example }) {
             </li>
           ))}
         </ol>
-        <div style={{ ...body, color: 'var(--app-ink)' }}>{e.result}</div>
+        <div style={{ ...body, color: 'var(--app-fg)' }}>{e.result}</div>
       </>
     );
   }
