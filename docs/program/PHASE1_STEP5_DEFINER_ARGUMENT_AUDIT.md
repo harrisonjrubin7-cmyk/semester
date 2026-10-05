@@ -6,16 +6,20 @@
 
 A Python scan of `supabase/migrations/*.sql` (184 files; 642 `create function` bodies parsed by regex), run twice:
 
-1. Definers with an argument named `p_tenant|p_school|p_institution|p_owner|p_user|p_actor|p_student*`: **11**.
+1. Definers with an argument named `p_tenant|p_school|p_institution|p_owner|p_user|p_actor|p_student*`: **11**: 9 with no gate in the body (Result 1) and 2 that the scan's gate pattern matched (Result 1b).
 2. Definers granted to `authenticated` that take a text or uuid argument and whose body shows none of `auth.uid()`, a membership/role helper, a JWT read, or a `private.`/`app_private.` call: **3**.
 
 Limits: the scan reads migration text, not the production catalog, so later `alter`/`revoke` outside migrations and drift are invisible (E-2 in the scorecard stays open). Argument names outside the patterns, `plpgsql` bodies that gate through a helper the regex does not know, and functions redefined in a later file can be missed. A clean result is a statement about the probe. No control was run against a deliberately weakened function, which step 5's exit criterion requires.
 
-## Result 1 — id-taking definers that are service-role only (8 functions, no finding)
+## Result 1 — id-taking definers that are service-role only (9 functions, no finding)
 
 `public.count_call`, `public.add_spend`, `public.productivity_commit`, `private.productivity_commit`, `public.productivity_tx_state`, `public.productivity_get`, `public.productivity_list_tasks`, `public.productivity_list_events`, `public.productivity_changes`.
 
 Each has `revoke all … from public, anon, authenticated` and `grant execute … to service_role` (V: for example `20260921142822_usage_atomic.sql:56-57`, `20261004170000_ai_spend_meter.sql:98-99`, `20261004180000_productivity_reads.sql:220-230`). They trust `p_tenant` / `p_owner` by design, so they are only as safe as the server callers that pass the ids. The productivity caller derives both from verified membership (see `PHASE1_STEP7_TENANT_CONTEXT_TRACE.md` rows 11–12). The other callers (`count_call`, `add_spend`) were not traced here. **Open:** trace their callers.
+
+## Result 1b — the other two of the 11 (gated, no finding)
+
+`private.record_audit` is `service_role`-only (`20260930000000_audit_and_subject_requests.sql:97-99`). `public.productivity_readiness_aggregate(p_tenant)` is granted to `authenticated` but raises `42501` unless the caller is an active admin of `p_tenant` through `institution_membership` and `auth.uid()` (`20261001153124_productivity_workspace.sql:47,53-54`). Both V.
 
 ## Result 2 — three authenticated-callable functions with no caller gate
 
@@ -30,11 +34,11 @@ None of the three is shown to expose an education record. The first two should s
 ## What this changes in the registers
 
 - **PR-04 (`COMPLETION_RISK_REGISTER.md`) / R-006 (`RISK_REGISTER.md`):** the service-role half is narrowed (grants verified; callers partly traced). A small authenticated-callable residue is named above. Severity is not changed by this page.
-- **No P0.** Nothing here shows a path to another tenant's records. That is a statement about 3 + 8 functions out of 642 parsed, not about the 510 definers in the register.
+- **No P0.** Nothing here shows a path to another tenant's records. That is a statement about the 11 + 3 functions above out of 642 parsed, not about the 510 definers in the register.
 
 ## Next, in step 5's own terms
 
-1. Run `supabase/definer-sweep.check.sql` against a catalog and diff its list against these 11 + 3 (closes the migration-text blind spot).
+1. Run `supabase/definer-sweep.check.sql` against a catalog and diff its list against these 11 + 3 = 14 functions (closes the migration-text blind spot).
 2. Write forged-argument tests for the highest-risk categories (records, finance, grants, export) and show them red against a weakened function, then green.
 3. Owner decision on `kill_switch_engaged` and `effective_module_modes` (tenant-scoped or platform-readable). It takes `docs/decisions/D-<PR number>.md` once a PR exists.
 4. Trace the callers of `count_call` and `add_spend`.
