@@ -548,7 +548,7 @@ a:hover {
   border-radius: var(--r-sm);
   border: 1px solid var(--app-accent);
   background: var(--app-panel);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: calc(13px * var(--text-scale, 1));
   letter-spacing: 0.08em;
@@ -5612,9 +5612,9 @@ section[data-drop] > .grip + * {
   padding-inline: var(--sp-4);
   border-left: 2px solid var(--app-accent);
   border-radius: var(--r-sm);
-  background: var(--app-ground);
-  color: var(--app-ink);
-  font-family: var(--app-font);
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-body);
   font-size: var(--type-xs);
   line-height: var(--leading-snug);
 }
@@ -8387,7 +8387,7 @@ section[data-drop] > .grip + * {
   padding: var(--sp-5);
   border: 1px solid var(--app-line);
   border-radius: var(--r-sm);
-  background: var(--app-raised);
+  background: var(--app-raise);
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
 }
@@ -10419,14 +10419,14 @@ button.adband-bar {
   padding: var(--sp-5) var(--sp-6);
   border: 1px solid var(--app-line);
   border-radius: var(--r-sm);
-  background: var(--app-paper);
+  background: var(--app-panel);
   color: var(--app-dim);
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
 }
 
 .course-capture-policy strong {
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: var(--type-base);
 }
@@ -10436,7 +10436,7 @@ button.adband-bar {
   grid-template-columns: auto 1fr;
   align-items: start;
   gap: var(--sp-3);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-size: var(--type-sm-plus);
   line-height: var(--leading-normal);
 }
@@ -10665,7 +10665,7 @@ button.adband-bar {
   border: 1px solid var(--app-line);
   border-left: 4px solid var(--app-dim);
   border-radius: var(--r-sm);
-  background: var(--app-paper);
+  background: var(--app-panel);
 }
 
 .trust-scorecard-row > div {
@@ -11263,14 +11263,14 @@ button.adband-bar {
 .standards-audit-summary, .standards-audit-filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-6); margin: var(--sp-7) 0; }
 .standards-audit-summary p { flex-basis: 100%; margin: 0; }
 .standards-audit label { display: flex; flex-direction: column; gap: var(--sp-3); }
-.standards-audit select, .standards-audit input[type="search"] { max-width: 100%; padding: var(--sp-4); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-border); border-radius: var(--r-md); min-height: 44px; }
-.standards-audit button { min-height: 44px; padding: var(--sp-4) var(--sp-6); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-border); border-radius: var(--r-md); cursor: pointer; }
+.standards-audit select, .standards-audit input[type="search"] { max-width: 100%; padding: var(--sp-4); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); min-height: 44px; }
+.standards-audit button { min-height: 44px; padding: var(--sp-4) var(--sp-6); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); cursor: pointer; }
 .standards-audit-views { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
 .standards-audit-views button[aria-pressed="true"] { border-color: var(--app-fg); font-weight: 600; }
 .standards-audit-table { overflow: auto; max-width: 100%; margin: var(--sp-7) 0; }
 .standards-audit table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: var(--type-md); line-height: 1.6; }
 .standards-audit caption { text-align: left; padding-bottom: var(--sp-5); }
-.standards-audit td, .standards-audit th { padding: var(--sp-6); border-bottom: 1px solid var(--app-border); text-align: left; vertical-align: top; }
+.standards-audit td, .standards-audit th { padding: var(--sp-6); border-bottom: 1px solid var(--app-line); text-align: left; vertical-align: top; }
 .standards-audit summary { min-height: 44px; cursor: pointer; }
 .standards-audit a { overflow-wrap: anywhere; text-decoration: underline; }
 .standards-audit li { margin-bottom: var(--sp-5); }
