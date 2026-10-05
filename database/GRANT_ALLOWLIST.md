@@ -23,5 +23,8 @@ Verified false alarm, recorded so nobody re-raises it: INSERT policies showed `t
 
 The 22 `private` helper functions executable by `anon` (`classmate`, `in_class`, `has_capability`, `is_app_admin`, ...) exist because policies on anon-granted tables call them. After the revoke, re-test whether that EXECUTE can also go.
 
+## Step 2a, applied to production on 2026-10-05
+`supabase/migrations/20261005000000_client_roles_lose_table_ddl_privileges.sql` revokes `TRUNCATE`, `TRIGGER`, `REFERENCES` (and `MAINTAIN` on Postgres 17) from `anon` and `authenticated` on every `public` table and from the default privileges for new ones; it touches no row privilege. `supabase/client-privileges.check.sql` holds it (five checks, including a planted-grant control and a check that SELECT, INSERT, UPDATE and DELETE are still held). A live read on 2026-10-04 found these four held by **both** roles on 25 tables, not `anon` alone. The owner authorized applying it, and it was applied to production on 2026-10-05 by running the statements and writing the ledger row `20261005000000` by hand (no pending migration sat below it). Read before and after: `TRUNCATE`/`TRIGGER`/`REFERENCES` holders by `anon` and `authenticated` on `public` went 150 to 0, `MAINTAIN` holders 50 to 0, and the SELECT, INSERT, UPDATE and DELETE grant counts were unchanged (306, 133, 105, 113). Not covered: default privileges for tables created by `supabase_admin` in `public` still grant all eight privileges to both roles (the migration role cannot change another role's defaults), and the Supabase-managed `storage` and `graphql` schemas. Rollback is a forward migration that grants the four back.
+
 ## Not done
 `authenticated`: 270 SELECT and 129 write tables. Allowlist not written.
