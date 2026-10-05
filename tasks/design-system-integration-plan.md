@@ -57,8 +57,8 @@ Marketplace revival. Company roles `ceo`, `cfo`, `comms`, `social`, `people`, `d
 | 1 | Shared design-system mapping | Already in `docs/design-system/`. No token edit |
 | 2 | Company-role student-row sweep | On main. All 64 owner-keyed tables probed (`D-1298`). One read still to narrow |
 | 3 | Free-text scan | Not built. `D-1298` |
-| 4 | Remaining stream 01 list: owner columns beyond `user_id` / `student_id`, blanket anon revoke, storage buckets, provenance and consequence ports | Open. The report suggests anon revoke or owner-column widening next. Neither is decided |
-| 5–18 | Student OS through release evidence | Open. Five named screens in `SCREEN-PACKS.md` have no production route |
+| 4 | Remaining stream 01 list: staff-named owner columns, storage buckets, provenance and consequence ports | Open. Fifteen owner-column names are swept (`D-1303`). A blanket anon revoke of `private` is not done. Leave and approve-join use `ActionPreview`. |
+| 5–18 | Student OS through release evidence | Term Plan is the Registration planner (`yes`). Four named screens in `SCREEN-PACKS.md` still have no production route |
 
 ## Definition of complete, not met
 

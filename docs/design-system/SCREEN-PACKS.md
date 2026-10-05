@@ -27,7 +27,7 @@ A screen that cannot name a component for a row has a gap in that row; §3 recor
 | 1 | Today dashboard | Student OS | `screens/Today.tsx`, `components/TodayActionCenter.tsx` | `student/Today.jsx` |
 | 2 | Action Center | Student OS | `components/ActionCenter.tsx` | catalogued only (`master-catalog`, `one-place`); archetype in `every-screen` |
 | 3 | Academic Path | Planning | `screens/Degree.tsx`, `screens/Pathway.tsx` | `student/Degree.jsx` |
-| 4 | Term Plan | Planning | **no screen of this name**; plans live in `screens/Registration.tsx` + `lib/registration.ts` | `student/Registration.jsx`, `student/Calendar.jsx` |
+| 4 | Term Plan | Planning | `screens/Yes.tsx` tab **Term plan**, heading in `components/RegistrationPortal.tsx`; cart conflicts render before the section list. Same route as Registration (`yes`), not a second screen. | `student/Registration.jsx`, `student/Calendar.jsx` |
 | 5 | Registration Readiness | Planning | `components/RegistrationReadiness.tsx`, `screens/Registration.tsx` | `student/Registration.jsx` |
 | 6 | Course Home | Student OS | `components/CourseDetailV2.tsx`, `screens/Courses.tsx` | `student/Course.jsx` |
 | 7 | Course Studio | Course Studio | `components/CourseStudio.tsx` | `staff/Faculty.jsx` |
@@ -52,7 +52,7 @@ Cells name components. **Gap** marks a row with no component today.
 | Today dashboard | `PageHeader` + term in `SystemContextBar` | One `ObjectCard` from the Action Center ranking | Primary on that card; `QuickActions` | `SourceBadge` official on each dated item | Age via `ProvenanceChips`; sync via `SaveState` | `SupportHandoff` footer | `NextSteps`, link to Action Center |
 | Action Center | `PageHeader` "Action Center" | Ranked `ObjectCard` list; first is the decision | Primary per card; Done/Snooze with `UndoToast` | `SourceLine` per action origin | Estimated vs official separated by `SourceBadge` | `AskAHuman` per card | `DecisionTrail` of what was done, `ScreenGuide` for ranking |
 | Academic Path | `PageHeader` + program in `ContextBar` | Next requirement unmet | "Plan this" → Term Plan | `SourceBadge` official for audited requirements | Estimated progress carries assumptions (`Fields`) | Advisor via `AskAHuman` | `DataTable` of requirements; `DecisionTrail` of changes |
-| Term Plan | `PageHeader`; plan name in `ContextBar` | Conflicts first | Save plan; compare plans | Official sections vs student-entered (`SourceBadge`) | Section data age in `ProvenanceChips` | Advisor / registrar `SupportHandoff` | `DataTable` of sections. **Gap: no named screen** |
+| Term Plan | Heading **Term plan** on the Registration planner (`yes`) | Time conflicts render before the section list | Save a potential schedule; compare saved schedules | Planning workspace, not an enrollment | Seat counts are the imported file’s | Advisor / registrar from the enrolled-schedule tab | Cart and saved schedules. **Same route as Registration** |
 | Registration Readiness | `PageHeader`; registration window in `Notice` | Holds and prerequisites that block today | One primary per blocker; `ActionPreview` before any official step | Registrar-owned items `official`; `OpenIn` registrar | Estimated eligibility labelled; stale holds flagged | `SupportHandoff` registrar with hours | `StepStatus` of readiness; `PolicyBadge` |
 | Course Home | `ContextBar` (course, term, section) | Next due item | Open material; ask | Syllabus `official`; student notes `personal` | Imported LMS data with age | Instructor/TA contact; `AskAHuman` | `DataTable` grades; `ScreenGuide` |
 | Course Studio | `PageHeader` + course in `ContextBar` | Unpublished changes | Publish via `ActionPreview` (names who sees it) | Published vs draft word on each item; `PolicyBadge` for integrity policy | AI-drafted content marked `ai`; unreviewed flagged | Instructional designer `SupportHandoff` | `DecisionTrail` of edits; version history. `ApprovalBanner` when review required |
@@ -73,7 +73,7 @@ Cells name components. **Gap** marks a row with no component today.
 | Pack | Screens | Missing |
 |---|---|---|
 | Student OS | Today, Action Center, Course Home, AI Copilot | Action Center kit prototype is archetype-only |
-| Planning/registration | Academic Path, Term Plan, Registration Readiness | Term Plan is not a named screen |
+| Planning/registration | Academic Path, Term Plan, Registration Readiness | Term Plan is the Registration planner (`yes`), named on the tab |
 | Course Studio | Course Studio | Review/approval state (`ApprovalBanner`) not wired on publish |
 | Student success/support | Support Center, Advisor Caseload | Advisor Caseload is not a named screen |
 | Institutional control plane | Registrar Console, Tenant Overview | Tenant Overview is not a named screen |

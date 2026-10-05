@@ -38,7 +38,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ## Named screens still absent
 
-- [ ] Term Plan
+- [x] Term Plan — the Registration planner (`yes`). Tab and heading say Term plan. Cart conflicts render before the sections (`RegistrationPortal.conflicts.test.tsx`).
 - [ ] Advisor Caseload
 - [ ] Tenant Overview
 - [ ] Operations Inbox

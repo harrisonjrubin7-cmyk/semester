@@ -31,7 +31,7 @@ Row-level notes stay in `REPO_AUDIT.md`. Catalog `exists` is existing but incomp
 | Group | Audit exists / partial / missing | Disposition |
 | --- | --- | --- |
 | A · Public company site (80) | 53 / 26 / 1 | Existing but incomplete. Claims stay inside the approved register. The Pilot page is missing as an app route. |
-| B · Student OS (70) | 60 / 10 / 0 | Existing but incomplete. Term Plan is not a named screen. |
+| B · Student OS (70) | 60 / 10 / 0 | Existing but incomplete. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. |
 | C · Faculty and Course Studio (36) | 8 / 18 / 10 | Existing but incomplete. |
 | D · Advisor and student success (25) | 3 / 13 / 9 | Existing but incomplete. Advisor Caseload is not a named screen. |
 | E · Registrar (35) | 13 / 19 / 3 | Existing but incomplete. User-entered plans are not SIS data. |
@@ -51,7 +51,7 @@ Developer platform and marketplace (0 / 3 / 13) is a roadmap concept. Incident r
 
 `MASTER-BRIEF-CROSSWALK.md` places the 19 deliverables. Authority stays `app/src/lib/look.ts`, then `app/src/styles/tokens.css`. The handoff palette is offered, not the default (`D-1293`).
 
-`SCREEN-PACKS.md` names 18 screens. These five have no production screen of that name: Term Plan, Advisor Caseload, Tenant Overview, Operations Inbox, Institutional Pilot page. Kit paths are prototype only and are not in the repository. The other thirteen have an app file named in that pack and are existing but incomplete.
+`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. These four have no production screen of that name: Advisor Caseload, Tenant Overview, Operations Inbox, Institutional Pilot page. Kit paths are prototype only and are not in the repository. The other thirteen have an app file named in that pack and are existing but incomplete.
 
 ## Handoff tree (139 files)
 
@@ -108,4 +108,4 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 
 ## Not complete
 
-57 catalog screens and 75 workflow steps are missing. Five named screens have no production route. This page does not say the handoff is integrated.
+57 catalog screens and 75 workflow steps are missing. Four named screens have no production route. This page does not say the handoff is integrated.
