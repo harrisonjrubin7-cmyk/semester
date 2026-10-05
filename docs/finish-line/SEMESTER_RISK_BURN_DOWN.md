@@ -28,7 +28,7 @@ in any of them that is not here is not dropped, only unranked.
 | R-06 | A data loss that cannot be recovered: restore never done in production, PITR unverified | 2 | 5 | 10 | Backups | run `restore-drill.sh` and a PITR test | recorded recovery point and time | HR `H` |
 | R-07 | An incident goes unnoticed or unanswered: no alert path, one responder, personal mailbox | 4 | 4 | 16 | Incident | alert path; non-personal address; second person | induced failure received and acted on by two people | HR `H` |
 | R-08 | Key-person dependency: one person holds every seat | 5 | 4 | 20 | Operations | name a backup; written runbooks; advisor | backup has run I-1 to I-4 once | HR `H` |
-| R-09 | SSRF through `fetchcal` | 2 | 4 | 8 | Security | per-hop redirect check, DNS check | failing test first, then green | HR |
+| R-09 | SSRF through `fetchcal` (redirect hop requested before checked; IPv4-in-IPv6 passed the host rule) | 2 | 4 | 8 | Security | per-hop check and host-rule fix **done in code**; remaining: verify deployed, fix the dev forwarder's redirect hop, decide on a DNS-resolution check | deployed function verified and the remaining two decided | HR |
 | R-10 | Browser-held provider tokens and AI keys stolen by XSS; no response headers on Pages | 2 | 4 | 8 | Security | server-side tokens; headers via a host that sets them | CSP present on deployed response | HR |
 | R-11 | AI bypass: device-key routes ignore kill switch and AI-off policy | 3 | 3 | 9 | AI | refuse when policy says off | route test | HR |
 | R-12 | AI quality unmeasured: no live baseline, one model red-teamed | 3 | 3 | 9 | AI | file baseline; repeat red team on change | baseline filed | HR |

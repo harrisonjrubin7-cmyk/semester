@@ -4,10 +4,13 @@ import {
   MEMBERSHIP_UNREADABLE_MESSAGE,
   TENANT_BUDGET_MESSAGE,
   TENANT_MANAGED_MESSAGE,
+  MICROS_PER_CENT,
+  centsForMicros,
   loadSchoolAi,
   schoolAiDecision,
   schoolOf,
   sharedKeyAudience,
+  tenantMeter,
   type PolicyReader,
   type ProfileReader,
   type SchoolAiFacts,
@@ -181,6 +184,93 @@ describe('reading which school an account belongs to', () => {
   });
 });
 
+describe('turning the account\'s dollars into the school\'s cents', () => {
+  it('rounds up to a whole cent and never below zero', () => {
+    expect(MICROS_PER_CENT).toBe(10_000);
+    expect(centsForMicros(0)).toBe(0);
+    expect(centsForMicros(1)).toBe(1);
+    expect(centsForMicros(10_000)).toBe(1);
+    expect(centsForMicros(10_001)).toBe(2);
+    expect(centsForMicros(-5)).toBe(0);
+  });
+});
+
+type Call = { fn: string; args: Record<string, unknown> };
+/** A stand-in client that records the meter calls and answers each from a table. */
+const meterDb = (answers: Record<string, { data?: unknown; error?: unknown } | 'throws'>) => {
+  const calls: Call[] = [];
+  const db = {
+    from: () => { throw new Error('the meter does not read tables'); },
+    rpc: async (fn: string, args: Record<string, unknown>) => {
+      calls.push({ fn, args });
+      const a = answers[fn];
+      if (a === 'throws') throw new Error('network');
+      return { data: a?.data ?? null, error: a?.error ?? null };
+    },
+  } as unknown as PolicyReader;
+  return { db, calls };
+};
+const quiet = (f: () => Promise<void>) => { const e = console.error; console.error = () => {}; return f().finally(() => { console.error = e; }); };
+
+describe('drawing a school\'s meter down with the shared key', () => {
+  it('reserves the request\'s worst case, in cents, under one reservation id', async () => {
+    const { db, calls } = meterDb({ reserve_ai_budget: { data: true } });
+    const m = tenantMeter(db, 'northstar', 25_001, () => 'r1');
+    expect(await m.reserve()).toBe('held');
+    expect(calls).toEqual([{ fn: 'reserve_ai_budget', args: { want_tenant: 'northstar', want_reservation: 'r1', want_cents: 3 } }]);
+  });
+
+  it('says full when the school has no room, and error when it cannot be asked: neither is held', async () => {
+    expect(await tenantMeter(meterDb({ reserve_ai_budget: { data: false } }).db, 'n', 100, () => 'r').reserve()).toBe('full');
+    expect(await tenantMeter(meterDb({ reserve_ai_budget: { error: { message: 'boom' } } }).db, 'n', 100, () => 'r').reserve()).toBe('error');
+    expect(await tenantMeter(meterDb({ reserve_ai_budget: 'throws' }).db, 'n', 100, () => 'r').reserve()).toBe('error');
+    expect(await tenantMeter(meterDb({ reserve_ai_budget: { data: 'yes' } }).db, 'n', 100, () => 'r').reserve()).toBe('error');
+  });
+
+  it('settles a read answer to what it used, rounded up, and never above what it reserved', async () => {
+    const { db, calls } = meterDb({ reserve_ai_budget: { data: true }, settle_ai_budget: { data: true } });
+    const m = tenantMeter(db, 'northstar', 50_000, () => 'r1');
+    await m.reserve();
+    await m.settle(12_001, { inputTokens: 100, outputTokens: 40 });
+    expect(calls[1]).toEqual({ fn: 'settle_ai_budget', args: { want_tenant: 'northstar', want_reservation: 'r1', want_actual_cents: 2, want_input_tokens: 100, want_output_tokens: 40 } });
+    const over = meterDb({ reserve_ai_budget: { data: true }, settle_ai_budget: { data: true } });
+    const o = tenantMeter(over.db, 'northstar', 50_000, () => 'r2');
+    await o.reserve();
+    await o.settle(900_000);
+    expect(over.calls[1]!.args.want_actual_cents).toBe(5);
+  });
+
+  it('settles an answer whose usage could not be read at the reservation, as the account\'s own meter does', async () => {
+    const { db, calls } = meterDb({ reserve_ai_budget: { data: true }, settle_ai_budget: { data: true } });
+    const m = tenantMeter(db, 'northstar', 50_000, () => 'r1');
+    await m.reserve();
+    await m.settle(null);
+    expect(calls[1]!.args).toMatchObject({ want_actual_cents: 5, want_input_tokens: 0, want_output_tokens: 0 });
+  });
+
+  it('gives the reservation back on a release, and does nothing at all for a reservation it never held', async () => {
+    const held = meterDb({ reserve_ai_budget: { data: true }, release_ai_budget: { data: true } });
+    const m = tenantMeter(held.db, 'northstar', 10_000, () => 'r1');
+    await m.reserve();
+    await m.release('upstream 500');
+    expect(held.calls[1]).toEqual({ fn: 'release_ai_budget', args: { want_tenant: 'northstar', want_reservation: 'r1' } });
+
+    const never = meterDb({ reserve_ai_budget: { data: false } });
+    const n = tenantMeter(never.db, 'northstar', 10_000, () => 'r1');
+    await n.reserve();
+    await n.release('x');
+    await n.settle(5);
+    expect(never.calls.map((c) => c.fn)).toEqual(['reserve_ai_budget']);
+  });
+
+  it('logs a release or settle that fails and does not throw out of the response path', async () => {
+    const { db } = meterDb({ reserve_ai_budget: { data: true }, release_ai_budget: 'throws', settle_ai_budget: { error: { message: 'boom' } } });
+    const m = tenantMeter(db, 'northstar', 10_000, () => 'r1');
+    await m.reserve();
+    await quiet(async () => { await m.release('x'); await m.settle(5); });
+  });
+});
+
 describe('the shared-key function asks before it spends anything', () => {
   const source = readFileSync(new URL('../../../supabase/functions/claude/index.ts', import.meta.url), 'utf8');
   const at = (needle: string) => {
@@ -212,5 +302,24 @@ describe('the shared-key function asks before it spends anything', () => {
     for (const later of ["from('billing_accounts')", 'clampRequest(', "rpc('add_spend'", "rpc('count_call'", 'fetch(ANTHROPIC']) {
       expect(ask, `the school's decision is asked after ${later}`).toBeLessThan(at(later));
     }
+  });
+
+  it('draws the school\'s meter down in step with the account\'s own', () => {
+    const reserve = at("spend(reserve, allowance)");
+    const tenantReserve = at('tenant.reserve()');
+    expect(tenantReserve, 'the school is asked after the account\'s reservation').toBeGreaterThan(reserve);
+    expect(tenantReserve, 'the school is asked before the call is counted').toBeLessThan(at("rpc('count_call'"));
+    expect(tenantReserve).toBeLessThan(at('fetch(ANTHROPIC'));
+    const afterReserve = source.slice(tenantReserve, at("rpc('count_call'"));
+    expect(afterReserve).toMatch(/release\(reserve[\s\S]{0,250}403/);
+    // Every place the account's reservation is given back gives the school's back too.
+    const releaseFn = source.slice(at('const release = async'), at('const { data: held'));
+    expect(releaseFn).toMatch(/tenant\?\.release\(/);
+    // A success settles the school at what it used, and so does an answer with no readable usage.
+    const settleFn = source.slice(at('const settle = async'), at('if ((upstream.headers'));
+    expect(settleFn).toMatch(/tenant\?\.settle\(/);
+    // The dropped connection leaves the account's reservation standing, so the school's stands too.
+    const caught = source.slice(at('the call to Anthropic threw'), at('const headers = {'));
+    expect(caught).toMatch(/tenant\?\.settle\(null\)/);
   });
 });

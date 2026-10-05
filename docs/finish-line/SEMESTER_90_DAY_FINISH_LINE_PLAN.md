@@ -54,7 +54,7 @@ it, per [the completion definition](SEMESTER_COMPLETION_DEFINITION.md).
 | # | Action | Type | Est. | Start → due | Depends on | Exit evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Re-read branch protection via the API; decide the reviewer rule a one-person repo can satisfy; apply `.github/rulesets/main.json` (or a corrected copy); get the last 10 `main` runs green | E + D | 0.5 | wk 1 → 10-19 | — | API read showing protection; run history |
-| 2 | Fix `fetchcal`: `redirect: 'manual'`, check every hop before the request, resolve and check addresses; failing test first | E | 0.3 | wk 1–2 | — | test red on revert, green with fix; merged |
+| 2 | Fix `fetchcal`: `redirect: 'manual'`, check every hop before the request, resolve and check addresses; failing test first. **Status 2026-10-05: hop check and the IPv4-in-IPv6 host-rule fix are written with tests shown red on revert; still to do: verify the deployed function, the dev forwarder's redirect hop, and the DNS-resolution decision** | E | 0.3 | wk 1–2 | — | test red on revert, green with fix; merged; deployed function verified |
 | 3 | Refuse device-key AI routes when kill switch or school AI-off applies | E | 0.5 | wk 2 | — | route test; `docs/security/FINDINGS-REGISTER.md` F-04 closed |
 | 4 | Generic cross-tenant sweep over every tenant table (TI-01/TI-04) as a CI gate; storage tests on real Storage; enable membership enforcement on a staging school | E | 3 | wk 2–6 (tier 2) | — | suite green; seeded policy-less table caught; `TENANT-ISOLATION-VERIFICATION.md` rows closed |
 | 5 | Production restore drill with `restore-drill.sh`; verify PITR; record date, owner, recovery point and time | E + H | 0.5 | wk 3 | — | `docs/evidence/restore/` record |

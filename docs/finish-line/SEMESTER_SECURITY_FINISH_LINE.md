@@ -98,7 +98,8 @@ block every merge. That is a decision, not a technicality
 | --- | --- | --- | --- | --- | --- |
 | SEC-01 | P0 | `main` unprotected, 26/30 red | API; F-09 | apply a satisfiable ruleset; green the runs | none (settings change); record the API read |
 | SEC-02 | P0 | Generic cross-tenant sweep absent; membership enforcement off | `TENANT-ISOLATION-VERIFICATION.md` TI-01/04/06/07/08/10/12 "Add" | build TI-01/TI-04 over every tenant table; enable enforcement on a staging school | a table with a deliberately missing policy must fail the sweep |
-| SEC-03 | P1 | `fetchcal` request precedes redirect check; no DNS-resolution check | `supabase/functions/fetchcal/index.ts:194,207`, confirmed in this audit | `redirect: 'manual'`, check each hop before the request, resolve and check addresses | a public host redirecting to `169.254.169.254` must be refused **before** a request is made |
+| SEC-03 | P1 | **Fixed in code, not yet verified deployed.** `fetchcal` made the request to a redirect target before checking it (`redirect: 'follow'`, check afterwards). Now walks the chain with `_shared/safefetch.ts`, asking the address rule before every hop; `redirect: 'manual'`. Open: a public *name* that resolves to a private address still passes (no DNS answer is available before the request); the dev-server forwarder in `app/vite.config.ts` still follows redirects (see SEC-17) | `supabase/functions/fetchcal/index.ts`; `app/src/lib/safefetch.test.ts` (20 tests, revert shown red) | deploy via `functions.yml` after CI; verify on the deployed function | the redirect to `169.254.169.254` test is in the file |
+| SEC-17 | P1 | **Found while fixing SEC-03; fixed in both copies.** The public-host rule recognised an IPv4 address inside IPv6 only in dotted form, which no URL produces: `new URL('https://[::ffff:169.254.169.254]/').hostname` is `[::ffff:a9fe:a9fe]`, which passed as public. Mapped, compatible, NAT64 and 6to4 spellings of loopback, private ranges and the cloud metadata address all passed. The rule now reads the IPv6 groups. Open: `app/vite.config.ts` (dev forwarder) uses the fixed rule but still follows redirects; sharing `safefetch.ts` with it triggers TS1287 in `tsconfig.node.json` (supabase code compiles as CommonJS) | `app/src/lib/publichost.ts`, `supabase/functions/fetchcal/index.ts`; `publichost.test.ts` (12 new, red on revert); `hostrule.test.ts` holds the two copies identical | follow-up: dev forwarder redirect hop without importing `supabase/functions` into the node typecheck | the same-code test in `hostrule.test.ts` |
 | SEC-04 | P1 | No restore proof | F15 | `restore-drill.sh` into the second project; PITR test; record | n/a (drill) |
 | SEC-05 | P1 | No alert delivery; personal mailbox contact | F-08 | route probe failure to a person; non-personal address | synthetic failure must reach the recipient |
 | SEC-06 | P1 | Gateway audit tables grant `service_role` DELETE and are unchained | F-10 | revoke; chain; schedule the verifier by migration | `service_role` delete must fail |
@@ -119,7 +120,7 @@ probe cannot read as clean.
 
 ## Order of work
 
-1. SEC-03, SEC-09, SEC-10, SEC-16: small, customer-independent, each with a
+1. SEC-03 and SEC-17 (done in code, awaiting deploy verification), then SEC-09, SEC-10, SEC-16: small, customer-independent, each with a
    failing test first.
 2. SEC-01 and SEC-05: settings and wiring.
 3. SEC-02: the largest piece and the gate for a second real tenant.

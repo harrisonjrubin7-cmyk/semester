@@ -40,6 +40,7 @@ import {
   ALLOWANCE_EXHAUSTED,
   ALLOWANCE_MESSAGE,
   UsageScanner,
+  type Usage,
   allowanceFor,
   costMicros,
   countInputTokens,
@@ -56,6 +57,7 @@ import {
   schoolAiDecision,
   schoolOf,
   sharedKeyAudience,
+  tenantMeter,
 } from '../_shared/tenantai.ts';
 import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
 import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
@@ -258,9 +260,17 @@ Deno.serve(async (req) => {
     admin.rpc('add_spend', { p_user: userId, p_month: month, p_delta: delta, p_cap: cap });
   // Giving a reservation back is best-effort: a failure leaves it standing,
   // which errs towards the owner, and is logged so it can be found.
+  //
+  // A school's account draws down its school's monthly budget in step with its
+  // own allowance: the school's meter (`reserve_ai_budget`, in whole cents) is
+  // reserved right after the account's, released wherever the account's is,
+  // and settled wherever the account's is settled or left standing. See
+  // `../_shared/tenantai.ts`.
+  const tenant = audience.school === null ? null : tenantMeter(admin, audience.school, reserve);
   const release = async (micros: number, why: string) => {
     const { error } = await spend(-micros, null);
     if (error) console.error('claude: a spend reservation could not be released', { why, micros });
+    await tenant?.release(why);
   };
 
   const { data: held, error: spendError } = await spend(reserve, allowance);
@@ -269,6 +279,15 @@ Deno.serve(async (req) => {
   }
   if (held < 0) {
     return json({ error: { message: ALLOWANCE_MESSAGE, code: ALLOWANCE_EXHAUSTED } }, 429);
+  }
+  if (tenant) {
+    const room = await tenant.reserve();
+    if (room !== 'held') {
+      await release(reserve, 'school budget');
+      return room === 'full'
+        ? json({ error: { message: TENANT_BUDGET_MESSAGE, code: 'tenant_budget' } }, 403)
+        : json({ error: { message: MEMBERSHIP_UNREADABLE_MESSAGE } }, 503);
+    }
   }
 
   // ── how much they have used ─────────────────────────────────────────────
@@ -353,6 +372,8 @@ Deno.serve(async (req) => {
     // its kind (a header the runtime refused, the network, or neither) and
     // the key's shape, which is enough to tell a bad paste from an outage.
     console.error('claude: the call to Anthropic threw', { ...describeThrow(e), key: shape });
+    // The account's reservation stands (the request may have been billed), so the school's does too.
+    await tenant?.settle(null);
     return json(
       {
         error: {
@@ -384,7 +405,8 @@ Deno.serve(async (req) => {
     await release(reserve, `upstream ${upstream.status}`);
     return new Response(upstream.body, { status: upstream.status, headers });
   }
-  const settle = async (actual: number | null) => {
+  const settle = async (actual: number | null, usage?: Usage) => {
+    await tenant?.settle(actual, usage);
     if (actual === null) return;
     const { error } = await spend(actual - reserve, null);
     if (error) console.error('claude: a spend reservation could not be settled', { reserve, actual });
@@ -399,7 +421,7 @@ Deno.serve(async (req) => {
       },
       async flush() {
         scanner.end();
-        await settle(scanner.seen ? costMicros(scanner.usage, priced.model) : null);
+        await settle(scanner.seen ? costMicros(scanner.usage, priced.model) : null, scanner.seen ? scanner.usage : undefined);
       },
     });
     return new Response(upstream.body.pipeThrough(pass), { status: upstream.status, headers });
@@ -407,6 +429,6 @@ Deno.serve(async (req) => {
 
   const text = await upstream.text();
   const usage = usageFromJson(text);
-  await settle(usage ? costMicros(usage, priced.model) : null);
+  await settle(usage ? costMicros(usage, priced.model) : null, usage ?? undefined);
   return new Response(text, { status: upstream.status, headers });
 });
