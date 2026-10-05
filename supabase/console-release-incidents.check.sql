@@ -87,9 +87,11 @@ begin
       'what_is_impacted', 'Sign in.',
       'what_to_do_now', 'Retry sign in.',
       'what_semester_is_doing', 'Monitoring recovery.',
-      'next_update', 'This is the resolution update.',
+      'next_update', 'Another update will follow.',
       'where_to_get_help', 'Use the support route.'),
-      '{}'::jsonb, array['Incident commander'], now() - interval '20 minutes', now() + interval '30 minutes');
+      -- Before recovered_at (now() - 1 hour), so this is not a post-recovery
+      -- notice. next_update_at stays inside the 60-minute admin_outage cadence.
+      '{}'::jsonb, array['Incident commander'], now() - interval '90 minutes', now() - interval '40 minutes');
 
   insert into public.governance_incident_notices
     (tenant_id, incident_ref, audience, sections, details, approved_by, sent_at, next_update_at)
@@ -203,10 +205,15 @@ end $$;
 
 delete from public.approval_request where ticket = 'REL-EXPIRED';
 
+-- now() does not advance inside this transaction, and recorded_at defaults to
+-- that same instant. latest evidence is ordered by observed_at, then
+-- recorded_at, then a random uuid, so rows stamped together have no insertion
+-- order. The deployment is early enough that each later observation can be
+-- strictly newer and still not future-dated.
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, rollback_ref, observed_at)
 values
-  ('production_deployment', 'pass', 'Engineering owner', 'DEPLOY-1', 'Vercel production deployment', repeat('a', 40), 'deployment-1', 'RUNBOOK-ROLLBACK-1', now());
+  ('production_deployment', 'pass', 'Engineering owner', 'DEPLOY-1', 'Vercel production deployment', repeat('a', 40), 'deployment-1', 'RUNBOOK-ROLLBACK-1', now() - interval '3 minutes');
 
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
@@ -225,7 +232,7 @@ end $$;
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG', 'production browser verification', repeat('b', 40), 'deployment-1', now());
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG', 'production browser verification', repeat('b', 40), 'deployment-1', now() - interval '2 minutes');
 
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
@@ -255,7 +262,7 @@ end $$;
 insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
-  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG-DEPLOYMENT', 'production browser verification', repeat('a', 40), 'deployment-0', now());
+  ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG-DEPLOYMENT', 'production browser verification', repeat('a', 40), 'deployment-0', now() - interval '1 minute');
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text; action text;
