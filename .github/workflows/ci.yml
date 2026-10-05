@@ -124,6 +124,48 @@ jobs:
         working-directory: app
         run: npm run lint
 
+      # ── The design system, held to its own sources ──────────────────────────
+      #
+      # `lint` above holds the type scale, the labels and the vocabulary; the
+      # suite below holds the token layer and the contrast. Three questions
+      # were left that no step asked by name, and a student sees all three:
+      #
+      #   · is `design-tokens/semester.tokens.json` the file `tokens.css` and
+      #     `look.ts` produce? (`lib/tokenexport.test.ts` knew; nothing said so
+      #     in a place a reviewer reads.)
+      #   · did this change add a raw colour, z-index, shadow, radius, duration
+      #     or easing, or raw CSS spacing or type, beyond what each file
+      #     already carries? (`src/styles/rawbudget.ts`; `hex.test.ts` covers
+      #     only quoted hex in `.tsx`.)
+      #   · does every Figma mapping resolve to a token and a component that
+      #     exist? (`docs/design-system/figma-mapping.json`; empty until a
+      #     Figma file is connected, and then it cannot go stale quietly.)
+      #
+      # It runs every gate every time so one red run names everything wrong.
+      # No Figma credential is used or needed: the manifest is validated
+      # against the committed export, and nothing here signs in to anything.
+      - name: Design-system gates
+        working-directory: app
+        run: npm run design-system:check
+
+      # The report is the artifact, not a second gate: the step above decides
+      # the colour, and this one runs the style and accessibility contract
+      # tests again only to say which of them held. `continue-on-error` so a
+      # failure here cannot paint a build red that the step above passed.
+      - name: Design-system report
+        if: always()
+        working-directory: app
+        continue-on-error: true
+        run: npm run design-system:report
+
+      - name: Keep the design-system report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: design-system-report
+          path: app/reports/design-system/
+          if-no-files-found: ignore
+
       # The half of the typecheck the build graph does not reach.
       #
       # `tsc -b` builds what `tsconfig.json` references, which is the app and

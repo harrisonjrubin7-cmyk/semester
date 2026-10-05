@@ -32,6 +32,10 @@ documents build on that system and do not replace any of it.
 | Reduced motion and calm mode are honoured | `npm test` | `app/src/a11y/motion.test.ts`, `calm.test.ts` |
 | Contrast on every ground | `npm test` | `app/src/lib/contrast.test.ts` |
 | Adoption figures | `npm run census:design` | `app/scripts/design-census.mjs` |
+| The generated token export is in step with `tokens.css` and `look.ts` | `npm run tokens:check` | `app/src/lib/tokenexport.test.ts` |
+| No new raw colour, z-index, shadow, radius, duration or easing, and no raw CSS spacing or type, beyond each file's ledger | `npm run design-system:audit` | `app/src/styles/designsystem.ts`, `rawbudget.ts` |
+| Every Figma mapping resolves to a real token or pattern | `npm run design-system:check` | `docs/design-system/figma-mapping.json` |
+| One report of all of the above, uploaded by CI | `npm run design-system:report` | [`docs/design-system/README.md`](../design-system/README.md) |
 | Every design-system component has a story; the gallery does not read the clock | `npm test` | `app/src/gallery/gallery.test.tsx` |
 | Visual regression of the stories against a runner-made baseline (not in CI) | `npm run gallery:shots` | `app/scripts/gallery-shots.mjs` |
 
