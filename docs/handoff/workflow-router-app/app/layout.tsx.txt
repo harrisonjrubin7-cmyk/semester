@@ -1,0 +1,9 @@
+import './globals.css';
+import Link from 'next/link';
+import { AuthButton } from '@/components/auth/auth-button';
+export const metadata = { title: 'Semester AI Workflow Router & Benchmark Lab' };
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (<html lang="en"><body className="bg-[#f4f1ea] text-[#1b1a17] antialiased"><a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
+    <header className="flex items-center justify-between bg-[#090a0e] px-6 py-3 text-[#eceef2]"><nav className="flex gap-5 text-sm" aria-label="Main"><Link href="/" className="font-semibold tracking-[.22em]">SEMESTER</Link><Link href="/workflow-router">Workflow router</Link><Link href="/benchmark">Benchmark lab</Link></nav><AuthButton /></header>
+    <main id="main" className="mx-auto max-w-[1280px] p-6">{children}</main></body></html>);
+}

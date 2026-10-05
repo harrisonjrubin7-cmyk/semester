@@ -4,7 +4,7 @@
 
 ## Verdict
 
-Stream 00 is **complete except its human gate**: the design-system baseline is committed on main, but only the founder can approve it. Nothing after this stream has been started.
+Stream 00 is **complete**. Its three open decisions were delegated to the assistant by the founder in-session and are recorded in [`D-1287`](../decisions/D-1287.md): the design-system baseline is accepted as the reference, stream 01 diffs the handoff against the repo before applying any migration, and only `handoff/` of the design export is kept. The founder can overrule any of them. This pull request still needs a human to merge it, and nothing after this stream has been started.
 
 ## Exists / extended / new
 
@@ -19,7 +19,7 @@ Stream 00 is **complete except its human gate**: the design-system baseline is c
 
 ## Files changed
 
-`docs/master/REPO_AUDIT.md`, `docs/master/SEMESTER_GAP_REGISTER.md`, `docs/master/SEMESTER_SCREEN_CATALOG.md`, `docs/master/SEMESTER_WORKFLOW_CATALOG.md`, `docs/execute/00-setup-report.md`. No code, migration, CI, secret or setting changed. The design export itself (`design/`, 70 MB, 57 MB of it design-chat PDFs) was **not** committed.
+`docs/master/REPO_AUDIT.md`, `docs/master/SEMESTER_GAP_REGISTER.md`, `docs/master/SEMESTER_SCREEN_CATALOG.md`, `docs/master/SEMESTER_WORKFLOW_CATALOG.md`, `docs/execute/00-setup-report.md`, `docs/decisions/D-1287.md`, and `docs/handoff/` (138 files, 876 KB: the design export's `handoff/` folder, with the `preflight.sh` fix and a note, `IN-THIS-REPO.md`, saying where it lives). No code, migration, CI, secret or setting changed. The rest of the design export (70 MB, 57 MB of it design-chat PDFs; `ui_kits/`, `templates/`, fonts) was **not** committed.
 
 ## Commands run and results
 
@@ -77,7 +77,8 @@ None. Stream 00 adds no code. RLS proof begins in stream 01.
 
 ## What the next stream (01 platform core) needs
 
-- **A decision from the founder before any migration is installed.** The handoff's `010`–`080` migrations and `semester-platform` tests assume a Next.js + Supabase app with its own role and tenant model. The repo already has 184 migrations, `private.has_capability` RBAC (69 roles, 84 capabilities), RLS proved by `supabase/*.check.sql`, a gateway under `app/server`, and an AI path. "Repo beats design" means stream 01 should diff each handoff migration against what exists and extend, not install. Renumbering alone is not enough.
+- **The decision is made (D-1287): diff first.** The handoff's `010`–`080` migrations and `semester-platform` tests assume a Next.js + Supabase app with its own role and tenant model. The repo already has 184 migrations, `private.has_capability` RBAC (69 roles, 84 capabilities), RLS proved by `supabase/*.check.sql`, a gateway under `app/server`, and an AI path. "Repo beats design" means stream 01 should diff each handoff migration against what exists and extend, not install. Renumbering alone is not enough. A schema-aware comparison found 24 handoff tables in five new schemas, none with an exact counterpart, six sharing a name with an existing `public` table (`profiles`, `groups`, `reports`, `invoices`, `ai_policy`, `course_ai_rules`). Stream 01's first deliverable is `docs/execute/01-platform-core-diff.md`, deciding each as extend, new or drop; nothing is applied before it is reviewed.
 - **Docker running** (or CI) for `supabase db reset`.
 - **A `web/` Next.js app** only if some handoff code is genuinely needed that the Vite app and gateway cannot host; BUILD.md §2 assumes it, but the gateway may already cover it.
-- **Founder-only steps still open:** approve the design-system baseline; approve this PR; every item in BUILD.md §7.
+- **The design export for UI streams.** `ui_kits/` and `templates/` are not in the repo; the founder re-supplies the zips when stream 03 starts.
+- **Founder-only steps still open:** merge this PR; every item in BUILD.md §7 (insurance, DPA, HECVAT, attorney review, IdP details, named contacts, the AI provider's terms, production cutover). None was decided or done here.
