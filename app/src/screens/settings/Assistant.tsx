@@ -193,6 +193,7 @@ export function SettingsAssistant() {
                 <input
                   className="input"
                   type="password"
+                  autoComplete="off"
                   placeholder="sk-…"
                   value={config.openaiKey}
                   onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
@@ -248,6 +249,7 @@ export function SettingsAssistant() {
                 <input
                   className="input"
                   type="password"
+                  autoComplete="off"
                   placeholder="sk-ant-…"
                   value={config.apiKey}
                   onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
