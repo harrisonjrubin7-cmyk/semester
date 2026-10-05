@@ -95,8 +95,8 @@ export function Undone() {
         gap: 'var(--sp-6)',
         paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
         borderRadius: 10,
-        background: 'var(--card)',
-        border: '1px solid var(--line)',
+        background: 'var(--card-surface)',
+        border: '1px solid var(--app-line)',
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
       }}
     >

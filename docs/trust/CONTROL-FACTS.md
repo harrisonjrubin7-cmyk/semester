@@ -47,6 +47,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/canonical-display.check.sql` | What an imported fact may say, and who may take a student's away. |
 | `supabase/capabilities.check.sql` | The permission matrix, and the four things that make it a matrix rather than a ladder. |
 | `supabase/classmates.check.sql` | Two people in one room, without needing two people. |
+| `supabase/client-privileges.check.sql` | The browser's roles hold no table privilege that row-level security does not govern. |
 | `supabase/commercial-automation.check.sql` | The commercial core's moving parts (20260929080000_commercial_automation): checkout, the webhook's writes, the dunning worker, contract → tenant, site lead intake and the nightly account-health job. |
 | `supabase/commercial.check.sql` | The commercial core: catalog, billing accounts, subscriptions, invoices, dunning, cancellation, delivery records and the governance registers. |
 | `supabase/community.check.sql` | Community: every permission in 20260928032000_community.sql walked as the account it is about, and every refusal attempted as the account that should be refused. |
