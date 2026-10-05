@@ -100,3 +100,50 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
 export function readinessCount(items: readonly PathReadinessItem[]): { ready: number; total: number } {
   return { ready: items.filter((item) => item.state === 'ready').length, total: items.length };
 }
+
+/**
+ * The one line above the steps: where the student stands as a whole.
+ *
+ * Five answers, and each is read off something the app really holds. There is
+ * deliberately no "needs advisor review": nothing Semester stores says an
+ * advisor must review a plan, so offering it would be a claim with no source.
+ * It can join this list when a source (an advising hold, a program rule) exists.
+ *
+ * - `blocked`: a meeting-time conflict in the chosen schedule. Computed, not
+ *   assumed. Holds and prerequisites live in the official system and are not
+ *   known here, so they can never produce this state.
+ * - `unavailable`: no course catalog is loaded, so sections, conflicts and
+ *   backups cannot be checked at all. That is a gap in what Semester knows,
+ *   not in what the student has done.
+ * - `ready`, `almost_ready`, `getting_ready`: by how many of the steps are done.
+ *
+ * Preparation only. None of these says the registration will succeed.
+ */
+export type OverallState = 'ready' | 'almost_ready' | 'getting_ready' | 'blocked' | 'unavailable';
+
+export interface OverallReadiness {
+  state: OverallState;
+  label: string;
+  why: string;
+}
+
+export function overallReadiness(items: readonly PathReadinessItem[], catalogSize: number): OverallReadiness {
+  const schedule = items.find((item) => item.id === 'schedule');
+  if (schedule?.state === 'attention') return { state: 'blocked', label: 'Blocked', why: `${schedule.detail} Fix it before you register.` };
+  if (catalogSize === 0) {
+    return {
+      state: 'unavailable',
+      label: 'Information unavailable',
+      why: 'No course catalog is loaded, so sections, conflicts and backups cannot be checked here.',
+    };
+  }
+  const left = items.filter((item) => item.state !== 'ready');
+  if (left.length === 0) {
+    return { state: 'ready', label: 'Ready', why: 'Every preparation step is done. Your registrar and official system still decide the result.' };
+  }
+  const names = left.map((item) => item.label.toLowerCase()).join(' and ');
+  if (left.length <= 2) {
+    return { state: 'almost_ready', label: 'Almost ready', why: `${left.length === 1 ? 'One step' : 'Two steps'} left: ${names}.` };
+  }
+  return { state: 'getting_ready', label: 'Getting ready', why: `${items.length - left.length} of ${items.length} steps done. Next: ${left[0]!.label.toLowerCase()}.` };
+}

@@ -9134,6 +9134,18 @@ section[data-drop] > .grip + * {
   border-color: var(--app-warn, var(--app-line));
 }
 
+.path-readiness-overall {
+  border-inline-start: 3px solid var(--app-line);
+  font-size: var(--type-sm);
+  margin: var(--sp-4) 0;
+  padding: var(--sp-2) var(--sp-4);
+}
+
+.path-readiness-overall[data-state='blocked'],
+.path-readiness-overall[data-state='unavailable'] {
+  border-inline-start-color: var(--app-warn, var(--app-line));
+}
+
 .path-readiness-list p {
   color: var(--app-dim);
   font-size: var(--type-sm);

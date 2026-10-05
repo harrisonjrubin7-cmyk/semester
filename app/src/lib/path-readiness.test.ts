@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_MEETINGS } from './advisor-meeting';
 import { EMPTY_REGISTRATION_DAY } from './registration-day';
-import { pathReadiness, readinessCount } from './path-readiness';
+import { overallReadiness, pathReadiness, readinessCount, type PathReadinessInput } from './path-readiness';
 import type { CatalogCourse } from './registration';
 
 const course = (id: string, start: number, end: number): CatalogCourse => ({
@@ -35,5 +35,50 @@ describe('path registration readiness', () => {
     expect(items.find((item) => item.id === 'backups')?.state).toBe('attention');
     expect(items.find((item) => item.id === 'advisor')?.state).toBe('ready');
     expect(items.find((item) => item.id === 'courses')?.detail).toContain('Northstar University');
+  });
+});
+
+describe('overall readiness', () => {
+  const a = course('a', 540, 600);
+  const b = course('b', 570, 630);
+  const c = course('c', 700, 760);
+  const base = (over: Partial<PathReadinessInput>): PathReadinessInput => ({
+    pathConfigured: false, requirementTotal: 0, cart: [], catalog: [],
+    registration: EMPTY_REGISTRATION_DAY, meetings: EMPTY_MEETINGS, institution: null, ...over,
+  });
+  const overall = (over: Partial<PathReadinessInput>) => {
+    const input = base(over);
+    return overallReadiness(pathReadiness(input), input.catalog.length);
+  };
+
+  it('says information is unavailable, not "not started", when there is no catalog to check against', () => {
+    expect(overall({}).state).toBe('unavailable');
+    expect(overall({}).why).toContain('cannot be checked');
+  });
+
+  it('is blocked only by a conflict the app computed, and says which', () => {
+    const o = overall({ pathConfigured: true, requirementTotal: 4, cart: [a, b], catalog: [a, b, c] });
+    expect(o.state).toBe('blocked');
+    expect(o.why).toContain('1 conflict');
+  });
+
+  it('never invents a block from what lives in the official system', () => {
+    // Every check unconfirmed is "not started", not "blocked": holds are not known here.
+    const o = overall({ pathConfigured: true, requirementTotal: 4, cart: [a, c], catalog: [a, b, c] });
+    expect(o.state).not.toBe('blocked');
+  });
+
+  it('counts steps: getting ready, then almost ready, then ready', () => {
+    const items = pathReadiness(base({ catalog: [a, b, c] }));
+    const withReady = (n: number) => items.map((item, i) => ({ ...item, state: i < n ? ('ready' as const) : ('not_started' as const) }));
+    expect(overallReadiness(withReady(2), 3)).toMatchObject({ state: 'getting_ready' });
+    expect(overallReadiness(withReady(6), 3)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('Two steps left') });
+    expect(overallReadiness(withReady(7), 3)).toMatchObject({ state: 'almost_ready', why: expect.stringContaining('One step left') });
+    expect(overallReadiness(withReady(8), 3)).toMatchObject({ state: 'ready' });
+  });
+
+  it('ready still says the official system decides', () => {
+    const items = pathReadiness(base({ catalog: [a] })).map((item) => ({ ...item, state: 'ready' as const }));
+    expect(overallReadiness(items, 1).why).toContain('official system still decide');
   });
 });
