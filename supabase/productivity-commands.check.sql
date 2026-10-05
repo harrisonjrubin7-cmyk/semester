@@ -55,7 +55,8 @@ create or replace function pg_temp.task(id uuid, seq_read bigint, over jsonb def
 returns jsonb language sql as $$
   select jsonb_build_object('type', 'task', 'expectedSeq', seq_read, 'row', jsonb_build_object(
     'id', id, 'title', 'Read chapter 4', 'notes', 'for Thursday', 'status', 'open', 'completedAt', null,
-    'dueAt', '2026-10-08T17:00:00.000Z', 'priority', 'high', 'courseId', null,
+    'dueAt', '2026-10-08T17:00:00.000Z', 'dueOn', null, 'whenText', null, 'priority', 'high', 'courseId', null,
+    'repeat', null, 'steps', '[]'::jsonb, 'plannedFrom', null,
     'source', jsonb_build_object('kind', 'student_entered'),
     'clocks', jsonb_build_object('title', '1790000000000.0000.dev-a'),
     'version', 1, 'createdAt', '2026-10-05T15:00:00.000Z', 'updatedAt', '2026-10-05T15:00:00.000Z',
@@ -205,6 +206,88 @@ begin
     and not exists (select 1 from private.productivity_owner_seq where owner_id = ghost));
 end $$;
 
+-- ── A predicted sequence number is held to, and the read functions are scoped ──
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  p1 constant uuid := 'f1f1f1f1-f1f1-4f1f-8f1f-f1f1f1f1f1f1';
+  p2 constant uuid := 'f2f2f2f2-f2f2-4f2f-8f2f-f2f2f2f2f2f2';
+  p3 constant uuid := 'f3f3f3f3-f3f3-4f3f-8f3f-f3f3f3f3f3f3';
+  last bigint;
+  code text;
+  got jsonb;
+begin
+  select (public.productivity_tx_state('pc-school-a', a))->>'lastSeq' into last;
+  perform pg_temp.must('the state function reports the owner''s counter', last = (select last_seq from private.productivity_owner_seq where tenant_id = 'pc-school-a' and owner_id = a));
+
+  -- A prediction that no longer holds: another writer moved the counter after it was read.
+  begin
+    perform public.productivity_commit('pc-school-a', a, null,
+      jsonb_build_array(jsonb_set(pg_temp.task(p1, 0), '{seq}', to_jsonb(last))), '[]', '[]');
+    code := null;
+  exception when others then code := sqlstate; end;
+  perform pg_temp.must('a stale prediction is refused with 40001', code = '40001');
+  perform pg_temp.must('and nothing of it was kept',
+    not exists (select 1 from public.productivity_task where id = p1)
+    and (select last_seq from private.productivity_owner_seq where tenant_id = 'pc-school-a' and owner_id = a) = last);
+
+  -- The same commit with the right prediction, for two entities in order.
+  got := public.productivity_commit('pc-school-a', a, null,
+    jsonb_build_array(jsonb_set(pg_temp.task(p1, 0), '{seq}', to_jsonb(last + 1)), jsonb_set(pg_temp.task(p2, 0), '{seq}', to_jsonb(last + 2))), '[]', '[]');
+  perform pg_temp.must('the right prediction is written where it said', got->'seqs' = jsonb_build_array(last + 1, last + 2)
+    and (select seq from public.productivity_task where id = p2) = last + 2);
+
+  -- A task that is already a tombstone, for what the reads must hide and the feed must carry.
+  perform public.productivity_commit('pc-school-a', a, null,
+    jsonb_build_array(jsonb_set(jsonb_set(jsonb_set(pg_temp.task(p3, 0, '{"deletedAt": "2026-10-05T16:00:00.000Z", "deleteClock": "1790000000001.0000.dev-a", "version": 2}'), '{seq}', to_jsonb(last + 3)), '{title}', '"gone"'), '{notes}', 'null')), '[]', '[]');
+
+  -- And the read functions return the entity the service holds, scoped to the tenant and the owner.
+  perform pg_temp.must('get returns the task in the service''s shape',
+    (public.productivity_get('pc-school-a', a, 'task', p1)) ?& array['id','tenantId','ownerId','version','seq','source','clocks','createdAt','updatedAt','deletedAt','deleteClock','title','notes','status','completedAt','dueAt','priority','courseId']
+    and (public.productivity_get('pc-school-a', a, 'task', p1))->>'createdAt' = '2026-10-05T15:00:00.000Z');
+  perform pg_temp.must('get is scoped: not the other tenant''s, not the other owner''s',
+    public.productivity_get('pc-school-b', a, 'task', p1) is null
+    and public.productivity_get('pc-school-a', '00000000-0000-4000-8000-00000000c102', 'task', p1) is null);
+  perform pg_temp.must('a tombstone is hidden unless asked for',
+    public.productivity_get('pc-school-a', a, 'task', p3) is null
+    and public.productivity_get('pc-school-a', a, 'task', p3, true) is not null);
+  perform pg_temp.must('the feed carries the tombstone, in sequence order, for this owner only',
+    (select bool_and(s.v > coalesce(lag, 0)) from (select (j->>'seq')::bigint v, lag((j->>'seq')::bigint) over (order by (j->>'seq')::bigint) lag
+       from jsonb_array_elements(public.productivity_changes('pc-school-a', a, 0, 100)) j) s)
+    and exists (select 1 from jsonb_array_elements(public.productivity_changes('pc-school-a', a, 0, 100)) j where j->>'deletedAt' is not null)
+    and jsonb_array_length(public.productivity_changes('pc-school-a', '00000000-0000-4000-8000-00000000c102', 0, 100)) = 0);
+  perform pg_temp.must('a task list is ordered by due date, undated last, and cut at the limit',
+    jsonb_array_length(public.productivity_list_tasks('pc-school-a', a, null, null, null, null, null, 2)) = 2);
+  perform pg_temp.must('and the cursor continues after the row it names',
+    (select j->>'id' from jsonb_array_elements(public.productivity_list_tasks('pc-school-a', a, null, null, null, '2026-10-08T17:00:00.000Z', p1, 50)) j limit 1) is distinct from p1::text);
+end $$;
+
+do $$
+declare
+  fns text[] := array[
+    'public.productivity_tx_state(text, uuid, uuid)', 'public.productivity_get(text, uuid, text, uuid, boolean)',
+    'public.productivity_list_tasks(text, uuid, text, timestamptz, timestamptz, text, uuid, integer)',
+    'public.productivity_list_events(text, uuid, timestamptz, timestamptz, text, uuid, integer)',
+    'public.productivity_changes(text, uuid, bigint, integer)', 'public.productivity_outbox_stats()'];
+  f text;
+begin
+  foreach f in array fns loop
+    perform pg_temp.must(f || ' is the service role''s alone',
+      has_function_privilege('service_role', f, 'execute')
+      and not has_function_privilege('authenticated', f, 'execute')
+      and not has_function_privilege('anon', f, 'execute'));
+  end loop;
+  -- Another producer's pending event: in the shared outbox, but not this service's to count.
+  insert into private.domain_outbox_events (aggregate_type, aggregate_id, event_type, event_version, environment, tenant_id, producer, correlation_id, payload, data_classification, retention_class)
+  values ('x', 'y', 'task.created', 1, 'staging', 'pc-school-a', 'somebody-else', 'req-0123456789abcdef', '{}', 'internal', 'operational');
+  perform pg_temp.must('the outbox stats leave out another producer''s events',
+    (public.productivity_outbox_stats()->>'pending')::int
+      < (select count(*) from private.domain_outbox_events where published_at is null and dead_lettered_at is null));
+  perform pg_temp.must('the outbox stats count only this producer''s events',
+    (public.productivity_outbox_stats()->>'pending')::int = (select count(*) from private.domain_outbox_events where producer = 'productivity-api' and published_at is null and dead_lettered_at is null));
+end $$;
+
 -- ── The table's own constraints, as the last wall ──────────────────────────
 
 do $$
@@ -280,12 +363,12 @@ select pg_temp.become('00000000-0000-4000-8000-00000000c101');
 do $$
 declare titles text;
 begin
-  -- School A holds three live tasks of hers (the first, the second, the ordinary
-  -- one from the constraint block); a fourth is a tombstone; a fifth is in
-  -- school B, where she has no membership.
+  -- School A holds five live tasks of hers (the first, the second, the two from the
+  -- prediction block and the ordinary one from the constraint block); two more are
+  -- tombstones; one is in school B, where she has no membership.
   select string_agg(title, '|' order by title) into titles from public.productivity_task;
-  perform pg_temp.must('Alice sees exactly her three live tasks in the tenant she belongs to',
-    titles = 'Read chapter 4|Read chapter 4|second edit');
+  perform pg_temp.must('Alice sees exactly her five live tasks in the tenant she belongs to',
+    titles = 'Read chapter 4|Read chapter 4|Read chapter 4|Read chapter 4|second edit');
   perform pg_temp.must('Alice does not see the tombstone', not exists (select 1 from public.productivity_task where title = 'to be deleted'));
   perform pg_temp.must('Alice does not see the task in a school she has no membership in', not exists (select 1 from public.productivity_task where tenant_id = 'pc-school-b'));
   perform pg_temp.must('Alice does not see the other person''s task', not exists (select 1 from public.productivity_task where title = 'bobs task'));
@@ -350,6 +433,110 @@ begin
     exists (select 1 from public.audit_event where action = 'task.created' and tenant_id = 'pc-school-a')
     and exists (select 1 from private.domain_outbox_events where tenant_id = 'pc-school-a' and event_type = 'task.created'));
   perform pg_temp.must('the sweep is not the clients''', not has_function_privilege('authenticated', 'private.productivity_sweep_commands()', 'execute'));
+end $$;
+
+-- ── An account with these rows is not untouched, is exported, and is erased ──
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  nobody constant uuid := '00000000-0000-4000-8000-00000000beef';
+begin
+  perform pg_temp.must('an account holding tasks and events is not untouched', not public.lti_account_untouched(a));
+  perform pg_temp.must('the control: an account holding nothing is', public.lti_account_untouched(nobody));
+end $$;
+
+select pg_temp.become('00000000-0000-4000-8000-00000000c101');
+do $$
+declare dump jsonb;
+begin
+  dump := public.export_my_data();
+  perform pg_temp.must('the export carries the productivity tables',
+    dump::text like '%productivity_task%' and dump::text like '%productivity_event%');
+end $$;
+reset role;
+
+do $$
+declare a constant uuid := '00000000-0000-4000-8000-00000000c101';
+begin
+  perform public.erase_account(a);
+  perform pg_temp.must('erasing the account removes its tasks, events, counter and ledger',
+    not exists (select 1 from public.productivity_task where owner_id = a)
+    and not exists (select 1 from public.productivity_event where owner_id = a)
+    and not exists (select 1 from private.productivity_owner_seq where owner_id = a)
+    and not exists (select 1 from private.productivity_command where owner_id = a));
+end $$;
+
+-- ── The fields the app's task carries ──────────────────────────────────────
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  t constant uuid := 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7';
+  t2 constant uuid := 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8';
+  rule constant jsonb := '{"every": "weekly", "until": "2026-12-18", "except": ["2026-11-27"]}';
+  two constant jsonb := '[{"id": "s1", "text": "Skim", "done": true}, {"id": "s2", "text": "Notes", "done": false}]';
+  code text;
+  row_ public.productivity_task;
+  seq_t bigint;
+begin
+  perform public.productivity_commit('pc-school-a', a, pg_temp.cmd('c0000000-0000-4000-8000-0000000000a1'),
+    jsonb_build_array(pg_temp.task(t, 0, jsonb_build_object('dueOn', '2026-10-09', 'whenText', '6:30 PM', 'repeat', rule,
+      'steps', two, 'plannedFrom', 'deadline-1'))),
+    pg_temp.audit('task.created'), pg_temp.event('e0000000-0000-4000-8000-0000000000a1', 'task.created', 'c0000000-0000-4000-8000-0000000000a1'));
+  select * into row_ from public.productivity_task where tenant_id = 'pc-school-a' and owner_id = a and id = t;
+  perform pg_temp.must('the day, the free text and the source reference are stored',
+    row_.due_on = date '2026-10-09' and row_.when_text = '6:30 PM' and row_.planned_from = 'deadline-1');
+  perform pg_temp.must('the repeat rule and the steps are stored whole', row_.repeat_rule = rule and row_.steps = two);
+  seq_t := row_.seq;
+
+  -- A field the service sends as null is SQL null, not the JSON literal that would fail the object check.
+  perform public.productivity_commit('pc-school-a', a, pg_temp.cmd('c0000000-0000-4000-8000-0000000000a2'),
+    jsonb_build_array(pg_temp.task(t2, 0)), pg_temp.audit('task.created'),
+    pg_temp.event('e0000000-0000-4000-8000-0000000000a2', 'task.created', 'c0000000-0000-4000-8000-0000000000a2'));
+  select * into row_ from public.productivity_task where tenant_id = 'pc-school-a' and owner_id = a and id = t2;
+  perform pg_temp.must('a task with no repeat rule, no day and no steps stores null, null and an empty list',
+    row_.repeat_rule is null and row_.due_on is null and row_.when_text is null and row_.steps = '[]'::jsonb and row_.planned_from is null);
+
+  -- An update replaces the steps as a whole.
+  perform public.productivity_commit('pc-school-a', a, pg_temp.cmd('c0000000-0000-4000-8000-0000000000a3'),
+    jsonb_build_array(pg_temp.task(t, seq_t, jsonb_build_object('version', 2, 'steps', '[{"id": "s1", "text": "Skim", "done": true}]'::jsonb, 'repeat', null))),
+    pg_temp.audit('task.updated'), pg_temp.event('e0000000-0000-4000-8000-0000000000a3', 'task.updated', 'c0000000-0000-4000-8000-0000000000a3'));
+  select * into row_ from public.productivity_task where tenant_id = 'pc-school-a' and owner_id = a and id = t;
+  perform pg_temp.must('an update replaces the steps and can clear the repeat rule', jsonb_array_length(row_.steps) = 1 and row_.repeat_rule is null and row_.seq > seq_t);
+end $$;
+
+do $$
+declare
+  a constant uuid := '00000000-0000-4000-8000-00000000c101';
+  n int := 0;
+
+  procedure_ text;
+begin
+  -- Each of these is something the service would already have refused. The database refuses it too.
+  for procedure_ in select unnest(array[
+    '{"repeat": {"every": "hourly", "until": "2026-12-18"}}',
+    '{"repeat": {"every": "weekly"}}',
+    '{"repeat": {"every": "weekly", "until": "next term"}}',
+    '{"whenText": "012345678901234567890123456789012345678901"}',
+    '{"plannedFrom": ""}',
+    '{"steps": {"not": "a list"}}'
+  ]) loop
+    n := n + 1;
+    begin
+      perform public.productivity_commit('pc-school-a', a,
+        pg_temp.cmd(('c0000000-0000-4000-8000-0000000001' || lpad(n::text, 2, '0'))::uuid),
+        jsonb_build_array(pg_temp.task(('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa01' || lpad(n::text, 2, '0'))::uuid, 0, procedure_::jsonb)),
+        pg_temp.audit('task.created'),
+        pg_temp.event(('e0000000-0000-4000-8000-0000000001' || lpad(n::text, 2, '0'))::uuid, 'task.created',
+                      'c0000000-0000-4000-8000-0000000001' || lpad(n::text, 2, '0')));
+      perform pg_temp.must('the database refused case ' || n || ' (' || procedure_ || ')', false);
+    exception when check_violation then
+      null;
+    end;
+  end loop;
+  perform pg_temp.must('every one of the six was refused', n = 6);
+  perform pg_temp.must('and none was written', not exists (select 1 from public.productivity_task where id::text like 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa01%'));
 end $$;
 
 rollback;

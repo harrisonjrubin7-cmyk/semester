@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Moving an action to another day on the month calendar now offers Undo
+
+Tap the day-shift button on an action in the month view and you get "Action moved" with Undo for a few seconds, the way dragging it to another day already did. It used to move silently. Nothing else about adding, ticking, moving or deleting an action changes, and you do not have to do anything. Behind the scenes these now go through one place in the code, which a build can switch to the new rules with `VITE_DOMAIN_TASKS`; it is off, and with it off everything behaves exactly as before.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one

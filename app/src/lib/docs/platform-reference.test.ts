@@ -454,7 +454,7 @@ function renderEvents(): string {
   const list = (xs: readonly string[]) => xs.map(code).join(', ');
   const producers = uses.length === 0
     ? 'none. No code outside the library and its tests calls it, no store other than the in-memory ones implements it, and no migration inserts into the outbox tables.'
-    : `${uses.map((u) => `${code(u.file)} (${u.why})`).join('; ')}. Mounted on a running entry point: ${running ? list(facts.mounts) : `none; no code outside ${list(facts.dirs)} imports it`}. Callers of \`drainOutbox\` outside the library: ${facts.drainCallers.length ? list(facts.drainCallers) : 'none, so nothing publishes what is written'}.`;
+    : `${uses.map((u) => `${code(u.file)} (${u.why})`).join('; ')}. Mounted on a running entry point: ${running ? `${list(facts.mounts)}, which answers only when a deployment sets \`SEMESTER_PRODUCTIVITY\` to on` : `none; no code outside ${list(facts.dirs)} imports it`}. Callers of \`drainOutbox\` outside the library: ${facts.drainCallers.length ? list(facts.drainCallers) : 'none, so nothing publishes what is written'}.`;
   const out: string[] = [];
   out.push('# Event catalog and outbox');
   out.push('');
@@ -1137,9 +1137,22 @@ describe('ANALYTICS-MARKS.md', () => {
     const emitted = new Set<string>();
     for (const f of emitting) // An object literal that is sent (`event: 'x',`), not a type that names the audit events a vault may write (`event: 'a' | 'b';`).
     for (const m of read(f).matchAll(/\bevent:\s*'([a-z][a-z0-9_.]*)'\s*,/g)) emitted.add(m[1]);
-    const gatewayRows = tableUnder(md, 'Sent to a server today').map(cellsOf).filter((c) => /^`institution\./.test(c[0]));
+    const gatewayRows = tableUnder(md, 'Sent to a server today').map(cellsOf).filter((c) => /^`(?:institution|productivity)\./.test(c[0]));
     expect(diff(gatewayRows.map((c) => tokens(c[0])[0]), [...emitted])).toEqual(NONE);
-    expect(emitted.size).toBe(3);
+    expect(emitted.size).toBe(5);
+  });
+
+  it('gives productivity.request and productivity.error the fields the productivity code writes', () => {
+    const telemetry = /export interface ApiTelemetry \{([\s\S]*?)\n\}/.exec(read('app/server/productivity/http.ts'))![1];
+    const fields = ['event', ...[...telemetry.matchAll(/^ {2}(\w+)\??:/gm)].map((m) => m[1])];
+    const request = marksTable.find((c) => tokens(c[0])[0] === 'productivity.request')!;
+    expect(diff(tokens(request[3]), fields)).toEqual(NONE);
+    const logged = /event: 'productivity\.error',([\s\S]*?)\}\)\);/.exec(read('app/server/productivity/runtime.ts'))![1];
+    const errorFields = ['event', ...[...logged.matchAll(/^ {4}(\w+)[,:]|\.\.\.\(context\.(\w+)/gm)].map((m) => m[1] ?? m[2])];
+    const error = marksTable.find((c) => tokens(c[0])[0] === 'productivity.error')!;
+    expect(diff(tokens(error[3]), errorFields)).toEqual(NONE);
+    // Neither carries a message, a title or a body: the class name and ids that find the request again.
+    expect(logged).not.toMatch(/message|title|body/);
   });
 
   it('gives institution.request the fields and routes the gateway has', () => {
@@ -1339,7 +1352,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
 
   it('the repository has exactly the producers the page lists, none mounted and none published', () => {
     // The productivity command service (PR 1175) is the one producer: it builds events, and a migration function
-    // writes them to the outbox in the command's transaction. Nothing imports it and nothing calls drainOutbox.
+    // writes them to the outbox in the command's transaction. One route imports it, switched off unless a deployment
+    // sets SEMESTER_PRODUCTIVITY=on, and nothing calls drainOutbox.
     // When that changes this goes red, and the page's status, the event-consumer guide and the example's README
     // (all of which say "no running code writes to the outbox") are revisited in the same change.
     const uses = repoEventUses();
@@ -1350,10 +1364,15 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'packages/platform/src/isolation/layers.ts',
       'packages/platform/src/testing/memory.ts',
       'supabase/migrations/20261004123000_productivity_commands.sql',
+      // The same producer again: the reads migration redefines private.productivity_commit (same signature) to hold
+      // the sequence prediction, so the outbox insert appears in both files. It is not a second producer.
+      'supabase/migrations/20261004180000_productivity_reads.sql',
+      'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);
-    expect(facts.mounts, 'something now imports the producer').toEqual([]);
+    expect(facts.mounts, 'something else now imports the producer').toEqual(['app/api/productivity/[...path].ts']);
+    expect(read('app/api/productivity/[...path].ts')).toContain('if (!productivityEnabled(process.env)) throw');
     expect(facts.drainCallers, 'something now publishes the outbox').toEqual([]);
   });
 

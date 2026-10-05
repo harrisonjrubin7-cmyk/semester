@@ -48,6 +48,7 @@ import {
   usageFromJson,
 } from '../_shared/aispend.ts';
 import { KILLED_MESSAGE, aiGenerationKilled } from '../_shared/killswitch.ts';
+import { MEMBERSHIP_UNREADABLE_MESSAGE, TENANT_MANAGED_MESSAGE, schoolOf, sharedKeyAudience } from '../_shared/tenantai.ts';
 import { KEY_UNUSABLE_MESSAGE, describeThrow, keyShape, sharedKey } from '../_shared/sharedkey.ts';
 import { NOT_ACTIVATED, NOT_ACTIVATED_MESSAGE, SHARED_PROVIDER, SWITCH, activation } from '../_shared/provideractivation.ts';
 
@@ -133,6 +134,27 @@ Deno.serve(async (req) => {
     return json({ error: { message: KILLED_MESSAGE } }, 503);
   }
 
+  // ── whether this account is the shared key's to serve ───────────────────
+  //
+  // The shared key serves individual accounts with no school. An account that
+  // belongs to a school is that school's to decide for, and this function has
+  // no tenant to read the school's decision for, so it does not serve it: the
+  // school's AI goes through the institution gateway, where the policy is
+  // read before a model is called. A membership that cannot be read is
+  // refused, not served — the plan lookup below falls back to `free` because
+  // being wrong there costs a paying student some models; being wrong here
+  // serves a school's student against their school. Asked before the plan is
+  // read and long before anything is counted, so a refusal costs nobody one of
+  // their sixty. See `../_shared/tenantai.ts` and ADR-0005.
+  const audience = sharedKeyAudience(await schoolOf(admin, userId));
+  if (!audience.serve) {
+    if (audience.reason === 'membership-unreadable') {
+      console.error('claude: the account\'s school could not be read; refusing');
+      return json({ error: { message: MEMBERSHIP_UNREADABLE_MESSAGE } }, 503);
+    }
+    return json({ error: { message: TENANT_MANAGED_MESSAGE, code: 'tenant_managed_account' } }, 403);
+  }
+
   // ── which models their plan covers ──────────────────────────────────────
   //
   // Read the way `my_entitlements()` reads it — a subscription that is in
@@ -171,6 +193,14 @@ Deno.serve(async (req) => {
   const raw = await req.text();
   const clamped = clampRequest(raw, new TextEncoder().encode(raw).length, { models: modelsForPlan(plan) });
   if (!clamped.ok) {
+    // A request that held something above the data-class ceiling is recorded
+    // by the fields that did and the highest class among them, from the clamp's
+    // own result: no part of the body is in this line, and the shared key has
+    // no school to write a tenant audit row for. It is refused here, before the
+    // spend is reserved and before the call is counted. See `../_shared/clamp.ts`.
+    if (clamped.audit) {
+      console.warn('claude: refused above the data-class ceiling', { user: userId, ...clamped.audit });
+    }
     return json(
       {
         error: {

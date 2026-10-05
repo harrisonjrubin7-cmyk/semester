@@ -15,6 +15,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `app/` | The application and the institution gateway. Vite, React 19 and TypeScript. The only client `package.json`. All npm commands run here. |
 | `audio/` | Podcast scripts, the manifest and the Python synthesiser that renders them. See [`audio/README.md`](../../audio/README.md). |
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
+| `commercial/` | Commercial readiness evidence. Today one file, [`commercial/READINESS_GAP_MATRIX.md`](../../commercial/READINESS_GAP_MATRIX.md): the Phase 0 reading of what is stated, implemented and enforced for pricing, plans, billing, procurement and support. Documentation only; no code. |
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
 | `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |
@@ -29,6 +30,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `supabase/` | The database and the edge functions, and the SQL that checks them. See below. |
 | `tasks/` | Planning notes (`plan.md`, `todo.md`). |
 | `infra/` | Infrastructure as code: Terraform modules and environments (`platform`, `staging`, `production`), the Rego policy that checks plans and workflows, and one change record per governed pull request. Nothing in it has been applied yet. See [`infra/README.md`](../../infra/README.md). |
+| `workflow-lab/` | Standalone Next.js (App Router) + Supabase app: the AI workflow router and the 12-workflow benchmark lab. Its own `package.json` and lockfile (not an npm workspace); CI is `.github/workflows/workflow-lab.yml`. See [`workflow-lab/README.md`](../../workflow-lab/README.md). |
 | `video/` | Remotion project that renders lessons to video. Has its own `package.json`; CI typechecks it with `npm run check:video`. See [`video/README.md`](../../video/README.md). |
 | `.claude/` | Agent configuration checked into the repository: `commands/` and `skills/` (`run`, `add-course`). |
 | `.github/` | `CODEOWNERS`, `dependabot.yml`, `pull_request_template.md`, `rulesets/main.json` and the workflows. |

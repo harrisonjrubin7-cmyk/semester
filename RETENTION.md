@@ -174,7 +174,10 @@ rescheduled at a different retention than the one written here, goes red there.
 
 Every remaining table is kept for the life of the account and removed when the
 account is deleted. That path is `deleteEverything` in `app/src/lib/cloud.ts`,
-which sends one delete per table under row-level security, and it is checked two
+which calls the `delete-account` function with the student's own token; the
+function runs `public.erase_account` (every row naming the account, in one
+transaction, refused up front when a legal hold covers the account) and then
+deletes the sign-in. The per-table list is checked two
 ways: `app/src/lib/privacy.test.ts` reads every module that writes a table and
 fails if one is missing from the list, and `supabase/deletion.check.sql` proves
 the policies actually permit each delete against a real Postgres.
@@ -266,7 +269,7 @@ behind and a client that believes it succeeded.
 | `ai_usage_reservation` | **five minutes against budget; physically removed after the tenant AI policy's retention-days setting** | metadata-only provider budget reservations. A crashed request stops counting after its explicit expiry; the same daily cleanup removes settled, released and expired rows, with no prompt or academic content stored |
 | `student_context`, `term_plan_courses`, `registration_time_tickets`, `seat_watches`, `graduation_scenarios`, `cost_plans`, `ai_memories`, `weekly_checkins`, `contact_channels`, `onboarding_progress`, `study_match_optins` | account deletion | the student's own planning, preferences and reminders, from `20260926150000_expansion_roles_and_features.sql`. Each is readable and deletable only by its owner (study opt-ins also by other opted-in students in the same section; onboarding progress also by an accepted, unexpired peer mentor). `study_match_optins` also lapses from view after its own expires_at |
 | `productivity_workspace` | account deletion, by explicit erasure and foreign-key cascade from `auth.users` | the student's private productivity workspace and opt-in aggregate-sharing choice. The row is readable and writable only by its owner. Private workspace content is never returned by the institutional aggregate function; when sharing is enabled, that function returns only cohort counts and refuses cohorts smaller than ten |
-| `productivity_task`, `productivity_event` | account deletion, by foreign-key cascade from `auth.users`; a deleted record is kept as a tombstone (`deleted_at`) so the sync feed can tell a device it is gone, and goes with the account | a student's tasks and calendar events, written only through the command API (`app/server/productivity/`, `docs/API-PLATFORM.md`) and readable directly only by their owner while their membership is active; a share to anyone else is decided by the policy decision point and audited, never by a row policy. From `20261004123000_productivity_commands.sql`. **Nothing writes to them yet** — no route is mounted. Before one does, they must be added to lti_account_untouched, the account export and the erasure path, which do not know them |
+| `productivity_task`, `productivity_event` | account deletion, by foreign-key cascade from `auth.users`; a deleted record is kept as a tombstone (`deleted_at`) so the sync feed can tell a device it is gone, and goes with the account | a student's tasks and calendar events, written only through the command API (`app/server/productivity/`, `docs/API-PLATFORM.md`) and readable directly only by their owner while their membership is active; a share to anyone else is decided by the policy decision point and audited, never by a row policy. From `20261004123000_productivity_commands.sql`. **Nothing writes to them yet** — no route is mounted. They are in lti_account_untouched (migration 20261004181000); the account export and erasure walk the foreign keys to `auth.users` and so already carry them, which `productivity-commands.check.sql` proves |
 | `productivity_command` | **35 days** after the command was applied, by `private.productivity_sweep_commands()` — **not yet scheduled**; with the account by cascade | the idempotency ledger: a command id, a hash of the request and the outcome, no content. Operational, not evidence (the evidence is the `audit_event` row and the outbox event, which this does not touch). Kept five days longer than the 30 days a queued command may be replayed, so no command that could still arrive has lost its record |
 | `productivity_owner_seq` | with the account, by foreign-key cascade | a counter per tenant and person that makes the change feed's sequence gapless. No content |
 | `transfer_evaluations` | account deletion | the student's estimate or request. The institution's decision arrives through the service role and goes with the account |
@@ -603,8 +606,9 @@ reopen the choice with the legal drafts.
 
 **Not yet true.** No drill has restored production data, so the recovery point
 and time in `RESTORE.md` are unmeasured; the 7 days is the tier's number, not
-one read off the dashboard on a date; and a legal hold, which would have to
-stop a backup expiring, does not exist (`RM-02`).
+one read off the dashboard on a date; and a legal hold does not yet reach the
+provider's backups. Legal holds exist for the live database (see *Legal holds*,
+above), but nothing stops a backup expiring under one (`RM-02`, `RM-04`).
 
 ## Changing any of this
 

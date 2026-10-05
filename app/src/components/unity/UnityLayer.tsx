@@ -6,6 +6,7 @@ import { statusOf } from '../../lib/status';
 import { SESSION_MINUTES, closeOverlay, showCapture, useOverlay, type SourceDetail } from '../../lib/unity';
 import { FocusBar } from './modes';
 import { useStore } from '../../state/store';
+import { useTaskActions } from '../../composition/taskactions';
 import { courseFieldFor } from '../../lib/parent';
 import { useModernShell } from '../shell-context';
 import { SaveState, StatusChip } from './Status';
@@ -252,6 +253,7 @@ export function KeepItAs({ text, onLeave }: { text: string; onLeave: () => void 
  */
 export function QuickCapture({ context, as, text: carried = '' }: { context?: string; as?: string; text?: string }) {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const field = useRef<HTMLInputElement>(null);
   const [text, setText] = useState(carried);
   const [kind, setKind] = useState<CaptureKind>(
@@ -272,7 +274,7 @@ export function QuickCapture({ context, as, text: carried = '' }: { context?: st
     const course = courseId || null;
     const said = CAPTURE_KINDS.find((k) => k.id === kind)!.label;
     if (kind === 'task') {
-      dispatch({ type: 'addTask', task: { title, date: null, time: '', note: '', courseId: course } });
+      taskActions.add({ title, date: null, time: '', note: '', courseId: course });
     } else if (kind === 'session') {
       dispatch({ type: 'addTimer', label: `Study: ${title}`, seconds: SESSION_MINUTES * 60, at: Date.now() });
     } else {

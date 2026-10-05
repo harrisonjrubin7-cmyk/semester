@@ -122,6 +122,10 @@ How to read the **Status** column: it is the status the document gives itself, s
 | [DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md](../legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md) | The user-facing retention and deletion policy. | Draft; effective date undecided |
 | [COOKIE-AND-STORAGE-NOTICE-DRAFT.md](../legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | The cookie and device-storage notice. | Draft; effective date undecided |
 | [PRIVACY-POLICY-DRAFT.md](../legal/PRIVACY-POLICY-DRAFT.md) | The privacy policy. | Draft; effective date undecided |
+| [LEGAL_REVIEW_QUEUE.md](../legal/LEGAL_REVIEW_QUEUE.md) | Phase 0 view reconciling every legal question with the existing queues. | Draft; not legal advice, counsel not engaged |
+| [PUBLIC_CLAIMS_APPROVAL_REGISTER.md](../legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md) | Phase 0 list of public claims that exceed their evidence. | Draft; no claim approved |
+| [CONTRACT_REVIEW_CHECKLIST.md](../legal/CONTRACT_REVIEW_CHECKLIST.md) | What counsel checks in any customer contract. | Draft; no contract approved |
+| [PRIVACY_REVIEW_QUEUE.md](../legal/PRIVACY_REVIEW_QUEUE.md) | Phase 0 view of open privacy questions for counsel. | Draft; counsel not engaged |
 
 ## Third parties and contracts
 

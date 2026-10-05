@@ -13,6 +13,7 @@ import {
 } from '../../../packages/institution/src/index.ts';
 import {
   AUTHORITATIVE_FIELDS,
+  TASK_FIELDS,
   LIMITS,
   clampClock,
   encodeCursor,
@@ -226,7 +227,7 @@ export class ProductivityService {
     const { clock, clamped } = clampClock(parseClock(command.clock)!, now);
 
     return this.repo.transaction(scope, async (tx) => {
-      const seen = tx.command(command.commandId);
+      const seen = await tx.command(command.commandId);
       if (seen) {
         if (seen.requestSha256 !== requestSha256) {
           return this.rejected(command.commandId, 'idempotency_key_reused', 'This command id was already used for a different change. Make a new id for a new change.');
@@ -247,7 +248,7 @@ export class ProductivityService {
     const { tx, now, clock, clamped } = ctx;
     const type = entityTypeOf(command.type);
     const verb = verbOf(command.type);
-    const existing = tx.entity(type, command.id);
+    const existing = await tx.entity(type, command.id);
 
     const changes = 'changes' in command ? (command.changes as Record<string, unknown>) : {};
     const touchesAuthoritative = existing !== null
@@ -279,8 +280,8 @@ export class ProductivityService {
     const auditObligation = decision.obligations.find((o): o is Extract<PolicyObligation, { type: 'audit' }> => o.type === 'audit');
     const eventType = auditObligation?.eventType ?? EVENT_FOR[type]![verb]!;
 
-    const finish = (entity: Entity, appliedFields: string[], supersededFields: string[]): CommandResult => {
-      const seq = tx.save(entity);
+    const finish = async (entity: Entity, appliedFields: string[], supersededFields: string[]): Promise<CommandResult> => {
+      const seq = await tx.save(entity);
       const result: StoredResult = {
         commandId: command.commandId, status: 'applied', entity: { type, id: entity.id, version: entity.version },
         seq, appliedFields, supersededFields, clockClamped: clamped,
@@ -290,10 +291,10 @@ export class ProductivityService {
       tx.recordCommand({ commandId: command.commandId, requestSha256: ctx.requestSha256, result, storedAt: iso(now) });
       return result;
     };
-    const settle = (entity: Entity | null, result: StoredResult): CommandResult => {
+    const settle = async (entity: Entity | null, result: StoredResult): Promise<CommandResult> => {
       // Nothing visible changed, but a newer clock may have been learned; keep it so a later,
       // older edit still loses. The change feed sees the record once more, unchanged.
-      if (entity) tx.save(entity);
+      if (entity) await tx.save(entity);
       tx.recordCommand({ commandId: command.commandId, requestSha256: ctx.requestSha256, result, storedAt: iso(now) });
       return result;
     };
@@ -311,10 +312,12 @@ export class ProductivityService {
           const task: Task = {
             ...base, source: { kind: 'student_entered' },
             title: f.title, notes: f.notes ?? null, status: 'open', completedAt: null,
-            dueAt: f.dueAt ?? null, priority: f.priority ?? 'normal', courseId: f.courseId ?? null,
-            clocks: stamp(['title', 'notes', 'status', 'dueAt', 'priority', 'courseId'], clock),
+            dueAt: f.dueAt ?? null, dueOn: f.dueOn ?? null, whenText: f.whenText ?? null,
+            priority: f.priority ?? 'normal', courseId: f.courseId ?? null,
+            repeat: f.repeat ?? null, steps: f.steps ?? [], plannedFrom: f.plannedFrom ?? null,
+            clocks: stamp(['status', ...TASK_FIELDS], clock),
           };
-          return finish(task, ['title', 'notes', 'dueAt', 'priority', 'courseId'].filter((k) => k in f || k === 'title'), []);
+          return await finish(task, TASK_FIELDS.filter((k) => k in f || k === 'title'), []);
         }
         const f = command.fields;
         const bad = spanIssue(f.startsAt, f.endsAt);
@@ -326,7 +329,7 @@ export class ProductivityService {
           allDay: f.allDay ?? false, timezone: f.timezone, location: f.location ?? null, kind: f.kind ?? 'event',
           clocks: stamp(['title', 'notes', 'startsAt', 'endsAt', 'allDay', 'timezone', 'location', 'kind'], clock),
         };
-        return finish(event, Object.keys(f), []);
+        return await finish(event, Object.keys(f), []);
       }
 
       case 'task.update':
@@ -346,7 +349,7 @@ export class ProductivityService {
         }
         if (merged.changed.length === 0) {
           const advanced = merged.advanced;
-          return settle(advanced ? merged.next : null, {
+          return await settle(advanced ? merged.next : null, {
             commandId: command.commandId, status: 'superseded', entity: { type, id: existing.id, version: existing.version },
             supersededFields: merged.superseded, reason: merged.superseded.length > 0 ? 'newer_edit' : 'no_change',
           });
@@ -356,21 +359,21 @@ export class ProductivityService {
           merged.next.completedAt = done ? iso(Math.min(parseClock(clock)!.wall, now)) : null;
         }
         merged.next.updatedAt = iso(now);
-        return finish(merged.next, merged.changed, merged.superseded);
+        return await finish(merged.next, merged.changed, merged.superseded);
       }
 
       case 'task.delete':
       case 'calendar_event.delete': {
         if (!existing) return this.rejected(command.commandId, 'not_found', 'That item does not exist.');
         if (existing.deletedAt) {
-          return settle(null, {
+          return await settle(null, {
             commandId: command.commandId, status: 'superseded', entity: { type, id: existing.id, version: existing.version },
             supersededFields: [], reason: 'already_deleted',
           });
         }
         // A delete outranks any edit, newer or older: bringing back something somebody removed is the surprise.
         const gone = { ...existing, version: existing.version + 1, deletedAt: iso(now), deleteClock: clock, updatedAt: iso(now) } as Entity;
-        return finish(gone, ['deleted'], []);
+        return await finish(gone, ['deleted'], []);
       }
     }
   }

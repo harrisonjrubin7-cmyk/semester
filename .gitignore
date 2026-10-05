@@ -73,3 +73,5 @@ override.tf.json
 
 # Visual-regression screenshots and the runner's own baseline (scripts/gallery-shots.mjs)
 .gallery/
+# Generated design-system reports (uploaded as CI artifacts, not committed)
+app/reports/

@@ -1,6 +1,6 @@
 # Offline and synchronization contract
 
-Status: target contract. Current implementation is a PWA/local-first foundation, not a native SQLCipher or CRDT system.
+Status: target contract. Current implementation is a PWA/local-first foundation, not a native SQLCipher or CRDT system. Since 4 October 2026 `app/src/lib/vault/` implements the web half of the device-database contract (classification gate, hybrid logical clock, AES-GCM at rest, the queue state machine); see [`rebuild-slice-audit.md`](rebuild-slice-audit.md). The one store that uses it is the task engine's local snapshot (`sealedSnapshotPort` in `app/src/lib/sync/engine/persistent.ts`), and only on a device where the engine owns tasks; no other store does yet.
 
 A tested platform-neutral core and a reference design for this contract now exist: [`mobile-offline-reference.md`](mobile-offline-reference.md) and `packages/offline-sync`. They change none of the status below — no native client, SQLCipher binding, gateway endpoint or CRDT service has been built. One device-local, default-off slice now carries personal tasks through the engine over `public.tasks` (§10a of that document); it is not the encrypted native store the contract describes.
 
@@ -8,7 +8,7 @@ A tested platform-neutral core and a reference design for this contract now exis
 
 - Implemented: service worker/PWA, browser offline detection, cached assets/media, local student-state stores, export/restore paths, some queued replay and merge tests.
 - Partial: durable sync semantics vary by feature. Browser persistence is not one classified offline database with a central policy gate.
-- Not implemented: native per-tenant/person/device SQLCipher database, hardware-backed key wrapping, remote wipe of database/WAL/SHM, hybrid logical clocks, general CRDT registry/update/snapshot/compaction service.
+- Not implemented: native per-tenant/person/device SQLCipher database, hardware-backed key wrapping, remote wipe of database/WAL/SHM, general CRDT registry/update/snapshot/compaction service. Implemented as a library but not yet adopted by any screen: hybrid logical clocks and a software-keyed encrypted browser store (`lib/vault`).
 - External approval required: mobile threat model, supported-device matrix, mobile MDM expectations, retention, accessibility, provider offline terms, and institutional acceptance.
 
 The current web persistence path includes the `semester-store` IndexedDB database and multiple localStorage-backed feature stores; `db.ts` can fall back to localStorage. These stores are not encrypted by SQLCipher and are not mediated by one classification policy. Therefore the current mobile claim is “responsive installable PWA with limited offline behavior,” not “encrypted FERPA offline mobile client.”

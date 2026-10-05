@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 178 |
+| Migration files | 183 |
 | Tables created in `public` and not later dropped | 321 |
 | … of which enable row-level security in a migration | 321 |
 | Tables created in `private` and not later dropped | 31 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-110 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+112 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -46,6 +46,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/canonical-display.check.sql` | What an imported fact may say, and who may take a student's away. |
 | `supabase/capabilities.check.sql` | The permission matrix, and the four things that make it a matrix rather than a ladder. |
 | `supabase/classmates.check.sql` | Two people in one room, without needing two people. |
+| `supabase/client-privileges.check.sql` | The browser's roles hold no table privilege that row-level security does not govern. |
 | `supabase/commercial-automation.check.sql` | The commercial core's moving parts (20260929080000_commercial_automation): checkout, the webhook's writes, the dunning worker, contract → tenant, site lead intake and the nightly account-health job. |
 | `supabase/commercial.check.sql` | The commercial core: catalog, billing accounts, subscriptions, invoices, dunning, cancellation, delivery records and the governance registers. |
 | `supabase/community.check.sql` | Community: every permission in 20260928032000_community.sql walked as the account it is about, and every refusal attempted as the account that should be refused. |
@@ -59,6 +60,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/deletion.check.sql` | What "Delete my account" actually empties, walked as the account doing it. |
 | `supabase/demand.check.sql` | Course demand forecasting (Phase K, D-051): a student contributes only by consenting, only at their own school, and can stop; a count is published only at ten or more and only from live consent; staf… |
 | `supabase/dining.check.sql` | who may order, give, move and read, in dining. |
+| `supabase/erasure-clears-consent-snapshots.check.sql` | Erasing an account must not leave its consent history behind in a copy. |
 | `supabase/evidence-graphs.check.sql` | Learning, skill and capture evidence must stay inside both its tenant and its person boundary. |
 | `supabase/expansion.check.sql` | Expansion roles and features: every new permission walked as the account it is about, and every refusal attempted as the account that should be refused. |
 | `supabase/export-withholds-guardian-restrictions.check.sql` | An account export must not carry a guardian restriction. |
