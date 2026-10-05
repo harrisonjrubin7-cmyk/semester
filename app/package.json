@@ -59,7 +59,8 @@
     "docs:stale": "node scripts/docs-stale.mjs",
     "release:draft": "node scripts/release-draft.mjs",
     "sbom": "npm sbom --sbom-format cyclonedx --omit dev",
-    "test:publication": "vitest run --config vitest.publication.config.ts"
+    "test:publication": "vitest run --config vitest.publication.config.ts",
+    "generate:gtm-pdf": "node scripts/generate-gtm-pdf.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
@@ -80,6 +81,7 @@
     "axe-core": "^4.13.0",
     "jsdom": "^30.1.1",
     "jsqr": "^1.4.0",
+    "marked": "^16.4.2",
     "oxlint": "^1.85.0",
     "qrcode-generator": "^2.0.4",
     "typescript": "~7.0.2",

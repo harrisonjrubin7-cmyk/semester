@@ -24,6 +24,12 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Semester staff get a finance planning tool in the operations console
+
+Only people holding the operator grant see this, so students and school administrators will notice nothing. The console has a new **Finance model** tab: a 36-month planning model with twelve scenarios, editable assumptions, two sensitivity grids, warnings for runway, margin, delivery capacity and AI cost, and downloads as CSV, JSON and Markdown. Every figure on it says it is a forecast on planning assumptions, it works on sample data only, and it saves nothing. No price, target or result in it is approved. You do not have to do anything.
+
+New business planning documents, a report build (`npm run generate:gtm-pdf` from `app/`) and four PDFs came with it; they are in `docs/business/` and `output/`, not in the app.
+
 ### Moving an action to another day on the month calendar now offers Undo
 
 Tap the day-shift button on an action in the month view and you get "Action moved" with Undo for a few seconds, the way dragging it to another day already did. It used to move silently. Nothing else about adding, ticking, moving or deleting an action changes, and you do not have to do anything. Behind the scenes these now go through one place in the code, which a build can switch to the new rules with `VITE_DOMAIN_TASKS`; it is off, and with it off everything behaves exactly as before.
