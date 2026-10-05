@@ -425,7 +425,7 @@ export const CONTROLS: readonly Control[] = [
   {
     id: 'TC-A11-04',
     family: 'accessibility',
-    does: 'A nightly browser sweep measures painted contrast across thirteen grounds, two widths and hover and focus states.',
+    does: 'A nightly browser sweep measures painted contrast across fourteen grounds, two widths and hover and focus states.',
     domains: ALL,
     mechanism: 'ci',
     state: 'partial',

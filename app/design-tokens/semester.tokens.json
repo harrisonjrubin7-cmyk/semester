@@ -14,6 +14,7 @@
         "oxblood",
         "moss",
         "ink",
+        "semester",
         "gold"
       ],
       "default": "sterling",
@@ -59,7 +60,8 @@
         "bone",
         "industry",
         "industry-dark",
-        "fog"
+        "fog",
+        "semester"
       ],
       "default": "ink",
       "variables": 42
@@ -115,6 +117,7 @@
               "oxide": "#d4d9e2",
               "paper": "#4c5561",
               "parchment": "#4c5561",
+              "semester": "#4c5561",
               "wine": "#d4d9e2"
             },
             "accent": {
@@ -127,6 +130,7 @@
               "moss": "#b6c39b",
               "oxblood": "#c99a9a",
               "pewter": "#b9b9bd",
+              "semester": "#a5b4fc",
               "slate": "#aebdd0",
               "sterling": "#d4d9e2"
             }
@@ -157,6 +161,7 @@
               "oxide": "#f6f8fb",
               "paper": "#4c5561",
               "parchment": "#4c5561",
+              "semester": "#4c5561",
               "wine": "#f6f8fb"
             },
             "accent": {
@@ -169,6 +174,7 @@
               "moss": "#dde5c9",
               "oxblood": "#e8cdcd",
               "pewter": "#e2e2e6",
+              "semester": "#c7d2fe",
               "slate": "#d8e2ee",
               "sterling": "#f6f8fb"
             }
@@ -199,6 +205,7 @@
               "oxide": "#9ca3b2",
               "paper": "#4c5561",
               "parchment": "#4c5561",
+              "semester": "#4c5561",
               "wine": "#9ca3b2"
             },
             "accent": {
@@ -211,6 +218,7 @@
               "moss": "#98a380",
               "oxblood": "#b69291",
               "pewter": "#9e9ea3",
+              "semester": "#8f9cf0",
               "slate": "#929fb0",
               "sterling": "#9ca3b2"
             }
@@ -241,6 +249,7 @@
               "oxide": "#d4d9e2",
               "paper": "#4c5561",
               "parchment": "#4c5561",
+              "semester": "#4c5561",
               "wine": "#d4d9e2"
             },
             "accent": {
@@ -253,6 +262,7 @@
               "moss": "#b6c39b",
               "oxblood": "#c99a9a",
               "pewter": "#b9b9bd",
+              "semester": "#a5b4fc",
               "slate": "#aebdd0",
               "sterling": "#d4d9e2"
             }
@@ -283,6 +293,7 @@
               "oxide": "rgba(212, 217, 226, 0.12)",
               "paper": "rgba(76, 85, 97, 0.1)",
               "parchment": "rgba(76, 85, 97, 0.1)",
+              "semester": "rgba(76, 85, 97, 0.1)",
               "wine": "rgba(212, 217, 226, 0.12)"
             },
             "accent": {
@@ -295,6 +306,7 @@
               "moss": "rgba(182, 195, 155, 0.12)",
               "oxblood": "rgba(201, 154, 154, 0.12)",
               "pewter": "rgba(185, 185, 189, 0.12)",
+              "semester": "rgba(165, 180, 252, 0.12)",
               "slate": "rgba(174, 189, 208, 0.12)",
               "sterling": "rgba(212, 217, 226, 0.12)"
             }
@@ -324,6 +336,7 @@
               "oxide": "#000000",
               "paper": "#f2f4f7",
               "parchment": "#f4f1ea",
+              "semester": "#f8fafc",
               "wine": "#0e090a"
             }
           }
@@ -352,6 +365,7 @@
               "oxide": "rgba(236, 238, 242, 0.62)",
               "paper": "rgba(21, 24, 29, 0.68)",
               "parchment": "rgba(27, 26, 23, 0.68)",
+              "semester": "rgba(15, 23, 42, 0.8)",
               "wine": "rgba(240, 233, 234, 0.64)"
             }
           },
@@ -368,6 +382,7 @@
             "oxide": 6.1,
             "paper": 5.42,
             "parchment": 5.35,
+            "semester": 9.04,
             "wine": 6.22
           }
         }
@@ -395,6 +410,7 @@
               "oxide": "#fc798f",
               "paper": "#a4041f",
               "parchment": "#a4041f",
+              "semester": "#b80523",
               "wine": "#fc798f"
             }
           }
@@ -423,6 +439,7 @@
               "oxide": "rgba(252, 121, 143, 0.5)",
               "paper": "rgba(164, 4, 31, 0.5)",
               "parchment": "rgba(164, 4, 31, 0.5)",
+              "semester": "rgba(184, 5, 35, 0.5)",
               "wine": "rgba(252, 121, 143, 0.5)"
             }
           }
@@ -451,6 +468,7 @@
               "oxide": "rgba(252, 121, 143, 0.1)",
               "paper": "rgba(164, 4, 31, 0.1)",
               "parchment": "rgba(164, 4, 31, 0.1)",
+              "semester": "rgba(184, 5, 35, 0.1)",
               "wine": "rgba(252, 121, 143, 0.1)"
             }
           }
@@ -479,6 +497,7 @@
               "oxide": "rgba(236, 238, 242, 0.4)",
               "paper": "rgba(21, 24, 29, 0.52)",
               "parchment": "rgba(27, 26, 23, 0.52)",
+              "semester": "rgba(15, 23, 42, 0.62)",
               "wine": "rgba(240, 233, 234, 0.42)"
             }
           },
@@ -495,6 +514,7 @@
             "oxide": 3.29,
             "paper": 3.37,
             "parchment": 3.33,
+            "semester": 4.87,
             "wine": 3.5
           }
         }
@@ -522,6 +542,7 @@
               "oxide": "#eceef2",
               "paper": "#15181d",
               "parchment": "#1b1a17",
+              "semester": "#0f172a",
               "wine": "#f0e9ea"
             }
           },
@@ -538,6 +559,7 @@
             "oxide": 13.74,
             "paper": 13.71,
             "parchment": 13.72,
+            "semester": 16.3,
             "wine": 13.24
           }
         }
@@ -565,6 +587,7 @@
               "oxide": "#14171c",
               "paper": "#ffffff",
               "parchment": "#ffffff",
+              "semester": "#ffffff",
               "wine": "#201618"
             }
           }
@@ -593,6 +616,7 @@
               "oxide": "rgba(236, 238, 242, 0.11)",
               "paper": "rgba(17, 17, 17, 0.16)",
               "parchment": "rgba(17, 17, 17, 0.16)",
+              "semester": "rgba(17, 17, 17, 0.16)",
               "wine": "rgba(236, 238, 242, 0.11)"
             }
           }
@@ -621,6 +645,7 @@
               "oxide": "rgba(236, 238, 242, 0.06)",
               "paper": "rgba(17, 17, 17, 0.09)",
               "parchment": "rgba(17, 17, 17, 0.09)",
+              "semester": "rgba(17, 17, 17, 0.09)",
               "wine": "rgba(236, 238, 242, 0.06)"
             }
           }
@@ -649,6 +674,7 @@
               "oxide": "rgba(255, 255, 255, 0.07)",
               "paper": "rgba(0, 0, 0, 0.06)",
               "parchment": "rgba(0, 0, 0, 0.06)",
+              "semester": "rgba(0, 0, 0, 0.06)",
               "wine": "rgba(255, 255, 255, 0.07)"
             }
           }
@@ -677,6 +703,7 @@
               "oxide": "#0b0d10",
               "paper": "#fbfcfd",
               "parchment": "#fbf9f4",
+              "semester": "#ffffff",
               "wine": "#171012"
             }
           }
@@ -716,6 +743,7 @@
               "oxide": "#1e2229",
               "paper": "#ffffff",
               "parchment": "#ffffff",
+              "semester": "#ffffff",
               "wine": "#2c1f21"
             }
           }
@@ -744,6 +772,7 @@
               "oxide": "0.62",
               "paper": "0.68",
               "parchment": "0.68",
+              "semester": "0.8",
               "wine": "0.64"
             }
           }
@@ -772,6 +801,7 @@
               "oxide": "rgba(236, 238, 242, 0.09)",
               "paper": "rgba(17, 17, 17, 0.12)",
               "parchment": "rgba(17, 17, 17, 0.12)",
+              "semester": "rgba(17, 17, 17, 0.12)",
               "wine": "rgba(236, 238, 242, 0.09)"
             }
           }
@@ -800,6 +830,7 @@
               "oxide": "#000000",
               "paper": "#dfe2e8",
               "parchment": "#e8e4dc",
+              "semester": "#f1f5f9",
               "wine": "#080405"
             }
           }
@@ -828,6 +859,7 @@
               "oxide": "#c9775e",
               "paper": "#994b33",
               "parchment": "#9d4d34",
+              "semester": "#ac5439",
               "wine": "#c9775e"
             }
           }
@@ -856,6 +888,7 @@
               "oxide": "rgba(201, 119, 94, 0.45)",
               "paper": "rgba(153, 75, 51, 0.45)",
               "parchment": "rgba(157, 77, 52, 0.45)",
+              "semester": "rgba(172, 84, 57, 0.45)",
               "wine": "rgba(201, 119, 94, 0.45)"
             }
           }
@@ -884,6 +917,7 @@
               "oxide": "rgba(201, 119, 94, 0.09)",
               "paper": "rgba(153, 75, 51, 0.09)",
               "parchment": "rgba(157, 77, 52, 0.09)",
+              "semester": "rgba(172, 84, 57, 0.09)",
               "wine": "rgba(201, 119, 94, 0.09)"
             }
           }
@@ -912,6 +946,7 @@
               "oxide": "#6995d3",
               "paper": "#356bb6",
               "parchment": "#356bb6",
+              "semester": "#356bb6",
               "wine": "#6995d3"
             }
           }
@@ -940,6 +975,7 @@
               "oxide": "#39c684",
               "paper": "#1f6b47",
               "parchment": "#1f6b47",
+              "semester": "#1f6b47",
               "wine": "#39c684"
             }
           }
@@ -968,6 +1004,7 @@
               "oxide": "#dabf81",
               "paper": "#96762c",
               "parchment": "#9a792d",
+              "semester": "#a68330",
               "wine": "#dabf81"
             }
           }
@@ -996,6 +1033,7 @@
               "oxide": "#9351cd",
               "paper": "#55257e",
               "parchment": "#55257e",
+              "semester": "#55257e",
               "wine": "#9351cd"
             }
           }
@@ -1024,6 +1062,7 @@
               "oxide": "#b6bfc3",
               "paper": "#5c6970",
               "parchment": "#5c6970",
+              "semester": "#5c6970",
               "wine": "#b6bfc3"
             }
           }
@@ -1052,6 +1091,7 @@
               "oxide": "linear-gradient(172deg, #f7f8fa, #c9ced8 46%, #aeb4c0 52%, #dfe3ea 65%, #f4f6f9)",
               "paper": "linear-gradient(172deg, rgba(0,0,0,.86), rgba(0,0,0,.62) 46%, rgba(0,0,0,.58) 52%, rgba(0,0,0,.78) 65%, rgba(0,0,0,.88))",
               "parchment": "linear-gradient(172deg, rgba(0,0,0,.86), rgba(0,0,0,.62) 46%, rgba(0,0,0,.58) 52%, rgba(0,0,0,.78) 65%, rgba(0,0,0,.88))",
+              "semester": "linear-gradient(172deg, rgba(0,0,0,.86), rgba(0,0,0,.62) 46%, rgba(0,0,0,.58) 52%, rgba(0,0,0,.78) 65%, rgba(0,0,0,.88))",
               "wine": "linear-gradient(172deg, #f7f8fa, #c9ced8 46%, #aeb4c0 52%, #dfe3ea 65%, #f4f6f9)"
             }
           }
@@ -1080,6 +1120,7 @@
               "oxide": "rgba(255, 255, 255, 0.35)",
               "paper": "rgba(0, 0, 0, 0.3)",
               "parchment": "rgba(0, 0, 0, 0.3)",
+              "semester": "rgba(0, 0, 0, 0.3)",
               "wine": "rgba(255, 255, 255, 0.35)"
             }
           }
@@ -1108,6 +1149,7 @@
               "oxide": "#08090c",
               "paper": "#f7f5f0",
               "parchment": "#f7f5f0",
+              "semester": "#f7f5f0",
               "wine": "#08090c"
             }
           }
@@ -1211,6 +1253,7 @@
               "oxide": "0 0 0 1px rgba(212, 217, 226, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5), 0 14px 34px rgba(0, 0, 0, 0.45)",
               "paper": "0 0 0 1px rgba(90, 84, 72, 0.16), 0 2px 6px rgba(90, 84, 72, 0.22), 0 14px 34px rgba(90, 84, 72, 0.10)",
               "parchment": "0 0 0 1px rgba(90, 84, 72, 0.16), 0 2px 6px rgba(90, 84, 72, 0.22), 0 14px 34px rgba(90, 84, 72, 0.10)",
+              "semester": "0 0 0 1px rgba(90, 84, 72, 0.16), 0 2px 6px rgba(90, 84, 72, 0.22), 0 14px 34px rgba(90, 84, 72, 0.10)",
               "wine": "0 0 0 1px rgba(212, 217, 226, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5), 0 14px 34px rgba(0, 0, 0, 0.45)"
             }
           }
@@ -1454,6 +1497,7 @@
               "oxide": "10px",
               "paper": "10px",
               "parchment": "10px",
+              "semester": "10px",
               "wine": "10px"
             },
             "corners": {
@@ -1489,6 +1533,7 @@
               "oxide": "6px",
               "paper": "6px",
               "parchment": "6px",
+              "semester": "6px",
               "wine": "6px"
             },
             "corners": {
@@ -1524,6 +1569,7 @@
               "oxide": "3px",
               "paper": "3px",
               "parchment": "3px",
+              "semester": "3px",
               "wine": "3px"
             },
             "corners": {
@@ -1569,6 +1615,7 @@
               "oxide": "inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(255, 255, 255, 0.04)",
               "paper": "inset 2px 2px 5px rgba(90, 84, 72, 0.16), inset -2px -2px 5px rgba(255, 255, 255, 0.65)",
               "parchment": "inset 2px 2px 5px rgba(90, 84, 72, 0.16), inset -2px -2px 5px rgba(255, 255, 255, 0.65)",
+              "semester": "inset 2px 2px 5px rgba(90, 84, 72, 0.16), inset -2px -2px 5px rgba(255, 255, 255, 0.65)",
               "wine": "inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(255, 255, 255, 0.04)"
             }
           }
@@ -1597,6 +1644,7 @@
               "oxide": "-2px -2px 6px rgba(255, 255, 255, 0.045), 4px 6px 14px rgba(0, 0, 0, 0.5)",
               "paper": "-2px -2px 6px rgba(255, 255, 255, 0.7), 4px 6px 14px rgba(90, 84, 72, 0.14)",
               "parchment": "-2px -2px 6px rgba(255, 255, 255, 0.7), 4px 6px 14px rgba(90, 84, 72, 0.14)",
+              "semester": "-2px -2px 6px rgba(255, 255, 255, 0.7), 4px 6px 14px rgba(90, 84, 72, 0.14)",
               "wine": "-2px -2px 6px rgba(255, 255, 255, 0.045), 4px 6px 14px rgba(0, 0, 0, 0.5)"
             }
           }
@@ -1736,6 +1784,7 @@
               "oxide": "#14171c",
               "paper": "#131311",
               "parchment": "#131311",
+              "semester": "#131311",
               "wine": "#201618"
             }
           }
@@ -1765,6 +1814,7 @@
               "oxide": "#f6f8fb",
               "paper": "#d4d9e2",
               "parchment": "#d4d9e2",
+              "semester": "#d4d9e2",
               "wine": "#f6f8fb"
             },
             "accent": {
@@ -1777,6 +1827,7 @@
               "moss": "#dde5c9",
               "oxblood": "#e8cdcd",
               "pewter": "#e2e2e6",
+              "semester": "#c7d2fe",
               "slate": "#d8e2ee",
               "sterling": "#f6f8fb"
             }
@@ -1806,6 +1857,7 @@
               "oxide": "#eceef2",
               "paper": "#f4f2ee",
               "parchment": "#f4f2ee",
+              "semester": "#f4f2ee",
               "wine": "#f0e9ea"
             }
           }
@@ -1834,6 +1886,7 @@
               "oxide": "#1e2229",
               "paper": "#232320",
               "parchment": "#232320",
+              "semester": "#232320",
               "wine": "#2c1f21"
             }
           }
