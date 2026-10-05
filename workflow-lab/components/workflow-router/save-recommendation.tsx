@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/base-path";
 import { useActionState } from "react";
 import { saveRecommendation } from "@/app/workflow-router/actions";
 import { ActionMessage, Field, SubmitButton, fieldError, inputClass } from "@/components/ui/form-bits";
@@ -17,7 +18,7 @@ export function SaveRecommendation({ inputs, session, organizations }: {
   if (session.kind === "prototype")
     return <p className="rounded-md bg-warn-soft px-3 py-2 text-sm text-warn">Prototype mode: Supabase is not configured, so recommendations cannot be saved. You can still copy and export them.</p>;
   if (session.kind === "signed-out")
-    return <p className="rounded-md bg-surface-2 px-3 py-2 text-sm">Saving is protected. <a href="/auth/sign-in?next=/workflow-router" className="font-medium underline">Sign in</a> to save this recommendation.</p>;
+    return <p className="rounded-md bg-surface-2 px-3 py-2 text-sm">Saving is protected. <a href={withBasePath("/auth/sign-in?next=/workflow-router")} className="font-medium underline">Sign in</a> to save this recommendation.</p>;
 
   const writable = organizations.filter((o) => o.role !== "viewer");
   return (

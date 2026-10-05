@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { withBasePath } from "@/lib/base-path";
 import { safeNextPath } from "@/lib/auth/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,7 +24,7 @@ const otpParams = z.object({
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const next = safeNextPath(searchParams.get("next"), "/");
-  const failure = NextResponse.redirect(new URL("/auth/sign-in?error=confirm", origin));
+  const failure = NextResponse.redirect(new URL(withBasePath("/auth/sign-in?error=confirm"), origin));
 
   const supabase = await createClient();
   if (!supabase) return failure;
@@ -37,5 +38,5 @@ export async function GET(request: NextRequest) {
       ? await supabase.auth.exchangeCodeForSession(code.data)
       : { error: new Error("missing credentials") };
 
-  return error ? failure : NextResponse.redirect(new URL(next, origin));
+  return error ? failure : NextResponse.redirect(new URL(withBasePath(next), origin));
 }

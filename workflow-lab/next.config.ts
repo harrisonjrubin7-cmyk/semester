@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
+import { BASE_PATH } from "./lib/base-path";
 
 const config: NextConfig = {
+  basePath: BASE_PATH,
   reactStrictMode: true,
   poweredByHeader: false,
   async headers() {

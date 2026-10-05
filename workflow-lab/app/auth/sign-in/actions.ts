@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { NOT_CONFIGURED, type ActionState } from "@/lib/actions/types";
+import { withBasePath } from "@/lib/base-path";
 import { safeNextPath } from "@/lib/auth/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, formToObject } from "@/lib/validation/common";
@@ -31,7 +32,7 @@ export async function signInWithMagicLink(_prev: ActionState, formData: FormData
   const next = safeNextPath(String(raw.next ?? ""), "/");
   const { error } = await supabase.auth.signInWithOtp({
     email: parsed.data.email,
-    options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=${encodeURIComponent(next)}` },
+    options: { emailRedirectTo: `${await siteOrigin()}${withBasePath("/auth/confirm")}?next=${encodeURIComponent(next)}` },
   });
   // Do not reveal whether an address has an account: report only transport-level failures.
   if (error && error.status && error.status >= 500) return { ok: false, message: "Could not send the link right now. Try again shortly." };
@@ -61,7 +62,7 @@ export async function signUpWithPassword(_prev: ActionState, formData: FormData)
   const next = safeNextPath(String(raw.next ?? ""), "/");
   const { error } = await supabase.auth.signUp({
     ...parsed.data,
-    options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=${encodeURIComponent(next)}` },
+    options: { emailRedirectTo: `${await siteOrigin()}${withBasePath("/auth/confirm")}?next=${encodeURIComponent(next)}` },
   });
   if (error && error.status && error.status >= 500) return { ok: false, message: "Could not create the account right now." };
   return { ok: true, message: "If that address can be registered, a confirmation email is on its way." };

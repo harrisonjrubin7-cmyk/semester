@@ -1,5 +1,6 @@
 "use client";
 
+import { withBasePath } from "@/lib/base-path";
 import { useMemo, useState } from "react";
 import { DownloadButton } from "@/components/ui/download-button";
 import { BENCHMARK_WORKFLOWS } from "@/lib/benchmark/benchmark.config";
@@ -29,7 +30,7 @@ export function WorkflowRouter({ session, saved, organizations }: {
 
   const allTouched = new Set<QuestionKey>(QUESTIONS.map((q) => q.key));
   const params = new URLSearchParams({ ...inputs, ...(task.trim() ? { task: task.trim().slice(0, 2000) } : {}) });
-  const exportHref = (format: "md" | "json") => `/api/exports/recommendation?${new URLSearchParams({ format, ...Object.fromEntries(params) })}`;
+  const exportHref = (format: "md" | "json") => `${withBasePath("/api/exports/recommendation")}?${new URLSearchParams({ format, ...Object.fromEntries(params) })}`;
 
   return (
     <div className="space-y-10">
