@@ -81,3 +81,16 @@ The diff said the grep guards were missing (they exist), left `approvals.ts` as 
 - A decision on item 1 above, so the `TO NARROW` entry can be closed by a migration and a suite edit.
 - Whoever picks up item 6: the free-text redaction scan is *not* the largest gap — it contradicts the repo's declared-field-class design (D-1298). Start with the blanket anon revoke or the owner-column widening.
 - To run the policy suites in a session container: install `postgresql-17` from the PGDG repository, then `su postgres -c "cd <repo> && supabase/check.sh [suite ...]"`.
+
+## Slice 3 — the sweep widened to other owner columns
+
+`supabase/company-roles-student-data.check.sql` now also keys on `student`, `subject_user_id`, `person_id`, `author`, `author_id`, `owner`, `recipient`, `requester`, `donor`, `target_student`, `auth_user_id`, `person_account` and `reader_id`. **79** tables are probed (was 64); 15 are named as unprobed because their owner cannot read the row back (mostly event tables written by staff or the system: `*_share_events`, `capture_*`, `registration_audit_event`, `skill_claim*` and similar), not counted as safe.
+
+Two new company-role reads, both on the list with a reason:
+
+| Read | Verdict |
+| --- | --- |
+| `approval_request` by five console roles (`data_steward`, `incident_responder`, `platform_admin`, `support_agent`, `trust_officer`) | Intended. `console:operate` reads every request; `requester` is the staff member who asked, a column-name match and not a student record. |
+| `course_review_authors` by `moderator` | Intended read, **enforcement open**. `docs/ROLE-LAUNCH-REGISTER.md` promises "author access strictly audited"; the table read writes no audit row. Privacy owner: audit each authorship read, or serve it through a definer function that does. |
+
+Proof: floor 80 fails ("only 79 tables probed"); deleting one new exception fails ("not on the list: approval_request/support_agent"); all 115 suites pass.
