@@ -62,6 +62,7 @@ At the root there are also Markdown reports and registers (for example `CLAUDE.m
 | `app/src/kernel/` | What every domain may depend on and nothing more: the clock, errors, id source and the in-process event sink. Strict import rules apply; there is no allowlist. |
 | `app/src/domains/` | The new domain modules, each with a public `index.ts` and `domain/`, `application/` and `adapters/` inside: `calendar`, `identity`, `policy`, `tasks` and `today`. Only a domain's `index.ts` may be imported from outside it. |
 | `app/src/composition/` | The shell that joins the domains to the legacy app: `domains.ts` wires them to a `LegacyHost`, `react.ts` fills that host from the legacy store, and `shadow.ts` and `TodayShadow.tsx` run the new Today read model beside the old one. |
+| `app/src/finance/` | The GTM financial model, an internal planning tool mounted as the Console's `Finance model` tab: the pure 36-month engine, scenarios, input registry and validation, exports and the dashboard. Local sample data only; every output is a forecast. Specified in `docs/business/finance/FINANCIAL_MODEL_SPEC.md`. |
 | `app/src/components/` | React components shared by screens. The largest directory. |
 | `app/src/lib/` | Logic, stores, registers and their tests. Subdirectories include `governance/`, `ops/`, `trust/`, `integration/`, `billing/`, `config/`, `docs/` and others. |
 | `app/src/state/` | The store: context provider, reducer, state shape, persistence, migrations of stored shape. |
