@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it } from 'vitest';
 import { EXPERIENCE_FLAGS, MODULE_FLAG_NAMES, experienceFlags, moduleFlags } from '../../lib/experience-flags';
 import { toolkitFlags, TOOLKIT_FLAGS } from '../../lib/toolkit/flags';
 import { communityFlags, COMMUNITY_FLAGS } from '../../community/flags';
-import { Releases, flagRows } from './Releases';
+import { Releases, flagRows, STANDALONE_FLAGS } from './Releases';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let host: HTMLDivElement;
@@ -23,23 +23,24 @@ const modules = { ...moduleFlags({}), cost_planner: 'production' as const };
 // Flags that live outside experience-flags.ts, switched on the way a build would: by environment variable.
 const toolkit = toolkitFlags({ VITE_AI_TOOLKIT: 'sandbox', VITE_TOOLKIT_DATA_UPLOAD: 'preview', VITE_TOOLKIT_RESEARCH: 'sandbox' });
 const community = communityFlags({ VITE_COMMUNITY_FEED: 'production', VITE_COMMUNITY_IMAGES: 'sandbox' });
+const standalone = { language: 'preview', lifeEvents: 'sandbox', momentFeedback: 'production', learnerPathways: 'preview' } as const;
 
 const mount = (filter = '') =>
   act(async () =>
-    root.render(<Releases env="Staging" filter={filter} experience={experience} modules={modules} toolkit={toolkit} community={community} language="preview" />),
+    root.render(<Releases env="Staging" filter={filter} experience={experience} modules={modules} toolkit={toolkit} community={community} standalone={standalone} />),
   );
 const cells = (label: string) => [...host.querySelectorAll('tbody tr')].find((tr) => tr.querySelector('th')?.textContent === label);
 
 it('lists every flag the registry has, so the tab cannot fall behind it', async () => {
   await mount();
-  const ids = flagRows(experience, modules, toolkit, community, 'preview').map((r) => r.id);
+  const ids = flagRows(experience, modules, toolkit, community, standalone).map((r) => r.id);
   for (const key of Object.keys(EXPERIENCE_FLAGS)) expect(ids, key).toContain(`experience.${key}`);
   for (const name of MODULE_FLAG_NAMES) expect(ids, name).toContain(`module.${name}`);
   for (const key of Object.keys(TOOLKIT_FLAGS)) expect(ids, key).toContain(`toolkit.${key}`);
   for (const key of Object.keys(COMMUNITY_FLAGS)) expect(ids, key).toContain(`community.${key}`);
-  expect(ids).toContain('language');
+  for (const key of Object.keys(STANDALONE_FLAGS)) expect(ids, key).toContain(`standalone.${key}`);
   expect(host.querySelectorAll('tbody tr')).toHaveLength(
-    Object.keys(EXPERIENCE_FLAGS).length + MODULE_FLAG_NAMES.length + Object.keys(TOOLKIT_FLAGS).length + Object.keys(COMMUNITY_FLAGS).length + 1,
+    Object.keys(EXPERIENCE_FLAGS).length + MODULE_FLAG_NAMES.length + Object.keys(TOOLKIT_FLAGS).length + Object.keys(COMMUNITY_FLAGS).length + Object.keys(STANDALONE_FLAGS).length,
   );
 });
 
@@ -51,6 +52,11 @@ it('shows flags enabled outside experience-flags.ts, which a build can turn on b
   expect(cells('Community: feed')?.textContent).toContain('On in production');
   expect(cells('Community: images')?.textContent).toContain('Sandbox');
   expect(cells('Language')?.textContent).toContain('Preview');
+  // The three Codex found after the registries: each gates a user-facing feature and a build can switch it on.
+  expect(cells('Life events')?.textContent).toContain('Sandbox');
+  expect(cells('Moment feedback')?.textContent).toContain('On in production');
+  expect(cells('Learner pathways')?.textContent).toContain('Preview');
+  expect(cells('Learner pathways')?.textContent).toContain('does not follow the institutional preview');
 });
 
 it('says what the registries themselves say: unbuilt toolkit flags cannot be on, high-risk community flags never follow preview', async () => {

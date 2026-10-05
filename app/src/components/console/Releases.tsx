@@ -12,12 +12,15 @@ import {
 import { UNBUILT, TOOLKIT_FLAGS, type ToolkitFlags } from '../../lib/toolkit/flags';
 import { COMMUNITY_FLAGS, COMMUNITY_FLAG_SPECS, type CommunityFlag, type CommunityFlags } from '../../community/flags';
 import { LANGUAGE_FLAG } from '../../lib/locale';
+import { LIFE_EVENTS_FLAG } from '../../lib/lifeevents';
+import { MOMENT_FEEDBACK_FLAG } from '../../lib/momentfeedback';
+import { LEARNER_PATHWAYS_FLAG } from '../../lib/learner-pathways';
 import { matches, type ViewProps } from './Fields';
 
 /**
  * What this build ships: the feature flags it was built with, from the four
  * registries that hold them (experience, module, toolkit and community) and the
- * one standalone language flag, and the state each was built in.
+ * four standalone flags, and the state each was built in.
  *
  * Read-only on purpose. A flag is fixed when a build is made (a `VITE_*`
  * variable, read once into `lib/experience-flags.ts`), and a school's own
@@ -94,6 +97,43 @@ const TOOLKIT_LABELS: Record<keyof ToolkitFlags, { label: string; about?: string
 
 const UNBUILT_ABOUT = 'Cannot be switched on from this build: nothing is built behind it yet, so it reads off whatever the environment says.';
 
+/**
+ * The flags that live on their own in the module they gate rather than in a
+ * registry. Typed, so a flag added here is a flag the tab shows.
+ */
+export type StandaloneFlags = Record<'language' | 'lifeEvents' | 'momentFeedback' | 'learnerPathways', FeatureState>;
+
+export const STANDALONE_FLAGS: StandaloneFlags = {
+  language: LANGUAGE_FLAG,
+  lifeEvents: LIFE_EVENTS_FLAG,
+  momentFeedback: MOMENT_FEEDBACK_FLAG,
+  learnerPathways: LEARNER_PATHWAYS_FLAG,
+};
+
+/** What each says of itself, from the module that holds it; nothing is added. */
+const STANDALONE_LABELS: Record<keyof StandaloneFlags, { label: string; about?: string }> = {
+  language: { label: 'Language' },
+  lifeEvents: { label: 'Life events', about: 'Gates the life-events panel. Absent is off.' },
+  momentFeedback: { label: 'Moment feedback', about: 'Gates the feedback prompts and the panel. Absent is off.' },
+  learnerPathways: { label: 'Learner pathways', about: 'Absent is off, and does not follow the institutional preview.' },
+};
+
+/**
+ * Every source file that reads a four-state flag from the build environment,
+ * and so every one this tab must read. `Releases.sources.test.ts` scans the
+ * tree for such files and fails when one is missing from this list, so the tab
+ * cannot silently omit a flag a build can turn on.
+ */
+export const FLAG_SOURCES = [
+  'community/flags.ts',
+  'lib/experience-flags.ts',
+  'lib/learner-pathways.ts',
+  'lib/lifeevents.ts',
+  'lib/locale.ts',
+  'lib/momentfeedback.ts',
+  'lib/toolkit/flags.ts',
+] as const;
+
 /** `communityFeed` → `feed`, `moderationConsole` → `moderation console`: the words after the `Community:` prefix. */
 const communityWords = (key: string): string => key.replace(/([A-Z])/g, ' $1').toLowerCase().replace(/^community /, '');
 
@@ -113,7 +153,7 @@ const humanise = (name: string): string => {
 
 interface Row {
   id: string;
-  group: 'Experience' | 'Module' | 'Toolkit' | 'Community' | 'Language';
+  group: 'Experience' | 'Module' | 'Toolkit' | 'Community' | 'Standalone';
   label: string;
   state: FeatureState;
   about?: string;
@@ -124,7 +164,7 @@ export function flagRows(
   modules: ModuleFlags,
   toolkit: ToolkitFlags,
   community: CommunityFlags,
-  language: FeatureState,
+  standalone: StandaloneFlags,
 ): Row[] {
   const rows: Row[] = [
     ...(Object.keys(FLAG_LABELS) as (keyof ExperienceFlags)[]).map((key) => ({
@@ -157,7 +197,13 @@ export function flagRows(
         ? `${COMMUNITY_FLAG_SPECS[key].purpose} High risk: never follows the preview default, and production is refused.`
         : COMMUNITY_FLAG_SPECS[key].purpose,
     })),
-    { id: 'language', group: 'Language', label: 'Language', state: language },
+    ...(Object.keys(STANDALONE_LABELS) as (keyof StandaloneFlags)[]).map((key) => ({
+      id: `standalone.${key}`,
+      group: 'Standalone' as const,
+      label: STANDALONE_LABELS[key].label,
+      state: standalone[key],
+      about: STANDALONE_LABELS[key].about,
+    })),
   ];
   return rows.sort((a, b) => STATE_RANK[a.state] - STATE_RANK[b.state] || a.label.localeCompare(b.label));
 }
@@ -176,22 +222,22 @@ export function Releases({
   modules = MODULE_FLAGS,
   toolkit = TOOLKIT_FLAGS,
   community = COMMUNITY_FLAGS,
-  language = LANGUAGE_FLAG,
+  standalone = STANDALONE_FLAGS,
 }: Pick<ViewProps, 'env' | 'filter'> & {
   experience?: ExperienceFlags;
   modules?: ModuleFlags;
   toolkit?: ToolkitFlags;
   community?: CommunityFlags;
-  language?: FeatureState;
+  standalone?: StandaloneFlags;
 }) {
-  const all = flagRows(experience, modules, toolkit, community, language);
+  const all = flagRows(experience, modules, toolkit, community, standalone);
   const rows = all.filter((r) => matches(filter, r.label, r.id, STATE_WORD[r.state], r.group, r.about ?? UNDESCRIBED));
   const live = all.filter((r) => r.state !== 'off').length;
 
   return (
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
       <Notice>
-        Read-only. These are the states this {env.toLowerCase()} build was made with, from the experience, module, toolkit and community flag registries and the language flag. A flag is fixed when the build is made, and a school’s own
+        Read-only. These are the states this {env.toLowerCase()} build was made with, from the experience, module, toolkit and community flag registries and the four standalone flags. A flag is fixed when the build is made, and a school’s own
         policy can narrow it further at run time, so nothing here changes either. To change one, set its build variable and make a new build.
       </Notice>
       <SectionLabel aside={`${live} of ${all.length} not off`}>Feature flags</SectionLabel>

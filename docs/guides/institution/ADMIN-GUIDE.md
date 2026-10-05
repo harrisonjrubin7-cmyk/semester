@@ -77,7 +77,7 @@ The Console's tabs, in order: `Command center`, `Support` (only when support tic
 
 - `Approvals` and `Break-glass` run on a duty matrix (`DUTIES` in `app/src/lib/ops/console.ts`): the requester and the approvers are different parties. A break-glass grant to a production tenant is requested by the `engineering` seat and approved by the `security` and `founder` seats.
 - `Audit` shows the audit-chain status and events, newest first.
-- `Releases and flags` is read-only. It lists the feature flags this build was made with, from the experience, module, toolkit and community flag registries and the language flag, each with its state, most live first. A flag is fixed when a build is made and a school's own policy can narrow it further at run time, so nothing on this tab changes either; to change a flag, set its build variable and make a new build.
+- `Releases and flags` is read-only. It lists the feature flags this build was made with, from the experience, module, toolkit and community flag registries and the four standalone flags, each with its state, most live first. A flag is fixed when a build is made and a school's own policy can narrow it further at run time, so nothing on this tab changes either; to change a flag, set its build variable and make a new build.
 - `Finance model` is Semester's own internal planning tool, for its staff and not a customer feature. It runs on local sample data, reads nothing from a ledger or bank, saves nothing, and labels every figure a forecast on planning assumptions.
 - Saved views and the last-open tab live on the server, not in browser storage.
 
