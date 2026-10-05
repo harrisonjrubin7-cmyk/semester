@@ -24,6 +24,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
 | `ops/` | Operating registers rendered from data under `app/src/lib/ops/`: billing, claims, customer commitments, master plan, operations console, strategic boundaries. See [`ops/README.md`](../../ops/README.md). |
 | `operations/` | The launch command center and the go/no-go scorecard (Phase 0 baseline): the ordered Phase 1 plan, stop conditions, dated exceptions. Sequences work; approves no launch. |
+| `output/` | Generated PDF reports built from `docs/business/` by `npm run generate:gtm-pdf` (from `app/`): the GTM playbook, executive summary, board and investor summary, and the customer-safe pilot pack. Generated files; edit the Markdown and the manifest in `app/scripts/gtm-pdf/`, then rebuild. |
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
@@ -64,6 +65,7 @@ At the root there are also Markdown reports and registers (for example `CLAUDE.m
 | `app/src/kernel/` | What every domain may depend on and nothing more: the clock, errors, id source and the in-process event sink. Strict import rules apply; there is no allowlist. |
 | `app/src/domains/` | The new domain modules, each with a public `index.ts` and `domain/`, `application/` and `adapters/` inside: `calendar`, `identity`, `policy`, `tasks` and `today`. Only a domain's `index.ts` may be imported from outside it. |
 | `app/src/composition/` | The shell that joins the domains to the legacy app: `domains.ts` wires them to a `LegacyHost`, `react.ts` fills that host from the legacy store, and `shadow.ts` and `TodayShadow.tsx` run the new Today read model beside the old one. |
+| `app/src/finance/` | The GTM financial model, an internal planning tool mounted as the Console's `Finance model` tab: the pure 36-month engine, scenarios, input registry and validation, exports and the dashboard. Local sample data only; every output is a forecast. Specified in `docs/business/finance/FINANCIAL_MODEL_SPEC.md`. |
 | `app/src/components/` | React components shared by screens. The largest directory. |
 | `app/src/lib/` | Logic, stores, registers and their tests. Subdirectories include `governance/`, `ops/`, `trust/`, `integration/`, `billing/`, `config/`, `docs/` and others. |
 | `app/src/state/` | The store: context provider, reducer, state shape, persistence, migrations of stored shape. |

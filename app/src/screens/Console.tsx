@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -52,9 +52,11 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
  * browser storage; `console.test.tsx` asserts it.
  */
 
+const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
+
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
 
-type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
+type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'finance' | 'evidence' | 'views';
 
 const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'command', label: 'Command center' },
@@ -63,6 +65,7 @@ const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'audit', label: 'Audit' },
   { id: 'customers', label: 'Customers' },
   { id: 'figures', label: 'Figures' },
+  { id: 'finance', label: 'Finance model' },
   { id: 'evidence', label: 'Evidence' },
   { id: 'views', label: 'Views' },
 ];
@@ -261,6 +264,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'audit' && <Audit {...viewProps} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
+        {tab === 'finance' && (
+          <Suspense fallback={<p role="status">Loading the finance model…</p>}>
+            <FinancialModel />
+          </Suspense>
+        )}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views

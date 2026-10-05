@@ -65,7 +65,8 @@
     "design-system:report": "node scripts/design-system-report.mjs --with-tests",
     "design-system:css": "node scripts/design-system-css.mjs",
     "design-system:check": "npm run tokens:check && node scripts/design-system-audit.mjs && node scripts/design-system-css.mjs && vitest run src/lib/designsystem.test.ts src/lib/designtooling.test.ts src/styles/hex.test.ts src/styles/tokens.test.ts src/styles/rawvalues.test.ts",
-    "design-system:baseline": "node scripts/design-system-audit.mjs --write-baseline"
+    "design-system:baseline": "node scripts/design-system-audit.mjs --write-baseline",
+    "generate:gtm-pdf": "node scripts/generate-gtm-pdf.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
@@ -86,6 +87,7 @@
     "axe-core": "^4.13.0",
     "jsdom": "^30.1.1",
     "jsqr": "^1.4.0",
+    "marked": "^16.4.2",
     "oxlint": "^1.85.0",
     "qrcode-generator": "^2.0.4",
     "typescript": "~7.0.2",
