@@ -257,6 +257,14 @@ describe('the report', () => {
     expect(run(REPORT, [...t.args, '--strict']).code).toBe(1);
   });
 
+  it('escapes a backslash before the pipe in a table cell, so a value cannot swallow its own escape', () => {
+    // The file holds `a\|b rgba(1,1,1,1)`; the finding quotes it, and the report writes it into a cell.
+    const t = tree({ files: { 'components/Esc.tsx': "export const s = 'a\\|b rgba(1,1,1,1)';\n" } });
+    const out = run(REPORT, t.args).out;
+    expect(out).toContain('a\\\\\\|b'); // a, two backslashes, then the escaped pipe
+    expect(out).not.toMatch(/a\\\\\|b/); // not the pipe-only escaping, where one backslash survives to eat the next
+  });
+
   it('appends to --out, so it can write to an Actions step summary', () => {
     const t = tree();
     const out = join(t.dir, 'summary.md');

@@ -33,7 +33,8 @@ const ENFORCEMENT = [
   ['Accessibility', '`src/a11y/*.test.*`, `smoke:a11y`', 'Landmarks, labels, focus, modal, motion, axe on rendered screens.', 'The assistive-technology pass has not been run (AT-PASS-PROTOCOL).'],
 ];
 
-const cell = (s) => String(s).replace(/\|/g, '\\|');
+// Backslash first: escaping the pipe alone lets a value ending in `\` swallow the escape that follows it.
+const cell = (s) => String(s).replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 const table = (head, rows) => [`| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.map(cell).join(' | ')} |`)].join('\n');
 const count = (o) => Object.values(o).reduce((a, b) => a + b, 0);
 
