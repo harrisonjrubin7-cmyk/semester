@@ -49,8 +49,8 @@ Audit only; nothing here changed behaviour. Start with the adoption audit.
 | Contrast on every ground | `npm test` | `app/src/lib/contrast.test.ts` |
 | Adoption figures | `npm run census:design` | `app/scripts/design-census.mjs` |
 | The generated token export is in step with `tokens.css` and `look.ts` | `npm run tokens:check` | `app/src/lib/tokenexport.test.ts` |
-| No new raw colour, z-index, shadow, radius, duration or easing, and no raw CSS spacing or type, beyond each file's ledger | `npm run design-system:audit` | `app/src/styles/designsystem.ts`, `rawbudget.ts` |
-| Every Figma mapping resolves to a real token or pattern | `npm run design-system:check` | `docs/design-system/figma-mapping.json` |
+| No new raw `.tsx` z-index, shadow, radius, duration, easing or font size beyond the baseline; no undefined custom property; every Figma mapping path resolves | `npm run design-system:audit` | `app/scripts/design-system-audit.mjs`, `app/design-system-baseline.json` |
+| No new raw colour, z-index, shadow, duration, easing, spacing or type in a stylesheet, or colour function in `.tsx`, beyond each file's ledger | `npm run design-system:css` | `app/src/styles/rawvalues.ts`, `rawbudget.ts` |
 | One report of all of the above, uploaded by CI | `npm run design-system:report` | [`docs/design-system/README.md`](../design-system/README.md) |
 | Every design-system component has a story; the gallery does not read the clock | `npm test` | `app/src/gallery/gallery.test.tsx` |
 | Visual regression of the stories against a runner-made baseline (not in CI) | `npm run gallery:shots` | `app/scripts/gallery-shots.mjs` |

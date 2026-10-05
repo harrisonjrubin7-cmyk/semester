@@ -1,82 +1,51 @@
-# Design-system tooling
+# Semester design-system workflow
 
-What keeps Claude Code, the React app, the CSS tokens and Figma in step, and the
-commands that check it. The design itself is described in
-[`DESIGN-SYSTEM-GUIDE.md`](../../DESIGN-SYSTEM-GUIDE.md) and [`docs/design/`](../design/README.md);
-this folder is the tooling around it. What existed before it was added is in the
-[baseline](SEMESTER-DESIGN-SYSTEM-BASELINE.md).
+**Order of authority:** `lib/look.ts` → `styles/tokens.css` → `lib/tokenexport.ts` → `design-tokens/semester.tokens.json` (generated) → `docs/design-system/FIGMA-MAPPING.md` → Figma.
 
-## Which file wins
-
-In order. When two disagree, the earlier is right and the later is stale.
-
-1. [`app/src/lib/look.ts`](../../app/src/lib/look.ts) — every colour, on 13 grounds and 11 accents.
-2. [`app/src/styles/tokens.css`](../../app/src/styles/tokens.css) — the semantic CSS tokens.
-3. [`app/src/lib/tokenexport.ts`](../../app/src/lib/tokenexport.ts) — builds the export from those two.
-4. [`app/design-tokens/semester.tokens.json`](../../app/design-tokens/semester.tokens.json) — **generated.**
-5. The contract tests in `app/src/styles/` and `app/src/a11y/`.
-6. Figma — approved visual intent, never an authority over the above. See [FIGMA-MAPPING.md](FIGMA-MAPPING.md).
-
-## Never hand-edit
+**Never hand-edit:**
 
 | File | Regenerate with |
-|---|---|
+| --- | --- |
 | `app/design-tokens/semester.tokens.json` | `npm run tokens:export` |
-| `app/src/styles/rawbudget.ts` | `npm run design-system:audit -- --fix` |
+| `app/design-system-baseline.json` | `npm run design-system:baseline` |
+| `app/src/styles/rawbudget.ts` | `npm run design-system:css -- --fix` |
 | `app/src/styles/budget.ts` | `npm run lint:styles -- --fix` |
-| `app/reports/design-system/*` | `npm run design-system:report` (git-ignored) |
+| `app/reports/` | `npm run design-system:report` (git-ignored) |
 
-## Commands
+## Skills
+- `/build-semester-ui <screen> [figma-url]` — build or change UI from existing primitives.
+- `/audit-semester-design-sync [figma-url] [path]` — read-only report.
+- `/create-semester-component <name> <screens>` — spec-first shared component.
 
-All from `app/`.
+## Figma MCP (each developer, once)
+```bash
+claude mcp add --scope project --transport http figma https://mcp.figma.com/mcp
+claude    # then run /mcp and authenticate in the browser
+```
+`.mcp.json` holds only the endpoint; authentication is interactive and per developer. CI never authenticates to Figma.
 
-| Command | What it does | Fails when |
-|---|---|---|
-| `npm run tokens:check` | Runs `lib/tokenexport.test.ts`, which holds the committed export to `tokens.css` and `look.ts`. Builds no export of its own. | The export is stale or hand-edited |
-| `npm run design-system:audit` | Counts raw colours, z-indexes, shadows, radii, durations and easings, CSS spacing and CSS type per file against `src/styles/rawbudget.ts`. `-- --fix` rewrites the ledger. | A file has more than the ledger allows, or fewer (run `--fix`) |
-| `npm run design-system:check` | `tokens:check`, the audit and the Figma mapping check, all of them every time | Any of the three fails |
-| `npm run design-system:report` | The same, plus the style and accessibility contract tests, written to `app/reports/design-system/design-system-report.md` and `.json` | A blocker or a major finding |
+## Checks (from `app/`)
+| Command | What it does |
+| --- | --- |
+| `npm run tokens:check` | Fails if the committed JSON differs from `buildTokenExport` |
+| `npm run design-system:audit` | Raw values vs the hex LEDGER, undefined variables, tokens.css ↔ export, Figma mapping — file:line |
+| `npm run design-system:css` | Raw colours, z-indexes, shadows, durations, easings, spacing and type in the stylesheets, and colour functions in `.tsx`, against `src/styles/rawbudget.ts`. `-- --fix` rewrites the ledger; it may shrink and may not grow |
+| `npm run design-system:report` | Writes `app/reports/design-system/report.md` + `.json`, runs 8 existing contract tests |
+| `npm run design-system:check` | Token drift, the audit, the stylesheet ledger and the tests that hold them. CI runs this, then the report, and uploads `app/reports/design-system/` |
+| `npm run design-system:baseline` | Rewrites `app/design-system-baseline.json` from the tree. It only records what is measured, so a raised number shows in the diff |
 
-The audit's rules and what it leaves to other checks are written at the top of
-[`app/src/styles/designsystem.ts`](../../app/src/styles/designsystem.ts). In short: a raw value
-*used* by a rule counts; a custom-property *definition* does not; quoted hex in
-`.tsx` is `hex.test.ts`'s; font size, leading and spacing in `.tsx` are
-`lint:styles`'s.
-
-CI runs the check and the report in `ci.yml`, with no credentials, and uploads the
-report as an artifact.
+## Adding a mapping
+Add a row to `FIGMA-MAPPING.md` whose first path cell is `semantic.<name>` or `primitive.<name>` as it appears in the JSON. Run `npm run design-system:audit`; a path that does not resolve fails as *missing*.
 
 ## Reading the report
+**Violations** (blocker/major) fail CI. **Warnings** (minor) are raw inline values with the token to use instead; they do not fail until a baseline is agreed. **Unmapped candidates** are exported semantic tokens no Figma variable uses yet — informational.
 
-Open `design-system-report.md`. Its findings table is the only thing that fails a
-build; the ledger counts are debt already carried, shown so the trend is
-visible.
+## Two ledgers, and why
 
-| Severity | Meant | Example |
-|---|---|---|
-| Blocker | A source of truth is broken | Export out of step; a contract test failing; a Figma variable mapped to a token that does not exist |
-| Major | Drift got worse | A raw value beyond the ledger; a required token with no mapping |
-| Minor | Bookkeeping or a note | The ledger can shrink (`--fix`); an obsolete mapping whose token still exists |
+`.tsx` raw values are counted by `design-system-audit.mjs` against `app/design-system-baseline.json`, with the line and the token to use. Stylesheets, and colour functions in `.tsx`, are counted by `design-system:css` against `src/styles/rawbudget.ts`. Neither counts what the other does, so a value is never on two lists; what each leaves to the other, to `hex.test.ts` and to `lint:styles` is written at the top of `src/styles/rawvalues.ts`. A raw value *used* by a rule counts; a custom-property *definition* (`--x: #fff;`) is the token being decided and does not.
 
-A raw value flagged by the audit usually has an answer already: the message names
-the token (`--layer-overlay`, `--ease-standard`, `--sp-4`, `--type-sm`…). If the
-value has to stay, raise that file's row with `--fix` and say why in the same
-diff, where a reviewer sees a number go up with your name on it.
+If a value has to stay, raise that file's row with the matching command and say why in the same diff, where a reviewer sees a number go up with your name on it.
 
-## Claude skills
+## Not done
 
-Invoke from Claude Code in this repository:
-
-| Skill | Use it to |
-|---|---|
-| `/build-semester-ui` | Add or restyle a screen or component from the existing patterns, tokens and states |
-| `/audit-semester-design-sync <path> [figma url]` | Audit a route or component against the system and optionally a Figma frame. Read-only; produces a report |
-| `/create-semester-component` | Decide whether a new shared component is justified, and specify it |
-
-They live in [`.claude/skills/`](../../.claude/skills/). `CLAUDE.md` holds the
-rules they follow.
-
-## Figma MCP
-
-Authenticate once per developer, interactively. The steps are in
-[FIGMA-MAPPING.md](FIGMA-MAPPING.md#setup-once-per-developer).
+Fixing the carried raw values; fetched Figma names (the mapping holds proposed ones until a file is connected); visual regression in CI; any Figma write.

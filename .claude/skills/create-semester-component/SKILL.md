@@ -53,8 +53,8 @@ From `app/`: `npx tsc -b`, `npm run lint`, the new tests, `npm run design-system
 then the full `npm test` and `npm run test:shuffle`. Look at it in the app
 (`.claude/skills/run/SKILL.md`).
 
-If it maps to a Figma component, add a row to `docs/design-system/figma-mapping.json`
-with the real code path; do not create the component *because* Figma has one.
+If it maps to a Figma component, add a row to the Components table in
+`docs/design-system/FIGMA-MAPPING.md` with the real code path; do not create the component *because* Figma has one.
 
 ## 5 · Report
 

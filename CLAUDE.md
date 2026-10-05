@@ -166,8 +166,10 @@ UI dependency, framework, Tailwind, Storybook or package; there are none.
 
 **Values.** Use semantic variables and the scales. Do not write a raw colour,
 spacing, radius, shadow, z-index, font size, duration or easing in feature UI.
-`npm run design-system:audit` counts them per file against
-`src/styles/rawbudget.ts`; the ledger may shrink and may not grow. A raw value
+`npm run design-system:audit` reports `.tsx` ones with `file:line` against
+`app/design-system-baseline.json`, and `npm run design-system:css` counts
+stylesheet ones per file against `src/styles/rawbudget.ts`; both ledgers may
+shrink and may not grow (`-- --fix` / `design-system:baseline` rewrite them). A raw value
 is allowed where it is the definition of a token (a custom property in
 `tokens.css`, `app.css`'s `:root`, `industry.css`, `look.ts`), in a test
 fixture, in a generated file, or in `ALLOWED_RAW`/`hex.test.ts` with a reason.
@@ -194,7 +196,7 @@ Figma MCP (`.mcp.json`; each developer authenticates with `/mcp`). Read it;
 never write to a Figma file unless the user asked. Map a Figma variable to an
 exported token path and a Figma component to an existing React or CSS pattern
 *before* creating anything, and record what does not map in
-`docs/design-system/FIGMA-MAPPING.md` and `figma-mapping.json`. A Figma frame
+`docs/design-system/FIGMA-MAPPING.md`, whose `semantic.*`/`primitive.*` paths the audit checks against the export. A Figma frame
 that omits loading, empty, error, disabled, permission, keyboard, focus or
 narrow states does not remove them from the task. Do not add a raw value for
 pixel parity.
@@ -202,8 +204,8 @@ pixel parity.
 **Done means** the gates above pass and these pass too, from `app/`:
 
 ```bash
-npm run design-system:check   # token export in step, raw values within the ledger, Figma mapping valid
-npm run design-system:report  # the same plus the contract tests, written to reports/design-system/
+npm run design-system:check   # token export in step, no undefined variable, raw values within both ledgers, Figma mapping resolves
+npm run design-system:report  # the audit plus the contract tests, written to reports/design-system/report.md
 ```
 
 and your summary names the files changed, the existing assets reused, the

@@ -127,23 +127,22 @@ jobs:
       # ── The design system, held to its own sources ──────────────────────────
       #
       # `lint` above holds the type scale, the labels and the vocabulary; the
-      # suite below holds the token layer and the contrast. Three questions
-      # were left that no step asked by name, and a student sees all three:
+      # suite below holds the token layer and the contrast. Four questions were
+      # left that no step asked by name, and a student sees all of them:
       #
       #   · is `design-tokens/semester.tokens.json` the file `tokens.css` and
       #     `look.ts` produce? (`lib/tokenexport.test.ts` knew; nothing said so
       #     in a place a reviewer reads.)
-      #   · did this change add a raw colour, z-index, shadow, radius, duration
-      #     or easing, or raw CSS spacing or type, beyond what each file
-      #     already carries? (`src/styles/rawbudget.ts`; `hex.test.ts` covers
-      #     only quoted hex in `.tsx`.)
-      #   · does every Figma mapping resolve to a token and a component that
-      #     exist? (`docs/design-system/figma-mapping.json`; empty until a
-      #     Figma file is connected, and then it cannot go stale quietly.)
+      #   · does any style use a custom property nothing defines?
+      #   · did this change add a raw value, beyond what each file already
+      #     carries? `.tsx` is `app/design-system-baseline.json`'s, with the line
+      #     and the token to use; stylesheets and colour functions are
+      #     `src/styles/rawbudget.ts`'s; `hex.test.ts` holds quoted hex.
+      #   · does every path in `docs/design-system/FIGMA-MAPPING.md` resolve in
+      #     the export, so a mapping cannot go stale quietly?
       #
-      # It runs every gate every time so one red run names everything wrong.
-      # No Figma credential is used or needed: the manifest is validated
-      # against the committed export, and nothing here signs in to anything.
+      # No Figma credential is used or needed: the mapping is checked against
+      # the committed export, and nothing here signs in to anything.
       - name: Design-system gates
         working-directory: app
         run: npm run design-system:check

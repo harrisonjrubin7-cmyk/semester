@@ -167,6 +167,7 @@ const ROWS: Row[] = [
   ['pipeline:docs', 'Documentation impact check (pull requests)', 'pipeline', 'C3', 'platform', '', '', 'A change to a gateway, edge function, screen or script can merge without the page that describes it; the docs tests in npm test still hold the generated and held pages.', null, 'RB-08', '.github/workflows/docs.yml'],
   ['pipeline:contrast', 'Daily contrast sweep', 'pipeline', 'C3', 'platform', '', '', 'A colour regression ships a day later than it could be found.', null, 'RB-08', '.github/workflows/contrast.yml'],
   ['pipeline:hawkscan', 'Dynamic security scan', 'pipeline', 'C3', 'security', '', '', 'Scans pause; no runtime effect.', null, 'RB-08', '.github/workflows/hawkscan.yml'],
+  ['pipeline:workflow-lab', 'Workflow Lab checks (standalone Next.js app)', 'pipeline', 'C3', 'platform', '', '', 'The Workflow Lab app loses its automated typecheck, lint, test and build; the Semester app is unaffected.', null, 'RB-08', '.github/workflows/workflow-lab.yml'],
   ['pipeline:codeql', 'Static analysis of the source (CodeQL)', 'pipeline', 'C3', 'security', '', '', 'Source analysis pauses; no runtime effect. Skipped, not red, where code scanning is unavailable.', null, 'RB-08', '.github/workflows/codeql.yml'],
 ];
 

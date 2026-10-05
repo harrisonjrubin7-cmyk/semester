@@ -14,10 +14,6 @@
     "census:exports": "node scripts/exports.mjs .",
     "census:design": "node scripts/design-census.mjs",
     "tokens:export": "TOKENS=write vitest run src/lib/tokenexport.test.ts",
-    "tokens:check": "node scripts/design-system.mjs tokens",
-    "design-system:audit": "node scripts/design-system.mjs audit",
-    "design-system:report": "node scripts/design-system.mjs report",
-    "design-system:check": "node scripts/design-system.mjs check",
     "census:arch": "node scripts/arch-census.ts",
     "icons": "node scripts/icons.mjs",
     "mirror": "node scripts/mirror.mjs",
@@ -63,7 +59,13 @@
     "docs:stale": "node scripts/docs-stale.mjs",
     "release:draft": "node scripts/release-draft.mjs",
     "sbom": "npm sbom --sbom-format cyclonedx --omit dev",
-    "test:publication": "vitest run --config vitest.publication.config.ts"
+    "test:publication": "vitest run --config vitest.publication.config.ts",
+    "tokens:check": "vitest run src/lib/tokenexport.test.ts",
+    "design-system:audit": "node scripts/design-system-audit.mjs",
+    "design-system:report": "node scripts/design-system-report.mjs --with-tests",
+    "design-system:css": "node scripts/design-system-css.mjs",
+    "design-system:check": "npm run tokens:check && node scripts/design-system-audit.mjs && node scripts/design-system-css.mjs && vitest run src/lib/designsystem.test.ts src/lib/designtooling.test.ts src/styles/hex.test.ts src/styles/tokens.test.ts src/styles/rawvalues.test.ts",
+    "design-system:baseline": "node scripts/design-system-audit.mjs --write-baseline"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",

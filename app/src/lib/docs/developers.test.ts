@@ -531,7 +531,7 @@ describe('the testing guide', () => {
 
   it('names the other workflows by their file, name and trigger', () => {
     const table = rows(section(guide, '## What CI runs').split('Other workflows:')[1]);
-    expect(table.length).toBe(11);
+    expect(table.length).toBe(12);
     for (const [name, file, trigger] of table) {
       const f = file.replace(/`/g, '');
       const yml = read(`.github/workflows/${f}`);

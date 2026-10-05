@@ -28,12 +28,14 @@ family, or a Figma frame against its implementation. Say what is out of scope.
 From `app/`:
 
 ```bash
-npm run design-system:report     # tokens, raw values, Figma mapping, contract tests -> reports/design-system/
+npm run design-system:report     # audit, Figma mapping and contract tests -> reports/design-system/report.md
+npm run design-system:audit      # file:line violations and warnings; --json for a machine-readable copy
+npm run design-system:css        # raw values in stylesheets against src/styles/rawbudget.ts
 npm run census:design            # adoption: Page frames, ActionButton vs raw <button>, EmptyState, hex
 npm run lint                     # includes lint:styles and lint:labels
 ```
 
-Read `reports/design-system/design-system-report.md`. Do not re-derive what it
+Read `reports/design-system/report.md`. Do not re-derive what it
 says. The numbers it carries are debt already on the ledger; a finding is what
 is beyond it, or what no instrument covers.
 
@@ -81,7 +83,7 @@ Only with a URL, and only the read tools. Use `get_variable_defs` and
 `get_design_context` on the node. Treat the result as intent, not markup to
 copy. Map each Figma variable to a path in `semester.tokens.json` and each
 component to an existing pattern; list what does not map in the report and
-suggest the row for `docs/design-system/figma-mapping.json`. If the Figma MCP is
+suggest the row for `docs/design-system/FIGMA-MAPPING.md` (one variable per row, first column `semantic.<name>` or `primitive.<name>`). If the Figma MCP is
 not authenticated, say so and continue with the code-only audit.
 
 ## 8 · Report

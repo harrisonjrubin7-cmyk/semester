@@ -4,7 +4,7 @@ import { cloud, cloudConfigured } from '../lib/cloud';
 import { newId } from '../lib/idb';
 import { READ_ONLY } from '../lib/readonly';
 import type { PersonalTask } from '../lib/types';
-import { idbSnapshotPort, openEngineStore } from '../lib/sync/engine/persistent';
+import { idbSnapshotPort, openEngineStore, sealedSnapshotPort } from '../lib/sync/engine/persistent';
 import { taskEngineOn } from '../lib/sync/engine/ownership';
 import { supabaseTaskRows } from '../lib/sync/engine/rows';
 import { TaskSync } from '../lib/sync/engine/tasks';
@@ -64,11 +64,14 @@ export function useTaskEngine({ accountId, online, tasks, apply }: Options): Tas
     let gone = false;
     void (async () => {
       const db = await cloud();
-      const store = await openEngineStore(idbSnapshotPort(accountId));
+      const device = deviceId();
+      // Sealed in the vault, with the plain store as the fallback and the migration source (persistent.ts).
+      const port = sealedSnapshotPort(accountId, { who: { tenantId: 'self', personId: accountId, deviceId: device }, plain: idbSnapshotPort(accountId) });
+      const store = await openEngineStore(port);
       const engine = new SyncEngine({
         store,
         transport: tasksTransport(supabaseTaskRows(db, accountId), { now: Date.now }),
-        identity: { tenantId: 'self', userId: accountId, deviceId: deviceId() },
+        identity: { tenantId: 'self', userId: accountId, deviceId: device },
         now: Date.now,
         newId: () => newId('c-'),
       });
