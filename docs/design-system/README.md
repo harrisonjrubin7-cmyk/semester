@@ -2,7 +2,15 @@
 
 **Order of authority:** `lib/look.ts` → `styles/tokens.css` → `lib/tokenexport.ts` → `design-tokens/semester.tokens.json` (generated) → `docs/design-system/FIGMA-MAPPING.md` → Figma.
 
-**Never hand-edit:** `app/design-tokens/semester.tokens.json`, `app/reports/`.
+**Never hand-edit:**
+
+| File | Regenerate with |
+| --- | --- |
+| `app/design-tokens/semester.tokens.json` | `npm run tokens:export` |
+| `app/design-system-baseline.json` | `npm run design-system:baseline` |
+| `app/src/styles/rawbudget.ts` | `npm run design-system:css -- --fix` |
+| `app/src/styles/budget.ts` | `npm run lint:styles -- --fix` |
+| `app/reports/` | `npm run design-system:report` (git-ignored) |
 
 ## Skills
 - `/build-semester-ui <screen> [figma-url]` — build or change UI from existing primitives.
@@ -21,11 +29,23 @@ claude    # then run /mcp and authenticate in the browser
 | --- | --- |
 | `npm run tokens:check` | Fails if the committed JSON differs from `buildTokenExport` |
 | `npm run design-system:audit` | Raw values vs the hex LEDGER, undefined variables, tokens.css ↔ export, Figma mapping — file:line |
+| `npm run design-system:css` | Raw colours, z-indexes, shadows, durations, easings, spacing and type in the stylesheets, and colour functions in `.tsx`, against `src/styles/rawbudget.ts`. `-- --fix` rewrites the ledger; it may shrink and may not grow |
 | `npm run design-system:report` | Writes `app/reports/design-system/report.md` + `.json`, runs 8 existing contract tests |
-| `npm run design-system:check` | All of the above that gate a PR |
+| `npm run design-system:check` | Token drift, the audit, the stylesheet ledger and the tests that hold them. CI runs this, then the report, and uploads `app/reports/design-system/` |
+| `npm run design-system:baseline` | Rewrites `app/design-system-baseline.json` from the tree. It only records what is measured, so a raised number shows in the diff |
 
 ## Adding a mapping
 Add a row to `FIGMA-MAPPING.md` whose first path cell is `semantic.<name>` or `primitive.<name>` as it appears in the JSON. Run `npm run design-system:audit`; a path that does not resolve fails as *missing*.
 
 ## Reading the report
 **Violations** (blocker/major) fail CI. **Warnings** (minor) are raw inline values with the token to use instead; they do not fail until a baseline is agreed. **Unmapped candidates** are exported semantic tokens no Figma variable uses yet — informational.
+
+## Two ledgers, and why
+
+`.tsx` raw values are counted by `design-system-audit.mjs` against `app/design-system-baseline.json`, with the line and the token to use. Stylesheets, and colour functions in `.tsx`, are counted by `design-system:css` against `src/styles/rawbudget.ts`. Neither counts what the other does, so a value is never on two lists; what each leaves to the other, to `hex.test.ts` and to `lint:styles` is written at the top of `src/styles/rawvalues.ts`. A raw value *used* by a rule counts; a custom-property *definition* (`--x: #fff;`) is the token being decided and does not.
+
+If a value has to stay, raise that file's row with the matching command and say why in the same diff, where a reviewer sees a number go up with your name on it.
+
+## Not done
+
+Fixing the carried raw values; fetched Figma names (the mapping holds proposed ones until a file is connected); visual regression in CI; any Figma write.

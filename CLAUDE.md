@@ -137,3 +137,78 @@ foreground is *strongest* on. A light ground's void is two steps darker.
 `lib/contrast.test.ts` walks the whole ramp for both rungs — keep it that way,
 and measure a new ground against every surface it has rather than the one that
 flatters it.
+
+## Building UI: Semester's design system
+
+Semester is a calm academic workspace, not a dashboard theme. Build screens
+native to it: a clear hierarchy, one primary action, useful content, consistent
+density, and every state a student can reach. Do not reach for generic SaaS
+patterns — decorative card grids, gradient surfaces, pill badges, one-off
+shadows. The fastest way to write a screen is to copy the last one; the rules
+below exist because by November the last one is whatever was written last.
+
+**Which file wins, in order.** When two disagree, the earlier one is right and
+the later one is stale.
+
+1. `app/src/lib/look.ts` decides every colour (13 grounds, 11 accents), measured by `lib/contrast.test.ts`.
+2. `app/src/styles/tokens.css` is the semantic CSS-token authority: `--surface-*`, `--text-*`, `--border-*`, `--action-*`, `--status-*`, `--focus-*`, `--layer-*`, `--motion-*` and the rest.
+3. `app/src/lib/tokenexport.ts` produces the export from 1 and 2.
+4. `app/design-tokens/semester.tokens.json` is **generated. Never edit it.** `npm run tokens:export` rewrites it and `lib/tokenexport.test.ts` fails when it drifts. The docs (`docs/DESIGN-TOKENS.md`, `DESIGN-SYSTEM-GUIDE.md`) copy these; they are stale where they differ.
+5. The tests in `app/src/styles/` and `app/src/a11y/` are design contracts, not suggestions. Extend them; do not loosen one to get green.
+6. Figma is evidence of approved visual intent, never an authority over any of the above.
+
+**Before writing UI,** search `components/ui.tsx`, `components/Page.tsx`,
+`components/unity/`, `gallery/stories.tsx` and the nearest screen in
+`screens/`, and say which existing pattern you are reusing. A new shared
+component needs the case made in `docs/design/GOVERNANCE.md` §2; a wrapper or a
+feature-local variant needs evidence that the shared one cannot serve. Add no
+UI dependency, framework, Tailwind, Storybook or package; there are none.
+
+**Values.** Use semantic variables and the scales. Do not write a raw colour,
+spacing, radius, shadow, z-index, font size, duration or easing in feature UI.
+`npm run design-system:audit` reports `.tsx` ones with `file:line` against
+`app/design-system-baseline.json`, and `npm run design-system:css` counts
+stylesheet ones per file against `src/styles/rawbudget.ts`; both ledgers may
+shrink and may not grow (`-- --fix` / `design-system:baseline` rewrite them). A raw value
+is allowed where it is the definition of a token (a custom property in
+`tokens.css`, `app.css`'s `:root`, `industry.css`, `look.ts`), in a test
+fixture, in a generated file, or in `ALLOWED_RAW`/`hex.test.ts` with a reason.
+
+**Accessibility.** Native elements first. Visible keyboard focus. An accessible
+name on every icon-only control (`npm run lint:labels`). A field's label,
+description and error are programmatically related (`components/FieldMessage.tsx`).
+Colour is never the only status signal: pair it with a word or glyph
+(`lib/status.ts`). Honour reduced motion by animating through `--motion-*`.
+
+**Responsive.** The breakpoints are `lib/media.ts` (600 / 840 / 1200 / 1600),
+the gutter is `--page-pad`, the touch target is `--target-primary` (44px).
+Critical content and the primary action survive at 320px; nothing important
+depends on hover. Contracts: `styles/{breakpoints,gutter,taps,density,stacking}.test.ts`.
+
+**States.** Cover the ones that apply: default, loading, empty, error with a
+way back, disabled, success, long content, and permission. Use the shared
+`EmptyState`, `Notice`, `ErrorState`, `LoadingState` and `PermissionNotice`
+(`components/ui.tsx`, `components/unity/States.tsx`) and the vocabulary in
+`docs/design/RECOVERY-STATE-LIBRARY.md`.
+
+**Figma.** Only when a Figma URL, node, component or variable is given, use the
+Figma MCP (`.mcp.json`; each developer authenticates with `/mcp`). Read it;
+never write to a Figma file unless the user asked. Map a Figma variable to an
+exported token path and a Figma component to an existing React or CSS pattern
+*before* creating anything, and record what does not map in
+`docs/design-system/FIGMA-MAPPING.md`, whose `semantic.*`/`primitive.*` paths the audit checks against the export. A Figma frame
+that omits loading, empty, error, disabled, permission, keyboard, focus or
+narrow states does not remove them from the task. Do not add a raw value for
+pixel parity.
+
+**Done means** the gates above pass and these pass too, from `app/`:
+
+```bash
+npm run design-system:check   # token export in step, no undefined variable, raw values within both ledgers, Figma mapping resolves
+npm run design-system:report  # the audit plus the contract tests, written to reports/design-system/report.md
+```
+
+and your summary names the files changed, the existing assets reused, the
+states and accessibility covered, and the design-system gaps still open. Three
+skills do this work: `/build-semester-ui`, `/audit-semester-design-sync` (read
+only until asked to implement) and `/create-semester-component`.
