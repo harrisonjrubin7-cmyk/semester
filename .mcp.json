@@ -3,6 +3,10 @@
     "figma": {
       "type": "http",
       "url": "https://mcp.figma.com/mcp"
+    },
+    "middleware": {
+      "type": "http",
+      "url": "https://mcp.middleware.io/mcp"
     }
   }
 }
