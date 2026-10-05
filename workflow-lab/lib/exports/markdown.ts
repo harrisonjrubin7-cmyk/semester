@@ -8,7 +8,7 @@ import { buildPrompt, githubPlan, supabasePrompt } from "@/lib/workflow-router/p
 
 /** Escape text for a Markdown table cell. */
 export const mdCell = (s: string | number | null | undefined) =>
-  String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+  String(s ?? "").replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
 
 export function recommendationToMarkdown(r: Recommendation, task?: string): string {
   const lines: string[] = [];

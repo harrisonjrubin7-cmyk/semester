@@ -164,6 +164,10 @@ describe("benchmark report exports", () => {
 
 describe("small helpers", () => {
   it("mdCell escapes pipes and newlines", () => expect(mdCell("a|b\nc")).toBe("a\\|b c"));
+  it("mdCell escapes backslashes first, so a trailing backslash cannot un-escape the pipe after it", () => {
+    expect(mdCell("a\\|b")).toBe("a\\\\\\|b");
+    expect(mdCell("C:\\dir\\")).toBe("C:\\\\dir\\\\");
+  });
   it("safeFilename strips path and control characters", () => {
     expect(safeFilename("../../Etc/Passwd \"x\"")).toBe("etc-passwd-x");
     expect(safeFilename("a..b...c")).toBe("a.b.c");
