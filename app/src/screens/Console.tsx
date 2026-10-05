@@ -25,7 +25,6 @@ import { Customers } from '../components/console/Customers';
 import { Figures } from '../components/console/Figures';
 import { StandardsCrosswalk } from '../components/console/StandardsCrosswalk';
 import { Evidence } from '../components/console/Evidence';
-import { Releases } from '../components/console/Releases';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
 import { SupportQueue } from '../components/console/SupportQueue';
@@ -53,6 +52,8 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
  * browser storage; `console.test.tsx` asserts it.
  */
 
+// Its own chunk: it reads six flag modules the rest of the console never needs, and the console's opening cost is budgeted.
+const Releases = lazy(() => import('../components/console/Releases').then((m) => ({ default: m.Releases })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
@@ -271,7 +272,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
             <FinancialModel />
           </Suspense>
         )}
-        {tab === 'releases' && <Releases env={env} filter={filter} />}
+        {tab === 'releases' && (
+          <Suspense fallback={<p role="status">Loading the release flags…</p>}>
+            <Releases env={env} filter={filter} />
+          </Suspense>
+        )}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views
