@@ -59,7 +59,12 @@
     "docs:stale": "node scripts/docs-stale.mjs",
     "release:draft": "node scripts/release-draft.mjs",
     "sbom": "npm sbom --sbom-format cyclonedx --omit dev",
-    "test:publication": "vitest run --config vitest.publication.config.ts"
+    "test:publication": "vitest run --config vitest.publication.config.ts",
+    "tokens:check": "vitest run src/lib/tokenexport.test.ts",
+    "design-system:audit": "node scripts/design-system-audit.mjs",
+    "design-system:report": "node scripts/design-system-report.mjs --with-tests",
+    "design-system:check": "npm run tokens:check && node scripts/design-system-audit.mjs && vitest run src/lib/designsystem.test.ts src/styles/hex.test.ts src/styles/tokens.test.ts",
+    "design-system:baseline": "node scripts/design-system-audit.mjs --write-baseline"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
