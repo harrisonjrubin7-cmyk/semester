@@ -191,6 +191,14 @@ const cweIdentity = /^(?:CWE-)?([1-9]\d*)$/i;
 // HawkScan 6.5.0 writes the WASC category (for example "Information Leakage")
 // into the summary field named cweId. A category is not a CWE number.
 const categoryIdentity = /^(?!Unknown$)(?!Server$)[A-Za-z][A-Za-z ]{1,80}$/;
+// Hawk's summary stores the WASC category. hawkop's detail category for the
+// same email finding is the ZAP bucket name. They are one group.
+const categoryAliases = new Map([['Information Disclosure', 'Information Leakage']]);
+
+function categoryPhrase(value) {
+  if (typeof value !== 'string' || !categoryIdentity.test(value)) return null;
+  return categoryAliases.get(value) ?? value;
+}
 
 function cweNumber(value) {
   const match = cweIdentity.exec(String(value ?? ''));
@@ -214,8 +222,8 @@ function findingGroup(finding, source, mode) {
     if (cwe === null) throw new Error(`${source} finding has unsupported CWE identity`);
     return `CWE-${cwe}/${severity}`;
   }
-  const category = source === 'summary' ? finding?.cweId : finding?.category;
-  if (typeof category !== 'string' || !categoryIdentity.test(category)) throw new Error(`${source} finding has unsupported CWE identity`);
+  const category = categoryPhrase(source === 'summary' ? finding?.cweId : finding?.category);
+  if (category === null) throw new Error(`${source} finding has unsupported CWE identity`);
   if (source === 'detail' && cweNumber(finding?.cwe_id) === null) throw new Error('detail finding has unsupported CWE identity');
   return `category:${category}/${severity}`;
 }
@@ -278,7 +286,7 @@ export function assertReconciledFindingEvidence(summary, detail) {
     if (typeof plugin !== 'string' || !/^[a-z\d._:-]{1,128}$/i.test(plugin) || plugins.has(plugin)) throw new Error('Missing, unsafe or duplicate detail plugin identity');
     plugins.add(plugin);
     const expected = groups.get(key);
-    if (!expected) throw new Error(`Unmatched independent finding group ${key}`);
+    if (!expected) throw new Error(`Unmatched independent finding group ${key}; summary groups ${[...groups.keys()].join(' | ')}`);
     assertCompleteFindingEvidence(finding);
     if (finding.total_paths !== expected.count) throw new Error(`Finding count mismatch for ${key}: summary ${expected.count}, detail ${finding.total_paths}`);
     const actual = findingPathCounts(finding.paths, 'detail');

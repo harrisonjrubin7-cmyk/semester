@@ -809,6 +809,16 @@ test('reconciliation accepts Hawk 6.5.0 WASC categories in the summary field nam
   assert.deepEqual(reconcile(summary, detail), detail.findings);
 });
 
+test('reconciliation pairs WASC Information Leakage with hawkop Information Disclosure', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = categoryFixture();
+  detail.findings[0].category = 'Information Disclosure';
+  assert.deepEqual(reconcile(summary, detail), detail.findings);
+  const mismatched = categoryFixture();
+  mismatched.detail.findings[0].category = 'Session Management';
+  assert.throws(() => reconcile(mismatched.summary, mismatched.detail), /Unmatched independent finding group category:Session Management\/LOW/);
+});
+
 test('reconciliation still rejects a 10-path page when the summary identity is a category', () => {
   const reconcile = reconciliationValidator();
   const { summary, detail } = categoryFixture();
