@@ -61,6 +61,15 @@ it('says what the registries themselves say: unbuilt toolkit flags cannot be on,
   expect(cells('Community: feed')?.textContent).toContain('Communities, memberships, finite explained feeds, study sessions.');
 });
 
+it('finds a row by the words the table shows for it, including the fallback for a flag the registry does not describe', async () => {
+  await mount('not described in the flag registry');
+  const rows = [...host.querySelectorAll('tbody tr')];
+  expect(rows.length).toBeGreaterThan(0);
+  for (const tr of rows) expect(tr.textContent).toContain('Not described in the flag registry.');
+  expect(rows.map((tr) => tr.querySelector('th')?.textContent)).toContain('Adaptive learning');
+  expect(rows.map((tr) => tr.querySelector('th')?.textContent)).not.toContain('Workflow builder');
+});
+
 it('does not claim to list every flag, since it lists the registries it reads', async () => {
   await mount();
   expect(host.textContent).toContain('experience, module, toolkit and community flag registries');

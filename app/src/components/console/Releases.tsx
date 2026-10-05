@@ -36,6 +36,9 @@ import { matches, type ViewProps } from './Fields';
  * where it does not, the row says so rather than the tab inventing a sentence.
  */
 
+/** Said in the row, and searched by the filter, so a query taken from the table finds the row. */
+const UNDESCRIBED = 'Not described in the flag registry.';
+
 const STATE_WORD: Record<FeatureState, string> = {
   production: 'On in production',
   sandbox: 'Sandbox',
@@ -163,7 +166,7 @@ const COLUMNS: Column<Row>[] = [
   { id: 'flag', header: 'Flag', rowHeader: true, cell: (r) => r.label },
   { id: 'state', header: 'State in this build', cell: (r) => <strong>{STATE_WORD[r.state]}</strong> },
   { id: 'group', header: 'Kind', cell: (r) => r.group },
-  { id: 'about', header: 'What it controls', cell: (r) => r.about ?? <span style={{ color: 'var(--app-dim)' }}>Not described in the flag registry.</span> },
+  { id: 'about', header: 'What it controls', cell: (r) => r.about ?? <span style={{ color: 'var(--app-dim)' }}>{UNDESCRIBED}</span> },
 ];
 
 export function Releases({
@@ -182,7 +185,7 @@ export function Releases({
   language?: FeatureState;
 }) {
   const all = flagRows(experience, modules, toolkit, community, language);
-  const rows = all.filter((r) => matches(filter, r.label, r.id, STATE_WORD[r.state], r.group, r.about));
+  const rows = all.filter((r) => matches(filter, r.label, r.id, STATE_WORD[r.state], r.group, r.about ?? UNDESCRIBED));
   const live = all.filter((r) => r.state !== 'off').length;
 
   return (
