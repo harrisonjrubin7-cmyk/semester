@@ -123,7 +123,7 @@ export const STORIES: Story[] = [
     render: () => (
       <div style={{ display: 'grid', gap: 'calc(20px * var(--text-scale, 1))' }}>
         <ActionPreview subject="Spring schedule" says="Sends a copy of your schedule to your advisor." doesNotChange="Your registration." recovery={{ kind: 'undo', how: 'Remove the share in Settings.' }} />
-        <ActionPreview subject="Draft essay" says="Submits the draft to your instructor." subjectTo="Your instructor’s deadline." recovery={{ kind: 'request', how: 'ask your instructor to reopen it.' }} provenance={fromSourceLabel('student_entered')} />
+        <ActionPreview subject="Draft essay" says="Submits the draft to your instructor." subjectTo="Your instructor’s deadline." recovery={{ kind: 'request', how: 'ask your instructor to reopen it.' }} whoCanHelp="Your instructor, or the Help desk." provenance={fromSourceLabel('student_entered')} />
         <ActionPreview subject="Course" says="Deletes the course and its notes." recovery={{ kind: 'none' }} />
       </div>
     ),

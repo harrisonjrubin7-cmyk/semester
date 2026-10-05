@@ -17,10 +17,10 @@
 | 7 | Iconography | `components/Icons.tsx`, `icons.data.ts` (108 shapes), `scripts/icons.mjs`, `lint:labels`; kit `guidelines/iconography*.html` | Exists |
 | 8 | Navigation | `lib/nav.ts`, `lib/tabbar.ts`, `components/nav/*`, `docs/design/RESPONSIVE_SHELL_AUDIT.md`; five destinations | Exists; Rail/TabBar still inline in `App.tsx` (extraction planned, D2) |
 | 9 | Universal page shell | `docs/design/LAYOUT-CONTRACT.md`, `components/Page.tsx`, kit `PageHeader` | Exists |
-| 10 | Trust / source / freshness | `lib/source.ts`, `docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md`, spec §4 (five axes) | Exists; app `SourceBadge` is word-only (glyph gap) |
+| 10 | Trust / source / freshness | `lib/source.ts`, `docs/TRUST-CUES-AND-SOURCE-PRESENTATION.md`, spec §4 (five axes) | Exists, enforced: `components/SourceBadge.tsx` draws glyph + word + meaning (`SourceBadge.test.tsx`); `COMPONENT_INVENTORY.md` still says word-only, and is stale on that row |
 | 11 | Workflow state | `docs/design/INTERACTION-STANDARDS.md` §3–4, `unity/DecisionTrail.tsx`, `StepStatus` | Exists |
 | 12 | Form and validation | `INTERACTION-STANDARDS.md`, `components/FieldMessage.tsx`, `a11y/fielderror.test.ts` | Exists; `TextField` wrapper is "New" in the inventory |
-| 13 | AI answer / citation / uncertainty | `docs/ai-governance/09-user-transparency.md`, `STATUS_AND_PROVENANCE_AUDIT.md`, spec §5.5 | Exists as rules; **no composed app component** |
+| 13 | AI answer / citation / uncertainty | `docs/ai-governance/09-user-transparency.md`, `STATUS_AND_PROVENANCE_AUDIT.md`, spec §5.5 | Exists: `intelligence/Disclosure.tsx` is the answer receipt (AI-assisted badge, evidence, information used, uncertainty, policy) in both `ai/Chat.tsx` and `ai/Panel.tsx`; the human handoff was missing and is now `onAskHuman` |
 | 14 | Responsive standard | `docs/RESPONSIVE-COMPONENT-SPEC.md`, `lib/media.ts` (600/840/1200/1600), `RESPONSIVE-CONTRACTS.md` | Exists, enforced |
 | 15 | Accessibility standard | `docs/accessibility/*`, spec §6, `docs/WCAG-UI-AUDIT-SCORECARD.md`; `src/a11y/` tests | Exists; conformance is *not* claimed (spec §6.8) |
 | 16 | Component library | `components/ui.tsx`, `components/unity/`, `gallery/stories.tsx`; inventory in `docs/design/COMPONENT_INVENTORY.md` | Exists, partial |
@@ -38,7 +38,7 @@
 | Progressive disclosure L1/L2/L3 | `PROGRESSIVE-DISCLOSURE-RULES.md` | None |
 | Full capability parity across devices | `CAPABILITY-PARITY-MATRIX.md` | None |
 | No hover-only controls, no colour-only status | `a11y/tellings.test.ts`, `taps.test.ts` | None |
-| AI shows source, policy, limits, handoff | Rules exist | Not yet one component |
+| AI shows source, policy, limits, handoff | Receipt in `intelligence/Disclosure.tsx`; handoff added | One receipt, not one `AIResponse` component |
 | No unsupported customer or compliance claims | `PUBLIC-CLAIMS-APPROVAL-REGISTER.md` | The Pilot page and homepage must cite it |
 | "Create a separate style per module: no" | One token source; ledgers may shrink, never grow | None |
 
@@ -52,5 +52,5 @@
 ## 4. What would make this finished
 
 1. Owner decides which of the five missing named screens to build first (Term Plan, Advisor Caseload, Tenant Overview, Operations Inbox, Pilot page).
-2. Add `whoCanHelp` to `ActionPreview`; ship glyph + word `SourceBadge`; compose `AIResponse` — each its own pull request with a failing-then-passing test.
+2. Adopt `ActionPreview` (it has `whoCanHelp` now, but no screen uses it yet; 23 dialogs implement their own).
 3. Wire the matrix's test requirements into the gallery stories (`gallery.test.tsx` already requires a story per component).

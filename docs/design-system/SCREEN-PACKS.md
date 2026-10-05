@@ -12,7 +12,7 @@ Every screen answers all seven, with the same components in the same order (Laye
 | What matters now? | `NextSteps` / one `ObjectCard` with the single primary action | 1 |
 | What can I do? | One primary `Button`; `QuickActions` for the rest; consequence via `ActionPreview` | 1–2 |
 | What is official? | `SourceBadge` (official) + `SourceLine` beside each fact; `OpenIn` to the system of record | 1–2 |
-| What is stale or uncertain? | `SourceBadge` stale/estimated/review + age in `ProvenanceChips`; `AIResponse` confidence | 1–2 |
+| What is stale or uncertain? | `SourceBadge` stale/estimated/review + age in `ProvenanceChips`; `IntelligenceDisclosure` uncertainty | 1–2 |
 | Who can help? | `SupportHandoff` (office, hours, reference); advisor via `AskAHuman` | 2 |
 | Where can I go deeper? | `ScreenGuide`, `DecisionTrail`, `PolicyBadge`, `DataTable` | 3 |
 
@@ -56,7 +56,7 @@ Cells name components. **Gap** marks a row with no component today.
 | Registration Readiness | `PageHeader`; registration window in `Notice` | Holds and prerequisites that block today | One primary per blocker; `ActionPreview` before any official step | Registrar-owned items `official`; `OpenIn` registrar | Estimated eligibility labelled; stale holds flagged | `SupportHandoff` registrar with hours | `StepStatus` of readiness; `PolicyBadge` |
 | Course Home | `ContextBar` (course, term, section) | Next due item | Open material; ask | Syllabus `official`; student notes `personal` | Imported LMS data with age | Instructor/TA contact; `AskAHuman` | `DataTable` grades; `ScreenGuide` |
 | Course Studio | `PageHeader` + course in `ContextBar` | Unpublished changes | Publish via `ActionPreview` (names who sees it) | Published vs draft word on each item; `PolicyBadge` for integrity policy | AI-drafted content marked `ai`; unreviewed flagged | Instructional designer `SupportHandoff` | `DecisionTrail` of edits; version history. `ApprovalBanner` when review required |
-| Student AI Copilot | `PageHeader`; data scope listed in `AIResponse` | The answer plus its limits | Follow-ups; actions open `ActionPreview` | `sources[n]` with kind; "not official" stated | `confidence`; "could not find in your sources" | `AIResponse` handoff to human office | `PolicyBadge` for AI policy; source anchors |
+| Student AI Copilot | `PageHeader`; data scope listed in `AIResponse` | The answer plus its limits | Follow-ups; actions open `ActionPreview` | `sources[n]` with kind; "not official" stated | `confidence`; "could not find in your sources" | `IntelligenceDisclosure` + its "See who can help" handoff to `screens/Help.tsx` | `PolicyBadge` for AI policy; source anchors |
 | Support Center | `PageHeader` "Support" | Open request status | Start request; `SupportHandoff` | Office hours/policies `official` | Last staff update age | Named office + reference | `DecisionTrail` of the request |
 | Advisor Caseload | `PageHeader` + cohort in `ContextBar` | Students needing contact today (`HealthBadge` with driver) | Message/schedule via `ActionPreview` (consent shown by `ConsentBadge`) | `SourceBadge` per field; consent gate | Data age per student; `HealthBadge` unknown band | Escalate: `SupportHandoff` student support | `DataTable`; `DecisionTrail`. **Gap: no named screen** |
 | Registrar Console | `PageHeader`; term + environment in `SystemContextBar` | Exceptions awaiting decision | Decide with `ActionPreview`; `ApprovalBanner` | System-of-record rows `official` | Sync age; conflicts as `SaveState` Conflict | Registrar lead; audit contact | `DecisionTrail`; `DataTable` |
@@ -72,7 +72,7 @@ Cells name components. **Gap** marks a row with no component today.
 
 | Pack | Screens | Missing |
 |---|---|---|
-| Student OS | Today, Action Center, Course Home, AI Copilot | Action Center kit prototype is archetype-only; no composed `AIResponse` app component |
+| Student OS | Today, Action Center, Course Home, AI Copilot | Action Center kit prototype is archetype-only |
 | Planning/registration | Academic Path, Term Plan, Registration Readiness | Term Plan is not a named screen |
 | Course Studio | Course Studio | Review/approval state (`ApprovalBanner`) not wired on publish |
 | Student success/support | Support Center, Advisor Caseload | Advisor Caseload is not a named screen |

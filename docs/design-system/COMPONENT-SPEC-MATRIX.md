@@ -56,7 +56,7 @@
 | **ObjectCard** | surfaces | The universal decision card | kind; statuses; provenance; explanation; metadata; primary+secondary; tone pending/danger | `object_card_action_pressed` | One primary; provenance before explanation |
 | **ContextBar** | surfaces | The object a screen is about, with states and actions | kicker, title, states, actions | — | Page title is an h1 once per route |
 | **NextSteps** | surfaces | Ordered next safe actions, one line of why each | steps[label, why, aside] | `next_step_pressed` | Ordered list; each item a button/link with the object named |
-| **ActionPreview** | surfaces | Say what will happen before it happens | subject; says; exactly; doesNotChange; subjectTo; recovery undo/request/none; provenance | `action_previewed · action_confirmed · action_cancelled` | Required before any consequential action; **add `whoCanHelp`** (open gap) |
+| **ActionPreview** | surfaces | Say what will happen before it happens | subject; says; exactly; doesNotChange; subjectTo; recovery undo/request/none; provenance | `action_previewed · action_confirmed · action_cancelled` | Required before any consequential action; `whoCanHelp` (optional) names who to ask |
 | **Dialog** | surfaces | Modal confirmation naming object, consequence, recovery | destructive; confirm/cancel labels; inline | `dialog_confirmed · dialog_cancelled` | Focus lands on Cancel; Escape closes; `modal` test |
 | **QuickActions** | surfaces | Short list of common actions | actions[label, icon] | `quick_action_pressed` | Buttons with names; no hover-only reveal |
 | **OpenIn** | surfaces | Hand off to an official or external system | targets; about | `official_system_opened` | Warns before leaving; names the owner |
@@ -160,8 +160,8 @@ Family defaults are in the family table of §4; this table repeats them per comp
 
 ## 5. Open gaps this matrix surfaces
 
-- `ActionPreview` has no `whoCanHelp` (COMPONENT_INVENTORY row). The seven screen questions require it.
-- `SourceBadge` in the app is word-only; the kit and `STATUS-SOURCE-VISUAL-LANGUAGE` require glyph + word.
-- `AIResponse` has no composed app component; pieces live in `ai/Chat.tsx`, `ai/Turns.tsx`, `intelligence/Disclosure.tsx`.
+- `ActionPreview` has `whoCanHelp` now, but only the gallery uses the component; the 23 hand-written dialogs in `COMPONENT_INVENTORY.md` have not adopted it.
+- `AIResponse` is the kit's single component; in the app the same job is split between `ai/Answer.tsx` (text), `intelligence/Disclosure.tsx` (receipt) and `ai/Actions.tsx`. The receipt carries the badge, sources, information used, uncertainty and policy, and now a route to a person.
+- `COMPONENT_INVENTORY.md` is stale on `SourceBadge` (it already draws glyph + word).
 - Offline and Forbidden cells are contracts. Few have a test; each row's test requirement is the minimum for that to change.
 - Event names here are proposals; none has been through D-005.
