@@ -164,10 +164,66 @@ Supabase project.
 
 ## 7. What `semester-shared-core` holds that the monorepo does not
 
-See §8 once classified. By path alone the repository has 160 files with no
-same-path counterpart: campus profiles and community, account activity,
-managed-AI usage, a course sandbox, LMS server code, a "Google shell", and ten
-migrations that exist only on `Semester2`.
+The repository is an older, smaller fork (last commit 1 October). Of the 929
+files at the same relative path in both trees, 643 differ, and in nearly all of
+them the monorepo is the refactored, newer one. Several shared-core-only UI
+features were removed from the monorepo on purpose (`SIMPLIFY-AUDIT.md` E1, E2,
+E4). The 160 shared-core-only paths group into the capabilities below. This
+comparison was made by reading code; none of it was run.
+
+| Capability | Class | Action |
+| --- | --- | --- |
+| Moderation, reports, blocks, rate limits; account deletion; course sandbox backend; family policy; learning evidence; study journal; tab groups and maturity gates; identity/capability/audit model | present, usually a superset | **keep in the monorepo** |
+| Campus direct messages | policy conflict: `COMMUNITIES-REGISTER.md` PRV-003, MNT-010 say no DMs | **obsolete**, needs a product decision to revisit |
+| Assignment center, graph calculator, Google-style shell and tabs, launcher, Ahead and Tonight screens, `experimental.ts`, root `supabase/*.sql` base schema, most `docs/*` | removed or superseded on purpose | **obsolete** |
+| Campus profiles (peer-visible, per-field audience) | partial: school claim exists, the profile does not | port only if wanted, as new forward migrations on `public.schools` / `profiles.school_id` |
+| Campus orgs and connections UI | backend present (`organizations`, `connections` migrations, `app/src/lib/orgs.ts`), **no screen uses it** | port the UI onto the existing RPCs |
+| Org events with RSVP and waitlist | missing; `COMMUNITIES-REGISTER.md` EVT-004 is "not-started" and needs an approval workflow | build as EVT-004; the shared-core schema is only a sketch |
+| Account activity timeline | partial (`access_log` and `activity` cover other ground) | port only if wanted |
+| Canvas / Brightspace server adapter (`lms.ts`) | missing as an `InstitutionAdapter`; `adapters.ts` is intentionally empty until a school approves | port as an adapter; not registered yet |
+| Us-top-50 school resources data | missing; only `vanderbilt.json` is bundled | port through the school-pack / `add-school` path, re-verifying links |
+| Gateway student access history, multi-membership selection | missing; the monorepo rejects ambiguous membership deliberately | optional, design-dependent |
+
+### Small fixes worth porting (one pull request each)
+
+| Fix | Why | Verified here |
+| --- | --- | --- |
+| Service worker: do not cache requests with `Authorization`, a query string, or `api/`, `auth/`, `__shared` paths | The monorepo's last handler in `app/public/sw.js` caches every same-origin GET that reaches it, and the gateway is same-origin (`app/api/institution/[...path].ts`). Shared-core's `sw.js` has the exclusions; the monorepo's has none. | handler shape confirmed by reading both files; **whether gateway responses are actually cached in production is not tested** |
+| `idb.ts`: resolve a write only on `transaction.oncomplete`, reject on abort; `clearSnapshots` rejects on failure | A rolled-back write is reported as done, which matters for erase confirmation | reported by the comparison, not re-read |
+| `push.ts` `leave()`: remove the server row first, then unsubscribe, and throw on failure | Today a failed server removal orphans the endpoint with no retry | reported, not re-read |
+| Device archive as one ZIP with attachment bytes and a SHA-256 manifest | Backups omit attachment files today | reported, not re-read |
+| Import: per-request processing notice before a syllabus goes to AI; 7-day diagnostics expiry; `versionStudySources` | small gaps | reported, not re-read |
+
+"Reported, not re-read" means the comparison agent found it and this record has
+not checked it. Treat these as leads.
+
+### Migrations: do not replay shared-core's ten
+
+The shared-core files say so themselves ("Do not apply to the newer upstream
+school/profile schema without reconciliation"). Replayed on production they
+would:
+
+- fail on `create table public.connections` and the bare `create function`
+  statements for the connection helpers and `private.school_of()`;
+- **silently overwrite** the monorepo's organization functions
+  (`org_standing`, `org_can`, `start_organization`, …) with versions that read
+  `profiles.campus_school_id`, breaking organization row-level security;
+- revoke and re-grant `public.profiles` columns, clobbering the pinned
+  `account_role` / `school_id` grants from `20260921211500`;
+- run out of order, between `20260922*` and `20260923210000`, on a database that
+  has already applied later migrations.
+
+Anything wanted from `Semester2` is a new forward migration in the monorepo's
+timeline. That database stays as it is.
+
+### Open questions this comparison could not answer
+
+- Does "Signed out means account sync is off" or "nothing leaves the device at
+  all" match what the app does? The two repos assert different sentences
+  (`signedout.test.ts`); check against the claims register before either is
+  published.
+- Was shared-core's multi-membership selection rejected by design or never
+  built?
 
 ## 8. Route and redirect map
 
