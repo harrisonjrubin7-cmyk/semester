@@ -224,9 +224,13 @@ function findingPathCounts(records, source) {
   const counts = new Map();
   for (const record of records) {
     const method = record?.method;
-    const value = source === 'summary' ? record?.path : record?.uri;
+    // Hawk's JSON summary removes the configured host, so the site root is "".
+    let value = source === 'summary' ? record?.path : record?.uri;
+    if (value === '') value = '/';
     if (typeof method !== 'string' || !/^[A-Z]{1,16}$/i.test(method) || typeof value !== 'string' || !/^(https?:\/\/|\/)/.test(value)) {
-      throw new Error(`${source} finding has unsupported method or path evidence`);
+      const methodKind = typeof method !== 'string' ? typeof method : /^[A-Z]{1,16}$/i.test(method) ? 'verb' : 'other';
+      const pathKind = typeof value !== 'string' ? typeof value : value === '' ? 'empty' : value.startsWith('/') ? 'slash' : /^https?:/i.test(value) ? 'absolute' : /^[a-z][a-z0-9+.-]*:/i.test(value) ? 'scheme' : 'relative';
+      throw new Error(`${source} finding has unsupported method or path evidence (${methodKind}/${pathKind})`);
     }
     let url;
     try { url = new URL(value, host); } catch { throw new Error(`${source} finding has malformed path evidence`); }

@@ -442,6 +442,24 @@ const reconciliationValidator = () => {
   return findingEvidence.assertReconciledFindingEvidence;
 };
 
+test('reconciliation treats a host-stripped empty summary path as the site root', () => {
+  const reconcile = reconciliationValidator();
+  const { summary, detail } = reconciliationFixture();
+  summary.findings[0].paths[0].path = '';
+  detail.findings[0].paths[0].uri = '/';
+  assert.doesNotThrow(() => reconcile(summary, detail));
+  const absolute = reconciliationFixture();
+  absolute.summary.findings[0].paths[0].path = '';
+  absolute.detail.findings[0].paths[0].uri = 'https://localhost:4186/';
+  assert.doesNotThrow(() => reconcile(absolute.summary, absolute.detail));
+  const evil = reconciliationFixture();
+  evil.summary.findings[0].paths[0].path = 'https://evil.example/synthetic-email-1';
+  assert.throws(() => reconcile(evil.summary, evil.detail), /origin|path/i);
+  const scheme = reconciliationFixture();
+  scheme.summary.findings[0].paths[0].path = 'javascript:alert(1)';
+  assert.throws(() => reconcile(scheme.summary, scheme.detail), /scheme|unsupported method or path/i);
+});
+
 test('reconciliation accepts full independent finding evidence without inventing human triage', () => {
   const reconcile = reconciliationValidator();
   const { summary, detail } = reconciliationFixture();
