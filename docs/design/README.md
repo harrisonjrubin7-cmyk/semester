@@ -21,6 +21,22 @@ The visual foundations — tokens, grounds, type, spacing — are
 [../DESIGN-SYSTEM-IMPROVEMENTS.md](../DESIGN-SYSTEM-IMPROVEMENTS.md). These
 documents build on that system and do not replace any of it.
 
+## Design-system adoption (phase D0, 2026-10-04)
+
+Audit only; nothing here changed behaviour. Start with the adoption audit.
+
+| Document | What it settles |
+|---|---|
+| [DESIGN_SYSTEM_ADOPTION_AUDIT.md](DESIGN_SYSTEM_ADOPTION_AUDIT.md) | Findings, conflicts U-1..U-6, gate recommendation |
+| [DESIGN_MIGRATION_MATRIX.md](DESIGN_MIGRATION_MATRIX.md) | Every element mapped to a bucket, phase and risk |
+| [VISUAL_DEBT_REGISTER.md](VISUAL_DEBT_REGISTER.md) | VD-001..VD-045, cross-referenced to DESIGN-DEBT.md |
+| [COMPONENT_INVENTORY.md](COMPONENT_INVENTORY.md) | Target library against what exists |
+| [STATUS_AND_PROVENANCE_AUDIT.md](STATUS_AND_PROVENANCE_AUDIT.md) | Four vocabularies, AI, consequence preview |
+| [ACCESSIBILITY_GAP_AUDIT.md](ACCESSIBILITY_GAP_AUDIT.md) | Accessibility gaps and the seven manual scripts |
+| [RESPONSIVE_SHELL_AUDIT.md](RESPONSIVE_SHELL_AUDIT.md) | Rail, tab bar, breakpoints, staff shells, routes |
+| [CONTENT_AND_VOICE_AUDIT.md](CONTENT_AND_VOICE_AUDIT.md) | Copy rules measured |
+| [adr/README.md](adr/README.md) | ADR-0030 to ADR-0040, Proposed |
+
 ## What is enforced by code
 
 | Rule | Command | Where |

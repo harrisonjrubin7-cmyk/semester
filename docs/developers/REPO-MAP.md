@@ -15,6 +15,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `app/` | The application and the institution gateway. Vite, React 19 and TypeScript. The only client `package.json`. All npm commands run here. |
 | `audio/` | Podcast scripts, the manifest and the Python synthesiser that renders them. See [`audio/README.md`](../../audio/README.md). |
 | `chats/` | The design conversation that produced the first version. Source material; the app does not import it. |
+| `commercial/` | Commercial readiness evidence. Today one file, [`commercial/READINESS_GAP_MATRIX.md`](../../commercial/READINESS_GAP_MATRIX.md): the Phase 0 reading of what is stated, implemented and enforced for pricing, plans, billing, procurement and support. Documentation only; no code. |
 | `company-site/` | A static company site (`index.html`, `site.css`, `site.js`, fonts, screenshots, `SHA256SUMS`). It has no `package.json`. |
 | `contracts/` | A school's signed terms as data, one JSON file per tenant id. The owner writes them. See [`contracts/README.md`](../../contracts/README.md). |
 | `database/` | Catalog-derived isolation evidence for production, read read-only: the tenant-isolation matrix, grant allowlist, function-authorization matrix and data-classification register, and `schema/inventory.sql`, which regenerates every figure. Nothing in it was applied to a database. See [`database/README.md`](../../database/README.md). |

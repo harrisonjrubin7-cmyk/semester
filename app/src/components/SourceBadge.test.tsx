@@ -2,7 +2,7 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { TRUST_KINDS, TRUST_MEANING, TRUST_TEXT } from '../lib/source';
+import { TRUST_GLYPH, TRUST_KINDS, TRUST_MEANING, TRUST_TEXT } from '../lib/source';
 import { SourceBadge } from './SourceBadge';
 
 /**
@@ -31,6 +31,15 @@ it('says every label in text, with its meaning for assistive technology', () => 
     const hidden = host.querySelector('.sr-only');
     expect(hidden?.textContent, label).toBe(TRUST_MEANING[label]);
     expect(host.querySelector(`[data-source="${label}"]`), label).not.toBeNull();
+  }
+});
+
+it('draws the glyph beside the word, hidden from a screen reader', () => {
+  for (const label of TRUST_KINDS) {
+    act(() => root.render(<SourceBadge label={label} />));
+    const glyph = host.querySelector('[aria-hidden="true"]');
+    expect(glyph?.textContent, label).toBe(TRUST_GLYPH[label]);
+    expect(host.textContent, label).toContain(`${TRUST_GLYPH[label]}${TRUST_TEXT[label]}`);
   }
 });
 
