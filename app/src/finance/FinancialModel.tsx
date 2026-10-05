@@ -467,7 +467,9 @@ function download(name: string, text: string, type: string): boolean {
   a.href = url;
   a.download = name;
   a.click();
-  URL.revokeObjectURL(url);
+  // Revoke on a timer rather than immediately: Safari starts the download asynchronously, and a URL revoked in
+  // the same tick produces a failed download with no error anywhere.
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
   return true;
 }
 

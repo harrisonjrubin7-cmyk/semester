@@ -242,7 +242,9 @@ describe('exports', () => {
   it('starts a download for each file and copies the prompt', async () => {
     const urls: string[] = [];
     const names: string[] = [];
-    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: (b: Blob) => { urls.push(`${b.type}:${b.size}`); return 'blob:x'; }, revokeObjectURL: () => undefined }));
+    vi.useFakeTimers();
+    const revoked: string[] = [];
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: (b: Blob) => { urls.push(`${b.type}:${b.size}`); return 'blob:x'; }, revokeObjectURL: (u: string) => { revoked.push(u); } }));
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { names.push(this.download); });
     const copied: string[] = [];
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: (t: string) => { copied.push(t); return Promise.resolve(); } } });
@@ -254,6 +256,11 @@ describe('exports', () => {
       'semester-gtm-base-monthly.csv', 'semester-gtm-base-assumptions.csv', 'semester-gtm-base.json', 'semester-gtm-base.md', 'semester-gtm-base-board-summary.md',
     ]);
     expect(urls.every((u) => !u.endsWith(':0'))).toBe(true);
+    // The object URL outlives the click: Safari starts the download asynchronously, so it is revoked later, not at once.
+    expect(revoked).toEqual([]);
+    act(() => { vi.advanceTimersByTime(30_000); });
+    expect(revoked).toHaveLength(5);
+    vi.useRealTimers();
     await act(async () => { click('Copy assumptions as a prompt'); });
     expect(copied).toHaveLength(1);
     expect(copied[0]).toMatch(/CAC = sales and marketing spend/);
