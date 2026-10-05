@@ -39,10 +39,15 @@ shared computer's leftover disk and does **not** defeat script running in the
 page. **Public wording must stay "encrypted at rest in the browser's storage",
 not "encrypted FERPA offline mobile client".** (Legal-review item, below.)
 
-**Not wired to a screen yet.** Nothing in the UI calls the vault; the existing
-stores are unchanged. Moving tasks and drafts onto it is a migration with its
-own data-loss risk (existing students have data in `localStorage`) and wants its
-own change, with a restore path.
+**One store uses it.** The task engine's local snapshot is sealed in the vault
+as class `personal_plan` (`sealedSnapshotPort`), on a device where the engine
+owns tasks. A plain snapshot is migrated once and removed only after the sealed
+copy reads back identical; if the browser cannot seal, the snapshot stays plain
+rather than dropping an edit. Turning the engine off after a device has migrated
+returns it to the account sync, and unsent offline edits on that device are the
+only thing lost. Tasks in the `localStorage` state blob, drafts and every other
+store are unchanged and still unsealed: moving them is a migration with its own
+data-loss risk and wants its own change.
 
 ## Verification, and what the tests found
 

@@ -49,7 +49,7 @@ There is **no approved price book** (`docs/commercial/PRICING-AND-PACKAGING.md`:
 
 | Asset | State | Evidence | Issue |
 | --- | --- | --- | --- |
-| Website | Live single page, claims-controlled | `company-site/index.html` (3,099 lines), `vercel.json` CSP/HSTS | Contradictions PC-1…PC-7 ([claims register](../docs/legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md)) |
+| Website | Live single page, claims-controlled | `company-site/index.html` (3,099 lines), `vercel.json` CSP/HSTS | Contradictions PC-1…PC-7 ([claims register](../docs/program/COMPLETION_PUBLIC_CLAIMS_SCAN.md)) |
 | Pricing page | Published, **out of register** | `index.html:618-670` | Institution bands uncovered; savings figure |
 | Trust center | Present | `index.html:~562, 2647-2668`; `docs/TRUST-CENTER.md` | Wording to counsel (PL-05) |
 | Positioning | Descriptor "Semester — the student action platform" | program §1 | Matches register's conservative stance |

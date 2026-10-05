@@ -11,6 +11,7 @@ import {
   wantsAttention,
   TRUST_KINDS,
   TRUST_TEXT,
+  TRUST_GLYPH,
   TRUST_MEANING,
 } from './source';
 
@@ -113,6 +114,28 @@ describe('the display-only trust kinds', () => {
     expect(TRUST_TEXT.ai_assisted).toBe('AI-assisted');
     expect(TRUST_TEXT.external).toBe('External');
     expect(TRUST_TEXT.unavailable_stale).toBe('Unavailable or stale');
+  });
+
+  it('has the ten kinds of the design brief, each with its own glyph and word', () => {
+    expect([...TRUST_KINDS].sort()).toEqual(
+      ['ai_assisted', 'connected', 'estimated', 'external', 'imported', 'institution_verified', 'needs_review', 'sample', 'student_entered', 'unavailable_stale'],
+    );
+    expect(TRUST_GLYPH).toEqual({
+      institution_verified: '◆',
+      connected: '⇄',
+      imported: '↓',
+      student_entered: '○',
+      ai_assisted: '✦',
+      estimated: '≈',
+      needs_review: '?',
+      unavailable_stale: '!',
+      external: '↗',
+      sample: '◌',
+    });
+    expect(new Set(Object.values(TRUST_GLYPH)).size).toBe(TRUST_KINDS.length);
+    expect(new Set(Object.values(TRUST_TEXT)).size).toBe(TRUST_KINDS.length);
+    expect(TRUST_TEXT.connected).toBe('Connected');
+    expect(TRUST_TEXT.sample).toBe('Sample');
   });
 
   it('give every kind words and a meaning', () => {

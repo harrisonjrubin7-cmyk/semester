@@ -1,6 +1,6 @@
 # Semester — readiness gap matrix (Phase 0)
 
-**Date:** 2026-10-04 · **Registers:** [`COMPLETE_CAPABILITY_REGISTER.md`](COMPLETE_CAPABILITY_REGISTER.md), [`RISK_REGISTER.md`](RISK_REGISTER.md) · **Controlling:** [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)
+**Date:** 2026-10-04 · **Registers:** [`COMPLETE_CAPABILITY_REGISTER.md`](COMPLETE_CAPABILITY_REGISTER.md), [`COMPLETION_RISK_REGISTER.md`](COMPLETION_RISK_REGISTER.md) · **Controlling:** [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md)
 
 The matrix has four readiness areas. In each, the product must prove one set of things and the company must prove another. A cell is **PROVEN** only with current evidence; **BUILT** means code/tests exist but the proof does not; **ABSENT** means nothing exists.
 

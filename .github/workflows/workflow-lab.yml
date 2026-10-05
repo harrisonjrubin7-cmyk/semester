@@ -1,0 +1,43 @@
+# CI for workflow-lab/, the Next.js + Supabase router and benchmark app.
+# Path-filtered so the Vite app's CI is not re-run for changes here, and the
+# reverse. The database tests run the real migrations on Postgres (PGlite), so
+# no Supabase project or secret is needed - and none is used.
+
+name: Workflow Lab
+
+on:
+  push:
+    branches: ['main']
+    paths: ['workflow-lab/**', '.github/workflows/workflow-lab.yml']
+  pull_request:
+    branches: ['main']
+    paths: ['workflow-lab/**', '.github/workflows/workflow-lab.yml']
+
+concurrency:
+  group: workflow-lab-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workflow-lab
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: workflow-lab/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run seed:generate && git diff --exit-code supabase/seed.sql
+      # Builds in prototype mode (no Supabase variables): proves the app degrades
+      # cleanly rather than crashing when the environment is absent.
+      - run: npm run build

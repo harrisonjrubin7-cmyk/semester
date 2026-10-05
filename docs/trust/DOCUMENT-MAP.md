@@ -122,6 +122,10 @@ How to read the **Status** column: it is the status the document gives itself, s
 | [DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md](../legal/DATA-RETENTION-AND-DELETION-POLICY-DRAFT.md) | The user-facing retention and deletion policy. | Draft; effective date undecided |
 | [COOKIE-AND-STORAGE-NOTICE-DRAFT.md](../legal/COOKIE-AND-STORAGE-NOTICE-DRAFT.md) | The cookie and device-storage notice. | Draft; effective date undecided |
 | [PRIVACY-POLICY-DRAFT.md](../legal/PRIVACY-POLICY-DRAFT.md) | The privacy policy. | Draft; effective date undecided |
+| [LEGAL_REVIEW_QUEUE.md](../legal/LEGAL_REVIEW_QUEUE.md) | Phase 0 view reconciling every legal question with the existing queues. | Draft; not legal advice, counsel not engaged |
+| [PUBLIC_CLAIMS_APPROVAL_REGISTER.md](../legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md) | Phase 0 list of public claims that exceed their evidence. | Draft; no claim approved |
+| [CONTRACT_REVIEW_CHECKLIST.md](../legal/CONTRACT_REVIEW_CHECKLIST.md) | What counsel checks in any customer contract. | Draft; no contract approved |
+| [PRIVACY_REVIEW_QUEUE.md](../legal/PRIVACY_REVIEW_QUEUE.md) | Phase 0 view of open privacy questions for counsel. | Draft; counsel not engaged |
 
 ## Third parties and contracts
 
@@ -148,8 +152,6 @@ Every file here is a draft with its effective date undecided. None has been revi
 | [ACCESSIBILITY-STATEMENT-DRAFT.md](../legal/ACCESSIBILITY-STATEMENT-DRAFT.md) | The public accessibility statement. | Draft |
 | [INCIDENT-RESPONSE-SUMMARY-DRAFT.md](../legal/INCIDENT-RESPONSE-SUMMARY-DRAFT.md) | A public summary of incident response. | Draft |
 | [REFUND-AND-CANCELLATION-POLICY-DRAFT.md](../legal/REFUND-AND-CANCELLATION-POLICY-DRAFT.md) | Refunds and cancellation. | Draft |
-| [LEGAL_REVIEW_QUEUE.md](../legal/LEGAL_REVIEW_QUEUE.md) | The program view of the legal review queue: maps the program's counsel list to the controlled queue and adds twelve new items; approves nothing. | Draft working list for counsel |
-| [PUBLIC_CLAIMS_APPROVAL_REGISTER.md](../legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md) | The program view of the public-claims register: the Phase 0 scan of the live site against the controlled register; approves no claim. | Draft working list for counsel |
 | [SUPPORT-POLICY-DRAFT.md](../legal/SUPPORT-POLICY-DRAFT.md) | What support is offered. | Draft |
 
 ## Outside these directories

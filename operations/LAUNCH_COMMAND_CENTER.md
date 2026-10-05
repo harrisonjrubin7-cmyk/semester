@@ -19,7 +19,7 @@
 | Ritual | When | Output |
 | --- | --- | --- |
 | Weekly program review | Mondays (first: **2026-10-11** report) | Status counting **verified outcomes only**; scorecard re-scored; risk expiries checked |
-| Risk review | with the weekly review | `LAUNCH-RISK-REGISTER.md` + [`RISK_REGISTER.md`](../docs/program/RISK_REGISTER.md) updated |
+| Risk review | with the weekly review | `LAUNCH-RISK-REGISTER.md` + [`COMPLETION_RISK_REGISTER.md`](../docs/program/COMPLETION_RISK_REGISTER.md) updated |
 | Claims check | before any outbound copy | `PUBLIC-CLAIMS-APPROVAL-REGISTER.md` row exists, approver recorded |
 | Pre-merge | every PR | scope line (S1–S5); `CLAUDE.md` first step: `git fetch origin main` and grep for the thing itself |
 | Escalation | per `04-RITUALS…` ladder | stop conditions below |
@@ -40,7 +40,7 @@ Order follows the program (1→10), annotated with what blocks each step and wha
 | 6 | **Staging environment proof** | Run `STAGING.md` steps 2–4 on a Supabase preview branch: fingerprint compare, RLS on, secrets | Dated record; "staging proven" ticked | **Owner authorizes branch use** | PR-16 |
 | 7 | **Single trusted membership-derived tenant context** — **TRACE DONE for the productivity API** ([`PHASE1_STEP7_TENANT_CONTEXT_TRACE.md`](../docs/program/PHASE1_STEP7_TENANT_CONTEXT_TRACE.md)): no entitlement bypass; API unmounted. **Open:** per-function table for the gateway and Edge Functions (grep-level only), and a mount-level test that fails if `consentGrantsFor` is derived from request data (do it with step 9) | Trace table (done for productivity); per-function table (open) | none | I-05, PR-04 (narrowed) |
 | 8 | **Policy gateway adoption** | Route-by-route adoption of `decide()` (`advising`, `athletics`, `career`, `clubs`, `family`, `housing`, `money`, `registration`, `scim`) and Edge Functions; add a coverage test | "Every route passes the PDP" test (function #6) | none | I-06, PR-05 |
-| 9 | **Governed productivity API adoption** | Mount productivity commands/reads on live product paths behind the flag | Contract test through the real handler | Depends on 7, 8 | register P-03 |
+| 9 | **Governed productivity API adoption** — **mount DONE by #1265** (`app/api/productivity/[...path].ts`, `runtime.ts`; off unless `SEMESTER_PRODUCTIVITY=on`; principal from membership; no grant resolver) | Add the mount-level test that fails if the principal ever carries request-derived grants; extend adoption to the next route family (step 8) | Contract test through the real handler | Depends on 8 | register P-03, I-05 |
 | 10 | **Runtime role / FORCE RLS where verified** | Evaluate FORCE per table against definer ownership (the `rls-coverage` header records why it was declined); design the runtime role | `D-<PR#>` decision; migration + green `rls-coverage` | **Owner decision DO-5** | PR-02, FR-004 |
 
 **Proving rule for every step** (`CLAUDE.md`): revert the fix under the new test and watch it go red; include a control; look at the screenshot for anything visual. Run from `app/`: `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm test`, `npm run test:shuffle`, `npm run build`. **Lint has zero headroom** — fix warnings before adding code.

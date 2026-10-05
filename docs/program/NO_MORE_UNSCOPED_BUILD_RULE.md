@@ -13,7 +13,7 @@ From adoption until the Phase 1 gate is PASS, a change may be merged only if it 
 | Scope | What it must cite |
 | --- | --- |
 | **S1 Gate evidence** | the gap ID in [`READINESS_GAP_MATRIX.md`](READINESS_GAP_MATRIX.md) it closes, and the evidence file or test it adds |
-| **S2 Risk closure** | the risk ID in [`RISK_REGISTER.md`](RISK_REGISTER.md) or `LAUNCH-RISK-REGISTER.md` (FR-xxx) it reduces |
+| **S2 Risk closure** | the risk ID in [`COMPLETION_RISK_REGISTER.md`](COMPLETION_RISK_REGISTER.md) or `LAUNCH-RISK-REGISTER.md` (FR-xxx) it reduces |
 | **S3 Defect** | a failing test, reproduced, with the revert-and-watch-it-fail proof `CLAUDE.md` requires |
 | **S4 Truth repair** | the contradiction ID (baseline §6) or claim ID it corrects |
 | **S5 Phase 1 step** | the numbered Phase 1 step it implements |

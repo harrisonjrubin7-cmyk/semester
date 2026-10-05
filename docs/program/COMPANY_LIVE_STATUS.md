@@ -57,7 +57,7 @@ The program's pricing baseline is **not approved in the repo** and is not encode
 | Storage | 25 GB/student pooled, $18/TB/mo | Finance: pooled tenant storage, 80% warn; $0.02/GB-mo is vendor cost | A | |
 | Paid pilot | $30–45k | Finance $12k + $15k = $27k; `PRICING-AND-PACKAGING` "[APPROVED FEE OR NO-FEE TERM REQUIRED]"; paid pilot is NO-GO | A | |
 
-Public exposure already out of step: `company-site/index.html:623/637` ($7.99/$59 "planned"), `:621` "save 38%" (derived from a price CLM-015 prohibits publishing), `:660` institution bands (no register claim). See [`PUBLIC_CLAIMS_APPROVAL_REGISTER.md`](../legal/PUBLIC_CLAIMS_APPROVAL_REGISTER.md).
+Public exposure already out of step: `company-site/index.html:623/637` ($7.99/$59 "planned"), `:621` "save 38%" (derived from a price CLM-015 prohibits publishing), `:660` institution bands (no register claim). See [`COMPLETION_PUBLIC_CLAIMS_SCAN.md`](COMPLETION_PUBLIC_CLAIMS_SCAN.md).
 
 ## 4. Summary
 

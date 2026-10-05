@@ -8,6 +8,15 @@
 | Controlling documents it reconciles to, and does not replace | [`GO-NO-GO-DECISION.md`](../../GO-NO-GO-DECISION.md), [`LAUNCH-RISK-REGISTER.md`](../../LAUNCH-RISK-REGISTER.md), [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](../../PUBLIC-CLAIMS-APPROVAL-REGISTER.md), [`LEGAL-REVIEW-QUEUE.md`](../../LEGAL-REVIEW-QUEUE.md), [`EVIDENCE-REGISTER.md`](../../EVIDENCE-REGISTER.md), [`PHASE_0_1_RECONCILIATION.md`](PHASE_0_1_RECONCILIATION.md) |
 | Legal | Nothing here is a legal, compliance, security-assurance or accessibility conclusion. Those stay with qualified counsel and assessors. |
 
+## 0. How this pack relates to the parallel baseline on main
+
+Two sessions ran the same completion prompt. PR #1252 merged first and holds a Phase 0 of its own on main: `docs/program/BASELINE_AUDIT.md`, `CAPABILITY_TRACEABILITY_MATRIX.md`, `RISK_REGISTER.md` (R-001…R-036), `DOMAIN_OWNERSHIP_MATRIX.md`, `PHASE_GATE_LOG.md`, `ASSUMPTION_REGISTER.md`, `PHASE_1_EXECUTION_BACKLOG.md`, a restore-drill runsheet, and the four legal registers under `docs/legal/`. **Those are authoritative** for the paths they occupy. This pack was merged *beside* them:
+
+- Four of the sixteen requested filenames collided, so mine live under new names: `COMPLETION_RISK_REGISTER.md`, `COMPLETION_DOMAIN_OWNERSHIP.md`, `COMPLETION_LEGAL_NEW_ITEMS.md`, `COMPLETION_PUBLIC_CLAIMS_SCAN.md` (all in `docs/program/`).
+- What this pack adds that main's does not: the per-capability **live-status register** (109 rows), the product and company status pages, the commercial and operations assessments, the go/no-go scorecard and command center, the line-cited public-claims scan, the pricing-baseline reconciliation, the build rule, and the Phase 1 step 7 trace.
+- Main's `commercial/READINESS_GAP_MATRIX.md` is a different file from this pack's `docs/program/READINESS_GAP_MATRIX.md` (same name, different directory).
+- **Caveat on "required checks":** this pack names `build`, `account-sync` and `secrets` as required because `.github/rulesets/main.json` says so. Main's `R-014` reports that the ruleset is not applied. Read "required" as "named in the ruleset file".
+
 ## 1. Method and evidence confidence
 
 Five read-only audits ran in parallel (database/tenancy, product, commercial/legal, CI/ops, AI/integrations), each reading code, not docs. Where a document and the code disagree, the code wins and the disagreement is listed in §5.

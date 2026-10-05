@@ -45,7 +45,7 @@ The zeros are not a criticism of the code. Most BUILT items need a human, an out
 
 ## 3. Required CI checks vs available
 
-`.github/rulesets/main.json` requires `build`, `account-sync`, `secrets` only. Not required: `codeql.yml`, `hawkscan.yml`, `supply-chain.yml`, `infra.yml`, `docs.yml`, `production-smoke.yml` (PR-17).
+`.github/rulesets/main.json` names `build`, `account-sync`, `secrets` as required, and only those. Main's `R-014` reports that the ruleset is not applied, so this is the file's intent, not a verified setting. Not required: `codeql.yml`, `hawkscan.yml`, `supply-chain.yml`, `infra.yml`, `docs.yml`, `production-smoke.yml` (PR-17).
 
 ## 4. The twelve architecture fitness functions
 
@@ -74,7 +74,7 @@ The zeros are not a criticism of the code. Most BUILT items need a human, an out
 | Pricing claims | Classified — every program baseline figure is **unapproved and conflicting**; none is a valid claim ([`COMPANY_LIVE_STATUS.md` §3](../docs/program/COMPANY_LIVE_STATUS.md)) |
 | Customer promises | Classified — none permitted; no customer exists |
 | Company functions | Classified — [`COMPANY_LIVE_STATUS.md`](../docs/program/COMPANY_LIVE_STATUS.md) |
-| Launch blockers identified | Yes — [`READINESS_GAP_MATRIX.md`](../docs/program/READINESS_GAP_MATRIX.md), [`RISK_REGISTER.md`](../docs/program/RISK_REGISTER.md) |
+| Launch blockers identified | Yes — [`READINESS_GAP_MATRIX.md`](../docs/program/READINESS_GAP_MATRIX.md), [`COMPLETION_RISK_REGISTER.md`](../docs/program/COMPLETION_RISK_REGISTER.md) |
 | Live-status standard defined | Yes — register §classes; no capability is A/B/C |
 | ADRs | **Not created.** Per `CLAUDE.md` a decision takes its pull request's number; six decisions are queued (DO-1…DO-6, PR-02, price authority) and are written after the PR is opened |
 | Risks have owners | Roles yes; **backups unassigned** on every row |

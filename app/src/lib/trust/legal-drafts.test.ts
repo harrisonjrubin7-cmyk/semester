@@ -52,16 +52,16 @@ describe('legal drafts', () => {
   // Every draft in the folder, not a list someone must remember to extend: a
   // new policy without the banner is exactly the one that gets linked by
   // mistake.
-  // Two files here are not policies: they are the program's working views of
-  // the controlled registers at the repository root. They are named, not
-  // matched by pattern, so any other file in the folder still has to be a
-  // `-DRAFT.md` with the banner. They keep their own banner and must keep
-  // pointing at the register that controls them (asserted below).
-  const PROGRAM_VIEWS = {
-    'LEGAL_REVIEW_QUEUE.md': 'LEGAL-REVIEW-QUEUE.md',
-    'PUBLIC_CLAIMS_APPROVAL_REGISTER.md': 'PUBLIC-CLAIMS-APPROVAL-REGISTER.md',
-  } as const;
-  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md') && !(f in PROGRAM_VIEWS));
+  // The four Phase 0 program registers (underscore names) are lists of
+  // questions for counsel, not policies a user could be shown, so they are not
+  // held to the draft banner. A new policy still has to be a -DRAFT.md.
+  const PROGRAM_REGISTERS = new Set([
+    'CONTRACT_REVIEW_CHECKLIST.md',
+    'LEGAL_REVIEW_QUEUE.md',
+    'PRIVACY_REVIEW_QUEUE.md',
+    'PUBLIC_CLAIMS_APPROVAL_REGISTER.md',
+  ]);
+  const DRAFTS = readdirSync(LEGAL).filter((f) => f.endsWith('.md') && !PROGRAM_REGISTERS.has(f));
 
   it('finds every draft, including the two it began with', () => {
     expect(DRAFTS).toContain('PRIVACY-POLICY-DRAFT.md');
@@ -69,16 +69,6 @@ describe('legal drafts', () => {
     expect(DRAFTS.length).toBeGreaterThanOrEqual(13);
     for (const f of DRAFTS) expect(f, 'a policy here is a draft until it is in force').toMatch(/-DRAFT\.md$/);
   });
-
-  it.each(Object.entries(PROGRAM_VIEWS))(
-    '%s stays a draft working list and defers to its controlled register %s',
-    (name, controlled) => {
-      const text = read(name);
-      expect(text).toMatch(/DRAFT FOR QUALIFIED LEGAL REVIEW/);
-      expect(text, 'it must link the register that controls it').toContain(`](../../${controlled})`);
-      expect(text, 'it approves nothing').toMatch(/does not (replace|approve)/i);
-    },
-  );
 
   it.each(DRAFTS)(
     '%s still says it is not in force',

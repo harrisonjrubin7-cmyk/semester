@@ -20,7 +20,7 @@ This register is keyed to **verified code**, not to claims. It does not replace 
 | **Unknown/investigate** | Not verified |
 
 **Marks:** V = verified by author in this session · A = audit-reported with path/symbol · N = not verified.
-**Owner column** is a *role*. The only person evidenced anywhere in the repo is Harrison Rubin, primary on nearly every seat; backups are `UNASSIGNED` (`OWNER-AND-ACCOUNTABILITY-MATRIX.md`, `LAUNCH-RISK-REGISTER.md` FR-006). Ownership detail: [`DOMAIN_OWNERSHIP_MATRIX.md`](DOMAIN_OWNERSHIP_MATRIX.md).
+**Owner column** is a *role*. The only person evidenced anywhere in the repo is Harrison Rubin, primary on nearly every seat; backups are `UNASSIGNED` (`OWNER-AND-ACCOUNTABILITY-MATRIX.md`, `LAUNCH-RISK-REGISTER.md` FR-006). Ownership detail: [`COMPLETION_DOMAIN_OWNERSHIP.md`](COMPLETION_DOMAIN_OWNERSHIP.md).
 
 ## Summary
 
@@ -49,7 +49,7 @@ Counts are tallied by script from the rows below (class = the first matching cla
 | I-02 | FORCE RLS / non-BYPASSRLS runtime role | Documented but unimplemented | 0 statements (V); `docs/target-architecture/09-CONVERSION-PLAN.md:94`; `database/TENANT_ISOLATION_MATRIX.md` "Not applied" | Owner decision + migration + role | Security |
 | I-03 | SECURITY DEFINER hardening | Built but not release-ready | 278/278 public pin `search_path`; `supabase/definer-sweep.check.sql`; `app/src/lib/definerregister.ts` (A) | 25 names unreconciled; forged-argument tests not written (`database/README.md`) | Security |
 | I-04 | Grants allowlist (functions) | Built but not release-ready | `supabase/grants.check.sql` (1,013 lines) (A) | Table grants not asserted; `anon` DML+TRUNCATE on ≈24 tables; `database/proposed/anon_grant_reduction.sql` unapplied | Security |
-| I-05 | Tenant context from membership | Built but not release-ready | `app/server/institution/gateway.ts`, `context.ts`, `membership.ts` (A) | Productivity API traced, see [`PHASE1_STEP7_TENANT_CONTEXT_TRACE.md`](PHASE1_STEP7_TENANT_CONTEXT_TRACE.md) (V): owner never taken from the request for writes; reads gated by the PDP; **not mounted**. Gateway and Edge Functions grep-level only | Engineering |
+| I-05 | Tenant context from membership | Built but not release-ready | `app/server/institution/gateway.ts`, `context.ts`, `membership.ts` (A) | Productivity API traced, see [`PHASE1_STEP7_TENANT_CONTEXT_TRACE.md`](PHASE1_STEP7_TENANT_CONTEXT_TRACE.md) (V): owner never taken from the request for writes; reads gated by the PDP; **mounted since #1265 behind `SEMESTER_PRODUCTIVITY=on`, principal from membership, no grant resolver**. Gateway and Edge Functions grep-level only | Engineering |
 | I-06 | Policy decision point | Partially implemented | `packages/institution/src/policy.ts` `decide()` used only by `app/server/productivity/service.ts` (A) | Every other route/Edge Function bypasses | Engineering |
 | I-07 | Audit hash chain / ledger seals | Built but not release-ready | `private.console_audit_event`, `ledger_chain_append`, `ledger-chains.check.sql` (A) | Mutable financial tables outside chain (`docs/commercial/REVENUE-OPERATIONS-ARCHITECTURE.md`) | Security |
 | I-08 | Domain outbox | Partially implemented | `private.domain_outbox_events`; writers: productivity only; **no publisher** (V) | Publisher worker, DLQ, drain evidence | Engineering |
@@ -68,7 +68,7 @@ Counts are tallied by script from the rows below (class = the first matching cla
 | I-21 | Synthetic monitoring | Built but not release-ready | `production-smoke.yml` hourly; institutional probe skipped without vars (A) | Retained history; institutional target | Reliability |
 | I-22 | Status page | Partially implemented | `app/public/status.html` browser-side probe; empty `status-incidents.json` (A) | Hosted service with history | Support |
 | I-23 | Fitness-function suite | Partially implemented | 12-function audit in [`GO_NO_GO_SCORECARD`](../../operations/GO_NO_GO_SCORECARD.md) §4 (A) | ADR-link, tenant-boundary, PDP-coverage, release-evidence gates absent or partial | Engineering |
-| I-24 | CI required checks | Partially implemented | `.github/rulesets/main.json`: `build`,`account-sync`,`secrets` only (A) | CodeQL/hawk/supply-chain/infra/docs not required | Engineering |
+| I-24 | CI required checks | Partially implemented | `.github/rulesets/main.json` names `build`,`account-sync`,`secrets` only (A); main's R-014 reports that ruleset is **not applied**, so nothing may be enforced | CodeQL/hawk/supply-chain/infra/docs not required | Engineering |
 
 ## 2. Student product
 
@@ -186,7 +186,7 @@ Counts are tallied by script from the rows below (class = the first matching cla
 | ID | Item | Class | Reason |
 | --- | --- | --- | --- |
 | R-01 | `FEATURE-INVENTORY.md`, `SEMESTER_PRODUCT_COMPLETENESS_MATRIX.md`, `REGRESSION-CHECKLIST.md` baseline figures | Retire candidate | Stale against code (baseline §5 D15–D16); regenerate or demote to history |
-| U-01 | `productivity/http.ts` `q.ownerId` handling | Built but not release-ready | Traced in [`PHASE1_STEP7_TENANT_CONTEXT_TRACE.md`](PHASE1_STEP7_TENANT_CONTEXT_TRACE.md): no entitlement bypass; **no production caller** (`createProductivityApi` unmounted). Wiring of `authenticate`/`consentGrantsFor` is step 9 |
+| U-01 | `productivity/http.ts` `q.ownerId` handling | Built but not release-ready | Traced in [`PHASE1_STEP7_TENANT_CONTEXT_TRACE.md`](PHASE1_STEP7_TENANT_CONTEXT_TRACE.md): no entitlement bypass; **mounted by #1265** at `app/api/productivity/[...path].ts`, off unless `SEMESTER_PRODUCTIVITY=on`; `authenticate` is membership-derived and `consentGrantsFor` is unset (cross-owner reads denied) |
 | U-02 | `begin_checkout(want_user,…)` grant | Unknown/investigate | Grant/revoke not located (N); check `supabase/grants.check.sql` |
 | U-03 | Design-system spec (Ink/Parchment/blue, source/status vocabulary) vs tokens | Unknown/investigate | Not compared (N) |
 

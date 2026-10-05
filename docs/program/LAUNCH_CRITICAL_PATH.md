@@ -66,7 +66,7 @@ These are the Phase 1 plan, restated by what they unblock. Full ordering in the 
 | 6 | Staging proven equivalent | 1, 4 | O |
 | 7 | One trusted tenant context (trace `q.ownerId`) | 4, 5 | none |
 | 8 | PDP adopted route by route | 4, 5 | none |
-| 9 | Governed productivity API adoption | 4 | 7, 8 |
+| 9 | Governed productivity API adoption (mounted by #1265, off by default; remaining: grant-source test) | 4 | 8 |
 | 10 | Runtime role / FORCE RLS decision and migration | 4, 5 | owner decision (D-`<PR#>`) |
 
 ## 4. What this page does not do
