@@ -1,9 +1,19 @@
 # Site readiness green register
 
-Reviewed: 2026-10-01  
+Reviewed: 2026-10-03
 Scope: public company-site readiness, procurement, accessibility, legal-draft, and supply-chain claims
 
 This register records what Semester can truthfully mark green from repository evidence. Green means the named artifact or automated control exists and is reviewable. It does not turn a draft into signed terms, a self-assessment into an independent audit, a controlled test into production capacity, or a product integration into an activated customer connection.
+
+## P04 repository and artifact validation — 2026-10-03
+
+The focused public-site pass at `d246a348` passed **16 files and 213 tests**, covering generated routes and links, claim statuses and prohibited claims, legal-draft labels, contact routing, privacy/consent behavior, current site tools, and the legacy company-site safeguards. The static build then emitted **55 files** successfully for `https://www.semester.website` with the candidate revision/date stamped into the artifact.
+
+The emitted site has no third-party analytics or tracking endpoint. Its ordinary pages ship no script; its six local tool pages have one same-origin script and `connect-src 'none'`. The current generated contact path is email rather than an on-site form, and explicitly says nothing typed is stored by the site. Legacy lead-form tests still verify optional update consent and privacy-respecting attribution, but do not prove message delivery or an operated response.
+
+Artifact inspection found and corrected two unqualified institutional replacement claims. The institution and pricing pages now describe a pilot beside existing systems, keep LMS/gradebook authority off until a separately approved cutover, and state that no institutional connection is live. A regression test prevents the removed wording from returning.
+
+This is source and generated-artifact evidence only. It does not prove the currently deployed company-site revision, external link/delivery behavior, inbox staffing, consent operations, production analytics absence, legal effectiveness, customer acceptance or institutional activation. HawkScan was also unavailable on this host: there is no Hawk runtime/tool and `HAWK_API_KEY` is absent, so no DAST pass is claimed; P07 retains the scan gate.
 
 ## Evidence-backed green items
 

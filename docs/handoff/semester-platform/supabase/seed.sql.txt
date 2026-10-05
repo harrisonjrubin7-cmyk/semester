@@ -1,0 +1,40 @@
+set search_path = public, extensions;
+-- Seed runs as the postgres role, so RLS and defaults that call auth.uid() are bypassed or null: every row sets institution_id and owner explicitly.
+-- Test seed for local Supabase (supabase/seed.sql). Synthetic people only. IDs are fixed so tests can reference them via .env.test.
+-- Local test users. auth.identities rows are required for password sign-in on current Supabase versions.
+insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token) values
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000a001','authenticated','authenticated','student@campus-a.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000a002','authenticated','authenticated','student2@campus-a.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000a003','authenticated','authenticated','seller@campus-a.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000a004','authenticated','authenticated','advisor@campus-a.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000a005','authenticated','authenticated','it@campus-a.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000b001','authenticated','authenticated','student@campus-b.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000c001','authenticated','authenticated','cfo@semester.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','',''),
+ ('00000000-0000-0000-0000-000000000000','00000000-0000-0000-0000-00000000c002','authenticated','authenticated','social@semester.test',crypt('Test-pass-1!', gen_salt('bf')),now(),'{"provider":"email","providers":["email"]}','{}',now(),now(),'','','','');
+insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at) values
+ ('00000000-0000-0000-0000-00000000a001','00000000-0000-0000-0000-00000000a001','{"sub":"00000000-0000-0000-0000-00000000a001","email":"student@campus-a.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000a002','00000000-0000-0000-0000-00000000a002','{"sub":"00000000-0000-0000-0000-00000000a002","email":"student2@campus-a.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000a003','00000000-0000-0000-0000-00000000a003','{"sub":"00000000-0000-0000-0000-00000000a003","email":"seller@campus-a.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000a004','00000000-0000-0000-0000-00000000a004','{"sub":"00000000-0000-0000-0000-00000000a004","email":"advisor@campus-a.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000a005','00000000-0000-0000-0000-00000000a005','{"sub":"00000000-0000-0000-0000-00000000a005","email":"it@campus-a.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000b001','00000000-0000-0000-0000-00000000b001','{"sub":"00000000-0000-0000-0000-00000000b001","email":"student@campus-b.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000c001','00000000-0000-0000-0000-00000000c001','{"sub":"00000000-0000-0000-0000-00000000c001","email":"cfo@semester.test"}','email',now(),now(),now()),
+ ('00000000-0000-0000-0000-00000000c002','00000000-0000-0000-0000-00000000c002','{"sub":"00000000-0000-0000-0000-00000000c002","email":"social@semester.test"}','email',now(),now(),now());
+insert into core.institutions (id, name, features) values
+ ('00000000-0000-0000-0000-0000000000aa','Campus A','{"community":true,"marketplace":true}'),
+ ('00000000-0000-0000-0000-0000000000bb','Campus B','{"community":true,"marketplace":true}');
+insert into core.profiles (id, institution_id, display_name, role, visibility) values
+ ('00000000-0000-0000-0000-00000000a001','00000000-0000-0000-0000-0000000000aa','Student A','student','{"findable":true,"major":true,"major_value":"Biology"}'),
+ ('00000000-0000-0000-0000-00000000a002','00000000-0000-0000-0000-0000000000aa','Student Two','student','{"findable":false}'),
+ ('00000000-0000-0000-0000-00000000a003','00000000-0000-0000-0000-0000000000aa','Seller','student','{"findable":true}'),
+ ('00000000-0000-0000-0000-00000000a004','00000000-0000-0000-0000-0000000000aa','Advisor Lee','advisor','{}'),
+ ('00000000-0000-0000-0000-00000000a005','00000000-0000-0000-0000-0000000000aa','IT Admin','it_admin','{}'),
+ ('00000000-0000-0000-0000-00000000b001','00000000-0000-0000-0000-0000000000bb','Student B','student','{}');
+insert into ops.staff (id, role) values ('00000000-0000-0000-0000-00000000c001','cfo'),('00000000-0000-0000-0000-00000000c002','social');
+insert into community.groups (id, institution_id, name, kind, created_by) values ('00000000-0000-0000-0000-00000000d001','00000000-0000-0000-0000-0000000000aa','Private study group','community','00000000-0000-0000-0000-00000000a001');
+insert into community.members (group_id, profile_id, role) values ('00000000-0000-0000-0000-00000000d001','00000000-0000-0000-0000-00000000a001','leader');
+insert into community.posts (id, institution_id, author, body) values ('00000000-0000-0000-0000-00000000e001','00000000-0000-0000-0000-0000000000aa','00000000-0000-0000-0000-00000000a001','Seed post');
+insert into community.events (id, institution_id, title, starts_at) values ('00000000-0000-0000-0000-00000000f0b1','00000000-0000-0000-0000-0000000000bb','Campus B event', now() + interval '7 days');
+insert into market.listings (id, institution_id, seller, title, category, price_cents, status) values ('00000000-0000-0000-0000-00000000aa11','00000000-0000-0000-0000-0000000000aa','00000000-0000-0000-0000-00000000a003','Seed lamp','gear',500,'live');
+insert into core.ai_policy (institution_id, ai_on, weekly_budget, student_id_pattern, model) values ('00000000-0000-0000-0000-0000000000aa', true, 50, '\\b\\d{9}\\b', 'approved-default');
+-- If a column above does not exist in the repo's schema, fix the seed to match the migration (the migration is the source of truth), never the reverse.

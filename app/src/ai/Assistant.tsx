@@ -429,8 +429,8 @@ function PanelGone({ error, onClose }: { error: Error; onClose: () => void }) {
         maxWidth: 420,
         marginInline: 'auto',
         padding: 'var(--sp-6)',
-        background: 'var(--card)',
-        border: '1px solid var(--line)',
+        background: 'var(--card-surface)',
+        border: '1px solid var(--app-line)',
         borderRadius: 'var(--r-lg)',
         boxShadow: 'var(--glow)',
       }}

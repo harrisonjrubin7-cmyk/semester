@@ -3,6 +3,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { clock, dateToIso, isoToDate } from '../lib/date';
 import { formatDate } from '../lib/locale';
 import { weekStart } from '../lib/weekly';
+import { useNow } from '../state/store';
 import {
   EMPTY_RESETS,
   HELP_OPTIONS,
@@ -45,7 +46,7 @@ const dayName = (iso: string) => formatDate(isoToDate(iso), { weekday: 'long', m
  * reports the acceptance (`onAcceptBlock`); it writes no calendar itself.
  */
 export function WeeklyReset({
-  now = new Date(),
+  now: suppliedNow,
   commitments = [],
   deadlines = [],
   unfinished = [],
@@ -61,6 +62,8 @@ export function WeeklyReset({
   /** Called with a proposal when the student accepts it, and again with `false` if they take it back. */
   onAcceptBlock?: (block: BlockProposal, accepted: boolean) => void;
 }) {
+  const currentTime = useNow();
+  const now = suppliedNow ?? currentTime;
   const week = dateToIso(weekStart(now));
   const lib = useDeviceLibrary(RESET_KEY, readResets, EMPTY_RESETS);
   const record = lib.value.resets.find((r) => r.weekStart === week) ?? startReset(week);

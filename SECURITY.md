@@ -25,6 +25,12 @@ function starts reading a secret this document does not know how to rotate.
 the repository, the Supabase project and the only mailbox
 (`harrisonjrubin7@gmail.com`) a student is given to write to.
 
+That mailbox is the owner's personal address and is the one contact for
+security reports, privacy questions and rights requests alike. No dedicated
+address has been decided or published (**[COUNSEL REQUIRED]**, P-20, owner to
+decide); the policy drafts and `security.txt` use this one until then, and
+nothing here promises how fast it is read.
+
 The same single point of failure [`ROLLBACK.md`](ROLLBACK.md) names, and it is
 worse here: a rollback can wait an hour with no one harmed, and a live read of
 other people's rows cannot. During a pilot there is nobody else to page, so the
@@ -77,6 +83,14 @@ which [`docs/SUPPLY-CHAIN.md`](docs/SUPPLY-CHAIN.md) renders, and
 [`app/src/lib/security.test.ts`](app/src/lib/security.test.ts) holds this table
 to that one — the day counts cannot drift apart without a test going red.
 
+This is the scale for vulnerability reports and advisories only. Other scales
+stay in their own lanes: `INCIDENT-RECOVERY-PLAYBOOK.md` (SEV1–4) for service
+recovery, the trust incident runbook (P0/P1) for a suspected security incident,
+and the Community runbook for its own queues. Where a privacy incident needs a
+level, use the overlay in
+[`docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md`](docs/privacy-operations/05-PRIVACY-INCIDENT-COORDINATION.md)
+§4, which maps to all of them and implies no notice duty.
+
 | Severity | What it looks like here | First response | Fixed within | Escalate to |
 | --- | --- | --- | ---: | --- |
 | **Critical** | Another account's rows readable; a service-role or signing key out; an exploit in the wild against a package or Action this project ships | The same day: rotate, close the gate or roll back before anything else ships (the moves above) | 2 days | Owner; every affected account, per *Telling people* |
@@ -99,9 +113,9 @@ commitment to a customer until a contract or
 still says that no response time is promised. And a target for *fixing* is not
 a target for *acknowledging*: with one person reading the mailbox, the honest
 acknowledgement clock is "when the owner next reads mail", and this file does
-not dress that up as a number. The 72-hour clock under *Telling people* is the
-one clock in this file that is a commitment rather than a target, and it is
-about notice, not repair.
+not dress that up as a number. The 72-hour clock under *Telling people* is
+about notice, not repair, and it is a target pending counsel, not a commitment:
+no notice deadline has been approved (**[COUNSEL REQUIRED]**, P-02).
 
 The row this closes in the HECVAT register is `VULN-1`
 ([`docs/market-readiness/HECVAT_READINESS.md`](docs/market-readiness/HECVAT_READINESS.md)),
@@ -146,7 +160,7 @@ complete rather than a selection.
 | **`STRIPE_WEBHOOK_SECRET`** | Function secret (`billing-webhook`) | The ability to forge a payment event | Roll the endpoint's signing secret in Stripe, then `supabase secrets set`. Unset, the webhook answers 503 |
 | **`RESEND_API_KEY`** | Function secret (`lead-intake`, `support-reply-notify`) | Sending email as Semester's Resend account | Revoke at `resend.com/api-keys`, then `supabase secrets set` |
 | `LEAD_IP_SALT` | Function secret, optional | Reversing a one-day rate-limit hash by guessing addresses | `supabase secrets set`; falls back to the service key |
-| `SITE_ORIGINS`, `CHECKOUT_RETURN_URL`, `STRIPE_PORTAL_CONFIGURATION_ID`, `STRIPE_PRODUCT_TAX_CODE`, `BILLING_LIVE_ENABLED`, `LEAD_NOTIFY_EMAIL`, `LEAD_NOTIFY_FROM`, `SUPPORT_NOTIFY_FROM`, `SUPPORT_RETURN_URL` | Function secrets | Nothing. Origins, return addresses, exact Stripe portal configuration, reviewed product classification, an explicit checkout operations gate and notification routing | `SITE_ORIGINS` and `ALLOWED_ORIGIN` are read strictly. Billing refuses absent or invalid return, portal or `txcd_…` values; only literal `BILLING_LIVE_ENABLED=true` opens checkout, and setting it to `false` closes checkout without removing credentials. `SUPPORT_NOTIFY_FROM` falls back to `LEAD_NOTIFY_FROM`; `SUPPORT_RETURN_URL` defaults only to the production GitHub Pages app. See `docs/COMMERCIAL-CORE.md` |
+| `SITE_ORIGINS`, `CHECKOUT_RETURN_URL`, `STRIPE_PORTAL_CONFIGURATION_ID`, `STRIPE_PRODUCT_TAX_CODE`, `BILLING_LIVE_ENABLED`, `LEAD_NOTIFY_EMAIL`, `LEAD_NOTIFY_FROM`, `SUPPORT_NOTIFY_FROM`, `SUPPORT_RETURN_URL` | Function secrets | Nothing. Origins, return addresses, exact Stripe portal configuration, reviewed product classification, an explicit checkout operations setting and notification routing | `SITE_ORIGINS` and `ALLOWED_ORIGIN` are read strictly. Billing refuses absent or invalid return, portal or `txcd_…` values. `BILLING_LIVE_ENABLED=false` closes checkout without removing credentials; `true` is necessary but cannot override the current code-level paid-acquisition hold. `SUPPORT_NOTIFY_FROM` falls back to `LEAD_NOTIFY_FROM`; `SUPPORT_RETURN_URL` defaults only to the production GitHub Pages app. See `docs/COMMERCIAL-CORE.md` |
 | `SUPABASE_URL` | Injected | Nothing. It is in the JavaScript every visitor downloads | — |
 | `SUPABASE_ANON_KEY` | Injected | Nothing beyond a visitor's reach: the publishable key the app ships. `billing-cancel` pairs it with the caller's own token, so row-level security decides what it reads | — |
 | `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | Function secrets | Nothing. The public half is compiled into the page on purpose | — |
@@ -230,12 +244,14 @@ like this is to describe what you wish you could see:
 The part the old commitment was about, and the part that has to survive the
 owner wanting it to be smaller than it was.
 
-**Within 72 hours of confirming that rows were readable by somebody they do not
-belong to, every affected account is emailed** — addresses are in `auth.users`
+**Target, pending counsel (P-02), not a commitment — [COUNSEL REQUIRED].** The
+aim is: Within 72 hours of confirming that rows were readable by somebody they do not
+belong to, every affected account is emailed — addresses are in `auth.users`
 and reachable from the dashboard, so the mechanism is a query and a mail merge
-rather than a project. Seventy-two hours is the commitment because it is the
-tightest clock any of the regimes below sets, and one clock is easier to keep
-than three.
+rather than a project. Seventy-two hours is the working target because it is the
+tightest clock any of the regimes below is believed to set (not verified), and one clock is easier to keep
+than three. No notice deadline has been approved, and nothing here promises
+one to a customer or a user.
 
 What the mail says, in this order: **what was readable, for how long, whether
 it was read, and what the person should do.** "Whether it was read" is usually

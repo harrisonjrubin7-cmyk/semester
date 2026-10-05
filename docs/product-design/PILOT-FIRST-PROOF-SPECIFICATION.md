@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | **CONTROLLED PILOT SPECIFICATION — NO NAMED-CUSTOMER PROOF FILED** |
 | Owner | Harrison Rubin — company-side Product and Customer Success; backup and named customer sponsor unassigned |
-| Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
+| Evidence date | 2026-10-03 at repository revision `d246a348` |
 | Scope | One bounded institution, cohort, workflow and decision period |
 
 ## Definition
@@ -28,6 +28,14 @@ A signed conversation, configured tenant, passing repository test, sandbox demon
 | measurement | event/survey/interview definitions, privacy threshold, owners, cadence and decision date |
 
 Unknown or bracketed values block activation.
+
+## Repository validation — 2026-10-03
+
+The P03 focused Vitest run passed **20 files and 176 tests** covering account/isolation helpers, role specifications and launch behavior, verified institutional access, institutional navigation and package surfaces, privacy-safe operations reporting, audit behavior, trust scorecards and named-tenant approval logic. In particular, the client-selected presentation role did not become authorization; access remained derived from live verified grants, malformed or expired grants failed closed, and reporting tests preserved cohort suppression, lineage and independent review rules.
+
+The corresponding PostgreSQL 17 suites for tenancy, capabilities, grants, institutional foundations, membership, reports, rollout and school offboarding were selected, but the checker exited 2 before initializing a cluster because this host has no PostgreSQL 17 server. They were therefore **not rerun** in this pass. The 2026-09-30 hosted-preview offboarding rehearsal remains historical synthetic evidence only: it was partial, author-run and rolled back, and it is not customer, production or second-person acceptance.
+
+This validation supports repository behavior for the cited paths only. It does not establish a complete target route/data inventory, deployed two-tenant isolation, authoritative institutional readback, a generated tenant-wide export, real offboarding, staffed operation, customer UAT/acceptance, activation or observed first proof.
 
 ## First-proof journey
 

@@ -786,7 +786,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Migration discovery report',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Customer data migration: NOT_STARTED; nothing supports it' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3 course-migration milestones and evidence' }],
+    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Customer data migration: evidence path (Migration Center) and roster staging built; no discovery scanner and no load path' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3 course-migration milestones and evidence' }],
     gap: 'No scanner of legacy courses/tools/content/links/assessments and no risk report. Needs tooling and a migration discovery report.',
   },
   {
@@ -796,7 +796,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Migration UAT',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'No import format, dry-run, provenance, rollback or reconciliation' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: course shells, pages, files and media imported' }],
+    evidence: [{ path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Rosters only have a manifest, dry-run, rollback and reconciliation; no content import and no provenance' }, { path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: course shells, pages, files and media imported' }],
     gap: 'No content migration from Canvas/Brightspace/Blackboard and no native content model to receive it. Needs importers and migration UAT.',
   },
   {
@@ -816,7 +816,7 @@ export const REGISTER: readonly Requirement[] = [
     validation: 'Reconciliation UAT',
     severity: 'P0',
     status: 'designed',
-    evidence: [{ path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: grade ledger reconciled before any passback' }, { path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Reconciliation report: none' }],
+    evidence: [{ path: 'docs/operating-model/PILOT-TO-PRODUCTION.md', shows: 'Phase 3: grade ledger reconciled before any passback' }, { path: 'docs/market-readiness/MIGRATION_PLAYBOOK.md', shows: 'Reconciliation counts exist in the Migration Center and for rosters; no grade import or reconciliation' }],
     gap: 'No gradebook structure or historical grade import, security model or reconciliation. Needs definition, build and reconciliation UAT.',
   },
   {

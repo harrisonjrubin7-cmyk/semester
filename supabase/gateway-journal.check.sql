@@ -150,6 +150,7 @@ begin
      or not has_function_privilege('service_role', 'public.gateway_retention_health()', 'execute') then
     raise exception 'FAILED: retention readiness privileges are not service-only';
   end if;
+  raise notice 'ok  gateway journal state is tenant-scoped, atomic, conservative and service-only';
 end $$;
 
 rollback;

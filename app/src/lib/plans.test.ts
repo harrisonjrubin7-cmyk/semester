@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ALWAYS_INCLUDED, PILOT_NOTE, PLANS, plan, priceLine } from './plans';
+import { ALWAYS_INCLUDED, INDIVIDUAL_PAID_ACQUISITION_ENABLED, PILOT_NOTE, PLANS, plan, priceLine } from './plans';
 
 describe('the plans', () => {
   it('are Free, Plus, Pro and Semester Institutional, in that order', () => {
@@ -9,14 +9,13 @@ describe('the plans', () => {
     expect(plan('institution').name).toBe('Semester Institutional');
   });
 
-  it('sell only Plus, and only in the app: every other paid price is marked planned', () => {
+  it('holds every paid individual plan as planned while acquisition is disabled', () => {
+    expect(INDIVIDUAL_PAID_ACQUISITION_ENABLED).toBe(false);
     for (const p of PLANS) {
-      if (p.price) expect(p.priceStatus, p.id).toBe(p.id === 'plus' ? 'in-app' : 'planned');
+      if (p.price) expect(p.priceStatus, p.id).toBe('planned');
       if (p.priceStatus === 'planned') expect(priceLine(p), p.id).toMatch(/\(planned\)$/);
-      if (p.priceStatus === 'in-app') expect(priceLine(p), p.id).not.toMatch(/planned/);
     }
-    expect(PILOT_NOTE).toMatch(/Plus can be bought from the Account screen/);
-    expect(PILOT_NOTE).toMatch(/Pro is not on sale yet/);
+    expect(PILOT_NOTE).toMatch(/Plus and Pro are planned, not on sale/);
   });
 
   it('never put export, deletion or saved plans behind a paywall', () => {
@@ -32,7 +31,7 @@ describe('the plans', () => {
 
   it('writes prices the way people read them', () => {
     expect(priceLine(plan('free'))).toBe('Free');
-    expect(priceLine(plan('plus'))).toBe('$7.99 a month or $59 a year');
+    expect(priceLine(plan('plus'))).toBe('$7.99 a month or $59 a year (planned)');
     expect(priceLine(plan('institution'))).toBe('Through your university');
   });
 });
@@ -56,7 +55,7 @@ describe('the Plus price', () => {
     expect(Object.keys(catalogPlus()).sort()).toEqual(['month', 'year']);
   });
 
-  it('is the same on the pricing page and at checkout: $7.99 a month or $59 a year', () => {
+  it('keeps the planned display price aligned with the dormant catalog', () => {
     const p = plan('plus').price!;
     expect(p).toEqual({ monthly: 7.99, yearly: 59 });
     expect(catalogPlus()).toEqual({ month: Math.round(p.monthly * 100), year: Math.round(p.yearly * 100) });

@@ -5,6 +5,18 @@
 - **Evidence date:** 2026-10-03
 - **Scope:** application, identity, database, integrations, AI, security, privacy, availability, backups, releases, and customer-impact signals
 
+## P05 repository validation — 2026-10-03
+
+At repository revision `d246a348`, the focused operational-control run passed **22 files and 311 tests** covering AI kill-switch contracts and drill safety, deploy rollback preconditions, restore-rehearsal CI wiring, error budgets, incident communications, war-room logic, status history/notices/pages, support tickets and their panel, help/status routing, browser/draft/academic/plan/incident recovery, institutional flight-plan recovery, audit regressions and sync status.
+
+The target-dependent exercises were also invoked and failed closed before changing or contacting a configured target:
+
+- `supabase/restore.sh` exited 2 because this host has no PostgreSQL 17 server; no restore cluster was initialized.
+- `pnpm run drill:killswitch` exited 2 because `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `SEMESTER_SESSION` are absent; no switch or deployed function was touched.
+- `pnpm run smoke:production` exited 2 because the explicit production app and gateway HTTPS origins are absent; no production probe ran.
+
+This pass supports repository contracts and safe refusal behavior only. It does not prove production log completeness, alert delivery or acknowledgement, staffed escalation, current deployed health, target rollback, provider-backup restore, measured RTO/RPO, deployed kill-switch operation, support response, incident exercise, customer communication or institutional acceptance.
+
 ## Standard
 
 Collect the minimum events needed to detect security, reliability, privacy, safety, cost, and integration failures without logging secrets, tokens, full request bodies, unnecessary student content, or sensitive attributes. Events must carry time, environment, service, correlation ID, outcome/reason, authorized account/tenant/resource identifiers where necessary, source/status, and version while enforcing access, retention, export, deletion, hold, integrity, and incident-preservation rules.

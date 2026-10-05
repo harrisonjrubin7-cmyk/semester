@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { cloud, cloudConfigured } from '../lib/cloud';
-import { plan } from '../lib/plans';
+import { INDIVIDUAL_PAID_ACQUISITION_ENABLED, plan } from '../lib/plans';
 import {
   askToOpenUpgrade,
   currentSubscription,
@@ -51,7 +51,7 @@ export function PlusPrompt({ now = Date.now }: { now?: () => number } = {}) {
   const snoozed = accountId !== '' && (notNow === accountId || snoozedUntil(accountId) > now());
 
   useEffect(() => {
-    if (!accountId || snoozed) return;
+    if (!INDIVIDUAL_PAID_ACQUISITION_ENABLED || !accountId || snoozed) return;
     let live = true;
     void (async () => {
       try {
@@ -70,7 +70,7 @@ export function PlusPrompt({ now = Date.now }: { now?: () => number } = {}) {
   }, [accountId, snoozed]);
 
   const prices = offer && offer.accountId === accountId ? offer.prices : [];
-  if (!accountId || snoozed || prices.length === 0) return null;
+  if (!INDIVIDUAL_PAID_ACQUISITION_ENABLED || !accountId || snoozed || prices.length === 0) return null;
 
   const later = () => {
     try {

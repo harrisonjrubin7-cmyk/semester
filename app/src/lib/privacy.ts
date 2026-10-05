@@ -155,7 +155,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
       'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'opened', 'visited',
       'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
-      'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
+      'typeface', 'bodyface', 'lineHeight', 'textSpacing', 'readingWidth', 'iconShape', 'calm',
       'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites', 'access',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
       'workspaceMode', 'pinned', 'goal',

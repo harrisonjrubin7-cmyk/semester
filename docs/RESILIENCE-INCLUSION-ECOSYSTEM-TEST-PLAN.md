@@ -8,7 +8,7 @@ proof here.
 
 ## The gates every phase runs
 
-From `app/` — the repository root has no scripts:
+From `app/` — the repository root defines no scripts:
 
 ```bash
 npx tsc -b

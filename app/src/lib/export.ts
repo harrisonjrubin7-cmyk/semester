@@ -881,6 +881,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',
+  textSpacing: 'how far apart the letters and words sit',
   readingWidth: 'how wide a paragraph gets',
   shell: 'how a screen is arranged once you are on it',
   textSize: 'the size text is set at here',

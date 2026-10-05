@@ -5,8 +5,12 @@ renew. Schema: `supabase/migrations/20260929070000_commercial_core.sql`.
 Proof: `supabase/commercial.check.sql` (29 checks), plus the updated allowlists
 in `grants`, `capabilities` and `rls-coverage`. What runs it is below.
 
-Nothing here charges anyone yet. Stripe is wired but not connected: nothing
-happens until the secrets under "Off until the owner sets these" are set. The
+Individual Semester Plus billing was live-accepted on 2026-10-03
+([record](evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md)); checkout stays held
+by the governed acquisition control, the $59 annual charge, refunds, failed
+renewals and disputes were not exercised, and nothing here charges an
+institution. Each function still answers 503 until its secrets under "Off until
+the owner sets these" are set. The
 seed priced Plus at $3.99/month and $29.99/year; `20260929131000_plus_price.sql`
 retired those rows and set Plus at $7.99/month and $59/year (D-134), the
 figures the pricing page prints. `plans.test.ts` holds the two to each other.
@@ -174,7 +178,7 @@ or leads go unanswered.
 | `CHECKOUT_RETURN_URL` | billing-checkout, billing-portal | App route where Stripe returns the student. Activation supplies the production Account route; the portal refuses to fall back to an origin root |
 | `STRIPE_PORTAL_CONFIGURATION_ID` | billing-portal | Active `bpc_…` configuration created or selected by the activation tool; sessions always name it explicitly |
 | `STRIPE_PRODUCT_TAX_CODE` | billing-checkout | Owner/accountant-approved `txcd_…` classification for Semester Plus software; sent on every inline Stripe Product and required before checkout opens |
-| `BILLING_LIVE_ENABLED` | billing-checkout | Explicit operations gate. Only literal `true` opens checkout; the activation tool keeps it false while credentials, tax code, and provider inventory are changing |
+| `BILLING_LIVE_ENABLED` | billing-checkout | Explicit operations setting. `false` closes checkout; `true` is necessary but cannot override the current code-level paid-acquisition hold. The activation tool keeps it false while credentials, tax code, and provider inventory are changing |
 | `LEAD_IP_SALT` | lead-intake | Optional: the key the IP address is hashed with (default: the service key) |
 
 The Stripe webhook to register (Developers → Webhooks) is

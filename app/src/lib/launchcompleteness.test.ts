@@ -330,7 +330,7 @@ function render(): string {
     ...groupedSection(LMS, ['Learning experience', 'Faculty experience', 'Integration and standards']),
     `## ${SECTIONS[4]}`,
     '',
-    `Customer data migration does not exist (${ref('docs/market-readiness/MIGRATION_PLAYBOOK.md')}). This is its shape, for the first pilot, even one that uses only curated or manual data. The principle: migrate only data needed for the approved scope.`,
+    `No production load path for customer data exists (${ref('docs/market-readiness/MIGRATION_PLAYBOOK.md')}); the Migration Center records evidence and roster staging is a foundation. This is its shape, for the first pilot, even one that uses only curated or manual data. The principle: migrate only data needed for the approved scope.`,
     '',
     `**Sequence:** ${MIGRATION_SEQUENCE.join(' → ')}.`,
     '',

@@ -189,7 +189,12 @@ interface Finding {
 }
 
 async function serious(): Promise<{ findings: Finding[]; passed: number }> {
-  const result = await axe.run(document.documentElement, { resultTypes: ['violations'] });
+  if (!host) throw new Error('axe probe called before the app rendered');
+  // Audit the rendered application root. Document-level language and title
+  // are asserted separately above; walking the whole shared jsdom document
+  // repeatedly also includes test-runner residue and can overrun the case
+  // budget before axe reaches the requested screen.
+  const result = await axe.run(host, { resultTypes: ['violations'] });
   const findings = result.violations
     .filter((v) => v.impact === 'serious' || v.impact === 'critical')
     .map((v) => ({

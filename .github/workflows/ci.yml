@@ -67,12 +67,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       # `npm ci` rather than `npm install`: it installs the lockfile exactly,
       # so CI cannot pass on a dependency tree nobody has locally.
       - name: Install
-        working-directory: app
         run: npm ci
 
       # ── Advisories published since the lockfile was written ──────────────
@@ -124,6 +123,47 @@ jobs:
       - name: Lint
         working-directory: app
         run: npm run lint
+
+      # ── The design system, held to its own sources ──────────────────────────
+      #
+      # `lint` above holds the type scale, the labels and the vocabulary; the
+      # suite below holds the token layer and the contrast. Four questions were
+      # left that no step asked by name, and a student sees all of them:
+      #
+      #   · is `design-tokens/semester.tokens.json` the file `tokens.css` and
+      #     `look.ts` produce? (`lib/tokenexport.test.ts` knew; nothing said so
+      #     in a place a reviewer reads.)
+      #   · does any style use a custom property nothing defines?
+      #   · did this change add a raw value, beyond what each file already
+      #     carries? `.tsx` is `app/design-system-baseline.json`'s, with the line
+      #     and the token to use; stylesheets and colour functions are
+      #     `src/styles/rawbudget.ts`'s; `hex.test.ts` holds quoted hex.
+      #   · does every path in `docs/design-system/FIGMA-MAPPING.md` resolve in
+      #     the export, so a mapping cannot go stale quietly?
+      #
+      # No Figma credential is used or needed: the mapping is checked against
+      # the committed export, and nothing here signs in to anything.
+      - name: Design-system gates
+        working-directory: app
+        run: npm run design-system:check
+
+      # The report is the artifact, not a second gate: the step above decides
+      # the colour, and this one runs the style and accessibility contract
+      # tests again only to say which of them held. `continue-on-error` so a
+      # failure here cannot paint a build red that the step above passed.
+      - name: Design-system report
+        if: always()
+        working-directory: app
+        continue-on-error: true
+        run: npm run design-system:report
+
+      - name: Keep the design-system report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: design-system-report
+          path: app/reports/design-system/
+          if-no-files-found: ignore
 
       # The half of the typecheck the build graph does not reach.
       #
@@ -515,7 +555,9 @@ jobs:
       # open connections are checked after each, and `drift.sh` fails a scenario
       # whose best window at the end is more than twice, and five milliseconds,
       # slower than its best at the start. A leak passes every window's budget
-      # and fails that (D-1019).
+      # and fails that (D-1019). A drift seen once is confirmed by four more windows
+      # before it fails the run, since a stalled pair of windows on a shared runner
+      # reads like a leak (D-1280).
       - name: Load and concurrency scenarios
         env:
           LOAD_SECONDS: '6'
@@ -549,7 +591,9 @@ jobs:
   # builds the app against it, and has `scripts/account-sync.mjs` sign up on
   # one browser context, make and finish an action, confirm the server holds
   # it, sign in on a second fresh context and see it there done, and then the
-  # same in reverse. Nothing is mocked.
+  # same in reverse. It then downloads and inspects the account export, deletes
+  # the account through the real Edge Function, and proves the old session is
+  # invalid. Nothing is mocked.
   #
   # Shown to be a guard rather than assumed one: with `push()` in
   # `lib/cloud.ts` made to return before writing, both viewports go red at
@@ -559,7 +603,7 @@ jobs:
   # A job of its own because `supabase start` pulls a stack of images and
   # wants a runner that is not also doing everything `build` does. The
   # services the journey never touches are left out (`-x`) to keep the pull
-  # small: sign-in and sync are Kong, GoTrue, PostgREST and Postgres.
+  # small. Edge Runtime stays because the last step exercises delete-account.
   account-sync:
     runs-on: ubuntu-latest
 
@@ -570,18 +614,22 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
-        working-directory: app
         run: npm ci
 
       - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3
         with:
           version: latest
 
+      - name: Allow loopback CORS only for this local test stack
+        run: |
+          install -d supabase/functions
+          printf 'CORS_ALLOW_DEV=1\n' > supabase/functions/.env
+
       - name: Start a local Supabase from this repository
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,storage-api
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor,postgres-meta,storage-api
 
       # The public key of the *local* stack — the same fixed development value
       # every `supabase start` prints, not a secret of any project. `--outDir`
@@ -605,12 +653,16 @@ jobs:
       # Exits 1 on a finding and 2 if it could not run — including when the
       # build turns out to be talking to anything but a loopback address, in
       # which case it refuses to make an account at all.
-      - name: Sign in on two devices and sync between them
+      - name: Complete the real account lifecycle across two devices
         working-directory: app
         env:
           SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
           SMOKE_URL: http://localhost:4174/
-        run: npm run smoke:sync
+        run: |
+          # This key belongs only to the ephemeral loopback stack. The smoke
+          # refuses to send it to any non-loopback origin and never prints it.
+          export SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────
   #
@@ -713,6 +765,11 @@ jobs:
       # One place, read by both scans, so they cannot drift onto different
       # binaries. See the block above for what the default cost.
       GITLEAKS_VERSION: 8.28.0
+      # From the release's own gitleaks_8.28.0_checksums.txt. The full-tree
+      # scan below downloads a binary and runs it over the whole repository
+      # with the job token in reach; without this, a tampered or substituted
+      # release asset would run unchecked. Bump it with the version above.
+      GITLEAKS_SHA256: a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -749,6 +806,7 @@ jobs:
           cd "$(mktemp -d)"
           curl -fsSL -o gitleaks.tar.gz \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum --check --strict -
           tar xzf gitleaks.tar.gz gitleaks
           bin="$PWD/gitleaks"
           cd "$GITHUB_WORKSPACE"

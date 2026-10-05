@@ -1,6 +1,6 @@
 # Semester owner and accountability matrix
 
-**Version:** 0.1
+**Version:** 0.2
 **Assessment date:** 2026-10-03 (America/Chicago)
 **Document owner:** Harrison Rubin, Founder/CEO, until delegated
 **Review cadence:** weekly during finalization; before every launch decision; quarterly after stable operation
@@ -27,6 +27,21 @@ Harrison Rubin is the named primary for every company-side seat below under the 
 | Support | intake, triage, privacy/security routing, service communications | named primary/backup; staffed hours; tested channel | PRIMARY: Harrison Rubin; BACKUP: UNASSIGNED | any supported launch until hours, backup and channel test exist |
 | Communications | approved public/customer messaging and crisis coordination | named owner/backup; approval chain | PRIMARY: Harrison Rubin; BACKUP: UNASSIGNED | public/company claims until approval chain is complete |
 
+## Growth and lifecycle reviewer roles
+
+Added 2026-10-04 for [`docs/gtm/GROWTH-OPERATING-PLAN.md`](docs/gtm/GROWTH-OPERATING-PLAN.md). Names are recorded as the founder gave them.
+
+| Role | Named person | Backup | Gate it feeds in the plan |
+| --- | --- | --- | --- |
+| Privacy reviewer | Harrison Rubin | UNASSIGNED | consent texts, retention sweep, any new analytics field |
+| Accessibility reviewer | Harrison Rubin | UNASSIGNED | message templates and every experiment variant |
+| Claims reviewer | Harrison Rubin | UNASSIGNED | every public asset |
+| Analyst | Harrison Rubin | UNASSIGNED | dashboards and experiment readouts |
+| Moderator | Harrison Rubin | UNASSIGNED | opening any community space |
+| Backup experiment owner | Harrison Rubin | UNASSIGNED | any experiment |
+
+What this does and does not satisfy: it closes the unnamed-seat gap only. One person holding the owner and the reviewer seats cannot meet the plan's owner-is-not-approver rule, cannot supply independent review, and is not backup coverage; the backup experiment owner is the same person as the experiment owner. Those gates stay open until a second person holds the relevant seat.
+
 ## Customer-side seats required for an institutional pilot
 
 | Seat | Accountable for | Minimum evidence | Current state |
@@ -46,6 +61,18 @@ Harrison Rubin is the named primary for every company-side seat below under the 
 - Security, privacy, accessibility, and data-rights protections are not tradable for price or schedule.
 - A missing signature, primary/backup, tested channel, or scope authority is a NO-GO for the affected motion.
 - The customer controls customer-side authorization; Semester cannot substitute its own approval.
+
+## Final motion accountability
+
+| Motion | Company accountable primary | Required independent/customer acceptance | Current authority state |
+| --- | --- | --- | --- |
+| invitation-only individual validation | Harrison Rubin — Product/Privacy/Support coordination | qualified legal and accessibility review plus representative-user acceptance as applicable | **CONDITIONAL**; activation conditions remain open |
+| non-activation design-partner engagement | Harrison Rubin — Founder/Revenue/Product | prospect controls its own name, statements and confidential information; no customer approval implied | **AUTHORIZED ONLY WITHIN THE NON-ACTIVATION BOUNDARY** in [`GO-NO-GO-DECISION.md`](GO-NO-GO-DECISION.md) |
+| institutional activation | Harrison Rubin — cross-functional company primary | named sponsor, champion, IT, privacy, security, accessibility and procurement/counsel acceptance | **NO-GO**; all customer seats unidentified |
+| paid pilot | Harrison Rubin — Founder/Deal Desk/Finance coordination | counsel, tax/accounting, insurance, independent assurance and customer signatories | **NO-GO** |
+| broad enterprise sale | Harrison Rubin — Founder/Revenue | repeated customer, operational and independent evidence | **NO-GO** |
+
+The evidence producer, evidence acceptor, risk owner and launch decision-maker may be different people. Harrison may coordinate and produce internal evidence but cannot act as his own qualified independent assessor, licensed counsel, customer approver or proof of backup coverage.
 
 ## Required founder confirmations
 

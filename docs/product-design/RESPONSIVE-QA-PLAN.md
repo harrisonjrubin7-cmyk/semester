@@ -4,7 +4,7 @@
 | --- | --- |
 | Status | **CONTROLLED QA PLAN — AUTOMATED GUARDS PARTIAL; DEVICE MATRIX OPEN** |
 | Owner | Harrison Rubin — Product Design and Frontend Engineering; backup device-matrix reviewer unassigned |
-| Evidence date | 2026-10-03 at repository revision `8fc5fd56` |
+| Evidence date | 2026-10-03 at repository revision `d246a348` |
 | Canonical breakpoints | behavior follows repository media contracts; required observation widths below are test points, not new CSS breakpoints |
 
 ## Required observation matrix
@@ -44,6 +44,31 @@ Run width/media/unit guards, the production build and browser smoke first. Then 
 ## Release rule
 
 Horizontal page overflow, a clipped or obscured primary action, lost data or context on resize or rotation, an inaccessible alternative, navigation that is duplicated or missing, unreachable close, back, or recovery controls, or a core task that cannot complete at a required tier blocks the affected release. Cosmetic differences may be accepted only with an owner and rationale.
+
+## P06 repository and browser validation — 2026-10-03
+
+The focused repository suite passed 31 files and 294 tests covering axe checks, focus and keyboard behavior, labels, landmarks, titles, modal behavior, drag alternatives, field and failure messages, offline state, reduced-motion and calm settings, type scale, narrow headers, safe-area and target CSS, scrolling, and Calendar keyboard and target behavior. TypeScript and the production build passed; Vite retained its existing advisory for chunks above 500 kB.
+
+The local production bundle then passed the browser accessibility smoke on Home, Calendar, Courses, Work, YES, and Degree at desktop and 320 CSS-pixel reflow/400% effective zoom with reduced motion enabled. The smoke verified skip-link focus transfer, page titles, landmarks, accessible names, ARIA references, and absence of horizontal page overflow. This is evidence for those six signed-out fixtures in the local Chrome environment, not every route, signed-in state, browser, device, assistive technology, or deployment.
+
+The final cold-load performance run passed all six route/profile checks, with three runs per check:
+
+| Profile/route | FCP | LCP | CLS | Main-thread blocking |
+| --- | ---: | ---: | ---: | ---: |
+| phone / Home | 368 ms | 648 ms | 0.001 | 0 ms |
+| phone / Work | 292 ms | 364 ms | 0.001 | 1 ms |
+| phone / Degree | 468 ms | 548 ms | 0.001 | 135 ms |
+| desktop / Home | 240 ms | 424 ms | 0.010 | 1 ms |
+| desktop / Work | 212 ms | 416 ms | 0.010 | 30 ms |
+| desktop / Degree | 316 ms | 472 ms | 0.010 | 0 ms |
+
+An earlier full run measured 514 ms blocking on desktop Home against the 200 ms guard. A five-run isolated confirmation measured 0 ms and the complete rerun measured 1 ms, so the result was not reproduced and is retained as a laboratory spike rather than treated as a closed product defect. The bundle budget also passed: 435.0 KB first load against 479.0 KB, a 435.7 KB largest file against 480.0 KB, across 93 routes.
+
+The Comfortable-density target sweep opened all six selected destinations at phone and desktop widths. It found no controls below the 24 CSS-pixel WCAG AA floor and no controls that were unreachable by scroll. At phone width it measured 199 controls, one inline exemption, and 50 controls below the 44 CSS-pixel AAA design aim; at desktop it measured 267 controls and 114 below that aim. It also inventoried 161 of 389 phone text nodes and 217 of 481 desktop text nodes below 12 CSS pixels. The AAA target and small-text counts are design-review observations, not claims of WCAG failure; six phone and seven desktop controls were painted over at initial rest but reachable by scrolling and remain candidates for manual obstruction review.
+
+The scoped contrast sweep measured 1,199 text elements across 158 resting, hover, focus-visible, and focus passes on the same six destinations in the dark `ink` ground and reported zero findings. It did not measure 98 gradient-painted elements, four elements without resolvable text/color, 82 decorative glyphs, 47 passes that yielded no measurable text, the other 57 destinations, or the other dark and light grounds.
+
+Open proof remains: manual screen-reader and mobile virtual-keyboard operation, real-device portrait/landscape and resize continuity, the other required viewport tiers and 200% zoom, signed-in and populated/error fixtures, representative users, approved screenshots, all destinations and grounds, and deployed-target validation. No result in this section establishes universal accessibility, device support, institutional acceptance, production activation, or observed user outcomes.
 
 ## Evidence state
 

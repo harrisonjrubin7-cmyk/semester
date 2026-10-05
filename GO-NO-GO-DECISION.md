@@ -1,0 +1,66 @@
+# Semester go / no-go decision
+
+| Control | Value |
+| --- | --- |
+| Decision date | 2026-10-03, America/Chicago |
+| Status | **FINAL REPOSITORY RECOMMENDATION — NOT CUSTOMER OR PROFESSIONAL APPROVAL** |
+| Decision authority | repository assessment recommends; authorized founder, counsel, finance, security/accessibility reviewers, operators and customer approvers retain their respective authority |
+| Evidence | [`EXECUTIVE-FINALIZATION-REPORT.md`](EXECUTIVE-FINALIZATION-REPORT.md), [`LAUNCH-READINESS-CHECKLIST.md`](LAUNCH-READINESS-CHECKLIST.md), [`P07 record`](docs/finalization/P07-VALIDATION-EVIDENCE-2026-10-03.md), [`external queue`](docs/finalization/EXTERNAL-EVIDENCE-QUEUE.md) |
+
+## Decisions
+
+| Motion | Decision | Authorized boundary today | Explicitly not authorized |
+| --- | --- | --- | --- |
+| Individual student acquisition | **CONDITIONAL GO / YELLOW** | prepare invitation-only, unpaid validation; activate only after the conditions below are accepted | broad/paid promotion, unsupported outcome claims, or treating repository flows as a staffed service |
+| Design-partner institutional pilot | **GO / GREEN for non-activation engagement only** | discovery, synthetic demos, evidence exchange, fit/limitation review and conditional scoping | live customer data, tenant activation, customer/logo claims, production integrations or a launch promise |
+| Paid institutional pilot | **NO-GO / RED** | remediation and procurement preparation only | accepting payment, executing an unconditional launch obligation, or activating live data |
+| Broad institutional enterprise sale | **NO-GO / RED** | long-range qualification and learning only, with current limitations disclosed | GA/enterprise/system-replacement positioning, scale/assurance claims or broad contracting |
+
+## Conditions and blockers
+
+| Priority | Motion(s) | Blocking item | Owner/authority | Remediation | Required evidence | Category |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | all activation | authorized published candidate and current hosted release matrix | Harrison Rubin / Engineering; hosted CI authority | publish/freeze the authorized candidate; rerun CI, PostgreSQL 17, account sync and target checks | immutable SHA, green run links, retained logs | technical |
+| 2 | paid/broad; target activation | HawkScan and independent security assessment | Harrison Rubin coordinates; qualified independent assessor validates | configure authorized target/runtime; scan, triage, fix, clean rescan; conduct independent assessment | DAST reports and independent report with no open launch-blocking finding | security |
+| 3 | individual/paid/broad | qualified accessibility review | qualified assessor + Harrison Rubin coordination + counsel | manual AT/keyboard/zoom review, remediation and retest | dated report and approved public/ACR position | design/accessibility/legal |
+| 4 | individual/paid/broad | public and institutional legal authority | founder + qualified counsel + customer counsel where applicable | resolve company facts and review public policies, pilot paper, DPA and exhibits | versioned approvals and executed applicable paper | legal |
+| 5 | paid/broad | entity, signing, price, tax/accounting, payment and insurance authority | founder + finance/CPA/tax adviser + broker + counsel | confirm facts, approve economics and implement controls | signed authority matrix, written advice, coverage/payment evidence | commercial/legal/operations |
+| 6 | any supported launch | staffed support, monitoring and incident coverage | Harrison Rubin primary; backups required | establish queues, hours, routing, rota and acknowledgement/escalation drills | signed owner matrix, alert/support exercise | operations |
+| 7 | any target activation | recovery, rollback, rights and offboarding operation | Engineering + Security + Privacy + Support | execute on authorized target with named witnesses | dated restore/rollback/incident/export/deletion/revocation/offboarding records | reliability/privacy/security |
+| 8 | institutional | named customer scope and acceptance | customer sponsor, IT, privacy, security, accessibility, procurement/counsel | approve cohort, data/integration map, roles, responsibilities, limitations and UAT | signed approvals, UAT and responsibility matrix | customer/product/legal |
+| 9 | institutional conversion/claims | baseline, outcome and reference authority | Product/Success + customer sponsor + counsel | freeze measures and guardrails; run pilot; reconcile evidence; obtain permission | signed baseline, complete denominators, decision record and claim-specific permission | product/commercial/privacy |
+| 10 | broad enterprise | repeatability and capacity | Product + Engineering + Implementation + Support | complete multiple scoped deployments and close recurring operational gaps | measured implementation/support/capacity/isolation/recovery record | product/technical/operations |
+
+## Sequencing recommendation
+
+Proceed now with truthful design-partner discovery and preparation. In parallel, publish/freeze an authorized candidate and close company/legal/operational prerequisites. Complete independent and target validation before selecting an activation date. Run one bounded design-partner pilot only after signed GO; use its measured closeout to decide whether a paid pilot is supportable. Reconsider broad enterprise sale only after repeated successful deployments and independent assurance.
+
+Conditions are gates, not a schedule promise. If evidence expires, scope changes, a new material finding appears, or an owner/approver withdraws acceptance, the affected decision returns to NO-GO.
+
+## Executable path to GO
+
+The release evaluator in [`app/src/lib/governance/release-profiles.ts`](app/src/lib/governance/release-profiles.ts) now encodes the cumulative evidence needed to convert each held motion. It authorizes only the exact deployment, configuration, cohort and, where applicable, tenant and data mode named by current secure evidence. Missing, stale, malformed, cross-target or withdrawn evidence fails closed.
+
+| Motion | Executable profile or control | GO conversion rule |
+| --- | --- | --- |
+| Broad/paid individual acquisition | `individual-scale` plus product checkout hold | remains NO-GO while new checkout is disabled; future conversion requires every invitation-validation gate plus a separate broad-rollout decision accepted by founder, counsel, product, security, privacy, accessibility, support and operations |
+| Invitation-only unpaid individual validation | `invitation-only-individual-validation` | exact-SHA technical gates plus production, counsel-approved terms/public-policy posture, representative-user UAT, target account-lifecycle acceptance, qualified accessibility review, validation support, agreed outcomes/stop criteria and a current non-institutional validation decision for one named cohort |
+| Non-activation design-partner work | controlling non-activation boundary in this decision | remains GO only while work uses synthetic or otherwise approved non-production information, makes no customer/activation claim and creates no live-data, payment or launch obligation |
+| Paid institutional pilot, manual data | `paid-institutional-manual-pilot` | every bounded-pilot gate plus an approved design-partner activation and measured closeout; target DAST, restore, incident/alert, data-rights, revocation and offboarding exercises; independent security and qualified accessibility review; approved production providers; counsel-approved paper, pricing/signing authority, tax/accounting/payment controls, insurance decision; and customer-side purchase/billing authorization for one named manual-data target |
+| Paid institutional pilot, connected data | `paid-institutional-pilot` | every bounded-pilot gate plus an approved design-partner activation and measured closeout; target DAST, restore, incident/alert, data-rights, revocation and offboarding exercises; independent security and qualified accessibility review; approved production providers; counsel-approved paper, pricing/signing authority, tax/accounting/payment controls, insurance decision; and customer-side purchase/billing authorization for one named connected-data target |
+| Broad enterprise sale | `broad-enterprise-sale` | every paid-pilot gate plus a separate broad-enterprise sale decision, repeated customer deployments, capacity/error-budget acceptance and claim-specific reference permission |
+
+Passing the evaluator records authority for its exact scope; it does not waive a prohibited operation or turn planning-only scope into SIS/LMS replacement or system-of-record authority. The generated evidence contract is [`docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md`](docs/PILOT-AND-INDIVIDUAL-RELEASE-PROFILES.md).
+
+## Checkpoint F consistency decision
+
+**Finalization-program status: COMPLETE as a controlled repository package. Launch status: NOT COMPLETE and not broadly approved.** Completion means the ten required executive controls exist, reconcile to the current evidence and state conservative decisions. It does not convert missing professional, operated, customer, activation or outcome evidence into approval.
+
+| Motion | Final decision | Blocking package | Accountable coordination and acceptance | Remediation and required evidence | Categories | Sequence |
+| --- | --- | --- | --- | --- | --- | --- |
+| Individual student acquisition | **CONDITIONAL GO / YELLOW** for invitation-only, unpaid validation; otherwise **NO-GO** | priorities 1, 3, 4 and, before any supported or target-backed activation, 6–7 | Harrison Rubin coordinates Product, Engineering, Privacy and Support; qualified counsel and accessibility reviewers accept their domains; participants accept the disclosed validation boundary | publish/freeze an authorized candidate; complete current hosted CI/target checks, qualified accessibility and policy review, staffed support coverage and applicable recovery/privacy exercises; retain dated approvals, run links, reports and exercise records | technical, design/accessibility, legal, operations, reliability/privacy/security | prepare only now; activate a bounded cohort only after every applicable gate is evidenced and accepted; broad or paid acquisition remains later and separately decided |
+| Design-partner institutional pilot | **GO / GREEN** only for non-activation discovery, synthetic demonstrations, evidence exchange and conditional scoping | no launch blocker inside that boundary; priorities 1–8 apply before any live-data or tenant activation | Harrison Rubin coordinates Founder, Revenue and Product; the prospect controls its name, confidentiality and any later customer approval; professional reviewers retain domain authority | keep demonstrations synthetic and claims conditional; before activation, close the immutable-candidate, independent/target, legal, operational, recovery and named-customer controls and retain the evidence listed in priorities 1–8 | commercial, product, technical, security, legal, operations, customer | proceed now within the non-activation boundary; scope one bounded pilot only after written approvals; do not imply that discovery is an activated or successful pilot |
+| Paid institutional pilot | **NO-GO / RED** | priorities 1–9 | Harrison Rubin coordinates; Founder, Finance, counsel, independent assessors, operators and the named customer's authorized approvers must each accept their domain | close technical and independent validation, legal/commercial authority, staffing and target-operation exercises, named-customer scope/UAT, and baseline controls; retain executed paper, clean reports, operated records and signed customer evidence | technical, security, design/accessibility, legal, commercial, operations, reliability/privacy, product and customer | reconsider only after a bounded design-partner engagement has an approved activation record and measured closeout; payment or an unconditional launch promise remains prohibited until then |
+| Broad institutional enterprise sale | **NO-GO / RED** | priorities 1–10 | Harrison Rubin coordinates; Founder, Product, Engineering, Implementation, Support, Finance, counsel, independent reviewers and authorized customer stakeholders must accept their domains | satisfy the paid-pilot package, complete multiple scoped deployments, and retain repeatability, capacity, isolation, recovery, implementation and support evidence plus claim-specific permission | product, technical, security, legal, commercial, operations, reliability/privacy and customer | last motion to reconsider, only after repeated successful deployments and independent assurance; GA, enterprise-readiness and system-replacement claims remain prohibited before that record exists |
+
+This table is the controlling motion-level reconciliation for Checkpoint F. Detailed owners and escalation paths remain in [`OWNER-AND-ACCOUNTABILITY-MATRIX.md`](OWNER-AND-ACCOUNTABILITY-MATRIX.md); evidence definitions remain in [`EVIDENCE-REGISTER.md`](EVIDENCE-REGISTER.md); claims remain governed by [`PUBLIC-CLAIMS-APPROVAL-REGISTER.md`](PUBLIC-CLAIMS-APPROVAL-REGISTER.md). Any conflict resolves to the more conservative boundary until an authorized, dated decision supersedes it.

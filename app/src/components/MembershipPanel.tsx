@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ALWAYS_INCLUDED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
+import { ALWAYS_INCLUDED, INDIVIDUAL_PAID_ACQUISITION_ENABLED, NOT_ON_SALE_HERE, PLANS, plan, priceLine, type PlanId } from '../lib/plans';
 import { cloud, cloudConfigured, currentSession } from '../lib/cloud';
 import { formatDate } from '../lib/locale';
 import {
@@ -97,7 +97,7 @@ export function MembershipPanel() {
     void (async () => {
       try {
         const db = await cloud();
-        const found = await fetchPlusPrices(db);
+        const found = INDIVIDUAL_PAID_ACQUISITION_ENABLED ? await fetchPlusPrices(db) : [];
         if (!accountId) {
           if (live) setPrices(found);
           return;
@@ -256,7 +256,7 @@ export function MembershipPanel() {
       {!unknown && <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', marginBottom: 'var(--sp-3)' }}>
         {!sub && (
           <button type="button" className="btn btn-secondary" aria-expanded={said === 'upgrade'} onClick={() => toggle('upgrade')}>
-            Upgrade
+            View planned Plus
           </button>
         )}
         {!(sub && sub.cancelAtPeriodEnd) && (
@@ -347,7 +347,7 @@ export function MembershipPanel() {
                 {p.id === currentId ? ' · your plan' : ''}
               </div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
-                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : p.id === 'plus' ? `${priceLine(p)} (planned)` : priceLine(p)}
+                {p.id === 'plus' && onSale ? prices.map(priceWords).join(' or ') : priceLine(p)}
               </div>
               <ul style={{ fontSize: 'var(--type-sm)', margin: 'var(--sp-2) 0 0', paddingInlineStart: '1.2em' }}>
                 {p.includes.map((i) => <li key={i}>{i}</li>)}

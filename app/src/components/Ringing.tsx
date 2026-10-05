@@ -49,7 +49,7 @@ function notify(title: string, body: string): void {
 
 export function Ringing() {
   const { state, dispatch } = useStore();
-  const [, tick] = useState(0);
+  const [now, setNow] = useState(() => new Date());
   const sounded = useRef<Set<string>>(new Set());
 
   const counting = state.timers.some((t) => t.endsAt !== null);
@@ -57,11 +57,10 @@ export function Ringing() {
 
   useEffect(() => {
     if (!watching) return;
-    const id = setInterval(() => tick((n) => n + 1), 1000);
+    const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, [watching]);
 
-  const now = new Date();
   const going = whatIsRinging(state.timers, state.alarms, now);
   const all = [...going.timers, ...going.alarms];
 

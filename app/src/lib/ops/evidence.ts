@@ -63,6 +63,17 @@ export interface EvidenceRecord {
 
 export const EVIDENCE: readonly EvidenceRecord[] = [
   {
+    id: 'billing-live-acceptance-2026-10-03',
+    artifact: 'Production Semester Plus lifecycle acceptance: live checkout, paid invoice, entitlement, customer portal and end-of-period cancellation',
+    path: 'docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md',
+    produced: '2026-10-03',
+    validFor: YEARLY,
+    owner: 'founder',
+    claims: [],
+    rows: ['COM-001'],
+    note: 'One owner-account acceptance run. It does not cover an annual charge, refund, failed renewal, dispute, registered-jurisdiction tax collection, Pro, institution access or general availability, and it does not authorize enabling the governed acquisition hold.',
+  },
+  {
     id: 'ai-killswitch-drill',
     artifact: 'AI kill-switch drill against production: kill.ai_generation engaged, the deployed claude function refusing, released, each step timed',
     path: 'docs/evidence/ai/killswitch-drill-2026-09-29T22-51-50-121Z.json',
@@ -182,6 +193,17 @@ export const EVIDENCE: readonly EvidenceRecord[] = [
     claims: [],
     rows: ['SRE-002'],
     note: 'One reachability observation, not availability history, institutional gateway monitoring, alert delivery, authenticated UAT, SLA evidence or named-tenant acceptance.',
+  },
+  {
+    id: 'main-ci-red-diagnosis-2026-10-04',
+    artifact: 'Diagnosis of the block of red CI runs on main on 4 October 2026, read from the Actions run history and two failing jobs\' logs',
+    path: 'docs/evidence/operations/2026-10-04-main-ci-red-diagnosis.md',
+    produced: '2026-10-04',
+    validFor: MONTHLY,
+    owner: 'engineering',
+    claims: [],
+    rows: ['SEC-003'],
+    note: 'Two of 26 failing runs were read; no ruleset, required status or workflow was changed. Branch protection and merge gating remain unapplied.',
   },
   {
     id: 'founder-assurance-run-2026-10-03',

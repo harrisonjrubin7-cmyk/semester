@@ -15,6 +15,7 @@
 import { useState } from 'react';
 import { Panel } from './Produced';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { planFor, planLine } from '../lib/steps';
 import type { DatedItem } from '../lib/types';
 
@@ -24,7 +25,8 @@ function stepTitle(item: DatedItem, step: string): string {
 }
 
 export function BreakItUp({ item }: { item: DatedItem }) {
-  const { state, dispatch, say } = useStore();
+  const { state, say } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const [shown, setShown] = useState(false);
 
@@ -114,18 +116,15 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           className="bare tappable"
           onClick={() => {
             for (const s of steps) {
-              dispatch({
-                type: 'addTask',
-                task: {
-                  title: stepTitle(item, s.title),
-                  date: s.date,
-                  time: '',
-                  // Where it came from, in the row itself, so a step found in
-                  // the task list three weeks later says what it is for.
-                  note: `Step towards ${item.title}, due ${item.dueShort}.`,
-                  courseId: item.c,
-                  from: item.id,
-                },
+              taskActions.add({
+                title: stepTitle(item, s.title),
+                date: s.date,
+                time: '',
+                // Where it came from, in the row itself, so a step found in
+                // the task list three weeks later says what it is for.
+                note: `Step towards ${item.title}, due ${item.dueShort}.`,
+                courseId: item.c,
+                from: item.id,
               });
             }
             // `mine` is where the steps actually are, and you are not on it

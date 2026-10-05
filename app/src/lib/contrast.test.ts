@@ -74,14 +74,15 @@ describe('a colour blended over its background', () => {
 describe('every combination the app will wear', () => {
   const combos = GROUNDS.flatMap((g) => ACCENTS.map((a) => ({ g, a })));
 
-  it('is a hundred and forty-three of them', () => {
-    // Eleven accents and thirteen grounds. I had written "six grounds" in the
+  it('is a hundred and sixty-eight of them', () => {
+    // Twelve accents and fourteen grounds. I had written "six grounds" in the
     // proposal that led to this test and never counted them, which is why the
     // number is asserted rather than described: adding Industry and Industry
-    // Dark moved it from 100 to 132, and Bone moved it to 143. Each time the
+    // Dark moved it from 100 to 132, Bone moved it to 143, and the Semester
+    // ground with its indigo accent moved it to 168. Each time the
     // arithmetic below is what said so.
-    expect(combos).toHaveLength(143);
-    expect(GROUNDS.length * ACCENTS.length).toBe(143);
+    expect(combos).toHaveLength(168);
+    expect(GROUNDS.length * ACCENTS.length).toBe(168);
   });
 
 /**
@@ -169,6 +170,36 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
           needs: AA_LARGE,
         },
       ]),
+
+      /*
+       * Accent-deep on the two surfaces a journey card paints, not only on
+       * the page and the panel.
+       *
+       * `.journey-reason` is set in `--app-accent-deep`. The card rests on
+       * `--app-hero` and, hovered or focused, moves to `--app-raise`. The
+       * pairs above measure accent-deep on `--app-bg` and `--app-panel` and so
+       * could not see either: the browser sweep found it at 3.96:1 on
+       * Industry Dark, hovered, against the 4.5 that every other place this
+       * token is used is held to. Measured across all accents, the raise also
+       * fails on Graphite. Industry Dark's ramp inverts, so its raise is the
+       * lightest step; Graphite's is the step nearest the accent's own value.
+       */
+      {
+        what: `${where} · accent-deep on hero (a journey card at rest)`,
+        ratio: contrast(t['--app-accent-deep'], t['--app-hero']) ?? 0,
+        needs: AA_TEXT,
+      },
+      // Accent-deep does not reach 4.5 on the raise on Graphite (4.20 to 4.48)
+      // or Industry Dark (3.59 to 3.96), so a hovered or focused card sets its
+      // reason in the ground's full-strength ink instead
+      // (`.journey-card:hover .journey-reason` in app.css). The ink is what this
+      // pins; a hover rule that fell back to accent-deep would be caught by the
+      // browser sweep, not here, because it is a stylesheet fact.
+      {
+        what: `${where} · fg on raise (a journey card's reason, hovered or focused)`,
+        ratio: contrast(g.fg, t['--app-raise']) ?? 0,
+        needs: AA_TEXT,
+      },
 
       /*
        * The accent read against its own wash.
@@ -784,5 +815,43 @@ describe('the map credit, which is the licence', () => {
   it('keeps the underline against leaflet’s own rule', () => {
     // Same specificity, loaded later — so this has to win explicitly.
     expect(rule()).toMatch(/text-decoration:\s*underline\s*!important/);
+  });
+});
+
+/**
+ * A journey card's reason, hovered or focused.
+ *
+ * `.journey-reason` is accent-deep, which the audit holds to 4.5:1 on the
+ * page and the panel. A hovered card moves to `--app-raise`, and there
+ * accent-deep fails on Graphite and Industry Dark. The stylesheet answers that
+ * by setting the reason in the ground's own ink on hover and focus. That is a
+ * fact about `app.css`, not about a token, so this reads the stylesheet: it
+ * works out from the palette whether the override is needed, and if it is, the
+ * rule has to be there. If the palette is ever fixed so that accent-deep holds
+ * on the raise everywhere, the override stops being demanded and can go.
+ */
+describe('a journey card hovered or focused', () => {
+  const failing = GROUNDS.flatMap((g) =>
+    ACCENTS.filter((a) => {
+      const t = tokensFor({ accent: a.id, ground: g.id });
+      return (contrast(t['--app-accent-deep'], t['--app-raise']) ?? 0) < AA_TEXT;
+    }).map((a) => `${a.label} on ${g.label}`),
+  );
+  const css = () => readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
+  it('names the pairings that need the override, so the list is not a belief', () => {
+    expect(failing).toContain('Sterling on Industry Dark');
+    expect(failing.some((f) => f.endsWith('on Graphite'))).toBe(true);
+    expect(failing.every((f) => /on (Graphite|Industry Dark)$/.test(f))).toBe(true);
+  });
+
+  it('sets the reason in full-strength ink when accent-deep does not hold on the raise', () => {
+    const src = css();
+    const at = src.indexOf('.journey-card:hover .journey-reason');
+    expect(failing.length, 'if this is 0 the override is no longer needed').toBeGreaterThan(0);
+    expect(at, 'the hover override for .journey-reason is missing from app.css').toBeGreaterThan(-1);
+    const rule = src.slice(at, src.indexOf('}', at));
+    expect(rule).toContain('.journey-card:focus-visible .journey-reason');
+    expect(rule).toMatch(/color:\s*var\(--app-fg\)/);
   });
 });

@@ -23,4 +23,4 @@ Counsel-reviewed Terms, Privacy Notice, Cookie/Storage Notice, AUP, AI policy, a
 
 ## Deal desk rule
 
-No salesperson or demo may promise a control, certification, integration, SLA, data use, outcome or roadmap item outside the approved registry and agreement. Novel terms route to CEO + responsible control owner + counsel; security/privacy/accessibility work is never traded away for price or speed.
+No salesperson or demo may promise a control, certification, integration, SLA, data use, outcome or roadmap item outside the approved registry and agreement. Novel terms route to CEO + responsible control owner + counsel (amounts and discounts follow the deal-desk ladder in `app/src/lib/governance/deal-desk.ts`); security/privacy/accessibility work is never traded away for price or speed.

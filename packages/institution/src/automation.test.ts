@@ -1,4 +1,4 @@
-import { describe, expect, it } from '../../../app/node_modules/vitest/dist/index.js';
+import { describe, expect, it } from 'vitest';
 import { LEVELS, LEVEL_TEXT, groundsFor, mayStep, missing, rank, type Grounds } from './automation.ts';
 
 const FULL: Grounds = { confirmed: true, authority: 'registrar:enroll', policy: 'reg-window-open', audit: 'evt_1' };

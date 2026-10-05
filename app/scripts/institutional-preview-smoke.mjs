@@ -10,7 +10,7 @@ const appRoot = join(here, '..');
 const host = '127.0.0.1';
 const port = Number(process.env.INSTITUTIONAL_SMOKE_PORT || 4180);
 const base = `http://${host}:${port}/`;
-const vite = join(appRoot, 'node_modules', 'vite', 'bin', 'vite.js');
+const vite = join(dirname(createRequire(import.meta.url).resolve('vite/package.json')), 'bin', 'vite.js');
 const expectedPreview = process.env.EXPECT_INSTITUTIONAL_PREVIEW !== 'false';
 
 if (!Number.isInteger(port) || port < 1 || port > 65_535) {
