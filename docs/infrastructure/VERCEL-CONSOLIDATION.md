@@ -177,7 +177,7 @@ Do not start until every box in §6.1 is ticked. Nothing here has been run.
 - [ ] `GET /api/institution/health` returns the same status as the live site
       (503) or better. Not worse.
 - [ ] Which scope owns `semester.website` is known (§3).
-- [ ] The four `Semester2` accounts are identified as test accounts or ported (§2.2), and the OAuth redirect URIs include `www.semesterintel.tech`.
+- [x] The four `Semester2` accounts are test accounts and the OAuth redirect URIs include `www.semesterintel.tech` (§2.2; both stated by the owner on 5 October, not verified from here).
 
 ### 6.2 Move
 
