@@ -3,7 +3,76 @@
   "services": {
     "app": {
       "root": "app",
-      "framework": "vite"
+      "framework": "vite",
+      "headers": [
+        {
+          "source": "/(.*)",
+          "headers": [
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=31536000; includeSubDomains"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org; font-src 'self'; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://api.anthropic.com https://api.openai.com https://login.microsoftonline.com https://graph.microsoft.com https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://gmail.googleapis.com https://tasks.googleapis.com https://zoom.us https://api.zoom.us https://appleid.apple.com https://nominatim.openstreetmap.org https://photon.komoot.io; frame-ancestors 'self' https://brightspace.vanderbilt.edu"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=(self), microphone=(self), display-capture=(self), geolocation=(self), clipboard-read=(self), clipboard-write=(self), screen-wake-lock=(self), payment=(), usb=(), serial=(), hid=(), bluetooth=()"
+            }
+          ]
+        },
+        {
+          "source": "/api/institution/(.*)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "no-referrer"
+            }
+          ]
+        },
+        {
+          "source": "/api/productivity/(.*)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-store"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "no-referrer"
+            }
+          ]
+        }
+      ],
+      "functions": {
+        "api/institution/[...path].ts": {
+          "maxDuration": 30
+        },
+        "api/productivity/[...path].ts": {
+          "maxDuration": 30
+        }
+      }
     },
     "workflow-lab": {
       "root": "workflow-lab",
@@ -12,13 +81,59 @@
       "buildCommand": "npm run build"
     },
     "company-site": {
-      "root": "company-site"
+      "root": "company-site",
+      "headers": [
+        {
+          "source": "/(.*)",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' 'sha256-SVFDjwcaISDaY5H6B2mrchJ9EY15yZYVbKL0eOOd8Tc=' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self'; font-src 'self'; img-src 'self' data: https://i.ytimg.com; connect-src 'self' https://lzrqvlugnawcgywkhqlz.supabase.co https://harrisonjrubin7-cmyk.github.io https://raw.githubusercontent.com; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self' mailto:; object-src 'none'; upgrade-insecure-requests"
+            },
+            {
+              "key": "Strict-Transport-Security",
+              "value": "max-age=63072000; includeSubDomains; preload"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=(), microphone=(), geolocation=(), payment=(), interest-cohort=()"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     }
   },
   "rewrites": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "(www\\.)?semester\\.website" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "(www\\.)?semester\\.website"
+        }
+      ],
       "destination": {
         "service": "company-site"
       }
