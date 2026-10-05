@@ -265,9 +265,9 @@ function make(origin: Origin, assurance: Assurance, freshness: Freshness, o: Ada
 }
 
 /**
- * The seven display kinds and the five stored ones, as provenance.
+ * The ten display kinds, which include the five stored ones, as provenance.
  *
- * Injective on the eight kinds below `unavailable_stale`: no two map to the
+ * Injective on the kinds other than `unavailable_stale`: no two map to the
  * same fact, which is what lets the database keep its five values and nothing
  * be lost on the way to the screen (`factprovenance.test.ts`).
  */
@@ -292,6 +292,10 @@ export function fromSourceLabel(label: TrustKind, o: AdaptOptions = {}): FactPro
       return make('external', 'unverified', f, o);
     case 'unavailable_stale':
       return make('connected', 'unverified', 'stale', o);
+    case 'connected':
+      return make('connected', 'unverified', f, o);
+    case 'sample':
+      return make('sample', 'unverified', 'unknown', o);
   }
 }
 
