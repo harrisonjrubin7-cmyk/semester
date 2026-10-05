@@ -3,7 +3,7 @@ import { PILOT_ROLES } from '../../../packages/institution/src/index';
 import { INTERNAL_CATEGORIES, ROLES } from './rolelaunch';
 
 /**
- * The pilot roster, held to the register it was chosen from (D-1315).
+ * The pilot roster, held to the register it was chosen from (D-1318).
  *
  * `PILOT_ROLES` names app roles by string. If the register renames one, or the roster picks a role
  * that is not a customer role at all, the login tests would still pass against a name nothing else

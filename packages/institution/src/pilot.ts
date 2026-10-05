@@ -4,7 +4,7 @@ import type { UniversityRole } from './index.ts';
  * The thirteen roles the Vanderbilt pilot signs in, and how each of them arrives.
  *
  * Stream 02 asked for "a test login per pilot role" and nothing in the repository said which
- * roles those are. D-1315 chose them from the Role Launch Register: the roles a pilot university
+ * roles those are. D-1318 chose them from the Role Launch Register: the roles a pilot university
  * actually exercises, each at the `usable` rung or above, spanning learners, instructors, the
  * advising and learning-support offices, the registrar, and the university's own administrators
  * and integration owners. The founder can change the list; the tests follow it.
