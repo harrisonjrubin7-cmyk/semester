@@ -58,6 +58,7 @@ import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { linkedScreen } from '../lib/deeplink';
+import { captureEntry } from '../lib/entrycontext';
 import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
@@ -368,8 +369,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const ephemeral = initialEphemeral();
     // A "Log in" link is the exception: it came for the form, not the tour,
     // and onboarding still opens on the next visit until it is finished.
+    // A link from outside may say where it was going. A first visit still
+    // opens on setup, but setup now ends there (`lib/entrycontext.ts`).
+    const entry = captureEntry(window.location.search);
     if (!persisted.seenOnboarding && !opensAccount(window.location.hash)) {
-      return { ...persisted, ...ephemeral, screen: 'onboarding' as Screen };
+      return {
+        ...persisted,
+        ...ephemeral,
+        screen: 'onboarding' as Screen,
+        afterSetup: entry?.continueTo ?? null,
+      };
     }
     /*
      * A refresh, a bookmark, or a link somebody sent.
@@ -405,7 +414,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * on a new tab. `lib/chrome.ts` holds the rule, beside the rest of what a
      * navigation decides.
      */
-    return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? firstScreen(persisted.nav) };
+    return {
+      ...persisted,
+      ...ephemeral,
+      screen: screenFromUrl() ?? (window.location.search ? entry?.continueTo : null) ?? firstScreen(persisted.nav),
+    };
   });
 
   // Re-render on the minute so "in 1 hr 19 min" and "Today" stay correct
