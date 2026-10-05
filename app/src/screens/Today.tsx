@@ -15,6 +15,7 @@ import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
 import { useOnline } from '../lib/offline-mode';
 import { ReadState } from '../components/unity/ReadState';
+import { PilotFactMark } from '../components/PilotFactMark';
 import { countSources, itemSources, todayEnvelope } from '../lib/read/surfaces';
 import type { SourceLabel } from '../lib/source';
 import { DEADLINE_HORIZON_DAYS } from '../lib/today-actions';
@@ -823,6 +824,7 @@ function TabHome() {
           content first. Focus View still needs the briefing when it hides
           the switcher and secondary content. */}
       <div className="today-briefing" hidden={tab !== 'today' && state.workspaceMode !== 'focused'}>
+        <PilotFactMark surface="today" seeded={state.sample} />
         <FirstGoal />
         <TodayDecisionSurface />
         <OperatingRhythm />

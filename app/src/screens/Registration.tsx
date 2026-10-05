@@ -3,6 +3,7 @@ import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { EmptyState, Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
+import { PilotFactMark } from '../components/PilotFactMark';
 import { Field } from '../components/academic/Form';
 import { StudentRegistration } from '../components/enrollment/StudentRegistration';
 import { RegistrarDesk } from '../components/enrollment/RegistrarDesk';
@@ -56,9 +57,20 @@ export function Registration() {
       <Page blurb={BLURB}>
         <ModuleGateState gate={gate} what="registration" off={OFF} />
         {gate.status === 'off' && (
-          <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'yes' })}>
-            Open your registration plan
-          </button>
+          <>
+            <section aria-labelledby="readiness-gaps">
+              <h2 id="readiness-gaps" className="sr-only">What Semester can see</h2>
+              <PilotFactMark surface="registration" seeded={false} />
+              <ul>
+                <li>Registration window: unavailable. Semester cannot see whether one is open.</li>
+                <li>Hold: unavailable. Semester cannot see whether a hold is in the way.</li>
+                <li>Section: unavailable. Semester cannot see seats or meeting times.</li>
+              </ul>
+            </section>
+            <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'yes' })}>
+              Open your registration plan
+            </button>
+          </>
         )}
       </Page>
     );

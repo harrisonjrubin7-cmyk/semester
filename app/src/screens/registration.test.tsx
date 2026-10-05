@@ -194,6 +194,11 @@ describe('when the school has not turned it on', () => {
     mock.flag = 'off';
     await render();
     expect(text()).toContain('Your school has not turned on registration in Semester');
+    expect(text()).toContain('Registration window: unavailable');
+    expect(text()).toContain('Hold: unavailable');
+    expect(text()).toContain('Section: unavailable');
+    expect(host.querySelector('[data-source="unavailable_stale"]')).not.toBeNull();
+    expect(host.querySelector('[data-source="institution_verified"]')).toBeNull();
     expect(mock.terms).not.toHaveBeenCalled();
     expect(mock.sections).not.toHaveBeenCalled();
     await press('Open your registration plan');

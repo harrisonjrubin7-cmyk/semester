@@ -16,7 +16,7 @@ P0 means "do not tell an institution this is on." It does not mean "build it thi
 | B-06 | Registration, gradebook, records, finance, family, community are unsafe to activate | Domain catalog | A flag is turned on for a tenant |
 | B-07 | No qualified accessibility evaluation | EXT-008, domain universal field | A WCAG conformance claim |
 | B-08 | No alert path to a person; incident roles are data, not a workflow | F-08; gap register incident steps | A severity is "declared" in a document only |
-| B-09 | Seeded or device data can be read as the institution | D01 risks | A student acts on a sample grade |
+| B-09 | Seeded or device data can be read as the institution | Four surfaces now label a seed as sample (`pilotfacts.ts`). Other screens are not covered | A student acts on a sample grade outside those four |
 | B-10 | AI output has no single permission engine | Workflow catalog §5 | A tool call is treated as an official act |
 | B-11 | Outbox has no projection worker | `private.domain_outbox_events`; consumer not found | Operators think writes refresh every read model |
 | B-12 | One unsigned operator covers the launch seats | Company operating system doc | Support, security, and finance are implied to be staffed |
@@ -62,7 +62,7 @@ Enrolment, a grade, a balance, a family share, a community, an employer introduc
 | Named institution and a signed scope | Absent |
 | F-01 fixed or the pilot holds no school rows | Open |
 | Anon exposure review written down | Open |
-| Source label on every readiness fact | Partial |
+| Source label on every readiness fact | Partial. Today, degree, account, and registration-off carry a badge. A live registration read is still a separate path |
 | SIS remains authoritative | Required and true today |
 | Support owner named | Unsigned seats |
 | Accessibility review of these six screens | No qualified evaluation |

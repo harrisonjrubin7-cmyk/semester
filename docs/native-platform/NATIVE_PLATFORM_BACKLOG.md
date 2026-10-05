@@ -14,8 +14,8 @@ Nothing here authorises a production migration, a deploy, a billing change, or a
 | 4 | Classify the 207 definer functions: student, staff, operator, or revoke | 1 | Done. Live names match `definerregister.ts` (207, same MD5). No revoke |
 | 5 | Re-test F-01 and either fix school isolation or record a compensating control | 4 | Done as a control, not a flip. 0 schools. `nativefoundation.test.ts` holds the default-false acknowledgement gate |
 | 6 | Confirm Semester2 (`kpuulmnicidgdmwgfngv`) table set versus `semester` | 2 | Done. 19 public tables, 2 private tables with RLS off and no client grants. Not this repo's schema |
-| 7 | Put source, authority, and freshness on Today, registration readiness, degree, and account | 5 | A test that a seeded grade cannot render as institution-verified |
-| 8 | Registration readiness copy and empty states: unavailable hold, unavailable window, handoff link | 7 | Screen test. SIS remains the only enrol path a student is told to trust |
+| 7 | Put source, authority, and freshness on Today, registration readiness, degree, and account | 5 | Done. `gradeSource` returns `sample` for a seeded grade, including when a caller also claims an institutional read. `PilotFactMark` is on Today, registration (off), degree, and account. A seeded grade renders “Sample” and “Update time not recorded”, never “Institution verified” |
+| 8 | Registration readiness copy and empty states: unavailable hold, unavailable window, handoff link | 7 | Done for the off gate, which is every school today. Window, hold, and section each say unavailable. The plan button still hands off to `yes`. Enrolment copy stays with the school’s system. Not a live SIS read |
 | 9 | Prove `registration_enroll` refuses a closed window, a hold, and a failed prerequisite | 4, 8 | Tests red against a reverted check |
 | 10 | Attach approval and audit to `gradebook_release` and `registrar_decide` | 4 | A release without the capability and the approval does not write |
 | 11 | State in the gradebook UI that the LMS is the record | 10 | Copy test. No "official transcript" string |

@@ -25,6 +25,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SourceBadge } from '../components/SourceBadge';
+import { GradeFactMark, PilotFactMark } from '../components/PilotFactMark';
 import { ActionButton, PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
@@ -81,12 +82,19 @@ export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_
           {/*
             The app's one trust badge (`lib/source.ts`), not the status
             chips' "Yours" and "Needs confirmation": the same provenance in a
-            second vocabulary is a second fact to a reader. What you typed in
-            is Student entered; everything below it is worked out from that,
-            which is Estimated — "not an official figure" is its meaning.
+            second vocabulary is a second fact to a reader. The shipped
+            semester is Sample. What you typed in is Student entered;
+            everything worked out from that is Estimated. Neither is an
+            official figure.
           */}
-          <SourceBadge label="student_entered" />
-          <SourceBadge label="estimated" />
+          {state.sample ? (
+            <PilotFactMark surface="degree" seeded />
+          ) : (
+            <>
+              <SourceBadge label="student_entered" unknownAge />
+              <SourceBadge label="estimated" unknownAge />
+            </>
+          )}
         </div>
         <div
           style={{
@@ -153,7 +161,12 @@ function WhatIsLeft() {
         */}
         {h.done > 0 ? (
           <>
-            <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Hours and grades</SectionLabel>
+            <SectionLabel
+              aside={<GradeFactMark seeded={state.sample} />}
+              style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}
+            >
+              Hours and grades
+            </SectionLabel>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {h.done} hours finished
               {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
@@ -229,7 +242,12 @@ function WhatIsLeft() {
         );
       })}
 
-      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Hours and grades</SectionLabel>
+      <SectionLabel
+        aside={<GradeFactMark seeded={state.sample} />}
+        style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}
+      >
+        Hours and grades
+      </SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {h.done} hours finished
         {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
@@ -294,7 +312,7 @@ function ThisTerm() {
 
   return (
     <Folding name="ThisTerm">
-      <SectionLabel style={{ marginTop: 'var(--sp-7)', marginBottom: 'var(--sp-4)' }}>
+      <SectionLabel aside={<GradeFactMark seeded={state.sample} />} style={{ marginTop: 'var(--sp-7)', marginBottom: 'var(--sp-4)' }}>
         This term, projected
       </SectionLabel>
       <div
