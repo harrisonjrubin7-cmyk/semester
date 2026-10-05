@@ -31,7 +31,7 @@ The test that holds this page checks that every script, test file and CI step na
 | `shared` | `isolate: false`. Workers are reused across files. | Every `*.test.ts` and `*.test.tsx` under `app/`, plus `packages/institution/src/**/*.test.ts`, except the files in the `mocked` project and `scripts/rollout-publication.test.ts`. |
 | `mocked` | `isolate: true`. Each file gets a fresh module registry. | The files listed in `MOCKS_MODULES` in `vite.config.ts`. |
 
-Why two: `vi.mock` can only rebind a module that the worker has not already evaluated, and whether it has depends on which file ran first. A file that mocks and is not listed fails sometimes, which is worse than always. `app/src/isolation.test.ts` reads the config and the tree and fails if a file calls `vi.mock(` without being listed. If you add a mock, add the file to `MOCKS_MODULES`.
+Why two: `vi.mock` can only rebind a module that the worker has not already evaluated, and whether it has depends on which file ran first. A file that mocks and is not listed fails sometimes, which is worse than always. `app/src/isolation.test.ts` reads the config and the tree and fails if a file calls `vi.mock(` without being listed. If you add a mock, add the file to `MOCKS_MODULES`. The operations-console workspace list (`app/src/lib/console/workspaces.test.ts`) and the support-case client (`app/src/lib/support-case-client.test.ts`) mock their clients, so both are in that list.
 
 Other settings: `maxWorkers` is 4 and `testTimeout` and `hookTimeout` are 30 seconds. Tests live beside the code they test. A component test that needs a DOM begins with the `// @vitest-environment jsdom` pragma; the default environment is Node.
 
