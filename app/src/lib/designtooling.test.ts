@@ -86,7 +86,7 @@ describe('what the Claude configuration points at', () => {
       const r = refs(read(file));
       expect(r.paths.length + r.npm.length, 'it should reference something').toBeGreaterThan(0);
       // The report is regenerated and git-ignored, so it is rightly absent from a clean checkout.
-      expect(r.paths.filter((p) => !p.startsWith('app/reports/') && !existsSync(join(ROOT, p))), 'missing paths').toEqual([]);
+      expect(r.paths.filter((p) => !/^app\/reports(?:\/|$)/.test(p) && !existsSync(join(ROOT, p))), 'missing paths').toEqual([]);
       expect(r.npm.filter((n) => !scripts[n]), 'missing scripts').toEqual([]);
     });
   }
