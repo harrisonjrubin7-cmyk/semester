@@ -23,6 +23,7 @@ Dot-directories are included. Files at the root are listed after the table.
 | `examples/` | Being added by another author. This row was written before the directory existed and says nothing about its contents. |
 | `extensions/` | `semester-capture`, a browser extension (`manifest.json`, `popup.html`, `popup.js`). |
 | `ops/` | Operating registers rendered from data under `app/src/lib/ops/`: billing, claims, customer commitments, master plan, operations console, strategic boundaries. See [`ops/README.md`](../../ops/README.md). |
+| `output/` | Generated PDF reports built from `docs/business/` by `npm run generate:gtm-pdf` (from `app/`): the GTM playbook, executive summary, board and investor summary, and the customer-safe pilot pack. Generated files; edit the Markdown and the manifest in `app/scripts/gtm-pdf/`, then rebuild. |
 | `packages/` | Two source-only packages shared by the app and the servers: `contract` and `institution`. Neither is published. |
 | `pipeline/` | Syllabus to course tooling: ingest, lessons, slides, handouts, alignment, and `validate.mjs`, which CI runs. See [`pipeline/README.md`](../../pipeline/README.md). |
 | `project/` | The original Claude Design handoff: HTML prototypes and the design system. Reference material; the app does not import it. |
