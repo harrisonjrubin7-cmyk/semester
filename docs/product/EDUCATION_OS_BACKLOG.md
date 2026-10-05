@@ -2,6 +2,8 @@
 
 Status: Phase 0 plan, assessed 2026-10-05 at `790ebbf`. Items are proposals for pull-request-sized work, **not commitments**; none is started. Estimates are relative sizes (S under 2 days, M under 2 weeks, L over 2 weeks) given one to two engineers. It does not replace `docs/CLAUDE-CODE-BACKLOG.md` (BL-x, old counts) and must not be confused with `COMPLETION-PLAN.md` or `IMPLEMENTATION-PLAN.md` (both historic; do not use them as backlogs). Current planning lives in `docs/90-DAY-LAUNCH-PROGRAM.md`, `docs/PRODUCT-ROADMAP.md`, `docs/PROOF-CALENDAR.md`, `docs/target-architecture/` and `docs/strategy/`.
 
+**Overlap with the Phase 1 backlog on main.** `docs/program/PHASE_1_EXECUTION_BACKLOG.md` already orders the security, tenancy, recovery and platform-spine work (steps 0 to 10, ADRs proposed, none accepted). EOS-107 to EOS-114 (request context, outbox, readiness, isolation conformance, grants, ledger drift, capability mapping) are the education-OS view of those steps; take them as slices of that backlog and cite its step id in the pull request. EOS-101 to EOS-106 (identity resolution, source state, rollout gate, org units, family tenant, classification) are not in that backlog.
+
 ## Rules for taking an item
 
 1. **Check main for the thing itself before reading or writing code** (`CLAUDE.md`): `git fetch origin main`, `git log --oneline -30 origin/main`, then grep the defect, not the title, and read the recent history of the files you would edit. If it landed, say so and stop; consider the guard nobody wrote.
@@ -68,7 +70,7 @@ The brief's execution branches, with their epics. The environment working this p
 | EOS-108 | Outbox publisher, tenant-verifying consumer and retention sweep | L | `published_at` set by code; consumer refuses cross-tenant events; sweep respects holds |
 | EOS-109 | Probe-based readiness; wire and delivery-test the P0 alerts | M | `monitoringConfigured` from a probe; a test alert is received |
 | EOS-110 | Real-adapter isolation conformance for cache, queue, object store and search | L | `packages/platform/src/testing/conformance.ts` passes against real adapters; the 7 leaky controls still fail |
-| EOS-111 | Review and apply the `anon` grant reduction; decide FORCE RLS | M | Decision file; production catalog read shows the new grants |
+| EOS-111 | Review and apply the remaining `anon` row-privilege reduction; close the `supabase_admin` default-privilege gap; decide FORCE RLS (the DDL-class privileges were revoked 2026-10-05) | M | Decision file; production catalog read shows the new grants |
 | EOS-112 | Apply the three repo-only safety migrations to production after review; add drift alert | S | `ledger.snapshot` shows them applied |
 | EOS-113 | Capability mapping dot-to-colon and parity test | S | Mapping table; comparison test runs |
 

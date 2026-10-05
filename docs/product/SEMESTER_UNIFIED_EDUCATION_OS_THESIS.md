@@ -62,6 +62,16 @@ From the repo's own claims discipline (`app/src/lib/ops/claims.ts`: 40 claims, n
 | "It can connect to existing systems during transition and become the authoritative layer for domains an institution chooses to modernize." | "Semester is the system of record" for any domain. |
 | For a pilot: "Begin with one measurable workflow, such as registration readiness, then prove value before expanding." | Any outcome, retention, ROI, compliance, accessibility or security-certification claim. None is evidenced. |
 
+## Relationship to the parallel Phase 0 on main
+
+Another session landed a Phase 0 of its own while this one ran (`docs/program/`, merged by #1252 and #1254; `docs/ops/`; `docs/marketing/`). Where the two overlap, **that pack is authoritative for its paths**, and this set adds only what it does not hold:
+
+| Held by `docs/program/` (authoritative) | Added here |
+| --- | --- |
+| `BASELINE_AUDIT.md`, `FINAL_BASELINE_AUDIT.md` (measured: 22,707 tests passed, 352 of 352 tables with RLS, 0 `FORCE ROW LEVEL SECURITY`); `RISK_REGISTER.md` (R-001 to R-036); `PHASE_1_EXECUTION_BACKLOG.md` (security, tenancy, recovery and platform-spine steps 0 to 10); `DOMAIN_OWNERSHIP_MATRIX.md`; `COMPLETE_CAPABILITY_REGISTER.md` | The education graph and its edge attributes; the domain **authority** matrix (who is the source of truth per domain); the fifteen replacement gates; the role-by-role experience view; the interoperability and migration plan; the governed AI routing specification; the outcome frameworks |
+
+Rules for the overlap: a Phase 1 security, tenancy, recovery or platform-spine step is tracked in `PHASE_1_EXECUTION_BACKLOG.md`, not re-planned here (backlog items EOS-109 to EOS-114 point at it); a risk that already has an `R-` id keeps that id and this register cites it; facts below were re-checked against `origin/main` at `d672ba3`, and where the two packs differ the code wins and the difference is listed in the table that follows.
+
 ## Reconciliation with existing documents
 
 The audit found places where documents and code disagree. These are corrections owed, recorded here so they are not copied forward. Where this set cites a number, it cites the code.

@@ -178,7 +178,7 @@ Each has a backlog item in [EDUCATION_OS_BACKLOG.md](EDUCATION_OS_BACKLOG.md) wi
 5. A request-context contract adopted by the gateway and the productivity service: identity, tenant, role, purpose, correlation id, policy version (all graphs; `packages/platform` `RequestContext` is the starting point and is imported by one file today).
 6. An outbox publisher, tenant-verifying consumer and retention sweep so the graph can propagate events (graph 12).
 7. One classification vocabulary with a published mapping between T-tiers, C-classes, `ResourceClassification` and table-isolation classes, and a column-level classification for education-record tables.
-8. A written FORCE RLS decision, applying `database/proposed/anon_grant_reduction.sql` after review, and a cross-tenant negative suite that walks every tenant-scoped table.
+8. A written FORCE RLS decision, applying the remaining `database/proposed/anon_grant_reduction.sql` row-privilege reduction after review (the DDL-class privileges were revoked 2026-10-05), and a cross-tenant negative suite that walks every tenant-scoped table.
 
 ## Test gate for the graph
 
