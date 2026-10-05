@@ -16,6 +16,7 @@
 - [MASTER-BRIEF-CROSSWALK.md](MASTER-BRIEF-CROSSWALK.md) — the 19-deliverable design brief mapped to where each already lives, and what is missing.
 - [COMPONENT-SPEC-MATRIX.md](COMPONENT-SPEC-MATRIX.md) — the 12 fields (purpose, variants, tokens, accessibility, responsive, five states, analytics event, test) for every component.
 - [SCREEN-PACKS.md](SCREEN-PACKS.md) — the 18 named screens against the seven questions, with app and prototype locations.
+- [HANDOFF-INTEGRATION-CROSSWALK.md](HANDOFF-INTEGRATION-CROSSWALK.md) — the design export mapped onto this repository. A merged decision is kept; the free-text scanner is not built.
 
 ## Skills
 - `/build-semester-ui <screen> [figma-url]` — build or change UI from existing primitives.
