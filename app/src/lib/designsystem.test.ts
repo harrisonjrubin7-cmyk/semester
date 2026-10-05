@@ -81,7 +81,7 @@ describe('design-system audit', () => {
   });
 
   it('fails when tokens.css and the export disagree', () => {
-    const r = audit({ root: fixture({ ...base, 'app/src/styles/tokens.css': TOKENS.replace('}', '  --surface-new: var(--app-panel);\n}') }) });
+    const r = audit({ root: fixture({ ...base, 'app/src/styles/tokens.css': TOKENS.replace(/\}\n$/, '  --surface-new: var(--app-panel);\n}\n') }) });
     expect(r.violations.map((v: { check: string }) => v.check)).toContain('export-sync');
   });
 
