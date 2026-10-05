@@ -237,7 +237,7 @@ describe('where the meter sits in the handler', () => {
   it('reserves after the clamp and before the call is counted or forwarded', () => {
     expect(at('clampRequest(')).toBeLessThan(at("spend(reserve, allowance)"));
     expect(at("spend(reserve, allowance)")).toBeLessThan(at("rpc('count_call'"));
-    expect(at("rpc('count_call'")).toBeLessThan(at('await fetch(ANTHROPIC'));
+    expect(at("rpc('count_call'")).toBeLessThan(at('await fetch(upstreamTo.url'));
   });
 
   it('gives the reservation back when the call counter or the call cap refuses, and when upstream refuses', () => {
