@@ -106,7 +106,7 @@ If you change styles, tokens or UI, also run `npm run design-system:check`. It c
 
 To read a Figma file from Claude Code, the repository's [`.mcp.json`](../../.mcp.json) already names the remote server. Each developer signs in with their own Figma account: start Claude Code in the repository, run `/mcp`, choose `figma` and follow the browser sign-in. If `.mcp.json` is missing, `claude mcp add --scope project --transport http figma https://mcp.figma.com/mcp` writes it. No credential is committed or needed in CI. See [the Figma mapping page](../design-system/FIGMA-MAPPING.md).
 
-`.mcp.json` also names Middleware's hosted server (`https://mcp.middleware.io/mcp`) for reading dashboards, metrics and alerts. It signs in the same way: `/mcp`, choose `middleware`, **Authenticate**. Nothing in the app sends it data yet. See [D-1289](../decisions/D-1289.md). To debug either MCP connection (tools list, OAuth, a failing call), `npx @mcpjam/inspector@latest` runs MCPJam's inspector locally; it is a tool you run, not a dependency of the app.
+`.mcp.json` also names Middleware's hosted server (`https://mcp.middleware.io/mcp`) for reading dashboards, metrics and alerts. It signs in the same way: `/mcp`, choose `middleware`, **Authenticate**. Nothing in the app sends it data yet. See [D-1289](../decisions/D-1289.md). To debug either MCP connection (tools list, OAuth, a failing call), [MCPJam Inspector](https://github.com/MCPJam/inspector) can be run locally against it; it is a tool you run, not a dependency of the app, and its run command is in its README.
 
 ## 7. Run the institution gateway locally
 
