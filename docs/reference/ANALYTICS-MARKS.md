@@ -53,7 +53,9 @@ The university gateway writes JSON log lines to its process output. They are ser
 | Event | Emitted by | Sink | Fields |
 | --- | --- | --- | --- |
 | `institution.request` | `createGateway` in [`gateway.ts`](../../app/server/institution/gateway.ts), once per request | `console.info` of the JSON, set by the production runtime ([`runtime.ts`](../../app/server/institution/runtime.ts)). `start.ts` passes no telemetry sink, so the standalone process emits none. | `event`, `requestId`, `correlationId`, `method`, `route`, `status`, `durationMs`, `errorClass` |
-| `institution.authorization` | `createMembershipResolver` audit callback | `console.info` in both `start.ts` and `runtime.ts` | `event`, `userId`, `providerIdentifier`, `tenantId` (when known), `outcome` (accepted or denied), `reason`, `occurredAt` |
+| `institution.authorization` | `createMembershipResolver` audit callback | `console.info` in `start.ts`, in `runtime.ts`, and in the productivity runtime ([`runtime.ts`](../../app/server/productivity/runtime.ts)), which resolves membership the same way | `event`, `userId`, `providerIdentifier`, `tenantId` (when known), `outcome` (accepted or denied), `reason`, `occurredAt` |
+| `productivity.request` | `createProductivityApi` in [`http.ts`](../../app/server/productivity/http.ts), once per request | `console.info` of the JSON, set by the productivity runtime. Only a deployment that sets `SEMESTER_PRODUCTIVITY` to on emits it. | `event`, `route` (the template, never the path), `method`, `status`, `durationMs`, `requestId`, `correlationId`, `actorType` (when known) |
+| `productivity.error` | the productivity runtime, when a command or a request threw something unexpected | `console.error` | `event`, `source` (the service or the HTTP layer), `name` (the error's class, never its message), `correlationId`, `requestId` and `route` (http only) |
 | `institution.scim.audit_unrecorded` | the SCIM repository, only when writing a refusal to the audit table failed | `console.error` | `event`, `tenantId`, `credentialId`, `status` |
 
 Notes on `institution.request`:
