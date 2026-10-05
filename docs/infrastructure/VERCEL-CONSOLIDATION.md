@@ -56,7 +56,12 @@ at `4358847`. The `company-site` service added in #1292 is inert for the same
 reason. Before either works, the project's Root Directory must be the repository
 root (empty) with the Services preset, and `app/vercel.json`'s headers and
 function limits must be confirmed to apply per service. This is a project
-setting, not a code change; it is step 1 of §6.1, and it was not changed here.
+setting, not a code change.
+
+**Changed 5 October 2026 (owner delegated the decision):** `semester` now has
+Root Directory = repository root and framework preset `services` (was `app` /
+`vite`). Revert by setting Root Directory back to `app` and the framework to
+`vite`. Verification is the first build after this change, recorded in §6.1.
 
 ## 3. Things that cannot be moved from here
 
@@ -123,7 +128,7 @@ Do not start until every box in §6.1 is ticked. Nothing here has been run.
 
 ### 6.1 Before
 
-- [ ] This pull request is merged. **Set `semester`'s Root Directory to the repository root with the Services preset**, redeploy, and confirm `/lab` is no longer 404 on `semester-rose.vercel.app` and that the app's CSP/HSTS headers and the two 30 s function limits from `app/vercel.json` are still present.
+- [ ] This pull request is merged. Root Directory and the Services preset are already set (§2.1). Redeploy and confirm `/lab` is no longer 404 on `semester-rose.vercel.app` and that the app's CSP/HSTS headers and the two 30 s function limits from `app/vercel.json` are still present.
 - [ ] `MERGE` variables in §5 set on `semester` for Production (and Preview for
       the `SEMESTER_*`/`OPENAI_API_KEY` set), then **redeploy** production.
 - [ ] Supabase Auth: Site URL and Redirect URLs include
