@@ -236,7 +236,10 @@ begin
     pg_temp.visible(unclaimed, 'public.organizations'), 0);
 
   perform pg_temp.become_anon();
-  select count(*) into n from public.organizations;
+  begin
+    select count(*) into n from public.organizations;
+  exception when insufficient_privilege then n := 0;  -- no grant: refused before any row
+  end;
   reset role;
   perform pg_temp.counted('and a signed-out visitor sees none either', n, 0);
 

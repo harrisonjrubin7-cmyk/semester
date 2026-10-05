@@ -220,7 +220,10 @@ begin
   perform pg_temp.counted('a stranger sees none of them', n, 0);
 
   perform pg_temp.become_anon();
-  select count(*) into n from public.family_grants;
+  begin
+    select count(*) into n from public.family_grants;
+  exception when insufficient_privilege then n := 0;  -- no grant: refused before any row
+  end;
   perform pg_temp.counted('and a signed-out visitor sees none of them', n, 0);
 
   -- ── The student's own side ──────────────────────────────────────────────

@@ -13,6 +13,9 @@
 -- thought of. The default-privilege check is the part a list could never do: it creates a table and
 -- reads what it was given.
 --
+-- Since D-1304 it also holds the other half: `anon` holds a row privilege only on the public catalog,
+-- the open forms and the school list; a migration that adds a table revokes the default.
+--
 -- ## Controls
 --
 -- A sweep that finds nothing is also what a broken sweep finds. So the suite plants a table with
@@ -41,6 +44,32 @@ language sql stable as $$
     cross join unnest(pg_temp.forbidden()) as p(privilege)
    where c.relkind in ('r', 'p')
      and has_table_privilege(r.role_name, c.oid, p.privilege)
+$$;
+
+
+-- What a signed-out visitor is meant to hold on `public`, and nothing else: the pricing catalog, the
+-- open forms, the school list, and the right to answer an open form. Every other table's policies key
+-- on `auth.uid()`, so `anon` has no use for a grant on it (D-1304).
+create function pg_temp.anon_allowed() returns table (relname text, privilege text)
+language sql stable as $$
+  select * from (values
+    ('commercial_plans', 'SELECT'), ('commercial_prices', 'SELECT'), ('commercial_products', 'SELECT'),
+    ('entitlement_definitions', 'SELECT'), ('plan_entitlements', 'SELECT'),
+    ('form_publications', 'SELECT'), ('published_forms', 'SELECT'), ('schools', 'SELECT'),
+    ('form_responses', 'INSERT')
+  ) as v(relname, privilege)
+$$;
+
+-- Every row privilege `anon` holds on a table or view in `public` that is not on that list.
+create function pg_temp.anon_extra() returns table (relname text, privilege text)
+language sql stable as $$
+  select c.relname::text, p.privilege
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace and n.nspname = 'public'
+    cross join (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE')) as p(privilege)
+   where c.relkind in ('r', 'p', 'v', 'm', 'f')
+     and has_table_privilege('anon', c.oid, p.privilege)
+     and not exists (select 1 from pg_temp.anon_allowed() a where a.relname = c.relname::text and a.privilege = p.privilege)
 $$;
 
 do $$
@@ -100,6 +129,30 @@ begin
     raise exception 'FAILED: authenticated lost a row privilege on notes; the revoke reached past its privileges';
   end if;
   raise notice 'ok  SELECT, INSERT, UPDATE and DELETE are still held where policies rely on them';
+
+  -- 6. anon holds a row privilege only where a signed-out visitor needs it (D-1304).
+  select string_agg(format('%s: anon holds %s', relname, privilege), '; ' order by relname, privilege)
+    into found from pg_temp.anon_extra() where relname <> 'zz_client_privileges_probe';  -- the probe is this suite's own
+  if found is not null then
+    raise exception 'FAILED: anon holds a table privilege a signed-out visitor has no use for; row-level security is then the only thing between them and the table: %', found;
+  end if;
+  select count(*) into n from pg_temp.anon_allowed() a
+   where not has_table_privilege('anon', format('public.%I', a.relname), a.privilege);
+  if n <> 0 then
+    raise exception 'FAILED: anon lost % of the % privileges the public catalog and open forms need', n, (select count(*) from pg_temp.anon_allowed());
+  end if;
+  raise notice 'ok  anon holds exactly the % privileges a signed-out visitor needs, on nothing else', (select count(*) from pg_temp.anon_allowed());
+
+  -- 7. The control: the sweep sees a grant to anon when one is planted. (A table born now does hold
+  -- Supabase's default row privileges for anon, as `grants.check.sql` requires the harness to model;
+  -- the migration that creates a table must revoke them, and this suite is what makes it.)
+  grant select on public.zz_client_privileges_probe to anon;
+  select count(*) into n from pg_temp.anon_extra() where relname = 'zz_client_privileges_probe' and privilege = 'SELECT';
+  if n <> 1 then
+    raise exception 'FAILED: the sweep did not see a planted SELECT grant to anon; it would pass any schema';
+  end if;
+  revoke select on public.zz_client_privileges_probe from anon;
+  raise notice 'ok  a planted SELECT grant to anon is named by the sweep (control)';
 end $$;
 
 rollback;
