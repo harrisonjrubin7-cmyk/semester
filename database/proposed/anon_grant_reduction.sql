@@ -1,4 +1,6 @@
 -- PROPOSED, NOT APPLIED, NOT IN supabase/migrations. Needs owner review and the repo's check suites.
+-- 2026-10-05 reading (docs/native-platform/FOUNDATION_EXPOSURE_READING.md): anon TRUNCATE
+-- is already absent on the owner-scoped tables. INSERT, UPDATE and DELETE are not.
 -- Why: 24 owner-scoped tables carry the Supabase default full grant to anon (incl. TRUNCATE, TRIGGER).
 -- Row policies key on auth.uid(), which is null for anon, so row reads/writes are already denied.
 -- TRUNCATE is not subject to RLS; PostgREST does not expose it, but the grant is a standing

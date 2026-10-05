@@ -81,6 +81,10 @@ company-site/: third Vercel service, static pages
 
 Deployment config lives in the root `vercel.json` plus `app/` and `company-site/`. CI workflows present in `.github/workflows/` include ci, codeql, contrast, docs, drift, functions, hawkscan, infra, pages, production-smoke, and supply-chain. This pass did not re-run them.
 
+## Foundation reading (same day, later)
+
+`FOUNDATION_EXPOSURE_READING.md` re-read the anon policies, the 207 definer functions, F-01, and Semester2. The function set matches `app/src/lib/definerregister.ts`. Zero schools exist, so enforcement was not switched on. Anon write grants remain; `TRUNCATE` does not.
+
 ## Readiness, one sentence
 
 No PDF domain is native-authoritative, ready for production, or ready for a named institutional pilot. Two domains (Student OS, workspace) sit at the repository's conditional invitation-only individual validation, which is not a pilot. The schema is far ahead of the data, and the data that exists is mostly seed (roles, capabilities, commercial catalog rows), not an operating institution.

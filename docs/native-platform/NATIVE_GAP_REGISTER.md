@@ -9,9 +9,9 @@ P0 means "do not tell an institution this is on." It does not mean "build it thi
 | ID | Blocker | Evidence | If ignored |
 | --- | --- | --- | --- |
 | B-01 | No domain is ready for a named pilot, production, or authority | Capability matrix | A screen is described as a SIS, LMS, or bursar |
-| B-02 | School tenant isolation is off (F-01) | Trust model; not re-tested this pass | Any institutional row is under-protected |
+| B-02 | School tenant isolation is off (F-01) | Re-read 2026-10-05: 0 schools on `lzrqvlugnawcgywkhqlz`. Default stays false until `set_school_enforcement` acknowledges lockout. The switch covers course rooms only. See `FOUNDATION_EXPOSURE_READING.md` | A school row created for a pilot with the switch left off |
 | B-03 | Two Supabase projects | `semester` `lzrqvlugnawcgywkhqlz` measured; `Semester2` `kpuulmnicidgdmwgfngv` is the live-domain database per the source-of-truth doc, not queried here | A fix lands on the project the domain does not use |
-| B-04 | Anon can see 32 tables in GraphQL and holds SELECT | Security advisor WARN; policies exist; predicates not run | Possible disclosure if a policy is permissive |
+| B-04 | Anon can see 32 tables in GraphQL and holds SELECT | Predicates read 2026-10-05. Owner-scoped tables deny anon (uid is null). `schools_read`, commercial catalog, entitlements, and open forms allow anon reads on purpose. Write grants remain; TRUNCATE does not. Proposal not applied | A later policy uses `true` on a private table |
 | B-05 | 207 signed-in SECURITY DEFINER functions | Advisor WARN | A command without an internal capability check |
 | B-06 | Registration, gradebook, records, finance, family, community are unsafe to activate | Domain catalog | A flag is turned on for a tenant |
 | B-07 | No qualified accessibility evaluation | EXT-008, domain universal field | A WCAG conformance claim |
