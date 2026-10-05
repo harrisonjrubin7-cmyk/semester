@@ -80,7 +80,7 @@ Mapping of the requested routes to what exists is in
 - SLA is `cta_routes.response_sla_hours` → `site_leads.respond_by`.
 - Client: every lead form carries an optional unchecked "occasional updates"
   box sent as `consent_updates`; UTM and referrer go in `sessionStorage` and ride
-  on the lead; failure falls back to a `mailto:` to the founder's personal address.
+  on the lead; failure falls back to a `mailto:` to the company contact mailbox (`harrisonjrubin7@gmail.com`, confirmed by the owner as a non-personal mailbox).
 
 **Not present, on the server path:** a stored consent version or timestamp; any
 suppression check; any audit event; structured attribution columns (only free-text
@@ -142,7 +142,7 @@ company-site security-green claim is supported, and that doc may predate the wor
 company-site: `<html lang="en">`, canonical `https://www.semester.website/`, title,
 description, `og:*`, `twitter:card=summary`, `theme-color`; **no `og:image`/`twitter:image`**,
 no apple-touch-icon, no manifest. One JSON-LD `Organization` whose `email` is the
-founder's personal Gmail. `robots.txt` is `Allow: /` plus Sitemap.
+company contact mailbox `harrisonjrubin7@gmail.com`. `robots.txt` is `Allow: /` plus Sitemap.
 **Every unknown URL returns 200 with the home shell** (catch-all rewrite), so there
 are no real 404s; canonical/title/description are set by JS only; there is no
 `<noscript>`. `og:title` differs from `<title>`.

@@ -63,7 +63,8 @@
     "tokens:check": "vitest run src/lib/tokenexport.test.ts",
     "design-system:audit": "node scripts/design-system-audit.mjs",
     "design-system:report": "node scripts/design-system-report.mjs --with-tests",
-    "design-system:check": "npm run tokens:check && node scripts/design-system-audit.mjs && vitest run src/lib/designsystem.test.ts src/styles/hex.test.ts src/styles/tokens.test.ts",
+    "design-system:css": "node scripts/design-system-css.mjs",
+    "design-system:check": "npm run tokens:check && node scripts/design-system-audit.mjs && node scripts/design-system-css.mjs && vitest run src/lib/designsystem.test.ts src/lib/designtooling.test.ts src/styles/hex.test.ts src/styles/tokens.test.ts src/styles/rawvalues.test.ts",
     "design-system:baseline": "node scripts/design-system-audit.mjs --write-baseline",
     "generate:gtm-pdf": "node scripts/generate-gtm-pdf.mjs"
   },

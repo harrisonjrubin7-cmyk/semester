@@ -69,3 +69,16 @@ The value/semantic split with no colours in `tokens.css`; the generated export a
 | P2 | `.gitignore` | `app/reports/` | Report not committed |
 
 **Deferred:** replacing existing inline z-index/duration literals (warnings only until a baseline is agreed); fetched Figma variable names; visual regression; Figma writes (never).
+
+## 7 · Measured on main@790ebbf, with the first implementation merged
+
+Everything above was read before any of it ran. These are measured, from `app/`, on a tree that already carried `design-system-audit.mjs`.
+
+| Measure | Result |
+| --- | --- |
+| `npx tsc -b`, `npm run lint`, `npm run check:university`, `npm run build` | pass |
+| `npm test` / `npm run test:shuffle` | 1,420 files and 22,915 tests pass in each (before the merge with main) |
+| `node scripts/design-system-audit.mjs` | 0 violations, 86 warnings; 67 `.tsx` raw values now on `design-system-baseline.json` |
+| `npm run design-system:css` | 279 raw values in the stylesheets and `.tsx` colour functions on `src/styles/rawbudget.ts` (colour 78, z-index 30, shadow 31, motion 6, spacing 81, type 53) |
+
+Gap found on top of the first implementation: its `.tsx` raw-value warnings were not enforced, because the baseline file the ratchet reads had not been written (`design-system:baseline` was never run). Nothing at all read stylesheets for raw values. Those are the two additions above; the instructions (`CLAUDE.md`), the three skills, `.mcp.json` and the CI step set are the P0/P2 rows this document planned and the first commit did not land.
