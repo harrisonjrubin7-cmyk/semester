@@ -10,7 +10,7 @@ import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createCompanySiteScanServer } from './company-site-scan-server.mjs';
-import { apiBase, assemblePluginPaths, assertCompleteFindingEvidence, completeFindingDetail, evaluate, evidenceDiagnostics, evidenceShape, expectedResponses, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
+import { apiBase, assemblePluginPaths, assertCompleteFindingEvidence, completeFindingDetail, evaluate, evidenceDiagnostics, evidenceShape, expectedResponses, fetchAlertPages, findingHash, findingHashes, findingPluginIds, findingsFromEvidence, parseJson, scanId, scannedPaths } from './company-site-scan-report.mjs';
 import { createServer } from 'node:http';
 import * as findingEvidence from './company-site-scan-report.mjs';
 
@@ -836,6 +836,42 @@ test('alert page assembly rejects a 10-uri page whose totalCount is 14', () => {
   assert.throws(() => assemblePluginPaths([
     { applicationScanAlertUris: [{ ...first[0], scan: { id: '87654321-1234-1234-1234-123456789abc' } }], totalCount: 1, nextPageToken: '' },
   ], scan), /scan association/i);
+  // The live findings route keeps a numeric nextPageToken after the last populated page.
+  const complete = assemblePluginPaths([
+    { applicationScanAlertUris: first, totalCount: 14, nextPageToken: 1 },
+    { applicationScanAlertUris: rest, totalCount: 14, nextPageToken: 2 },
+  ], scan);
+  assert.equal(complete.length, 14);
+});
+
+test('alert paging stops once totalCount is in hand instead of following an incrementing token', async () => {
+  const scan = cleanReport().scan.id;
+  const record = index => ({
+    requestMethod: 'GET', uri: `/synthetic-email-${index}`, status: 'RISK_ACCEPTED',
+    findingHash: createHash('sha256').update(`email-${index}`).digest('hex'), scan: { id: scan },
+  });
+  const calls = [];
+  const fetchImpl = async url => {
+    const parsed = new URL(url);
+    calls.push(`${parsed.pathname}?${parsed.searchParams}`);
+    if (parsed.pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln' }) };
+    const pageToken = parsed.searchParams.get('pageToken');
+    if (pageToken === '2') return { ok: true, status: 200, json: async () => ({ applicationScanAlertUris: [], totalCount: 2, nextPageToken: 3 }) };
+    const body = pageToken === '0'
+      ? { applicationScanAlertUris: [record(1)], totalCount: 2, nextPageToken: 1 }
+      : { applicationScanAlertUris: [record(2)], totalCount: 2, nextPageToken: 2 };
+    return { ok: true, status: 200, json: async () => body };
+  };
+  const previous = process.env.HAWK_API_KEY;
+  process.env.HAWK_API_KEY = 'synthetic-key-value';
+  try {
+    const pages = await fetchAlertPages(scan, '100009', fetchImpl);
+    assert.deepEqual(calls.map(call => call.includes('/auth/login') ? 'login' : new URL(`http://127.0.0.1${call}`).searchParams.get('pageToken')), ['login', '0', '1']);
+    assert.equal(assemblePluginPaths(pages, scan).length, 2);
+  } finally {
+    if (previous === undefined) delete process.env.HAWK_API_KEY;
+    else process.env.HAWK_API_KEY = previous;
+  }
 });
 
 test('complete finding detail replaces a self-consistent 10-path plugin with both alert pages', async () => {

@@ -313,6 +313,7 @@ export function assemblePluginPaths(pages, scan) {
   if (pages.length > alertPageLimit) throw new Error('Alert page evidence has an unconsumed continuation');
   const paths = [];
   let total = null;
+  let lastContinued = false;
   for (let index = 0; index < pages.length; index += 1) {
     const page = pages[index];
     if (!page || typeof page !== 'object' || Array.isArray(page) || !Array.isArray(page.applicationScanAlertUris)) {
@@ -325,10 +326,14 @@ export function assemblePluginPaths(pages, scan) {
     const continued = next !== null && next !== undefined && next !== '';
     if (continued && !pageTokenIdentity.test(String(next))) throw new Error('Unsupported alert page schema');
     if (index < pages.length - 1 && !continued) throw new Error('Alert pages ended before the reported total');
-    if (index === pages.length - 1 && continued) throw new Error('Alert page evidence has an unconsumed continuation');
+    if (index === pages.length - 1) lastContinued = continued;
     for (const uri of page.applicationScanAlertUris) paths.push(alertUriRecord(uri, scan));
   }
-  if (paths.length !== total) throw new Error(`Finding count mismatch: alert pages ${paths.length}, totalCount ${total}`);
+  if (paths.length !== total) {
+    throw new Error(lastContinued
+      ? 'Alert page evidence has an unconsumed continuation'
+      : `Finding count mismatch: alert pages ${paths.length}, totalCount ${total}`);
+  }
   return paths;
 }
 
@@ -365,6 +370,8 @@ export async function fetchAlertPages(scan, pluginId, fetchImpl = globalThis.fet
   const token = await accessToken(fetchImpl);
   const pages = [];
   let pageToken = '0';
+  let total = null;
+  let collected = 0;
   for (let index = 0; index < alertPageLimit; index += 1) {
     const url = new URL(`/api/v1/scan/${scan}/alert/${encodeURIComponent(pluginId)}`, apiBase());
     url.searchParams.set('pageSize', '100');
@@ -372,14 +379,28 @@ export async function fetchAlertPages(scan, pluginId, fetchImpl = globalThis.fet
     const response = await fetchImpl(url, { headers: { Accept: 'application/json', Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(30000) });
     if (!response.ok) throw new Error(`alert page request failed (${response.status})`);
     const page = await response.json();
+    const uris = page?.applicationScanAlertUris;
+    if (!page || typeof page !== 'object' || Array.isArray(page) || !Array.isArray(uris)) {
+      const keys = page && typeof page === 'object' && !Array.isArray(page) ? Object.keys(page).sort().join(',') : typeof page;
+      throw new Error(`Unsupported alert page schema (${safeText(keys)})`);
+    }
+    if (!Number.isInteger(page.totalCount) || page.totalCount < 1) throw new Error('Incomplete finding evidence: alert page omitted totalCount');
+    if (total === null) total = page.totalCount;
+    else if (page.totalCount !== total) throw new Error('Finding count mismatch between alert pages');
     pages.push(page);
-    const next = page?.nextPageToken;
-    if (next === null || next === undefined || next === '') return pages;
+    collected += uris.length;
+    const next = page.nextPageToken;
+    const continued = next !== null && next !== undefined && next !== '';
+    // The findings route increments nextPageToken past the last page that
+    // still holds URIs. Stop when the counted set is complete or a page is empty.
+    if (!continued || collected >= total || uris.length === 0) return pages;
     const advanced = String(next);
-    if (advanced === pageToken) throw new Error('Alert page evidence has an unconsumed continuation');
+    if (!pageTokenIdentity.test(advanced) || advanced === pageToken) {
+      throw new Error(`Alert page evidence has an unconsumed continuation (${collected} of ${total} after ${pages.length} pages)`);
+    }
     pageToken = advanced;
   }
-  throw new Error('Alert page evidence has an unconsumed continuation');
+  throw new Error(`Alert page evidence has an unconsumed continuation (${collected} of ${total} after ${pages.length} pages)`);
 }
 
 export async function completeFindingDetail(detail, scan, fetchPages = pluginId => fetchAlertPages(scan, pluginId)) {
