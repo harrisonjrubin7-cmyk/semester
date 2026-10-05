@@ -56,11 +56,12 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 const Releases = lazy(() => import('../components/console/Releases').then((m) => ({ default: m.Releases })));
 // Its own chunk, for the same reason: twelve gates' worth of evidence text the rest of the console never reads.
 const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
+const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
-type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'finance' | 'releases' | 'launch' | 'evidence' | 'views';
+type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'finance' | 'releases' | 'launch' | 'controls' | 'evidence' | 'views';
 
 const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'command', label: 'Command center' },
@@ -72,6 +73,7 @@ const CORE_TABS: readonly { id: Tab; label: string }[] = [
   { id: 'finance', label: 'Finance model' },
   { id: 'releases', label: 'Releases and flags' },
   { id: 'launch', label: 'Launch readiness' },
+  { id: 'controls', label: 'Trust controls' },
   { id: 'evidence', label: 'Evidence' },
   { id: 'views', label: 'Views' },
 ];
@@ -283,6 +285,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'launch' && (
           <Suspense fallback={<p role="status">Loading the launch gates…</p>}>
             <Launch filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'controls' && (
+          <Suspense fallback={<p role="status">Loading the control register…</p>}>
+            <Controls filter={filter} />
           </Suspense>
         )}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}

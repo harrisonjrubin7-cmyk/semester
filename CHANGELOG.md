@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The operations console has a Trust controls tab
+
+For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
+
 ### The operations console has a Launch readiness tab
 
 For operators holding the console grant: a new **Launch readiness** tab, after Releases and flags, shows where the launch go/no-go stands. It lists the twelve launch gates (met, partial or unmet, the files that show it and what is still missing), the council seats with who holds each and whether it has signed, and the verdict worked out from them: go, go with conditions or no-go, with the reasons. It is read-only and says it is the repository's record as of a date, not a live check; nothing on it can mark a gate met. Nothing else in the console moves, and you do not have to do anything.
