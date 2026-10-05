@@ -7,7 +7,7 @@ import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
-import { FieldMessage, useFieldErrors } from '../components/FieldMessage';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import { readTerm } from '../lib/term';
 import { datedItems, railFor } from '../lib/select';
@@ -180,6 +180,7 @@ function HousingDetails() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
+      <ErrorSummary {...fields.summary({ hall: 'Residence hall', hours: 'Hours after your last exam' })} />
       <div id={hint} style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.

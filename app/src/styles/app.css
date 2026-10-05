@@ -2513,6 +2513,38 @@ a:hover {
 }
 
 /*
+ * The list of everything a failed submit found — `ErrorSummary` in
+ * `components/FieldMessage.tsx`. A border and a heading say it is a problem;
+ * the warning colour only reinforces the border. Each link is a full-height
+ * target, so the list is usable on a phone without precision.
+ */
+.error-summary {
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--app-warn);
+  border-radius: var(--r-md);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+.error-summary-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-sm);
+  color: var(--app-warn);
+}
+.error-summary ul {
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+.error-summary a {
+  display: inline-block;
+  min-height: 44px;
+  padding-block: var(--sp-2);
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/*
  * ── The composer ─────────────────────────────────────────────────────────
  *
  * One pill: the field, the send button and the ring around both. Drawn here
