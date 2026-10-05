@@ -171,6 +171,14 @@ Deno.serve(async (req) => {
   const raw = await req.text();
   const clamped = clampRequest(raw, new TextEncoder().encode(raw).length, { models: modelsForPlan(plan) });
   if (!clamped.ok) {
+    // A request that held something above the data-class ceiling is recorded
+    // by the fields that did and the highest class among them, from the clamp's
+    // own result: no part of the body is in this line, and the shared key has
+    // no school to write a tenant audit row for. It is refused here, before the
+    // spend is reserved and before the call is counted. See `../_shared/clamp.ts`.
+    if (clamped.audit) {
+      console.warn('claude: refused above the data-class ceiling', { user: userId, ...clamped.audit });
+    }
     return json(
       {
         error: {

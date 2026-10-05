@@ -1,12 +1,13 @@
 import type { CSSProperties } from 'react';
-import { TRUST_MEANING, TRUST_TEXT, freshnessLine, wantsAttention, type TrustKind } from '../lib/source';
+import { TRUST_GLYPH, TRUST_MEANING, TRUST_TEXT, freshnessLine, wantsAttention, type TrustKind } from '../lib/source';
 
 /**
  * Where a fact came from and how old it is, beside the fact.
  *
- * Text, not an icon or a colour: `a11y/tellings.test.ts` holds the app to
- * never saying something only with shape or colour, and "Estimated" is
- * exactly the kind of word that must reach a screen reader. The meaning
+ * A glyph and a word, never a colour alone: `a11y/tellings.test.ts` holds the
+ * app to never saying something only with shape or colour, and "Estimated" is
+ * exactly the kind of word that must reach a screen reader. The glyph is
+ * `aria-hidden`; the word is what is read. The meaning
  * sentence rides in `title` for a pointer and in visually-hidden text for
  * assistive technology, so the badge stays one short line on screen.
  *
@@ -23,9 +24,10 @@ export function SourceBadge({
   style,
 }: {
   /**
-   * One of the five stored labels, or `ai_assisted` / `external` — the two
-   * display-only kinds in `lib/source.ts`. One badge for all seven, so an AI
-   * answer and a registrar record read in the same vocabulary.
+   * One of the five stored labels, or a display-only kind in `lib/source.ts`
+   * (`ai_assisted`, `external`, `unavailable_stale`, `connected`, `sample`).
+   * One badge for all ten, so an AI answer and a registrar record read in the
+   * same vocabulary.
    */
   label: TrustKind;
   /** When the fact was last updated or synced, epoch ms. Omit when unknown. */
@@ -66,6 +68,9 @@ export function SourceBadge({
           color: 'var(--app-fg)',
         }}
       >
+        <span aria-hidden="true" style={{ marginInlineEnd: 'var(--sp-2)' }}>
+          {TRUST_GLYPH[label]}
+        </span>
         {TRUST_TEXT[label]}
       </span>
       <span className="sr-only">{TRUST_MEANING[label]}</span>

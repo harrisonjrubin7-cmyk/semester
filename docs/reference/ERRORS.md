@@ -677,6 +677,7 @@ Returned flat, as `{"code", "message"}`, by `/v1/intelligence/respond`, `/policy
 | `course-scope-mismatch` | 403 | yes | The requested course or term does not match the approved scope of the sources. |
 | `course-mode-disabled` | 403 | yes | The published course policy does not allow that mode. |
 | `course-policy-unavailable` | 503 | yes | The course policy service is missing or failed. |
+| `data-class-refused` | 403 | yes | A field in the request to the provider is above the AI data-class ceiling (T2) or has no declared class. Nothing was sent and no budget was reserved. |
 | `model-unavailable` | 503 | yes | No tenant-approved model fits the cost ceiling. |
 | `budget-unavailable` | 503 | yes | The budget service failed. |
 | `budget-exhausted` | 429 | yes | The institution AI budget is spent. |

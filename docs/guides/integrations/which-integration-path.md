@@ -62,7 +62,7 @@ OneRoster would give a standard roster feed from a SIS. It is `PLANNED` with no 
 
 ## Events
 
-Modules inside Semester can pass events in a common envelope through an outbox. The code exists and is tested. One producer exists (the productivity command service), but nothing mounts it and nothing publishes what it writes, so there is no event stream for a partner to subscribe to. If you are adding or consuming an event inside the repository, follow [Consume events](event-consumer.md). There is no subscription or delivery endpoint for outside systems, and this page does not promise one.
+Modules inside Semester can pass events in a common envelope through an outbox. The code exists and is tested. One producer exists (the productivity command service), but one route mounts it, off unless a deployment switches it on, and nothing publishes what it writes, so there is no event stream for a partner to subscribe to. If you are adding or consuming an event inside the repository, follow [Consume events](event-consumer.md). There is no subscription or delivery endpoint for outside systems, and this page does not promise one.
 
 ## Calendar
 
