@@ -169,6 +169,7 @@ export function Profile() {
             maxLength={40}
             placeholder="What should the app call you?"
             aria-label="Your name"
+            autoComplete="nickname"
             onChange={(e) => dispatch({ type: 'setMyName', name: e.target.value })}
             style={{ width: '100%', fontSize: 'var(--type-base-plus)' }}
           />
@@ -180,6 +181,7 @@ export function Profile() {
             maxLength={80}
             placeholder="How to say it (optional) — e.g. ah-DAY-oh-lah"
             aria-label="How to say your name"
+            autoComplete="off"
             onChange={(e) => dispatch({ type: 'setPronounce', text: e.target.value })}
           />
         </CustomRow>
