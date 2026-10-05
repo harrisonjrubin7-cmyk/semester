@@ -20,7 +20,7 @@
  * state cannot be promoted by editing a word.
  */
 
-import { JOURNEYS } from '../governance/error-budgets';
+import { ADOPTED_JOURNEYS } from '../governance/error-budgets';
 
 export type AlertState = 'defined' | 'manual' | 'wired' | 'delivery_tested';
 export type Severity = 'page' | 'ticket';
@@ -55,19 +55,26 @@ const JOURNEY_ROUTE: Record<string, { component: string; runbook: string }> = {
 };
 
 /**
- * One burn alert per journey. Each is two rules on the same SLI (a page and a
+ * One burn alert per *adopted* journey (a proposed one has no objective an owner
+ * has agreed to, so it gets no alert that could page). Each is two rules on the same SLI (a page and a
  * ticket, see burn-alerts.ts), so the row names the *route the worst rule
  * asks for* — a journey can page. All are `defined`: no accepted event stream
  * supplies eligible and bad counts yet (SLO-SLI-DRAFT.md), and a burn alert on
  * an unmeasured SLI is a promise, not a monitor.
  */
-const burnAlerts: Alert[] = JOURNEYS.map((j) => ({
+const routeOf = (id: string): { component: string; runbook: string } => {
+  const route = JOURNEY_ROUTE[id];
+  if (!route) throw new Error(`Journey "${id}" is adopted but has no route in JOURNEY_ROUTE: name the component that carries it and the runbook that answers it (and link it in catalog.ts)`);
+  return route;
+};
+
+const burnAlerts: Alert[] = ADOPTED_JOURNEYS.map((j) => ({
   id: `burn:${j.id}`,
   condition: `${j.name}: error budget burning at 14.4× over 1 h and 5 m, or 6× over 6 h and 30 m (page); 3× over 1 d, or 1× over 3 d (ticket)`,
   source: 'burn' as const,
   severity: 'page' as const,
-  component: JOURNEY_ROUTE[j.id].component,
-  runbook: JOURNEY_ROUTE[j.id].runbook,
+  component: routeOf(j.id).component,
+  runbook: routeOf(j.id).runbook,
   state: 'defined' as const,
   evidence: null,
 }));
