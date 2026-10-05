@@ -204,12 +204,14 @@ a, .ref { color: var(--accent); text-decoration: none; }
 `;
 
 function render(report, md, toc, meta) {
-  const slug = (s, seen) => { let b = s.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 's'; let n = b; let i = 2; while (seen.has(n)) n = `${b}-${i++}`; seen.add(n); return n; };
+  // Slugs come from the heading's plain source text, never from rendered HTML: every character outside a-z and 0-9
+  // becomes a hyphen, so nothing markup-like can reach the id attribute.
+  const slug = (plainText, seen) => { const b = plainText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 's'; let n = b; let i = 2; while (seen.has(n)) n = `${b}-${i++}`; seen.add(n); return n; };
   const seen = new Set();
   const renderer = new marked.Renderer();
   renderer.heading = function ({ tokens, depth }) {
     const text = this.parser.parseInline(tokens);
-    return `<h${depth} id="${slug(text, seen)}">${text}</h${depth}>\n`;
+    return `<h${depth} id="${slug(tokens.map((t) => t.raw ?? '').join(''), seen)}">${text}</h${depth}>\n`;
   };
   // A PDF cannot resolve a repository-relative link, so show the reference as text.
   renderer.link = function ({ href, tokens }) {

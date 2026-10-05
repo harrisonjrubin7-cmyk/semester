@@ -1286,6 +1286,10 @@ Every document in this report ends with the reviews it needs. They are collected
 
 `[REVIEW: counsel]` entity facts, the 72-hour wording, pricing and pilot paper. `[REVIEW: security]` the HECVAT draft rows. `[REVIEW: accounting]` the finance conflicts.
 
+### Business operating system: index
+
+`[REVIEW: counsel]` `[REVIEW: accounting]` `[REVIEW: tax]` `[REVIEW: insurance]` `[REVIEW: security]` `[REVIEW: privacy]` `[REVIEW: accessibility]` `[REVIEW: procurement]` per document.
+
 ### Cloud Security Plan (master plan)
 
 Independent security assessor [REVIEW: security]; counsel [REVIEW: counsel] for notification, DPA and retention durations; privacy lead [REVIEW: privacy]; accessibility evaluator [REVIEW: accessibility]. None named in the repository.
