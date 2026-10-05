@@ -13,7 +13,7 @@
 | `npm run lint` | passes; oxlint warnings (React hook/purity/ref warnings in `Sheet.tsx`, `Classmates.tsx`, `Calendar.tsx`, `Import.tsx`, `folds.hook.ts`, `importgraph.ts`); style, label and term audits ok |
 | `npm run check:university` | clean |
 | `npm run design-system:check` | 0 violations, 86 raw-value warnings; 69 contract tests in 5 files pass |
-| `npm test` | see §6 |
+| `npm test` | passes, see §6 |
 | `npm run test:shuffle`, `npm run build`, secret scan, migration validation | **not run in this pass** |
 
 ## 2. Architecture map
@@ -45,7 +45,7 @@ Deployment: root `vercel.json` plus `app/` and `company-site/`. Workflows: ci, c
 
 ## 6. Test suite
 
-`npm test` had not finished when this was committed; see [`SEMESTER_RELEASE_EVIDENCE_REGISTER.md`](SEMESTER_RELEASE_EVIDENCE_REGISTER.md).
+1441 test files passed (23,179 tests); details in [`SEMESTER_RELEASE_EVIDENCE_REGISTER.md`](SEMESTER_RELEASE_EVIDENCE_REGISTER.md).
 
 ## 7. Existing master documents this page does not replace
 
