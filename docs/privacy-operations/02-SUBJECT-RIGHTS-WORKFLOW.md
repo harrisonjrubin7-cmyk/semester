@@ -9,10 +9,10 @@
 | Piece | State |
 | --- | --- |
 | Student files and tracks a request | **Built.** `raise_my_data_subject_request(kind, detail)`; screen `DataRightsRequests.tsx`. Idempotent per kind; 30-day `due_at` is a column default and nothing else |
-| Anything that **answers** a request | **Does not exist.** No UI, function or RPC updates `data_subject_request`; the only route is SQL as `service_role`. The runbook's "trusted operations service" is not in the repository |
-| `verified_at` | Column only; no setter |
+| Anything that **answers** a request | **Function built, no screen.** `answer_data_subject_request(id, status, resolution)` moves a request through its statuses for a holder of `data_request:handle` (`data_steward`) who is not the requester (D-1258). No UI calls it; nobody is named to hold the capability **[CR, P-03]** |
+| `verified_at` | Set by `verify_data_subject_request(id, rung)`, which also records the rung and a pseudonym of who verified (D-1258) |
 | Guardian or institution requests | Values exist in the check constraint; **no producer** |
-| Audit of status changes | **None.** Only `privacy.request_raised` and `privacy.export_completed` exist |
+| Audit of status changes | `privacy.request_status_changed` and `privacy.request_verified`, written by a trigger on the table (kind and statuses or rung only). Erasure, hold and export events other than `privacy.export_completed` still do not exist |
 | Overdue alerting | **None** |
 | Named answerer, backup, response time | **None** (`COUNSEL-BRIEF.md` C1; RM-06) |
 | Older queue `data_requests` | A second queue with a different status vocabulary and a `data_steward` role; no screen. Treat as the **receipt ledger**, not a queue, until a decision retires one (08-B13) |
