@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your browser stops filling your own details into other people's boxes
+
+Fields that take someone else's email address (an email's To, Cc and Bcc, a contact's, a family member's) now tell the browser not to autofill them, so your own address no longer appears in them. The two assistant key boxes in Settings tell it not to offer to save a key as a login. The two name boxes about you (on Profile, and what a call shows as your name) now say what they are for, so a browser or screen reader can help. Nothing was removed and you do not have to do anything.
+
 ### Forms that find several problems now list them together
 
 On **Costs** (the bill and the out-of-pocket form), **Meals** and **Housing**, pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
