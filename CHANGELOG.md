@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Support and the assistant now point you to a person
+
+On **Support**, each tab has a line under its introduction: "Not sure which door fits? See who can help with what". It opens Help, where the offices and what to bring are listed. In the assistant, under the sources of an answer, there is a new "Not sure it's right? See who can help" link to the same place, because an assistant answer is not an official answer. Nothing was removed and you do not have to do anything.
+
 ### Semester staff get a finance planning tool in the operations console
 
 Only people holding the operator grant see this, so students and school administrators will notice nothing. The console has a new **Finance model** tab: a 36-month planning model with twelve scenarios, editable assumptions, two sensitivity grids, warnings for runway, margin, delivery capacity and AI cost, and downloads as CSV, JSON and Markdown. Every figure on it says it is a forecast on planning assumptions, it works on sample data only, and it saves nothing. No price, target or result in it is approved. You do not have to do anything.

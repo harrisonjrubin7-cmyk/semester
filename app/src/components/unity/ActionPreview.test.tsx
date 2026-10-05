@@ -63,6 +63,14 @@ describe('ActionPreview', () => {
     expect(host.querySelector('.action-preview-caveat')?.textContent).toBe('Subject to your school’s official audit.');
   });
 
+  it('names who can help last, after taking it back, only when given', () => {
+    act(() => root.render(<ActionPreview says="Sends it." recovery={{ kind: 'request', how: 'ask the Registrar.' }} whoCanHelp="Your advisor, or the Registrar’s office." />));
+    expect(labels()).toEqual(['What happens', 'Taking it back', 'Who can help']);
+    expect(values()[2]).toBe('Your advisor, or the Registrar’s office.');
+    act(() => root.render(<ActionPreview says="Sends it." recovery={{ kind: 'undo' }} />));
+    expect(labels()).not.toContain('Who can help');
+  });
+
   it('draws no empty labels for what it was not given', () => {
     act(() => root.render(<ActionPreview says="Signs out every other device." recovery={{ kind: 'none' }} />));
     expect(labels()).toEqual(['What happens', 'Taking it back']);
@@ -110,7 +118,7 @@ describe('ActionPreview accessibility (axe)', () => {
   it('has none', async () => {
     act(() =>
       root.render(
-        <ActionPreview subject="Midterm" says="Shared." exactly="The summary." doesNotChange="Notes." subjectTo="Caveat." recovery={{ kind: 'undo' }} provenance={fromSourceLabel('estimated')} />,
+        <ActionPreview subject="Midterm" says="Shared." exactly="The summary." doesNotChange="Notes." subjectTo="Caveat." recovery={{ kind: 'undo' }} provenance={fromSourceLabel('estimated')} whoCanHelp="Your advisor." />,
       ),
     );
     const r = await axe.run(host, { rules: { 'color-contrast': { enabled: false } }, resultTypes: ['violations'] });
