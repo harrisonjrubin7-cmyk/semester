@@ -70,7 +70,7 @@ The diff said the grep guards were missing (they exist), left `approvals.ts` as 
 ## Open gaps, highest priority first
 
 1. **The `community_volunteers` / `trust_safety_reviewer` read** — privacy owner's decision (above). P1.
-2. ~~The 8 inconclusive tables~~ — done in slice 2 (D-ORDER below): all 64 probed, none inconclusive. The sweep still keys on `user_id`/`student_id`; other owner columns (`owner_id`, `created_by`, `account_id`, `subject`) are not swept. P2.
+2. ~~The 8 inconclusive tables~~ — done in slice 2 (D-1298 below): all 64 probed, none inconclusive. The sweep still keys on `user_id`/`student_id`; other owner columns (`owner_id`, `created_by`, `account_id`, `subject`) are not swept. P2.
 3. **Owner columns beyond `user_id` / `student_id`** (`created_by`, `subject`, `owner_id`, `account_id`, ...) are not swept. P2.
 4. **The sweep reads through the table only.** What a `security definer` function a company role may call returns is each feature suite's job. P2.
 5. **Shared-key Edge path** keeps no per-request row. Decide whether it should. P2.
@@ -79,5 +79,5 @@ The diff said the grep guards were missing (they exist), left `approvals.ts` as 
 ## What the next slice needs
 
 - A decision on item 1 above, so the `TO NARROW` entry can be closed by a migration and a suite edit.
-- Whoever picks up item 6: the free-text redaction scan is *not* the largest gap — it contradicts the repo's declared-field-class design (D-ORDER). Start with the blanket anon revoke or the owner-column widening.
+- Whoever picks up item 6: the free-text redaction scan is *not* the largest gap — it contradicts the repo's declared-field-class design (D-1298). Start with the blanket anon revoke or the owner-column widening.
 - To run the policy suites in a session container: install `postgresql-17` from the PGDG repository, then `su postgres -c "cd <repo> && supabase/check.sh [suite ...]"`.
