@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# The public site, built by scripts/build-site.mjs.
+dist-site
 *.local
 
 # The screenshot baseline. `scripts/baseline.mjs` regenerates it; the script is

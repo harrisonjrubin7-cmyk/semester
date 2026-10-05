@@ -1,7 +1,11 @@
+import { useCoursePublications } from '../lib/courserules';
 import {StudyJournal} from '../components/StudyJournal';
+import {LearningHub} from '../components/LearningHub';
 import { StudyStudio } from '../components/StudyStudio';
+import { Toolkit } from '../components/toolkit/Toolkit';
+import { on, TOOLKIT_FLAGS } from '../lib/toolkit/flags';
 import { allCards } from '../data/catalog';
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -37,6 +41,30 @@ import {
   type UnitFacts,
 } from '../lib/revise';
 import type { CourseId } from '../lib/types';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { MasteryGraph } from '../components/MasteryGraph';
+import {
+  courseLearningInput,
+  learningState,
+  readinessForecast,
+  recommendLearningActivity,
+} from '../lib/learning-loop';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+
+const FlightPlanLearning = lazy(() =>
+  import('../components/institutional/FlightPlanLearning').then((module) => ({
+    default: module.FlightPlanLearning,
+  })),
+);
+
+function FlightPlanLearningSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanLearning />
+    </Suspense>
+  );
+}
 
 /**
  * The evenings a student actually has.
@@ -78,8 +106,10 @@ const PLAN_ROWS = 8;
  * The exam countdown stays above the switcher, because it is true whichever
  * view you are on and it is the thing you want to see without looking.
  */
-export function Study() {
-  const { state, dispatch, catalog, tint } = useStore();
+export function Study({
+  adaptiveLearning = EXPERIENCE_FLAGS.adaptiveLearning !== 'off',
+}: { adaptiveLearning?: boolean } = {}) {
+  const { state, dispatch, catalog, tint, account } = useStore();
   const now = useNow();
   /**
    * Courses whose full list of ways has been asked for.
@@ -95,6 +125,9 @@ export function Study() {
   /** Whether the ranking below the plan is showing. */
   const [showRest, setShowRest] = useState(false);
   const [studio, setStudio] = useState(false);
+  const [toolkit, setToolkit] = useState(false);
+  // What instructors published for these courses, when Course Studio is on (`lib/courserules.ts`); {} otherwise.
+  const published = useCoursePublications(catalog.courses.map((c) => c.code), state.term, !!account);
   const [studioCourse, setStudioCourse] = useState(state.guideId);
   const selectedStudioCourse = catalog.courses.find(c=>c.id===studioCourse)?.id ?? catalog.courses[0]?.id;
   const rowTwelve = useRowStyle(12);
@@ -240,6 +273,12 @@ export function Study() {
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
+  // Behind `VITE_AI_TOOLKIT`, off unless an environment names a state. See `lib/toolkit/flags.ts`.
+  if (toolkit && on(TOOLKIT_FLAGS.aiToolkit))
+    return (
+      // Keyed by account so a different student signing in starts from their own toolkit, with no panel state carried over.
+      <Toolkit key={account?.id || 'device'} accountId={account?.id} courses={catalog.courses} published={published} onOpen={(screen) => dispatch({ type: 'go', screen })} onClose={() => setToolkit(false)} />
+    );
   if(studio && selectedStudioCourse) return <><div className="studio-course-picker"><label>Course<select value={selectedStudioCourse} onChange={e=>setStudioCourse(e.target.value)}>{catalog.courses.map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></label></div><StudyStudio key={selectedStudioCourse} courseId={selectedStudioCourse} onClose={()=>setStudio(false)}/></>;
   return (
     <Page>
@@ -260,6 +299,7 @@ export function Study() {
         size, saying the same thing.
       */}
       <div className="studio-entry"><div><strong>One course. Eleven study formats.</strong><p>Choose sources, create a guide, and save it with your course.</p></div><button className={`portal-primary${tab === 'revise' ? ' is-quiet' : ''}`} onClick={()=>setStudio(true)}>Create study guide</button></div>
+      {on(TOOLKIT_FLAGS.aiToolkit) && <div className="studio-entry"><div><strong>AI Toolkit</strong><p>Start from a course and a goal: assignment stages, research evidence, data, rubrics and AI-use policy.</p></div><button className="is-quiet" onClick={()=>setToolkit(true)}>Open AI Toolkit</button></div>}
       {/*
         Six buttons used to sit here, and removing them is the hierarchy pass
         the UI audit asked for rather than a deletion for its own sake.
@@ -318,6 +358,7 @@ export function Study() {
         row is gone, and every destination it named is still reachable.
       */}
       <StudyJournal/>
+      <LearningHub/>
       {exam && (
         <Blueprint
           style={{
@@ -415,6 +456,8 @@ export function Study() {
           </div>
         </Blueprint>
       )}
+
+      <FlightPlanLearningSlot />
 
       <Segmented
         options={[
@@ -600,6 +643,18 @@ export function Study() {
           // this is the one that gets a word put to it.
           const standing = knowingOf(keys, state.reviews, now.getTime());
           const test = testedIn(catalog, now, c.id);
+          const recurringMistake =
+            keys.map((key) => state.reviews[key]).filter((review) => review?.wrong > 0).length >= 2
+              ? ('recall-gap' as const)
+              : null;
+          const learningInput = courseLearningInput(c.id, g, state.reviews, {
+            due,
+            recurringMistake,
+            now: now.getTime(),
+          });
+          const conceptStates = learningState(learningInput);
+          const adaptive = recommendLearningActivity(learningInput);
+          const readiness = readinessForecast(learningInput, now);
           const step = nextStep({
             ways,
             guide: g,
@@ -618,6 +673,7 @@ export function Study() {
             testIn: test?.days ?? null,
             testKind: test?.kind ?? null,
             started,
+            adaptive,
           });
           return (
             <Blueprint
@@ -695,6 +751,24 @@ export function Study() {
               <div style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
                 <Standing state={standing.state} evidence={standing.evidence} name={c.code} />
               </div>
+              {adaptiveLearning && <details className="course-mastery">
+                <summary>
+                  Learning evidence · readiness {readiness.range[0]}–{readiness.range[1]}%
+                </summary>
+                <p>
+                  Forecast range, not a grade. It uses current retrieval coverage and review timing.
+                </p>
+                <MasteryGraph concepts={conceptStates} />
+                {learningInput.attempts.length === 0 && ways.some((way) => way.id === 'quiz') && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: 'quiz' })}
+                  >
+                    Start a short diagnostic
+                  </button>
+                )}
+              </details>}
               {/*
                 What is true of this course today, beside what is true of it
                 always. The size of the guide is in the corner above and does
@@ -1019,7 +1093,7 @@ export function Study() {
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
-                    color: on ? 'var(--on-chrome)' : undefined,
+                    color: on ? 'var(--chrome-ink)' : undefined,
                     borderLeft: choice.id ? `3px solid ${tint(choice.id).edge}` : undefined,
                   }}
                 >

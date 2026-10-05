@@ -11,9 +11,10 @@ The spine is the podcast MP3 every student already streams; the picture is its
 chapter marks, drawn as lower-thirds that arrive on the second the chapter
 does. Nothing is synthesised and no audio is cut.
 
-There are no captions. `audio/synth.py` records where a *chapter* starts and
-nothing records where a line does, so a caption track would have to be invented
-— see video/src/Documentary.tsx for why an invented one is worse than none.
+Captions are burned in per line, from `audio/scripts/<stem>.lines.json` (see
+video/src/Documentary.tsx), and the same words go beside the MP4 as a WebVTT
+sidecar copied from `app/public/audio/<episode>.vtt`, which
+`app/scripts/captions.ts` writes from the script and those times.
 
 `--broll <provider>` is the paid half and is not wired to any provider. The
 accounting for it is built and guarded (video/src/clipspend.ts,

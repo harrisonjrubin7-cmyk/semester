@@ -112,17 +112,191 @@ export async function claimSchool(schoolId: string): Promise<Claim> {
   return { ok: true, schoolId: String(data ?? schoolId) };
 }
 
-/** The school the server currently believes you are at, or ''. */
-export async function claimedSchool(): Promise<string> {
+/**
+ * The school the server currently believes you are at, or '' — and a failed
+ * request throws rather than reading as "no school". Screens that must tell a
+ * dropped request from an account with no claim (the Notices hub) use this.
+ */
+export async function claimedSchoolOrThrow(): Promise<string> {
   if (!cloudConfigured) return '';
   const db = await cloud();
-  const { data } = await db.auth.getUser();
+  const { data, error } = await db.auth.getUser();
+  if (error && error.name !== 'AuthSessionMissingError') throw new Error(error.message);
   const id = data.user?.id;
   if (!id) return '';
-  const { data: row } = await db
+  const { data: row, error: rowError } = await db
     .from('profiles')
     .select('school_id')
     .eq('user_id', id)
     .maybeSingle();
+  if (rowError) throw new Error(rowError.message);
   return row?.school_id ? String(row.school_id) : '';
+}
+
+/** The school the server currently believes you are at, or ''. A failure reads as ''. */
+export async function claimedSchool(): Promise<string> {
+  try {
+    return await claimedSchoolOrThrow();
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * The same, with the third answer kept: `null` when the read failed, so a
+ * screen can say it could not check instead of treating "could not read" as "at
+ * no university". Anything that acts on an empty answer (the automatic claim)
+ * must use this one, because moving a person who is already somewhere is worse
+ * than not claiming.
+ */
+export async function claimedSchoolOrUnknown(): Promise<string | null> {
+  try {
+    return await claimedSchoolOrThrow();
+  } catch {
+    return null;
+  }
+}
+
+// ── Membership: asking, leaving, deciding ──────────────────────────────────
+//
+// The server is the authority on all of it (`20260930100000_school_membership_
+// enforcement.sql`); these are the way in and the words. Nothing here can put
+// anybody in a school. A request grants nothing until a person at that school
+// approves it, and a claim works only for an address the school publishes.
+
+/** A request as the requester sees it. */
+export interface MyRequest {
+  id: string;
+  schoolId: string;
+  status: 'pending' | 'approved' | 'rejected' | 'withdrawn';
+  createdAt: string;
+}
+
+/** A waiting request as a school's administrator sees it: a handle, never an address. */
+export interface WaitingRequest {
+  id: string;
+  handle: string;
+  note: string;
+  createdAt: string;
+}
+
+/** What switching a school's rooms to members-only would do. Counts, never people. */
+export interface Readiness {
+  enforced: boolean;
+  members: number;
+  enrolled: number;
+  lockedOut: number;
+  pending: number;
+}
+
+type Done = { ok: true } | { ok: false; because: string };
+
+/**
+ * Whether to claim a school for this account without asking.
+ *
+ * Only when the choice is unambiguous: nothing claimed yet, the person has not
+ * left a university on purpose, and exactly ONE known school publishes the
+ * address's domain. Two schools publishing one domain (a system with several
+ * campuses) is a question for the person, not a guess. The server checks the
+ * confirmed address again; this only decides whether to ask it.
+ */
+export function shouldAutoClaim(
+  address: string,
+  schools: KnownSchool[],
+  claimed: string,
+  declined: boolean,
+): KnownSchool | null {
+  if (claimed || declined || !address) return null;
+  const fits = schools.filter((school) => looksClaimable(address, school));
+  return fits.length === 1 ? fits[0] : null;
+}
+
+/** Remembers, on this device, that the person left — so it is not undone for them. */
+export const declinedKey = (accountId: string) => `semester.school.declined:${accountId}`;
+
+export function autoClaimDeclined(accountId: string): boolean {
+  try {
+    return localStorage.getItem(declinedKey(accountId)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function rememberDeclined(accountId: string, on: boolean): void {
+  try {
+    if (on) localStorage.setItem(declinedKey(accountId), '1');
+    else localStorage.removeItem(declinedKey(accountId));
+  } catch {
+    // Without storage the worst case is being asked again, which is safe.
+  }
+}
+
+async function call(fn: string, args: Record<string, unknown>): Promise<Done> {
+  if (!cloudConfigured) return { ok: false, because: 'This build has no account server.' };
+  const { error } = await (await cloud()).rpc(fn, args);
+  return error ? { ok: false, because: error.message } : { ok: true };
+}
+
+export const requestMembership = (schoolId: string, why: string) =>
+  call('request_school_membership', { want: schoolId, why });
+export const withdrawRequest = (id: string) => call('withdraw_school_request', { req: id });
+export const leaveSchool = () => call('leave_school', {});
+export const decideRequest = (id: string, approve: boolean) =>
+  call('decide_school_request', { req: id, approve, why: '' });
+
+/**
+ * Whether this school's rooms are limited to its members. `null` when that
+ * could not be read (a failed query or no such row): a setting that could not
+ * be checked is not the same as one that is off, and the screen says which.
+ */
+export async function schoolEnforced(schoolId: string): Promise<boolean | null> {
+  if (!cloudConfigured || !schoolId) return false;
+  const { data, error } = await (await cloud()).from('schools').select('enforce_membership').eq('id', schoolId).maybeSingle();
+  if (error || !data) return null;
+  return data.enforce_membership === true;
+}
+
+/** The requests this account made. Own rows only: an administrator's list is `waitingFor`. */
+export async function myRequests(userId: string): Promise<MyRequest[]> {
+  if (!cloudConfigured) return [];
+  const { data, error } = await (await cloud())
+    .from('school_membership_requests')
+    .select('id, school_id, status, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: String(r.id),
+    schoolId: String(r.school_id),
+    status: r.status as MyRequest['status'],
+    createdAt: String(r.created_at),
+  }));
+}
+
+/** Waiting requests at a school, for someone who may decide them; [] for anyone else. */
+export async function waitingFor(schoolId: string): Promise<WaitingRequest[]> {
+  if (!cloudConfigured || !schoolId) return [];
+  const { data, error } = await (await cloud()).rpc('school_requests_for_admin', { want: schoolId });
+  if (error || !Array.isArray(data)) return [];
+  return data.map((r: Record<string, unknown>) => ({
+    id: String(r.id),
+    handle: String(r.handle ?? ''),
+    note: String(r.note ?? ''),
+    createdAt: String(r.created_at ?? ''),
+  }));
+}
+
+/** Counts for a school's administrator; null for anyone who may not see them. */
+export async function readinessOf(schoolId: string): Promise<Readiness | null> {
+  if (!cloudConfigured || !schoolId) return null;
+  const { data, error } = await (await cloud()).rpc('school_enforcement_readiness', { want: schoolId });
+  if (error || !data) return null;
+  const d = data as Record<string, unknown>;
+  return {
+    enforced: d.enforced === true,
+    members: Number(d.members ?? 0),
+    enrolled: Number(d.enrolled ?? 0),
+    lockedOut: Number(d.locked_out ?? 0),
+    pending: Number(d.pending_requests ?? 0),
+  };
 }

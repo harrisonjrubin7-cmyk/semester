@@ -2,7 +2,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { StoreProvider } from '../state/store';
+import { StoreProvider, useStore } from '../state/store';
 import { STORAGE_KEY } from '../state/shape';
 import { loadSeed } from '../data/seed';
 import { Today } from './Today';
@@ -50,6 +50,19 @@ beforeAll(async () => {
     disconnect() {}
   };
   await loadSeed();
+  // Today loads these lazily. Left to resolve on their own they can finish
+  // after the last test, and React then logs an act() warning as the worker
+  // closes ("Closing rpc while onUserConsoleLog was pending"), which fails the
+  // run for a file whose assertions all passed. Loaded here, a mount waits for
+  // React and not for a module, as `RegistrationDayCard.test.tsx` does.
+  await Promise.all([
+    import('../components/PlusPrompt'),
+    import('../components/institutional/FlightPlanHome'),
+    import('../components/TodayActionCenter'),
+    import('../components/RegistrationDayCard'),
+    import('../components/CrunchWeekCard'),
+    import('../components/OfficeActionsToday'),
+  ]);
 });
 
 beforeEach(() => {
@@ -64,6 +77,10 @@ afterEach(async () => {
 });
 
 /** Mount Today over a given stored state. */
+function FocusMode() {
+  const {dispatch} = useStore();
+  return <button onClick={() => dispatch({type: 'setLook', look: {workspaceMode: 'focused'}})}>Enable Focus View</button>;
+}
 async function open(stored: Record<string, unknown>): Promise<void> {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, ...stored }));
   await act(async () => {
@@ -72,6 +89,7 @@ async function open(stored: Record<string, unknown>): Promise<void> {
   await act(async () => {
     root.render(
       <StoreProvider>
+        <FocusMode />
         <Today />
       </StoreProvider>,
     );
@@ -82,6 +100,29 @@ const banner = (): string =>
   [...host.querySelectorAll('button')]
     .map((b) => (b.textContent ?? '').replace(/\s+/g, ' '))
     .find((t) => /went by without being ticked off/.test(t)) ?? '';
+
+describe('Today tab hierarchy', () => {
+  for (const homeTab of ['Hours', 'This week', 'Done']) {
+    it(`puts ${homeTab} content ahead of the daily briefing`, async () => {
+      await open({});
+      await act(async () => [...host.querySelectorAll<HTMLButtonElement>('.segmented-option')].find(button => button.textContent === homeTab)!.click());
+      const briefing = host.querySelector<HTMLElement>('.today-briefing');
+      expect(briefing).not.toBeNull();
+      expect(briefing!.hidden).toBe(true);
+      const today = host.querySelector<HTMLButtonElement>('.segmented-option');
+      await act(async () => today!.click());
+      expect(briefing!.hidden).toBe(false);
+      expect(host.querySelector('.today-briefing')).toBe(briefing);
+    });
+  }
+  it('keeps the next step available in Focus View even if another tab was selected', async () => {
+    await open({});
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>('.segmented-option')].find(button => button.textContent === 'This week')!.click());
+    expect(host.querySelector<HTMLElement>('.today-briefing')?.hidden).toBe(true);
+    await act(async () => [...host.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === 'Enable Focus View')!.click());
+    expect(host.querySelector<HTMLElement>('.today-briefing')?.hidden).toBe(false);
+  });
+});
 
 describe('a first run, with the sample term unclaimed', () => {
   it('does not tell the visitor they missed anything', async () => {

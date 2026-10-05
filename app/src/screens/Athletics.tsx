@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
+import { AthleteShare, SupportSharesWithYou } from '../components/AthleteShare';
 import { useDeviceLibrary } from '../lib/device-library';
 import {
   ATHLETIC_KINDS,
@@ -17,7 +18,7 @@ import {
 } from '../lib/athletics';
 import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
-import { dateToIso, decorateItem } from '../lib/date';
+import { dateToIso, decorateItem, shownTime } from '../lib/date';
 import { lengthOf, railFor } from '../lib/select';
 import { TravelPack } from '../components/TravelPack';
 import { AbsenceNotices } from '../components/AbsenceNotices';
@@ -54,6 +55,7 @@ const TABS = [
   { id: 'hours' as const, label: 'Hours' },
   { id: 'eligibility' as const, label: 'Eligibility' },
   { id: 'data' as const, label: 'Import' },
+  { id: 'share' as const, label: 'Share' },
 ];
 
 type Tab = (typeof TABS)[number]['id'];
@@ -80,6 +82,7 @@ export function Athletics() {
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
+  const now = useNow();
   const { state, dispatch, catalog } = useStore();
   const lib = useDeviceLibrary(storageKey, readAthletics, EMPTY_ATHLETICS);
 
@@ -122,11 +125,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
           b.from?.kind === 'appointment' &&
           state.appointments.find((a) => a.id === b.from?.id)?.note.includes(`athletics:${e.id}:`);
         const runs = b.at < to && b.at + (b.minutes ?? lengthOf(catalog, b)) > from;
-        if (!b.canceled && runs && !mine) found.push(`${day} · ${b.title} · ${b.time}`);
+        if (!b.canceled && runs && !mine) found.push(`${day} · ${b.title} · ${shownTime(b.time, b.at)}`);
       }
 
       for (const i of catalog.items) {
-        if (dateToIso(decorateItem(i, new Date()).date) === day && !state.done[i.id]) {
+        if (dateToIso(decorateItem(i, now).date) === day && !state.done[i.id]) {
           found.push(`${day} · Due: ${i.title}`);
         }
       }
@@ -494,6 +497,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'eligibility' && (
         <EligibilityCheck value={lib.value} update={lib.update} blocked={lib.blocked} />
+      )}
+
+      {tab === 'share' && (
+        <>
+          <AthleteShare library={lib.value} />
+          <SupportSharesWithYou />
+        </>
       )}
 
       {tab === 'data' && (

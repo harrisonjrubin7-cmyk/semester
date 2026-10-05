@@ -147,8 +147,12 @@ describe('every database the app opens is one the sweep clears', () => {
     const files = await import('./files');
     const snaps = await import('./snapshots');
     const share = await import('./shared');
+    const outbox = await import('./sync/outbox');
+    const engine = await import('./sync/engine/persistent');
+    const hist = await import('./history/history');
     const db = await import('../state/persist/db');
     const persist = await import('../state/persist');
+    const vault = await import('./vault/idb');
 
     const calls: string[] = [];
     vi.spyOn(persist, 'stopWriting').mockImplementation(() => undefined);
@@ -163,6 +167,19 @@ describe('every database the app opens is one the sweep clears', () => {
     });
     vi.spyOn(drafts, 'clearVersions').mockImplementation(async () => {
       calls.push('semester-drafts');
+    });
+    vi.spyOn(outbox, 'clearOutbox').mockImplementation(async () => {
+      calls.push('semester-outbox');
+    });
+    vi.spyOn(vault, 'eraseVaults').mockImplementation(async () => {
+      calls.push('semester-vault');
+    });
+    vi.spyOn(engine, 'clearEngineStore').mockImplementation(async () => {
+      calls.push('semester-engine');
+    });
+    vi.spyOn(hist, 'clearHistory').mockImplementation(async () => {
+      calls.push('semester-history');
+      return true;
     });
     vi.spyOn(share, 'clearShared').mockImplementation(async () => {
       calls.push('semester-shared');

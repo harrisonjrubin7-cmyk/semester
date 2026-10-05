@@ -28,24 +28,34 @@ import type { ReactNode } from 'react';
 
 /** What the device remembers, per test. See `state.registered`. */
 let registered = false;
+/** Which way a link asked the form to open. See `state.accountDoor`. */
+let accountDoor: 'in' | 'up' | null = null;
 const dispatched: { type: string }[] = [];
 
 vi.mock('../state/store', () => ({
   useStore: () => ({
-    state: { registered },
+    state: { registered, accountDoor },
     dispatch: (action: { type: string }) => dispatched.push(action),
   }),
 }));
 
 type Made = { said: string; signedIn: boolean };
 
-const signUp = vi.fn<(email: string, password: string) => Promise<Made>>(async () => ({
+const signUp = vi.fn<(email: string, password: string, bornOn?: string) => Promise<Made>>(async () => ({
   said: 'Account made.',
   signedIn: true,
 }));
 const signIn = vi.fn<(email: string, password: string) => Promise<void>>(async () => {});
 const sendReset = vi.fn<(email: string) => Promise<string>>(async () => 'A reset link is on its way.');
 const signInWith = vi.fn<(provider: string) => Promise<void>>(async () => {});
+const signInWithSSO = vi.fn<
+  (options: { domain: string; redirectTo: string }) => Promise<void>
+>(async () => {});
+const institutionSsoConfig = vi.fn(async () => null as {
+  enabled: true;
+  label: string;
+  domain: string;
+} | null);
 
 /**
  * What the project says it has switched on, and when it says it.
@@ -65,10 +75,13 @@ vi.mock('../lib/cloud', () => ({
   namesSaid: (names: string[]) =>
     names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`,
   providersOn: () => providersOn(),
-  signUp: (email: string, password: string) => signUp(email, password),
+  institutionSsoConfig: () => institutionSsoConfig(),
+  appUrl: () => 'https://semester.example/',
+  signUp: (email: string, password: string, bornOn?: string) => signUp(email, password, bornOn),
   signIn: (email: string, password: string) => signIn(email, password),
   sendReset: (email: string) => sendReset(email),
   signInWith: (provider: string) => signInWith(provider),
+  signInWithSSO: (options: { domain: string; redirectTo: string }) => signInWithSSO(options),
 }));
 
 const { Credentials } = await import('./Credentials');
@@ -100,6 +113,7 @@ function type(el: HTMLInputElement, value: string) {
 
 const email = () => host.querySelector('#account-email') as HTMLInputElement;
 const password = () => host.querySelector('#account-password') as HTMLInputElement;
+const born = () => host.querySelector('#account-born') as HTMLInputElement | null;
 const submit = () => host.querySelector('button[type=submit]') as HTMLButtonElement;
 const link = (said: string) =>
   [...host.querySelectorAll('button')].find((b) => (b.textContent ?? '').trim() === said);
@@ -127,20 +141,26 @@ async function send() {
   });
 }
 
-/** Fill both fields and submit, which is the whole of what this form asks. */
-async function enter(address = 'you@vanderbilt.edu', secret = 'a-real-password') {
+/** Fill the fields and submit: a date of birth too, when making an account. */
+async function enter(address = 'you@vanderbilt.edu', secret = 'a-real-password', bornOn = '2000-01-01') {
   type(email(), address);
   type(password(), secret);
+  const b = born();
+  if (b) type(b, bornOn);
   await send();
 }
 
 beforeEach(() => {
   registered = false;
+  accountDoor = null;
   dispatched.length = 0;
   signUp.mockClear();
   signIn.mockClear();
   sendReset.mockClear();
   signInWith.mockClear();
+  signInWithSSO.mockClear();
+  institutionSsoConfig.mockReset();
+  institutionSsoConfig.mockResolvedValue(null);
   providersOn.mockClear();
   signUp.mockImplementation(async () => ({ said: 'Account made.', signedIn: true }));
   asking = new Promise((resolve) => {
@@ -185,8 +205,36 @@ describe('the first time', () => {
   it('registers what was typed, and does not try to sign in with it', async () => {
     show(<Credentials />);
     await enter();
-    expect(signUp).toHaveBeenCalledWith('you@vanderbilt.edu', 'a-real-password');
+    expect(signUp).toHaveBeenCalledWith('you@vanderbilt.edu', 'a-real-password', '2000-01-01');
     expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it('asks for a date of birth when making an account, and never when signing in', () => {
+    show(<Credentials />);
+    expect(born()).not.toBeNull();
+    expect(host.textContent).toMatch(/at least 13/);
+    act(() => link('I already have one')?.click());
+    expect(born()).toBeNull();
+  });
+
+  it('tells someone under 13 why, and sends nothing', async () => {
+    show(<Credentials />);
+    const twelve = new Date();
+    twelve.setFullYear(twelve.getFullYear() - 12);
+    await enter('young@example.edu', 'a-real-password', twelve.toISOString().slice(0, 10));
+    expect(signUp).not.toHaveBeenCalled();
+    expect(host.textContent).toMatch(/at least 13 to make a Semester account/);
+    expect(host.textContent).toMatch(/Nothing was sent and nothing was created/);
+  });
+
+  it('makes the account for someone 13 to 17, and says what stays off until 18', async () => {
+    show(<Credentials />);
+    const fifteen = new Date();
+    fifteen.setFullYear(fifteen.getFullYear() - 15);
+    const bornOn = fifteen.toISOString().slice(0, 10);
+    await enter('teen@example.edu', 'a-real-password', bornOn);
+    expect(signUp).toHaveBeenCalledWith('teen@example.edu', 'a-real-password', bornOn);
+    expect(host.textContent).toMatch(/stay off until your 18th birthday/);
   });
 
   it('remembers that this device now has an account', async () => {
@@ -247,6 +295,50 @@ describe('every time after that', () => {
 });
 
 describe('what it refuses to send', () => {
+  it('keeps field labels and password guidance visible after typing', async () => {
+    await showAnswered(<Credentials />, []);
+    type(email(), 'you@vanderbilt.edu');
+    type(password(), 'a-real-password');
+    for (const id of ['account-email', 'account-password']) {
+      const label = host.querySelector(`label[for="${id}"]`)!;
+      expect(label.textContent?.trim()).toBeTruthy();
+      expect(label.classList.contains('sr-only')).toBe(false);
+    }
+    const hint = host.querySelector('#account-password-hint');
+    expect(hint?.textContent).toMatch(/at least \d+ characters/);
+    expect(password().getAttribute('aria-describedby')).toBe(hint?.id);
+  });
+
+  it('explains each missing requirement until the create-account action is ready', async () => {
+    await showAnswered(<Credentials />, []);
+    const guidance = () => host.querySelector('#account-readiness')?.textContent;
+    expect(guidance()).toBe('Enter your email address to continue.');
+    expect(submit().getAttribute('aria-describedby')).toBe('account-readiness');
+    type(email(), 'you@vanderbilt.edu');
+    expect(guidance()).toMatch(/Choose a password with at least \d+ characters/);
+    type(password(), 'short');
+    expect(submit().disabled).toBe(true);
+    expect(guidance()).toMatch(/Choose a password/);
+    type(password(), 'a-real-password');
+    expect(guidance()).toBe('Add your date of birth to continue.');
+    type(born()!, '2000-01-01');
+    expect(submit().disabled).toBe(false);
+    expect(guidance()).toBeUndefined();
+    expect(submit().getAttribute('aria-describedby')).toBeNull();
+    expect(signUp).not.toHaveBeenCalled();
+  });
+
+  it('explains sign-in readiness without adding a new password floor', async () => {
+    registered = true;
+    await showAnswered(<Credentials />, []);
+    type(email(), 'you@vanderbilt.edu');
+    expect(host.querySelector('#account-readiness')?.textContent).toBe('Enter your password to continue.');
+    type(password(), 'x');
+    expect(submit().disabled).toBe(false);
+    expect(host.querySelector('#account-readiness')).toBeNull();
+    expect(host.querySelector('#account-password-hint')).toBeNull();
+  });
+
   it('will not submit without an address', () => {
     show(<Credentials />);
     type(password(), 'a-real-password');
@@ -436,6 +528,63 @@ describe('the provider buttons', () => {
   });
 });
 
+describe('the institution-approved SSO button', () => {
+  it('appears only after the gateway supplies an enabled Vanderbilt configuration', async () => {
+    institutionSsoConfig.mockResolvedValue({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+    });
+    expect(link('Continue with Vanderbilt')).toBeTruthy();
+  });
+
+  it('stays absent when no authorized institutional provider is available', async () => {
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+    });
+    expect(link('Continue with Vanderbilt')).toBeUndefined();
+  });
+
+  it('uses the exact approved domain and app callback', async () => {
+    institutionSsoConfig.mockResolvedValue({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+      link('Continue with Vanderbilt')?.click();
+    });
+    expect(signInWithSSO).toHaveBeenCalledWith({
+      domain: 'vanderbilt.edu',
+      redirectTo: 'https://semester.example/',
+    });
+  });
+
+  it('shows a readable recovery when institutional sign-in fails', async () => {
+    institutionSsoConfig.mockResolvedValue({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    signInWithSSO.mockRejectedValueOnce(new Error('Vanderbilt sign-in is temporarily unavailable.'));
+    await showAnswered(<Credentials />, []);
+    await act(async () => {
+      await institutionSsoConfig.mock.results[0]?.value;
+      link('Continue with Vanderbilt')?.click();
+    });
+    expect(host.querySelector('[role=alert]')?.textContent).toContain(
+      'Vanderbilt sign-in is temporarily unavailable.',
+    );
+  });
+});
+
 describe('when the service says no', () => {
   it('shows what it said, and does not claim an account was made', async () => {
     signUp.mockImplementation(async () => {
@@ -463,4 +612,32 @@ describe('when the service says no', () => {
 afterEach(() => {
   if (root) act(() => root.unmount());
   host?.remove();
+});
+
+/**
+ * A link's say, spent on the form it opened.
+ *
+ * `#/login` and `#/signup` choose which way the form opens. The choice is for
+ * that one form: left standing, arriving through `#/signup` and making an
+ * account meant every later visit to Account opened on "Create the account".
+ */
+describe('a form opened by a link', () => {
+  it('opens the way the link asked, over the device’s own default', async () => {
+    accountDoor = 'in';
+    await showAnswered(<Credentials />, []);
+    expect(password().getAttribute('autocomplete')).toBe('current-password');
+  });
+
+  it('clears the choice once used, so the next form decides for itself', async () => {
+    accountDoor = 'up';
+    registered = true;
+    await showAnswered(<Credentials />, []);
+    expect(password().getAttribute('autocomplete')).toBe('new-password');
+    expect(dispatched).toContainEqual({ type: 'setAccountDoor', door: null });
+  });
+
+  it('control: without a link it asks nothing of the store', async () => {
+    await showAnswered(<Credentials />, []);
+    expect(dispatched.some((a) => a.type === 'setAccountDoor')).toBe(false);
+  });
 });

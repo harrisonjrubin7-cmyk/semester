@@ -19,14 +19,30 @@ sections are built; §90, §93, §106, §108, §127 and §128 are built past wha
 they ask for. The academic loop §86 draws runs end to end except at three
 points, and all three are the same missing record.
 
-**Part A has not started, and one of its rows is a P0.**
+**Part A has not started. Its P0 is closed** — see below.
 
-So the current phase is: close the P0, then finish Part B's foundation, then
-begin Part A's.
+So the current phase is: finish Part B's foundation, then begin Part A's.
 
 ---
 
-## P0 — §58, the report that cannot be read
+## P0 — §58, the report that cannot be read · **Closed 28 September 2026**
+
+All three pieces are built. The status column and the admin read and update
+policies landed on 21 September (`20260921214500_report_status.sql`), were
+repointed at `report:read` / `moderation:action` on 22 September
+(`20260922012000_capabilities.sql`), and every status change has been audited
+since 24 September (`20260924223000_moderation_audit.sql`). The screen is
+`components/ReportQueue.tsx` on University › Services. It draws nothing unless
+`public.my_moderation_access()` (`20260928000000`) says the caller holds
+`report:read`, and shows the reason and the message copy but never who reported
+or who it is about. The sentence in `lib/classmates.ts` and on the Classmates
+screen changed with it: reports reach a queue, with no promise of how fast.
+
+That closes the P0, not §58. The standard also asks for reporting a user, an
+organization and an event. Message reports and Community post reports
+exist; neither has an organization or event target. That remains open.
+
+What follows is the plan as written, kept for the reasoning.
 
 The only row in either part that is a defect rather than an absence, and the
 only one the specification names outright: *"Do not implement report buttons

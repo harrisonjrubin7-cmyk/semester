@@ -27,7 +27,7 @@ function makeDb() {
       log.push({ table, op: name, args });
     };
     const self: Record<string, unknown> = {};
-    for (const name of ['eq', 'in', 'select', 'delete', 'insert', 'upsert', 'maybeSingle']) {
+    for (const name of ['eq', 'in', 'select', 'delete', 'insert', 'update', 'upsert', 'maybeSingle']) {
       self[name] = (...args: unknown[]) => {
         record(name, ...args);
         return self;
@@ -65,7 +65,14 @@ function makeDb() {
       },
       auth: {
         getUser: async () => ({ data: { user: { id: 'user-1' } } }),
+        getSession: async (): Promise<{ data: { session: { access_token: string } | null } }> => ({
+          data: { session: { access_token: 'access-token' } },
+        }),
         signOut: vi.fn(async () => ({ error: null })),
+        signInWithSSO: vi.fn(async (args: unknown) => {
+          log.push({ table: 'auth', op: 'signInWithSSO', args: [args] });
+          return { error: errors.auth ? { message: errors.auth } : null };
+        }),
         resetPasswordForEmail: vi.fn(async (email: string, opts: unknown) => {
           log.push({ table: 'auth', op: 'resetPasswordForEmail', args: [email, opts] });
           return { error: errors.auth ? { message: errors.auth } : null };
@@ -91,6 +98,7 @@ async function load() {
   vi.resetModules();
   vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
   vi.stubEnv('VITE_SUPABASE_KEY', 'a-publishable-key');
+  vi.stubEnv('VITE_UNIVERSITY_GATEWAY_URL', 'https://gateway.example.test');
   harness = makeDb();
   vi.doMock('@supabase/supabase-js', () => ({ createClient: () => harness.db }));
   return import('./cloud');
@@ -354,6 +362,63 @@ describe('appUrl', () => {
   });
 });
 
+describe('institutional SSO activation', () => {
+  const response = (body: unknown, ok = true) =>
+    vi.fn(async (_input: string, _init?: RequestInit) => ({ ok, json: async () => body }));
+
+  it('accepts only an enabled configuration supplied by the university gateway', async () => {
+    const mod = await load();
+    const fetching = response({ enabled: true, label: 'Vanderbilt', domain: 'vanderbilt.edu' });
+    vi.stubGlobal('fetch', fetching);
+    await expect(mod.institutionSsoConfig()).resolves.toEqual({
+      enabled: true,
+      label: 'Vanderbilt',
+      domain: 'vanderbilt.edu',
+    });
+    expect(fetching).toHaveBeenCalledWith(
+      'https://gateway.example.test/v1/auth/config',
+      expect.objectContaining({ credentials: 'omit', redirect: 'error' }),
+    );
+    expect(JSON.stringify(fetching.mock.calls[0]?.[1] ?? {})).not.toMatch(/authorization|bearer/i);
+  });
+
+  it.each([
+    [{ enabled: false }],
+    [{ enabled: true, label: 'Vanderbilt', domain: 'not a host' }],
+    [{ enabled: true, label: '', domain: 'vanderbilt.edu' }],
+  ])('keeps the institutional button hidden for disabled or malformed configuration', async (body) => {
+    const mod = await load();
+    vi.stubGlobal('fetch', response(body));
+    await expect(mod.institutionSsoConfig()).resolves.toBeNull();
+  });
+
+  it('keeps the institutional button hidden when no gateway is configured', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_UNIVERSITY_GATEWAY_URL', '');
+    const fetching = vi.fn();
+    vi.stubGlobal('fetch', fetching);
+    await expect((await import('./cloud')).institutionSsoConfig()).resolves.toBeNull();
+    expect(fetching).not.toHaveBeenCalled();
+  });
+
+  it('starts domain discovery with the one allowlisted app callback', async () => {
+    const mod = await load();
+    await mod.signInWithSSO({ domain: 'vanderbilt.edu', redirectTo: 'https://example.test/' });
+    expect(harness.log.find((entry) => entry.op === 'signInWithSSO')?.args[0]).toEqual({
+      domain: 'vanderbilt.edu',
+      options: { redirectTo: 'https://example.test/' },
+    });
+  });
+
+  it('refuses a different redirect before asking the auth service', async () => {
+    const mod = await load();
+    await expect(
+      mod.signInWithSSO({ domain: 'vanderbilt.edu', redirectTo: 'https://attacker.example/' }),
+    ).rejects.toThrow(/approved app address/i);
+    expect(harness.log.some((entry) => entry.op === 'signInWithSSO')).toBe(false);
+  });
+});
+
 describe('explainSyncError', () => {
   it('turns a missing table into the setup step that was missed', async () => {
     const { explainSyncError } = await load();
@@ -465,18 +530,26 @@ describe('push', () => {
   const course = (id: string) => ({ id, data: { code: id.toUpperCase() } });
 
   it('writes the state and the courses', async () => {
+    // A device that has read nothing inserts; `cloudcas.test.ts` has the
+    // updates and what happens when the account moved on.
     const { push } = await load();
     await push('user-1', { term: '2026FA' }, [course('econ')]);
-    const upserts = harness.log.filter((l) => l.op === 'upsert');
-    expect(upserts.map((u) => u.table)).toEqual(['state', 'courses']);
+    const inserts = harness.log.filter((l) => l.op === 'insert');
+    expect(inserts.map((u) => u.table)).toEqual(['state', 'courses']);
+  });
+
+  it('never upserts, which would write over a copy this device has not read', async () => {
+    const { push } = await load();
+    await push('user-1', {}, [course('econ')]);
+    expect(harness.log.filter((l) => l.op === 'upsert')).toEqual([]);
   });
 
   it('sends no course write at all when there are none', async () => {
-    // An empty upsert is a round trip that achieves nothing, and on a phone
+    // An empty write is a round trip that achieves nothing, and on a phone
     // plan that is somebody's data.
     const { push } = await load();
     await push('user-1', {}, []);
-    expect(harness.log.filter((l) => l.op === 'upsert').map((u) => u.table)).toEqual(['state']);
+    expect(harness.log.filter((l) => l.op === 'insert').map((u) => u.table)).toEqual(['state']);
   });
 
   it('deletes only the courses this device actually removed', async () => {
@@ -569,152 +642,139 @@ describe('push', () => {
 });
 
 describe('deleteEverything', () => {
-  it('empties every table the account owns, then signs out', async () => {
-    const { deleteEverything, OWNED_TABLES } = await load();
-    const said = await deleteEverything();
-    // Every entry but the ones a cascade covers, which are sent nothing on
-    // purpose — `privacy.test.ts` is what proves the cascade is really there —
-    // and the ones a function empties, which are the next test.
-    const sent = OWNED_TABLES.filter((t) => t.column !== null && !t.via).map((t) => t.table);
-    expect(harness.deleted().sort()).toEqual([...sent].sort());
-    expect(harness.db.auth.signOut).toHaveBeenCalled();
-    expect(said).toMatch(/your rows are gone and you are signed out/i);
-  });
-
   /*
-   * `organization_members` holds one person's rank in an organization as
-   * decided by another, so DELETE on it is revoked from both API roles and
-   * there is no filter that would work. A name added to this list with a
-   * column would have sent a delete PostgREST refuses, and the button would
-   * have reported a failure; a name added with neither a column nor a
-   * function would have sent nothing at all and reported success.
+   * The button no longer deletes anything itself. It asks the `delete-account`
+   * Edge Function, which erases every row in one transaction and then the
+   * sign-in (`supabase/functions/_shared/deleteaccount.ts`, and
+   * `supabase/deletion.check.sql` for the SQL). What is left here is the part
+   * a person reads: signed out only when both happened, and told the truth in
+   * every other case — including the one where nobody can know.
    */
-  it('calls the function for a table no filtered delete can reach', async () => {
-    const { deleteEverything, OWNED_TABLES } = await load();
-    await deleteEverything();
-    const byFunction = OWNED_TABLES.filter((t) => t.via);
-    expect(byFunction.length).toBeGreaterThan(0);
-    for (const { table, via } of byFunction) {
-      expect(harness.deleted(), table).not.toContain(table);
-      expect(harness.called(), table).toContain(via);
-    }
-  });
+  const answering = (status: number, body: unknown) =>
+    vi.fn(async () => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status }));
 
-  it('reports a function that refused, rather than reporting the account emptied', async () => {
-    const { deleteEverything, OWNED_TABLES } = await load();
-    const first = OWNED_TABLES.find((t) => t.via);
-    harness.errors[first!.via!] = 'permission denied';
-    const said = await deleteEverything();
-    expect(said).toContain(first!.table);
-    expect(said).not.toMatch(/your rows are gone/i);
-    expect(harness.db.auth.signOut).toHaveBeenCalled();
-  });
-
-  it('sends nothing for a table a cascade already empties', async () => {
-    // `form_responses` has no column naming an account at all: it hangs off
-    // `forms` and goes when the form does. A delete keyed on `user_id` would
-    // have been an error, and an error the button reports as a failure.
-    const { deleteEverything, OWNED_TABLES } = await load();
-    await deleteEverything();
-    expect(OWNED_TABLES.some((t) => t.table === 'form_responses' && t.column === null)).toBe(true);
-    expect(harness.deleted()).not.toContain('form_responses');
-  });
-
-  it('names the column each table actually owns a row by', async () => {
-    /*
-     * The bug the old shape would have produced. Ownership is `user_id` in
-     * most of this schema and `owner` in `forms`, so a list of bare names
-     * deleted `.eq('user_id', id)` cannot empty a student's shared practice
-     * papers — PostgREST answers a missing column with an error, so the button
-     * would have reported failure rather than deleting the wrong rows, but the
-     * forms would still be there.
-     */
-    const { deleteEverything, OWNED_TABLES } = await load();
-    await deleteEverything();
-    const columnUsedFor = new Map(
-      harness.log
-        .filter((l) => l.op === 'eq')
-        .map((l) => [l.table, l.args[0] as string]),
-    );
-    for (const { table, column } of OWNED_TABLES) {
-      if (column === null) continue;
-      expect(columnUsedFor.get(table), table).toBe(column);
-    }
-    expect(columnUsedFor.get('forms')).toBe('owner');
-  });
-
-  it('empties the rooms before it leaves the classes', async () => {
-    /*
-     * The order in `OWNED_TABLES` is load-bearing and nothing about reading the
-     * list says so, which is why this is a test rather than a comment.
-     *
-     * PostgreSQL applies SELECT policies to the WHERE clause of a DELETE, and
-     * PostgREST only ever sends a filter. `messages` and `message_reactions`
-     * are readable through `private.in_class`, `group_members` through
-     * `private.group_in_my_class` — all three by way of `enrollments`. Delete
-     * the enrolment first and those three stop matching: `row_count` is 0,
-     * there is no error, and this function reports a deleted account over a
-     * room still holding every message the student sent.
-     *
-     * This fake database cannot see that — it answers whatever it is told to.
-     * `supabase/deletion.check.sql` walks the real policies in this order and
-     * proves both halves, including the wrong order failing. What this test
-     * protects is the order itself, against the next person who tidies the
-     * list into alphabetical.
-     */
+  it('asks the function, with the session and the word, and deletes nothing itself', async () => {
     const { deleteEverything } = await load();
+    const fetching = answering(200, { erased: true, signInRemoved: true, message: 'Your account is deleted.' });
+    vi.stubGlobal('fetch', fetching);
     await deleteEverything();
-    const order = harness.deleted();
-    const enrolments = order.indexOf('enrollments');
-    expect(enrolments).toBeGreaterThan(-1);
-    for (const needsIt of ['messages', 'message_reactions', 'group_members']) {
-      const at = order.indexOf(needsIt);
-      expect(at, needsIt).toBeGreaterThan(-1);
-      expect(at, `${needsIt} must go before enrollments`).toBeLessThan(enrolments);
-    }
+    const [url, init] = fetching.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://project.supabase.co/functions/v1/delete-account');
+    expect(init.method).toBe('POST');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer access-token');
+    expect(JSON.parse(String(init.body))).toEqual({ confirm: 'DELETE' });
+    // The old path, one DELETE per table from the browser, is gone.
+    expect(harness.deleted()).toEqual([]);
+    expect(harness.called()).toEqual([]);
   });
 
-  it('leaves the rows other people are relying on, each with a reason', async () => {
-    // Groups you started, their tasks, and reports you filed. Deleting a group
-    // would take its shared tasks away from its other members, and a report is
-    // a record about somebody else — so these stay, and the reason is data
-    // rather than a comment because the privacy page prints it.
-    const { deleteEverything, KEPT_TABLES } = await load();
-    await deleteEverything();
+  it('signs out only when the rows and the sign-in are both gone', async () => {
+    const { deleteEverything } = await load();
+    vi.stubGlobal('fetch', answering(200, { erased: true, signInRemoved: true, message: 'Your account is deleted.' }));
+    const said = await deleteEverything();
+    expect(harness.db.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(said).toMatch(/your account is deleted/i);
+    expect(said).toMatch(/signed out/i);
+    // Somebody deleting their account has asked to be off the server, not to
+    // lose their semester. The two are separate actions on purpose.
+    expect(said).toMatch(/this device still has its own copy/i);
+  });
+
+  it('stays signed in and says nothing was deleted when nothing was', async () => {
+    const { deleteEverything } = await load();
+    const message = 'Your account could not be deleted, and nothing was: every row is exactly where it was.';
+    vi.stubGlobal('fetch', answering(500, { erased: false, signInRemoved: false, message }));
+    expect(await deleteEverything()).toBe(message);
+    expect(harness.db.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('stays signed in and says which half happened when only the rows went', async () => {
+    // Signed in, because pressing the button again is what finishes it — and
+    // that needs the session this would otherwise throw away.
+    const { deleteEverything } = await load();
+    const message = 'Your data is deleted, but the sign-in itself could not be removed yet.';
+    vi.stubGlobal('fetch', answering(500, { erased: true, signInRemoved: false, message }));
+    const said = await deleteEverything();
+    expect(said).toBe(message);
+    expect(said).not.toMatch(/nothing was deleted/i);
+    expect(harness.db.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('does not claim nothing was deleted when no answer came back', async () => {
+    /*
+     * A rejected fetch is not evidence that nothing happened. A CORS refusal
+     * is exactly this rejection, and the browser produces it after the
+     * function has run — `_shared/cors.ts` carries the incident where every
+     * function was in that state for days. The only true sentence is that
+     * nobody here knows.
+     */
+    const { deleteEverything, ERASURE_UNKNOWN } = await load();
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Load failed'); }));
+    const said = await deleteEverything();
+    expect(said).toBe(ERASURE_UNKNOWN);
+    expect(said).not.toMatch(/nothing was deleted/i);
+    expect(said).toMatch(/cannot say whether anything was deleted/i);
+    expect(harness.db.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('treats an answer it cannot read as not knowing, not as success', async () => {
+    const { deleteEverything, ERASURE_UNKNOWN } = await load();
+    vi.stubGlobal('fetch', answering(502, '<html>Bad gateway</html>'));
+    expect(await deleteEverything()).toBe(ERASURE_UNKNOWN);
+    expect(harness.db.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('says plainly when this server has no such function yet', async () => {
+    // A project the migration and the function have not reached answers 404
+    // before anything runs, so here "nothing was deleted" is known.
+    const { deleteEverything } = await load();
+    vi.stubGlobal('fetch', answering(404, { message: 'Requested function was not found' }));
+    const said = await deleteEverything();
+    expect(said).toMatch(/nothing was deleted/i);
+    expect(harness.db.auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it('refuses to start without a session', async () => {
+    const { deleteEverything } = await load();
+    harness.db.auth.getSession = async () => ({ data: { session: null } });
+    const fetching = vi.fn();
+    vi.stubGlobal('fetch', fetching);
+    await expect(deleteEverything()).rejects.toThrow(/sign in first/i);
+    expect(fetching).not.toHaveBeenCalled();
+  });
+
+  it('still names every table the page says goes, and every one it says stays', async () => {
+    // The lists are the privacy page's account now rather than the button's
+    // instructions. `erasure.test.ts` holds them to the schema; here, only
+    // that each kept table carries a reason the page can print.
+    const { OWNED_TABLES, KEPT_TABLES } = await load();
+    expect(OWNED_TABLES.length).toBeGreaterThan(20);
     for (const { table, why } of KEPT_TABLES) {
-      expect(harness.deleted(), table).not.toContain(table);
+      expect(OWNED_TABLES.map((t) => t.table), table).not.toContain(table);
       expect(why.length, table).toBeGreaterThan(80);
     }
   });
+});
 
-  it('says plainly that this device keeps its own copy', async () => {
-    // Somebody deleting their account has asked to be off the server, not to
-    // lose their semester. The two are separate actions on purpose.
-    const { deleteEverything } = await load();
-    expect(await deleteEverything()).toMatch(/this device still has its own copy/i);
+describe('exportAccount', () => {
+  it('asks the server for everything it holds about this account, as a named JSON file', async () => {
+    const { exportAccount } = await load();
+    const file = { format: 'semester.account-export', tables: { courses: [{ id: 'econ' }], notes: [] } };
+    harness.db.rpc = ((fn: string, args?: unknown) => {
+      harness.log.push({ table: fn, op: 'rpc', args: [args] });
+      return Promise.resolve({ data: file, error: null });
+    }) as unknown as typeof harness.db.rpc;
+    const got = await exportAccount(new Date('2026-09-28T12:00:00Z'));
+    expect(harness.called()).toEqual(['export_my_data']);
+    expect(got.name).toBe('Semester account export 2026-09-28.json');
+    expect(JSON.parse(got.body)).toEqual(file);
+    expect(got.tables).toBe(2);
   });
 
-  it('does not treat a table this build never had as a failure', async () => {
-    // A deployment without reminders has no push queue to empty.
-    const { deleteEverything } = await load();
-    harness.errors.push_queue = "Could not find the table 'public.push_queue' in the schema cache";
-    expect(await deleteEverything()).toMatch(/your rows are gone and you are signed out/i);
-  });
-
-  it('names what it could not remove instead of claiming it did', async () => {
-    // "Deleted" is a promise, and a half-kept one has to say which half.
-    const { deleteEverything } = await load();
-    harness.errors.courses = 'permission denied';
-    const said = await deleteEverything();
-    expect(said).toMatch(/could not be removed/i);
-    expect(said).toContain('courses');
-  });
-
-  it('still signs out even when a table refused', async () => {
-    const { deleteEverything } = await load();
-    harness.errors.courses = 'permission denied';
-    await deleteEverything();
-    expect(harness.db.auth.signOut).toHaveBeenCalled();
+  it('reports a refusal rather than saving an empty file', async () => {
+    const { exportAccount } = await load();
+    harness.errors.export_my_data = 'Sign in first.';
+    await expect(exportAccount()).rejects.toThrow(/sign in first/i);
   });
 });
 
@@ -770,5 +830,33 @@ describe('saveQueue', () => {
     await saveQueue([reminder()]);
     const [row] = (harness.log.find((l) => l.op === 'insert')?.args[0] as Record<string, unknown>[]) ?? [];
     expect(row.send_at).toBe('2026-09-20T14:00:00.000Z');
+  });
+});
+
+describe('push under read-only mode', () => {
+  /** Fresh, with the flag set — the module reads it at import, like the project URL. */
+  async function loadReadOnly() {
+    vi.resetModules();
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'a-publishable-key');
+    vi.stubEnv('VITE_READ_ONLY', 'true');
+    harness = makeDb();
+    vi.doMock('@supabase/supabase-js', () => ({ createClient: () => harness.db }));
+    return import('./cloud');
+  }
+
+  it('refuses before it writes anything, or even fetches the client', async () => {
+    const mod = await loadReadOnly();
+    await expect(mod.push('user-1', { term: '2026FA' }, [{ id: 'c1', data: {} }])).rejects.toMatchObject({ name: 'ReadOnly' });
+    expect(harness.log, 'no table was touched').toEqual([]);
+  });
+
+  it('is the ordinary push when the flag is anything but true — the control', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_READ_ONLY', 'on');
+    const mod = await load();
+    harness.rows.state = { updated_at: '2026-09-28T10:00:00Z' };
+    await expect(mod.push('user-1', { term: '2026FA' }, [])).resolves.toBeTruthy();
+    expect(harness.log.some((l) => l.table === 'state' && l.op === 'insert')).toBe(true);
   });
 });

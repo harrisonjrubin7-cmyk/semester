@@ -2108,7 +2108,7 @@ describe('the vertical, through the gateway', () => {
         }),
       );
       expect(refused.status, 'a mistyped line is not an outage').toBe(400);
-      expect((await refused.json()).error).toContain('"Evidence, 5, oops"');
+      expect((await refused.json()).error.message).toContain('"Evidence, 5, oops"');
       expect(store.assignment('essay-two')).toBeUndefined();
     } finally {
       asFaculty.journal.close();
@@ -2176,7 +2176,7 @@ describe('the vertical, through the gateway', () => {
        * refusal from an outage is the reason nobody noticed.
        */
       expect(late.status, await late.clone().text()).toBe(409);
-      expect((await late.clone().json()).error).toMatch(/changed/i);
+      expect((await late.clone().json()).error.message).toMatch(/changed/i);
       // And nothing was submitted twice.
       expect(store.byId('student-1:a1')?.history.filter((h) => h.what === 'Submitted').length).toBe(1);
     } finally {

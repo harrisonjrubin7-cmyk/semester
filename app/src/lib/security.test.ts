@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { CONTACT_EMAIL, DEFAULT_SITE } from '../site/config';
 import { SUPPORT } from './privacy';
+import { PATCH_POLICY } from './supplychain';
 
 /**
  * An incident-response process is a claim about the project, so it is checked
@@ -199,6 +201,97 @@ describe('the levers it tells you to pull are there to pull', () => {
      * somebody reaches for first and discovers cold.
      */
     expect(flat()).toMatch(/no lever for.{0,400}never been exercised here/i);
+  });
+});
+
+describe('a stranger can find the contact, and the clocks are the ones the patch policy holds', () => {
+  const WELL_KNOWN = join(ROOT, 'app', 'public', '.well-known', 'security.txt');
+  const securityTxt = () => readFileSync(WELL_KNOWN, 'utf8');
+  /** The `Field: value` lines of a security.txt, comments and blanks dropped. */
+  const fields = (text = securityTxt()) =>
+    new Map(
+      text
+        .split('\n')
+        .filter((l) => l.trim() && !l.startsWith('#'))
+        .map((l) => {
+          const i = l.indexOf(':');
+          return [l.slice(0, i).trim(), l.slice(i + 1).trim()] as const;
+        }),
+    );
+
+  it('publishes a security.txt the deployed app serves, with the address the privacy page names', () => {
+    /*
+     * HECVAT VULN-1 asks for a public disclosure contact. Three files name the
+     * mailbox — this document, the RFC 9116 file and the public site's config
+     * — and a reporter who reads a different address in each is a reporter
+     * who writes to the wrong one. The privacy page's constant is the anchor,
+     * because the app's own students already read that one.
+     */
+    expect(existsSync(WELL_KNOWN), 'app/public/.well-known/security.txt is gone').toBe(true);
+    expect(fields().get('Contact')).toBe(`mailto:${SUPPORT}`);
+    expect(CONTACT_EMAIL, 'the site names a different mailbox from privacy.ts').toBe(SUPPORT);
+    expect(doc(), 'SECURITY.md does not tell a reporter where security.txt is').toContain(
+      'app/public/.well-known/security.txt',
+    );
+  });
+
+  it('and the file points back at this document, and has not expired', () => {
+    /*
+     * RFC 9116 says a security.txt past its Expires is not to be trusted, so a
+     * lapsed one is a published contact nobody vouches for. This goes red the
+     * day it lapses: the reminder is the failure, and renewing the date is a
+     * review of the file rather than a chore somebody remembers.
+     */
+    const f = fields();
+    expect(f.get('Policy'), 'Policy does not name SECURITY.md').toMatch(/\/SECURITY\.md$/);
+    /*
+     * Canonical is the app's own address, so the day the app moves to a
+     * domain of its own — the one change that makes origin-root discovery
+     * possible — this line and the file's comment about base paths both go
+     * red rather than pointing at the old project site.
+     */
+    expect(f.get('Canonical')).toBe(`${DEFAULT_SITE.appUrl}.well-known/security.txt`);
+    const expires = Date.parse(f.get('Expires') ?? '');
+    expect(Number.isNaN(expires), 'Expires is not a date').toBe(false);
+    expect(expires, 'security.txt has expired — renew the date as part of reviewing SECURITY.md').toBeGreaterThan(
+      Date.now(),
+    );
+    expect(expires - Date.now(), 'Expires is more than a year out; RFC 9116 asks for less').toBeLessThan(
+      366 * 24 * 3600 * 1000,
+    );
+  });
+
+  it('holds the severity table to PATCH_POLICY, row for row', () => {
+    /*
+     * Two tables in two files with the same four numbers is two tables to
+     * drift; this is the one that notices. The supply-chain register renders
+     * its copy from `PATCH_POLICY`, so the numbers a Dependabot advisory is
+     * answered on and the numbers a reporter is told are the same numbers.
+     */
+    expect(PATCH_POLICY.length, 'the patch policy has changed shape').toBe(4);
+    for (const p of PATCH_POLICY) {
+      const label = p.severity[0].toUpperCase() + p.severity.slice(1);
+      const row = new RegExp(`\\| \\*\\*${label}\\*\\* \\|[^\\n]*\\| ${p.days} days \\|`);
+      expect(doc(), `SECURITY.md's ${label} row does not say ${p.days} days`).toMatch(row);
+    }
+  });
+
+  it('and says whose numbers they are, and what starts the clock', () => {
+    // A "fixed within 2 days" read as a promise to a customer is a promise this
+    // project cannot keep with one person; the document has to say the numbers
+    // are targets, and the row that is a commitment (notice) has to say it is.
+    expect(flat()).toMatch(/accepted internal targets/);
+    expect(flat()).toMatch(/accepted them unchanged on 29 September 2026 \(D-124\)/);
+    expect(flat()).not.toMatch(/proposed internal targets/);
+    expect(flat()).toMatch(/clock starts when the finding is \*\*confirmed\*\*/);
+    expect(flat()).toMatch(/nothing here is a commitment to a customer/);
+  });
+
+  it('and the row probe would catch a table with the wrong number', () => {
+    // The control: the same regex against a Critical row of 3 days must miss.
+    const row = /\| \*\*Critical\*\* \|[^\n]*\| 2 days \|/;
+    expect('| **Critical** | x | y | 3 days | z |').not.toMatch(row);
+    expect('| **Critical** | x | y | 2 days | z |').toMatch(row);
   });
 });
 

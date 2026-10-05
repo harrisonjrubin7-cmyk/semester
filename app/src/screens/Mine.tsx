@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -11,7 +12,7 @@ import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } 
 import { ChevronRight, Plus, StarIcon } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { Drive } from './mine/Drive';
-import { dateToIso, isoToDate, longLabel } from '../lib/date';
+import { dateToIso, isoToDate, longLabel, shownTime } from '../lib/date';
 import { codeOf } from '../lib/call';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
@@ -33,6 +34,11 @@ import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
+import { SaveState } from '../components/unity/Status';
+import { ReadState } from '../components/unity/ReadState';
+import { useOnline } from '../lib/offline-mode';
+import { countSources, tasksEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
 
 /**
  * Everything you added yourself.
@@ -95,6 +101,7 @@ const submitOnEnter =
  */
 function TaskRow({ task: t }: { task: PersonalTask }) {
   const { state, dispatch, courseCode } = useStore();
+  const taskActions = useTaskActions();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(t.title);
   const [date, setDate] = useState(t.date ?? '');
@@ -152,7 +159,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             if (e.key === 'Enter') save();
             if (e.key === 'Escape') setEditing(false);
           }}
-          aria-label="What the task is"
+          aria-label="What the action is"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           style={{ height: 40, fontSize: 'var(--type-md)', width: '100%' }}
@@ -280,7 +287,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           <button
             type="button"
             className="bare"
-            onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
+            onClick={() => taskActions.remove(t.id)}
             aria-label={`Delete ${t.title}`}
             /* Marked so the assistant's floating button lifts clear of it at
                any overlap rather than at half of it — see `tappable` in
@@ -315,7 +322,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         /* On a repeating task the tick moves it rather than finishing it, and
            a checkbox that does something other than tick has to say so before
            it is pressed — `tickSays` is the sentence. */
@@ -367,7 +374,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
           {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
-          {t.time ? ` \u00b7 ${t.time}` : ''}
+          {t.time ? ` \u00b7 ${shownTime(t.time)}` : ''}
           {/* Only the first letter: `describe` returns a sentence, and
               lower-casing the whole of it turned December into december. */}
           {t.repeat ? ` \u00b7 ${lowerFirst(describeRepeat(t.repeat))}` : ''}
@@ -387,9 +394,21 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 }
 
 function Tasks({ rows }: { rows?: PersonalTask[] }) {
-  const { state, dispatch } = useStore();
+  const { state, loading } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
+  const online = useOnline();
   const [open, setOpen] = useState(false);
+  // The list region's own rule, unchanged: empty means no tasks and no form
+  // open, because an open form is somebody about to fill it.
+  const env = tasksEnvelope({
+    loading,
+    empty: state.tasks.length === 0 && !open,
+    count: state.tasks.length,
+    sources: countSources(state.tasks.map((): SourceLabel => 'student_entered')),
+    online,
+    now: now.getTime(),
+  });
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
   const [time, setTime] = useState('');
@@ -400,17 +419,14 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
 
   const add = () => {
     if (!title.trim()) return;
-    dispatch({
-      type: 'addTask',
-      task: {
-        title: title.trim(),
-        date: date || null,
-        time: time.trim(),
-        note: '',
-        courseId,
-        // A rule counts from a first day; without one there is no series.
-        ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
-      },
+    taskActions.add({
+      title: title.trim(),
+      date: date || null,
+      time: time.trim(),
+      note: '',
+      courseId,
+      // A rule counts from a first day; without one there is no series.
+      ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
     });
     setTitle('');
     setTime('');
@@ -462,7 +478,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             onKeyDown={submitOnEnter(add, () => setOpen(false))}
             placeholder="What needs doing?"
             style={{ height: 42, fontSize: 'var(--type-lg)' }}
-            aria-label="Task"
+            aria-label="Action"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
@@ -511,7 +527,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
               onClick={add}
               style={{ flex: 1, height: 42, textTransform: 'uppercase', letterSpacing: '0.1em' }}
             >
-              Add task
+              Add action
             </button>
           </div>
         </Blueprint>
@@ -520,21 +536,25 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
           onClick={() => setOpen(true)}
           tone="primary"
         >
-          + New task
+          + New action
         </ActionButton>
       )}
 
-      {state.tasks.length === 0 && !open && (
-        <EmptyState
-          title="Nothing of your own yet."
-          body="Tasks you add here are yours — they sit alongside coursework on Today without pretending to be it."
-        />
-      )}
-
+      <ReadState
+        env={env}
+        now={now.getTime()}
+        what="your actions"
+        empty={{
+          title: 'Nothing of your own yet.',
+          body: 'Actions you add here are yours — they sit alongside coursework on Today without pretending to be it.',
+        }}
+      >
+        {() => (
+      <>
       {groups.map((g) =>
         g.tasks.length === 0 ? null : (
           <div key={g.label}>
-            <Folding name="Tasks">
+            <Folding name="Actions">
             <SectionLabel>{g.label}</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
               {g.tasks.map((t) => (
@@ -545,6 +565,9 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
           </div>
         ),
       )}
+      </>
+        )}
+      </ReadState>
       <div style={{ height: 22 }} />
     </div>
   );
@@ -1042,7 +1065,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       }}
     >
       <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 'var(--leading-display-lg)' }}>
-        <div style={{ fontSize: 'var(--type-display-xs)' }}>{a.time}</div>
+        <div style={{ fontSize: 'var(--type-display-xs)' }}>{shownTime(a.time)}</div>
         <div style={{ fontSize: 'var(--type-2xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}>
           {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
         </div>
@@ -1442,7 +1465,7 @@ export function Mine() {
       <>
       <Segmented
         options={[
-          { id: 'tasks', label: 'Tasks' },
+          { id: 'tasks', label: 'Actions' },
           { id: 'appointments', label: 'Events' },
           { id: 'notes', label: 'Notes' },
           { id: 'files', label: 'Files' },
@@ -1521,6 +1544,12 @@ export function NoteEditor() {
         style={{ height: 46, fontSize: 'var(--type-display-xs)', fontFamily: 'var(--font-heading)' }}
         aria-label="Note title"
       />
+      {/* Every keystroke is dispatched to the store as it is typed, so the
+          note is saved on this device the moment it changes — this says so
+          rather than leaving it to be assumed. */}
+      <div style={{ marginTop: 'var(--sp-2)' }}>
+        <SaveState status="saved" />
+      </div>
 
       {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
       <CoursePicker

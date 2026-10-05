@@ -47,7 +47,7 @@ const mount = async (lib: Partial<CareerLibrary> = {}, education = '') => {
   await act(async () => {
     root.render(
       <StoreProvider>
-        <Career />
+        <Career careerSkillsGraph />
       </StoreProvider>,
     );
   });
@@ -228,6 +228,21 @@ describe('filtering contacts by what you have in common', () => {
     // The screen's own preamble uses "verified alumni" to say it has none; the
     // card must not claim one, so this reads the card rather than the page.
     expect(card).not.toMatch(/verified|confirmed/i);
+  });
+});
+
+describe('explainable skills fit', () => {
+  it('names matched and missing evidence even before an opportunity is selected', async () => {
+    await mount();
+    await press('Skills & fit');
+    expect(text()).toContain('Matched evidence');
+    expect(text()).toContain('Missing');
+    expect(text()).not.toMatch(/\b\d{1,3}% match\b/i);
+  });
+
+  it('keeps the prior career tabs when the skills graph flag is off', async () => {
+    await act(async () => root.render(<StoreProvider><Career careerSkillsGraph={false} /></StoreProvider>));
+    expect([...host.querySelectorAll('button')].some((button) => button.textContent === 'Skills & fit')).toBe(false);
   });
 });
 

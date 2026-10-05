@@ -224,7 +224,7 @@ export function ForThis({ item }: { item: DatedItem }) {
           under the New row because making something is what people do first. */}
       <button
         type="button"
-        className="bare tappable"
+        className="bare tappable for-this-attach"
         onClick={() => setAdding((was) => !was)}
         aria-expanded={adding}
         style={{
@@ -355,7 +355,7 @@ function Row({
 /** The New row's buttons, which are one shape drawn five times. */
 function New({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" className="bare tappable" onClick={onClick} style={{ width: 'auto' }}>
+    <button type="button" className="bare tappable for-this-new" onClick={onClick} style={{ width: 'auto' }}>
       <NewFace>{children}</NewFace>
     </button>
   );
@@ -372,6 +372,7 @@ function NewFace({ children }: { children: React.ReactNode }) {
         borderRadius: 'var(--r-sm)',
         border: '1px solid var(--app-line)',
         fontSize: 'var(--type-sm)',
+        color: 'var(--app-accent-deep)',
       }}
     >
       <Plus size={13} style={{ ...secondLine() }} />

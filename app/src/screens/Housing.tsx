@@ -1,5 +1,5 @@
 import {CampusDirectory, HousingPlanner} from '../components/CampusDirectory';
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -7,6 +7,7 @@ import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import { readTerm } from '../lib/term';
 import { datedItems, railFor } from '../lib/select';
@@ -55,7 +56,8 @@ function HousingDetails() {
   const [room, setRoom] = useState(mine?.room ?? '');
   const [out, setOut] = useState(mine?.moveOut ?? '');
   const [hours, setHours] = useState(String(mine?.hoursAfterLastExam || ''));
-  const [bad, setBad] = useState('');
+  const fields = useFieldErrors(['hall', 'hours'] as const);
+  const hint = useId();
 
   const exams = useMemo(
     () => datedItems(catalog, now).filter((i) => i.kind === 'Exam'),
@@ -89,15 +91,15 @@ function HousingDetails() {
   const hallSaved = mine ? Boolean(matchPlace(mine.hall, state.places)) : false;
 
   const save = () => {
-    if (!hall.trim()) {
-      setBad('The building is the one field this needs — everything else is optional.');
-      return;
-    }
     const n = hours.trim() ? Number(hours) : 0;
-    if (!Number.isFinite(n) || n < 0 || n > 168) {
-      setBad('Hours after your last exam has to be a number of hours, or left blank.');
-      return;
-    }
+    const ok = fields.check({
+      hall: hall.trim() ? '' : 'The building is the one field this needs — everything else is optional.',
+      hours:
+        !Number.isFinite(n) || n < 0 || n > 168
+          ? 'Hours after your last exam has to be a number of hours, or left blank.'
+          : '',
+    });
+    if (!ok) return;
     dispatch({
       type: 'setResidence',
       residence: {
@@ -108,7 +110,7 @@ function HousingDetails() {
         hoursAfterLastExam: Math.round(n),
       },
     });
-    setBad('');
+    fields.clear();
   };
 
   return (
@@ -178,7 +180,8 @@ function HousingDetails() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
+      <ErrorSummary {...fields.summary({ hall: 'Residence hall', hours: 'Hours after your last exam' })} />
+      <div id={hint} style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>
@@ -189,7 +192,11 @@ function HousingDetails() {
           value={hall}
           aria-label="Residence hall"
           placeholder="Building"
-          onChange={(e) => setHall(e.target.value)}
+          {...fields.control('hall', hint)}
+          onChange={(e) => {
+            setHall(e.target.value);
+            fields.clear('hall');
+          }}
           style={{ flex: 2, minWidth: 0 }}
         />
         <input
@@ -200,6 +207,9 @@ function HousingDetails() {
           onChange={(e) => setRoom(e.target.value)}
           style={{ flex: 1, minWidth: 0 }}
         />
+      </div>
+      <div style={{ marginBottom: fields.errors.hall ? 'var(--sp-4)' : 0 }}>
+        <FieldMessage {...fields.message('hall')} />
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
@@ -217,16 +227,18 @@ function HousingDetails() {
           aria-label="Hours after your last exam"
           placeholder="or hrs"
           inputMode="numeric"
-          onChange={(e) => setHours(e.target.value)}
+          {...fields.control('hours', hint)}
+          onChange={(e) => {
+            setHours(e.target.value);
+            fields.clear('hours');
+          }}
           style={{ flex: 1, minWidth: 0 }}
         />
       </div>
 
-      {bad ? (
-        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
-          {bad}
-        </div>
-      ) : null}
+      <div style={{ marginBottom: fields.errors.hours ? 'var(--sp-4)' : 0 }}>
+        <FieldMessage {...fields.message('hours')} />
+      </div>
 
       <button
         type="button"

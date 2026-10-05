@@ -1,3 +1,9 @@
+-- supabase/familyinvites.check.sql — the share codes behind supporter sharing.
+--
+-- Ported with 20260928306000_family_invites.sql from the unmerged
+-- `claude/inspiring-goldberg-kv3yzn`, and extended for the owner-approved
+-- consent design (D-037): `selected` only, 1–200 days, a 7-day code, named
+-- items required, and revocation as the one write, one way.
 -- The eight characters between a student and a grant.
 --
 -- `family_grants` has had no way to acquire a row since it landed, because a
@@ -106,13 +112,13 @@ begin
   begin
     insert into public.family_invites
       (code, student_id, institution_id, categories, access, grant_expires_at)
-    values ('AAAAAAAA', student, 'vanderbilt', array['finances'], 'view', now() + interval '90 days');
+    values ('AAAAAAAA', student, 'vanderbilt', array['finances'], 'selected', now() + interval '90 days');
     raise exception 'FAILED: a student wrote their own invite row';
   exception when insufficient_privilege then
     raise notice 'ok  a student cannot write an invite row directly';
   end;
 
-  first := public.make_family_invite(array['finances', 'calendar'], 'view', array['bill-2026fa'], 90);
+  first := public.make_family_invite(array['finances', 'calendar'], 'selected', array['bill-2026fa'], 90);
   perform pg_temp.said('and gets eight characters from the minter',
                        (first ~ '^[23456789ABCDEFGHJKMNPQRSTVWXYZ]{8}$')::text, 'true');
 
@@ -124,9 +130,15 @@ begin
   select count(*) into n from public.family_invites;
   perform pg_temp.counted('the person holding the code cannot read the row', n, 0);
 
+  -- Stronger than the branch this came from: a signed-out visitor holds no
+  -- privilege on the table at all, so the read is refused rather than empty.
   perform pg_temp.become_anon();
-  select count(*) into n from public.family_invites;
-  perform pg_temp.counted('and a signed-out visitor cannot', n, 0);
+  begin
+    select count(*) into n from public.family_invites;
+    raise exception 'FAILED: a signed-out visitor could read the invites table';
+  exception when insufficient_privilege then
+    raise notice 'ok  and a signed-out visitor cannot even ask';
+  end;
 
   -- ── Claiming ────────────────────────────────────────────────────────────
   perform pg_temp.become(parent);
@@ -161,7 +173,7 @@ begin
 
   -- ── The three that answer the same ──────────────────────────────────────
   perform pg_temp.become(student);
-  second := public.make_family_invite(array['finances'], 'view', array['bill'], 90);
+  second := public.make_family_invite(array['finances'], 'selected', array['bill'], 90);
 
   perform pg_temp.become(parent);
   perform pg_temp.said('a code that never existed is unknown',
@@ -183,7 +195,7 @@ begin
 
   -- Revoked, on a third code, so the control above is not disturbed.
   perform pg_temp.become(student);
-  second := public.make_family_invite(array['housing'], 'view', array['room'], 90);
+  second := public.make_family_invite(array['housing'], 'selected', array['room'], 90);
   update public.family_invites set revoked_at = now() where code = second;
   perform pg_temp.become(parent);
   perform pg_temp.said('a revoked code is unknown too',
@@ -191,7 +203,7 @@ begin
 
   -- ── Nobody claims their own ─────────────────────────────────────────────
   perform pg_temp.become(student);
-  second := public.make_family_invite(array['career'], 'view', array['cv'], 90);
+  second := public.make_family_invite(array['career'], 'selected', array['cv'], 90);
   perform pg_temp.said('a student cannot claim their own code',
                        public.claim_family_invite(second), 'yourself');
 
@@ -209,17 +221,71 @@ begin
   -- ── An invite has to be worth something ─────────────────────────────────
   perform pg_temp.become(student);
   begin
-    perform public.make_family_invite(array[]::text[], 'view', '{}', 90);
+    perform public.make_family_invite(array[]::text[], 'selected', array['bill'], 90);
     raise exception 'FAILED: minted a code that grants nothing';
   exception when check_violation then
     raise notice 'ok  a code with no categories is refused';
   end;
 
+  -- D4: at most one term. 200 is allowed; 201 is not.
   begin
-    perform public.make_family_invite(array['finances'], 'view', '{}', 4000);
-    raise exception 'FAILED: minted a code with an absurd expiry';
+    perform public.make_family_invite(array['finances'], 'selected', array['bill'], 201);
+    raise exception 'FAILED: minted a code whose grant outlasts a term';
   exception when check_violation then
-    raise notice 'ok  and so is an expiry outside one to four hundred days';
+    raise notice 'ok  a grant longer than 200 days is refused';
+  end;
+  second := public.make_family_invite(array['finances'], 'selected', array['bill'], 200);
+  perform pg_temp.said('and exactly 200 days is allowed', (second is not null)::text, 'true');
+
+  -- D5: named items at the one level offered.
+  begin
+    perform public.make_family_invite(array['finances'], 'view', array['bill'], 90);
+    raise exception 'FAILED: minted a view code';
+  exception when check_violation then
+    raise notice 'ok  "view" cannot be minted';
+  end;
+  begin
+    perform public.make_family_invite(array['finances'], 'payment', array['bill'], 90);
+    raise exception 'FAILED: minted a payment code';
+  exception when check_violation then
+    raise notice 'ok  and nor can "payment"';
+  end;
+  -- Rule 3: a category alone grants nothing.
+  begin
+    perform public.make_family_invite(array['finances'], 'selected', '{}', 90);
+    raise exception 'FAILED: minted a code carrying no items';
+  exception when check_violation then
+    raise notice 'ok  a code with no named items is refused';
+  end;
+
+  -- The code itself lapses in seven days (design §6), the grant later.
+  set local role postgres;
+  select count(*) into n from public.family_invites
+   where code = second
+     and expires_at between now() + interval '7 days' - interval '1 minute' and now() + interval '7 days'
+     and grant_expires_at > now() + interval '199 days';
+  perform pg_temp.counted('a code lapses in seven days, its grant in two hundred', n, 1);
+
+  -- Revoking is the one write, and it only goes one way.
+  perform pg_temp.become(student);
+  begin
+    update public.family_invites set resource_ids = array['bill', 'everything-else'] where code = second;
+    raise exception 'FAILED: a student widened a live code';
+  exception when insufficient_privilege then
+    raise notice 'ok  a student cannot add items to a live code';
+  end;
+  begin
+    update public.family_invites set categories = array['finances', 'academic'] where code = second;
+    raise exception 'FAILED: a student added a category to a live code';
+  exception when insufficient_privilege then
+    raise notice 'ok  or categories';
+  end;
+  update public.family_invites set revoked_at = now() where code = second;
+  begin
+    update public.family_invites set revoked_at = null where code = second;
+    raise exception 'FAILED: a revoked code was re-opened';
+  exception when insufficient_privilege then
+    raise notice 'ok  and a revoked code cannot be re-opened';
   end;
 
   -- ── A code outstanding is not an untouched account ──────────────────────
@@ -241,7 +307,7 @@ begin
     public.lti_account_untouched(loner)::text, 'true');
 
   perform pg_temp.become(loner);
-  perform public.make_family_invite(array['calendar'], 'view', array['term-dates'], 30);
+  perform public.make_family_invite(array['calendar'], 'selected', array['term-dates'], 30);
 
   set local role postgres;
   perform pg_temp.said('and the same account is not, once it holds one code and nothing else',
@@ -250,7 +316,7 @@ begin
   -- ── Signed out ──────────────────────────────────────────────────────────
   perform pg_temp.become_anon();
   begin
-    perform public.make_family_invite(array['finances'], 'view', '{}', 90);
+    perform public.make_family_invite(array['finances'], 'selected', array['bill'], 90);
     raise exception 'FAILED: a signed-out visitor minted a code';
   exception when insufficient_privilege then
     raise notice 'ok  a signed-out visitor cannot mint one';

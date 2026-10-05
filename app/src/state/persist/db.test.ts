@@ -91,10 +91,10 @@ describe('open', () => {
     let settled = false;
     void waiting.then(() => (settled = true));
 
-    await vi.advanceTimersByTimeAsync(9_000);
+    await vi.advanceTimersByTimeAsync(2_500);
     expect(settled, 'still waiting before the limit').toBe(false);
 
-    await vi.advanceTimersByTimeAsync(1_500);
+    await vi.advanceTimersByTimeAsync(750);
     expect(await waiting).toBeNull();
   });
 
@@ -107,7 +107,7 @@ describe('open', () => {
     });
     const { open } = await fresh();
     const waiting = open([]);
-    await vi.advanceTimersByTimeAsync(11_000);
+    await vi.advanceTimersByTimeAsync(3_250);
     expect(await waiting).toBeNull();
     late?.();
     expect(await waiting).toBeNull();
@@ -148,6 +148,12 @@ function fakeIndexedDB(
   const rows = new Map<string, Map<string, unknown>>();
   const opens: (number | undefined)[] = [];
   let held = 0;
+  /**
+   * Transactions still to leave in neither the complete nor the error state,
+   * which is the Mobile WebKit stall `TRANSACTION_LIMIT_MS` exists for. Zero
+   * is a browser that answers.
+   */
+  const knob = { stall: 0, aborted: 0 };
 
   const database = {
     get version() {
@@ -174,9 +180,20 @@ function fakeIndexedDB(
           return {
             put: (value: unknown, key: string) => store.set(key, value),
             delete: (key: string) => store.delete(key),
+            // Answered on `oncomplete`, the way the real requests are read.
+            getAllKeys: () => ({ get result() { return [...store.keys()]; } }),
+            getAll: () => ({ get result() { return [...store.values()]; } }),
           };
         },
+        abort: () => {
+          knob.aborted += 1;
+          setTimeout(() => (t.onabort as (() => void) | undefined)?.(), 0);
+        },
       };
+      if (knob.stall > 0) {
+        knob.stall -= 1;
+        return t;
+      }
       setTimeout(() => (t.oncomplete as (() => void) | undefined)?.(), 0);
       return t;
     },
@@ -207,8 +224,81 @@ function fakeIndexedDB(
     },
   });
 
-  return { state, rows, opens, held: () => held };
+  return { state, rows, opens, held: () => held, knob };
 }
+
+/*
+ * A transaction that never settles.
+ *
+ * Mobile WebKit can open the database and then leave a transaction in
+ * neither the complete nor the error state, most often after restoring the
+ * app from suspension. `main.tsx` awaits the first read before mounting, so
+ * this used to be an empty window for as long as the tab lived. Now the
+ * read answers at the limit — and what it answers is the whole point: `null`,
+ * not `[]`. The first version answered `[]`, `load` read that as an empty
+ * store and migrated the localStorage account onto a handle this had just
+ * dropped, and a returning student was handed a fresh account (Codex on
+ * #954). Two figures are pinned: the answer, and the handle let go.
+ */
+/** The fake answers on a timer, so every promise it owes is advanced to. */
+const settled = async <T,>(waiting: Promise<T>, ms = 10): Promise<T> => {
+  await vi.advanceTimersByTimeAsync(ms);
+  return waiting;
+};
+
+describe('a transaction that never settles', () => {
+  it('reads as "did not answer", not as an empty store, and lets go of the handle', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, readAll, write, held } = await fresh();
+    await settled(open(['courses']));
+    expect(held(), 'the handle is held after a good open').toBe(true);
+
+    fake.knob.stall = 1;
+    const waiting = readAll('settings');
+    let done = false;
+    void waiting.then(() => (done = true));
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(done, 'still waiting before the limit').toBe(false);
+
+    await vi.advanceTimersByTimeAsync(600);
+    expect(await waiting, 'a stall is not an empty store').toBeNull();
+    expect(fake.knob.aborted, 'the transaction is aborted rather than left running').toBe(1);
+    expect(held(), 'a handle that stopped answering is not kept').toBe(false);
+    expect(fake.held(), 'and was closed rather than dropped').toBe(0);
+
+    // And a later write does not pretend to have landed.
+    expect(await settled(write([{ store: 'settings', key: 'k', value: 1 }]))).toBe(false);
+  });
+
+  it('a stalled write answers false and lets go the same way', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, write, held } = await fresh();
+    await settled(open(['courses']));
+
+    fake.knob.stall = 1;
+    const waiting = write([{ store: 'settings', key: 'nav', value: 'tabs' }]);
+    await vi.advanceTimersByTimeAsync(1_600);
+    expect(await waiting).toBe(false);
+    expect(held()).toBe(false);
+    expect(fake.held()).toBe(0);
+  });
+
+  // The control: a browser that answers is read as before, and keeps its
+  // handle. Without this the two above could pass against a `readAll` that
+  // answers null to everything.
+  it('a transaction that completes still answers its rows, and the handle stays', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, readAll, write, isEmpty, held } = await fresh();
+    await settled(open(['courses']));
+
+    expect(await settled(isEmpty())).toBe(true);
+    expect(await settled(write([{ store: 'settings', key: 'nav', value: 'tabs' }]))).toBe(true);
+    expect(await settled(readAll('settings'))).toEqual([['nav', 'tabs']]);
+    expect(await settled(isEmpty())).toBe(false);
+    expect(held()).toBe(true);
+    expect(fake.knob.aborted).toBe(0);
+  });
+});
 
 describe('a store this build needs that the database has never had', () => {
   it('makes it, by opening once more a version higher', async () => {

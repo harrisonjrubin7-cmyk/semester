@@ -57,10 +57,10 @@ function heads(width: number): Record<string, CellStyle> {
 export const TEMPLATES: Template[] = [
   {
     id: 'todo',
-    label: 'To-do list',
+    label: 'Action list',
     says: 'What is due, when, and whether it is done',
     rows: [
-      ['Task', 'Course', 'Due', 'Hours', 'Done'],
+      ['Action', 'Course', 'Due', 'Hours', 'Done'],
       ['', '', '', '', ''],
       ['', '', '', '', ''],
       ['', '', '', '', ''],

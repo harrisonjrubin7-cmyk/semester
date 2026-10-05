@@ -1,7 +1,9 @@
+import { WhatChanged } from '../components/WhatChanged';
 import { CourseHub } from '../components/CourseHub';
 import { WhereItStands } from '../components/WhereItStands';
 import { useState } from 'react';
 import { useNow, useStore } from '../state/store';
+import { ADDED_BY_YOU } from '../lib/edit';
 import { draftFor } from '../lib/mail';
 import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
@@ -35,7 +37,9 @@ import { CoursePicker } from '../components/CoursePicker';
 import { badge, overdueLine, split, standingOf } from '../lib/standing';
 import { isUnderway, openLine, underway, underwayLine } from '../lib/underway';
 import type { Course } from '../lib/types';
-import { CourseTag } from '../components/CourseTag';
+import { ContextBar } from '../components/unity/ContextBar';
+import { NextSteps } from '../components/unity/NextSteps';
+import type { StatusKey } from '../lib/status';
 import { Folding } from '../components/Fold';
 
 /** The one switcher, so the three views cannot drift apart. */
@@ -247,9 +251,9 @@ export function Courses() {
                       color: 'var(--app-dim)',
                       flex: 1,
                       minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      // Wraps: a deadline's title is the thing the card is for, and
+                      // text spacing (WCAG 1.4.12) must not cut its end off.
+                      overflowWrap: 'anywhere',
                     }}
                   >
                     {next ? next.title : 'Nothing scheduled'}
@@ -535,6 +539,7 @@ function CourseInformation() {
         ) : null}
         <span className="tag tag-neutral">{course.credits}</span>
       </div>
+      <WhatChanged courseId={course.id} />
 
       <ActionButton
         onClick={() => dispatch({ type: 'openGuide', id: course.id })}
@@ -689,37 +694,52 @@ export function ItemDetail() {
   if (!item) return null;
   const done = !!state.done[item.id];
   const going = isUnderway(item.id, state.started, state.done);
+  const code = catalog.byId[item.c]?.code ?? item.c;
+  // Typed by hand says so in its source line (`blankItem`); otherwise it is
+  // as imported as the course it sits in. Not the quote: the importer keeps an
+  // item whose quote it could not verify and clears only the quote, so a
+  // missing sentence is not a sign the student wrote it. Nothing in this
+  // build is official.
+  const origin: StatusKey = item.source === ADDED_BY_YOU
+    ? 'yours'
+    : state.courses.some((m) => m.course.id === item.c)
+      ? 'made'
+      : 'sample';
+  const nextHere = all.find((i) => i.c === item.c && i.id !== item.id && !state.done[i.id] && i.date >= now);
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
       <Folding name="ItemDetail">
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
-        <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', alignItems: 'center' }}>
-          <CourseTag id={item.c} />
-          <span
-            style={{
-              fontSize: 'var(--type-xs)',
-              color: 'var(--app-dim)',
-              fontFamily: 'var(--font-heading)',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {item.kind}
-          </span>
-        </div>
-        <div
-          className="chrome-text"
-          style={{
-            fontSize: 'var(--type-2xl)',
-            lineHeight: 'var(--leading-display-lg)',
-            letterSpacing: '-0.01em',
-            marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(12px * var(--density, 1))',
-            textWrap: 'pretty',
+        {state.recoveryIntent === 'short_task' ? (
+          <div className="portal-notice" role="status">
+            <strong>2–25 minute recovery start.</strong> Pick one small action—open the source, write the first line, or identify the first question—then stop when the timebox ends. The official requirement and due date stay unchanged.
+          </div>
+        ) : null}
+        {/*
+          What this is, which course it is in, and on whose word — the shared
+          Context Bar rather than a chip, a kicker and a title of its own. The
+          title stays a plain line, as it was: the screen's name is the h1.
+          Done is the thing this screen is for, so it is the bar's one primary;
+          Study sits beside it, and the bar's Source & details says where the
+          date came from and whether you have moved it since.
+        */}
+        <ContextBar
+          context={`${code} · ${item.kind}`}
+          title={item.title}
+          statuses={[origin, ...(item.movedFrom ? (['action-required'] as const) : [])]}
+          source={{
+            title: item.title,
+            origin,
+            sourceName: item.checked?.doc ?? item.source,
+            excerpt: item.quote || undefined,
+            location: item.checked?.page ? `Page ${item.checked.page}` : undefined,
+            freshness: item.checked?.page ? `Page ${item.checked.page} of the syllabus` : undefined,
+            limitations: item.movedFrom ? 'You moved this date; the syllabus says otherwise.' : undefined,
           }}
-        >
-          {item.title}
-        </div>
+          primary={{ label: done ? 'Mark not done' : 'Mark done', run: () => dispatch({ type: 'toggleDone', id: item.id }) }}
+          secondary={{ label: 'Study', run: () => dispatch({ type: 'openGuide', id: item.c }) }}
+        />
         {/*
           A flex item will not go narrower than its own longest word unless it
           is told it may — `min-width: auto` is the default, and `item.where`
@@ -845,7 +865,7 @@ export function ItemDetail() {
       {/*
         * The middle state, which is where most coursework actually lives.
         *
-        * Above the Done row rather than beside it, because they are not two
+        * Kept apart from Done, which is the bar's primary above, because they are not two
         * halves of one choice: starting and finishing are independent, and a
         * three-way segmented control would make un-ticking a finished thing
         * lose that it was ever begun. Hidden once something is done — there is
@@ -883,24 +903,6 @@ export function ItemDetail() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: going && !done ? 14 : 24 }}>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => dispatch({ type: 'toggleDone', id: item.id })}
-          style={{ flex: 1, height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          {done ? 'Mark not done' : 'Mark done'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => dispatch({ type: 'openGuide', id: item.c })}
-          style={{ height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Study
-        </button>
-      </div>
       {/* Where it stands past the tick: finished, handed in, or finished and
           never handed in — which is the one the tick cannot say and the one
           worth a warning. See `lib/stage.ts`. */}
@@ -914,6 +916,22 @@ export function ItemDetail() {
       ) : (
         <Timer id={item.id} courseId={item.c} kind={item.kind} title={item.title} />
       )}
+
+      {/* Study is already on the bar above, so the one thing worth adding
+          here is the next piece of work in the same course. */}
+      <NextSteps
+        steps={
+          nextHere
+            ? [
+                {
+                  label: `Next deadline in ${code}`,
+                  why: `${nextHere.title} · ${nextHere.dueShort}`,
+                  run: () => dispatch({ type: 'openItem', id: nextHere.id }),
+                },
+              ]
+            : []
+        }
+      />
       <div style={{ height: 22 }} />
       </Folding>
     </div>

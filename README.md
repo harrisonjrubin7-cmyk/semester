@@ -1,5 +1,7 @@
 # Semester
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 Upload your syllabi; get the semester back as an app — every deadline with the
 sentence it came from, a study guide you can drill, narrated lessons, a deck, a
 document, and a calendar that knows when your classes are.
@@ -40,6 +42,8 @@ root, which is why nothing in the app reads a leading-slash path directly — se
 | `pipeline/` | Syllabus → course, and everything generated from a course: lessons, decks, handouts. See [`pipeline/README.md`](pipeline/README.md). |
 | `project/` | The original Claude Design handoff — HTML prototypes, the Industry design system, the syllabus PDFs. Kept as the reference the app was built from. |
 | `chats/` | The design conversation that produced it. |
+| `docs/business/` | The go-to-market operating system: GTM playbook, sales and outreach, customer success, compliance views, templates and the PDF reports. Start at [`docs/business/README.md`](docs/business/README.md). The internal finance model lives in `app/src/finance/` and opens from the operations console. |
+| `output/` | PDF reports built from `docs/business/` by `npm run generate:gtm-pdf` (from `app/`). Generated files. |
 
 `project/` and `chats/` are the source material and are not built or imported by
 the app. The one thing the app does take from `project/` is the Industry
@@ -1547,29 +1551,31 @@ the term is archived — and none of it reaches an institution.
 
 ## Phone, iPad, laptop, or its own window
 
-One build, three layouts and a way of installing it. The two boundaries are
-written once, in `app/src/lib/media.ts`, and repeated in the media queries of
-`app/src/styles/app.css` because a stylesheet cannot import a constant —
+One build, three layouts and a way of installing it. The boundaries are the
+adaptive-device contract's window classes — compact under 600, medium to 839,
+expanded to 1199, large from 1200, extra-large from 1600 — written once in
+`app/src/lib/media.ts` and repeated in the media queries of
+`app/src/styles/app.css` because a stylesheet cannot import a constant;
 `lib/tiers.test.ts` fails if the two copies ever disagree.
 
-- **Phone** (under 760px) — as drawn, filling the screen: one column, the tab
-  bar under the thumb, an 18px gutter.
-- **Tablet** (760–1179px) — the tab bar unrolls into a rail beside the content,
-  so every iPad in portrait (768–834pt) gets it, and landscape and Split View
-  follow the window live. An iPad mini upright, and any half-width split, stay
-  on the phone layout at full height. The touch sizes do not change: the finger
-  holding an iPad is the finger that held the phone — the rail's own rows
-  included, which they were not. Unrolled, the five destinations that are 51px
-  tall each in the tab bar came out at 41 in the rail, and the five under them
-  — Ask Claude, Account, Settings — at 35, so the one piece of chrome on screen
-  the whole time was the one part of a tablet build nobody had sized for a
-  tablet. They have a 44px floor now, on `pointer: coarse` rather than on a
-  width: an iPad at 1194 is in the desktop layout and still has a finger on it,
-  and a browser window dragged to 820 is in the tablet layout and does not.
-  The content column fills whatever the rail leaves, up to a 760px cap so a
-  list row on a landscape iPad is not a metre of hairline with its value
-  stranded at the far end.
-- **Desktop** (1180px and up) — a window rather than a phone propped up. A
+- **Phone** (under 600px, compact) — as drawn: one column, the tab bar under
+  the thumb, an 18px gutter.
+- **Medium** (600–839px) — the rail collapsed to its icons, 72px, in the tab
+  bar's place; a button at its head opens it out over the content with its
+  labels and the quieter rows (Ask, Add a course, Account, Connect,
+  Settings), and it closes on a choice, on Escape, or on the scrim. An iPad
+  held upright (744–834pt) is here. Open is never stored, so rotating or
+  resizing cannot change a preference.
+- **Tablet** (840–1199px, expanded) — the tab bar unrolls into a rail beside
+  the content, for an iPad on its side and any window that wide; Split View
+  follows the window live. The touch sizes do not change: the finger holding
+  an iPad is the finger that held the phone — the rail's own rows included,
+  with a 44px floor on `pointer: coarse` rather than on a width, so a
+  browser window dragged to 900 has the rail without thumb-sized rows. The
+  content column fills whatever the rail leaves, up to a 760px cap so a list
+  row on a landscape iPad is not a metre of hairline with its value stranded
+  at the far end.
+- **Desktop** (1200px and up, large; a wider measure from 1600) — a window rather than a phone propped up. A
   wider sidebar with room for its labels; the app filling the window instead of
   a 560px column with black either side; a measured reading column with the
   header's title aligned to it; a wider canvas for the screens that are

@@ -20,6 +20,7 @@
 
 import type { Settled } from './files';
 import { childrenOf, type Shown } from './folders';
+import { formatDate, formatTime } from './locale';
 
 /** How many of each the home shows. A home that scrolls is a listing. */
 export const SUGGESTED_FILES = 6;
@@ -58,12 +59,12 @@ export function when(at: number, now: number): string {
   midnight.setHours(0, 0, 0, 0);
   const date = new Date(at);
   if (at >= midnight.getTime()) {
-    return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    return formatTime(date, { hour: 'numeric', minute: '2-digit' });
   }
   if (at >= midnight.getTime() - 6 * day) {
-    return date.toLocaleDateString(undefined, { weekday: 'long' });
+    return formatDate(date, { weekday: 'long' });
   }
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return formatDate(date, { month: 'short', day: 'numeric' });
 }
 
 /**

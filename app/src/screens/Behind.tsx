@@ -22,7 +22,8 @@
  * manners.
  */
 
-import { useNow, useStore } from '../state/store';
+import { lazy, Suspense } from 'react';
+import { useAccountId, useNow, useStore } from '../state/store';
 import { DIMMED_ROW } from '../lib/dim';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
@@ -33,6 +34,21 @@ import { WAKING_HOURS, hoursOn } from '../lib/windows';
 import { behindLine, howBehind, moves, movesLine, triage, type Step } from '../lib/behind';
 import type { Screen } from '../lib/types';
 import { misses, missesLine } from '../lib/misses';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { LifeEvents } from '../components/LifeEvents';
+import { LIFE_EVENTS_KEY, dayOf, lifeEventsOn } from '../lib/lifeevents';
+import { seedHelp } from '../lib/help-routes';
+
+const FlightPlanRecovery = lazy(() =>
+  import('../components/institutional/FlightPlanRecovery').then((module) => ({
+    default: module.FlightPlanRecovery,
+  })),
+);
+
+function FlightPlanRecoverySlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><FlightPlanRecovery /></Suspense>;
+}
 
 const GROUPS: { where: Step['where']; label: string; note: string }[] = [
   {
@@ -42,6 +58,7 @@ const GROUPS: { where: Step['where']; label: string; note: string }[] = [
   },
   { where: 'today', label: 'Today', note: '' },
   { where: 'fits', label: 'Fits in the hours you have', note: '' },
+  { where: 'available', label: 'Other unfinished work', note: 'Available to choose for a short first pass; its full effort has not been compared with this week.' },
   {
     where: 'tight',
     label: 'Past the hours you have',
@@ -52,6 +69,7 @@ const GROUPS: { where: Step['where']; label: string; note: string }[] = [
 export function Behind() {
   const { state, dispatch, catalog, courseCode } = useStore();
   const now = useNow();
+  const accountId = useAccountId();
   if (catalog.empty) return <FirstRun where="to sort out a bad week" />;
 
   // The hours are the student's own, from their work windows. Where they have
@@ -63,7 +81,23 @@ export function Behind() {
 
   const items = datedItems(catalog, now);
   const b = howBehind(items, state.done, state.spent, week);
-  const steps = triage(items, state.done, state.spent, week);
+  const triageSteps = triage(items, state.done, state.spent, week);
+  const shortTaskFallback = state.recoveryIntent === 'short_task' && triageSteps.length === 0;
+  const steps = shortTaskFallback
+    ? items
+      .filter((item) => !state.done[item.id])
+      .sort((a, b) => Math.abs(a.daysAway) - Math.abs(b.daysAway))
+      .map((item): Step => ({
+        id: item.id,
+        title: item.title,
+        courseId: item.c,
+        where: item.daysAway < 0 ? 'gone' : item.daysAway === 0 ? 'today' : 'available',
+        minutes: null,
+        daysAway: item.daysAway,
+        worth: 0,
+        says: `${item.dueShort}; outside the usual one-week triage window.`,
+      }))
+    : triageSteps;
   const attendance = misses(
     catalog.courses.map((c) => c.id),
     state.attendPolicy,
@@ -85,9 +119,47 @@ export function Behind() {
             textWrap: 'pretty',
           }}
         >
-          {behindLine(b)}
+          {shortTaskFallback && steps.length > 0
+            ? `Showing ${steps.length} unfinished ${steps.length === 1 ? 'item' : 'items'} to choose a short first pass, including work outside the usual one-week triage window.`
+            : behindLine(b)}
         </div>
       </Blueprint>
+
+      <FlightPlanRecoverySlot />
+
+      {state.recoveryIntent === 'short_task' ? (
+        <Blueprint style={{ marginTop: 'var(--sp-4)', padding: 'var(--sp-5)' }}>
+          <div className="kicker">Your 2–25 minute start</div>
+          {steps.length > 0 ? (
+            <p style={{ marginBottom: 0 }}>Choose one item below. The item will keep this recovery choice visible so you can timebox a first pass without changing its official requirement or due date.</p>
+          ) : (
+            <>
+              <p>No unfinished coursework is available here. Nothing needs to be reopened to fill this time.</p>
+              <button type="button" className="bare tappable" onClick={() => dispatch({ type: 'go', screen: 'home' })}>Open Today for another action</button>
+            </>
+          )}
+        </Blueprint>
+      ) : null}
+
+      {/*
+        Before the deadlines, because a bad week is often not about the
+        deadlines: an availability that changed, somebody to look after, a
+        place to live. It asks for no reason and sends nothing — see
+        `lib/lifeevents.ts`. Off unless `VITE_ME_LIFE_EVENTS` is set.
+      */}
+      {lifeEventsOn() && (
+        <LifeEvents
+          storageKey={`${LIFE_EVENTS_KEY}:${accountId || 'device'}`}
+          today={dayOf(now)}
+          onGo={(screen) => dispatch({ type: 'go', screen })}
+          onHelp={(need) =>
+            seedHelp(
+              { need, from: 'You said something has changed. Nothing else is filled in.', fields: {} },
+              () => dispatch({ type: 'go', screen: 'university' }),
+            )
+          }
+        />
+      )}
 
       {/*
         Before the deadlines, because a percentage already gone outranks a

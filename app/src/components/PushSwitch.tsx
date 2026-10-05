@@ -1,3 +1,4 @@
+import { storedWindow } from '../lib/registration-window';
 import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
@@ -149,6 +150,7 @@ export function PushSwitch() {
       items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
       classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
       registrar: state.registrar,
+          registrationOpens: storedWindow(),
       /*
        * A muted course is silent here too, and so are quiet hours.
        *

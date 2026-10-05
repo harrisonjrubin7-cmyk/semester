@@ -36,6 +36,14 @@ concurrency:
   group: contrast
   cancel-in-progress: false
 
+# The job token may read the repository and nothing else, unless a job says
+# otherwise below. Without this line every job gets the repository's default
+# token, which a Settings change can make read-write, and a compromised Action
+# or dependency runs with whatever that is. `supplychain.test.ts` requires
+# every workflow to declare this.
+permissions:
+  contents: read
+
 jobs:
   sweep:
     runs-on: ubuntu-latest
@@ -44,16 +52,15 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
-        working-directory: app
         run: npm ci
 
       # Playwright is installed here and not in `app/package.json`, which is
@@ -81,7 +88,15 @@ jobs:
       # The script exits non-zero on a finding *or* on a pass whose setup it
       # could not confirm, so this step failing means one of those two and the
       # log says which.
+      #
+      # `shell: bash` is what lets that be true. A step with no `shell:` runs
+      # as `bash -e {0}`, which has no `pipefail`, so the pipe into `tee` below
+      # reported `tee`'s status and the step was green on every night's run
+      # while the log said `FINDINGS: 159` (run of 3 October 2026). With the
+      # shell named GitHub runs `bash -eo pipefail`, and the script's exit code
+      # is the step's. `workflowshell.test.ts` holds every workflow to this.
       - name: Sweep
+        shell: bash
         working-directory: app
         env:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
@@ -100,6 +115,7 @@ jobs:
       # section, which is why no unit test was ever going to find it.
       - name: Walls
         if: always()
+        shell: bash
         working-directory: app
         env:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
@@ -109,7 +125,7 @@ jobs:
       # are how you notice the sweep quietly measuring less than it used to.
       - name: Keep the output
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: contrast-sweep
           path: |

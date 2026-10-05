@@ -151,7 +151,7 @@ export function Reader({
           }}
         >
           <button type="button" className="btn btn-secondary" onClick={() => onTask(last)}>
-            Make a task from this
+            Make an action from this
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => onChanges(last)}>
             Read it into my dates

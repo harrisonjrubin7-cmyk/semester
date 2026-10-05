@@ -11,10 +11,12 @@ import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
 import { mixLine, worthMixing } from '../lib/interleave';
+import { whyDue } from '../lib/whydue';
 import { guideDeck, mixedDeck } from '../lib/drilldeck';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
 import { ActionButton, EmptyState, Toggle } from '../components/ui';
+import { QuizFeedback, useQuizFeedback } from '../components/QuizFeedback';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
@@ -41,12 +43,18 @@ export function Drill() {
    * revision is *for*. Identity is preserved when nothing moved, which is what
    * keeps the memo below from re-sorting the deck under your thumb.
    */
+  const tests = useMemo(
+    () => testsNear(catalog, now),
+    // Held for the run, like the schedule it feeds.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [catalog, state.guideId, state.drillUnit, state.drillMix],
+  );
   const schedule = useMemo(
-    () => inTime(state.reviews, testsNear(catalog, now), now.getTime()),
+    () => inTime(state.reviews, tests, now.getTime()),
     // Same dependencies as the deck itself, and deliberately not `state.reviews`:
     // see the note in the memo below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [catalog, state.guideId, state.drillUnit, state.drillMix],
+    [tests],
   );
 
   const ordered = useMemo(() => {
@@ -357,6 +365,24 @@ export function Drill() {
             `ECON 1020 · 0 · …` reads as three things when it is two. */}
         {state.drillMix ? `${courseCode(card.courseId)} · ${unitName(card.unit)}` : card.unit}
       </div>
+
+      {/* Why this card, now. Read off the stored record rather than the
+          run's adjusted copy, which "Run it again" does not rebuild — see
+          `lib/whydue.ts`. Hidden once the card is turned: by then the
+          question is whether you knew it. */}
+      {!state.revealed && (
+        <div
+          style={{
+            fontSize: 'var(--type-xs-plus)',
+            ...secondLine(),
+            marginTop: 'var(--sp-2)',
+            lineHeight: 'var(--leading-normal)',
+            textWrap: 'pretty',
+          }}
+        >
+          {whyDue(card.key, card.courseId, state.reviews, tests, now.getTime()).says}
+        </div>
+      )}
 
       {canMix && (
         <div style={{ marginTop: 'var(--sp-5)' }}>
@@ -752,6 +778,8 @@ function Matching({
 export function Quiz() {
   const { state, dispatch, courseCode } = useStore();
   const { guide } = useLive(state.guideId);
+  // Cards the student has asked to be left out. See `components/QuizFeedback.tsx`.
+  const { leave, count: leftOutCount, update: updateFeedback } = useQuizFeedback(state.guideId);
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
 
   /*
@@ -807,7 +835,7 @@ export function Quiz() {
    */
   useEffect(() => {
     if (state.quiz.length === 0 && allCards(guide).length > 0) {
-      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed, leave) });
     }
     // Only ever on arriving at an empty quiz. Depending on the seed would
     // rebuild the deck under the answer being read, since `startQuiz` moves it.
@@ -892,7 +920,7 @@ export function Quiz() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })}
+              onClick={() => dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed, leave) })}
               style={{ flex: 1, height: 48, letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               New ten
@@ -909,6 +937,24 @@ export function Quiz() {
    * cards have not been written from yet. Say that, and offer the guide,
    * rather than leaving a screen that says it is working when it is not.
    */
+  if (!current && leftOutCount > 0) {
+    // The student's own reports are why, and they can undo them from here —
+    // the questions they would undo them from are the ones not being asked.
+    return (
+      <EmptyState
+        title="Too few questions left"
+        body={`You have left ${leftOutCount} ${leftOutCount === 1 ? 'card' : 'cards'} of ${guide.code || 'this course'} out of your quizzes, and what remains is too few to ask four-option questions from.`}
+        action={{
+          label: `Bring back the ${leftOutCount} left out`,
+          onClick: () => {
+            updateFeedback((f) => ({ reports: f.reports.filter((r) => r.courseId !== state.guideId) }));
+            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+          },
+        }}
+      />
+    );
+  }
+
   if (!current) {
     return (
       <EmptyState
@@ -1157,6 +1203,11 @@ export function Quiz() {
               {current.full}
             </div>
           </Blueprint>
+          <QuizFeedback
+            question={current}
+            courseId={state.guideId}
+            missed={current.kind !== 'match' && state.quizPicked !== null && !current.opts[state.quizPicked]?.ok}
+          />
           <ActionButton
             onClick={() => dispatch({ type: 'nextQuestion' })}
             tone="primary"

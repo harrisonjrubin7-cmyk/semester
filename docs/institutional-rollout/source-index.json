@@ -1,0 +1,776 @@
+[
+  {
+    "ref": "repo:docs/superpowers/specs/2026-09-23-semester-institutional-rollout-design.md",
+    "title": "Semester Institutional Rollout Design",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "2fb03eb467d3170419338a7b51e8ed211d5c530c69ead1d673e610f6fa17c0a6",
+    "note": "Approved program design in this branch."
+  },
+  {
+    "ref": "attachment:Pasted text.txt#L194-L985",
+    "title": "Semester central statement and complete 60-tool inventory",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "db2ca7cb3597f603bca02f86030b6e5e0e1d124cd49cc33ced25e9512d229afb",
+    "note": "User-supplied attachment; 1,059 lines; cited range contains the complete inventory."
+  },
+  {
+    "ref": "repo:app/src/lib/types.ts",
+    "title": "Application screen and data types",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "168d31c369f7030c9d02f075f9ae607cac9526a2d82f291dc587458b757c8568",
+    "note": "Current Screen union and application data contracts."
+  },
+  {
+    "ref": "repo:app/src/lib/nav.ts",
+    "title": "Application destination registry",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "ea5f1e2c20ecf3859dd5f900ef4d2da39f496723893930cc3e7dcf268890c3f9",
+    "note": "Current 59-destination registry."
+  },
+  {
+    "ref": "repo:app/src/lib/nav.registry.test.ts",
+    "title": "Destination-accounting contract",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "sha256": "2abaf5b1a9240d4c5e6ce6271e8c3f7ce12c91a3232d17d98b1c2b1210f18c3d",
+    "note": "Names every screen intentionally excluded from the destination registry."
+  },
+  {
+    "ref": "web:https://chatgpt.com/share/6ab2c668-ab4c-83ea-a224-b5d582a9337f",
+    "title": "Shared Semester ChatGPT conversation",
+    "status": "unverified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "note": "URL supplied by the user; content was not programmatically readable in this execution."
+  },
+  {
+    "ref": "web:https://harrisonjrubin7-cmyk.github.io/semester/#/search",
+    "title": "Current public Semester site",
+    "status": "verified",
+    "checkedAt": "2026-09-23T18:16:38.000Z",
+    "note": "Public live site inspected during design; production state must be refreshed before release."
+  },
+  {
+    "ref": "repo:app/src/screens/calendar-source.test.ts",
+    "title": "Capability evidence: calendar-source.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "13c6eb458e22b63a4f17ae04496067f7bd9f930d68bddf0d8f73bcf866883528",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/calendar-targets.test.ts",
+    "title": "Capability evidence: calendar-targets.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "026ac6da7e3efbe28389a801733f6aa7d7606ed641842f47e657edea03eb6d71",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/profile.test.ts",
+    "title": "Capability evidence: profile.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "81c7792c892b8ace3b455ef7abe542d2002394df7f1e9432ec9acefe69c84c73",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/AccountSecurity.test.tsx",
+    "title": "Capability evidence: AccountSecurity.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "c5d5ab3ddd54e0433c1b96c7a304e087ff10cf35067ff1c4bf842f9377aa6870",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/Recovery.test.tsx",
+    "title": "Capability evidence: Recovery.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "cabe5620e34390d589f5e46dd756338e4eba894c1121f0807386e0e1de4e372f",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/data/onboarding.test.ts",
+    "title": "Capability evidence: onboarding.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b9024c110866d14e5723d17059f6dd742246b966586a2b3d618a85e084cf4ee8",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/connect.test.ts",
+    "title": "Capability evidence: connect.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "dc73403212963173bd5f91e3eb750c163ac92a57fb3b322e8d8e106cb0960259",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/connect.scopes.test.ts",
+    "title": "Capability evidence: connect.scopes.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "265f23dc82f8b1daee0519ef7be29c1e2b778180e144a7fd32d31b6460906fcf",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/integration/quality.test.ts",
+    "title": "Capability evidence: quality.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "0767c4715eb895add71254819dbe5f725f9d8af4314d7e100f944846be531962",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/inventory.test.ts",
+    "title": "Capability evidence: inventory.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "c178a9ca61c63251cafede1b36c33333f4726742804e34575b477c4d4054430f",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/statuspage.test.ts",
+    "title": "Capability evidence: statuspage.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "e8ad618dcfa7292e3a02054042062ecadd8966dfaeda50499c1a036507be91f3",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/Data.tsx",
+    "title": "Capability evidence: Data.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "e8ca83697697f33ada0a527c7729b427dccfabc4ebcbf72b824cacc7ecf7054d",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/privacy.test.ts",
+    "title": "Capability evidence: privacy.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "d29dfecd8442eecb32034bf21cc4d7f3b7f7dbe25a122ae0ae6111e41b969476",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/deleteaccount.test.ts",
+    "title": "Capability evidence: deleteaccount.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "d65b5dfee72e9983e5173df18a68a09041adfb893709b3f1a1e00ac23e3680d7",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/revoke.test.ts",
+    "title": "Capability evidence: revoke.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b547f68a116df41993f1caecba67e60c153e600cffc6a693b8fed994e7eb31dc",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/export.test.ts",
+    "title": "Capability evidence: export.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "1afa43a7d6146afe80ce231154e39d266cc0bc0d19572db8a91ef0967f865204",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/workspace-backup.test.ts",
+    "title": "Capability evidence: workspace-backup.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "d9e5fb97e2d1b527f8ae0846b47195d40346fffa4a43070acc7c7765da5afe18",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/rehearsal.test.ts",
+    "title": "Capability evidence: rehearsal.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "259012e635bb6b048e93e07fff046d28ba20b723314bc9e9b7dc93970e298a65",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/notify.test.ts",
+    "title": "Capability evidence: notify.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b82e545354998c8112f75153c653457c399f7fe549f845d45f0569dbea421b38",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/pushreach.test.tsx",
+    "title": "Capability evidence: pushreach.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "dea384b551c383d2016ed4e0af8b1fdbf2b7fd04ff4ece3578243f7a50016311",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/help.knownlimitations.test.tsx",
+    "title": "Capability evidence: help.knownlimitations.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "8086da3fa6331a2b15bc20d1cd64e39b1e779c4475d723df89c00fdeb27b2fab",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/help.statuslink.test.ts",
+    "title": "Capability evidence: help.statuslink.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "04f9d725860d3ea0ff49337855f677f791bcbd3285ad49b000f5a7ac10356453",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/help-routes.test.ts",
+    "title": "Capability evidence: help-routes.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "1934e9f1e0301101929a91c7ee1668aec5c32d3f5533427e1801b347f9384f99",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/assignment.test.ts",
+    "title": "Capability evidence: assignment.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "1f9a906da9dda8de003bbd106554e2099588edc6827196f6f7d1bf18710ee921",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/draft.test.ts",
+    "title": "Capability evidence: draft.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "854b29a29d8c01633580a7d7d1bf596d5445bb3e6cf04bfbfe37cab305cd1d6e",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/CourseDetailV2.test.tsx",
+    "title": "Capability evidence: CourseDetailV2.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "00f85853ceb81abd297375cfd28dc6786c080591d3d4f982c2325004aca36104",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/studystudio.test.ts",
+    "title": "Capability evidence: studystudio.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "03b20c9469cb2215802baaf8b2c2f43c9d546116ed909bd348c15d56dd38049e",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/studysources.test.ts",
+    "title": "Capability evidence: studysources.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "242a7f2c52a261b97d9127b0e246825f885653668225869ac15ddfab7523a3f9",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/studyhierarchy.test.tsx",
+    "title": "Capability evidence: studyhierarchy.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "eb606d7902d62cc556b93c8d198c867f2be8668bb359c8a4e6edbdd2d5b8bdab",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/intelligence.test.ts",
+    "title": "Capability evidence: intelligence.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "19d7a42c06001b61df34e7ae1f89cfd1edee10a54ec58bf78186582c52fa5f02",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/intelligence-runtime.test.ts",
+    "title": "Capability evidence: intelligence-runtime.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "18150bc9457a1d29248768f5689b5262a092bebfa85bbe18f9e54eca734da975",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/ai/usingline.test.tsx",
+    "title": "Capability evidence: usingline.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "4ed416f8bf2612cc06beb28bfbd355003ba83847e3f709b388b7736c106212d8",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/create-routes.test.ts",
+    "title": "Capability evidence: create-routes.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "8a6ea5484d0252a88d01e3a9ec44e4db40a6ad3ab365e20def8f6916c3694d25",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/creations.test.ts",
+    "title": "Capability evidence: creations.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "a9cd08a3a1fb5bc5c8d6344891c1e0c57b308bf997ece75aed94d1b56618d16a",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/figure.test.ts",
+    "title": "Capability evidence: figure.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "94573fc41d45bf1b9a4987b973277221f78a0628be62131f0b4a453533927073",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/drawnfigure.test.tsx",
+    "title": "Capability evidence: drawnfigure.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "1d915410e3e8ddc1022763b3125dbc161f69c177445ddb0e348c9110ade54855",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/decks.test.ts",
+    "title": "Capability evidence: decks.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "91ad5c29e43c92147be059db4432e5150285cb05bb6259d79a165ae6d0573eb4",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/pptx.test.ts",
+    "title": "Capability evidence: pptx.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "9120f266e10baef94f213d79fd23eb034bd5c9d9de005a17485a2d9aea1f4f8e",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/docx.test.ts",
+    "title": "Capability evidence: docx.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "446d1a18fb8a48a94c2ec18b094fd045e84953648a9c8d79d4ded709711f9f65",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/pdf.test.ts",
+    "title": "Capability evidence: pdf.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "74d0290645ae8e29155e0769c692ba4af7463197f6a3df1c5bf09b01958035cc",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/history.test.ts",
+    "title": "Capability evidence: history.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "45d77a93726c922091ebbbfd2688b26e70bad9be9342a08d47a783a5b9e24c99",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/sheet.test.ts",
+    "title": "Capability evidence: sheet.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "5ecb9037feaa5b196acba9e918c8f027abbcb2aaa42c18b2b77f228bcd2aeec6",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/sheetedit.test.ts",
+    "title": "Capability evidence: sheetedit.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "c67c1b74c46ed3ceb5db7d744ffac0aa5305751cdbae8c1f110cc53bf93e1f31",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/xlsxin.test.ts",
+    "title": "Capability evidence: xlsxin.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "391fbbb281b0472510c681493e02a1e5bdf305e44a7114356ae5d168ecbd0383",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/files.test.ts",
+    "title": "Capability evidence: files.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "9e0deebfb12dc79abb8e8e84f22e025f0f6561c346b2c61bdff54331a864fb3b",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/state/slices/mine.test.ts",
+    "title": "Capability evidence: mine.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "464e72816f25af25bdd250ce7b87de4914a4bffa09b6694afc2526f91b4537bf",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/family.test.ts",
+    "title": "Capability evidence: family.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "168cfd97ff37a1b4baf3f7bf3d660598ba0742470fadbaf5f670e67b57399bc0",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/familyshare.test.ts",
+    "title": "Capability evidence: familyshare.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "35fdb77afdf30cea432bb55b957f3007e4c6a9b0e1749c606bb8291b12cb9b8c",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/familyinvites.test.ts",
+    "title": "Capability evidence: familyinvites.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "dd4b7777b7ca1889595bf5e3ee0ffd24631937629b7abb56958c50daa4feabd4",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/athletics-career.test.ts",
+    "title": "Capability evidence: athletics-career.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "106d91384a4c1e9651e32e50929862ed128872d61ee26ae6b86921616bf463ee",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/gateway.test.ts",
+    "title": "Capability evidence: gateway.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "1f706e1363e5320abe8499802126a4bd86b0f807c4df9835c44b052f72d719d6",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/integration/mock-campus.test.ts",
+    "title": "Capability evidence: mock-campus.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "c47bade440240f9d3b709b8ab6a7fa75c03e3d16a9534261461f3c45cb4c7d44",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/institutional/IntegrationDashboard.test.tsx",
+    "title": "Capability evidence: IntegrationDashboard.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "78240cfc2f6d2a3e1f3cdee72cb3648414c86dce2d485a8daa75a100ab0f3242",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/degree.test.ts",
+    "title": "Capability evidence: degree.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "2e5863005a0013279b94b89d9b1bbb6a10fad1f4ddddd3112c410ce87cd7c90a",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/GraduationSimulator.test.tsx",
+    "title": "Capability evidence: GraduationSimulator.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "8d96d2ec9273cf3e4f4da0a91b0d66485badfd5f7a6484081524ec7fd00ed5ea",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/registrar.calendar.test.ts",
+    "title": "Capability evidence: registrar.calendar.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "8c10f6c2258ff42337ac25fc91051a0de5c04e14238a2d81803801fdb90bfcbd",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/registrar.test.ts",
+    "title": "Capability evidence: registrar.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "e444ad3cbb0d576212504409ca6ffe52f3d58450b58da659a7288b9a92d96da6",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/money.test.ts",
+    "title": "Capability evidence: money.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "cbcb44b8dc6e3a4b5fbe700f9e24eb5b20f93b41eb1f51076d9da8e9b9376768",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/cost.test.ts",
+    "title": "Capability evidence: cost.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "9ef616e8e3d7eebafdc8ed658de9ebea840c27466755b4a03caac37dc7ab80c9",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/cost-plan.test.ts",
+    "title": "Capability evidence: cost-plan.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "58ab2bf1d5f96c07b2ec3cb65d1641987d36b62ebc0563634278f76ad2dbf8bf",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/meals.test.ts",
+    "title": "Capability evidence: meals.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "dc65e90f963ee79a21bd8b360975e2fbdc872952ca8c7905c27f2e3094962de6",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/housing.test.ts",
+    "title": "Capability evidence: housing.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "e5aed5a4783b4d9f624922070e57f83b66b746b145d0d95ffc298bd7e6e4cd03",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/housing.test.ts",
+    "title": "Capability evidence: housing.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b6117c16f1b9cfd213d9dd529ed498f13189a628fa1438f630662ae02d782a5c",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/maps.test.ts",
+    "title": "Capability evidence: maps.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "664177d7b67d24b042d57e4acbbcc07552dfe81cc8853819cda588c039d1e273",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/arrive.test.ts",
+    "title": "Capability evidence: arrive.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "9dc5b167ad7bc7b00ee420cbabde8002021702c52b503dc45084517b1373913c",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/mapsbuildings.test.ts",
+    "title": "Capability evidence: mapsbuildings.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "2ab0e24b1b149708375760d2abc46775837053e85edc19b1dbdf670a0e2b5e20",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/registration.test.ts",
+    "title": "Capability evidence: registration.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "c7a1d4c273adb48744479bfc1296b2bc5d5ae2bdb4cad9684428fbaf4fa5c503",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/registration-actions.test.ts",
+    "title": "Capability evidence: registration-actions.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "ae38b9e6cc7616f0b8299156b76bb5108edcb77d0e31f763dd2a9e8b218afcbc",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/registration.test.ts",
+    "title": "Capability evidence: registration.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "19f7ed073f3d223dd04d5f544eb21d23e56b4c3eec37d166b18c5677652e0124",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/server/institution/clubs.test.ts",
+    "title": "Capability evidence: clubs.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "e32c3998449f0d666f276714b5c8bffc55e433ac5c20d2281fcf80ecc38cafda",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/activities.test.ts",
+    "title": "Capability evidence: activities.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "4529ac015cf8cbec244c2dac76b4845a6f89108f3b21d9f1e947f5a5c4246f2a",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/letters.test.ts",
+    "title": "Capability evidence: letters.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "68c74c4f9619c1c418f26fc20915d1c1468506ff3e4d83cbfb7387aea10fd4cd",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/People.tsx",
+    "title": "Capability evidence: People.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "a43aa33c5c8c03a2e7d9090e2be8586552be6e778130b219ed84e58d1c6c6c7b",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/pathway.test.ts",
+    "title": "Capability evidence: pathway.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "a8c516a02b9a05d9ea429af2306ea52b1b07a0722300fb711e800dfec0510005",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/pathway.test.tsx",
+    "title": "Capability evidence: pathway.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b5236bfa53db106159c7733f7cde3e6ffdcfa8ac4dce943c9148bc46573f1d3e",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/career.test.ts",
+    "title": "Capability evidence: career.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "fe5048d719f55e2fe395c0c70577002847d960635627b90f531be69161d30935",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/career-evidence.test.ts",
+    "title": "Capability evidence: career-evidence.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "e1a1ce5a234370e723a8b014356fde47cab7beae73dae5bfcc54501c518291d3",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/career.test.tsx",
+    "title": "Capability evidence: career.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "d4294f6eabb8618cb8b152e3fccbcfcb65b0688dfc7f1e5a7e23f588c70d0c89",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/apply.test.ts",
+    "title": "Capability evidence: apply.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "11b20752aa581f66f6fbc27e9f688043917452dda32e05859d3705cc5454c39c",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/components/applyingquiet.test.tsx",
+    "title": "Capability evidence: applyingquiet.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "4c0abf1577c8e2d885d7a0b19eb6ca9ae15a3694d9be1b77136063d0f2f66cfb",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/call.test.ts",
+    "title": "Capability evidence: call.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b36186146c9f10bee4b545ec4e9b69a6d8c1a96f1c0e2980d9d795913b00a567",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/call/consent.ui.test.tsx",
+    "title": "Capability evidence: consent.ui.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "74557dde2182f1dc7ebfc0a4d918ac869b7b38c081831c1ce95f682f9866ba31",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/screens/call/leaving.test.tsx",
+    "title": "Capability evidence: leaving.test.tsx",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "b38d5ef2dea83abbcf0ce0c5f476adaf0657cc12239fe50e96bd31710b7f162f",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/groupwork.test.ts",
+    "title": "Capability evidence: groupwork.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "ea3102a63e133ceaba2cf931c93408f711408ebea56b34b82680fa87154b8f86",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/groupwork.ts",
+    "title": "Capability evidence: groupwork.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "55ed820a75a11b61f7c493bc89ff800eab6a238ccf5c44cba0da20992796a9a3",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/mail.test.ts",
+    "title": "Capability evidence: mail.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "be0f61aad0d751c3f61efd3bc060ed0bbf05cc3509d134808f289cc608138794",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/state/slices/mailbox.test.ts",
+    "title": "Capability evidence: mailbox.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "20c2493f166afea6cb54ad64b7a649691445fc6a1bf94f472c663c854588f3ed",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/lib/classmates.test.ts",
+    "title": "Capability evidence: classmates.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "4d49891a3e1e1d3c10056e4ece4c98e8630293b5031009f338024a7da271fce5",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/community/connect.test.ts",
+    "title": "Capability evidence: connect.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "a8557e7f730bbe701cafe140b2ccc4674fa20a2cd0bfb4ee2951a35f1980a61e",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  },
+  {
+    "ref": "repo:app/src/community/integrations.test.ts",
+    "title": "Capability evidence: integrations.test.ts",
+    "status": "verified",
+    "checkedAt": "2026-09-30T00:00:00.000Z",
+    "sha256": "3677e1c97d17feb9042f1277414bf8b97752a6f4ca99265bcd632e6c77c7e701",
+    "note": "Focused repository evidence cited by the canonical capability registry."
+  }
+]

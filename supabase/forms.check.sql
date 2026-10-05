@@ -112,6 +112,27 @@ begin
   perform pg_temp.counted('and the answer key is theirs to read', n, 1);
 end $$;
 
+-- ── The view answers to the caller, not to its owner ──────────────────────
+--
+-- `20260929000000_published_forms_invoker.sql`. The view used to run with its
+-- owner's rights so its WHERE could see past `forms`' owner-only policies,
+-- which made that WHERE the whole gate and left row-level security with
+-- nothing to say (Supabase lint 0010, level ERROR). It is now
+-- `security_invoker` over `form_publications`, and the policy on that table
+-- is the gate every check below goes through.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_class
+     where oid = 'public.published_forms'::regclass
+       and 'security_invoker=true' = any(coalesce(reloptions, '{}'))
+  ) then
+    raise exception 'FAILED: published_forms runs with its owner''s rights, not the caller''s';
+  end if;
+  raise notice 'ok  published_forms runs as whoever is asking';
+end $$;
+
 -- ── A respondent, holding only the link ───────────────────────────────────
 
 do $$
@@ -148,6 +169,40 @@ begin
     raise exception 'FAILED: the author''s account id is readable through the published view';
   exception when undefined_column then
     raise notice 'ok  the author''s account id is not a column a respondent can ask for';
+  end;
+
+  -- And the table under the view, which a respondent can now name directly.
+  -- It must carry neither column at all — that is why it exists rather than a
+  -- policy on `forms` — and it must not be writable, or a stranger could
+  -- publish, rewrite or withdraw somebody else's form through it.
+  begin
+    execute 'select marking from public.form_publications limit 1' into got;
+    raise exception 'FAILED: the answer key is in form_publications';
+  exception when undefined_column then
+    raise notice 'ok  form_publications has no answer key to read';
+  end;
+
+  begin
+    execute 'select owner from public.form_publications limit 1' into got;
+    raise exception 'FAILED: the author''s account id is in form_publications';
+  exception when undefined_column then
+    raise notice 'ok  form_publications has no account id to read';
+  end;
+
+  begin
+    update public.form_publications set title = 'defaced';
+    get diagnostics n = row_count;
+    raise exception 'FAILED: a stranger rewrote a published form (% row(s))', n;
+  exception when insufficient_privilege then
+    raise notice 'ok  a stranger cannot rewrite a published form';
+  end;
+
+  begin
+    delete from public.published_forms;
+    get diagnostics n = row_count;
+    raise exception 'FAILED: a stranger withdrew published forms through the view (% row(s))', n;
+  exception when insufficient_privilege then
+    raise notice 'ok  a stranger cannot delete through the published view';
   end;
 end $$;
 
@@ -189,6 +244,13 @@ declare n bigint;
 begin
   perform pg_temp.become('ffffffff-0000-0000-0000-000000000002');
 
+  -- The control for the row below, and the half a security-invoker view can
+  -- get wrong that a definer view could not: a signed-in respondent answers
+  -- as `authenticated`, not `anon`, and the policy has to name both.
+  select count(*) into n from public.published_forms
+   where id = '11111111-1111-1111-1111-111111111111';
+  perform pg_temp.counted('a signed-in stranger with the link can read the questions', n, 1);
+
   select count(*) into n from public.forms;
   perform pg_temp.counted('a stranger cannot read your form row', n, 0);
 
@@ -206,6 +268,27 @@ begin
   delete from public.form_responses;
   get diagnostics n = row_count;
   perform pg_temp.counted('a stranger cannot destroy your responses', n, 0);
+end $$;
+
+-- ── An edit reaches the respondent ────────────────────────────────────────
+--
+-- The published half is a copy kept by a trigger, and a copy that stops being
+-- kept is a respondent answering last week's questions.
+
+do $$
+declare got text;
+begin
+  perform pg_temp.become('eeeeeeee-0000-0000-0000-000000000001');
+  update public.forms set title = 'Study group interest (v2)'
+   where id = '11111111-1111-1111-1111-111111111111';
+
+  perform pg_temp.become_anon();
+  select title into got from public.published_forms
+   where id = '11111111-1111-1111-1111-111111111111';
+  if got is distinct from 'Study group interest (v2)' then
+    raise exception 'FAILED: an edit to the form did not reach the published copy (got %)', got;
+  end if;
+  raise notice 'ok  an edit to the form reaches the published copy';
 end $$;
 
 -- ── Closed means closed, in the database ──────────────────────────────────
@@ -340,10 +423,20 @@ begin
   select count(*) into n from public.form_responses where form_id = '22222222-2222-2222-2222-222222222222';
   perform pg_temp.counted('the capped form has its answers', n, 2);
 
+  select count(*) into n from public.form_publications where id = '22222222-2222-2222-2222-222222222222';
+  perform pg_temp.counted('and a published copy, before it is withdrawn', n, 1);
+
   delete from public.forms where id = '22222222-2222-2222-2222-222222222222';
 
   select count(*) into n from public.form_responses where form_id = '22222222-2222-2222-2222-222222222222';
   perform pg_temp.counted('withdrawing a form takes its answers with it', n, 0);
+
+  -- And its published copy. Counted as the owner of the database rather than
+  -- as a respondent, because a respondent reads through the policy and would
+  -- see nothing either way; the row itself has to be gone.
+  reset role;
+  select count(*) into n from public.form_publications where id = '22222222-2222-2222-2222-222222222222';
+  perform pg_temp.counted('withdrawing a form takes its published copy with it', n, 0);
 end $$;
 
 -- ── And deleting the account takes the forms ──────────────────────────────

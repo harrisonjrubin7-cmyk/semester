@@ -51,7 +51,7 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 'c', does: 'Courses', screen: 'courses' },
   { key: 's', does: 'Study', screen: 'study' },
   { key: 'k', does: 'The calendar', screen: 'calendar' },
-  { key: 'm', does: 'Mine — your tasks, notes and files', screen: 'mine' },
+  { key: 'm', does: 'Mine — your actions, notes and files', screen: 'mine' },
   /*
    * The assistant, not the Ask screen.
    *
@@ -167,6 +167,20 @@ export function shortcutFor(
   /** The document to ask about open dialogs. Passed only by the test. */
   doc?: Document,
 ): Shortcut | null {
+  /*
+   * ⌘K / Ctrl+K — the one modified key, and why it is the exception.
+   *
+   * The rule above this function is that a modified key is the browser's.
+   * ⌘K is the command-palette key of nearly every web app a student already
+   * uses, and a page that answers it is not taking something they expect the
+   * browser to do there. It opens the same search every other route opens,
+   * so it adds a way in and no second meaning. Not while typing and not under
+   * a dialog, for the same reasons as every other binding.
+   */
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+    if (underModal(doc) || typing(e.target ?? null)) return null;
+    return PALETTE;
+  }
   if (e.metaKey || e.ctrlKey || e.altKey) return null;
   /*
    * Escape included, and that is the point rather than an oversight. A dialog
@@ -185,9 +199,13 @@ export function shortcutFor(
   return SHORTCUTS.find((s) => s.key === key) ?? null;
 }
 
+/** ⌘K / Ctrl+K, drawn on the help sheet beside `/`. */
+export const PALETTE: Shortcut = { key: 'mod+k', does: 'Search and quick actions', action: 'search' };
+
 /** How a key is drawn on the help sheet. */
 export function keyLabel(key: string): string {
   if (key === 'escape') return 'Esc';
   if (key === ' ') return 'Space';
+  if (key === 'mod+k') return '⌘K / Ctrl+K';
   return key.length === 1 ? key.toUpperCase() : key;
 }

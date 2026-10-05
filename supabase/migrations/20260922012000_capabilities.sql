@@ -199,10 +199,13 @@ grant select on table public.app_roles         to authenticated;
 grant select on table public.app_capabilities  to authenticated;
 grant select on table public.role_capabilities to authenticated;
 
+drop policy if exists "the role vocabulary is public to signed-in accounts" on public.app_roles;
 create policy "the role vocabulary is public to signed-in accounts" on public.app_roles
   for select to authenticated using (true);
+drop policy if exists "the capability vocabulary is public to signed-in accounts" on public.app_capabilities;
 create policy "the capability vocabulary is public to signed-in accounts" on public.app_capabilities
   for select to authenticated using (true);
+drop policy if exists "the matrix is public to signed-in accounts" on public.role_capabilities;
 create policy "the matrix is public to signed-in accounts" on public.role_capabilities
   for select to authenticated using (true);
 
@@ -280,11 +283,13 @@ comment on function private.has_capability(text, text, text) is
 -- reviewer-only role is now expressible without inventing a second boolean.
 
 drop policy if exists "administrators may read reports" on public.reports;
+drop policy if exists "whoever may read the queue reads reports" on public.reports;
 create policy "whoever may read the queue reads reports" on public.reports
   for select
   using (private.has_capability('report:read'));
 
 drop policy if exists "administrators may move a report along" on public.reports;
+drop policy if exists "whoever may act on a report moves it along" on public.reports;
 create policy "whoever may act on a report moves it along" on public.reports
   for update
   using (private.has_capability('moderation:action'))

@@ -1,5 +1,6 @@
 import { realMonthDay } from './date';
 import { ask } from './claude';
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { flatten } from './cite';
 import type { Kind } from './classify';
 import { hashOf, type Intake } from './intake';
@@ -210,6 +211,18 @@ export async function harvest(
     signal,
     think: true,
     maxTokens: 6000,
+    ...harvestPrompt(item, kind, context, style),
+  });
+
+  const start = reply.indexOf('{');
+  const end = reply.lastIndexOf('}');
+  if (start === -1 || end === -1) return { pieces: [], says: '', dropped: [] };
+  return harvested(reply.slice(start, end + 1), item, base);
+}
+
+/** The prompt `harvest` sends, pure, so `ai/injection.test.ts` can hold its shape. */
+export function harvestPrompt(item: Intake, kind: Kind, context: string, style: string) {
+  return {
     system:
       'You read course material a university student has added, and you turn it into the shapes ' +
       'their study app already holds. You do not invent content types and you do not invent ' +
@@ -225,22 +238,24 @@ export async function harvest(
       'leave the field out. A quote that is not there is worse than no quote, because the app ' +
       'shows it as the source\'s own words.\n' +
       '- Where the material gives a page or slide number, carry it. Never guess one.\n' +
-      '- Plain, direct, second person where you address the student. No exclamation marks.',
+      '- Plain, direct, second person where you address the student. No exclamation marks.\n\n' +
+      DATA_RULE,
     messages: [
       {
-        role: 'user',
-        content: `The course as it stands:\n${context}\n\nThe material — "${item.name}":\n\n${item.text.slice(0, 140_000)}`,
+        role: 'user' as const,
+        content:
+          `The course as it stands:\n${fence('course', context)}\n\n` +
+          `The material is called:\n${fence('file name', item.name)}\n\n` +
+          `The material:\n\n${fence('material', item.text.slice(0, 140_000))}`,
       },
     ],
-  });
+  };
+}
 
-  const start = reply.indexOf('{');
-  const end = reply.lastIndexOf('}');
-  if (start === -1 || end === -1) return { pieces: [], says: '', dropped: [] };
-
+function harvested(json: string, item: Intake, base: Omit<Where, 'page'>): Harvest {
   let parsed: Reply;
   try {
-    parsed = JSON.parse(reply.slice(start, end + 1)) as Reply;
+    parsed = JSON.parse(json) as Reply;
   } catch {
     return { pieces: [], says: '', dropped: [] };
   }
@@ -268,8 +283,23 @@ export function assemble(parsed: Reply, item: Intake, base: Omit<Where, 'page'>)
     return undefined;
   };
 
-  /** A page number survives only if the material really has that page. */
-  const pageOf = (n: unknown): number | undefined => {
+  /**
+   * A page number survives only if the material really has that page.
+   *
+   * For a PDF that is not enough. Its page numbers are not in the text the
+   * model reads (see `Extracted.pageUnit`), so any number it gives is a guess
+   * that merely lands on a page that exists — "page 4" of a twelve-page
+   * handout always checks out. A PDF page is therefore taken from the checked
+   * quote: the one page whose text contains it. No quote, or a quote that
+   * runs across a page break, and there is no page, whatever was claimed.
+   */
+  const pageOf = (n: unknown, quote?: string): number | undefined => {
+    if (item.pageUnit === 'page') {
+      if (!quote) return undefined;
+      const want = flatten(quote);
+      const on = (item.pages ?? []).filter((p) => flatten(p.text).includes(want));
+      return on.length === 1 ? on[0].page : undefined;
+    }
     if (typeof n !== 'number' || !Number.isInteger(n)) return undefined;
     return item.pages?.some((p) => p.page === n) ? n : undefined;
   };
@@ -291,14 +321,13 @@ export function assemble(parsed: Reply, item: Intake, base: Omit<Where, 'page'>)
   for (const c of parsed.cards ?? []) {
     if (typeof c?.q !== 'string' || typeof c?.a !== 'string' || !c.q.trim() || !c.a.trim()) continue;
     const card = { q: c.q.trim(), a: c.a.trim() };
+    const quote = checkQuote(c.quote, `a card about "${card.q.slice(0, 40)}"`);
     pieces.push({
       what: 'card',
       unit: unitName,
       card,
-      ...(checkQuote(c.quote, `a card about "${card.q.slice(0, 40)}"`)
-        ? { quote: checkQuote(c.quote, '') }
-        : {}),
-      where: where(pageOf(c.page)),
+      ...(quote ? { quote } : {}),
+      where: where(pageOf(c.page, quote)),
       // Hashed on the substance, not on the wording of the question, so the
       // same card arriving twice from two files is one card. See `merge.ts`.
       hash: hashOf(flatten(card.a)),

@@ -39,8 +39,47 @@ import {
 } from '../lib/exam';
 import { UseSources, appendTo } from '../components/UseSources';
 import { NeedsKey } from '../components/NeedsKey';
+import {
+  ATTEMPT_KEY,
+  KEPT_LINE,
+  NOT_KEPT_LINE,
+  begun,
+  finished,
+  offerLine,
+  putBackLine,
+  readAttempt,
+  receiptLine,
+  secondsLeft,
+  withAnswers,
+  type Attempt,
+} from '../lib/examattempt';
 
 type Stage = 'setup' | 'sitting' | 'marking';
+
+/** The kept paper, if there is one worth offering back. See `lib/examattempt.ts`. */
+function loadAttempt(now: number): Attempt | null {
+  try {
+    return readAttempt(localStorage.getItem(ATTEMPT_KEY), now);
+  } catch {
+    // A private window with storage off is a device with no kept paper.
+    return null;
+  }
+}
+
+/**
+ * Whether the write took. Storage full or off leaves the paper on the screen
+ * unaffected, but the line under it must then stop saying the paper is kept —
+ * see `NOT_KEPT_LINE`.
+ */
+function storeAttempt(a: Attempt | null): boolean {
+  try {
+    if (a) localStorage.setItem(ATTEMPT_KEY, JSON.stringify(a));
+    else localStorage.removeItem(ATTEMPT_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * One line of the "before you finish" panel: a count, then a number per
@@ -142,12 +181,44 @@ export function Exam() {
   const open = useMemo(() => outstanding(questions, answers), [questions, answers]);
   const [kept, setKept] = useState<'no' | 'result' | 'cards' | 'both'>('no');
 
+  // The paper as it is kept on the device — see `lib/examattempt.ts`. A ref
+  // rather than state, because it changes on every keystroke and nothing on
+  // the screen is drawn from it; what is drawn (the offer, the put-back line,
+  // the receipt) has its own state below.
+  const attempt = useRef<Attempt | null>(null);
+  // A paper found on the device when the screen opened, offered on Setup — and
+  // only on the guide it was built from: a paper for ECON put back while PSCI
+  // is open would be marked, filed and printed under the wrong course. It
+  // waits, for its week, until that guide is open again. Its line is worded
+  // once, here, rather than against a clock read during render.
+  const [offer, setOffer] = useState<{ paper: Attempt; line: string } | null>(() => {
+    const now = Date.now();
+    const paper = loadAttempt(now);
+    return paper && paper.guideId === state.guideId ? { paper, line: offerLine(paper, now) } : null;
+  });
+  // Said once, under the clock, when a paper has been put back.
+  const [said, setSaid] = useState('');
+  const [receipt, setReceipt] = useState('');
+  // Whether the last write to the device took. False turns the "kept" line
+  // into its opposite rather than leaving a promise the device is not keeping.
+  const [kept_, setKeptOk] = useState(true);
+
   // Dropped as soon as it has been read, so coming back later opens on your
   // own last choice rather than on what the quiz asked for an hour ago.
   useEffect(() => {
     if (preset) dispatch({ type: 'clearPaperPreset' });
   }, [preset, dispatch]);
   const marks = useMemo(() => result(questions, answers), [questions, answers]);
+
+  // Every answer is written through as it is given. Storage is the same
+  // localStorage the drafts use, and an answer is a few bytes: no settling
+  // delay, because a paper closed between the keystroke and the write is
+  // exactly the case this exists for.
+  useEffect(() => {
+    if (stage === 'setup' || !attempt.current) return;
+    attempt.current = withAnswers(attempt.current, answers, Date.now());
+    setKeptOk(storeAttempt(attempt.current));
+  }, [answers, stage]);
 
   // The clock. Stops at zero rather than going negative, and does not end the
   // paper on its own — a practice paper that snatches itself away is a paper
@@ -159,6 +230,15 @@ export function Exam() {
   }, [stage]);
 
   const begin = (list: Question[], named: string, drawnWith: number | null = null) => {
+    const now = Date.now();
+    attempt.current = begun(
+      { title: named, course: course?.code ?? '', guideId: state.guideId, seed: drawnWith, minutes, questions: list },
+      now,
+    );
+    storeAttempt(attempt.current);
+    setOffer(null);
+    setSaid('');
+    setReceipt('');
     setQuestions(list);
     setTitle(named);
     setSeed(drawnWith);
@@ -167,6 +247,45 @@ export function Exam() {
     setLeft(minutes * 60);
     setStage('sitting');
     window.scrollTo(0, 0);
+  };
+
+  /** Put the kept paper back on the screen, sitting or marked as it was left. */
+  const resume = (a: Attempt) => {
+    const now = Date.now();
+    attempt.current = a;
+    setOffer(null);
+    setSaid(putBackLine(a, now));
+    setReceipt(a.finishedAt === undefined ? '' : receiptLine(a, now));
+    setQuestions(a.questions);
+    setTitle(a.title);
+    setSeed(a.seed);
+    setMinutes(a.minutes);
+    setKept('no');
+    setAnswers(a.answers);
+    setLeft(secondsLeft(a, now));
+    setStage(a.finishedAt === undefined ? 'sitting' : 'marking');
+    window.scrollTo(0, 0);
+  };
+
+  const finish = () => {
+    const now = Date.now();
+    if (attempt.current) {
+      attempt.current = finished(withAnswers(attempt.current, answers, now), now);
+      storeAttempt(attempt.current);
+      setReceipt(receiptLine(attempt.current, now));
+    }
+    setSaid('');
+    setStage('marking');
+    window.scrollTo(0, 0);
+  };
+
+  /** Finished with the paper: forget it, so it is not offered back. */
+  const forget = () => {
+    attempt.current = null;
+    storeAttempt(null);
+    setOffer(null);
+    setSaid('');
+    setReceipt('');
   };
 
   const fromCards = () => {
@@ -245,6 +364,30 @@ export function Exam() {
           A paper with a shape, a total and a clock — not another round of cards. The marks and
           the timing are worked out here; only the questions come from anywhere else.
         </div>
+
+        {offer && (
+          /* The paper this device was holding when the screen was last left.
+             Offered rather than put straight back: somebody who came here to
+             sit a fresh paper should not find last week's half-finished one
+             already on the clock. */
+          <Blueprint plain style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))' }}>
+            <div className="kicker">Pick up where you left off</div>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))', lineHeight: 'var(--leading-tight)' }}>
+              {offer.paper.title}
+            </div>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              {offer.line}
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+              <button type="button" className="btn btn-primary" onClick={() => resume(offer.paper)} style={{ flex: 1, height: 42 }}>
+                {offer.paper.finishedAt === undefined ? 'Carry on' : 'Open the marking'}
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={forget} style={{ flex: 1, height: 42 }}>
+                Forget it
+              </button>
+            </div>
+          </Blueprint>
+        )}
 
         <Segmented
           options={[
@@ -455,6 +598,16 @@ export function Exam() {
         {!marking && left === 0 && (
           <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Time is up. Nothing has been taken away from you — finish when you want to.
+          </div>
+        )}
+        {said && (
+          <div role="status" style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            {said}
+          </div>
+        )}
+        {marking && receipt && (
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            {receipt}
           </div>
         )}
       </Blueprint>
@@ -803,6 +956,7 @@ export function Exam() {
             type="button"
             className="btn btn-block"
             onClick={() => {
+              forget();
               setStage('setup');
               setQuestions([]);
               setAnswers({});
@@ -848,10 +1002,7 @@ export function Exam() {
           )}
 
           <ActionButton
-            onClick={() => {
-            setStage('marking');
-            window.scrollTo(0, 0);
-            }}
+            onClick={finish}
             tone="primary"
             style={{ marginTop: 'calc(22px * var(--density, 1))' }}
           >
@@ -861,6 +1012,9 @@ export function Exam() {
             {total(questions)} marks in {questions.length} questions. Multiple choice is marked
             here; the written ones you mark yourself against the key, which is the part that
             teaches.
+          </div>
+          <div role={kept_ ? undefined : 'status'} style={{ fontSize: 'var(--type-xs-plus)', color: kept_ ? 'var(--app-dim)' : 'var(--app-fg)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            {kept_ ? KEPT_LINE : NOT_KEPT_LINE}
           </div>
         </>
       )}

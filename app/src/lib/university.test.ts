@@ -201,3 +201,28 @@ describe('an action off the wire', () => {
     expect(() => validateActionFields({ ...input, fields: { smuggled: 'x' } }, action)).toThrow(/unexpected/i);
   });
 });
+
+describe('reading a gateway refusal', () => {
+  it('reads the envelope, and keeps the code, the id and whether to try again on the cause', async () => {
+    const { gatewayError } = await import('./university');
+    const error = gatewayError(
+      { error: { code: 'review_expired', message: 'Review expired.', correlation_id: 'tap-0000000001', retryable: false, user_action: { label: 'Review again', kind: 'open_screen' } }, message: 'Review expired.' },
+      'fallback-000001',
+    );
+    expect(error.message).toBe('Review expired.');
+    expect(error.cause).toEqual({ code: 'review_expired', correlationId: 'tap-0000000001', retryable: false, userAction: { label: 'Review again', kind: 'open_screen' } });
+  });
+
+  it('still reads the two older shapes, and falls back to the id it sent', async () => {
+    const { gatewayError } = await import('./university');
+    expect(gatewayError({ message: 'Older message.' }, 'sent-00000001')).toMatchObject({ message: 'Older message.', cause: { code: 'error', correlationId: 'sent-00000001', retryable: false } });
+    expect(gatewayError({ error: 'Oldest string.' }, 'sent-00000001').message).toBe('Oldest string.');
+    expect(gatewayError('not json at all', 'sent-00000001').message).toBe('The connection could not complete this request.');
+    expect(gatewayError(null, 'sent-00000001').message).toBe('The connection could not complete this request.');
+  });
+
+  it('does not treat a retryable flag that is not exactly true as permission to retry', async () => {
+    const { gatewayError } = await import('./university');
+    expect((gatewayError({ error: { code: 'x', message: 'm', retryable: 'true' } }, 'sent-00000001').cause as { retryable: boolean }).retryable).toBe(false);
+  });
+});

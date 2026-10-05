@@ -1,4 +1,5 @@
-import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { OperatingLauncher } from '../components/OperatingLauncher';
+import { Fragment, lazy, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
@@ -8,7 +9,15 @@ import { ApplyingSoon } from '../components/Applying';
 import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { Waiting } from '../components/Waiting';
 import { ClosingWindows } from '../components/Windows';
+import { WhatChanged } from '../components/WhatChanged';
+import { DayPlanNote } from '../components/DayPlanNote';
+import { SchoolRecords } from '../components/SchoolRecords';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { countSources, itemSources, todayEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
+import { DEADLINE_HORIZON_DAYS } from '../lib/today-actions';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
@@ -31,7 +40,7 @@ import {
   upcomingItems,
   type FeedFilter,
 } from '../lib/select';
-import { MONTHS, clock, minutesNow } from '../lib/date';
+import { clock, minutesNow, monthDay, shownTime } from '../lib/date';
 import { dueByDay, weekDates, weekLabel, weekLine } from '../lib/weekpage';
 import { hasTime, readDue } from '../lib/duetime';
 import { clockOf } from '../lib/atrisk';
@@ -49,6 +58,7 @@ import { Walks } from '../components/Walks';
 import { BehindOffer } from '../components/BehindOffer';
 import { StartList, StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
+import { aheadLine, confirmLine, named, welcomeBack } from '../lib/welcomeback';
 import { GapOffer } from './GapOffer';
 import { HomeWalk } from '../components/HomeWalk';
 import { tally } from '../lib/review';
@@ -60,6 +70,87 @@ import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { dateToIso } from '../lib/date';
 import { goCal } from '../lib/opencal';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { JourneyCards } from '../components/JourneyCards';
+import { journeysFor, recommendJourney } from '../lib/journeys';
+import { offered } from '../lib/nav';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { useTaskActions } from '../composition/taskactions';
+import { CommandCenter, FirstGoal } from '../components/unity/CommandCenter';
+import { TodayDecisionSurface } from '../components/TodayDecisionSurface';
+import { DeadlineHorizon } from '../components/DeadlineHorizon';
+import { AssignmentStates } from '../components/AssignmentStates';
+import { OperatingRhythm } from '../components/OperatingRhythm';
+import { DailyRhythm } from '../components/DailyRhythm';
+import { WeeklyReset } from '../components/WeeklyReset';
+import { WeeklyReflection } from '../components/WeeklyReflection';
+import { GoalPlan } from '../components/GoalPlan';
+import { fromItems } from '../lib/deadline-feed';
+
+const FlightPlanHome = lazy(() =>
+  import('../components/institutional/FlightPlanHome').then((module) => ({
+    default: module.FlightPlanHome,
+  })),
+);
+
+function FlightPlanHomeSlot() {
+  const { dispatch } = useStore();
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <div className="today-synthetic-flight-plan">
+      <Suspense fallback={null}>
+        <FlightPlanHome enabled onNavigate={(screen) => dispatch({ type: 'go', screen })} />
+      </Suspense>
+    </div>
+  );
+}
+
+function RecommendedJourney() {
+  const { state, dispatch, catalog, school } = useStore();
+  const now = useNow();
+  if (EXPERIENCE_FLAGS.journeyNavigation === 'off') return null;
+  const nowMs = now.getTime();
+  const inAWeek = nowMs + 7 * 86_400_000;
+  const confirmedDueSoon = upcomingItems(catalog, now).filter(
+    (item) => item.daysAway <= 3 && item.checked?.confirmed,
+  ).length;
+  const reviewDue = Object.values(state.reviews).filter((review) => review.due <= nowMs).length;
+  const collaborationDue = state.tasks.filter(
+    (task) =>
+      !task.done &&
+      /\b(group|team|meet|partner|classmate)\b/i.test(`${task.title} ${task.note}`),
+  ).length;
+  const careerDue = state.applications.filter((application) => {
+    const due = application.nextBy || application.due;
+    if (!due) return false;
+    const at = new Date(`${due}T23:59:59`).getTime();
+    return at >= nowMs && at <= inAWeek;
+  }).length;
+  const ranked = recommendJourney({
+    confirmedDueSoon,
+    setupIncomplete: catalog.empty,
+    reviewDue,
+    collaborationDue,
+    careerDue,
+  });
+  const available = journeysFor(offered(school.capabilities, state.role));
+  const recommendation = ranked.find((candidate) =>
+    available.some((journey) => journey.id === candidate.id && journey.screens.length > 0),
+  );
+  if (!recommendation) return null;
+  const journey = available.find((candidate) => candidate.id === recommendation.id)!;
+
+  return (
+    <section className="today-journey today-secondary-journey" aria-label="Also useful">
+      <div className="kicker">Also useful</div>
+      <JourneyCards
+        journeys={[journey]}
+        reasons={{ [journey.id]: recommendation.reason }}
+        onOpen={(screen) => dispatch({ type: 'go', screen })}
+      />
+    </section>
+  );
+}
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -70,6 +161,7 @@ function NextClassCard() {
 
   return (
     <Blueprint
+      className="today-next-class-legacy"
       style={{
         padding: 'var(--sp-7)',
         background: 'var(--app-hero)',
@@ -94,7 +186,7 @@ function NextClassCard() {
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
-          {next.block.time}
+          {shownTime(next.block.time, next.block.at)}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-lg)' }}>
@@ -131,6 +223,7 @@ function NextClassCard() {
  */
 function YourTasks() {
   const { state, dispatch, courseCode, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
@@ -181,7 +274,7 @@ function YourTasks() {
             <button
               type="button"
               className="bare"
-              onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+              onClick={() => taskActions.toggle(t.id)}
               aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
               // 20px was the icon's size, not a target. This is the most
               // tapped control in the app and it was less than half the
@@ -222,7 +315,7 @@ function YourTasks() {
                   ) : (
                     ''
                   )}
-                  {t.time}
+                  {shownTime(t.time)}
                 </div>
               )}
             </div>
@@ -331,6 +424,50 @@ function OverdueBanner() {
  * about what a week is. What differs is the presentation: there a page you
  * pin up, here rows you tap to open.
  */
+/** The same deadlines, grouped by how near they are, with each one's source. */
+function WeekHorizon() {
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
+  const deadlines = useMemo(
+    () => fromItems(upcomingItems(catalog, now), state.done, (id) => courseCode(id)),
+    [catalog, now, state.done, courseCode],
+  );
+  // Effort and saved blocks are not recorded for course items, so those
+  // fields are left out rather than guessed: a state is only ever as sure as
+  // what the student and the syllabus actually said.
+  const assignments = useMemo(
+    () =>
+      deadlines.map((d) => ({
+        id: d.id,
+        course: '',
+        title: d.title,
+        due: d.due,
+        label: d.label,
+        done: d.done,
+      })),
+    [deadlines],
+  );
+  const closed = { marginTop: 'var(--sp-5)' } as const;
+  return (
+    <>
+      <DeadlineHorizon deadlines={deadlines} now={now.getTime()} />
+      <details style={closed}>
+        <summary>Assignment states</summary>
+        <AssignmentStates assignments={assignments} now={now.getTime()} />
+      </details>
+      <details style={closed}>
+        <summary>Weekly reset · about five minutes, skip any time</summary>
+        <WeeklyReset now={now} />
+        <WeeklyReflection now={now} />
+      </details>
+      <details style={closed}>
+        <summary>Turn a goal into a plan</summary>
+        <GoalPlan now={now} />
+      </details>
+    </>
+  );
+}
+
 function ThisWeek() {
   const { state, dispatch, catalog, tint, courseCode } = useStore();
   const now = useNow();
@@ -347,7 +484,7 @@ function ThisWeek() {
   // Everything still ahead that the seven days do not reach, and the date it
   // is "after" — written out, because "after 14" is not a date.
   const last = weekDates(now)[6];
-  const lastDay = `${MONTHS[last.getMonth()]} ${last.getDate()}`;
+  const lastDay = monthDay(last);
   // The list, not just its length: the aside below offers to show these, and
   // "show them" means landing on the first of them rather than wherever the
   // calendar was left. `datedItems` sorts by date, so `[0]` is the first.
@@ -395,7 +532,7 @@ function ThisWeek() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{nextEvent.title}</div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
-                {nextEvent.time} · {nextEvent.where}
+                {shownTime(nextEvent.time)} · {nextEvent.where}
               </div>
             </div>
             <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -589,7 +726,7 @@ function ThisWeek() {
                       marginTop: 'var(--sp-1)',
                     }}
                   >
-                    {['Yours', t.courseId ? courseCode(t.courseId) : '', t.time.trim()]
+                    {['Yours', t.courseId ? courseCode(t.courseId) : '', shownTime(t.time.trim())]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
@@ -656,6 +793,7 @@ function TabHome() {
 
   return (
     <Page bottom={26}>
+      <OperatingLauncher />
       {/*
         Four tabs, not five. The fifth was Report, and it rendered the Reports
         screen inline — the same body, sharing the same `state.report` grain,
@@ -667,25 +805,45 @@ function TabHome() {
         "Week" only because a fifth tab made the switcher wrap to two lines on
         every Today view.
       */}
-      <Segmented
-        options={[
-          { id: 'today', label: 'Today' },
-          { id: 'hours', label: 'Hours' },
-          { id: 'week', label: 'This week' },
-          { id: 'done', label: 'Done' },
-        ]}
-        value={tab}
-        onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
-        style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
-      />
+      <div className="hides-in-focus">
+        <Segmented
+          options={[
+            { id: 'today', label: 'Today' },
+            { id: 'hours', label: 'Hours' },
+            { id: 'week', label: 'This week' },
+            { id: 'done', label: 'Done' },
+          ]}
+          value={tab}
+          onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
+          style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(16px * var(--density, 1))' }}
+        />
+      </div>
 
-      {tab === 'today' && <TodayFeed />}
+      {/* Keep briefing state when changing tabs, but put each tab's own
+          content first. Focus View still needs the briefing when it hides
+          the switcher and secondary content. */}
+      <div className="today-briefing" hidden={tab !== 'today' && state.workspaceMode !== 'focused'}>
+        <FirstGoal />
+        <TodayDecisionSurface />
+        <OperatingRhythm />
+      </div>
+      <div className="hides-in-focus">
+        {tab === 'week' && <ThisWeek />}
+        {tab === 'week' && <WeekHorizon />}
 
-      {tab === 'week' && <ThisWeek />}
+        {tab === 'hours' && <HoursToday />}
 
-      {tab === 'hours' && <HoursToday />}
+        {tab === 'done' && <DoneToday />}
 
-      {tab === 'done' && <DoneToday />}
+        <details key={tab} className="today-more">
+          <summary>More from Today</summary>
+          <CommandCenter />
+          <FlightPlanHomeSlot />
+          <RecommendedJourney />
+          {tab === 'today' && <TodayFeed />}
+          {tab === 'today' && <DailyPlanSlot />}
+        </details>
+      </div>
     </Page>
   );
 }
@@ -696,6 +854,9 @@ function Feed_next() {
     <>
       <NextClassCard />
       <OverdueBanner />
+      {/* Your own deadlines moving is about your work, so it sits with the overdue banner, ahead of anybody else's message. */}
+      <WhatChanged />
+      <DayPlanNote />
       {/*
        * After the overdue banner, deliberately. That one is about work of
        * yours that has already slipped; this is about somebody else waiting on
@@ -919,9 +1080,11 @@ function Feed_since() {
     [lastSeen, now, state.tickedAt, state.feeds, state.updates, state.sittings],
   );
 
-  if (list.length === 0) return null;
+  if (list.length === 0) return <WelcomeBack />;
 
   return (
+    <>
+    <WelcomeBack />
     <div
       style={{
         paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
@@ -936,6 +1099,101 @@ function Feed_since() {
         {sinceLine(list)}
       </div>
     </div>
+    </>
+  );
+}
+
+/**
+ * Back after a real break: what went by, what is ahead, one place to start.
+ *
+ * Drawn above the one-line change report rather than instead of it, because
+ * the two answer different questions — that line says what *arrived* while
+ * the app was closed, this says what *fell due*. Silent for any gap shorter
+ * than `AWAY_DAYS`, which is almost always. See `lib/welcomeback.ts`.
+ *
+ * Deadlines that went by are offered with a tick, not labelled missed: the
+ * app cannot see a paper handed in from somebody else's computer, so it asks.
+ */
+function WelcomeBack() {
+  const { state, catalog, lastSeen, dispatch } = useStore();
+  const now = useNow();
+  const w = useMemo(
+    () => welcomeBack(datedItems(catalog, now), state.done, lastSeen, now),
+    [catalog, now, state.done, lastSeen],
+  );
+  if (!w) return null;
+  const confirm = named(w.toConfirm);
+  return (
+    <section
+      aria-label="Welcome back"
+      style={{
+        paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
+        marginBottom: 'calc(14px * var(--density, 1))',
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-line)',
+        background: 'var(--app-panel)',
+      }}
+    >
+      <div className="kicker">Welcome back · {w.days} days away</div>
+      <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
+        Your courses, notes and plans are as you left them. {aheadLine(w)}
+      </div>
+      {confirm.shown.length > 0 && (
+        <>
+          <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)', ...secondLine() }}>
+            {confirmLine(w)}
+          </div>
+          <ul style={{ listStyle: 'none', margin: 'var(--sp-3) 0 0', padding: 0 }}>
+            {confirm.shown.map((it) => (
+              <li key={it.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                <button
+                  type="button"
+                  className="bare tappable"
+                  aria-label={`Handed in: ${it.title}`}
+                  onClick={() => dispatch({ type: 'toggleDone', id: it.id })}
+                  style={{ width: 34, flex: 'none', paddingBlock: 'var(--sp-3)' }}
+                >
+                  <TickBox on={false} />
+                </button>
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() => dispatch({ type: 'openItem', id: it.id })}
+                  style={{ flex: 1, minWidth: 0, display: 'flex', gap: 'var(--sp-3)', alignItems: 'center' }}
+                >
+                  <span style={{ flex: 'none' }}><CourseTag id={it.c} /></span>
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{it.title}</span>
+                  <span style={{ marginLeft: 'auto', flex: 'none', whiteSpace: 'nowrap', fontSize: 'var(--type-xs)', ...secondLine() }}>{it.dueShort}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {confirm.more > 0 && (
+            <button
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'go', screen: 'behind' })}
+              style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--type-sm)' }}
+            >
+              And {confirm.more} more — see everything that went by
+            </button>
+          )}
+        </>
+      )}
+      {w.restart && (
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          {/* The title on its own line and the button short: a syllabus
+              title in a caps button ran to four lines on a phone. */}
+          <div style={{ fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-3)', textWrap: 'pretty' }}>
+            <span style={secondLine()}>A place to start: </span>
+            {w.restart.title}
+          </div>
+          <ActionButton tone="primary" onClick={() => dispatch({ type: 'openItem', id: w.restart!.id })}>
+            Start here
+          </ActionButton>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -986,10 +1244,13 @@ function Feed_rail() {
   const nowRule = (
     <div
       key="now"
-      aria-label={`Now, ${clockOf(minutes)}`}
+      // Said as text, not as an `aria-label` on a role-less div: readers
+      // ignore a name there (axe `aria-prohibited-attr`), so a screen reader
+      // heard a bare "3:11" with nothing saying it was now.
       style={{ display: 'flex', gap: RAIL_GAP, alignItems: 'center', padding: 'var(--sp-2) 0' }}
     >
       <div
+        className="hides-in-focus"
         style={{
           width: RAIL_GUTTER,
           flex: 'none',
@@ -999,6 +1260,7 @@ function Feed_rail() {
           color: 'var(--app-warn)',
         }}
       >
+        <span className="sr-only">Now, </span>
         {clockOf(minutes)}
       </div>
       <div style={{ width: 1, flex: 'none', position: 'relative' }}>
@@ -1064,7 +1326,7 @@ function Feed_rail() {
                       ...secondLine(gone),
                     }}
                   >
-                    {b.from?.kind === 'item' ? said(b.at) : b.time}
+                    {shownTime(b.from?.kind === 'item' ? said(b.at) : b.time, b.at)}
                   </div>
                   <div style={{ width: 1, background: 'var(--app-line)', position: 'relative' }}>
                     <div
@@ -1110,7 +1372,7 @@ function Feed_rail() {
                           Yours
                         </span>
                       )}
-                      {[b.meta, b.from?.kind === 'item' && b.time !== said(b.at) ? b.time : '']
+                      {[b.meta, b.from?.kind === 'item' && b.time !== said(b.at) ? shownTime(b.time, b.at) : '']
                         .filter(Boolean)
                         .join(' · ')}
                     </div>
@@ -1282,6 +1544,8 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   applying: ApplyingSoon,
   reading: ReadingsOnTheGo,
   windows: ClosingWindows,
+  // Nothing unless the school turned it on and has shared something.
+  school: SchoolRecords,
 };
 
 /**
@@ -1654,7 +1918,7 @@ function HoursToday() {
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                 {t.title}
                 {t.time.trim() && (
-                  <span style={{ color: 'var(--app-dim)' }}> · {t.time.trim()}</span>
+                  <span style={{ color: 'var(--app-dim)' }}> · {shownTime(t.time.trim())}</span>
                 )}
               </span>
             </button>
@@ -1675,6 +1939,11 @@ function HoursToday() {
 }
 
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
+function DailyPlanSlot() {
+  const { account } = useStore();
+  return <details><summary>Daily plan · one outcome and three actions</summary><DailyRhythm accountId={account?.id ?? null} /></details>;
+}
+
 function FeedHome() {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
@@ -1701,10 +1970,21 @@ function FeedHome() {
       </div>
 
       <div style={{ padding: 'var(--page-pad)' }}>
-        <NextClassCard />
+        <FirstGoal />
+        <TodayDecisionSurface />
+        <OperatingRhythm />
+        <div className="hides-in-focus">
+          <details className="today-more">
+            <summary>More from Today</summary>
+            <CommandCenter />
+            <NextClassCard />
+            <FlightPlanHomeSlot />
+            <RecommendedJourney />
+            <DailyPlanSlot />
+          </details>
 
-        <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
-          {entries.map((f) => (
+          <div style={{ marginTop: 'calc(22px * var(--density, 1))', display: 'flex', flexDirection: 'column' }}>
+            {entries.map((f) => (
             <button
               key={f.key}
               type="button"
@@ -1798,9 +2078,10 @@ function FeedHome() {
                 <div style={{ fontSize: 'var(--type-sm)', ...secondLine(f.done || f.canceled), marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
-          ))}
+            ))}
+          </div>
+          <div style={{ height: 70 }} />
         </div>
-        <div style={{ height: 70 }} />
       </div>
     </>
   );
@@ -1836,13 +2117,31 @@ export function nothingOnToday(
 }
 
 export function Today() {
-  const { state, catalog } = useStore();
+  const { state, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
   const shape = homeShape(state.nav);
-  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today" />;
-  return shape === 'feed' ? <FeedHome /> : <TabHome />;
+  const empty = nothingOnToday(shape, catalog, state);
+  const sources = useMemo(() => {
+    const near = datedItems(catalog, now).filter((i) => !i.isPast && !state.done[i.id] && i.daysAway <= DEADLINE_HORIZON_DAYS);
+    return countSources([...itemSources(near), ...state.tasks.map((): SourceLabel => 'student_entered')]);
+  }, [catalog, now, state.done, state.tasks]);
+  const env = todayEnvelope({ loading, empty, count: Object.values(sources).reduce((a, b) => a + b, 0), sources, online, now: now.getTime() });
+  return (
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="today"
+      empty={{ title: 'Nothing on today yet.', body: 'Add a course or an action to start.' }}
+      emptyNode={<FirstRun where="on today"><DailyPlanSlot /></FirstRun>}
+      inset
+    >
+      {() => (shape === 'feed' ? <FeedHome /> : <TabHome />)}
+    </ReadState>
+  );
 }
 
 /** Re-exported for the Me screen's load bars. */

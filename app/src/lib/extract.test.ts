@@ -38,7 +38,7 @@ vi.mock('pdfjs-dist', () => ({
 }));
 vi.mock('pdfjs-dist/build/pdf.worker.min.mjs?url', () => ({ default: 'worker.mjs' }));
 
-const { extractText } = await import('./extract');
+const { extractText, pageRanges, unreadLine } = await import('./extract');
 
 /** A fragment at a given vertical position — what restores line breaks. */
 const at = (y: number, str: string): Frag => ({ str, transform: [1, 0, 0, 1, 0, y] });
@@ -174,6 +174,43 @@ describe('PDFs', () => {
   it('keeps the pages apart', async () => {
     pages = [[at(700, 'Page one')], [at(700, 'Page two')]];
     expect((await extractText(pdf())).text).toBe('Page one\n\nPage two');
+  });
+
+  it('keeps each page with its number, and says they are pages rather than slides', async () => {
+    // So a quote from a forty-page reading can be pointed at page 23 instead of
+    // "page not recorded". The flat text is unchanged: no page numbers are
+    // printed into it, so quotes, word counts and hashes are what they were.
+    pages = [[at(700, 'Scarcity'), at(680, 'means choosing')], [], [at(700, 'Opportunity cost ')]];
+    const out = await extractText(pdf());
+    expect(out.pages).toEqual([
+      { page: 1, text: 'Scarcity\nmeans choosing' },
+      { page: 3, text: 'Opportunity cost' },
+    ]);
+    expect(out.pageUnit).toBe('page');
+    expect(out.text).toBe('Scarcity\nmeans choosing\n\n\n\nOpportunity cost');
+    expect(out.text).not.toMatch(/Page \d/);
+  });
+
+  it('names the pages that had no text, and how many pages there were', async () => {
+    // A page with no text is usually a picture of one. It is left out of
+    // `pages`, and now it is said, rather than the file reading as shorter.
+    pages = [[at(700, 'Title page')], [], [{ str: '   ' }], [at(700, 'Last page')]];
+    const out = await extractText(pdf());
+    expect(out.unread).toEqual([2, 3]);
+    expect(out.pageCount).toBe(4);
+  });
+
+  it('says nothing about unread pages when every page had text', async () => {
+    pages = [[at(700, 'One')], [at(700, 'Two')]];
+    const out = await extractText(pdf());
+    expect(out.unread).toBeUndefined();
+    expect(unreadLine(out)).toBe('');
+  });
+
+  it('carries no pages for a Word file, which has none', async () => {
+    const out = await extractText(docx(`<w:document><w:body>${para('One')}</w:body></w:document>`));
+    expect(out.pages).toBeUndefined();
+    expect(out.pageUnit).toBeUndefined();
   });
 
   it('reads a fragment carrying no position at all', async () => {
@@ -321,6 +358,7 @@ describe('slide decks', () => {
 
   it('keeps the slide numbers, which are the only page reference a deck has', async () => {
     const out = await extractText(deck({ 1: slide('Title'), 2: slide('Segmentation') }));
+    expect(out.pageUnit).toBe('slide');
     expect(out.pages).toEqual([
       { page: 1, text: 'Title' },
       { page: 2, text: 'Segmentation' },
@@ -384,5 +422,22 @@ describe('slide decks', () => {
     expect((await extractText(file('a.txt', 'x'))).pages).toBeUndefined();
     expect((await extractText(docx('<w:document><w:p><w:r><w:t>x</w:t></w:r></w:p></w:document>'))).pages)
       .toBeUndefined();
+  });
+});
+
+describe('saying which pages could not be read', () => {
+  it('writes page numbers the way a person would', () => {
+    expect(pageRanges([3])).toBe('3');
+    expect(pageRanges([5, 3, 4, 9, 11, 10])).toBe('3\u20135, 9\u201311');
+  });
+
+  it('calls a mostly unreadable file a scan, and a few blank pages blank pages', () => {
+    const scan = unreadLine({ name: 'Week 4.pdf', unread: [2, 3, 4, 5, 6, 7, 8, 9], pageCount: 9 });
+    expect(scan).toContain('Week 4.pdf: 8 of 9 pages had no text that could be read (pages 2\u20139), so they are not included.');
+    expect(scan).toContain('probably scanned images');
+    const few = unreadLine({ name: 'Reading.pdf', unread: [4], pageCount: 20 });
+    expect(few).toContain('1 of 20 pages had no text that could be read (page 4), so it is not included.');
+    expect(few).toContain('Blank pages are expected');
+    expect(few).not.toContain('scanned');
   });
 });

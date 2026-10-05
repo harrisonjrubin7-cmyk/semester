@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ROLE, ROLES, forRole, hiddenFrom, pickable, roleOf, type Role } from './role';
+import { DEFAULT_ROLE, ROLES, denserLayoutFor, forRole, hiddenFrom, pickable, roleOf, screenForRole, type Role } from './role';
 import { DESTINATIONS, destinationsFor, offered } from './nav';
 import type { Capabilities } from './school';
+import { reducer } from '../state/reducer';
+import { DEFAULT_PERSISTED, initialEphemeral } from '../state/shape';
 
 /** A school that offers everything, so only the role gate is under test. */
 const EVERY: Capabilities = {
@@ -18,20 +20,21 @@ describe('the roles the app admits to', () => {
     expect(roleOf('student').ready).toBe(true);
   });
 
-  it('offers only the two it can actually serve', () => {
-    expect(pickable().map((r) => r.id)).toEqual(['student', 'faculty']);
+  it('offers every built role', () => {
+    expect(pickable().map((r) => r.id)).toEqual(ROLES.map((r) => r.id));
   });
 
   /*
-   * The line this file is drawn on. A role that reads only its own data works
-   * today because that is the shape the whole app has; a role that reads
-   * somebody else's needs a server, an identity on both sides and an
-   * authorisation model, and the app has none of the three. Offering one
-   * anyway would be a screen that looks right and holds only what you typed
-   * into it.
+   * Every role has a useful local workspace, while connected records remain
+   * explicit about the verified relationship they require. The picker changes
+   * presentation; it never manufactures that relationship.
    */
-  it('says what each unready role is waiting on, rather than hiding it', () => {
-    for (const r of ROLES.filter((r) => !r.ready)) {
+  it('ships each role live and explains both immediate and connected access', () => {
+    for (const r of ROLES) {
+      expect(r.ready, r.id).toBe(true);
+      expect(r.live.length, r.id).toBeGreaterThan(30);
+    }
+    for (const r of ROLES.filter((r) => r.id !== 'student')) {
       expect(r.needs.length, r.id).toBeGreaterThan(30);
     }
   });
@@ -78,6 +81,20 @@ describe('what each role sees', () => {
     }
   });
 
+  it('sends a stale role-inapplicable route home instead of rendering it directly', () => {
+    expect(screenForRole('degree', 'faculty')).toBe('home');
+    expect(screenForRole('write', 'faculty')).toBe('write');
+    expect(screenForRole('degree', 'student')).toBe('degree');
+  });
+
+  it('keeps the applicant transition workspace available without widening other student screens', () => {
+    expect(forRole('launchpad', 'applicant')).toBe(true);
+    expect(screenForRole('launchpad', 'applicant')).toBe('launchpad');
+    expect(hiddenFrom('applicant')).not.toContain('launchpad');
+    expect(forRole('degree', 'applicant')).toBe(false);
+    expect(forRole('launchpad', 'alumni')).toBe(false);
+  });
+
   // A screen added later and forgotten in the table stays visible rather than
   // vanishing for every role but one.
   it('shows an unnamed screen to everybody, which is the safe direction', () => {
@@ -119,5 +136,28 @@ describe('the gate composes with the school’s, and neither un-hides the other'
   it('defaults to the student everywhere, so an unpassed role changes nothing', () => {
     expect(offered(EVERY)).toEqual(offered(EVERY, 'student'));
     expect(destinationsFor('Campus', EVERY)).toEqual(destinationsFor('Campus', EVERY, 'student'));
+  });
+});
+
+describe('a denser layout is offered, never assumed', () => {
+  it('is offered to the roles whose screens are rows and columns, and to no one else', () => {
+    const offered = ROLES.filter((r) => denserLayoutFor(r.id)).map((r) => r.id).sort();
+    expect(offered).toEqual(['admin', 'advisor', 'faculty', 'staff', 'teaching_assistant']);
+    expect(denserLayoutFor('student')).toBeNull();
+  });
+
+  it('names a density the look system has', async () => {
+    const { DENSITIES } = await import('./look');
+    for (const r of ROLES) {
+      const d = denserLayoutFor(r.id);
+      if (d) expect(DENSITIES.map((x) => x.id)).toContain(d);
+    }
+  });
+});
+
+describe('choosing a role never changes the layout', () => {
+  it('leaves density alone for every role', () => {
+    const base = { ...DEFAULT_PERSISTED, ...initialEphemeral() };
+    for (const r of ROLES) expect(reducer(base, { type: 'setRole', role: r.id }).density).toBe(base.density);
   });
 });

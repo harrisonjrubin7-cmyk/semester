@@ -2,7 +2,12 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
+import { EXTRA_CONNECT, parsePolicy, uncoveredOrigins } from './src/lib/cspheader.ts'
 import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
+import { isAmbiguousStaticPath, staticHostHeaders } from './src/lib/previewsecurity.ts'
+import { unregisteredHosts } from './src/lib/trust/subprocessors.ts'
 
 /**
  * The dev server doubles as the OAuth token proxy.
@@ -549,17 +554,137 @@ function cspExtraConnect(read: (name: string) => string | undefined): string {
  *
  * `order: 'pre'` so this runs before Vite's own `%VITE_…%` substitution, which
  * would otherwise spend a moment resolving a tag that is about to be deleted.
+ *
+ * ## And the header copy, while building
+ *
+ * `public/_headers` carries the same policy as a header, placeholder and all
+ * (`src/lib/cspheader.ts` says why the policy is sent twice). Vite copies
+ * `public/` into `dist/` verbatim — it substitutes `%VITE_…%` in the HTML and
+ * nowhere else — so without this the header would ship the literal
+ * placeholder, a source the browser cannot parse, and would *lack* the
+ * deployment's own origins. And since a browser enforces both policies, a
+ * Supabase custom domain the tag allows would then be refused by the header:
+ * the feature would work under `vite preview` and fail on Netlify. So once
+ * the bundle is written, the copy in `dist/` gets the same value the tag got.
+ * A `_headers` that has lost its placeholder is left alone; `hostheaders.test.ts`
+ * is what notices that.
  */
-const csp = (serving: boolean) => ({
-  name: 'csp',
-  transformIndexHtml: {
-    order: 'pre' as const,
-    handler: (html: string) =>
-      serving
-        ? html.replace(/[ \t]*<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>\n?/i, '')
-        : html,
+const csp = (serving: boolean) => {
+  let outDir = 'dist'
+  return {
+    name: 'csp',
+    configResolved(config: { root: string; build: { outDir: string } }) {
+      outDir = join(config.root, config.build.outDir)
+    },
+    transformIndexHtml: {
+      order: 'pre' as const,
+      handler: (html: string) =>
+        serving
+          ? html.replace(/[ \t]*<meta\s+http-equiv="Content-Security-Policy"[\s\S]*?\/>\n?/i, '')
+          : html,
+    },
+    closeBundle() {
+      if (serving) return
+      const file = join(outDir, '_headers')
+      if (!existsSync(file)) return
+      const text = readFileSync(file, 'utf8')
+      if (!text.includes(EXTRA_CONNECT)) return
+      writeFileSync(
+        file,
+        text.split(EXTRA_CONNECT).join(process.env.VITE_CSP_EXTRA_CONNECT ?? ''),
+      )
+    },
+  }
+}
+
+/**
+ * Keep the production-build preview honest as a DAST target.
+ *
+ * Vite preview is a convenient static server, not a deployment host: it does
+ * not read public/_headers and its SPA fallback answers malformed asset paths
+ * with index.html. The first difference hides the headers the real static
+ * hosts enforce; the second creates relative-path-confusion findings that do
+ * not represent a valid Semester route. The preview used by CI therefore
+ * carries the host contract and refuses only impossible asset subpaths.
+ */
+const previewPathGuard = () => ({
+  name: 'preview-path-guard',
+  configurePreviewServer(server: { middlewares: { use: (handler: (req: { url?: string }, res: { statusCode: number; setHeader: (name: string, value: string) => void; end: (body: string) => void }, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, res, next) => {
+      if (!isAmbiguousStaticPath(req.url ?? '/')) return next()
+      res.statusCode = 404
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.end('Not found')
+    })
   },
 })
+
+/**
+ * The chunk graph of a production build, for `scripts/budgets.ts`.
+ *
+ * Which source module each chunk came from, and which chunks it imports
+ * statically and dynamically. That is what a performance budget needs and a
+ * file listing cannot give: two screens called `Courses.tsx` make two
+ * `Courses-*.js` chunks, and only the graph says which is the route. Vite's
+ * own `build.manifest` would give the same, but it writes into `dist/`, and
+ * everything in `dist/` is published — every source path in the tree, on the
+ * live site. So this writes under `node_modules/.cache/`, which is never
+ * deployed, and records source paths relative to `app/`.
+ */
+const bundleGraph = () => {
+  let root = '.'
+  return {
+    name: 'bundle-graph',
+    apply: 'build' as const,
+    configResolved(config: { root: string }) {
+      root = config.root
+    },
+    writeBundle(
+      _options: unknown,
+      bundle: Record<string, { type: string; fileName: string; facadeModuleId?: string | null; isEntry?: boolean; imports?: string[]; dynamicImports?: string[] }>,
+    ) {
+      const chunks = Object.values(bundle)
+        .filter((c) => c.type === 'chunk')
+        .map((c) => ({
+          file: c.fileName,
+          source: c.facadeModuleId ? relative(root, c.facadeModuleId).split(sep).join('/') : null,
+          entry: Boolean(c.isEntry),
+          imports: c.imports ?? [],
+          dynamicImports: c.dynamicImports ?? [],
+        }))
+      const dir = join(root, 'node_modules', '.cache', 'semester')
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(join(dir, 'bundle-graph.json'), JSON.stringify({ chunks }, null, 1))
+    },
+  }
+}
+
+/**
+ * The origins a Vercel build would configure and its header would refuse.
+ *
+ * `vercel.json` is read before the build runs, so its policy cannot take the
+ * substitution `_headers` gets above; it carries the fixed sources only. A
+ * browser enforces the header *and* the tag, so an origin the tag gains from a
+ * build variable but the header does not name is refused — on the Vercel
+ * deployment only, silently, as a feature that looks switched off. That is the
+ * failure this repository keeps finding, so on Vercel (which sets `VERCEL=1`
+ * in its builds) it is a build failure instead, naming the origin and the
+ * line to add it to. The deployment's own addresses are exempt: a gateway on
+ * the same host is `'self'`.
+ */
+function vercelUncovered(extra: string): string[] {
+  const config = JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8')) as {
+    headers: { source: string; headers: { key: string; value: string }[] }[]
+  }
+  const all = config.headers.find((r) => r.source === '/(.*)')
+  const policy = all?.headers.find((h) => h.key.toLowerCase() === 'content-security-policy')
+  const sources = parsePolicy(policy?.value ?? '').get('connect-src') ?? []
+  const self = ['VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL']
+    .map((name) => process.env[name])
+    .filter((v): v is string => !!v)
+    .map((host) => `https://${host}`)
+  return uncoveredOrigins(sources, extra, self)
+}
 
 /**
  * The test files that must keep a module registry of their own.
@@ -578,20 +703,93 @@ const csp = (serving: boolean) => ({
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/TodayActionCenter.shadow.sources.test.tsx',
+  'src/composition/react.mount.test.tsx',
+  'src/components/ProductivityPreparation.test.tsx',
+  'src/lib/productivity-cloud.test.ts',
+  'src/components/ProductivityWorkspace.test.tsx',
+  'src/components/GetHelp.feedback.test.tsx',
+  'src/components/MomentPromptSlot.test.tsx',
+  'src/screens/behind.lifeevents.test.tsx',
+  'src/screens/whatsnew.feedback.test.tsx',
+  'src/components/StudyStudio.packs.test.tsx',
+  'src/lib/coursestudio.test.ts',
+  'src/components/CourseStudio.test.tsx',
+  'src/components/MembershipPanel.live.test.tsx',
+  'src/components/PlusPrompt.test.tsx',
+  'src/components/institutional/ModulesPanel.test.tsx',
+  'src/components/unity/rollout-b.test.tsx',
+  'src/components/PushTop.regday.test.tsx',
+  'src/components/OfflineBanner.reconnect.test.tsx',
   'src/screens/onboardingcounts.test.tsx',
   'src/components/saysomething.test.tsx',
   'src/screens/mentionbadge.test.tsx',
+  'src/components/syncstrip.test.tsx',
   'src/components/waitingrow.test.tsx',
   'src/components/pushstalled.test.tsx',
   'src/components/credentials.test.tsx',
+  'src/components/desk/TopBar.test.tsx',
   'src/components/referrallink.test.tsx',
   'src/components/schoolclaim.test.tsx',
   'src/components/downloads.test.tsx',
   'src/data/seed.test.ts',
+  'src/lib/graduation-cloud.test.ts',
+  'src/lib/advisor-shares.test.ts',
+  'src/components/SourceLocker.test.tsx',
+  'src/components/StudentOperating.test.tsx',
+  'src/components/AdvisorMeeting.test.tsx',
+  'src/components/OfficeActionFeed.test.tsx',
+  'src/components/DataRightsRequests.test.tsx',
+  'src/components/DemandContribution.test.tsx',
+  'src/components/SemesterWrapped.test.tsx',
+  'src/components/TrustCenter.test.tsx',
   'src/components/rework.test.tsx',
+  'src/components/room/Talk.test.tsx',
+  'src/components/GraduationSimulator.phase-d.test.tsx',
   'src/components/StudyStudio.test.tsx',
+  'src/components/QuizFeedback.test.tsx',
+  'src/components/TeachBack.test.tsx',
+  'src/components/StudyStudio.anchors.test.tsx',
+  'src/lib/familyinvites.test.ts',
+  'src/components/FamilyInvite.test.tsx',
+  'src/lib/familyshare.test.ts',
+  'src/components/SharedWithYou.test.tsx',
+  'src/components/AthleteShare.test.tsx',
+  'src/components/SupportAccess.test.tsx',
+  'src/components/GetHelp.test.tsx',
+  'src/components/HelpInbox.test.tsx',
+  'src/components/ActionCenter.help.test.tsx',
+  'src/components/ReportQueue.test.tsx',
+  'src/components/MentorFinder.test.tsx',
+  'src/components/schoolrecords.test.tsx',
+  'src/screens/Community.test.tsx',
+  'src/screens/Moderation.test.tsx',
+  'src/screens/console.test.tsx',
+  'src/components/MfaStep.test.tsx',
+  'src/lib/console/client.test.ts',
+  'src/screens/registration.test.tsx',
+  'src/lib/enrollment/client.test.ts',
+  'src/screens/gradebook.test.tsx',
+  'src/lib/gradebook/client.test.ts',
+  'src/lib/modulegate.test.ts',
+  'src/screens/dining.test.tsx',
+  'src/lib/dining/client.test.ts',
+  'src/lib/governance/activation.test.ts',
+  'src/state/readonly.test.tsx',
+  'src/screens/Volunteer.test.tsx',
+  'src/screens/Agreements.test.tsx',
+  'src/screens/Volunteers.test.tsx',
+  'src/components/betapanel.test.tsx',
+  'src/components/institutional-preview-bar.test.tsx',
+  'src/components/supportticketspanel.test.tsx',
+  'src/components/console/supportqueue.test.tsx',
   'src/components/TermChoice.test.tsx',
   'src/components/gpascalenote.test.tsx',
+  'src/components/institutional/ControlPlane.test.tsx',
+  'src/components/institutional/RecordLedger.test.tsx',
+  'src/components/institutional/StudentAccounts.test.tsx',
+  'src/components/MyStudentAccount.test.tsx',
+  'src/components/nav/institutional-nav.test.tsx',
   'src/lib/extract.test.ts',
   'src/lib/extractaccuracy.test.ts',
   'src/lib/referral.test.ts',
@@ -604,11 +802,21 @@ const MOCKS_MODULES = [
   'src/screens/pathway.test.tsx',
   'src/screens/pathwaygrid.test.tsx',
   'src/screens/solvephoto.test.tsx',
+  'src/screens/trustroom.test.tsx',
   'src/screens/university.test.tsx',
+  'src/screens/university.helpcount.test.tsx',
   'src/state/deeplink.test.tsx',
   'src/state/persist/firstrun.test.ts',
+  'src/state/persist/leaving.test.ts',
   'src/state/persist/tell.test.ts',
+  'src/state/pushlater.test.tsx',
   'src/state/storetoken.test.tsx',
+  'src/state/syncretry.test.tsx',
+  'src/state/syncstates.test.tsx',
+  'src/state/returnto.test.tsx',
+  'src/state/review.test.tsx',
+  'src/state/deletions.test.tsx',
+  'src/components/WaitingSends.test.tsx',
 ]
 
 export default defineConfig(({ command, mode }) => {
@@ -665,6 +873,32 @@ export default defineConfig(({ command, mode }) => {
     (name) => process.env[name] ?? local[name],
   )
 
+  // A configured origin the subprocessor register does not list is a third
+  // party nobody recorded. CI cannot see a repository variable, so the build
+  // says so here, where the value finally arrives (docs/SUBPROCESSORS.md).
+  const unlisted = unregisteredHosts(process.env.VITE_CSP_EXTRA_CONNECT)
+  if (command === 'build' && unlisted.length > 0) {
+    console.warn(
+      `\n! The content-security policy allows ${unlisted.join(', ')}, which the ` +
+        'subprocessor register (app/src/lib/trust/subprocessors.ts) does not list. ' +
+        'Add its row before this build is deployed.\n',
+    )
+  }
+
+  // See `vercelUncovered`: on Vercel, an origin the header would refuse is a
+  // failed build rather than a feature that quietly does not work.
+  if (command === 'build' && process.env.VERCEL) {
+    const refused = vercelUncovered(process.env.VITE_CSP_EXTRA_CONNECT)
+    if (refused.length > 0) {
+      throw new Error(
+        `The Content-Security-Policy header in app/vercel.json would refuse ${refused.join(', ')}, ` +
+          'which this build is configured to connect to (index.html gains it from the build ' +
+          'variables, and a browser enforces both policies). Add it to the end of connect-src ' +
+          'in app/vercel.json — src/lib/cspheader.ts explains why that file cannot be substituted.',
+      )
+    }
+  }
+
   /*
    * With a key on the server, point the app at the proxy holding it — unless
    * whoever is running this named a proxy of their own, which is the production
@@ -694,6 +928,12 @@ export default defineConfig(({ command, mode }) => {
         '@semester/institution': fileURLToPath(
           new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
+        '@semester/offline-sync': fileURLToPath(
+          new URL('../packages/offline-sync/src/index.ts', import.meta.url),
+        ),
+        '@semester/platform': fileURLToPath(
+          new URL('../packages/platform/src/index.ts', import.meta.url),
+        ),
       },
     },
     // GitHub Pages serves a project site from /<repo>/, not from the root. The
@@ -707,16 +947,27 @@ export default defineConfig(({ command, mode }) => {
       canvasProxy(),
       appleToken(),
       claudeProxy(anthropicKey),
+      bundleGraph(),
+      previewPathGuard(),
     ],
+    preview: {
+      headers: staticHostHeaders(
+        readFileSync(new URL('./public/_headers', import.meta.url), 'utf8'),
+        process.env.VITE_CSP_EXTRA_CONNECT,
+      ),
+    },
     /*
      * The test suite, which had no configuration at all and was paying for it.
      *
-     * 363 files, and vitest was spawning one worker per file: 363 spawns at
-     * ~224ms each, which is 27 of the suite's 47 seconds spent starting
-     * processes rather than running tests. Vitest says so itself at the foot
-     * of every run, and has done for as long as there have been this many
-     * files. CI pays it three times — `npm test`, then `test:zones` runs the
-     * whole suite again in Chicago and again in Kiritimati.
+     * The suite is now more than twelve hundred files. Leaving Vitest to use
+     * every reported CPU made the slow structural scans and async component
+     * tests compete with seven other transforms and miss their otherwise
+     * ordinary five-second test budget. The same files passed alone and failed
+     * under the full run, so the failure was runner contention rather than a
+     * product assertion. Four workers keeps useful parallelism without making
+     * the suite's own source-tree reads fight an eight-way transform storm.
+     * CI pays for this suite three times — `npm test`, then `test:zones` runs
+     * it again in Chicago and Kiritimati — so this is a cap, not serial mode.
      *
      * `isolate: false` reuses a worker across files instead of starting one
      * per file. What it gives up is the guarantee that each file gets a fresh
@@ -736,13 +987,28 @@ export default defineConfig(({ command, mode }) => {
      * listed.
      */
     test: {
+      // Five seconds is Vitest's small-unit default. This suite also contains
+      // deliberately medium-sized component and whole-source-tree checks. The
+      // release gate is their assertions, not whether a loaded workstation can
+      // finish each one inside the framework's unrelated default stopwatch.
+      maxWorkers: 4,
+      testTimeout: 30_000,
+      hookTimeout: 30_000,
       projects: [
         {
           extends: true,
           test: {
             name: 'shared',
             isolate: false,
-            exclude: [...configDefaults.exclude, ...MOCKS_MODULES],
+            include: [
+              ...configDefaults.include,
+              '../packages/institution/src/**/*.test.ts',
+              '../packages/offline-sync/src/**/*.test.ts',
+              '../packages/platform/src/**/*.test.ts',
+            ],
+            // Publication artifacts are outside the repository. Their explicit
+            // suite requires the real deliverables; it is not an app regression.
+            exclude: [...configDefaults.exclude, ...MOCKS_MODULES, 'scripts/rollout-publication.test.ts'],
           },
         },
         {

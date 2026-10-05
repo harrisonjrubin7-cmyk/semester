@@ -100,6 +100,10 @@ useDefault = true
 #      `semester.claude.strict.v1` are what a settings object is saved under in
 #      the student's own browser — `SETTINGS_KEY` and `STRICT_KEY` in
 #      `app/src/lib/assistant.ts`. A literal dotted prefix this app owns.
+#      Names may carry a hyphen: `semester.advisor-meeting.v1` (`MEETING_KEY`
+#      in `app/src/lib/advisor-meeting.ts`) was reported by 8.28.0 until the
+#      class allowed one. A random 32-character value beside `SECRET_KEY` is
+#      still reported with it, so the widening reaches nothing but these names.
 #
 #   3. **A classmate-room key**: a school slug and a course code joined by a
 #      slash. Fixtures for `roomsFor`, and the real ones are public the moment
@@ -122,7 +126,7 @@ description = 'Four string shapes this repository contains that are named "key" 
 regexTarget = 'secret'
 regexes = [
   '''^sb_publishable_[A-Za-z0-9_-]{8,}$''',
-  '''^semester\.[a-z.]+\.v[0-9]+$''',
+  '''^semester\.[a-z.-]+\.v[0-9]+$''',
   '''^[a-z][a-z0-9-]*/[A-Z]{2,4}$''',
   '''^[0-9a-f]{16}$''',
 ]

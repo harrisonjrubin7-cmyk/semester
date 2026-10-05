@@ -19,7 +19,7 @@ import { DESTINATIONS } from '../lib/nav';
  * their equal.
  *
  * Every one of the six had another home, and five answered to a different name
- * there — `AI Tutor` was `Ask Claude`, `Practice exam` was `Practice paper`,
+ * there — `AI Tutor` is now `Ask Semester`, `Practice exam` was `Practice paper`,
  * `Exam planner` was `Exam runway`, `Study groups` was `Group work`,
  * `Citations & evidence` was `Sources`. Three of those homes are the Tools tab
  * on this same screen, which is generated from `lib/nav.ts` and ranked by
@@ -68,6 +68,11 @@ async function show(node: ReactNode) {
  * it, where "Create study guide" is an offer the screen makes on arrival.
  * Counting it would have made this assertion false about a screen that reads
  * correctly, which is how a test starts being edited to fit the code.
+ *
+ * The feedback inbox's "File this feedback" is the same kind of thing — it
+ * files the comment typed above it — and is exempt for the same reason, by its
+ * own class rather than by widening this one. So is the learning map's "Add
+ * to my map", which adds the concept typed above it.
  */
 function filled(): string[] {
   /*
@@ -88,7 +93,7 @@ function filled(): string[] {
    */
   return [...host.querySelectorAll('button')]
     .filter((b) => /\b(portal-primary|btn-primary)\b/.test(b.className.toString()))
-    .filter((b) => !b.closest('.study-journal'))
+    .filter((b) => !b.closest('.study-journal, .feedback-inbox, .learning-map'))
     .map((b) => (b.textContent ?? '').trim());
 }
 
@@ -275,7 +280,7 @@ describe('nothing the row named became unreachable', () => {
    * than about how the tab happens to draw today.
    */
   it.each([
-    ['ask', 'Ask Claude'],
+    ['ask', 'Ask Semester'],
     ['exam', 'Practice paper'],
     ['runway', 'Exam runway'],
   ])('%s is still a Study tool, under its own name (%s)', (screen, label) => {

@@ -29,8 +29,9 @@ describe('the bar as it ships', () => {
     expect(DEFAULT_TABS.length).toBeGreaterThanOrEqual(FEWEST);
   });
 
-  it('is the four the app is for, and the way to the rest', () => {
-    expect(DEFAULT_TABS).toEqual(['home', 'courses', 'study', 'calendar', 'me']);
+  it('is one front door per navigation area, in the order a day runs', () => {
+    // Today, Plan, Learn, Help, Progress — see `lib/navareas.ts`.
+    expect(DEFAULT_TABS).toEqual(['home', 'calendar', 'study', 'support', 'me']);
   });
 
   it('ends on Me, which is where the other thirty-odd screens live', () => {

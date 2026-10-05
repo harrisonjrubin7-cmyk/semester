@@ -70,7 +70,7 @@ import { meetings, pairings } from './meet';
 import { codeOf } from './call';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
-import { dateToIso, isoToDate, longLabel, shiftIso } from './date';
+import { dateToIso, isoToDate, longLabel, shiftIso, shownTime } from './date';
 import { billFor, money } from './bill';
 import { forTerm as costsFor, total } from './cost';
 
@@ -141,6 +141,13 @@ export interface TopInput {
    * device library. A count and never an amount — see the case that uses it.
    */
   nilDeals?: number;
+  /**
+   * Launchpad steps still open at the stage the student chose, and
+   * opportunities not yet done or closed — both counted from their device
+   * libraries by whoever could read them, the same exception as `nilDeals`.
+   */
+  launchpadOpen?: number;
+  opportunitiesLive?: number;
 }
 
 /**
@@ -367,7 +374,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           ? {
               label: 'Next class',
               meta: next.untilLabel,
-              figure: next.block.time,
+              figure: shownTime(next.block.time, next.block.at),
               foot: next.block.title,
             }
           : { label: 'Today', said: 'No class today.', foot: count(due.length, 'thing') + ' still due' },
@@ -512,7 +519,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'ask':
       return {
         hero: {
-          label: 'Ask Claude',
+          label: 'Ask Semester',
           said: courses === 0 ? 'No course loaded, so answers come without a guide in hand.' : `Answering with ${count(courses, 'course')} in hand.`,
         },
         stats: term,
@@ -635,7 +642,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       const b = howBehind(dated, state.done, state.spent, hours);
       return {
         hero: {
-          label: 'When you are behind',
+          label: 'Catching up',
           meta: overdue ? `${overdue} overdue` : undefined,
           said: behindLine(b),
           foot: b.needed > 0 ? `${showHours(b.needed)} of work against ${showHours(b.there)}` : undefined,
@@ -706,6 +713,45 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
 
     case 'career':
       return holds('Applications', state.applications.length, 'application');
+
+    case 'launchpad':
+      return holds('Steps open', input.launchpadOpen ?? 0, 'step');
+
+    case 'opportunities':
+      return holds('In progress', input.opportunitiesLive ?? 0, 'opportunity');
+
+    /*
+     * The hub's figure is the course channel's, because it is the only one
+     * with store data behind it: what is due in the next seven days. The
+     * official channel is empty until a school connects one, and a hero that
+     * counted it would lead every student with a nought that means "not
+     * connected" rather than "nothing to read".
+     */
+    case 'hub':
+      return {
+        hero: {
+          label: 'Notices',
+          figure: num(soon.length),
+          foot: soon.length === 0 ? 'Nothing due this week' : 'from your courses this week',
+        },
+        stats: [],
+      };
+
+    /*
+     * Support leads with nothing about the student. A count of anything here —
+     * visits, saved contacts, notes — would be a figure about somebody's care
+     * drawn in the biggest type on the screen, which is exactly what the
+     * screen promises not to keep.
+     */
+    case 'support':
+      return {
+        hero: {
+          label: 'Support',
+          figure: '988',
+          foot: 'Call or text, any hour (U.S.)',
+        },
+        stats: [],
+      };
 
     case 'pathway':
       return holds('Courses so far', catalog.courses.length, 'course');
@@ -793,7 +839,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       const next = scheduled[0];
       return {
         hero: next
-          ? { label: 'Next call', meta: next.time, said: next.title, foot: longLabel(isoToDate(next.date)) }
+          ? { label: 'Next call', meta: shownTime(next.time), said: next.title, foot: longLabel(isoToDate(next.date)) }
           : { label: 'Video call', said: 'Nothing scheduled.', foot: 'Start one, or join with a code' },
         stats: term,
       };
@@ -920,7 +966,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: [
           { label: 'Courses', value: num(courses) },
           { label: 'Notes', value: num(state.notes.length) },
-          { label: 'Your tasks', value: num(state.tasks.length) },
+          { label: 'Your actions', value: num(state.tasks.length) },
         ],
       };
 
@@ -970,7 +1016,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           figure: num(
             state.tasks.length + state.notes.length + state.appointments.length + state.sources.length + state.people.length,
           ),
-          foot: 'tasks, notes, appointments, sources and people',
+          foot: 'actions, notes, appointments, sources and people',
         },
         stats: term,
       };

@@ -32,24 +32,22 @@ import {
   currentSession,
   onAuthChange,
   explainSync,
+  isStale,
   pull,
   push as pushCloud,
   type Account,
 } from '../lib/cloud';
+import { READ_ONLY } from '../lib/readonly';
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
-import { nextPayment } from '../lib/bill';
-import { classesToNudge, dueReminders, fire } from '../lib/notify';
-import { atRiskToday } from '../lib/atrisk';
-import { beginNow, planFrom } from '../lib/start';
-import { myReminders } from '../lib/myrules';
-import { datedItems, railFor } from '../lib/select';
+import { fire } from '../lib/notify';
+import { remindersFor } from './reminders';
 import { save, trouble } from '../lib/keep';
 import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
   available as dbAvailable,
   whileWriting,
-  flushNow,
+  flushOnLeave,
   load as loadFromDb,
   persist as persistToDb,
 } from './persist';
@@ -60,7 +58,7 @@ import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { linkedScreen } from '../lib/deeplink';
-import { NAMED, fromHash, replaces, same, toHash, type Route } from '../lib/route';
+import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
@@ -76,13 +74,40 @@ import type { Facts } from '../lib/reveal';
 import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
+import { offline, watchConnection } from '../lib/offline';
+import { takeReturn } from '../lib/returnto';
+import { pushWait, retriesOnItsOwn } from '../lib/syncstatus';
+import {
+  addReview,
+  baseOf,
+  conflictsIn,
+  keptHere,
+  readBase,
+  takenTicks,
+  tickConflictsIn,
+  readReview,
+  removedThere,
+  writeBase,
+  writeReview,
+  type Conflict,
+} from '../lib/conflicts';
+import { coursesDeletedHere, settleDeletions } from '../lib/deletions';
+import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
+import { withEngine } from '../lib/sync/engine/tasks';
+import { useTaskEngine } from './useTaskEngine';
 import {
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
+  forgetSyncMemory,
   markSeen,
+  markUnpushed,
+  rememberSyncedAs,
+  syncedAs,
   pickPersisted,
+  sameFields,
   seenRows,
+  unpushed,
   unseen,
   type Action,
   type Persisted,
@@ -111,12 +136,24 @@ function screenFromUrl(): Screen | null {
   }
 }
 
+/**
+ * How recently a pull must have happened for coming back to the app not to
+ * start another. A minute: long enough that flicking between tabs costs
+ * nothing, short enough that "I just changed it on my phone" is caught.
+ */
+export const FOCUS_PULL_MS = 60_000;
+
 /** Where the account copy stands, for the Account screen to show honestly. */
 export type SyncStatus =
   | 'off'          // no project configured in this build
   | 'signed-out'
   | 'syncing'
   | 'synced'
+  | 'offline'      // no connection, and nothing waiting to go up
+  | 'queued'       // no connection, and changes waiting to go up when it returns
+  | 'read-only'    // this build does not push (lib/readonly.ts); changes wait for one that does
+  | 'conflict'     // another device keeps writing at the same moment; retrying
+  | 'review'       // synced, but two devices' edits of something wait on a choice
   | 'error';
 
 interface Store {
@@ -167,6 +204,12 @@ interface Store {
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
   /**
+   * The sample course is still arriving. An empty catalogue now means "not
+   * yet", not "nothing there"; a screen that reads the second while this is
+   * true draws its first-run for a moment it should have drawn a loading state.
+   */
+  loading: boolean;
+  /**
    * What went wrong saving to this device, in a sentence, or empty.
    *
    * On the context rather than in a toast because it is not an event — it is
@@ -181,6 +224,13 @@ interface Store {
    * it says so rather than pretending to be up to date.
    */
   refresh: () => Promise<string>;
+  /**
+   * Send this device's copy to the account now, rather than after the next
+   * edit. Resolves true once the account has it. A reconnect needs this:
+   * `refresh` only pulls, and an edit whose push failed offline would
+   * otherwise wait for another edit before it went up.
+   */
+  pushNow: () => Promise<boolean>;
   /**
    * Announce one outcome, to the live region and to the change strip.
    *
@@ -213,6 +263,13 @@ interface Store {
    */
   asking: { sides: Sides; say: string } | null;
   settle: (choice: Choice, backup: string | null) => void;
+  /**
+   * Records edited on two devices before either synced, waiting for the
+   * student to choose. Kept on this device only. See `lib/conflicts.ts`.
+   */
+  review: Conflict[];
+  /** Keep one copy of a waiting record. The other is let go. */
+  resolve: (key: string, keep: 'mine' | 'theirs') => void;
   /**
    * Take the semester the app ships with on as your own courses.
    *
@@ -309,7 +366,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => {
     const persisted = loadPersisted();
     const ephemeral = initialEphemeral();
-    if (!persisted.seenOnboarding) {
+    // A "Log in" link is the exception: it came for the form, not the tour,
+    // and onboarding still opens on the next visit until it is finished.
+    if (!persisted.seenOnboarding && !opensAccount(window.location.hash)) {
       return { ...persisted, ...ephemeral, screen: 'onboarding' as Screen };
     }
     /*
@@ -335,6 +394,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
         ...(landed.opens?.courses ? { coursesTab: landed.opens.courses } : {}),
         ...(landed.opens?.home ? { homeTab: landed.opens.home } : {}),
+        ...(landed.opens?.account ? { accountDoor: landed.opens.account } : {}),
       };
     }
     /*
@@ -585,10 +645,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    *
    * No dependencies: this is about the page, not about what is in it, and
    * `flushNow` writes whatever is owing at the moment it is called.
+   *
+   * `flushOnLeave` rather than `flushNow` itself: `flushNow` waits for a
+   * write already in flight before starting the owed one, and a reload does
+   * not wait for either. See `flushOnLeave` in `state/persist`.
    */
   useEffect(() => {
     const last = () => {
-      void flushNow();
+      flushOnLeave();
     };
     const hidden = () => {
       if (document.visibilityState === 'hidden') last();
@@ -659,10 +723,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * a signed-in account arriving a moment later is the same shape of delay it
    * always had — `currentSession` was asynchronous before this too.
    */
+  /*
+   * The address this page was opened at, before the app wrote one of its own.
+   *
+   * Empty is what a sign-in round trip lands on: every provider sends the tab
+   * back to the bare `appUrl()`. That is the one case a written-down return
+   * point is for — a page opened on a link somebody chose goes where the link
+   * says, not where a sign-in fifteen minutes ago was started from.
+   */
+  const bootHash = useRef(typeof window === 'undefined' ? '' : window.location.hash);
+  const returned = useRef(false);
+
   useEffect(() => {
     if (!cloudConfigured) return;
     const take = (s: Session | null) => {
+      /*
+       * Which account this device's sync memory belongs to — its stamps, the
+       * versions it last agreed, the choices waiting on its review list. All
+       * of it is about one account's copy, and none of it was cleared on
+       * signing out, so signing in as somebody else compared their copy
+       * against the last person's: their conflicts offered here, "keep this
+       * one" writing the last account's note into this one. Forgotten here,
+       * before the refresh that would read it, so the new account gets a
+       * first sign-in's question instead.
+       */
+      if (s?.user?.id) {
+        const was = syncedAs();
+        if (was && was !== s.user.id) {
+          forgetSyncMemory();
+          setReview([]);
+        }
+        rememberSyncedAs(s.user.id);
+      }
       setAccount(accountOf(s));
+      /*
+       * Back to where the sign-in was started. Once per page, and taken
+       * whether or not it is used, so it cannot move anybody later. Through
+       * the hash, so the ordinary `hashchange` path below does the landing —
+       * the same one Back and a typed address use. See `lib/returnto.ts`.
+       */
+      if (s && !returned.current) {
+        returned.current = true;
+        const back = takeReturn();
+        // A boot hash that is not one of this app's addresses — a provider's
+        // `#error=` — was not a place anybody chose, so it does not count.
+        if (back && !fromHash(bootHash.current)) window.location.hash = back;
+      }
       // The shared key is only available to a signed-in account, and this is
       // what proves the account to the function.
       setSessionToken(s?.access_token ?? null);
@@ -769,13 +875,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * `hasRemote` is what stops a signed-in device with a blank account from
    * hydrating a semester's work away.
    */
+  /** Two devices' edits of one record, waiting on the student. See `lib/conflicts.ts`. */
+  const [review, setReview] = useState<Conflict[]>(readReview);
+  /** When this device last asked the account for its copy. See the focus pull below. */
+  const pulledAt = useRef(0);
   const refresh = useCallback(async (): Promise<string> => {
     const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
       if (cloudConfigured) setSync({ status: 'signed-out', at: 0, error: '' });
       return refreshSaid(base, Date.now());
     }
+    // No connection is not a failure to report as one: the copy here is
+    // intact, and the pull happens when the connection comes back.
+    if (offline()) {
+      setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
+      return refreshSaid({ ...base, error: 'No connection. This device will catch up when it is back.' }, Date.now());
+    }
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
+    pulledAt.current = Date.now();
     try {
       const remote = await pull(account.id);
       const seen = seenRows();
@@ -816,15 +933,87 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        */
       const take = hasRemote && unseen(remote.seen, seen);
 
-      if (take) {
-        dispatch({
-          type: 'hydrate',
-          persisted: {
-            ...(remote.state as Partial<Persisted>),
-            courses: remote.courses.map((c) => c.data as CourseModule),
-          },
-        });
+      /*
+       * An account with nothing in it has no rows this device can have read.
+       * If this device remembers stamps anyway — the account was emptied from
+       * another device — they name rows that are gone, every push would be
+       * refused for naming them, and the retry would never end. Nothing is
+       * agreed with an empty account, so this device remembers nothing, and
+       * its next push creates the rows. Not on a first sign-in (`seen` null),
+       * which has nothing to forget and a question of its own to ask.
+       */
+      if (!hasRemote && seen !== null && (seen.state || Object.keys(seen.courses).length > 0)) {
         markSeen(remote.seen);
+        writeBase({});
+      }
+
+      if (take) {
+        const theirsAll = {
+          ...(remote.state as Partial<Persisted>),
+          courses: remote.courses.map((c) => c.data as CourseModule),
+        };
+        /*
+         * Before the merge, against the version both sides last agreed on:
+         * which records were edited here *and* there. The merge below still
+         * keeps one of each pair; the other is written down so the student
+         * can choose it instead. See `lib/conflicts.ts`.
+         */
+        const here = forLegacy(pickPersisted(latest.current) as unknown as Record<string, unknown>);
+        const agreedOn = baseForLegacy(readBase());
+        /*
+         * What was deleted, on either side, since the two agreed — the one
+         * thing the merge below cannot see, because a union cannot express a
+         * deletion. What this device deleted is taken out of the account's
+         * copy so it cannot come back; what another device deleted and this
+         * one never touched is dropped here; and a deletion against an edit
+         * is offered like two edits are, with the edit in use. See
+         * `lib/deletions.ts`.
+         */
+        const deletions = settleDeletions(here, theirsAll as Record<string, unknown>, agreedOn);
+        const theirs = deletions.remote as typeof theirsAll;
+        const found = [
+          ...conflictsIn(here, theirsAll as Record<string, unknown>, agreedOn),
+          ...tickConflictsIn(here, theirsAll as Record<string, unknown>, agreedOn),
+          ...deletions.conflicts,
+        ];
+        if (found.length > 0) {
+          setReview((was) => {
+            const next = addReview(was, found);
+            writeReview(next);
+            return next;
+          });
+        }
+        /*
+         * And the settings the account has not touched since the two agreed:
+         * left as they are here, because the difference is this device's own
+         * change on its way up. Without this a pull — which now happens on
+         * focus and on reconnect — put the account's older value back over it.
+         * See `keptHere`.
+         */
+        const held = new Set(keptHere(theirs as Record<string, unknown>, agreedOn));
+        const taken = {
+          ...Object.fromEntries(Object.entries(theirs).filter(([field]) => !held.has(field))),
+          // And the per-key maps cut to the keys the account changed: a box
+          // ticked here and not yet pushed stays ticked. See `takenTicks`.
+          ...takenTicks(theirs as Record<string, unknown>, agreedOn),
+        } as typeof theirs;
+        /*
+         * And the keys the account removed that this device still holds
+         * unchanged: removed here first, because the merge that follows can
+         * only add and overwrite a key, never take one away. See
+         * `removedThere`.
+         */
+        const gone = removedThere(here, theirs as Record<string, unknown>, agreedOn);
+        if (Object.keys(gone).length > 0) dispatch({ type: 'dropTicks', removals: gone });
+        if (Object.keys(deletions.dropHere).length > 0) dispatch({ type: 'dropRecords', removals: deletions.dropHere });
+        dispatch({ type: 'hydrate', persisted: taken });
+        markSeen(remote.seen);
+        // The version both sides now agree on is the account's — including
+        // for the fields held back, whose difference here is still to go up,
+        // and for what this device deleted, which the account still holds
+        // until the push that follows tells it. The untrimmed copy, so that
+        // deletion is still a deletion if that push has to wait.
+        writeBase(baseOf(forLegacy(theirsAll as Record<string, unknown>)));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -845,16 +1034,135 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  /*
+   * A count that moves when, and only when, something persisted changes.
+   *
+   * What the push below depends on. It depended on `persisted`, the
+   * serialised half — which on the database path is `''` on every render,
+   * because that string is never built there. So on IndexedDB, which is
+   * every ordinary browser, an edit never re-ran the push: the account heard
+   * about it only at the next sign-in, or when something else happened to
+   * trigger one. `sameFields` answers the same question by reference, on
+   * both paths, without serialising anything.
+   *
+   * A ref updated during render, which is safe here because the result is a
+   * pure function of `picked` and the previous pick: rendering twice with the
+   * same `picked` counts once.
+   */
+  const lastPick = useRef<{ picked: Persisted | null; n: number }>({ picked: null, n: 0 });
+  const edit = useMemo(() => {
+    const was = lastPick.current;
+    if (was.picked && sameFields(was.picked, picked)) return was.n;
+    lastPick.current = { picked, n: was.n + 1 };
+    return was.n + 1;
+  }, [picked]);
+
+  // Anything changed since the first render is something the account lacks
+  // until a push lands. The first count is the app loading, not an edit.
+  useEffect(() => {
+    if (edit > 1 && account) markUnpushed(true);
+  }, [edit, account]);
+  // The latest `edit`, for a push that lands to ask whether anything changed
+  // while it was on its way. Kept in an effect, not during render.
+  const editNow = useRef(edit);
+  useEffect(() => {
+    editNow.current = edit;
+  }, [edit]);
+
+  /*
+   * How many times in a row a push has found the account moved on.
+   *
+   * A push that loses the race pulls, merges and goes again — see `Stale` in
+   * `lib/cloud.ts`. Bumping this is what makes it go again: the merge can
+   * leave the persisted half exactly as it was (the account's news was
+   * already here), and then nothing else would re-run the effect below.
+   * Each round waits twice as long as the last, up to a minute, and from the
+   * third the sync line says why: two devices trading pushes every few
+   * seconds is something to say, not something to spin on. It never stops
+   * trying, because stopping would leave this device's work on this device.
+   */
+  const [lost, setLost] = useState(0);
+  /*
+   * And how many in a row have failed outright — the network, the service,
+   * a rate limit. It used to be none: a failed push set "Sync trouble" and
+   * waited for the next edit, so a student who made one change and closed
+   * the laptop left it on the laptop. Now it goes again on its own, backing
+   * off to five minutes, for as long as the failure is one that repeating
+   * could fix. See `retriesOnItsOwn` and `pushWait` in `lib/syncstatus.ts`.
+   */
+  const [failed, setFailed] = useState(0);
+  /** Whether a push is on its way, and a count its landing moves to go again. */
+  const inFlight = useRef(false);
+  const [landed, setLanded] = useState(0);
+
+  /*
+   * Whether there is a connection, as state, so going offline and coming back
+   * both re-run what depends on it.
+   */
+  const [online, setOnline] = useState(() => !offline());
+  useEffect(() => watchConnection(setOnline), []);
+
+  // Back online: look at the account before anything else. Whatever another
+  // device did while this one was away is merged in, and the push below then
+  // sends the merge rather than finding out the hard way.
+  const wasOnline = useRef(online);
+  useEffect(() => {
+    if (online && !wasOnline.current && account) {
+      // A failure while cut off was the connection. Start the waits again.
+      setFailed(0);
+      void refresh();
+    }
+    wasOnline.current = online;
+  }, [online, account, refresh]);
+
+  /*
+   * Coming back to the app: look at the account.
+   *
+   * The case this is for is the ordinary one — a laptop that stayed online all
+   * night, with the phone used in the morning. Nothing else would pull: the
+   * connection never dropped, the account never changed, and this device has
+   * nothing to push, so it would show last night's semester until somebody
+   * pulled down to refresh. Now switching back to the tab, or unlocking the
+   * phone with the app open, catches it up.
+   *
+   * Both `visibilitychange` and `focus`, because each misses a case the other
+   * sees: a window already visible beside another one gains focus without
+   * becoming visible, and a phone returning to the app becomes visible and
+   * may never fire focus. They often fire together, and switching between two
+   * tabs fires them a dozen times a minute, so a pull within the last
+   * `FOCUS_PULL_MS` — for any reason, sign-in and reconnect included — is
+   * enough and this does nothing.
+   *
+   * Not while the first-sign-in question is open, which is waiting on a pull
+   * that has already happened; and not offline, where `online` returning
+   * pulls instead.
+   */
+  useEffect(() => {
+    if (!account || !online || asking) return;
+    const look = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (Date.now() - pulledAt.current < FOCUS_PULL_MS) return;
+      void refresh();
+    };
+    document.addEventListener('visibilitychange', look);
+    window.addEventListener('focus', look);
+    return () => {
+      document.removeEventListener('visibilitychange', look);
+      window.removeEventListener('focus', look);
+    };
+  }, [account, online, asking, refresh]);
+
+
   /**
    * Every later change goes up, once things stop moving.
    *
-   * The dependency is the serialised persisted half, for the reason written
-   * above the localStorage save: this list used to be seventeen hand-written
-   * fields and had fallen a dozen behind. Drilling a card, naming a place,
-   * sitting a practice paper and adding a source all changed state that this
-   * effect was not watching, so none of them reached the account until some
-   * *other* field happened to change. Depending on the same string means what
-   * is saved is what is synced, and the two cannot drift again.
+   * The dependency is `edit`, which moves whenever anything in the persisted
+   * half does — for the reason written above the localStorage save: this list
+   * used to be seventeen hand-written fields and had fallen a dozen behind.
+   * Drilling a card, naming a place, sitting a practice paper and adding a
+   * source all changed state that this effect was not watching, so none of them reached the account until some
+   * *other* field happened to change. Depending on every field means what is
+   * saved is what is synced, and the two cannot drift again.
    *
    * A pull no longer suppresses the push either. The merge in `hydrate` is a
    * union, so the state after a pull holds this device's work as well as the
@@ -863,35 +1171,116 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     if (!account) return;
+    // Not while the first-sign-in question is open. Before it is answered
+    // this device has no business writing either copy — and it used to: an
+    // edit made with the dialogue on screen was pushed over the account the
+    // student was in the middle of being asked about.
+    if (asking) return;
+    /*
+     * Read-only mode (`lib/readonly.ts`): this build does not push. The edits
+     * are on disk and `unpushed` remembers them, exactly as offline below; the
+     * next build without the flag runs this effect and sends them. Said as
+     * its own status rather than `queued`, because `queued` says there is no
+     * connection, and there is.
+     */
+    if (READ_ONLY) {
+      setSync((s) => ({ ...s, status: 'read-only', error: '' }));
+      return;
+    }
+    /*
+     * No connection: say so, and wait. A push now would fail and read as
+     * "Sync trouble" for what is only a train going through a tunnel. The
+     * edits are on disk and `unpushed` remembers them; `online` coming back
+     * re-runs this effect, which pushes them.
+     */
+    if (!online) {
+      setSync((s) => ({ ...s, status: unpushed() ? 'queued' : 'offline', error: '' }));
+      return;
+    }
+    const wait = pushWait(lost, failed);
     const timer = setTimeout(() => {
+      // One push at a time. A second started while the first is on its way
+      // names the stamps the first is about to replace, is refused, and its
+      // recovery compares this device's newest copy against its own earlier
+      // one — which could put the earlier one back. It waits; the first one
+      // landing runs this again (`landed`).
+      if (inFlight.current) return;
+      inFlight.current = true;
+      const sentAt = editNow.current;
       const { courses, ...rest } = pickPersisted(state);
-      const removed = state.removedCourses;
+      // Read from the base as well as from memory, so a course deleted while
+      // offline is still a deletion after the app was closed and opened.
+      const removed = [...new Set([...state.removedCourses, ...coursesDeletedHere(readBase(), courses)])];
       void pushCloud(
         account.id,
         rest as Record<string, unknown>,
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
+        seenRows(),
       )
         .then((seen) => {
           // What the database stamped, not what this device's clock says.
+          inFlight.current = false;
           markSeen(seen);
+          // And the account now holds what was sent.
+          writeBase(baseOf(forLegacy({ ...rest, courses } as Record<string, unknown>)));
+          // Only if nothing changed while it was on its way: an edit made
+          // after this push left is still waiting, and says so.
+          if (editNow.current === sentAt) markUnpushed(false);
+          else setLanded((n) => n + 1);
+          setLost(0);
+          setFailed(0);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
-        .catch((e: unknown) =>
+        .catch(async (e: unknown) => {
+          inFlight.current = false;
+          if (isStale(e)) {
+            // The account has something this device has not read. Take it —
+            // `hydrate` merges rather than replaces — and then push the merge.
+            await refresh();
+            if (lost >= 2) {
+              setSync({
+                status: 'conflict',
+                at: 0,
+                error:
+                  'Another device keeps changing this semester at the same moment. Nothing has been overwritten, and this device will keep trying.',
+              });
+            }
+            setLost((n) => n + 1);
+            return;
+          }
+          const { said, code } = explainSync(e);
+          const again = retriesOnItsOwn(code);
           setSync({
             status: 'error',
             at: 0,
-            error: explainSync(e).said,
-          }),
-        );
-    }, 2500);
+            // Say that it is not over, where it is not: "Sync failed" alone
+            // reads as something the student now has to do something about.
+            error: again ? `${said}\n\nYour changes are safe on this device, and it will try again by itself.` : said,
+          });
+          if (again) setFailed((n) => n + 1);
+        });
+    }, wait);
     return () => clearTimeout(timer);
-    // `persisted` stands in for the whole persisted half. `state` is read
+    // `edit` stands in for the whole persisted half. `state` is read
     // inside the timer and is deliberately not a dependency — it changes on
     // every navigation, and none of those are worth a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [account, persisted]);
+  }, [account, edit, asking, lost, failed, online, landed]);
+
+  /*
+   * Push without waiting for the next edit: the offline banner asks for this
+   * when the connection comes back (D-058). It runs the push above rather than
+   * a second one beside it, so there is still one push in flight at a time,
+   * with the same retries. `landed` is what that effect already re-runs on.
+   * Resolves true once a push is asked for, false with no account to push to.
+   */
+  const pushNow = useCallback(async (): Promise<boolean> => {
+    if (!account) return false;
+    setLanded((n) => n + 1);
+    return true;
+  }, [account]);
 
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a
@@ -1067,64 +1456,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (catalog.empty) return;
     const check = () => {
       const at = new Date();
-      const items = datedItems(catalog, at);
-      fire(
-        dueReminders(at, state.notifs, {
-          items,
-          done: state.done,
-          classes: classesToNudge(railFor(catalog, at, state.appointments)),
-          muted: state.mutedCourses,
-          registrar: state.registrar,
-          /*
-           * The four lists `nextPayment` reads, named rather than passed as
-           * the whole store. `Held` in `lib/bill.ts` is structural, so this
-           * satisfies it — and it is the difference between a dependency
-           * array that can be checked and one that says `state` and so
-           * re-creates this interval on every keystroke anywhere in the app.
-           */
-          bill: nextPayment(
-            {
-              charges: state.charges,
-              aid: state.aid,
-              payments: state.payments,
-              plans: state.plans,
-            },
-            state.term,
-            at,
-          ),
-          quiet: state.quiet,
-          atRisk: atRiskToday(
-            railFor(catalog, at, state.appointments),
-            state.attendance,
-            state.attendPolicy,
-            courseCode,
-          ),
-          // What has to begin, worked out here for the same reason `atRisk`
-          // and `bill` are: `lib/notify.ts` decides when to say a thing and
-          // never what is true. `planFrom` is the one calibration, so the
-          // reminder and the card on Today cannot disagree about the date.
-          starts: beginNow(
-            planFrom({
-              items,
-              done: state.done,
-              spent: state.spent,
-              windows: state.windows,
-              now: at,
-            }),
-          ),
-        }),
+      // Two calls, as before: the built-in rules and the student's own are
+      // capped separately by `fire`, and merging them would change that.
+      const { rules, mine } = remindersFor(
+        {
+          notifs: state.notifs, mutedCourses: state.mutedCourses, appointments: state.appointments,
+          registrar: state.registrar, myRules: state.myRules, attendance: state.attendance,
+          attendPolicy: state.attendPolicy, done: state.done, quiet: state.quiet, term: state.term,
+          charges: state.charges, aid: state.aid, payments: state.payments, plans: state.plans,
+          spent: state.spent, windows: state.windows,
+        },
+        catalog,
+        at,
+        courseCode,
       );
-      // The student's own rules, fired through the same `fire` — which keeps
-      // the seen list, so a custom reminder is subject to the same "once" as
-      // every built-in one. They add and never subtract: see `lib/myrules.ts`.
-      fire(
-        myReminders(at, state.myRules, items, state.done).map((f) => ({
-          id: f.id,
-          rule: 'today' as const,
-          title: f.title,
-          body: f.body,
-        })),
-      );
+      fire(rules);
+      fire(mine);
     };
     check();
     const id = setInterval(check, 60_000);
@@ -1243,6 +1590,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (asked.opens?.changes) dispatch({ type: 'setChanges', source: asked.opens.changes });
       if (asked.opens?.courses) dispatch({ type: 'setCoursesTab', tab: asked.opens.courses });
       if (asked.opens?.home) dispatch({ type: 'setHomeTab', tab: asked.opens.home });
+      if (asked.opens?.account) dispatch({ type: 'setAccountDoor', door: asked.opens.account });
 
       if (same(asked, shown.current)) return;
       shown.current = asked;
@@ -1355,14 +1703,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         markSeen(remote.seen);
       } else {
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
-        dispatch({
-          type: 'hydrate',
-          persisted: {
-            ...(remote.state as Partial<Persisted>),
-            courses: remote.courses.map((c) => c.data as CourseModule),
-          },
-        });
+        const theirs = {
+          ...(remote.state as Partial<Persisted>),
+          courses: remote.courses.map((c) => c.data as CourseModule),
+        };
+        dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
+        // The first version this device and the account agree on.
+        writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
       }
       setAsking(null);
     },
@@ -1429,9 +1777,62 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [tints],
   );
 
+  /**
+   * The student's choice between two devices' edits.
+   *
+   * Keeping the copy the merge already kept only clears the question. Keeping
+   * the other puts it back through the reducer, stamped now, and the ordinary
+   * push sends it up — so the other device gets the choice on its next pull,
+   * as an edit, and is not asked again.
+   */
+  const resolve = useCallback((key: string, keep: 'mine' | 'theirs') => {
+    setReview((was) => {
+      const item = was.find((c) => c.key === key);
+      if (item && keep !== item.kept) {
+        const chosen = keep === 'mine' ? item.mine : item.theirs;
+        dispatch(
+          // The side that deleted it: keeping it deleted is deleting it here,
+          // and the push tells the account. Never a null written into a list.
+          chosen === null
+            ? { type: 'dropRecords', removals: { [item.field]: [item.id] } }
+            : item.field === 'settings'
+            ? { type: 'restoreSettings', values: chosen as Record<string, unknown> }
+            : item.field === 'ticks'
+              ? {
+                  type: 'restoreTick',
+                  field: item.id.slice(0, item.id.indexOf('/')),
+                  key: item.id.slice(item.id.indexOf('/') + 1),
+                  value: chosen,
+                }
+              : { type: 'restoreRecord', field: item.field, record: chosen },
+        );
+      }
+      const next = was.filter((c) => c.key !== key);
+      writeReview(next);
+      return next;
+    });
+  }, []);
+
+  /*
+   * What the sync line says, with waiting choices counted in. A device that
+   * synced cleanly but is holding two copies of a note says so, rather than
+   * "Synced" — which would be true of the account and not of the student's
+   * work. Anything worse (offline, an error) still says the worse thing.
+   */
+  const taskEngine = useTaskEngine({
+    accountId: account?.id ?? null,
+    online,
+    tasks: state.tasks,
+    apply: (tasks, known, adopted) => dispatch({ type: 'tasksFromEngine', tasks, known, adopted }),
+  });
+  const shownSync = useMemo(
+    () => withEngine(review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync, taskEngine.summary),
+    [sync, review.length, taskEngine.summary],
+  );
+
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
-    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, loading: awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
+    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
   );
   /*
    * The clock is published beside the store, not inside it.
@@ -1448,6 +1849,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       <NowContext.Provider value={now}>{children}</NowContext.Provider>
     </StoreContext.Provider>
   );
+}
+
+/**
+ * The signed-in account's id, or null: signed out, or rendered with no
+ * provider (a component's own test). For a library that keys its device store
+ * by account and must never throw for want of one — the journal.
+ */
+export function useAccountId(): string | null {
+  return useContext(StoreContext)?.account?.id ?? null;
 }
 
 export function useStore(): Store {

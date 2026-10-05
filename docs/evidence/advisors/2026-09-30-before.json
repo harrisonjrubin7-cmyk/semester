@@ -1,0 +1,18 @@
+{
+  "project": "lzrqvlugnawcgywkhqlz",
+  "read": "2026-09-30, read-only, 13:46 UTC",
+  "advisor": {
+    "rls_enabled_no_policy": 49,
+    "authenticated_security_definer_function_executable": 180,
+    "unindexed_foreign_keys": 4,
+    "no_primary_key": 2
+  },
+  "probe": { "definer_executable": 180, "definer_executable_by_anon_or_public": 0, "no_policy_tables": 49, "no_policy_tables_a_client_can_touch": 0, "unindexed_foreign_keys": 4, "no_primary_key": 2 },
+  "unindexed_foreign_keys": [
+    "private.domain_outbox_events(domain_outbox_events_tenant_id_fkey)",
+    "private.gateway_intelligence_action(gateway_intelligence_action_tenant_id_fkey)",
+    "private.gateway_intelligence_audit(gateway_intelligence_audit_tenant_id_fkey)",
+    "private.gateway_review(gateway_review_tenant_id_fkey)"
+  ],
+  "no_primary_key": ["private.console_audit_verification", "private.site_lead_hits"]
+}

@@ -434,6 +434,58 @@ export const SHAPES = {
     { c: [6, 20, 1.5] },
   ],
 
+  /*
+   * Launchpad — a rocket leaving the pad.
+   *
+   * Not a graduation cap and not a door: this is the start of the degree,
+   * the weeks before the first class, and the one thing that says "setting
+   * off" at sixteen pixels is something lifting off a line.
+   */
+  launchpad: [
+    { d: 'M12 2.5c3 2.4 4.5 5.8 4.5 9.5v4h-9v-4c0-3.7 1.5-7.1 4.5-9.5z' },
+    { c: [12, 9.5, 1.6] },
+    { d: 'M7.5 13.5 5 16v2.5h2.5M16.5 13.5 19 16v2.5h-2.5' },
+    { d: 'M10 19.5v2M14 19.5v2' },
+  ],
+
+  /*
+   * Notices — a tray with messages stacked in it.
+   *
+   * An inbox tray rather than an envelope (that is Mail) or a bell (that is
+   * the alerts setting). The hub gathers, and a tray is the thing that holds
+   * several at once.
+   */
+  hub: [
+    { d: 'M3.5 13.5h5l1.5 2.5h4l1.5-2.5h5v6h-17z' },
+    { d: 'M3.5 13.5 6 5.5h12l2.5 8' },
+    { d: 'M8.5 8.5h7M9.5 11h5' },
+  ],
+
+  /*
+   * Support — a hand held open under a heart.
+   *
+   * Not a cross, which would say clinic, and this screen is the map to many
+   * offices, most of them not medical. Something offered, and something held.
+   */
+  support: [
+    { d: 'M12 11.5s-4.5-2.6-4.5-5.4A2.3 2.3 0 0 1 12 5a2.3 2.3 0 0 1 4.5 1.1c0 2.8-4.5 5.4-4.5 5.4z' },
+    { d: 'M3 15.5h3.5l4 1.5h4a1.5 1.5 0 0 1 0 3H9' },
+    { d: 'M14.5 17l4-2.2a1.6 1.6 0 0 1 2 2.4L15 20.5H6.5' },
+  ],
+
+  /*
+   * Opportunities — a door standing open, with light through it.
+   *
+   * Every kind on that screen — a job, a lab, a term abroad, a scholarship —
+   * is a door somebody holds open for a while. Career already has the stairs.
+   */
+  opportunities: [
+    { d: 'M5.5 20.5v-17h9v17' },
+    { d: 'M14.5 3.5 19 5v14l-4.5 1.5z' },
+    { c: [16.3, 12, 0.9] },
+    { d: 'M3 20.5h18' },
+  ],
+
   /** Career — steps going up, with the next one drawn open. */
   career: [
     { d: 'M3.5 20.5h4v-5h4v-5h4v-5h5' },

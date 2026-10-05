@@ -393,14 +393,6 @@ export interface Block {
   optional?: boolean;
 }
 
-export interface AppNotification {
-  id: string;
-  code: string;
-  when: string;
-  title: string;
-  body: string;
-}
-
 // ── Your own things ───────────────────────────────────────────────────────
 // Everything above comes out of a syllabus. Everything below you added
 // yourself, and the app keeps the two visibly apart.
@@ -750,6 +742,17 @@ export type Screen =
   | 'edit'
   | 'analyse'
   | 'classmates'
+  | 'community'
+  | 'moderation'
+  // The operations console: a staff tool behind a platform-scope capability,
+  // nested like the review queue rather than registered. See `lib/nav.ts`.
+  | 'console'
+  // The school's dining, behind its module flag and nested rather than
+  // registered while no school has it on. See `lib/nav.ts`.
+  | 'dining'
+  | 'agreements'
+  | 'volunteers'
+  | 'volunteer'
   | 'activities'
   | 'brief'
   | 'essay'
@@ -766,6 +769,11 @@ export type Screen =
   | 'runway'
   | 'privacy'
   | 'registrar'
+  // The official registration transaction and the gradebook of record, each
+  // behind its school's writeback flag. See `screens/Registration.tsx` and
+  // `screens/Gradebook.tsx`.
+  | 'registration'
+  | 'gradebook'
   | 'sources'
   | 'slides'
   | 'account'
@@ -799,6 +807,22 @@ export type Screen =
   | 'family'
   | 'pathway'
   /*
+   * The student journey around the term, from offer letter to alumni. Each is
+   * a map and a checklist the student keeps, never a record the university
+   * keeps, and each routes to the office that decides — see `lib/offices.ts`.
+   * Their libraries live on the device, like the four above.
+   *
+   * Launchpad is admission to the fifth week. The hub is one inbox with every
+   * source labelled. Support is care, access, safety and the campus itself.
+   * Opportunities is jobs, research, abroad, credentials, placements, funding
+   * and alumni. `lib/journey-areas.ts` says which of the twenty-six expansion
+   * areas each one answers.
+   */
+  | 'launchpad'
+  | 'hub'
+  | 'support'
+  | 'opportunities'
+  /*
    * One door to everything that makes something. Six of its nine tiles open
    * a maker this app already had; the three that are its own — a form, a
    * design, a video — had nowhere to live. See `screens/Create.tsx`.
@@ -813,7 +837,15 @@ export type Screen =
   | 'setGrading'
   | 'setWorkload'
   | 'setAbout'
-  | 'setAssistant';
+  | 'setAssistant'
+  /*
+   * Under Me, the three screens the one control surface opens that nothing
+   * else did: the student's own trail (`lib/journal.ts`), what changed in the
+   * app (`lib/whatsnew.ts`), and the way back when something went missing.
+   */
+  | 'activity'
+  | 'whatsnew'
+  | 'recovery';
 
 /**
  * The report's grain, the post a changed date arrived in, and the grain of

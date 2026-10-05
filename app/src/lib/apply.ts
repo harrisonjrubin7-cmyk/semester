@@ -73,7 +73,7 @@ export const KINDS: { id: ApplyKind; label: string }[] = [
 export type Stage = 'found' | 'writing' | 'sent' | 'talking' | 'offer' | 'closed';
 
 export const STAGES: { id: Stage; label: string; means: string }[] = [
-  { id: 'found', label: 'Found it', means: 'Noted, not started.' },
+  { id: 'found', label: 'Interested', means: 'Noted, not started.' },
   { id: 'writing', label: 'Writing it', means: 'The application is being put together.' },
   { id: 'sent', label: 'Sent', means: 'In, and waiting.' },
   { id: 'talking', label: 'Talking', means: 'An interview, a coffee chat, an assessment.' },

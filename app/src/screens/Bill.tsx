@@ -20,12 +20,13 @@
  * somebody's payment details to no purpose.
  */
 
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import {
   AID_KINDS,
@@ -45,11 +46,16 @@ import {
 } from '../lib/bill';
 import { isoToDate, longLabel } from '../lib/date';
 import { readTerm } from '../lib/term';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+
+// The school's account is behind a flag that is off by default; its code
+// loads only where the flag is on.
+const MyStudentAccount = lazy(() => import('../components/MyStudentAccount').then((m) => ({ default: m.MyStudentAccount })));
 
 /** How many instalments a plan can be split into. Five is the common one. */
 const PARTS = [1, 2, 3, 4, 5, 6, 8, 10, 12];
 
-export function Bill() {
+export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off' }: { schoolAccount?: boolean } = {}) {
   // `now` from the store rather than `new Date()` here: it is the one clock
   // every screen reads, so "overdue" changes at midnight on this screen at the
   // same moment it changes on Today.
@@ -66,7 +72,7 @@ export function Bill() {
   // draw the rows; every figure comes from here.
   const { owed: o, instalments, next, paidCents: done } = useMemo(
     () => billFor(state, state.term, now),
-    [state, state.term, now],
+    [state, now],
   );
   const said = useMemo(() => todo(o, next), [o, next]);
 
@@ -81,30 +87,32 @@ export function Bill() {
   const [pending, setPending] = useState(false);
   const [on, setOn] = useState('');
   const [adding, setAdding] = useState<'charge' | 'aid' | 'payment'>('charge');
-  const [bad, setBad] = useState('');
+  const fields = useFieldErrors(['what', 'amount', 'on'] as const);
 
   const clear = () => {
     setWhat('');
     setAmount('');
     setPending(false);
     setOn('');
-    setBad('');
+    fields.clear();
   };
 
   const add = () => {
     const cents = readMoney(amount);
-    if (cents === null) {
-      setBad('That is not an amount the app can read. Try 3241.50, or $3,241.50.');
-      return;
-    }
-    if (cents === 0) {
-      setBad('A line of $0.00 tells a December version of you nothing. Leave it out.');
-      return;
-    }
-    if (!what.trim()) {
-      setBad('Say what it is, so the list still means something in December.');
-      return;
-    }
+    const ok = fields.check({
+      what: what.trim() ? '' : 'Say what it is, so the list still means something in December.',
+      amount:
+        cents === null
+          ? 'That is not an amount the app can read. Try 3241.50, or $3,241.50.'
+          : cents === 0
+            ? 'A line of $0.00 tells a December version of you nothing. Leave it out.'
+            : '',
+      on:
+        adding === 'payment' && !on
+          ? 'Say when you paid it. A payment with no date cannot be set against an instalment.'
+          : '',
+    });
+    if (!ok || cents === null) return;
     if (adding === 'charge') {
       dispatch({
         type: 'addCharge',
@@ -116,10 +124,6 @@ export function Bill() {
         aid: { term: state.term, what: what.trim(), kind: aidKind, cents, pending },
       });
     } else {
-      if (!on) {
-        setBad('Say when you paid it. A payment with no date cannot be set against an instalment.');
-        return;
-      }
       dispatch({
         type: 'addPayment',
         payment: { term: state.term, what: what.trim(), cents, on },
@@ -133,6 +137,13 @@ export function Bill() {
 
   return (
     <>
+      {schoolAccount && (
+        <Suspense fallback={<p role="status">Reading your school’s account…</p>}>
+          <MyStudentAccount enabled payUrl={statement} />
+        </Suspense>
+      )}
+
+      {schoolAccount && <SectionLabel style={{ marginTop: 'var(--sp-6)' }}>What you track yourself</SectionLabel>}
       <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
@@ -382,6 +393,7 @@ export function Bill() {
       )}
 
       <SectionLabel>Add a line</SectionLabel>
+      <ErrorSummary {...fields.summary({ what: 'What it is', amount: 'How much', on: 'When you paid it' })} />
       {/* The shared control rather than a fourth hand-rolled row of pills, and
           named "An award" rather than "Aid" on purpose: the section above is
           already a foldable group called Aid, and two buttons with the same
@@ -397,7 +409,7 @@ export function Bill() {
         value={adding}
         onChange={(which) => {
           setAdding(which);
-          setBad('');
+          fields.clear();
         }}
         style={{ marginBottom: 'var(--sp-4)' }}
       />
@@ -413,9 +425,16 @@ export function Bill() {
               ? 'Need-based grant'
               : 'Instalment 1'
         }
-        onChange={(e) => setWhat(e.target.value)}
-        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+        {...fields.control('what')}
+        onChange={(e) => {
+          setWhat(e.target.value);
+          fields.clear('what');
+        }}
+        style={{ width: '100%' }}
       />
+      <div style={{ marginBottom: 'var(--sp-4)' }}>
+        <FieldMessage {...fields.message('what')} />
+      </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <input
@@ -424,7 +443,11 @@ export function Bill() {
           aria-label="How much"
           placeholder="3241.50"
           inputMode="decimal"
-          onChange={(e) => setAmount(e.target.value)}
+          {...fields.control('amount')}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            fields.clear('amount');
+          }}
           style={{ width: 120, flex: 'none' }}
         />
         {adding === 'charge' && (
@@ -463,10 +486,18 @@ export function Bill() {
             type="date"
             value={on}
             aria-label="When you paid it"
-            onChange={(e) => setOn(e.target.value)}
+            {...fields.control('on')}
+            onChange={(e) => {
+              setOn(e.target.value);
+              fields.clear('on');
+            }}
             style={{ flex: 1, minWidth: 0 }}
           />
         )}
+      </div>
+      <div style={{ marginBottom: fields.errors.amount || fields.errors.on ? 'var(--sp-4)' : 0 }}>
+        <FieldMessage {...fields.message('amount')} />
+        <FieldMessage {...fields.message('on')} />
       </div>
 
       {adding === 'aid' && (
@@ -505,18 +536,6 @@ export function Bill() {
         </div>
       )}
 
-      {bad ? (
-        <div
-          style={{
-            fontSize: 'var(--type-sm-plus)',
-            color: 'var(--app-warn)',
-            marginBottom: 'var(--sp-4)',
-            lineHeight: 'var(--leading-normal)',
-          }}
-        >
-          {bad}
-        </div>
-      ) : null}
 
       <button type="button" className="btn btn-primary btn-block" onClick={add} style={{ height: 44 }}>
         Add it
@@ -549,11 +568,13 @@ export function Bill() {
           lineHeight: 'var(--leading-normal)',
         }}
       >
-        Nothing here is read off your student account, and nothing here is a payment. The account is
+        {schoolAccount
+          ? 'What you track yourself is yours alone: none of it is read off your school’s account, and nothing here is a payment. Type in what the school’s account does not show you yet — aid you have been offered, an instalment plan — and the app does the arithmetic. Paying happens on the university’s own page.'
+          : `Nothing here is read off your student account, and nothing here is a payment. The account is
         behind single sign-on and publishes nothing a student can read on their own, so you type the
         figures off the statement and the app does the arithmetic the statement does not — what is
         actually covered, what is only hoped for, and what each instalment comes to. Paying happens
-        on the university's own page.
+        on the university's own page.`}
       </div>
     </>
   );

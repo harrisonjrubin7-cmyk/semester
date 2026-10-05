@@ -1,3 +1,4 @@
+import { shownTime } from '../../lib/date';
 import { useMemo, useRef, useState } from 'react';
 import { secondLine } from '../../lib/dim';
 import { Produced } from '../../components/Produced';
@@ -25,6 +26,7 @@ import {
 } from '../../lib/brief';
 import { showHours } from '../../lib/activities';
 import { goHome } from '../../lib/openhome';
+import { formatDate } from '../../lib/locale';
 
 /**
  * The day, at both ends of it.
@@ -127,7 +129,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
 
       <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">
-          {now.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+          {formatDate(now, { weekday: 'long', month: 'short', day: 'numeric' })}
         </div>
         <div
           className="chrome-text"
@@ -169,10 +171,10 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
             ) : (
               <>
                 {am.classes.map((c) => (
-                  <ItemRow key={`c:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`c:${c.title}:${c.time}`} title={c.title} trailing={shownTime(c.time)} />
                 ))}
                 {am.commitments.map((c) => (
-                  <ItemRow key={`m:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`m:${c.title}:${c.time}`} title={c.title} trailing={shownTime(c.time)} />
                 ))}
               </>
             )}
@@ -228,7 +230,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
                   <ItemRow key={i.id} title={`${code(i.c)} · ${i.title}`} trailing="done" />
                 ))}
                 {pm.tasksDone > 0 && (
-                  <ItemRow title={`${pm.tasksDone} of your own tasks`} trailing="done" />
+                  <ItemRow title={`${pm.tasksDone} of your own actions`} trailing="done" />
                 )}
               </>
             )}
@@ -256,14 +258,14 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
                   <ItemRow key={i.id} title={`${code(i.c)} · ${i.title}`} trailing={i.dueTime} />
                 ))}
                 {pm.tomorrowClasses.map((c) => (
-                  <ItemRow key={`t:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`t:${c.title}:${c.time}`} title={c.title} trailing={shownTime(c.time)} />
                 ))}
               </>
             )}
           </Group>
 
           <Group header="Standing" framed={false}>
-            <ItemRow title={`${pm.tasksLeft} of your own tasks still open`} />
+            <ItemRow title={`${pm.tasksLeft} of your own actions still open`} />
             {pm.cardsSeen > 0 && (
               <ItemRow
                 title={`${pm.cardsSeen} cards drilled`}

@@ -11,6 +11,7 @@ import { Library } from './sheet/Library';
 import { FUNCTIONS, fnDoc } from '../lib/functions';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
+import { HorizontalOverflow } from '../components/HorizontalOverflow';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
 import {
@@ -202,6 +203,7 @@ import {
 import { pictureFileName, standalone } from '../lib/svgout';
 import { handOver } from '../lib/draft.hook';
 import type { Menu } from '../lib/menus';
+import { formatDate } from '../lib/locale';
 
 /**
  * A sheet, or a table.
@@ -710,10 +712,7 @@ function Shelf() {
                             sheet.courseId ? courseCode(sheet.courseId) : 'Personal',
                             forLine(allItems, sheet.itemId),
                             size.rows === 0 ? 'empty' : `${size.rows} × ${size.cols}`,
-                            new Date(order === 'edited' ? sheet.updated : seenAt(sheet)).toLocaleDateString(
-                              undefined,
-                              { month: 'short', day: 'numeric' },
-                            ),
+                            formatDate(order === 'edited' ? sheet.updated : seenAt(sheet), { month: 'short', day: 'numeric' }),
                           ]
                             .filter(Boolean)
                             .join(' · ')}
@@ -748,7 +747,8 @@ function Gallery({
   onTemplate: (id: string) => void;
 }) {
   return (
-    <div
+    <HorizontalOverflow
+      label="Start a new sheet"
       style={{
         display: 'flex',
         gap: 'var(--sp-4)',
@@ -795,7 +795,7 @@ function Gallery({
           <div style={{ ...secondLine(), fontSize: 'var(--type-xs)' }}>{template.says}</div>
         </Blueprint>
       ))}
-    </div>
+    </HorizontalOverflow>
   );
 }
 

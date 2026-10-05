@@ -1,5 +1,62 @@
 # Repairing the migration history
 
+## 24 September 2026 — first-login SSO membership binding
+
+`20260924154500_bind_institution_sso_membership.sql` adds the service-only,
+atomic bridge between a SCIM membership created before first login and the
+Supabase Auth user created by a verified SAML login. It binds only when the
+authorized provider, tenant, asserted email domain and active SCIM user name
+all agree; tenant mismatch, provider mismatch, rebinding and duplicate claims
+return false. The identity provisioning suite covers the successful binding
+and the cross-domain refusal.
+
+## 24 September 2026 — institutional identity provisioning
+
+`20260924150142_institution_identity_provisioning.sql` adds tenant-bound SAML
+provider records, current institutional memberships, salted SCIM credential
+verification material, external identities, approved group-to-role mappings
+and immutable provisioning audit events. Browser-editable profile or user
+metadata does not grant access. Service-role-only functions apply idempotent
+SCIM user and group changes, clear roles on deprovisioning and grant nothing
+for unknown groups.
+
+The matching `identity-provisioning.check.sql` proves tenant isolation,
+external-identifier uniqueness, absence of plaintext credential storage,
+unknown-group refusal, approved group role derivation, immediate deprovisioning
+and immutable audit history on PostgreSQL 17.
+
+## 23 September 2026 — isolated evidence graphs
+
+`20260923211000_evidence_graphs.sql` adds normalized learning evidence,
+mistake evidence, skill claims and consent-bound capture records. Every record
+carries tenant and person scope, every foreign key is covered by a non-partial
+index, and row-level policies keep students inside their own tenant and their
+own evidence. Students may suggest or confirm a skill claim but cannot mark it
+institution verified; that transition requires a live school-scoped source
+approval capability.
+
+Capture assets point to a versioned consent record. Derived segments and
+artifacts are refused after consent is revoked or expires, and a withdrawal
+marks existing derivatives withdrawn and the original removed. The matching
+`evidence-graphs.check.sql` proves same-owner access, cross-tenant isolation,
+verification refusal, withdrawal and cascade deletion. The deletion and record
+suites additionally cover account cleanup and the structural tenant/person
+scope of all eight tables.
+
+## 23 September 2026 — tenant intelligence policy
+
+`20260923210000_intelligence_policy.sql` adds school-scoped feature state, AI
+policy, approved-source and consent records. University administration is
+authorized only by live `role_grants` at `scope_kind = 'school'`; profile
+choices, email domains and browser-provided flags grant nothing. The migration
+also records old/new configuration changes with the authenticated actor and
+the verified grant that authorized an institutional write. The two public read
+helpers are security-invoker functions, so their table RLS remains in force.
+
+The matching `intelligence-policy.check.sql` uses two synthetic schools and
+proves same-tenant administration, cross-tenant invisibility, source-approval
+refusal, student-owned consent and audit evidence on PostgreSQL 17.
+
 The schema this app runs on cannot be rebuilt from its own record.
 [`ROLLBACK.md`](ROLLBACK.md) states the finding and why it is a rollback
 concern; this is the plan for fixing it, written before any of it was done so
@@ -877,6 +934,66 @@ means comparing the repository against a live project on every run, which is a
 different kind of check from everything else in this repository and should be
 argued for on its own rather than smuggled in here.
 
+### The reading of 28 September
+
+The ledger was read again through the Supabase connector: ninety-five rows,
+ending at `20260928230000  direct_rate_limits`. Every row has a file here. It
+also held a finding the snapshot could not show.
+
+`20260928200000_scim_gateway` (#819) and `20260928210000_support_tickets`
+(#839) reached main and were applied within minutes. The integration branch
+(#893) still carried eleven migrations numbered `20260928130000`–`160000`, the
+numbers D-105 gave them against the reading of the day before. Every one was
+pending and below the new watermark: the fault this file opens with, a second
+time, on the one merge that would have carried all eleven. `migrationorder.test.ts`
+was green throughout, because it was holding the directory to the reading of
+21 September.
+
+With the new reading in `supabase/ledger.snapshot`, that test names all eleven.
+They move to `20260928300000`–`310000` in their own order (D-107), and it
+passes again. The lesson is the one above, sharper: a guard held to a reading
+is only as current as the reading, and on a day with several merges an hour,
+a day-old watermark is a guess.
+
+### The reading and repair of 1 October
+
+The live ledger had advanced through `20260930234000`, but it exposed a
+content/version collision rather than a missing tail. Both
+`20260930233000` and `20260930234000` were named
+`data_subject_request_intake`; the repository assigns the former version to
+`k12_guardians`. Read-only object probes settled which account was true:
+`raise_my_data_subject_request(text,text)` existed, while the school edition
+column, guardian capability, grade-level table, three guardian tables and the
+guardian helper functions did not.
+
+The additive, rerunnable SQL in
+`20260930233000_k12_guardians.sql` was applied through the Supabase management
+API as a new forward migration rather than changing either old ledger row. The
+ledger recorded it as:
+
+    20261001075026  k12_guardians_repair
+
+The post-apply probe found the edition column, all four tables, all five
+triggers, ten RLS policies, fourteen indexes, the capability and the guardian
+authorization helper. `supabase/migrations/20261001075026_k12_guardians_repair.sql`
+is intentionally inert: its executable SQL already lives at the original
+version for clean builds, while the stub ensures `db push` can reconcile every
+version production knows.
+
+### The reading of 4 October
+
+The ledger was read again through the Supabase connector, ending at
+`20261004123000  productivity_commands`. The snapshot had stopped at
+`20261001075026`; the twenty rows after it, from
+`20261001152756  productivity_workspace` on, were applied by the deploy and each
+has a file in `supabase/migrations/`. No row is missing a file.
+
+It also settles a clash. Two files carried `20261004090000`, so `db push` would
+have applied one and skipped the other. Production already held
+`order_form_never_downgrades_plan` at that version, so that file kept it and
+`productivity_commands` moved to `20261004123000` (`bf7ea52`), above
+`20261004120000`. The ledger now shows it applied there.
+
 ## What this costs, and what it does not fix
 
 Steps 1–4 touch no live system and can be abandoned at any point with nothing
@@ -893,6 +1010,23 @@ project on every run is a different kind of thing from the tests in this
 repository, and it should be argued for on its own.
 
 ## Status
+
+### Pending durable gateway migration
+
+`20260924184500_gateway_action_journal.sql` is present in the repository but is
+not described here as deployed. It adds encrypted, tenant-scoped university
+action and AI-confirmation state, metadata-only audit events, a write-based
+readiness probe, shared atomic rate limits, and conservative retention. Its
+`gateway-journal.check.sql` suite must pass against PostgreSQL 17 in CI before
+merge; a green repository check still does not prove a production project has
+applied it, so the live ledger and deploy workflow remain the authority.
+
+`20260924200000_gateway_observability.sql` is also pending and must follow the
+journal migration. It records the last successful server-only retention sweep
+and makes that freshness available only to the service role so the gateway can
+fail readiness closed when the hourly cleanup has stopped. Neither the green
+repository suite nor the checked-in scheduler proves that production has
+applied the migration or activated the job.
 
 | Step | State |
 | --- | --- |

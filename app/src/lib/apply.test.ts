@@ -20,6 +20,7 @@ import {
   title,
   type Application,
 } from './apply';
+import { newOpportunity, opportunityApplication } from './career';
 
 const NOW = new Date(2026, 8, 4, 9, 0);
 const AT = NOW.getTime();
@@ -29,6 +30,20 @@ const day = (n: number) => {
 };
 
 const app = (patch: Partial<Application> = {}, at = AT) => newApplication(patch, at);
+
+it('tracks an opportunity deadline through the existing application calendar path', () => {
+  const opportunity = {
+    ...newOpportunity(),
+    title: 'Policy research intern',
+    organization: 'Civic Lab',
+    deadline: '2026-09-23',
+  };
+  const application = opportunityApplication(opportunity, AT);
+  const [item] = asItems([application], new Date(2026, 8, 23));
+  expect(item.source).toBe('applications');
+  expect(application.stage).toBe('found');
+  expect(line(application, new Date(2026, 8, 23))).toContain('Interested');
+});
 
 describe('what one is called', () => {
   it('joins the role and the place', () => {

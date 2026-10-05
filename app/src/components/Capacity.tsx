@@ -18,8 +18,11 @@ import { datedItems } from '../lib/select';
 import { forecast } from '../lib/pace';
 import { SUGGESTED_REST, keeps, over, takenLine, verdict, weekCapacity } from '../lib/rest';
 import { Folding } from './Fold';
+import { appLocale } from '../lib/locale';
+import { localClock } from '../lib/date';
 
 function clock(minutes: number): string {
+  if (appLocale()) return localClock(minutes);
   const h = Math.floor(minutes / 60) % 24;
   const m = minutes % 60;
   const hour = h % 12 === 0 ? 12 : h % 12;

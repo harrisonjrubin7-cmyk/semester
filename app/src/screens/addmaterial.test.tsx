@@ -197,10 +197,20 @@ async function attach(name: string, body: string, type: string) {
   await act(async () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  // The read, the classifier and the diff are all promises behind that event.
-  await act(async () => {
-    await Promise.resolve();
-  });
+  // The read, classifier, harvest and diff are all promises behind that
+  // event. Wait for the screen's own working state rather than a guessed
+  // number of microtasks.
+  if (/^image\//.test(type)) {
+    await vi.waitFor(() => expect(host.textContent).toContain(name));
+  } else if (assistant) {
+    await vi.waitFor(() => expect([...host.querySelectorAll('button')].some((candidate) =>
+      /^What it would change in/.test(candidate.textContent?.trim() ?? ''),
+    )).toBe(true));
+  } else {
+    await vi.waitFor(() => expect([...host.querySelectorAll('button')].some((candidate) =>
+      /^Review and add to/.test(candidate.textContent?.trim() ?? '') && !(candidate as HTMLButtonElement).disabled,
+    )).toBe(true));
+  }
 }
 
 /** Two cards and a term, written the way `parseMaterial` reads them. */
@@ -614,9 +624,9 @@ describe('what the ticked changes reach', () => {
  * on wording counted "What it is" among the proposals.
  */
 function sheet(): HTMLElement {
-  const apply = [...host.querySelectorAll('button')].find((b) =>
-    /^(Add the|Attach )/.test((b.textContent ?? '').trim()),
-  );
+  const buttons = [...host.querySelectorAll('button')];
+  const apply = buttons.find((b) => /^Add the/.test((b.textContent ?? '').trim()))
+    ?? buttons.find((b) => /^Attach /.test((b.textContent ?? '').trim()));
   if (!apply) throw new Error('no review sheet on screen');
   return apply.parentElement as HTMLElement;
 }

@@ -137,10 +137,26 @@ describe('where a launch lands', () => {
  * is the whole point.
  */
 const NOT_CONTENT = new Set([
+  /*
+   * Course demand (Phase K). The plan rows are a copy of the registration
+   * cart, which lives on the device, sent only to be counted; the consent is
+   * a record that the student agreed. Neither is work that exists nowhere
+   * else, and both are listed in `OWNED_TABLES` only so Delete my account
+   * removes them.
+   */
+  'demand_consents',
+  'term_plan_courses',
   'push_devices',
   'push_queue',
   'access_log',
   'profiles',
+  /*
+   * A request to be recognised as a member of a university (G-03). It records
+   * that somebody asked and what was decided, not anything they made, and it is
+   * listed in `OWNED_TABLES` only so Delete my account removes it. An account
+   * whose only history is a waiting request has lost nothing by being retired.
+   */
+  'school_membership_requests',
   /*
    * `activity` is the strongest case in this list rather than the weakest, and
    * it is worth saying why in more than a word.
@@ -158,6 +174,83 @@ const NOT_CONTENT = new Set([
    * flow exists to allow. `20260921151000_activity.sql` is the table.
    */
   'activity',
+  /*
+   * What a school sent about the account through an integration, and the
+   * consent that let it in. Neither is something the person did: an
+   * enrollment or a hold summary arrives whether or not anybody ever opened
+   * the app, so counting them would call a provisioned account that has only
+   * received its registrar's data "not empty" and refuse the attach this flow
+   * exists for. Same category as `activity` above — about the person, not by
+   * them. `20260927170000_integration_control_plane.sql` and
+   * `20260923210000_intelligence_policy.sql` are the tables.
+   */
+  'canonical_entity_references',
+  /*
+   * The link a registrar made from the school's student record to this
+   * account (D-145, D-146). The school made it, not the person; counting it
+   * would call a linked account that has never been opened "not empty".
+   * `20260929210000_academic_record_ledger.sql` is the table.
+   */
+  'academic_record_subjects',
+  'consent_record',
+  /*
+   * A school's dining (`20260929330000_dining.sql`) and the gradebook of
+   * record (`20260929310000_gradebook.sql`). The meal plan is what the card
+   * office sent, and a grade entry is what an instructor wrote; the same
+   * category as the integration rows above: about the person, not by them. A
+   * mobile order, an enrollment and a regrade request are the person's own
+   * acts, and `lti_account_untouched` reads them (20260929360000).
+   */
+  'dining_plans',
+  'grade_entries',
+  /*
+   * Phase J (`20260928302000_office_action_feed.sql`). Which programs and
+   * eligibilities a student said apply to them, and which office actions they
+   * marked done. Settings and ticks about someone else's content — an office's
+   * action — rather than anything the student wrote, and all of it can be set
+   * again in a few taps. Counting them would make an account that once ticked
+   * "I applied for financial aid" read as holding work.
+   */
+  'institution_action_audiences',
+  'institution_action_progress',
+  /*
+   * A private beta's membership, feedback and exit record. Not because they
+   * are nothing — the feedback is the person's words — but because an account
+   * this flow could retire can never have them: joining needs an invitation
+   * to a *confirmed* address, and a provisioned account's address is on a
+   * domain that cannot receive mail (`provisionedEmail` above), so no
+   * invitation can match it. `20260928220000_private_beta.sql`.
+   */
+  'beta_memberships',
+  'beta_feedback',
+  'beta_exit_requests',
+  /*
+   * A question the student asked Semester's support about the app. It is
+   * theirs, and account deletion takes it (`forget_my_support_tickets`), but
+   * it is not coursework an attach could strand: the ticket stays with the
+   * account whichever way the attach goes, and an account whose only row is
+   * "sign-in isn't working" is exactly the account this flow exists to let
+   * attach. `20260928210000_support_tickets.sql` is the tables.
+   */
+  'support_tickets',
+  'support_ticket_messages',
+  /*
+   * A privacy-rights case records a request about the account and the
+   * institution's handling of it. It is governance metadata rather than
+   * coursework or a student-created artifact, and it must remain attached to
+   * the subject for audit even when no academic work exists. Account deletion
+   * still includes it through `OWNED_TABLES`.
+   */
+  'data_subject_request',
+  /*
+   * An operator's saved console views and last-open tab
+   * (`lib/console/client.ts`, `20260929100000_console_control_plane.sql`).
+   * A preference about how a staff screen is arranged, not work that exists
+   * nowhere else — and it belongs to an operator holding `console:operate`,
+   * which is not an account an LTI launch attaches to. Listed in
+   * `OWNED_TABLES` only so Delete my account removes it.
+   */
+  'operator_preference',
 ]);
 
 /**

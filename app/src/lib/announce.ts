@@ -1,4 +1,4 @@
-import { MONTHS, realMonthDay } from './date';
+import { monthDay, realMonthDay } from './date';
 /**
  * The email that changes a date.
  *
@@ -187,7 +187,7 @@ export function readChanges(text: string, module: CourseModule): Change[] {
 /** What a proposal will do, in the words a person would use. */
 export function describe(change: Change, module: CourseModule): string {
   const item = module.items.find((i) => i.id === change.itemId);
-  const when = change.month >= 0 ? `${MONTHS[change.month]} ${change.day}` : '';
+  const when = change.month >= 0 ? monthDay(new Date(2000, change.month, change.day)) : '';
 
   switch (change.op) {
     case 'move':

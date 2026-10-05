@@ -59,6 +59,23 @@ export function split(items: DatedItem[], done: DoneMap): Split {
   return { ahead, overdue, done: finished };
 }
 
+/** The four views a course's Assignments tab offers. */
+export type AssignmentView = 'upcoming' | 'past' | 'completed' | 'all';
+
+/**
+ * Whether a deadline belongs in one of those views, by the same rule as
+ * `standingOf`: today is never past. The tab used to compare the item's day,
+ * which is midnight, with the clock, so something due at 11:59 tonight left
+ * Upcoming and joined Past the moment the day began — while the Overview
+ * beside it, counting with `split`, still called it upcoming.
+ */
+export function inView(view: AssignmentView, item: DatedItem, done: DoneMap): boolean {
+  if (view === 'all') return true;
+  if (view === 'completed') return Boolean(done[item.id]);
+  if (view === 'past') return item.isPast;
+  return !done[item.id] && !item.isPast;
+}
+
 /** How many deadlines have gone by unticked. The number worth a warning. */
 export function overdueCount(items: DatedItem[], done: DoneMap): number {
   return items.reduce((n, i) => n + (standingOf(i, done) === 'overdue' ? 1 : 0), 0);
@@ -106,6 +123,26 @@ export function claimed<T extends { c: CourseId }>(
   if (!sample) return items;
   const mine = new Set(own);
   return items.filter((i) => mine.has(i.c));
+}
+
+/**
+ * What Today decides from: the student's own dates, not the sample's.
+ *
+ * While the sample question is open the catalogue holds the sample's courses
+ * as well as the student's, and Today would lead with "Prepare <a sample
+ * assignment>" as if it were theirs. `OverdueBanner` already applied `claimed`
+ * for that reason; the Action Center and the single-decision briefing did not.
+ *
+ * `empty` is also true when the only courses are the sample's, so the first
+ * step offered is "Start your semester" rather than nothing at all.
+ */
+export function ownedScope<T extends { c: CourseId }>(
+  items: T[],
+  own: CourseId[],
+  sample: boolean,
+  catalogEmpty: boolean,
+): { items: T[]; empty: boolean } {
+  return { items: claimed(items, own, sample), empty: catalogEmpty || (sample && own.length === 0) };
 }
 
 /** "2 days late" — said plainly, because softening it helps nobody. */

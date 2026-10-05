@@ -1,3 +1,4 @@
+import { fence } from '../ai/untrusted';
 import type { CourseUpdate, Guide, StudyCard, Unit } from './types';
 
 /**
@@ -169,7 +170,9 @@ export function styleFor(house: House): string {
     `Match this course’s existing material. Read these ${house.from} cards before writing anything,`,
     'and write so that yours would not stand out among them.',
     '',
-    house.samples,
+    // The cards are the course's own material — a poisoned import could have
+    // written them — so they travel inside a fence like any other material.
+    fence('this course’s existing cards', house.samples),
     '',
     'What that comes down to:',
     ...house.rules.map((r) => `- ${r}`),

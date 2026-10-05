@@ -4,7 +4,11 @@ import { wipe } from '../state/persist/db';
 import { clearSnapshots } from './snapshots';
 import { clearFiles } from './files';
 import { clearVersions } from './docversions';
+import { clearOutbox } from './sync/outbox';
+import { eraseVaults } from './vault/idb';
+import { clearEngineStore } from './sync/engine/persistent';
 import { clearShared } from './shared';
+import { clearHistory } from './history/history';
 
 /**
  * Erase from this device.
@@ -64,6 +68,13 @@ export const DATABASES = [
   'semester-files',
   'semester-snapshots',
   'semester-drafts',
+  // Sends the student kept for later. Their own material, waiting to go.
+  'semester-outbox',
+  'semester-history',
+  // Encrypted offline records and the key that seals them (`lib/vault`).
+  'semester-vault',
+  // The engine's queue and rows for personal tasks (`lib/sync/engine`): unsent edits are somebody's writing.
+  'semester-engine',
 ];
 
 /** What was actually removed, so the screen can say so rather than assume. */
@@ -104,6 +115,16 @@ function empty(store: Storage): number {
   return keys.length;
 }
 
+/** Whether any account is connected, read without loading `lib/connect.ts`. */
+function holdsTokens(): boolean {
+  try {
+    const raw = localStorage.getItem('semester.tokens.v1');
+    return Boolean(raw && Object.keys(JSON.parse(raw) as object).length > 0);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Take this device back to how it was before the app ran.
  *
@@ -120,6 +141,18 @@ function empty(store: Storage): number {
 export async function eraseDevice(): Promise<Erased> {
   stopWriting();
 
+  /*
+   * The connected accounts' tokens are about to go with everything else, so
+   * the grants behind them are withdrawn first, where the provider allows it
+   * (`lib/revoke.ts`). Deleting a token without that leaves the permission
+   * live at the provider with nothing on this device able to withdraw it.
+   * Loaded only when something is connected: `lib/connect.ts` is kept out of
+   * the first load on purpose (see `main.tsx`).
+   */
+  if (holdsTokens()) {
+    await import('./revoke').then((m) => m.disconnectAll()).catch(() => undefined);
+  }
+
   const keys = empty(localStorage) + empty(sessionStorage);
 
   // Through each store's own clear rather than `deleteDatabase`: the app holds
@@ -130,6 +163,10 @@ export async function eraseDevice(): Promise<Erased> {
   await clearFiles().catch(() => undefined);
   await clearSnapshots().catch(() => undefined);
   await clearVersions().catch(() => undefined);
+  await clearOutbox().catch(() => undefined);
+  await eraseVaults();
+  await clearEngineStore().catch(() => undefined);
+  await clearHistory().catch(() => undefined);
 
   // Not a database: the service worker leaves a shared file in a Cache
   // Storage entry, and one that arrived and was never collected is still a

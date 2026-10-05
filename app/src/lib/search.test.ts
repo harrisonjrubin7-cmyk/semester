@@ -59,7 +59,7 @@ describe('the two searches, on the same query', () => {
    */
   const cat = buildCatalog([]);
   const palette = (q: string) =>
-    findEverything(cat, new Date(), q, [], [], ALL)
+    findEverything(cat, new Date(), q, [], [], ALL, [], {}, [], {}, 'student')
       .flatMap((g) => g.hits)
       .filter((h) => h.kind === 'screen')
       .map((h) => (h as { screen: string }).screen);

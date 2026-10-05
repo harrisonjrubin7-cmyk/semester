@@ -33,6 +33,7 @@ import type { DoneMap } from './standing';
 import type { Sitting } from './sitting';
 import type { Reviews } from './review';
 import { insightLines, type Insight } from '../insights/lines';
+import { formatDate } from './locale';
 
 /** Sunday-to-Saturday is how a university week is spoken about. */
 export function weekStart(now: Date): Date {
@@ -49,7 +50,7 @@ export function weekEnd(start: Date): Date {
 export function weekLabel(start: Date): string {
   const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
   const fmt = (d: Date) =>
-    d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    formatDate(d, { month: 'short', day: 'numeric' });
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
@@ -230,7 +231,7 @@ export function brief(
     `- Deadlines that went by unticked: ${
       b.slipped.length === 0 ? 'none' : b.slipped.map((i) => `${code(i.c)} ${i.title}`).join('; ')
     }`,
-    `- Your own tasks: ${b.tasksDone} done, ${b.tasksOpen} still open`,
+    `- Your own actions: ${b.tasksDone} done, ${b.tasksOpen} still open`,
     `- Cards drilled: ${b.cardsDrilled}`,
     `- Practice papers sat: ${
       b.papers.length === 0

@@ -186,7 +186,7 @@ export const gap: Provide = (look) => {
   return {
     summary:
       `Between classes. ${soon.length} things due in the next three days, ` +
-      `${undone.length} undone tasks of your own` +
+      `${undone.length} undone actions of your own` +
       `${undone.length > quick.length ? `, the shortest ${quick.length} below` : ''}.`,
     visible: [
       ...soon.slice(0, SHOWN).map((i) => ({ course: catalog.byId[i.c]?.code, title: i.title, due: i.dueShort })),

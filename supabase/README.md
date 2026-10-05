@@ -30,6 +30,22 @@ politeness: a migration that only works on an empty database cannot be used to
 repair a database that is half set up, which is exactly the state anything
 real is in when you need it most.
 
+**This was a claim until 27 September, and it was false.** The first run of the
+set twice found nine files that stopped on a second run: `create policy`
+without a `drop policy if exists`, `create trigger` without `or replace`, a
+`create table` without `if not exists`, a constraint dropped after foreign keys
+had come to depend on it, and a function re-created over a later, wider version.
+The last one did not merely fail — it stopped part way, and left an older
+`lti_account_untouched` behind that `help-requests.check.sql` caught. All nine
+are fixed, and so are two more that reached main
+the same afternoon (#803: a check constraint added without dropping it first,
+and a function re-created at a signature a later file installs) — found by the
+same check the moment this branch was rebased onto them. `SEMESTER_CHECK_REAPPLY=1 supabase/check.sh` now applies every file a
+second time, requires the schema and the rows of every table in `public` and
+`private` (count and a hash, per table) to come out identical, and runs the suites on
+the result; CI runs it that way. `reapply.known` is where a file that genuinely
+cannot run twice would be listed with its reason, and it is empty.
+
 **The order is a dependency order, not a history.** The timestamps put them in
 the sequence they have to run in; they are not the dates anything happened.
 
@@ -51,6 +67,13 @@ can answer — a `security definer` function runs as its owner, so the EXECUTE
 grant is the only thing standing in front of it. It is an allowlist over the
 whole schema rather than a list of cases, because the fault it guards against
 is an omission.
+
+`rls-coverage.check.sql` asks the same way about the policies: every table in
+`public` has RLS on (and `ensure_rls` still turns it on for new ones), every
+definer function pins its search_path, no write policy is `true`, only four
+named tables are readable in full, nothing in `private` is a client's to
+touch, and one connection switching accounts shows each only their own rows.
+Each sweep first proves it can fail, against a probe it plants.
 
 (This list had gone stale by four — it named seven of the eleven, and the four
 it left out include the two whose subject is whether an account can be created
@@ -174,3 +197,20 @@ comment reads the field back.
 Until **Deploy to production** is switched on, migrations are still applied by
 hand: SQL Editor → New query → paste a file's contents → Run, in filename
 order. SETUP.md walks through it.
+
+## Institutional isolation baseline
+
+`institutional-foundation.check.sql` composes the school, organization, role
+grant and capability boundaries into one two-campus probe. It verifies that a
+campus cannot read another campus's organization, `profiles.school_id` cannot
+be directly changed by a client, revoked and expired grants carry nothing, an
+exact scope does not authorize a different tenant-prefixed scope, and a tenant
+role implies no platform capability.
+
+Run it only through the disposable local harness:
+
+    supabase/check.sh institutional-foundation
+
+The harness creates a temporary Postgres cluster, applies every migration,
+runs the check in a transaction, rolls the fixtures back and removes the
+cluster. Do not run this fixture-producing check against staging or production.

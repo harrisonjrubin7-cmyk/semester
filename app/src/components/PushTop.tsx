@@ -17,6 +17,9 @@
  * from `lib/notify.ts` within a term.
  */
 
+import { useDeviceLibrary } from '../lib/device-library';
+import { EMPTY_REGISTRATION_DAY, readRegistrationDay } from '../lib/registration-day';
+import { REGISTRATION_DAY_KEY, storedWindow } from '../lib/registration-window';
 import { useEffect, useRef } from 'react';
 import { useNow, useStore } from '../state/store';
 import { enrolled, lastRefill, markRefilled, needsRefill, queueFor } from '../lib/push';
@@ -32,10 +35,21 @@ export function PushTop() {
   // Once per mount, not once per render: `now` ticks every thirty seconds and
   // the effect's other dependencies change whenever anything is ticked off.
   const tried = useRef(false);
+  // The registration reminder, watched: turning it off or moving the time
+  // must rebuild the queue now, not at the next twice-a-day refill — or a
+  // reminder the student switched off would still arrive.
+  const regday = useDeviceLibrary(REGISTRATION_DAY_KEY, readRegistrationDay, EMPTY_REGISTRATION_DAY).value;
+  const opens = regday.remind && regday.opensAt ? storedWindow() : null;
+  const lastOpens = useRef(opens);
 
   useEffect(() => {
+    const changed = opens !== lastOpens.current;
+    if (changed) {
+      lastOpens.current = opens;
+      tried.current = false;
+    }
     if (tried.current || !account) return;
-    if (!needsRefill(lastRefill(), Date.now())) return;
+    if (!changed && !needsRefill(lastRefill(), Date.now())) return;
     tried.current = true;
 
     void (async () => {
@@ -45,6 +59,7 @@ export function PushTop() {
           items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
           classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
           registrar: state.registrar,
+          registrationOpens: storedWindow(),
           // Muted courses and quiet hours, which this refill dropped on the
           // floor exactly as `PushSwitch` did. See the note there.
           muted: state.mutedCourses,
@@ -74,7 +89,7 @@ export function PushTop() {
         // twelve hours after a failure.
       }
     })();
-  }, [account, catalog, now, state.notifs, state.done, state.appointments, state.commitments, state.registrar, state.attendance, state.attendPolicy, state.mutedCourses, state.quiet, state.spent, state.windows, courseCode]);
+  }, [account, opens, catalog, now, state.notifs, state.done, state.appointments, state.commitments, state.registrar, state.attendance, state.attendPolicy, state.mutedCourses, state.quiet, state.spent, state.windows, courseCode]);
 
   return null;
 }

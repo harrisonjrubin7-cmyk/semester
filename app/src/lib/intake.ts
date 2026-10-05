@@ -1,6 +1,6 @@
 import { gather, type Unpacked } from './bundle';
 import { hashOf } from './fnv';
-import { extractText } from './extract';
+import { extractText, unreadLine } from './extract';
 
 /**
  * One way in for everything a course throws at you.
@@ -49,6 +49,8 @@ export interface Intake {
    * none, because the point of carrying one is that it can be checked.
    */
   pages?: { page: number; text: string }[];
+  /** Whether `pages` are slides or PDF pages. See `Extracted.pageUnit`. */
+  pageUnit?: 'slide' | 'page';
   /** The original PDF, base64, when small enough to send whole. */
   pdf?: string;
   door: Door;
@@ -67,6 +69,8 @@ export interface IntakeResult {
   read: Intake[];
   /** Named, never silently dropped — with what to do about each. */
   refused: { name: string; why: string }[];
+  /** Files read only in part: PDF pages that were pictures. See `unreadLine`. */
+  partly?: string[];
 }
 
 /**
@@ -104,6 +108,7 @@ export async function intakeFiles(
 ): Promise<IntakeResult> {
   const got: Unpacked = await gather(list);
   const read: Intake[] = [];
+  const partly: string[] = [];
   const refused: { name: string; why: string }[] = got.skipped.map((s) => ({
     name: s.name,
     why: s.why,
@@ -124,6 +129,7 @@ export async function intakeFiles(
     }
     try {
       const out = await extractText(piece.file);
+      if (unreadLine(out)) partly.push(unreadLine(out));
       read.push({
         name: out.name,
         text: out.text,
@@ -131,7 +137,7 @@ export async function intakeFiles(
         door: 'file',
         hash: hashOf(out.text),
         size: piece.file.size,
-        ...(out.pages ? { pages: out.pages } : {}),
+        ...(out.pages ? { pages: out.pages, ...(out.pageUnit ? { pageUnit: out.pageUnit } : {}) } : {}),
         ...(out.pdf ? { pdf: out.pdf } : {}),
       });
     } catch (e) {
@@ -139,7 +145,7 @@ export async function intakeFiles(
     }
   }
   onProgress?.(done, got.files.length);
-  return { read, refused };
+  return { read, refused, ...(partly.length ? { partly } : {}) };
 }
 
 /** Text somebody pasted. The one door with no file behind it. */

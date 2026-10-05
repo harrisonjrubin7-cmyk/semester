@@ -24,6 +24,8 @@ import {
 } from '../lib/myrules';
 import { useRowStyle } from './shell/useShell';
 import { Folding } from './Fold';
+import { appLocale } from '../lib/locale';
+import { localHourMark } from '../lib/date';
 
 /** The leads people actually use. A free number field invites 0 and 365. */
 const LEADS = [0, 1, 2, 3, 5, 7, 10, 14, MOST_DAYS];
@@ -31,7 +33,7 @@ const LEADS = [0, 1, 2, 3, 5, 7, 10, 14, MOST_DAYS];
 /** Waking hours. Nobody sets a reminder for 3am on purpose. */
 const HOURS = [6, 7, 8, 9, 10, 12, 15, 17, 18, 19, 20, 21, 22];
 
-const hourLabel = (h: number) => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'am' : 'pm'}`;
+const hourLabel = (h: number) => (appLocale() ? localHourMark(h) : `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'am' : 'pm'}`);
 
 export function MyRules() {
   const { state, dispatch, catalog, courseCode } = useStore();

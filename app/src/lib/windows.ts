@@ -1,3 +1,5 @@
+import { appLocale } from './locale';
+import { localClock } from './date';
 /**
  * When you are actually good for work.
  *
@@ -146,6 +148,7 @@ export function daysLine(days: number[]): string {
 /** "7:00p – 11:00p". */
 export function spanLine(w: Window): string {
   const clock = (m: number) => {
+    if (appLocale()) return localClock(m);
     const h = Math.floor(m / 60);
     const mins = String(m % 60).padStart(2, '0');
     const suffix = h >= 12 ? 'p' : 'a';

@@ -5,7 +5,7 @@ import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { dueByDay, weekLabel, weekLine, type Span } from '../lib/weekpage';
-import { clock } from '../lib/date';
+import { clock, shownTime } from '../lib/date';
 import { hasTime } from '../lib/duetime';
 import { Folding } from './Fold';
 
@@ -133,7 +133,7 @@ export function WeekDue({
                 </span>
                 {t.title}
                 {t.time.trim() && (
-                  <span style={{ ...secondLine(t.done), fontSize: 'var(--type-xs)' }}> {t.time.trim()}</span>
+                  <span style={{ ...secondLine(t.done), fontSize: 'var(--type-xs)' }}> {shownTime(t.time.trim())}</span>
                 )}
               </div>
             ))}

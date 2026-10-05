@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SourceBadge } from '../components/SourceBadge';
 import { DIMMED_ROW } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -14,10 +15,12 @@ import { Cutoffs } from '../components/Cutoffs';
 import { ScoreField } from '../components/ScoreField';
 import { Folding } from '../components/Fold';
 import { Suppose } from '../components/Suppose';
+import { OutcomeScenarios } from '../components/OutcomeScenarios';
 import { ScoreShot } from '../components/ScoreShot';
 import { configured } from '../lib/assistant';
 import { datedItems } from '../lib/select';
 import { isExam } from '../lib/runway';
+import { formatDate } from '../lib/locale';
 
 /**
  * What you have, and what the rest has to be.
@@ -330,6 +333,8 @@ export function Grades() {
               daysToTest={nextTest}
             />
 
+            <OutcomeScenarios standing={s} code={c.code} />
+
             {/*
               Practice, beside the projection and deliberately not inside it.
               The projection is arithmetic on weights a syllabus states; a
@@ -416,7 +421,21 @@ export function Grades() {
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {intro}
       </div>
+      {/*
+        Where these figures come from, in the one trust vocabulary. The marks
+        are what you typed; the projections and "what you need on the final"
+        are arithmetic on them — a student decides how hard to work from
+        those numbers, so they say they are not the registrar's.
+      */}
+      <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)', marginBottom: 'var(--sp-4)' }}>
+        <SourceBadge label="student_entered" />
+        <SourceBadge label="estimated" />
+      </div>
       {body(catalog.courses)}
+      {/* The instructor's released grades are the record; this tab is arithmetic. The gradebook is the other half. */}
+      <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'gradebook' })}>
+        See your official released grades
+      </button>
       <div style={{ height: 22 }} />
     </div>
   );
@@ -448,7 +467,7 @@ export function Grades() {
 function PaperTag({ paper }: { paper: Sitting }) {
   const { dispatch } = useStore();
   const [armed, setArmed] = useState(false);
-  const when = new Date(paper.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const when = formatDate(paper.at, { month: 'short', day: 'numeric' });
 
   return (
     <button

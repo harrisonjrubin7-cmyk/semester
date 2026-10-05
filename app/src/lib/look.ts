@@ -27,6 +27,7 @@
  */
 
 import { contrast as wcagContrast } from './contrast';
+import { readAccessModes } from './accessmode';
 import type { NavMode } from './types';
 
 export interface Accent {
@@ -106,6 +107,7 @@ export const ACCENTS: Accent[] = [
   { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#b69291', shade: '#6f3f3f' },
   { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#98a380', shade: '#4f5a37' },
   { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#969bbd', shade: '#454a72' },
+  { id: 'semester', label: 'Semester indigo', base: '#a5b4fc', bright: '#c7d2fe', deep: '#8f9cf0', shade: '#4338ca' },
   { id: 'gold', label: 'Old gold', base: '#d6c089', bright: '#efe1bc', deep: '#b19d72', shade: '#695a2f' },
 ];
 
@@ -447,6 +449,17 @@ export const GROUNDS: Ground[] = [
     // As Parchment above: 0.52 is the floor a faint label needs here.
     faintAlpha: 0.52,
   },
+  {
+    id: 'semester',
+    label: 'Semester',
+    blurb: 'Cool slate and white, with indigo for the one action that matters.',
+    light: true,
+    // Muted surface, page, then the white surface every card and field sits on.
+    ramp: ['#f1f5f9', '#f8fafc', '#ffffff', '#ffffff', '#ffffff'],
+    fg: '#0f172a',
+    dimAlpha: 0.8,
+    faintAlpha: 0.62,
+  },
 ];
 
 export function ground(id: string | undefined): Ground {
@@ -550,6 +563,34 @@ export const CALMS = [
 export function calmOf(id: string | undefined): string {
   return CALMS.find((c) => c.id === id)?.id ?? CALMS[0].id;
 }
+
+/**
+ * How much of each workspace is drawn — the four presentation modes.
+ *
+ * Presentation only, and that is a rule rather than a description: a mode
+ * changes what is shown first and what waits behind a disclosure, never what
+ * the student is allowed to do. Nothing that checks a permission or a
+ * capability reads this. `lib/unity.test.ts` holds that.
+ *
+ * `access` is not a fifth palette. It turns on the accessibility settings the
+ * app already has — larger text, comfortable spacing, less motion — through
+ * `ACCESS_LOOK`, so there is one text-size setting and not two that disagree.
+ */
+export const WORKSPACE_MODES = [
+  { id: 'guided', label: 'Guided', blurb: 'Next steps and short explanations alongside the work.' },
+  { id: 'focused', label: 'Focused', blurb: 'The current work, its sources and save state — navigation steps back.' },
+  { id: 'detailed', label: 'Detailed', blurb: 'Sources, metadata and deadlines shown up front.' },
+  { id: 'access', label: 'Accessibility', blurb: 'Larger text, more space and less motion, from your own settings.' },
+] as const;
+
+export type WorkspaceMode = (typeof WORKSPACE_MODES)[number]['id'];
+
+export function workspaceModeOf(id: string | undefined): WorkspaceMode {
+  return WORKSPACE_MODES.find((m) => m.id === id)?.id ?? 'guided';
+}
+
+/** What choosing Accessibility asks of the existing settings. Nothing else. */
+export const ACCESS_LOOK = { textSize: 'large', density: 'comfortable', calm: 'still' } as const;
 
 /**
  * Whether this setting asks for motion to be reduced on its own account.
@@ -724,6 +765,25 @@ export const LINE_HEIGHTS = [
 
 export function lineHeightOf(id: string | undefined): number {
   return LINE_HEIGHTS.find((l) => l.id === id)?.value ?? 1.55;
+}
+
+/**
+ * How far apart the letters and the words sit.
+ *
+ * Its own setting, not part of line spacing: crowding between letters is a
+ * different complaint from crowding between lines, and it is the one people
+ * with dyslexia most often name. The steps are deliberately below the
+ * 0.12em / 0.16em that WCAG 1.4.12 asks a layout to survive, so anything
+ * offered here is inside what `npm run sweep:spacing` measures.
+ */
+export const TEXT_SPACINGS = [
+  { id: 'normal', label: 'Normal', tracking: 0, word: 0, blurb: 'The default.' },
+  { id: 'open', label: 'Open', tracking: 0.02, word: 0.08, blurb: 'A little room between letters and words.' },
+  { id: 'wide', label: 'Wide', tracking: 0.05, word: 0.16, blurb: 'As open as it goes. Long words wrap sooner.' },
+];
+
+export function textSpacingOf(id: string | undefined) {
+  return TEXT_SPACINGS.find((t) => t.id === id) ?? TEXT_SPACINGS[0];
 }
 
 /**
@@ -1212,6 +1272,97 @@ export function warnFor(g: Ground): string {
 }
 
 /**
+ * The error ink: the rung above `warnFor`, mixed for the ground it is read on.
+ *
+ * Until now `--status-danger` was `--app-warn`, so "possible conflict" and
+ * "this failed" drew in the same colour (DD-006). The order of the rungs was
+ * carried only by the word and the glyph beside it, which is right and stays
+ * right — no state is ever colour-only — but the colour should not undo it.
+ *
+ * Three things separate it from the warning, and each is measured in
+ * `lib/contrast.test.ts` rather than described here:
+ *
+ *   - a hue 24° further into red (350 against 14), and more saturated;
+ *   - a higher bar, 6:1 against every surface the ground has, where the
+ *     warning holds 4.5:1. The rung that says "this did not work" is the one
+ *     that must not be missed in daylight. (7:1, WCAG's AAA, was tried and
+ *     turned every dark ground's error into a pastel pink, which is a softer
+ *     signal, not a stronger one.)
+ *   - it is never the same hex as the warning on any ground.
+ *
+ * Same walk as `warnFor`: darker on a light ground, lighter on a dark one, stop
+ * at the first value that clears the bar.
+ */
+export function errorFor(g: Ground): string {
+  const HUE = 350;
+  // High, because at the lightness a dark ground needs for 6:1 a fixed saturation
+  // carries almost no colour: 0.62 made Industry Dark's error #f0c1c9, a pastel
+  // beside its peach warning. 0.95 keeps it a rose (#fdb9c5) and does not move
+  // the contrast, which the walk below still solves for.
+  const SAT = 0.95;
+  const TARGET = 6.1;
+  const worst = (hex: string) =>
+    g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
+  const step = g.light ? -0.01 : 0.01;
+  let lum = g.light ? 0.5 : 0.62;
+  for (let i = 0; i < 90; i += 1) {
+    const hex = hueToHex(HUE, lum, SAT);
+    if (worst(hex) >= TARGET) return hex;
+    lum += step;
+    if (lum <= 0.04 || lum >= 0.96) break;
+  }
+  return g.light ? '#000000' : '#ffffff';
+}
+
+/**
+ * The five categorical series a chart may use, and the bar they are held to.
+ *
+ * Hues are fixed and spread (blue, green, amber, violet, and a low-chroma slate), red is
+ * left out on purpose — red is `errorFor`, and a series that reads as an
+ * error is a chart that lies. What is derived per ground is only the
+ * lightness, walked from a different starting point for each series so that
+ * neighbours also differ in luminance, which is what keeps them apart for
+ * someone who cannot tell two hues apart.
+ *
+ * The bar is 3:1 (WCAG 1.4.11, non-text contrast) against *every* surface in
+ * the ground's ramp — the same rule `CLAUDE.md` sets for the faint rung, for
+ * the same reason: a mark that clears the page and fails on a panel is the
+ * one somebody reads. It is 3:1 and not 4.5:1 because a bar or a line is a
+ * graphic, not text; any label set in a series colour is measured as text by
+ * `lib/contrast.test.ts` separately.
+ *
+ * These are for charts that mean something — verified against estimated,
+ * this term against last. `SheetChart` and the grapher keep using the
+ * reader's own hues around their accent (`lib/tint.ts`), which is a different
+ * job: telling five of somebody's own columns apart.
+ */
+export const CHART_HUES = [215, 152, 42, 272, 200] as const;
+/** The fifth is a slate, not a fifth hue: a fifth hue lands between two others. */
+export const CHART_SAT = [0.55, 0.55, 0.55, 0.55, 0.1] as const;
+export const CHART_START = [0.62, 0.5, 0.68, 0.44, 0.74] as const;
+/** The same five on a light ground, where the walk runs darker from here. */
+export const CHART_START_LIGHT = [0.46, 0.27, 0.42, 0.32, 0.4] as const;
+export const CHART_TARGET = 3.2;
+
+export function chartFor(g: Ground): string[] {
+  const worst = (hex: string) =>
+    g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
+  const step = g.light ? -0.01 : 0.01;
+  return CHART_HUES.map((hue, i) => {
+    // Different starting lightness per series, on either kind of ground, so
+    // neighbours differ in luminance and not only in hue.
+    let lum = g.light ? CHART_START_LIGHT[i] : CHART_START[i];
+    for (let n = 0; n < 96; n += 1) {
+      const hex = hueToHex(hue, lum, CHART_SAT[i]);
+      if (worst(hex) >= CHART_TARGET) return hex;
+      lum += step;
+      if (lum <= 0.04 || lum >= 0.96) break;
+    }
+    return g.light ? '#000000' : '#ffffff';
+  });
+}
+
+/**
  * A whole accent from one hue.
  *
  * All four shades, not just the main one. `shade` in particular is not a
@@ -1246,6 +1397,8 @@ export interface Look {
   typeface?: string;
   bodyface?: string;
   lineHeight?: string;
+  /** `normal`, `open` or `wide` — letter and word spacing. See `TEXT_SPACINGS`. */
+  textSpacing?: string;
   readingWidth?: string;
   iconShape?: string;
   /**
@@ -1284,6 +1437,12 @@ export interface Look {
    * string holding both would make a shelf called `dock` a real possibility.
    */
   boardOrder?: string;
+  /** How much of each workspace is drawn. See `WORKSPACE_MODES`. */
+  workspaceMode?: string;
+  /** Today's pinned command-centre widgets, comma-separated. See `lib/widgets.ts`. */
+  pinned?: string;
+  /** The first-session goal. See `lib/goals.ts`. */
+  goal?: string;
   /**
    * The shortcuts on the search home, as screen ids in the order they sit in.
    *
@@ -1295,6 +1454,8 @@ export interface Look {
    * which would spend the state on the first save.
    */
   favourites?: string;
+  /** Accessibility modes, a comma list. See `lib/accessmode.ts`. */
+  access?: string;
   /**
    * `on` or `off` — whether the search home draws its row of shortcuts.
    *
@@ -1444,6 +1605,12 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--app-warn': warnFor(g),
     '--app-warn-line': fade(warnFor(g), 0.45),
     '--app-warn-wash': fade(warnFor(g), 0.09),
+    // One rung above the warning, and a different colour. See `errorFor`.
+    '--app-error': errorFor(g),
+    '--app-error-line': fade(errorFor(g), 0.5),
+    '--app-error-wash': fade(errorFor(g), 0.1),
+    // The categorical series for charts that carry meaning. See `chartFor`.
+    ...Object.fromEntries(chartFor(g).map((hex, i) => [`--chart-${i + 1}`, hex])),
 
     '--app-accent': g.light ? a.shade : a.base,
     '--app-accent-bright': g.light ? a.shade : a.bright,
@@ -1562,6 +1729,8 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     // the body text hard to read had nothing to change.
     '--font-body': bodyfaceOf(look.bodyface).body,
     '--line-height': String(lineHeightOf(look.lineHeight)),
+    '--tracking-body': `${textSpacingOf(look.textSpacing).tracking}em`,
+    '--word-space': `${textSpacingOf(look.textSpacing).word}em`,
     // Zero means no cap. Used only by the long-form screens.
     '--reading-width': readingWidthOf(look.readingWidth)
       ? `${readingWidthOf(look.readingWidth)}ch`
@@ -1630,6 +1799,7 @@ export function readLook(saved: Look | undefined): Required<Look> {
     typeface: typefaceOf(saved?.typeface).id,
     bodyface: bodyfaceOf(saved?.bodyface).id,
     lineHeight: LINE_HEIGHTS.find((l) => l.id === saved?.lineHeight)?.id ?? 'normal',
+    textSpacing: textSpacingOf(saved?.textSpacing).id,
     readingWidth: READING_WIDTHS.find((w) => w.id === saved?.readingWidth)?.id ?? 'normal',
     iconShape: iconShapeOf(saved?.iconShape).id,
     // Unrecognised falls to `device`, which is the value that defers to the
@@ -1659,9 +1829,17 @@ export function readLook(saved: Look | undefined): Required<Look> {
     // registry on the way out, so a stale list can only arrange the shortcuts
     // oddly — never offer a screen this school does not have.
     favourites: typeof saved?.favourites === 'string' ? saved.favourites : '',
+    // Resolved here, unlike `favourites`: the modes are a closed list this
+    // file can check, and an unknown one should not survive a save.
+    access: readAccessModes(saved?.access).join(','),
     shortcuts: saved?.shortcuts === 'off' ? 'off' : 'on',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
+    workspaceMode: workspaceModeOf(saved?.workspaceMode),
+    // Unvalidated here like `boardOrder`: `lib/widgets.ts` checks every id on
+    // the way out, so a stale list can only drop a widget, never draw a dead one.
+    pinned: typeof saved?.pinned === 'string' ? saved.pinned : '',
+    goal: typeof saved?.goal === 'string' ? saved.goal : '',
   };
 }
 

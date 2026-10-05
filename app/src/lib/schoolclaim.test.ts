@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { domainOf, looksClaimable, type KnownSchool } from './schoolclaim';
+import { domainOf, looksClaimable, shouldAutoClaim, type KnownSchool } from './schoolclaim';
 
 const SQL = readFileSync(
   join(process.cwd(), '..', 'supabase/migrations/20260921170000_schools.sql'),
@@ -120,5 +120,26 @@ describe('the enforcement, which is not in this module', () => {
     // `null = null` is null, which a policy reads as false — but that is the
     // subtle half, so the explicit not-null is what is asserted.
     expect(fn).toMatch(/me\.school_id is not null/);
+  });
+});
+
+describe('shouldAutoClaim', () => {
+  const north = { id: 'north', name: 'North', shortName: '', domains: ['north.example'] };
+  const south = { id: 'south', name: 'South', shortName: '', domains: ['south.example'] };
+  const system = { id: 'north-city', name: 'North City', shortName: '', domains: ['north.example'] };
+
+  it('claims for an address exactly one school publishes, whatever its case', () => {
+    expect(shouldAutoClaim('Ana@NORTH.example', [north, south], '', false)?.id).toBe('north');
+  });
+  it('asks instead of guessing when two schools publish the same domain', () => {
+    expect(shouldAutoClaim('ana@north.example', [north, system], '', false)).toBeNull();
+  });
+  it('does nothing for an address no school publishes', () => {
+    expect(shouldAutoClaim('ana@gmail.example', [north, south], '', false)).toBeNull();
+    expect(shouldAutoClaim('', [north], '', false)).toBeNull();
+  });
+  it('does nothing when already claimed, or when the person left on purpose', () => {
+    expect(shouldAutoClaim('ana@north.example', [north], 'north', false)).toBeNull();
+    expect(shouldAutoClaim('ana@north.example', [north], '', true)).toBeNull();
   });
 });

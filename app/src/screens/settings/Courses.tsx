@@ -9,7 +9,7 @@ import { SEED_SUMMARY } from '../../data/seed';
 import { CourseRow } from '../Me';
 import { DESTINATIONS } from '../../lib/nav';
 import { hiddenFor } from '../../lib/school';
-import { ROLES, hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
+import { denserLayoutFor, hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
 
 /**
  * Who you are to the app, and what it is holding.
@@ -29,6 +29,7 @@ export function SettingsCourses() {
   const { state, dispatch, school } = useStore();
   const hidden = hiddenFor(school.capabilities);
   const byRole = hiddenFrom(state.role);
+  const role = roleOf(state.role);
 
   return (
     <SettingsPage
@@ -40,12 +41,12 @@ export function SettingsCourses() {
           <Group
             header="What you are here to do"
             footer="Not a permission. It is one device and one person, and this decides which screens are addressed to you — the same kind of thing as the university above deciding whether a meal-plan screen exists."
-            lit={lights('role student faculty teaching professor instructor advisor administrator parent payer staff who am i', lit)}
+            lit={lights('role student faculty teaching professor instructor teaching assistant advising advisor administration administrator parent payer parent or payer campus services staff applicant authorized family alumni who am i', lit)}
           >
             <CustomRow>
               <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>You are here as</SectionLabel>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
-                {roleOf(state.role).blurb}
+                {role.blurb}
               </div>
               <select
                 className="input"
@@ -61,6 +62,23 @@ export function SettingsCourses() {
                 ))}
               </select>
 
+              {denserLayoutFor(state.role) && state.density === 'comfortable' && (
+                // An offer, not a default: the app never changes a layout because of a role.
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                  Screens for this role are mostly rows and columns. A snugger layout fits more of them on
+                  screen. You can change it back under Look.
+                  <div style={{ marginTop: 'var(--sp-3)' }}>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => dispatch({ type: 'setLook', look: { density: 'snug' } })}
+                    >
+                      Use the snug layout
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {byRole.length > 0 && (
                 // Named rather than counted, for the same reason as the
                 // school's list below it.
@@ -71,25 +89,21 @@ export function SettingsCourses() {
                 </div>
               )}
 
-              {/*
-                Shown rather than hidden. Somebody who came looking for the
-                advising side deserves to know it is understood and missing;
-                leaving it out entirely reads as an app that has never heard
-                of advisors, and a role that is offered and then holds only
-                what you typed into it would be the confident wrong thing
-                this app refuses everywhere else.
-              */}
               <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
-                Not yet
+                Live now
               </SectionLabel>
-              {ROLES.filter((r) => !r.ready).map((r) => (
-                <div key={r.id} style={{ marginBottom: 'var(--sp-4)' }}>
-                  <div style={{ fontSize: 'var(--type-base)' }}>{r.label}</div>
-                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
-                    {r.needs}
+              <div style={{ fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                {role.live}
+              </div>
+
+              {role.needs && (
+                <div style={{ borderTop: '1px solid var(--app-line)', marginTop: 'var(--sp-4)', paddingTop: 'var(--sp-4)' }}>
+                  <SectionLabel style={{ margin: 0 }}>Connected access</SectionLabel>
+                  <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                    {role.needs} Choosing this role does not grant that access.
                   </div>
                 </div>
-              ))}
+              )}
             </CustomRow>
           </Group>
 

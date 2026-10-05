@@ -22,6 +22,7 @@ import { readLeadDays } from '../../lib/runway';
 import { readSettings as readGeocode } from '../../lib/geocode';
 import { toggle as toggleStarted } from '../../lib/underway';
 import { toggleStage } from '../../lib/stage';
+import { screenForRole } from '../../lib/role';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -148,6 +149,9 @@ export function settings(state: State, action: Action): State | null {
       // from somewhere else cannot arrive as a paragraph.
       return { ...state, myName: action.name.trim().slice(0, 40) };
 
+    case 'setPronounce':
+      return { ...state, pronounce: action.text.slice(0, 80) };
+
     // Attendance is the one record here the app must never write on its own —
     // no inference from a phone that did not move, no default once a class
     // has ended. See `lib/attend.ts`.
@@ -253,6 +257,7 @@ export function settings(state: State, action: Action): State | null {
     case 'wipeLocalForAdopt':
       return {
         ...state,
+        operatingWorkspace: null,
         courses: [],
         notes: [],
         tasks: [],
@@ -375,7 +380,12 @@ export function settings(state: State, action: Action): State | null {
 
     // Who is holding the app. Not a permission — see `lib/role.ts`.
     case 'setRole':
-      return { ...state, role: action.role };
+      return {
+        ...state,
+        role: action.role,
+        screen: screenForRole(state.screen, action.role),
+        history: state.history.filter((screen) => screenForRole(screen, action.role) === screen),
+      };
 
     case 'toggleSaved':
       return { ...state, saved: { ...state.saved, [action.id]: !state.saved[action.id] } };

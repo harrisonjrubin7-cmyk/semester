@@ -71,7 +71,7 @@ export function isExempt(screen: Screen): boolean {
  * message, where the prose actually is.
  *
  * So the drawn screens take `--canvas` on a desktop and everything else takes
- * `--measure`. Below 1180px the two are both `100%` and this changes nothing.
+ * `--measure`. Below 1200px the two are both `100%` and this changes nothing.
  */
 export const CANVAS: Screen[] = ['calendar', 'maps', 'draw', 'mail'];
 

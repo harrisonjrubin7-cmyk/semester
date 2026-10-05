@@ -2,6 +2,7 @@ import { inventory, bytesOf } from '../../lib/inventory';
 import { pickPersisted } from '../../state/shape';
 import { SHORTCUTS } from '../../lib/keys';
 import type { Provide } from '../shape';
+import { formatTime } from '../../lib/locale';
 
 /**
  * The Yours group — your account, your data, how the app looks.
@@ -26,7 +27,7 @@ export const clocks: Provide = (look) => {
       })),
       ...state.alarms.map((a) => ({
         alarm: a.label || 'unnamed',
-        at: new Date(a.at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+        at: formatTime(a.at, { hour: 'numeric', minute: '2-digit' }),
         on: a.on,
         repeats: a.days.length > 0,
       })),

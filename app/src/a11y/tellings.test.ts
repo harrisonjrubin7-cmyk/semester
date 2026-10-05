@@ -108,8 +108,14 @@ describe('every message that says something went wrong', () => {
         if (!SHOWN.test(line)) return;
         // The node it renders, or the component it delegates to, has to be
         // one a reader is told about.
-        const shown = lines.slice(i, i + 12).join('\n');
-        if (/<Trouble|<Problem|role="alert"|role="status"|aria-live/.test(shown)) return;
+        //
+        // From the line before as well: a live region that is already in the
+        // document with the error inserted into it — the pattern that is
+        // actually heard, and the one `components/FieldMessage.tsx` uses —
+        // opens its container on the line above the condition, not below it.
+        const shown = lines.slice(Math.max(0, i - 1), i + 12).join('\n');
+        // `ErrorState` is `role="alert"` itself — `components/unity/States.tsx`.
+        if (/<Trouble|<Problem|<ErrorState|role="alert"|role="status"|aria-live/.test(shown)) return;
         out.push(`${file}:${i + 1}`);
       });
     }

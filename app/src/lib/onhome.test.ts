@@ -113,6 +113,18 @@ describe('reach, reading this browser', () => {
   });
 
   it('reads an iPhone off the user agent and asks for the home screen', () => {
+    // The precondition first, named: the worker keeps the window between
+    // files, and a `matchMedia` stub left by an earlier file once answered
+    // yes to this query, which reads as "already installed" and turned the
+    // assertion below into a 'never' that named nothing.
+    let installed = false;
+    try {
+      installed = window.matchMedia?.('(display-mode: standalone)')?.matches ?? false;
+    } catch {
+      /* no matchMedia, or one that throws: neither says installed */
+    }
+    expect(installed, 'an earlier file left a matchMedia that says this page is installed').toBe(false);
+    expect((navigator as Navigator & { standalone?: boolean }).standalone, 'an earlier file left navigator.standalone set').not.toBe(true);
     Object.defineProperty(Navigator.prototype, 'userAgent', {
       configurable: true,
       get: () => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Safari/604.1',

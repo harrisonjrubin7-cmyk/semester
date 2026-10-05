@@ -1,5 +1,7 @@
 # Architecture decision records
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](../../SEMESTER-OPERATING-SYSTEM.md).
+
 What §43 of the transformation command asks for: the significant decisions, and
 **why** rather than what.
 
@@ -31,7 +33,17 @@ have been made.
 | [0004](0004-ai-through-a-metered-gateway.md) | AI through a server-side metered gateway, tool-based | Accepted, **not deployed** |
 | [0005](0005-multi-campus-scoping.md) | Campus scoping via an admin-written `schools` table | Accepted — `20260921170000_schools.sql` |
 | [0006](0006-search-is-one-ranker.md) | One ranker for search, extended rather than duplicated | Accepted |
+| [0007](0007-policy-decision-point.md) | One policy decision point, asked in one vocabulary | Accepted; adoption by route is incremental |
+| [0008](0008-event-envelope-and-outbox.md) | One event envelope, written through a transactional outbox | Accepted; no producer writes yet |
+| [0009](0009-workflow-state-machines.md) | Consequential workflows are state machines | Accepted |
+| [0010](0010-correlation-ids-and-error-envelope.md) | One correlation id to the audit row; one error envelope | Accepted, live in the gateway |
+| [0011](0011-modular-monolith-before-services.md) | Modularize the monolith in place; extract a service only when a trigger fires | Accepted — [plan](modularization/README.md) |
+| [0012](0012-legacy-only-through-anti-corruption-layers.md) | New code reaches legacy only through adapters; legacy may only improve | Accepted — held by `src/architecture/` |
 
 Not yet decided, and deliberately not recorded as if they were: messaging
 fan-out, notification digests, payments processor, object storage for generated
 media. Each becomes a record when a phase needs it.
+
+## Related
+
+[`data-architecture/`](data-architecture/README.md): canonical entity model, source-of-truth matrix, schema conventions, event and lineage design, lifecycle governance, analytics, search, AI data access and physical design. A **proposal** with validated, un-applied SQL; it adds no ADR and changes no decision recorded here.

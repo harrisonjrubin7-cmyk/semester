@@ -1,0 +1,252 @@
+/* Semester — the semantic token layer.
+ *
+ * Three layers, and only the middle one is new:
+ *
+ *   primitive   `--app-*`, `--type-*`, `--sp-*`, `--leading-*`, `--r-*`,
+ *               `--lift-*`, `--ease`, `--fast`. Written per ground and per
+ *               setting by `tokensFor` in `lib/look.ts`, or fixed in
+ *               `app.css`. Unchanged by this file.
+ *   semantic    this file. A name for the *job* — surface, text, border,
+ *               action, status, focus, target, motion, layer, elevation,
+ *               layout, shape — that points at a primitive.
+ *   component   the handful of `--card-*`, `--bar-*`, `--sheet-*` names at the
+ *               bottom, which point at semantic ones.
+ *
+ * Every semantic value here is a `var()` of something that already exists, or
+ * a fixed number that has no primitive yet (targets, motion durations, the
+ * layer ladder). No colour is written here as a hex: the thirteen grounds and
+ * eleven accents in `lib/look.ts` stay the only place a colour is decided, so
+ * `lib/contrast.test.ts` still covers everything these names can resolve to.
+ * `styles/tokens.test.ts` holds that.
+ *
+ * Adopting a semantic name changes the name of a value and not the value.
+ * That is the migration rule in `docs/DESIGN-SYSTEM-MIGRATION-PLAN.md`.
+ *
+ * Names are chosen not to collide with `industry.css`, which already owns
+ * `--space-*`, `--radius-*` and `--shadow-*` and loads before this: a
+ * same-named declaration here would silently retune the design system
+ * underneath, which is exactly the accident `app.css` records for `--sp-*`.
+ */
+
+:root {
+  /* ── Surface ─────────────────────────────────────────────────────────────
+     The five-step ramp, named by what sits on it. Dark grounds step up in
+     lightness as they rise, which is the tonal elevation a dark theme needs
+     because shadows barely read on it; light grounds use the same ramp. */
+  --surface-sunken: var(--app-void);
+  --surface-canvas: var(--app-bg);
+  --surface-plain: var(--app-bg);
+  --surface-base: var(--app-panel);
+  --surface-quiet: var(--app-panel);
+  --surface-raised: var(--app-hero);
+  --surface-feature: var(--app-hero);
+  --surface-overlay: var(--app-raise);
+  --surface-modal: var(--app-raise);
+  --surface-critical: var(--app-error-wash);
+
+  /* ── Text ────────────────────────────────────────────────────────────── */
+  --text-primary: var(--app-fg);
+  --text-secondary: var(--app-dim);
+  /* The faint rung. `lib/contrast.test.ts` walks it against every surface on
+     every ground; use it for metadata, never for anything a student must read
+     to act. */
+  --text-tertiary: var(--app-faint);
+  --text-disabled: var(--app-faint);
+  --text-on-action: var(--chrome-ink);
+
+  /* ── Border ──────────────────────────────────────────────────────────── */
+  --border-subtle: var(--app-line-soft);
+  --border-hairline: var(--app-line-soft);
+  --border-default: var(--app-line);
+  --border-strong: var(--app-accent-deep);
+
+  /* ── Shared brand vocabulary ───────────────────────────────────────────
+     These six names are also declared by the company site. The values stay
+     native to each surface: the application still follows the selected
+     ground and accent, while the public site keeps its fixed editorial
+     palette. Shared names let composition and documentation agree without
+     pretending the marketing canvas and a student workspace are identical. */
+  --brand-canvas: var(--surface-canvas);
+  --brand-surface: var(--surface-base);
+  --brand-ink: var(--text-primary);
+  --brand-muted: var(--text-secondary);
+  --brand-accent: var(--action-primary);
+  --brand-focus: var(--focus-color);
+
+  /* ── Action ──────────────────────────────────────────────────────────────
+     One call-to-action colour, and it is the ground's metal. */
+  --action-primary: var(--app-accent);
+  --action-primary-strong: var(--app-accent-bright);
+  --action-secondary: var(--app-accent-wash);
+
+  /* ── Status ──────────────────────────────────────────────────────────────
+     The app spends colour on one thing only: something that needs attention.
+     `attention` is the oxidised warn ink, `danger` is the error ink one rung
+     above it (`errorFor`: a redder hue, held to 6:1 where warn holds 4.5:1),
+     and the three calm states share the accent. Every
+     status is also carried by a word and a glyph (`lib/status.ts`), so no
+     state here is ever colour-only. */
+  --status-attention: var(--app-warn);
+  --status-attention-line: var(--app-warn-line);
+  --status-attention-wash: var(--app-warn-wash);
+  --status-danger: var(--app-error);
+  --status-danger-line: var(--app-error-line);
+  --status-danger-wash: var(--app-error-wash);
+  --status-success: var(--app-accent);
+  --status-info: var(--app-accent);
+  --status-neutral: var(--app-dim);
+
+  /* State roles name the treatment as well as the colour. Critical state is
+     never represented by one of these values alone; the shared components
+     pair it with text and a glyph. */
+  --state-disabled-text: var(--text-disabled);
+  --state-disabled-surface: var(--surface-sunken);
+  --state-readonly-surface: var(--surface-quiet);
+  --state-locked-border: var(--border-strong);
+  --state-preview-surface: var(--action-secondary);
+  --state-destructive-text: var(--status-danger);
+
+  /* ── Chart ───────────────────────────────────────────────────────────────
+     Series colours are derived per ground (`chartFor`) and held to 3:1 on
+     every surface by `lib/contrast.test.ts`; the roles below only name them.
+     A chart never leans on colour alone (`docs/DATA-VISUALIZATION-SYSTEM.md`):
+     every mark that means something also has a label, a pattern or a glyph.
+     Source roles reuse series so a chart and its `SourceBadge` agree. */
+  --chart-verified: var(--chart-2);
+  --chart-estimated: var(--chart-3);
+  --chart-stale: var(--app-error);
+  --chart-student-entered: var(--chart-4);
+  --chart-grid: var(--app-line);
+  --chart-axis: var(--app-dim);
+  --chart-label: var(--app-fg);
+  --chart-muted: var(--app-faint);
+  --data-series-1: var(--chart-1);
+  --data-series-2: var(--chart-2);
+  --data-series-3: var(--chart-3);
+  --data-series-4: var(--chart-4);
+  --data-series-5: var(--chart-5);
+
+  /* ── Focus ───────────────────────────────────────────────────────────────
+     The ring `app.css` already draws, by name. 2px outside the box keeps it
+     clear of the control's own border and survives `overflow: hidden`. The
+     scroll margins are what keeps a focused control out from under the
+     frosted header and the tab bar (WCAG 2.4.11). */
+  --focus-color: var(--app-accent-deep);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-clear-top: 96px;
+  --focus-clear-bottom: 84px;
+
+  /* ── Target size ─────────────────────────────────────────────────────────
+     24 is WCAG 2.2's floor (2.5.8); 44 is the practical fingertip that
+     `.tap` and `.btn` already reach. */
+  --target-min: 24px;
+  --target-compact: 32px;
+  --target-icon: 40px;
+  --target-primary: 44px;
+  --control-height-compact: var(--target-compact);
+  --control-height-standard: var(--target-primary);
+
+  /* ── Typography roles ─────────────────────────────────────────────────
+     The primitive type scale remains in app.css because it responds to the
+     reader's Text size setting. These are the finite jobs product UI and
+     documentation should ask for. */
+  --font-editorial: var(--font-heading);
+  --font-product: var(--font-body);
+  --type-role-display: var(--type-xl);
+  --type-role-page: var(--type-display-lg);
+  --type-role-section: var(--type-display-sm);
+  --type-role-body: var(--type-base);
+  --type-role-compact: var(--type-sm);
+  --type-role-label: var(--type-xs);
+  --type-role-numeric: var(--type-display);
+  --type-role-control: var(--type-sm-plus);
+  --type-role-caption: var(--type-xs);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     Durations by the job they do. `--fast` (130ms) is the app's existing
+     hover/press speed and stays the one for that. The role tokens below are
+     what `unity.css` animates with; every one of them is zeroed for reduced
+     motion and for the app's own Less motion / Low stimulation settings. */
+  --duration-instant: 0ms;
+  --duration-fast: 130ms;
+  --duration-standard: 180ms;
+  --duration-slow: 240ms;
+  --duration-sheet: 280ms;
+  --ease-standard: var(--ease);
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --motion-save: var(--duration-standard) var(--ease-standard);
+  --motion-insert: var(--duration-standard) var(--ease-standard);
+  --motion-panel: var(--duration-slow) var(--ease-emphasized);
+  --motion-sheet: var(--duration-sheet) var(--ease-emphasized);
+  --motion-progress: var(--duration-standard) linear;
+
+  /* ── Layers ──────────────────────────────────────────────────────────────
+     The ladder the app's stacking already implies, by name. The values are
+     the ones in use (`styles/stacking.test.ts` explains why 20/21 and 80/90
+     matter), so adopting a name moves nothing. */
+  --layer-base: 0;
+  --layer-raised: 1;
+  --layer-sticky: 20;
+  --layer-chrome: 21;
+  --layer-overlay: 80;
+  --layer-menu: 90;
+  /* The skip link, which must clear everything a keyboard user can land on. */
+  --layer-skip: 100;
+  /* The splash curtain, above the map's 1200. */
+  --layer-curtain: 1500;
+
+  /* ── Elevation ───────────────────────────────────────────────────────────
+     Four levels, mapped to the three-layer lifts. Use sparingly: a border is
+     the first tool for hierarchy here, a shadow the second. */
+  --elevation-none: none;
+  --elevation-raised: var(--lift-1);
+  --elevation-floating: var(--lift-2);
+  --elevation-modal: var(--lift-3);
+
+  /* ── Shape ───────────────────────────────────────────────────────────────
+     By job. They follow the Corners setting because the `--r-*` they point
+     at do. */
+  --shape-control: var(--r-sm);
+  --shape-card: var(--r-md);
+  --shape-surface: var(--r-lg);
+  --shape-sheet: var(--r-lg);
+  --shape-pill: 999px;
+
+  /* ── Layout ──────────────────────────────────────────────────────────── */
+  --layout-reading: var(--reading-width, 66ch);
+  --layout-measure: var(--measure, 100%);
+  --layout-operational: 1180px;
+  --layout-gutter: var(--page-pad, 18px);
+
+  /* ── Component tokens ────────────────────────────────────────────────── */
+  --card-surface: var(--surface-base);
+  --card-border: var(--border-default);
+  --card-shape: var(--shape-card);
+  --bar-surface: var(--surface-base);
+  --bar-border: var(--border-subtle);
+  --sheet-surface: var(--surface-overlay);
+  --sheet-shape: var(--shape-sheet);
+  --sheet-elevation: var(--elevation-modal);
+}
+
+/* Reduced motion, from the device or from the app's own setting. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-save: 0ms linear;
+    --motion-insert: 0ms linear;
+    --motion-panel: 0ms linear;
+    --motion-sheet: 0ms linear;
+    --motion-progress: 0ms linear;
+  }
+}
+
+:root[data-calm='still'],
+:root[data-calm='calm'] {
+  --motion-save: 0ms linear;
+  --motion-insert: 0ms linear;
+  --motion-panel: 0ms linear;
+  --motion-sheet: 0ms linear;
+  --motion-progress: 0ms linear;
+}

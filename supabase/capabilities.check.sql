@@ -170,15 +170,30 @@ begin
   select private.has_capability('platform:configure') into a;
   perform pg_temp.answered('and may not configure the platform', a, false);
 
-  -- `platform_admin` carries three capabilities and not this one. Asserted out
-  -- of the matrix rather than by granting it, because the claim is about what
-  -- the seeded rows say.
+  -- `platform_admin` carries eight capabilities and not this one: the three it
+  -- was created with, running the private beta
+  -- (20260928220000_private_beta.sql), and the three the operations console
+  -- added (20260929100000_console_control_plane.sql: console:operate,
+  -- approval:decide, breakglass:request — each judged operations-only in
+  -- app/src/lib/rolelaunch.ts before it was granted). Asserted out of the
+  -- matrix rather than by granting it, because the claim is about what the
+  -- seeded rows say — and asserted as the exact set, so a ninth cannot arrive
+  -- in passing.
   set local role postgres;
   select count(*) into n from public.role_capabilities
    where role = 'platform_admin' and capability = 'member:manage';
   perform pg_temp.counted('platform_admin does not implicitly hold member:manage', n, 0);
   select count(*) into n from public.role_capabilities where role = 'platform_admin';
-  perform pg_temp.counted('it holds exactly the three it was given', n, 3);
+  perform pg_temp.counted('it holds exactly the eight it was given', n, 8);
+  select count(*) into n from public.role_capabilities
+   where role = 'platform_admin'
+     and capability in ('console:operate', 'approval:decide', 'breakglass:request');
+  perform pg_temp.counted('three of them are the console’s', n, 3);
+  select count(*) into n from public.role_capabilities where role = 'platform_admin'
+     and capability not in ('report:read', 'moderation:action', 'platform:configure',
+                            'beta:manage', 'beta:triage',
+                            'console:operate', 'approval:decide', 'breakglass:request');
+  perform pg_temp.counted('and they are those eight', n, 0);
 
   -- ── The split, as a measurement ────────────────────────────────────────
   --
@@ -220,9 +235,77 @@ begin
 
   perform pg_temp.become(member);
   select count(*) into n from public.app_roles;
-  perform pg_temp.counted('a signed-in account reads the twenty roles', n, 20);
+  -- Twenty original roles plus the twenty-seven added by
+  -- 20260926150000_expansion_roles_and_features.sql, plus `integration_admin`
+  -- and `incident_responder` from 20260927170000_integration_control_plane.sql,
+  -- and `portfolio_council` from 20260927235000_governance_registries.sql,
+  -- plus the three Trust & Safety and community roles from the community migration,
+  -- the four go-to-market roles from 20260928090000_gtm_foundation.sql,
+  -- `trust_officer` from 20260928100000_trust_room.sql,
+  -- plus the four office publishers from the office action feed migration
+  -- (Phase J), and `athletic_academic_support` from
+  -- 20260928308000_support_shares.sql (D1).
+  -- 63 before 20260929000000_commercial_core added five: finance_operator,
+  -- customer_success, compliance_owner, content_owner, billing_contact.
+  -- 68 before 20260929330000_dining.sql added `dining_staff`.
+  perform pg_temp.counted('a signed-in account reads the sixty-nine roles', n, 69);
   select count(*) into n from public.role_capabilities;
-  perform pg_temp.counted('and the whole matrix', n, 15);
+  -- Twenty original rows, thirty-seven expansion rows, eight from the
+  -- integration control plane (four for integration_admin, three for
+  -- university_admin, one for incident_responder), eight staff roles that
+  -- answer help requests (the help_requests migration), two from the
+  -- governance registries (portfolio_council → governance:decide,
+  -- incident_responder → incident:communicate), seven learner and
+  -- teaching roles → lti:launch (20260928015315_lti_launch_capability.sql),
+  -- five community rows, one from integration quality
+  -- (integration_admin → integration:reconcile), six from the go-to-market
+  -- foundation (two for marketing_admin, one each for campaign_reviewer,
+  -- marketing_analyst, account_executive, and sponsor:review for
+  -- university_admin), trust:publish for trust_officer, four for the Phase J
+  -- office publishers, `faculty` → `course:publish` from
+  -- 20260928309000_course_studio.sql, and three from the private beta
+  -- (beta:manage and beta:triage for platform_admin, beta:triage for
+  -- support_agent), and nine from the operations console
+  -- (20260929100000_console_control_plane.sql: console:operate for six
+  -- operator roles, approval:decide for platform_admin, breakglass:request
+  -- for platform_admin and incident_responder).
+  -- 112 before the commercial core migration added six role-capability pairs.
+  -- 118 before the Migration Center (20260929200000_migration_center.sql)
+  -- added eleven: migration:manage and :view for implementation_manager and
+  -- integration_admin, migration:approve and :view for registrar,
+  -- university_admin and dean, and migration:view for institutional_researcher.
+  -- 129 before the academic-record ledger (20260929210000_academic_record_ledger.sql)
+  -- added seven: record:propose, :approve, :override and :read for registrar,
+  -- record:propose for faculty, record:approve and :read for dean.
+  -- 136 before student accounts (20260929220000_student_accounts.sql) added
+  -- nine: finance:request, :approve and :read for student_accounts_officer,
+  -- finance:request and :read for financial_aid_officer, and finance:approve,
+  -- :approve_high, :close and :read for business_admin.
+  -- 145 before the gradebook (20260929310000_gradebook.sql) added ten:
+  -- faculty → grades:enter, grades:moderate, grades:release, grades:export;
+  -- teaching_assistant → grades:enter; registrar → grades:export; and
+  -- grades:receive for student,
+  -- undergraduate_student, graduate_student and transfer_student.
+  -- 155 before 20260929300000_registration_transaction.sql gave `registrar`
+  -- `registration:administer`.
+  -- 156 before 20260929330000_dining.sql added dining_staff → dining:operate.
+  -- 157 before legal holds (20260930100000_legal_holds.sql) added three:
+  -- hold:read, :place and :release for university_admin.
+  -- 160 before human overrides (20260930120000_human_overrides.sql) added three:
+  -- override:record and override:review for registrar, override:review for
+  -- university_admin.
+  -- 163 before the Configuration Studio (20260930230000_configuration_studio.sql)
+  -- added ten: config:manage and :view for implementation_manager and
+  -- integration_admin, config:manage, :publish and :view for university_admin,
+  -- config:publish and :view for registrar, and config:view for
+  -- institutional_researcher.
+  -- 173 before the Workflow Builder (20260930231000_workflow_builder.sql) added
+  -- ten more: workflow:manage and :view for implementation_manager and
+  -- integration_admin, workflow:manage, :publish and :view for university_admin,
+  -- workflow:publish and :view for registrar, and workflow:view for
+  -- institutional_researcher; then guardians:manage for university_admin and
+  -- university_staff (20260930233000_k12_guardians.sql) added two more.
+  perform pg_temp.counted('and the whole matrix, including tenant controls', n, 185);
 
   perform pg_temp.become_anon();
   perform pg_temp.refused('a signed-out visitor cannot read the matrix',

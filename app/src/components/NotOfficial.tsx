@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { StatusChip } from './unity/Status';
 
 /**
  * The line that has to be on the screen, not in a footer.
@@ -50,6 +51,9 @@ export function NotOfficial({
         ...style,
       }}
     >
+      {/* The shared word first, so this reads as the same state as every
+          other "Needs confirmation" in the app, then the standing sentence. */}
+      <StatusChip status="needs-confirmation" />{' '}
       <strong>This is not official — confirm with your compliance office.</strong>
       {children ? ' ' : null}
       {children}

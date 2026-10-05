@@ -1,0 +1,4 @@
+# Migrations allowed to fail when applied a second time, one per line with the
+# reason. `SEMESTER_CHECK_REAPPLY=1 supabase/check.sh` reads this: a file not
+# listed that fails is a new non-idempotent migration, and a listed file that
+# passes is a stale entry. Both fail the run, so this list can only shrink.

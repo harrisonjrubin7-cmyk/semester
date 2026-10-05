@@ -26,7 +26,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  */
 
 const write = vi.fn<(w: unknown[]) => Promise<boolean>>();
-const isEmpty = vi.fn<() => Promise<boolean>>();
+const isEmpty = vi.fn<() => Promise<boolean | null>>();
+const held = vi.fn<() => boolean>();
 
 vi.mock('./db', async () => {
   const real = await vi.importActual<typeof import('./db')>('./db');
@@ -35,10 +36,11 @@ vi.mock('./db', async () => {
     open: vi.fn(async () => ({}) as unknown),
     write: (w: unknown[]) => write(w),
     isEmpty: () => isEmpty(),
+    held: () => held(),
   };
 });
 
-const { load } = await import('./index');
+const { load, available } = await import('./index');
 const { SCHEMA } = await import('../../lib/migrate');
 const { DEFAULT_PERSISTED, primePersisted } = await import('../shape');
 
@@ -50,6 +52,8 @@ beforeEach(() => {
   write.mockResolvedValue(true);
   isEmpty.mockReset();
   isEmpty.mockResolvedValue(true);
+  held.mockReset();
+  held.mockReturnValue(true);
   localStorage.clear();
   /*
    * `loadPersisted` caches its answer in a module-level `primed`, and the
@@ -135,5 +139,50 @@ describe('the first run on a device', () => {
     const state = await load();
     expect(state?.nav).toBe('tabs');
     expect(rows().filter((r) => r.key === 'schemaVersion')).toHaveLength(1);
+  });
+});
+
+/*
+ * The database opened and then did not answer.
+ *
+ * `isEmpty` answers `null` for a read that hit its limit (see `db.ts`), and
+ * that is not "empty". Read as empty, `load` migrated the `semester.v1`
+ * account onto a handle `db.ts` had just dropped, the write failed, and the
+ * student got `freshPersisted()` — a new account — with `available()` still
+ * true, so every later save went the same way (Codex on #954). The promise
+ * at the top of `main.tsx` is the localStorage path, and this holds it to it.
+ */
+describe('a database that opened and then did not answer', () => {
+  it('falls back to the localStorage path rather than migrating onto nothing', async () => {
+    localStorage.setItem('semester.v1', JSON.stringify({ ...DEFAULT_PERSISTED, schemaVersion: SCHEMA, nav: 'tabs' }));
+    isEmpty.mockResolvedValue(null);
+
+    expect(await load(), 'null is the signal to stay on localStorage').toBeNull();
+    expect(write, 'nothing is written onto a handle that is gone').not.toHaveBeenCalled();
+    expect(available(), 'and the session is not on the database path').toBe(false);
+  });
+
+  it('and when the move itself is the transaction that stalls', async () => {
+    localStorage.setItem('semester.v1', JSON.stringify({ ...DEFAULT_PERSISTED, schemaVersion: SCHEMA, nav: 'tabs' }));
+    // The store reads empty, the move is tried, and its write is the one
+    // that hits the limit: `db.ts` answers false and lets go of the handle.
+    write.mockImplementation(async () => {
+      held.mockReturnValue(false);
+      return false;
+    });
+
+    expect(await load(), 'not a fresh account: the old copy is still the account').toBeNull();
+    expect(available()).toBe(false);
+  });
+
+  it('and a handle let go of after the load takes the session off the database path', async () => {
+    expect(await load(), 'a good load on a fresh device').not.toBeNull();
+    expect(available(), 'the database path, while the handle is held').toBe(true);
+    // A later transaction hits its limit and `db.ts` lets go. `available()`
+    // used to answer from what `load` found and never look again, so every
+    // save for the rest of the session went to a database that could not
+    // take one.
+    held.mockReturnValue(false);
+    expect(available()).toBe(false);
   });
 });

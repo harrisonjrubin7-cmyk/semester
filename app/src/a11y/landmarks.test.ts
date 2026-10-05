@@ -38,6 +38,9 @@ function code(src: string): string {
 const FILES = tsx('src').map((f) => ({ file: f, src: code(readFileSync(f, 'utf8')) }));
 const find = (end: string) => FILES.find(({ file }) => file.endsWith(end))!;
 
+/** Workspace-owned screens for which App deliberately omits the global Header. */
+const OWN_TITLES = ['screens/Directory.tsx', 'screens/Search.tsx'] as const;
+
 /**
  * The components `main.tsx` renders *instead of* the app.
  *
@@ -70,8 +73,26 @@ const ROOTS = (() => {
   return names;
 })();
 
-/** Whether this file is one of those, by its default export's name. */
-const isRoot = (file: string) => ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!);
+/**
+ * Whether this file is one of those, by its default export's name — or part
+ * of the public site.
+ *
+ * `site/render.tsx` renders every file under `src/site/` into a document of
+ * its own, prerendered to static HTML and never mounted inside the app's
+ * shell (DECISION-LOG D-011). Each of those pages is the whole page, the same
+ * kind of exception as `Respond`, and `site/site.test.tsx` holds every one of
+ * them to exactly one `<main>` and one `<h1>` on the rendered HTML.
+ */
+const isRoot = (file: string) =>
+  ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!) || /(^|[\\/])src[\\/]site[\\/]/.test(file);
+
+/**
+ * The workspace deliberately removes its shared header on these two shell
+ * surfaces (`Workspace.ownTitle` in App.tsx). Their in-screen wordmark and
+ * welcome line therefore own the single page heading instead of duplicating
+ * one supplied by the shell.
+ */
+const OWNS_SHELL_TITLE = new Set(['Directory', 'Search']);
 
 /**
  * The app draws exactly one navigation, whichever of the four is chosen —
@@ -116,7 +137,9 @@ describe('every navigation is a landmark', () => {
  */
 describe('there is one main', () => {
   it('is the one in ScrollArea', () => {
-    expect(find('ScrollArea.tsx').src).toContain('<main id="main"');
+    const scrollArea = find('ScrollArea.tsx').src;
+    expect(scrollArea).toContain('<main id="main"');
+    expect(scrollArea, 'the skip-link target must receive keyboard focus').toContain('tabIndex={-1}');
   });
 
   it('exempts the pages that are a whole page, and only those', () => {
@@ -124,7 +147,8 @@ describe('there is one main', () => {
     // would leave both rules below passing against any file at all, and the
     // failure would be silent — so the set is named here once, where a fourth
     // root has to be looked at rather than absorbed.
-    expect([...ROOTS].sort()).toEqual(['Onboarding', 'Respond', 'StrictMode']);
+    // TrustRoom: a university reviewer's procurement-room link, mounted like Respond.
+    expect([...ROOTS].sort()).toEqual(['Onboarding', 'Respond', 'StrictMode', 'TrustRoom']);
     expect(isRoot('src/screens/Respond.tsx')).toBe(true);
     expect(isRoot('src/screens/Degree.tsx')).toBe(false);
   });
@@ -151,14 +175,40 @@ describe('there is one h1', () => {
     expect(find('App.tsx').src, 'the screen’s name is the page’s h1').toMatch(/<h1/);
   });
 
+  it('is owned by the two workspace surfaces whose shared header is absent', () => {
+    expect([...OWNS_SHELL_TITLE].sort()).toEqual(['Directory', 'Search']);
+    expect(find('App.tsx').src).toContain("state.screen === 'search' || state.screen === 'directory'");
+    expect(find('App.tsx').src).toContain('<Header screenOwnsTitle={ownTitle} />');
+  });
+
   it('is not printed again by a screen inside the shell', () => {
     const extra = FILES.filter(({ file, src }) => {
       if (file.endsWith('App.tsx')) return false;
+      if (OWN_TITLES.some((screen) => file.endsWith(screen))) return false;
       // Same exception, for the same reason.
       if (isRoot(file)) return false;
+      if (OWNS_SHELL_TITLE.has(file.replace(/\.tsx$/, '').split('/').pop()!)) return false;
       return /<h1[\s>]/.test(src);
     });
     expect(extra.map(({ file }) => file), 'a second h1 under the header’s').toEqual([]);
+  });
+
+  it('is owned by each workspace screen whose global header is absent', () => {
+    const app = find('App.tsx').src;
+    expect(app).toContain("state.screen === 'search' || state.screen === 'directory'");
+    for (const screen of OWN_TITLES) {
+      const source = find(screen).src;
+      expect(source.match(/<h1[\s>]/g), `${screen} needs one page heading`).toHaveLength(1);
+      expect(source, `${screen} needs the workspace route-focus target`).toMatch(
+        /<h1[^>]*data-page-title[^>]*tabIndex=\{-1\}/,
+      );
+    }
+  });
+
+  it('moves workspace route focus even when its global header is absent', () => {
+    const app = find('App.tsx').src;
+    expect(app).toContain("querySelector<HTMLHeadingElement>('h1[data-page-title]')");
+    expect(app).toContain('new MutationObserver');
   });
 
   it('is the only thing focus is moved to on arrival', () => {
@@ -167,5 +217,53 @@ describe('there is one h1', () => {
     const page = find('settings/Page.tsx').src;
     expect(page, 'the shell moves focus; this page should not').not.toMatch(/heading\.current\?\.focus\(\)/);
     expect(page, 'and so needs no landing point of its own').not.toMatch(/tabIndex=\{-1\}/);
+  });
+});
+
+describe('institutional preview extends the one Semester application root', () => {
+  it('marks every existing shell layout as the same application root', () => {
+    const app = find('App.tsx').src;
+    expect(app.match(/data-semester-root/g)?.length).toBe(3);
+  });
+
+  it('adds no nested global landmark or standalone institutional stylesheet', () => {
+    const institutional = FILES.filter(({ file }) => file.includes('/institutional/'));
+    for (const { file, src } of institutional) {
+      expect(src, `${file} must stay inside the shell main`).not.toMatch(/<main[\s>]/);
+      expect(src, `${file} must not add global navigation`).not.toMatch(/<nav[\s>]/);
+      expect(src, `${file} must use the existing design system`).not.toMatch(/import\s+['"][^'"]+\.css['"]/);
+    }
+  });
+
+  it('mounts App exactly once in the signed-in product root', () => {
+    const main = find('main.tsx').src;
+    expect(main.match(/<App\s*\/>/g)).toHaveLength(1);
+  });
+});
+
+describe('the expansion keeps essential controls readable and touchable', () => {
+  it('uses the existing shell landmarks and no private stylesheet', () => {
+    for (const name of [
+      'components/JourneyCards.tsx',
+      'components/MasteryGraph.tsx',
+      'components/SkillsGraph.tsx',
+      'components/CourseCapture.tsx',
+      'components/institutional/ControlPlane.tsx',
+    ]) {
+      const component = find(name).src;
+      expect(component, `${name} nested a main landmark`).not.toMatch(/<main[\s>]/);
+      expect(component, `${name} nested a global navigation`).not.toMatch(/<nav[\s>]/);
+      expect(component, `${name} added a private stylesheet`).not.toMatch(/import\s+['"][^'"]+\.css['"]/);
+    }
+  });
+
+  it('gives capture actions a 44px minimum target', () => {
+    const css = readFileSync('src/styles/app.css', 'utf8');
+    expect(css).toMatch(/\.course-capture-original button\s*\{[^}]*min-height:\s*44px/s);
+  });
+
+  it('announces mutable capture and control-plane status', () => {
+    expect(find('components/CourseCapture.tsx').src).toContain('<p role="status"');
+    expect(find('components/institutional/ControlPlane.tsx').src).toContain('<p role="status"');
   });
 });

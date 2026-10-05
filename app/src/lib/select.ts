@@ -1,16 +1,7 @@
 import { blocksFor, classNote, codeOf, type Catalog } from '../data/catalog';
 import { occursOn } from './repeat';
 import { CAMPUS_CALENDARS } from '../data/events';
-import {
-  dateToIso,
-  daysBetween,
-  shiftIso,
-  decorateEvent,
-  decorateItem,
-  minutesNow,
-  sameDay,
-  untilLabel,
-} from './date';
+import { dateToIso, daysBetween, decorateEvent, decorateItem, minutesNow, sameDay, shiftIso, shownTime, untilLabel } from './date';
 import { blocksOn, type Commitment } from './activities';
 import { hasTime, readDue } from './duetime';
 import { CAMPUS_KIND } from './kinds';
@@ -163,7 +154,7 @@ export function feed(cat: Catalog, now: Date, done: Record<string, boolean>): Fe
       isClass: true,
       c: b.c,
       top: 'Today',
-      bottom: b.time,
+      bottom: shownTime(b.time, b.at),
       code: b.c ? codeOf(cat, b.c) : 'Campus',
       kind: b.optional ? 'Optional' : b.canceled ? 'Canceled' : 'Class',
       title: b.title,
@@ -684,9 +675,9 @@ export function railFor(
       at,
       title: t.title,
       // The course it is filed against, then the word for what it is. A task
-      // with no course says only "Task", which is still more than the blank
+      // with no course says only "Action", which is still more than the blank
       // second line it would otherwise draw.
-      meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Task'].filter(Boolean).join(' · '),
+      meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Action'].filter(Boolean).join(' · '),
       // As with a deadline: a task is an hour, not a room.
       where: '',
       c: t.courseId,

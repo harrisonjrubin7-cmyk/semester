@@ -1,3 +1,4 @@
+import { useQuizFeedback } from '../components/QuizFeedback';
 import { allCards, weakestUnit } from '../data/catalog';
 import { useEffect, useMemo, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
@@ -30,6 +31,8 @@ import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
 import { hasTranscript, load, readingTime, speaker, type Transcript } from '../lib/transcript';
 import { scriptFor } from '../lib/script';
+import { ContextBar } from '../components/unity/ContextBar';
+import type { StatusKey } from '../lib/status';
 
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
@@ -49,6 +52,7 @@ export function Guide() {
   useKeepAwake();
 
   const live = useLive(state.guideId);
+  const { leave: quizLeave } = useQuizFeedback(state.guideId);
   const { guide, figures: figMap, updates, onUnit } = live;
   const cards = allCards(guide);
   const weak = weakestUnit(guide);
@@ -90,6 +94,8 @@ export function Guide() {
    * away costs nothing but the fold.
    */
   const isNav = state.nav === 'guides';
+  // Imported is the one test of whose course this is — see `ShareCourse`.
+  const origin: StatusKey = state.courses.some((m) => m.course.id === state.guideId) ? 'made' : 'sample';
   const waysOpen = isNav || state.waysOpen;
 
   return (
@@ -101,7 +107,14 @@ export function Guide() {
           so repeating them above it just pushes the document down. */}
       {state.mode !== 'field' && (
         <>
-          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
+          {/* The guide's name as a plain line, as before — the screen's name
+              is the h1 — with where it came from beside it. */}
+          <ContextBar
+            context={guide.code}
+            title={guide.name}
+            statuses={[origin]}
+            source={{ title: guide.name, origin, sourceName: guide.source }}
+          />
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>{guide.blurb}</div>
         </>
       )}
@@ -443,7 +456,7 @@ export function Guide() {
           </div>
           <ActionButton
             onClick={() =>
-            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
+            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed, quizLeave) })
             }
             tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
@@ -498,7 +511,7 @@ export function Guide() {
                       flex: 'none',
                       color: 'var(--app-dim)',
                       transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
-                      transition: 'transform 140ms ease',
+                      transition: 'transform var(--duration-standard) ease',
                     }}
                   />
                   <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>
@@ -1274,7 +1287,7 @@ function Worked({ example }: { example: Example }) {
             </li>
           ))}
         </ol>
-        <div style={{ ...body, color: 'var(--app-ink)' }}>{e.result}</div>
+        <div style={{ ...body, color: 'var(--app-fg)' }}>{e.result}</div>
       </>
     );
   }
@@ -1620,7 +1633,10 @@ function Listen() {
   const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
-  const pod = catalog.podcast[state.guideId];
+  // A deep link can render once before the dynamically loaded sample catalog
+  // arrives. Keep Listen usable during that hand-off instead of throwing into
+  // the screen boundary while `settleCourse` waits for the requested course.
+  const pod = catalog.podcast[state.guideId] ?? { blurb: '', editions: [] };
   /*
    * Drawn rather than native, and the element is not here.
    *

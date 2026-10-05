@@ -1,5 +1,10 @@
+import { AGENTS } from '../../../packages/institution/src/agents';
+import { useLive } from './live';
 import { useAI } from './store';
 import { assemble, suggestionsFor } from './assemble';
+import { useNow, useStore } from '../state/store';
+import { upcomingItems } from '../lib/select';
+import type { HelpState } from './converse';
 
 /**
  * A new conversation, which is not a blank page.
@@ -19,6 +24,7 @@ export function Opening({
   onPick,
   tight = false,
   big = false,
+  help = { kind: 'ready' },
 }: {
   onPick: (q: string) => void;
   tight?: boolean;
@@ -33,9 +39,17 @@ export function Opening({
    * surface has to give them.
    */
   big?: boolean;
+  /** Whether help is available; a course ban trims the starters to planning. */
+  help?: HelpState;
 }) {
   const ai = useAI();
-  const suggestions = suggestionsFor(ai).slice(0, 4);
+  const { agent } = useLive();
+  const starters = {
+    advisor: ['Help me compare academic options', 'Prepare questions for my advisor', 'What needs official advisor review?'],
+    tutor: ['Ask me a guiding question about this concept', 'Give me a similar practice problem', 'Help me prepare an office-hours question'],
+    'course-guide': ['Explain this course’s AI policy', 'What are this week’s learning objectives?', 'Where can I find course support?'],
+  };
+  const suggestions = agent === 'assistant' ? suggestionsFor(ai).slice(0, 4) : starters[agent];
 
   /*
    * What it is looking at — unless the answer is this page.
@@ -49,67 +63,107 @@ export function Opening({
    * saying.
    */
   const seen = ai.screen === 'ask' ? null : assemble(ai).label;
+  const { catalog } = useStore();
+  const now = useNow();
+  const courses = catalog.courses.length;
+  const soon = upcomingItems(catalog, now).filter((i) => i.daysAway <= 14).length;
+
+  /*
+   * The starters, less any that could not be answered here.
+   *
+   * A course whose AI policy bans help with its work still gets planning
+   * help, so the planning starters stay and the rest go: a suggestion is an
+   * invitation, and one that is going to be refused should not be offered.
+   */
+  const offered = help.kind === 'course-off' ? suggestions.filter((s) => PLANNING.has(s)) : suggestions;
 
   return (
-    <div style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
-      <div
+    <div className="ask-opening" style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
+      {/*
+        A question, not a slogan.
+
+        This was "Ask about your term." in the display serif — a second page
+        title under the header's own, and a decoration rather than an
+        invitation. The operational type and a question that names the job
+        is the pattern every other empty state here follows.
+      */}
+      <h2
         style={{
+          margin: 0,
           fontSize: big ? 'var(--type-xl)' : tight ? 'var(--type-lg)' : 'var(--type-md)',
-          fontFamily: big ? 'var(--font-display)' : undefined,
+          fontWeight: 600,
           lineHeight: 'var(--leading-tight)',
           textWrap: 'pretty',
           marginBottom: big ? 'var(--sp-3)' : undefined,
         }}
       >
-        {seen ? `You are on ${seen}.` : 'Ask about your term.'}
-      </div>
-      {suggestions.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--sp-4)',
-            marginTop: big ? 'var(--sp-7)' : 'var(--sp-6)',
-          }}
-        >
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => onPick(s)}
-              style={{
-                height: 'auto',
-                // A thumb, not a hairline. 10px of padding was fine as a row
-                // in a stack of rows; as the only thing on an empty screen a
-                // suggestion is the thing you are being invited to tap.
-                padding: big ? 'var(--sp-6) var(--sp-7)' : 'var(--sp-5) var(--sp-6)',
-                textAlign: 'left',
-                justifyContent: 'flex-start',
-                fontSize: big ? 'var(--type-md)' : 'var(--type-sm)',
-                lineHeight: 'var(--leading-normal)',
-                // Round, to match the composer they are a shortcut to.
-                borderRadius: big ? '16px' : undefined,
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        {seen ? `You are on ${seen}.` : 'What would you like help with?'}
+      </h2>
+      {!seen && (
+        <p className="ask-opening-lede">
+          {AGENTS[agent].question} I use the context allowed for this role and prepare drafts you review.
+        </p>
       )}
-      <div
-        style={{
-          fontSize: 'var(--type-xs)',
-          color: 'var(--app-dim)',
-          lineHeight: 'var(--leading-normal)',
-          marginTop: 'var(--sp-6)',
-          textWrap: 'pretty',
-        }}
-      >
-        {seen ? 'It sees what this screen is showing, your ' : 'It sees your '}
-        deadlines and your grades — never your notes, your drafts or anyone in People. It can offer
-        to change something, and nothing happens until you tap it.
+      {/*
+        What it can see, before what to ask it.
+
+        It used to come last, under the suggestions, as a grey sentence — so a
+        student was invited to ask before being told what the answer could be
+        drawn from. Context first: what is in use now, and a disclosure for
+        what is never used and that nothing changes until you confirm.
+      */}
+      <div className="ask-context" role="group" aria-label="What Semester Intelligence can see">
+        <div className="ask-context-line">
+          <span className="ask-context-kicker">Using right now</span>
+          <span>
+            {agent === 'assistant' && seen ? 'this screen · ' : ''}
+            {courses} {courses === 1 ? 'course' : 'courses'} · {soon}{' '}
+            {soon === 1 ? 'deadline' : 'deadlines'} in the next two weeks
+          </span>
+        </div>
+        <details className="ask-context-more">
+          <summary>What it can and cannot see</summary>
+          <ul>
+            <li>
+              It uses role-scoped context: planning for the Assistant, selected course material for learning roles, and approved sources at your institution. Grades and attendance are excluded from automatic context.
+            </li>
+            <li>It never sees your notes, your drafts or anyone in People.</li>
+            <li>It is not your registrar: it cannot change your official record.</li>
+            <li>It can offer to change something. Nothing happens until you tap to confirm.</li>
+          </ul>
+        </details>
       </div>
+      {offered.length > 0 && (
+        <>
+          <h3 className="ask-starters-label">Suggested starting points</h3>
+          <div className={`ask-starters${big ? ' is-grid' : ''}`}>
+            {offered.map((s) => (
+              <button key={s} type="button" className="ask-starter" onClick={() => onPick(s)}>
+                <span className="ask-starter-q">{s}</span>
+                {USES[s] && <span className="ask-starter-uses">{USES[s]}</span>}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
+/** The starters that are planning rather than coursework, which a course ban leaves standing. */
+const PLANNING = new Set<string>(['What is due this week?', 'Help me plan my week']);
+
+/**
+ * What each Ask-tab starter reads, said under it.
+ *
+ * Every suggestion has an input and an output; this is the input, so a
+ * student can see what the answer will be built from before tapping. Only
+ * the term-wide starters have one — a screen's own suggestions are about the
+ * screen, and the opening already says it is looking at it.
+ */
+const USES: Record<string, string> = {
+  'What is due this week?': 'Uses your deadlines and calendar',
+  'What should I study next?': 'Uses your courses and what is coming up',
+  'Help me plan my week': 'Uses your calendar — nothing changes until you confirm',
+  'Prepare questions for my advisor': 'Uses your courses and your saved plan',
+};

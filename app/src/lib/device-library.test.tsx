@@ -37,8 +37,8 @@ let host: HTMLDivElement;
 const box: { lib: ReturnType<typeof useDeviceLibrary<string[]>> | null } = { lib: null };
 const lib = () => box.lib as ReturnType<typeof useDeviceLibrary<string[]>>;
 
-function Harness({ scope = 'a' }: { scope?: string }) {
-  const value = useDeviceLibrary(scope, read, EMPTY);
+function Harness({ scope = 'a', max }: { scope?: string; max?: number }) {
+  const value = useDeviceLibrary(scope, read, EMPTY, max);
   useEffect(() => {
     box.lib = value;
   });
@@ -123,5 +123,14 @@ describe('device workspace saving', () => {
     spy.mockRestore();
     await act(async () => expect(lib().update(['retry'])).toBe(true));
     expect(lib().value).toEqual(['retry']);
+  });
+
+  it('refuses a write over its own size limit and leaves the stored copy alone', async () => {
+    localStorage.setItem('a', '["saved"]');
+    await act(async () => root.render(<Harness max={20} />));
+    await act(async () => expect(lib().update(['x'.repeat(40)])).toBe(false));
+    expect(localStorage.getItem('a')).toBe('["saved"]');
+    expect(lib().error).toContain('full');
+    await act(async () => expect(lib().update(['short'])).toBe(true));
   });
 });

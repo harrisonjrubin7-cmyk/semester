@@ -1,0 +1,49 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.430
+Inference and significance
+
+2
+00:00:05.430 --> 00:00:10.700
+What does 95% confidence actually mean?
+
+3
+00:00:10.700 --> 00:00:24.720
+The method captures the true value 19 times in 20 across repeated sampling. It is not a 95% chance the truth is in this interval — the truth is fixed. Formula: estimate ± 1.96 × standard error.
+
+4
+00:00:24.720 --> 00:00:29.250
+Hypothesis testing in four steps?
+
+5
+00:00:29.250 --> 00:00:38.570
+State the null. Assume it true. Ask how likely a relationship this big is by sampling luck — that is p. If p &lt; .05, reject the null. You never accept it.
+
+6
+00:00:38.570 --> 00:00:43.340
+Type I vs. Type II error?
+
+7
+00:00:43.340 --> 00:00:54.830
+Type I is a false positive — you announced something that is not there; p &lt; .05 caps that risk at 5%. Type II is a false negative, usually from too small a sample.
+
+8
+00:00:54.830 --> 00:01:00.500
+Significant at p &lt; .001 — is it important?
+
+9
+00:01:00.500 --> 00:01:16.100
+Unknown. With 300,000 cases a tenth of a point clears p &lt; .05 and means nothing. Levitt’s capital-punishment estimate explains about 1.5% of the 1990s homicide decline: possibly real, definitely not the answer.
+
+10
+00:01:16.100 --> 00:01:21.150
+What does significance say about causality?
+
+11
+00:01:21.150 --> 00:01:28.110
+Nothing. A significant correlation still has to clear all four hurdles. This is the mistake that costs the most points.
+
+12
+00:01:28.110 --> 00:01:30.000
+Inference and significance — 5 cards

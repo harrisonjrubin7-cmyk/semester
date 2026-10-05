@@ -1,0 +1,115 @@
+# Hourly synthetic checks for the systems students actually reach.
+#
+# The public check always runs against the deployed Pages bundle and Supabase
+# PostgREST. The institutional check activates only when both production URLs
+# are configured; a half-configuration fails loudly instead of silently
+# claiming that a gateway nobody checked is healthy.
+#
+# The `record` job writes each hour's result down (app/scripts/status-record.mjs)
+# on the `status-data` branch, which the status pages read for their 90-day
+# bars. It is the only job with write access, and it can write only that
+# branch: it never touches main. History starts with the first run; an hour the
+# scheduler skips records nothing, and the pages show that as "no data yet".
+
+name: Production smoke
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - name: Probe public production
+        working-directory: app
+        env:
+          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+        run: node scripts/public-production-smoke.mjs
+
+  institutional:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - name: Validate institutional monitor configuration
+        id: config
+        env:
+          APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}
+        run: |
+          if [ -z "$APP_URL" ] && [ -z "$GATEWAY_URL" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Institutional monitor::Skipped until both production URLs are configured."
+          elif [ -z "$APP_URL" ] || [ -z "$GATEWAY_URL" ]; then
+            echo "::error title=Institutional monitor::Set both SEMESTER_PRODUCTION_APP_URL and SEMESTER_PRODUCTION_GATEWAY_URL; one is missing."
+            exit 1
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Probe institutional production
+        if: steps.config.outputs.enabled == 'true'
+        working-directory: app
+        env:
+          SEMESTER_PRODUCTION_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          SEMESTER_PRODUCTION_GATEWAY_URL: ${{ vars.SEMESTER_PRODUCTION_GATEWAY_URL }}
+        run: node scripts/production-smoke.mjs
+
+  record:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    # One writer at a time, and a queued run is never dropped for a newer one:
+    # each hour's line is the record.
+    concurrency:
+      group: status-history
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+      - name: Check out the history branch, or start it
+        run: |
+          if git ls-remote --exit-code --heads origin status-data >/dev/null 2>&1; then
+            git fetch origin status-data
+            git worktree add "$RUNNER_TEMP/history" FETCH_HEAD
+          else
+            git worktree add --detach "$RUNNER_TEMP/history"
+            (cd "$RUNNER_TEMP/history" && git checkout --orphan status-data && git rm -rf . >/dev/null)
+          fi
+      - name: Probe and record
+        working-directory: app
+        env:
+          SEMESTER_PUBLIC_APP_URL: ${{ vars.SEMESTER_PRODUCTION_APP_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+        run: node scripts/status-record.mjs "$RUNNER_TEMP/history/status-history.json"
+      - name: Commit the record to status-data
+        working-directory: ${{ runner.temp }}/history
+        run: |
+          git config user.name "semester-status"
+          git config user.email "status@users.noreply.github.com"
+          git add status-history.json
+          git commit -m "Status check $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push origin HEAD:refs/heads/status-data

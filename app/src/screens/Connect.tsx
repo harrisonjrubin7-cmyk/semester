@@ -18,7 +18,6 @@ import {
   addTask,
   beginAuth,
   describe,
-  forget,
   listRemoteFiles,
   pullCalendar,
   signInReady,
@@ -27,9 +26,24 @@ import {
   type ProviderId,
   type RemoteFile,
 } from '../lib/connect';
+import { MANAGE, disconnect, lastRevocation, saidAboutDisconnect } from '../lib/revoke';
 import { datedItems, railFor } from '../lib/select';
 import { dateToIso } from '../lib/date';
+import { formatDateTime } from '../lib/locale';
 import type { FeedSource } from '../lib/types';
+import { AiHandoffReview } from '../components/AiHandoffReview';
+import {
+  EXTERNAL_AI,
+  EXTERNAL_AI_ORDER,
+  clearHandoffs,
+  handoffs,
+  offered,
+  prepare,
+  send as sendToAi,
+  type ExternalAiId,
+  type HandoffRecord,
+  type Prepared,
+} from '../lib/aihandoff';
 
 /**
  * The campus systems the app links out to rather than reads.
@@ -86,6 +100,13 @@ export function Connect() {
     }
   });
   const [url, setUrl] = useState('');
+  // Asking an outside AI service. Nothing here is saved: the question and the
+  // excerpt live only until the tab is opened or the screen is left.
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiCourse, setAiCourse] = useState('');
+  const [aiExcerpt, setAiExcerpt] = useState('');
+  const [aiReview, setAiReview] = useState<{ to: ExternalAiId; prepared: Prepared } | null>(null);
+  const [aiSent, setAiSent] = useState<HandoffRecord[]>(() => handoffs());
   // Canvas is two fields rather than one, and they are not the same kind of
   // thing: the host is an address somebody can read off their own browser and
   // correct, the token is a secret shown once. They are kept apart here for
@@ -175,7 +196,7 @@ export function Connect() {
         kind,
         name: title,
         url: from,
-        synced: Date.now(),
+        synced: now.getTime(),
         status: `${said(events.length)} read`,
         count: events.length,
       },
@@ -416,7 +437,7 @@ export function Connect() {
       for (const t of mine) {
         await addTask(id, { title: t.title, date: t.date, note: t.note });
       }
-      return `${mine.length} of your own tasks sent to ${id === 'google' ? 'Google Tasks' : 'Microsoft To Do'}.`;
+      return `${mine.length} of your own actions sent to ${id === 'google' ? 'Google Tasks' : 'Microsoft To Do'}.`;
     });
 
   const browse = async (id: ProviderId) => {
@@ -487,7 +508,7 @@ export function Connect() {
       */}
       <SectionLabel>Calendars</SectionLabel>
       <Blueprint
-        style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
+        style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', outline: dropping ? '2px dashed var(--app-fg)' : undefined }}
         onDragOver={(e) => {
           e.preventDefault();
           setDropping(true);
@@ -756,20 +777,20 @@ export function Connect() {
 
       {/* ── OAuth providers ─────────────────────────────────────────────── */}
       {/*
-        Where the Claude settings were.
+        Where the provider settings were.
 
         Connect accounts had its own key field, model picker and `saveSettings`
         call, and so did Settings → The assistant — two implementations of one
         setting, which is a setting that can disagree with itself. Settings won
         because it is the superset: two providers, the routing between them, and
         what the month has cost. What this screen had and that one did not — the
-        check-the-key button, and the sentence saying there is no "sign in with
-        Claude" to hunt for — moved there rather than dying with the copy.
+        check-the-key button, and the provider sign-in explanation — moved
+        there rather than dying with the copy.
 
         A row rather than nothing at all: this is where the key lived for a year,
         and somebody coming back for it should be told where it went.
       */}
-      <SectionLabel>Claude</SectionLabel>
+      <SectionLabel>Semester Intelligence</SectionLabel>
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
         style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
@@ -781,11 +802,129 @@ export function Connect() {
           <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', textWrap: 'pretty' }}>
             {configured()
               ? `${modelLabel()} · ${routeLabel()}. Change it in Settings.`
-              : 'No key yet, so the parts of the app that need Claude are switched off. Set one in Settings.'}
+              : 'No provider key yet, so model-powered parts of Semester Intelligence are switched off. Set one in Settings.'}
           </span>
         </span>
       </Blueprint>
 
+
+      {/*
+        Outside AI services. Not connections: nothing signs in and nothing
+        comes back. The student writes a question, may add one course and a
+        pasted excerpt, reads exactly what will go, and the service opens in a
+        new tab. See `lib/aihandoff.ts` for what can and cannot be sent.
+      */}
+      <SectionLabel>Other AI services</SectionLabel>
+      <Blueprint plain style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          Take a question to Claude, ChatGPT or Perplexity. You choose what goes and see it before it is sent. Nothing
+          comes back into Semester, and no account is connected.
+        </div>
+        <textarea
+          aria-label="Your question for an outside AI service"
+          className="input"
+          value={aiQuestion}
+          onChange={(e) => setAiQuestion(e.target.value)}
+          placeholder="Explain the difference between correlation and causation."
+          style={{ width: '100%', minHeight: 72, resize: 'vertical', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}
+        />
+        {catalog.courses.length > 0 && (
+          <select
+            aria-label="Course to name in the question"
+            className="input"
+            value={aiCourse}
+            onChange={(e) => setAiCourse(e.target.value)}
+            style={{ width: '100%', marginTop: 'var(--sp-4)' }}
+          >
+            <option value="">No course</option>
+            {catalog.courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.code} — {c.name}
+              </option>
+            ))}
+          </select>
+        )}
+        <textarea
+          aria-label="An excerpt from your notes to include, optional"
+          className="input"
+          value={aiExcerpt}
+          onChange={(e) => setAiExcerpt(e.target.value)}
+          placeholder="Optional: paste a short excerpt from your own notes"
+          style={{ width: '100%', minHeight: 56, resize: 'vertical', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}
+        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
+          {EXTERNAL_AI_ORDER.map((id) => {
+            const ai = EXTERNAL_AI[id];
+            return (
+              <div key={id} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{ flex: 1, minWidth: 180 }}>
+                  <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>{ai.name}</span>
+                  <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', textWrap: 'pretty' }}>{ai.role}</span>
+                </span>
+                {offered(id) && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={!aiQuestion.trim()}
+                    onClick={() => {
+                      const course = catalog.courses.find((c) => c.id === aiCourse);
+                      const prepared = prepare({
+                        question: aiQuestion,
+                        course: course ? { code: course.code, title: course.name } : undefined,
+                        excerpt: aiExcerpt,
+                      });
+                      if (prepared) setAiReview({ to: id, prepared });
+                    }}
+                    style={{ minHeight: 44, fontSize: 'var(--type-sm)' }}
+                  >
+                    Review for {ai.name}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        {aiSent.length > 0 && (
+          <div style={{ marginTop: 'var(--sp-6)', paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--app-line)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
+              Sent from this device, most recent first. Only what kind of thing went is kept, not the text.
+            </div>
+            <ul style={{ margin: 0, marginTop: 'var(--sp-3)', paddingLeft: '1.2em', fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+              {aiSent.slice(0, 5).map((r) => (
+                <li key={`${r.to}-${r.at}`}>
+                  {EXTERNAL_AI[r.to].name} · {formatDateTime(r.at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} ·{' '}
+                  {r.shared.join(', ').toLowerCase()}
+                  {r.course ? ` (${r.course})` : ''}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className="bare"
+              onClick={() => {
+                clearHandoffs();
+                setAiSent([]);
+              }}
+              style={{ marginTop: 'var(--sp-3)', minHeight: 44, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            >
+              Clear this list
+            </button>
+          </div>
+        )}
+      </Blueprint>
+      {aiReview && (
+        <AiHandoffReview
+          to={aiReview.to}
+          prepared={aiReview.prepared}
+          onCancel={() => setAiReview(null)}
+          onSend={() => {
+            sendToAi(aiReview.to, aiReview.prepared);
+            setAiSent(handoffs());
+            setAiReview(null);
+            setNote(`Opened ${EXTERNAL_AI[aiReview.to].name} in a new tab. Press send there when you are ready.`);
+          }}
+        />
+      )}
 
       <SectionLabel>Accounts</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(11px * var(--density, 1))' }}>
@@ -804,6 +943,61 @@ export function Connect() {
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
                 {spec.blurb}
               </div>
+              {/*
+                What signing in lets Semester do, from the scopes themselves
+                (`connect.scopes.test.ts` holds the two together). Shown before
+                sign-in, because that is when it is a decision.
+              */}
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
+                <div>
+                  <strong style={{ color: 'var(--app-fg)' }}>Reads:</strong> {spec.reads.join(', ')}.
+                </div>
+                <div>
+                  <strong style={{ color: 'var(--app-fg)' }}>Writes:</strong>{' '}
+                  {spec.writes.length > 0 ? `${spec.writes.join(', ')}. Only when you ask.` : 'Nothing.'}
+                </div>
+                {token && (
+                  <div>
+                    <strong style={{ color: 'var(--app-fg)' }}>Signed in as:</strong> {token.account || 'this account'}
+                    {feed?.synced ? ` · calendar ${lastPulled(feed.synced, now.getTime())}` : ''}
+                  </div>
+                )}
+              </div>
+
+              {(() => {
+                /*
+                  After a disconnect the provider did not confirm, say so on
+                  the card until the student connects again: the permission
+                  may still be live there, and this is where to remove it.
+                */
+                const last = token ? undefined : lastRevocation(id);
+                if (!last || last.status === 'revoked') return null;
+                return (
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      color: 'var(--app-dim)',
+                      lineHeight: 'var(--leading-relaxed)',
+                      marginTop: 'var(--sp-4)',
+                      textWrap: 'pretty',
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {spec.name} may still list Semester as allowed.{' '}
+                    {last.status === 'failed' ? 'Withdrawing it did not work. ' : ''}
+                    Remove it at{' '}
+                    {MANAGE[id].map((link, i) => (
+                      <span key={link.url}>
+                        {i > 0 ? ' or ' : ''}
+                        <a href={link.url} target="_blank" rel="noreferrer">
+                          {link.label}
+                        </a>
+                      </span>
+                    ))}
+                    .
+                  </div>
+                );
+              })()}
 
               {/*
                 A sign-in is offered only where one can finish: `signInReady`
@@ -839,7 +1033,7 @@ export function Connect() {
                   {!token ? (
                     <button
                       type="button"
-                      className="btn btn-primary"
+                      className="btn btn-secondary"
                       disabled={busy === id}
                       onClick={() => void connect(id)}
                       style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
@@ -895,16 +1089,25 @@ export function Connect() {
                           {id === 'zoom' ? 'Recordings' : 'Recent files'}
                         </button>
                       )}
+                      {/*
+                        Withdrawn at the provider where it allows it, and the
+                        local copy deleted whatever the provider says —
+                        `lib/revoke.ts` has what each provider permits. The
+                        sentence says which of the two actually happened.
+                      */}
                       <button
                         type="button"
                         className="bare"
+                        disabled={busy !== ''}
                         onClick={() => {
-                          forget(id);
-                          setNote(`${spec.name} disconnected. The token is gone from this device.`);
+                          setBusy(id);
+                          void disconnect(id)
+                            .then((outcome) => setNote(saidAboutDisconnect(outcome)))
+                            .finally(() => setBusy(''));
                         }}
                         style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}
                       >
-                        DISCONNECT
+                        {busy === id ? 'DISCONNECTING…' : 'DISCONNECT'}
                       </button>
                     </>
                   )}
@@ -915,7 +1118,7 @@ export function Connect() {
                 <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'calc(9px * var(--density, 1))' }}>
                   Reading Gmail may not be switched on for your account yet: Google reviews that
                   one permission separately, and until it passes, only accounts this copy has
-                  named can use it. Calendar, Drive and Tasks work immediately.
+                  named can use it. Calendar, Drive and Google Tasks work immediately.
                 </div>
               )}
 
@@ -1006,7 +1209,7 @@ export function Connect() {
               textWrap: 'pretty',
             }}
           >
-            Your dates onto the calendar and task list you already live in. These add rather than
+            Your dates onto the calendar and the Google Tasks or Microsoft To Do list you already live in. These add rather than
             sync — running one twice makes duplicates, and nothing here removes anything.
           </div>
 
@@ -1191,7 +1394,7 @@ export function Connect() {
         say the app feels like two systems.
 
         There is one now. It already knows what to do with a wide screen: from
-        760px the tab bar unrolls into a rail beside the reading column, which
+        840px the tab bar unrolls into a rail beside the reading column, which
         is what a laptop was being sent somewhere else for.
       */}
       <SectionLabel>On a desktop</SectionLabel>

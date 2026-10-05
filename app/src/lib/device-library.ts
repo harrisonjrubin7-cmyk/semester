@@ -61,7 +61,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
  * `storage` event with a null key is the whole store being cleared, and counts
  * as a change to every key.
  */
-export function useDeviceLibrary<T>(key: string, read: (value: unknown) => T, empty: T) {
+/**
+ * `maxChars` caps this key's serialized size. The default suits a library of
+ * notes; a library that holds bulk data (the toolkit's datasets) passes a
+ * tighter one so it cannot crowd the rest of the app out of the origin's
+ * shared quota.
+ */
+export function useDeviceLibrary<T>(key: string, read: (value: unknown) => T, empty: T, maxChars = 3_000_000) {
   /*
    * One read of storage, carrying the key it came from.
    *
@@ -109,7 +115,7 @@ export function useDeviceLibrary<T>(key: string, read: (value: unknown) => T, em
          * megabytes is well inside every browser's limit and leaves room for
          * the rest of the app's keys.
          */
-        if (raw.length > 3_000_000) {
+        if (raw.length > maxChars) {
           throw new Error('This workspace is full. Export and archive older work first.');
         }
         localStorage.setItem(key, raw);
@@ -122,7 +128,7 @@ export function useDeviceLibrary<T>(key: string, read: (value: unknown) => T, em
         return false;
       }
     },
-    [key, read, load],
+    [key, read, load, maxChars],
   );
 
   useEffect(() => {

@@ -14,25 +14,40 @@
  * field on the device — see `lib/merge.ts` — so lists you add to keep both
  * sides and settings take the copy that synced later.
  *
- * What still does not merge is one record edited on both devices: the later
- * edit of the same note is the one that survives. Anything cleverer is a
- * distributed-systems project, and pretending otherwise in the UI would be
- * worse than saying it plainly.
+ * And a device never writes over a copy it has not read. Every push names the
+ * `updated_at` it last saw for each row, and a row that has moved on refuses
+ * the write — the store then pulls, merges, and pushes the merge. See `push`
+ * and `Stale` below. Before that, the merge only ran for a device that
+ * happened to pull first, and a laptop left open overnight pushed straight
+ * over the phone's morning.
+ *
+ * One record edited on both devices before either syncs keeps the later edit
+ * in use, and the other version is kept on this device and offered on Account
+ * (`lib/conflicts.ts`, against the version both devices last agreed on). A
+ * deletion is settled against the same version, so a note or course deleted
+ * on one device stays deleted, and a deletion against an edit is offered the
+ * same way (`lib/deletions.ts`). What still is not cleverer: text is not
+ * merged inside a record, and the choice is whole-version.
  *
  * What does not sync: files you attach. They live in IndexedDB and can be tens
  * of megabytes; uploading them silently on a phone plan is not a decision the
  * app should make for you. The screen says so.
  */
 
+import { passwordProblem } from './password';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { requireOnline } from './offline-mode';
 import { classify, reference, say, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
+import { READ_ONLY, ReadOnly } from './readonly';
+import { forLegacy } from './sync/engine/ownership';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
 const KEY = env.VITE_SUPABASE_KEY ?? '';
+const UNIVERSITY_GATEWAY_URL = env.VITE_UNIVERSITY_GATEWAY_URL ?? '';
 
 /** False when no project is configured — the app then runs device-only. */
 export const cloudConfigured = Boolean(URL && KEY);
@@ -97,6 +112,53 @@ export function appUrl(): string {
   const base = import.meta.env.BASE_URL || '/';
   // `URL` is taken in this module by the project address, hence globalThis.
   return new globalThis.URL(base, window.location.origin).href;
+}
+
+export interface InstitutionSsoConfig {
+  enabled: true;
+  label: string;
+  domain: string;
+}
+
+/**
+ * The public, non-secret part of an institution's approved SSO connection.
+ *
+ * The browser cannot turn this on from an environment label alone. The
+ * gateway derives it from the current server-side provider record and returns
+ * only the human label and domain used by Supabase domain discovery. Missing,
+ * malformed and unreachable configurations all mean "do not draw a button".
+ */
+export async function institutionSsoConfig(): Promise<InstitutionSsoConfig | null> {
+  if (!UNIVERSITY_GATEWAY_URL) return null;
+  try {
+    const base = new globalThis.URL(UNIVERSITY_GATEWAY_URL, window.location.origin);
+    const local = ['localhost', '127.0.0.1'];
+    const secure =
+      base.protocol === 'https:' ||
+      (base.protocol === 'http:' && local.includes(base.hostname) && local.includes(window.location.hostname));
+    if (base.username || base.password || base.search || base.hash || !secure) return null;
+
+    const result = await fetchWithin(`${base.href.replace(/\/$/, '')}/v1/auth/config`, {
+      credentials: 'omit',
+      redirect: 'error',
+    });
+    if (!result.ok) return null;
+    const value: unknown = await result.json();
+    if (!value || typeof value !== 'object') return null;
+    const candidate = value as Record<string, unknown>;
+    if (
+      candidate.enabled !== true ||
+      typeof candidate.label !== 'string' ||
+      !candidate.label.trim() ||
+      candidate.label.length > 80 ||
+      typeof candidate.domain !== 'string' ||
+      candidate.domain !== candidate.domain.toLowerCase() ||
+      !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(candidate.domain)
+    ) return null;
+    return { enabled: true, label: candidate.label.trim(), domain: candidate.domain };
+  } catch {
+    return null;
+  }
 }
 
 // ── Signing in ────────────────────────────────────────────────────────────
@@ -179,11 +241,16 @@ export interface SignedUp {
   signedIn: boolean;
 }
 
-export async function signUp(email: string, password: string): Promise<SignedUp> {
+/**
+ * `bornOn` is YYYY-MM-DD. It travels in the account's metadata, where
+ * `private.record_stated_age` reads it, refuses an under-13, keeps only the
+ * day a minor turns 18, and deletes it (`lib/age.ts`).
+ */
+export async function signUp(email: string, password: string, bornOn?: string): Promise<SignedUp> {
   const { data, error } = await (await cloud()).auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: appUrl() },
+    options: { emailRedirectTo: appUrl(), ...(bornOn ? { data: { birth_date: bornOn } } : {}) },
   });
   // The invite gate is a database trigger, so its refusal arrives here as an
   // unreadable server error. `explainSignUp` turns that one shape into a
@@ -200,6 +267,22 @@ export async function signUp(email: string, password: string): Promise<SignedUp>
           'it is verified before the redirect — so come back here and sign in anyway.',
         signedIn: false,
       };
+}
+
+/** Where this account stands: never the date, only the standing. */
+export type AgeStatus = 'unknown' | 'adult' | 'minor' | 'under_minimum';
+
+export async function myAgeStatus(): Promise<AgeStatus> {
+  const { data, error } = await (await cloud()).rpc('my_age_status');
+  if (error) throw new Error(error.message);
+  return (data as AgeStatus) ?? 'unknown';
+}
+
+/** Once, for an account made without a birth date. A second answer is refused. */
+export async function stateMyAge(bornOn: string): Promise<'adult' | 'minor' | 'under_minimum_age' | 'already_stated'> {
+  const { data, error } = await (await cloud()).rpc('state_my_age', { want_birth_date: bornOn });
+  if (error) throw new Error(error.message);
+  return data as 'adult' | 'minor' | 'under_minimum_age' | 'already_stated';
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
@@ -329,6 +412,21 @@ export async function signInWith(provider: Provider): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+export async function signInWithSSO({
+  domain,
+  redirectTo,
+}: {
+  domain: string;
+  redirectTo: string;
+}): Promise<void> {
+  if (redirectTo !== appUrl()) throw new Error('Institutional sign-in must return to the approved app address.');
+  if (!/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(domain)) {
+    throw new Error('Institutional sign-in is not configured with a valid domain.');
+  }
+  const { error } = await (await cloud()).auth.signInWithSSO({ domain, options: { redirectTo } });
+  if (error) throw new Error(error.message);
+}
+
 /**
  * Send the reset link, and say that it went.
  *
@@ -351,6 +449,58 @@ export async function sendReset(email: string): Promise<string> {
 
 export async function signOut(): Promise<void> {
   await (await cloud()).auth.signOut();
+}
+
+/**
+ * Watch for the moment an emailed reset link has been opened.
+ *
+ * Supabase raises `PASSWORD_RECOVERY` once the link's code has been exchanged
+ * for a short session. That session is enough to set a password and nothing
+ * else the app asks for, so the recovery screen listens here and asks for the
+ * new password straight away.
+ */
+export function onPasswordRecovery(fn: () => void): () => void {
+  if (!cloudConfigured) return () => {};
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+  void cloud().then((db) => {
+    if (cancelled) return;
+    const { data } = db.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') fn();
+    });
+    stop = () => data.subscription.unsubscribe();
+  });
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
+}
+
+/** Set the password of the signed-in (or just-recovered) account. */
+export async function setNewPassword(password: string): Promise<string> {
+  const problem = passwordProblem(password);
+  if (problem) throw new Error(problem);
+  const { error } = await (await cloud()).auth.updateUser({ password });
+  if (error) throw new Error(error.message);
+  return 'Your password is changed.';
+}
+
+/**
+ * Ask for a new sign-in address. Supabase emails a confirmation and the
+ * address does not change until it is followed, so the sentence says that
+ * rather than claiming a change that has not happened.
+ */
+export async function changeEmail(email: string): Promise<string> {
+  const { error } = await (await cloud()).auth.updateUser({ email }, { emailRedirectTo: appUrl() });
+  if (error) throw new Error(error.message);
+  return `A confirmation link is on its way to ${email}. Your address changes when you follow it.`;
+}
+
+/** Sign out every device but this one. */
+export async function signOutOtherDevices(): Promise<string> {
+  const { error } = await (await cloud()).auth.signOut({ scope: 'others' });
+  if (error) throw new Error(error.message);
+  return 'Every other device has been signed out.';
 }
 
 /**
@@ -461,6 +611,40 @@ export interface Snapshot {
   seen: Seen;
 }
 
+/**
+ * What each course row held when this device last knew it matched the
+ * database: the stamp, and the data in a canonical form. Keyed `user/id`.
+ *
+ * It is what lets `push` send only the courses that changed. A push used to
+ * rewrite every course, changed or not, and on 30 September that was where
+ * capacity gave first: the load harness's push, the state row and four 42 KB
+ * courses, was the slowest thing a student does (docs/PERFORMANCE-AND-LOW-END-
+ * DEVICE-PLAN.md). A student edits one course at a time.
+ *
+ * Skipping a row is safe only when two things hold, and both are checked: the
+ * stamp this push names for it is the stamp recorded here, so the device has
+ * not taken a newer copy since; and its data is what was recorded, so there
+ * is nothing to send. If another device changed that row meanwhile, not
+ * writing it loses nothing: this push does not touch it, and the state row's
+ * compare-and-swap, which every push makes, is refused because the other
+ * device's push moved that too.
+ *
+ * Memory only. After a reload it is empty until the first pull, and the first
+ * push writes everything, which is what every push did before.
+ */
+const acked = new Map<string, { at: string; data: string }>();
+
+/** JSON with object keys sorted, so jsonb's reordering is not a change. */
+function canon(value: unknown): string {
+  return JSON.stringify(value, (_k, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : v,
+  );
+}
+
+const ackKey = (userId: string, id: string) => `${userId}/${id}`;
+
 export async function pull(userId: string): Promise<Snapshot> {
   const db = (await cloud());
   const [stateRow, courseRows] = await Promise.all([
@@ -473,10 +657,15 @@ export async function pull(userId: string): Promise<Snapshot> {
 
   const rows = (courseRows.data ?? []) as { id: string; data: unknown; updated_at: string }[];
   const stateAt = stateRow.data?.updated_at as string | undefined;
+  for (const r of rows) acked.set(ackKey(userId, r.id), { at: r.updated_at, data: canon(r.data) });
   const stamps = [stateAt, ...rows.map((r) => r.updated_at)].filter(Boolean) as string[];
 
+  // While the engine owns this device's tasks (`lib/sync/engine/ownership.ts`), the account's old copy of them is
+  // not read back: the engine is the one source. What this device pushes still carries them, so a device that
+  // has not opted in keeps receiving them.
+  const held = stateRow.data?.data as CloudState | undefined;
   return {
-    state: (stateRow.data?.data as CloudState) ?? null,
+    state: held ? forLegacy(held as unknown as Record<string, unknown>) as unknown as CloudState : null,
     courses: rows.map((r) => ({ id: r.id, data: r.data })),
     updated: stamps.length ? Math.max(...stamps.map((s) => new Date(s).getTime())) : 0,
     seen: {
@@ -487,7 +676,64 @@ export async function pull(userId: string): Promise<Snapshot> {
 }
 
 /**
- * Send this device's copy up.
+ * The account's copy moved on since this device last read it.
+ *
+ * Thrown by `push` instead of writing, and caught by the store, which pulls,
+ * merges and pushes again. It is not a failure anybody needs to read about:
+ * it is the sync working, and it never reaches `explainSync`.
+ */
+export class Stale extends Error {
+  constructor(what: string) {
+    super(`The account's copy of ${what} changed on another device since this one last read it.`);
+    this.name = 'Stale';
+  }
+}
+
+/**
+ * A write's failure as an Error that keeps the database's code and status.
+ *
+ * `new Error(error.message)` kept only the prose, and the retry decision is
+ * made by `classify`, which reads the code first. A check-constraint refusal
+ * (23514) then fell through to INTERNAL_ERROR and was sent again every five
+ * minutes, with a line telling the student it might recover by itself. It
+ * will not: the same snapshot fails the same check.
+ */
+export function failed(error: { message: string; code?: string; status?: number }): Error {
+  return Object.assign(new Error(error.message), { code: error.code, status: error.status });
+}
+
+export function isStale(e: unknown): e is Stale {
+  return e instanceof Error && e.name === 'Stale';
+}
+
+/** Postgres's unique_violation: an insert found the row already there. */
+const TAKEN = '23505';
+
+/**
+ * Send this device's copy up — but only over the copy it last read.
+ *
+ * ## Why every write names the stamp it expects
+ *
+ * This was an upsert, and an upsert overwrites whatever is there. The pull
+ * side has merged field by field since `lib/merge.ts`, but a merge only helps
+ * a device that pulls before it pushes, and this one never did: a laptop left
+ * open overnight pushed its copy over the phone's morning and the phone's
+ * edits were gone from the account, with nothing to say so. `lib/merge.ts`
+ * could not help, because the account never held both copies at once.
+ *
+ * So each row is now a compare-and-swap on `updated_at`, which the database
+ * sets and no client can (`touch_updated_at`). A row this device has read is
+ * updated only where its stamp is still the one `seen` recorded; a row it has
+ * never read is inserted, and an insert that finds the row already there has
+ * lost the same race. Either way nothing is written over a copy this device
+ * has not seen — `push` throws `Stale`, and the store pulls, merges and
+ * pushes the merged copy back.
+ *
+ * What this does not solve is the same record edited on both devices before
+ * either syncs: the merge still keeps the later edit of it. The difference is
+ * that the merge now gets to run. Before, the account never saw the loser.
+ *
+ * ## The rest of it, unchanged
  *
  * `removed` is the courses this device has actually deleted since it last
  * pushed — not "everything the account has that this device does not hold",
@@ -506,39 +752,101 @@ export async function push(
   state: CloudState,
   courses: { id: string; data: unknown }[],
   removed: string[] = [],
+  seen: Seen | null = null,
 ): Promise<Seen> {
+  /*
+   * Read-only mode (`lib/readonly.ts`): nothing leaves this device, and the
+   * refusal is here as well as in the store so that no other caller can push
+   * around it. Before the client is even fetched — a build in read-only mode
+   * has no reason to load the SDK for a write it will not make.
+   */
+  if (READ_ONLY) throw new ReadOnly();
   const db = (await cloud());
 
   /*
-   * `.select('updated_at')` on the way out, and it is the point of this
+   * `.select('updated_at')` on every write, and it is the point of this
    * function returning anything at all.
    *
    * The device has to write down what it has now taken, and the only honest
    * value is the stamp the database just wrote. This used to be `Date.now()`
    * on the device — see `state/shape.ts` for what that cost — and reading the
    * stamp back costs nothing, because the row is already being returned by the
-   * statement that wrote it.
+   * statement that wrote it. It is also how a stale update is noticed: an
+   * update whose filter matched nothing returns no row.
    */
-  const { data: stateRow, error: stateError } = await db
-    .from('state')
-    .upsert({ user_id: userId, data: state }, { onConflict: 'user_id' })
-    .select('updated_at')
-    .maybeSingle();
-  if (stateError) throw new Error(stateError.message);
+  let stateAt: string | undefined;
+  if (seen?.state) {
+    const { data, error } = await db
+      .from('state')
+      .update({ data: state })
+      .eq('user_id', userId)
+      .eq('updated_at', seen.state)
+      .select('updated_at');
+    if (error) throw failed(error);
+    const rows = (data ?? []) as { updated_at: string }[];
+    if (rows.length === 0) throw new Stale('your semester');
+    stateAt = rows[0].updated_at;
+  } else {
+    const { data, error } = await db
+      .from('state')
+      .insert({ user_id: userId, data: state })
+      .select('updated_at')
+      .maybeSingle();
+    if (error) {
+      if (error.code === TAKEN) throw new Stale('your semester');
+      throw failed(error);
+    }
+    stateAt = (data as { updated_at?: string } | null)?.updated_at;
+  }
 
   const stamps: Record<string, string> = {};
-  if (courses.length > 0) {
+  const sent = new Map(courses.map((c) => [c.id, canon(c.data)]));
+  // Known to this device and unchanged since the database last confirmed
+  // them: nothing to send, and the stamp carries forward (see `acked`).
+  const same = courses.filter((c) => {
+    const at = seen?.courses[c.id];
+    const was = at ? acked.get(ackKey(userId, c.id)) : undefined;
+    return !!was && was.at === at && was.data === sent.get(c.id);
+  });
+  for (const c of same) stamps[c.id] = seen!.courses[c.id];
+  const known = courses.filter((c) => seen?.courses[c.id] && !same.includes(c));
+  const fresh = courses.filter((c) => !seen?.courses[c.id]);
+
+  // New to this device: one insert for all of them. A clash on any means
+  // another device got there first, and the whole push goes round again.
+  if (fresh.length > 0) {
     const { data, error } = await db
       .from('courses')
-      .upsert(
-        courses.map((c) => ({ user_id: userId, id: c.id, data: c.data })),
-        { onConflict: 'user_id,id' },
-      )
+      .insert(fresh.map((c) => ({ user_id: userId, id: c.id, data: c.data })))
       .select('id, updated_at');
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === TAKEN) throw new Stale('a course');
+      throw failed(error);
+    }
     for (const row of (data ?? []) as { id: string; updated_at: string }[]) {
       stamps[row.id] = row.updated_at;
     }
+  }
+
+  // Read before: one update each, because each names its own stamp. A term
+  // is a handful of courses, so this is a handful of small requests.
+  const updated = await Promise.all(
+    known.map((c) =>
+      db
+        .from('courses')
+        .update({ data: c.data })
+        .eq('user_id', userId)
+        .eq('id', c.id)
+        .eq('updated_at', seen!.courses[c.id])
+        .select('id, updated_at')
+        .then(({ data, error }) => ({ id: c.id, data, error })),
+    ),
+  );
+  for (const { id, data, error } of updated) {
+    if (error) throw failed(error);
+    const rows = (data ?? []) as { id: string; updated_at: string }[];
+    if (rows.length === 0) throw new Stale('a course');
+    stamps[id] = rows[0].updated_at;
   }
 
   // A course deleted on this device has to be deleted there too, or the next
@@ -551,6 +859,12 @@ export async function push(
       .eq('user_id', userId)
       .in('id', gone);
     if (pruneError) throw new Error(pruneError.message);
+    for (const id of gone) acked.delete(ackKey(userId, id));
+  }
+
+  // What the database now holds, for the next push to compare against.
+  for (const c of [...fresh, ...known]) {
+    if (stamps[c.id]) acked.set(ackKey(userId, c.id), { at: stamps[c.id], data: sent.get(c.id)! });
   }
 
   /*
@@ -562,8 +876,7 @@ export async function push(
    * takes them, and records them — which is exactly the behaviour that used to
    * depend on their stamp beating a clock reading.
    */
-  const at = (stateRow as { updated_at?: string } | null)?.updated_at;
-  return { ...(at ? { state: at } : {}), courses: stamps };
+  return { ...(stateAt ? { state: stateAt } : {}), courses: stamps };
 }
 
 
@@ -668,34 +981,42 @@ export async function queuedSendAts(): Promise<number[]> {
 }
 
 /**
- * Delete the rows belonging to this account.
+ * Delete this account: its rows, and the sign-in itself.
  *
- * Not a flag, not an archive. `on delete cascade` in the schema means removing
- * the auth user would take everything with it — but a browser holding an anon
- * key cannot delete an auth user, and it should not be able to. **So that
- * cascade never fires**, and what a deleted account is actually emptied of is
- * exactly `OWNED_TABLES` and nothing else. For a long time the privacy page
- * said the opposite, in those words, while eleven tables in `classmates.ts`
- * and `formshare.ts` were in no list at all.
+ * ## Where it happens now, and why it moved
+ *
+ * This used to run here, in the browser: one filtered DELETE per entry in
+ * `OWNED_TABLES`, each its own request, then a sign-out. A browser holding a
+ * publishable key cannot delete an `auth.users` row and must not be able to,
+ * so the email address and the sign-in outlived the button, and a failure half
+ * way left half an account behind (SECURITY-GAP-ANALYSIS.md, S-2).
+ *
+ * So the button calls the `delete-account` Edge Function, which erases every
+ * row naming the account in **one transaction** (`public.erase_account`, in
+ * `supabase/migrations/20260929010000_account_erasure_and_export.sql`) and
+ * then deletes the auth user with the service role. Its answer says what
+ * happened — `erased`, `signInRemoved` — and this function signs out only when
+ * both are true. On anything else the student stays signed in, is told
+ * exactly which of the two happened, and can press the button again.
+ *
+ * ## What the lists below are now
+ *
+ * The server does not read them: it derives its list from the database's own
+ * foreign keys to `auth.users`, so a table added later is erased the day it
+ * lands. `OWNED_TABLES` and `KEPT_TABLES` stay as the privacy page's account
+ * of what goes and what stays, and `erasure.test.ts` holds that account to the
+ * schema — every owned table reachable by a cascade from `auth.users` or by
+ * one of the `forget_my_*` functions `erase_account` calls, and no kept table
+ * hanging off `auth.users` by a cascade that would take it.
  *
  * ## What it does not touch
  *
  * This device's own copy. Somebody deleting their account has asked to be off
  * the server, not to lose their semester — and the two are separate on purpose,
- * with Erase from this device as its own deliberate action. Saying so plainly
- * is the difference between a button people can press and one they will not.
- *
- * The sign-in itself. The `auth.users` row, and so the address it was created
- * with, is the one thing here no client can remove; `privacy.ts` says so and
- * gives the address to write to.
+ * with Erase from this device as its own deliberate action.
  *
  * `KEPT_TABLES` — the rows other people are relying on. Each carries its
  * reason, and the page prints them.
- *
- * The tables are named rather than discovered, so a table added later and
- * forgotten here leaves rows behind. `privacy.test.ts` is what catches that,
- * and it now reads every module rather than this one: a table in either list
- * is a decision, a table in neither is the bug.
  */
 /** A table a deleted account is emptied from, and the column that owns a row. */
 export type OwnedTable = {
@@ -712,13 +1033,15 @@ export type OwnedTable = {
   /**
    * The `rpc` this account's rows go through instead of a DELETE.
    *
-   * One table needs it. `organization_members` holds one person's rank in an
+   * Two tables need it. `organization_members` holds one person's rank in an
    * organization as decided by another, so DELETE on it is revoked from both
    * API roles outright and there is no filter that would work.
    * `forget_my_organizations()` is the only way out, and it does more than a
    * DELETE could: it takes the `DECLINED` and `REMOVED` rows that
    * `leave_organization()` refuses to touch, and the trigger behind it removes
-   * an organization left with no members at all.
+   * an organization left with no members at all. `support_access_grant` names
+   * an account in either the student or supporter column, so its RPC safely
+   * removes both sides in one server-side operation.
    */
   via?: string;
 };
@@ -772,13 +1095,71 @@ export const OWNED_TABLES: OwnedTable[] = [
   // ── Private to one account ──────────────────────────────────────────────
   { table: 'push_queue', column: 'user_id' },
   { table: 'push_devices', column: 'user_id' },
+  // What a school shared about you through an integration, and the consent
+  // that let it in. Both also cascade on account deletion.
+  { table: 'canonical_entity_references', column: 'subject_user_id' },
+  { table: 'consent_record', column: 'subject_user_id' },
   { table: 'courses', column: 'user_id' },
   { table: 'state', column: 'user_id' },
   { table: 'notes', column: 'user_id' },
   { table: 'tasks', column: 'user_id' },
+  // The student's private productivity workspace. The database also cascades
+  // it from auth.users, but listing it here keeps explicit erasure complete
+  // even when account deletion is exercised before the auth row is removed.
+  { table: 'productivity_workspace', column: 'user_id' },
+  // Tasks and events written through the command API (`server/productivity/`).
+  // Both cascade from auth.users; the person is `owner_id`, not `user_id`.
+  { table: 'productivity_task', column: 'owner_id' },
+  { table: 'productivity_event', column: 'owner_id' },
   { table: 'appointments', column: 'user_id' },
   { table: 'sittings', column: 'user_id' },
   { table: 'calendar_feeds', column: 'user_id' },
+  // Graduation scenario drafts a student chose to save to their account
+  // (`lib/graduation-cloud.ts`, Phase D). The foreign key cascades from
+  // auth.users too; listed so the delete here does not depend on it.
+  { table: 'graduation_scenarios', column: 'user_id' },
+  { table: 'productivity_workspace', column: 'user_id' },
+  // Advisor shares (`lib/advisor-shares.ts`, Phase G), at either end: the ones
+  // a student made and the ones an advisor received. Deleting them cascades to
+  // their read log. `erase_account` runs the RPC before the auth user goes,
+  // and an advisor has no delete policy — the RPC removes both sides.
+  { table: 'advisor_shares', column: null, via: 'forget_my_advisor_shares' },
+  // Course demand (Phase K): the courses a student contributed and their
+  // consent. The consent allows no client write, so the RPC removes both;
+  // the plan rows are listed too, since the student may delete those directly.
+  { table: 'demand_consents', column: null, via: 'forget_my_course_demand' },
+  { table: 'term_plan_courses', column: 'user_id' },
+  // What a student said applies to them for campus office actions, and which
+  // of those actions they marked done (`lib/office-actions-remote.ts`, Phase
+  // J). Both are the student's alone; no office can read either.
+  { table: 'institution_action_audiences', column: 'user_id' },
+  { table: 'institution_action_progress', column: 'user_id' },
+  // The link a registrar made from the school's student record to this
+  // account (D-145), which the student reads their record and student account
+  // through (lib/finance/mine.ts, D-146). The student has no delete policy on
+  // it, so the filtered DELETE takes nothing; the cascade from auth.users
+  // does, and the school's record stays with the school.
+  { table: 'academic_record_subjects', column: 'user_id' },
+  // A request to be recognised as a member of a university (`school_membership_
+  // requests`, G-03). The person reads their own; they have no delete policy —
+  // a decision is a record other people made — so the filtered DELETE takes
+  // nothing and the cascade from auth.users does. It holds no address.
+  { table: 'school_membership_requests', column: 'user_id' },
+  // A formal export, correction, restriction or assisted-erasure request.
+  // It is keyed by `subject` and cascades with auth.users; the completed fact
+  // may remain without an identity in the older `data_requests` ledger.
+  { table: 'data_subject_request', column: 'subject' },
+  // A support grant names this account in either of two columns. The RPC
+  // removes both sides, which one filtered DELETE cannot express, while its
+  // audit trigger leaves only pseudonyms behind.
+  { table: 'support_access_grant', column: null, via: 'forget_my_support_access' },
+  // A private beta you joined: the membership, and through it what you sent
+  // as beta feedback and why you left. The tables have no grant at all, so a
+  // filtered DELETE cannot reach them; the RPC removes the memberships (the
+  // other two cascade) and any beta invitation to your confirmed address.
+  { table: 'beta_memberships', column: null, via: 'forget_my_beta' },
+  { table: 'beta_feedback', column: null, cascadesFrom: 'beta_memberships' },
+  { table: 'beta_exit_requests', column: null, cascadesFrom: 'beta_memberships' },
   // The record of who read the rows above, which is about the account and so
   // goes with it. `access.check.sql` proves the delete policy that makes this
   // line work, and proves a stranger cannot use it to clear somebody else's.
@@ -798,6 +1179,22 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `feedback.check.sql` proves the delete policy this line needs and that it
   // cannot be aimed at anybody else's reports.
   { table: 'feedback', column: 'author' },
+  // Community. A member cannot filter on author_id or host_id — neither is
+  // readable — so one RPC removes posts, hosted sessions, session places,
+  // mutes and memberships together. The two entries call it twice, which is
+  // harmless: the second finds nothing. A post that is the subject of a
+  // moderation case is withdrawn and anonymised rather than deleted; see
+  // `community_cases` below. `community.check.sql` walks it.
+  { table: 'community_posts', column: null, via: 'forget_my_community' },
+  { table: 'community_sessions', column: null, via: 'forget_my_community' },
+  // A member's aliases and volunteer record go in the same call. Neither is
+  // written by this client; both are about the account, so both go with it.
+  { table: 'community_aliases', column: null, via: 'forget_my_community' },
+  { table: 'community_volunteers', column: null, via: 'forget_my_community' },
+  { table: 'community_media', column: null, via: 'forget_my_community' },
+  { table: 'community_session_participants', column: 'user_id' },
+  { table: 'community_mutes', column: 'user_id' },
+  { table: 'community_members', column: 'user_id' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //
@@ -858,11 +1255,23 @@ export const OWNED_TABLES: OwnedTable[] = [
   // explicitly not that. Closing it belongs with the auth flows that first
   // give a parent an account to delete.
   { table: 'family_grants', column: 'student_id' },
-  // The codes that made them. Keyed on the student for the same reason the
-  // grants are: the invite is the student's statement, and a claimant's copy
-  // of it is `claimed_by`, which `on delete set null` takes care of when the
-  // claimant's account really goes.
+  // The codes that made them, keyed on the student for the same reason: the
+  // invite is the student's statement. A claimant's link to it is
+  // `claimed_by`, which `on delete set null` clears when their account goes.
   { table: 'family_invites', column: 'student_id' },
+  // The confirmed copies behind a share, and the log of every read of them.
+  // Both are the student's; a supporter holds no row in either, and a reader's
+  // own deletion only clears `reader_id` on the log (`on delete set null`).
+  { table: 'family_shared_items', column: 'student_id' },
+  { table: 'family_access_events', column: 'student_id' },
+  // An athlete's share with academic support (D-039), gone at either end:
+  // the student's shares and the ones a staff member received. `erase_account`
+  // runs the RPC, and the auth cascade takes anything left; the RPC reaches the
+  // received ones. Its read log goes with each share (`on delete cascade`).
+  { table: 'support_shares', column: null, via: 'forget_my_support_shares' },
+  // Its read log has no column of the student's: each row goes with the
+  // share it records, by `on delete cascade`.
+  { table: 'support_share_events', column: null, cascadesFrom: 'support_shares' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   // ── Organizations ───────────────────────────────────────────────────────
@@ -878,6 +1287,32 @@ export const OWNED_TABLES: OwnedTable[] = [
   // merely leaving.
   { table: 'organization_members', column: null, via: 'forget_my_organizations' },
 
+  // ── Help requests ───────────────────────────────────────────────────────
+  // No API role holds DELETE on `help_requests`: the only writes into it are
+  // the functions in `20260927230000_help_requests.sql`, so the way out is one
+  // of them too. The events are the student's record of who opened what, and
+  // go with their request.
+  { table: 'help_requests', column: null, via: 'forget_my_help_requests' },
+  { table: 'help_request_events', column: null, cascadesFrom: 'help_requests' },
+
+  // ── Mentor requests ─────────────────────────────────────────────────────
+  // Same shape: no API role writes `mentor_requests` directly, so it leaves
+  // through `forget_my_mentor_requests()` (20260928021700), which removes every
+  // request the account sent or received.
+  { table: 'mentor_requests', column: null, via: 'forget_my_mentor_requests' },
+  // The offers themselves, with the display name the mentor chose. Both hang
+  // off `auth.users` by `on delete cascade`, which `erase_account` follows;
+  // each table's owner-delete policy is what the old client path relied on.
+  { table: 'peer_mentor_offers', column: 'user_id' },
+  { table: 'alumni_mentor_offers', column: 'user_id' },
+
+  // ── Support tickets ─────────────────────────────────────────────────────
+  // Questions to Semester's own support staff, not to a campus office. No API
+  // role holds any grant on either table (`20260928210000_support_tickets.sql`),
+  // so the way out is the student's own function; messages go with their ticket.
+  { table: 'support_tickets', column: null, via: 'forget_my_support_tickets' },
+  { table: 'support_ticket_messages', column: null, cascadesFrom: 'support_tickets' },
+
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
   // `form_responses.form_id` references `forms` with `on delete cascade`, and
@@ -886,6 +1321,33 @@ export const OWNED_TABLES: OwnedTable[] = [
   // `forms.check.sql` proves that, because a cascade nobody has watched fire
   // is a cascade this file is only assuming.
   { table: 'form_responses', column: null, cascadesFrom: 'forms' },
+
+  // ── The operations console ──────────────────────────────────────────────
+  // An operator's saved views and last-open tab (`lib/console/client.ts`).
+  // Keyed by `subject`, which references `auth.users` with `on delete
+  // cascade` (`20260929100000_console_control_plane.sql`), and owner-only by
+  // row-level security, so the rows go with the account.
+  { table: 'operator_preference', column: 'subject' },
+
+  // ── A school's dining ───────────────────────────────────────────────────
+  // Your meal plan and mobile orders (`lib/dining/client.ts`). Each row names
+  // you by a column that references `auth.users` with `on delete cascade`
+  // (`20260929330000_dining.sql`), so they go with the account; the school's
+  // own system of record keeps its copy.
+  { table: 'dining_plans', column: 'student' },
+  { table: 'dining_orders', column: 'student' },
+
+  // ── The official registration ledger and gradebook ──────────────────────
+  // Your enrollments (`lib/enrollment/client.ts`), and every version of your
+  // grades and your regrade requests (`lib/gradebook/client.ts`). Each names
+  // you by a column that references `auth.users` with `on delete cascade`
+  // (`20260929300000_registration_transaction.sql`,
+  // `20260929310000_gradebook.sql`), so they go with the account; a regrade's
+  // answer goes with its request. The school's own record keeps its copy.
+  { table: 'registration_enrollments', column: 'student' },
+  { table: 'grade_entries', column: 'student_id' },
+  { table: 'regrade_requests', column: 'student_id' },
+  { table: 'regrade_resolutions', column: null, cascadesFrom: 'regrade_requests' },
 ];
 
 /**
@@ -908,52 +1370,328 @@ export const OWNED_TABLES: OwnedTable[] = [
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
+    table: 'module_mode_request',
+    why: 'A request to switch one of a school’s modules between Connect and Core is a governance record of the school, kept with its approvals. Deleting your account removes you as the person who asked; the request and what it changed stay.',
+  },
+  {
+    table: 'module_mode_approval',
+    why: 'An approval is the proof that two administrators agreed to a change in what the school’s record is. Deleting your account removes your id from it; the approval stays, so the change can still be explained.',
+  },
+  {
+    table: 'commercial_prices',
+    why: 'The price list is not a record about you. Anyone can read it, no account writes a row in it, and the Membership panel only reads it to name what Plus costs.',
+  },
+  {
+    table: 'subscriptions',
+    why: 'A paid subscription is a financial record of what was charged and when. The app only reads your own; deleting your account unlinks you from the billing account it belongs to, and the record stays, no longer tied to your account.',
+  },
+  {
+    table: 'gtm_campaigns',
+    why: 'A campaign you ran for your school belongs to the school, and its record is how the school shows what it sent and why. Deleting your account removes you as its owner or approver; the campaign stays, and one with no owner cannot be switched on again.',
+  },
+  {
+    table: 'gtm_campaign_reviews',
+    why: 'A privacy, accessibility or brand review you recorded is part of the record of why a campaign was allowed to go out. It stays with the campaign, no longer attributed to you.',
+  },
+  {
+    table: 'academic_record_entries',
+    why: 'Your school’s academic record of you — enrollment, grades, credits, standing, degrees — is an education record the school keeps, not data you gave Semester. Deleting your account removes your link to read it here; the school’s record stays with the school, and if you worked on it as staff, it stays no longer naming you.',
+  },
+  {
+    table: 'academic_record_changes',
+    why: 'A change you proposed or decided on your school’s academic record is part of the record of why an entry says what it says. It stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_payment_plans',
+    why: 'A payment plan you asked your school for, and whether it agreed, is part of the school’s financial record of your account. Deleting your account leaves the plan with the school, no longer naming you as the one who asked; if you decided on plans as staff, the same.',
+  },
+  {
+    table: 'student_payment_plan_installments',
+    why: 'A plan’s schedule of payments belongs to the plan: it stays with the school when the plan does, and names nobody.',
+  },
+  {
+    table: 'student_account_entries',
+    why: 'Your school’s record of your student account — what was charged, paid, refunded and credited — is a financial record the school keeps, not data you gave Semester. Deleting your account removes your link to read it here; the school’s record stays with the school, and if you worked on it as staff, it stays no longer naming you.',
+  },
+  {
+    table: 'student_account_requests',
+    why: 'A request you made or decided on a student account is part of the record of why the account says what it says. It stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_account_reconciliations',
+    why: 'A reconciliation you recorded with your school’s payment provider is how the school shows a month’s payments were checked. It holds totals and a file fingerprint, never a payment’s details, and stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_account_closes',
+    why: 'A month you closed on your school’s student accounts is part of its financial record. It stays with the school, no longer attributed to you.',
+  },
+  {
+    table: 'student_account_settings',
+    why: 'Your school’s thresholds for student accounts — when a hold applies, when a second approver is needed — are its configuration, not a record about you. They stay with the school.',
+  },
+  {
+    table: 'migration_projects',
+    why: 'A migration you ran for your school, moving a domain out of a system it is retiring, belongs to the school and is part of how it shows the cutover was safe. Deleting your account removes you as the person who opened it; the migration stays.',
+  },
+  {
+    table: 'migration_field_maps',
+    why: 'A field mapping you wrote for one of your school’s migrations says how its old system’s fields became Semester’s, and it names fields, never a person. It stays with the migration.',
+  },
+  {
+    table: 'migration_runs',
+    why: 'Counts you recorded while migrating your school’s data — rows read, mapped, missing — and the fingerprint of the file they came from are the evidence a cutover was approved on. They hold no record from the file, stay with the migration, and are no longer attributed to you.',
+  },
+  {
+    table: 'migration_approvals',
+    why: 'An approval or rejection you recorded for a migration’s cutover is part of the record of why your school retired a system. It stays with the migration, no longer attributed to you.',
+  },
+  {
+    table: 'workflow_versions',
+    why: 'A workflow you drafted or published for your school — the steps of a process and the checks a student must meet — is the school’s process, not a record about you, and it holds no student. Deleting your account removes you as the person who drafted or published it; every version stays.',
+  },
+  {
+    table: 'school_config_versions',
+    why: 'A configuration you drafted or published for your school — its terms, workflow thresholds, AI defaults or reporting floor — is the school’s policy, not a record about you. Deleting your account removes you as the person who drafted or published it; every version stays.',
+  },
+  {
     table: 'groups',
-    why: 'A group you started belongs to everyone in it. Deleting it would take its shared tasks away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
+    why: 'A group you started belongs to everyone in it. Deleting it would take its shared actions away from the other members, so your membership goes and the group stays, with no starter recorded.',
   },
   {
     table: 'group_tasks',
-    why: 'Parts of a group project you added are what the rest of the group is working from, so they stay with the group.',
+    why: 'Parts of a group project you added are what the rest of the group is working from, so they stay with the group, no longer attributed to you.',
   },
   {
     table: 'reports',
-    why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one.',
+    why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one. It stays, no longer naming you as its reporter.',
   },
   {
     table: 'organizations',
     why: 'A student organization outlives everybody in it — that is most of what makes it one rather than a study group. Your membership goes and it stays, with no founder recorded if you started it. If you were its last administrator it is left with none, and any member can take it on; if you were its last member it goes with you, because an organization nobody is in is not anything.',
   },
   {
+    table: 'course_ai_rules',
+    why: 'The AI rules an instructor published for a course are course policy the whole class relies on, not a record about you. A student account never writes a row; an instructor who leaves has their name cleared from the rules they published, and the rules stay.',
+  },
+  {
+    table: 'course_guidance',
+    why: 'Guidance an instructor published for a course belongs to the course, not to any one account. Students only read it; an instructor who leaves has their name cleared from what they published, and it stays for the class.',
+  },
+  {
+    table: 'study_packs',
+    why: 'A study pack an instructor published is a list of course references for the whole class. Students only read it; an instructor who leaves has their name cleared from the packs they published, and the packs stay.',
+  },
+  {
     table: 'schools',
     why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
+  {
+    table: 'opportunities',
+    why: 'A job, internship or scholarship listing an office or employer published is an institutional notice, not a record about you. If you submitted one on behalf of an office, it stays for the students it was meant for, with your account no longer named as its publisher.',
+  },
+  {
+    table: 'help_destinations',
+    why: 'The offices your university chose to reach through Semester — their names, links and hours — are institutional configuration, not a record about you. Your requests to them go with your account; the list of offices stays.',
+  },
+  {
+    table: 'integration_connections',
+    why: 'A university\'s connections to its other systems, and the record of each sync, belong to the university. Its integration staff read them; a student account never writes a row here, so leaving takes nothing from them. Anything imported about you specifically is held apart, readable only by you, and goes with your account.',
+  },
+  {
+    table: 'integration_scopes',
+    why: 'What each of your university\'s connections is approved to read. University configuration, not a record about you.',
+  },
+  {
+    table: 'integration_mappings',
+    why: 'How your university\'s systems\' fields map onto Semester\'s. University configuration, not a record about you.',
+  },
+  {
+    table: 'integration_sync_runs',
+    why: 'The history of your university\'s syncs: counts and times, never a record about a named student.',
+  },
+  {
+    table: 'integration_sync_errors',
+    why: 'Sync problems for your university\'s integration staff, with any external record identifier replaced by a one-way hash before it is stored.',
+  },
+  {
+    table: 'integration_dead_letter_events',
+    why: 'Sync work that failed and is waiting for review. It points at a stored payload and holds no record about you itself.',
+  },
+  {
+    table: 'feature_kill_switch',
+    why: 'The emergency stops for features across a university or all of Semester. Not a record about anybody.',
+  },
+  {
+    table: 'communities',
+    why: 'A community outlives whoever started it — the other members are still in it. Your membership goes; the community stays, with no creator recorded anywhere a member can read.',
+  },
+  {
+    table: 'community_venues',
+    why: 'The study venues your school approved are not a record about you, and only a community manager can add or remove one.',
+  },
+  {
+    table: 'community_cases',
+    why: 'A Trust & Safety case about a post stays when its author deletes their account, and so does the post, withdrawn and shown as "Deleted account" — deleting an account is not a way to make a report disappear. Cases carry a retention date; the sweep that enforces it is not yet scheduled.',
+  },
+  {
+    table: 'community_reports',
+    why: 'A report you filed is a record about somebody else, like `reports`: deleting your account is not a way to withdraw one. Who filed it is readable by nobody through the app, reviewers included.',
+  },
+  {
+    table: 'community_signals',
+    why: 'What an automated detector recorded about a post — the rule, how sure it was, and what a reviewer then decided. It belongs to the moderation case and goes when the case does, on the case\'s retention date.',
+  },
+  {
+    table: 'community_calibration_items',
+    why: 'Practice posts with a known answer, written by Trust & Safety staff for volunteer moderators to calibrate on. Not a record about any student.',
+  },
+  {
+    table: 'community_volunteer_events',
+    why: 'If you volunteered as a moderator: when you applied, trained, signed the agreements, and any change to your standing, each naming you only by a one-way hash. It is removed a year after it happened, by the daily retention sweep.',
+  },
+  {
+    table: 'community_identity_grants',
+    why: 'When Trust & Safety needed to know which account posted something under an alias during an investigation: who asked and who approved, by a one-way hash, and when it ran out. It goes with the case, and never records what was seen.',
+  },
+  {
+    table: 'community_escalation_agreement_events',
+    why: 'The history of your university\'s escalation agreement — each draft, activation and retirement by Semester\'s Trust & Safety staff. A record about the school\'s agreement, not about you.',
+  },
+  {
+    table: 'community_escalation_policies',
+    why: 'Whether your university has signed an agreement to receive escalations of serious safety cases, and which kinds it covers. An agreement of the school, not a record about you.',
+  },
+  {
+    table: 'community_escalations',
+    why: 'A request by Trust & Safety to tell your university about a serious safety case, and a second reviewer\'s decision on it. It goes with the case, on the case\'s retention date; it never holds your name, email or account id, only an opaque reference when the agreement requires one.',
+  },
+  {
+    table: 'community_escalation_deliveries',
+    why: 'The one queued copy of an approved escalation and whether it was delivered. It is removed 90 days after delivery, and goes with its escalation before then.',
+  },
+  {
+    table: 'community_programs',
+    why: 'Whether your university has switched pseudonyms or volunteer moderation on. A setting of the school, not a record about you; only the service role writes it.',
+  },
+  {
+    table: 'community_retention_runs',
+    why: 'How many records each daily retention sweep removed, and when. No row names a person, and the log trims itself after a year.',
+  },
+  {
+    table: 'support_access_event',
+    why: 'Support-access evidence stays after the grant is deleted so a student or university can establish that a read occurred. It contains typed tenant, grant, scope, expiry, revocation, action and time fields plus SHA-256 pseudonyms — never a name, email, free-form reason, note, source excerpt, recording, protected trait or emotion inference — and ordinary accounts cannot change or delete it.',
+  },
+  {
+    table: 'console_duty',
+    why: 'The segregation-of-duties matrix the operations console reads: which party asks for each high-risk action and which approves. It is policy seeded by a migration from lib/ops/console.ts, names no person, and the browser only reads it.',
+  },
+  {
+    table: 'dining_locations',
+    why: 'Your school’s dining locations, as its card office lists them. Not a record about you, and no student account writes a row.',
+  },
+  {
+    table: 'dining_hours',
+    why: 'When your school’s dining locations open. Not a record about you, and no student account writes a row.',
+  },
+  {
+    table: 'registration_terms',
+    why: 'Your school’s registration calendar: when enrollment opens, when add/drop and withdrawal end. A setting of the school, not a record about you; if you set it, your name is cleared and the term stays.',
+  },
+  {
+    table: 'registration_sections',
+    why: 'Your school’s course sections, their seats and meeting times. A setting of the school, not a record about you; if you set one, your name is cleared and the section stays.',
+  },
+  {
+    table: 'gradebook_schemes',
+    why: 'How a course weights its grades. The course’s, not any student’s; if you set it as an instructor, your name is cleared and the scheme stays.',
+  },
+  {
+    table: 'gradebook_items',
+    why: 'A course’s graded items, such as a midterm. The course’s, not any student’s; if you added one as an instructor, your name is cleared and the item stays.',
+  },
+  {
+    table: 'dining_menu_items',
+    why: 'What your school’s dining locations serve and what it costs. Not a record about you, and no student account writes a row.',
+  },
 ];
 
-export async function deleteEverything(): Promise<string> {
-  const db = await cloud();
-  const { data } = await db.auth.getUser();
-  const userId = data.user?.id;
-  if (!userId) throw new Error('Sign in first — there is no account to delete.');
+/** What the `delete-account` function answers; see `_shared/deleteaccount.ts`. */
+type Erasure = { erased?: unknown; signInRemoved?: unknown; message?: unknown };
 
-  const failed: string[] = [];
-  for (const { table, column, via } of OWNED_TABLES) {
-    if (via) {
-      const { error } = await db.rpc(via);
-      if (error && !/does not exist|schema cache/i.test(error.message)) failed.push(table);
-      continue;
-    }
-    if (column === null) continue;
-    const { error } = await db.from(table).delete().eq(column, userId);
-    // A table this project does not have is not a failure — a build without
-    // reminders has no queue to empty. Anything else is reported rather than
-    // swallowed, because "deleted" is a promise.
-    if (error && !/does not exist|schema cache/i.test(error.message)) failed.push(table);
+/** Said when no answer came back, because then nobody here knows what happened. */
+export const ERASURE_UNKNOWN =
+  'No answer came back from the server, so this cannot say whether anything was deleted. You are still signed in here. Press Delete my account again — it is safe to repeat, and the answer will say what is left.';
+
+export async function deleteEverything(): Promise<string> {
+  requireOnline('delete');
+  const db = await cloud();
+  const { data } = await db.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Sign in first — there is no account to delete.');
+
+  let res: Response;
+  try {
+    res = await fetchWithin(
+      `${feedBase()}/delete-account`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, apikey: KEY },
+        body: JSON.stringify({ confirm: 'DELETE' }),
+      },
+      MOVE_MS,
+    );
+  } catch {
+    // Not "nothing was deleted". A CORS refusal is exactly this rejection, and
+    // it arrives *after* the function has run — `_shared/cors.ts` has the
+    // incident. Not knowing is the only true thing to say.
+    return ERASURE_UNKNOWN;
   }
-  await db.auth.signOut();
-  if (failed.length > 0) {
-    return `Signed out, and most of your account is gone — but ${failed.join(' and ')} could not be removed. Email ${'harrisonjrubin7@gmail.com'} and it will be done by hand.`;
+
+  let said: Erasure = {};
+  try {
+    said = (await res.json()) as Erasure;
+  } catch {
+    said = {};
   }
-  return 'Your rows are gone and you are signed out. What a deleted account leaves behind, and why, is on the Privacy page. This device still has its own copy — Erase from this device removes that.';
+  const message = typeof said.message === 'string' && said.message ? said.message : '';
+
+  if (res.ok && said.erased === true && said.signInRemoved === true) {
+    // Local only: the sessions on the server went with the auth user, and a
+    // global sign-out would ask a server that no longer knows this token.
+    await db.auth.signOut({ scope: 'local' });
+    return `${message || 'Your account is deleted.'} You are signed out. What stays, and why, is on this page. This device still has its own copy — Erase from this device removes that.`;
+  }
+  if (said.erased === true) {
+    return message || 'Your data is deleted, but the sign-in could not be removed yet. Press Delete my account again to finish.';
+  }
+  if (said.erased === false) {
+    return message || 'Nothing was deleted. Try again in a minute.';
+  }
+  return res.status === 404
+    ? 'Account deletion is not available on this server yet, so nothing was deleted. Email the address on this page and it will be done by hand.'
+    : ERASURE_UNKNOWN;
+}
+
+/**
+ * Everything the server holds about this account, as one JSON file.
+ *
+ * `export_my_data()` (same migration as `erase_account`) walks the same list
+ * the erasure does — every foreign key to `auth.users`, and every row hanging
+ * off those by a cascade — so what can be downloaded and what is deleted are
+ * one list rather than two that drift. Three kinds of row are left out
+ * because they are another person's record about this account, and the file
+ * says so in its own `withheld` field.
+ */
+export async function exportAccount(now = new Date()): Promise<{ name: string; body: string; tables: number }> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('export_my_data');
+  if (error) throw failed(error);
+  const file = (data ?? {}) as { tables?: Record<string, unknown> };
+  return {
+    name: `Semester account export ${now.toISOString().slice(0, 10)}.json`,
+    body: JSON.stringify(data, null, 2),
+    tables: Object.keys(file.tables ?? {}).length,
+  };
 }
 
 /** Switching reminders off deletes what was waiting to be sent. */

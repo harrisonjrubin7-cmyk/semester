@@ -28,6 +28,7 @@
 
 import type { Account } from './cloud';
 import type { SyncStatus } from '../state/store';
+import { SYNC_WORDS } from './syncstatus';
 import type { Row } from './inventory';
 
 /**
@@ -112,8 +113,8 @@ export function saidAbout({ account, status, at }: AccountState, now = Date.now(
     };
   }
   const sub =
-    status === 'syncing'
-      ? 'Catching up with your account…'
+    status === 'syncing' || status === 'offline' || status === 'queued' || status === 'read-only' || status === 'conflict' || status === 'review'
+      ? SYNC_WORDS[status].sentence
       : status === 'error'
         ? 'Sync failed — open Account for what went wrong.'
         : status === 'synced'
@@ -155,7 +156,7 @@ export function agoLine(at: number, now = Date.now()): string {
 export const SUMMARY: { key: string; label: string }[] = [
   { key: 'courses', label: 'Courses' },
   { key: 'notes', label: 'Notes' },
-  { key: 'tasks', label: 'Tasks' },
+  { key: 'tasks', label: 'Actions' },
   { key: 'appointments', label: 'Appointments' },
   { key: 'sittings', label: 'Practice papers' },
   { key: 'reviews', label: 'Cards reviewed' },

@@ -20,6 +20,9 @@ BROWSER  ──────────────►  GitHub Pages (static SPA
 - Supabase project `lzrqvlugnawcgywkhqlz` (Postgres 17), with per-PR preview
   branch projects
 - The institution gateway is a separate Node process
+- `.github/workflows/production-smoke.yml` probes the public Pages bundle and
+  production PostgREST hourly. Gateway liveness/readiness joins the same run
+  only after both production URL variables are configured.
 
 **There is no general backend tier.** Items that assume conventional server
 middleware must be solved either at the host, in the SPA shell, or in the
@@ -41,6 +44,19 @@ gateway process:
 | Preview | Yes — per-PR Supabase preview branches, real and automatic |
 | Staging | **Missing** — no staging tier exists |
 | Production | Pages + the Supabase project |
+
+## Production detection
+
+The hourly `Production smoke` workflow performs a cache-busted fetch of the
+live HTML, follows the module and stylesheet names emitted by that exact page,
+and reaches the production Supabase REST API with the publishable browser key.
+That catches a missing Pages site, a stale HTML shell naming missing assets,
+and a failed PostgREST/auth edge. It does not inspect private student rows.
+
+This is uptime evidence, not application-error telemetry and not an on-call
+route. GitHub workflow failure notifications have not been proven to reach a
+named operator. The institutional job is deliberately visible but skipped
+until both production app and gateway URLs exist; a half-configured pair fails.
 
 The missing staging tier is a real risk: migrations currently go from a
 throwaway Postgres 16 straight to a production Postgres 17. `supabase/check.sh`

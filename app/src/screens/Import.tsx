@@ -10,6 +10,7 @@ import { takeSnapshot } from '../lib/snapshots';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui';
 import { Trouble } from '../components/Trouble';
+import { ErrorState, Progress } from '../components/unity/States';
 import { troubleOf, useTrouble } from '../lib/trouble';
 import { intakeFiles, intakeText, type Intake } from '../lib/intake';
 import { Capture } from '../components/Capture';
@@ -35,6 +36,7 @@ import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
 import { reviewReady } from '../lib/import-review';
 import { DOCUMENTS } from '../lib/extract';
+import { formatNumber } from '../lib/locale';
 
 /**
  * What the picker will offer.
@@ -104,6 +106,13 @@ const NO_KEY_HERE =
   'Reading a document is the part that needs it — adding a course by hand, or ' +
   'opening one somebody shared with you, needs no key at all.';
 
+/** What did not happen, for each attempt the screen can offer to repeat. */
+const FAILED_TITLE = {
+  build: 'The course was not built',
+  photos: 'The photographs were not read',
+  open: 'The shared course did not open',
+} as const;
+
 /**
  * Upload a syllabus, get a course.
  *
@@ -121,6 +130,10 @@ export function Import() {
   const [files, setFiles] = useState<Intake[]>([]);
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState('');
+  /** How far through a multi-file pick the reader is, for the shared progress bar. */
+  const [readCount, setReadCount] = useState<{ done: number; total: number } | null>(null);
+  /** Which attempt the retryable failure belongs to, so its title says what did not happen. */
+  const [failedAt, setFailedAt] = useState<'build' | 'photos' | 'open'>('build');
   const trouble = useTrouble();
   const [result, setResult] = useState<GenerationResult | null>(null);
   /**
@@ -209,15 +222,19 @@ export function Import() {
     trouble.clear();
     setBusy('Opening what you picked…');
     try {
-      const got = await intakeFiles(chosen, (done, total) =>
-        setBusy(total > 1 ? `Reading ${done + 1} of ${total}…` : 'Reading it…'),
-      );
+      const got = await intakeFiles(chosen, (done, total) => {
+        setBusy(total > 1 ? `Reading ${done + 1} of ${total}…` : 'Reading it…');
+        setReadCount({ done, total });
+      });
       if (got.read.length > 0) {
         setFiles((f) => [
           ...f.filter((x) => !got.read.some((r) => r.name === x.name)),
           ...got.read,
         ]);
       }
+      // Read, but not all of it: said even when nothing was refused, because
+      // the pages that were pictures are not in the course that gets built.
+      if (got.partly?.length) say(got.partly.join(' '));
       if (got.refused.length > 0) {
         // Choosing them again would refuse them again — a .pages file is still
         // a .pages file on the second go — so this is said without a retry.
@@ -229,6 +246,7 @@ export function Import() {
       trouble.wrong(troubleOf(e) ?? 'Those files could not be opened.');
     } finally {
       setBusy('');
+      setReadCount(null);
     }
   };
 
@@ -249,7 +267,7 @@ export function Import() {
     setFiles((f) => [...f.filter((x) => x.name !== read.name), read]);
     setPasted('');
     setPasting(false);
-    say(`${read.words.toLocaleString()} words taken. Build the course when you are ready.`);
+    say(`${formatNumber(read.words)} words taken. Build the course when you are ready.`);
   };
 
   /**
@@ -283,8 +301,9 @@ export function Import() {
       }
       setFiles((f) => [...f.filter((x) => x.name !== read.name), read]);
       setShots([]);
-      say(`${read.words.toLocaleString()} words read off the photographs. Check them before building.`);
+      say(`${formatNumber(read.words)} words read off the photographs. Check them before building.`);
     } catch (e) {
+      setFailedAt('photos');
       trouble.failed(e, () => void readShotsIn());
     } finally {
       setReading(false);
@@ -349,6 +368,7 @@ export function Import() {
         attendance: NO_POLICY,
       });
     } catch (e) {
+      setFailedAt('open');
       trouble.failed(e, () => void openShared(file));
     } finally {
       setBusy('');
@@ -372,6 +392,7 @@ export function Import() {
     } catch (e) {
       // The extracted text is still held, so a second run costs the upload
       // nothing — only the request.
+      setFailedAt('build');
       trouble.failed(e, () => void build());
     } finally {
       setBusy('');
@@ -524,6 +545,11 @@ export function Import() {
       >
         {busy || (over ? 'Drop them here' : 'Choose files — PDF, Word, slides, text, or a zip')}
       </FilePick>
+      {readCount && readCount.total > 1 && (
+        <div style={{ marginTop: 'var(--sp-4)' }}>
+          <Progress label="Reading your files" done={readCount.done} total={readCount.total} />
+        </div>
+      )}
 
       {/*
         The camera, for the syllabus that only exists on paper.
@@ -704,7 +730,7 @@ export function Import() {
             {f.name}
           </span>
           <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', flex: 'none' }}>
-            {f.words.toLocaleString()} words
+            {formatNumber(f.words)} words
           </span>
           <button
             type="button"
@@ -758,7 +784,7 @@ export function Import() {
               tone="primary"
               style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))' }}
             >
-              {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
+              {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${formatNumber(words)} words`}
             </ActionButton>
           ) : (
             <NeedsKey also={NO_KEY_HERE} />
@@ -788,12 +814,18 @@ export function Import() {
       {/* The files are still read and still in state, so the retry costs
           nothing already spent — which is the whole reason a dead end here
           was the worst one in the app. */}
-      <Trouble
-        said={trouble.said}
-        onRetry={trouble.again}
-        label="Try building it again"
-        busy={busy !== ''}
-      />
+      {trouble.said && trouble.again ? (
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          <ErrorState
+            title={FAILED_TITLE[failedAt]}
+            body={trouble.said}
+            recover={{ label: failedAt === 'build' ? 'Try building it again' : 'Try that again', run: trouble.again }}
+            busy={busy !== '' || reading}
+          />
+        </div>
+      ) : (
+        <Trouble said={trouble.said} />
+      )}
 
       {result && changes && existing ? (
         <Rediff

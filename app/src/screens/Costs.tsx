@@ -8,6 +8,7 @@ import { Page } from '../components/Page';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Bill } from './Bill';
 import { TermSwitch } from '../components/TermSwitch';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import {
   KINDS,
@@ -86,7 +87,7 @@ function OutOfPocket() {
   const [kind, setKind] = useState<Kind>('book');
   const [rented, setRented] = useState(false);
   const [courseId, setCourseId] = useState(catalog.courses[0]?.id ?? '');
-  const [bad, setBad] = useState('');
+  const fields = useFieldErrors(['what', 'amount'] as const);
 
   const mine = useMemo(() => forTerm(state.costs, state.term), [state.costs, state.term]);
   const t = useMemo(() => total(mine), [mine]);
@@ -95,14 +96,11 @@ function OutOfPocket() {
 
   const add = () => {
     const cents = readMoney(amount);
-    if (cents === null) {
-      setBad('That is not an amount the app can read. Try 64.99, or $65.');
-      return;
-    }
-    if (!what.trim()) {
-      setBad('Say what it was, so the list means something in December.');
-      return;
-    }
+    const ok = fields.check({
+      what: what.trim() ? '' : 'Say what it was, so the list means something in December.',
+      amount: cents === null ? 'That is not an amount the app can read. Try 64.99, or $65.' : '',
+    });
+    if (!ok || cents === null) return;
     dispatch({
       type: 'addCost',
       cost: {
@@ -118,7 +116,7 @@ function OutOfPocket() {
     setWhat('');
     setAmount('');
     setRented(false);
-    setBad('');
+    fields.clear();
   };
 
   return (
@@ -238,6 +236,7 @@ function OutOfPocket() {
       <NilTaxNote />
 
       <SectionLabel>Add something</SectionLabel>
+      <ErrorSummary {...fields.summary({ what: 'What it was', amount: 'What it cost' })} />
       <select
         className="input"
         value={courseId}
@@ -257,9 +256,16 @@ function OutOfPocket() {
         value={what}
         aria-label="What it was"
         placeholder="Mankiw, Principles of Macroeconomics, 9e"
-        onChange={(e) => setWhat(e.target.value)}
-        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+        {...fields.control('what')}
+        onChange={(e) => {
+          setWhat(e.target.value);
+          fields.clear('what');
+        }}
+        style={{ width: '100%' }}
       />
+      <div style={{ marginBottom: 'var(--sp-4)' }}>
+        <FieldMessage {...fields.message('what')} />
+      </div>
 
       {/* The one field a camera can fill in. The app still refuses to fetch a
           price — see the note at the foot of this screen — because that is a
@@ -273,7 +279,11 @@ function OutOfPocket() {
           aria-label="What it cost"
           placeholder="64.99"
           inputMode="decimal"
-          onChange={(e) => setAmount(e.target.value)}
+          {...fields.control('amount')}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            fields.clear('amount');
+          }}
           style={{ width: 110, flex: 'none' }}
         />
         <select
@@ -289,6 +299,9 @@ function OutOfPocket() {
             </option>
           ))}
         </select>
+      </div>
+      <div style={{ marginBottom: fields.errors.amount ? 'var(--sp-4)' : 0 }}>
+        <FieldMessage {...fields.message('amount')} />
       </div>
 
       {kindOf(kind).resellable && (
@@ -313,11 +326,6 @@ function OutOfPocket() {
         </button>
       )}
 
-      {bad ? (
-        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
-          {bad}
-        </div>
-      ) : null}
 
       <button
         type="button"

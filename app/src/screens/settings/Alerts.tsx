@@ -6,6 +6,7 @@ import { SectionLabel, Toggle } from '../../components/ui';
 import { MyRules } from '../../components/MyRules';
 import { PushSwitch } from '../../components/PushSwitch';
 import { MuteCourses } from '../../components/MuteCourses';
+import { CalmSettings } from '../../components/CalmSettings';
 import { Reminders } from '../Me';
 import { NOTIF_DEFS } from '../../data/misc';
 import { clock } from '../../lib/date';
@@ -192,6 +193,14 @@ export function SettingsAlerts() {
               <MuteCourses />
 
               <PushSwitch />
+            </CustomRow>
+          </Group>
+          <Group
+            header="Your Guide"
+            lit={lights('guide briefing digest minimal calm pause scenarios career study memory horizon', lit)}
+          >
+            <CustomRow>
+              <CalmSettings />
             </CustomRow>
           </Group>
         </>

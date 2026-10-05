@@ -40,10 +40,18 @@ import { SUPPORT } from '../lib/privacy';
 import { ActionButton } from './ui';
 import { secondLine } from '../lib/dim';
 
-export function SaySomething() {
+export function SaySomething({
+  initialKind = 'bug',
+  initialNote = '',
+}: {
+  /** Where the report starts: "Report incorrect information" opens on `wrong`. */
+  initialKind?: Kind;
+  /** What the student is reporting about, so they only have to add what is wrong. */
+  initialNote?: string;
+} = {}) {
   const { account } = useStore();
-  const [kind, setKind] = useState<Kind>('bug');
-  const [note, setNote] = useState('');
+  const [kind, setKind] = useState<Kind>(initialKind);
+  const [note, setNote] = useState(initialNote);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [trouble, setTrouble] = useState('');

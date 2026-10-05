@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel } from '../components/ui';
@@ -57,8 +57,10 @@ import { Talk } from '../components/room/Talk';
  * Blocking is enforced by a database policy, so a blocked person's messages
  * never reach the device at all.
  *
- * Reports are stored and nobody is watching a queue. Saying otherwise would be
- * the worst kind of lie here, because somebody would rely on it.
+ * Reports go to a queue a moderator can read (`components/ReportQueue.tsx`),
+ * and the screen says exactly that and no more: a queue existing is not a
+ * promise that somebody reads it quickly, and saying otherwise would be the
+ * worst kind of lie here, because somebody would rely on it.
  *
  * ## What is on the device and what is on the server
  *
@@ -68,6 +70,7 @@ import { Talk } from '../components/room/Talk';
  * not something the other forty people in it should be able to read.
  */
 export function Classmates() {
+  const now = useNow();
   const { account, catalog, state, school, dispatch } = useStore();
   const wide = useMedia(WIDE);
   const term = termOf();
@@ -187,7 +190,7 @@ export function Classmates() {
       // and the name arrives once you are in the room. Better an honest line
       // than four queries for forty names to prefix it with.
       nameOf,
-      new Date(),
+      now,
       profile?.handle ?? '',
       /*
        * Your own handle, and it has to be here for the badge to work.
@@ -212,7 +215,7 @@ export function Classmates() {
        */
       profile?.handle ? [profile.handle] : [],
     );
-  }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile]);
+  }, [account, catalog.courses, rooms, state.schoolId, said, marks, profile, now]);
 
   if (!cloudConfigured) {
     return (
@@ -452,8 +455,9 @@ export function Classmates() {
             >
               {termLabel(term)}. Leaving a room removes you from it and nothing you posted. Blocking
               somebody is immediate and is enforced by the database, so their messages stop reaching
-              this device — reports are recorded, but nobody is watching a queue, and it would be
-              wrong to imply otherwise.
+              this device. Reports go to a review queue that only people holding a moderator role
+              can read; they see the reason and the message, not who sent the report. Nobody
+              promises how quickly it is read, so blocking is the step that works at once.
             </div>
           </div>
         )}

@@ -23,6 +23,7 @@ import {
   type Snapshot,
 } from '../lib/snapshots';
 import { Folding } from './Fold';
+import { SuccessState } from './unity/States';
 
 /**
  * Going back a day.
@@ -213,7 +214,12 @@ export function Snapshots() {
           Take a copy now
         </button>
 
-        {said ? (
+        {said === RESTORED_LINE ? (
+          <div style={{ marginTop: 'var(--sp-5)' }}>
+            {/* The line's own first word is the title; the rest is what to do if it was the wrong one. */}
+            <SuccessState title="Restored" body={RESTORED_LINE.replace(/^Restored\.\s*/, '')} />
+          </div>
+        ) : said ? (
           <div style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
             {said}
           </div>

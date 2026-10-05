@@ -2,6 +2,7 @@ import { screenName } from '../lib/nav';
 import { providerFor } from './providers';
 import { render, type Look, type ScreenContext } from './shape';
 import type { Screen } from '../lib/types';
+import { journeyPositionFor } from '../lib/journeys';
 
 /**
  * What the assistant can see, assembled at the moment it is asked.
@@ -59,6 +60,41 @@ export interface Assembled {
   text: string;
   /** Rows that did not fit. Said out loud rather than silently cut. */
   dropped: number;
+  /** Source ids explicitly present in the active provider's visible slice. */
+  visibleSourceIds: string[];
+}
+
+function idsNamedBy(value: unknown, found = new Set<string>()): Set<string> {
+  if (Array.isArray(value)) {
+    for (const item of value) idsNamedBy(item, found);
+    return found;
+  }
+  if (!value || typeof value !== 'object') return found;
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    if (key === 'sourceId' && typeof item === 'string') found.add(item);
+    else if (key === 'sourceIds' && Array.isArray(item)) {
+      for (const id of item) if (typeof id === 'string') found.add(id);
+    } else {
+      idsNamedBy(item, found);
+    }
+  }
+  return found;
+}
+
+function visibleSourceIds(
+  screen: Screen,
+  now: Look | null,
+  contexts: readonly ScreenContext[],
+): string[] {
+  const found = new Set<string>();
+  for (const context of contexts) idsNamedBy([context.focus, context.visible], found);
+  // The Sources provider deliberately shows this exact capped slice. Its
+  // rendered rows omit internal ids, so preserve that visibility here without
+  // leaking every saved source from the store.
+  if (screen === 'sources' && now) {
+    for (const source of now.state.sources.slice(0, 40)) found.add(source.id);
+  }
+  return [...found];
 }
 
 export function assemble(ai: Inputs): Assembled {
@@ -70,8 +106,25 @@ export function assemble(ai: Inputs): Assembled {
   // at: setLook" and its placeholder "Ask about drill".
   const label = screenName(screen);
   const registered = ai.registered();
+  const journey = journeyPositionFor(screen);
+  const journeyText = journey
+    ? [
+        `Semester journey: ${journey.journey.label}.`,
+        `Current part: ${journey.position} of ${journey.total} — ${screenName(journey.current)}.`,
+        journey.previous ? `Previous part: ${screenName(journey.previous)}.` : '',
+        journey.next ? `Next part: ${screenName(journey.next)}.` : '',
+      ].filter(Boolean).join(' ')
+    : '';
   if (!now) {
-    return { screen, label, own: null, extra: registered, text: '', dropped: 0 };
+    return {
+      screen,
+      label,
+      own: null,
+      extra: registered,
+      text: journeyText,
+      dropped: 0,
+      visibleSourceIds: visibleSourceIds(screen, now, registered),
+    };
   }
   const provide = providerFor(screen);
   const own = provide ? provide(now) : null;
@@ -88,7 +141,15 @@ export function assemble(ai: Inputs): Assembled {
       .map((c) => render(screen, label, c))
       .map((r) => r.text)
       .join('\n\n');
-    return { screen, label, own: null, extra: registered, text: only, dropped: 0 };
+    return {
+      screen,
+      label,
+      own: null,
+      extra: registered,
+      text: [journeyText, only].filter(Boolean).join('\n\n'),
+      dropped: 0,
+      visibleSourceIds: visibleSourceIds(screen, now, registered),
+    };
   }
   /*
    * What was asked about goes first, not last.
@@ -100,20 +161,50 @@ export function assemble(ai: Inputs): Assembled {
    * end.
    */
   const rendered = render(screen, label, own);
-  const text = [...registered.map((c) => render(screen, label, c).text), rendered.text]
+  const text = [journeyText, ...registered.map((c) => render(screen, label, c).text), rendered.text]
     .filter(Boolean)
     .join('\n\n');
-  return { screen, label, own, extra: registered, text, dropped: rendered.dropped };
+  return {
+    screen,
+    label,
+    own,
+    extra: registered,
+    text,
+    dropped: rendered.dropped,
+    visibleSourceIds: visibleSourceIds(screen, now, [own, ...registered]),
+  };
 }
 
 export function suggestionsFor(ai: Inputs): string[] {
   const assembled = assemble(ai);
+  /*
+   * The Ask tab itself is not a screen with something on it.
+   *
+   * It sits in the Learn area, so the journey line used to offer "What should
+   * I do next in Learn and practice?" as the one and only starting point — a
+   * question about a menu heading, alone in the middle of an empty page. Opened
+   * directly, the useful starters are the term-wide ones.
+   */
+  if (assembled.screen === 'ask') return [...TERM_STARTERS];
+  const journey = journeyPositionFor(assembled.screen);
+  const fromJourney = journey ? [`What should I do next in ${journey.journey.label}?`] : [];
   const fromScreen = assembled.own?.suggestions ?? [];
   const fromExtra = assembled.extra.flatMap((c) => c.suggestions);
-  const all = [...fromExtra, ...fromScreen];
+  const all = [...fromExtra, ...fromJourney, ...fromScreen];
   // Everywhere works, so a screen with nothing to suggest still offers the
   // two questions that are worth asking from anywhere.
   return all.length > 0
     ? all.slice(0, 3)
     : ['What is due this week?', 'How am I doing?', 'How does this app work?'];
 }
+
+/** Where a conversation opened on the Ask tab starts. Four, each a job. */
+export const TERM_STARTERS = [
+  'What is due this week?',
+  'What should I study next?',
+  'Help me plan my week',
+  // Not "How am I doing in my courses?": a starter that invites a verdict on
+  // academic standing, offered before anything says what it would be drawn
+  // from. Grades are still one question away for anyone who asks.
+  'Prepare questions for my advisor',
+] as const;

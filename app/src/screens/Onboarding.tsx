@@ -1,3 +1,4 @@
+import { PathProfileForm } from '../components/PathProfileForm';
 import { useMemo } from 'react';
 import { useNow, useStore } from '../state/store';
 import { askReminders, type Tone } from '../lib/tone';
@@ -131,7 +132,7 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
       b: offline
         ? 'This build has no account service switched on, so there is nothing to sign in to. Everything you do is saved here and goes no further — which is the whole app, minus the copy that follows you to a laptop.'
         : hasAccount
-          ? 'Your courses, notes, tasks and ticked boxes are on the account now, and the laptop gets the same semester the moment you sign in there.'
+          ? 'Your courses, notes, actions and ticked boxes are on the account now, and the laptop gets the same semester the moment you sign in there.'
           : 'An email address and a password, and the semester follows you to the laptop and back. Skip it and everything still works — it just stays on this device.',
       cta: offline || hasAccount ? 'Next' : 'Not now',
     },
@@ -213,10 +214,11 @@ export function Onboarding() {
       </div>
 
       <div className="kicker">{step.k}</div>
-      <div
+      <h1
         className="chrome-text"
         style={{
           fontSize: 'calc(42px * var(--text-scale, 1))',
+          fontWeight: 'inherit',
           lineHeight: 1.04,
           letterSpacing: '-0.01em',
           marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(14px * var(--density, 1))',
@@ -224,7 +226,7 @@ export function Onboarding() {
         }}
       >
         {soft && state.onb === 0 ? welcomeLine(mine, now) : step.t}
-      </div>
+      </h1>
       <div style={{ fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
         {soft && state.onb === 0 ? welcomeLead(mine) : step.b}
       </div>
@@ -373,6 +375,18 @@ export function Onboarding() {
         <div style={{ marginTop: 'calc(26px * var(--density, 1))', display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
           <TermChoice />
           <SchoolPicker />
+          {/*
+            Where the student is headed, optional and folded away: this step
+            already asks "when and where", and a programme, a target term and
+            the credits their audit names are the rest of that question. It
+            is the same form My Path shows, writing the same store.
+          */}
+          <details>
+            <summary style={{ minHeight: 44, display: 'flex', alignItems: 'center', cursor: 'pointer', fontSize: 'var(--type-sm-plus)' }}>
+              Add your degree path (optional)
+            </summary>
+            <PathProfileForm />
+          </details>
         </div>
       )}
 

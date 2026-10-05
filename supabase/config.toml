@@ -70,6 +70,22 @@ major_version = 17
 # reaching a preview branch — which is the exact failure these blocks exist to
 # end, and would otherwise return one function at a time.
 
+# Stripe has no Supabase token; the Stripe-Signature over the raw body is the
+# credential, and the function answers 503 until STRIPE_WEBHOOK_SECRET is set.
+# The checkout checks the caller's own token after the CORS preflight, which
+# carries none. The cancel does the same. See DEPLOY.md → billing.
+[functions.billing-cancel]
+verify_jwt = false
+
+[functions.billing-checkout]
+verify_jwt = false
+
+[functions.billing-portal]
+verify_jwt = false
+
+[functions.billing-webhook]
+verify_jwt = false
+
 [functions.calendar]
 verify_jwt = false
 
@@ -82,8 +98,36 @@ verify_jwt = false
 [functions.fetchcal]
 verify_jwt = false
 
+[functions.integration-tick]
+verify_jwt = false
+
+# The company site's visitors have no Semester account. The site's own
+# origins are built in; SITE_ORIGINS only adds. See DEPLOY.md → lead-intake.
+[functions.lead-intake]
+verify_jwt = false
+
 [functions.lti]
 verify_jwt = false
 
 [functions.push]
+verify_jwt = false
+
+# The caller is a reviewer at a university with no Semester account; the link
+# token in the POST body is the credential. See DEPLOY.md → trust-room.
+[functions.trust-room]
+verify_jwt = false
+
+# Delete my account. The caller is a signed-in student and the function checks
+# their token itself, like `claude`; see DEPLOY.md → delete-account.
+[functions.delete-account]
+verify_jwt = false
+
+# CORS preflight is unauthenticated; the function validates every POST with auth.getUser.
+[functions.productivity-sourcecheck]
+verify_jwt = false
+
+# A support agent's browser records the in-app reply first, then this function
+# sends a generic email hint. It checks the caller's token and support grant;
+# the student's address and reply body never return to the staff browser.
+[functions.support-reply-notify]
 verify_jwt = false

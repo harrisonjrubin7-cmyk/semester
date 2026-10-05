@@ -1,20 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { assemble } from './assemble';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
-import { useConversation, provider } from './converse';
+import { canSend, useConversation } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
-import { configured, modelLabel } from '../lib/assistant';
+import { configured } from '../lib/assistant';
 import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
+import { IntelligenceDisclosure } from '../intelligence/Disclosure';
+import { HowItHelps } from './HelpNotice';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import { GuideOperatingContract } from '../components/GuideOperatingContract';
 
 /**
  * The panel: the assistant once it is open, and nothing that is true before.
@@ -91,6 +95,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * views of one assistant rather than two assistants. See its header.
    */
   const talk = useConversation();
+  const noticeId = useId();
   const voice = useVoice(talk);
   /** Whether the "what's included" panel is open. Nothing hidden, on request. */
   const [showing, setShowing] = useState(false);
@@ -116,7 +121,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * A new thread has no question yet and says who is answering instead.
    */
   const open = talk.threads.find((t) => t.id === talk.openId);
-  const title = open && open.turns.length > 0 ? nameOf(open) : `Ask ${provider()}`;
+  const title = open && open.turns.length > 0 ? nameOf(open) : 'Ask Semester';
 
   /**
    * Follows the stream, and stops the moment you scroll up.
@@ -438,6 +443,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         : ' — nothing of its own'
                     }`}
               </button>
+              <GuideOperatingContract compact />
             </div>
 
             <div
@@ -487,7 +493,9 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                 {/* Nothing asked yet. The same opening the tab draws, from
                     `Opening.tsx` — a sentence about what it can see and four
                     things worth asking here, rather than four naked buttons. */}
-                {empty && <Opening onPick={(q) => void talk.send(q)} tight />}
+                {empty && canSend(talk.help) && (
+                  <Opening onPick={(q) => void talk.send(q)} tight help={talk.help} />
+                )}
 
                 {/*
                   The same two components the full chat draws, from
@@ -542,6 +550,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         text={t.content}
                         incomplete={t.incomplete}
                         onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                        quality={t.quality}
                         /*
                          * The offers belong to the answer that made them.
                          *
@@ -554,8 +563,12 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         extra={
                           i === talk.turns.length - 1 && !talk.busy ? (
                             <>
-                              <Using read={talk.read} />
-                              {talk.used.length > 0 && (
+                              {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
+                                <IntelligenceDisclosure response={talk.response} onAskHuman={() => dispatch({ type: 'go', screen: 'help' })} />
+                              ) : (
+                                <Using read={talk.read} />
+                              )}
+                              {!talk.response && talk.used.length > 0 && (
                                 <Looked
                                   said={`Read ${talk.used.length} ${
                                     talk.used.length === 1 ? 'part' : 'parts'
@@ -597,7 +610,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                     <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
                       {talk.streaming && <Reply text={talk.streaming} />}
                       {(!talk.streaming || talk.looking.length > 0) && (
-                        <Waiting who={provider()} doing={talk.looking} />
+                        <Waiting who="Semester Intelligence" doing={talk.looking} />
                       )}
                     </div>
                   )}
@@ -646,6 +659,16 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
               }}
             >
               <div style={COLUMN}>
+                <HowItHelps
+                  help={talk.help}
+                  requested={talk.integrityMode}
+                  allowed={talk.allowedIntegrityModes}
+                  reason={talk.integrityReason}
+                  onChange={talk.setIntegrityMode}
+                  onRetry={talk.retryPolicy}
+                  noticeId={noticeId}
+                  noticeVariant="full"
+                />
                 {/*
                   The same box the full chat uses, from `Composer.tsx`, so
                   Enter means the same thing on both — including on a touch
@@ -665,12 +688,15 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                   }}
                   busy={talk.busy}
                   placeholder={
-                    voice.on
+                    !canSend(talk.help)
+                      ? 'Sending is paused'
+                      : voice.on
                       ? 'Listening — say it out loud'
                       : `Ask about ${assembled.label} — ${sendHint(touch)}`
                   }
-                  autoFocus
+                  autoFocus={canSend(talk.help)}
                   voice={voice}
+                  blockedBy={canSend(talk.help) ? undefined : noticeId}
                 />
                 <div
                   style={{
@@ -694,7 +720,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                     }}
                     style={QUIET}
                   >
-                    {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
+                    {configured() ? 'ASSISTANT SETTINGS' : 'SET A KEY'}
                   </button>
                   <span style={{ flex: 1 }} />
                   {/* The same conversation, with the page to itself. Not a

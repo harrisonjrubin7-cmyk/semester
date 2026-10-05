@@ -1,14 +1,21 @@
+import { retainIncomingCapture } from './lib/productivity-arrival';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 // The typefaces both sheets below name, declared once and served from this
 // origin rather than from Google — see `styles/typefaces.css` for why.
 import './styles/typefaces.css';
+import './styles/hyperlegible.css';
 import './styles/industry.css';
 import './styles/app.css';
 // The ported audit feature modules (study studio, assignment centre, campus
 // directories, registration and the graphing calculator) bring their own
 // scoped rules — see `styles/features.css`.
 import './styles/features.css';
+// The semantic token layer over the primitives above, and the shared
+// components built on it — see `styles/tokens.css` and `styles/unity.css`.
+import './styles/tokens.css';
+import './styles/unity.css';
+import './styles/form-usability.css';
 import App from './App';
 import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';
@@ -16,6 +23,7 @@ import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
 import { redirected } from './lib/redirected';
 import { askedForm } from './lib/formshare';
+import { askedRoom } from './lib/trustlink';
 import { takeFromUrl } from './lib/referral';
 import { takeHandoff } from './lib/ltiarrival';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
@@ -23,6 +31,8 @@ import type { ProviderId } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
 import { primePersisted } from './state/shape';
 import { warm } from './lib/warm';
+
+retainIncomingCapture();
 
 /**
  * A sign-in comes back as a redirect to this same page. Redeem the code before
@@ -58,8 +68,24 @@ function finishAnyRedirect(): Promise<{ id: ProviderId; error?: string } | null>
  * a `?form=` carrying anything but a uuid falls through to the ordinary app
  * rather than mounting this against rubbish.
  */
-const formLink = askedForm(window.location.search);
-if (formLink) {
+/*
+ * A procurement-room link: a reviewer at a university, holding a token the
+ * account team minted, with no account and no semester. Mounted in place of
+ * the app for the same reasons as a published form, below, and ahead of it.
+ * The token is read from the fragment, which no server is ever sent. See
+ * `screens/TrustRoom.tsx` and `lib/trustlink.ts`.
+ */
+const roomLink = askedRoom(window.location.hash);
+const formLink = roomLink ? null : askedForm(window.location.search);
+if (roomLink) {
+  void import('./screens/TrustRoom').then(({ default: TrustRoom }) => {
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <TrustRoom token={roomLink} />
+      </StrictMode>,
+    );
+  });
+} else if (formLink) {
   void import('./screens/Respond').then(({ default: Respond }) => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

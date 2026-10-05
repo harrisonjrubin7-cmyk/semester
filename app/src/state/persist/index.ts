@@ -21,7 +21,7 @@
  * and all.
  */
 
-import { readAll, isEmpty, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
+import { readAll, isEmpty, held, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
 import { migrate, versionOf } from '../../lib/migrate';
@@ -58,9 +58,17 @@ export const FIRST_DB_SCHEMA = 3;
 
 let ready = false;
 
-/** Whether the database opened. False means the app is on the old path. */
+/**
+ * Whether the database opened and is still answering. False means the app is
+ * on the old path.
+ *
+ * Both halves. `ready` is what `load` found; `held` is whether `db.ts` still
+ * has the handle, which it lets go of when a transaction hits its limit. With
+ * only the first, a stall after load left the app choosing a database that
+ * could no longer take a write, for the rest of the session.
+ */
 export function available(): boolean {
-  return ready;
+  return ready && held();
 }
 
 /**
@@ -70,19 +78,24 @@ export function available(): boolean {
  * `loadPersisted` does — a field the database has never heard of takes its
  * default rather than becoming undefined halfway down a screen.
  */
-async function readEverything(): Promise<Partial<Persisted>> {
+async function readEverything(): Promise<Partial<Persisted> | null> {
   const out: Record<string, unknown> = {};
 
   for (const key of COLLECTIONS) {
     const rows = await readAll(key);
+    if (rows === null) return null;
     if (rows.length > 0) out[key] = rows.map(([, value]) => value);
   }
 
-  for (const [key, value] of await readAll(MAPS_STORE)) {
+  const maps = await readAll(MAPS_STORE);
+  if (maps === null) return null;
+  for (const [key, value] of maps) {
     if (MAPS.includes(key as keyof Persisted)) out[key] = value;
   }
 
-  for (const [key, value] of await readAll(SETTINGS_STORE)) {
+  const settings = await readAll(SETTINGS_STORE);
+  if (settings === null) return null;
+  for (const [key, value] of settings) {
     if (key === MIGRATED) continue;
     if (SETTINGS.includes(key as keyof Persisted)) out[key] = value;
   }
@@ -165,15 +178,34 @@ async function migrateFromLocalStorage(): Promise<FirstRun> {
  * Open the database, migrate if this is the first run, and read.
  *
  * Returns null when the database is unavailable, which is the caller's signal
- * to stay on localStorage.
+ * to stay on localStorage. Unavailable includes a database that opened and
+ * then did not answer: a read that hits its limit is `null` rather than an
+ * empty store, and the whole load falls back rather than migrating an account
+ * onto a handle that has just been dropped.
  */
 export async function load(): Promise<Persisted | null> {
   const db = await open(COLLECTIONS as string[]);
   if (!db) return null;
   ready = true;
 
-  if (await isEmpty()) {
+  /*
+   * The database stopped answering under the load. `db.ts` has let go of the
+   * handle, and whatever this had read or written is not to be trusted as an
+   * account: the caller stays on localStorage, exactly as if the open had
+   * never answered.
+   */
+  const lost = (): null => {
+    ready = false;
+    return null;
+  };
+
+  const empty = await isEmpty();
+  if (empty === null) return lost();
+  if (empty) {
     const first = await migrateFromLocalStorage();
+    // The move's own write can be the transaction that stalls. Read as
+    // `incomplete`, that handed a returning student `freshPersisted()`.
+    if (!held()) return lost();
     if (first.kind === 'moved') return first.state;
     /*
      * A genuinely new account has nothing to migrate and nothing to read —
@@ -212,7 +244,11 @@ export async function load(): Promise<Persisted | null> {
     return freshPersisted();
   }
 
+  // A change owed when the page last went away, and the transaction the
+  // browser tore down with it. See `keepForNextLoad`.
+  await replayLeaving();
   const found = await readEverything();
+  if (found === null || !held()) return lost();
   // The database path never goes near `loadPersisted` — the value is primed
   // before the reducer's initialiser runs, so its field rules are not in the
   // way. The third door, through the same reader as the other two. See
@@ -323,6 +359,22 @@ export const SETTLE_MS = 250;
 
 let pending: Partial<Persisted> | null = null;
 let last: Partial<Persisted> | null = null;
+
+/**
+ * What the database is known to hold: `last` as of the last write that
+ * answered true. `last` runs ahead of it while a write is in flight.
+ */
+let confirmed: Partial<Persisted> | null = null;
+
+/**
+ * Each state `persist` is handed is numbered, so a write that lands can tell
+ * whether it carried everything the leaving journal holds. States are whole,
+ * not diffs: a later one landing means an earlier one has too.
+ */
+let seq = 0;
+let pendingSeq = 0;
+let lastSeq = 0;
+let journalSeq: number | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let inFlight: Promise<void> = Promise.resolve();
 
@@ -352,13 +404,16 @@ export function whileWriting(fn: ((failing: boolean) => void) | null): void {
 
 async function flush(): Promise<void> {
   const next = pending;
+  const nextSeq = pendingSeq;
   const tell = told;
   pending = null;
   told = null;
   if (!next || !last) return;
   const before = last;
+  const beforeSeq = lastSeq;
   const writes = writesFor(last, next);
   last = next;
+  lastSeq = nextSeq;
   // Nothing to write is not something to announce. A tab told to re-read a
   // disk that did not change is the first step of a loop, not an update.
   if (writes.length === 0) return;
@@ -410,10 +465,25 @@ async function flush(): Promise<void> {
      * origin's quota is not.
      */
     last = before;
+    lastSeq = beforeSeq;
     watching?.(true);
     return;
   }
 
+  /*
+   * Only a write built on what the database is known to hold makes the
+   * database hold `next`. One started while another was in flight carries
+   * only the diff from that one, and if that one was aborted (the browser may
+   * abort either as the page goes) this landing leaves the earlier change
+   * missing. Then nothing is confirmed and the journal stays; the failure
+   * already put `last` back, so the next write carries it again.
+   */
+  if (before === confirmed) {
+    confirmed = next;
+    // Everything the leaving journal held has now landed, or something newer
+    // has. Replaying it next load would put an older value over a newer one.
+    if (journalSeq !== null && nextSeq >= journalSeq) forgetLeaving();
+  }
   tell?.();
   // And the writer is working, which clears a warning left by a failure that
   // has since passed — a browser that made room, or a transaction that lost a
@@ -424,6 +494,7 @@ async function flush(): Promise<void> {
 /** What the app last read or wrote, so the first diff has something to be against. */
 export function prime(state: Partial<Persisted>): void {
   last = state;
+  confirmed = state;
 }
 
 /**
@@ -445,6 +516,7 @@ export function prime(state: Partial<Persisted>): void {
 export function persist(next: Partial<Persisted>, onWrote?: () => void): void {
   if (!ready) return;
   pending = next;
+  pendingSeq = ++seq;
   told = onWrote ?? null;
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
@@ -465,6 +537,8 @@ export function persist(next: Partial<Persisted>, onWrote?: () => void): void {
 export function stopWriting(): void {
   ready = false;
   pending = null;
+  // An erase followed by a reload must not bring rows back from the journal.
+  forgetLeaving();
   told = null;
   if (timer) {
     clearTimeout(timer);
@@ -480,4 +554,106 @@ export async function flushNow(): Promise<void> {
   }
   inFlight = inFlight.then(flush);
   await inFlight;
+}
+
+/**
+ * Write whatever is owing now, for a page that is going away.
+ *
+ * `flushNow` queues behind a write still in flight, and on a reload that is
+ * too late: the owed write is only started once the earlier transaction
+ * completes, by which time the page is being torn down, and the change is
+ * lost. CI's golden path lost an action ticked just before a reload this way
+ * on 30 September, desktop only, once.
+ *
+ * So this starts the write at once rather than after the one in flight.
+ * `flush` builds its transaction synchronously, and IndexedDB runs read-write
+ * transactions over the same stores in the order they were created, so the
+ * new one still lands after the old. `last` has already moved on to what the
+ * write in flight carries, so the diff here is only what came after it.
+ *
+ * That narrowed the loss and did not close it: the browser may abort either
+ * transaction as the document goes. So it first leaves a synchronous copy of
+ * everything unconfirmed behind, for the next load. See `keepForNextLoad`.
+ */
+export function flushOnLeave(): void {
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  keepForNextLoad();
+  if (!pending) return;
+  const now = flush();
+  inFlight = Promise.all([inFlight, now]).then(() => undefined);
+}
+
+/**
+ * Where a change owed as the page leaves is kept, synchronously.
+ *
+ * `flushOnLeave` starts the database write before the page goes, and that
+ * narrowed the loss without closing it: a browser tearing a document down may
+ * abort a transaction still running in it, and a reload does not wait. CI's
+ * golden path lost a tick that way on 30 September after the fix above was in
+ * (#996, desktop, "after a reload the action is gone or no longer done").
+ *
+ * localStorage is written synchronously and survives the unload. So as the
+ * page leaves, whatever the database has not confirmed, the rows between
+ * `confirmed` and the newest state, is written here, and `load` puts it into
+ * the database before reading. It is a diff, one row per tick, not the whole
+ * account, so it is small. It is dropped as soon as a write covering it lands,
+ * so a stale journal can never be replayed over something newer. `stopWriting`
+ * drops it too, for the erase.
+ *
+ * Two tabs share it: one leaving with a change owed while the other keeps
+ * editing the same row, then reopened, replays its row over the other's. That
+ * needs a tab closed within a quarter of a second of its own edit, on the same
+ * record another tab is changing, and is left as it is.
+ */
+export const LEAVING_KEY = 'semester.leaving';
+
+function keepForNextLoad(): void {
+  const current = pending ?? last;
+  const currentSeq = pending ? pendingSeq : lastSeq;
+  if (!current || !confirmed || current === confirmed) return;
+  const writes = writesFor(confirmed, current);
+  if (writes.length === 0) return;
+  try {
+    localStorage.setItem(LEAVING_KEY, JSON.stringify(writes));
+    journalSeq = currentSeq;
+  } catch {
+    // Full, or blocked. The database write still goes out as before.
+  }
+}
+
+function forgetLeaving(): void {
+  journalSeq = null;
+  try {
+    localStorage.removeItem(LEAVING_KEY);
+  } catch {
+    // Nothing to forget where there is no storage.
+  }
+}
+
+const isWrite = (w: unknown): w is Write =>
+  !!w && typeof w === 'object' && typeof (w as Write).store === 'string' && typeof (w as Write).key === 'string' && 'value' in (w as object);
+
+async function replayLeaving(): Promise<void> {
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(LEAVING_KEY);
+  } catch {
+    return;
+  }
+  if (!raw) return;
+  let writes: unknown;
+  try {
+    writes = JSON.parse(raw);
+  } catch {
+    writes = null;
+  }
+  if (!Array.isArray(writes) || !writes.every(isWrite)) {
+    forgetLeaving();
+    return;
+  }
+  // Kept if the write does not land, so the next open tries again.
+  if (await write(writes)) forgetLeaving();
 }

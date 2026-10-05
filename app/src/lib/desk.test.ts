@@ -5,6 +5,7 @@ import {
   allApps,
   categories,
   centreHidden,
+  discover,
   findApps,
   isFavourite,
   narrowApps,
@@ -17,6 +18,7 @@ import {
 import { DESTINATIONS, offered } from './nav';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
+import { NAV_AREAS, navAreaLabel, navAreaOf } from './navareas';
 
 /** A school that has everything, so the gate is not what is being tested. */
 const ALL: Capabilities = {
@@ -80,6 +82,14 @@ describe('the shortcuts', () => {
     expect(isFavourite(toggleFavourite(without, 'courses' as Screen, ALL), 'courses' as Screen, ALL)).toBe(
       true,
     );
+  });
+});
+
+describe('journey-first discovery', () => {
+  it('returns matching journeys and tools from the same offered registry', () => {
+    const found = discover('resume', ALL);
+    expect(found.journeys.map((journey) => journey.id)).toContain('prepare-next');
+    expect(found.apps.every((destination) => offered(ALL).includes(destination))).toBe(true);
   });
 });
 
@@ -345,20 +355,30 @@ describe('the directory', () => {
 
   it('offers only the categories that have something in them', () => {
     const chips = categories(BARE);
-    for (const group of chips) {
-      expect(allApps(BARE).some((d) => d.group === group), `${group} is an empty chip`).toBe(true);
+    expect(chips.length).toBeGreaterThan(0);
+    for (const label of chips) {
+      expect(allApps(BARE).some((d) => navAreaLabel(d.screen) === label), `${label} is an empty chip`).toBe(true);
     }
+  });
+
+  it('files the categories under the navigation areas, in their order', () => {
+    // The launcher's headings are the areas, not the shelves (`lib/navareas.ts`).
+    const labels = NAV_AREAS.map((a) => a.label);
+    const chips = categories(ALL);
+    expect(chips).toEqual(labels.filter((l) => chips.includes(l)));
+    expect(chips).toContain('Help');
+    expect(chips).not.toContain('Beyond');
   });
 
   it('narrows by the category, the query, or both', () => {
     const apps = allApps(ALL);
-    const study = narrowApps(apps, 'Study', '', ALL);
-    expect(study.length).toBeGreaterThan(0);
-    for (const d of study) expect(d.group).toBe('Study');
+    const learn = narrowApps(apps, 'Learn', '', ALL);
+    expect(learn.length).toBeGreaterThan(0);
+    for (const d of learn) expect(navAreaOf(d.screen)).toBe('learn');
     // A query inside a category can only ever narrow it further.
-    const both = narrowApps(apps, 'Study', 'quiz', ALL);
-    expect(both.length).toBeLessThanOrEqual(study.length);
-    for (const d of both) expect(d.group).toBe('Study');
+    const both = narrowApps(apps, 'Learn', 'quiz', ALL);
+    expect(both.length).toBeLessThanOrEqual(learn.length);
+    for (const d of both) expect(navAreaOf(d.screen)).toBe('learn');
   });
 
   it('gives everything back when nothing is asked', () => {

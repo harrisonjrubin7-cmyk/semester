@@ -61,7 +61,8 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { createRemoteJWKSet, importJWK, jwtVerify, SignJWT, type JWK } from 'npm:jose@5';
-import { checkLaunch, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
+import { checkLaunch, launchTenant, startLogin, type Launch, type Registration } from '../_shared/lti.ts';
+import { JWKS_OPTIONS, checkHeader, decodeHeader, safeError, subjectDigest, verifyOptions } from '../_shared/ltiverify.ts';
 import { landingPath, provisionedEmail, provisionedMetadata } from '../_shared/ltiaccount.ts';
 import { autoPostForm, mayPlace, readSettings, resourceLinkItem, responseClaims } from '../_shared/ltideeplink.ts';
 import { SCOPE, clientAssertion, jwks, keyId, publicJwk, tokenRequest } from '../_shared/ltikey.ts';
@@ -75,6 +76,9 @@ import {
   type LineItemRow,
 } from '../_shared/ltiags.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { passbackVerdict } from '../_shared/ltigate.ts';
+import { entitlementLogLine, launchEntitlement, readFacts } from '../_shared/ltientitlement.ts';
+import { membershipJoin, membershipLogLine, placementDecision, sessionDecision, type MembershipJoin } from '../_shared/ltimembership.ts';
 
 /** How long a launch has between the redirect out and the POST back. */
 const FLIGHT_SECONDS = 300;
@@ -100,7 +104,7 @@ const keySets = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 function keysFor(jwksUrl: string) {
   let set = keySets.get(jwksUrl);
   if (!set) {
-    set = createRemoteJWKSet(new URL(jwksUrl));
+    set = createRemoteJWKSet(new URL(jwksUrl), { ...JWKS_OPTIONS });
     keySets.set(jwksUrl, set);
   }
   return set;
@@ -125,6 +129,34 @@ function refuse(reason: string, detail: string, status = 400): Response {
     status,
     'This link could not be opened',
     `Semester could not verify this launch came from your school's Brightspace. Nothing was changed. If this keeps happening, the reference is <code>${escape(reason)}</code>.`,
+  );
+}
+
+/**
+ * The launch was real; the school's membership refuses it: access made
+ * inactive, or (for placing an activity) no instructor role.
+ *
+ * Its own page, because `refuse` says the launch could not be verified, which
+ * here would be false and would send somebody to their LMS administrator for
+ * a problem that is their school's access office's. 403, not 401: we know who
+ * this is. It does not say suspended or deprovisioned; that is the school's
+ * to tell them. The reference carries it for whoever they ask.
+ */
+function membershipRefused(reason: string): Response {
+  if (reason === 'membership-not-instructor') {
+    // Access is fine; what is missing is the school listing them as teaching.
+    console.error(`lti refused: ${reason} — membership holds no faculty or teaching_assistant role`);
+    return page(
+      403,
+      'This activity could not be added',
+      `Your school's records do not list you as an instructor or teaching assistant, so Semester cannot add activities to this course for you. Nothing was changed. Your school's help desk can update your role; the reference is <code>${escape(reason)}</code>.`,
+    );
+  }
+  console.error(`lti refused: ${reason} — institutional membership is not active`);
+  return page(
+    403,
+    'Your school access is not active',
+    `Your school has not made Semester available to your account right now, so this course link cannot open it. Nothing was changed. Your school's help desk can explain; the reference is <code>${escape(reason)}</code>.`,
   );
 }
 
@@ -157,10 +189,10 @@ async function registration(
   client: ReturnType<typeof db>,
   issuer: string,
   clientId?: string,
-): Promise<(Registration & { tokenUrl: string | null }) | null> {
+): Promise<(Registration & { tokenUrl: string | null; tenantId: string | null }) | null> {
   let q = client
     .from('lti_platform')
-    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url')
+    .select('issuer, client_id, deployment_id, auth_login_url, jwks_url, token_url, tenant_id')
     .eq('issuer', issuer);
   if (clientId) q = q.eq('client_id', clientId);
   const { data, error } = await q.limit(2);
@@ -183,7 +215,24 @@ async function registration(
     authLoginUrl: r.auth_login_url,
     jwksUrl: r.jwks_url,
     tokenUrl: r.token_url ?? null,
+    tenantId: r.tenant_id ?? null,
   };
+}
+
+/**
+ * Which institutional membership a verified launch belongs to, logged.
+ * `public.lti_launch_membership` does the join; `ltimembership.ts` reads it.
+ */
+async function membershipFor(client: ReturnType<typeof db>, who: Launch): Promise<MembershipJoin> {
+  const { data, error } = await client.rpc('lti_launch_membership', {
+    want_issuer: who.issuer,
+    want_client: who.clientId,
+    want_deployment: who.deploymentId,
+    want_subject: who.subject,
+  });
+  const join = membershipJoin(data, error);
+  console.log(membershipLogLine(join));
+  return join;
 }
 
 /** Both a GET and a POST arrive here in the wild, so read both the same way. */
@@ -356,7 +405,7 @@ Deno.serve(async (req) => {
    * for a quiz that went perfectly well.
    */
   if (path.endsWith('/score')) {
-    const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'));
+    const cors = corsHeaders(Deno.env.get('ALLOWED_ORIGIN'), req.headers.get('Origin'), Deno.env.get('CORS_ALLOW_DEV'));
     const answer = (body: Record<string, unknown>, status = 200) =>
       new Response(JSON.stringify(body), {
         status,
@@ -410,6 +459,22 @@ Deno.serve(async (req) => {
     if (!match.ok) return not(match.reason, match.detail);
     const item = match.value;
 
+    /*
+     * ── Whether this school allows it at all ──────────────────────────────
+     *
+     * Before anything is signed or sent. The database decides — kill
+     * switches, and for a registration bound to a school its flags, its
+     * connection and its approved scope (20260927180000_lti_integration_binding.sql)
+     * — and a refusal is the ordinary `reported: false`, because a school
+     * that has passback switched off is not a fault in the student's quiz.
+     */
+    const { data: gateWord, error: gateError } = await client.rpc('lti_passback_decision', {
+      want_issuer: item.issuer,
+      want_client: item.client_id,
+    });
+    const gate = passbackVerdict(gateWord, gateError);
+    if (!gate.ok) return not(gate.reason, gate.detail);
+
     const score = scoreBody({ userId: item.subject, given, max, at: Date.now() });
     if (!score.ok) return not(score.reason, score.detail, 400);
 
@@ -429,7 +494,7 @@ Deno.serve(async (req) => {
         .setProtectedHeader({ alg: 'RS256', kid, typ: 'JWT' })
         .sign(await importJWK(key as JWK, 'RS256'));
     } catch (e) {
-      return not('sign-failed', `The client assertion could not be signed: ${e}`, 500);
+      return not('sign-failed', `The client assertion could not be signed: ${safeError(e)}`, 500);
     }
 
     const form = tokenRequest(signed, [SCOPE.score]);
@@ -447,7 +512,7 @@ Deno.serve(async (req) => {
       if (!parsed.ok) return not(parsed.reason, parsed.detail, 502);
       token = parsed.value;
     } catch (e) {
-      return not('token-unreachable', `${reg.tokenUrl}: ${e}`, 502);
+      return not('token-unreachable', `token endpoint: ${safeError(e)}`, 502);
     }
 
     // ── and the number, to the column the instructor made ──────────────
@@ -459,11 +524,11 @@ Deno.serve(async (req) => {
       });
       if (!res.ok) return not('platform-refused', `${item.lineitem_url} answered ${res.status}.`, 502);
     } catch (e) {
-      return not('platform-unreachable', `${item.lineitem_url}: ${e}`, 502);
+      return not('platform-unreachable', `line item endpoint: ${safeError(e)}`, 502);
     }
 
     console.log(
-      `lti score ok: iss=${item.issuer} sub=${item.subject} context=${item.context_id} ${given}/${max}`,
+      `lti score ok: iss=${item.issuer} sub=${await subjectDigest(item.subject)} context=${item.context_id} ${given}/${max}`,
     );
     return answer({ reported: true, course: item.context_title ?? item.context_id });
   }
@@ -549,10 +614,13 @@ Deno.serve(async (req) => {
 
     /*
      * Spent first, and atomically, before anything is fetched or verified.
-     * Two POSTs carrying the same state race otherwise, and the loser of that
-     * race is a replayed launch that both halves believe. The function does
-     * the check and the write in one statement for exactly that reason —
-     * `lti.check.sql` removes the guard and watches this go through.
+     * Two POSTs carrying the same state would race otherwise, and the loser
+     * of that race would be a replayed launch that both halves believe. The
+     * RPC does the check and the write in one statement for exactly that
+     * reason (`spent_at is null` in its `update … returning`), and
+     * `lti.check.sql` spends a live state once, then asserts the same state
+     * spends a second time for nobody and that an expired or never-issued
+     * state is refused.
      */
     const { data: spent, error: spendError } = await client
       .rpc('spend_lti_nonce', { want_state: state })
@@ -570,13 +638,16 @@ Deno.serve(async (req) => {
 
     let claims: Record<string, unknown>;
     try {
-      // Signature only. Every claim rule is in `_shared/lti.ts`, where it is
-      // tested; duplicating two of them here would mean two places to be
-      // wrong and one of them with no test on it.
-      const { payload } = await jwtVerify(token, keysFor(reg.jwksUrl));
+      // The header first, before any key is fetched: no key-location
+      // parameter, RS256 only, a key id. `jwtVerify` is then pinned to the
+      // same algorithm list and to this registration's issuer and audience.
+      // Every claim rule is in `_shared/lti.ts`, where it is tested.
+      const header = checkHeader(decodeHeader(token));
+      if (!header.ok) return refuse(header.reason, header.detail, 401);
+      const { payload } = await jwtVerify(token, keysFor(reg.jwksUrl), verifyOptions(reg));
       claims = payload as Record<string, unknown>;
     } catch (e) {
-      return refuse('bad-signature', `The token did not verify against ${reg.jwksUrl}: ${e}`, 401);
+      return refuse('bad-signature', `The token did not verify against the registration's key set: ${safeError(e)}`, 401);
     }
 
     const verdict = checkLaunch({
@@ -590,8 +661,12 @@ Deno.serve(async (req) => {
 
     const who = verdict.value;
     console.log(
-      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
+      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} context=${who.contextId ?? '-'} teaches=${who.teaches}`,
     );
+    // Allowed either way; an unbound registration is logged on every launch
+    // so the row that needs its school recorded is never quiet about it.
+    const tenant = launchTenant(reg.tenantId, reg);
+    if (tenant.warning) console.warn(tenant.warning);
 
     /*
      * ── The launch that asks a question ───────────────────────────────────
@@ -608,6 +683,11 @@ Deno.serve(async (req) => {
     if (who.messageType === 'LtiDeepLinkingRequest') {
       const allowed = mayPlace(who);
       if (!allowed.ok) return refuse(allowed.reason, allowed.detail, 403);
+
+      // The LMS says instructor; when the school has a membership for this
+      // person, it must say so too (placementDecision). Narrows, never widens.
+      const placing = placementDecision(await membershipFor(client, who));
+      if (!placing.allow) return membershipRefused(placing.reason);
 
       const settings = readSettings(claims);
       if (!settings.ok) return refuse(settings.reason, settings.detail, 400);
@@ -646,11 +726,11 @@ Deno.serve(async (req) => {
           .setProtectedHeader({ alg: 'RS256', kid, typ: 'JWT' })
           .sign(await importJWK(key as JWK, 'RS256'));
       } catch (e) {
-        return refuse('sign-failed', `The deep linking response could not be signed: ${e}`, 500);
+        return refuse('sign-failed', `The deep linking response could not be signed: ${safeError(e)}`, 500);
       }
 
       console.log(
-        `lti deep link ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} ` +
+        `lti deep link ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} ` +
           `context=${who.contextId ?? '-'} return=${settings.value.returnUrl}`,
       );
 
@@ -672,6 +752,58 @@ Deno.serve(async (req) => {
 
     const bound = await accountFor(client, who);
     if (!bound.ok) return refuse(bound.reason, bound.detail, 500);
+
+    /*
+     * ── The institutional membership this launch belongs to ───────────────
+     *
+     * After `accountFor`, because the join reads the `lti_identity` row it
+     * guarantees. Through the registration's school and a *linked* identity
+     * only, never an email or an LMS-sent id
+     * (20260927235930_lti_launch_membership.sql). It reads and never writes a
+     * membership.
+     *
+     * And it limits the session: when the school has a membership for this
+     * person and it is not active, the LMS is not a way around that, and no
+     * session is minted. Before the context and line-item writes below, so a
+     * refused launch leaves nothing behind. `sessionDecision` is the rule; a
+     * launch that never reached a membership goes on as before.
+     */
+    const join = await membershipFor(client, who);
+
+    /*
+     * The entitlement order, in shadow: evaluated and logged, never enforced
+     * (_shared/ltientitlement.ts says why). Before the session gate, so the
+     * log covers every launch the gate is about to judge. A failure here is
+     * logged and changes nothing about the launch.
+     */
+    const facts = join.tenantId
+      ? await client.rpc('lti_launch_entitlement_facts', {
+          want_tenant: join.tenantId,
+          want_issuer: who.issuer,
+          want_subject: who.subject,
+        })
+      : { data: null, error: null };
+    console.log(entitlementLogLine(launchEntitlement(join, readFacts(facts.data, facts.error), new Date())));
+    const session = sessionDecision(join);
+    if (!session.allow) return membershipRefused(session.reason);
+
+    /*
+     * ── The course, for the school's integration record ───────────────────
+     *
+     * Only the context id, and only when the registration is bound to an
+     * approved, unpaused connection with the LTI flag on — the database
+     * decides and says why not. Never fails the launch, for the same reason
+     * the line item below does not.
+     */
+    if (who.contextId) {
+      const { data: recorded, error: recordError } = await client.rpc('lti_record_context', {
+        want_issuer: who.issuer,
+        want_client: who.clientId,
+        want_context: who.contextId,
+      });
+      if (recordError) console.log(`lti context not recorded: ${recordError.message}`);
+      else console.log(`lti context: ${recorded}`);
+    }
 
     /*
      * ── Where this course's grades go, if anywhere ────────────────────────
@@ -738,7 +870,7 @@ Deno.serve(async (req) => {
     to.hash = landingPath(who);
 
     console.log(
-      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${who.subject} ` +
+      `lti launch ok: iss=${who.issuer} deployment=${who.deploymentId} sub=${await subjectDigest(who.subject)} ` +
         `context=${who.contextId ?? '-'} teaches=${who.teaches} provisioned=${Boolean(bound.ticket)}`,
     );
 

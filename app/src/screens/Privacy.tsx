@@ -16,19 +16,27 @@
  * uses — because it is the one thing on this screen that an undo cannot fix.
  */
 
-import { useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { SharingList } from '../components/SharingList';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { CLAIMS, SUPPORT, region } from '../lib/privacy';
 import { KEEP, LOG_KEY, dump, dumpName, read } from '../lib/diagnose';
 import { SCHEMA, migrationLine } from '../lib/migrate';
 import { migrationReport } from '../state/shape';
-import { cloudConfigured, deleteEverything } from '../lib/cloud';
+import { cloudConfigured, deleteEverything, exportAccount } from '../lib/cloud';
+import { download } from '../lib/deliver';
 import { eraseDevice } from '../lib/erase';
+import { record, yours } from '../lib/journal';
 import { Toggle } from '../components/ui';
+import { SupportAccess } from '../components/SupportAccess';
+import { DataRightsRequests } from '../components/DataRightsRequests';
+import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
 import {
   USAGE_KEY,
@@ -40,6 +48,9 @@ import {
   usageLine,
   type Counts,
 } from '../lib/usage';
+
+// The Trust & Data Center (Phase N), at the top of this page.
+const TrustCenter = lazy(() => import('../components/TrustCenter').then((m) => ({ default: m.TrustCenter })));
 
 /**
  * A stored value, or null, even where the browser refuses to be asked.
@@ -62,7 +73,7 @@ function stored(key: string): string | null {
   }
 }
 
-export function Privacy() {
+export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: { trustCenter?: boolean } = {}) {
   const { account, state, dispatch, school } = useStore();
   // Their app, not the registry. See the note on the count below.
   const theirs = offered(school.capabilities, state.role);
@@ -91,6 +102,8 @@ export function Privacy() {
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [saved, setSaved] = useState('');
+  const [fetching, setFetching] = useState(false);
+  const [got, setGot] = useState('');
 
   const where = region((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '');
 
@@ -116,6 +129,12 @@ export function Privacy() {
         </div>
       </Blueprint>
 
+      {trustCenter ? (
+        <Suspense fallback={null}>
+          <TrustCenter key={account?.id ?? 'signed-out'} />
+        </Suspense>
+      ) : null}
+
       {CLAIMS.map((c) => (
         <div key={c.heading}>
           <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>{c.heading}</SectionLabel>
@@ -131,6 +150,10 @@ export function Privacy() {
           </div>
         </div>
       ))}
+
+      <SupportAccess account={account} />
+
+      <SchoolDataPanel />
 
       {/*
         The counting, and what it has actually counted.
@@ -203,10 +226,14 @@ export function Privacy() {
         </div>
       )}
 
+      <SharingList />
+
+      <DataRightsRequests account={account} />
+
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>If something is wrong</SectionLabel>
       <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
-        There is no form. Email <strong>{SUPPORT}</strong> and a person will answer — including if
-        you want your account removed by hand rather than by the button below.
+        The tracked form above is for your data rights. Email <strong>{SUPPORT}</strong> for a privacy
+        question you do not want to put in the request detail, or if you cannot sign in.
       </div>
 
       <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Export diagnostics</SectionLabel>
@@ -273,13 +300,63 @@ export function Privacy() {
         </div>
       )}
 
+      {account && (
+        <>
+          {/*
+            What the server holds, as a file, before anybody decides to delete
+            it. `export_my_data()` walks the same list `erase_account` does, so
+            the two sections below are about the same rows.
+          */}
+          <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Download my account data</SectionLabel>
+          <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
+            Everything the server holds about {account.email}, as one JSON file: every row that
+            names your account, the rows hanging off them — the answers to a practice paper you
+            shared, your beta feedback, your support messages — and the account record itself.
+            It is the same list Delete my account removes. Three kinds of row are left out
+            because they are another person’s record about you, and the file says which.
+          </div>
+          <button
+            type="button"
+            className="btn btn-block"
+            disabled={fetching}
+            onClick={() => {
+              setFetching(true);
+              setGot('');
+              void exportAccount()
+                .then((file) => {
+                  download({ name: file.name, body: file.body, mime: 'application/json' });
+                  record(account?.id ?? null, { kind: 'export-requested', detail: file.name, provenance: yours('This device only', 'Done') });
+                  setGot(`Saved “${file.name}”, with rows from ${file.tables} ${file.tables === 1 ? 'table' : 'tables'}.`);
+                })
+                .catch((e: unknown) =>
+                  setGot(`Nothing was downloaded: ${e instanceof Error ? e.message : 'the server did not answer'}. Try again in a minute.`),
+                )
+                .finally(() => setFetching(false));
+            }}
+            style={{ marginTop: 'var(--sp-6)', height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          >
+            {fetching ? 'Gathering…' : 'Download my account data'}
+          </button>
+          {got && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}
+            >
+              {got}
+            </div>
+          )}
+        </>
+      )}
+
       <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(5px * var(--density, 1))' }}>Delete my account</SectionLabel>
       {account ? (
         <>
           <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
-            Removes every row belonging to {account.email}: courses, deadlines, notes, grades,
-            cards and any queued reminders. It does not touch this device — signing out and
-            deleting the account both leave your semester here.
+            Removes every row belonging to {account.email} — courses, deadlines, notes, grades,
+            cards, reminders, messages — and then the account and its sign-in, all in one step
+            on the server. If any of it fails you stay signed in and are told what happened. It
+            does not touch this device: your semester stays here until you erase it below.
           </div>
           <button
             type="button"
@@ -290,25 +367,31 @@ export function Privacy() {
           >
             {busy ? 'Deleting…' : 'Delete my account'}
           </button>
-          {said && (
-            <div
-              role="status"
-              aria-live="polite"
-              style={{
-                fontSize: 'var(--type-base)',
-                marginTop: 'var(--sp-5)',
-                lineHeight: 'var(--leading-relaxed-plus)',
-                textWrap: 'pretty',
-              }}
-            >
-              {said}
-            </div>
-          )}
         </>
       ) : (
         <div style={{ fontSize: 'var(--type-base-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-loose)', textWrap: 'pretty' }}>
           You are not signed in, so there is no account to delete — nothing about this semester
           has ever left the device.
+        </div>
+      )}
+      {/*
+        Outside the signed-in branch on purpose. A deletion that succeeds signs
+        out, which flips `account` to null — and the sentence saying what was
+        deleted used to vanish with the branch it was in, at the one moment it
+        mattered.
+      */}
+      {said && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            fontSize: 'var(--type-base)',
+            marginTop: 'var(--sp-5)',
+            lineHeight: 'var(--leading-relaxed-plus)',
+            textWrap: 'pretty',
+          }}
+        >
+          {said}
         </div>
       )}
 
@@ -336,9 +419,9 @@ export function Privacy() {
         <TypeToConfirm
           title="Erase from this device"
           what={[
-            'Your semester on this device: courses, deadlines, notes, tasks, grades and cards.',
+            'Your semester on this device: courses, deadlines, notes, actions, grades and cards.',
             'Attachments, the daily copies you could have restored from, and the assistant’s threads.',
-            'Any connected accounts and keys — this browser signs out.',
+            'Any connected accounts and keys — this browser signs out. Semester asks Google to withdraw its access too; Microsoft, Zoom and Apple give apps no way to do that, so remove Semester in those accounts yourself.',
             account
               ? `Nothing belonging to ${account.email} on the server is touched, and it can be synced back.`
               : 'Nothing has ever left this device, so there is nowhere to sync it back from.',
@@ -371,8 +454,8 @@ export function Privacy() {
         <TypeToConfirm
           title="Delete your account"
           what={[
-            `Every row belonging to ${account.email} is removed from the server.`,
-            'Courses, deadlines, notes, grades, cards and any queued reminders.',
+            `Every row belonging to ${account.email} is removed from the server, and then the account and its sign-in.`,
+            'Courses, deadlines, notes, grades, cards, messages and any queued reminders.',
             'This device keeps its own copy — it is not touched.',
             'There is no archive and no undo.',
           ]}

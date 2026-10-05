@@ -2,15 +2,31 @@ import { randomUUID } from 'node:crypto';
 import {
   UNIVERSITY_AREAS,
   isRefusal,
+  groundsFor,
   isUniversityArea,
+  mayStep,
   parseAction,
   validateActionFields,
   type ActionInput,
+  type PolicyEnvironment,
   type UniversityArea,
   type UniversityIdentity,
+  type UserAction,
 } from '../../../packages/institution/src/index.ts';
+import {
+  PlatformError,
+  errorResponse,
+  isPlatformError,
+  resolveCorrelationId,
+  type ErrorEnvelope as PlatformErrorEnvelope,
+} from '../../../packages/platform/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
-import type { ActionJournal } from './journal.ts';
+import { contextFor } from './context.ts';
+import type { ActionJournalStore } from './journal.ts';
+import type { IntelligenceService } from './intelligence.ts';
+import type { PublicSsoConfig } from './membership.ts';
+import { MemoryRateLimiter, type RateLimiter } from './rate-limit.ts';
+import type { ReadinessResult } from './readiness.ts';
 
 /**
  * The gateway: everything that is the same whichever university it is.
@@ -45,23 +61,96 @@ import type { ActionJournal } from './journal.ts';
  * The identity (it comes from `auth.ts`), the institution (from the identity),
  * the adapter (an installed module, looked up by the identity's own tenant),
  * or whether an action is permitted (the adapter decides, every call).
+ *
+ * ## One id, carried through
+ *
+ * Every response carries two ids. `X-Request-Id` is minted here, once per
+ * request, and is never anything a client sent. `X-Correlation-Id` is the
+ * client's if it sent a well-formed one, and minted otherwise — it is the id
+ * that follows one student action from the tap in the browser through this
+ * request, its audit rows, its telemetry line and, if it comes to that, the
+ * support ticket. The audit row and the telemetry event both carry it, so
+ * "which audit event proves this happened" is a lookup rather than a search.
+ *
+ * ## Every refusal has the same shape
+ *
+ * `{ error: { code, message, correlation_id, retryable, user_action? } }`,
+ * plus a top-level `message` for the client that predates the envelope.
+ * `retryable` is a statement, not a hint: a 429 or a 503 may be tried again,
+ * and a 502 from an unknown outcome **may not** — the sentence says to
+ * reconcile, and the flag says the same thing to a client that only reads
+ * flags.
  */
 
 interface Config {
   origin: string;
   institutionName: string;
   authenticate: (token: string) => Promise<UniversityIdentity | null>;
+  refreshIdentity?: (identity: UniversityIdentity, token: string) => Promise<UniversityIdentity | null>;
   adapters: InstitutionAdapter[];
-  journal: ActionJournal;
+  journal: ActionJournalStore;
+  intelligence?: IntelligenceService;
+  loadSsoConfig?: () => Promise<PublicSsoConfig | null>;
+  rateLimiter?: RateLimiter;
+  readiness?: () => Promise<ReadinessResult>;
+  telemetry?: (event: GatewayTelemetryEvent) => void | Promise<void>;
+  /**
+   * Read-only mode: every write is refused with a 503 `read_only` that says
+   * to try again later, and reads go on as before. Asked each request rather
+   * than read once, so an operator can turn it on and off without a restart
+   * when the process is given a way to. `start.ts` reads
+   * `SEMESTER_READ_ONLY=on`; the app has its own copy in `lib/readonly.ts`,
+   * and the two are registered together in `docs/FEATURE-FLAG-REGISTRY.md`.
+   */
+  readOnly?: () => boolean;
+  /** Which environment the tenants of this gateway are in. `production` unless told otherwise. */
+  environment?: PolicyEnvironment;
 }
 
-class HttpError extends Error {
+export interface GatewayTelemetryEvent {
+  event: 'institution.request';
+  requestId: string;
+  correlationId: string;
+  method: string;
+  route: string;
   status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
+  durationMs: number;
+  errorClass: 'none' | 'client' | 'server';
 }
+
+const TELEMETRY_ROUTES = new Set([
+  '/health', '/health/live', '/health/ready', '/v1/auth/config',
+  '/v1/intelligence/policy', '/v1/intelligence/respond',
+  '/status', '/records', '/actions/prepare', '/actions/commit', '/actions/reconcile',
+]);
+
+function telemetryRoute(pathname: string): string {
+  if (/^\/v1\/intelligence\/actions\/[^/]+\/confirm$/.test(pathname)) {
+    return '/v1/intelligence/actions/:id/confirm';
+  }
+  return TELEMETRY_ROUTES.has(pathname) ? pathname : '/unmatched';
+}
+
+/**
+ * The machine-readable name for each refusal, by status, unless a `fail`
+ * names a more specific one. The names are the envelope's vocabulary and a
+ * client may switch on them; a status alone is not enough to tell "the
+ * review expired" from "the record moved", and both are 4xx.
+ */
+export const CODE_BY_STATUS: Record<number, string> = {
+  400: 'invalid_request',
+  401: 'unauthenticated',
+  403: 'forbidden',
+  404: 'not_found',
+  405: 'method_not_supported',
+  409: 'conflict',
+  410: 'expired',
+  413: 'too_large',
+  415: 'unsupported_media_type',
+  429: 'rate_limited',
+  502: 'outcome_uncertain',
+  503: 'unavailable',
+};
 
 /*
  * A declaration rather than a const arrow, deliberately: TypeScript only
@@ -69,12 +158,31 @@ class HttpError extends Error {
  * function declaration (or a const with an explicit type annotation). As an
  * arrow, every `fail(...)` guard below would still leave its subject nullable.
  */
-function fail(status: number, message: string): never {
-  throw new HttpError(status, message);
+function fail(status: number, message: string, code?: string, userAction?: UserAction): never {
+  throw PlatformError.from(status, code ?? CODE_BY_STATUS[status] ?? 'error', message, userAction ? { userAction } : {});
 }
 
-/** Requests per minute, per account. */
-const RATE = { window: 60_000, max: 60 } as const;
+/**
+ * The envelope every refusal is: `@semester/platform`'s, which is this
+ * gateway's own shape (ADR 0010) lifted out so every surface says it the same
+ * way. Kept as an export here because clients and tests import it by this name.
+ */
+export type ErrorEnvelope = PlatformErrorEnvelope;
+
+function envelope(status: number, code: string, message: string, correlationId: string, userAction?: UserAction): ErrorEnvelope {
+  return errorResponse(PlatformError.from(status, code, message, userAction ? { userAction } : {}), correlationId).body;
+}
+
+/**
+ * The correlation id for this request: the client's, if it sent one that is
+ * plainly an id, and a fresh one otherwise. The pattern is the same the audit
+ * column checks, so nothing accepted here is refused there — and nothing
+ * outside it (a sentence, a script, four kilobytes) reaches a log line.
+ */
+export function correlationIdFor(request: Request): string {
+  return resolveCorrelationId(request.headers.get('x-correlation-id') ?? undefined, { next: () => randomUUID() });
+}
+
 /** How long somebody has to read a review and confirm it. */
 const REVIEW_MINUTES = 10;
 /**
@@ -96,15 +204,17 @@ export function createGateway(config: Config) {
    * selects which adapter runs.
    */
   const installed = new Map(config.adapters.map((a) => [`${a.institutionId}:${a.area}`, a]));
-  const limits = new Map<string, { until: number; count: number }>();
+  const rateLimiter = config.rateLimiter ?? new MemoryRateLimiter();
 
-  return async (request: Request): Promise<Response> => {
+  const handle = async (request: Request, correlationId: string, requestId: string): Promise<Response> => {
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff',
       Vary: 'Origin',
     });
+    const refuse = (status: number, code: string, message: string, userAction?: UserAction) =>
+      Response.json(envelope(status, code, message, correlationId, userAction), { status, headers });
 
     /*
      * One exact origin, echoed only when it matches.
@@ -114,11 +224,15 @@ export function createGateway(config: Config) {
      */
     const origin = request.headers.get('origin');
     if (origin && origin !== config.origin) {
-      return new Response(JSON.stringify({ error: 'This origin is not allowed.' }), { status: 403, headers });
+      return refuse(403, 'origin_not_allowed', 'This origin is not allowed.');
     }
-    if (origin) headers.set('Access-Control-Allow-Origin', origin);
+    if (origin) {
+      headers.set('Access-Control-Allow-Origin', origin);
+      // Without this a browser client can send the id but never read it back.
+      headers.set('Access-Control-Expose-Headers', 'X-Request-Id, X-Correlation-Id');
+    }
     if (request.method === 'OPTIONS') {
-      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+      headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Correlation-Id');
       headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       return new Response(null, { status: 204, headers });
     }
@@ -150,42 +264,120 @@ export function createGateway(config: Config) {
        * endpoint that narrates which part of a service is broken is a map for
        * somebody choosing what to lean on.
        */
-      if (request.method === 'GET' && path === '/health') {
-        const ready = config.journal.healthy();
+      if (request.method === 'GET' && path === '/health/live') {
+        return Response.json({ service: 'Semester university gateway', version: 1, status: 'live' }, { status: 200, headers });
+      }
+      if (request.method === 'GET' && (path === '/health' || path === '/health/ready')) {
+        const readiness = config.readiness
+          ? await config.readiness()
+          : { ready: await config.journal.healthy(), status: 'ready' as const };
+        const ready = readiness.ready;
         return Response.json(
           {
             service: 'Semester university gateway',
             version: 1,
             status: ready ? 'ready' : 'unavailable',
             adapters: config.adapters.length,
+            intelligence: config.intelligence?.status ?? 'policy-disabled',
+            // So the runbook's "confirm" step is a curl, not a guess.
+            readOnly: config.readOnly?.() === true,
           },
           { status: ready ? 200 : 503, headers },
         );
+      }
+      if (request.method === 'GET' && path === '/v1/auth/config') {
+        try {
+          const sso = await config.loadSsoConfig?.();
+          return Response.json(sso ?? { enabled: false }, { status: 200, headers });
+        } catch {
+          return Response.json({ enabled: false }, { status: 200, headers });
+        }
       }
       if (!['GET', 'POST'].includes(request.method)) fail(405, 'Method not supported.');
 
       const token = /^Bearer ([^\s]+)$/.exec(request.headers.get('authorization') || '')?.[1];
       if (!token) fail(401, 'Sign in to your school-approved Semester account.');
 
-      const who = await config.authenticate(token);
-      if (!who) fail(403, 'No verified university access is assigned to this account.');
+      const authenticated = await config.authenticate(token);
+      if (!authenticated) fail(403, 'No verified university access is assigned to this account.');
+      let who: UniversityIdentity = authenticated;
 
       const now = Date.now();
-      for (const [id, limit] of limits) if (limit.until < now) limits.delete(id);
-      const key = `${who.institutionId}:${who.userId}`;
-      const limit = limits.get(key) ?? { until: now + RATE.window, count: 0 };
-      if (++limit.count > RATE.max) fail(429, 'Please wait a minute before trying again.');
-      limits.set(key, limit);
+      if (!(await rateLimiter.allow(who, now))) fail(429, 'Please wait a minute before trying again.');
 
-      const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000) };
+      /*
+       * Read-only mode. After authentication and the rate limit, so that a
+       * frozen gateway is not also an open one; before any route that can
+       * write, so that no route has to remember to check.
+       *
+       * Every POST but one: `/actions/reconcile` does not do anything at the
+       * school, it *asks* what already happened to an action whose outcome is
+       * unknown, and refusing it would leave that student's action stuck at
+       * `uncertain` for as long as the mode lasts — which is exactly when a
+       * restore or a repair may have made the answer worth asking for. The
+       * journal row it finishes records a result the school already has.
+       *
+       * 503, which is the one refusal that says "the same request may be sent
+       * again" and means it here: the mode ends, the request works.
+       */
+      if (request.method === 'POST' && path !== '/actions/reconcile' && config.readOnly?.()) {
+        fail(503, 'Semester is in read-only mode for maintenance. Nothing was sent; try again later.', 'read_only');
+      }
+
+      /*
+       * The platform's request context, built once from the verified identity
+       * and the two ids this request already carries. It is where a client's
+       * `X-Tenant-Id` that disagrees with the session is refused
+       * (`tenant_mismatch`) instead of ignored: the tenant is the session's, and
+       * a request that names another one is a bug or an attack worth hearing about.
+       */
+      const ids = { requestId, correlationId };
+      const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000), request: contextFor(request, who, ids, config.environment) };
+
+      const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
+      if (request.method === 'GET' && path === '/v1/intelligence/policy') {
+        if (!config.intelligence) return refuse(503, 'policy-disabled', 'Semester Intelligence is not configured for this gateway.');
+        const response = await config.intelligence.policy(who);
+        return Response.json(response.body, { status: response.status, headers });
+      }
+      if (
+        request.method === 'POST' &&
+        (path === '/v1/intelligence/respond' || intelligenceConfirm)
+      ) {
+        if (!config.intelligence) {
+          return refuse(503, 'policy-disabled', 'Semester Intelligence is not configured for this gateway.');
+        }
+        if (!request.headers.get('content-type')?.startsWith('application/json')) fail(415, 'Send JSON.');
+        const text = await request.text();
+        if (Buffer.byteLength(text) > MAX_BODY) fail(413, 'Request is too large.');
+        let value: unknown;
+        try {
+          value = JSON.parse(text);
+        } catch {
+          fail(400, 'Invalid JSON.');
+        }
+        if (intelligenceConfirm && config.refreshIdentity) {
+          const current = await config.refreshIdentity(who, token);
+          if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+            fail(403, 'Your current university access does not permit this action.');
+          }
+          who = current;
+          context.identity = current;
+          context.request = contextFor(request, current, ids, config.environment);
+        }
+        const response = path === '/v1/intelligence/respond'
+          ? await config.intelligence.respond(who, value)
+          : await config.intelligence.confirm(who, decodeURIComponent(intelligenceConfirm![1]), value);
+        return Response.json(response.body, { status: response.status, headers });
+      }
 
       /** The adapter for an area, if it exists and currently permits this. */
       const adapterFor = async (area: UniversityArea, write = false) => {
         const adapter = installed.get(`${who.institutionId}:${area}`);
-        if (!adapter) fail(503, 'An approved university connection is not configured for this service.');
+        if (!adapter) fail(503, 'An approved university connection is not configured for this service.', 'adapter_not_configured');
         const status = await adapter.status(context);
         if (status.state !== 'connected' || !status.canRead || (write && !status.canWrite)) {
-          fail(403, 'This connection does not permit that action.');
+          fail(403, 'This connection does not permit that action.', 'connection_forbids');
         }
         return adapter;
       };
@@ -205,7 +397,7 @@ export function createGateway(config: Config) {
           fail(404, 'Record not available to this account.');
         }
         if (record.version !== input.version) {
-          fail(409, 'This record changed. Refresh it and review your action again.');
+          fail(409, 'This record changed. Refresh it and review your action again.', 'record_changed');
         }
         const action = record.actions.find((a) => a.id === input.actionId);
         if (!action) fail(403, 'This action is not available for this record.');
@@ -270,7 +462,7 @@ export function createGateway(config: Config) {
           search: (url.searchParams.get('search') || '').slice(0, 200),
           cursor: (url.searchParams.get('cursor') || '').slice(0, 500) || null,
         });
-        config.journal.audit(who, area, 'records.read');
+        await config.journal.audit(who, area, 'records.read', null, correlationId);
         return Response.json(page, { headers });
       }
 
@@ -304,8 +496,8 @@ export function createGateway(config: Config) {
           details: summary.details,
           expiresAt: new Date(now + REVIEW_MINUTES * 60_000).toISOString(),
         };
-        config.journal.save({ review, input, identity: who, state: 'ready' });
-        config.journal.audit(who, input.area, 'action.prepared', review.id);
+        await config.journal.save({ review, input, identity: who, state: 'ready' });
+        await config.journal.audit(who, input.area, 'action.prepared', review.id, correlationId);
         return Response.json(review, { headers });
       }
 
@@ -314,7 +506,7 @@ export function createGateway(config: Config) {
       if (!asked || (path === '/actions/commit' && asked.confirmed !== true) || typeof asked.reviewId !== 'string') {
         fail(400, 'Confirm the reviewed action before continuing.');
       }
-      const row = config.journal.get(asked.reviewId as string, who);
+      const row = await config.journal.get(asked.reviewId as string, who);
       if (!row) fail(404, 'Review not found for this account.');
 
       // Already done: hand back the same receipt rather than doing anything.
@@ -323,7 +515,7 @@ export function createGateway(config: Config) {
       // Terminal, and there is nothing to look up: it was answered by a
       // refusal, not left hanging. Said before the two generic 409s below,
       // both of which would tell the person to reconcile it.
-      if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.');
+      if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.', 'review_refused');
 
       if (path === '/actions/reconcile') {
         if (row.state === 'ready') fail(409, 'This action has not been submitted.');
@@ -337,10 +529,10 @@ export function createGateway(config: Config) {
          * because the guess that costs somebody money is "it probably failed".
          */
         if (!result || !result.id || !['completed', 'pending'].includes(result.status)) {
-          fail(409, 'The school has not confirmed the result yet. Do not submit it again.');
+          fail(409, 'The school has not confirmed the result yet. Do not submit it again.', 'outcome_uncertain');
         }
-        config.journal.finish(row, result.status === 'pending' ? 'pending' : 'completed', result);
-        config.journal.audit(who, row.input.area, 'action.reconciled', row.review.id);
+        await config.journal.finish(row, result.status === 'pending' ? 'pending' : 'completed', result);
+        await config.journal.audit(who, row.input.area, 'action.reconciled', row.review.id, correlationId);
         return Response.json(result, { headers });
       }
 
@@ -349,7 +541,17 @@ export function createGateway(config: Config) {
         fail(409, 'This action is processing or needs reconciliation. Do not submit it again.');
       }
       if (Date.parse(row.review.expiresAt) <= now) {
-        fail(410, 'Review expired. Refresh and review the action again.');
+        fail(410, 'Review expired. Refresh and review the action again.', 'review_expired');
+      }
+
+      if (config.refreshIdentity) {
+        const current = await config.refreshIdentity(who, token);
+        if (!current || current.userId !== who.userId || current.institutionId !== who.institutionId) {
+          fail(403, 'Your current university access does not permit this action.');
+        }
+        who = current;
+        context.identity = current;
+        context.request = contextFor(request, current, ids, config.environment);
       }
 
       /*
@@ -364,21 +566,45 @@ export function createGateway(config: Config) {
       await recordFor(adapter, row.input);
       const checked = await adapter.review(context, row.input);
       if (JSON.stringify(checked) !== JSON.stringify({ title: row.review.title, details: row.review.details })) {
-        fail(409, 'The action details changed. Prepare a new review.');
+        fail(409, 'The action details changed. Prepare a new review.', 'review_changed');
       }
 
-      if (!config.journal.claim(row.review.id, who, Date.now())) {
-        fail(409, 'This action was already claimed or expired.');
+      /*
+       * The ladder, asked at the one place something is written.
+       *
+       * Everything above is what "confirm" and its four grounds are made of:
+       * the explicit `true`, write access to this area, an action the adapter
+       * offered for this record, and the correlation id the journal will hold
+       * the start of the action under. If any is missing the answer is a
+       * refusal that names it, before anything is claimed or sent.
+       */
+      const step = mayStep(
+        { from: 'confirm', to: 'execute' },
+        groundsFor({
+          confirmed: asked.confirmed,
+          institutionId: who.institutionId,
+          area: row.input.area,
+          actionId: row.input.actionId,
+          correlationId,
+        }),
+      );
+      if (!step.ok) {
+        await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+        fail(403, `This action cannot run yet: ${step.why}`, 'not_ready_to_execute');
+      }
+
+      if (!(await config.journal.claim(row.review.id, who, Date.now()))) {
+        fail(409, 'This action was already claimed or expired.', 'already_claimed');
       }
 
       try {
-        config.journal.audit(who, row.input.area, 'action.started', row.review.id);
+        await config.journal.audit(who, row.input.area, 'action.started', row.review.id, correlationId);
         const receipt = await adapter.execute(context, row.input, row.review.id);
         if (!receipt.id || !['completed', 'pending'].includes(receipt.status) || !receipt.recordedAt) {
           throw new Error('Invalid upstream receipt.');
         }
-        config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
-        config.journal.audit(who, row.input.area, 'action.receipt', row.review.id);
+        await config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
+        await config.journal.audit(who, row.input.area, 'action.receipt', row.review.id, correlationId);
         return Response.json(receipt, { headers });
       } catch (e) {
         /*
@@ -391,9 +617,9 @@ export function createGateway(config: Config) {
          * to reconcile an action that provably did not happen.
          */
         if (isRefusal(e)) {
-          config.journal.finish(row, 'refused');
-          config.journal.audit(who, row.input.area, 'action.refused', row.review.id);
-          return fail(400, e.message);
+          await config.journal.finish(row, 'refused');
+          await config.journal.audit(who, row.input.area, 'action.refused', row.review.id, correlationId);
+          return fail(400, e.message, 'refused');
         }
         /*
          * The one place this gateway refuses to guess.
@@ -402,18 +628,20 @@ export function createGateway(config: Config) {
          * pay twice; marking it done could have them miss a deadline. So it
          * is marked unknown, and only `/actions/reconcile` can resolve it.
          */
-        config.journal.finish(row, 'uncertain');
-        config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id);
+        await config.journal.finish(row, 'uncertain');
+        await config.journal.audit(who, row.input.area, 'action.uncertain', row.review.id, correlationId);
         return fail(
           502,
           'The result could not be confirmed. Ask the institution to reconcile this action before submitting again.',
+          'outcome_uncertain',
+          { label: 'Ask the institution to reconcile', kind: 'contact_support' },
         );
       }
     } catch (e) {
       /*
        * Three kinds of thrown thing, and the middle one used to be lost.
        *
-       * An `HttpError` is something this gateway meant to say. A `Refusal` is
+       * A `PlatformError` is something this gateway meant to say. A `Refusal` is
        * something the *adapter* meant to say — a rubric line that will not
        * parse, a mark outside its range, a deadline that has passed — and it
        * is the caller's to fix, so it is a 400 carrying that sentence. Every
@@ -425,11 +653,32 @@ export function createGateway(config: Config) {
        * carry a connection string or a stack — so it becomes one flat
        * sentence, which is still the default and still the right one.
        */
-      if (isRefusal(e)) return Response.json({ error: e.message }, { status: 400, headers });
-      return Response.json(
-        { error: e instanceof HttpError ? e.message : 'The university service is unavailable. Please try again later.' },
-        { status: e instanceof HttpError ? e.status : 503, headers },
-      );
+      if (isRefusal(e)) return refuse(400, 'refused', e.message);
+      if (isPlatformError(e)) return refuse(e.status, e.code, e.message, e.userAction);
+      return refuse(503, 'unavailable', 'The university service is unavailable. Please try again later.');
     }
+  };
+
+  return async (request: Request): Promise<Response> => {
+    const requestId = randomUUID();
+    const correlationId = correlationIdFor(request);
+    const started = performance.now();
+    const response = await handle(request, correlationId, requestId);
+    response.headers.set('X-Request-Id', requestId);
+    response.headers.set('X-Correlation-Id', correlationId);
+    const pathname = new URL(request.url).pathname;
+    const route = telemetryRoute(pathname);
+    const event: GatewayTelemetryEvent = {
+      event: 'institution.request',
+      requestId,
+      correlationId,
+      method: request.method,
+      route,
+      status: response.status,
+      durationMs: Math.max(0, Math.round(performance.now() - started)),
+      errorClass: response.status >= 500 ? 'server' : response.status >= 400 ? 'client' : 'none',
+    };
+    try { await config.telemetry?.(event); } catch { /* observability must not rewrite the response */ }
+    return response;
   };
 }

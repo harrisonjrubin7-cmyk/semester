@@ -76,6 +76,14 @@ concurrency:
   group: functions
   cancel-in-progress: false
 
+# The job token may read the repository and nothing else, unless a job says
+# otherwise below. Without this line every job gets the repository's default
+# token, which a Settings change can make read-write, and a compromised Action
+# or dependency runs with whatever that is. `supplychain.test.ts` requires
+# every workflow to declare this.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -89,7 +97,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # The commit CI passed, not whatever main has drifted to since —
           # which on this repository is a real distance: five merges landed
@@ -169,13 +177,34 @@ jobs:
           fi
           echo "list=$list" >> "$GITHUB_OUTPUT"
 
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3
         if: steps.what.outputs.list != ''
         with:
           version: latest
 
+      # A later merge can finish CI first. Re-check main immediately before
+      # the mutation so an older passing run cannot overwrite newer function
+      # code merely because its slower CI completed last. A hand-started run
+      # deliberately remains the documented override.
+      - name: Refuse a stale release
+        id: current
+        env:
+          PASSED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -z "$PASSED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          current=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$current" = "$PASSED_SHA" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Stale release::CI passed $PASSED_SHA, but main is now $current. The newer functions stay live; this run will not replace them."
+          fi
+
       - name: Deploy
-        if: steps.what.outputs.list != ''
+        if: steps.what.outputs.list != '' && steps.current.outputs.deploy == 'true'
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           REF: ${{ steps.project.outputs.ref }}

@@ -119,6 +119,39 @@ describe('page numbers', () => {
     expect(only(out.pieces, 'card')[0].where.page).toBeUndefined();
   });
 
+  describe('in a PDF, whose page numbers the model cannot see', () => {
+    const reading: Intake = {
+      ...(intakeText('Scarcity means every choice has a cost.\n\nThe opportunity cost of a choice is the value of the next best alternative.\n\nMarginal thinking compares the extra benefit with the extra cost.') as Intake),
+      name: 'Chapter 1.pdf',
+      pageUnit: 'page',
+      pages: [
+        { page: 1, text: 'Scarcity means every choice has a cost.' },
+        { page: 2, text: 'The opportunity cost of a choice is the value of the next best alternative.' },
+        { page: 5, text: 'Marginal thinking compares the extra benefit with the extra cost.' },
+      ],
+    };
+    const card = (extra: object) => only(run({ cards: [{ q: 'q', a: 'a', ...extra }] }, reading, 'reading').pieces, 'card')[0];
+
+    it('takes the page from where the checked quote is, not from what was claimed', () => {
+      expect(card({ quote: 'the value of the next best alternative', page: 5 }).where.page).toBe(2);
+    });
+
+    it('gives no page without a quote, however plausible the claim', () => {
+      // "Page 1" of this reading exists, so the old check would have kept it.
+      expect(card({ page: 1 }).where.page).toBeUndefined();
+    });
+
+    it('gives no page for a quote that runs across a page break', () => {
+      const c = card({ quote: 'has a cost. The opportunity cost' });
+      expect(c.quote).toBeTruthy();
+      expect(c.where.page).toBeUndefined();
+    });
+
+    it('gives no page for a quote that is not in the material', () => {
+      expect(card({ quote: 'Demand curves always slope downward.', page: 2 }).where.page).toBeUndefined();
+    });
+  });
+
   it('carries none at all for material with no pages to speak of', () => {
     const out = run({ cards: [{ q: 'q', a: 'a', page: 2 }] }, source);
     expect(only(out.pieces, 'card')[0].where.page).toBeUndefined();

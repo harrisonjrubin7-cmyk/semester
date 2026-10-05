@@ -1,4 +1,4 @@
-# What production's migration ledger holds, read at 21:5x UTC on 21 September 2026.
+# What production's migration ledger holds, read on 4 October 2026 (see below); first read 21 September.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
 # version, then name. This is a reading, not a wish — `app/src/lib/migrationorder.test.ts`
@@ -74,6 +74,39 @@
 # rather than passes when the directory stops matching it.
 #
 #   version         name
+#
+# ## The reading of 28 September, and the finding it is
+#
+# Read through the Supabase connector (`list_migrations`) with ninety-five rows,
+# ending at `20260928230000  direct_rate_limits`. Every row has a file here. The
+# finding: `20260928200000_scim_gateway` and `20260928210000_support_tickets`
+# reached main and were applied within minutes, while the integration branch
+# (#893) still carried eleven migrations numbered `20260928130000`–`160000`,
+# pending and now below the watermark. This test, held to the 21 September
+# reading, could not see it. `MIGRATION-HISTORY.md` has the entry.
+
+# ## The reading and repair of 1 October
+#
+# The live ledger had reached `20260930234000`, but version `20260930233000`
+# was named `data_subject_request_intake`, not `k12_guardians`; both it and
+# `20260930234000` held the data-rights migration. Object-level probes confirmed
+# the data-rights function existed and every K-12 guardian object was absent.
+# The executable `20260930233000_k12_guardians.sql` was therefore applied as the
+# tracked forward repair `20261001075026_k12_guardians_repair`. The version is
+# represented by an inert file because a build from empty already runs the
+# executable SQL at its original version.
+
+# ## The reading of 4 October
+#
+# Read through the Supabase connector (`list_migrations`) on the live `semester`
+# project, ending at `20261004123000  productivity_commands`. The snapshot had
+# stopped at `20261001075026`, so twenty applied rows were missing, every one of
+# which has a file here. Nothing disagrees with the directory: the clash on
+# `20261004090000` was resolved in the right direction, because production had
+# already applied `order_form_never_downgrades_plan` at that version and
+# `productivity_commands` was the pending one that moved (to `20261004123000`).
+# `MIGRATION-HISTORY.md` has the entry.
+
 20260901000100  schema
 20260901000200  classmates
 20260901000300  classmates_schools
@@ -111,3 +144,140 @@
 20260921170000  schools
 20260921174500  index_lti_link_ticket_user
 20260921211500  pin_profile_school
+20260921214500  report_status
+20260921215800  feedback
+20260921223000  role_grants
+20260921230000  organizations
+20260921234500  organization_succession
+20260921235500  untouched_accounts
+20260922003000  connections
+20260922003500  lti_line_item
+20260922012000  capabilities
+20260923210000  intelligence_policy
+20260923211000  evidence_graphs
+20260923212000  harden_evidence_capture
+20260924150142  institution_identity_provisioning
+20260924154500  bind_institution_sso_membership
+20260924163000  intelligence_provider_runtime
+20260924184500  gateway_action_journal
+20260924200000  gateway_observability
+20260924213000  role_grant_audit
+20260924223000  moderation_audit
+20260925103000  support_access
+20260925160000  support_access_ui
+20260926150000  expansion_roles_and_features
+20260927120000  identity_claim_minimization
+20260927170000  integration_control_plane
+20260927180000  lti_integration_binding
+20260927190000  canonical_display
+20260927200000  integration_hardening
+20260927210000  integration_review_fixes
+20260927220000  integration_orphan_identity
+20260927230000  help_requests
+20260927231000  help_inbox
+20260927232000  help_request_identity
+20260927233000  help_request_review_fixes
+20260927234000  help_request_reply_on_open
+20260927235000  governance_registries
+20260927235500  governance_review_fixes
+20260927235930  lti_launch_membership
+20260927235945  lti_launch_entitlement_facts
+20260928000000  moderation_queue_access
+20260928004730  tenant_plan
+20260928010000  my_capabilities
+20260928011845  tenant_sso_policy
+20260928015315  lti_launch_capability
+20260928021700  mentor_rosters
+20260928030000  help_inbox_closed_history
+20260928031700  opportunity_links
+20260928032000  community
+20260928040000  integration_quality
+20260928041700  space_availability
+20260928050000  tenant_rollout
+20260928090000  gtm_foundation
+20260928100000  trust_room
+20260928101000  integration_tick_auth
+20260928110700  consent_and_moderation_narrowing
+20260928200000  scim_gateway
+20260928210000  support_tickets
+20260928220000  private_beta
+20260928230000  direct_rate_limits
+20260928300000  untouched_graduation_drafts
+20260928301000  advisor_shares
+20260928302000  office_action_feed
+20260928303000  untouched_graduation_after_help
+20260928304000  untouched_advisor_after_help
+20260928305000  course_demand_forecasting
+20260928306000  family_invites
+20260928307000  family_shared_items
+20260928308000  support_shares
+20260928309000  course_studio
+20260928310000  expansion_review_fixes
+20260928320000  audit_correlation_and_outbox
+20260929000000  published_forms_invoker
+20260929010000  account_erasure_and_export
+20260929030000  retention_sweeps
+20260929040000  round_trip_stable_checks
+20260929050000  definer_helper_grants
+20260929070000  commercial_core
+20260929080000  commercial_automation
+20260929100000  console_control_plane
+20260929110000  console_approvals_and_break_glass
+20260929120000  gtm_pilot_problems_visibility
+20260929130000  financial_retention
+20260929131000  plus_price
+20260929140000  gtm_pilot_26_weeks
+20260929150000  minimum_age
+20260929200000  migration_center
+20260929210000  academic_record_ledger
+20260929220000  student_accounts
+20260929230000  student_payment_plans
+20260929300000  registration_transaction
+20260929310000  gradebook
+20260929330000  dining
+20260929340000  feature_cohorts
+20260929350000  plan_save_serialized
+20260929360000  account_untouched_school_domains
+20260929370000  feature_policy_narrowing
+20260930000000  audit_and_subject_requests
+20260930010000  module_mode
+20260930100000  legal_holds
+20260930110000  ledger_chains
+20260930120000  human_overrides
+20260930130000  hold_gated_sweeps
+20260930140000  erase_respects_holds
+20260930150000  ledger_chain_seals
+20260930160000  override_break_glass
+20260930170000  hold_aware_sweeps
+20260930173030  console_command_center
+20260930185000  school_membership_enforcement
+20260930190000  advisor_share_audit
+20260930200000  school_offboarding
+20260930210000  deprovision_revokes_grants
+20260930220000  roster_import_staging
+20260930230000  configuration_studio
+20260930231000  workflow_builder
+20260930232000  advisor_reconciliation
+20260930233000  data_subject_request_intake
+20260930234000  data_subject_request_intake
+20261001075026  k12_guardians_repair
+20261001152756  productivity_workspace
+20261001153124  productivity_workspace
+20261001160447  productivity_account_link_guard
+20261001160550  productivity_account_link_guard
+20261001160755  productivity_preserve_all_owned_work
+20261001160823  productivity_preserve_all_owned_work
+20261001170000  integration_governance_writes
+20261001171000  productivity_workspace_covering_index
+20261001184000  productivity_workspace_tenant_index
+20261001185348  approved_source_policy_scope
+20261001193951  productivity_workspace_covering_index
+20261001221500  support_reply_audit
+20261002003000  support_notification_outbox
+20261002091500  set_based_course_plan_contribution
+20261003083000  billing_tax_integrity
+20261003090000  billing_invoice_event_precedence
+20261003120000  support_notification_consent_boundary
+20261004090000  order_form_never_downgrades_plan
+20261004120000  incident_notice_launch_delay_and_change
+20261004123000  productivity_commands

@@ -22,10 +22,12 @@
  */
 
 import { offered, saysFor, type Destination } from './nav';
+import { NAV_AREAS, navAreaLabel, navAreaOf } from './navareas';
 import { queryWords, worthSplitting } from './search';
 import { DEFAULT_ROLE, type Role } from './role';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
+import { journeysFor, searchJourneys, type Journey } from './journeys';
 
 /**
  * The shortcuts a search home opens on, before anybody has moved one.
@@ -156,7 +158,9 @@ function tier(d: Destination, q: string, caps: Capabilities): number {
    * below than it did on its own: a phantom whole-query hit returns before
    * the every-word tier is reached, and would have shadowed it.
    */
-  const words = [said.blurb, d.keywords, d.group].join('\n').toLowerCase();
+  // The area name is searchable as well as the shelf's, so "help" and "plan"
+  // find what the launcher files under them, and an old shelf name still works.
+  const words = [said.blurb, d.keywords, d.group, navAreaLabel(d.screen)].join('\n').toLowerCase();
   // Word-start rather than bare `includes`: "map" inside "compare" is not a
   // hit anybody meant, and a search that answers with a screen whose only
   // connection is a substring in the middle of a word reads as broken.
@@ -290,6 +294,23 @@ export function findApps(
   return scored.slice(0, limit).map((x) => x.d);
 }
 
+/** Journey and tool matches from the same offered destination set. */
+export function discover(
+  query: string,
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  limit = 8,
+): { journeys: Journey[]; apps: Destination[] } {
+  const destinations = offered(caps, role);
+  const matchedIds = new Set(searchJourneys(query).map((journey) => journey.id));
+  return {
+    journeys: journeysFor(destinations).filter(
+      (journey) => journey.screens.length > 0 && matchedIds.has(journey.id),
+    ),
+    apps: findApps(query, caps, role, limit),
+  };
+}
+
 /**
  * What is standing over the search home, if anything.
  *
@@ -318,16 +339,20 @@ export function centreHidden(o: Overlays): boolean {
 }
 
 /**
- * The categories the directory filters by, with "All apps" in front.
+ * The categories the directory filters by: the navigation areas
+ * (`lib/navareas.ts`), in their order.
  *
- * Read off what this school actually offers rather than off `GROUPS`, so a
- * shelf whose every screen is switched off is not a chip that empties the
+ * Read off what this school actually offers rather than off `NAV_AREAS`, so
+ * an area whose every screen is switched off is not a chip that empties the
  * list when pressed.
  */
 export function categories(caps: Capabilities, role: Role = DEFAULT_ROLE): string[] {
-  const seen: string[] = [];
-  for (const d of offered(caps, role)) if (!seen.includes(d.group)) seen.push(d.group);
-  return seen;
+  return chipsFor(offered(caps, role));
+}
+
+/** The area labels that have at least one of these apps in them, in area order. */
+export function chipsFor(apps: Destination[]): string[] {
+  return NAV_AREAS.filter((a) => apps.some((d) => navAreaOf(d.screen) === a.id)).map((a) => a.label);
 }
 
 /** Everything this person can open, in one list, for the directory. */
@@ -348,7 +373,7 @@ export function narrowApps(
   query: string,
   caps: Capabilities,
 ): Destination[] {
-  const inCategory = category ? apps.filter((d) => d.group === category) : apps;
+  const inCategory = category ? apps.filter((d) => navAreaLabel(d.screen) === category) : apps;
   const q = query.trim();
   if (!q) return inCategory;
   return inCategory

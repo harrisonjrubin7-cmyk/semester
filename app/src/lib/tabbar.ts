@@ -36,18 +36,28 @@ import type { Screen } from './types';
  * things that are empty, which makes the whole bar read as a menu of somebody
  * else's app rather than a place to start.
  *
- * The four that are left are the four the app is for: what is today, what the
- * courses are, how to study them, and when everything falls. Progress is the
- * fifth and is the way to everything else — it holds the whole directory, so
- * nothing is unreachable, only un-promoted.
+ * Progress is always the last and is the way to everything else — it holds
+ * the whole directory, so nothing is unreachable, only un-promoted.
+ *
+ * ## One tab per question, and Courses gave way to Support
+ *
+ * The bar held Today, Courses, Study, Calendar and Progress: four of the
+ * navigation areas in `lib/navareas.ts` and two tabs for one of them, Learn.
+ * What it did not hold was Help. "Who can help me" is the question a student
+ * is least likely to go looking for and most likely to need at a bad moment,
+ * and the one screen that answers it — Support — was four taps down the
+ * directory. So the bar is now the front doors of five areas in the order a
+ * day runs: what is now, when things fall, the work, who can help, how it is
+ * going. Courses is one tap from Study and from every deadline, and one tick
+ * from being back in the bar.
  *
  * This is the *default*, not the maximum. The bar still takes up to seven and
- * Map and Personal are one tap from Progress and one tick from being back in
- * it — see Settings, Navigation. And because `tabs` is saved state, anybody
- * who already has this app has their own bar already and sees no change at
- * all: this is what a fresh install starts from.
+ * Courses, Map and Personal are one tick from being back in it — see
+ * Settings, Navigation. And because `tabs` is saved state, anybody who
+ * already has this app has their own bar already and sees no change at all:
+ * this is what a fresh install starts from.
  */
-export const DEFAULT_TABS: Screen[] = ['home', 'courses', 'study', 'calendar', 'me'];
+export const DEFAULT_TABS: Screen[] = ['home', 'calendar', 'study', 'support', 'me'];
 
 /**
  * Seven, because seven is what fits.
@@ -217,4 +227,91 @@ export function litRailTab(screen: Screen, chosen: Screen[], listed: Screen[]): 
 export function tabLabel(screen: Screen): string {
   const d = destination(screen);
   return d?.short ?? d?.label ?? screen;
+}
+
+// ── the five student destinations (D-003) ────────────────────────────────────
+
+/**
+ * Today, My Path, Search, Plan, Me — the blueprint's five, drawn over screens
+ * that already exist. Nothing is renamed or moved: the ids, the hash routes and
+ * `lib/nav.ts`'s shelves are untouched (`REGRESSION-CHECKLIST.md` §Q); only the
+ * bar's five slots and their words change.
+ *
+ * Behind `journeyNavigation` as a rollback gate, and on in a normal build.
+ * The five are fixed — the point is that they are the same for everyone — and
+ * every contextual capability is still one tap away from its canonical home.
+ */
+export const FIVE_DESTINATIONS: Screen[] = ['home', 'degree', 'search', 'calendar', 'me'];
+
+export const FIVE_LABELS: Partial<Record<Screen, string>> = {
+  home: 'Today',
+  degree: 'My Path',
+  search: 'Search',
+  calendar: 'Plan',
+  me: 'Me',
+};
+
+/**
+ * Which destination a screen lives under, from
+ * `docs/ROUTE-AND-FEATURE-CROSSWALK.md`. Anything not named is under Me,
+ * which is where the directory is.
+ */
+const UNDER: Partial<Record<Screen, Screen>> = {
+  brief: 'home',
+  behind: 'home',
+  notifs: 'home',
+  yes: 'degree',
+  registrar: 'degree',
+  pathway: 'degree',
+  applying: 'degree',
+  courses: 'degree',
+  course: 'degree',
+  item: 'degree',
+  import: 'degree',
+  edit: 'degree',
+  announce: 'degree',
+  ask: 'search',
+  help: 'search',
+  directory: 'search',
+  hub: 'search',
+  university: 'search',
+  people: 'search',
+  maps: 'search',
+  links: 'search',
+  opportunities: 'search',
+  support: 'search',
+  runway: 'calendar',
+  clocks: 'calendar',
+  costs: 'calendar',
+  meals: 'calendar',
+  housing: 'calendar',
+  activities: 'calendar',
+  work: 'calendar',
+  event: 'calendar',
+};
+
+/** The one canonical home used by navigation, governance and continuity UI. */
+export function canonicalDestinationFor(screen: Screen): Screen {
+  if (FIVE_DESTINATIONS.includes(screen)) return screen;
+  return UNDER[screen] ?? PINNED;
+}
+
+/** The bar to draw: the five when the flag is on, the student's own bar otherwise. */
+export function barForMode(saved: Screen[], c: Capabilities, role: Role, five: boolean): Screen[] {
+  if (!five) return barFor(saved, c, role);
+  const kept = FIVE_DESTINATIONS.filter((s) => allowed(s, c) && forRole(s, role));
+  return kept.filter((s) => s !== PINNED).length < FEWEST_CHOSEN ? barFor(saved, c, role) : kept;
+}
+
+/** The bar's word for a screen, in the five-destination bar or the ordinary one. */
+export function labelForMode(screen: Screen, five: boolean): string {
+  return (five && FIVE_LABELS[screen]) || tabLabel(screen);
+}
+
+/** Which tab to light for the screen on show. */
+export function litForMode(screen: Screen, chosen: Screen[], five: boolean): Screen | null {
+  if (!five) return litTab(screen, chosen);
+  if (chosen.includes(screen)) return screen;
+  const under = canonicalDestinationFor(screen);
+  return chosen.includes(under) ? under : null;
 }

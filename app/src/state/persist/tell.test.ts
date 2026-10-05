@@ -39,7 +39,9 @@ const write = vi.fn<(w: unknown[]) => Promise<boolean>>();
 
 vi.mock('./db', async () => {
   const real = await vi.importActual<typeof import('./db')>('./db');
-  return { ...real, open: vi.fn(async () => ({}) as unknown), write: (w: unknown[]) => write(w) };
+  // `held` too: `load` now checks the handle is still there after the first
+  // run's write, and this file's database never lets go of it.
+  return { ...real, open: vi.fn(async () => ({}) as unknown), held: () => true, write: (w: unknown[]) => write(w) };
 });
 
 /*
@@ -56,7 +58,7 @@ vi.mock('./db', async () => {
  * worst shape a test failure can have.
  */
 vi.resetModules();
-const { persist, prime, flushNow, stopWriting, whileWriting } = await import('./index');
+const { persist, prime, flushNow, flushOnLeave, stopWriting, whileWriting } = await import('./index');
 const { load } = await import('./index');
 
 beforeEach(async () => {
@@ -211,5 +213,39 @@ describe('when the other tabs are told', () => {
     stopWriting();
     await flushNow();
     expect(told).not.toHaveBeenCalled();
+  });
+});
+
+describe('leaving the page', () => {
+  it('starts the owed write at once, not behind the one in flight', async () => {
+    /*
+     * A reload does not wait for promises. CI's golden path ticked an action,
+     * reloaded, and found it not done: the tick was owed while an earlier
+     * write was still in flight, and `flushNow` only starts the owed write
+     * once that one completes — by then the page is gone.
+     */
+    let release: (ok: boolean) => void = () => {};
+    write.mockImplementationOnce(() => new Promise<boolean>((r) => { release = r; }));
+    prime({ notes: [] });
+    persist({ notes: [{ id: 'n1', title: 'Opened Personal' }] } as never);
+    const earlier = flushNow();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+
+    persist({ notes: [{ id: 'n1', title: 'Ticked' }] } as never);
+    flushOnLeave();
+    // Synchronously, while the first write is still unanswered.
+    expect(write).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(write.mock.calls[1][0])).toContain('Ticked');
+
+    release(true);
+    await earlier;
+    await flushNow();
+    expect(write).toHaveBeenCalledTimes(2);
+  });
+
+  it('writes nothing when nothing is owed', () => {
+    prime({ notes: [] });
+    flushOnLeave();
+    expect(write).not.toHaveBeenCalled();
   });
 });

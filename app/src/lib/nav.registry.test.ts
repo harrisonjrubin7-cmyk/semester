@@ -15,7 +15,7 @@ import { DESTINATIONS } from './nav';
  * exists and cannot be reached from anywhere a person would look.
  *
  * So every member of the union is either registered or named below with the
- * reason it is not. Twenty-two are named, and all twenty-two are genuinely not
+ * reason it is not. Twenty-five are named, and all twenty-five are genuinely not
  * destinations: putting `course` in the launcher would mean "a course",
  * unanswerably, and putting `setLook` there would be a second door into a page
  * Settings already lists.
@@ -62,7 +62,37 @@ const SETTINGS = [
   'setAssistant',
 ] as const;
 
-const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS]);
+/**
+ * Staff tools. The Trust & Safety console is opened from Community by an
+ * account that holds a reviewer role; putting it on a student's shelf would be
+ * a door that opens onto "you are not a reviewer" for everybody else.
+ */
+const STAFF = ['moderation', 'agreements', 'volunteers', 'console'] as const;
+
+/**
+ * Present only while a build switch is on. Community is absent from the
+ * registry until its flags are set, rather than present as a tile that opens
+ * onto "not available" — see `COMMUNITY_DESTINATION` in lib/nav.ts. Volunteer
+ * moderation is never a shelf item: it is opened from Community, and only
+ * when both its build flag and the school's own switch are on. Dining is the
+ * same case with a school's module flag for the switch: off at every school
+ * today, opened from its student-kept counterpart (Meal plan) rather than
+ * offered as a tile. The
+ * registration transaction and the gradebook of record are the same again,
+ * with a writeback flag for the switch, reached from the Registration planner
+ * and the Grades tab.
+ */
+const SWITCHED = ['community', 'volunteer', 'dining', 'registration', 'gradebook'] as const;
+
+/**
+ * Pages inside the Me control surface, which lists them itself
+ * (`lib/mecontrols.ts`, drawn by `components/MeControls.tsx`) and is
+ * registered. The same arrangement as Settings and its pages: a second door
+ * on a shelf would be a second home, and the Data shelf is full.
+ */
+const ME_CONTROLS = ['activity', 'whatsnew', 'recovery'] as const;
+
+const NOT_DESTINATIONS = new Set<string>([...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS, ...STAFF, ...SWITCHED, ...ME_CONTROLS]);
 
 /**
  * The union, read out of the file rather than imported.

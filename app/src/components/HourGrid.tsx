@@ -7,6 +7,8 @@ import { placeBlock } from '../lib/hourplace';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { revealKindly, usePrefersDark } from '../lib/prefers';
+import { appLocale } from '../lib/locale';
+import { localClock, localHourMark } from '../lib/date';
 
 /**
  * A day, by the hour.
@@ -78,6 +80,7 @@ export const GUTTER = 46;
 
 /** Half past nine reads as "9:30"; on the hour it reads as "9". */
 function clock(minutes: number): string {
+  if (appLocale()) return localClock(minutes);
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   const hour = h % 12 === 0 ? 12 : h % 12;
@@ -85,6 +88,7 @@ function clock(minutes: number): string {
 }
 
 function ampm(hour: number): string {
+  if (appLocale()) return localHourMark(hour);
   const h = hour % 12 === 0 ? 12 : hour % 12;
   return `${h}${hour < 12 ? 'a' : 'p'}`;
 }

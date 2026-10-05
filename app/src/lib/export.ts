@@ -726,6 +726,7 @@ export interface Restore {
  * automatically a section a restore warns you about.
  */
 export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valueType?: 'string'|'number' }[] = [
+  { key: 'operatingWorkspace', label: 'private operating workspace', array: false, valueType: 'string' },
   { key: 'courses', label: 'courses', array: true },
   { key: 'updates', label: 'added readings', array: true },
   { key: 'notes', label: 'notes', array: true },
@@ -824,6 +825,7 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'wanted', label: 'opportunity preferences', array: false },
   { key: 'progress', label: 'assignment progress', array: false },
   { key: 'regradeWindows', label: 'regrade windows', array: false },
+  { key: 'deadlineSeen', label: 'acknowledged deadline readings', array: false },
   { key: 'scale', label: 'grading scale', array: false },
   { key: 'floor', label: 'rest settings', array: false },
   { key: 'contract', label: 'weekly workload plan', array: false },
@@ -840,6 +842,7 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'term', label: 'current term', array: false, valueType: 'string' },
   { key: 'schoolId', label: 'school selection', array: false, valueType: 'string' },
   { key: 'myName', label: 'your name', array: false, valueType: 'string' },
+  { key: 'pronounce', label: 'how to say your name', array: false, valueType: 'string' },
   { key: 'accessLeadDays', label: 'testing lead time', array: false, valueType: 'number' },
 
 ];
@@ -870,10 +873,15 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   feed: 'the shape of Today',
   ground: 'the background the app is drawn on',
   hue: 'the tint behind the ground',
+  workspaceMode: 'how much of each workspace is drawn',
+  pinned: 'the widgets pinned to Today',
+  goal: 'what you said would help most on first open',
   calm: 'how much the app may move and decorate itself',
+  access: 'the accessibility modes turned on',
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',
+  textSpacing: 'how far apart the letters and words sit',
   readingWidth: 'how wide a paragraph gets',
   shell: 'how a screen is arranged once you are on it',
   textSize: 'the size text is set at here',
@@ -919,6 +927,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   countScreens: 'whether screen opens are counted at all',
   lastSync: 'when this device last reached the account',
   recent: 'the screens opened lately',
+  opened: 'the deadlines and courses opened lately',
   registered: 'whether this device registered for reminders',
   schemaVersion: 'the shape the file is in, written by the backup itself',
   seenOnboarding: 'whether onboarding has run here',
@@ -1007,6 +1016,7 @@ export function readBackup(text: string): Restore {
 export function backupOf(state: State) {
   return {
     format: 'semester.backup.v1',
+    operatingWorkspace: state.operatingWorkspace,
     exported: new Date().toISOString(),
     courses: state.courses,
     updates: state.updates,
@@ -1090,6 +1100,7 @@ export function backupOf(state: State) {
     wanted: state.wanted,
     progress: state.progress,
     regradeWindows: state.regradeWindows,
+    deadlineSeen: state.deadlineSeen,
     scale: state.scale,
     floor: state.floor,
     contract: state.contract,
@@ -1106,6 +1117,7 @@ export function backupOf(state: State) {
     term: state.term,
     schoolId: state.schoolId,
     myName: state.myName,
+    pronounce: state.pronounce,
     accessLeadDays: state.accessLeadDays,
     sample: state.sample,
   };

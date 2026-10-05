@@ -158,7 +158,7 @@ export function Group({
               // The same two-second outline the grouped panel gets, on the
               // frame this layout already draws.
               borderColor: lit ? 'var(--app-accent)' : undefined,
-              transition: 'border-color 220ms ease',
+              transition: 'border-color var(--duration-slow) ease',
             }}
           >
             {children}
@@ -213,7 +213,7 @@ export function Group({
             borderRadius: 'var(--r-lg)',
             border: `1px solid ${lit ? 'var(--app-accent)' : 'var(--app-line-soft)'}`,
             overflow: 'hidden',
-            transition: 'border-color 220ms ease',
+            transition: 'border-color var(--duration-slow) ease',
           }}
         >
           {children}

@@ -20,12 +20,19 @@ import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
+import { MODE_ATTR } from './components/unity/modes';
+import { hasMode } from './lib/accessmode';
 import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { Guides, SCREENS, Springboard } from './screens';
+import { Guides, InstitutionalPreviewBar, OfflineBanner, SCREENS, Springboard } from './screens';
+import { ReadOnlyBanner } from './components/ReadOnlyBanner';
+import { AgeBanner } from './components/AgeBanner';
+import { RecoveryDialog } from './components/AccountSecurity';
+import { StatusNotice } from './components/StatusNotice';
 import { headOf, type Head } from './headers';
 import {
   calmOf,
+  workspaceModeOf,
   DRAWN_AT,
   ground,
   resolveGround,
@@ -61,22 +68,30 @@ import {
    the directory of everything behind it. See `lib/desk.ts`. */
 
 import { datedItems, nextExam } from './lib/select';
-import { destination, rootOf } from './lib/nav';
+import { destination, rootOf, saysFor } from './lib/nav';
+import { PagePurpose } from './components/Page';
 import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
+import { InstitutionalNavigation } from './components/nav/InstitutionalPrimaryNav';
+import { INSTITUTIONAL_PREVIEW } from './lib/institutional-preview';
 import { SoftTop } from './components/soft/SoftTop';
-import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
+import { barForMode, labelForMode, litForMode } from './lib/tabbar';
+import { EXPERIENCE_FLAGS } from './lib/experience-flags';
+
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
 import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
-import { QuickAdd } from './components/QuickAdd';
+import { DeferredQuickAdd as QuickAdd } from './components/DeferredQuickAdd';
+import { UnityLayer } from './components/unity/UnityLayer';
+import { LoadingState } from './components/unity/States';
+import { SystemContextBar } from './components/unity/SystemContextBar';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
@@ -95,10 +110,21 @@ import { Adopting } from './components/Adopting';
 import { Watching } from './components/Watching';
 import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
-import { useTier } from './lib/media';
-import { DOW, MONTHS } from './lib/date';
+import { SyncStrip } from './components/SyncStrip';
+import { useMedium, useTier } from './lib/media';
+import { CloseIcon, MenuIcon } from './components/Icons';
+import { monthDay, weekdayShort } from './lib/date';
 import { windowTitle } from './a11y/title';
 import type { Screen } from './lib/types';
+import { InstitutionalPreviewRoot } from './components/institutional/PreviewRoot';
+import { forRole } from './lib/role';
+import { MODULE_FLAGS, moduleOn } from './lib/experience-flags';
+
+// Offline mode (Phase M). The badge is lazy, in screens.tsx, so the flag off costs nothing.
+const OFFLINE_MODE = moduleOn(MODULE_FLAGS.offline_mode);
+
+/** D-003: the five student destinations, when `journeyNavigation` is on. */
+const FIVE = EXPERIENCE_FLAGS.journeyNavigation !== 'off';
 
 /**
  * What fills the column while a screen's chunk is in flight.
@@ -112,23 +138,13 @@ import type { Screen } from './lib/types';
  * It appears once per screen per session. React holds the module after the
  * first import, so the second visit to a screen renders straight away.
  */
+/*
+ * The screen fallback. It drew these four bars with `aria-hidden` and nothing
+ * else, so a screen reader heard silence while a screen loaded; the shared
+ * `LoadingState` keeps the same bars and says what is happening.
+ */
 function Loading() {
-  return (
-    <div style={{ padding: 'var(--page-pad)' }} aria-hidden="true">
-      {[62, 30, 96, 96].map((h, i) => (
-        <div
-          key={i}
-          style={{
-            height: h,
-            marginTop: i === 0 ? 0 : 12,
-            borderRadius: 'var(--r-md)',
-            background: 'var(--app-hero)',
-            color: 'var(--app-dim)',
-          }}
-        />
-      ))}
-    </div>
-  );
+  return <LoadingState />;
 }
 
 /**
@@ -141,7 +157,12 @@ function Loading() {
  */
 function SkipLink() {
   return (
-    <a className="skip-link" href="#main">
+    <a className="skip-link" href="#main" onClick={(event) => {
+      const main = event.currentTarget.ownerDocument.getElementById('main');
+      if (!main) return;
+      event.preventDefault();
+      main.focus();
+    }}>
       Skip to content
     </a>
   );
@@ -183,7 +204,7 @@ function useHeader(): Head {
     code,
     about: (what: string) => (code ? `${code} · ${what}` : what),
     exam: nextExam(catalog, now),
-    today: `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`,
+    today: `${weekdayShort(now)} · ${monthDay(now)}`,
     courseCount,
     load: credits > 0 ? `${courseCount} · ${credits} credits` : courseCount,
   });
@@ -213,12 +234,14 @@ function Header({
    * One fact now rather than a list: is this the workspace, whose bar carries
    * these controls. It was briefly two — the sidebar was the second, because
    * that column drew New and this header's `+` stood down for it. The column
-   * no longer draws New, so the `+` is unconditional again; `headerRow` in
-   * `lib/header.ts` has that argument. What always stays is what no other
+   * no longer draws New, so the `+` is normally present again. Search is the
+   * one exception because its field already carries the same capture action;
+   * `headerRow` in `lib/header.ts` has that argument. What always stays is what no other
    * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
-}: { desk?: boolean } = {}) {
+  screenOwnsTitle = false,
+}: { desk?: boolean; screenOwnsTitle?: boolean } = {}) {
   const { state, dispatch, catalog } = useStore();
   const now = useNow();
   const { kicker, title } = useHeader();
@@ -270,7 +293,13 @@ function Header({
    * of the same control. `lib/header.ts` answers for all five now, and the
    * markup below asks rather than decides.
    */
-  const row = headerRow({ atRoot, phone, counting, desk });
+  const row = headerRow({
+    atRoot,
+    phone,
+    counting,
+    desk,
+    hasInlineAdd: desk && state.screen === 'search',
+  });
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -284,8 +313,25 @@ function Header({
   useEffect(() => {
     if (wasOn.current === state.screen) return;
     wasOn.current = state.screen;
-    heading.current?.focus({ preventScroll: true });
-  }, [state.screen]);
+
+    const focusTitle = () => {
+      const title = screenOwnsTitle
+        ? document.querySelector<HTMLHeadingElement>('h1[data-page-title]')
+        : heading.current;
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const shell = document.querySelector('.device');
+    if (!shell) return;
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(shell, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [screenOwnsTitle, state.screen]);
 
   return (
     // A real <header>, and the screen's name is the page's <h1>. Both were
@@ -317,6 +363,7 @@ function Header({
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
+        {!screenOwnsTitle && <>
         {upTo ? (
           <button
             type="button"
@@ -359,22 +406,28 @@ function Header({
         */}
         <h1
           ref={heading}
+          data-page-title
           tabIndex={-1}
           className="chrome-text"
           style={{
             outline: 'none',
             fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            // Wraps rather than truncating: a title the reader's text spacing makes
+            // too long for one line (WCAG 1.4.12) must not lose its end. The header
+            // is a flex row with no fixed height, so it grows with the title.
+            overflowWrap: 'anywhere',
             margin: 0,
             fontWeight: 'inherit',
-            letterSpacing: 'inherit',
+            // 0, not `inherit`: the reader's letter spacing (`textSpacing`) is set on the
+            // device and would otherwise reach the display heading through the header.
+            letterSpacing: 0,
+            wordSpacing: 0,
           }}
         >
           {title}
         </h1>
+        </>}
       </div>
 
       {/*
@@ -429,7 +482,7 @@ function Header({
           `findEverything` over the same `openHit` and drew the same tagged
           rows as `components/Command.tsx` — one search behind two doors, and
           which one you got depended on the width of your window. `/` opened
-          the overlay, and `Keys` is mounted only on the wide layout, so a
+          the overlay, and `Keys` was mounted only on the wide layout, so a
           phone could reach the screen and never the overlay.
 
           The overlay is the one that survives, for the reason its own file
@@ -449,7 +502,7 @@ function Header({
             type="button"
             className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'finder', open: true })}
-            aria-label="Search everything"
+            aria-label="Search, ask or add"
             aria-keyshortcuts="/"
           >
             <SearchIcon size={19} />
@@ -562,14 +615,14 @@ function TabBar() {
   // student arranged, minus anything the school or the role has since taken
   // off the table — see `barFor`. `litTab` rather than `rootOf` because a
   // chosen bar can hold a screen and the tab it files under at the same time.
-  const tabs = barFor(state.tabs, school.capabilities, state.role);
-  const here = litTab(state.screen, tabs);
+  const tabs = barForMode(state.tabs, school.capabilities, state.role, FIVE);
+  const here = litForMode(state.screen, tabs, FIVE);
   const labelled = state.labels !== 'off';
 
   return (
     <nav ref={bar} className="safe-bottom app-tabs" aria-label="Sections">
       {tabs.map((id) => {
-        const label = tabLabel(id);
+        const label = labelForMode(id, FIVE);
         // Lit for the screen itself and for everything nested under it, so a
         // flashcard three levels deep still shows you are inside Study.
         const on = here === id;
@@ -644,7 +697,7 @@ function TabBar() {
 }
 
 function CurrentScreen() {
-  const { state } = useStore();
+  const { state, school } = useStore();
   /*
    * Home first, because it is the one screen whose component is a function of
    * the navigation rather than of `state.screen`.
@@ -685,7 +738,19 @@ function CurrentScreen() {
   // and missing from `SCREENS` remains a build error; this catches the string
   // that is not a screen at all, which used to land on Today and does again.
   const Screen = SCREENS[state.screen as Exclude<typeof state.screen, 'home' | 'onboarding'>] ?? Today;
-  return <Screen />;
+  /*
+   * The sentence under the heading, for every screen that does not write its
+   * own. Today is above and not in this: it is the dashboard, and "What is due
+   * and what to do next" over the thing that shows exactly that says it twice.
+   * `components/Page.tsx` has the rest.
+   */
+  const place = destination(state.screen);
+  const purpose = place ? saysFor(place, school.capabilities).blurb : undefined;
+  return (
+    <PagePurpose.Provider value={purpose}>
+      <Screen />
+    </PagePurpose.Provider>
+  );
 }
 
 /**
@@ -752,6 +817,37 @@ function Workspace({
   const focusBar = useCallback(() => barBox.current?.focus(), []);
   /** The shell's own two screens, which are their own titles. See above. */
   const ownTitle = state.screen === 'search' || state.screen === 'directory';
+  const pane = useRef<HTMLDivElement>(null);
+  const wasOn = useRef(state.screen);
+
+  /*
+   * `Header` normally moves focus into a new page title. In the workspace it
+   * is deliberately absent on Search and All apps, and is unmounted while
+   * either screen is open, so its screen-change effect cannot cover the
+   * transition into or back out of those pages. Keep the route landing rule
+   * at the persistent shell level for this layout. The observer only matters
+   * when a lazy screen's chunk is still behind the Suspense fallback.
+   */
+  useEffect(() => {
+    if (wasOn.current === state.screen) return;
+    wasOn.current = state.screen;
+    const root = pane.current;
+    if (!root) return;
+
+    const focusTitle = () => {
+      const title = root.querySelector<HTMLHeadingElement>('h1[data-page-title]');
+      if (!title) return false;
+      title.focus({ preventScroll: true });
+      return true;
+    };
+    if (focusTitle()) return;
+
+    const observer = new MutationObserver(() => {
+      if (focusTitle()) observer.disconnect();
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [state.screen]);
 
   return (
     <SuggestingProvider value={suggesting}>
@@ -767,7 +863,7 @@ function Workspace({
         column. Portals that look for `.device` find this, and it is
         positioned, so they land over the whole workspace.
       */}
-      <div className="device deskwork" data-tier={tier}>
+      <div className="device deskwork" data-tier={tier} data-semester-root>
         <SkipLink />
         <Titled />
         <Fresh />
@@ -790,17 +886,20 @@ function Workspace({
             layout is shaped like keeps them. It draws nothing at all until
             something has been starred. */}
         <BookmarksBar />
+        <InstitutionalNavigation />
 
-        <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
-          {chrome.sidebar && <Sidebar />}
+        <div className={chrome.sidebar && !INSTITUTIONAL_PREVIEW ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
+          {chrome.sidebar && !INSTITUTIONAL_PREVIEW && <Sidebar />}
           <div
+            ref={pane}
             className={
               isCanvas(state.screen)
                 ? 'device-pane deskwork-pane has-canvas'
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header desk />}
+            <Header desk screenOwnsTitle={ownTitle} />
+            <SystemContextBar />
             <Said />
             {/* The sample banner belongs over records, which is what it is
                 about. The search home says the same thing in its own foot
@@ -855,12 +954,14 @@ function Workspace({
           Out here each one is a sibling of those strips rather than a
           grandchild of the body, so the number it already carries is
           compared with theirs and wins. Nothing else changes: all three are
-          `position: fixed` above 1180px and laid out against the window
+          `position: fixed` above 1200px and laid out against the window
           wherever they are mounted.
         */}
         <Assistant />
         {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+        {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
+        <UnityLayer />
         {/* The launcher and Customize, last so they stack over the body
             without a z-index of their own to keep in step with anything. */}
         {state.apps && <AppsPanel onClose={() => dispatch({ type: 'apps', open: false })} />}
@@ -882,12 +983,49 @@ function Workspace({
  * one. So on a wide screen the rail is always there, whichever nav mode the
  * phone is set to, and it carries the things the phone keeps under Me.
  */
-function Rail() {
+function Rail({ collapsed = false }: { collapsed?: boolean }) {
   const { state, dispatch, school } = useStore();
+  /*
+   * The medium window's rail: collapsed to its icons, opened out on demand.
+   *
+   * 600–839px has room for a 72px column of icons and not for the 232px
+   * sidebar with its words, so the rail is drawn narrow in the tab bar's
+   * place and a button at its head opens it out over the content — the
+   * adaptive-device contract's "collapsible rail". Open is state of this
+   * component and nothing else: never stored, so rotating or resizing can
+   * never change a saved preference, and `App` keys the rail on `collapsed`
+   * so crossing 840 and back starts it closed rather than remembering.
+   *
+   * Everything the full rail offers is one press away. The tabs are there
+   * collapsed, as icons whose names are still read out (hidden visually, not
+   * with `display: none`, which would take the name from a screen reader —
+   * `a11y/labels.ts` has that story); the quieter rows, which have no icons,
+   * appear when it is opened.
+   */
+  const [open, setOpen] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const shut = collapsed && !open;
+  const expanded = collapsed && open;
+  const close = useCallback(() => {
+    setOpen(false);
+    toggle.current?.focus();
+  }, []);
+  useEffect(() => {
+    if (!expanded) return;
+    // Capture, so Escape closes this and goes no further: bubbling on to
+    // `Keys` it would also mean Back, and the screen behind would change.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      close();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [expanded, close]);
   // Through the same gate as the bar: the rail is the same list on a wider
   // screen, and a screen hidden from this role must not survive by being on
   // a laptop.
-  const tabs = barFor(state.tabs, school.capabilities, state.role);
+  const tabs = barForMode(state.tabs, school.capabilities, state.role, FIVE);
   // The rail keeps its labels whatever the tab bar does: it is a wide-screen
   // sidebar with room for words, and the setting exists to buy height back on
   // a phone, which the rail is not on.
@@ -896,23 +1034,45 @@ function Rail() {
   const extras = ['ask', 'import', 'account', 'connect', 'settings']
     .map((s) => destination(s as Screen))
     .filter((d): d is NonNullable<typeof d> => Boolean(d))
+    .filter((d) => forRole(d.screen, state.role))
     // Not twice. Four of these six can now be put in the bar, and the rail
     // draws the bar above this list — so without the filter, a student who
     // put Ask Claude in their bar would find it in the rail twice.
     .filter((d) => !tabs.includes(d.screen));
   // Whichever of those the rail ended up drawing, so `litRailTab` knows which
   // screens this nav already has a row of its own for.
-  const here = litRailTab(
-    state.screen,
-    tabs,
-    extras.map((d) => d.screen),
-  );
+  // `litRailTab`'s rule, with the five-destination nesting when that is on.
+  const here = extras.some((d) => d.screen === state.screen) ? null : litForMode(state.screen, tabs, FIVE);
 
   return (
-    <nav className="rail" aria-label="Sections">
-      <Wordmark className="rail-mark" />
+    <>
+      {/* Holds the rail's column while the rail itself floats open over the
+          content, so the screen beside it does not jump across. */}
+      {expanded && <div className="rail-spacer" aria-hidden="true" />}
+      {expanded && (
+        <button type="button" className="rail-scrim" tabIndex={-1} aria-label="Close navigation" onClick={close} />
+      )}
+    <nav className="rail" id="rail" data-collapsed={collapsed || undefined} data-open={expanded || undefined} aria-label="Sections">
+      {collapsed ? (
+        <div className="rail-head">
+          <button
+            ref={toggle}
+            type="button"
+            className="bare rail-toggle"
+            aria-expanded={open}
+            aria-controls="rail"
+            aria-label={open ? 'Close navigation' : 'Open navigation'}
+            onClick={() => setOpen((was) => !was)}
+          >
+            {open ? <CloseIcon size={20} /> : <MenuIcon size={20} />}
+          </button>
+          {open && <Wordmark className="rail-mark" />}
+        </div>
+      ) : (
+        <Wordmark className="rail-mark" />
+      )}
       {tabs.map((id) => {
-        const label = tabLabel(id);
+        const label = labelForMode(id, FIVE);
         const on = here === id;
         return (
           <button
@@ -924,6 +1084,9 @@ function Rail() {
               // what every phone does, and it is the only way back up a long
               // list without flicking — `go` to the current screen is a no-op
               // in the reducer, so nothing else would happen at all.
+              // Opened out, the rail closes once it has been used — it is
+              // over the screen, and the screen is where they were going.
+              if (expanded) setOpen(false);
               if (state.screen === id) {
                 forget(id);
                 scrollKindly(document.querySelector('.scrollarea'), { top: 0 });
@@ -931,6 +1094,7 @@ function Rail() {
               }
               dispatch({ type: 'go', screen: id });
             }}
+            title={shut ? label : undefined}
             aria-current={on ? 'page' : undefined}
             style={{
               // The rail is the tab bar's wide-screen counterpart and its
@@ -948,7 +1112,7 @@ function Rail() {
         );
       })}
       <div className="rail-gap" />
-      {extras.map(({ screen, label, blurb }) => {
+      {!shut && extras.map(({ screen, label, blurb }) => {
         // The same treatment a tab gets, because it means the same thing: this
         // is the screen you are on. A colour shift alone lost that argument to
         // the lit pill `litTab` used to put on the tab above.
@@ -958,7 +1122,10 @@ function Rail() {
             key={screen}
             type="button"
             className="bare rail-item rail-quiet"
-            onClick={() => dispatch({ type: 'go', screen })}
+            onClick={() => {
+              if (expanded) setOpen(false);
+              dispatch({ type: 'go', screen });
+            }}
             title={blurb}
             aria-current={on ? 'page' : undefined}
             style={{
@@ -976,10 +1143,22 @@ function Rail() {
         );
       })}
     </nav>
+    </>
   );
 }
 
 export default function App() {
+  if (INSTITUTIONAL_PREVIEW) {
+    return (
+      <InstitutionalPreviewRoot>
+        <AppFrame />
+      </InstitutionalPreviewRoot>
+    );
+  }
+  return <AppFrame />;
+}
+
+function AppFrame() {
   const { state, dispatch, saveTrouble, asking, settle } = useStore();
   /*
    * Which of the three layouts this window is in — see `lib/media.ts`.
@@ -993,6 +1172,9 @@ export default function App() {
    */
   const tier = useTier();
   const wide = tier !== 'phone';
+  // 600–839px: the rail, collapsed to its icons, where the tab bar was. See
+  // `useMedium` and `chromeFor`'s `medium`.
+  const medium = useMedium();
   /*
    * Which navigation is drawn — and it is one, always.
    *
@@ -1006,7 +1188,8 @@ export default function App() {
    * combination of navigation, screen and width to prove no two are ever
    * drawn together. Here there is one call and no conditions of its own.
    */
-  const chrome = chromeFor(state.nav, state.screen, wide);
+  const chrome = chromeFor(state.nav, state.screen, wide, medium);
+  const ownTitle = state.screen === 'search' || state.screen === 'directory';
 
   /**
    * The whole look, written onto the document root.
@@ -1040,7 +1223,8 @@ export default function App() {
   // once, so everything downstream sees a ground that names real colours. See
   // `lib/look.ts`.
   const prefersDark = usePrefersDark();
-  const moreContrast = usePrefersContrast();
+  const deviceContrast = usePrefersContrast();
+  const moreContrast = deviceContrast || hasMode(state.access, 'contrast');
   const lookKey = JSON.stringify({
     ...currentLook(state),
     ground: resolveGround(state.ground, prefersDark),
@@ -1102,6 +1286,10 @@ export default function App() {
      * with no way to ask.
      */
     root.setAttribute(CALM_ATTR, calmOf((JSON.parse(lookKey) as Look).calm));
+    // The workspace mode rides along the same way, so the stylesheet can
+    // show and hide by it without any screen having to read the store.
+    root.setAttribute(MODE_ATTR, workspaceModeOf((JSON.parse(lookKey) as Look).workspaceMode));
+    root.setAttribute('data-contrast', moreContrast ? 'more' : 'device');
 
     /*
      * And the other half of the browser's chrome.
@@ -1140,7 +1328,7 @@ export default function App() {
    * the next reload, and a message that fades after four seconds is worse than
    * none because it makes them think they imagined it.
    */
-  const trouble = saveTrouble ? (
+  const banner = saveTrouble ? (
     <div
       role="status"
       style={{
@@ -1157,6 +1345,28 @@ export default function App() {
       {saveTrouble}
     </div>
   ) : null;
+  /*
+   * And under it, the account: one quiet line while being offline, a waiting
+   * choice or a failed sync is worth saying, nothing otherwise. Carried in the
+   * same slot so every frame that shows the one shows the other. See
+   * `components/SyncStrip.tsx`. Offline mode (Phase M) shares the slot too: a
+   * standing condition, not an event.
+   */
+  const trouble = (
+    <>
+      {banner}
+      <ReadOnlyBanner />
+      <AgeBanner />
+      <RecoveryDialog />
+      <SyncStrip />
+      <StatusNotice />
+      {OFFLINE_MODE ? (
+        <Suspense fallback={null}>
+          <OfflineBanner />
+        </Suspense>
+      ) : null}
+    </>
+  );
 
   /*
    * The workspace, at every width.
@@ -1184,12 +1394,18 @@ export default function App() {
    */
   const frame = () => {
     if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
-    return wide ? wideFrame() : phoneFrame();
+    // The collapsed rail needs the frame with a column for a rail in it.
+    return wide || chrome.railCollapsed ? wideFrame() : phoneFrame();
   };
   return (
     <>
       <Sound />
       {frame()}
+      {INSTITUTIONAL_PREVIEW && (
+        <Suspense fallback={null}>
+          <InstitutionalPreviewBar />
+        </Suspense>
+      )}
     </>
   );
 
@@ -1207,7 +1423,12 @@ export default function App() {
        * `.desk-one` drops the rail's column so the pane does not sit in the
        * second half of an empty grid.
        */
-      <div className={chrome.rail ? 'desk' : 'desk desk-one'} data-tier={tier}>
+      <div
+        className={chrome.rail && !INSTITUTIONAL_PREVIEW ? 'desk' : 'desk desk-one'}
+        data-tier={tier}
+        data-rail={chrome.railCollapsed ? 'collapsed' : undefined}
+        data-semester-root
+      >
         {/* First in the tree, so it is the first tab stop. See the note in
             the phone layout below. */}
         <SkipLink />
@@ -1228,7 +1449,7 @@ export default function App() {
         <Watching />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-        {chrome.rail && <Rail />}
+        {chrome.rail && !INSTITUTIONAL_PREVIEW && <Rail key={chrome.railCollapsed ? 'collapsed' : 'full'} collapsed={chrome.railCollapsed} />}
         {/* `has-canvas` widens the header's gutter to match a screen whose
             body is a grid rather than a column — see `.pane-body.is-canvas`
             in `styles/app.css`. Both answers come from the same list in
@@ -1276,6 +1497,8 @@ export default function App() {
               with nothing capping it its explanation ran the full width of a
               laptop in a single line. See its own `position`. */}
           {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+          {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
+          <UnityLayer />
           {/*
             The tabs, on the window rather than only inside the search
             overlay.
@@ -1293,7 +1516,8 @@ export default function App() {
             that is 800 tall and mostly thumb.
           */}
           <TabStrip />
-          <Header />
+          <Header screenOwnsTitle={ownTitle} />
+          <SystemContextBar />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
               different thing on Calendar than it does on Today. Inside the
@@ -1327,7 +1551,8 @@ export default function App() {
           <Replaced />
           <Undone />
           {trouble}
-          {chrome.shelves && <ShelfNav />}
+          <InstitutionalNavigation />
+          {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
             <SoftTop />
             <Suspense fallback={<Loading />}>
@@ -1348,7 +1573,7 @@ export default function App() {
 
   function phoneFrame() {
   return (
-    <div className="device" data-tier={tier}>
+    <div className="device" data-tier={tier} data-semester-root>
       {/*
         The first focusable thing on the page, and invisible until it has
         focus. With sixty screens behind a header and a tab bar, a keyboard
@@ -1365,6 +1590,11 @@ export default function App() {
       <SkipLink />
       <Titled />
       <Fresh />
+      {/* On this layout too, which it was not: a laptop window dragged
+          narrow, or an iPad in Split View with a keyboard, is drawn as a
+          phone and still has keys. `Keys` decides for itself whether there
+          is a keyboard to listen to — see its own note. */}
+      <Keys />
       <Ringing />
       <PushTop />
       <Tapped />
@@ -1375,6 +1605,8 @@ export default function App() {
       <Assistant />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+      {/* The shared overlays — Source & details, Capture, the Focus bar. See `components/unity/UnityLayer.tsx`. */}
+      <UnityLayer />
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
       {/* The launcher, on this layout too. See the wide layout's copy. */}
       {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
@@ -1391,12 +1623,14 @@ export default function App() {
         again.
       */}
       <TabStrip />
-      <Header />
+      <Header screenOwnsTitle={ownTitle} />
+      <SystemContextBar />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />
       <SampleMark />
       {trouble}
-      {chrome.shelves && <ShelfNav />}
+      <InstitutionalNavigation />
+      {!INSTITUTIONAL_PREVIEW && chrome.shelves && <ShelfNav />}
       <ScrollArea screen={state.screen} key={state.screen}>
         <SoftTop />
         <Suspense fallback={<Loading />}>
@@ -1409,7 +1643,7 @@ export default function App() {
           </ScreenTrouble>
         </Suspense>
       </ScrollArea>
-      {chrome.tabs && <TabBar />}
+      {!INSTITUTIONAL_PREVIEW && chrome.tabs && <TabBar />}
     </div>
   );
   }

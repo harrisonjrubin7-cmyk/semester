@@ -1,0 +1,73 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.940
+Small-N and selection bias
+
+2
+00:00:05.940 --> 00:00:10.460
+King, Keohane &amp; Verba’s one rule?
+
+3
+00:00:10.460 --> 00:00:15.990
+Select cases on the independent variable. Never on the dependent variable. Never on both.
+
+4
+00:00:15.990 --> 00:00:20.850
+What does selecting on Y do to your estimate?
+
+5
+00:00:20.850 --> 00:00:35.080
+Biases it toward zero — keeping only high-Y cases cut an estimated slope from 0.68 to 0.32. Because the direction is known, a significant effect in a truncated sample means the true effect is at least that large.
+
+6
+00:00:35.080 --> 00:00:40.470
+Why is selecting on both X and Y worse?
+
+7
+00:00:40.470 --> 00:00:46.560
+The bias can run in any direction and you cannot know which. With selection on Y alone you at least know the sign.
+
+8
+00:00:46.560 --> 00:00:51.400
+You study twenty civil wars. What is the error?
+
+9
+00:00:51.400 --> 00:01:03.720
+No variation in Y — you never see the countries with the same conditions that stayed peaceful, so nothing distinguishes causes from constants. Same for only-successful-startups and only-school-shooters studies.
+
+10
+00:01:03.720 --> 00:01:07.990
+Why is selecting on X fine?
+
+11
+00:01:07.990 --> 00:01:16.000
+Deliberately picking cases with very different X actually increases your leverage. The only cost is that your findings apply to that range of X.
+
+12
+00:01:16.000 --> 00:01:21.280
+Which selection rules create the bias by accident?
+
+13
+00:01:21.280 --> 00:01:32.420
+Any rule correlated with Y — using only cases covered in newspapers, only “important” cases, only cases with available data, only organizations that survived long enough to study.
+
+14
+00:01:32.420 --> 00:01:38.080
+What can Venkatesh’s crack-gang books do, and not do?
+
+15
+00:01:38.080 --> 00:01:52.520
+Show a mechanism and kill a stereotype — foot soldiers earned below minimum wage while the leader took a large share. Not establish a general causal claim: one non-random case, no comparison group, no variation on the outcome.
+
+16
+00:01:52.520 --> 00:01:57.610
+Why is random selection risky with small N?
+
+17
+00:01:57.610 --> 00:02:06.450
+With six cases a random draw can easily be unrepresentative — which is why KKV recommend intentional selection on X for qualitative work.
+
+18
+00:02:06.450 --> 00:02:09.000
+Small-N and selection bias — 8 cards

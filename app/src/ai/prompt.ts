@@ -1,5 +1,6 @@
 import { build as guidebook } from '../lib/guidebook';
 import type { Mode } from '../lib/mode';
+import { DATA_RULE, fence } from './untrusted';
 
 /**
  * The system prompt, as a function of two things and nothing else.
@@ -96,7 +97,7 @@ export const READING =
   '- Never say you do not have their schedule, their grades or their material without ' +
   'looking first. Never do arithmetic on a grade from memory of the conversation when you ' +
   'can read the weights.\n' +
-  '- Look up before proposing. Do not offer to add a task they already have, and do not tick ' +
+  '- Look up before proposing. Do not offer to add an action they already have, and do not tick ' +
   'off a deadline whose id you did not read.\n' +
   '- A lookup that comes back empty is an answer. Say what their records do not contain, ' +
   'plainly and once, and then answer what you can.';
@@ -177,8 +178,17 @@ const NEVER =
   'Never describe a feature of this app that is not in the material below. If the app cannot ' +
   `do what is being asked, say so plainly and name the closest thing it can do.\n\n${VOICE}`;
 
-/** The whole system prompt for one question, given how it was read. */
-export function systemPrompt(read: Mode, drawn: string): string {
+/**
+ * The whole system prompt for one question, given how it was read.
+ *
+ * `tutor` is the paragraph `lib/socratic.ts` writes for the mode the student
+ * picked — empty for Explain, which is what every question got before the
+ * picker meant anything. It goes after the bounds and before the tools, and
+ * never into an app question: how the guidebook is read does not change
+ * because somebody asked for a hint.
+ */
+export function systemPrompt(read: Mode, drawn: string, tutor = ''): string {
+  const teach = tutor ? `${tutor}\n\n` : '';
   if (read === 'app') {
     const book = guidebook();
     const facts = book.sections
@@ -195,13 +205,13 @@ export function systemPrompt(read: Mode, drawn: string): string {
       "You are answering a question about this student's own courses and records, and about " +
       'the screen they are looking at. Answer from what is below and say which part you used. ' +
       'Each deadline carries its id in brackets; use those ids when a tool needs one, and ' +
-      `never invent one.\n\n${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+      `never invent one.\n\n${BOUNDS}\n\n${teach}${READING}\n\n${ACTING}\n\n${NEVER}\n\n${DATA_RULE}\n\n${fence('what the student is looking at', drawn)}`
     );
   }
   return (
     'You are helping a university student. Answer the question they asked, well and directly — ' +
     'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
     `it to their coursework and do not refuse because it is not about a course.\n\n` +
-    `${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+    `${BOUNDS}\n\n${teach}${READING}\n\n${ACTING}\n\n${NEVER}\n\n${DATA_RULE}\n\n${fence('what the student is looking at', drawn)}`
   );
 }

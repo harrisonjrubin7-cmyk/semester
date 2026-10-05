@@ -93,6 +93,39 @@ describe('how it is written', () => {
     expect(counting?.body).toContain('not uploaded');
   });
 
+  it('does not hide consented support behind a blanket only-you promise', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).not.toMatch(/^Only you/i);
+    expect(visibility?.body).toMatch(/verified university supporter/i);
+    expect(visibility?.body).toMatch(/one-to-seven-day window/i);
+    expect(visibility?.body).toMatch(/every read is recorded/i);
+    expect(visibility?.body).toMatch(/raw notes, sources, recordings and mistake detail remain private/i);
+  });
+
+  it('names the help request as an exception, and what it carries', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/five deliberate exceptions/i);
+    expect(visibility?.body).toMatch(/help request/i);
+    expect(visibility?.body).toMatch(/only what you wrote and ticked/i);
+    expect(visibility?.body).toMatch(/your name, your university email/i);
+    expect(visibility?.body).toMatch(/every time .* opens it is recorded/i);
+  });
+
+  it('names beta feedback as an exception, and that it carries no name or address', () => {
+    // `beta_feedback_queue` returns no column that could name the sender;
+    // `supabase/beta.check.sql` proves it. This is the sentence that promises it.
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/invite-only beta/i);
+    expect(visibility?.body).toMatch(/without your name or address/i);
+  });
+
+  it('names a support ticket as an exception, and what it leaves out', () => {
+    const visibility = CLAIMS.find((c) => c.heading === 'Who can see your rows');
+    expect(visibility?.body).toMatch(/Semester support is read by Semester's support staff/i);
+    expect(visibility?.body).toMatch(/only what you wrote and the app details you ticked/i);
+    expect(visibility?.body).toMatch(/never your name or email address/i);
+  });
+
   it('keeps those counts out of everything that syncs', () => {
     // The claim above is only true while this is. `pickPersisted` is what the
     // push sends, so a count that appeared in it would make the page a lie.
@@ -353,11 +386,95 @@ describe('"delete my account" really means every row', () => {
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      // The academic-record ledger (lib/record/api.ts, D-145): the school's
+      // education record and the proposals behind it. academic_record_subjects,
+      // the link, goes with the account and is in OWNED_TABLES instead.
+      'academic_record_changes',
+      'academic_record_entries',
+      'commercial_prices',
+      'communities',
+      'community_calibration_items',
+      'community_cases',
+      'community_escalation_agreement_events',
+      'community_escalation_deliveries',
+      'community_escalation_policies',
+      'community_escalations',
+      'community_identity_grants',
+      'community_programs',
+      'community_reports',
+      'community_retention_runs',
+      'community_signals',
+      'community_venues',
+      'community_volunteer_events',
+      // The operations console's duty matrix (lib/console/client.ts): policy
+      // seeded by a migration, read-only from the browser, naming no person.
+      'console_duty',
+      // What an instructor published in Course Studio (D-101). Students only
+      // read these; they are course policy, kept for the class.
+      'course_ai_rules',
+      'course_guidance',
+      // A school's dining locations, hours and menus (lib/dining/client.ts,
+      // 20260929330000_dining.sql): what its card office lists.
+      'dining_hours',
+      'dining_locations',
+      'dining_menu_items',
+      'feature_kill_switch',
+      // A course's grading scheme and items (lib/gradebook/client.ts,
+      // 20260929310000_gradebook.sql): the course's, not a student's.
+      'gradebook_items',
+      'gradebook_schemes',
       'group_tasks',
       'groups',
+      'gtm_campaign_reviews',
+      'gtm_campaigns',
+      'help_destinations',
+      // A university's integration configuration and sync logs, read by the
+      // Integration Dashboard (lib/integration/dashboard.ts). No student
+      // account writes a row in any of them.
+      'integration_connections',
+      'integration_dead_letter_events',
+      'integration_mappings',
+      'integration_scopes',
+      'integration_sync_errors',
+      'integration_sync_runs',
+      // The Migration Center's tables (lib/migration/api.ts, D-144): a school's
+      // migrations and their evidence. Counts and fingerprints, never a record.
+      'migration_approvals',
+      'migration_field_maps',
+      'migration_projects',
+      'migration_runs',
+      // Verified listings (lib/listings.ts, components/ListingDesk.tsx): an
+      // office's or employer's publication. publisher_id is `on delete set null`.
+      // A school's Connect/Core switch and who approved it (D-1011): governance
+      // records of the school, kept with their approvals.
+      'module_mode_approval',
+      'module_mode_request',
+      'opportunities',
       'organizations',
+      // A school's registration calendar and sections (lib/enrollment/client.ts,
+      // 20260929300000_registration_transaction.sql).
+      'registration_sections',
+      'registration_terms',
       'reports',
+      // The Configuration Studio's table (lib/config/api.ts, D-1011): a school's
+      // versioned policy settings. No person, credential or student record.
+      'school_config_versions',
       'schools',
+      // Student accounts (lib/finance/api.ts, D-146): the school's financial
+      // record of its students' accounts, and its reconciliations and closes.
+      'student_account_closes',
+      'student_account_entries',
+      'student_account_reconciliations',
+      'student_account_requests',
+      'student_account_settings',
+      'student_payment_plan_installments',
+      'student_payment_plans',
+      'study_packs',
+      'subscriptions',
+      'support_access_event',
+      // The Workflow Builder's table (lib/workflow/api.ts, D-1018): a school's
+      // versioned workflow definitions. No person, credential or student record.
+      'workflow_versions',
     ]);
     const said = deletionClaims().map((c) => c.body).join(' ');
     for (const { table, why } of KEPT_TABLES) {
@@ -375,9 +492,11 @@ describe('"delete my account" really means every row', () => {
      * it has never once fired. And it claimed "every row belonging to you"
      * while eleven tables were in no list at all.
      *
-     * A narrower true claim beats a broad false one, so what replaces it has
-     * to name the account record it cannot reach, and offer the address that
-     * can.
+     * A narrower true claim beat a broad false one, so the page then named the
+     * account record it could not reach and offered the address that could.
+     * Since `delete-account` (20260929010000) the record *is* reached, on the
+     * server, after the rows — so the page says that instead, and keeps the
+     * address for the case where the button cannot finish.
      */
     // Two paragraphs rather than one, because the sentence that matters most
     // here — that some rows stay — was the fifteenth line of twenty-seven when
@@ -388,6 +507,9 @@ describe('"delete my account" really means every row', () => {
     expect(said).not.toMatch(/cascades in the database/i);
     expect(said).not.toMatch(/every row belonging to you/i);
     expect(said).toMatch(/account record/i);
+    expect(said).not.toMatch(/outlives the button/i);
+    expect(said).toMatch(/one step that either happens completely or not at all/i);
+    expect(said).toMatch(/download my account data/i);
     expect(said).toContain(SUPPORT);
     // The named tables a person would not have guessed were being kept.
     for (const word of ['display name', 'messages', 'blocked', 'group', 'practice paper']) {

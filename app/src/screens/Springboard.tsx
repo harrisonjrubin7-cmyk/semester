@@ -56,6 +56,7 @@ import { currentLook } from '../state/shape';
 import { lately } from '../lib/nav';
 import { useBottomChrome } from '../lib/bottomchrome.hook';
 import type { Screen } from '../lib/types';
+import { formatDate } from '../lib/locale';
 
 const ICON = 58;
 
@@ -346,7 +347,7 @@ export function Springboard() {
               }}
             >
               <span className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
-                {now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                {formatDate(now, { weekday: 'long', month: 'long', day: 'numeric' })}
               </span>
               <span
                 style={{

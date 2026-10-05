@@ -1,0 +1,81 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.450
+Causality — the four hurdles
+
+2
+00:00:05.450 --> 00:00:09.710
+Name the four hurdles, in order.
+
+3
+00:00:09.710 --> 00:00:19.930
+1. Is there a credible causal mechanism? 2. Can we rule out that Y causes X? 3. Is there covariation? 4. Have we controlled for confounders Z? One confident no kills the claim.
+
+4
+00:00:19.930 --> 00:00:25.750
+Which hurdle do public arguments usually clear — and stop at?
+
+5
+00:00:25.750 --> 00:00:31.150
+Hurdle 3, covariation. Chocolate and Nobel prizes clears it and fails the other three.
+
+6
+00:00:31.150 --> 00:00:36.370
+Why does random assignment clear two hurdles at once?
+
+7
+00:00:36.370 --> 00:00:45.240
+The researcher sets X, so Y cannot have caused it (Hurdle 2), and randomization balances every confounder including unmeasured ones (Hurdle 4).
+
+8
+00:00:45.240 --> 00:00:50.610
+What does “X caused Y” mean, counterfactually?
+
+9
+00:00:50.610 --> 00:00:54.950
+Y would have been different had X been different, everything else held fixed.
+
+10
+00:00:54.950 --> 00:01:00.300
+State the fundamental problem of causal inference.
+
+11
+00:01:00.300 --> 00:01:11.590
+For any case you only ever observe one potential outcome — Y(1) or Y(0). The counterfactual is never seen, so every method is a scheme for constructing a believable stand-in.
+
+12
+00:01:11.590 --> 00:01:15.880
+What is the average treatment effect?
+
+13
+00:01:15.880 --> 00:01:24.930
+The average of Y(1) − Y(0) across cases. Effects differ person to person, so an ATE can be positive even where it is negative for some.
+
+14
+00:01:24.930 --> 00:01:29.320
+Can there be causation without correlation?
+
+15
+00:01:29.320 --> 00:01:37.560
+Yes — if the effect runs in opposite directions for different groups, or if people compensate for it, the net correlation can be zero.
+
+16
+00:01:37.560 --> 00:01:42.180
+Four things people get wrong about causes?
+
+17
+00:01:42.180 --> 00:01:55.370
+There is no such thing as “the” cause. A single counterexample does not refute a causal claim — causation here is about averages. Causes precede effects. And a mechanism is not strictly required for an effect to be real.
+
+18
+00:01:55.370 --> 00:02:00.870
+The three cases Kellstedt &amp; Whitten run through the hurdles?
+
+19
+00:02:00.870 --> 00:02:11.700
+Life satisfaction and democratic stability (Hurdle 2 — which direction?). Race and political participation. Head Start (Hurdle 4 — families select in, so groups differ beforehand).
+
+20
+00:02:11.700 --> 00:02:14.000
+Causality — the four hurdles — 9 cards

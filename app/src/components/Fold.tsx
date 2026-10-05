@@ -435,7 +435,7 @@ export function FoldHead({
           flex: 'none',
           color: 'var(--app-dim)',
           transform: shut ? 'none' : 'rotate(90deg)',
-          transition: 'transform 160ms ease',
+          transition: 'transform var(--duration-standard) ease',
         }}
       />
       {/* Wide, so a heading sharing its line with a count keeps its words
@@ -472,7 +472,7 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
   const { count, said, press } = useFoldAll(scope);
   if (count < 2) return null;
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', ...style }}>
+    <div className="fold-all" style={{ justifyContent: 'flex-end', ...style }}>
       <button
         type="button"
         className="bare tappable tap-x"

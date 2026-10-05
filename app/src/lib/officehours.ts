@@ -28,7 +28,7 @@
  */
 
 import type { CourseId, DatedItem, RecurringBlock } from './types';
-import { DOW, daysBetween, startOfDay } from './date';
+import { daysBetween, shownTime, startOfDay, weekdayShort } from './date';
 import type { Sitting } from './sitting';
 
 /**
@@ -95,8 +95,8 @@ export function nextSitting(blocks: RecurringBlock[], now: Date): { on: Date; bl
 export function whenLine(next: { on: Date; block: RecurringBlock } | null, now: Date): string {
   if (!next) return '';
   const away = daysBetween(startOfDay(now), next.on);
-  const day = away === 0 ? 'Today' : away === 1 ? 'Tomorrow' : DOW[next.on.getDay()];
-  return `${day}, ${next.block.time}`;
+  const day = away === 0 ? 'Today' : away === 1 ? 'Tomorrow' : weekdayShort(next.on);
+  return `${day}, ${shownTime(next.block.time, next.block.at)}`;
 }
 
 export interface Reason {

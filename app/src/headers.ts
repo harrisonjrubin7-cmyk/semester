@@ -2,12 +2,11 @@ import type { State } from './state/shape';
 import type { Catalog } from './data/catalog';
 import type { School } from './lib/school';
 import type { Screen } from './lib/types';
-import { MONTHS } from './lib/date';
+import { monthShort } from './lib/date';
 import { homeTitle } from './lib/look';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination } from './lib/nav';
 import { settingsTitle } from './lib/settings';
-import { provider } from './lib/assistant';
 import { isoToDate } from './lib/date';
 
 /** The two lines the header draws: the small one over the big one. */
@@ -70,9 +69,10 @@ export interface HeaderCtx {
  * all read. A screen added to `DESTINATIONS` is now named in the header for
  * free, and `header.test.ts` fails if one ever is not.
  *
- * `Today` remains the answer for anything genuinely unlisted — the two shell
- * screens and onboarding — which is the honest last resort rather than the
- * first one.
+ * `Today` remains the answer only for a genuinely unknown runtime route (for
+ * example, a stale bookmark whose name is no longer in the `Screen` union).
+ * Shell-owned routes have explicit metadata below because this value also
+ * drives the document title even when their visible header is suppressed.
  */
 export function fallbackHeader(screen: Screen, today: string): Head {
   const known = destination(screen);
@@ -80,8 +80,8 @@ export function fallbackHeader(screen: Screen, today: string): Head {
   return { kicker: 'In the app', title: known.short ?? known.label };
 }
 
-/** The six screens that take their name from `DESTINATIONS`, or wear the last
- *  resort. Shared, so the six are provably one rule and not six copies. */
+/** Screens that take their name from `DESTINATIONS`, with a safe last resort
+ * for a stale runtime route. */
 const fromRegistry = (c: HeaderCtx): Head => fallbackHeader(c.screen, c.today);
 
 /*
@@ -165,7 +165,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
     // read a second field, so it could name a different month from the grid
     // under it once the two drifted apart. See `calDay` in `state/shape.ts`.
     const on = c.state.calDay ? isoToDate(c.state.calDay) : c.now;
-    return { kicker: `${source} · ${MONTHS[on.getMonth()]}`, title: 'Calendar' };
+    return { kicker: `${source} · ${monthShort(on)}`, title: 'Calendar' };
   },
   event: (c) => {
     const event = datedEvents(c.now, c.state.schoolId, c.state.sample).find((e) => e.id === c.state.eventId);
@@ -195,6 +195,11 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   setWorkload: settingsPage,
   setAbout: settingsPage,
   setAssistant: settingsPage,
+  // The Me control surface's three pages: named here, as Settings' are, since
+  // neither set is in the registry (`lib/nav.registry.test.ts`).
+  activity: () => ({ kicker: 'You', title: 'Your activity' }),
+  whatsnew: () => ({ kicker: 'You', title: 'What changed' }),
+  recovery: () => ({ kicker: 'You', title: 'Recovery' }),
   mine: () => ({ kicker: 'Yours, not the syllabus', title: 'Personal' }),
   note: () => ({ kicker: 'Note', title: 'Editing' }),
   lesson: (c) => ({ kicker: c.about('lesson'), title: 'Watch' }),
@@ -208,7 +213,7 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
    * answering rather than repeating the title, which is the one thing about
    * this screen worth saying before you have asked anything.
    */
-  ask: () => ({ kicker: `${provider()} · this term`, title: 'Ask Claude' }),
+  ask: () => ({ kicker: 'Semester Intelligence · this term', title: 'Ask Semester' }),
   work: (c) => ({ kicker: c.about('assignments'), title: 'Work on it' }),
   maps: () => ({ kicker: 'Campus, city, and how to get there', title: 'Getting there' }),
   mail: () => ({ kicker: 'Read here, sent by you', title: 'Email' }),
@@ -219,11 +224,18 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   edit: () => ({ kicker: 'A syllabus is a first draft', title: 'Edit the course' }),
   analyse: () => ({ kicker: 'Computed here, not guessed', title: 'Analyse data' }),
   classmates: () => ({ kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' }),
+  community: () => ({ kicker: 'Found by what you study, not where you are', title: 'Community' }),
+  moderation: () => ({ kicker: 'Trust & Safety', title: 'Moderation' }),
+  agreements: () => ({ kicker: 'Trust & Safety', title: 'Agreements' }),
+  volunteers: () => ({ kicker: 'Trust & Safety', title: 'Volunteers' }),
+  console: () => ({ kicker: 'Operations', title: 'Operations console' }),
+  dining: () => ({ kicker: 'From your school’s card office', title: 'Dining' }),
+  volunteer: () => ({ kicker: 'Community moderation', title: 'Volunteering' }),
   activities: () => ({ kicker: 'Everything that is not a class', title: 'Activities' }),
   clocks: () => ({ kicker: 'Counting, and ringing', title: 'Timers and alarms' }),
   proof: () => ({ kicker: 'Rules, not a judgement', title: 'Check the writing' }),
   applying: () => ({ kicker: 'The other deadline set', title: 'Applications' }),
-  behind: () => ({ kicker: 'Counted, not felt', title: 'When you are behind' }),
+  behind: () => ({ kicker: 'Counted, not felt', title: 'Catching up' }),
   degree: () => ({ kicker: 'Four years, not four months', title: 'The degree' }),
   meet: () => ({ kicker: 'Words in common, not ideas', title: 'Where courses meet' }),
   people: () => ({ kicker: 'Started late, invisibly', title: 'People and letters' }),
@@ -243,6 +255,8 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   housing: () => ({ kicker: 'The room, and the day you are out of it', title: 'Housing' }),
   runway: () => ({ kicker: 'Counted backwards from the exam', title: 'Exam runway' }),
   registrar: () => ({ kicker: 'The dates the university sets', title: 'Term deadlines' }),
+  registration: () => ({ kicker: 'Seats taken at confirm, never at review', title: 'Enrollment' }),
+  gradebook: () => ({ kicker: 'The record, not the arithmetic', title: 'Gradebook' }),
   /*
    * Its own entry rather than `fromRegistry`, which would print the tab bar's
    * nine-character `short` — "Uni" — as the page's heading. The kicker is the
@@ -259,21 +273,25 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
   career: () => ({ kicker: 'What is open, and what you have done', title: 'Career' }),
   family: () => ({ kicker: 'What somebody else would see', title: 'Family' }),
   pathway: () => ({ kicker: 'The part that outlasts this term', title: 'Pathway' }),
+  launchpad: () => ({ kicker: 'From the offer to week five', title: 'Launchpad' }),
+  hub: () => ({ kicker: 'Every message, with its source', title: 'Notices' }),
+  support: () => ({ kicker: 'Which door, and what happens behind it', title: 'Support' }),
+  opportunities: () => ({ kicker: 'Jobs, research, abroad and funding', title: 'Opportunities' }),
   create: () => ({ kicker: 'Whatever it is you have to hand in', title: 'Create' }),
   sources: () => ({ kicker: 'Yours, never invented', title: 'Sources' }),
   account: () => ({ kicker: 'Your semester, everywhere', title: 'Account' }),
   slides: (c) => ({ kicker: c.about('deck'), title: 'Slides' }),
   import: () => ({ kicker: 'Syllabus in, course out', title: 'New course' }),
-  // The six with no line of their own: four that the registry names —
-  // Everything, How this works, Your data, Privacy — and the two shell
-  // screens, which are the workspace looking at itself and are deliberately
-  // not destinations. Onboarding is the seventh: it draws no header at all.
+  // The registry names the three navigable utility pages. Shell-owned routes
+  // still need explicit names: they do not draw this header, but `useHeader`
+  // also supplies the document title announced by browsers and assistive
+  // technology.
   data: fromRegistry,
   help: fromRegistry,
   privacy: fromRegistry,
-  directory: fromRegistry,
-  search: fromRegistry,
-  onboarding: fromRegistry,
+  directory: () => ({ kicker: 'Semester', title: 'All apps' }),
+  search: () => ({ kicker: 'Semester', title: 'Search' }),
+  onboarding: () => ({ kicker: 'Semester', title: 'Welcome' }),
 };
 
 /**

@@ -130,7 +130,7 @@ describe('the templates', () => {
     // empty on purpose.
     const todo = fromTemplate(TEMPLATES.find((t) => t.id === 'todo')!, '');
     expect(todo.rows).toBeGreaterThanOrEqual(10);
-    expect(todo.cells.A1).toBe('Task');
+    expect(todo.cells.A1).toBe('Action');
   });
 
   it('compute what they promise', () => {

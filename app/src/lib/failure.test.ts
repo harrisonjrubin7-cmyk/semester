@@ -17,6 +17,13 @@ describe('classifying', () => {
     expect(classify({ code: 'PGRST116' })).toBe<Code>('NOT_FOUND');
   });
 
+  it('reads the database rate limit, which PostgREST sends as a 413', () => {
+    expect(classify({ code: '54000', status: 413 })).toBe<Code>('RATE_LIMITED');
+    // The control: the status alone is not a rate limit, so it is the code
+    // that decides.
+    expect(classify({ status: 413 })).not.toBe<Code>('RATE_LIMITED');
+  });
+
   it('reads HTTP status', () => {
     expect(classify({ status: 401 })).toBe<Code>('AUTH_REQUIRED');
     expect(classify({ status: 429 })).toBe<Code>('RATE_LIMITED');

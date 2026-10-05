@@ -32,6 +32,16 @@ export interface Change {
   said: string;
   /** Where to go to see it, or empty. */
   screen: string;
+  /**
+   * The three things the brief says every changed item should carry beside
+   * the change itself: where it came from, why it matters, and what to do.
+   * `freshness` is when the source last spoke, as epoch ms, or 0 when the
+   * change has no single moment.
+   */
+  source: string;
+  freshness: number;
+  why: string;
+  action: string;
 }
 
 export interface SinceInput {
@@ -78,6 +88,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${elsewhere.length} ${elsewhere.length === 1 ? 'deadline was' : 'deadlines were'} ticked on your other device`,
       screen: 'home',
+      source: 'Your other device, through your account',
+      freshness: Math.max(...elsewhere.map(([, at]) => at)),
+      why: 'Today no longer lists them, so the list here is shorter than you left it.',
+      action: 'Look under Done if one should not have been ticked.',
     });
   }
 
@@ -87,6 +101,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${pulled[0].name} brought in ${total} ${total === 1 ? 'event' : 'events'}`,
       screen: 'connect',
+      source: `${pulled[0].name}, a calendar you subscribed to`,
+      freshness: Math.max(...pulled.map((f) => f.synced)),
+      why: 'Dates from a feed move when the course moves them; these are the ones that did.',
+      action: 'Check the calendar, and say if a date looks wrong.',
     });
   }
 
@@ -95,6 +113,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${added.length} ${added.length === 1 ? 'reading was' : 'readings were'} added to a course`,
       screen: 'courses',
+      source: 'Material added to a course, from another device or an import',
+      freshness: Math.max(...added.map((u) => u.created)),
+      why: 'New material changes what the study guide and the cards cover.',
+      action: 'Open the course to see what was added.',
     });
   }
 
@@ -103,6 +125,10 @@ export function changes(input: SinceInput): Change[] {
     out.push({
       said: `${sat.length} practice ${sat.length === 1 ? 'paper was' : 'papers were'} sat`,
       screen: 'exam',
+      source: 'A practice paper sat on another device',
+      freshness: Math.max(...sat.map((x) => x.at)),
+      why: 'Its marks count toward what the study tools think you know.',
+      action: 'Review the paper against its key.',
     });
   }
 
@@ -134,7 +160,25 @@ export function line(list: Change[]): string {
   return `${said.join(', ')} and ${last}.`;
 }
 
-const SEEN_KEY = 'semester.seen';
+/**
+ * Where the mark lives: a key of its own.
+ *
+ * It was `semester.seen`, which is also `SEEN_KEY` in `state/shape.ts` — the
+ * sync's per-row stamps. The two wrote over each other: a number written here
+ * made `seenRows` read "synced before, holding nothing" and drop the device's
+ * sync memory, and the stamps written there parsed here as `NaN`, so a
+ * signed-in student never saw this line (or the welcome-back card) at all.
+ */
+const MARK_KEY = 'semester.lastOpened';
+/** The old spelling, read once so nobody's mark is lost on upgrade. */
+const OLD_KEY = 'semester.seen';
+
+/** A positive epoch-ms number, or 0. Sync's JSON stamps read as 0. */
+function mark(raw: string | null): number {
+  if (raw === null || raw.trim() === '') return 0;
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
 
 /**
  * When this device last had the app open.
@@ -145,8 +189,7 @@ const SEEN_KEY = 'semester.seen';
  */
 export function readSeen(): number {
   try {
-    const n = Number(localStorage.getItem(SEEN_KEY));
-    return Number.isFinite(n) && n > 0 ? n : 0;
+    return mark(localStorage.getItem(MARK_KEY)) || mark(localStorage.getItem(OLD_KEY));
   } catch {
     // A private window, or storage off. No mark, so nothing is claimed.
     return 0;
@@ -155,7 +198,7 @@ export function readSeen(): number {
 
 export function writeSeen(at: number): void {
   try {
-    localStorage.setItem(SEEN_KEY, String(at));
+    localStorage.setItem(MARK_KEY, String(at));
   } catch {
     /* storage off; the line simply never appears */
   }

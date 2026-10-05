@@ -1,12 +1,20 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { incomingCapture } from '../lib/productivity-arrival';
+import { lazy, Suspense, useState, type Dispatch, type SetStateAction } from 'react';
 import { useWorkspaceSelection, useWorkspaceTabId } from '../lib/workspace-view';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ContextBar } from '../components/unity/ContextBar';
+import { safeUrl } from '../lib/apply';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
+import { LEARNER_KEY, learnerPathwaysOn } from '../lib/learner-pathways';
+import { LearnerPathways } from '../components/LearnerPathways';
 import { download } from '../lib/deliver';
+const ProductivityWorkspace = lazy(() => import('../components/ProductivityWorkspace').then(module => ({ default: module.ProductivityWorkspace })));
+import { StudyAbroad } from '../components/StudyAbroad';
+import { abroadKey } from '../lib/abroad';
 import { fromMarkdown } from '../lib/document';
 import {
   APPLICATION_STAGES,
@@ -27,6 +35,7 @@ import {
   type Program,
 } from '../lib/pathway';
 import type { Screen } from '../lib/types';
+import { formatDateTime } from '../lib/locale';
 
 /**
  * The parts of a degree that outlast a term.
@@ -59,11 +68,13 @@ import type { Screen } from '../lib/types';
  */
 
 const TABS = [
+  { id: 'productivity' as const, label: 'Decisions & productivity' },
   { id: 'home' as const, label: 'Pathway' },
   { id: 'programs' as const, label: 'Programs' },
   { id: 'compare' as const, label: 'Costs' },
   { id: 'profile' as const, label: 'Profile' },
   { id: 'milestones' as const, label: 'Milestones' },
+  { id: 'abroad' as const, label: 'Study abroad' },
   { id: 'backup' as const, label: 'Backup' },
 ];
 
@@ -111,7 +122,7 @@ export function Pathway() {
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
-  const { dispatch } = useStore();
+  const { dispatch, account } = useStore();
   const lib = useDeviceLibrary(storageKey, readPathway, EMPTY_PATHWAY);
 
   /*
@@ -120,7 +131,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
     applications each come back to their own. The applications themselves
     stay in the one shared library below.
   */
-  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', 'home') as [
+  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', incomingCapture() ? 'productivity' : 'home') as [
     Tab,
     Dispatch<SetStateAction<Tab>>,
   ];
@@ -196,6 +207,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </Notice>
       )}
 
+      {tab === 'productivity' && <Suspense fallback={<p role="status">Loading decisions and productivity…</p>}><ProductivityWorkspace /></Suspense>}
+
       {tab === 'home' && (
         <>
           <label style={field}>
@@ -233,6 +246,19 @@ function Workspace({ storageKey }: { storageKey: string }) {
           >
             Create it
           </ActionButton>
+
+          {learnerPathwaysOn() && (
+            <LearnerPathways
+              storageKey={storageKey.replace('semester.pathway.v1', LEARNER_KEY)}
+              onStart={(kind) => {
+                const p = newPathwayProject(kind);
+                if (lib.update((old) => ({ ...old, projects: [p, ...old.projects] }))) {
+                  setProjectId(p.id);
+                  setTab('milestones');
+                }
+              }}
+            />
+          )}
 
           <SectionLabel
             aside={`${lib.value.programs.length} saved`}
@@ -338,16 +364,35 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
           {selected && (
             <>
-              <SectionLabel
-                aside={`You recorded: ${selected.status}`}
-                style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}
-              >
-                {selected.school} · {selected.program}
-              </SectionLabel>
+              <ContextBar
+                heading={2}
+                context={selected.school}
+                title={selected.program}
+                statuses={['yours', 'needs-confirmation']}
+                source={{
+                  title: `${selected.school} · ${selected.program}`,
+                  origin: 'yours',
+                  sourceName: selected.url ? 'The program page you recorded' : 'What you recorded',
+                  openSource: safeUrl(selected.url)
+                    ? {
+                        label: 'Open the source you recorded ↗',
+                        run: () => void window.open(safeUrl(selected.url), '_blank', 'noopener,noreferrer'),
+                      }
+                    : undefined,
+                }}
+                primary={{
+                  label: 'Edit',
+                  run: () => {
+                    setProgram(structuredClone(selected));
+                    setTab('edit');
+                  },
+                }}
+              />
               <p style={{ ...body, whiteSpace: 'pre-wrap' }}>
                 {selected.requirements || 'Add the requirements from the program’s own instructions.'}
               </p>
               <p style={line}>
+                You recorded: {selected.status} ·{' '}
                 {programReadiness(selected).missing} materials still in preparation
                 {!selected.materials.length ? ' · none listed yet' : ''}
                 {!selected.deadline ? ' · deadline missing' : ''}
@@ -425,15 +470,6 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
                 <ActionButton
-                  onClick={() => {
-                    setProgram(structuredClone(selected));
-                    setTab('edit');
-                  }}
-                  style={{ flex: '1 1 auto' }}
-                >
-                  Edit
-                </ActionButton>
-                <ActionButton
                   onClick={() =>
                     write(
                       `${selected.school} · Essay preparation`,
@@ -459,13 +495,6 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   Start the essay
                 </ActionButton>
               </div>
-              {selected.url && (
-                <p style={{ marginTop: 'var(--sp-4)' }}>
-                  <a href={selected.url} target="_blank" rel="noreferrer" style={body}>
-                    Open the source you recorded ↗
-                  </a>
-                </p>
-              )}
             </>
           )}
         </>
@@ -685,6 +714,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
+      {tab === 'abroad' && <StudyAbroad storageKey={abroadKey(account?.id)} />}
       {tab === 'profile' && (
         <>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
@@ -927,7 +957,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <ul style={{ margin: 'var(--sp-3) 0 0', paddingLeft: 'var(--sp-7)' }}>
                     {project.history.map((h, i) => (
                       <li key={i} style={{ ...line, paddingBlock: 'var(--sp-2)' }}>
-                        {new Date(h.at).toLocaleString()} · {h.message}
+                        {formatDateTime(h.at)} · {h.message}
                       </li>
                     ))}
                   </ul>

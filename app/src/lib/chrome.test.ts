@@ -39,13 +39,13 @@ describe('the navigation rule', () => {
     const doubled: string[] = [];
     for (const nav of MODES) {
       for (const screen of SCREENS) {
-        for (const wide of [false, true]) {
-          const chrome = chromeFor(nav, screen, wide);
+        for (const [wide, medium] of [[false, false], [false, true], [true, false]] as const) {
+          const chrome = chromeFor(nav, screen, wide, medium);
           if (navigationsDrawn(chrome) > 1) {
             doubled.push(
-              `${nav} on ${screen} (${wide ? 'wide' : 'phone'}): ${
+              `${nav} on ${screen} (${wide ? 'wide' : medium ? 'medium' : 'phone'}): ${
                 Object.entries(chrome)
-                  .filter(([k, v]) => v && k !== 'sidebar')
+                  .filter(([k, v]) => v && k !== 'sidebar' && k !== 'railCollapsed')
                   .map(([k]) => k)
                   .join(' + ')
               }`,
@@ -121,6 +121,33 @@ describe('the navigation rule', () => {
    * than left to the count above, which would go on passing if `sidebar` were
    * ever drawn on a phone as well as the strip.
    */
+  /*
+   * The medium window (600–839px): the rail, collapsed, in the tab bar's
+   * place — and nothing else of the wide layout. The adaptive-device
+   * contract's "bottom navigation or collapsible rail"; see `chromeFor`.
+   */
+  it('draws the rail collapsed at medium, where the tab bar was', () => {
+    const tabs = chromeFor('tabs', 'courses', false, true);
+    expect(tabs.tabs).toBe(false);
+    expect(tabs.rail).toBe(true);
+    expect(tabs.railCollapsed).toBe(true);
+    // The feed and the springboard express themselves as the rail wherever
+    // there is a column for it, as they do wide.
+    expect(chromeFor('feed', 'courses', false, true).railCollapsed).toBe(true);
+    // And never collapsed once there is room for the whole rail.
+    for (const nav of MODES) expect(chromeFor(nav, 'courses', true, false).railCollapsed, nav).toBe(false);
+  });
+
+  it('leaves the other navigations as they are at medium', () => {
+    // The workspace keeps its strip and waits for 840 for the sidebar; the
+    // shelves are the shelves; the guides draw nothing.
+    expect(chromeFor('workspace', 'courses', false, true)).toMatchObject({ desk: true, sidebar: false, rail: false });
+    expect(chromeFor('shelves', 'courses', false, true)).toMatchObject({ shelves: true, rail: false, railCollapsed: false });
+    expect(navigationsDrawn(chromeFor('guides', 'courses', false, true))).toBe(0);
+    // And a drill keeps the whole display at every width.
+    expect(navigationsDrawn(chromeFor('tabs', 'drill', false, true))).toBe(0);
+  });
+
   it('unrolls the workspace into a sidebar only where there is room', () => {
     expect(chromeFor('workspace', 'courses', false).sidebar).toBe(false);
     expect(chromeFor('workspace', 'courses', true).sidebar).toBe(true);
@@ -145,7 +172,9 @@ describe('the navigation rule', () => {
      * Every member, and every one of them counted by `navigationsDrawn` —
      * except `sidebar`, which is the wide expression of `desk` rather than a
      * navigation of its own, cannot be on without it, and is documented as
-     * the exception in `chrome.ts`.
+     * the exception in `chrome.ts`; and `railCollapsed`, the medium window's
+     * expression of `rail`, on the same terms and held to the same check:
+     * never on without the navigation it draws.
      *
      * Written as the key list rather than as a `fab` check so that it holds
      * the rule and not one member's absence. It has already earned that once:
@@ -156,10 +185,11 @@ describe('the navigation rule', () => {
      */
     const COUNTED = ['desk', 'rail', 'shelves', 'tabs'];
     for (const nav of MODES) {
-      for (const wide of [true, false]) {
-        const c = chromeFor(nav, 'home', wide);
-        expect(Object.keys(c).sort(), `${nav} ${wide}`).toEqual([...COUNTED, 'sidebar'].sort());
+      for (const [wide, medium] of [[true, false], [false, true], [false, false]] as const) {
+        const c = chromeFor(nav, 'home', wide, medium);
+        expect(Object.keys(c).sort(), `${nav} ${wide}`).toEqual([...COUNTED, 'sidebar', 'railCollapsed'].sort());
         if (c.sidebar) expect(c.desk, `${nav} ${wide}`).toBe(true);
+        if (c.railCollapsed) expect(c.rail, `${nav} medium`).toBe(true);
         // The list above is the invariant's list, not a second copy of it:
         // anything counted must be here, and anything here must be counted.
         const on = COUNTED.filter((k) => c[k as keyof typeof c]).length;

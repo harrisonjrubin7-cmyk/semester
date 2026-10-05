@@ -14,6 +14,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Trouble } from './Trouble';
+import { PermissionNotice } from './unity/States';
 import { useTrouble } from '../lib/trouble';
 import { download, shareOut } from '../lib/deliver';
 import { packCourse, packName } from '../lib/handoff';
@@ -57,11 +58,19 @@ export function ShareCourse({ courseId }: { courseId: CourseId }) {
       >
         Share this course
       </button>
-      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-        {sent
-          ? 'Sent. Whoever opens it gets the deadlines, the schedule and the guide — and none of your own notes, ticks or timings, which are not in the file.'
-          : 'A file with this course in it: the deadlines, the schedule and the study guide. Your notes, ticked boxes, grades and timings stay here — they are not part of a course. They open it under Add a course.'}
-      </div>
+      {sent ? (
+        <div style={{ marginTop: 'var(--sp-3)' }}>
+          <PermissionNotice
+            changed="Course file shared"
+            why="Whoever opens it gets the deadlines, the schedule and the guide — and none of your own notes, ticks or timings, which are not in the file."
+          />
+        </div>
+      ) : (
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          A file with this course in it: the deadlines, the schedule and the study guide. Your notes, ticked boxes, grades and
+          timings stay here — they are not part of a course. They open it under Add a course.
+        </div>
+      )}
       <Trouble said={trouble.said} onRetry={trouble.again} />
     </div>
   );

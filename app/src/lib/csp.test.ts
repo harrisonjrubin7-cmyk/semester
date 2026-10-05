@@ -165,7 +165,7 @@ describe('the policy is there and says the things that make it worth having', ()
     expect(policyTag()).not.toContain("'unsafe-eval'");
   });
 
-  it('allows inline style, which is load-bearing and should not be tidied away', () => {
+  it('documents the legacy fallback and separates inline dependencies for CSP3 browsers', () => {
     /*
      * This one looks like the thing to delete and is not, so it is pinned.
      *
@@ -173,16 +173,19 @@ describe('the policy is there and says the things that make it worth having', ()
      * it — 59 rules, measured — and `components/Drawing.tsx` puts that string
      * into the page as it came, which is deliberate: `securityLevel: 'strict'`
      * is what makes that safe, and `lib/diagram.ts`'s sanitiser runs on the
-     * *other* language. `diagram.ts` also calls `setAttribute('style', …)`,
-     * which `style-src` governs where a React `style={{…}}` prop does not.
+     * *other* language. `diagram.ts` also calls `setAttribute('style', …)`.
+     * CSP Level 3 keeps those two necessary cases separate from the default
+     * style source.
      *
      * Measured in a browser: with `'unsafe-inline'` the injected sheet reports
      * 59 rules; without it the same render reports no sheet at all and the
      * console carries 64 refusals. Every generated figure in every study guide
-     * draws unstyled. That is the cost of tightening this line, and it is the
-     * reason to leave it alone until the diagrams are rendered some other way.
+     * draws unstyled. The separated exceptions remain until those styles are
+     * migrated; this test does not claim they reduce the effective allowance.
      */
-    expect(directives().get('style-src')).toContain("'unsafe-inline'");
+    expect(directives().get('style-src')).toEqual(["'self'", "'unsafe-inline'"]);
+    expect(directives().get('style-src-attr')).toContain("'unsafe-inline'");
+    expect(directives().get('style-src-elem')).toContain("'unsafe-inline'");
   });
 
   it('allows the map its tiles, and the marker icons Leaflet inlines', () => {

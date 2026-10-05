@@ -145,7 +145,7 @@ export const PICK = {
      * contents. A task's `note` is not among them, for the same reason a
      * note's body is not.
      */
-    'Titles, dates and times from the student’s own task list. Never a task’s note.',
+    'Titles, dates and times from the student’s own actions. Never an action’s note.',
     /*
      * Written down rather than newly allowed.
      *

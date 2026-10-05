@@ -10,47 +10,86 @@ import { useEffect, useState } from 'react';
  * place and read wherever they matter.
  */
 export function useMedia(query: string): boolean {
+  const available = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
   const [matches, setMatches] = useState(() =>
-    typeof window === 'undefined' ? false : window.matchMedia(query).matches,
+    available ? window.matchMedia(query).matches : false,
   );
 
   useEffect(() => {
+    if (!available) return;
     const mql = window.matchMedia(query);
     const onChange = () => setMatches(mql.matches);
     onChange();
     mql.addEventListener('change', onChange);
     return () => mql.removeEventListener('change', onChange);
-  }, [query]);
+  }, [query, available]);
 
-  return matches;
+  return available && matches;
 }
 
 /**
- * ── The three layouts ─────────────────────────────────────────────────────
+ * ── The layouts ───────────────────────────────────────────────────────────
  *
  * One number per boundary, named once, used by both the stylesheet and the
- * components. `styles/app.css` repeats the same two figures in its media
- * queries — it has to, a stylesheet cannot import a constant — and
- * `tiers.test.ts` asserts the two copies agree, so a breakpoint moved here
- * and not there fails a test instead of producing a rail with no room beside
- * it.
+ * components. `styles/app.css` repeats the same figures in its media queries
+ * — it has to, a stylesheet cannot import a constant — and `tiers.test.ts`
+ * asserts the two copies agree, so a breakpoint moved here and not there
+ * fails a test instead of producing a rail with no room beside it.
  *
- *   phone    < 760      one column, a tab bar under the thumb, full bleed.
- *   tablet   760–1179   the rail beside the column; touch sizes kept.
- *   desktop  ≥ 1180     a window: wide rail, a measured reading column, and
- *                       the screens that are grids given room to be grids.
+ * The boundaries are the adaptive-device contract's window classes
+ * (`docs/ADAPTIVE-DEVICE-EXPERIENCE.md`), which are the common adaptive-layout
+ * ones: compact under 600, medium to 839, expanded to 1199, large to 1599,
+ * extra-large from 1600. They were 760 and 1180, measured against devices —
+ * 760 so every iPad held upright got the rail. The contract asks for the
+ * window, not the device, and puts a portrait tablet in medium, where the
+ * tab bar stays. So:
+ *
+ *   phone    < 840      no full rail.
+ *              < 600    compact: the phone as drawn, the tab bar under the
+ *                       thumb — in a desktop window, the 402px column it was
+ *                       drawn at.
+ *              600–839  medium: the rail collapsed to its icons in the tab
+ *                       bar's place, opening out over the content on demand
+ *                       (`useMedium`, `chromeFor`'s `medium`).
+ *   tablet   840–1199   expanded: the rail beside the column; touch sizes kept.
+ *   desktop  ≥ 1200     large: a window — wide rail, a measured reading
+ *                       column, and grids given room to be grids.
+ *              ≥ 1600   extra-large: the same, with a wider measure and canvas
+ *                       rather than longer lines.
+ *
+ * `Tier` is still three values, because three is how many navigations the
+ * width chooses between; `windowClassFor` names all five for anything that
+ * needs the finer answer.
  *
  * Width decides it, with one exception, which is `HANDHELD` below: a phone
- * turned on its side is wider than an iPad is tall, and width alone called it
- * a tablet.
+ * turned on its side is wider than a small tablet is tall, and width alone
+ * called it a tablet.
  */
 export type Tier = 'phone' | 'tablet' | 'desktop';
 
-/** Where the rail replaces the tab bar. */
-export const TABLET_AT = 760;
+/** The contract's five window classes. */
+export type WindowClass = 'compact' | 'medium' | 'expanded' | 'large' | 'extraLarge';
 
-/** Where the app stops being a phone held up and becomes a desktop window. */
-export const DESKTOP_AT = 1180;
+/** Where the phone's column stops being the 402px artboard. */
+export const MEDIUM_AT = 600;
+
+/** Where the rail replaces the tab bar. */
+export const TABLET_AT = 840;
+
+/** Where the app stops being a tablet and becomes a desktop window. */
+export const DESKTOP_AT = 1200;
+
+/** Where the reading measure and the canvas take their last step. */
+export const EXTRA_LARGE_AT = 1600;
+
+/** The window class of a width. Pure, so it can be tested. */
+export function windowClassFor(width: number): WindowClass {
+  if (width >= EXTRA_LARGE_AT) return 'extraLarge';
+  if (width >= DESKTOP_AT) return 'large';
+  if (width >= TABLET_AT) return 'expanded';
+  if (width >= MEDIUM_AT) return 'medium';
+  return 'compact';
+}
 
 /**
  * The shortest a window may be and still be a tablet or a desktop.
@@ -67,24 +106,25 @@ export const TALL_AT = 600;
 /**
  * Wide enough for the rail and a reading column beside it.
  *
- * 760px rather than 900 so an iPad in portrait gets the rail: the 11-inch is
- * 834pt wide, the 10.9-inch 820, the 9.7-inch 768. Below that — an iPad mini
- * held upright at 744, and every phone — the app is the phone it was drawn as,
- * filling the screen. Split View is just a narrower window, and the query
- * follows it live.
+ * 840: the contract's expanded class. An iPad held upright (744–834) is
+ * medium and keeps the tab bar, as the contract puts a portrait tablet; the
+ * same iPad on its side (1024–1194) has the rail. Split View is just a
+ * narrower window, and the query follows it live.
  */
 export const WIDE = `(min-width: ${TABLET_AT}px)`;
 
 /**
  * A desktop window, rather than a tablet.
  *
- * 1180 is where a laptop's browser window — 1280 or 1440 wide, minus its own
- * chrome — clears both the rail and a full reading measure with room left for
- * a second column. An iPad in landscape is 1080–1194: the 13-inch lands just
- * inside it and gets the desktop layout with touch sizes intact, which is what
- * it is asking for by being that wide.
+ * 1200: the contract's large class. A laptop's browser window — 1280 or 1440
+ * wide, minus its own chrome — clears it with the rail, a full reading
+ * measure and room for a second column. An iPad in landscape is 1024–1194 and
+ * is expanded: the rail with touch sizes, which is what it asks for.
  */
 export const DESKTOP = `(min-width: ${DESKTOP_AT}px)`;
+
+/** The medium window class and up. The medium rail reads it through `useMedium`. */
+export const MEDIUM = `(min-width: ${MEDIUM_AT}px)`;
 
 /**
  * A phone on its side — the one device width gets wrong.
@@ -135,6 +175,23 @@ export function tierFor(width: number, handheld = false): Tier {
  * re-render sixty screens on every frame. Turning a phone crosses one of them
  * too, so the layout follows a rotation without anything listening for one.
  */
+/**
+ * Whether this window is medium — 600 to 839px — and so draws the rail
+ * collapsed to its icons in the tab bar's place (`chromeFor`'s `medium`).
+ *
+ * Not a phone on its side, which is a phone at any width (`HANDHELD`): the
+ * same 700px that is a desktop window or an iPad mini upright is also an
+ * iPhone lying down, and the rail was drawn into its 430px of height once
+ * before. Every caller that asks `chromeFor` must pass this, or two parts of
+ * the shell disagree about whether there is a tab bar.
+ */
+export function useMedium(): boolean {
+  const medium = useMedia(MEDIUM);
+  const wide = useMedia(WIDE);
+  const handheld = useMedia(HANDHELD);
+  return medium && !wide && !handheld;
+}
+
 export function useTier(): Tier {
   const desktop = useMedia(DESKTOP);
   const tablet = useMedia(WIDE);
@@ -154,3 +211,18 @@ export function useTier(): Tier {
  * held in landscape is wide and never does.
  */
 export const TOUCH = '(pointer: coarse)';
+
+/**
+ * A mouse or a trackpad somewhere on this device, whatever the window's width.
+ *
+ * `any-pointer` rather than `pointer`: it asks whether *any* input is fine,
+ * not whether the primary one is. An iPad with a Magic Keyboard answers yes
+ * — its trackpad is fine though its screen is coarse — and so does a laptop
+ * whose browser window has been dragged to 600px. Neither of those is wide,
+ * and both have a keyboard in front of them.
+ *
+ * The honest reading is "probably a keyboard", not "a keyboard": no query
+ * says that. It is used where the width was being asked the same question
+ * and answering it worse — see `components/Keys.tsx`.
+ */
+export const FINE = '(any-pointer: fine)';

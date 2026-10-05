@@ -1,6 +1,7 @@
 # Pilot Playbook
 
-**Status: `NOT_STARTED`**
+**Status: `IN_PROGRESS`** — two entry criteria are implemented and one is
+partial; the named people, formal audit and support operating model are not.
 
 ## Shape of a first pilot
 
@@ -14,15 +15,16 @@
 
 | Criterion | Current |
 | --- | --- |
-| Tenant isolation enforced and tested | **Not met** |
-| Monitoring in place | **Not met** |
+| Tenant isolation enforced and tested | **Met for the institutional data layer** — cross-tenant policy suites pass; legacy direct tables remain outside this claim |
+| Monitoring in place | **Partially met** — public Pages/assets/PostgREST run hourly; private workflow/error signals and named-person delivery remain open |
 | Incident process with university contacts | **Not met** |
-| Data export and deletion available | **Not met** |
+| Data export and deletion available | **Met** — portable/restorable export, specialized-workspace backup, cloud-account deletion and device erasure are user-facing and tested |
 | Accessibility audit of piloted workflows | **Not met** |
 | Support access model | **Not met** |
 
-**Six of six unmet.** This is the honest gate, and it is the reason the
-scorecard sequences tenancy and observability ahead of everything else.
+**Two met, one partial and three unmet.** This remains a closed gate: partial
+monitoring is not incident ownership, and automated accessibility checks are
+not a formal audit.
 
 ## Success criteria — decided before, measured after
 

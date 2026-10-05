@@ -25,6 +25,15 @@
 
 export const INSTITUTION_VERSION = 1;
 
+export * from './automation.ts';
+export * from './identity.ts';
+export * from './intelligence.ts';
+export * from './agents.ts';
+export * from './provisioning.ts';
+export * from './policy.ts';
+export * from './workflow.ts';
+export * from './events.ts';
+
 /**
  * The thirty-seven service areas, each with the name a student would read.
  *
@@ -87,7 +96,7 @@ export const UNIVERSITY_AREAS = [
 export type UniversityArea = (typeof UNIVERSITY_AREAS)[number][0];
 
 /**
- * The six roles a *draft* can be written as.
+ * The institution roles a *draft* can be written as.
  *
  * Read the name of this type carefully, because the whole security posture of
  * the university work rests on it: these choose a template, and nothing else.
@@ -97,7 +106,18 @@ export type UniversityArea = (typeof UNIVERSITY_AREAS)[number][0];
  * gateway and cannot be set from the browser. The two are deliberately
  * different fields with different names so that no screen can confuse them.
  */
-export const UNIVERSITY_ROLES = ['student', 'faculty', 'advisor', 'admin', 'payer', 'staff'] as const;
+export const UNIVERSITY_ROLES = [
+  'student',
+  'faculty',
+  'teaching_assistant',
+  'advisor',
+  'admin',
+  'staff',
+  'applicant',
+  'payer',
+  'family',
+  'alumni',
+] as const;
 
 export type UniversityRole = (typeof UNIVERSITY_ROLES)[number];
 
@@ -454,3 +474,6 @@ export function allowsFamilyRequest(
   // Payment-only access cannot disclose statements or transaction history.
   return grant.access === 'selected' || grant.access === 'view';
 }
+export * from './policy.ts';
+export * from './events.ts';
+export * from './workflow.ts';

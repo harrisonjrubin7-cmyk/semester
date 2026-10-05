@@ -1,5 +1,6 @@
 # Which pipeline last deployed each Edge Function, read off the project at
-# 01:08 UTC on 22 September 2026.
+# 21:27 UTC on 29 September 2026. Every function, billing-cancel included,
+# last deployed by the platform at 21:10:28Z.
 #
 # Four columns: slug, version, the pipeline that deployed that version, and when.
 # `app/src/lib/functionsdeployed.test.ts` holds `supabase/functions/` to this
@@ -57,15 +58,43 @@
 # next merge is the freeze.** Re-read before concluding, which is the same
 # instruction `ledger.snapshot` carries and for the same reason.
 #
+# ## A new function's first row
+#
+# A new function cannot have a `platform` row yet. The platform deploys only
+# what main declares in config.toml, and `functionconfig.test.ts` will not let
+# main declare a function until it is live. So a function's first deploy is by
+# hand, from its branch (Actions → Deploy Edge Functions, run on that branch),
+# and it reads `runner`. Its row carries a fifth column, `first`, which is the
+# only thing that excuses a runner row: it says the merge that adds the
+# function hands it to the platform. The next reading drops the note, and a
+# `first` row that survives that reading is a freeze like any other.
+#
 # ## Re-reading it
 #
 # Nothing in a test run can reach the project. The reading comes from the
 # Management API's function list (the dashboard's Edge Functions page shows the
 # same versions), and the columns below are transcribed from it.
 
-claude     64  platform  2026-09-22T01:08:08Z
-push       28  platform  2026-09-22T01:08:08Z
-calendar   24  platform  2026-09-22T01:08:08Z
-fetchcal   56  platform  2026-09-22T01:08:08Z
-canvas     49  platform  2026-09-22T01:08:08Z
-lti        49  platform  2026-09-22T01:08:08Z
+claude            244  platform  2026-09-29T21:10:28Z
+push              198  platform  2026-09-29T21:10:28Z
+calendar          195  platform  2026-09-29T21:10:28Z
+fetchcal          239  platform  2026-09-29T21:10:28Z
+canvas            230  platform  2026-09-29T21:10:28Z
+lti               232  platform  2026-09-29T21:10:28Z
+integration-tick   88  platform  2026-09-29T21:10:28Z
+trust-room         95  platform  2026-09-29T21:10:28Z
+delete-account     72  platform  2026-09-29T21:10:28Z
+billing-cancel      2  platform  2026-09-29T21:10:28Z
+billing-checkout   32  platform  2026-09-29T21:10:28Z
+# Added in the billing-availability release. Replace this pending row with the
+# Management API reading after the gated main deploy completes.
+billing-portal      -  pending   2026-10-03T07:31:00Z
+billing-webhook    32  platform  2026-09-29T21:10:28Z
+lead-intake        32  platform  2026-09-29T21:10:28Z
+
+# productivity-sourcecheck first deployed through the Management API connector.
+# Its entrypoint is /tmp/user_fn_.../source/productivity-sourcecheck/index.ts,
+# so provenance is manual, not a fabricated platform/runner reading. On merge,
+# the continuous platform deploy should replace this first reading.
+productivity-sourcecheck  2  manual  2026-10-01T16:05:17Z first
+support-reply-notify      -  pending 2026-10-01T20:00:00Z

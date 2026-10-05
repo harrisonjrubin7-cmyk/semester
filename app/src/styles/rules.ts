@@ -44,12 +44,12 @@ export const TYPE: Record<string, string> = {
   '11.5': 'xs-plus',
   '12': 'sm',
   '12.5': 'sm-plus',
-  '13': 'base',
-  '13.5': 'base-plus',
-  '14': 'md',
-  '14.5': 'md-plus',
-  '15': 'lg',
-  '17': 'display-xs',
+  '16': 'base',
+  '16.5': 'base-plus',
+  '17': 'md',
+  '17.5': 'md-plus',
+  '18': 'lg',
+  '19': 'display-xs',
   '20': 'display-sm',
   '22': 'display',
   '24': 'display-lg',
@@ -358,6 +358,95 @@ export function cycles(dir: string): Problem[] {
           `value, so the token is gone for this element and every one inside it. ` +
           `Delete the declaration — a token carries through when nothing is said about it.`,
       });
+    }
+  }
+  return out;
+}
+
+/** Spacing-token references whose named step is absent from the scale. */
+export function undefinedScaleTokens(dir: string): Problem[] {
+  const files = sheets(dir);
+  const defined = new Set<string>();
+  for (const file of files) {
+    const code = withoutComments(file.text);
+    for (const root of code.matchAll(/:root\s*\{([^}]*)\}/g)) {
+      for (const match of root[1].matchAll(/(--sp-\d+)\s*:/g)) {
+        defined.add(match[1]);
+      }
+    }
+  }
+
+  const out: Problem[] = [];
+  for (const file of files) {
+    const rel = file.path.slice(dir.length + 1);
+    const code = withoutComments(file.text);
+    for (const match of code.matchAll(/var\((--sp-\d+)\)/g)) {
+      if (defined.has(match[1])) continue;
+      out.push({
+        file: rel,
+        line: lineOf(code, match.index),
+        found: match[0],
+        says: `${match[1]} is undefined, so the browser drops the declaration that uses it. Use a defined spacing step or a calc made from defined steps.`,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * A stylesheet may not overrule the two shape-and-face settings.
+ *
+ * Typeface and Corners are the student's, and both arrive as tokens:
+ * `--font-heading` and `--font-body` from `TYPEFACES` and `BODYFACES`,
+ * `--r-sm/md/lg` from `CORNERS`. A rule that names `Arial` or `22px` instead
+ * looks the same on the machine it was written on and ignores the setting for
+ * everybody else — somebody on Square corners had 22px panels on every
+ * registration and study-studio screen, and somebody who picked a typeface for
+ * legibility had Arial headings there, because `features.css` arrived from a
+ * port that predated both settings and the style rule only read TSX.
+ *
+ * What stays allowed is what no setting speaks to: `inherit`, a monospace
+ * stack for code, the `@font-face` declarations that define the faces, a
+ * hairline (1–2px), a full round (`50%`, `999px`), and the two radii below
+ * whose comments say why they are fixed geometry rather than a card corner.
+ */
+export const SHEET_RADII: { file: string; value: string; why: string }[] = [
+  { file: 'styles/app.css', value: '14px', why: 'the desktop window frame around .device, not a card' },
+  { file: 'styles/app.css', value: '22px', why: 'the chat composer stays round-ended as it grows' },
+];
+
+export function sheetLiterals(dir: string): Problem[] {
+  const out: Problem[] = [];
+  const face = /font-family\s*:\s*([^;}]+)/g;
+  const radius = /border(?:-(?:top|bottom)-(?:left|right))?-radius\s*:\s*([^;}]+)/g;
+  for (const f of sheets(dir)) {
+    const rel = f.path.slice(f.path.indexOf('/src/') + 5);
+    const code = withoutComments(f.text);
+    for (const m of code.matchAll(face)) {
+      const v = m[1].trim();
+      if (/^(var\(|inherit|ui-monospace)/.test(v)) continue;
+      // Inside `@font-face` the property names a face rather than choosing one.
+      const before = code.slice(0, m.index);
+      if (/@font-face\s*\{[^}]*$/.test(before)) continue;
+      out.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        found: m[0],
+        says: 'a named face overrules the Typeface setting — use `var(--font-body)` or `var(--font-heading)`.',
+      });
+    }
+    for (const m of code.matchAll(radius)) {
+      for (const px of m[1].matchAll(/(\d+(?:\.\d+)?)px/g)) {
+        const n = Number(px[1]);
+        if (n <= 2 || n >= 999) continue;
+        if (SHEET_RADII.some((a) => a.file === rel && a.value === `${px[1]}px`)) continue;
+        out.push({
+          file: rel,
+          line: lineOf(code, m.index),
+          found: m[0],
+          says: `${px[0]} overrules the Corners setting — use \`var(--r-md)\` for a control, \`var(--r-lg)\` for a card, \`999px\` for a pill.`,
+        });
+      }
     }
   }
   return out;

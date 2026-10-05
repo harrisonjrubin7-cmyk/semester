@@ -1,0 +1,7 @@
+-- Compatibility marker for preview branches that recorded this migration
+-- version before the production migration history was recovered.
+--
+-- The canonical implementation is
+-- 20261001160550_productivity_account_link_guard.sql. This marker intentionally
+-- contains no statement so the account-link guard is installed only once on a
+-- fresh database while both migration ledgers remain reconcilable.

@@ -55,6 +55,7 @@ import type { CourseId, PersonalTask, Screen } from './types';
 import { fromMarkdown, hasContent, summary, type Block } from './document';
 import { fromRows, readTable } from './sheet';
 import { parse, plain } from './maths';
+import { formatDate } from './locale';
 
 /** The screens a proposal may send you to. Everything else is out of bounds. */
 const REACHABLE: Screen[] = [
@@ -136,12 +137,12 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'move_task',
     description:
-      'Move one of the student’s own tasks to a different day, when they say it is not happening today. Only their own tasks — a syllabus deadline is not yours to move, and there is no tool for it.',
+      'Move one of the student’s own actions to a different day, when they say it is not happening today. Only their own actions — a syllabus deadline is not yours to move, and there is no tool for it.',
     strict: true,
     input_schema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'The task id, exactly as given in the context.' },
+        id: { type: 'string', description: 'The action id, exactly as given in the context.' },
         date: { type: 'string', description: 'The new ISO date (2026-09-14).' },
       },
       required: ['id', 'date'],
@@ -512,7 +513,7 @@ function day(value: string): string {
   const d = new Date(`${value}T12:00:00`);
   return Number.isNaN(d.getTime())
     ? value
-    : d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+    : formatDate(d, { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
 /**

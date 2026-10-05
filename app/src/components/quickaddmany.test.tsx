@@ -98,6 +98,12 @@ const tasks = (): { title: string; date: string | null; courseId: string | null 
 };
 
 describe('one thing, which is what this box is for', () => {
+  it('uses a themed, touch-sized capture action and a reachable close control', () => {
+    const capture = buttons('Capture for later')[0];
+    expect(capture.classList.contains('btn')).toBe(true);
+    expect(parseFloat(capture.style.minHeight)).toBeGreaterThanOrEqual(44);
+    expect(buttons('Close')[0].classList.contains('tap-y')).toBe(true);
+  });
   it('shows the single reading, not a list of one', async () => {
     await typeIn('econ ps4 friday 5pm');
     expect(text()).toContain('What it read');

@@ -15,6 +15,7 @@
  * name.
  */
 
+import { COMMUNITY_FLAGS, enabled } from '../community/flags';
 import type { Screen } from './types';
 import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
@@ -51,15 +52,15 @@ import { DEFAULT_ROLE, forRole, type Role } from './role';
  *
  * Standing was three screens and shrinking — the assistant screens moved to
  * Study and the calendar work moved to Semester, and what was left was Grades,
- * The degree and When you are behind. A shelf of three is worse than no shelf:
+ * The degree and Catching up. A shelf of three is worse than no shelf:
  * it costs a pill in the row and a tile in the grid to hold a third of what
  * every other shelf holds, and "which of these nine is it under" gets harder
  * for every shelf that exists, not just the full ones.
  *
- * Grades and When you are behind fold into Semester, where the question was
+ * Grades and Catching up fold into Semester, where the question was
  * already being asked — Reports is a Semester screen and carries the `stand`
  * tag. Semester is your term, and how it is going is part of your term. It
- * also puts The week ahead and When you are behind next to each other, which
+ * also puts The week ahead and Catching up next to each other, which
  * is where two screens that answer the same question in opposite directions
  * should always have been.
  *
@@ -154,6 +155,18 @@ export interface Destination {
   /** The tab this lives under, so navigation stays oriented inside it. */
   root: Screen;
 }
+
+/**
+ * A trusted, pre-resolved visibility decision for a registered route.
+ *
+ * Navigation deliberately knows nothing about release evidence, tenant
+ * entitlements, cohorts, or kill switches. Those inputs belong at the
+ * governance boundary; this callback is the narrow seam through which that
+ * boundary can remove a route without teaching the directory to recreate the
+ * policy. Callers that do not yet have an authoritative decision may omit it
+ * and retain the existing school-and-role behavior.
+ */
+export type NavigationExposureGate = (screen: Screen) => boolean;
 
 /**
  * The intentions, in the order they are shown.
@@ -260,7 +273,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'The degree',
     short: 'Degree',
     blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
-    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
+    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count scenario scenarios what if simulator graduation date when will i graduate finish early late extra semester cost of delay minor switch majors part time summer courses heavier load',
     group: 'Courses',
     taskTags: ['ahead', 'stand'],
     root: 'me',
@@ -297,11 +310,11 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'ask',
-    label: 'Ask Claude',
+    label: 'Ask Semester',
     short: 'Ask',
     blurb: 'The conversation — your term in hand, and every thread you have had.',
     // The full-screen chat was a destination of its own called "Chat", beside
-    // a tab called "Ask Claude" that opened a key form. One room, one door.
+    // a provider-branded tab that opened a key form. One room, one door.
     keywords:
       'ai chat explain help tutor claude conversation talk assistant ask threads history messages ' +
       'discuss back and forth question answer gpt chatgpt',
@@ -568,12 +581,34 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'behind',
-    label: 'When you are behind',
-    short: 'Behind',
+    label: 'Catching up',
+    short: 'Catch up',
     blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
     keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
     group: 'Semester',
     taskTags: ['due', 'week', 'stand'],
+    root: 'home',
+  },
+  {
+    screen: 'hub',
+    label: 'Notices',
+    short: 'Notices',
+    blurb: 'Everything your courses, your school and Semester are telling you — one list, every message labelled with who sent it.',
+    keywords:
+      'notices notice communications hub inbox messages message announcements alerts official registrar financial aid department instructor lms reminders unread saved follow up quiet hours digest channel preferences priority required',
+    group: 'Semester',
+    taskTags: ['due', 'week'],
+    root: 'home',
+  },
+  {
+    screen: 'launchpad',
+    label: 'Launchpad',
+    short: 'Launch',
+    blurb: 'From the offer letter to week five — deposit, documents, orientation, housing, advisor and first courses, in order.',
+    keywords:
+      'launchpad admitted accepted admission enrollment enrol confirm deposit transcripts immunization vaccine insurance placement test orientation first year first-year freshman transfer international online adult learner commuter veteran military first semester first 30 days new student onboarding checklist move in arrival glossary terminology office hours academic integrity mentor peer ambassador parent supporter reflection',
+    group: 'Semester',
+    taskTags: ['ahead', 'campus'],
     root: 'home',
   },
   {
@@ -616,7 +651,7 @@ export const DESTINATIONS: Destination[] = [
     // the bar would read as a bug. `saysFor` names it everywhere with room.
     short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
-    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
+    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list',
     /*
      * Courses, not Campus, and the move came with University arriving.
      *
@@ -668,9 +703,20 @@ export const DESTINATIONS: Destination[] = [
     short: 'Pathway',
     blurb: 'Applying somewhere, arriving, a thesis, graduating — the projects that outlast a term.',
     keywords:
-      'pathway program programs application applications apply graduate grad school masters doctoral phd thesis dissertation research publication transfer credit admission admissions arrival orientation graduation alumni milestone milestones tuition cost compare shortlist deadline personal statement essay recommendation',
+      'pathway program programs application applications apply graduate grad school masters doctoral phd thesis dissertation research publication transfer credit admission admissions arrival orientation graduation alumni milestone milestones tuition cost compare shortlist deadline personal statement essay recommendation study abroad exchange semester away course approval pre-approval credit count host university',
     group: 'Beyond',
     taskTags: ['ahead'],
+    root: 'mine',
+  },
+  {
+    screen: 'opportunities',
+    label: 'Opportunities',
+    short: 'Openings',
+    blurb: 'Campus jobs, research, study abroad, certificates, internships and scholarships — one list, each with its steps.',
+    keywords:
+      'opportunity opportunities job jobs campus job student employment work study workstudy shift payroll research lab undergraduate research irb faculty mentor poster conference study abroad exchange global passport visa credential credentials certificate badge microcredential continuing education internship co-op placement practicum service learning capstone scholarship scholarships grant grants fellowship funding award travel grant reference references alumni mentor mentoring resume skills time budget',
+    group: 'Beyond',
+    taskTags: ['ahead', 'make'],
     root: 'mine',
   },
   {
@@ -767,8 +813,8 @@ export const DESTINATIONS: Destination[] = [
     // "Mine" said whose it was and not what it held. Everything in the app is
     // yours; what makes this tab different is that you put it there yourself.
     label: 'Personal',
-    blurb: 'Your own tasks, appointments, notes, places and files.',
-    keywords: 'mine personal todo task appointment note file attachment place own yours',
+    blurb: 'Your own actions, appointments, notes, places and files.',
+    keywords: 'mine personal action todo task appointment note file attachment place own yours',
     group: 'Life',
     // On You rather than Life: this is the one screen holding what the
     // student wrote rather than what a syllabus or the campus did, which is
@@ -791,7 +837,7 @@ export const DESTINATIONS: Destination[] = [
     keywords:
       'me progress profile load more menu overview directory settings everything ' +
       'all screens index list of features what can this app do capabilities map contents table of contents ' +
-      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by task',
+      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by goal by task',
     group: 'Semester',
     taskTags: ['stand', 'app'],
     root: 'me',
@@ -812,7 +858,7 @@ export const DESTINATIONS: Destination[] = [
      */
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
-    keywords: 'sign in log in register sync devices password email',
+    keywords: 'sign in log in register sync devices password email membership plan plans pricing upgrade billing subscription',
     group: 'Data',
     taskTags: ['data'],
     root: 'me',
@@ -870,6 +916,17 @@ export const DESTINATIONS: Destination[] = [
     short: 'Links',
     blurb: 'Campus sites, the bookstore, tickets, and any address you add.',
     keywords: 'links bookmarks shortcuts campus yes anchorlink brightspace onevu myvu bookstore books tickets game football basketball commodores social instagram twitter x address url website site',
+    group: 'Life',
+    taskTags: ['campus'],
+    root: 'me',
+  },
+  {
+    screen: 'support',
+    label: 'Support',
+    short: 'Support',
+    blurb: 'Care, basic needs, accommodations, safety and the campus itself — which door, and whether what you say there stays there.',
+    keywords:
+      'support help care counseling counselling mental health wellbeing wellness crisis 988 emergency 911 safety public safety alert closure weather continuity basic needs food pantry hunger homeless homelessness emergency shelter emergency grant emergency fund childcare legal aid transportation disability accommodation accommodations access accessibility assistive technology captioning note-taking testing center study space room booking lab equipment makerspace printing transit shuttle parking commute building hours student government election committee sustainability bike',
     group: 'Life',
     taskTags: ['campus'],
     root: 'me',
@@ -944,8 +1001,70 @@ export const DESTINATIONS: Destination[] = [
   },
 ];
 
+/**
+ * Community, registered only when its build switches are on.
+ *
+ * A switched-off feature is not a place in the app, so it is not in the
+ * registry at all rather than a tile that opens onto "not available". It
+ * turns on only with reporting, because a community without report, block and
+ * mute is not a version of it that should exist (app/src/community/flags.ts).
+ * `lib/nav.registry.test.ts` names it among the screens that may be absent.
+ */
+export const COMMUNITY_DESTINATION: Destination = {
+  screen: 'community',
+  label: 'Community',
+  short: 'Community',
+  blurb: 'Course spaces, study groups and study sessions — found by what you study, never by where you are.',
+  keywords:
+    'community communities study group groups study session sessions course space support group first generation organization club post posts forum discussion peers report block mute',
+  group: 'Beyond',
+  taskTags: ['campus', 'study'],
+  root: 'mine',
+};
+
+if (enabled(COMMUNITY_FLAGS, 'communityFeed') && enabled(COMMUNITY_FLAGS, 'communityReporting')) {
+  DESTINATIONS.push(COMMUNITY_DESTINATION);
+}
+
 /** Screens that are reached from somewhere rather than gone to directly. */
 const NESTED: Partial<Record<Screen, Screen>> = {
+  community: 'mine',
+  moderation: 'mine',
+  /*
+   * The operations console is a staff tool the way the review queue is, and
+   * for the same reason it is nested rather than registered: the registry is
+   * per school and per role, and `offered()` cannot see a *capability*. A
+   * `console:operate` grant at platform scope is what opens it, the screen
+   * asks the database for that (`lib/console/client.ts`, `holdsConsole`) and
+   * shows one sentence to anyone without it. Reached at `#/console`; it is
+   * offered from nothing a student sees.
+   */
+  console: 'me',
+  /*
+   * The school's dining. It is behind a module flag that is off at every
+   * school today, so a shelf tile would open onto "your school has not turned
+   * this on" for everybody — the reason Community is not registered while its
+   * switches are off. It is opened from its student-kept counterpart (Meal
+   * plan) and at its own address, and sits under that screen's root.
+   */
+  dining: 'me',
+  /**
+   * The official registration transaction and the gradebook of record, each
+   * behind a school's writeback flag and off at every school today. Nested
+   * rather than registered for two reasons. Every shelf is at its eight, and
+   * a directory tile that opens onto "your school has not turned this on" for
+   * every student at every school is the door the registry exists not to
+   * draw — the same rule Community follows. They are reached at
+   * `#/registration` and `#/gradebook`, from the Registration planner and the
+   * Grades tab, and each says in one sentence whether the school has it on.
+   * Enrollment sits under Calendar beside Term deadlines, where the planner
+   * is; the gradebook under Courses, where Grades is.
+   */
+  registration: 'calendar',
+  gradebook: 'courses',
+  agreements: 'moderation',
+  volunteers: 'moderation',
+  volunteer: 'mine',
   course: 'courses',
   edit: 'courses',
   item: 'courses',
@@ -1008,11 +1127,29 @@ export function destination(screen: Screen): Destination | undefined {
  */
 const NESTED_NAMES: Partial<Record<Screen, string>> = {
   onboarding: 'setting up',
+  // The three pages the Me control surface opens (`lib/mecontrols.ts`), which
+  // lists them itself the way Settings lists its pages.
+  activity: 'Your activity',
+  whatsnew: 'What changed',
+  recovery: 'Recovery',
   // The two screens the workspace shell is made of. Named here rather than in
   // the registry because neither is a place in the app — one is the app's own
   // front door and the other is the index of everything behind it, the way a
   // browser's new-tab page is not one of your bookmarks. See `lib/desk.ts`.
   search: 'the search home',
+  // Community is a registered destination only while its switches are on;
+  // the review queue is a staff tool opened from it. See COMMUNITY_DESTINATION.
+  community: 'Community',
+  moderation: 'the review queue',
+  console: 'the operations console',
+  dining: 'dining at your school',
+  // What each does: enroll, wait, drop and withdraw in the school's own
+  // registration; and a course's official grades, entered, released and read.
+  registration: 'Enrollment',
+  gradebook: 'the gradebook',
+  agreements: 'escalation agreements',
+  volunteers: 'the volunteer programme',
+  volunteer: 'volunteer moderation',
   directory: 'all apps',
   course: 'this course',
   item: 'this deadline',
@@ -1074,13 +1211,26 @@ export function destinationsFor(
   group: Group,
   c: Capabilities,
   role: Role = DEFAULT_ROLE,
+  exposure?: NavigationExposureGate,
 ): Destination[] {
-  return destinationsIn(group).filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
+  return destinationsIn(group).filter((d) => (
+    allowed(d.screen, c)
+    && forRole(d.screen, role)
+    && (exposure?.(d.screen) ?? true)
+  ));
 }
 
 /** Every destination the app can offer this person, across all groups. */
-export function offered(c: Capabilities, role: Role = DEFAULT_ROLE): Destination[] {
-  return DESTINATIONS.filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
+export function offered(
+  c: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  exposure?: NavigationExposureGate,
+): Destination[] {
+  return DESTINATIONS.filter((d) => (
+    allowed(d.screen, c)
+    && forRole(d.screen, role)
+    && (exposure?.(d.screen) ?? true)
+  ));
 }
 
 /*

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, Group } from '../../components/shell/Rows';
+import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { secondLine } from '../../lib/dim';
 import { checkKey, checkShared } from '../../lib/claude';
@@ -31,7 +31,10 @@ import {
   RATES_READ,
 } from '../../lib/spend';
 import { ActionButton, SectionLabel } from '../../components/ui';
+import { FieldMessage, fieldProps } from '../../components/FieldMessage';
 import { AboutMe } from '../../components/AboutMe';
+import { SaveState } from '../../components/unity/Status';
+import { GuideOperatingContract } from '../../components/GuideOperatingContract';
 
 /**
  * Where the answers come from, what they cost, and what leaves the device.
@@ -59,6 +62,7 @@ import { AboutMe } from '../../components/AboutMe';
  * that hunt now ends on this page rather than on a screen about calendars.
  */
 export function SettingsAssistant() {
+  const now = useNow();
   const [config, setConfig] = useState(settings());
   const [saved, setSaved] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -98,10 +102,10 @@ export function SettingsAssistant() {
     setChecking(false);
   };
   const spend = readSpend();
-  const month = total(since(spend, monthStart(new Date())));
+  const month = total(since(spend, monthStart(now)));
   const courses = byCourse(spend);
   const askers = byAsker(spend);
-  const { courseCode, account } = useStore();
+  const { courseCode, account, dispatch } = useStore();
   /*
    * One row of the breakdown. Written here rather than in a component because
    * it is two spans and a gap, and `scripts/styles.mjs` counts what is worth
@@ -127,10 +131,25 @@ export function SettingsAssistant() {
   return (
     <SettingsPage
       screen="setAssistant"
-      blurb="Which provider answers, which model, and what it has cost. The assistant itself is the Ask tab."
+      blurb="Which provider answers, which model, and what it has cost. Semester Intelligence itself is the Ask Semester tab."
     >
       {(lit) => (
         <>
+          <GuideOperatingContract />
+          <Group
+            header="Semester Guide controls"
+            footer="These are controls and records the app already provides. Opening one does not authorize Semester to act for you."
+            lit={lights('guide control today recommendations remembers activity notifications quiet sources recovery sharing export', lit)}
+          >
+            <NavRow label="What matters today" sub="Your current priorities and source-labeled next steps" onClick={() => dispatch({ type: 'go', screen: 'home' })} />
+            <NavRow label="Recent recommendations and why" sub="The activity trail and the source behind each recorded action" onClick={() => dispatch({ type: 'go', screen: 'activity' })} />
+            <NavRow label="What Semester remembers" sub="Every record the app holds on this device or account" onClick={() => dispatch({ type: 'go', screen: 'data' })} />
+            <NavRow label="Notifications and quiet hours" sub="Choose what may interrupt you and when" onClick={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
+            <NavRow label="Source health" sub="Connections, their last update and how to disconnect them" onClick={() => dispatch({ type: 'go', screen: 'connect' })} />
+            <NavRow label="Recovery plans" sub="Review a disruption without replacing the plan you already have" onClick={() => dispatch({ type: 'go', screen: 'recovery' })} />
+            <NavRow label="Shared access" sub="See and revoke what you shared, with whom and until when" onClick={() => dispatch({ type: 'go', screen: 'privacy' })} />
+            <NavRow label="Export Guide data" sub="Keep a portable copy of the records you added" onClick={() => dispatch({ type: 'go', screen: 'export' })} />
+          </Group>
           <Group
             header="Where the answers come from"
             footer={
@@ -242,7 +261,7 @@ export function SettingsAssistant() {
                   onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
                   style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)' }}
                   aria-label="Proxy URL"
-                  aria-invalid={proxyProblem(config.proxy) ? true : undefined}
+                  {...fieldProps('assistant-proxy', proxyProblem(config.proxy) || undefined)}
                 />
                 {/*
                   * Said here, where it was typed, rather than as a number in
@@ -255,19 +274,8 @@ export function SettingsAssistant() {
                   * ignored now, so the key above answers; this is the line
                   * that says so before somebody spends an evening on it.
                   */}
-                {proxyProblem(config.proxy) && (
-                  <div
-                    style={{
-                      fontSize: 'var(--type-sm)',
-                      color: 'var(--app-accent)',
-                      marginTop: 'var(--sp-3)',
-                      lineHeight: 'var(--leading-normal)',
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {proxyProblem(config.proxy)}
-                  </div>
-                )}
+                {/* Checked as it is typed; announced politely — see `FieldMessage`. */}
+                <FieldMessage id="assistant-proxy" error={proxyProblem(config.proxy) || undefined} />
                 <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                   {MODELS.map((m) => (
                     <button
@@ -298,6 +306,11 @@ export function SettingsAssistant() {
               >
                 {saved ? 'Saved on this device' : 'Save on this device'}
               </ActionButton>
+              {saved && (
+                <div style={{ marginTop: 'var(--sp-3)' }}>
+                  <SaveState status="saved" />
+                </div>
+              )}
               {config.provider !== 'openai' && config.apiKey.trim() !== '' && (
                 <button
                   type="button"
@@ -435,7 +448,7 @@ export function SettingsAssistant() {
           */}
           <Group
             header="What it knows about you"
-            footer="Said once, and every part of the app that asks Claude anything is told it — the Ask tab, Work the problem, Draft it, the study tools. Nothing here is guessed at or remembered from a conversation: a line is here because you typed it, and it is gone when you delete it. These are preferences, not instructions — a line cannot make the assistant write work you will hand in as your own."
+            footer="Said once, and every part of Semester Intelligence is told it — Ask Semester, Work the problem, Draft it, and the study tools. Nothing here is guessed at or remembered from a conversation: a line is here because you typed it, and it is gone when you delete it. These are preferences, not instructions — a line cannot make the assistant write work you will hand in as your own."
             lit={lights('memory about you preferences remember profile context', lit)}
           >
             <CustomRow line={false}>
@@ -488,7 +501,7 @@ export function SettingsAssistant() {
           <Group header="What it can do" lit={lights('tools actions change undo permissions', lit)}>
             <CustomRow>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-                Offer to tick off a deadline, add or move one of your own tasks, mark you at a class,
+                Offer to tick off a deadline, add or move one of your own actions, mark you at a class,
                 start a timer, keep a note, add a source, track or move an application, set your
                 study budget, change the accent, text size, background or spacing, or take you to a
                 screen. Nothing happens until you tap it, and everything it changes has an Undo

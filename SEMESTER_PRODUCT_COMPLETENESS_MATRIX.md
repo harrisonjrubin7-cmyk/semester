@@ -91,7 +91,7 @@ over the count it imports. `screen` is component-level test files.
 | `brief` Reports | **FUNCTIONAL** | device | container | 0 | delegates to `report/Day|Week|Term` |
 | `calendar` Calendar | **CONNECTED** | **server** | 14/16 | 1 | external feeds via `public.calendar_feeds`; 2,356 lines |
 | `work` Work on it | **FUNCTIONAL** | device | 7/10 | 0 | |
-| `behind` When you are behind | **CONNECTED** | device | 5/6 | 0 | reads the same record the planner does |
+| `behind` Catching up | **CONNECTED** | device | 5/6 | 0 | reads the same record the planner does |
 | `me` Progress | **FUNCTIONAL** | device | 2/3 | 0 | |
 
 ### Courses
@@ -204,7 +204,7 @@ out; the rest confirm it.
 | 270 | PDF → study material | **PRODUCTION READY** | the syllabus importer, and it keeps the source reference §270 requires |
 | 262 | Autosave | **FUNCTIONAL** | `lib/draft.ts` plus debounce in `components/Page.tsx` |
 | 264 | Trash / recovery | **PARTIALLY FUNCTIONAL** | **corrected** — `lib/undo.ts` is an undo, not a trash, and argues the case: *"a confirmation dialogue is the wrong answer twice over."* §264 wants a restore window; the app has a take-it-back. Adjacent, not equal |
-| 236 | Command center | **PARTIALLY FUNCTIONAL** | `components/Command.tsx`, `lib/launcher.ts`; §236's list is wider than what they reach |
+| 236 | Command center | **PARTIALLY FUNCTIONAL** | The student command launcher remains narrower than §236. Separately, the protected operations console now has a live, fail-closed exception queue over release gates, approvals, break-glass, integrations, support and tenant rollout; deployment and recorded production evidence remain release requirements. |
 | 258 | Offline-first | **PRODUCTION READY** | by construction |
 | 251–256 | Global search 2.0 | **PARTIALLY FUNCTIONAL** | `screens/Search.tsx` makes **no network call**; searches the registry, the guidebook and the student's own data |
 | 257 | Search authorization | **see below** | the most important row in this file |

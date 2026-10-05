@@ -30,7 +30,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const src = join(here, '..', 'src');
 const ledgerPath = join(src, 'styles', 'budget.ts');
 
-const { AXES, check, counts, countsByFile, cycles, multipliers, overBudget, owed, render, ALLOWED } =
+const { AXES, check, counts, countsByFile, cycles, multipliers, overBudget, owed, render, sheetLiterals, undefinedScaleTokens, ALLOWED } =
   await import(join(src, 'styles', 'rules.ts'));
 
 if (process.argv.includes('--fix')) {
@@ -58,6 +58,8 @@ const { BUDGET } = await import(ledgerPath);
 const problems = [
   ...check(src),
   ...cycles(src),
+  ...undefinedScaleTokens(src),
+  ...sheetLiterals(src),
   ...multipliers(readFileSync(join(src, 'styles', 'app.css'), 'utf8')),
   ...overBudget(src, BUDGET),
 ];

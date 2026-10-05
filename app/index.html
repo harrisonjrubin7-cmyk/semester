@@ -20,10 +20,22 @@
           learn from here that this policy is breaking something for a student
           on a device nobody is holding.
 
-      Both close the moment this is served from somewhere that can set a
-      header — Cloudflare Pages, Netlify, a Supabase-fronted host. Until then
-      this covers script, style, image, font, media, worker and connect, which
-      is where an injected script would actually have to go to do anything.
+      (A third: a tag applies only from the point the parser reaches it, so
+      nothing earlier in this head is policed by it. There is nothing earlier
+      that loads anything, which is why this tag comes first.)
+
+      All three close wherever this is served from a host that sets headers.
+      `vercel.json` and `public/_headers` send this same policy as a header,
+      directive for directive, with `frame-ancestors` added for the LMS
+      iframe; the build writes this deployment's connect origins into the
+      `_headers` copy just as it does here. On those hosts both policies are
+      enforced, and since they agree the effect is this one plus framing.
+      `src/lib/hostheaders.test.ts` fails if the header and this tag disagree
+      on any directive, so THIS TAG IS WHERE A SOURCE IS ADDED — then copy
+      the change into both header files, and the test says where you missed.
+      On Pages the tag alone covers script, style, image, font, media, worker
+      and connect, which is where an injected script would actually have to
+      go to do anything.
 
       ## Every source below is here because something loads from it
 
@@ -41,14 +53,11 @@
         script-src   'self'. The production build emits no inline script and
                      no eval — `dist/index.html` is one external module and a
                      stylesheet, nothing more.
-        style-src    'self' and 'unsafe-inline'. This is the one line that
-                     looks like it should be tightened and cannot be. Mermaid
-                     returns a diagram as an SVG string with a <style> element
-                     inside it, and `components/Drawing.tsx` puts that string
-                     into the page as it came. Measured: with 'unsafe-inline'
-                     the sheet reports 59 rules; without it, no sheet at all
-                     and 64 refusals in the console, and every generated figure
-                     in every study guide draws unstyled.
+        style-src    'self' and 'unsafe-inline'. Safari/iOS Safari before 16.1
+                     ignores the CSP3 directives below and falls back here, so
+                     this compatibility allowance remains until that support
+                     floor moves or the inline styles are migrated. CSP3 browsers
+                     also receive the separated dependency declarations below.
         img-src      'self', plus data: for the marker icons Leaflet inlines
                      into its CSS, blob: for anything the app renders or a
                      student photographs, and OpenStreetMap's tile servers,
@@ -90,6 +99,8 @@
                form-action 'self';
                script-src 'self';
                style-src 'self' 'unsafe-inline';
+               style-src-attr 'unsafe-inline';
+               style-src-elem 'self' 'unsafe-inline';
                img-src 'self' data: blob: https://*.tile.openstreetmap.org;
                font-src 'self';
                media-src 'self' blob:;
@@ -120,14 +131,28 @@
       name="description"
       content="Every deadline, class and study guide for Fall 2026 — built from four syllabi."
     />
-    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="%BASE_URL%icon.svg" type="image/svg+xml" />
     <!-- iOS and iPadOS ignore an SVG here, so the home-screen tile is a PNG. -->
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%BASE_URL%apple-touch-icon.png" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
     <title>Semester</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      A real first paint, before IndexedDB has answered and React can mount.
+
+      This is deliberately tiny and is replaced (not hidden) by createRoot.
+      If storage is unavailable or a mobile browser is restoring the app, the
+      student sees the product opening instead of an unexplained black window.
+      The classes live in app.css so the production CSP needs no inline style.
+    -->
+    <div id="root">
+      <main class="boot" aria-label="Semester is opening">
+        <div class="boot-mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="boot-name">Semester</div>
+        <div class="boot-status" role="status">Opening your semester…</div>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

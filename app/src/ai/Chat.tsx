@@ -1,18 +1,22 @@
-import { useState, type CSSProperties } from 'react';
+import { useId, useState, type CSSProperties } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
-import { TOUCH, WIDE, useMedia } from '../lib/media';
+import { TOUCH, WIDE, useMedia, useMedium } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
-import { useConversation, provider } from './converse';
+import { canSend, useConversation } from './converse';
 import { useVoice } from './usevoice';
-import { configured, modelLabel } from '../lib/assistant';
+import { configured } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
 import { Opening } from './Opening';
 import { Applied, Holding, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
+import { IntelligenceDisclosure } from '../intelligence/Disclosure';
+import { MomentPromptSlot } from '../components/MomentPrompt';
+import { HelpNotice, HowItHelps } from './HelpNotice';
+import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
 
 /**
  * The assistant, full screen.
@@ -65,7 +69,8 @@ export function Chat() {
    * has none of its own, and pure clutter beside a tab bar that is already
    * showing five of them.
    */
-  const chrome = chromeFor(state.nav, state.screen, wide);
+  const medium = useMedium();
+  const chrome = chromeFor(state.nav, state.screen, wide, medium);
   /*
    * And how much of the window the keyboard is standing on.
    *
@@ -89,6 +94,25 @@ export function Chat() {
   };
 
   const empty = talk.turns.length === 0 && !talk.busy;
+  /*
+   * Whether anything can be sent, and where the reason goes when not.
+   *
+   * With nothing asked yet the reason is the screen — the panel with its
+   * actions takes the opening's place, since suggestions that cannot be sent
+   * are the contradiction this replaced — and the dock keeps one line of it,
+   * directly over the disabled box, as that box's description.
+   */
+  const noticeId = useId();
+  const blocked = !canSend(talk.help);
+  const helpInLog = empty && blocked && talk.help.kind !== 'ready';
+  /*
+   * The history beside the conversation only once there is history.
+   *
+   * A 232px column holding one row reading "New conversation · Nothing asked
+   * yet" was a third of the window spent saying there was nothing in it.
+   */
+  const kept = talk.threads.filter((t) => t.turns.length > 0).length;
+  const rail = wide && (kept > 0 || talk.archived.length > 0);
   const list = {
     threads: talk.threads,
     openId: talk.openId,
@@ -111,7 +135,7 @@ export function Chat() {
         not. A 200px rail on a 430px phone leaves 230px for the answer, which
         is narrower than the measure this whole layout exists to protect.
       */}
-      {wide && (
+      {rail && (
         <div
           style={{
             flex: 'none',
@@ -177,7 +201,10 @@ export function Chat() {
         }}
       >
         <div style={COLUMN}>
-          {empty && <Opening onPick={(q) => ask(q)} big />}
+          {empty && talk.help.kind !== 'ready' && helpInLog && (
+            <HelpNotice help={talk.help} onRetry={talk.retryPolicy} />
+          )}
+          {empty && !helpInLog && <Opening onPick={(q) => ask(q)} big help={talk.help} />}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--sp-7) * 1.6)' }}>
             <Dropped n={talk.dropped} />
@@ -216,6 +243,7 @@ export function Chat() {
                   text={t.content}
                   incomplete={t.incomplete}
                   onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                  quality={t.quality}
                   /*
                    * The offers belong to the answer that made them, and sit
                    * inside it rather than in a tray at the bottom.
@@ -229,8 +257,12 @@ export function Chat() {
                   extra={
                     i === talk.turns.length - 1 && !talk.busy ? (
                       <>
-                        <Using read={talk.read} />
-                        {talk.used.length > 0 && (
+                        {EXPERIENCE_FLAGS.semesterIntelligence !== 'off' && talk.response ? (
+                          <IntelligenceDisclosure response={talk.response} onAskHuman={() => dispatch({ type: 'go', screen: 'help' })} />
+                        ) : (
+                          <Using read={talk.read} />
+                        )}
+                        {!talk.response && talk.used.length > 0 && (
                           <Looked
                             said={`Read ${talk.used.length} ${talk.used.length === 1 ? 'part' : 'parts'} of your records`}
                             detail={talk.used.join('\n')}
@@ -252,6 +284,12 @@ export function Chat() {
                           onLetGo={talk.letGo}
                         />
                         <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
+                        {/*
+                          One optional question about the source, and only when
+                          there is a source to ask about. Off unless
+                          VITE_ME_MOMENT_FEEDBACK is set; see lib/momentfeedback.ts.
+                        */}
+                        {(talk.response || talk.used.length > 0) && <MomentPromptSlot moment="ai-answer" />}
                       </>
                     ) : undefined
                   }
@@ -272,7 +310,7 @@ export function Chat() {
               <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
                 {talk.streaming && <Answering text={talk.streaming} />}
                 {(!talk.streaming || talk.looking.length > 0) && (
-                  <Waiting who={provider()} doing={talk.looking} />
+                  <Waiting who="Semester Intelligence" doing={talk.looking} />
                 )}
               </div>
             )}
@@ -281,7 +319,7 @@ export function Chat() {
       </div>
 
       {/* Never yanks anybody back down: it appears, and it waits. */}
-      {!following && (
+      {!following && !empty && (
         <div style={{ position: 'relative' }}>
           <button
             type="button"
@@ -325,6 +363,16 @@ export function Chat() {
         }
       >
         <div style={COLUMN}>
+          <HowItHelps
+            help={talk.help}
+            requested={talk.integrityMode}
+            allowed={talk.allowedIntegrityModes}
+            reason={talk.integrityReason}
+            onChange={talk.setIntegrityMode}
+            onRetry={talk.retryPolicy}
+            noticeId={noticeId}
+            noticeVariant={helpInLog ? 'line' : 'full'}
+          />
           <Composer
             value={draft}
             onChange={setDraft}
@@ -338,9 +386,18 @@ export function Chat() {
               return null;
             }}
             busy={talk.busy}
-            placeholder={voice.on ? 'Listening — say it out loud' : sendHint(touch)}
-            autoFocus={!touch}
+            placeholder={
+              blocked
+                ? 'Sending is paused'
+                : voice.on
+                ? 'Listening — say it out loud'
+                : talk.help.kind === 'course-off'
+                  ? `Ask about your deadlines or your week — ${sendHint(touch)}`
+                  : sendHint(touch)
+            }
+            autoFocus={!touch && !blocked}
             voice={voice}
+            blockedBy={blocked ? noticeId : undefined}
           />
           {/*
             One line, centred, under the pill — the shape every chat has, and
@@ -384,7 +441,7 @@ export function Chat() {
               </>
             )}
             {/* Only where the panel is not already showing the list. */}
-            {!wide && (
+            {!rail && kept > 0 && (
               <>
                 <button
                   type="button"
@@ -423,7 +480,13 @@ export function Chat() {
               onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
               style={QUIET}
             >
-              {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
+              {/*
+                Not the model's name. "OPUS 5" under the box was a vendor
+                label in the student's view, read as a price tag or a
+                version to worry about. Which model answers is a setting,
+                and the setting is where it is named.
+              */}
+              {configured() ? 'ASSISTANT SETTINGS' : 'SET A KEY'}
             </button>
           </div>
           {/* A failed request, and the retry for it. The sheet has had this

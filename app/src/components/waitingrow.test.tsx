@@ -227,7 +227,11 @@ describe('the waiting row on Today', () => {
     });
 
     expect(host.textContent ?? '').toContain('2 new in ECON 1020.');
-  });
+    // Mounting the complete Today surface pulls its lazy screen graph. This is
+    // intentionally an integration test; keep its allowance aligned with the
+    // suite's medium-test budget so concurrent transforms cannot turn a correct
+    // render into a timing failure.
+  }, 30_000);
 
   it('honours a room this device muted', async () => {
     // Written the way `lib/roomprefs.ts` stores it. This is the wiring test

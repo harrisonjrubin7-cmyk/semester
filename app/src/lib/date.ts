@@ -1,5 +1,6 @@
 import type { DatedEvent, DatedItem, CampusEvent, Item } from './types';
 import { dueMinutes } from './duetime';
+import { appLocale, formatDate, formatTime } from './locale';
 
 /**
  * The year the app shipped configured for.
@@ -271,8 +272,157 @@ export function daysBetween(from: Date, to: Date): number {
   return Math.round(ms / 86_400_000);
 }
 
-/** "Fri Sep 4" */
+/**
+ * The drawn names, in the student's chosen locale when there is one.
+ *
+ * `MONTHS` and `DOW` stay English and stay exported: they are also what
+ * parsers and English sentences are built from, and a syllabus that says
+ * "Sep 4" is still English after somebody chooses German. Only what is *drawn*
+ * as a date follows the choice. With nothing chosen these return the English
+ * names exactly, so nothing changes for anybody who has not chosen.
+ */
+export function monthShort(d: Date): string {
+  return appLocale() ? formatDate(d, { month: 'short' }) : MONTHS[d.getMonth()];
+}
+
+export function weekdayShort(d: Date): string {
+  return appLocale() ? formatDate(d, { weekday: 'short' }) : DOW[d.getDay()];
+}
+
+/*
+ * The rest of the drawn shapes, one function each, so a screen never has to
+ * put `MONTHS[…]` and `getDate()` side by side itself. Every one returns the
+ * exact English string the screens built by hand when nothing is chosen, and
+ * the chosen locale's own form — its order, its words, its punctuation — when
+ * something is. `locale.guard.test.ts` refuses a new file that reaches for the
+ * English names directly.
+ */
+
+/** A date whose weekday is `dow` (0 = Sunday): 1 January 2023 was a Sunday. */
+const onWeekday = (dow: number) => new Date(2023, 0, 1 + (((dow % 7) + 7) % 7));
+
+/** "Sep" for month index 8. */
+export function monthShortOf(month: number): string {
+  return monthShort(new Date(2000, month, 1));
+}
+
+/** "September" for month index 8. */
+export function monthLongOf(month: number): string {
+  return appLocale() ? formatDate(new Date(2000, month, 1), { month: 'long' }) : MONTH_NAMES[month];
+}
+
+/** "Sun" for weekday 0. */
+export function weekdayShortOf(dow: number): string {
+  return weekdayShort(onWeekday(dow));
+}
+
+/** "Sunday" for weekday 0 — for a label read aloud. */
+export function weekdayLongOf(dow: number): string {
+  return appLocale() ? formatDate(onWeekday(dow), { weekday: 'long' }) : DAY_NAMES[dow];
+}
+
+/** "S" for weekday 0 — the column heads of a grid. */
+export function weekdayInitialOf(dow: number): string {
+  return appLocale() ? formatDate(onWeekday(dow), { weekday: 'narrow' }) : DOW_INITIALS[dow];
+}
+
+export const weekdayInitial = (d: Date): string => weekdayInitialOf(d.getDay());
+
+/** "Sep 4". */
+export function monthDay(d: Date): string {
+  return appLocale() ? formatDate(d, { month: 'short', day: 'numeric' }) : `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+}
+
+/** "4 Sep". */
+export function dayMonth(d: Date): string {
+  return appLocale() ? formatDate(d, { day: 'numeric', month: 'short' }) : `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+/** "4 September". */
+export function dayMonthLong(d: Date): string {
+  return appLocale() ? formatDate(d, { day: 'numeric', month: 'long' }) : `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+}
+
+/** "Fri 4". */
+export function weekdayDay(d: Date): string {
+  return appLocale() ? formatDate(d, { weekday: 'short', day: 'numeric' }) : `${DOW[d.getDay()]} ${d.getDate()}`;
+}
+
+/** "Fri, 4 Sep". */
+export function weekdayDayMonth(d: Date): string {
+  return appLocale()
+    ? formatDate(d, { weekday: 'short', day: 'numeric', month: 'short' })
+    : `${DOW[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+/** "Sep 2026". */
+export function monthShortYear(year: number, month: number): string {
+  return appLocale()
+    ? formatDate(new Date(year, month, 1), { month: 'short', year: 'numeric' })
+    : `${MONTHS[month]} ${year}`;
+}
+
+/** "September 2026". */
+export function monthYear(year: number, month: number): string {
+  return appLocale()
+    ? formatDate(new Date(year, month, 1), { month: 'long', year: 'numeric' })
+    : `${MONTH_NAMES[month]} ${year}`;
+}
+
+/*
+ * Clocks. The app's own "2:45p" is also a *stored* form — a class block's
+ * `time`, a task's `time`, a feed event's — and parsers read it back
+ * (`readDue`, `duetime.ts`). So stored strings never change; a screen draws
+ * them through `shownTime`, which re-renders from the minutes when a locale is
+ * chosen and hands the stored string back untouched when not.
+ */
+
+/** A time of day in the chosen locale. Only meaningful when one is chosen. */
+export function localClock(minutes: number): string {
+  const whole = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  return formatTime(new Date(2000, 0, 1, Math.floor(whole / 60), whole % 60), { hour: 'numeric', minute: '2-digit' });
+}
+
+/**
+ * A stored time, drawn. With nothing chosen, exactly as stored. With a locale
+ * chosen, re-rendered from `at` where the object carries one, or from the
+ * string itself when it is one plain time — "7:00p", "10am", "12:30 PM".
+ * Anything else comes back as stored: "9:05–9:55a" is a range, and drawing
+ * only its start would drop the end; "All day" and "TBA" are not times.
+ */
+const ONE_TIME = /^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\s*$/i;
+
+export function shownTime(time: string, at?: number | null): string {
+  if (!appLocale()) return time;
+  if (typeof at === 'number' && Number.isFinite(at)) return localClock(at);
+  const one = ONE_TIME.exec(time);
+  if (!one) return time;
+  const hour = Number(one[1]);
+  const minute = Number(one[2] ?? 0);
+  if (hour < 1 || hour > 12 || minute > 59) return time;
+  return localClock(((hour % 12) + (one[3].toLowerCase() === 'p' ? 12 : 0)) * 60 + minute);
+}
+
+/** Whether the chosen locale writes a twenty-four-hour clock. False with nothing chosen. */
+export function twentyFourHour(): boolean {
+  const locale = appLocale();
+  if (!locale) return false;
+  const cycle = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
+  return cycle === 'h23' || cycle === 'h24';
+}
+
+/** An hour on a grid's edge, in the chosen locale: "14" where the clock runs to 24, "2 PM" where it does not. */
+export function localHourMark(hour: number): string {
+  const h = ((hour % 24) + 24) % 24;
+  return twentyFourHour() ? String(h) : formatTime(new Date(2000, 0, 1, h), { hour: 'numeric' });
+}
+
+/**
+ * "Fri Sep 4". In a chosen locale, that locale's own order and punctuation —
+ * "vie, 4 sept" in Spanish — rather than English's order with translated words.
+ */
 export function longLabel(d: Date): string {
+  if (appLocale()) return formatDate(d, { weekday: 'short', month: 'short', day: 'numeric' });
   return `${DOW[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
 
@@ -302,8 +452,8 @@ export function decorateItem(item: Item, now: Date): DatedItem {
     ...item,
     date,
     dueShort: dueLabel(date, now, item.dueTime),
-    dow: DOW[date.getDay()],
-    mon: MONTHS[date.getMonth()],
+    dow: weekdayShort(date),
+    mon: monthShort(date),
     isToday: away === 0,
     isPast: away < 0,
     daysAway: away,
@@ -319,8 +469,8 @@ export function decorateEvent(event: CampusEvent, now: Date): DatedEvent {
   return {
     ...event,
     date,
-    mon: MONTHS[date.getMonth()],
-    dow: DOW[date.getDay()],
+    mon: monthShort(date),
+    dow: weekdayShort(date),
     isPast: daysBetween(now, date) < 0,
   };
 }
@@ -338,10 +488,16 @@ export function minutesNow(now: Date): number {
   return now.getHours() * 60 + now.getMinutes();
 }
 
-/** "9:05a" / "11:00a" / "2:45p" — the prototype's clock format. */
+/**
+ * "9:05a" / "11:00a" / "2:45p" — the prototype's clock format.
+ *
+ * In a chosen locale, that locale's clock instead: "14:45" in German, where
+ * "2:45p" is not a way anybody writes a time.
+ */
 export function clock(minutes: number): string {
   const h24 = Math.floor(minutes / 60);
   const m = minutes % 60;
+  if (appLocale()) return localClock(minutes);
   const h = h24 % 12 === 0 ? 12 : h24 % 12;
   return `${h}:${String(m).padStart(2, '0')}${h24 < 12 ? 'a' : 'p'}`;
 }

@@ -103,7 +103,7 @@ function choiceFrom(card: DeckCard, all: DeckCard[], rnd: () => number): QuizQue
     rnd,
   );
 
-  return { kind: 'choice', q: card.q, unit: card.unit, full: card.a, opts };
+  return { kind: 'choice', q: card.q, unit: card.unit, full: card.a, opts, ...(card.id ? { cardId: card.id } : {}) };
 }
 
 /**
@@ -146,6 +146,7 @@ function trueFalseFrom(
     q: card.q,
     unit: card.unit,
     full: card.a,
+    ...(card.id ? { cardId: card.id } : {}),
     claim,
     opts: [
       { text: 'True', ok: holds },
@@ -216,8 +217,18 @@ const TRUE_FALSE = 3;
  * with the answer already given away by the first of them. The pools are
  * therefore cut from one shuffled deck rather than drawn independently.
  */
-export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
-  const all = allCards(guide);
+export function buildQuiz(
+  guide: Guide,
+  seed: number,
+  /**
+   * Cards the student has asked to be left out (`lib/quiz-feedback.ts`).
+   * Left out of the whole run — as questions and as the decoys other
+   * questions borrow, since an answer reported wrong is no better as a wrong
+   * option than as a right one.
+   */
+  leave?: (card: { id?: string; q: string }) => boolean,
+): QuizQuestion[] {
+  const all = leave ? allCards(guide).filter((c) => !leave(c)) : allCards(guide);
   if (all.length === 0) return [];
 
   /*
@@ -234,9 +245,11 @@ export function buildQuiz(guide: Guide, seed: number): QuizQuestion[] {
    *
    * Gated on the same number `lib/modes.ts` gates the mode on, so that the
    * Study screen offering a quiz and this function returning one cannot
-   * disagree.
+   * disagree — counted after `leave`, which is the one way they can: a
+   * student who has left enough cards out can reach a guide too thin to
+   * quiz, and the screen says that is why.
    */
-  if (distinctAnswers(guide) < 4) return [];
+  if (new Set(all.map((c) => clip(c.a))).size < 4) return [];
 
   let s = (seed * 9301) % 233280 || 1;
   const rnd = () => {

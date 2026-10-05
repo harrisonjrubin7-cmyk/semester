@@ -48,7 +48,14 @@ export interface Route {
    * are there, not part of the address, and putting them in the hash would
    * mean every flip pushed a history entry.
    */
-  opens?: { report?: ReportGrain; changes?: ChangeSource; courses?: CoursesTab; home?: HomeTab };
+  opens?: {
+    report?: ReportGrain;
+    changes?: ChangeSource;
+    courses?: CoursesTab;
+    home?: HomeTab;
+    /** Only from `DOORS`: which way round the account form opens. */
+    account?: 'in' | 'up';
+  };
 }
 
 /**
@@ -122,6 +129,28 @@ export const LIBRARIES: Screen[] = ['write', 'sheet', 'deck'];
  * rather than merged does not belong here: sending somebody somewhere
  * unrelated is worse than telling them the link is dead.
  */
+
+/**
+ * Addresses written for people outside the app rather than by it.
+ *
+ * The company site's "Log in" and "Start planning free" buttons are links
+ * into this app, and a link is all they can be. `#/account` was the only way
+ * to name the sign-in form, and a first visit never reached it: the store
+ * opens a first run on the onboarding screen whatever the hash says, so "Log
+ * in" landed on a welcome carousel — which, on the demo build, read as being
+ * sent to the demo instead of to a sign-in page.
+ *
+ * These are the words a person types or a marketing page links, each landing
+ * on the account screen with the form already turned the way the button
+ * meant. The store lets the account screen past the first run for the same
+ * reason (see `opensAccount`). They are read, never written: once landed, the
+ * address becomes `#/account` like any other visit to it.
+ */
+const DOORS: Record<string, { screen: Screen; opens: Route['opens'] }> = {
+  login: { screen: 'account' as Screen, opens: { account: 'in' } },
+  signin: { screen: 'account' as Screen, opens: { account: 'in' } },
+  signup: { screen: 'account' as Screen, opens: { account: 'up' } },
+};
 
 const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   // Three grains of one report — see `screens/Reports.tsx`. Each link says
@@ -246,7 +275,7 @@ export function fromHash(hash: string): Route | null {
   // A screen name is written by this file and read by this file; anything
   // with a character it would never have produced is not one of ours.
   if (!/^[A-Za-z]+$/.test(named)) return null;
-  const moved = RETIRED[named];
+  const moved = RETIRED[named] ?? DOORS[named];
   const screen = (moved?.screen ?? named) as Screen;
 
   const id = parts[1] ? readId(parts[1]) : '';
@@ -277,3 +306,15 @@ export function same(a: Route | null, b: Route | null): boolean {
   return a.screen === b.screen && a.id === b.id && (a.mode ?? '') === (b.mode ?? '');
 }
 
+
+/**
+ * Whether an address asks for the account screen.
+ *
+ * The one screen a first visit may open before onboarding: somebody who
+ * followed a "Log in" link came to sign in, and a returning student signing
+ * in on a new laptop has already been through a first run on another device.
+ * Their account brings the rest.
+ */
+export function opensAccount(hash: string): boolean {
+  return fromHash(hash)?.screen === 'account';
+}

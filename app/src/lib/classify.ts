@@ -1,4 +1,5 @@
 import { ask } from './claude';
+import { DATA_RULE, fence } from '../ai/untrusted';
 import type { Intake } from './intake';
 
 /**
@@ -171,8 +172,10 @@ export function guess(item: Intake): Verdict {
   }
 
   // Slide numbers in the extracted pages are the strongest signal there is —
-  // only a real deck has them, because only a real deck is asked for them.
-  if (item.pages && item.pages.length > 2) {
+  // only a real deck has them. A PDF has pages too, and says so in
+  // `pageUnit`; a page count says nothing about whether it is a deck. An item
+  // with pages and no unit predates PDFs having any, so it is a deck.
+  if (item.pages && item.pages.length > 2 && item.pageUnit !== 'page') {
     scores.set('slides', (scores.get('slides') ?? 0) + 4);
   }
 
@@ -224,6 +227,26 @@ export async function classify(
     about: 'what this is',
     signal,
     maxTokens: 700,
+    ...classifyPrompt(item, context),
+  });
+
+  const start = reply.indexOf('{');
+  const end = reply.lastIndexOf('}');
+  if (start === -1 || end === -1) return guess(item);
+  try {
+    return verdictFrom(JSON.parse(reply.slice(start, end + 1)) as Partial<Verdict>);
+  } catch {
+    return guess(item);
+  }
+}
+
+/**
+ * The prompt `classify` sends, as a pure function, so `ai/injection.test.ts`
+ * can hold its shape: the course, the file's name and the sample of its text
+ * are fenced as material, and the rules say what a fence is.
+ */
+export function classifyPrompt(item: Intake, context: string) {
+  return {
     system:
       'You are told what a university student just added to a course, and you say what kind of ' +
       'thing it is. You do not summarise it and you do not extract anything from it.\n\n' +
@@ -247,24 +270,22 @@ export async function classify(
       'not "lecture slides". Plain, direct, no exclamation marks.\n' +
       '- about: the unit, session, week or item it belongs to, if it names one. Empty if not.\n' +
       '- because: up to four short quotes from the text that decided it. Quote, do not ' +
-      'paraphrase — somebody is going to check these against the file.',
+      'paraphrase — somebody is going to check these against the file.\n\n' +
+      DATA_RULE,
     messages: [
       {
-        role: 'user',
+        role: 'user' as const,
         content:
-          `The course:\n${context}\n\n` +
-          `The file is called "${item.name}"` +
-          (item.pages ? ` and has ${item.pages.length} slides or pages.` : '.') +
-          `\n\nWhat it says (the opening, and some of the middle):\n\n${sample(item.text)}`,
+          `The course:\n${fence('course', context)}\n\n` +
+          `The file is called:\n${fence('file name', item.name)}\n` +
+          (item.pages ? `It has ${item.pages.length} slides or pages.` : '') +
+          `\n\nWhat it says (the opening, and some of the middle):\n\n${fence('material', sample(item.text))}`,
       },
     ],
-  });
+  };
+}
 
-  const start = reply.indexOf('{');
-  const end = reply.lastIndexOf('}');
-  if (start === -1 || end === -1) return guess(item);
-  try {
-    const p = JSON.parse(reply.slice(start, end + 1)) as Partial<Verdict>;
+function verdictFrom(p: Partial<Verdict>): Verdict {
     const kind = (p.kind && kindOf(p.kind)) || 'unclear';
     return {
       kind,
@@ -275,11 +296,6 @@ export async function classify(
         ? p.because.filter((b): b is string => typeof b === 'string').slice(0, 4)
         : [],
     };
-  } catch {
-    // A reply that did not survive the wire. The free answer is still an
-    // answer, and it is better than none.
-    return guess(item);
-  }
 }
 
 /** Only the eleven names. Anything else the model invents becomes `unclear`. */

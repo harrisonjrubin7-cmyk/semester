@@ -1,5 +1,7 @@
 # The three figures, and what each is worth
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 Stage 1 of the build-out plan cannot be closed until the pilot is "reporting".
 This is what it reports, how, and — the part that decides whether any of it is
 useful — what each number is not able to say.
@@ -66,7 +68,9 @@ that studied for an hour. That is not a flaw to fix by adding a duration — it
 is what the word "active" means here, and anyone quoting the figure should
 quote the definition with it.
 
-### Activation
+### Legacy course-plus-study funnel (historically labeled “Activation”)
+
+This report predates the controlled setup-only `student_activated` definition in `docs/market-readiness/STUDENT-ONBOARDING-SPEC.md`. It must remain labeled **legacy course-plus-study** in any output or decision record and must not be published as the controlled activation rate. The controlled rate is unavailable until its separate versioned event/query is implemented and sample-validated.
 
 Of the accounts first seen in a week, how many had a course of their own **and**
 had answered a card, within **7 days** of arriving.

@@ -7,6 +7,7 @@ import type {
   UniversityIdentity,
   UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
+import type { RequestContext } from '../../../packages/platform/src/index.ts';
 
 /**
  * What a school has to write to connect one of its systems.
@@ -27,8 +28,8 @@ import type {
  * Three things that are never an authorization, stated because each has been
  * somebody's bug: a role the browser sent, a record id that happens to be
  * well formed, and a tenant named in a request. `AdapterContext.identity` is
- * the only identity, it comes from `auth.ts`, and it comes out of server-side
- * `app_metadata` that no client can write.
+ * the only identity: `auth.ts` validates the token and `membership.ts`
+ * reloads its current tenant and roles from server-controlled records.
  *
  * Credentials — API keys, service accounts, signing secrets — come from the
  * server's own configuration or secret store. Never from anything reachable
@@ -39,6 +40,13 @@ export interface AdapterContext {
   identity: UniversityIdentity;
   /** Aborts at the gateway's timeout. Pass it to every upstream call. */
   signal: AbortSignal;
+  /**
+   * The platform's request context for this request: the verified tenant, actor,
+   * correlation and request ids, in the shape every platform primitive takes.
+   * Optional while adapters are migrated onto it (`docs/platform/MIGRATION.md`,
+   * phase 4); the gateway always sets it.
+   */
+  request?: RequestContext;
 }
 
 export interface InstitutionAdapter {

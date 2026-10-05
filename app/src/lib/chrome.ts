@@ -85,6 +85,14 @@ export interface Chrome {
    * below fail on every laptop.
    */
   sidebar: boolean;
+  /**
+   * The rail drawn narrow: icons only, a button to open it out with labels.
+   *
+   * The medium window class's form of the rail (600–839px). Not a second
+   * navigation — it is `rail`, in less room — so it is only ever true when
+   * `rail` is, and `navigationsDrawn` does not count it.
+   */
+  railCollapsed: boolean;
 }
 
 /*
@@ -121,18 +129,25 @@ export interface Chrome {
  *
  * @param nav   Which navigation the student chose. The only input that picks.
  * @param screen Where they are, for the screens that keep the whole display.
- * @param wide  Whether there is room for the rail — a laptop or a tablet held
- *              upright. The same navigation expresses itself differently at
- *              the two widths; it does not become a different navigation.
+ * @param wide  Whether there is room for the rail — expanded and up, 840px.
+ *              The same navigation expresses itself differently at the two
+ *              widths; it does not become a different navigation.
+ * @param medium Whether the window is medium (600–839px) and not a phone on
+ *              its side. The adaptive-device contract gives medium "bottom
+ *              navigation or a collapsible rail"; this is the rail, collapsed
+ *              to its icons, in the tab bar's place. Only the tab bar and the
+ *              rail answer to it — the workspace's sidebar still waits for
+ *              `wide`, because a second column at 600px is a column of words
+ *              nobody can read.
  */
-export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
+export function chromeFor(nav: NavMode, screen: Screen, wide: boolean, medium = false): Chrome {
   // A drill, a lesson, a deck: one object filling the display, and a bar under
   // it is a mis-tap waiting to happen. The rail goes too — the same argument
   // holds at any width, and it used to stay, so a lesson on a laptop was the
   // one screen that never got the display it asked for.
   const full = FULLSCREEN.includes(screen);
   if (full)
-    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false };
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false, railCollapsed: false };
 
   /*
    * The workspace answers first, and answers for every width.
@@ -153,21 +168,23 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
    * false here, at both widths, and the header's Back button is the way out.
    */
   if (nav === 'guides') {
-    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false };
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false, railCollapsed: false };
   }
 
   return {
-    tabs: nav === 'tabs' && !wide,
+    tabs: nav === 'tabs' && !wide && !medium,
     // The rail is how the bar, the feed and the springboard all express
     // themselves where there is room: a laptop can keep the navigation
     // visible, and hiding it behind a phone's rules would make the wide
     // layout worse than the narrow one. The shelves are excluded because they
     // are already a navigation that shows both the shelf and its screens —
     // drawing the rail beside them is the doubling this file exists to stop.
-    rail: wide && nav !== 'shelves' && !desk,
+    // At medium too, collapsed to its icons — see `medium` above.
+    rail: (wide || medium) && nav !== 'shelves' && !desk,
     shelves: nav === 'shelves',
     desk,
     sidebar: desk && wide,
+    railCollapsed: !wide && medium && nav !== 'shelves' && !desk,
   };
 }
 

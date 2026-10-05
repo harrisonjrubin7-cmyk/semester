@@ -7,7 +7,7 @@ import { ItemRow } from '../../components/shell/Rows';
 import { CallIcon, ChevronRight, Plus, ScreenShareIcon } from '../../components/Icons';
 import { secondLine } from '../../lib/dim';
 import { codeOf, nameFor, newCode, normaliseCode } from '../../lib/call';
-import { isoToDate, longLabel } from '../../lib/date';
+import { isoToDate, longLabel, shownTime } from '../../lib/date';
 import { byDateThenTime } from '../../lib/select';
 import { cloudConfigured } from '../../lib/cloud';
 import { canShare, relayed, supported } from '../../lib/rtc';
@@ -160,7 +160,7 @@ export function Lobby({
             key={a.id}
             leading={<CallIcon size={17} />}
             title={a.title}
-            meta={`${longLabel(isoToDate(a.date))} · ${a.time} · ${codeOf(a)}`}
+            meta={`${longLabel(isoToDate(a.date))} · ${shownTime(a.time)} · ${codeOf(a)}`}
             trailing={<ChevronRight size={16} />}
             onClick={() => onOpen({ code: codeOf(a), title: a.title })}
           />

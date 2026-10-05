@@ -1,0 +1,1 @@
+{"manifest_version":3,"name":"Semester Capture","version":"1.0.0","description":"Review and save the current page to your private Semester inbox.","permissions":["activeTab","scripting","storage"],"action":{"default_popup":"popup.html"}}

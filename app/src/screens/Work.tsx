@@ -1,6 +1,8 @@
+import { StudentOperating } from '../components/StudentOperating';
 import { useMemo, useRef, useState } from 'react';
-import { faintLine } from '../lib/dim';
+import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
@@ -23,9 +25,10 @@ import type { CourseId } from '../lib/types';
 import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
 
-type Tab = 'plan' | 'file' | 'draft' | 'ask';
+type Tab = 'operating' | 'plan' | 'file' | 'draft' | 'ask';
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'operating', label: 'My operating manual' },
   { id: 'plan', label: 'Break it down' },
   { id: 'file', label: 'Project file' },
   { id: 'draft', label: 'Read my draft' },
@@ -65,11 +68,12 @@ const TABS: { id: Tab; label: string }[] = [
  */
 export function Work() {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);
 
-  const [tab, setTab] = useState<Tab>('plan');
+  const [tab, setTab] = useState<Tab>('operating');
   const [instructions, setInstructions] = useState('');
   const [plan, setPlan] = useState<Breakdown | null>(null);
   // The longest thing anybody types into this app that is not a note, and
@@ -133,15 +137,12 @@ export function Work() {
   const keepSteps = () => {
     if (!plan) return;
     for (const s of plan.steps) {
-      dispatch({
-        type: 'addTask',
-        task: {
-          title: s.do,
-          date: s.by || plan.due || null,
-          time: s.minutes ? `${s.minutes} min` : '',
-          note: s.why,
-          courseId,
-        },
+      taskActions.add({
+        title: s.do,
+        date: s.by || plan.due || null,
+        time: s.minutes ? `${s.minutes} min` : '',
+        note: s.why,
+        courseId,
       });
     }
     setSaved(plan.steps.length);
@@ -152,7 +153,7 @@ export function Work() {
     setKept(true);
   };
 
-  if (!configured()) return <NeedsKey frame />;
+  if (!configured() && tab !== 'operating') return <Page><button className="bare" onClick={() => setTab('operating')}>My operating manual</button><NeedsKey /></Page>;
 
   return (
     <Page>
@@ -170,6 +171,8 @@ export function Work() {
           }}
         />
       </div>
+
+      {tab === 'operating' && <StudentOperating />}
 
       {/* ── Break it down ──────────────────────────────────────────────── */}
       {tab === 'plan' && (
@@ -358,7 +361,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 'calc(20px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'calc(20px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
@@ -492,7 +495,7 @@ function PlanView({
             style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-4)' }}
           >
             {saved > 0 ? <Check size={14} /> : <Plus size={14} />}
-            {saved > 0 ? `${saved} tasks added` : `Add ${plan.steps.length} steps as tasks`}
+            {saved > 0 ? `${saved} actions added` : `Add ${plan.steps.length} steps as actions`}
           </ActionButton>
         </>
       )}

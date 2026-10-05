@@ -96,7 +96,7 @@ export const SETTINGS: SettingsSection[] = [
         label: 'Courses',
         holds: 'What is loaded, and where you study',
         keywords:
-          'courses course remove delete sample data demo example school university college switch order rearrange import syllabus term',
+          'courses course remove delete sample data demo example school university college switch order rearrange import syllabus term role student teaching faculty teaching assistant advising advisor administration administrator parent payer parent or payer campus services staff applicant authorized family alumni',
       },
       {
         screen: 'setGrading',
@@ -114,8 +114,8 @@ export const SETTINGS: SettingsSection[] = [
       },
       {
         screen: 'setAssistant',
-        label: 'The assistant',
-        short: 'Assistant',
+        label: 'Semester Intelligence',
+        short: 'Intelligence',
         holds: 'Which provider answers, which model, what it costs and what it sees',
         keywords:
           'claude ai assistant chat gpt chatgpt openai anthropic api key proxy model sonnet opus haiku provider cost spend money tokens billing what it can see privacy context sign in with claude login console check my key',

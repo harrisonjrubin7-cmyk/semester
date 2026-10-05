@@ -277,10 +277,15 @@ begin
     for org in select o.id from public.organizations o
     loop
       perform pg_temp.become(who);
-      select private.org_readable(org) into readable;
       select exists (select 1 from public.organizations o where o.id = org)
         into selectable;
       reset role;
+      -- Asked after the role is reset and with `who`'s claims still set, which
+      -- is the context it really runs in: only the definer functions call it,
+      -- and since 20260929050000 no client role may execute it directly. It
+      -- reads the caller from `auth.uid()`, not from the role, so the answer
+      -- is the one `follow_organization` gets for this account.
+      select private.org_readable(org) into readable;
 
       if readable is distinct from selectable then
         raise exception 'FAILED: org_readable says % for an organization the read '
@@ -590,12 +595,17 @@ begin
   -- `on delete restrict` instead, and the difference is the whole of what this
   -- asserts.
 
+  -- (The delete guard of 20260930200000 refuses first; it is off here so this
+  -- proves the foreign key's own refusal, which is what would matter if the
+  -- guard were ever dropped.)
+  alter table public.schools disable trigger refuse_school_delete;
   begin
     delete from public.schools where id = 'northerly';
     raise exception 'FAILED: a university with organizations on it was removed anyway';
   exception when foreign_key_violation then
     perform pg_temp.ok('a university cannot be removed while it has organizations');
   end;
+  alter table public.schools enable trigger refuse_school_delete;
 end $$;
 
 -- ── What happens when somebody stops existing ─────────────────────────────

@@ -37,6 +37,8 @@ import type {
   Review,
   UniversityArea,
   UniversityRole,
+  IntelligenceGatewayRequest,
+  IntelligenceGatewayResponse,
 } from '@semester/institution';
 
 export { UNIVERSITY_AREAS, UNIVERSITY_ROLES } from '@semester/institution';
@@ -99,10 +101,18 @@ async function gateway<T>(path: string, body?: unknown): Promise<T> {
   const session = await currentSession();
   if (!session) throw new Error('Sign in to your school-approved Semester account first.');
 
+  /*
+   * One id for this tap, sent ahead and read back. The gateway keeps it on
+   * the audit row and the telemetry line, so the sentence a person is shown
+   * on failure can name the id that finds their request — which is what a
+   * support ticket needs and what a screenshot of an error never has.
+   */
+  const correlationId = crypto.randomUUID();
   const response = await fetch(`${url.href.replace(/\/$/, '')}${path}`, {
     method: body ? 'POST' : 'GET',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
+      'X-Correlation-Id': correlationId,
       ...(body ? { 'Content-Type': 'application/json' } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -112,16 +122,53 @@ async function gateway<T>(path: string, body?: unknown): Promise<T> {
   });
 
   const result = await response.json();
-  if (!response.ok) {
-    throw new Error(
-      typeof result.error === 'string' ? result.error : 'The connection could not complete this request.',
-    );
-  }
+  if (!response.ok) throw gatewayError(result, response.headers.get('X-Correlation-Id') ?? correlationId);
   return result as T;
+}
+
+/** What a gateway refusal carries, for a screen that wants more than the sentence. */
+export interface GatewayFailure {
+  code: string;
+  correlationId: string;
+  retryable: boolean;
+  userAction?: { label: string; kind: string; href?: string };
+}
+
+/**
+ * The gateway's error envelope — `{ error: { code, message, correlation_id,
+ * retryable, user_action? } }` — or the two older shapes, a top-level
+ * `message` or a string `error`, read in that order. Whatever the shape, the
+ * thrown error's `cause` is a `GatewayFailure` so a screen can say "try again"
+ * only when the gateway said so, and can show the id that finds the request.
+ */
+export function gatewayError(result: unknown, correlationId: string): Error {
+  const r = (result && typeof result === 'object' ? result : {}) as Record<string, unknown>;
+  const e = (r.error && typeof r.error === 'object' ? r.error : {}) as Record<string, unknown>;
+  const message =
+    typeof e.message === 'string' ? e.message
+      : typeof r.message === 'string' ? r.message
+        : typeof r.error === 'string' ? r.error
+          : 'The connection could not complete this request.';
+  const cause: GatewayFailure = {
+    code: typeof e.code === 'string' ? e.code : 'error',
+    correlationId: typeof e.correlation_id === 'string' ? e.correlation_id : correlationId,
+    retryable: e.retryable === true,
+  };
+  const action = e.user_action as Record<string, unknown> | undefined;
+  if (action && typeof action.label === 'string' && typeof action.kind === 'string') {
+    cause.userAction = { label: action.label, kind: action.kind, ...(typeof action.href === 'string' ? { href: action.href } : {}) };
+  }
+  return new Error(message, { cause });
 }
 
 /** What the school says this account may see, per area. */
 export const institutionStatus = () => gateway<InstitutionStatus>('/status');
+
+/** The authenticated, policy-enforced institutional intelligence wire. */
+export const institutionIntelligence = (input: IntelligenceGatewayRequest) =>
+  gateway<IntelligenceGatewayResponse>('/v1/intelligence/respond', input);
+export const institutionIntelligencePolicy = () =>
+  gateway<{ state: string; allowedModes: IntelligenceGatewayRequest['mode'][] }>('/v1/intelligence/policy');
 
 /**
  * One page of a school's own records.

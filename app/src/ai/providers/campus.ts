@@ -196,7 +196,7 @@ export const groupwork: Provide = (look) => {
   const { state, catalog } = look;
   const mine = state.tasks.filter((t) => !t.done && t.courseId);
   return {
-    summary: `Group work — ${mine.length} of your own undone tasks are filed against a course.`,
+    summary: `Group work — ${mine.length} of your own undone actions are filed against a course.`,
     visible: mine.slice(0, 25).map((t) => ({
       id: t.id,
       title: t.title,
@@ -451,6 +451,51 @@ export const family: Provide = () => ({
     'What should I share with a parent helping me with the bill?',
     'How do I set an expiry on what someone can see?',
   ],
+});
+
+/**
+ * The journey screens — Launchpad, Notices, Support, Opportunities.
+ *
+ * All four keep their contents in device libraries, and three of them hold
+ * exactly the material a model should not be handed by default: reflections,
+ * access notes, emergency contacts, a work-study flag. So each follows
+ * Family's shape — `visible` is empty and says what the screen is for, which
+ * is enough to answer "how do I…" without a second disclosure nobody chose.
+ */
+export const launchpad: Provide = () => ({
+  summary:
+    'Launchpad — the steps from admission to the fifth week of term, kept by the student on this device. Stages and ticks are the student’s own; ticking a step informs no office, and every official step names the office that decides it.',
+  focus: { stage_is: 'chosen by the student', informs_offices: false, steps_shared_with_assistant: false },
+  visible: [],
+  actions: ['open_screen'],
+  suggestions: ['What should I do before orientation?', 'What does the registrar do, compared with the bursar?'],
+});
+
+export const hub: Provide = () => ({
+  summary:
+    'Notices — one list of course deadlines and Semester reminders, each labelled with its source. No official school channel is connected; nothing sponsored is ever shown, and the hub sends no email or text.',
+  focus: { official_channel_connected: false, sponsored: false, sends_messages: false },
+  visible: [],
+  actions: ['open_screen'],
+  suggestions: ['How do quiet hours work here?', 'Which of these notices are required?'],
+});
+
+export const support: Provide = () => ({
+  summary:
+    'Support — a map of care, basic-needs, access, safety and campus offices, with what each does with what a student tells them. It diagnoses nothing, scores nothing, monitors nobody and tracks no location. In an emergency: 911; the 988 lifeline takes calls and texts (U.S.).',
+  focus: { clinical: false, monitors: false, notes_shared_with_assistant: false, crisis_line: '988 (U.S.)' },
+  visible: [],
+  actions: ['open_screen'],
+  suggestions: ['Where do I start if I am not sure which office I need?', 'How do I request an exam accommodation?'],
+});
+
+export const opportunities: Provide = () => ({
+  summary:
+    'Opportunities — campus jobs, research, study abroad, credentials, placements, funding and alumni mentors, tracked on this device. Eligibility is decided by each office, never here; work-study status is private; visa information is general, not legal advice.',
+  focus: { decides_eligibility: false, work_study_shared: false, visa_advice: 'informational only' },
+  visible: [],
+  actions: ['open_screen'],
+  suggestions: ['How do I ask a professor about joining their lab?', 'What should a study-abroad budget include?'],
 });
 
 /**

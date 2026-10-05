@@ -194,7 +194,7 @@ export function ByTask() {
           ))}
         </nav>
       ) : (
-        <nav aria-label="By task" className="soft-grid task-grid">
+        <nav aria-label="By goal" className="soft-grid task-grid">
           {sections.map((section) => (
             <div key={section.tag} className="soft-grid-cell">
               <DarkTile

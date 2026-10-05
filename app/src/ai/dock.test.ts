@@ -213,6 +213,22 @@ describe('the assistant button, and what it sits on', () => {
     });
 
     /*
+     * And the control with keyboard focus (WCAG 2.4.11). Measured at 320x640
+     * on Timers: tabbing to Start left 46% of it under the button — under
+     * `COVERED`, so the button stayed, with "ST" showing and the ring hidden.
+     * The same box unfocused is the control and must keep its raw share.
+     */
+    it('counts the focused control as covered at any overlap', () => {
+      const start = rect(227, 435, 75, 44);
+      const under = rect(250, 412, 52, 52);
+      const plain = control('BUTTON', start);
+      const focused = control('BUTTON', start);
+      (focused as unknown as { ownerDocument: unknown }).ownerDocument = { activeElement: focused };
+      expect(costOf(plain, null, under), 'unfocused: its share, under half').toBeLessThan(0.5);
+      expect(costOf(focused, null, under), 'focused: has to move').toBeGreaterThanOrEqual(0.5);
+    });
+
+    /*
      * And two *fields* rank against each other, which is the half of "without
      * flattening them" the floor did not deliver.
      *

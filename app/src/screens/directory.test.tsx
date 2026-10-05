@@ -48,7 +48,7 @@ beforeEach(() => {
     root = createRoot(host);
   });
   act(() => {
-    root.render(<StoreProvider>{<Directory />}</StoreProvider>);
+    root.render(<StoreProvider>{<Directory journeyNavigation />}</StoreProvider>);
   });
 });
 
@@ -60,11 +60,23 @@ afterEach(() => {
 const text = () => host.textContent ?? '';
 
 describe('the one directory', () => {
-  it('draws every app with the sentence saying what it is for', () => {
-    // The thing it was always for, checked so the rest of this file is not
-    // testing a screen that failed to render at all.
+  it('restores the existing catalog-first layout when journey navigation is off', () => {
+    act(() => root.render(<StoreProvider><Directory journeyNavigation={false} /></StoreProvider>));
+    expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(0);
     expect(text()).toContain('All applications');
-    expect(host.querySelectorAll('button').length).toBeGreaterThan(20);
+    expect(host.querySelector('[aria-label="Search tools"]')).toBeTruthy();
+  });
+  it('starts with six journeys and keeps the unchanged catalog behind All tools', () => {
+    expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(6);
+    const all = [...host.querySelectorAll('button')].find((button) =>
+      /^All tools \(\d+\)$/.test(button.textContent?.trim() ?? ''),
+    );
+    expect(all, 'the complete catalog has no visible way in').toBeTruthy();
+    const promised = Number(all!.textContent!.match(/\d+/)![0]);
+
+    act(() => all!.click());
+    expect(text()).toContain('All applications');
+    expect(host.querySelectorAll('.deskdir-rowopen, .deskdir-cardsays')).toHaveLength(promised);
   });
 
   it('carries the Not-opened-yet list that came from Progress', () => {
@@ -77,7 +89,7 @@ describe('the one directory', () => {
     // Favourites, Lately and Not-opened-yet answer "where was that". Once
     // somebody types, they are asking "where is the thing called this", and
     // three lists ignoring the filter above one obeying it reads as a bug.
-    const box = host.querySelector('[aria-label="Filter these apps"]') as HTMLInputElement;
+    const box = host.querySelector('[aria-label="Search journeys and tools"]') as HTMLInputElement;
     expect(box).toBeTruthy();
 
     const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
@@ -107,7 +119,7 @@ describe('the one directory', () => {
  */
 describe('narrowing the directory', () => {
   const type = (into: string) => {
-    const box = host.querySelector('[aria-label="Filter these apps"]') as HTMLInputElement;
+    const box = host.querySelector('[aria-label="Search journeys and tools"]') as HTMLInputElement;
     const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
     act(() => {
       set.call(box, into);
@@ -149,9 +161,9 @@ describe('narrowing the directory', () => {
 
     act(() => out!.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     expect(text()).not.toContain('Nothing here matches that');
-    // And the standing lists are back, which is what "all of them" means on
-    // this screen.
-    expect(text()).toContain('All applications');
+    // And the standing lists and journey-first home are back.
+    expect(text()).toContain('What do you want to do?');
+    expect(host.querySelectorAll('[data-journey-id]')).toHaveLength(6);
     expect(text()).not.toMatch(/\d+ of \d+ apps/);
   });
 

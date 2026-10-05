@@ -4,6 +4,7 @@ import type { Figure } from '../lib/types';
 import { getFile } from '../lib/files';
 import { Blueprint } from './Blueprint';
 import { Diagram } from './Diagram';
+import { formatNumber } from '../lib/locale';
 
 /**
  * Lazy for the reason `components/Drawing.tsx` is lazy on the Draw screen:
@@ -89,7 +90,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
               >
                 <span style={secondLine()}>{r.l}</span>
                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)' }}>
-                  {r.v.toLocaleString()}
+                  {formatNumber(r.v)}
                   <span style={{ color: 'var(--app-dim)', fontSize: 'var(--type-xs)' }}> {figure.unit}</span>
                 </span>
               </div>

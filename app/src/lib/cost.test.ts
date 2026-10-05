@@ -232,3 +232,15 @@ describe('what the same course cost last time', () => {
     expect(lastTime(all, codeOf, 'econ', '2026FA')).toEqual({ term: '2026SU', cents: 2000 });
   });
 });
+
+describe('dollars', () => {
+  it('writes whole US dollars, grouped by hand, as the callers it replaced did', async () => {
+    const { dollars } = await import('./cost');
+    expect(dollars(0)).toBe('$0');
+    expect(dollars(1234.4)).toBe('$1,234');
+    expect(dollars(1234567.5)).toBe('$1,234,568');
+    expect(dollars(-1234)).toBe('$-1,234');
+    // The same string toLocaleString('en-US') wrote, for every amount above.
+    for (const n of [0, 1234.4, 1234567.5, -1234]) expect(dollars(n)).toBe(`$${Math.round(n).toLocaleString('en-US')}`);
+  });
+});

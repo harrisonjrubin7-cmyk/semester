@@ -1,48 +1,57 @@
 # AI Governance
 
-**Status: `IN_PROGRESS`**
+**Repository status: `IMPLEMENTED_NOT_PRODUCTION_APPROVED`**
 
-## What exists
+Semester has one authenticated institutional intelligence gateway. It verifies
+tenant and person scope, loads feature and AI policy server-side, limits roles
+and academic-integrity modes, routes only to operator- and tenant-approved
+models, retrieves only server-held approved source text, requires
+provider-declared citations, meters usage and requires explicit confirmation
+plus authoritative readback before an action can become a receipt.
 
-An AI surface: `app/src/lib/claude.ts`, `app/src/lib/openai.ts`,
-`app/src/ai/`, `app/src/keygate.ts`, plus `app/src/lib/context.ts` and
-research/explainer modules. Each has tests.
+The OpenAI adapter uses the Responses API in foreground mode with `store: false`,
+a 20-second cancellation boundary, bounded output, structured grounded
+answers and authoritative token usage. Provider errors are converted to a
+generic response; prompts, answers and source bodies are not written to the
+gateway audit journal.
 
-## What is missing, and why it matters institutionally
+## Enforcement boundaries
 
-**No central AI gateway.** Calls are made from library modules rather than
-routed through one place that enforces auth, tenant, permissions, model
-routing, rate limits, logging, cost controls and safety. A university cannot be
-told what the AI can see if the answer is "it depends which module called it".
+- Browser flags cannot enable intelligence. Missing server credentials,
+  Supabase service access, configured model routes or cost ceilings produce a
+  policy-disabled runtime.
+- Source metadata is tenant-scoped. Source bodies live in
+  `private.approved_source_content`, are inaccessible to browser roles and are
+  joined only after the gateway verifies every requested source identifier.
+- Provider output may cite only source identifiers included in that request.
+  Semester maps those citations back to its own evidence identifiers; the
+  provider never becomes citation authority.
+- Every request atomically reserves tenant budget before provider work.
+  Successful metering settles the reservation; failures release it; abandoned
+  reservations stop counting after five minutes.
+- The daily `ai-runtime-metadata` job removes usage metadata according to the
+  tenant AI policy's retention-days setting. It never removes approved source
+  content.
+- Provider-generated actions are prepare-only until a separately approved
+  institutional adapter supplies a verified write and authoritative readback.
 
-**No tenant data boundary enforcement for AI.** The rule — AI receives only
-what the authenticated user is authorised to see, and never data from another
-tenant — is not enforced by construction. It currently depends on each call
-site passing the right context.
+## Required production approval
 
-**Cost controls are per user, not per tenant.** Corrected: `public.usage`
-already meters `calls`, `input_tokens` and `output_tokens` per account per
-month, so the metering exists and the gap is narrower than first recorded — a
-university cannot be given a bill, a cap or a forecast, because nothing rolls
-those rows up by school. `profiles.school_id` is what would make that possible
-and nothing reads it yet.
+Code completion is not Vanderbilt approval. Before changing a Vanderbilt
+tenant feature policy to `production`, the operator still needs:
 
-**No model routing abstraction.** Business logic is not insulated from a
-specific provider or model.
+1. A Vanderbilt-approved OpenAI project, data-processing terms and documented
+   data-control configuration. `store: false` disables response application
+   storage; it does not itself establish Zero Data Retention.
+2. Production Supabase credentials, applied migrations, the scheduler job and
+   a populated tenant policy with approved sources.
+3. Vanderbilt-approved models, integrity modes, roles, monthly budget,
+   per-request ceiling and retention period.
+4. Security, accessibility, privacy and legal sign-off, plus a tested incident
+   and rollback owner.
+5. A staging proof that cross-tenant source identifiers, unapproved citations,
+   concurrent budget exhaustion, provider outages and expired confirmations
+   all fail closed.
 
-**No source citation.** When AI answers from Semester or university records,
-there is no mechanism to say which record it came from.
-
-## The rule that should govern the gateway when it is built
-
-> AI must only receive data the authenticated user is authorised to access.
-> Tenant data must never cross an AI request boundary.
-
-This is a *construction* requirement, not a review requirement: the gateway
-should make the unsafe call impossible to write, not merely discouraged.
-
-## Next
-
-The AI gateway is a prerequisite for any institutional AI claim, and it should
-land after tenancy — a gateway that enforces a tenant boundary needs a tenant
-boundary to enforce.
+Until those controls are observed in the actual Vanderbilt environment, the
+truthful state is configured sandbox or policy-disabled—not production.

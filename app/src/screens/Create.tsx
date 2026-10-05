@@ -12,6 +12,7 @@ import { CREATION_LIMIT, EMPTY_CREATIONS, newCreation, readCreations, type Creat
 import { download } from '../lib/deliver';
 import { addFile } from '../lib/files';
 import type { Screen } from '../lib/types';
+import { formatDate } from '../lib/locale';
 
 /**
  * One door to everything that makes something.
@@ -319,7 +320,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   key={p.id}
                   label={p.title}
                   meta={catalog.courses.find((c) => c.id === p.courseId)?.code || p.kind}
-                  title={`${p.kind} · edited ${new Date(p.updated).toLocaleDateString()}`}
+                  title={`${p.kind} · edited ${formatDate(p.updated)}`}
                   onClick={() => setId(p.id)}
                 />
               ))}

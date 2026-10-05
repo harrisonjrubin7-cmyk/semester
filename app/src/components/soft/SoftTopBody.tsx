@@ -33,31 +33,29 @@
  */
 
 import { useMemo } from 'react';
-import { useNow, useStore } from '../../state/store';
+import { useNow, useStore, type SyncStatus } from '../../state/store';
+import { SYNC_WORDS } from '../../lib/syncstatus';
 import { useDeviceLibrary } from '../../lib/device-library';
 import { EMPTY_FAMILY, readFamily } from '../../lib/family';
 import { softTop, type TopStat } from '../../lib/softtop';
 import { useAthleticEvents } from '../../lib/athletics.hook';
+import { EMPTY_LAUNCHPAD, openSteps, readLaunchpad, stepsFor } from '../../lib/launchpad';
+import { EMPTY_OPPORTUNITIES, readOpportunities } from '../../lib/opportunities';
 import { useDeviceLibrary as useLibrary } from '../../lib/device-library';
 import { EMPTY_NIL, nilKey, readNil } from '../../lib/nil';
 import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
 
 /*
- * What each sync state is called on a stat card.
- *
- * One word each, because the slot is a stat's value and set at the size of
- * one: "Signed out" wrapped to two lines and made the card taller than the
- * two beside it. "None" for a signed-out account says the same thing in the
- * space there is — there is no account — and the card's label already
- * supplies the noun.
+ * What each sync state is called on a stat card: the one-word `short` form
+ * from `lib/syncstatus.ts`, because the slot is a stat's value and set at the
+ * size of one — "Signed out" wrapped to two lines and made the card taller
+ * than the two beside it. The long forms are the settings screen's, from the
+ * same table, so the two cannot drift apart.
  */
-const SYNC_SAID: Record<string, string> = {
-  synced: 'Synced',
-  syncing: 'Syncing',
-  'signed-out': 'None',
-  error: 'Trouble',
-};
+const SYNC_SAID = Object.fromEntries(
+  Object.entries(SYNC_WORDS).map(([status, words]) => [status, words.short]),
+) as Record<SyncStatus, string>;
 
 /**
  * This screen's spec.
@@ -73,7 +71,7 @@ function useTop() {
   const caps = school.capabilities;
   // The word Settings shows, not the whole status object: the spec holds
   // strings, and a shape with a timestamp in it would recompute every tick.
-  const said = SYNC_SAID[sync.status] ?? 'Local';
+  const said = SYNC_SAID[sync.status];
   /*
    * The one figure the spec cannot reach for itself.
    *
@@ -114,6 +112,14 @@ function useTop() {
    */
   const nil = useLibrary(nilKey(account?.id), readNil, EMPTY_NIL);
   const nilDeals = nil.value.deals.length;
+  /*
+   * Launchpad and Opportunities, by the same route again — counts, read from
+   * their libraries because this function is the one that may open them.
+   */
+  const launch = useDeviceLibrary(`semester.launchpad.v1:${account?.id || 'device'}`, readLaunchpad, EMPTY_LAUNCHPAD);
+  const launchpadOpen = openSteps(stepsFor(launch.value.types), launch.value.stage, launch.value.done).length;
+  const opps = useDeviceLibrary(`semester.opportunities.v1:${account?.id || 'device'}`, readOpportunities, EMPTY_OPPORTUNITIES);
+  const opportunitiesLive = opps.value.items.filter((o) => o.stage !== 'Done' && o.stage !== 'Closed').length;
   return useMemo(
     () =>
       softTop(state.screen, {
@@ -125,8 +131,10 @@ function useTop() {
         familyPlans,
         athletics: season,
         nilDeals,
+        launchpadOpen,
+        opportunitiesLive,
       }),
-    [state, catalog, now, caps, said, familyPlans, season, nilDeals],
+    [state, catalog, now, caps, said, familyPlans, season, nilDeals, launchpadOpen, opportunitiesLive],
   );
 }
 

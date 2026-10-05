@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
+import { ObjectCard } from '../components/unity/ObjectCard';
 import { ItemRow } from '../components/shell/Rows';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -38,6 +39,55 @@ import {
 } from '../lib/readiness';
 import type { School } from '../lib/school';
 import type { Screen } from '../lib/types';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { EXPERIENCE_FLAGS, MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { GetHelp } from '../components/GetHelp';
+import { HelpInbox } from '../components/HelpInbox';
+import { ReportQueue } from '../components/ReportQueue';
+import { ListingDesk } from '../components/ListingDesk';
+import { operationsAllowed } from '../lib/institution-ops';
+import { forSchool, useMyCapabilities } from '../lib/capabilities';
+import { helpSeedWaiting, loadInboxes, newRequestCount, type StaffInbox } from '../lib/help-routes';
+import { ControlPlane } from '../components/institutional/ControlPlane';
+import { TrustDashboard } from '../components/institutional/TrustDashboard';
+import { IntegrationDashboard } from '../components/institutional/IntegrationDashboard';
+import { CampaignManager } from '../components/institutional/CampaignManager';
+import { InstitutionalPackage } from '../components/institutional/InstitutionalPackage';
+import { campaignsAllowed } from '../lib/gtm/manager';
+import { canApprove, canManage, migrationAllowed } from '../lib/migration/api';
+import { workflowsAllowed } from '../lib/workflow/allowed';
+import { studioAllowed } from '../lib/config/allowed';
+import { canDecide, canOverride, canPropose, canRead, recordAllowed } from '../lib/record/api';
+import { canApprove as canApproveFinance, canApproveHigh, canClose, canReadAccounts, canRequest, financeAllowed } from '../lib/finance/api';
+import type { ControlPlaneStatus } from '../lib/control-plane';
+import { formatDateTime, formatTime } from '../lib/locale';
+import { forRole } from '../lib/role';
+
+// The ledgers and the Migration Center are behind flags that are off by
+// default, so their code loads only when a tab of theirs opens.
+const WorkflowBuilder = lazy(() => import('../components/institutional/WorkflowBuilder').then((m) => ({ default: m.WorkflowBuilder })));
+const ConfigurationStudio = lazy(() => import('../components/institutional/ConfigurationStudio').then((m) => ({ default: m.ConfigurationStudio })));
+const ModulesPanel = lazy(() => import('../components/institutional/ModulesPanel').then((m) => ({ default: m.ModulesPanel })));
+const MigrationCenter = lazy(() => import('../components/institutional/MigrationCenter').then((m) => ({ default: m.MigrationCenter })));
+const RecordLedger = lazy(() => import('../components/institutional/RecordLedger').then((m) => ({ default: m.RecordLedger })));
+const StudentAccounts = lazy(() => import('../components/institutional/StudentAccounts').then((m) => ({ default: m.StudentAccounts })));
+const DemandDesk = lazy(() => import('../components/DemandDesk').then((module) => ({ default: module.DemandDesk })));
+const OperationsStudio = lazy(() =>
+  import('../components/institutional/OperationsStudio').then((module) => ({
+    default: module.OperationsStudio,
+  })),
+);
+
+const RoleWorkspace = lazy(() =>
+  import('../components/institutional/RoleWorkspace').then((module) => ({
+    default: module.RoleWorkspace,
+  })),
+);
+
+function RoleWorkspaceSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><RoleWorkspace /></Suspense>;
+}
 
 /**
  * Everything a university is, and an honest account of which parts work.
@@ -94,24 +144,84 @@ import type { Screen } from '../lib/types';
  * nothing anywhere is labelled official without a receipt.
  */
 
-/** The tabs, and what each is for. */
-const TABS = [
+/**
+ * The tabs, and what each is for. Operations depends on what the database says
+ * this person holds over this school (`lib/capabilities.ts`), so the list is
+ * built per render rather than once at load.
+ */
+const tabsFor = (verified: readonly string[]) => [
   { id: 'overview' as const, label: 'Services' },
   { id: 'drafts' as const, label: 'Drafts' },
   { id: 'records' as const, label: 'Records' },
   { id: 'connections' as const, label: 'Connections' },
+  { id: 'package' as const, label: 'Institutional package' },
+  ...(EXPERIENCE_FLAGS.universityControlPlane !== 'off'
+    ? [{ id: 'control' as const, label: 'Control' }, { id: 'trust' as const, label: 'Trust' }]
+    : []),
+  // Only for someone the database says may configure this school: the switch
+  // itself is refused to anyone else, and the tab would only be a dead end.
+  ...(verified.includes('tenant:configure') ? [{ id: 'modules' as const, label: 'Modules' }] : []),
+  ...(EXPERIENCE_FLAGS.humanHelp !== 'off' ? [{ id: 'help' as const, label: 'Get help' }] : []),
+  // Staff only in practice: RLS returns nothing to an account without
+  // `integration:view`, and the dashboard says so rather than inventing data.
+  ...(EXPERIENCE_FLAGS.integrationDashboard !== 'off'
+    ? [{ id: 'integrations' as const, label: 'Integrations' }]
+    : []),
+  // Staff only in practice, and governed in code: aggregates at n >= 10, no
+  // per-student grain, forbidden measures refused. See lib/institution-ops.ts.
+  ...(EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified)
+    ? [{ id: 'operations' as const, label: 'Operations' }]
+    : []),
+  // Course demand (Phase K): staff only in practice. The database returns
+  // counts of ten or more, scoped by demand:read, and nothing that names a
+  // person; an account without the scope is told so.
+  ...(moduleOn(MODULE_FLAGS.demand_forecasting) ? [{ id: 'demand' as const, label: 'Demand' }] : []),
+  // Only for an account holding a verified campaign capability at this school;
+  // RLS would return it nothing otherwise.
+  ...(EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified)
+    ? [{ id: 'campaigns' as const, label: 'Campaigns' }]
+    : []),
+  // Only for an account holding a verified migration capability at this
+  // school (D-144); RLS and the stage gate decide what it may then do.
+  ...(EXPERIENCE_FLAGS.migrationCenter !== 'off' && migrationAllowed(verified)
+    ? [{ id: 'migration' as const, label: 'Migration' }]
+    : []),
+  // Only for an account holding a verified configuration capability at this
+  // school (D-147); RLS and the second-person publish rule decide the rest.
+  ...(EXPERIENCE_FLAGS.configurationStudio !== 'off' && studioAllowed(verified)
+    ? [{ id: 'configuration' as const, label: 'Configuration' }]
+    : []),
+  // Only for an account holding a verified workflow capability at this school
+  // (D-1018); RLS and the second-person publish rule decide the rest.
+  ...(EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified)
+    ? [{ id: 'workflows' as const, label: 'Workflows' }]
+    : []),
+  // Only for an account holding a verified record capability at this school
+  // (D-145); the approval trigger decides what enters the ledger.
+  ...(EXPERIENCE_FLAGS.recordLedger !== 'off' && recordAllowed(verified)
+    ? [{ id: 'ledger' as const, label: 'Academic record' }]
+    : []),
+  // Only for an account holding a verified finance capability at this school
+  // (D-146); the approval trigger decides what enters the account ledger.
+  ...(EXPERIENCE_FLAGS.studentAccounts !== 'off' && financeAllowed(verified)
+    ? [{ id: 'accounts' as const, label: 'Student accounts' }]
+    : []),
 ];
 
-type Tab = (typeof TABS)[number]['id'];
+type Tab = 'overview' | 'drafts' | 'records' | 'connections' | 'package' | 'control' | 'trust' | 'modules' | 'help' | 'integrations' | 'operations' | 'demand' | 'campaigns' | 'migration' | 'configuration' | 'workflows' | 'ledger' | 'accounts';
 
 /** What each role is called on screen. */
 const ROLE_LABELS: Record<UniversityRole, string> = {
   student: 'Student',
   faculty: 'Professor',
+  teaching_assistant: 'Teaching assistant',
   advisor: 'Advisor',
   admin: 'Administrator',
-  payer: 'Authorized payer',
   staff: 'Campus staff',
+  applicant: 'Applicant',
+  payer: 'Authorized payer',
+  family: 'Authorized family',
+  alumni: 'Alumni',
 };
 
 /**
@@ -232,11 +342,43 @@ function Standing({
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, account } = useStore();
+  // Capabilities over this school, as the database reports them — never a role
+  // picked in the UI. They decide what is offered; policies still authorize.
+  const grants = useMyCapabilities();
+  const verified = forSchool(grants, school.id);
+  const TABS = tabsFor(verified);
 
-  const [tab, setTab] = useState<Tab>('overview');
-  const [intent, setIntent] = useState<UniversityRole>('student');
+  // An Action Center "Ask for help" lands here with a seed waiting; open on it.
+  const [tab, setTab] = useState<Tab>(() =>
+    EXPERIENCE_FLAGS.humanHelp !== 'off' && helpSeedWaiting() ? 'help' : 'overview',
+  );
+  const [intent, setIntent] = useState<UniversityRole>(state.role);
   const [area, setArea] = useState<UniversityArea>('courses');
+
+  /*
+   * New help requests waiting for this account's offices, shown on the Get
+   * help tab so staff see them without opening it. Zero for an account that
+   * answers for no office (RLS returns no inbox), so students see no count.
+   * A failed load shows no count rather than a wrong one; the inbox itself
+   * reports the error once opened.
+   */
+  const [helpCount, setHelpCount] = useState<{ owner: string; n: number }>({ owner: '', n: 0 });
+  const accountId = account?.id ?? '';
+  const countHelp = useCallback(
+    (inboxes: StaffInbox[]) => setHelpCount({ owner: accountId, n: newRequestCount(inboxes) }),
+    [accountId],
+  );
+  useEffect(() => {
+    if (EXPERIENCE_FLAGS.humanHelp === 'off' || !accountId) return;
+    let live = true;
+    loadInboxes()
+      .then((inboxes) => { if (live) countHelp(inboxes); })
+      .catch(() => { if (live) setHelpCount({ owner: accountId, n: 0 }); });
+    return () => { live = false; };
+  }, [accountId, countHelp]);
+  // Only this account's count: a count loaded for someone else is not shown.
+  const newHelp = accountId && helpCount.owner === accountId ? helpCount.n : 0;
 
   /*
    * The same store the other five device workspaces use.
@@ -287,6 +429,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
   const draft = drafts.find((d) => d.id === selected);
   const connection = status?.connections.find((c) => c.area === area);
+  const controlStatus: ControlPlaneStatus = status
+    ? 'connected but degraded'
+    : gatewayConfigured
+      ? 'awaiting authorization'
+      : 'contract only';
 
   const patch = (fields: Partial<UniversityDraft>) =>
     setDrafts((ds) =>
@@ -489,6 +636,11 @@ function Workspace({ storageKey }: { storageKey: string }) {
     });
 
   const areaName = (id: UniversityArea) => UNIVERSITY_AREAS.find(([x]) => x === id)?.[1] ?? id;
+  const localForRole = (id: UniversityArea) => {
+    const local = LOCAL[id];
+    return local && forRole(local.screen, state.role) ? local : undefined;
+  };
+  const currentLocal = localForRole(area);
 
   return (
     <Page>
@@ -510,10 +662,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       <Standing school={school} status={status} />
 
+      <RoleWorkspaceSlot />
+
       <Segmented
         options={TABS.map((t) => ({
           id: t.id,
-          label: t.id === 'drafts' ? `${t.label} (${drafts.length})` : t.label,
+          label:
+            t.id === 'drafts'
+              ? `${t.label} (${drafts.length})`
+              : t.id === 'help' && newHelp > 0
+                ? `${t.label} (${newHelp}\u00a0new)` // one unit when the tab wraps on a phone
+                : t.label,
         }))}
         value={tab}
         onChange={setTab}
@@ -555,6 +714,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'overview' && (
         <>
+          {/* Draws nothing unless the database says this account may read reports. */}
+          <ReportQueue account={account} />
+          {/* Draws nothing unless my_capabilities() reports opportunity:publish or :moderate. */}
+          <ListingDesk school={school.id} />
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-3)' }}>
             <SectionLabel style={{ marginBlock: 0 }}>Prepare drafts as</SectionLabel>
             <select
@@ -606,7 +769,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <GridCard
                   key={id}
                   label={name}
-                  meta={connected ? 'Connected' : LOCAL[id] ? 'Opens here' : 'Prepare only'}
+                  meta={connected ? 'Connected' : localForRole(id) ? 'Opens here' : 'Prepare only'}
                   selected={id === area}
                   title={DRAFT_TEMPLATES[id].steps.join(' · ')}
                   onClick={() => {
@@ -622,13 +785,13 @@ function Workspace({ storageKey }: { storageKey: string }) {
             {areaName(area)}
           </SectionLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-            {LOCAL[area] && (
+            {currentLocal && (
               <ActionButton
                 tone="primary"
-                onClick={() => dispatch({ type: 'go', screen: LOCAL[area]!.screen })}
+                onClick={() => dispatch({ type: 'go', screen: currentLocal.screen })}
                 style={{ flex: '1 1 auto' }}
               >
-                {LOCAL[area]!.label}
+                {currentLocal.label}
               </ActionButton>
             )}
             {area === 'courses' && (
@@ -658,6 +821,118 @@ function Workspace({ storageKey }: { storageKey: string }) {
             the service your school approved for them.
           </p>
         </>
+      )}
+
+      {tab === 'help' && EXPERIENCE_FLAGS.humanHelp !== 'off' && (
+        <>
+          <GetHelp account={account} />
+          <HelpInbox account={account} onInboxes={countHelp} />
+        </>
+      )}
+
+      {tab === 'package' && <InstitutionalPackage />}
+
+      {tab === 'control' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && (
+        <ControlPlane
+          input={{
+            tenantId: school.id,
+            viewedTenantId: school.id,
+            previewRole: intent,
+            featureState: EXPERIENCE_FLAGS.universityControlPlane,
+            gatewayStatus: controlStatus,
+            // The selector and locally loaded institution status are not
+            // authorization. This list is what my_capabilities() reports over
+            // this school; the policy writes it unlocks are still checked by RLS.
+            verifiedCapabilities: verified.map((capability) => ({ tenantId: school.id, capability, verified: true })),
+            approvedSourceCount: catalog.courses.filter((course) => Boolean(course.source)).length,
+            activeConsentCount: 0,
+            auditEventCount: 0,
+          }}
+        />
+      )}
+
+      {tab === 'trust' && EXPERIENCE_FLAGS.universityControlPlane !== 'off' && <TrustDashboard />}
+
+      {tab === 'modules' && verified.includes('tenant:configure') && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <ModulesPanel school={school.id} me={account?.id ?? ''} canEdit={verified.includes('tenant:configure')} />
+        </Suspense>
+      )}
+
+      {tab === 'integrations' && EXPERIENCE_FLAGS.integrationDashboard !== 'off' && <IntegrationDashboard />}
+
+      {tab === 'campaigns' && EXPERIENCE_FLAGS.campaignManager !== 'off' && campaignsAllowed(verified) && (
+        <CampaignManager tenantId={school.id} viewerId={account?.id ?? null} />
+      )}
+
+      {tab === 'migration' && EXPERIENCE_FLAGS.migrationCenter !== 'off' && migrationAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <MigrationCenter
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            manage={canManage(verified)}
+            approve={canApprove(verified)}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'configuration' && EXPERIENCE_FLAGS.configurationStudio !== 'off' && studioAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <ConfigurationStudio
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            holds={verified}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'workflows' && EXPERIENCE_FLAGS.workflowBuilder !== 'off' && workflowsAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <WorkflowBuilder
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            holds={verified}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'ledger' && EXPERIENCE_FLAGS.recordLedger !== 'off' && recordAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <RecordLedger
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            propose={canPropose(verified)}
+            decide={canDecide(verified)}
+            override={canOverride(verified)}
+            read={canRead(verified)}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'accounts' && EXPERIENCE_FLAGS.studentAccounts !== 'off' && financeAllowed(verified) && (
+        <Suspense fallback={<p role="status">Loading…</p>}>
+          <StudentAccounts
+            tenantId={school.id}
+            viewerId={account?.id ?? null}
+            request={canRequest(verified)}
+            approve={canApproveFinance(verified)}
+            approveHigh={canApproveHigh(verified)}
+            close={canClose(verified)}
+            read={canReadAccounts(verified)}
+          />
+        </Suspense>
+      )}
+
+      {tab === 'operations' && EXPERIENCE_FLAGS.institutionalOperations !== 'off' && operationsAllowed(verified) && (
+        <Suspense fallback={null}>
+          <OperationsStudio verified={verified} tenantId={school.id} accountId={account?.id || 'device'} />
+        </Suspense>
+      )}
+
+      {tab === 'demand' && moduleOn(MODULE_FLAGS.demand_forecasting) && (
+        <Suspense fallback={null}>
+          <DemandDesk key={account?.id ?? 'signed-out'} />
+        </Suspense>
       )}
 
       {tab === 'drafts' && (
@@ -884,7 +1159,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   textWrap: 'pretty',
                 }}
               >
-                Saved {new Date(draft.updatedAt).toLocaleString()} on this device. A ticked checklist
+                Saved {formatDateTime(draft.updatedAt)} on this device. A ticked checklist
                 describes your preparation, never official completion.
               </p>
             </>
@@ -965,57 +1240,54 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </button>
               </form>
               <p style={{ fontSize: 'var(--type-sm)', ...secondLine(), lineHeight: 'var(--leading-normal)' }}>
-                {fetched ? `Fetched ${new Date(fetched).toLocaleString()}` : 'Refresh to load records.'} ·
+                {fetched ? `Fetched ${formatDateTime(fetched)}` : 'Refresh to load records.'} ·
                 Read from your school, never copied into local drafts.
               </p>
-              {records.map((r) => (
-                <section
-                  key={r.id}
-                  style={{
-                    border: '1px solid var(--app-line)',
-                    borderRadius: 'var(--r-md)',
-                    padding: 'var(--sp-5)',
-                    marginBlock: 'var(--sp-4)',
-                  }}
-                >
-                  <SectionLabel aside={r.status} style={{ marginBlock: 0 }}>
-                    {r.title}
-                  </SectionLabel>
-                  <p
-                    style={{
-                      fontSize: 'var(--type-base)',
-                      lineHeight: 'var(--leading-normal)',
-                      marginBlock: 'var(--sp-4)',
-                    }}
-                  >
-                    {r.summary}
-                  </p>
-                  {r.details.map((d, i) => (
-                    <div key={i} style={{ fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-3)' }}>
-                      <span style={secondLine()}>{d.label}: </span>
-                      <span>{d.value}</span>
-                    </div>
-                  ))}
-                  {connection.canWrite &&
-                    r.actions.map((a) => (
-                      <ActionButton
-                        key={a.id}
-                        disabled={busy}
-                        onClick={() => {
-                          setAction({ record: r, action: a });
-                          setValues({});
-                          setReview(null);
-                          setReceipt(null);
-                          setConfirmed(false);
-                          setUnresolved(false);
-                        }}
-                        style={{ marginTop: 'var(--sp-4)' }}
-                      >
+              {records.map((r) => {
+                const start = (a: (typeof r.actions)[number]) => {
+                  setAction({ record: r, action: a });
+                  setValues({});
+                  setReview(null);
+                  setReceipt(null);
+                  setConfirmed(false);
+                  setUnresolved(false);
+                };
+                const [first, ...rest] = connection.canWrite ? r.actions : [];
+                return (
+                  <div key={r.id}>
+                    <ObjectCard
+                      kind="task"
+                      level={2}
+                      title={r.title}
+                      explanation={r.summary}
+                      metadata={[r.status, ...r.details.map((d) => `${d.label}: ${d.value}`)].join(' · ')}
+                      statuses={['connected']}
+                      source={{
+                        title: r.title,
+                        origin: 'connected',
+                        sourceName: connection.provider || undefined,
+                        freshness: fetched ? `Fetched ${formatDateTime(fetched)}` : undefined,
+                      }}
+                      primary={
+                        first
+                          ? {
+                              label: first.label,
+                              run: () => start(first),
+                              // Disabled while a request is in flight, as the
+                              // button this replaced was.
+                              disabled: busy,
+                            }
+                          : undefined
+                      }
+                    />
+                    {rest.map((a) => (
+                      <ActionButton key={a.id} disabled={busy} onClick={() => start(a)} style={{ marginTop: 'var(--sp-4)' }}>
                         {a.label}
                       </ActionButton>
                     ))}
-                </section>
-              ))}
+                  </div>
+                );
+              })}
               {fetched && !records.length && (
                 <p style={{ fontSize: 'var(--type-base)', ...secondLine() }}>No matching records.</p>
               )}
@@ -1079,7 +1351,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     </div>
                   ))}
                   <p style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
-                    This review expires at {new Date(review.expiresAt).toLocaleTimeString()}.
+                    This review expires at {formatTime(review.expiresAt)}.
                   </p>
                   {unresolved && (
                     <p
@@ -1240,7 +1512,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 meta={
                   <>
                     {access}
-                    {c?.lastSyncAt ? ` · Last sync ${new Date(c.lastSyncAt).toLocaleString()}` : ''}
+                    {c?.lastSyncAt ? ` · Last sync ${formatDateTime(c.lastSyncAt)}` : ''}
                   </>
                 }
               />

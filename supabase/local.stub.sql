@@ -109,6 +109,14 @@ create table if not exists auth.users (
   email              text,
   email_confirmed_at timestamptz,
   raw_user_meta_data jsonb       default '{}'::jsonb,
+  -- Read, not only written: `lti_launch_entitlement_facts` asks whether an
+  -- account's provider is `sso:…`, the marker auth.ts trusts. A SQL function
+  -- is checked when it is created, so without the column the migration fails.
+  raw_app_meta_data  jsonb       default '{}'::jsonb,
+  -- Read by `private.sweep_abandoned_signups()`, which removes accounts that
+  -- never confirmed and never signed in. A real `auth.users` has it; without
+  -- it here the function would fail to create.
+  last_sign_in_at    timestamptz,
   created_at         timestamptz default now(),
   updated_at         timestamptz default now()
 );
@@ -171,6 +179,46 @@ do $$ begin
     create publication supabase_realtime;
   end if;
 end $$;
+
+-- ── Storage ───────────────────────────────────────────────────────────────
+--
+-- The two tables of Supabase Storage that policies are written against, with
+-- the columns the Community media migration and `community.check.sql` touch.
+-- On a real project the storage API writes a row to `storage.objects` as the
+-- signed-in user when a file is uploaded — so the row-level policies on it are
+-- the whole of who may upload and who may read — and RLS is on for the table
+-- from the start. It is on here for the same reason: a policy that is never
+-- consulted is not being checked. Nothing here is a migration; on a real
+-- project every object below already exists.
+create schema if not exists storage;
+
+create table if not exists storage.buckets (
+  id                 text        primary key,
+  name               text        not null,
+  owner              uuid,
+  public             boolean     default false,
+  file_size_limit    bigint,
+  allowed_mime_types text[],
+  created_at         timestamptz default now(),
+  updated_at         timestamptz default now()
+);
+
+create table if not exists storage.objects (
+  id         uuid        primary key default gen_random_uuid(),
+  bucket_id  text        references storage.buckets(id),
+  name       text,
+  owner      uuid,
+  metadata   jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (bucket_id, name)
+);
+alter table storage.objects enable row level security;
+
+grant usage on schema storage to anon, authenticated, service_role;
+grant select on storage.buckets to anon, authenticated;
+grant all on storage.buckets, storage.objects to service_role;
+grant select, insert, update, delete on storage.objects to anon, authenticated;
 
 -- ── RLS on by default is NOT here, and that is the correction ────────────
 --

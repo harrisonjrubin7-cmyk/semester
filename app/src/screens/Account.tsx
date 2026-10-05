@@ -1,4 +1,8 @@
+import { CourseStudioEntry } from '../components/CourseStudio';
 import { useState } from 'react';
+import { SYNC_WORDS } from '../lib/syncstatus';
+import { Review } from '../components/Review';
+import { WaitingSends } from '../components/WaitingSends';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -6,9 +10,14 @@ import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
+import { AccountSecurity } from '../components/AccountSecurity';
 import { SchoolClaim } from '../components/SchoolClaim';
 import { ReferralLink } from '../components/ReferralLink';
+import { AgeStatement } from '../components/AgeStatement';
+import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
+import { formatTime } from '../lib/locale';
+import { ErrorState } from '../components/unity/States';
 
 /**
  * The account screen.
@@ -53,6 +62,7 @@ export function AccountScreen() {
             in to. Everything works without one, and everything stays in this browser.
           </div>
         </Blueprint>
+        <MembershipPanel />
       </Page>
     );
   }
@@ -62,14 +72,32 @@ export function AccountScreen() {
       `${state.courses.length} ${state.courses.length === 1 ? 'course' : 'courses'}`,
       `${state.updates.length} added`,
       `${state.notes.length} notes`,
-      `${state.tasks.length} tasks`,
+      `${state.tasks.length} action${state.tasks.length === 1 ? '' : 's'}`,
     ].join(' · ');
+
+    // The same check the pull-down gesture makes. The error state's recovery
+    // and the button below are one function, so they cannot drift apart.
+    const check = () => {
+      setChecking(true);
+      setChecked('');
+      void refresh().then((line) => {
+        setChecking(false);
+        setChecked(line);
+      });
+    };
+    // `explainSync` ends its sentence with "Reference: SEM-…"; the error state
+    // has a slot for exactly that, so it goes there rather than in the body.
+    const ref = /\n\nReference: (\S+)\s*$/.exec(sync.error);
+    const syncFailure = {
+      body: (ref ? sync.error.slice(0, ref.index) : sync.error).trim(),
+      reference: ref?.[1],
+    };
 
     return (
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Signed in</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', marginTop: 'var(--sp-3)' }}>
+          <div className="account-identity" style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', marginTop: 'var(--sp-3)' }}>
             {account.email}
           </div>
           {account.via && (
@@ -79,14 +107,29 @@ export function AccountScreen() {
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-            {sync.status === 'syncing' && 'Catching up with your account…'}
+          {/* A live region, so a screen reader hears "Queued" when the
+              connection drops and "Synced" when it comes back, rather than
+              finding out on the next visit to this screen. */}
+          <div role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+            {sync.status === 'syncing' && SYNC_WORDS.syncing.sentence}
+            {(sync.status === 'offline' || sync.status === 'queued' || sync.status === 'read-only' || sync.status === 'conflict' || sync.status === 'review') &&
+              SYNC_WORDS[sync.status].sentence}
             {sync.status === 'synced' &&
-              `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
-            {sync.status === 'error' && (
-              <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
-            )}
+              `Synced ${sync.at ? formatTime(sync.at) : ''} · ${counts}`}
+            {/* An error is said once, by the announced ErrorState below,
+                which carries the failure and the way to retry. */}
           </div>
+          {sync.status === 'error' && (
+            <div style={{ marginTop: 'var(--sp-4)' }}>
+              <ErrorState
+                title="Sync did not finish"
+                body={syncFailure.body}
+                reference={syncFailure.reference}
+                recover={{ label: checking ? 'Checking…' : 'Check now', run: check }}
+                busy={checking}
+              />
+            </div>
+          )}
           {/*
             What the last sync actually did, which was never reported.
 
@@ -100,25 +143,26 @@ export function AccountScreen() {
             </div>
           ) : null}
 
+          {/* Two devices' edits of one thing, and the choice. See `lib/conflicts.ts`. */}
+          <Review />
+
+          {/* Sends the student kept for later, and the one tap that sends each. See `lib/sync/outbox.ts`. */}
+          <WaitingSends />
+
           {/* The same check the pull-down gesture makes, for a laptop, which
               has no pull-down. It answers in a sentence rather than leaving a
               spinner to be interpreted — see `lib/refresh.ts`. */}
-          <button
-            type="button"
-            className="btn btn-block"
-            disabled={checking}
-            onClick={() => {
-              setChecking(true);
-              setChecked('');
-              void refresh().then((line) => {
-                setChecking(false);
-                setChecked(line);
-              });
-            }}
-            style={{ marginTop: 'calc(14px * var(--density, 1))' }}
-          >
-            {checking ? 'Checking…' : 'Check now'}
-          </button>
+          {sync.status !== 'error' && (
+            <button
+              type="button"
+              className="btn btn-block"
+              disabled={checking}
+              onClick={check}
+              style={{ marginTop: 'calc(14px * var(--density, 1))' }}
+            >
+              {checking ? 'Checking…' : 'Check now'}
+            </button>
+          )}
           {checked && (
             <div
               role="status"
@@ -141,10 +185,15 @@ export function AccountScreen() {
             only one a policy can ever read. See `components/SchoolClaim.tsx`. */}
         <SchoolClaim />
 
+        {/* Faculty Course Studio (D-100): shown only to an account the school
+            has made faculty on a course, with the module on. See
+            `components/CourseStudio.tsx`. */}
+        <CourseStudioEntry />
+
         <SectionLabel>What syncs</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
-          you have added to them, your tasks, appointments, notes and connected calendars, the
+          you have added to them, your actions, appointments, notes and connected calendars, the
           documents, spreadsheets, decks and graphs you have made, the email you have drafted,
           your grades and degree plan, what you have recorded the term costing, and how the app is
           set up. Privacy and your rights lists it group by group. Sign in on a laptop and the same
@@ -161,20 +210,21 @@ export function AccountScreen() {
         <SectionLabel>How conflicts resolve</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
-          Write a note on the laptop and another on your phone while it is offline, and you end up
-          with both; tick one box here and a different one there, and both stay ticked. Settings
-          are the exception, and deliberately so — your colours are whatever you last chose,
-          wherever you chose it.
+          Notes and checked actions from both devices are kept. Settings use the latest choice.
         </div>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
-          What still does not merge is the same note edited on both: the later edit is the one that
-          survives. The app would rather say so than pretend.
+          If the same note is edited on both devices, the later edit wins.
         </div>
 
         {/* Between what the account does and leaving it: the one thing on
             this screen that is about somebody other than the account holder.
             See `components/ReferralLink.tsx`. */}
+        {/* Asked once, for an account made without a birth date (D-139). */}
+        <AgeStatement />
+
         <ReferralLink />
+
+        <AccountSecurity />
 
         <ActionButton
           disabled={busy}
@@ -200,6 +250,7 @@ export function AccountScreen() {
             {error}
           </div>
         )}
+        <MembershipPanel />
       </Page>
     );
   }
@@ -227,6 +278,11 @@ export function AccountScreen() {
       */}
       <Credentials />
 
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        An institution sign-in option appears only after the university has authorized its identity
+        provider and Semester has verified the connection.
+      </div>
+
       <SectionLabel>Before you sign up</SectionLabel>
       <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the
@@ -234,6 +290,7 @@ export function AccountScreen() {
         you end up with both sides' courses, notes and ticked boxes.
       </div>
       <StorageRoom />
+      <MembershipPanel />
     </Page>
   );
 }

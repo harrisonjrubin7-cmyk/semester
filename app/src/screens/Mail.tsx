@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { WIDE, useMedia } from '../lib/media';
 import { secondLine } from '../lib/dim';
 import { typing } from '../lib/keys';
@@ -43,6 +44,18 @@ import {
   type MailDraft,
   type Thread,
 } from '../lib/mailbox';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+
+const FlightPlanInbox = lazy(() =>
+  import('../components/institutional/FlightPlanInbox').then((module) => ({
+    default: module.FlightPlanInbox,
+  })),
+);
+
+function FlightPlanInboxSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return <Suspense fallback={null}><FlightPlanInbox /></Suspense>;
+}
 
 /** How many conversations a page holds. Gmail's number, and it is a good one. */
 const PER_PAGE = 50;
@@ -80,6 +93,7 @@ const PER_PAGE = 50;
  */
 export function Mail() {
   const { state, dispatch, catalog, account, say } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const wide = useMedia(WIDE);
   const trouble = useTrouble();
@@ -378,8 +392,43 @@ export function Mail() {
    */
   const showActions = wide || chosen.length > 0;
 
+  /*
+   * The paging, which is the only way past the fiftieth conversation.
+   *
+   * It lived only in the wide toolbar, and the list under it is sliced to a
+   * page at every width — so on a phone the fifty-first message in a folder
+   * was unreachable except by searching for it by name. Search is not a way
+   * to browse. The toolbar on a phone has no room for three more controls
+   * beside the search field, so there it is a row of its own under the
+   * toolbar, drawn only when there is a second page to go to.
+   */
+  const pager = (
+    <>
+      <span className="mb-folder-n">{pageLabel(threads.length, page, PER_PAGE)}</span>
+      <button
+        type="button"
+        className="mb-ico"
+        aria-label="Newer"
+        disabled={page === 0}
+        onClick={() => setPage((n) => Math.max(0, n - 1))}
+      >
+        <ChevronLeft size={17} />
+      </button>
+      <button
+        type="button"
+        className="mb-ico"
+        aria-label="Older"
+        disabled={page + 1 >= pages(threads.length, PER_PAGE)}
+        onClick={() => setPage((n) => n + 1)}
+      >
+        <ChevronLeft size={17} style={{ transform: 'rotate(180deg)' }} />
+      </button>
+    </>
+  );
+
   return (
     <div className="mb">
+      <FlightPlanInboxSlot />
       <div className="mb-top">
         {!wide && (
           <button
@@ -543,29 +592,7 @@ export function Mail() {
 
         {wide && (
           <>
-            {threads.length > 0 && (
-              <>
-                <span className="mb-folder-n">{pageLabel(threads.length, page, PER_PAGE)}</span>
-                <button
-                  type="button"
-                  className="mb-ico"
-                  aria-label="Newer"
-                  disabled={page === 0}
-                  onClick={() => setPage((n) => Math.max(0, n - 1))}
-                >
-                  <ChevronLeft size={17} />
-                </button>
-                <button
-                  type="button"
-                  className="mb-ico"
-                  aria-label="Older"
-                  disabled={page + 1 >= pages(threads.length, PER_PAGE)}
-                  onClick={() => setPage((n) => n + 1)}
-                >
-                  <ChevronLeft size={17} style={{ transform: 'rotate(180deg)' }} />
-                </button>
-              </>
-            )}
+            {threads.length > 0 && pager}
             <button
               type="button"
               className="mb-ico"
@@ -583,6 +610,11 @@ export function Mail() {
           </>
         )}
       </div>
+      {!wide && !open && threads.length > PER_PAGE && (
+        <div className="mb-top mb-pager" role="navigation" aria-label="Pages">
+          {pager}
+        </div>
+      )}
 
       {menu?.which === 'snooze' && (
         <Popover label="Snooze until" corner={menu.corner} onClose={() => setMenu(null)}>
@@ -767,20 +799,17 @@ export function Mail() {
               onMenu={openMenu}
               onReply={reply}
               onTask={(mail) => {
-                dispatch({
-                  type: 'addTask',
-                  task: {
-                    title: mail.subject,
-                    // Undated: the email says what, not when, and a task
-                    // dated today because that is when it arrived is a task
-                    // that goes overdue tomorrow for no reason.
-                    date: null,
-                    time: '',
-                    note: `From ${mail.from.name || mail.from.address}. ${mail.snippet}`,
-                    courseId: mail.courseId ?? null,
-                  },
+                taskActions.add({
+                  title: mail.subject,
+                  // Undated: the email says what, not when, and a task
+                  // dated today because that is when it arrived is a task
+                  // that goes overdue tomorrow for no reason.
+                  date: null,
+                  time: '',
+                  note: `From ${mail.from.name || mail.from.address}. ${mail.snippet}`,
+                  courseId: mail.courseId ?? null,
                 });
-                say('Added to your tasks.', 'mine');
+                say('Added to your actions.', 'mine');
               }}
               onChanges={(mail) => {
                 dispatch({ type: 'tellChange', text: `${mail.subject}\n\n${mail.body}` });

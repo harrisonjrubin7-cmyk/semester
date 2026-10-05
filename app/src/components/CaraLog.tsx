@@ -10,6 +10,7 @@ import {
   type CaraKind,
 } from '../lib/athletics';
 import { fromSeason, limitOf, logged, weekLine, weekOf, weeks } from '../lib/cara';
+import { useNow } from '../state/store';
 
 /**
  * The hours, written down where they can be added up.
@@ -43,7 +44,7 @@ export function CaraLog({
   update: (change: (old: AthleticsLibrary) => AthleticsLibrary) => boolean;
   blocked: boolean;
 }) {
-  const today = new Date();
+  const today = useNow();
   const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const [date, setDate] = useState(iso);

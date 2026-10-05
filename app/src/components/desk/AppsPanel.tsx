@@ -9,7 +9,7 @@
  * reading is chrome that costs you the page.
  *
  * It is a second drawing of one grid rather than a second grid. `AppGrid`
- * draws the icons, `appShelves` decides what is in them, `saysFor` decides
+ * draws the icons, `appSections` decides what is in them, `saysFor` decides
  * what they are called. What is this file's is the favourites block at the
  * top and the way out.
  *
@@ -25,7 +25,7 @@
 
 import { useStore } from '../../state/store';
 import { currentLook } from '../../state/shape';
-import { appShelves } from '../../lib/apps';
+import { appSections } from '../../lib/apps';
 import { isFavourite, readFavourites, toggleFavourite } from '../../lib/desk';
 import { saysFor, shortFor } from '../../lib/nav';
 import { useModal } from '../../a11y/modal';
@@ -38,7 +38,7 @@ export function AppsPanel({ onClose }: { onClose: () => void }) {
   const { state, dispatch, school } = useStore();
   const caps = school.capabilities;
   const look = currentLook(state);
-  const shelves = appShelves(caps, look.groupOrder, state.role);
+  const sections = appSections(caps, look.groupOrder, state.role);
   const favourites = readFavourites(look.favourites, caps, state.role);
   /** Whether the panel is in the state where tapping an icon pins it. */
   const [editing, setEditing] = useState(false);
@@ -98,11 +98,11 @@ export function AppsPanel({ onClose }: { onClose: () => void }) {
 
       <div className="desk-panel-all">
         <Caps quiet>More from Semester</Caps>
-        {shelves.map((shelf) => (
-          <section key={shelf.group}>
-            <Caps quiet>{shelf.group}</Caps>
+        {sections.map(({ area, apps }) => (
+          <section key={area.id}>
+            <Caps quiet>{area.label}</Caps>
             <AppGrid
-              apps={shelf.apps}
+              apps={apps}
               says={(d) => ({
                 // A pinned app says so in the grid while the pencil is down,
                 // so "which of these am I already carrying" is answerable

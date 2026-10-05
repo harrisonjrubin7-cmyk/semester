@@ -143,6 +143,11 @@ const BY_CODE: Record<string, Code> = {
   '22P02': 'VALIDATION_ERROR', // invalid_text_representation
   '40001': 'CONFLICT', // serialization_failure
   '53300': 'RATE_LIMITED', // too_many_connections
+  // program_limit_exceeded — what the direct-write rate limits raise
+  // (`20260928230000_direct_rate_limits.sql`), and the per-community posting
+  // and image limits before them. PostgREST answers it as HTTP 413, which
+  // `byStatus` would not read as a rate limit, so the code has to.
+  '54000': 'RATE_LIMITED',
   '57014': 'INTEGRATION_UNAVAILABLE', // query_canceled
   // PostgREST
   PGRST301: 'AUTH_REQUIRED', // JWT expired or invalid

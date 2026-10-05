@@ -1,11 +1,17 @@
 import { DatabaseSync } from 'node:sqlite';
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import type {
   ActionInput,
   Receipt,
   Review,
   UniversityIdentity,
 } from '../../../packages/institution/src/index.ts';
+import type { IntelligenceAuditRecord } from './intelligence.ts';
+import {
+  assertJournalKey,
+  journalOperation,
+  openJournalRow,
+  sealJournalRow,
+} from './journal-crypto.ts';
 
 /**
  * The record of every action that reached, or may have reached, a school.
@@ -54,6 +60,40 @@ export interface SavedReview {
   receipt?: Receipt;
 }
 
+/**
+ * The action state machine the gateway depends on, independent of storage.
+ *
+ * SQLite implements it synchronously for the single-host development server.
+ * A production store may use a shared database and therefore return promises.
+ * Keeping both shapes behind this contract lets the request path await every
+ * durability boundary without making the local journal artificially async.
+ */
+export interface ActionJournalStore {
+  healthy(): boolean | Promise<boolean>;
+  retentionHealthy?(): boolean | Promise<boolean>;
+  save(row: SavedReview): void | Promise<void>;
+  get(id: string, identity: UniversityIdentity): SavedReview | null | Promise<SavedReview | null>;
+  claim(id: string, identity: UniversityIdentity, now: number): boolean | Promise<boolean>;
+  finish(
+    row: SavedReview,
+    state: 'completed' | 'pending' | 'refused' | 'uncertain',
+    receipt?: Receipt,
+  ): void | Promise<void>;
+  audit(
+    identity: UniversityIdentity,
+    area: string,
+    event: string,
+    reviewId?: string | null,
+    correlationId?: string | null,
+  ): void | Promise<void>;
+  auditIntelligence?(
+    identity: UniversityIdentity,
+    record: IntelligenceAuditRecord,
+  ): void | Promise<void>;
+  purge?(now?: number): void | Promise<void>;
+  close?(): void | Promise<void>;
+}
+
 /** How long a settled row is kept before `purge` may drop it. */
 const KEEP = {
   /** A prepared review nobody confirmed. */
@@ -63,12 +103,12 @@ const KEEP = {
   audit: 180 * 86_400_000,
 } as const;
 
-export class ActionJournal {
+export class ActionJournal implements ActionJournalStore {
   private db: DatabaseSync;
   private key: Buffer;
 
   constructor(file: string, key: Buffer) {
-    if (key.length !== 32) throw new Error('The journal needs a 32-byte encryption key.');
+    assertJournalKey(key);
     this.key = key;
     this.db = new DatabaseSync(file, { timeout: 5000 });
     this.db.exec(`
@@ -89,9 +129,35 @@ export class ActionJournal {
         actor TEXT NOT NULL,
         area TEXT NOT NULL,
         event TEXT NOT NULL,
-        review_id TEXT
+        review_id TEXT,
+        correlation_id TEXT
+      );
+      CREATE TABLE IF NOT EXISTS intelligence_audit(
+        id INTEGER PRIMARY KEY,
+        at TEXT NOT NULL,
+        tenant TEXT NOT NULL,
+        actor TEXT NOT NULL,
+        category TEXT NOT NULL,
+        provider TEXT NOT NULL,
+        model TEXT NOT NULL,
+        input_tokens INTEGER NOT NULL,
+        output_tokens INTEGER NOT NULL,
+        cost_cents REAL NOT NULL,
+        policy_decision TEXT NOT NULL,
+        action_id TEXT,
+        confirmation TEXT
       );
     `);
+    /*
+     * A journal file written before the correlation column existed has an
+     * `audit` table without it, and `CREATE TABLE IF NOT EXISTS` does not
+     * widen a table it found. One guarded ALTER, so an old file opens rather
+     * than failing its first audit write with "no such column".
+     */
+    const columns = this.db.prepare('PRAGMA table_info(audit)').all() as Array<{ name: string }>;
+    if (!columns.some((c) => c.name === 'correlation_id')) {
+      this.db.exec('ALTER TABLE audit ADD COLUMN correlation_id TEXT');
+    }
   }
 
   /**
@@ -138,18 +204,11 @@ export class ActionJournal {
 
   /** AES-256-GCM, with the IV and tag carried in front of the ciphertext. */
   private seal(v: unknown): string {
-    const iv = randomBytes(12);
-    const cipher = createCipheriv('aes-256-gcm', this.key, iv);
-    const out = Buffer.concat([cipher.update(JSON.stringify(v), 'utf8'), cipher.final()]);
-    return Buffer.concat([iv, cipher.getAuthTag(), out]).toString('base64');
+    return sealJournalRow(this.key, v as SavedReview);
   }
 
   private open(text: string): SavedReview {
-    const data = Buffer.from(text, 'base64');
-    const decipher = createDecipheriv('aes-256-gcm', this.key, data.subarray(0, 12));
-    // Set before any `update`, so a tampered row throws rather than decrypting.
-    decipher.setAuthTag(data.subarray(12, 28));
-    return JSON.parse(Buffer.concat([decipher.update(data.subarray(28)), decipher.final()]).toString('utf8'));
+    return openJournalRow<SavedReview>(this.key, text);
   }
 
   /**
@@ -161,17 +220,7 @@ export class ActionJournal {
    * the first is unresolved.
    */
   private operation(row: SavedReview): string {
-    return createHash('sha256')
-      .update(
-        JSON.stringify([
-          row.identity.institutionId,
-          row.identity.userId,
-          row.input.area,
-          row.input.recordId,
-          row.input.actionId,
-        ]),
-      )
-      .digest('hex');
+    return journalOperation(row);
   }
 
   save(row: SavedReview): void {
@@ -238,10 +287,35 @@ export class ActionJournal {
       .run(state, this.seal({ ...row, state, receipt }), row.review.id);
   }
 
-  audit(identity: UniversityIdentity, area: string, event: string, reviewId: string | null = null): void {
+  audit(
+    identity: UniversityIdentity,
+    area: string,
+    event: string,
+    reviewId: string | null = null,
+    correlationId: string | null = null,
+  ): void {
     this.db
-      .prepare('INSERT INTO audit(at,tenant,actor,area,event,review_id) VALUES(?,?,?,?,?,?)')
-      .run(new Date().toISOString(), identity.institutionId, identity.userId, area, event, reviewId);
+      .prepare('INSERT INTO audit(at,tenant,actor,area,event,review_id,correlation_id) VALUES(?,?,?,?,?,?,?)')
+      .run(new Date().toISOString(), identity.institutionId, identity.userId, area, event, reviewId, correlationId);
+  }
+
+  /**
+   * Metadata only. Source bodies and model prose are deliberately absent from
+   * both this signature and the table, so logging cannot accidentally turn a
+   * protected course source into a second ungoverned copy.
+   */
+  auditIntelligence(identity: UniversityIdentity, record: IntelligenceAuditRecord): void {
+    this.db
+      .prepare(`INSERT INTO intelligence_audit(
+        at,tenant,actor,category,provider,model,input_tokens,output_tokens,
+        cost_cents,policy_decision,action_id,confirmation
+      ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .run(
+        new Date().toISOString(), identity.institutionId, identity.userId,
+        record.category, record.provider, record.model, record.inputTokens,
+        record.outputTokens, record.costCents, record.policyDecision,
+        record.actionId ?? null, record.confirmation ?? null,
+      );
   }
 
   /**
@@ -260,6 +334,7 @@ export class ActionJournal {
       )
       .run(now - KEEP.ready, now - KEEP.completed);
     this.db.prepare('DELETE FROM audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
+    this.db.prepare('DELETE FROM intelligence_audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
   }
 
   close(): void {

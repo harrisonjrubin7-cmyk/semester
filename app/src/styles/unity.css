@@ -1,0 +1,1459 @@
+/* Semester — the shared components, drawn from the semantic tokens.
+ *
+ * Every rule here reads `styles/tokens.css` names, and through them the
+ * per-ground primitives, so these components repaint with the thirteen grounds
+ * and eleven accents, answer the Text size and Density settings (`--type-*`
+ * and `--sp-*` carry both multipliers), and pass `lib/contrast.test.ts` for
+ * the same reason every other surface does. `styles/tokens.test.ts` holds
+ * that nothing here writes a colour or an off-scale gap of its own.
+ *
+ * Motion is by the role tokens only, which the reduced-motion query and the
+ * app's own Less motion setting both zero. Nothing in this sheet animates for
+ * decoration, and no state here is carried by motion alone.
+ */
+
+/* ── Status ─────────────────────────────────────────────────────────────── */
+
+.status-chip,
+.save-state {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--type-xs);
+  line-height: var(--leading-tight);
+  color: var(--status-neutral);
+}
+
+.status-chip {
+  padding: var(--sp-1) var(--sp-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-pill);
+}
+
+.status-chip[data-tone='attention'],
+.save-state[data-tone='attention'] {
+  color: var(--status-attention);
+  border-color: var(--status-attention-line);
+}
+
+/* One rung above attention: `--status-danger` is the error ink (DD-006). It
+   shared the rule above until a review found the new token never drew. */
+.status-chip[data-tone='danger'],
+.save-state[data-tone='danger'] {
+  color: var(--status-danger);
+  border-color: var(--status-danger-line);
+}
+
+.status-chip[data-tone='success'],
+.status-chip[data-tone='info'],
+.save-state[data-tone='success'] {
+  color: var(--text-primary);
+}
+
+.save-state {
+  transition: color var(--motion-save);
+}
+
+.status-glyph {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A fact's provenance: origin first, then at most two cues (lib/factprovenance.ts).
+   The chip itself is .status-chip; these only add the second, non-colour carrier
+   of origin — solid for an institution's, dashed for a sample. */
+.prov,
+.prov-visible {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.prov-chip[data-fill='solid'] {
+  background: var(--surface-quiet);
+  border-color: var(--border-strong);
+}
+
+.prov-chip[data-fill='dashed'] {
+  border-style: dashed;
+}
+
+.prov-age {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+/* ── Persistent system context ─────────────────────────────────────────── */
+
+.system-context {
+  position: relative;
+  z-index: var(--layer-raised);
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  min-height: var(--target-primary);
+  padding-block: var(--sp-2);
+  padding-inline: var(--chrome-pad);
+  border-bottom: 1px solid var(--app-line-soft);
+  background: var(--bar-surface);
+  color: var(--text-secondary);
+  font-size: var(--type-xs);
+  line-height: var(--leading-tight);
+}
+
+.system-context-location,
+.system-context-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.system-context-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.system-context-location {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.system-context-term {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.system-context-term-select {
+  width: auto;
+  max-width: 16rem;
+  min-height: 32px;
+  padding: var(--sp-1) var(--sp-7) var(--sp-1) var(--sp-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-sm);
+  background: var(--bar-surface);
+  font: inherit;
+}
+
+.system-context-link,
+.system-health {
+  width: auto;
+  min-width: var(--target-primary);
+  min-height: var(--target-primary);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  color: inherit;
+  white-space: nowrap;
+}
+
+.system-context-link:hover,
+.system-health:hover {
+  color: var(--text-primary);
+  background: var(--action-secondary);
+}
+
+.system-context-workflow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.system-context-workflow > .input {
+  width: auto;
+  max-width: 11rem;
+  min-height: 32px;
+  padding-block: var(--sp-1);
+  font: inherit;
+}
+
+.system-accessibility,
+.decision-trail {
+  position: relative;
+}
+
+.system-tool-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 32px;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--shape-pill);
+  color: var(--text-secondary);
+  cursor: pointer;
+  list-style: none;
+  white-space: nowrap;
+}
+
+.system-accessibility > .system-tool-trigger::before {
+  content: 'Aa';
+  color: var(--text-primary);
+  font-size: var(--type-xs);
+  font-weight: 700;
+}
+
+.system-accessibility[data-open] > .system-tool-trigger,
+.decision-trail[data-open] > .system-tool-trigger,
+.system-tool-trigger:hover {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  background: var(--action-secondary);
+}
+
+.system-tool-popover {
+  color: var(--text-primary);
+}
+
+.system-tool-close {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.system-tool-close > button {
+  display: grid;
+  place-items: center;
+  width: var(--target-primary);
+  min-height: var(--target-primary);
+  border-radius: var(--shape-control);
+  color: var(--text-secondary);
+}
+
+.system-tool-close > button:hover {
+  background: var(--action-secondary);
+  color: var(--text-primary);
+}
+
+.system-tool-content {
+  padding: 0 var(--sp-4) var(--sp-4);
+}
+
+.accessibility-panel,
+.accessibility-selects,
+.accessibility-selects label {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.accessibility-panel-head {
+  display: flex;
+  align-items: start;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.accessibility-panel-head h2 {
+  margin: var(--sp-1) 0 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+}
+
+.accessibility-panel-note,
+.accessibility-status {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+}
+
+.accessibility-selects {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Keep native selection behavior, while drawing the control in Semester's palette. */
+.device select.input:not([multiple]),
+.device .system-context-term-select {
+  appearance: none;
+  min-width: 0;
+  padding-inline-end: calc(var(--sp-7) + var(--sp-5));
+  background-color: var(--surface-base);
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%), linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
+  background-position: calc(100% - 1rem) 50%, calc(100% - 0.75rem) 50%;
+  background-size: 0.25rem 0.25rem;
+  background-repeat: no-repeat;
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+}
+
+.device select.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (forced-colors: active) {
+  .device select.input:not([multiple]),
+  .device .system-context-term-select {
+    appearance: auto;
+    background-image: none;
+  }
+}
+
+/*
+ * Course-hub quiet actions sit inside a legacy portal scope that paints every
+ * button as a filled control. The Upload picker is a label, so only the four
+ * create buttons received that outer fill; text links received it too. Keep
+ * the shared portal defaults for ordinary controls and restore the explicit
+ * quiet actions after that sheet in the cascade.
+ */
+.device .portal-workspace button.for-this-new {
+  min-height: 44px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+}
+
+.device .portal-workspace button.for-this-new:hover {
+  background: none;
+}
+
+.device .portal-workspace button.for-this-attach,
+.device .portal-workspace button.workspace-text-button {
+  min-height: 44px;
+  background: none;
+  border: 0;
+  font-size: var(--type-sm) !important;
+}
+
+.device .portal-workspace button.workspace-text-button {
+  padding: 0 var(--sp-2);
+  margin: 0 calc(var(--sp-2) * -1);
+  border-radius: var(--r-sm);
+  font: inherit;
+  color: var(--app-accent-deep);
+  letter-spacing: inherit !important;
+  text-transform: none !important;
+  line-height: inherit;
+}
+
+.accessibility-selects label {
+  color: var(--text-secondary);
+  font-size: var(--type-sm);
+}
+
+.accessibility-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+
+.accessibility-actions .btn {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: var(--target-primary);
+  text-transform: none;
+  letter-spacing: normal;
+  text-align: left;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-control);
+}
+
+.accessibility-actions .btn::after {
+  content: 'Off';
+  margin-inline-start: auto;
+  color: var(--text-secondary);
+  font-size: var(--type-xs);
+}
+
+.accessibility-actions .btn[aria-pressed='true']::after {
+  content: 'On';
+  color: var(--text-primary);
+}
+
+.accessibility-audio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding-block: var(--sp-3);
+  border-block: 1px solid var(--border-subtle);
+}
+
+.accessibility-actions .btn[aria-pressed='true'] {
+  border-color: var(--app-accent-deep);
+  background: var(--app-accent-wash);
+  color: var(--text-primary);
+}
+
+.device .accessibility-panel > .accessibility-settings-link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-primary);
+}
+
+.decision-trail-meta {
+  color: var(--text-secondary);
+  font-size: var(--type-2xs-plus);
+}
+
+.decision-trail-panel h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+}
+
+.decision-trail-panel p {
+  margin: var(--sp-2) 0 var(--sp-4);
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+
+.decision-trail-panel ol {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+
+.decision-trail-panel li[aria-current='step'] {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.system-health {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  justify-content: center;
+}
+
+.system-health[data-tone='attention'] {
+  color: var(--status-attention);
+}
+
+.system-health[data-tone='danger'] {
+  color: var(--status-danger);
+}
+
+.object-history {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding-left: var(--sp-7);
+}
+
+@media (max-width: 839px) {
+  .system-context {
+    align-items: flex-start;
+    padding-inline: var(--page-pad);
+  }
+
+  .system-context-actions {
+    margin-left: auto;
+  }
+
+  .system-context-workflow,
+  .system-context-actions > .system-context-link {
+    display: none;
+  }
+
+  .system-health {
+    padding-inline: var(--sp-2);
+  }
+
+  .accessibility-selects,
+  .accessibility-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Tabular figures, for dates, counts, schedules and data. */
+.nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quiet text action — the secondary beside a primary button. */
+.link-quiet {
+  color: var(--text-secondary);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  font-size: var(--type-sm);
+}
+
+.link-quiet:hover {
+  color: var(--text-primary);
+}
+
+/* Inside the ported portal workspaces (course hub, study studio, toolkit)
+   `.portal-workspace button` fills every button with a wash and pads it to
+   40px — it outranks `.bare`, so a quiet link there drew as a grey slab
+   across the card. Two classes outrank it back. */
+.bare.link-quiet {
+  /* As wide as its words. `.bare` is `width: 100%` for the rows it was made
+     for, which gave every quiet link a hit area across the whole column —
+     on Mail, "About this screen" ran under the floating Compose button. */
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+/* ── Context bar ────────────────────────────────────────────────────────── */
+
+.context-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-6) var(--sp-7);
+  margin-block: var(--sp-4);
+  background: var(--bar-surface);
+  border: 1px solid var(--bar-border);
+  border-radius: var(--card-shape);
+}
+
+/* A bar placed inside a surface that is already a card — the course
+   banner, a studio panel — takes that surface rather than drawing a card of
+   its own inside it. Cards inside cards are the thing the brief names. */
+.course-banner > .context-bar,
+.portal-panel > .context-bar,
+.blueprint > .context-bar {
+  padding: 0;
+  margin-block: 0 var(--sp-4);
+  background: none;
+  border: 0;
+}
+
+.context-bar-title {
+  margin: 0;
+  font-weight: inherit;
+  font-size: var(--type-display-xs);
+  line-height: var(--leading-display-xs);
+  color: var(--text-primary);
+}
+
+.context-bar-states,
+.context-bar-actions,
+.object-card-actions,
+.object-card-foot,
+.open-in,
+.unity-sheet-actions,
+.state-actions,
+.quick-actions-row,
+.command-center-add,
+.first-goal-choices,
+.capture-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+/* In the drawn frame the bar is the screen's own object — a deadline — and
+   its title is set at the size that title had before, not a card's. */
+.blueprint > .context-bar .context-bar-title {
+  font-size: var(--type-display-lg);
+  line-height: var(--leading-display);
+}
+
+/* ── Object card ────────────────────────────────────────────────────────── */
+
+.object-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-7);
+  background: var(--card-surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-shape);
+}
+
+.object-card-eyebrow {
+  font-size: var(--type-2xs-plus);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.object-card-title {
+  margin: 0;
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.object-card-why,
+.object-card-meta,
+.object-card-detail {
+  margin: 0;
+  font-size: var(--type-base);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+
+.object-card-meta {
+  font-size: var(--type-sm);
+}
+
+.open-in-label {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+/* ── Sheets: Source & details, Capture ──────────────────────────────────── */
+
+.unity-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: var(--layer-overlay);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--scrim, rgba(0, 0, 0, 0.5));
+}
+
+.unity-scrim.is-window {
+  position: fixed;
+  align-items: center;
+}
+
+.unity-sheet {
+  width: 100%;
+  max-width: 620px;
+  max-height: 88%;
+  overflow: auto;
+  padding: var(--sp-7);
+  background: var(--sheet-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--sheet-shape) var(--sheet-shape) 0 0;
+  box-shadow: var(--sheet-elevation);
+  animation: unity-sheet-in var(--motion-sheet);
+}
+
+.is-window > .unity-sheet {
+  border-radius: var(--sheet-shape);
+}
+
+@keyframes unity-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.unity-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.unity-sheet-title {
+  margin: 0 0 var(--sp-6);
+  font-size: var(--type-display-xs);
+  line-height: var(--leading-display-xs);
+  color: var(--text-primary);
+}
+
+.source-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-7);
+}
+
+.source-list dt {
+  margin-top: var(--sp-5);
+  font-size: var(--type-2xs-plus);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.source-list dd {
+  margin: 0;
+  font-size: var(--type-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+}
+
+.source-list ul {
+  margin: 0;
+  padding-left: var(--sp-7);
+}
+
+.source-about {
+  display: block;
+  margin-top: var(--sp-2);
+  color: var(--text-secondary);
+}
+
+.capture-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.capture-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.capture-kinds,
+.visibility-choices,
+.mode-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.capture-next {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+/* ── Visibility, modes ──────────────────────────────────────────────────── */
+
+.visibility {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.visibility-said {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+}
+
+.visibility-choices,
+.mode-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.visibility-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-5);
+  min-height: var(--target-primary);
+  font-size: var(--type-md);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.visibility-choice input {
+  width: var(--target-min);
+  height: var(--target-min);
+  margin: 0;
+  flex: none;
+  accent-color: var(--action-primary);
+}
+
+.visibility-about {
+  display: block;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+
+/* ── Next ───────────────────────────────────────────────────────────────── */
+
+.next-steps {
+  margin-block: var(--sp-7);
+}
+
+.next-steps ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.next-steps-title {
+  margin: 0 0 var(--sp-4);
+}
+
+.next-step {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: var(--target-primary);
+  padding: var(--sp-5) var(--sp-6);
+  text-align: left;
+  background: var(--card-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-shape);
+  font: inherit;
+  cursor: pointer;
+}
+
+.next-step-label {
+  font-size: var(--type-md);
+}
+
+.next-step-why {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+/* ── States ─────────────────────────────────────────────────────────────── */
+
+.state-loading {
+  padding: var(--page-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+.state-loading-bar {
+  border-radius: var(--shape-card);
+  background: var(--surface-raised);
+}
+
+.state-error,
+.state-success,
+.state-permission,
+.state-progress,
+.state-offline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-6) var(--sp-7);
+  margin-block: var(--sp-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--card-shape);
+  font-size: var(--type-base);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+}
+
+.state-offline {
+  margin-inline: var(--page-pad);
+}
+
+.state-offline {
+  border-color: var(--status-attention-line);
+  background: var(--status-attention-wash);
+}
+
+.state-error {
+  border-color: var(--status-danger-line);
+  background: var(--status-danger-wash);
+}
+
+.state-title {
+  font-size: var(--type-md);
+  font-weight: 600;
+}
+
+.state-body,
+.state-note,
+.state-ref {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* A failure explained in more than one paragraph — the sync and import
+   explanations are — keeps its breaks. */
+.state-body {
+  white-space: pre-line;
+}
+
+.state-note,
+.state-ref {
+  font-size: var(--type-sm);
+}
+
+.state-progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.state-progress-bar {
+  width: 100%;
+  height: var(--sp-4);
+  accent-color: var(--action-primary);
+  transition: all var(--motion-progress);
+}
+
+.state-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  font-size: var(--type-base);
+  color: var(--text-secondary);
+}
+
+.state-steps li {
+  display: flex;
+  gap: var(--sp-4);
+}
+
+.state-steps [data-state='working'],
+.state-steps [data-state='done'] {
+  color: var(--text-primary);
+}
+
+.state-steps [data-state='failed'] {
+  color: var(--status-danger);
+}
+
+/* ── About this screen ──────────────────────────────────────────────────── */
+
+.screen-guide {
+  margin: var(--sp-7) var(--page-pad) var(--sp-7);
+  padding-top: var(--sp-6);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.screen-guide-body {
+  margin-top: var(--sp-5);
+  font-size: var(--type-base);
+  line-height: var(--leading-relaxed);
+  max-width: var(--layout-reading);
+}
+
+.screen-guide-body dl {
+  margin: 0 0 var(--sp-5);
+}
+
+.screen-guide-body dt {
+  margin-top: var(--sp-5);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.screen-guide-body dd {
+  margin: var(--sp-1) 0 0;
+  color: var(--text-secondary);
+}
+
+/* The fill screens: the screen takes what is left once the help's one line
+   is placed. See ShellBody. */
+.fill-with-guide {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.fill-with-guide > :not(.screen-guide) {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.screen-guide.is-compact {
+  flex: none;
+  margin-block: 0;
+  padding-block: var(--sp-3);
+}
+
+/* ── Quick actions, command centre, first goal ──────────────────────────── */
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-7);
+}
+
+.quick-actions-row {
+  justify-content: center;
+}
+
+.keep-it-as {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.keep-it-as .quick-actions-row {
+  justify-content: flex-start;
+}
+
+.command-center {
+  margin-block: var(--sp-7);
+}
+
+.command-center-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.command-center-head h2 {
+  margin: 0;
+}
+
+.command-center-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--sp-4);
+}
+
+.command-widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.command-widget-open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: var(--target-primary);
+  padding: var(--sp-6);
+  text-align: left;
+  background: var(--card-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-shape);
+  font: inherit;
+  cursor: pointer;
+}
+
+.command-widget-label {
+  font-size: var(--type-2xs-plus);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.command-widget-value {
+  font-size: var(--type-md);
+}
+
+.command-widget-arrange {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.command-center-add {
+  margin-top: var(--sp-5);
+}
+
+.first-goal {
+  margin-block: var(--sp-4) var(--sp-7);
+  padding: var(--sp-7);
+  border: 1px solid var(--card-border);
+  border-radius: var(--card-shape);
+  background: var(--card-surface);
+}
+
+.first-goal-title {
+  margin: 0 0 var(--sp-6);
+  font-size: var(--type-display-xs);
+  line-height: var(--leading-display-xs);
+  color: var(--text-primary);
+}
+
+.first-goal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+
+.first-goal-foot .visibility-about {
+  margin: 0;
+}
+
+.first-goal-said {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--bar-surface);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+
+.first-goal-summary-copy,
+.first-goal-summary-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.first-goal-summary-copy {
+  min-width: 0;
+}
+
+.first-goal-summary-copy > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Focus bar ──────────────────────────────────────────────────────────── */
+
+.focus-bar {
+  position: fixed;
+  left: 50%;
+  bottom: max(var(--sp-6), env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: var(--layer-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  width: max-content;
+  max-width: calc(100% - 2 * var(--layout-gutter));
+  padding: var(--sp-3) var(--sp-6);
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-pill);
+  box-shadow: var(--elevation-floating);
+}
+
+/* On a phone the bar wraps once it carries the break reminder, and a pill
+   that wraps is an oval. It takes the gutters' width and a card's corners. */
+@media (max-width: 759px) {
+  .focus-bar {
+    width: calc(100% - 2 * var(--layout-gutter));
+    border-radius: var(--shape-surface);
+  }
+}
+
+/* The break reminder's line. Empty until a break is due, and then one
+   sentence in the bar — no motion, no colour of its own. */
+.focus-break {
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--text-primary);
+}
+
+/* ── Workspace modes — presentation only ────────────────────────────────── */
+
+/* Detail that Detailed puts up front and the others keep one press away. */
+.detail-only {
+  display: none;
+}
+
+:root[data-workspace='detailed'] .detail-only {
+  display: block;
+}
+
+/* Focused steps the navigation and the extras back. The work, its sources,
+   its save state and the way out (`.focus-bar`) all stay. */
+.fold-all {
+  display: flex;
+}
+
+:root[data-workspace='focused'] .app-tabs,
+:root[data-workspace='focused'] .shelf-nav,
+:root[data-workspace='focused'] .today-secondary-journey,
+:root[data-workspace='focused'] .fold-all,
+:root[data-workspace='focused'] .hides-in-focus {
+  display: none;
+}
+
+/* And the desktop sidebars — the rail beside the pane on the tab-bar layout,
+   the workspace's own column on the workspace layout. Each is a grid column
+   as well as an element, so the column goes with it: hiding only the element
+   would auto-place the pane into the rail's zero-width track. The header's
+   back, search and + stay, and the Focus bar is the way out. */
+:root[data-workspace='focused'] {
+  --rail-w: 0px;
+}
+
+:root[data-workspace='focused'] .rail,
+:root[data-workspace='focused'] .desk-side {
+  display: none;
+}
+
+:root[data-workspace='focused'] .desk,
+:root[data-workspace='focused'] .deskwork-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ── Glass — the constrained policy ─────────────────────────────────────────
+   Allowed only on the transient overlays listed in
+   `docs/ELEVATION-AND-GLASS-POLICY.md`, and `styles/glass.test.ts` holds the
+   list. Opaque whenever the platform cannot blur, the person asked for less
+   transparency or more contrast, the app is in Low stimulation, or colours
+   are forced. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .focus-bar {
+    background: color-mix(in srgb, var(--surface-overlay) 86%, transparent);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+}
+
+/* The app's three existing frosted surfaces — the header, the tab bar and the
+   soft layout's folder — already fall back to opaque where the platform
+   cannot blur (`app.css`). They did not where the *person* asked for it:
+   reduced transparency and more contrast both left text over a moving
+   blur. These close that. */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more), (forced-colors: active) {
+  .app-header,
+  .app-tabs,
+  .soft-folder {
+    background: var(--surface-canvas);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .focus-bar {
+    background: var(--surface-overlay);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+:root[data-calm='calm'] .app-header,
+:root[data-calm='calm'] .app-tabs,
+:root[data-calm='calm'] .soft-folder {
+  background: var(--surface-canvas);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-calm='calm'] .focus-bar {
+  background: var(--surface-overlay);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ActionPreview (components/unity/ActionPreview.tsx): what happens, before it does. */
+.action-preview {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.action-preview-subject,
+.action-preview-caveat {
+  margin: 0;
+}
+
+.action-preview-caveat {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+.action-preview-facts {
+  display: grid;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+}
+
+.action-preview-facts dt {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+.action-preview-facts dd {
+  margin: 0 0 var(--sp-3);
+}
+
+/* Combobox (components/unity/Combobox.tsx): a text box with a list under it. */
+.combo {
+  position: relative;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.combo-label {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+.combo-hint {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+.combo-list {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  z-index: var(--layer-menu);
+  margin: var(--sp-2) 0 0;
+  padding: var(--sp-2);
+  list-style: none;
+  max-height: 40vh;
+  overflow-y: auto;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-surface);
+  box-shadow: var(--elevation-floating);
+}
+
+.combo-option {
+  display: grid;
+  gap: var(--sp-1);
+  min-height: var(--target-primary);
+  padding: var(--sp-3) var(--sp-4);
+  border-inline-start: 3px solid transparent;
+  cursor: pointer;
+}
+
+/* The row the arrow keys are on: an edge and a weight, not a colour alone. */
+.combo-option[aria-selected='true'] {
+  border-inline-start-color: var(--focus-color);
+  background: var(--surface-quiet);
+  font-weight: 600;
+}
+
+.combo-detail {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+@media (forced-colors: active) {
+  .status-chip,
+  .context-bar,
+  .object-card,
+  .unity-sheet,
+  .next-step,
+  .command-widget-open,
+  .focus-bar {
+    border: 1px solid CanvasText;
+  }
+
+  .combo-list {
+    border: 1px solid CanvasText;
+  }
+
+  .combo-option[aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  /* Forced colours drop the solid chip's fill; a heavier edge keeps origin readable. */
+  .prov-chip[data-fill='solid'] {
+    border-width: 3px;
+  }
+}
+
+/* "Describe the problem": the no-wrong-door front of Help (components/NoWrongDoor.tsx). */
+.no-wrong-door {
+  margin: 0 0 var(--sp-6);
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.no-wrong-door-lead,
+.no-wrong-door-never {
+  margin: 0 0 var(--sp-3);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.no-wrong-door-never {
+  margin: var(--sp-3) 0 0;
+}
+
+.no-wrong-door-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.no-wrong-door-answer {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line);
+}
+
+.no-wrong-door-owner {
+  margin: 0 0 var(--sp-3);
+  line-height: var(--leading-relaxed);
+}
+
+.no-wrong-door-head {
+  margin: var(--sp-3) 0 var(--sp-1);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.no-wrong-door-list {
+  margin: 0;
+  padding-left: var(--sp-5);
+  line-height: var(--leading-relaxed);
+}
+
+/* "Fix this": the correction paths under About this screen (components/FixThis.tsx). */
+.fix-this {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line);
+}
+
+.fix-this-head {
+  margin: 0 0 var(--sp-2);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.fix-this-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A disclosed trail is interactive content, including on narrow screens. */
+.system-context-workflow.system-context-trail {
+  display: flex;
+  white-space: nowrap;
+  max-inline-size: min(24rem, 40vw);
+}
+.system-context-trail .decision-trail {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .first-goal-said,
+  .accessibility-panel-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .first-goal-summary-actions {
+    justify-content: space-between;
+  }
+
+  .accessibility-selects,
+  .accessibility-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .system-context-workflow.system-context-trail,
+  .system-health-label {
+    display: none;
+  }
+}

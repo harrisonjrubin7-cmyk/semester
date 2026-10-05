@@ -11,6 +11,7 @@
  * Nothing here has any dependency beyond types and small pure helpers.
  */
 
+import { readOpened, type Opened } from '../lib/opened';
 import type {
   Appointment,
   CampusLink,
@@ -37,6 +38,7 @@ import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
+import { readSeen, type SeenMap } from '../lib/whatchanged';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
 import { readLeadDays } from '../lib/runway';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
@@ -71,6 +73,7 @@ import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
+import type { RecoveryIntent } from '../lib/academic-recovery';
 import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
@@ -119,6 +122,8 @@ export function migrationReport(): Migrated | null {
  * ephemeral navigation state that should reset.
  */
 export interface Persisted {
+  /** Private, student-entered planning; excluded from routine AI context. */
+  operatingWorkspace?: string | null;
   nav: NavMode;
   /**
    * Every answer you have given, keyed by card.
@@ -248,6 +253,11 @@ export interface Persisted {
   returned: Returned[];
   regradeWindows: Record<string, RegradeWindow>;
   /**
+   * The last reading of each course's deadlines the student has seen, so
+   * "What changed" can say what differs from it. See `lib/whatchanged.ts`.
+   */
+  deadlineSeen: SeenMap;
+  /**
    * Whether the app may look an address up, and how. Off by default and
    * off in two directions independently — see `lib/geocode.ts`. With it off
    * the app behaves exactly as it always has: you name places yourself and
@@ -314,6 +324,11 @@ export interface Persisted {
    * email address — a name is a thing you ask for, not derive.
    */
   myName: string;
+  /**
+   * How to say their name, in their own spelling — "ah-DAY-oh-lah". Theirs to
+   * write and to share; the app never generates or guesses one.
+   */
+  pronounce: string;
   /** Every class marked present, absent or excused. See `lib/attend.ts`. */
   attendance: Attended[];
   /** What each course's syllabus says about turning up, keyed by course id. */
@@ -338,6 +353,17 @@ export interface Persisted {
   courseOrder: CourseId[];
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
+  /**
+   * The deadlines and courses you opened most recently, newest first.
+   *
+   * `recent` above is screens — "Calendar", "Courses" — which answers where
+   * you go, not what you were in the middle of. This is the thing itself, so
+   * search can offer "continue where you left off" as the deadline you were
+   * reading rather than the list it was in. Ids only: the title is looked up
+   * at render time, so a renamed or deleted deadline is never shown stale.
+   * See `lib/opened.ts`.
+   */
+  opened: Opened[];
   /**
    * Every screen ever opened, so the app can say what has not been.
    *
@@ -573,6 +599,7 @@ export interface Persisted {
   typeface: string;
   bodyface: string;
   lineHeight: string;
+  textSpacing: string;
   readingWidth: string;
   iconShape: string;
   /** `device`, `still` or `calm` — see `CALMS` in `lib/look.ts`. */
@@ -606,6 +633,12 @@ export interface Persisted {
    * chosen, and that file answers it rather than this one.
    */
   favourites: string;
+  /**
+   * The accessibility modes somebody turned on, as a comma list. A look key
+   * so it follows them between devices; parsed by `lib/accessmode.ts`, which
+   * drops any id this build does not know.
+   */
+  access: string;
   /** `on` or `off` — whether the search home draws its row of shortcuts. */
   shortcuts: string;
   /**
@@ -636,6 +669,15 @@ export interface Persisted {
   boardOrder: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
+  /**
+   * `guided`, `focused`, `detailed` or `access` — how much of each workspace
+   * is drawn. Presentation only: see `WORKSPACE_MODES` in `lib/look.ts`.
+   */
+  workspaceMode: string;
+  /** The widgets pinned to Today's command centre, comma-separated ids. Empty is nobody has chosen. */
+  pinned: string;
+  /** What the student said would help most on first open. Empty until they say. See `lib/goals.ts`. */
+  goal: string;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -820,6 +862,8 @@ export interface Ephemeral {
   /** Whether the one-line capture box is open. See `lib/capture.ts`. */
   quickAdd: boolean;
   screen: Screen;
+  /** Student-selected recovery context carried to the next screen only. */
+  recoveryIntent: RecoveryIntent | null;
   /** Back stack, so Back walks history rather than one remembered screen. */
   history: Screen[];
   courseId: CourseId;
@@ -889,6 +933,18 @@ export interface Ephemeral {
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: HomeTab;
   coursesTab: CoursesTab;
+  /**
+   * Which way round the account form opens when a link said so.
+   *
+   * `#/login` and `#/signup` (see `DOORS` in `lib/route.ts`) are the company
+   * site's two buttons. The account screen is lazy, so by the time its form
+   * mounts the address has already been rewritten to `#/account` — the form
+   * cannot read the answer from the URL and has to find it here. Null means
+   * no link asked, and the form decides for itself. The form clears it once
+   * it has opened the way the link asked, so it answers one visit, not the
+   * rest of the session.
+   */
+  accountDoor: 'in' | 'up' | null;
   /** Which half of the money screen is showing. See `lib/types.ts`. */
   costsTab: CostsTab;
   /**
@@ -1102,6 +1158,13 @@ export interface QuizQuestion {
   q: string;
   unit: string;
   full: string;
+  /**
+   * The id of the card a choice or true-or-false was made from, where it has
+   * one, so the screen can name the card by `cardIdentity` — to put it in
+   * review, or leave it out of the next run. A card with no id is named by
+   * its question, which is `q`. None on a match, which is made from terms.
+   */
+  cardId?: string;
   /** The options to pick between. Two on a true-or-false, none on a match. */
   opts: { text: string; ok: boolean }[];
   /**
@@ -1292,6 +1355,7 @@ export function unseen(remote: Seen, seen: Seen | null): boolean {
 }
 
 export const DEFAULT_PERSISTED: Persisted = {
+  operatingWorkspace: null,
   /*
    * The workspace is what the app opens as: a tab strip, one search field
    * under it, and the launcher — `firstScreen` puts you on `search`, which is
@@ -1420,6 +1484,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   progress: {},
   returned: [],
   regradeWindows: {},
+  deadlineSeen: {},
   geocode: { on: false, reverseOn: false, service: 'nominatim' },
   requirements: [],
   taken: [],
@@ -1440,6 +1505,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   myRules: [],
   aboutMe: [],
   myName: '',
+  pronounce: '',
   attendance: [],
   attendPolicy: {},
   pieces: {},
@@ -1447,6 +1513,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   examCovers: {},
   dayBudget: DEFAULT_BUDGET,
   recent: [],
+  opened: [],
   sittings: [],
   sessions: [],
   liveSession: null,
@@ -1483,6 +1550,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   typeface: 'condensed',
   bodyface: 'barlow',
   lineHeight: 'normal',
+  textSpacing: 'normal',
   readingWidth: 'normal',
   iconShape: 'none',
   calm: 'device',
@@ -1495,6 +1563,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // "nobody has arranged their shortcuts", and writing the five defaults in
   // here would spend that state on the first save.
   favourites: '',
+  access: '',
   shortcuts: 'on',
   // Not `list`. Writing a default in here made "never chosen" unreachable —
   // the first save stamped `list` on everybody, and `directoryOf`'s soft
@@ -1503,6 +1572,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   groupOrder: '',
   boardOrder: '',
   hue: -1,
+  workspaceMode: 'guided',
+  pinned: '',
+  goal: '',
 };
 
 /** The look, gathered off the state it is spread across. */
@@ -1516,6 +1588,7 @@ export function currentLook(state: Persisted): Look {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -1525,11 +1598,15 @@ export function currentLook(state: Persisted): Look {
     courseColours: state.courseColours,
     shell: state.shell,
     favourites: state.favourites,
+    access: state.access,
     shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
     hue: state.hue,
+    workspaceMode: state.workspaceMode,
+    pinned: state.pinned,
+    goal: state.goal,
   };
 }
 
@@ -1548,6 +1625,7 @@ export function initialEphemeral(): Ephemeral {
     quickAdd: false,
     undone: null,
     screen: 'home',
+    recoveryIntent: null,
     history: [],
     courseId: 'core',
     itemId: 'bus-ga1',
@@ -1566,6 +1644,7 @@ export function initialEphemeral(): Ephemeral {
     mineTab: 'tasks',
     mathTab: 'write',
     homeTab: 'today',
+    accountDoor: null,
     coursesTab: 'courses',
     costsTab: 'bill',
     meTab: 'you',
@@ -1763,6 +1842,7 @@ export function loadPersisted(): Persisted {
       progress: readProgress(saved.progress),
       returned: readReturned(saved.returned),
       regradeWindows: readWindows(saved.regradeWindows),
+      deadlineSeen: readSeen(saved.deadlineSeen),
       geocode: readGeocode(saved.geocode),
       requirements: readRequirements(saved.requirements),
       taken: readTaken(saved.taken),
@@ -1803,6 +1883,7 @@ export function loadPersisted(): Persisted {
       myRules: readRules(saved.myRules),
       aboutMe: readFacts(saved.aboutMe),
       myName: typeof saved.myName === 'string' ? saved.myName : '',
+      pronounce: typeof saved.pronounce === 'string' ? saved.pronounce.slice(0, 80) : '',
       attendance: readLog(saved.attendance),
       attendPolicy: Object.fromEntries(
         Object.entries(saved.attendPolicy ?? {}).map(([k, v]) => [k, readPolicy(v)]),
@@ -1822,6 +1903,7 @@ export function loadPersisted(): Persisted {
       ),
       courseOrder: list(saved.courseOrder),
       recent: list(saved.recent),
+      opened: readOpened(saved.opened),
       // Seeded from `recent` for anybody upgrading: without this the app
       // would tell somebody who has used it all term that they have never
       // opened Today, which is both wrong and the sort of wrong that makes
@@ -1890,6 +1972,92 @@ export function loadPersisted(): Persisted {
  * The half of the state that outlives the session — what localStorage keeps,
  * and what an account syncs. Written once here so the two can never drift.
  */
+/**
+ * Whether two persisted halves are the same, field by field, by reference.
+ *
+ * The push to the account needs to know "did anything worth syncing change?"
+ * and must not answer yes to a navigation, which changes `state` and nothing
+ * in here. It used to depend on `JSON.stringify` of the whole half — and on
+ * the database path that string is never built (serialising the account on
+ * every change is what the move to IndexedDB removed), so it was `''` on
+ * every render and the push never re-ran after an edit at all.
+ *
+ * By reference is exact rather than approximate: `pickPersisted` copies no
+ * field, it hands each one straight through from `state`, and the reducer
+ * replaces a field only when it changes it. So two picks share every
+ * reference exactly when nothing persisted has changed.
+ */
+export function sameFields(a: Persisted, b: Persisted): boolean {
+  const keys = Object.keys(a) as (keyof Persisted)[];
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every((k) => a[k] === b[k]);
+}
+
+/**
+ * Whether this device has changes the account does not.
+ *
+ * A flag on disk rather than in memory, so that closing the app offline and
+ * opening it again still says "Queued" rather than "Offline" — the edits are
+ * still waiting, and the student should not have to remember that they are.
+ * Set on any change to the persisted half while signed in, cleared by a push
+ * that lands.
+ */
+export const UNPUSHED_KEY = 'semester.unpushed';
+
+/**
+ * The account this device's sync memory belongs to. See `take` in
+ * `state/store.tsx`: signing in as a different account forgets the lot.
+ */
+export const SYNCED_AS_KEY = 'semester.syncedAs';
+
+export function syncedAs(): string | null {
+  try {
+    return localStorage.getItem(SYNCED_AS_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function rememberSyncedAs(id: string): void {
+  try {
+    localStorage.setItem(SYNCED_AS_KEY, id);
+  } catch {
+    // Unremembered, the next sign-in cannot tell a switch; it forgets nothing.
+  }
+}
+
+/**
+ * Everything this device remembers about one account's copy: the stamps it
+ * has read, the versions it last agreed, the choices waiting on its review
+ * list. Not the semester itself, which is the student's and stays.
+ */
+export function forgetSyncMemory(): void {
+  for (const key of [SEEN_KEY, SYNCED_KEY, 'semester.base', 'semester.review']) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // See above.
+    }
+  }
+}
+
+export function unpushed(): boolean {
+  try {
+    return localStorage.getItem(UNPUSHED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markUnpushed(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(UNPUSHED_KEY, '1');
+    else localStorage.removeItem(UNPUSHED_KEY);
+  } catch {
+    // A storage that refuses a one-byte flag has bigger news than this.
+  }
+}
+
 export function pickPersisted(state: State): Persisted {
   return {
     nav: state.nav,
@@ -1903,6 +2071,7 @@ export function pickPersisted(state: State): Persisted {
     cleared: state.cleared,
     tasks: state.tasks,
     appointments: state.appointments,
+    operatingWorkspace: state.operatingWorkspace,
     notes: state.notes,
     updates: state.updates,
     feeds: state.feeds,
@@ -1936,6 +2105,7 @@ export function pickPersisted(state: State): Persisted {
     progress: state.progress,
     returned: state.returned,
     regradeWindows: state.regradeWindows,
+    deadlineSeen: state.deadlineSeen,
     geocode: state.geocode,
     requirements: state.requirements,
     taken: state.taken,
@@ -1953,6 +2123,7 @@ export function pickPersisted(state: State): Persisted {
     myRules: state.myRules,
     aboutMe: state.aboutMe,
     myName: state.myName,
+    pronounce: state.pronounce,
     attendance: state.attendance,
     attendPolicy: state.attendPolicy,
     pieces: state.pieces,
@@ -1962,6 +2133,7 @@ export function pickPersisted(state: State): Persisted {
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
+    opened: state.opened,
     visited: state.visited,
     sittings: state.sittings,
     sessions: state.sessions,
@@ -2027,6 +2199,7 @@ export function pickPersisted(state: State): Persisted {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -2036,11 +2209,15 @@ export function pickPersisted(state: State): Persisted {
     courseColours: state.courseColours,
     shell: state.shell,
     favourites: state.favourites,
+    access: state.access,
     shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
     hue: state.hue,
+    workspaceMode: state.workspaceMode,
+    pinned: state.pinned,
+    goal: state.goal,
   };
 }
 
@@ -2055,7 +2232,7 @@ export type Action =
    * guide was last looked at. It sets `guideId` only; `courseId`, which is the
    * course *page*, is not a tool's idea of where it is.
    */
-  | { type: 'go'; screen: Screen; courseId?: CourseId }
+  | { type: 'go'; screen: Screen; courseId?: CourseId; recoveryIntent?: RecoveryIntent }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
@@ -2138,6 +2315,7 @@ export type Action =
   | { type: 'patchReturned'; id: string; patch: Partial<Returned> }
   | { type: 'unmarkReturned'; id: string }
   | { type: 'setRegradeWindow'; courseId: string; window: RegradeWindow }
+  | { type: 'seenDeadlines'; seen: SeenMap; onlyNew: boolean }
   | { type: 'setGeocode'; patch: Partial<Geocode> }
   | { type: 'addRequirement'; patch: Partial<Requirement> }
   | { type: 'patchRequirement'; id: string; patch: Partial<Requirement> }
@@ -2178,6 +2356,7 @@ export type Action =
   | { type: 'setMyRules'; rules: MyRule[] }
   | { type: 'setAboutMe'; facts: Fact[] }
   | { type: 'setMyName'; name: string }
+  | { type: 'setPronounce'; text: string }
   | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
   /** Stop, or resume, reminders about one course. */
@@ -2256,6 +2435,11 @@ export type Action =
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
   /**
+   * Put a card's review row back as it was before a `recordCard`, or remove
+   * it if there was none. The undo for a student's own "review this soon".
+   */
+  | { type: 'restoreReview'; key: string; was: CardReview | null }
+  /**
    * Commit a plan: these sittings, on these days, replacing anything from
    * today forward.
    *
@@ -2326,6 +2510,7 @@ export type Action =
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: HomeTab }
+  | { type: 'setAccountDoor'; door: 'in' | 'up' | null }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'task' }
   | { type: 'setTone'; tone: Tone }
@@ -2356,7 +2541,13 @@ export type Action =
    * knows a course is unchanged. See `lib/forwork.ts`.
    */
   | { type: 'newDocument'; courseId: CourseId | null; itemId?: string | null }
-  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
+  | {
+      type: 'makeDocument';
+      doc: Omit<Doc, 'id' | 'created' | 'updated'>;
+      open?: boolean;
+      /** Chosen by the caller when it must record the new document's id (Source Locker). Ignored if taken. */
+      id?: string;
+    }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
   | { type: 'closeDocument' }
@@ -2456,6 +2647,8 @@ export type Action =
   | { type: 'addStep'; id: string; text: string }
   | { type: 'dropStep'; id: string; stepId: string }
   | { type: 'deleteTask'; id: string }
+  /** The engine's tasks, woven into the list (`lib/sync/engine/tasks.ts` `weave`). Never from a screen. */
+  | { type: 'tasksFromEngine'; tasks: PersonalTask[]; known: string[]; adopted: Record<string, string> }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   /*
    * The same shape as `editTask`, and here for the same reason it is.
@@ -2477,6 +2670,7 @@ export type Action =
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */
+  | { type: 'setOperatingWorkspace'; value: string | null }
   | { type: 'keepNote'; title: string; body: string; courseId: CourseId | null }
   | { type: 'openNote'; id: string }
   | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId' | 'itemId'>> }
@@ -2612,6 +2806,17 @@ export type Action =
   | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number }
+  /** A version the student chose on the review list, put back. See `lib/conflicts.ts`. */
+  | { type: 'restoreRecord'; field: string; record: unknown }
+  /** A setting's version the student chose on the review list, put back. Only `SETTING_FIELDS`. */
+  | { type: 'restoreSettings'; values: Record<string, unknown> }
+  /** One key of a per-key map, as the student chose it; `undefined` removes the key. */
+  | { type: 'restoreTick'; field: string; key: string; value: unknown }
+  /** Keys another device removed from per-key maps, removed here too. See `removedThere`. */
+  | { type: 'dropTicks'; removals: Record<string, string[]> }
+  // Records another device deleted and this one holds unchanged, by list. Only
+  // the lists in `lib/deletions.ts`, and only the ids named.
+  | { type: 'dropRecords'; removals: Record<string, string[]> }
   | { type: 'restore'; persisted: Partial<Persisted> }
   /**
    * The browser moved, so the app follows.
@@ -2623,4 +2828,7 @@ export type Action =
    */
   | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode };
 
-export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
+// Support joined when it became a default tab (`lib/tabbar.ts`): tapping a tab
+// resets the back stack, and a default tab that did not would be the one tab
+// in the bar whose Back retraced every earlier screen.
+export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'support', 'mine', 'me'];

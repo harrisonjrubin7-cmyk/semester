@@ -84,6 +84,26 @@ describe('every action is handled somewhere', () => {
   });
 });
 
+describe('role-aware route enforcement', () => {
+  it('leaves a role-inapplicable screen when the role changes', () => {
+    const state = { ...blank(), screen: 'degree' as const, history: ['calendar', 'costs'] as State['history'] };
+    const next = reducer(state, { type: 'setRole', role: 'faculty' });
+    expect(next.screen).toBe('home');
+    expect(next.history).toEqual(['calendar']);
+  });
+
+  it('refuses hidden internal navigation and typed URLs for the active role', () => {
+    const faculty = { ...blank(), role: 'faculty' as const, screen: 'calendar' as const };
+    expect(reducer(faculty, { type: 'go', screen: 'degree' }).screen).toBe('home');
+    expect(reducer(faculty, { type: 'landed', screen: 'costs' }).screen).toBe('home');
+  });
+
+  it('preserves the complete student surface', () => {
+    const student = { ...blank(), role: 'student' as const };
+    expect(reducer(student, { type: 'go', screen: 'degree' }).screen).toBe('degree');
+  });
+});
+
 describe('ticking things off', () => {
   it('records when, as well as whether', () => {
     const next = reducer(blank(), { type: 'toggleDone', id: 'e1' });
@@ -615,6 +635,20 @@ describe('drilling', () => {
     expect(reducer(s, { type: 'undoCard' }).reviews.card1.right).toBe(1);
   });
 
+  it('puts the review row for a quiz card back exactly as it was, or removes the row it made', () => {
+    // The undo for "Review this card soon" under a quiz question.
+    let s = reducer(blank(), { type: 'recordCard', got: true, key: 'card1' });
+    const before = s.reviews.card1;
+    s = reducer(s, { type: 'recordCard', got: false, key: 'card1' });
+    expect(s.reviews.card1).not.toEqual(before);
+    s = reducer(s, { type: 'restoreReview', key: 'card1', was: before });
+    expect(s.reviews.card1).toEqual(before);
+
+    let fresh = reducer(blank(), { type: 'recordCard', got: false, key: 'new' });
+    fresh = reducer(fresh, { type: 'restoreReview', key: 'new', was: null });
+    expect('new' in fresh.reviews).toBe(false);
+  });
+
   it('ignores a second answer to the same quiz question', () => {
     const started = reducer(blank(), {
       type: 'startQuiz',
@@ -980,5 +1014,34 @@ describe('a course from a school', () => {
     let s = reducer(blank(), { type: 'addCourse', module: other('econ') });
     s = reducer(s, { type: 'schoolCourse', module: school([deadline()]) });
     expect(s.courses.map((c) => c.course.id)).toEqual(['econ', 'school-sandbox-101']);
+  });
+});
+
+describe('tasksFromEngine', () => {
+  const task = (id: string, created = 1) => ({ id, title: id, date: null, time: '', note: '', done: false, created, courseId: null });
+  const withList = (...ids: string[]) => ({ ...blank(), tasks: ids.map((id) => task(id)) });
+  const was = (t: ReturnType<typeof task>) => JSON.stringify(Object.fromEntries(Object.entries(t).sort(([a], [b]) => (a < b ? -1 : 1))));
+
+  it('keeps an edit made while a sync was in flight, and takes the engine\'s copy of what the student left alone', () => {
+    const s = { ...withList('A', 'B'), tasks: [{ ...task('A'), title: 'edited a moment ago' }, task('B')] };
+    const out = reducer(s, {
+      type: 'tasksFromEngine', known: ['A', 'B'],
+      tasks: [task('A'), { ...task('B'), done: true }],
+      adopted: { A: was(task('A')), B: was(task('B')) },
+    });
+    expect(out.tasks[0]!.title).toBe('edited a moment ago');
+    expect(out.tasks[1]!.done).toBe(true);
+  });
+
+  it('keeps a task the student just made that the engine has not heard of, and appends the engine\'s others', () => {
+    const out = reducer(withList('NEW'), { type: 'tasksFromEngine', tasks: [task('B')], known: [], adopted: {} });
+    expect(out.tasks.map((t) => t.id)).toEqual(['NEW', 'B']);
+  });
+
+  it('drops a task the engine deleted, and returns the same state when nothing differs', () => {
+    const adopted = { GONE: was(task('GONE')), KEPT: was(task('KEPT')) };
+    expect(reducer(withList('GONE', 'KEPT'), { type: 'tasksFromEngine', tasks: [task('KEPT')], known: ['GONE', 'KEPT'], adopted }).tasks.map((t) => t.id)).toEqual(['KEPT']);
+    const s = withList('A');
+    expect(reducer(s, { type: 'tasksFromEngine', tasks: [task('A')], known: ['A'], adopted: { A: was(task('A')) } })).toBe(s);
   });
 });

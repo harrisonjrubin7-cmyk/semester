@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from '../../state/store';
+import { useTaskActions } from '../../composition/taskactions';
 import { Blueprint } from '../../components/Blueprint';
 import { capture, enough, readBack } from '../../lib/capture';
-import { isoToDate, longLabel } from '../../lib/date';
+import { isoToDate, longLabel, shownTime } from '../../lib/date';
 import { timeLabel } from '../../lib/drag';
 
 /**
@@ -48,6 +49,7 @@ export function AddHere({
   onClose: () => void;
 }) {
   const { catalog, dispatch, say } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const [text, setText] = useState('');
   const [said, setSaid] = useState('');
@@ -66,18 +68,15 @@ export function AddHere({
   const add = () => {
     if (!ready) return;
     if (at === undefined) {
-      dispatch({
-        type: 'addTask',
-        task: {
-          title: caught.title,
-          // The tap, not the sentence: tapping Thursday and typing "friday" is
-          // a person correcting themselves mid-thought, and the calendar knows
-          // which of the two they did last.
-          date,
-          time: caught.time,
-          note: caught.kind ? `${caught.kind}, added on the calendar` : 'Added on the calendar',
-          courseId: caught.courseId,
-        },
+      taskActions.add({
+        title: caught.title,
+        // The tap, not the sentence: tapping Thursday and typing "friday" is
+        // a person correcting themselves mid-thought, and the calendar knows
+        // which of the two they did last.
+        date,
+        time: caught.time,
+        note: caught.kind ? `${caught.kind}, added on the calendar` : 'Added on the calendar',
+        courseId: caught.courseId,
       });
     } else {
       dispatch({
@@ -93,7 +92,7 @@ export function AddHere({
         },
       });
     }
-    setSaid(`Added to ${when}${at === undefined ? '' : `, ${timeLabel(at)}`}.`);
+    setSaid(`Added to ${when}${at === undefined ? '' : `, ${shownTime(timeLabel(at), at)}`}.`);
     say(`Added · ${caught.title} on ${when}.`, 'calendar');
     setText('');
     box.current?.focus();
@@ -103,7 +102,7 @@ export function AddHere({
     <Blueprint style={{ padding: 'var(--sp-6) var(--sp-7)', marginTop: 'var(--sp-5)' }}>
       <div className="kicker">
         {when}
-        {at === undefined ? '' : ` · ${timeLabel(at)}`}
+        {at === undefined ? '' : ` · ${shownTime(timeLabel(at), at)}`}
       </div>
       <input
         ref={box}

@@ -144,7 +144,7 @@ export function SlideDeck() {
             height: '100%',
             width: `${((at + 1) / slides.length) * 100}%`,
             background: 'var(--chrome)',
-            transition: 'width 160ms ease',
+            transition: 'width var(--motion-progress)',
           }}
         />
       </div>

@@ -47,6 +47,10 @@ const Nil = lazy(() => import('./screens/Nil').then((m) => ({ default: m.Nil }))
 const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
 const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
 const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
+const Launchpad = lazy(() => import('./screens/Launchpad').then((m) => ({ default: m.Launchpad })));
+const Hub = lazy(() => import('./screens/Hub').then((m) => ({ default: m.Hub })));
+const Support = lazy(() => import('./screens/Support').then((m) => ({ default: m.Support })));
+const Opportunities = lazy(() => import('./screens/Opportunities').then((m) => ({ default: m.Opportunities })));
 const Create = lazy(() => import('./screens/Create').then((m) => ({ default: m.Create })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
@@ -91,6 +95,12 @@ const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Sol
 const EditCourse = lazy(() => import('./screens/EditCourse').then((m) => ({ default: m.EditCourse })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
+const Community = lazy(() => import('./screens/Community').then((m) => ({ default: m.Community })));
+const Moderation = lazy(() => import('./screens/Moderation').then((m) => ({ default: m.Moderation })));
+const Console = lazy(() => import('./screens/Console').then((m) => ({ default: m.Console })));
+const Volunteers = lazy(() => import('./screens/Volunteers').then((m) => ({ default: m.Volunteers })));
+const Agreements = lazy(() => import('./screens/Agreements').then((m) => ({ default: m.Agreements })));
+const Volunteer = lazy(() => import('./screens/Volunteer').then((m) => ({ default: m.Volunteer })));
 const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
 const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
 const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Proof })));
@@ -112,14 +122,25 @@ const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap }))
 const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
 const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
 const Meals = lazy(() => import('./screens/Meals').then((m) => ({ default: m.Meals })));
+const Dining = lazy(() => import('./screens/Dining').then((m) => ({ default: m.Dining })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
+const Registration = lazy(() => import('./screens/Registration').then((m) => ({ default: m.Registration })));
+const Gradebook = lazy(() => import('./screens/Gradebook').then((m) => ({ default: m.Gradebook })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
+const Activity = lazy(() => import('./screens/Activity').then((m) => ({ default: m.Activity })));
+const WhatsNew = lazy(() => import('./screens/WhatsNew').then((m) => ({ default: m.WhatsNew })));
+const Recovery = lazy(() => import('./screens/Recovery').then((m) => ({ default: m.Recovery })));
 export const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 export const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
+// Offline mode's badge (Phase M), mounted in the app shell under the header.
+export const OfflineBanner = lazy(() => import('./components/OfflineBanner').then((m) => ({ default: m.OfflineBanner })));
+export const InstitutionalPreviewBar = lazy(() =>
+  import('./components/InstitutionalPreviewBar').then((m) => ({ default: m.InstitutionalPreviewBar })),
+);
 
 /**
  * The component for a screen, keyed by the id the router holds.
@@ -136,6 +157,10 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   career: Career,
   family: Family,
   pathway: Pathway,
+  launchpad: Launchpad,
+  hub: Hub,
+  support: Support,
+  opportunities: Opportunities,
   create: Create,
   privacy: Privacy,
   data: DataScreen,
@@ -180,6 +205,12 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   edit: EditCourse,
   analyse: Analyse,
   classmates: Classmates,
+  community: Community,
+  moderation: Moderation,
+  console: Console,
+  volunteer: Volunteer,
+  agreements: Agreements,
+  volunteers: Volunteers,
   activities: Activities,
   clocks: Clocks,
   proof: Proof,
@@ -201,10 +232,16 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   groupwork: Groupwork,
   call: Call,
   meals: Meals,
+  dining: Dining,
   housing: Housing,
   runway: Runway,
   registrar: Registrar,
+  registration: Registration,
+  gradebook: Gradebook,
   sources: Sources,
   account: AccountScreen,
   slides: SlideDeck,
+  activity: Activity,
+  whatsnew: WhatsNew,
+  recovery: Recovery,
 };

@@ -1,0 +1,73 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.580
+Controlling without an experiment
+
+2
+00:00:05.580 --> 00:00:12.180
+You control for Z and the relationship vanishes in every slice. Verdict?
+
+3
+00:00:12.180 --> 00:00:23.020
+Spurious — Z was causing both X and Y. If it holds in every slice, X survives. If it holds in one slice only, that is an interaction and X is conditional.
+
+4
+00:00:23.020 --> 00:00:27.960
+Bartels’ Kansas numbers, controlled for region?
+
+5
+00:00:27.960 --> 00:00:38.670
+−5.9 points overall, −19.7 in the South, −1.0 outside it. Fifty-two years, one point. Frank’s thesis does not survive.
+
+6
+00:00:38.670 --> 00:00:43.380
+The permanent limit of statistical control?
+
+7
+00:00:43.380 --> 00:00:53.250
+You can only control for variables you measured and thought of. Randomization balances the ones you did not. That asymmetry is the standard critique of survey-based causal claims.
+
+8
+00:00:53.250 --> 00:00:58.390
+Leighley &amp; Nagler — when should you not control?
+
+9
+00:00:58.390 --> 00:01:09.710
+“Are poor people underrepresented among voters?” needs no controls, just shares. “Is a poor person less likely to vote than an otherwise identical richer person?” requires them. Same-looking questions, different methods.
+
+10
+00:01:09.710 --> 00:01:14.040
+What is a representativeness ratio?
+
+11
+00:01:14.040 --> 00:01:27.870
+A group’s share of actual voters ÷ its share of the citizen voting-age population. 1.0 is parity. The bottom income fifth sat at 0.79 in both 1972 and 2008.
+
+12
+00:01:27.870 --> 00:01:33.040
+Why relative measures rather than absolute ones?
+
+13
+00:01:33.040 --> 00:01:53.860
+Category meanings drift. College graduates went from 12.0% of adults in 1972 to 29.4% in 2008. In absolute categories the least-educated look like they collapsed (0.79 → 0.62); as the bottom third they barely moved (0.79 → 0.78).
+
+14
+00:01:53.860 --> 00:01:57.920
+Has turnout actually declined?
+
+15
+00:01:57.920 --> 00:02:13.360
+No — 58.4%–65.5% throughout, with no trend, once citizens are the denominator. The apparent decline is a denominator artifact: noncitizens grew from under 2% to 8.4% of the voting-age population.
+
+16
+00:02:13.360 --> 00:02:19.850
+What happened by age, and what is the counterfactual on 2008?
+
+17
+00:02:19.850 --> 00:02:36.720
+18–24s are the lowest-turnout group every year at about 0.77. The 76–84 group went from 0.91 to 1.11. Had Black turnout stayed at its 1972 level, Obama’s vote share would have been about 1.2 points lower.
+
+18
+00:02:36.720 --> 00:02:39.000
+Controlling without an experiment — 8 cards

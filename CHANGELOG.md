@@ -24,6 +24,409 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Forms that find several problems now list them together
+
+On **Costs** (the bill and the out-of-pocket form), **Meals** and **Housing**, pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
+
+### Support and the assistant now point you to a person
+
+On **Support**, each tab has a line under its introduction: "Not sure which door fits? See who can help with what". It opens Help, where the offices and what to bring are listed. In the assistant, under the sources of an answer, there is a new "Not sure it's right? See who can help" link to the same place, because an assistant answer is not an official answer. Nothing was removed and you do not have to do anything.
+
+### Semester staff get a finance planning tool in the operations console
+
+Only people holding the operator grant see this, so students and school administrators will notice nothing. The console has a new **Finance model** tab: a 36-month planning model with twelve scenarios, editable assumptions, two sensitivity grids, warnings for runway, margin, delivery capacity and AI cost, and downloads as CSV, JSON and Markdown. Every figure on it says it is a forecast on planning assumptions, it works on sample data only, and it saves nothing. No price, target or result in it is approved. You do not have to do anything.
+
+New business planning documents, a report build (`npm run generate:gtm-pdf` from `app/`) and four PDFs came with it; they are in `docs/business/` and `output/`, not in the app.
+
+### Moving an action to another day on the month calendar now offers Undo
+
+Tap the day-shift button on an action in the month view and you get "Action moved" with Undo for a few seconds, the way dragging it to another day already did. It used to move silently. Nothing else about adding, ticking, moving or deleting an action changes, and you do not have to do anything. Behind the scenes these now go through one place in the code, which a build can switch to the new rules with `VITE_DOMAIN_TASKS`; it is off, and with it off everything behaves exactly as before.
+
+### Deleting something offline now sticks, and you can keep two sends for later
+
+A note, course, action, appointment, document, sheet or deck you delete on one
+device stays deleted on the others. It used to come back from the other device,
+and a course deleted offline came back if you closed the app first. If you
+deleted something on one device and changed it on another, the changed one stays
+and Account asks which you want.
+
+Offline, you can now keep an advisor share or your course plan to send yourself
+later. They wait on Account under "Waiting for you to send", and they do not go
+by themselves, even when you are back online. One that waits three days is not
+sent and has to be made again. Files you attach still do not sync between devices.
+### For school staff: a Workflows tab on University (off for now)
+
+Staff with workflow rights at a school get a **Workflows** tab for the ten
+processes a school runs: registration clearance, advisor approval, transfer-
+credit review, study-abroad approval, tutoring referral, scholarship
+deadlines, organization events, internship approval, course substitution and
+graduation application. Each starts from a template you change: its steps, who
+owns each, the checks a student must meet, and the office it hands off to. A
+preview shows what a student would be told. A change is a draft; a colleague
+who holds the publish role publishes it as a numbered version, and you cannot
+publish your own.
+
+It is switched off, and nothing in the app runs these definitions yet: the tab
+says so. It holds no student and no request. Students see no difference.
+### For school staff: a Configuration tab on University (off for now)
+
+Staff with configuration rights at a school get a **Configuration** tab in
+eleven domains — academic structure, workflows, roles, branding, content, AI,
+notifications, data, features, accessibility and reporting. A change is a
+draft; a colleague who holds the publish role publishes it as a numbered
+version, and you cannot publish your own. Old versions stay, and you can start
+a new draft from any of them.
+
+It is switched off, and nothing in the app reads these settings yet: the tab
+says so. Students see no difference.
+
+Nothing to do.
+
+### On the public site: alumni relations and fundraising, described and not built
+
+Two new pages, `/solutions/advancement/` and `/alumni/`, describe what an
+alumni and advancement office could one day run in Semester: alumni relations,
+giving, and the office's own console. They say plainly that none of it is
+built, that no school uses it, that no gift has been taken and no receipt
+issued, and that no price has been set. They also say what is not planned:
+wealth screening and predictive donor scoring. The graduate page lists what a
+graduate can do today (offer to mentor, take their data with them) and asks
+for nothing.
+
+Nothing to do.
+
+### A school can no longer be deleted; leaving is a step-by-step case
+
+Nothing you can see changes in the app. Behind it, a university's record can
+no longer be deleted by anyone, because doing so would have silently removed
+everything the school had (shares, requests, grants, roll-outs). A school
+leaves through a recorded case: sized first, approved by a person at the school
+and a person at Semester, access switched off (nothing deleted), the school's
+data exported and checked, then archived for at least thirty days. Every step
+until the last can be undone. Nothing has been offboarded, and there is still
+no way to purge a school's data. Nothing to do.
+
+### Advisor shares and planning screens say where things came from
+
+When you preview or send an advisor meeting, it now ends with "Where this comes
+from, and what it assumes": which parts you wrote, which are your own estimate,
+the day it was prepared, and that nothing in it comes from the school's records
+or is a degree audit. A share made before this still opens as it did. The
+graduation projection and the study-abroad credit picture now carry a source
+label and say plainly that they are not an official degree audit or credit
+evaluation. On the university settings page, the Modules tab no longer says its
+settings "could not be read" while they are still loading. Nothing to do.
+
+### Action Center: more snooze times, and say why you hid something
+
+Where the Action Center is switched on: beside "Snooze until tomorrow" there is
+now "More snooze times" (later today, next week, and the day before it is due
+when that is a real later moment), and "Not relevant" asks why first, with four
+reasons or "Hide without saying why". The reason is kept on your device and shown
+in the Hidden list so you remember. Registration Day Mode, where it is on, adds
+"How heavy this term is": it compares your credits with the limits and study
+hours you type, and estimates weekly hours at two per credit. It is an estimate
+from numbers you gave, not a rule of your school, and it never stops you doing
+anything. Nothing to do.
+
+### Today no longer plans around the sample semester until you say it is yours
+
+While the question under the header ("These are mine" / "Not mine") is still open,
+Today's next step, its briefing and its list of commitments leave out the shipped
+semester's assignments and classes, instead of telling you to "Prepare" someone
+else's paper. With nothing of your own yet, Today suggests starting your semester.
+Answer "These are mine" and the same dates appear as yours. Where an item has no
+recorded update time, its label now says "Update time not recorded" instead of
+saying nothing. Commitments name where each date came from (for example "Needs
+review · date not checked"). Nothing to do.
+
+### On the public site: a page for the K–12 edition
+
+A new page, `/k-12/`, describes Semester for high school: who it would start
+with, how each part of the app would be set up for a school, and the 26-week
+pilot it would offer. It says plainly that no district or school uses
+Semester today and that a district's student data is not accepted yet, with
+how many of the things that waits on are still undone.
+
+Nothing to do.
+
+### A reset link now lands on a screen of the app's own
+
+Following a password-reset email opens a "Choose a new password" box in Semester,
+under the same eight-character rule as making an account (before, it sent you to
+a page Supabase draws, which applies its own rule). Account, once you are signed
+in, gains a "Sign-in and security" section: change your password, change your
+email address (it changes when you follow the link sent to the new address, and
+the page says so), and sign out every other device, which asks you to confirm
+first. Nothing to do; nothing is deleted by any of it.
+
+### Making an account now asks for your date of birth
+
+When you create an account, the form asks for your date of birth. You need to
+be at least 13: a younger date is refused before anything is sent, and the
+database refuses it too. If you are 13 to 17, the account is made and the
+features where other people can find, match with or message you — mentor
+requests, being listed as a mentor, connections, study matching and the talent
+profile — stay off until your 18th birthday. Plans, courses, study work, reports and sharing with a
+parent or guardian work as usual.
+
+If you signed in with Google, Microsoft or Apple, or your account was made
+before this, a line under the header asks for your date of birth, once.
+Until you answer, classmates, community, matching and mentoring stay off;
+your own plans, courses and study work are unaffected. It cannot be changed
+afterwards, and the date itself is not kept.
+
+Nothing else to do.
+
+### On the public site: the platform statement no longer lists payments
+
+The statement at the top of **One Operating System**, under Platform, named
+payments among the parts of university life Semester brings together.
+Semester does not handle payments, so the word is gone; the rest of the
+sentence is unchanged.
+
+Nothing to do.
+
+### Plus is $7.99 a month or $59 a year
+
+The Membership panel on your Account screen now offers Plus at $7.99 a month
+or $59 a year, the same price the pricing page and the company site show.
+Until now the panel offered $3.99 or $29.99. If you already started a Plus
+checkout at the old price in testing, it keeps that price; a new checkout
+uses the new one.
+
+Nothing to do.
+
+### On the public site: two more things Semester will never do
+
+**Data & AI Transparency**, under Trust, lists what Semester never does with
+student data. It now says two more things: education records, personal plans
+and study activity are never used for behavioural advertising, and study
+activity is never used to label a student capable or incapable, motivated or
+unmotivated. Each line links to the check that holds it, like the others.
+
+Nothing to do.
+
+### A Student accounts tab for the bursar's office
+
+Student accounts officers, financial aid officers and business administrators
+see **Student accounts** on the University screen, in builds with it switched
+on. Find a student by your school's identifier to see their balance, how old
+it is, whether a financial hold applies, every charge and payment, a month's
+statement, receipts and a payment-plan schedule. Every change is a request
+someone else approves; large refunds, adjustments and scholarships need a
+senior approver; a month is reconciled against your payment provider and then
+closed. No money moves here and no card is ever asked for.
+
+### Your school's account, on Bill
+
+When your school keeps its student accounts in Semester and its registrar has
+linked your student record to your account, **Bill** opens with what the
+school's ledger says: what you owe today, how old it is, whether a financial
+hold applies, every charge, payment and credit, a receipt for each payment,
+and a month's statement to download. Charges for later dates are listed apart
+and not counted as owed yet. Nothing here can be changed or paid; the link
+goes to your school's own payment page. What you type below stays yours, as
+before.
+
+### Ask your school for a payment plan
+
+On the same section of **Bill**, you can ask to spread what you owe over
+monthly payments: choose how many and when the first is due, and you see the
+exact schedule before you ask. Student Accounts agrees or declines, and once
+agreed you see each payment as paid, due, late or coming. While you keep to
+the plan, no financial hold applies. Student Accounts staff decide plans in a
+queue of their own and can cancel an agreed plan, with a reason you see.
+
+### An Academic record tab for registrar staff
+
+Registrars, deans and faculty with a school-wide role see **Academic record**
+on the University screen, in builds with the ledger switched on. Find a
+student by your school's identifier and see their record as it stood on any
+date, with the full history behind each line. Nothing on it is edited: a
+change is proposed with a reason and enters the record only when someone else
+approves it, and correcting a posted grade needs a registrar. The export is
+labelled as not an official transcript. Students see nothing new yet.
+
+### A Migration tab for staff moving a system into Semester
+
+Staff who hold a migration role at their school (an implementation manager,
+an integration admin, the registrar, a dean, a university administrator or an
+institutional researcher) now see **Migration** on the University screen, in
+builds with the Migration Center switched on. It walks a migration out of a
+system being retired through twelve stages, from inventory to post-cutover
+monitoring, and each stage opens only once the one before has its evidence.
+Export files you check there are read in your browser and go no further;
+only counts and the file's fingerprint are saved. Students see nothing new,
+and nothing is switched on in an ordinary build.
+
+### Find people, groups and opportunities, from Community
+
+Community now ends with one list — **Find people, groups and opportunities** —
+and shows it even where Community itself is switched off or you are not
+signed in: who else is in your classes, study groups and course spaces,
+clubs and events, project teams, peer and alumni mentors, research and
+internships, the people who will write about you, and the campus map. Every
+row opens a screen you already had; nothing is recommended, so nothing
+needs a reason beside it. Three things the list will hold have no screen
+yet and are not drawn: your portfolio, the verified-communities directory,
+and saved things in one place.
+
+Nothing to do.
+
+### On the public site: the Semester Community
+
+Five new pages under **Community** in the footer — The Semester Community,
+Campus ambassadors, Student stories, Partner directory, and Events and
+sessions — and a free resource library at the top of Resources: five tools
+that exist and ten guides named as being written. Each page says what is
+built instead of a social network, and says plainly that no community
+programme is switched on for any campus today, no ambassador has been
+recruited, no story published, no partner listed and no event scheduled.
+Every next step is a page or a person.
+
+### On the public site: one operating system, and why not another tool
+
+Two new pages under Platform. *One Operating System. Every Student Moment.*
+puts the student at the centre and nine areas around them — academic path,
+courses and learning, schedule and planning, advising and support, campus
+life, career and portfolio, money and important dates, community and
+opportunities, institution operations — each opening to the student problem,
+the Semester workflow, who benefits, what connects, what stays official, and
+how it connects back to Today, the Action Center, Search, Plan, the Workspace
+and Semester Intelligence. *Why not another tool?* sets the traditional
+approach beside the Semester approach in eight rows. Beside every area and
+every row is one of four words — held by a test, being built, designed, not
+started — computed from the register behind the page, never written by hand,
+so neither page can say “fully built” where the code says “being built”.
+Both pages ship no script; an area opens as a plain disclosure.
+
+Nothing to do.
+
+### Describe the problem, and be sent to the right door
+
+Help now opens with one field: describe the problem in your own words — “I
+do not understand why I cannot register”, “I need help with a paper”, “I need
+an accommodation” — and Semester says whose question it is, what it can do
+first, what to bring, and offers a summary to take with you. When the person
+is one the help route can reach, one button opens the request with your
+sentence as the question; you still read exactly what will be sent before it
+goes. Distress is heard before the subject it is about, and routed to campus
+counseling. Nothing you type there is kept.
+
+Nothing to do.
+
+### How to read an answer, and six ways to mark it
+
+Under every reply from Ask Semester there is now **How to read this answer**:
+source strength (strong, limited or none, from what was actually read), policy
+state (allowed, limited or unavailable, from the policy in force), what it can
+support, what it cannot determine, and what needs a person or the official
+record. The two marks under a reply became six: Helpful and Not helpful stay
+on this device as before; Incorrect, Source issue, Policy issue and
+Accessibility issue open a report on the right kind with the first words
+filled in.
+
+Nothing to do.
+
+### For institutions: simulate a policy change, and a Trust tab
+
+On the Control tab of the institution screen, **Before you change a policy**
+simulates turning a module off in a course or for the whole institution, or
+changing a retention clock: who sees it, which workflows and alternatives,
+what support content to update, the audit event it writes, and the reviewers
+it needs. A clock on a student’s own work is refused, and so is one under its
+legal floor. Beside Control there is a **Trust** tab: version, modules,
+connections and freshness, open issues, known limitations, trust documents,
+accessibility status, maintenance, retention, AI policy, feature changes and
+usage aggregates, each read from the product itself, with an absence said
+plainly.
+
+Nothing to do. Both tabs appear only where the control plane is switched on.
+
+### On the public site
+
+Six new pages — the Semester Standard, Data & AI Transparency, Integrations
+and standards, The words we use, the AI Governance Readiness Canvas, and
+Research and community — and a fifth free tool, the academic navigation
+diagnostic. Every capability the new pages name carries the register’s status
+word; no certification, customer or number is claimed.
+
+### One place under Me for what Semester knows about you
+
+Me now opens with one list, in the order the questions come: My profile, My
+data, Connected accounts, Sharing, AI controls, Notifications, Accessibility
+preferences, Activity, What changed, Recovery, Export data, Request deletion,
+Support access, Billing and Security. Each row opens the screen that already
+held the thing; nothing moved.
+
+Three of those screens are new. **Activity** is your own trail — a plan saved,
+an agenda shared, support let in or shut out, an export requested — each line
+with where it came from, who can see it and whether it still stands. It stays
+on this device and holds no content. **What changed** is this list, inside the
+app, filtered to the parts your school has switched on, with known issues
+listed apart. **Recovery** is where to start when something went missing: is
+your work safe, is anything waiting to sync, a recovery copy of this device's
+libraries, how to reconnect, how to reach a person.
+
+Nothing to do.
+
+### Fix this, on every screen
+
+Under **About this screen**, which every screen has, there is now a short
+list: this deadline looks wrong, this source is out of date, this
+recommendation is not relevant, this answer is incorrect, this should be
+private, report an accessibility barrier, get help. The first four open a
+report on the right kind with the first words filled in; the other three open
+the screen where the thing is done.
+
+Nothing to do.
+
+### Service notices only where they apply
+
+When the service has an incident or planned maintenance, the screens it
+affects say so in one line, with what still works. Unrelated screens say
+nothing. Help now links to the status page.
+
+Nothing to do.
+
+### A support ticket can carry what you were doing
+
+Where Semester support is switched on, the ticket form offers to add, as lines
+you read before sending: where you were, what you were trying to do, an error
+reference, your browser and device, the last error this device logged, whether
+your work is saved, and which sources are connected. Off until you tick it.
+Never your notes, files, grades, conversations with the assistant or anything
+from your student record.
+
+Nothing to do.
+
+### The term, start to finish
+
+On the registrar screen, beside closing the term, two lists: what to do at the
+start of a term (confirm courses, read in syllabi, set your week, read each
+course's rules, choose reminders, set the term's goal, connect your calendar)
+and at the end (review, archive, keep what is worth keeping, export, update
+your goals, plan next term, refresh career evidence, review shares, clear old
+deadlines). Each opens the screen where it is done.
+
+Nothing to do.
+
+### "Since you last opened" says why
+
+The line on Today that lists what changed while you were away now carries,
+for each change, where it came from, when, why it matters and what to do.
+
+Nothing to do.
+
+### Written help on the registrar screen, Ask Semester and the practice paper
+
+About this screen on those three now has answers written for them rather than
+the built fallback: what the screen is, why it matters, where its information
+comes from, and what to do next.
+
+Nothing to do.
+
 ### Setting up ends at your first course, not at somebody else's Today
 
 Finishing the introduction used to land you on Today with the shipped sample

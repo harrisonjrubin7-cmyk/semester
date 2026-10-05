@@ -27,6 +27,7 @@ import { UNNAMED, record, type Usage } from './spend';
 import type { CaseFile, CourseId, Example, Figure, Frame, StudyCard } from './types';
 import { figureShapes, readFigures } from './figure';
 import { fetchWithin, timedOut, tookTooLong } from './net';
+import { DATA_RULE, fence } from '../ai/untrusted';
 import { readStudyParts, studyShapes } from './study';
 import {
   DEFAULTS as NO_CONTROLS,
@@ -38,6 +39,7 @@ import {
 
 import { sessionToken } from './token';
 import { held, preamble } from './aboutme';
+import type { Quality } from '../ai/quality';
 import { readFound, searchTool, type Found } from './research';
 import { NOTHING_ARRIVED, askOpenAI } from './openai';
 import {
@@ -52,6 +54,7 @@ import {
   strictRefused,
   structuredRefused,
 } from './assistant';
+import { modelOnSharedKey, modelsFromRefusal, rememberSharedModels } from './sharedmodels';
 
 export interface Turn {
   role: 'user' | 'assistant';
@@ -71,6 +74,13 @@ export interface Turn {
    * API that validates them.
    */
   incomplete?: boolean;
+  /**
+   * How to read this answer — source strength, policy state, limits — as it
+   * stood when the answer was made. Ours, like `incomplete`: recorded on the
+   * assistant turn so every reply keeps its own context, and stripped by
+   * `asSent` before the turns go to a provider.
+   */
+  quality?: Quality;
   /**
    * The tools this answer asked to have run, on an assistant turn.
    *
@@ -107,6 +117,24 @@ export interface ToolResult {
 type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
 
 /**
+ * The words the `claude` function answers with while the shared key is not
+ * activated, from `supabase/functions/_shared/provideractivation.ts`. Matched
+ * rather than imported, because the app does not import server code;
+ * `lib/trust/provideractivation.test.ts` holds the two in step.
+ */
+export const NOT_ACTIVATED_MARK = "switched off until Semester's agreements";
+/** The error code beside it. */
+export const NOT_ACTIVATED_CODE = 'shared_provider_not_activated';
+
+/**
+ * The phrase `functions/_shared/aispend.ts` puts in the refusal for a spent
+ * monthly allowance, matched for the reason above and held in step by
+ * `aispend.test.ts`. That refusal is a 429 and must not be told "wait a
+ * moment": nothing about waiting renews it.
+ */
+export const ALLOWANCE_MARK = 'shared AI allowance';
+
+/**
  * Turn a failed call into a sentence that names the fix.
  *
  * The failure worth spelling out is the shared route against a project where
@@ -130,6 +158,12 @@ export function explainAskError(
   addressUsed = '',
 ): string {
   if (taking === 'shared') {
+    // Deployed, holding a key, and still off: the owner's provider decisions
+    // are not all recorded. The function's own sentence already says what to
+    // do, and "no key" or "not an API" would both be wrong here.
+    if (status === 501 && detail.includes(NOT_ACTIVATED_MARK)) return detail;
+    // Spent for the month. Its own sentence says what renews it and what to do.
+    if (status === 429 && detail.includes(ALLOWANCE_MARK)) return detail;
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
       return (
         'The shared key is not switched on for this deployment yet — the `claude` ' +
@@ -407,6 +441,8 @@ export interface Citation {
 }
 
 interface AskOptions {
+  /** Faculty course support must not inherit student-private standing memory. */
+  includePreferences?: boolean;
   system: string;
   messages: Turn[];
   maxTokens?: number;
@@ -727,8 +763,8 @@ export const CUT_OFF = '[This answer was stopped here and is unfinished.]';
  * the stopped turn" is exactly the kind of thing four call sites do three ways.
  */
 export function asSent(messages: Turn[]): Turn[] {
-  if (!messages.some((m) => m.incomplete)) return messages;
-  return messages.map(({ incomplete, ...turn }) =>
+  if (!messages.some((m) => m.incomplete || m.quality)) return messages;
+  return messages.map(({ incomplete, quality: _quality, ...turn }) =>
     // Spread rather than rebuilt from two fields: this used to name `role` and
     // `content` and nothing else, which quietly dropped the tool calls off a
     // conversation the moment anything in it had been stopped — and a
@@ -875,7 +911,7 @@ export async function ask(options: AskOptions): Promise<string> {
    *
    * Empty adds nothing, not even a blank line. See `preamble`.
    */
-  const mine = preamble(held());
+  const mine = options.includePreferences === false ? '' : preamble(held());
   const system = mine ? `${options.system}\n\n${mine}` : options.system;
 
   // The one branch in the whole app that knows there are two providers.
@@ -897,6 +933,15 @@ export async function ask(options: AskOptions): Promise<string> {
       signal: options.signal,
     });
   }
+
+  /*
+   * On the shared key the model is the one chosen unless the account's plan is
+   * known not to cover it — see `sharedmodels.ts`. Everything below that names
+   * a model (the body, the tool grammar, the search tool, the record of what
+   * answered) uses this one, so what is sent, what is kept and what the student
+   * is told are the same model.
+   */
+  const model = taking === 'shared' ? modelOnSharedKey(s.model) : s.model;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -924,7 +969,7 @@ export async function ask(options: AskOptions): Promise<string> {
       headers,
       signal: options.signal,
       body: JSON.stringify({
-        model: s.model,
+        model,
         max_tokens: options.maxTokens ?? 1400,
         // A cached system prompt is sent as a block so the breakpoint can sit
         // on it. Plain string otherwise, which is the shorter wire form.
@@ -942,8 +987,8 @@ export async function ask(options: AskOptions): Promise<string> {
         ...(options.tools?.length || options.search
           ? {
               tools: [
-                ...(options.tools?.length ? strictly(options.tools, s.model) : []),
-                ...(options.search ? [searchTool(s.model)] : []),
+                ...(options.tools?.length ? strictly(options.tools, model) : []),
+                ...(options.search ? [searchTool(model)] : []),
               ],
             }
           : {}),
@@ -966,12 +1011,30 @@ export async function ask(options: AskOptions): Promise<string> {
 
   if (!res.ok || !res.body) {
     let detail = `${res.status}`;
+    let refusal: unknown = null;
     try {
       // Anthropic nests it; Supabase's gateway does not. Read either.
       const body = (await res.json()) as { error?: { message?: string }; message?: string };
+      refusal = body;
       detail = body.error?.message ?? body.message ?? detail;
     } catch {
       /* keep the status */
+    }
+
+    /*
+     * The shared key naming the models this account's plan covers.
+     *
+     * The default model is Opus 5 and a Free account's list does not hold it,
+     * so this is the first thing most students meet. The refusal comes before
+     * the call is counted, so it costs nothing: take the list, remember it, and
+     * ask again on a model the plan covers. Only when that actually changes the
+     * model — a list that still holds the one just refused would loop, and is
+     * the function contradicting itself, which is shown as the error it is.
+     */
+    const covered = taking === 'shared' ? modelsFromRefusal(res.status, refusal) : null;
+    if (covered) {
+      rememberSharedModels(covered);
+      if (modelOnSharedKey(s.model) !== model) return ask(options);
     }
     // A route that will not take a constrained shape says so with a 400
     // naming the parameter. Remember it and try once more without — the
@@ -993,10 +1056,10 @@ export async function ask(options: AskOptions): Promise<string> {
     if (
       res.status === 400 &&
       options.tools?.length &&
-      !strictRefused(s.model) &&
+      !strictRefused(model) &&
       aboutStrictTools(detail)
     ) {
-      rememberStrictRefused(s.model);
+      rememberStrictRefused(model);
       return ask(options);
     }
 
@@ -1254,7 +1317,7 @@ export async function ask(options: AskOptions): Promise<string> {
      */
     record({
       at: Date.now(),
-      model: s.model,
+      model,
       from: options.about || UNNAMED,
       ...(options.courseId ? { courseId: options.courseId } : {}),
       use: counted,
@@ -1381,10 +1444,20 @@ export async function checkShared(): Promise<{ ok: boolean; detail: string }> {
   }
 
   const body = (await res.json().catch(() => ({}))) as {
-    error?: { message?: string };
+    error?: { message?: string; code?: string };
     message?: string;
   };
   const said = body.error?.message ?? '';
+
+  if (body.error?.code === NOT_ACTIVATED_CODE) {
+    return {
+      ok: false,
+      detail:
+        'The function is deployed and switched off on purpose: the shared key serves nobody until ' +
+        "Semester's provider decisions are recorded with evidence and the deployment switch is set " +
+        '(docs/trust/SHARED-PROVIDER-ACTIVATION.md). Your own key below works meanwhile.',
+    };
+  }
 
   if (res.status === 401) {
     /*
@@ -1474,6 +1547,14 @@ export async function readShots(
     images,
     think: true,
     maxTokens: 3000,
+    ...readShotsPrompt(context),
+  });
+  return readCards(reply);
+}
+
+/** The prompt `readShots` sends, pure, so `ai/injection.test.ts` can hold its shape. */
+export function readShotsPrompt(context: string) {
+  return {
     system:
       'You are reading photographs of a university student\'s course material — a lecture ' +
       'board, a page of notes, a handout, a slide. Transcribe and organise; do not invent.\n\n' +
@@ -1483,15 +1564,17 @@ export async function readShots(
       '- cards: questions an exam could ask, answered from what is written in the image, with ' +
       'the specific numbers, names and steps that appear there. Between 0 and 12.\n' +
       '- Anything you cannot read, leave out. Do not fill a gap from general knowledge, and do ' +
-      'not guess at a word that is cut off or out of focus.',
+      `not guess at a word that is cut off or out of focus.\n\n${DATA_RULE}`,
     messages: [
       {
-        role: 'user',
-        content: `Course context:\n${context}\n\nRead these and make cards from what they show.`,
+        role: 'user' as const,
+        content: `Course context:\n${fence('course', context)}\n\nRead these and make cards from what they show.`,
       },
     ],
-  });
+  };
+}
 
+function readCards(reply: string): { cards: StudyCard[]; note: string } {
   const start = reply.indexOf('{');
   const end = reply.lastIndexOf('}');
   if (start === -1 || end === -1) return { cards: [], note: '' };
@@ -1605,7 +1688,6 @@ export async function readMaterial(
   note: string;
 }> {
   const caps = capsFor(controls);
-  const says = shapeSays(controls);
 
   const reply = await ask({
     signal,
@@ -1618,6 +1700,20 @@ export async function readMaterial(
     // cut off mid-JSON parses as nothing at all — the student would see "could
     // not read it" for a reading the model read perfectly well.
     maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
+    ...readMaterialPrompt(text, context, controls),
+  });
+  return readParts(reply, caps);
+}
+
+/**
+ * The prompt `readMaterial` sends, as a pure function, so `ai/injection.test.ts`
+ * can hold its shape: the course and the material are fenced, and the rules
+ * say what a fence is.
+ */
+export function readMaterialPrompt(text: string, context: string, controls: Controls = NO_CONTROLS) {
+  const caps = capsFor(controls);
+  const says = shapeSays(controls);
+  return {
     system:
       'You are reading course material a university student has added to a study guide — a ' +
       'reading, a handout, a set of lecture notes. Turn it into study material; do not invent.\n\n' +
@@ -1635,14 +1731,18 @@ export async function readMaterial(
       'from general knowledge, and leave out anything the material only alludes to.' +
       // Empty on the defaults, so the prompt is unchanged for anybody who has
       // not touched a control.
-      (says ? `\n- ${says}` : ''),
+      (says ? `\n- ${says}` : '') +
+      `\n\n${DATA_RULE}`,
     messages: [
       {
-        role: 'user',
-        content: `Course context:\n${context}\n\nThe material:\n\n${text.slice(0, 120_000)}`,
+        role: 'user' as const,
+        content: `Course context:\n${fence('course', context)}\n\nThe material:\n\n${fence('material', text.slice(0, 120_000))}`,
       },
     ],
-  });
+  };
+}
+
+function readParts(reply: string, caps: ReturnType<typeof capsFor>) {
 
   const start = reply.indexOf('{');
   const end = reply.lastIndexOf('}');

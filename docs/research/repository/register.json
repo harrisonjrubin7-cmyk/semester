@@ -1,0 +1,1226 @@
+{
+ "schemaVersion": 1,
+ "asOf": "2026-10-04",
+ "vocabulary": {
+  "stakeholders": [
+   "student",
+   "family",
+   "faculty",
+   "advisor",
+   "registrar",
+   "finance",
+   "student-affairs",
+   "it",
+   "accessibility",
+   "employer",
+   "alumni",
+   "partner"
+  ],
+  "insightTypes": [
+   "need",
+   "behavior",
+   "friction",
+   "workaround",
+   "motivation",
+   "constraint",
+   "trust-concern",
+   "access-barrier",
+   "willingness",
+   "workflow-fact",
+   "outcome"
+  ],
+  "moments": [
+   "first-plan",
+   "support-routed",
+   "advising",
+   "study-session",
+   "ai-answer",
+   "accessibility-support",
+   "registration",
+   "course-ended"
+  ],
+  "routes": [
+   "warm",
+   "cold",
+   "institutional",
+   "inbound"
+  ],
+  "auditSurfaces": [
+   "student-home",
+   "calendar",
+   "courses-degree",
+   "learning-assessment",
+   "study-tutoring",
+   "docs-sheets-decks",
+   "ai-executive-assistant",
+   "campus-life",
+   "communication-community",
+   "family-portal",
+   "finance-payments",
+   "career-alumni",
+   "marketplace",
+   "staff-faculty",
+   "institution-console",
+   "support-trust",
+   "data-reporting"
+  ],
+  "extraScopes": [
+   "thesis",
+   "market",
+   "pricing",
+   "platform"
+  ],
+  "methods": [
+   "interview",
+   "usability",
+   "diary",
+   "survey",
+   "concept",
+   "workflow-observation",
+   "pilot-measure",
+   "artifact-review"
+  ]
+ },
+ "assumptions": [
+  {
+   "id": "ASM-001",
+   "statement": "Students would rather run planning, learning, campus, money and career in one app than in a few specialised ones.",
+   "origin": {
+    "cls": "opinion",
+    "where": "founder thesis; audit PDF p.2"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "thesis",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-concept-1"
+   },
+   "kill": "Most participants name a separate tool they would keep for the same job and cannot say what consolidation would give them."
+  },
+  {
+   "id": "ASM-002",
+   "statement": "Institutions will adopt one platform that replaces several existing systems, not only coexist beside them.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF pp.19-22, four operating modes"
+   },
+   "stakeholder": "it",
+   "type": "willingness",
+   "scope": "thesis",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-inst-1"
+   },
+   "kill": "No interviewed institution describes a replacement scenario inside its own planning horizon."
+  },
+  {
+   "id": "ASM-003",
+   "statement": "Institutions will grant SIS, LMS and identity access to a student-originated vendor.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.33, integration blueprint"
+   },
+   "stakeholder": "it",
+   "type": "constraint",
+   "scope": "thesis",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-inst-1"
+   },
+   "kill": "Reviews describe read access for third-party tools as blocked or as requiring a contract the vendor cannot meet."
+  },
+  {
+   "id": "ASM-004",
+   "statement": "Students adopt a planner on their own, without an institutional mandate, and keep using it.",
+   "origin": {
+    "cls": "opinion",
+    "where": "founder thesis; VALIDATED.md names zero users"
+   },
+   "stakeholder": "student",
+   "type": "behavior",
+   "scope": "market",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "pilot-measure",
+     "interview"
+    ],
+    "study": "S-pilot-1"
+   },
+   "kill": "Fewer than half of the pilot panel still open it after the 34-day band and none can name something they would miss."
+  },
+  {
+   "id": "ASM-005",
+   "statement": "Students keep deadlines in several unconnected places, and the fragmentation causes missed or late work.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF p.2 prompt; PILOT.md question 1"
+   },
+   "stakeholder": "student",
+   "type": "need",
+   "scope": "daily-planning",
+   "moment": "first-plan",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "diary"
+    ],
+    "study": "S-stu-1"
+   },
+   "kill": "Participants' last near-miss traces to causes other than fragmentation (forgetting, workload, unclear policy)."
+  },
+  {
+   "id": "ASM-006",
+   "statement": "Students understand the single dominant next action on Today, can say why it is shown, and act on or deliberately defer it.",
+   "origin": {
+    "cls": "artifact",
+    "where": "FIRST-WIN-SPECIFICATION.md, structural tests only"
+   },
+   "stakeholder": "student",
+   "type": "behavior",
+   "scope": "daily-planning",
+   "moment": "first-plan",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability",
+     "pilot-measure"
+    ],
+    "study": "S-usab-1"
+   },
+   "kill": "Fewer than four of five participants in a segment state the action and its reason unaided."
+  },
+  {
+   "id": "ASM-007",
+   "statement": "Manual course entry is an acceptable first-class route when import is unavailable.",
+   "origin": {
+    "cls": "artifact",
+    "where": "FIRST-WIN-SPECIFICATION.md step 2"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "manual-setup",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability",
+     "diary"
+    ],
+    "study": "S-usab-1"
+   },
+   "kill": "Participants abandon at manual entry or add placeholder data instead of real courses."
+  },
+  {
+   "id": "ASM-008",
+   "statement": "Local-first with optional account sync is enough to satisfy students' privacy expectations.",
+   "origin": {
+    "cls": "artifact",
+    "where": "privacy.ts claims; PUBLIC-CLAIMS CLM-002"
+   },
+   "stakeholder": "student",
+   "type": "trust-concern",
+   "scope": "account-auth",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "survey"
+    ],
+    "study": "S-stu-2"
+   },
+   "kill": "Participants decline to sign in or use real data because of data location, despite the explanation."
+  },
+  {
+   "id": "ASM-009",
+   "statement": "Syllabus import saves meaningful time over manual entry and is accurate enough to trust.",
+   "origin": {
+    "cls": "artifact",
+    "where": "PILOT.md question 4, gate 98% exact and 100% cited"
+   },
+   "stakeholder": "student",
+   "type": "need",
+   "scope": "manual-setup",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability",
+     "pilot-measure"
+    ],
+    "study": "S-pilot-1"
+   },
+   "kill": "Corrections after import take as long as manual entry, or the exactness gate is missed on real syllabi."
+  },
+  {
+   "id": "ASM-010",
+   "statement": "Students use AI help for coursework and want answers tied to the sources they were given.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF pp.31-33"
+   },
+   "stakeholder": "student",
+   "type": "behavior",
+   "scope": "ai-assistance",
+   "moment": "ai-answer",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "diary"
+    ],
+    "study": "S-stu-1"
+   },
+   "kill": "Participants do not use AI help for coursework or ignore sources when shown."
+  },
+  {
+   "id": "ASM-011",
+   "statement": "Students can read provenance labels (official, connected, user-created, AI-generated, estimated) correctly.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.24"
+   },
+   "stakeholder": "student",
+   "type": "friction",
+   "scope": "ai-assistance",
+   "moment": "ai-answer",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability"
+    ],
+    "study": "S-usab-1"
+   },
+   "kill": "Participants misread official versus AI-generated in more than one task in a segment."
+  },
+  {
+   "id": "ASM-012",
+   "statement": "Individual students will pay $7.99 a month or $59 a year for Plus.",
+   "origin": {
+    "cls": "opinion",
+    "where": "prices live per BILLING-LIVE-ACCEPTANCE-2026-10-03; no willingness observation"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "pricing",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept",
+     "pilot-measure"
+    ],
+    "study": "S-wtp-1"
+   },
+   "kill": "Participants at the money rung decline at that price and cannot name a price they would pay."
+  },
+  {
+   "id": "ASM-013",
+   "statement": "The free tier with a shared AI allowance of 60 generations a month is generous enough to build habit.",
+   "origin": {
+    "cls": "artifact",
+    "where": "VALIDATED.md, supabase/functions/claude"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "pricing",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "pilot-measure",
+     "interview"
+    ],
+    "study": "S-pilot-1"
+   },
+   "kill": "Participants reach the cap in the first fortnight or abandon when they approach it."
+  },
+  {
+   "id": "ASM-014",
+   "statement": "Priority student flows need to work offline or on weak connections.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF pp.17-18, 30-31, 40"
+   },
+   "stakeholder": "student",
+   "type": "need",
+   "scope": "platform",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "diary"
+    ],
+    "study": "S-stu-1"
+   },
+   "kill": "Participants report essentially always-on connectivity and no lost work from outages."
+  },
+  {
+   "id": "ASM-015",
+   "statement": "Students want documents, sheets and decks inside the planner, with real-time collaboration, instead of their current Office or Google tools.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF pp.18, 24, 31"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "docs-sheets-decks",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-concept-1"
+   },
+   "kill": "Participants keep their current tools for these jobs and do not want a second copy."
+  },
+  {
+   "id": "ASM-016",
+   "statement": "Students will share selected items with a guardian, and want to.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF p.14, p.25"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "family-portal",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview"
+    ],
+    "study": "S-fam-1"
+   },
+   "kill": "Students refuse or want sharing limited to nothing the guardian currently lacks."
+  },
+  {
+   "id": "ASM-017",
+   "statement": "Students use dining, housing, maps and directory features inside a planner rather than their campus apps.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.8 capability matrix"
+   },
+   "stakeholder": "student",
+   "type": "behavior",
+   "scope": "campus-life",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "diary"
+    ],
+    "study": "S-stu-1"
+   },
+   "kill": "Participants name existing campus apps they prefer and do not look for these features in a planner."
+  },
+  {
+   "id": "ASM-018",
+   "statement": "The first-win journey can be completed unaided by users of screen readers, magnification, keyboard-only and reading-support settings.",
+   "origin": {
+    "cls": "artifact",
+    "where": "EVIDENCE-REGISTER.md: automated and structural checks only"
+   },
+   "stakeholder": "accessibility",
+   "type": "access-barrier",
+   "scope": "manual-setup",
+   "moment": "accessibility-support",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability"
+    ],
+    "study": "S-at-1"
+   },
+   "kill": "Any assistive-technology participant cannot complete a first-win task unaided."
+  },
+  {
+   "id": "ASM-019",
+   "statement": "The reading, display and input settings the product offers meet the needs of students who rely on them.",
+   "origin": {
+    "cls": "artifact",
+    "where": "ACCESSIBILITY_READINESS.md self-assessment"
+   },
+   "stakeholder": "accessibility",
+   "type": "need",
+   "scope": "platform",
+   "moment": "accessibility-support",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "usability"
+    ],
+    "study": "S-at-1"
+   },
+   "kill": "Participants who need a setting report that it does not hold across screens."
+  },
+  {
+   "id": "ASM-020",
+   "statement": "Faculty will publish materials and policy into a source pack and keep it current.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.8; CORE-USER-JOURNEYS J06"
+   },
+   "stakeholder": "faculty",
+   "type": "need",
+   "scope": "learning-assessment",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "workflow-observation"
+    ],
+    "study": "S-fac-1"
+   },
+   "kill": "Faculty describe course materials as changing faster than any maintained pack could track."
+  },
+  {
+   "id": "ASM-021",
+   "statement": "Faculty accept students receiving AI answers grounded in their own course materials.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF pp.31-33"
+   },
+   "stakeholder": "faculty",
+   "type": "trust-concern",
+   "scope": "ai-assistance",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview"
+    ],
+    "study": "S-fac-1"
+   },
+   "kill": "Faculty reject the use outright or set conditions the product cannot meet."
+  },
+  {
+   "id": "ASM-022",
+   "statement": "A student-approved agenda improves an advising meeting.",
+   "origin": {
+    "cls": "artifact",
+    "where": "ADVISOR-MEETING-MODE.md; CORE-USER-JOURNEYS J07"
+   },
+   "stakeholder": "advisor",
+   "type": "need",
+   "scope": "staff-faculty",
+   "moment": "advising",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "workflow-observation",
+     "interview"
+    ],
+    "study": "S-adv-1"
+   },
+   "kill": "Advisors do not use the agenda, or find it adds preparation time with no change in what happens."
+  },
+  {
+   "id": "ASM-023",
+   "statement": "Advisors accept student-supplied context as input but never as the record.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.13 decision matrix"
+   },
+   "stakeholder": "advisor",
+   "type": "constraint",
+   "scope": "staff-faculty",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview"
+    ],
+    "study": "S-adv-1"
+   },
+   "kill": "Advisors rely on student-supplied context as if official, or refuse to look at it at all."
+  },
+  {
+   "id": "ASM-024",
+   "statement": "Registrars permit read-only enrollment and schedule feeds to a third-party student tool.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.33; DATA-STEWARDSHIP.md contracts"
+   },
+   "stakeholder": "registrar",
+   "type": "constraint",
+   "scope": "institutional-integrations",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-reg-1"
+   },
+   "kill": "Policy or practice forbids third-party feeds regardless of student consent."
+  },
+  {
+   "id": "ASM-025",
+   "statement": "The correction loop (student flags, office fixes, source updates) matches how corrections actually flow.",
+   "origin": {
+    "cls": "artifact",
+    "where": "DATA-STEWARDSHIP.md correction loop"
+   },
+   "stakeholder": "registrar",
+   "type": "workflow-fact",
+   "scope": "courses-degree",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "workflow-observation",
+     "artifact-review"
+    ],
+    "study": "S-reg-1"
+   },
+   "kill": "Observed corrections run through channels the loop does not include."
+  },
+  {
+   "id": "ASM-026",
+   "statement": "Bill and aid visibility can be offered without account-level access.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.8"
+   },
+   "stakeholder": "finance",
+   "type": "workflow-fact",
+   "scope": "finance-payments",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "workflow-observation"
+    ],
+    "study": "S-fin-1"
+   },
+   "kill": "The questions students bring need account views that no third party may hold."
+  },
+  {
+   "id": "ASM-027",
+   "statement": "Institutions will accept a payments role for Semester, directly or through a processor.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.8, p.14"
+   },
+   "stakeholder": "finance",
+   "type": "constraint",
+   "scope": "finance-payments",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-fin-1"
+   },
+   "kill": "Offices treat any payment role as out of scope for a vendor of this kind."
+  },
+  {
+   "id": "ASM-028",
+   "statement": "Routing students to the right office reduces misroutes and repeat contacts.",
+   "origin": {
+    "cls": "artifact",
+    "where": "CORE-USER-JOURNEYS J04; momentfeedback support-routed"
+   },
+   "stakeholder": "student-affairs",
+   "type": "need",
+   "scope": "support-trust",
+   "moment": "support-routed",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "workflow-observation",
+     "pilot-measure"
+    ],
+    "study": "S-saf-1"
+   },
+   "kill": "Offices cannot say where students are misrouted today, or the routes in use are already correct."
+  },
+  {
+   "id": "ASM-029",
+   "statement": "Offices can publish the capacity, wait time and owner a handoff requires.",
+   "origin": {
+    "cls": "artifact",
+    "where": "RESEARCH-AND-SERVICE-DESIGN.md eight questions"
+   },
+   "stakeholder": "student-affairs",
+   "type": "constraint",
+   "scope": "support-trust",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "workflow-observation",
+     "artifact-review"
+    ],
+    "study": "S-saf-1"
+   },
+   "kill": "Offices cannot state capacity or wait for the handoff in question."
+  },
+  {
+   "id": "ASM-030",
+   "statement": "A manual, read-only first pilot clears an institution's security and privacy review without bespoke work.",
+   "origin": {
+    "cls": "artifact",
+    "where": "PILOT-IMPLEMENTATION-PLAYBOOK.md"
+   },
+   "stakeholder": "it",
+   "type": "constraint",
+   "scope": "pilot-control-plane",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-it-1"
+   },
+   "kill": "Reviews require items the pilot design cannot supply (assurance reports, integrations, contracts)."
+  },
+  {
+   "id": "ASM-031",
+   "statement": "Procurement is decided on the evidence-room items the audit lists (VPAT, DPA, penetration test, questionnaire library) and not on others.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.37"
+   },
+   "stakeholder": "it",
+   "type": "workflow-fact",
+   "scope": "institution-console",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-it-1"
+   },
+   "kill": "Reviews turn on other items or on a champion's backing instead."
+  },
+  {
+   "id": "ASM-032",
+   "statement": "Institutions will use privacy-floored aggregate reporting (cells under ten suppressed) as useful.",
+   "origin": {
+    "cls": "artifact",
+    "where": "lib/institution-ops.ts MIN_COHORT"
+   },
+   "stakeholder": "it",
+   "type": "willingness",
+   "scope": "data-reporting",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview"
+    ],
+    "study": "S-it-1"
+   },
+   "kill": "Institutional research staff say the floor makes reports too sparse to use."
+  },
+  {
+   "id": "ASM-033",
+   "statement": "Guardians want progress visibility and accept granular, student-controlled, expiring access in place of full visibility.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF p.14 and p.25"
+   },
+   "stakeholder": "family",
+   "type": "willingness",
+   "scope": "family-portal",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview"
+    ],
+    "study": "S-fam-1"
+   },
+   "kill": "Guardians reject student-controlled limits, or sharing causes disagreement the design cannot resolve."
+  },
+  {
+   "id": "ASM-034",
+   "statement": "Guardians will pay for a family tier.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF p.14"
+   },
+   "stakeholder": "family",
+   "type": "willingness",
+   "scope": "pricing",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-fam-1"
+   },
+   "kill": "Guardians would not pay, or only for outcomes the product cannot promise."
+  },
+  {
+   "id": "ASM-035",
+   "statement": "Employers will pay for seats or campaigns on a campus-bound talent network.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.14"
+   },
+   "stakeholder": "employer",
+   "type": "willingness",
+   "scope": "career-alumni",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-emp-1"
+   },
+   "kill": "Employers recruit through channels they would not change and name no budget line."
+  },
+  {
+   "id": "ASM-036",
+   "statement": "Verified-achievement credentials change employers' hiring decisions.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.18, p.22"
+   },
+   "stakeholder": "employer",
+   "type": "need",
+   "scope": "career-alumni",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview"
+    ],
+    "study": "S-emp-1"
+   },
+   "kill": "Employers cannot name a credential that has changed a decision."
+  },
+  {
+   "id": "ASM-037",
+   "statement": "Alumni keep using a student-era identity after graduating, and institutions sponsor an alumni module.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.14, p.23"
+   },
+   "stakeholder": "alumni",
+   "type": "willingness",
+   "scope": "career-alumni",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-alu-1"
+   },
+   "kill": "Alumni drop student tools on leaving and no institution budgets for the module."
+  },
+  {
+   "id": "ASM-038",
+   "statement": "Providers will list on a marketplace with commissions, disputes and payouts.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.14, p.22, p.41"
+   },
+   "stakeholder": "partner",
+   "type": "willingness",
+   "scope": "marketplace",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-par-1"
+   },
+   "kill": "Providers already reach students by other means and decline platform terms."
+  },
+  {
+   "id": "ASM-039",
+   "statement": "Campus vendors will integrate with a student-side platform on workable terms.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.33"
+   },
+   "stakeholder": "partner",
+   "type": "constraint",
+   "scope": "institutional-integrations",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "artifact-review"
+    ],
+    "study": "S-par-1"
+   },
+   "kill": "Vendors' terms forbid it or price it beyond reach."
+  },
+  {
+   "id": "ASM-040",
+   "statement": "Students accept an assistant that proposes actions and defers consequential ones to their confirmation, and do not find that a burden.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF pp.8, 31-33"
+   },
+   "stakeholder": "student",
+   "type": "trust-concern",
+   "scope": "ai-executive-assistant",
+   "moment": "ai-answer",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability",
+     "interview"
+    ],
+    "study": "S-usab-1"
+   },
+   "kill": "Participants find confirmation intrusive or approve without reading."
+  },
+  {
+   "id": "ASM-041",
+   "statement": "Students want one Today surface for their whole educational life, not only academic tasks.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.23"
+   },
+   "stakeholder": "student",
+   "type": "need",
+   "scope": "student-home",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "diary"
+    ],
+    "study": "S-stu-1"
+   },
+   "kill": "Participants want Today limited to coursework and deadlines."
+  },
+  {
+   "id": "ASM-042",
+   "statement": "Thirty-day return follows from completing the first win.",
+   "origin": {
+    "cls": "opinion",
+    "where": "VALIDATED.md names this the missing number"
+   },
+   "stakeholder": "student",
+   "type": "outcome",
+   "scope": "daily-planning",
+   "moment": "course-ended",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "pilot-measure"
+    ],
+    "study": "S-pilot-1"
+   },
+   "kill": "First-win completers return at no higher a rate than non-completers across the panel."
+  },
+  {
+   "id": "ASM-043",
+   "statement": "Using Semester reduces missed or late deadlines.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF p.14 job to be done"
+   },
+   "stakeholder": "student",
+   "type": "outcome",
+   "scope": "daily-planning",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "pilot-measure",
+     "diary"
+    ],
+    "study": "S-pilot-2"
+   },
+   "kill": "Panel reports of slipped work do not fall relative to baseline and later cohorts."
+  },
+  {
+   "id": "ASM-044",
+   "statement": "Students rely on published-information degree and registration planning while the official audit stays authoritative, and understand the difference.",
+   "origin": {
+    "cls": "artifact",
+    "where": "institutional capability matrix"
+   },
+   "stakeholder": "student",
+   "type": "need",
+   "scope": "courses-degree",
+   "moment": "registration",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability",
+     "interview"
+    ],
+    "study": "S-usab-1"
+   },
+   "kill": "Participants treat the plan as official, or ignore it."
+  },
+  {
+   "id": "ASM-045",
+   "statement": "Students return to generated study aids repeatedly across a term.",
+   "origin": {
+    "cls": "artifact",
+    "where": "VALIDATED.md study features; momentfeedback study-session"
+   },
+   "stakeholder": "student",
+   "type": "behavior",
+   "scope": "study-tutoring",
+   "moment": "study-session",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "pilot-measure",
+     "diary"
+    ],
+    "study": "S-pilot-1"
+   },
+   "kill": "Study aids are used once and not again."
+  },
+  {
+   "id": "ASM-046",
+   "statement": "Students want messaging, groups and community inside the planner rather than in their existing channels.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.8"
+   },
+   "stakeholder": "student",
+   "type": "willingness",
+   "scope": "communication-community",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "concept"
+    ],
+    "study": "S-concept-1"
+   },
+   "kill": "Participants say their existing channels cover it and a new one is a cost."
+  },
+  {
+   "id": "ASM-047",
+   "statement": "Advisors will use a Semester caseload view in place of or beside their current advising system.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.25, p.8"
+   },
+   "stakeholder": "advisor",
+   "type": "behavior",
+   "scope": "staff-faculty",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "workflow-observation",
+     "interview"
+    ],
+    "study": "S-adv-1"
+   },
+   "kill": "Advisors keep all working state in their existing system and treat additions as duplicate entry."
+  },
+  {
+   "id": "ASM-048",
+   "statement": "A school can configure roles, policies and integrations itself without bespoke work.",
+   "origin": {
+    "cls": "desk",
+    "where": "audit PDF p.8 institution console"
+   },
+   "stakeholder": "it",
+   "type": "workflow-fact",
+   "scope": "institution-console",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "workflow-observation",
+     "interview"
+    ],
+    "study": "S-it-1"
+   },
+   "kill": "Observed configuration needs vendor staff for tasks the design assigns to the school."
+  },
+  {
+   "id": "ASM-049",
+   "statement": "Students can find export and deletion, and correctly say what will and will not happen when they use them.",
+   "origin": {
+    "cls": "artifact",
+    "where": "CORE-USER-JOURNEYS J05: user comprehension unproven"
+   },
+   "stakeholder": "student",
+   "type": "trust-concern",
+   "scope": "data-rights",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "usability",
+     "interview"
+    ],
+    "study": "S-usab-1"
+   },
+   "kill": "Participants cannot find the controls or misstate what deletion removes."
+  },
+  {
+   "id": "ASM-050",
+   "statement": "Students already keep a calendar for classes and commitments, and want deadlines to appear in it rather than in a separate view.",
+   "origin": {
+    "cls": "opinion",
+    "where": "audit PDF p.8 calendar and time row"
+   },
+   "stakeholder": "student",
+   "type": "behavior",
+   "scope": "calendar",
+   "confidence": "C0",
+   "insights": [],
+   "test": {
+    "methods": [
+     "interview",
+     "diary"
+    ],
+    "study": "S-stu-1"
+   },
+   "kill": "Participants do not use a calendar for school, or reject deadlines appearing in it."
+  }
+ ],
+ "insights": [],
+ "decisions": [
+  {
+   "id": "DEC-001",
+   "title": "Which navigation areas to expose: the audit's ten against DO-NOT-BUILD rule 1",
+   "cls": "hard-to-reverse",
+   "status": "open",
+   "assumptions": [
+    "ASM-001",
+    "ASM-041",
+    "ASM-005"
+   ]
+  },
+  {
+   "id": "DEC-002",
+   "title": "Whether to hold, change or test the individual Plus price",
+   "cls": "hard-to-reverse",
+   "status": "open",
+   "assumptions": [
+    "ASM-012",
+    "ASM-013"
+   ]
+  },
+  {
+   "id": "DEC-003",
+   "title": "Whether to build the guardian and family portal",
+   "cls": "hard-to-reverse",
+   "status": "open",
+   "assumptions": [
+    "ASM-016",
+    "ASM-033",
+    "ASM-034"
+   ]
+  },
+  {
+   "id": "DEC-004",
+   "title": "Whether to build the marketplace",
+   "cls": "hard-to-reverse",
+   "status": "open",
+   "assumptions": [
+    "ASM-038",
+    "ASM-035"
+   ]
+  },
+  {
+   "id": "DEC-005",
+   "title": "Whether to expand the pilot beyond ten students",
+   "cls": "user-reversible",
+   "status": "open",
+   "assumptions": [
+    "ASM-004",
+    "ASM-042",
+    "ASM-005"
+   ]
+  },
+  {
+   "id": "DEC-006",
+   "title": "Whether Semester may say publicly that it reduces missed deadlines",
+   "cls": "claim",
+   "status": "open",
+   "assumptions": [
+    "ASM-043"
+   ]
+  },
+  {
+   "id": "DEC-007",
+   "title": "Whether the first institutional pitch is replacement or coexistence",
+   "cls": "hard-to-reverse",
+   "status": "open",
+   "assumptions": [
+    "ASM-002",
+    "ASM-003"
+   ]
+  },
+  {
+   "id": "DEC-008",
+   "title": "How much to invest in offline-first and collaborative editing",
+   "cls": "user-reversible",
+   "status": "open",
+   "assumptions": [
+    "ASM-014",
+    "ASM-015"
+   ]
+  }
+ ]
+}

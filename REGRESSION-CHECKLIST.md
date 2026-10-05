@@ -1,5 +1,7 @@
 # REGRESSION-CHECKLIST.md
 
+> Owner, version, last and next review, status, supersedes and related decisions: [`SEMESTER-OPERATING-SYSTEM.md`](SEMESTER-OPERATING-SYSTEM.md).
+
 Every existing behaviour that must still work identically after the Workspace
 work. Run this at the end of **each** phase and report pass/fail before moving
 on, per §1 of the build prompt.
@@ -81,6 +83,11 @@ times in the run logs below while the other sat still.
 - [ ] **A3** `cd app && npm run lint` — oxlint clean, `scripts/styles.mjs` clean (no raw
       hex, no off-scale spacing), `scripts/labels.mjs` clean.
 - [ ] **A4** `cd app && npm run build` — exit 0, no TypeScript errors.
+- [ ] **A5** (pull requests) `cd app && npm run docs:impact` — a change under the
+      gateway, an edge function, a screen, a script or an example touches a page
+      that describes it, or the description says `Docs: none because <reason>`.
+      CI runs it as `.github/workflows/docs.yml`. The rest of the documentation
+      gates run inside A1; `docs/documentation/QUALITY-GATES.md` lists them.
 
 ## B. Bundle and load — the prompt's own performance rule
 
@@ -123,7 +130,7 @@ times in the run logs below while the other sat still.
 - [ ] **D1** All four `NavMode`s still work: `tabs`, `feed`, `springboard`, `shelves`.
 - [ ] **D2** Tab bar defaults to `home, courses, study, calendar, me`; a saved
       custom tab set still loads; the `FEWEST_CHOSEN` floor still reverts.
-- [ ] **D3** All <!--screens-->fifty-nine<!--/--> destinations still appear in the launcher, on the same shelf.
+- [ ] **D3** All <!--screens-->sixty-three<!--/--> destinations still appear in the launcher, on the same shelf.
 - [ ] **D4** The seven shelves are still `Semester, Courses, Study, Make,
       Campus, Life, Data`, in that order.
 - [ ] **D5** Tile reordering still saves and reloads (`groupOrder`).

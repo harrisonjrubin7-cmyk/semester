@@ -258,7 +258,7 @@ describe('the shelves the directory is arranged on', () => {
    * that; asserting an index against a row that no longer exists would have
    * had to be deleted rather than rewritten.
    */
-  it('keeps when you are behind on the shelf that answers the other direction', () => {
+  it('keeps Catching up on the shelf that answers the other direction', () => {
     const on = destinationsIn('Semester').map((d) => d.screen);
     expect(on).toContain('behind');
     expect(on).toContain('home');
@@ -527,7 +527,7 @@ describe('every screen is named, not identified', () => {
 
   it('names the settings pages the way the header bar does', () => {
     expect(screenName('setNav' as Screen)).toBe('Layout');
-    expect(screenName('setAssistant' as Screen)).toBe('Assistant');
+    expect(screenName('setAssistant' as Screen)).toBe('Intelligence');
   });
 
   it('leaves a registry screen wearing its registry label', () => {

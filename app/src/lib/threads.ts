@@ -95,6 +95,7 @@ export const MAX_ARCHIVE = 100;
 export const ROOM_ARCHIVE = 200_000;
 
 export interface Thread {
+  agent?: import('../../../packages/institution/src/agents').SemesterAgent;
   id: string;
   /** From the first question, not written by hand. See `nameOf`. */
   title: string;
@@ -380,6 +381,7 @@ export function load(): Kept {
         lost[t.id] = fitted.dropped;
         return {
           id: t.id,
+          ...(['assistant', 'advisor', 'tutor', 'course-guide'].includes(t.agent ?? '') ? { agent: t.agent } : {}),
           turns: fitted.turns,
           at: typeof t.at === 'number' ? t.at : 0,
           title: '',

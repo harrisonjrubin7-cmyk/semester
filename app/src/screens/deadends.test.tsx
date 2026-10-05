@@ -183,24 +183,24 @@ describe('the add boxes on Mine', () => {
   };
 
   it('adds the task on Return, without reaching for the button', () => {
-    open(/new task/i);
-    type('Task', 'Office hours with Stromme');
-    key('Task', 'Enter');
+    open(/new action/i);
+    type('Action', 'Office hours with Stromme');
+    key('Action', 'Enter');
     expect(host.textContent).toContain('Office hours with Stromme');
   });
 
   it('closes the box on Return, so the next thing typed is not appended to it', () => {
-    open(/new task/i);
-    type('Task', 'Office hours with Stromme');
-    key('Task', 'Enter');
-    expect(host.querySelector('[aria-label="Task"]')).toBeNull();
+    open(/new action/i);
+    type('Action', 'Office hours with Stromme');
+    key('Action', 'Enter');
+    expect(host.querySelector('[aria-label="Action"]')).toBeNull();
   });
 
   it('throws the box away on Escape, and keeps nothing from it', () => {
-    open(/new task/i);
-    type('Task', 'discard me');
-    key('Task', 'Escape');
-    expect(host.querySelector('[aria-label="Task"]')).toBeNull();
+    open(/new action/i);
+    type('Action', 'discard me');
+    key('Action', 'Escape');
+    expect(host.querySelector('[aria-label="Action"]')).toBeNull();
     expect(host.textContent).not.toContain('discard me');
   });
 

@@ -159,6 +159,25 @@ describe('what the filename and the format add', () => {
     );
     expect(v.kind).toBe('slides');
   });
+
+  it('does not take a PDF for a deck just because it has pages', () => {
+    // Every PDF has pages now (`extract.ts` keeps them so quotes can be
+    // placed), and a page count says nothing about being a deck. The same
+    // material as the test above, which reads as slides, differing only in
+    // what its pages are.
+    const v = guess(
+      item('Marketing Management\nWhat buyers trade off\nA worked example', {
+        name: 'week7.pdf',
+        pageUnit: 'page',
+        pages: [
+          { page: 1, text: 'a' },
+          { page: 2, text: 'b' },
+          { page: 3, text: 'c' },
+        ],
+      }),
+    );
+    expect(v.kind).not.toBe('slides');
+  });
 });
 
 describe('what it says about itself', () => {

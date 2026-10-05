@@ -183,21 +183,139 @@ done
 # later. `local.stub.sql` now sets the table privileges as default privileges
 # before the migrations run, the way Supabase does, which leaves a revoke
 # standing where a suite can read it. See the note in that file.
+# The second pass. `supabase/README.md` promises that every migration is
+# idempotent — that running the set twice is a no-op — because a migration
+# that only works on an empty database cannot repair a half-built one, which is
+# the state a restore or a failed deploy leaves behind. Nothing had ever run
+# them twice: the first attempt, in launch-readiness Phase 7, found nine files
+# that failed. This applies every one again on top of the built schema, before
+# any check runs, so the suites below also prove the schema survived it.
+#
+# `reapply.known` lists the files allowed to fail, each with its reason. A file
+# not on it that fails is a new non-idempotent migration; a file on it that now
+# passes is a stale entry. Both fail, so the list can only shrink honestly.
+if [ -n "${SEMESTER_CHECK_REAPPLY:-}" ]; then
+  echo "· migrations, a second time"
+  dump() { "$bindir/pg_dump" -s -h "$work" -p "$port" -U postgres postgres | grep -vE '^\\(un)?restrict '; }
+  # And the rows. A migration can succeed on every run and still not be a
+  # no-op: an insert with no conflict clause seeds a second copy, an update
+  # rewrites a row each time. One line per table in public and private: its
+  # row count and a hash of every row, sorted, so the physical order a
+  # second pass leaves them in does not matter.
+  rows() {
+    psql -At -v ON_ERROR_STOP=1 <<'SQL'
+select format('select %L, count(*), md5(coalesce(string_agg(t::text, chr(10) order by t::text), %L)) from %I.%I t',
+              n.nspname || '.' || c.relname, '', n.nspname, c.relname)
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+ where c.relkind in ('r', 'p') and n.nspname in ('public', 'private')
+ order by 1
+\gexec
+SQL
+  }
+  dump > "$work/schema.1"
+  rows > "$work/rows.1"
+  known=$(sed -e 's/#.*//' "$here/reapply.known" | awk 'NF {print $1}')
+  bad=0
+  for m in "$here"/migrations/*.sql; do
+    name=$(basename "$m")
+    if out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
+      if echo "$known" | grep -qx "$name"; then
+        echo "  ✗ $name passes a second time; remove it from reapply.known"
+        bad=1
+      fi
+    elif echo "$known" | grep -qx "$name"; then
+      echo "  · $name (known: reapply.known)"
+    else
+      echo "  ✗ $name is not idempotent"
+      echo "$out" | grep -E "ERROR" | head -2 | sed 's/^/      /'
+      bad=1
+    fi
+  done
+  [ "$bad" = 0 ] || exit 1
+  # Passing twice is not enough on its own: a file that stops part way on the
+  # second run leaves an older definition behind, and so does one that quietly
+  # re-creates something a later file had replaced. The schema after two passes
+  # has to be the schema after one.
+  dump > "$work/schema.2"
+  if ! diff -q "$work/schema.1" "$work/schema.2" >/dev/null; then
+    echo "  ✗ the schema after a second pass differs from the first:"
+    diff "$work/schema.1" "$work/schema.2" | head -20 | sed 's/^/      /'
+    exit 1
+  fi
+  rows > "$work/rows.2"
+  # The control: a query that matched no tables would compare two empty files.
+  if [ "$(wc -l < "$work/rows.1")" -lt 50 ]; then
+    echo "  ✗ the row fingerprint read only $(wc -l < "$work/rows.1") tables; the query is broken"
+    exit 1
+  fi
+  if ! diff -q "$work/rows.1" "$work/rows.2" >/dev/null; then
+    echo "  ✗ a second pass changed the rows in these tables (table|rows|hash):"
+    diff "$work/rows.1" "$work/rows.2" | grep '^[<>]' | head -20 | sed 's/^/      /'
+    exit 1
+  fi
+  echo "  ✓ every other migration applied twice; the schema and the rows in $(wc -l < "$work/rows.1") tables are unchanged"
+fi
+
 psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
 grant usage on schema auth, public to anon, authenticated;
 grant select, insert on auth.users to anon, authenticated;
 SQL
 
+# A fixture, and only a fixture: an account the check suites make without a
+# birth date is recorded as an adult who said so. Since D-139 an account that
+# never stated its age is kept out of every social feature, and the suites
+# that test those features make their accounts by inserting into auth.users
+# with no birth date — they are about the features, not the age. The trigger
+# is named to fire after the real one, adds a row only where the real one
+# added none, and is never part of a migration. `minimum-age.check.sql`, which
+# tests the age rules themselves, turns it off with
+# `set semester.fixture_age = 'off'`.
+psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
+create or replace function private.zz_fixture_adult() returns trigger
+language plpgsql security definer set search_path = '' as $fx$
+begin
+  if coalesce(current_setting('semester.fixture_age', true), '') <> 'off' then
+    insert into private.account_ages (user_id, source) values (new.id, 'sign_up')
+    on conflict (user_id) do nothing;
+  end if;
+  return new;
+end $fx$;
+revoke all on function private.zz_fixture_adult() from public;
+drop trigger if exists zz_fixture_adult on auth.users;
+create trigger zz_fixture_adult after insert on auth.users
+  for each row execute function private.zz_fixture_adult();
+SQL
+
+# Another script's turn at the same database, instead of the suites. `load.sh`
+# uses it so the load scenarios run against exactly what the checks see — the
+# same major, the same stub, every migration — without a second copy of the
+# setup above to drift from this one. The sourced script has `psql`, `$bindir`,
+# `$work` and `$port`, and its exit status is this script's.
+if [ -n "${SEMESTER_CHECK_THEN:-}" ]; then
+  # shellcheck source=/dev/null
+  . "$SEMESTER_CHECK_THEN"
+  exit $?
+fi
+
 echo "· checks"
 failed=0
 for c in "${suites[@]}"; do
   out=$(psql -f "$c" 2>&1 || true)
+  oks=$(echo "$out" | grep -cE 'NOTICE: +ok' || true)
   if echo "$out" | grep -qE "FAILED|ERROR"; then
     echo "  ✗ $(basename "$c")"
     echo "$out" | grep -E "FAILED|ERROR" | head -5 | sed 's/^/      /'
     failed=1
+  elif [ "$oks" = 0 ]; then
+    # A suite that prints no `ok` line proved nothing we can see. psql exits 0
+    # and prints no ERROR for an empty file or an `\ir` of a path that is not
+    # there, so "no error" alone cannot tell a passing suite from one that never
+    # ran. Every suite ends by saying what it established.
+    echo "  ✗ $(basename "$c") — passed with no 'ok' notice, so nothing shows it ran"
+    echo "$out" | head -3 | sed 's/^/      /'
+    failed=1
   else
-    echo "  ✓ $(basename "$c") — $(echo "$out" | grep -cE 'NOTICE: +ok') checks"
+    echo "  ✓ $(basename "$c") — $oks checks"
   fi
 done
 

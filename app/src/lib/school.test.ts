@@ -206,7 +206,7 @@ describe('search cannot reach what navigation hides', () => {
     const { findEverything } = await import('./find');
     const { buildCatalog } = await import('../data/catalog');
     const cat = buildCatalog([]);
-    const hits = findEverything(cat, new Date(), 'meal plan', [], [], VU.capabilities);
+    const hits = findEverything(cat, new Date(), 'meal plan', [], [], VU.capabilities, [], {}, [], {}, 'student');
     const screens = hits.flatMap((g) => g.hits).filter((h) => h.kind === 'screen');
     expect(screens.some((h) => h.screen === 'meals')).toBe(true);
   });
@@ -218,7 +218,7 @@ describe('search cannot reach what navigation hides', () => {
       const { findEverything } = await import('./find');
       const { buildCatalog } = await import('../data/catalog');
       const cat = buildCatalog([]);
-      const hits = findEverything(cat, new Date(), 'meal plan', [], [], PLAIN);
+      const hits = findEverything(cat, new Date(), 'meal plan', [], [], PLAIN, [], {}, [], {}, 'student');
       const screens = hits.flatMap((g) => g.hits).filter((h) => h.kind === 'screen');
       expect(screens.some((h) => h.screen === 'meals')).toBe(false);
     })();

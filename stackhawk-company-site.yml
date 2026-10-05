@@ -1,0 +1,54 @@
+# Public company frontend only. No account sessions or production API probes.
+# Reuse the existing Semester application, with a separate findings timeline.
+# Existing broad policy is preserved; no policy/technology flags are pruned.
+app:
+  applicationId: ${STACKHAWK_APPLICATION_ID}
+  host: ${APP_HOST:https://localhost:4186}
+  env: CompanySiteCI
+
+hawk:
+  startupTimeoutMinutes: 3
+  failureThreshold: low
+  config:
+    - pscans.maxAlertsPerRule=0
+  spider:
+    ajax: true
+    maxDurationMinutes: 4
+    ajaxBrowser: CHROME_HEADLESS
+    seedPaths:
+      - /site.css
+      - /site.js
+      - /product
+      - /students
+      - /personal-academic-os
+      - /contact
+      - /request-invite
+      - /trust
+      - /accessibility
+      - /status
+      - /legal
+      - /sitemap.xml
+      - /screenshots/search-desktop.jpg
+      - /screenshots/search-mobile.jpg
+      - /screenshots/today-desktop.jpg
+      - /screenshots/today-mobile.jpg
+      - /screenshots/courses-desktop.jpg
+      - /screenshots/courses-mobile.jpg
+      - /screenshots/calendar-desktop.jpg
+      - /screenshots/calendar-mobile.jpg
+      - /screenshots/path-desktop.jpg
+      - /screenshots/path-mobile.jpg
+      - /screenshots/discover-desktop.jpg
+      - /screenshots/discover-mobile.jpg
+
+tags:
+  - name: _STACKHAWK_AGENT
+    value: ${HAWK_AGENT:Codex}
+  - name: _STACKHAWK_GIT_COMMIT_SHA
+    value: ${COMMIT_SHA:none}
+  - name: _STACKHAWK_GIT_BRANCH
+    value: ${BRANCH_NAME:none}
+  - name: git_origin
+    value: harrisonjrubin7-cmyk/semester
+  - name: surface
+    value: company-site-frontend

@@ -39,7 +39,7 @@ const STYLES = join(process.cwd(), 'src', 'styles');
  * is a design decision to make, not a cleanup to do, and a test that deleted
  * them would be this file overruling that file.
  */
-const SHEETS = ['app.css', 'features.css'];
+const SHEETS = ['app.css', 'features.css', 'unity.css'];
 
 /**
  * Classes built at runtime rather than written down, with where each is made.
@@ -84,21 +84,100 @@ function haystack(): string {
     .join('\n');
 }
 
+/**
+ * Find all class names without rescanning the source for each selector.
+ *
+ * The earlier cache removed duplicate selectors, but each of the thousand
+ * distinct classes still searched the entire 27 MB source string. Every
+ * class extracted below contains only word characters and hyphens, so a
+ * match cannot cross a different character. Search each distinct run once
+ * with a trie and fallback links, including overlapping matches. Membership
+ * remains precisely `source.includes(name)`: a name mentioned in a comment
+ * or inside a longer word still counts, just as it did before.
+ */
+function referenced(source: string, names: Set<string>): Set<string> {
+  type Node = { next: Map<string, number>; fallback: number; matches: string[] };
+  const node = (): Node => ({ next: new Map(), fallback: 0, matches: [] });
+  const nodes: Node[] = [node()];
+  for (const name of names) {
+    let at = 0;
+    for (const letter of name) {
+      let next = nodes[at].next.get(letter);
+      if (next === undefined) {
+        next = nodes.push(node()) - 1;
+        nodes[at].next.set(letter, next);
+      }
+      at = next;
+    }
+    nodes[at].matches.push(name);
+  }
+
+  const queue = [...nodes[0].next.values()];
+  for (let i = 0; i < queue.length; i++) {
+    const at = queue[i];
+    for (const [letter, next] of nodes[at].next) {
+      let fallback = nodes[at].fallback;
+      while (fallback && !nodes[fallback].next.has(letter)) fallback = nodes[fallback].fallback;
+      nodes[next].fallback = nodes[fallback].next.get(letter) ?? 0;
+      nodes[next].matches.push(...nodes[nodes[next].fallback].matches);
+      queue.push(next);
+    }
+  }
+
+  const found = new Set(nodes[0].matches);
+  const tokens = new Set(source.match(/[\w-]+/g));
+  for (const token of tokens) {
+    if (found.size === names.size) break;
+    let at = 0;
+    for (let i = 0; i < token.length; i++) {
+      const letter = token[i];
+      while (at && !nodes[at].next.has(letter)) at = nodes[at].fallback;
+      at = nodes[at].next.get(letter) ?? 0;
+      for (const name of nodes[at].matches) found.add(name);
+    }
+  }
+  return found;
+}
+
 describe('the stylesheets', () => {
   it('style nothing that nothing wears', () => {
     const hay = haystack();
-    const dead: string[] = [];
-    for (const sheet of SHEETS) {
+    const classes = new Map(SHEETS.map(sheet => {
       const css = readFileSync(join(STYLES, sheet), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-      for (const m of css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) {
-        const name = m[1];
-        if (FOREIGN.test(name) || COMPOSED.has(name) || hay.includes(name)) continue;
-        if (!dead.includes(`${sheet}: .${name}`)) dead.push(`${sheet}: .${name}`);
+      return [sheet, [...css.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map(match => match[1])];
+    }));
+    const names = new Set([...classes.values()].flat().filter(name => !FOREIGN.test(name) && !COMPOSED.has(name)));
+    const worn = referenced(hay, names);
+    const dead = new Set<string>();
+    for (const sheet of SHEETS) {
+      for (const name of classes.get(sheet)!) {
+        if (FOREIGN.test(name) || COMPOSED.has(name) || worn.has(name)) continue;
+        dead.add(`${sheet}: .${name}`);
       }
     }
     // Named rather than counted: a failure should say which rule to look at,
     // and whether it is dead or merely composed somewhere this cannot see.
-    expect(dead).toEqual([]);
+    expect([...dead]).toEqual([]);
+  // This scans the complete source tree and its runtime-composed class names.
+  // The repository now exceeds the original 10-second budget on an otherwise
+  // idle worker, so keep the assertion exact while allowing the census to
+  // finish on the full application.
+  }, 30_000);
+
+  it('keeps substring membership, overlapping names and missing-name controls exact', () => {
+    const source = 'nav-row-expanded foobar _item ababa prefix-aa-suffix /* mentioned-here */';
+    const names = new Set(['nav', 'nav-row', 'row', 'nav-row-expanded', 'foo', 'oo', '_item', 'aba', 'ba', 'aa', 'mentioned-here', 'absent-name', 'ROW']);
+    expect([...referenced(source, names)].sort()).toEqual([...names].filter(name => source.includes(name)).sort());
+    expect(referenced('', names)).toEqual(new Set());
+    expect(referenced(source, new Set())).toEqual(new Set());
+  });
+
+  it('matches the previous lookup across fallback chains and repeated prefixes', () => {
+    const alphabet = ['a', 'b', '-', '_'];
+    const names = new Set(alphabet.flatMap(a => alphabet.flatMap(b => alphabet.map(c => `${a}${b}${c}`))));
+    for (const source of ['aaaaa', 'abababab', 'a-b_a--b', '__a_b-_', 'a'.repeat(40) + 'b', 'unrelated']) {
+      expect([...referenced(source, names)].sort(), source).toEqual([...names].filter(name => source.includes(name)).sort());
+    }
   });
 
   it('leaves no empty block behind when a rule goes', () => {

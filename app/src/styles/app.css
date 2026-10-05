@@ -19,6 +19,54 @@
 
 /* Cinzel is declared in styles/typefaces.css, loaded by main.tsx. */
 
+/* One calm content frame for every routed workspace. Individual screens own
+   their internal layout; the shell owns readable measure and dependable air. */
+.page-frame {
+  width: min(100%, var(--layout-operational));
+  margin-inline: auto;
+  padding: var(--page-pad);
+}
+
+.deskhome-title {
+  margin: 0;
+  font: inherit;
+}
+
+.page-frame-wide {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+.page-purpose {
+  max-width: var(--layout-reading);
+  margin-bottom: var(--sp-6);
+  color: var(--app-dim);
+  font-size: var(--type-base);
+  line-height: var(--leading-relaxed);
+  text-wrap: pretty;
+}
+
+.page-purpose.has-actions {
+  margin-bottom: 0;
+}
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-block: var(--sp-5) var(--sp-6);
+}
+
+.page-actions > :is(button, a) {
+  width: auto;
+}
+
+.page-end {
+  pointer-events: none;
+}
+
 :root {
   /* Ground — five steps of near-black, cooled very slightly toward blue.
      A perfectly neutral grey ramp reads as flat and a little dead on an OLED
@@ -112,11 +160,27 @@
   --type-xs-plus: calc(11.5px * var(--text-scale, 1)); /* the second line under a row */
   --type-sm: calc(12px * var(--text-scale, 1)); /* captions, second-rank prose */
   --type-sm-plus: calc(12.5px * var(--text-scale, 1)); /* a caption with something to say */
-  --type-base: calc(13px * var(--text-scale, 1)); /* body */
-  --type-base-plus: calc(13.5px * var(--text-scale, 1)); /* body that is the row */
-  --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
-  --type-md-plus: calc(14.5px * var(--text-scale, 1)); /* the name on a row you open */
-  --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
+  /*
+   * Body is 16px.
+
+   * It was 13, with rows at 14 and a card's title at 15 — a scale measured
+   * into place from usage, which is why it held for as long as it did. The
+   * design brief sets 16px as the floor for ordinary reading text, and the
+   * product decided to meet it (see `docs/TYPOGRAPHY-SYSTEM.md`). So body
+   * moved to 16 and every step above it moved with it, in the same order and
+   * with the same gaps where there was room: base-plus 16.5, rows 17 and
+   * 17.5, a card's title 18, an item title 19. From 20 up nothing moved — a
+   * section heading was already above the new body — and below body nothing
+   * moved either: captions, labels, kickers and the second line under a row
+   * are secondary text, which the brief sets at 12 to 14. The inherited
+   * default on `body` and `.device` moved from 15 to 16 for the same reason.
+   * Every name kept its job; only the numbers under the reading tier moved.
+   */
+  --type-base: calc(16px * var(--text-scale, 1)); /* body — 16px, see the note above `--type-base` */
+  --type-base-plus: calc(16.5px * var(--text-scale, 1)); /* body that is the row */
+  --type-md: calc(17px * var(--text-scale, 1)); /* list rows, the thing you tap */
+  --type-md-plus: calc(17.5px * var(--text-scale, 1)); /* the name on a row you open */
+  --type-lg: calc(18px * var(--text-scale, 1)); /* a card's own title */
   /*
      The gap between `lg` and `xl`, which the app had been filling by hand.
      Ninety-three sites across eleven values, 15.5 to 25, and no cluster in
@@ -137,7 +201,7 @@
      Named to match `--leading-display-*`, and they pair: a 22px figure takes
      `--leading-display` at 1.15, which is the ramp's own answer for 18-25px.
   */
-  --type-display-xs: calc(17px * var(--text-scale, 1)); /* a card or item title — 36 */
+  --type-display-xs: calc(19px * var(--text-scale, 1)); /* a card or item title — 36 */
   --type-display-sm: calc(20px * var(--text-scale, 1)); /* a section's own heading — 27 */
   --type-display: calc(22px * var(--text-scale, 1)); /* a figure read at a glance — 15 */
   /* The screen's own title, and the largest figures beside it. Both, and the
@@ -349,7 +413,7 @@ body {
   background: var(--app-void);
   color: var(--app-fg);
   font-family: var(--font-body);
-  font-size: calc(15px * var(--text-scale, 1));
+  font-size: calc(16px * var(--text-scale, 1));
   -webkit-font-smoothing: antialiased;
 
   /*
@@ -369,6 +433,62 @@ body {
    * unaffected — which is why this can sit on `body`.
    */
   overflow-wrap: break-word;
+}
+
+/*
+ * The pre-React first paint from index.html.
+ *
+ * Storage is intentionally read before the application mounts, otherwise a
+ * returning student can flash through onboarding with an empty account.  The
+ * read is normally imperceptible, but a browser restoring a suspended
+ * IndexedDB connection may take a moment (or fail).  This keeps that honest
+ * wait from looking like a broken, empty application.  React replaces the
+ * entire node as soon as the account is ready.
+ */
+.boot {
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  /* Off the --sp- ladder, and scaled by hand so Density still reaches it. */
+  gap: calc(18px * var(--density, 1));
+  padding: calc(24px * var(--density, 1));
+  box-sizing: border-box;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(212, 217, 226, 0.08), transparent 42%),
+    var(--app-void);
+  color: var(--app-fg);
+  text-align: center;
+}
+.boot-mark {
+  height: 58px;
+  display: flex;
+  align-items: end;
+  gap: calc(7px * var(--density, 1));
+  color: var(--app-accent);
+}
+.boot-mark i {
+  display: block;
+  width: 13px;
+  height: 34px;
+  border: 1px solid currentColor;
+  background: var(--app-accent-wash);
+  transform: skewY(-12deg);
+}
+.boot-mark i:nth-child(2) { height: 46px; }
+.boot-mark i:nth-child(3) { height: 58px; }
+.boot-name {
+  font-family: var(--font-display);
+  font-size: calc(var(--type-xl) * 1.3);
+  letter-spacing: -0.012em;
+  color: var(--app-accent-bright);
+}
+.boot-status {
+  font-family: var(--font-heading);
+  font-size: var(--type-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-dim);
 }
 
 a {
@@ -428,7 +548,7 @@ a:hover {
   border-radius: var(--r-sm);
   border: 1px solid var(--app-accent);
   background: var(--app-panel);
-  color: var(--app-ink);
+  color: var(--app-fg);
   font-family: var(--font-heading);
   font-size: calc(13px * var(--text-scale, 1));
   letter-spacing: 0.08em;
@@ -470,11 +590,15 @@ a:hover {
   background: var(--app-bg);
   color: var(--app-fg);
   font-family: var(--font-body);
-  font-size: calc(15px * var(--text-scale, 1));
+  font-size: calc(16px * var(--text-scale, 1));
   /* Set once here so every screen inherits it. Components that need a tighter
      line for their own reason still override locally; what this fixes is the
      hundred places that were relying on the browser default. */
   line-height: var(--line-height, 1.55);
+  /* The reader's letter and word spacing (`textSpacing` in lib/look.ts). `.chrome-text`
+     sets its own tracking, so display type is untouched. */
+  letter-spacing: var(--tracking-body, 0);
+  word-spacing: var(--word-space, 0);
   overflow: hidden;
   isolation: isolate;
 }
@@ -538,13 +662,15 @@ a:hover {
 
 /* ── The three layouts ────────────────────────────────────────────────────
  *
- * The app is drawn as a phone, and at phone size that is what it is. Above
- * 760px it gains the rail; above 1180px it stops being a phone held up and
- * becomes a desktop window. The two boundaries are the same numbers as
- * `lib/media.ts`, which is where the components read them, and
- * `tiers.test.ts` asserts the two copies agree — a stylesheet cannot import a
- * constant, so the next best thing is a test that fails when one of them
- * moves without the other.
+ * The app is drawn as a phone, and at phone size that is what it is. From
+ * 600px (medium) the column widens past the phone it was drawn as; from
+ * 840px (expanded) it gains the rail; from 1200px (large) it stops being a
+ * tablet and becomes a desktop window; at 1600px (extra-large) the measure
+ * takes a last step. The boundaries are the adaptive-device contract's window
+ * classes and the same numbers as `lib/media.ts`, which is where the
+ * components read them, and `tiers.test.ts` asserts the two copies agree — a
+ * stylesheet cannot import a constant, so the next best thing is a test that
+ * fails when one of them moves without the other.
  *
  * Every difference between the three is a value in this block, not a rule
  * written twice. A screen asks for the page gutter and gets the phone's 18px
@@ -571,11 +697,27 @@ a:hover {
   --cell-aspect: 1;
 }
 
+/* Medium. The rail, collapsed to its icons, in the tab bar's place — the
+   contract's "collapsible rail" — and no longer a phone held up in a window:
+   a desktop browser at 700px drew the 402px artboard with 150px of ground
+   down each side. The rail's column is 72px; the standalone column (a drill,
+   onboarding) widens to the tablet's 560 and the gutters to its 20. A phone
+   on its side is set back to the phone's values by the handheld block
+   further down, and `useMedium` keeps the rail off it too. */
+@media (min-width: 600px) {
+  :root {
+    --page-pad: 20px;
+    --chrome-pad: 20px;
+    --device-max: 560px;
+    --rail-w: 72px;
+  }
+}
+
 /* Tablet. The rail arrives; the touch sizes do not change, because the finger
    holding an iPad is the same finger that held the phone. The column fills
    whatever the rail leaves rather than sitting at a fixed 560 with a band of
    black beside it — at 834 that band was 88px of nothing. */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   :root {
     --page-pad: 20px;
     --chrome-pad: 20px;
@@ -601,7 +743,7 @@ a:hover {
    hairline with a chevron at the end of it, and a canvas for the screens that
    are genuinely grids — the month, the week, a map — which have more to say
    the more room they get. */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   :root {
     --page-pad: 30px;
     --chrome-pad: 30px;
@@ -646,7 +788,7 @@ a:hover {
    The same sentence appears once more, in the last block of this section,
    for a phone turned on its side — the two cannot be one query without `or`,
    which is newer than the oldest iPad this runs on. */
-@media (max-width: 759px) and (pointer: coarse) {
+@media (max-width: 839px) and (pointer: coarse) {
   :root {
     --device-max: 100%;
   }
@@ -714,11 +856,12 @@ a:hover {
 }
 
 /* ── The desk ─────────────────────────────────────────────────────────────
-   From 760px the rail sits beside the content, so an iPad or a laptop shows
-   the navigation instead of hiding it behind a tab bar that only fits a
-   thumb. 760 rather than 900 because an iPad in portrait is 768–834pt wide,
-   and on a tablet held upright the rail is the whole point. Below that the
-   app is the phone it was. */
+   From 840px (expanded) the rail sits beside the content, so an iPad on its
+   side or a laptop shows the navigation instead of hiding it behind a tab bar
+   that only fits a thumb. It was 760, so an iPad held upright got the rail;
+   the adaptive-device contract puts a portrait tablet in medium, with the tab
+   bar, and the window rather than the device decides. Below that the app is
+   the phone it was. */
 
 .desk {
   /* The same keyboard inset as `.device`: on a tablet held upright the rail
@@ -767,10 +910,78 @@ a:hover {
   font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  transition: color 120ms ease;
+  transition: color var(--duration-fast) ease;
 }
 .rail .rail-item:hover {
   color: var(--app-accent-bright);
+}
+
+/* ── The collapsed rail (medium) ──────────────────────────────────────────
+   Icons only, centred in the 72px column, with the words still in the
+   accessibility tree: clipped rather than `display: none`, which would leave
+   each button with no name at all. Opened, the same rail floats over the
+   screen at the sidebar's width, a spacer keeps its column so the pane does
+   not move, and the scrim behind it closes it. No transition: it is a
+   navigation, and it should be where the press put it. */
+.rail-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4) var(--sp-5);
+}
+.rail-head .rail-mark {
+  padding: 0;
+}
+/* Under `.rail` for the weight: `.bare`, which the button also wears, sets
+   `width: 100%` later in the sheet and would otherwise push the wordmark out
+   of the head. */
+.rail .rail-toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--app-dim);
+  border-radius: var(--r-md);
+}
+.rail .rail-toggle:hover {
+  color: var(--app-accent-bright);
+}
+.rail[data-collapsed]:not([data-open]) .rail-head {
+  justify-content: center;
+  padding-inline: 0;
+}
+.rail[data-collapsed]:not([data-open]) .rail-item {
+  justify-content: center;
+  margin-inline: var(--sp-2);
+  padding-inline: 0;
+  min-height: 44px;
+}
+.rail[data-collapsed]:not([data-open]) .rail-item span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.rail[data-open] {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 248px;
+  z-index: 45;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+.rail-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  border: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.35);
 }
 /*
  * The second group in the sidebar — Ask Claude, Add a course, Account,
@@ -818,7 +1029,7 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-@media (max-width: 1179px) {
+@media (max-width: 1199px) {
   .rail .rail-quiet {
     letter-spacing: 0.08em;
   }
@@ -837,9 +1048,9 @@ a:hover {
  *
  * A floor rather than a height, so larger text still grows the row, and on
  * `pointer: coarse` rather than on a width, because it is the input that
- * decides this and not the window: an iPad at 1194 gets it in the desktop
- * layout too, and a laptop at 820 — a browser window dragged narrow — does
- * not, since a mouse hits a 41px row perfectly well and a rail of 44s on a
+ * decides this and not the window: a 13-inch iPad at 1366 gets it in the
+ * desktop layout too, and a laptop at 900 — a browser window dragged narrow
+ * — does not, since a mouse hits a 41px row perfectly well and a rail of 44s on a
  * desktop is just a taller rail.
  *
  * The rail scrolls (`overflow-y: auto` above), so the extra height cannot
@@ -854,7 +1065,7 @@ a:hover {
 /* On a desktop the rail is a sidebar rather than a strip: more air at the
    top, a heavier mark, and rows tall enough to aim at with a mouse without
    being the 48px a thumb needs. */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .rail {
     padding: calc(30px * var(--density, 1)) 0 calc(24px * var(--density, 1));
   }
@@ -898,7 +1109,7 @@ a:hover {
  * ── The measure ──────────────────────────────────────────────────────────
  *
  * Every screen's body sits in this, and it is the one place the reading width
- * is decided. Below 1180 it is `100%` and this does nothing at all; above it,
+ * is decided. Below 1200 it is `100%` and this does nothing at all; above it,
  * ordinary content — a list of rows, a stack of cards, a form — stops at
  * `--measure` and centres, and a screen whose body is a grid or a map takes
  * `--canvas` instead.
@@ -963,6 +1174,17 @@ a:hover {
   height: var(--assistant-strip);
 }
 
+/*
+ * In Focused mode the Focus bar is fixed over the bottom as well, and the
+ * button stands on top of it (`ai/Assistant.tsx`), so the reservation is the
+ * bar's inset plus the button's strip. Without it the last card on a screen
+ * ended under a bar 110px tall at 320px wide with 30px of padding to clear it.
+ * `--focus-bar-inset` is written by the bar itself and unset when it is gone.
+ */
+:root[data-workspace='focused'] .pane-body::after {
+  height: calc(var(--assistant-strip) + var(--focus-bar-inset, 0px));
+}
+
 
 .pane-body.is-canvas {
   max-width: var(--canvas);
@@ -995,11 +1217,11 @@ a:hover {
  * shelves' pills started at 14. Neither is a judgement call about taste —
  * they are the one thing on the screen not lined up with anything.
  *
- * No base declaration, deliberately. Below 1180px each strip keeps whatever
+ * No base declaration, deliberately. Below 1200px each strip keeps whatever
  * padding it already had, so nothing moves on a phone or a tablet; this only
  * ever adds the gutter a wide window needs.
  */
-/* The banner's own gutter below 1180px, where `.pane-strip` does nothing.
+/* The banner's own gutter below 1200px, where `.pane-strip` does nothing.
    In the sheet rather than inline on the element: an inline padding beats a
    media query, and the strip would have stayed exactly where it was.
 
@@ -1012,7 +1234,7 @@ a:hover {
   padding-inline: var(--chrome-pad);
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   /* `.device-pane` on the front, because `.app-header` sets `padding-inline`
      itself further down this sheet and a later rule of equal weight wins:
      without the extra class this one is dead and the title sits at the window
@@ -1046,7 +1268,7 @@ a:hover {
  * a near-black ground is the difference between a scrollbar and a stripe of
  * grey.
  */
-@media (min-width: 1180px) and (pointer: fine) {
+@media (min-width: 1200px) and (pointer: fine) {
   .scrollarea {
     scrollbar-width: thin;
     scrollbar-color: var(--app-track) transparent;
@@ -1078,7 +1300,7 @@ a:hover {
  * four in two columns is a semester you can see at once.
  *
  * A screen opts in by putting `.cards` on the container it was already
- * stacking things in, and gets one column below 1180 — exactly what it had —
+ * stacking things in, and gets one column below 1200 — exactly what it had —
  * and as many as fit above it. `auto-fill` with a floor rather than a fixed
  * count so a two-card screen does not stretch two cards across a monitor.
  */
@@ -1088,7 +1310,7 @@ a:hover {
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .cards {
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   }
@@ -1133,7 +1355,7 @@ a:hover {
 .task-filter-box {
   flex: 1;
   min-width: 0;
-  min-height: 44px;
+  min-height: var(--institutional-nav-target);
   font-size: var(--type-md);
 }
 
@@ -1218,7 +1440,7 @@ a:hover {
  * are what let the backdrop reach the page gutter — a pinned bar that stops
  * short of the edge lets tiles slide up the sides of it.
  */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .task-bar {
     position: sticky;
     top: 0;
@@ -1242,7 +1464,7 @@ a:hover {
  * the bottom and had to be scrolled, which is the one thing a month view
  * exists not to make you do.
  *
- * So above 1180 the cell turns landscape, the dots become the names of what
+ * So above 1200 the cell turns landscape, the dots become the names of what
  * is on the day, and the whole month fits again. The markup is identical at
  * both — `Calendar.tsx` draws the names always and this hides them — because
  * the alternative is reading the window width in JavaScript and having two
@@ -1296,7 +1518,7 @@ a:hover {
   display: none;
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .mcell {
     align-items: stretch;
     justify-content: flex-start;
@@ -1355,7 +1577,7 @@ a:hover {
  * sections are different heights and a grid would leave a hole under the
  * short one, where a column flow just carries on.
  */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .flow-cols {
     columns: 2;
     column-gap: calc(26px * var(--density, 1));
@@ -1905,6 +2127,8 @@ a:hover {
      negative tracking is what makes a large heading look set rather than
      typed. */
   letter-spacing: -0.012em;
+  /* Display type is not body text: the reader's spacing (`textSpacing`) stops here. */
+  word-spacing: 0;
 }
 @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
   .chrome-text {
@@ -2004,18 +2228,22 @@ a:hover {
   transform: translateY(1px);
 }
 .device .btn-primary {
-  background: var(--chrome);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--app-accent);
+  border-color: var(--app-accent);
   color: var(--chrome-ink);
   font-weight: 600;
-  text-shadow: 0 1px 0 var(--chrome-glint);
-  box-shadow: var(--glow);
+  text-shadow: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset;
 }
 .device .btn-primary:hover {
-  filter: brightness(1.1);
+  background: var(--app-accent-bright);
+  border-color: var(--app-accent-bright);
+  filter: none;
 }
 .device .btn-primary:active {
-  filter: brightness(0.94);
+  background: var(--app-accent-deep);
+  border-color: var(--app-accent-deep);
+  filter: none;
 }
 .device .btn-secondary {
   border-color: var(--app-line);
@@ -2038,6 +2266,38 @@ a:hover {
 }
 .device .btn-ghost:active {
   background: rgba(206, 211, 220, 0.2);
+}
+
+.segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-1);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: color-mix(in srgb, var(--app-panel) 72%, transparent);
+}
+
+.device .segmented-option {
+  border-color: transparent;
+  background: transparent;
+  color: var(--app-dim);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.device .segmented-option:hover {
+  border-color: transparent;
+  background: var(--app-accent-wash);
+  color: var(--app-fg);
+}
+
+.device .segmented-option[aria-pressed='true'] {
+  border-color: var(--app-line);
+  background: var(--app-raise);
+  color: var(--app-fg);
+  font-weight: 600;
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
 }
 
 /*
@@ -2225,6 +2485,66 @@ a:hover {
 }
 
 /*
+ * A field that is wrong, and the line that says why — `components/FieldMessage.tsx`.
+ *
+ * The border is the warning colour, but colour is never the only signal: the
+ * message under it carries an icon and words. The message element is always
+ * in the document so `aria-describedby` never dangles; empty, it takes no room.
+ */
+.device .input[aria-invalid='true'] {
+  border-color: var(--app-warn);
+}
+.field-message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  margin: var(--sp-3) 0 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-warn);
+  text-wrap: pretty;
+}
+.field-message:empty {
+  margin: 0;
+}
+.field-message-icon {
+  flex: none;
+  margin-top: var(--sp-1);
+}
+
+/*
+ * The list of everything a failed submit found — `ErrorSummary` in
+ * `components/FieldMessage.tsx`. A border and a heading say it is a problem;
+ * the warning colour only reinforces the border. Each link is a full-height
+ * target, so the list is usable on a phone without precision.
+ */
+.error-summary {
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--app-warn);
+  border-radius: var(--r-md);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+.error-summary-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-sm);
+  color: var(--app-warn);
+}
+.error-summary ul {
+  margin: 0;
+  padding-left: var(--sp-6);
+}
+.error-summary a {
+  display: inline-block;
+  min-height: 44px;
+  padding-block: var(--sp-2);
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/*
  * ── The composer ─────────────────────────────────────────────────────────
  *
  * One pill: the field, the send button and the ring around both. Drawn here
@@ -2292,6 +2612,71 @@ a:hover {
   border: 0;
   box-shadow: none;
 }
+/*
+ * ── How it helps: the assistant's mode, as a radio group ────────────────
+ *
+ * `intelligence/ModePicker.tsx`. The radios are visually hidden and the
+ * labels are drawn as a row of pills; the choice is marked by a check and the
+ * full ink as well as the wash, so it is never colour alone, and the keyboard
+ * ring is moved onto the pill because the input it belongs to is clipped.
+ */
+.device .mode-picker {
+  border: 0;
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  min-width: 0;
+}
+.device .mode-picker-legend {
+  padding: 0;
+  margin-bottom: var(--sp-2);
+  font-size: var(--type-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-fg);
+}
+.device .mode-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.device .mode-picker-option {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-lg);
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+  cursor: pointer;
+}
+.device .mode-picker-option:has(input:checked) {
+  background: var(--app-accent-wash);
+  border-color: var(--app-accent);
+  box-shadow: inset 0 0 0 1px var(--app-accent);
+  font-weight: 600;
+}
+.device .mode-picker-option:has(input:checked)::before {
+  content: '✓';
+  margin-right: var(--sp-2);
+}
+.device .mode-picker-option[data-disabled] {
+  color: var(--app-dim);
+  cursor: not-allowed;
+  border-style: dashed;
+}
+.device .mode-picker-option:has(input:focus-visible) {
+  outline: 3px solid var(--focus-color);
+  outline-offset: var(--focus-ring-offset);
+}
+.device .mode-picker-help {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+}
+
 /* Round, and the size of a thumb. 34x32 was the old one and it was a small
    rectangle in the corner of a rectangle. */
 .device .ai-send {
@@ -2421,14 +2806,28 @@ a:hover {
  * `outline: none` on `:focus-visible` again.
  */
 .device :focus-visible {
-  outline: 2px solid var(--app-accent-deep);
-  outline-offset: 2px;
+  /* The width stays a literal: `a11y/focus.test.ts` reads it as the proof the
+     ring is an outline. Colour, offset and clearances are the named tokens in
+     `styles/tokens.css`, at the same values. */
+  outline: 2px solid var(--focus-color);
+  outline-offset: var(--focus-ring-offset);
   border-radius: var(--r-sm);
   /* Tabbing scrolls the focused control into view, and the frosted header sits
      on top of the scroller — so without this the thing you just focused lands
      underneath it and the ring is half hidden. */
-  scroll-margin-top: 96px;
-  scroll-margin-bottom: 84px;
+  scroll-margin-top: var(--focus-clear-top);
+  scroll-margin-bottom: var(--focus-clear-bottom);
+}
+
+/* In Focused mode the Focus bar is fixed over the bottom of the scroller,
+   where the tab bar was beside it. A control under the bar is still inside
+   the scroller's own box, so tabbing to it scrolled nothing and the ring sat
+   under the bar — measured at 320x640 on Today, eight of its 39 stops. The
+   scroller's padding is what focus scrolling treats as out of view, so it is
+   set there: the bar's inset plus the assistant's button standing on it
+   (`--focus-bar-inset`, written by the bar; `lib/bottomchrome.hook.ts`). */
+:root[data-workspace='focused'] .scrollarea {
+  scroll-padding-bottom: calc(var(--focus-bar-inset, 0px) + var(--assistant-strip));
 }
 
 /*
@@ -2910,6 +3309,13 @@ input[type='search'].input {
  * implied. `tokensFor` already returns `none` for both shadow tokens under
  * the same preference, so this is the half that cannot be done in JS.
  */
+:root[data-contrast="more"] .surface,
+:root[data-contrast="more"] .surface-in,
+:root[data-contrast="more"] .pill-soft {
+  box-shadow: none;
+  border-color: var(--app-fg);
+}
+
 @media (prefers-contrast: more) {
   .surface,
   .surface-in,
@@ -3324,7 +3730,7 @@ input[type='search'].input {
   flex: none;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: var(--institutional-nav-target);
   padding: 0 var(--sp-3);
   font-family: var(--font-heading);
   font-size: calc(11px * var(--text-scale, 1));
@@ -3401,9 +3807,9 @@ input[type='search'].input {
  * On a desk, the window rather than the pane.
  *
  * `absolute` is right on a phone, where `.device` is the app, and on a browser
- * window between 402 and 760px, where the app is a column with ground either
+ * window between 402 and 840px, where the app is a column with ground either
  * side and a sheet spilling onto the ground would be the only thing that does.
- * Above 760px `.device-pane` is a strip beside the rail, and a sheet that
+ * Above 840px `.device-pane` is a strip beside the rail, and a sheet that
  * covers only the strip leaves the rail lit and clickable behind a dialog
  * saying `aria-modal="true"` — so a tap on Courses navigated the screen
  * underneath while the sheet stayed over it, and a screen reader was told the
@@ -3418,7 +3824,7 @@ input[type='search'].input {
  * laptop, which is what makes a covered window read as a sheet and not as a
  * screen that has been pulled out of shape.
  */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .soft-folder {
     position: fixed;
     padding: calc(26px * var(--density, 1));
@@ -3706,14 +4112,14 @@ section[data-drop] > .grip + * {
 /*
  * On a wide window the gutter is the strip's, not the row's.
  *
- * `.shelf-nav` wears `pane-strip`, so above 1180px the nav's own padding is
+ * `.shelf-nav` wears `pane-strip`, so above 1200px the nav's own padding is
  * whatever puts its contents on the content column. The 14px below belongs
  * to a phone, where the strip rule does nothing, and adding it to the
  * column's gutter would leave the pills fourteen pixels right of everything
  * they navigate to. Zeroed on the two children rather than folded into the
  * nav, because the scroller and its fade have to end where the column does.
  */
-@media (min-width: 1180px) {
+@media (min-width: 1200px) {
   .device-pane .shelf-nav-row,
   .device-pane .shelf-nav-said {
     padding-inline: 0;
@@ -3726,6 +4132,287 @@ section[data-drop] > .grip + * {
   font-size: calc(12px * var(--text-scale, 1));
   line-height: var(--line-height, 1.45);
   color: var(--app-dim);
+}
+
+/* ── Institutional navigation preview ────────────────────────────────────
+ *
+ * A build-flagged shell over the same route catalogue. The contextual
+ * workspace tier is a disclosure at every width, so it names its purpose
+ * without permanently competing with primary navigation.
+ */
+.institutional-navigation {
+  border-bottom: 1px solid var(--app-line-soft);
+  background: var(--app-bg);
+}
+
+.institutional-primary-nav,
+.institutional-workspace-disclosure nav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.institutional-primary-nav,
+.institutional-workspace-disclosure nav {
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: var(--sp-3);
+}
+
+.institutional-primary-nav::-webkit-scrollbar,
+.institutional-workspace-disclosure nav::-webkit-scrollbar {
+  display: none;
+}
+
+.institutional-primary-nav {
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.institutional-nav-button {
+  flex: none;
+  width: auto;
+  min-height: 44px;
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: 999px;
+  color: var(--app-dim);
+  white-space: nowrap;
+}
+
+.institutional-nav-button:hover,
+.institutional-nav-button:focus-visible {
+  color: var(--app-fg);
+  background: var(--app-line-soft);
+}
+
+.institutional-nav-button.is-on {
+  color: var(--app-fg);
+  background: var(--app-accent-wash);
+  box-shadow: inset 0 -2px 0 var(--app-accent-bright);
+}
+
+.institutional-workspace-disclosure {
+  display: block;
+}
+
+.institutional-workspace-disclosure > summary {
+  min-height: 44px;
+  padding: var(--sp-4) var(--sp-2);
+  color: var(--app-fg);
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.institutional-workspace-disclosure[open] > summary {
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+/* ── Institutional workspace density ─────────────────────────────────────
+ *
+ * The workspace deliberately has several persistent wayfinding layers: open
+ * tabs, global search, primary destinations and the contextual workspace.
+ * At their original comfortable spacing those layers consumed roughly the
+ * first third of a short laptop viewport before the page itself began. Keep
+ * every layer, but make the chrome read as one compact control surface.
+ *
+ * The buttons retain their 44px interaction floor. Only the air around those
+ * targets and the decorative mark are reduced, so this does not trade away
+ * keyboard or touch access for density. Scoped through the institutional
+ * navigation so the non-institutional shells preserve their existing rhythm.
+ */
+.deskwork:has(.institutional-navigation) > .desktop-bar {
+  gap: var(--sp-5);
+  padding: var(--sp-1) var(--sp-7);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-brand {
+  gap: var(--sp-4);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-md);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-field {
+  min-height: 44px;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-6);
+}
+
+.deskwork:has(.institutional-navigation) .desktop-ai {
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-5);
+}
+
+.deskwork:has(.institutional-navigation) .institutional-primary-nav {
+  padding-block: var(--sp-1);
+}
+
+.deskwork:has(.institutional-navigation) .institutional-nav-button {
+  padding-inline: var(--sp-5);
+}
+
+.deskwork:has(.institutional-navigation) .institutional-workspace-disclosure > summary {
+  padding-block: var(--sp-2);
+}
+
+.deskwork:has(.institutional-navigation) .app-header {
+  padding-bottom: var(--sp-3);
+}
+
+@media (min-width: 840px) {
+  /* Keep every persistent institutional layer on a short laptop without
+     shrinking its 44px controls. These three bands previously put the page
+     itself 361px below the window top. Removing only surrounding air keeps
+     the content start inside the 320px compact-chrome budget. */
+  .deskwork:has(.institutional-navigation) > .deskstrip,
+  .deskwork:has(.institutional-navigation) > .desktop-bar {
+    padding-block: 0;
+  }
+
+  .deskwork:has(.institutional-navigation) .app-header {
+    padding-block: 0;
+  }
+}
+
+@media (max-width: 839px) {
+  .deskwork:has(.institutional-navigation) > .desktop-bar {
+    padding-inline: var(--sp-5);
+  }
+}
+
+.institutional-journey-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-2) var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.institutional-journey-copy {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.institutional-journey-copy > span:last-child {
+  color: var(--app-dim);
+  font-size: calc(13px * var(--text-scale, 1));
+}
+
+.institutional-journey-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.institutional-journey-button {
+  width: auto;
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: 999px;
+  color: var(--app-dim);
+  white-space: nowrap;
+}
+
+.institutional-journey-button:hover,
+.institutional-journey-button:focus-visible {
+  color: var(--app-fg);
+  background: var(--app-line-soft);
+}
+
+.institutional-journey-ai {
+  color: var(--app-accent-deep);
+  border: 1px solid var(--app-line);
+}
+
+@media (max-width: 839px) {
+  .institutional-navigation {
+    padding-inline: calc(14px * var(--density, 1));
+  }
+
+  .institutional-primary-nav {
+    margin-inline: calc(-14px * var(--density, 1));
+    padding-inline: calc(14px * var(--density, 1));
+  }
+
+  .institutional-workspace-disclosure nav {
+    flex-direction: column;
+    align-items: stretch;
+    padding-bottom: var(--sp-5);
+  }
+
+  .institutional-workspace-disclosure .institutional-nav-button {
+    width: 100%;
+    text-align: left;
+  }
+
+  .institutional-journey-context {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .institutional-journey-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ── Compact Flight Plan ──────────────────────────────────────────────── */
+.flight-plan-card > summary,
+.flight-plan-task > summary,
+.flight-plan-warning > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.flight-plan-card > summary {
+  font-size: calc(16px * var(--text-scale, 1));
+}
+
+.flight-plan-body {
+  display: grid;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+}
+
+.flight-plan-intro,
+.flight-plan-warning-body p,
+.flight-plan-overflow {
+  color: var(--app-dim);
+  margin: 0;
+}
+
+.flight-plan-groups {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.flight-plan-task,
+.flight-plan-warning {
+  border-top: 1px solid var(--app-line);
+}
+
+.flight-plan-task-body,
+.flight-plan-warning-body {
+  display: grid;
+  gap: var(--sp-2);
+  padding: 0 0 var(--sp-4) var(--sp-5);
+}
+
+.flight-plan-source,
+.flight-plan-session {
+  color: var(--app-dim);
+}
+
+.flight-plan-warning > summary {
+  color: var(--app-warn, var(--app-fg));
 }
 
 /* ---------------------------------------------------------------------------
@@ -3846,7 +4533,7 @@ section[data-drop] > .grip + * {
    `components/Bench.tsx` from the list in `lib/menus.ts`.
 
    It is the shape every editor a student has ever opened already has, which
-   is the whole argument for it: the reading is free. Below 760px the menu
+   is the whole argument for it: the reading is free. Below 840px the menu
    bar collapses to one button, because eight words in a row on a phone is
    either eight unreadable words or a row you have to drag. */
 
@@ -4105,6 +4792,54 @@ section[data-drop] > .grip + * {
   height: 18px;
   margin: 0 var(--sp-2);
   background: var(--app-line);
+}
+
+/* A horizontal row only announces that it moves when it actually clips.
+   Native touch, wheel and focus scrolling stay on the viewport; these controls
+   make that movement discoverable without covering the row's last item. */
+.overflow-cue {
+  min-width: 0;
+}
+
+.overflow-cue__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.overflow-cue__button {
+  display: grid;
+  place-items: center;
+  width: var(--target-compact);
+  min-width: var(--target-compact);
+  height: var(--target-compact);
+  padding: 0;
+  color: var(--app-fg);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.overflow-cue__button:hover:not(:disabled) {
+  border-color: var(--app-accent-deep);
+  background: var(--app-accent-wash);
+}
+
+.overflow-cue__button:disabled {
+  color: var(--app-faint);
+  background: transparent;
+  cursor: default;
+}
+
+.overflow-cue__viewport {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overflow-cue__viewport {
+    scroll-behavior: auto;
+  }
 }
 
 /* ── The shelf a file screen opens on ─────────────────────────────────────
@@ -4909,9 +5644,9 @@ section[data-drop] > .grip + * {
   padding-inline: var(--sp-4);
   border-left: 2px solid var(--app-accent);
   border-radius: var(--r-sm);
-  background: var(--app-ground);
-  color: var(--app-ink);
-  font-family: var(--app-font);
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-body);
   font-size: var(--type-xs);
   line-height: var(--leading-snug);
 }
@@ -5065,7 +5800,7 @@ section[data-drop] > .grip + * {
 
 /* Three lines on a phone, one row on anything wider — the same information
    either way, and a list that can be scanned rather than scrolled. */
-@media (min-width: 760px) {
+@media (min-width: 840px) {
   .fnlib-row {
     grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 13rem);
     align-items: baseline;
@@ -5407,7 +6142,7 @@ section[data-drop] > .grip + * {
  * list you can scan a row a second, and the message beside it. Drawn here
  * rather than inline in the screen for three reasons — a row has four hover
  * states and an inline style has none; the whole thing has to restack at
- * 760px and a component cannot hold a media query; and every size in it is a
+ * 840px and a component cannot hold a media query; and every size in it is a
  * token, so the Text size and Spacing settings reach the mailbox like they
  * reach everything else.
  *
@@ -5431,6 +6166,12 @@ section[data-drop] > .grip + * {
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--app-line);
+}
+
+/* The phone's paging row, under the toolbar — see `pager` in Mail.tsx. */
+.mb-pager {
+  justify-content: flex-end;
+  padding-block: var(--sp-1);
 }
 
 .mb-body {
@@ -5947,7 +6688,7 @@ section[data-drop] > .grip + * {
  * time, the folders behind a button, the message full screen, and the
  * composer as a sheet. The same components — only the frame changes.
  */
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .mb-rail {
     position: absolute;
     inset: 0 auto 0 0;
@@ -6084,7 +6825,7 @@ section[data-drop] > .grip + * {
 
 /* Below the desktop tier the wordmark goes and the mark carries the name. A
    34px square and a search field do fit across a phone; the word does not. */
-@media (max-width: 1179px) {
+@media (max-width: 1199px) {
   .desktop-word {
     display: none;
   }
@@ -6198,7 +6939,7 @@ section[data-drop] > .grip + * {
   background: var(--app-accent-wash);
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .desktop-ai span {
     display: none;
   }
@@ -6220,11 +6961,11 @@ section[data-drop] > .grip + * {
   background: var(--app-accent);
 }
 
-/* Two of the four go on a phone: alerts and settings are both one row down in
-   the launcher, and the avatar and the nine dots are the two that are not. */
-@media (max-width: 759px) {
-  .desktop-tools > :nth-child(1),
-  .desktop-tools > :nth-child(2) {
+/* Alerts and settings are both in the launcher on a phone. Name the controls
+   rather than their positions: the compact toolbar also carries page actions. */
+@media (max-width: 839px) {
+  .desktop-tools > .desktop-alerts,
+  .desktop-tools > .desktop-settings {
     display: none;
   }
 }
@@ -6301,7 +7042,7 @@ section[data-drop] > .grip + * {
   flex: none;
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .desktop-hit-group {
     display: none;
   }
@@ -6807,7 +7548,7 @@ section[data-drop] > .grip + * {
   font-size: var(--type-sm);
 }
 
-@media (max-width: 759px) {
+@media (max-width: 839px) {
   .deskhome-foot {
     flex-direction: column;
     align-items: flex-start;
@@ -6846,6 +7587,2209 @@ section[data-drop] > .grip + * {
 .deskdir-label {
   font-size: var(--type-lg);
   color: var(--app-fg);
+}
+
+.deskdir-intro {
+  margin-top: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.deskdir-alltools {
+  width: auto;
+  flex: none;
+  padding: var(--sp-4) var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+}
+
+.journey-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-6);
+}
+
+.journey-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sp-5);
+  width: 100%;
+  min-height: 132px;
+  padding: var(--sp-7);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: var(--app-hero);
+  color: var(--app-fg);
+  text-align: left;
+}
+
+.journey-card:hover,
+.journey-card:focus-visible {
+  border-color: var(--app-accent-deep);
+  background: var(--app-raise);
+}
+
+.journey-number {
+  color: var(--app-accent);
+  font-family: var(--font-heading);
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+}
+
+.journey-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.journey-name {
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+  line-height: var(--leading-tight);
+}
+
+.journey-outcome,
+.journey-reason {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.journey-reason {
+  color: var(--app-accent-deep);
+}
+
+/* Accent-deep is audited to 4.5:1 on the page and the panel, not on the lighter
+   surface a hovered card moves to: on Graphite it is 4.20 to 4.48 and on
+   Industry Dark 3.59 to 3.96. The card still shows its accent border; the
+   reason takes the ground's full-strength ink, which contrast.test.ts holds to
+   4.5:1 on that surface. */
+.journey-card:hover .journey-reason,
+.journey-card:focus-visible .journey-reason {
+  color: var(--app-fg);
+}
+
+.journey-arrow {
+  color: var(--app-accent);
+  font-size: var(--type-lg);
+}
+
+.today-journey {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin-block: var(--sp-6);
+}
+
+.today-journey .journey-card {
+  min-height: 0;
+}
+
+/* Today presents one decision first. Supporting systems stay available, but
+   they no longer arrive as equally loud full-width regions. */
+.today-guide-disclosure,
+.today-more,
+.page-frame > details:has(> summary:first-child) {
+  margin-block: var(--sp-4);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--bar-surface);
+}
+
+.today-guide-disclosure > summary,
+.today-more > summary,
+.page-frame > details:has(> summary:first-child) > summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-5);
+  color: var(--app-fg);
+  cursor: pointer;
+  font-size: var(--type-sm-plus);
+  font-weight: 600;
+  list-style: none;
+}
+
+.today-guide-disclosure > summary::-webkit-details-marker,
+.today-more > summary::-webkit-details-marker,
+.page-frame > details:has(> summary:first-child) > summary::-webkit-details-marker {
+  display: none;
+}
+
+.today-guide-disclosure > summary::after,
+.today-more > summary::after,
+.page-frame > details:has(> summary:first-child) > summary::after {
+  content: '+';
+  margin-left: auto;
+  color: var(--app-accent-deep);
+  font-size: var(--type-lg);
+  font-weight: 400;
+}
+
+.today-guide-disclosure[open] > summary::after,
+.today-more[open] > summary::after,
+.page-frame > details[open]:has(> summary:first-child) > summary::after {
+  content: '−';
+}
+
+.today-guide-disclosure > .sync-strip {
+  border: 0;
+  border-top: 1px solid var(--app-line-soft);
+  background: transparent;
+}
+
+.today-more[open] {
+  padding: 0 var(--sp-5) var(--sp-5);
+}
+
+.today-more[open] > summary {
+  margin-inline: calc(-1 * var(--sp-5));
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+/* Today is a briefing before it is a feed. These three objects share the
+   same decision model at every width; expanded layouts only change their
+   arrangement. The compact rules deliberately keep the cards short enough
+   for status, action and time to appear in the first few swipes. */
+.today-decision-surface {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-6);
+}
+
+/* The briefing timeline already carries the next class. Keep the established
+   large Next class card as the fallback for role homes where the student-only
+   briefing is not rendered, rather than showing the same commitment twice. */
+.today-decision-surface ~ .today-next-class-legacy,
+.today-decision-surface ~ * .today-next-class-legacy,
+.today-action-center ~ .today-next-class-legacy,
+.today-action-center ~ * .today-next-class-legacy {
+  display: none;
+}
+
+.today-decision-surface > :is(.blueprint, .today-near-term) {
+  min-width: 0;
+  padding: var(--sp-5);
+}
+
+/* The default briefing has one clear visual centre. Path and schedule remain
+   in the first layer, but they no longer compete with the next decision as
+   three equal cards. DOM order follows the same priority for keyboard and
+   screen-reader users. */
+.today-dominant-card {
+  border-color: var(--app-accent);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.today-dominant-heading,
+.action-panel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.today-dominant-heading .section-label,
+.action-panel-heading .action-kicker {
+  margin: 0;
+}
+
+.today-decision-surface h2 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+.today-decision-surface p {
+  margin: 0 0 var(--sp-3);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.today-path-numbers {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.today-path-numbers strong {
+  flex: none;
+  color: var(--app-fg);
+  font-family: var(--font-heading);
+  font-size: var(--type-xl);
+  line-height: 1;
+}
+
+.today-path-numbers span,
+.today-path-credit,
+.today-sync-status {
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+  line-height: var(--leading-normal);
+}
+
+.today-path-numbers span {
+  text-align: right;
+}
+
+.today-path-credit {
+  margin-top: var(--sp-2) !important;
+}
+
+.today-next-action .btn {
+  width: 100%;
+  margin-top: var(--sp-2);
+}
+
+.today-action-tools {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-top: var(--sp-3);
+}
+
+.today-why {
+  min-width: 0;
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+  line-height: var(--leading-normal);
+}
+
+.today-why > summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.today-why > p {
+  margin-bottom: var(--sp-2);
+  font-size: inherit;
+}
+
+.today-dismissed {
+  min-height: 44px;
+}
+
+/* The Action Center inside the Next best step card (components/ActionCenter.tsx). */
+.action-center .today-action-tools {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  row-gap: 0;
+  column-gap: var(--sp-4);
+  margin-top: var(--sp-1);
+}
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+}
+
+.action-row {
+  padding-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.action-row .today-timeline-row {
+  border-bottom: 0;
+}
+
+/*
+ * The Today briefing's buttons, reset.
+ *
+ * `features.css` styles a bare `<button>` only inside `.portal-workspace`,
+ * and the briefing (#761) is not inside one — so "View My Path →", "See
+ * full plan →" and every row of the 72-hour rail drew as the browser's own
+ * grey outset button. Found by looking at the screenshot, not by a test.
+ */
+.today-decision-surface .workspace-text-button {
+  appearance: none;
+  min-height: 44px;
+  padding: var(--sp-2) 0;
+  border: 0;
+  background: none;
+  color: var(--app-accent-deep);
+  font: inherit;
+  font-size: var(--type-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.today-decision-surface .workspace-text-button:disabled {
+  color: var(--app-dim);
+  cursor: default;
+}
+
+.today-decision-surface .today-timeline-row {
+  appearance: none;
+  border-width: 0 0 1px;
+  border-style: solid;
+  border-color: var(--app-line-soft);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.today-decision-surface .action-row .today-timeline-row {
+  border-bottom-width: 0;
+}
+
+.clarity-question {
+  margin: var(--sp-5) 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.clarity-question > legend {
+  font-size: var(--type-sm);
+}
+
+.action-note label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.today-near-term {
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.today-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--sp-2);
+}
+
+/* The briefing's text actions and timeline rows had no base style of their
+   own, so every one drew as the browser's grey default button — "View My
+   Path", "Not now", "See full plan" and each of the next-72-hours rows. The
+   reset `.bare` gives everywhere else, scoped to this surface, with the text
+   actions drawn quiet and underlined like the app's other in-line links. */
+.today-decision-surface .workspace-text-button,
+.today-timeline-row {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.today-decision-surface .workspace-text-button {
+  display: inline-block;
+  min-height: var(--target-min);
+  padding: 0;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.today-timeline-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-height: 58px;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  color: var(--app-fg);
+  text-align: left;
+}
+
+.today-timeline-row > span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.today-timeline-row :is(strong, small) {
+  overflow-wrap: anywhere;
+}
+
+.today-timeline-row strong {
+  font-size: var(--type-sm);
+  line-height: var(--leading-tight);
+}
+
+.today-timeline-row small {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+}
+
+/*
+ * H-2 (docs/UX-ENHANCEMENT-PLAN.md): the text buttons on Today and in the
+ * course hub had a :hover rule in features.css and nothing else, so every one
+ * drew as the browser's own grey button in the system font. A text button is
+ * text: the accent's reading shade, underlined, with a 44px target.
+ */
+.workspace-text-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-2);
+  margin: 0 calc(var(--sp-2) * -1);
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  font: inherit;
+  font-size: var(--type-sm);
+  color: var(--app-accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* …and the timeline rows are rows, not grey slabs with a white border. */
+.today-timeline-row {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* ── Today action center (today_action_center, Phase B) ─────────────────── */
+
+.today-action-center {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-7);
+  margin: 0 0 var(--sp-7);
+}
+
+.action-center-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-6);
+  min-width: 0;
+}
+
+.action-panel {
+  min-width: 0;
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.action-panel-primary {
+  border-color: var(--app-accent);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
+}
+
+.action-panel-secondary {
+  box-shadow: none;
+}
+
+.action-kicker {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.action-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+  text-wrap: balance;
+}
+
+.action-body,
+.action-meta {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+  text-wrap: pretty;
+}
+
+.action-source .action-meta {
+  margin: 0;
+  font-size: var(--type-xs);
+}
+
+.action-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+}
+
+.commitment-urgent,
+.commitment-row {
+  appearance: none;
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-4) 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  font: inherit;
+  color: var(--app-fg);
+  text-align: left;
+  cursor: pointer;
+}
+
+.commitment-urgent {
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+  padding: var(--sp-5);
+  border: 1px solid var(--app-warn-line);
+  border-radius: var(--r-sm);
+  background: var(--app-warn-wash);
+}
+
+.commitment-row {
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: baseline;
+}
+
+.commitment-list {
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  list-style: none;
+}
+
+.commitment-when {
+  font-size: var(--type-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.commitment-what {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.commitment-what strong,
+.commitment-urgent strong {
+  font-size: var(--type-sm);
+  overflow-wrap: anywhere;
+}
+
+.commitment-meta {
+  font-size: var(--type-xs);
+  color: var(--app-dim);
+}
+
+.quick-actions ul {
+  display: flex;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0 0 var(--sp-2);
+  list-style: none;
+  overflow-x: auto;
+}
+
+.quick-action {
+  appearance: none;
+  min-height: 44px;
+  padding: 0 var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-lg);
+  background: var(--app-panel);
+  font: inherit;
+  font-size: var(--type-sm);
+  white-space: nowrap;
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.today-context {
+  position: sticky;
+  top: var(--sp-7);
+  display: grid;
+  gap: var(--sp-6);
+  padding: var(--sp-6);
+  border-left: 1px solid var(--app-line);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.today-context h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.today-context p,
+.today-context ul {
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  list-style: none;
+  line-height: var(--leading-normal);
+}
+
+/* ── Sync strip ─────────────────────────────────────────────────────────── */
+
+/* One quiet line under the header while the account needs saying about. The
+   warn tone is the app's one warning colour; the quiet tone is the panel,
+   because being offline is a condition, not a fault. */
+.sync-strip {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-5);
+  padding: var(--sp-4) var(--sp-7);
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font-size: var(--type-sm-plus);
+  line-height: var(--leading-normal);
+}
+
+.sync-strip-warn {
+  border-bottom-color: var(--app-warn-line);
+  background: var(--app-warn-wash);
+}
+
+.sync-strip-off {
+  display: none;
+}
+
+.sync-strip-text {
+  flex: 1 1 16em;
+  min-width: 0;
+  text-wrap: pretty;
+}
+
+.sync-strip-btn {
+  width: auto;
+  flex: none;
+  font-size: var(--type-sm-plus);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Explanation sheet and drawer ───────────────────────────────────────── */
+
+.explain-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: color-mix(in srgb, var(--app-void) 60%, transparent);
+}
+
+.explain-sheet {
+  position: relative;
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  padding: var(--sp-5) var(--sp-7) calc(var(--sp-7) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--app-line-top);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--app-panel);
+  animation: explain-rise var(--duration-standard) var(--ease);
+}
+
+@media (min-width: 840px) {
+  .explain-sheet {
+    max-width: 560px;
+  }
+}
+
+@keyframes explain-rise {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+.explain-handle {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto var(--sp-5);
+  border-radius: var(--r-sm);
+  background: var(--app-line);
+}
+
+.explain-drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  width: 400px;
+  overflow-y: auto;
+  padding: var(--sp-7);
+  border-left: 1px solid var(--app-line);
+  background: var(--app-panel);
+  box-shadow: var(--shadow-soft-out);
+}
+
+.explain-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+
+.explain-title {
+  margin: 0;
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+}
+
+.explain-close {
+  appearance: none;
+  flex: none;
+  min-height: 44px;
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  cursor: pointer;
+}
+
+.explain-body h3 {
+  margin: var(--sp-6) 0 var(--sp-2);
+  font-size: var(--type-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.explain-body h3:first-child {
+  margin-top: 0;
+}
+
+.explain-body p,
+.explain-body li {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+}
+
+.explain-body ul {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explain-source-details {
+  display: grid;
+  grid-template-columns: minmax(7rem, auto) 1fr;
+  gap: var(--sp-2) var(--sp-5);
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: var(--app-raise);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.explain-source-details dt {
+  color: var(--app-dim);
+}
+
+.explain-source-details dd {
+  margin: 0;
+  color: var(--app-fg);
+}
+
+.explain-controls {
+  margin-top: var(--sp-7);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+/* ── Registration Day Mode (registration_day_mode, Phase C) ─────────────── */
+
+.regday-card {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.regday-card-clock {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-display-sm);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.regday-card-lines {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.regday-card-lines li {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: baseline;
+}
+
+.regday-card-lines li > span[aria-hidden] {
+  flex: none;
+  width: 1.2em;
+  text-align: center;
+  font-weight: 700;
+}
+
+.regday-card-lines .is-ok > span[aria-hidden] {
+  color: var(--app-passing);
+}
+
+.regday-card-lines .is-open > span[aria-hidden] {
+  color: var(--app-warn);
+}
+
+.regday-card-heading {
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.regday-card-plan {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: var(--sp-7);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.regday-card-backups ol {
+  margin: var(--sp-1) 0 0;
+  padding-left: var(--sp-7);
+}
+
+.regday-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0 var(--sp-3);
+}
+
+.regday-mode {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+/* The confirmation dialog (components/ConfirmDialog.tsx), portalled onto
+   `.device` like TypeToConfirm and at its layer. industry.css drew these
+   against the older token set and never gave them a place to stack. */
+.device .dialog-backdrop {
+  position: absolute;
+  z-index: 85;
+  background: color-mix(in srgb, var(--app-void) 60%, transparent);
+}
+
+.device .dialog {
+  border: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+}
+
+.device .dialog-body {
+  opacity: 1;
+  color: var(--app-dim);
+}
+
+.device .dialog-body p {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.dialog-url {
+  overflow-wrap: anywhere;
+  color: var(--app-fg);
+}
+
+.dialog-external {
+  padding: var(--sp-4);
+  border-left: 2px solid var(--app-warn-line);
+  background: var(--app-warn-wash);
+  color: var(--app-fg);
+}
+
+.dialog-confirm {
+  border-color: var(--app-accent-deep);
+  color: var(--app-accent-deep);
+}
+
+/* ── Graduation simulator and cost planner (Phase D) ────────────────────── */
+
+.scenario-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-sm);
+}
+
+.scenario-table th,
+.scenario-table td {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+
+.scenario-table thead th {
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.scenario-table tbody th {
+  font-weight: 500;
+  color: var(--app-dim);
+}
+
+.scenario-table .is-changed td:last-child {
+  font-weight: 700;
+  color: var(--app-fg);
+}
+
+.scenario-changes,
+.scenario-limits,
+.cost-lines {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+  padding-left: var(--sp-7);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.cost-lines {
+  padding-left: 0;
+  list-style: none;
+}
+
+.cost-line {
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.scenario-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+  font-size: var(--type-sm);
+}
+
+.scenario-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.portal-workspace .scenario-list dt {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.portal-workspace .scenario-list dd {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  text-align: right;
+}
+
+/* ── Academic life balance + Crunch Week Forecast (Phase E) ─────────────── */
+
+.guide-contract {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-sm);
+  background: var(--app-panel);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.guide-contract.is-compact {
+  margin: var(--sp-2) 0 0 calc(24px + var(--sp-4));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: var(--type-xs);
+}
+
+.guide-contract > summary {
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.guide-contract-body {
+  max-height: min(60vh, 36rem);
+  overflow: auto;
+  padding: var(--sp-3) var(--sp-2) var(--sp-2);
+  line-height: var(--leading-relaxed);
+}
+
+.guide-contract-body h3 {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-size: var(--type-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.guide-contract-body p,
+.guide-contract-body ul {
+  margin: 0 0 var(--sp-3);
+}
+
+.guide-contract-boundary {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--app-line-soft);
+  color: var(--app-dim);
+}
+
+.academic-recovery {
+  margin: 0 0 var(--sp-7);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.academic-recovery h2 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-size: var(--type-lg);
+}
+
+.academic-recovery h3,
+.academic-recovery h4 {
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+.academic-recovery p,
+.academic-recovery li {
+  font-size: var(--type-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.academic-recovery-choices,
+.academic-recovery-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: var(--sp-4) 0;
+}
+
+.academic-recovery-options .balance-button {
+  display: grid;
+  gap: var(--sp-1);
+  height: auto;
+  max-width: 20rem;
+  padding-block: var(--sp-3);
+  text-align: left;
+}
+
+.academic-recovery-options span {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+}
+
+.academic-recovery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-6);
+  margin-bottom: var(--sp-4);
+}
+
+.academic-recovery-grid ul {
+  margin: 0;
+  padding-left: var(--sp-5);
+}
+
+.academic-recovery-confidence {
+  display: inline-block;
+  margin: 0;
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-dim);
+}
+
+@media (max-width: 640px) {
+  .academic-recovery-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+.balance {
+  margin: 0 var(--page-pad) var(--sp-7);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.balance-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-lg);
+  color: var(--app-fg);
+}
+
+.balance-heading {
+  margin: var(--sp-6) 0 var(--sp-3);
+  font-size: var(--type-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.balance-muted,
+.balance-said {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.balance-said {
+  color: var(--app-fg);
+}
+
+.balance-categories,
+.balance-days,
+.balance-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.balance-categories li,
+.balance-days li {
+  display: grid;
+  grid-template-columns: minmax(0, 9em) minmax(0, 1fr) auto;
+  gap: var(--sp-4);
+  align-items: center;
+}
+
+.balance-days li {
+  grid-template-columns: 3em minmax(0, 1fr);
+  row-gap: var(--sp-1);
+}
+
+.balance-day-text {
+  grid-column: 2;
+  color: var(--app-dim);
+}
+
+.balance-bar,
+.balance-density {
+  display: flex;
+  height: 0.6rem;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--app-track);
+}
+
+.balance-bar > span {
+  background: var(--app-accent);
+}
+
+.balance-cat-hours {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-category='class'] > .balance-bar > span,
+.balance-density > [data-category='class'] {
+  background: var(--app-accent);
+}
+
+[data-category='athletics'] > .balance-bar > span,
+.balance-density > [data-category='athletics'] {
+  background: var(--app-accent-deep);
+}
+
+[data-category='work'] > .balance-bar > span,
+.balance-density > [data-category='work'] {
+  background: var(--app-accent-bright);
+}
+
+[data-category='study'] > .balance-bar > span,
+.balance-density > [data-category='study'] {
+  background: var(--app-accent-fill);
+}
+
+[data-category='personal'] > .balance-bar > span,
+.balance-density > [data-category='personal'],
+[data-category='commute'] > .balance-bar > span,
+.balance-density > [data-category='commute'] {
+  background: var(--app-faint);
+}
+
+[data-category='open'] > .balance-bar > span,
+.balance-density > [data-category='open'] {
+  background: var(--app-line-soft);
+}
+
+.balance-more {
+  margin: var(--sp-5) 0;
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+}
+
+.balance-more > summary {
+  cursor: pointer;
+  color: var(--app-accent-deep);
+}
+
+.balance-workload {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.balance-workload-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.balance-workload-head .balance-heading {
+  margin-top: 0;
+}
+
+.balance-workload-days {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.balance-workload-days li {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(12rem, 1fr) auto;
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line-soft);
+  font-size: var(--type-sm);
+}
+
+.balance-workload-days li > span:first-child {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.balance-workload-days small,
+.balance-workload-days .nums {
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+}
+
+@media (max-width: 640px) {
+  .balance-workload-days li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .balance-workload-days .nums {
+    grid-column: 1 / -1;
+  }
+}
+
+.balance-crunch {
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.balance-crunch-item + .balance-crunch-item {
+  margin-top: var(--sp-6);
+}
+
+.balance-crunch-line,
+.crunch-card-line {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.balance-button {
+  min-height: 2.75rem;
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--app-fg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.balance-button:disabled {
+  cursor: not-allowed;
+  color: var(--app-faint);
+}
+
+.balance-commute {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.balance-commute-minutes {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 12em;
+  margin: 0 0 var(--sp-4);
+}
+
+.crunch-card {
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-6);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+}
+
+.crunch-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+/* ── Course Detail V2 (course_detail_v2, Phase F) ───────────────────────── */
+
+.registration-results.is-v2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.course-drawer {
+  width: min(480px, 100%);
+}
+
+.course-v2-source {
+  margin: 0 0 var(--sp-5);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.course-v2-facts {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-5);
+  font-size: var(--type-sm);
+}
+
+.course-v2-facts > div {
+  display: grid;
+  grid-template-columns: 7em minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.course-v2-facts dt {
+  color: var(--app-dim);
+}
+
+.course-v2-facts dd {
+  margin: 0;
+  color: var(--app-fg);
+}
+
+.course-v2-actions,
+.course-compare-saved li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.course-v2-actions {
+  margin: 0 0 var(--sp-4);
+}
+
+.course-v2-section {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.course-v2-requisites,
+.course-v2-future,
+.course-compare-saved {
+  padding-left: 0;
+  list-style: none;
+}
+
+.course-v2-requisites [data-state='not_recorded'] > span[aria-hidden] {
+  color: var(--app-warn);
+}
+
+.course-v2-requisites [data-state='recorded'] > span[aria-hidden],
+.course-v2-requisites [data-state='in_cart'] > span[aria-hidden] {
+  color: var(--app-passing);
+}
+
+.course-compare-saved {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+}
+
+.course-compare-cards {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+/* ── Advisor Meeting Mode (advisor_meeting_mode, Phase G) ───────────────── */
+
+.path-readiness {
+  border-top: 1px solid var(--app-line);
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-6);
+}
+
+.path-readiness-list {
+  display: grid;
+  gap: var(--sp-3);
+  list-style: none;
+  margin: var(--sp-4) 0;
+  padding: 0;
+}
+
+.path-readiness-list li {
+  align-items: center;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: space-between;
+  padding: var(--sp-4);
+}
+
+.path-readiness-list li[data-state='attention'] {
+  border-color: var(--app-warn, var(--app-line));
+}
+
+.path-readiness-list p {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin: var(--sp-1) 0 0;
+}
+
+.path-readiness-state {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+  margin-inline-start: var(--sp-2);
+}
+
+.path-readiness-systems {
+  margin-top: var(--sp-5);
+}
+
+.path-readiness-systems summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: var(--sp-3);
+}
+
+.path-readiness-systems dl {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.path-readiness-systems dl > div {
+  border-left: 2px solid var(--app-line);
+  padding-inline-start: var(--sp-3);
+}
+
+.path-readiness-systems dt {
+  font-size: var(--type-sm);
+  font-weight: 700;
+}
+
+.path-readiness-systems dd {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin: var(--sp-1) 0 0;
+}
+
+@media (max-width: 560px) {
+  .path-readiness-list li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.credential-wallet-list {
+  border: 0;
+  display: grid;
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0;
+  padding: 0;
+}
+
+.credential-wallet-list label {
+  align-items: flex-start;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  display: flex;
+  gap: var(--sp-3);
+  min-height: 44px;
+  padding: var(--sp-4);
+}
+
+.credential-wallet-list label > span,
+.credential-wallet-list small {
+  display: block;
+}
+
+.credential-wallet-list label > span > span,
+.credential-wallet-list small {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  margin-top: var(--sp-1);
+}
+
+.advisor-lines,
+.advisor-share-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  padding-left: 0;
+  list-style: none;
+}
+
+.advisor-lines li,
+.advisor-share-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: end;
+}
+
+.advisor-attach {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-4) 0;
+  padding: 0;
+  border: 0;
+}
+
+.advisor-notes {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0;
+}
+
+.advisor-summary {
+  max-height: 16rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: var(--type-sm);
+}
+
+.advisor-share-list [data-state='expired'],
+.advisor-share-list [data-state='revoked'] {
+  color: var(--app-dim);
+}
+
+/* ── Study Readiness + Source Locker (study_readiness, source_locker, Phase H) ── */
+
+.locker-list,
+.readiness-topics,
+.readiness-materials {
+  display: grid;
+  gap: var(--sp-5);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.locker-list > li,
+.readiness-topics > li {
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.readiness-materials {
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.locker-head {
+  margin: 0 0 var(--sp-3);
+}
+
+/* The course hub is a .portal-workspace, whose dt rule pushes a label below its
+   value; the fact lists here are two-column rows (as .scenario-list in Phase D). */
+.portal-workspace .course-v2-facts dt,
+.portal-workspace .course-v2-facts dd {
+  margin: 0;
+}
+
+.readiness-next {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-accent-deep);
+  border-radius: var(--r-md);
+}
+
+/* ── Career Evidence (career_evidence, Phase I) ──────────────────────────── */
+
+.evidence-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.evidence-list > li[data-state='rejected'] {
+  color: var(--app-dim);
+}
+
+.evidence-form {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+  border: 0;
+}
+
+.evidence-preview {
+  margin: 0;
+  padding: var(--sp-4);
+  border-left: 2px solid var(--app-accent-deep);
+  color: var(--app-fg);
+}
+
+/* ── Campus office actions (office_action_feed, Phase J) ────────────────── */
+
+.office-feed,
+.office-desk,
+.office-today {
+  margin-top: var(--sp-5);
+}
+
+.office-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0 0 var(--sp-5);
+  padding-left: 0;
+  list-style: none;
+}
+
+.office-card {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.office-card p {
+  margin: 0 0 var(--sp-2);
+}
+
+.office-from {
+  font-size: var(--type-xs-plus);
+  color: var(--app-dim);
+}
+
+.office-title {
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.office-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-3);
+}
+
+.office-audiences fieldset {
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  border: 0;
+}
+
+.office-choice {
+  display: block;
+  padding: var(--sp-2) 0;
+}
+
+.office-form {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+
+.office-field {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.office-field input,
+.office-field select,
+.office-field textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.office-problems {
+  margin: 0;
+  color: var(--app-dim);
+}
+
+/* ── Course demand (demand_forecasting, Phase K) ───────────────────────── */
+
+.demand-contribution,
+.demand-desk {
+  margin-top: var(--sp-5);
+}
+
+.demand-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding-left: 0;
+  list-style: none;
+}
+
+.demand-row {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.demand-row p {
+  margin: 0 0 var(--sp-2);
+}
+
+.demand-term {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+
+.demand-department h4 {
+  margin: var(--sp-5) 0 var(--sp-3);
+}
+
+/* ── Semester Wrapped (semester_wrapped, Phase L) ─────────────────────── */
+
+.wrapped {
+  margin-bottom: var(--sp-7);
+}
+
+.wrapped-term {
+  max-width: 16rem;
+  margin: var(--sp-3) 0;
+}
+
+.wrapped-list {
+  margin: 0 0 var(--sp-4);
+  padding-left: var(--sp-6);
+}
+
+.wrapped-list li {
+  margin-bottom: var(--sp-2);
+}
+
+.wrapped-sub {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-weight: 600;
+}
+
+.wrapped-preview {
+  margin: 0 0 var(--sp-4);
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: var(--type-sm);
+}
+
+/* ── Offline mode (offline_mode, Phase M) ──────────────────────────────── */
+
+.offline-banner {
+  flex: none;
+  padding: calc(10px * var(--density, 1)) calc(18px * var(--density, 1)) calc(11px * var(--density, 1));
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+.offline-banner.is-offline {
+  background: var(--app-warn-wash);
+  border-bottom-color: var(--app-warn-line);
+}
+
+.offline-chip {
+  display: inline-block;
+  margin-right: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border: 1px solid currentColor;
+  border-radius: var(--r-md);
+  font-size: var(--type-xs-plus);
+  font-weight: 600;
+}
+
+/* ── Trust & Data Center (trust_center, Phase N) ────────────────────────── */
+
+.trust-center {
+  margin: var(--sp-5) 0 var(--sp-7);
+}
+
+.trust-title {
+  margin: var(--sp-2) 0 var(--sp-4);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+}
+
+.trust-section {
+  padding: var(--sp-4) 0;
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-section h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  line-height: var(--leading-tight);
+}
+
+.trust-list {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+  padding-left: 0;
+  list-style: none;
+}
+
+.trust-labels {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.trust-labels div {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: baseline;
+}
+
+.trust-labels dd {
+  margin: 0;
+}
+
+/* BL-1.4's Action Center, when it sits in a Phase B panel rather than in the
+   #761 card whose `.today-decision-surface` rules it was drawn against. */
+.action-panel .action-center h2 {
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-size: var(--type-lg);
+  line-height: var(--leading-display-sm);
+  color: var(--app-fg);
+}
+
+.action-panel .action-center p {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.action-panel .action-center .action-done {
+  margin: 0 0 var(--sp-5);
+}
+
+
+.today-sync-status {
+  margin: var(--sp-3) 0 0 !important;
+}
+
+.today-clear {
+  padding-block: var(--sp-3);
+}
+
+@media (max-width: 1199px) {
+  /* The phone promises one primary recommendation. These existing secondary
+     modules remain available on expanded Today and through their own routes. */
+  .today-secondary-journey,
+  .today-synthetic-flight-plan {
+    display: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .today-decision-surface {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-5);
+  }
+
+  .today-dominant-card {
+    grid-column: 1 / -1;
+  }
+
+  .today-near-term {
+    grid-column: auto;
+  }
+
+  .action-center-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-panel-primary,
+  .action-center-main > .hides-in-focus {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Focus mode is a real one-task view on Today, not just a hidden tab bar.
+   Source, rationale, help and the persistent Exit focus bar remain inside the
+   dominant action. Supporting status and navigation are still one step away
+   after the student leaves focus. */
+:root[data-workspace='focused'] .today-decision-surface > :not(.today-dominant-card),
+:root[data-workspace='focused'] .today-action-center .action-panel-secondary,
+:root[data-workspace='focused'] .today-action-center .today-context {
+  display: none;
+}
+
+.course-mastery {
+  margin-top: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-md);
+}
+
+.course-mastery > summary {
+  cursor: pointer;
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+}
+
+.course-mastery > p {
+  color: var(--app-dim);
+  font-size: var(--type-xs-plus);
+  line-height: var(--leading-normal);
+}
+
+.mastery-graph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  margin-block: var(--sp-5);
+}
+
+.mastery-concept {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mastery-concept-head,
+.mastery-concept-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.mastery-concept-head {
+  font-size: var(--type-sm);
+}
+
+.mastery-concept-head > span,
+.mastery-concept-meta {
+  color: var(--app-dim);
+}
+
+.mastery-concept-meta {
+  flex-wrap: wrap;
+  font-size: var(--type-xs);
+}
+
+.mastery-track {
+  height: var(--sp-2);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--app-line);
+}
+
+.mastery-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--app-accent);
+}
+
+.study-mistake-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-block: var(--sp-5);
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-accent-wash);
+  font-size: var(--type-sm);
+}
+
+.study-mistake-suggestion button {
+  flex: none;
+}
+
+.skills-empty {
+  color: var(--app-dim);
+  font-size: var(--type-base);
+}
+
+.skills-graph {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-5);
+}
+
+.skills-claim,
+.career-fit {
+  padding: var(--sp-6);
+  border: 1px solid var(--app-line-soft);
+  border-radius: var(--r-lg);
+  background: var(--app-hero);
+}
+
+.skills-claim-head,
+.career-fit-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-6);
+}
+
+.skills-claim-head > span,
+.skills-claim > p {
+  color: var(--app-dim);
+  font-size: var(--type-xs);
+}
+
+.skills-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.skills-evidence button {
+  width: auto;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-fg);
+  font-size: var(--type-xs);
+}
+
+.career-fit-columns > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.career-skill-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding-left: var(--sp-7);
+}
+
+.career-skill-plan li > span {
+  display: block;
+  margin-top: var(--sp-2);
+  color: var(--app-dim);
+}
+
+@media (max-width: 600px) {
+  .career-fit-columns {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 839px) {
+  .journey-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-card {
+    min-height: 0;
+  }
+
+  .deskdir-journeybar {
+    align-items: flex-start;
+  }
 }
 
 .deskdir-fav {
@@ -7291,13 +10235,13 @@ section[data-drop] > .grip + * {
 }
 
 .adband-bar.opens {
-  border-top-left-radius: 4px;
-  border-bottom-left-radius: 4px;
+  border-top-left-radius: var(--r-sm);
+  border-bottom-left-radius: var(--r-sm);
 }
 
 .adband-bar.closes {
-  border-top-right-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border-top-right-radius: var(--r-sm);
+  border-bottom-right-radius: var(--r-sm);
 }
 
 button.adband-bar {
@@ -7495,4 +10439,881 @@ button.adband-bar {
 :root[data-calm='calm'] [class*='gradient'],
 :root[data-calm='calm'] [data-decorative] {
   background-image: none !important;
+}
+.course-capture {
+  display: grid;
+  gap: var(--sp-5);
+}
+
+.course-capture-policy {
+  display: grid;
+  gap: var(--sp-1);
+  padding: var(--sp-5) var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  background: var(--app-panel);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.course-capture-policy strong {
+  color: var(--app-fg);
+  font-family: var(--font-heading);
+  font-size: var(--type-base);
+}
+
+.course-capture-consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--sp-3);
+  color: var(--app-fg);
+  font-size: var(--type-sm-plus);
+  line-height: var(--leading-normal);
+}
+
+.course-capture-consent input {
+  margin-top: 0.2em;
+}
+
+.course-capture-live,
+.course-capture-status,
+.course-capture-working,
+.capture-policy-notice {
+  margin: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.course-capture-original {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding-block: var(--sp-3);
+  border-bottom: 1px solid var(--app-line);
+  font-size: var(--type-sm);
+}
+
+.course-capture-original span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.course-capture-original button {
+  min-height: 44px;
+}
+
+.capture-policy-notice {
+  margin-bottom: var(--sp-4);
+}
+
+.control-plane {
+  display: grid;
+  gap: var(--sp-6);
+  margin-block: var(--sp-6);
+}
+
+.control-plane-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.control-plane-heading h2 {
+  margin: var(--sp-2) 0 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-xl);
+}
+
+.control-plane-heading p,
+.control-plane-grid p,
+.control-plane-note,
+.control-plane-message {
+  margin: var(--sp-3) 0 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.control-plane-tenant,
+.control-plane-status {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.control-plane-tenant {
+  flex: none;
+}
+
+.control-plane-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-4);
+}
+
+.control-plane-status {
+  margin-top: var(--sp-3);
+  color: var(--app-fg);
+  line-height: var(--leading-normal);
+}
+
+.control-plane-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+@media (max-width: 560px) {
+  .control-plane-heading {
+    display: grid;
+  }
+}
+
+/* ── Policy simulator (components/institutional/PolicySimulator.tsx) ───── */
+.policy-sim {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+.policy-sim-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-4);
+}
+
+.policy-sim-field {
+  display: grid;
+  gap: var(--sp-2);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.policy-sim-change {
+  margin: 0 0 var(--sp-3);
+  color: var(--app-fg);
+  line-height: var(--leading-normal);
+}
+
+.policy-sim-refused {
+  margin: 0;
+  color: var(--app-fg);
+  line-height: var(--leading-normal);
+}
+
+.policy-sim-dl {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.policy-sim-dl dt {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.policy-sim-dl dd {
+  margin: var(--sp-1) 0 0;
+  line-height: var(--leading-normal);
+}
+
+.policy-sim-dl ul {
+  margin: 0;
+  padding-left: var(--sp-5);
+}
+
+/* ── Customer trust dashboard (components/institutional/TrustDashboard.tsx) ─ */
+.trust-dashboard {
+  display: grid;
+  gap: var(--sp-4);
+  margin-block: var(--sp-6);
+}
+
+.trust-dashboard-dl {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+}
+
+.trust-dashboard-row {
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-dashboard-row dt {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.trust-dashboard-row dd {
+  margin: var(--sp-1) 0 0;
+}
+
+.trust-dashboard-row p {
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+.trust-dashboard-row ul {
+  margin: var(--sp-2) 0 0;
+  padding-left: var(--sp-5);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.trust-dashboard-row.is-none p {
+  color: var(--app-dim);
+}
+
+.trust-scorecard {
+  display: grid;
+  gap: var(--sp-4);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+.trust-scorecard-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trust-scorecard-row {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-left: 4px solid var(--app-dim);
+  border-radius: var(--r-sm);
+  background: var(--app-panel);
+}
+
+.trust-scorecard-row > div {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.trust-scorecard-row p,
+.trust-scorecard-row small {
+  margin: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.trust-scorecard-state {
+  flex: none;
+  text-transform: uppercase;
+  font-size: var(--type-xs);
+  letter-spacing: 0.08em;
+}
+
+/* The state is spelled out beside each row; the border only repeats it. */
+.trust-scorecard-row.is-green { border-left-color: var(--status-success); }
+.trust-scorecard-row.is-yellow { border-left-color: var(--status-attention); }
+.trust-scorecard-row.is-red { border-left-color: var(--status-danger); }
+
+/* ── Integration dashboard ───────────────────────────────────────────────
+ * Status is a glyph and a word; the border only repeats it, so nothing here
+ * is carried by colour alone. Tables scroll inside their own box so the page
+ * never scrolls sideways on a phone. */
+.integration-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  margin-block: var(--sp-6);
+}
+
+/* A grid item's minimum is its content, so one nowrap table would widen the
+   whole section past a phone's edge. Zero lets the table's own box scroll. */
+.integration-dashboard > *,
+.integration-map > * {
+  min-width: 0;
+}
+
+.integration-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.integration-tab {
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.integration-tab.is-on {
+  border-bottom-color: var(--app-accent);
+  color: var(--app-fg);
+}
+
+.integration-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+
+.integration-layer {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  font-size: var(--type-sm);
+}
+
+.integration-layer span,
+.integration-node-meta,
+.integration-panel p {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.integration-layer-gateway {
+  border-style: dashed;
+}
+
+.integration-nodes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.integration-node {
+  display: grid;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-bg);
+  color: var(--app-fg);
+  text-align: start;
+}
+
+.integration-node.is-on {
+  border-color: var(--app-accent);
+  background: var(--app-accent-wash);
+}
+
+.integration-node-label {
+  font-weight: 600;
+}
+
+.integration-status {
+  font-size: var(--type-sm);
+}
+
+.integration-status.is-warn {
+  color: var(--app-warn);
+}
+
+.integration-panel {
+  display: grid;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+
+.integration-detail {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+}
+
+.integration-detail h4 {
+  margin: 0 0 var(--sp-3);
+}
+
+.integration-detail dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  font-size: var(--type-sm);
+}
+
+.integration-detail dt {
+  color: var(--app-dim);
+}
+
+.integration-detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.integration-confirm {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.integration-confirm label {
+  display: grid;
+  gap: var(--sp-2);
+  font-size: var(--type-sm);
+}
+
+.integration-table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.integration-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-sm);
+}
+
+.integration-table th,
+.integration-table td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--app-line-soft);
+  text-align: start;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.integration-table thead th {
+  color: var(--app-dim);
+  font-weight: 500;
+}
+
+/* The shared Table (components/unity/Table.tsx). The look above is the existing
+   integration table's; these are what it adds. */
+.table-caption {
+  caption-side: top;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: start;
+  color: var(--app-dim);
+}
+
+.table-ui [data-numeric] {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table-sort {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  width: auto;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.table-sort-mark {
+  font-size: var(--type-xs);
+}
+
+/* Stacked: every cell stays, one labelled line per column. The header row is
+   kept for assistive technology and drawn nowhere. */
+@media (max-width: 839px) {
+  .table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr {
+    display: block;
+  }
+
+  /* A table-caption inside a block table gets wrapped in an anonymous shrink-to-fit table, and the
+     caption wraps in a sliver. Block it so it takes the width like everything else. */
+  .table-stack caption {
+    display: block;
+  }
+
+  .table-stack tr {
+    padding-block: var(--sp-3);
+    border-bottom: 1px solid var(--app-line-soft);
+  }
+
+  .table-stack th,
+  .table-stack td {
+    display: grid;
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr);
+    gap: var(--sp-3);
+    border-bottom: 0;
+    white-space: normal;
+  }
+
+  .table-stack th::before,
+  .table-stack td::before {
+    content: attr(data-label);
+    color: var(--app-dim);
+  }
+
+  .table-stack [data-numeric] {
+    text-align: start;
+  }
+}
+
+.integration-dead-letters {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--type-sm);
+}
+
+@media (max-width: 560px) {
+  .integration-detail dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── From your school (Today) and what it shares (Privacy) ─────────────── */
+.school-records {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.school-readiness {
+  margin: 0;
+  font-weight: 600;
+}
+
+.school-fact {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+.school-fact-meta,
+.school-data-lede {
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.school-data {
+  display: grid;
+  gap: var(--sp-3);
+  margin-block: var(--sp-6);
+}
+
+.school-data-list {
+  display: grid;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: var(--leading-normal);
+}
+
+.school-twostep {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-inline-start: var(--sp-2);
+}
+
+/*
+ * The journey screens — Launchpad, Notices, Support, Opportunities and the
+ * staff Operations studio — share these, from `components/JourneyKit.tsx`.
+ * Tokens only: every size reaches the Text size setting and every gap the
+ * Density one.
+ */
+.jx-lead { font-size: var(--type-base-plus); line-height: 1.55; margin-block: var(--sp-5); text-wrap: pretty; }
+.jx-muted { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; margin-block: var(--sp-3); text-wrap: pretty; }
+.jx-warn { font-size: var(--type-sm-plus); color: var(--app-warn); line-height: 1.55; margin-block: var(--sp-4); }
+.jx-notice { font-size: var(--type-sm); line-height: 1.55; padding: var(--sp-4) var(--sp-5); border: 1px solid var(--app-warn-line); background: var(--app-warn-wash); border-radius: var(--r-sm); margin-block: var(--sp-4); }
+.jx-card { border: 1px solid var(--app-line); border-radius: var(--r-sm); background: var(--app-panel); padding: var(--sp-6) var(--sp-7); margin-block: var(--sp-5); }
+.jx-card p { font-size: var(--type-base); line-height: 1.55; margin-block: var(--sp-3); }
+.jx-card ul, .jx-ol { font-size: var(--type-base); line-height: 1.55; padding-inline-start: var(--sp-7); margin-block: var(--sp-3); }
+.jx-card-title { font-size: var(--type-base-plus); font-weight: 600; margin-block: var(--sp-3); text-wrap: pretty; }
+.jx-chips { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-block: var(--sp-4); }
+.jx-chip { font: inherit; font-size: var(--type-sm); padding: var(--sp-3) var(--sp-5); min-height: 32px; border-radius: 999px; border: 1px solid var(--app-line); background: transparent; color: var(--app-fg); cursor: pointer; }
+.jx-chip-on { border-color: var(--app-accent); background: var(--app-accent-wash); }
+.jx-list { display: flex; flex-direction: column; gap: var(--sp-3); margin-block: var(--sp-4); }
+.jx-check { display: flex; gap: var(--sp-5); align-items: flex-start; padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line-soft); cursor: pointer; }
+.jx-check input { margin-top: var(--sp-1); flex: none; width: 18px; height: 18px; accent-color: var(--app-accent); }
+.jx-check-body { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; flex: 1; }
+.jx-check-title { font-size: var(--type-base-plus); line-height: 1.4; }
+.jx-check-done .jx-check-title { color: var(--app-dim); text-decoration: line-through; }
+.jx-check-detail { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.jx-door { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); align-items: baseline; font-size: var(--type-sm); }
+.jx-door-name { font-weight: 600; color: var(--app-fg); }
+.jx-door-decides { color: var(--app-dim); }
+.jx-door-link { color: var(--app-accent-bright); }
+.jx-door-none { color: var(--app-dim); font-style: italic; }
+.jx-go { font: inherit; font-size: var(--type-sm); color: var(--app-accent-bright); background: none; border: 0; padding: var(--sp-2) 0; cursor: pointer; text-align: left; }
+.jx-bare { font: inherit; background: none; border: 0; padding: 0; color: inherit; text-align: left; cursor: pointer; }
+.jx-never { border-left: 2px solid var(--app-accent); padding: var(--sp-4) var(--sp-6); margin-block: var(--sp-7); background: var(--app-accent-wash); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.jx-never-head { font-size: var(--type-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--app-dim); margin-bottom: var(--sp-3); }
+.jx-never ul { margin: 0; padding-inline-start: var(--sp-7); font-size: var(--type-sm); line-height: 1.55; }
+.jx-entry { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-5) 0; border-bottom: 1px solid var(--app-line-soft); width: 100%; }
+.jx-entry-button { font: inherit; color: inherit; background: none; border: 0; border-bottom: 1px solid var(--app-line-soft); text-align: left; cursor: pointer; }
+.jx-entry-read { opacity: 0.72; }
+.jx-entry-head { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
+.jx-entry-title { font-size: var(--type-base-plus); font-weight: 600; line-height: 1.4; }
+.jx-entry-what { font-size: var(--type-sm); color: var(--app-dim); line-height: 1.55; }
+.jx-privacy { font-size: var(--type-xs-plus); line-height: 1.4; padding: var(--sp-2) var(--sp-4); border-radius: var(--r-sm); background: var(--app-raise); align-self: flex-start; }
+.jx-tag { font-size: var(--type-xs); padding: var(--sp-1) var(--sp-3); border-radius: 999px; border: 1px solid var(--app-line); color: var(--app-dim); white-space: nowrap; }
+.jx-tag-student, .jx-tag-semester { border-style: dashed; }
+.jx-tag-official, .jx-pri-required { border-color: var(--app-accent); color: var(--app-fg); }
+.jx-pri-high { border-color: var(--app-warn-line); }
+.jx-fresh-stale, .jx-fresh-unowned { border-color: var(--app-warn-line); color: var(--app-warn); }
+.jx-call { font-size: var(--type-base); font-weight: 600; color: var(--app-accent-bright); }
+.jx-actions { display: flex; flex-wrap: wrap; gap: var(--sp-6); }
+.jx-row, .jx-rowbtn { display: flex; justify-content: space-between; gap: var(--sp-5); padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line-soft); font-size: var(--type-base); width: 100%; }
+.jx-rowbtn { font: inherit; color: inherit; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; cursor: pointer; }
+.jx-inline { display: flex; flex-wrap: wrap; gap: var(--sp-4); align-items: flex-end; margin-block: var(--sp-4); }
+.jx-inline > .input { flex: 1 1 140px; min-width: 0; }
+.jx-inline > .jx-field { flex: 1 1 120px; min-width: 0; }
+.jx-field { display: flex; flex-direction: column; gap: var(--sp-2); margin-block: var(--sp-4); font-size: var(--type-sm); color: var(--app-dim); }
+.jx-field > .input { color: var(--app-fg); }
+.jx-field-row { flex-direction: row; align-items: center; justify-content: space-between; }
+.jx-field-row > .input { max-width: 90px; }
+.jx-area { min-height: 88px; resize: vertical; font: inherit; font-size: var(--type-base); line-height: 1.55; }
+.jx-search, .jx-wide { width: 100%; margin-block: var(--sp-4); }
+.jx-glossary { margin: 0; }
+.jx-glossary > div { padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line-soft); }
+.jx-glossary dt { font-size: var(--type-base-plus); font-weight: 600; }
+.jx-glossary dd { margin: var(--sp-2) 0 0; font-size: var(--type-base); color: var(--app-dim); line-height: 1.55; }
+.jx-pre { font-size: var(--type-xs-plus); background: var(--app-raise); padding: var(--sp-5); border-radius: var(--r-sm); overflow-x: auto; white-space: pre; }
+
+/*
+ * ── What the assistant can see ───────────────────────────────────────────
+ *
+ * `ai/Opening.tsx`. One summary line with the scope in numbers, and a
+ * disclosure for the boundary. Drawn as a quiet tray, not a card: it is
+ * context for the composer below, not a thing to act on.
+ */
+.device .ask-context {
+  margin-top: var(--sp-6);
+  padding: var(--sp-5) var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-raise);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  /* The body of the tray is read, not glanced at: full ink, not `--app-dim`.
+     The grey version was the "faint support copy" the design review named. */
+  color: var(--app-fg);
+}
+.device .ask-context-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  align-items: baseline;
+}
+.device .ask-context-kicker {
+  font-size: var(--type-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-fg);
+}
+.device .ask-context-more {
+  margin-top: var(--sp-3);
+}
+.device .ask-context-more summary {
+  cursor: pointer;
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 24px;
+  display: list-item;
+}
+.device .ask-context-more summary:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+.device .ask-context-more ul {
+  margin: var(--sp-3) 0 0;
+  padding-left: var(--sp-7);
+}
+
+/*
+ * ── Ask Semester: the opening and the states around it ──────────────────
+ *
+ * `ai/Opening.tsx` and `ai/HelpNotice.tsx`. The lede and the starters are
+ * operational type — normal case, normal tracking, full ink — because they
+ * are read and tapped, not glanced at. The starters were full-width 56px
+ * rows of tracked bold type, four of them stacked, and they were most of
+ * the screen; on a wide window they are a two-column grid of cards, each
+ * saying what its answer is built from.
+ */
+.device .ask-opening-lede {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+  max-width: 60ch;
+}
+.device .ask-starters-label {
+  margin: var(--sp-7) 0 var(--sp-4);
+  font-size: var(--type-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-fg);
+}
+.device .ask-starters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-4);
+}
+@media (min-width: 600px) {
+  .device .ask-starters.is-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.device .ask-starter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--sp-5) var(--sp-6);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  color: var(--app-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--fast), background var(--fast);
+}
+.device .ask-starter:hover {
+  border-color: var(--app-accent);
+}
+.device .ask-starter:active {
+  background: var(--app-accent-wash);
+}
+.device .ask-starter:focus-visible {
+  outline: 3px solid var(--focus-color);
+  outline-offset: 2px;
+}
+.device .ask-starter-q {
+  font-size: var(--type-sm);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+.device .ask-starter-uses {
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+/*
+ * Why help is not available, with ways out.
+ *
+ * A neutral information surface — the accent edge, not the danger colour —
+ * because a school or a course that switched AI help off is a boundary, not
+ * a fault. Only a policy that could not be read is marked as trouble.
+ */
+.device .ask-help {
+  padding: var(--sp-6) var(--sp-7);
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-accent);
+  border-radius: var(--r-md);
+  background: var(--app-raise);
+  color: var(--app-fg);
+  margin-bottom: var(--sp-4);
+}
+.device .ask-help[data-kind='unreachable'] {
+  border-left-color: var(--app-warn);
+}
+.device .ask-help-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-md);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+.device .ask-help-body {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  max-width: 62ch;
+}
+.device .ask-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.device .ask-help-action {
+  width: auto;
+  min-height: 44px;
+  padding: 0 var(--sp-6);
+}
+.device .ask-help-line {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-fg);
+}
+/* A box that cannot send looks like one: no hover lift, the field muted but
+   still legible, and the reason sits directly above it. */
+.device .ai-composer[data-blocked] {
+  border-style: dashed;
+}
+.device .ai-composer[data-blocked]:hover {
+  border-color: var(--app-line);
+}
+.device .ai-composer[data-blocked] .ai-composer-field {
+  cursor: not-allowed;
+  color: var(--app-dim);
+}
+
+/* Standards readiness and procurement review. */
+.standards-audit { margin-top: calc(var(--sp-7) + var(--sp-6)); }
+.standards-audit-summary, .standards-audit-filters { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-6); margin: var(--sp-7) 0; }
+.standards-audit-summary p { flex-basis: 100%; margin: 0; }
+.standards-audit label { display: flex; flex-direction: column; gap: var(--sp-3); }
+.standards-audit select, .standards-audit input[type="search"] { max-width: 100%; padding: var(--sp-4); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); min-height: 44px; }
+.standards-audit button { min-height: 44px; padding: var(--sp-4) var(--sp-6); color: var(--app-fg); background: var(--app-panel); border: 1px solid var(--app-line); border-radius: var(--r-md); cursor: pointer; }
+.standards-audit-views { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+.standards-audit-views button[aria-pressed="true"] { border-color: var(--app-fg); font-weight: 600; }
+.standards-audit-table { overflow: auto; max-width: 100%; margin: var(--sp-7) 0; }
+.standards-audit table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: var(--type-md); line-height: 1.6; }
+.standards-audit caption { text-align: left; padding-bottom: var(--sp-5); }
+.standards-audit td, .standards-audit th { padding: var(--sp-6); border-bottom: 1px solid var(--app-line); text-align: left; vertical-align: top; }
+.standards-audit summary { min-height: 44px; cursor: pointer; }
+.standards-audit a { overflow-wrap: anywhere; text-decoration: underline; }
+.standards-audit li { margin-bottom: var(--sp-5); }
+.standards-audit :focus-visible { outline: 2px solid var(--app-fg); outline-offset: 3px; }
+
+/* One default assignment action stays visible; alternatives remain a readable
+   list without turning four equal controls into a single action wall. */
+.assignment-options-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
 }

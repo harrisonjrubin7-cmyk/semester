@@ -16,6 +16,8 @@ import { push } from './navigate';
 
 export function notes(state: State, action: Action): State | null {
   switch (action.type) {
+    case 'setOperatingWorkspace':
+      return { ...state, operatingWorkspace: action.value };
     case 'newNote': {
       const note: Note = {
         id: newId(),

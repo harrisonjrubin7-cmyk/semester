@@ -29,7 +29,7 @@ import { knowingOf, says } from './knowing';
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
 import { forLine } from './forwork';
-import { dueLabel, isoToDate } from './date';
+import { dueLabel, isoToDate, shownTime } from './date';
 import { DESTINATIONS, saysFor } from './nav';
 import { cardIdentity, type Reviews } from './review';
 import { nearAny } from './near';
@@ -37,7 +37,7 @@ import { queryWords, worthSplitting } from './search';
 import { allowed, type Capabilities } from './school';
 import { DOING } from './doing';
 import { SETTINGS } from './settings';
-import { DEFAULT_ROLE, forRole, type Role } from './role';
+import { forRole, type Role } from './role';
 
 /**
  * The default for a caller that has not been given a school.
@@ -367,8 +367,16 @@ export function findEverything(
    * reach a meal-plan screen their university does not have, and a role is
    * the same kind of hole — a professor typing "housing" should not be
    * offered a dorm screen the directory has already stopped showing them.
+   *
+   * No default, and that is the fix rather than a tidy-up. It used to be
+   * `role: Role = DEFAULT_ROLE`, and a JavaScript default fires on an
+   * explicit `undefined` as well as on an omitted argument — so the palette
+   * passing `state.role` before a role had been read, or after reading one
+   * failed, searched as a student: the widest set there is. The gate failed
+   * open. Now an unknown role reaches `forRole`, which gives it the narrower
+   * set; a caller that means "student" says so.
    */
-  role: Role = DEFAULT_ROLE,
+  role?: Role | null,
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -539,10 +547,10 @@ export function findEverything(
            * and it should not be the one place it is written in a different
            * language.
            */
-          sub: [t.date ? dueLabel(isoToDate(t.date), now, t.time) : 'Someday', t.time]
+          sub: [t.date ? dueLabel(isoToDate(t.date), now, t.time) : 'Someday', shownTime(t.time)]
             .filter(Boolean)
             .join(' · '),
-          tag: t.done ? 'Done' : 'Task',
+          tag: t.done ? 'Done' : 'Action',
           score: s,
         });
       }
@@ -557,7 +565,7 @@ export function findEverything(
           id: a.id,
           // The date as the app says dates, and the place, which is half of
           // why somebody looks an appointment up in the first place.
-          sub: [dueLabel(isoToDate(a.date), now, a.time), a.time, a.where].filter(Boolean).join(' · '),
+          sub: [dueLabel(isoToDate(a.date), now, a.time), shownTime(a.time), a.where].filter(Boolean).join(' · '),
           title: a.title,
           tag: 'Appointment',
           score: s,
@@ -722,7 +730,7 @@ export function findEverything(
       { label: 'Lessons', hits: lessonHits },
       { label: 'Courses', hits: courses },
       { label: 'Your notes', hits: noteHits },
-      { label: 'Your tasks', hits: taskHits },
+      { label: 'Your actions', hits: taskHits },
       { label: 'Your appointments', hits: apptHits },
       { label: 'Documents', hits: docHits },
       { label: 'Sheets', hits: sheetHits },

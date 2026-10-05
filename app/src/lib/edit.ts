@@ -28,6 +28,9 @@ export function itemId(courseId: string, existing: Item[]): string {
   }
 }
 
+/** The source line on a deadline somebody typed in themselves. */
+export const ADDED_BY_YOU = 'Added by you';
+
 export function blankItem(courseId: string, existing: Item[], now = new Date()): Item {
   return {
     id: itemId(courseId, existing),
@@ -43,7 +46,7 @@ export function blankItem(courseId: string, existing: Item[], now = new Date()):
     quote: '',
     // Said plainly, because "Straight from the syllabus" must not appear over
     // something a person typed themselves.
-    source: 'Added by you',
+    source: ADDED_BY_YOU,
   };
 }
 

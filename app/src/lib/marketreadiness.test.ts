@@ -50,6 +50,8 @@ import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '../../..');
 const scorecard = join(root, 'SEMESTER_MARKET_READINESS.md');
+const goLive = join(root, 'docs/market-readiness/GO_LIVE_CHECKLIST.md');
+const pilot = join(root, 'docs/market-readiness/PILOT_PLAYBOOK.md');
 
 /**
  * Things the scorecard reports as not built, and where they would live.
@@ -70,6 +72,9 @@ const PRESENT: { claim: string; at: string }[] = [
   { claim: 'consent-based local diagnostics', at: 'app/src/lib/diagnose.ts' },
   { claim: 'a content-security policy, with its own guard', at: 'app/src/lib/csp.test.ts' },
   { claim: 'erasure from this device', at: 'app/src/lib/erase.ts' },
+  { claim: 'portable and restorable data export', at: 'app/src/lib/export.ts' },
+  { claim: 'cloud-account deletion', at: 'app/src/lib/cloud.ts' },
+  { claim: 'hourly public production smoke', at: '.github/workflows/production-smoke.yml' },
   { claim: 'the privacy disclosure written as data', at: 'app/src/lib/privacy.ts' },
 ];
 
@@ -120,6 +125,7 @@ describe('the market-readiness scorecard', () => {
       'IMPLEMENTATION_PLAYBOOK', 'PILOT_PLAYBOOK', 'SUPPORT_PLAYBOOK',
       'INCIDENT_RESPONSE', 'DISASTER_RECOVERY', 'UNIVERSITY_ONBOARDING',
       'MIGRATION_PLAYBOOK', 'PROCUREMENT_CHECKLIST', 'GO_LIVE_CHECKLIST',
+      'INCIDENT_COMMUNICATION_TEMPLATES',
     ];
     for (const doc of named) {
       expect(
@@ -127,5 +133,37 @@ describe('the market-readiness scorecard', () => {
         `docs/market-readiness/${doc}.md is promised by the index and absent`,
       ).toBe(true);
     }
+  });
+
+  /*
+   * Part B of the migration playbook said customer data migration "does not
+   * exist" for days after the Migration Center and roster staging landed. This
+   * is the same fault as the four rows above, so it gets the same probe: while
+   * those migrations are in the tree, the playbook has to name them and may not
+   * say nothing supports migration.
+   */
+  it('does not say customer data migration is unsupported while its evidence path is built', () => {
+    const built = ['supabase/migrations/20260929200000_migration_center.sql', 'supabase/migrations/20260930220000_roster_import_staging.sql'];
+    for (const f of built) expect(existsSync(join(root, f)), `${f} is the control: if it moved, update this probe`).toBe(true);
+    const playbook = readFileSync(join(root, 'docs/market-readiness/MIGRATION_PLAYBOOK.md'), 'utf8');
+    const partB = playbook.split(/^## B\./m)[1]?.split(/^## /m)[0] ?? '';
+    expect(partB.length, 'Part B not found').toBeGreaterThan(200);
+    expect(partB).toMatch(/Migration Center/);
+    expect(partB).toMatch(/roster staging/i);
+    expect(partB).not.toMatch(/does not exist\s*$/m);
+    expect(partB).not.toMatch(/Nothing supports this/i);
+  });
+
+  it('does not regress export and deletion to an unmet release claim', () => {
+    const release = readFileSync(goLive, 'utf8');
+    const entry = release
+      .split('\n')
+      .find((line) => /Data export and account deletion available to users/i.test(line));
+    expect(entry).toMatch(/^- \[x\]/);
+
+    const entryTable = readFileSync(pilot, 'utf8')
+      .split('\n')
+      .find((line) => /\| Data export and deletion available \|/i.test(line));
+    expect(entryTable).toMatch(/\*\*Met\*\*/);
   });
 });

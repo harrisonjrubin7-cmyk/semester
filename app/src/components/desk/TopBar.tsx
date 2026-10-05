@@ -50,11 +50,14 @@
 
 import { createElement, useEffect, useId, useState } from 'react';
 import { useStore } from '../../state/store';
+import { addIntent, seedQuickAdd } from '../../lib/intent';
 import { findApps } from '../../lib/desk';
 import { saysFor } from '../../lib/nav';
+import { navAreaLabel } from '../../lib/navareas';
 import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
 import { recordSearch } from '../../lib/browser.hook';
+import { DESKTOP, WIDE, useMedia } from '../../lib/media';
 import { Mark } from '../Brand';
 import { Avatar } from '../Avatar';
 import { BookmarkStar } from '../Bookmarks';
@@ -87,6 +90,8 @@ export function TopBar({
   boxRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const { state, dispatch, school } = useStore();
+  const roomy = useMedia(DESKTOP);
+  const inlineActions = useMedia(WIDE);
   const caps = school.capabilities;
   const [text, setText] = useState('');
   const [at, setAt] = useState(0);
@@ -138,6 +143,24 @@ export function TopBar({
     box.current?.blur();
   };
 
+  // One set of page actions: beside the field when there is room, in the
+  // toolbar on a phone so they cannot squeeze the search down to a few pixels.
+  // The name stays accessible even where the Intelligence text is not drawn.
+  const searchActions = (
+    <>
+      <BookmarkStar />
+      <button
+        type="button"
+        className="bare desktop-ai"
+        aria-label="Semester Intelligence"
+        onClick={() => dispatch({ type: 'go', screen: 'ask' })}
+      >
+        <AskIcon size={15} />
+        <span>Semester Intelligence</span>
+      </button>
+    </>
+  );
+
   return (
     <div className="desktop-bar">
       <button
@@ -160,8 +183,8 @@ export function TopBar({
             className="bare desktop-input"
             type="search"
             value={text}
-            placeholder="Search apps and features"
-            aria-label="Search apps and features"
+            placeholder={roomy ? 'Search apps and features, or add something' : 'Search Semester'}
+            aria-label="Search apps and features, or add something"
             aria-expanded={open}
             aria-controls={open ? listId : undefined}
             aria-activedescendant={open ? `${listId}-${cursor}` : undefined}
@@ -181,6 +204,14 @@ export function TopBar({
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 setAt((n) => Math.max(n - 1, 0));
+              } else if (e.key === 'Enter' && addIntent(text) !== null) {
+                // The same explicit verbs as the search palette ("add …",
+                // "remind me to …"): the capture box opens on the rest.
+                // See `lib/intent.ts`.
+                e.preventDefault();
+                seedQuickAdd(addIntent(text)!);
+                setText('');
+                dispatch({ type: 'quickAdd', open: true });
               } else if (e.key === 'Enter' && rows > 0) {
                 e.preventDefault();
                 openApp(cursor);
@@ -206,55 +237,7 @@ export function TopBar({
               ✕
             </button>
           )}
-          {/* The star, where a browser puts it: in the field, about the page
-              the tab you are on is showing. See `components/Bookmarks.tsx`. */}
-          <BookmarkStar />
-          {/*
-            There was a `⌘ K` chip here, and it was not true.
-
-            `lib/keys.ts` ignores anything carrying a modifier on principle —
-            the rule that keeps this app out of the browser's shortcuts — so
-            no single-letter binding can be ⌘-anything. The one ⌘K listener in
-            the app is `ai/Assistant.tsx`'s, and it opens the assistant. So
-            this chip sat inside a *search field* advertising a key that opens
-            a chat, and the search home drew an identical one a row below it.
-
-            Removed rather than corrected, and then the key it should have
-            named arrived: `/` focuses this field in this navigation. It is
-            still not written here. A chip inside a field is a hint for
-            somebody who is already looking at the field — which is the one
-            person who does not need a way to reach it — and the `?` sheet is
-            where every other binding in the app is listed.
-
-            The star above it arrived from `main` in the same place, which
-            is where a browser keeps one — so the field ends in the control
-            that acts on what you are looking at rather than in a claim
-            about a key.
-          */}
-          {/*
-            Named here as well as in the span, because below 760px the span is
-            not drawn: `.desktop-ai span { display: none }` in app.css leaves
-            the glyph alone in the bar. The name then came only from text that
-            had been display-none'd, which is no name at all — a screen reader
-            on a phone announced "button" and stopped, on the one control in
-            this bar that opens the assistant.
-
-            The same answer the tab bar gives when its labels are off: the
-            glyph carries the picture and `aria-label` carries the name, so
-            the button reads identically at every width. The span stays for
-            the sighted reader where there is room for it, and being labelled
-            twice with the same words is not a conflict — `aria-label` wins,
-            and it wins with the text that was already there.
-          */}
-          <button
-            type="button"
-            className="bare desktop-ai"
-            aria-label="AI Tutor"
-            onClick={() => dispatch({ type: 'go', screen: 'ask' })}
-          >
-            <AskIcon size={15} />
-            <span>AI Tutor</span>
-          </button>
+          {inlineActions && searchActions}
         </div>
 
         {open && (
@@ -295,7 +278,7 @@ export function TopBar({
                     </span>
                   </span>
                   <span className="desktop-hit-group" style={secondLine()}>
-                    {d.group}
+                    {navAreaLabel(d.screen)}
                   </span>
                 </button>
               );
@@ -324,9 +307,10 @@ export function TopBar({
       </div>
 
       <div className="desktop-tools">
+        {!inlineActions && searchActions}
         <button
           type="button"
-          className="btn btn-ghost btn-icon tap"
+          className="btn btn-ghost btn-icon tap desktop-alerts"
           onClick={() => dispatch({ type: 'go', screen: 'notifs' })}
           aria-label="Alerts"
           style={{ position: 'relative' }}
@@ -336,7 +320,7 @@ export function TopBar({
         </button>
         <button
           type="button"
-          className="btn btn-ghost btn-icon tap"
+          className="btn btn-ghost btn-icon tap desktop-settings"
           onClick={() => dispatch({ type: 'go', screen: 'settings' })}
           aria-label="Settings"
         >

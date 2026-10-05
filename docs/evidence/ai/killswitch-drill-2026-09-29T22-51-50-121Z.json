@@ -1,0 +1,45 @@
+{
+  "at": "2026-09-29T22:51:50.121Z",
+  "switch": "kill.ai_generation",
+  "runtime": "supabase/functions/claude (the deployed runtime)",
+  "notObserved": "app/server/institution (the institution gateway) is not deployed; app/src/lib/aikillswitch.test.ts holds it to the same switch",
+  "steps": [
+    {
+      "name": "before: answered",
+      "status": 200,
+      "message": null,
+      "ms": 2194,
+      "at": "2026-09-29T22:51:52.329Z",
+      "expected": {
+        "status": 200
+      },
+      "ok": true
+    },
+    {
+      "name": "during: refused with the runtime's own sentence",
+      "status": 503,
+      "message": "AI generation is switched off right now. Everything else in Semester still works, and nothing you typed has been lost.",
+      "ms": 997,
+      "at": "2026-09-29T22:52:12.541Z",
+      "expected": {
+        "status": 503,
+        "message": "AI generation is switched off right now. Everything else in Semester still works, and nothing you typed has been lost."
+      },
+      "ok": true
+    },
+    {
+      "name": "after: answered again",
+      "status": 200,
+      "message": null,
+      "ms": 1776,
+      "at": "2026-09-29T22:55:32.852Z",
+      "expected": {
+        "status": 200
+      },
+      "ok": true
+    }
+  ],
+  "engagedAt": "2026-09-29T22:52:11.544Z",
+  "releasedAt": "2026-09-29T22:55:31.076Z",
+  "verdict": "held"
+}

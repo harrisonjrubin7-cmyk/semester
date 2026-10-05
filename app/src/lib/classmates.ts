@@ -28,7 +28,9 @@
  * removed by a row-level policy, so they never reach the device. Filtering in
  * the client would leave the words sitting in the browser.
  *
- * **Reports are stored, not moderated.** Nobody is watching a queue. Saying
+ * **Reports reach a queue, with no promise of speed.** A holder of
+ * `report:read` reads them in `components/ReportQueue.tsx`, without the
+ * reporter's or subject's identity. Nothing guarantees how soon, and saying
  * otherwise would be the worst kind of lie in a feature like this — somebody
  * would rely on it. Blocking is the remedy that works, and it is immediate.
  *
@@ -40,6 +42,8 @@
 
 import { cloud } from './cloud';
 import type { School } from './school';
+import { appLocale } from './locale';
+import { localClock, weekdayShort } from './date';
 
 /**
  * Whether an address is one this school recognises.
@@ -166,7 +170,7 @@ export function whenSaid(iso: string, now = new Date()): string {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return '';
   const h24 = at.getHours();
-  const clock = `${h24 % 12 === 0 ? 12 : h24 % 12}:${String(at.getMinutes()).padStart(2, '0')}${
+  const clock = appLocale() ? localClock(h24 * 60 + at.getMinutes()) : `${h24 % 12 === 0 ? 12 : h24 % 12}:${String(at.getMinutes()).padStart(2, '0')}${
     h24 >= 12 ? 'p' : 'a'
   }`;
   const sameDay =
@@ -174,7 +178,7 @@ export function whenSaid(iso: string, now = new Date()): string {
     at.getMonth() === now.getMonth() &&
     at.getDate() === now.getDate();
   if (sameDay) return clock;
-  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][at.getDay()];
+  const day = weekdayShort(at);
   return `${day} ${clock}`;
 }
 

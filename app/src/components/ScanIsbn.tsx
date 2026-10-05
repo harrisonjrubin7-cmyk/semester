@@ -91,10 +91,14 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
 
       {open && (
         <div style={{ marginBottom: 'var(--sp-4)' }}>
+          {/* A live, soundless camera preview: nothing is said, so there is
+              nothing to caption. It used to carry an empty captions track,
+              which claims captions that do not exist. */}
           <video
             ref={video}
             muted
             playsInline
+            aria-label="Camera preview for the barcode"
             style={{
               width: '100%',
               maxHeight: 200,
@@ -103,9 +107,7 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
               border: '1px solid var(--app-line)',
               background: '#000',
             }}
-          >
-            <track kind="captions" />
-          </video>
+          />
           <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             {trouble ||
               'Hold the barcode still in frame. The number is read on this device and goes no further — the app does not look it up, because that would mean telling somebody else what you are studying.'}

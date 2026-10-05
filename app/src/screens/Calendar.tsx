@@ -1,6 +1,7 @@
-import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
+import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -8,6 +9,10 @@ import { MarkClass } from '../components/MarkClass';
 import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
+import { useOnline } from '../lib/offline-mode';
+import { ReadState } from '../components/unity/ReadState';
+import { calendarEnvelope, countSources, itemSources } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { CallIcon, ChevronLeft, ChevronRight } from '../components/Icons';
@@ -23,18 +28,7 @@ import { WIDE, useMedia } from '../lib/media';
 import { PrintButton } from '../components/PrintButton';
 import { CAMPUS_KIND, kindOf } from '../lib/kinds';
 import { DOTS, dayCount, dayLabel, monthLabel, moveBy } from '../lib/monthgrid';
-import {
-  DOW,
-  DOW_INITIALS,
-  MONTHS,
-  dateToIso,
-  isoToDate,
-  longLabel,
-  minutesNow,
-  monthGrid,
-  sameDay,
-  shiftIso,
-} from '../lib/date';
+import { dateToIso, isoToDate, longLabel, minutesNow, monthDay, monthGrid, monthShort, monthShortYear, sameDay, shiftIso, shownTime, weekdayInitial, weekdayInitialOf, weekdayShort } from '../lib/date';
 import {
   appointmentsOn,
   bannersOn,
@@ -74,6 +68,47 @@ import type {
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { goCal } from '../lib/opencal';
+import { INSTITUTIONAL_PREVIEW } from '../lib/institutional-preview';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+
+const FlightPlanCalendar = lazy(() =>
+  import('../components/institutional/FlightPlanCalendar').then((module) => ({
+    default: module.FlightPlanCalendar,
+  })),
+);
+
+const LifeBalance = lazy(() => import('../components/LifeBalance').then((m) => ({ default: m.LifeBalance })));
+
+/**
+ * Academic life balance (Phase E), under the week view: the week's hours by
+ * category, each day's shape, and — with `crunch_week_forecast` on too — the
+ * Crunch Week Forecast. Always the Sunday-to-Saturday week around the day the
+ * calendar is on, whether the grid above shows seven days or three.
+ */
+function LifeBalanceSlot({
+  balance = moduleOn(MODULE_FLAGS.academic_life_balance),
+  crunch = moduleOn(MODULE_FLAGS.crunch_week_forecast),
+}: { balance?: boolean; crunch?: boolean }) {
+  const { state } = useStore();
+  const now = useNow();
+  if (!balance) return null;
+  const anchor = state.calDay ? isoToDate(state.calDay) : now;
+  const start = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - anchor.getDay());
+  return (
+    <Suspense fallback={null}>
+      <LifeBalance start={dateToIso(start)} crunch={crunch} />
+    </Suspense>
+  );
+}
+
+function FlightPlanCalendarSlot() {
+  if (!INSTITUTIONAL_PREVIEW) return null;
+  return (
+    <Suspense fallback={null}>
+      <FlightPlanCalendar />
+    </Suspense>
+  );
+}
 
 /**
  * The calendar has two independent axes.
@@ -145,6 +180,7 @@ function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
   const { state, dispatch, catalog, say, tint } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
@@ -159,13 +195,8 @@ function DayView() {
   const taskDrag = useDragToMove<Movable>({
     onDrop: ({ payload, point }) => {
       if (!point || payload.kind !== 'task') return;
-      dispatch({
-        type: 'moveTask',
-        id: payload.id,
-        date: dateToIso(day),
-        time: timeLabel(point.minutes),
-      });
-      say(`Moved · ${payload.title} to ${timeLabel(point.minutes)}.`, 'mine');
+      taskActions.reschedule(payload.id, dateToIso(day), timeLabel(point.minutes));
+      say(`Moved · ${payload.title} to ${shownTime(timeLabel(point.minutes), point.minutes)}.`, 'mine');
     },
   });
   const isToday = sameDay(day, now);
@@ -282,10 +313,10 @@ function DayView() {
         </button>
         <div style={{ textAlign: 'center' }}>
           <span className="chrome-text" style={{ fontSize: 'var(--type-display-sm)', display: 'block' }}>
-            {isToday ? 'Today' : DOW[day.getDay()]}
+            {isToday ? 'Today' : weekdayShort(day)}
           </span>
           <span className="kicker" style={{ display: 'block' }}>
-            {MONTHS[day.getMonth()]} {day.getDate()}
+            {monthDay(day)}
           </span>
         </div>
         <button
@@ -395,7 +426,7 @@ function DayView() {
                     color: 'var(--app-dim)',
                   }}
                 >
-                  {b.time}
+                  {shownTime(b.time, b.at)}
                 </div>
                 <div style={{ width: 1, background: 'var(--app-line)', position: 'relative' }}>
                   <div
@@ -509,7 +540,7 @@ function DayView() {
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>{e.title}</span>
                 <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
-                  {e.time} · {e.where}
+                  {shownTime(e.time)} · {e.where}
                 </span>
               </span>
             </button>
@@ -541,7 +572,7 @@ function DayView() {
                     color: 'var(--app-dim)',
                   }}
                 >
-                  {e.time}
+                  {shownTime(e.time)}
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>
@@ -613,12 +644,13 @@ function DayView() {
  */
 function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<HTMLElement> }) {
   const taskRow = useRowStyle(8);
-  const { dispatch, courseCode, say } = useStore();
+  const { courseCode, say } = useStore();
+  const taskActions = useTaskActions();
   if (!t.date) return null;
 
   const move = (days: number) => {
     const to = shiftIso(t.date ?? '', days);
-    dispatch({ type: 'editTask', id: t.id, patch: { date: to } });
+    taskActions.reschedule(t.id, to);
     say(`Moved · ${t.title} to ${longLabel(isoToDate(to))}.`, 'mine');
   };
 
@@ -636,7 +668,7 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
         style={{ width: 20, flex: 'none' }}
       >
@@ -1010,14 +1042,14 @@ function WeekView() {
                       color: 'var(--app-dim)',
                     }}
                   >
-                    {DOW_INITIALS[e.date.getDay()]} {e.date.getDate()}
+                    {weekdayInitial(e.date)} {e.date.getDate()}
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                       {e.title}
                     </span>
                     <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
-                      {e.time} · {e.where}
+                      {shownTime(e.time)} · {e.where}
                     </span>
                   </span>
                   <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -1039,7 +1071,7 @@ function WeekView() {
                       color: 'var(--app-dim)',
                     }}
                   >
-                    {DOW_INITIALS[isoToDate(e.date).getDay()]} {isoToDate(e.date).getDate()}
+                    {weekdayInitial(isoToDate(e.date))} {isoToDate(e.date).getDate()}
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
@@ -1160,7 +1192,7 @@ function MonthView() {
         aria-label={`Carrying ${what.title}. Arrow keys choose a day, Enter drops it, Escape cancels.`}
         style={CARRY}
       >
-        {MONTHS[shownMonth]} {carrying.day} · ENTER
+        {monthDay(new Date(shownYear, shownMonth, carrying.day))} · ENTER
       </button>
     ) : (
       <button
@@ -1294,7 +1326,7 @@ function MonthView() {
           className="chrome-text"
           style={{ fontSize: 'var(--type-display-sm)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
-          {MONTHS[shownMonth]} {shownYear}
+          {monthShortYear(shownYear, shownMonth)}
         </div>
         <button
           type="button"
@@ -1324,7 +1356,7 @@ function MonthView() {
         style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 'calc(1px * var(--density, 1))', marginBottom: 'var(--sp-3)' }}
         aria-hidden="true"
       >
-        {DOW_INITIALS.map((d, i) => (
+        {[0, 1, 2, 3, 4, 5, 6].map(weekdayInitialOf).map((d, i) => (
           <div
             key={i}
             style={{
@@ -1609,8 +1641,8 @@ function MonthView() {
       />
 
       <SectionLabel style={{ marginTop: 'calc(20px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
-        {DOW[new Date(shownYear, shownMonth, selectedDay).getDay()]} · {MONTHS[shownMonth]}{' '}
-        {selectedDay}
+        {weekdayShort(new Date(shownYear, shownMonth, selectedDay))} ·{' '}
+        {monthDay(new Date(shownYear, shownMonth, selectedDay))}
         {inThisMonth && selectedDay === now.getDate() ? ' · today' : ''}
       </SectionLabel>
 
@@ -1721,7 +1753,7 @@ function MonthView() {
               key={`c:${b.at}:${b.title}`}
               style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', ...monthTaskRow }}
             >
-              <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 'none' }}>{b.time}</span>
+              <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 'none' }}>{shownTime(b.time, b.at)}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                   {b.title}
@@ -1770,7 +1802,7 @@ function MonthView() {
                   // "Increase contrast". The campus row below still has the
                   // old shape and is that pass's to convert, not this one's.
                   <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>
-                    {[a.time, a.where].filter(Boolean).join(' \u00b7 ')}
+                    {[shownTime(a.time), a.where].filter(Boolean).join(' \u00b7 ')}
                   </span>
                 )}
               </span>
@@ -1814,7 +1846,7 @@ function MonthView() {
                     {a.title}
                   </span>
                   <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>
-                    {a.time} · {codeOf(a)}
+                    {shownTime(a.time)} · {codeOf(a)}
                   </span>
                 </span>
                 <span className="tag tag-outline">Join</span>
@@ -1850,7 +1882,7 @@ function MonthView() {
                   {e.title}
                 </span>
                 <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
-                  {e.time} · {e.where}
+                  {shownTime(e.time)} · {e.where}
                 </span>
               </span>
               <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
@@ -1865,7 +1897,7 @@ function MonthView() {
                 {/* Said out loud, every time: a feed is what somebody else's
                     calendar claims, not what a syllabus stated. */}
                 <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
-                  {[e.time, e.where].filter(Boolean).join(' · ') || 'From a connected calendar'}
+                  {[shownTime(e.time), e.where].filter(Boolean).join(' · ') || 'From a connected calendar'}
                 </span>
               </span>
             </div>
@@ -1876,7 +1908,7 @@ function MonthView() {
       {/* Where a carried thing would land, said rather than only drawn. */}
       <div role="status" aria-live="polite" className="sr-only">
         {carrying
-          ? `${carrying.what.title} would move to ${MONTHS[shownMonth]} ${carrying.day}.`
+          ? `${carrying.what.title} would move to ${monthDay(new Date(shownYear, shownMonth, carrying.day))}.`
           : ''}
       </div>
 
@@ -2321,7 +2353,7 @@ function SemesterView() {
                 }}
               >
                 <div style={{ fontSize: 'var(--type-2xs)', letterSpacing: '0.12em', color: 'var(--app-dim)' }}>
-                  {MONTHS[w.start.getMonth()].toUpperCase()}
+                  {monthShort(w.start).toUpperCase()}
                 </div>
                 <div style={{ fontSize: 'var(--type-display-sm)' }}>{w.start.getDate()}</div>
               </div>
@@ -2491,7 +2523,7 @@ function SemesterView() {
                     ).map((e) => (
                       <div key={e.id} style={{ ...WEEK_ROW, display: 'flex' }}>
                         <span>
-                          <span style={{ color: 'var(--app-dim)' }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
+                          <span style={{ color: 'var(--app-dim)' }}>{weekdayShort(isoToDate(e.date))}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
                         </span>
                       </div>
@@ -2724,7 +2756,7 @@ function CampusList() {
                   </div>
                   <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{e.title}</div>
                   <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
-                    {e.time} · {e.where}
+                    {shownTime(e.time)} · {e.where}
                   </div>
                 </button>
                 <button
@@ -2752,15 +2784,15 @@ function CampusList() {
                   <Blueprint plain key={e.id} style={CAMPUS_ROW}>
                     <div style={STACK}>
                       <DateStamp
-                        mon={MONTHS[on.getMonth()]}
+                        mon={monthShort(on)}
                         day={on.getDate()}
-                        dow={DOW[on.getDay()]}
+                        dow={weekdayShort(on)}
                       />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 'var(--type-lg)' }}>{e.title}</div>
                       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
-                        {[e.time, e.where].filter(Boolean).join(' · ')}
+                        {[shownTime(e.time), e.where].filter(Boolean).join(' · ')}
                       </div>
                     </div>
                   </Blueprint>
@@ -2797,7 +2829,29 @@ function CampusList() {
 }
 
 export function Calendar() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, loading } = useStore();
+  const now = useNow();
+  const online = useOnline();
+  const empty = nothingYet(catalog, state);
+  const sources = useMemo(
+    () =>
+      countSources([
+        ...itemSources(catalog.items.filter((i) => !state.done[i.id])),
+        ...state.tasks.map((): SourceLabel => 'student_entered'),
+        ...state.appointments.map((): SourceLabel => 'student_entered'),
+        ...state.feedEvents.map((): SourceLabel => 'imported'),
+      ]),
+    [catalog, state.done, state.tasks, state.appointments, state.feedEvents],
+  );
+  const env = calendarEnvelope({
+    loading,
+    empty,
+    count: Object.values(sources).reduce((a, b) => a + b, 0),
+    sources,
+    online,
+    now: now.getTime(),
+    hasCampusFeed: state.feedEvents.length > 0,
+  });
   /*
    * The week chip says what it will draw.
    *
@@ -2807,9 +2861,17 @@ export function Calendar() {
    * supposed to say where you are going.
    */
   const wide = useMedia(WIDE);
-  if (nothingYet(catalog, state)) return <FirstRun where="on the calendar" />;
 
   return (
+    <ReadState
+      env={env}
+      now={now.getTime()}
+      what="your calendar"
+      empty={{ title: 'Nothing on your calendar yet.', body: 'Add a course or an event to start.' }}
+      emptyNode={<FirstRun where="on the calendar" />}
+      inset
+    >
+      {() => (
     /*
      * `wide`, and no filter of its own.
      *
@@ -2828,6 +2890,7 @@ export function Calendar() {
      * the note about screens with nothing of their own to filter.
      */
     <Page wide bottom={0}>
+      <FlightPlanCalendarSlot />
       <div style={{ paddingTop: 'calc(14px * var(--density, 1))', paddingInline: 'calc(18px * var(--density, 1))', paddingBottom: '0' }}>
         <Segmented
           options={[
@@ -2877,13 +2940,18 @@ export function Calendar() {
       ) : state.calView === 'day' ? (
         <DayView />
       ) : state.calView === 'week' ? (
-        <WeekView />
+        <>
+          <WeekView />
+          <LifeBalanceSlot />
+        </>
       ) : state.calView === 'semester' ? (
         <SemesterView />
       ) : (
         <MonthView />
       )}
     </Page>
+      )}
+    </ReadState>
   );
 }
 
@@ -2921,7 +2989,7 @@ export function EventDetail() {
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>
               {event.dow} {event.mon} {event.day}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{event.time}</div>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{shownTime(event.time)}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, paddingTop: 'calc(11px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))' }}>

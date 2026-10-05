@@ -129,3 +129,102 @@ select c.relname as table_with_rls_but_no_policy
 -- schema rebuilt from a snapshot that did not know about it.
 
 select count(*) as ensure_rls_present from pg_event_trigger where evtname = 'ensure_rls';
+
+-- ── 6 · Is every scheduled job actually scheduled ─────────────────────────
+--
+-- `scheduler.sql` is the record of what should run, and it is only a record:
+-- a job exists once somebody has applied the statement, and on 28 September
+-- three jobs in that file (`community-retention`, `escalation-delivery`,
+-- `media-scan`) had never reached `cron.job`, and three sweeps the migrations
+-- expect had no job at all. Nothing said so.
+--
+-- `expected` is every job `scheduler.sql` creates, and whether that file
+-- leaves it parked. `app/src/lib/scheduler.test.ts` fails if this list and
+-- that file ever disagree, so the list here cannot drift from the file.
+--
+-- Every row should read `ok`. `MISSING` is a job the code expects that the
+-- database does not have — re-run the one `cron.schedule` from scheduler.sql.
+-- `NOT IN scheduler.sql` is a job somebody made by hand; put it in the file or
+-- remove it. `parked` is expected for a parked job until its runbook says to
+-- unpark it; `inactive` on a job the file leaves active is a job that has been
+-- switched off and should not have been.
+
+with expected(jobname, parked) as (values
+  ('abandoned-signups',             false),
+  ('account-health',                false),
+  ('ai-runtime-metadata',           false),
+  ('audit-retention',               false),
+  ('capture-expiry',                false),
+  ('commercial-dunning',            false),
+  ('commercial-financial-retention', false),
+  ('community-retention',           false),
+  ('console-audit-integrity',       false),
+  ('escalation-delivery',           true),
+  ('institution-gateway-retention', false),
+  ('integration-retention',         false),
+  ('integration-sync',              false),
+  ('invite-retention',              false),
+  ('ledger-chain-integrity',        false),
+  ('lti-link-ticket',               false),
+  ('lti-nonce',                     false),
+  ('media-scan',                    true),
+  ('push',                          true),
+  ('support-reply-notify',          true),
+  ('tombstones',                    false)
+)
+select coalesce(e.jobname, j.jobname) as jobname,
+       j.schedule,
+       j.active,
+       case
+         when j.jobid is null            then 'MISSING'
+         when e.jobname is null          then 'NOT IN scheduler.sql'
+         when e.parked and not j.active  then 'parked'
+         when not e.parked and not j.active then 'inactive'
+         else 'ok'
+       end as verdict
+  from expected e
+  full join cron.job j on j.jobname = e.jobname
+ order by (case when j.jobid is null or e.jobname is null then 0 else 1 end), 1;
+
+-- And whether the active ones are succeeding. A job that is there and fails
+-- every run is the same outage as a job that is missing, with more rows.
+
+select j.jobname,
+       count(*) filter (where d.status = 'succeeded') as succeeded,
+       count(*) filter (where d.status = 'failed')    as failed,
+       max(d.start_time)                              as last_run,
+       (array_agg(d.return_message order by d.start_time desc)
+          filter (where d.status = 'failed'))[1]      as last_failure
+  from cron.job j
+  left join cron.job_run_details d
+    on d.jobid = j.jobid and d.start_time > now() - interval '7 days'
+ where j.active
+ group by j.jobname
+ order by failed desc, j.jobname;
+
+-- Support email can fail even while pg_cron itself succeeds: pg_net accepts
+-- the HTTP request before the Edge Function knows whether Resend accepted the
+-- message. Any dead letter is an incident; pending rows are the retry backlog.
+select
+  count(*) filter (where accepted_at is null and dead_lettered_at is null) as pending,
+  count(*) filter (where dead_lettered_at is not null)                     as dead_lettered,
+  min(queued_at) filter (where accepted_at is null and dead_lettered_at is null) as oldest_pending,
+  max(dead_lettered_at)                                                   as latest_dead_letter,
+  (array_agg(last_error order by dead_lettered_at desc)
+    filter (where dead_lettered_at is not null))[1]                       as latest_error
+from public.support_notification_outbox;
+
+-- ── 7 · Accounts nobody has used in a long time ───────────────────────────
+--
+-- Counted, not acted on. RETENTION.md decides that an account which was ever
+-- used is kept until its owner deletes it — the privacy screen promises that —
+-- and that only a sign-up never confirmed and never signed in is removed
+-- (`abandoned-signups`). This is the number a data-protection reviewer will ask
+-- for, so it is here rather than worked out on the day.
+
+select
+  count(*) filter (where last_sign_in_at < now() - interval '1 year')  as idle_over_a_year,
+  count(*) filter (where last_sign_in_at < now() - interval '2 years') as idle_over_two_years,
+  count(*) filter (where email_confirmed_at is null and last_sign_in_at is null
+                     and created_at < now() - interval '30 days')      as abandoned_signups_awaiting_sweep
+from auth.users;

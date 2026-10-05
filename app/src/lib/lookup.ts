@@ -49,6 +49,7 @@
  * directly for them — returns any of it.
  */
 
+import { aiAllows, type AiOff } from './aiflags';
 import { budget, hasPolicy, tally } from './attend';
 import { blocksFor, type Catalog } from '../data/catalog';
 import type { ToolCall, ToolResult, ToolSpec } from './claude';
@@ -65,7 +66,22 @@ export interface Source {
   state: State;
   catalog: Catalog;
   now: Date;
+  /**
+   * What the school has switched off (`school.capabilities.aiOff`). `context.ts`
+   * honours it when it builds the preamble; a lookup is the same data read on
+   * demand, so it has to honour it too or a school that switched grades off
+   * would still have them read out by `read_grades`.
+   */
+  off?: readonly AiOff[];
 }
+
+/** The category a lookup reads from, where it has one. `read_tasks` and `read_timetable` read the student's own actions and timetable, which no category covers. */
+const LOOKUP_CATEGORY: Partial<Record<string, AiOff>> = {
+  find_deadlines: 'deadlines',
+  read_grades: 'grades',
+  read_attendance: 'attendance',
+  search_material: 'coursework',
+};
 
 /** One lookup, run. */
 export interface Looked {
@@ -166,7 +182,7 @@ export const LOOKUPS: ToolSpec[] = [
   {
     name: 'read_tasks',
     description:
-      'Look up the student’s own to-do list — the things they added themselves, which are not on any syllabus. Use it before proposing to add something, so you do not add a task they already have.',
+      'Look up the student’s own actions — the things they added themselves, which are not on any syllabus. Use it before proposing to add something, so you do not add an action they already have.',
     input_schema: {
       type: 'object',
       properties: {
@@ -459,7 +475,7 @@ function readTasks(src: Source, input: Record<string, unknown>): { text: string;
     .sort((a, b) => (a.date ?? '9999').localeCompare(b.date ?? '9999'));
 
   if (rows.length === 0) {
-    return { text: `Nothing on their own list in the next ${days} days.`, used: 'your own task list' };
+    return { text: `Nothing on their own list in the next ${days} days.`, used: 'your own actions' };
   }
   return {
     text:
@@ -471,7 +487,7 @@ function readTasks(src: Source, input: Record<string, unknown>): { text: string;
             `${t.time ? ` · ${t.time}` : ''}`,
         ),
       ),
-    used: 'your own task list',
+    used: 'your own actions',
   };
 }
 
@@ -579,7 +595,7 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
           // travel, and which no provider sends either. The code was saying
           // more than the rule written for it in the same commit.
           ...standing.map((b) => `  - ${b.time} · ${b.title} (a standing commitment)`),
-          ...tasks.map((t) => `  - ${t.time || 'no time'} · ${t.title} (their own task)`),
+          ...tasks.map((t) => `  - ${t.time || 'no time'} · ${t.title} (their own action)`),
           /*
            * One line for all of them, listing the hours.
            *
@@ -642,7 +658,7 @@ function saying(name: string, input: Record<string, unknown>): string {
     case 'search_material':
       return `Searching your study material${of}`;
     case 'read_tasks':
-      return 'Reading your own task list';
+      return 'Reading your own actions';
     case 'read_timetable':
       return 'Reading your timetable';
     default:
@@ -666,6 +682,10 @@ export function runLookup(call: ToolCall, src: Source): Looked {
     saying: said,
   });
   if (!isLookup(call.name)) return fail(`There is no lookup called ${call.name}.`);
+  const category = LOOKUP_CATEGORY[call.name];
+  if (category && !aiAllows(src.off, category)) {
+    return fail('Your university has switched this off in the assistant. Say so, and do not guess the answer.');
+  }
   try {
     const run: Record<string, (s: Source, i: Record<string, unknown>) => { text: string; used: string }> = {
       find_deadlines: findDeadlines,

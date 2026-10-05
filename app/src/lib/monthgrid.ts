@@ -33,7 +33,8 @@
  */
 
 // The grid's words are the app's words: `lib/date.ts` owns both lists.
-import { DAY_NAMES, MONTH_NAMES } from './date';
+import { DAY_NAMES, MONTH_NAMES, monthYear } from './date';
+import { appLocale, formatDate } from './locale';
 
 /** One thing sitting on a day, as the month grid already models it. */
 export interface Mark {
@@ -49,7 +50,7 @@ export interface Mark {
  */
 const SAYS: Record<string, [string, string]> = {
   due: ['deadline', 'deadlines'],
-  mine: ['task of your own', 'tasks of your own'],
+  mine: ['action of your own', 'actions of your own'],
   appt: ['appointment', 'appointments'],
   event: ['campus event', 'campus events'],
   feed: ['course event', 'course events'],
@@ -127,7 +128,9 @@ export interface DayStanding {
  * able to disagree with it.
  */
 export function dayLabel(date: Date, marks: Mark[], standing: DayStanding = {}): string {
-  const head = `${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`;
+  const head = appLocale()
+    ? formatDate(date, { weekday: 'long', day: 'numeric', month: 'long' })
+    : `${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`;
   const bits = [head];
   // Today and selected are both true on most visits, and saying both is not
   // repetitive — one is where the calendar is, the other is where you are.
@@ -197,5 +200,5 @@ export function moveBy(
 
 /** "September 2026", for the announcement when the month changes. */
 export function monthLabel(year: number, month: number): string {
-  return `${MONTH_NAMES[month]} ${year}`;
+  return monthYear(year, month);
 }

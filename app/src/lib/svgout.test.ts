@@ -49,6 +49,11 @@ describe('saving one', () => {
   });
 
   it('honours a fallback written into the drawing', () => {
+    // The fallback is taken only when the token is unset, so the token must be
+    // unset — and in a shared worker it is only unset if the file before this
+    // one put <html>'s inline style back. Say which it is, rather than fail on
+    // a colour.
+    expect(getComputedStyle(document.documentElement).getPropertyValue('--app-line'), 'a test before this one left the app’s theme tokens on <html>').toBe('');
     expect(standalone(drawing())).toContain('#333');
   });
 

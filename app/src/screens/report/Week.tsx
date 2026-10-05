@@ -188,7 +188,7 @@ export function WeekReport() {
 
       <Group header="Also this week" framed={false}>
         <ItemRow
-          title={`${back.tasksDone} of your own tasks done`}
+          title={`${back.tasksDone} of your own actions done`}
           trailing={back.tasksOpen > 0 ? `${back.tasksOpen} open` : ''}
         />
         <ItemRow title={`${back.cardsDrilled} cards drilled`} />

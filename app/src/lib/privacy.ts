@@ -86,9 +86,9 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
-    says: 'your notes, tasks, appointments, activities and the calendars you subscribe to',
+    says: 'your notes, actions, appointments, activities, private operating preferences and planning reflections, and the calendars you subscribe to',
     keys: [
-      'notes', 'tasks', 'appointments', 'commitments', 'timers', 'alarms',
+      'operatingWorkspace', 'notes', 'tasks', 'appointments', 'commitments', 'timers', 'alarms',
       'feeds', 'feedEvents', 'feedHidden', 'feedOrder',
     ],
   },
@@ -133,13 +133,13 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
   {
     says: 'your grades, the work that came back, your degree plan and the applications you are tracking',
     keys: [
-      'grades', 'returned', 'regradeWindows', 'requirements', 'taken',
+      'grades', 'returned', 'regradeWindows', 'deadlineSeen', 'requirements', 'taken',
       'applications', 'wanted',
     ],
   },
   {
     says: 'the people you have logged, the letters you have asked for and your advising visits',
-    keys: ['people', 'visits', 'letters', 'myName'],
+    keys: ['people', 'visits', 'letters', 'myName', 'pronounce'],
   },
   {
     says: 'what you have recorded a term costing, and your housing, meal and map records',
@@ -152,12 +152,13 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     says: 'and how the app is set up — your navigation, layout, colours, text size and which screens you have opened',
     keys: [
       'nav', 'tone', 'seenOnboarding', 'registered', 'cleared',
-      'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'visited',
+      'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'opened', 'visited',
       'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
-      'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape', 'calm',
-      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites',
+      'typeface', 'bodyface', 'lineHeight', 'textSpacing', 'readingWidth', 'iconShape', 'calm',
+      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites', 'access',
       'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
+      'workspaceMode', 'pinned', 'goal',
     ],
   },
 ];
@@ -232,21 +233,21 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Who has read your rows, and how you can see it',
     body:
-      'Two things in this app read your rows without signing in as you, and both are listed here because you can now see them happen. Your published calendar link is served to whoever presents it — that is how a calendar subscription works, and anyone holding the link can read your deadlines until you replace it. Your queued reminders are read by the sender, which runs on a schedule rather than being opened by a person. Every one of those reads is written down against your account, and you are the one who can read that log: it is on the Export screen beside the link, and it says what kind of thing fetched your calendar and on what day. A web browser in that list is worth looking at — a calendar subscription is fetched by a calendar app, so a browser is either you opening your own link or somebody else holding it. What is stored is the kind of client and nothing else: no address, no device, no browser fingerprint, and never the link itself. It is kept for ninety days, it is not in your export, and deleting your account deletes it.',
+      'Two things in this app read your rows without signing in as you, and both are listed here because you can now see them happen. Your published calendar link is served to whoever presents it — that is how a calendar subscription works, and anyone holding the link can read your deadlines until you replace it. Your queued reminders are read by the sender, which runs on a schedule rather than being opened by a person. Every one of those reads is written down against your account, and you are the one who can read that log: it is on the Export screen beside the link, and it says what kind of thing fetched your calendar and on what day. A web browser in that list is worth looking at — a calendar subscription is fetched by a calendar app, so a browser is either you opening your own link or somebody else holding it. What is stored is the kind of client and nothing else: no address, no device, no browser fingerprint, and never the link itself. It is kept for ninety days, it is in the account download on this page, and deleting your account deletes it.',
   },
   {
     heading: 'Deleting everything',
     body:
-      'Delete my account, in Settings, empties every table this app can reach on your behalf: your courses and their deadlines, your notes, grades and cards, your reminders and calendar feed, the record of what read them, the record of which days you opened the app, your display name, which courses you said you were in, the messages and reactions you posted in class threads, the people you blocked, your group memberships, and any practice paper you shared along with the answers sent back to it. Deleting your messages leaves gaps in conversations other people are still reading, which is the deliberate half of a real choice: the alternative was leaving your words in their thread under a name nobody can look up. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
+      'Delete my account, at the bottom of this page, is done on the server in one step that either happens completely or not at all: every row that names your account, in every table, and then the account record itself — the address you signed up with and your sign-in. That covers your courses and their deadlines, your notes, grades and cards, your reminders and calendar feed, the record of what read them, the record of which days you opened the app, your display name, which courses you said you were in, the messages and reactions you posted in class threads, the people you blocked, your group memberships, and any practice paper you shared along with the answers sent back to it. Deleting your messages leaves gaps in conversations other people are still reading, which is the deliberate half of a real choice: the alternative was leaving your words in their thread under a name nobody can look up. If it fails, you stay signed in and are told what did and did not happen. Before deleting, Download my account data on this page gives you every one of those rows as a file. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
   },
   {
     heading: 'What deleting leaves behind',
     body:
-      'Two things survive that button, and it is better to know which than to be told “everything”. First, three kinds of row that are not only yours. '
+      'Two things survive that button, and it is better to know which than to be told “everything”. First, rows that are not only yours, which stay with your name cleared from them. '
       + whatDeletionLeaves()
-      + ' Second, the account record itself: an app running in your browser may delete the rows it owns, and should not be able to delete the sign-in — so the address you signed up with outlives the button. Removing that takes an email to '
+      + ' Second, a note that a deletion happened: the date, and how many rows were removed from how many tables, with no account, address or name on it — so that it can be shown a deletion was honoured. The account record is not one of these; it is deleted last, after your rows. If the button ever cannot finish, email '
       + SUPPORT
-      + ', done by hand and answered. Everything else named above really is deleted, row by row, rather than marked hidden.',
+      + ' and it will be done by hand and answered. Everything named above really is deleted, rather than marked hidden.',
   },
   {
     heading: 'Which screens you open',
@@ -256,12 +257,12 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'The three things counted about your account',
     body:
-      'Semester is being piloted, and three questions decide whether it is worth building further: how many people who sign up get a course of their own in and study from it, how many open it in a given week, and how many are still opening it a month later. Answering them needs a record, and this is all of it: for each day you had the app open signed in, up to three words — that you opened it, that you had added a course by then, and that you had answered a card by then. No screen names, no titles, no course, no counts, no time of day, nothing about what you wrote or read. It is kept for a little over a year and then dropped, it is not in your export, deleting your account deletes it, and — this is the part worth saying plainly — it is ours, sent nowhere else. There is still no third-party analytics in this app and there is no tracking of you across the web. Signed out, none of it happens at all.',
+      'Semester is being piloted, and three questions decide whether it is worth building further: how many people who sign up get a course of their own in and study from it, how many open it in a given week, and how many are still opening it a month later. Answering them needs a record, and this is all of it: for each day you had the app open signed in, up to three words — that you opened it, that you had added a course by then, and that you had answered a card by then. No screen names, no titles, no course, no counts, no time of day, nothing about what you wrote or read. It is kept for a little over a year and then dropped, it is in the account download on this page, deleting your account deletes it, and — this is the part worth saying plainly — it is ours, sent nowhere else. There is still no third-party analytics in this app and there is no tracking of you across the web. Signed out, none of it happens at all.',
   },
   {
     heading: 'Who can see your rows',
     body:
-      'Only you. Every table is protected by row-level security keyed to your account, which is enforced by the database rather than by the app asking politely. A shared practice paper is the one exception and it is deliberate: you generate a link, and anyone with the link can open that one paper.',
+      'Your private rows are protected by row-level security keyed to your account, enforced by the database rather than by the app asking politely. There are five deliberate exceptions. A shared practice paper is visible to anyone holding its link. A support summary is visible only to the one verified university supporter you name, for the one-to-seven-day window you approve; every read is recorded, and raw notes, sources, recordings and mistake detail remain private. A help request you send to a campus office carries your name, your university email and only what you wrote and ticked on the confirm screen, is readable only by staff who answer for that office, and every time one of them opens it is recorded where you can see it; withdrawing it erases what it said. A question you send to Semester support is read by Semester\'s support staff, and carries only what you wrote and the app details you ticked — never your name or email address; deleting your account deletes it. If you join an invite-only beta, the feedback you send it is read by Semester’s support staff, without your name or address attached.',
   },
 ];
 
@@ -279,4 +280,3 @@ export const SYNCED_FIELDS = SYNC_GROUPS.flatMap((g) => g.keys);
 
 /** Fields that must never appear in what is uploaded. */
 export const NEVER_SYNCED = ['apiKey', 'anthropicKey', 'sessionToken', 'password'];
-

@@ -15,13 +15,14 @@
  * names are `AppGrid`'s, which is the Tools tab's home screen. The membership
  * and the order are `lib/apps.ts`'s, which is the registry's.
  *
- * What is here is the arrangement: shelves, each named, in the order the
- * student left them.
+ * What is here is the arrangement: the seven navigation areas
+ * (`lib/navareas.ts`), each named, with the apps inside each in the order the
+ * student left their tiles.
  */
 
 import { useStore } from '../../state/store';
 import { currentLook } from '../../state/shape';
-import { appCount, appShelves } from '../../lib/apps';
+import { appCount, appSections } from '../../lib/apps';
 import { saysFor, shortFor } from '../../lib/nav';
 import { Caps } from '../soft/Soft';
 import { AppGrid } from './AppGrid';
@@ -33,8 +34,8 @@ export function AllApps({ onClose }: { onClose: () => void }) {
   /* The shell draws its own launcher. One open menu at a time — fix #11. */
   const modern = useModernShell();
   const caps = school.capabilities;
-  const shelves = appShelves(caps, currentLook(state).groupOrder, state.role);
-  const count = appCount(shelves);
+  const sections = appSections(caps, currentLook(state).groupOrder, state.role);
+  const count = appCount(sections);
 
   if (modern) return null;
 
@@ -45,11 +46,11 @@ export function AllApps({ onClose }: { onClose: () => void }) {
       sub={count === 1 ? '1 screen' : `${count} screens`}
       onClose={onClose}
     >
-      {shelves.map((shelf) => (
-        <section key={shelf.group}>
-          <Caps quiet>{shelf.group}</Caps>
+      {sections.map(({ area, apps }) => (
+        <section key={area.id}>
+          <Caps quiet>{area.label}</Caps>
           <AppGrid
-            apps={shelf.apps}
+            apps={apps}
             // The name this school uses, cut to the column when this school
             // has no name of its own for it. `shortFor` holds both halves.
             says={(d) => ({ label: shortFor(d, caps), blurb: saysFor(d, caps).blurb })}

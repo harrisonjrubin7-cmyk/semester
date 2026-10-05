@@ -1,11 +1,20 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { ActionJournal } from './journal.ts';
+import { ActionJournal, type ActionJournalStore } from './journal.ts';
+import { PostgresActionJournal } from './postgres-journal.ts';
+import { MemoryRateLimiter, PostgresRateLimiter } from './rate-limit.ts';
+import { MemoryIntelligenceActionStore, PostgresIntelligenceActionStore } from './intelligence-action-store.ts';
 import { MAX_BODY, createGateway } from './gateway.ts';
 import { supabaseIdentity } from './auth.ts';
+import {
+  createMembershipResolver,
+  supabaseMembershipDirectory,
+  supabaseSsoConfigLoader,
+} from './membership.ts';
 import { adapters } from './adapters.ts';
 import { SANDBOX_NAME, SandboxStore, sandboxAdapters } from './sandbox.ts';
+import { createInstitutionIntelligenceRuntime } from './intelligence-runtime.ts';
 
 /**
  * The process. Everything the gateway needs before it can answer anything.
@@ -103,11 +112,11 @@ function sandboxPath(): string {
   return file;
 }
 
-function openJournal(): ActionJournal {
+function openJournal(key: Buffer): ActionJournal {
   const file = resolve(process.env.SEMESTER_JOURNAL_PATH || 'work/university/private/actions.sqlite');
   // 0o700: the directory holding prepared actions is not world-readable.
   mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
-  return new ActionJournal(file, journalKey());
+  return new ActionJournal(file, key);
 }
 
 /**
@@ -137,9 +146,25 @@ function headersOf(req: IncomingMessage): Headers {
   return headers;
 }
 
-const journal = openJournal();
 const authUrl = process.env.SEMESTER_AUTH_URL || '';
 const authKey = process.env.SEMESTER_AUTH_PUBLIC_KEY || '';
+const authServiceKey = process.env.SEMESTER_AUTH_SERVICE_KEY || '';
+const ssoDomain = (process.env.SEMESTER_SSO_DOMAIN || '').trim().toLowerCase();
+const ssoLabel = (process.env.SEMESTER_SSO_LABEL || '').trim();
+const key = journalKey();
+const sharedStore = process.env.SEMESTER_GATEWAY_STORE === 'postgres';
+if (sharedStore && (!authUrl || !authServiceKey)) {
+  throw new Error('SEMESTER_GATEWAY_STORE=postgres requires SEMESTER_AUTH_URL and SEMESTER_AUTH_SERVICE_KEY.');
+}
+const journal: ActionJournalStore = sharedStore
+  ? new PostgresActionJournal({ url: authUrl, serviceKey: authServiceKey, encryptionKey: key })
+  : openJournal(key);
+const rateLimiter = sharedStore
+  ? new PostgresRateLimiter({ url: authUrl, serviceKey: authServiceKey })
+  : new MemoryRateLimiter();
+const intelligenceActions = sharedStore
+  ? new PostgresIntelligenceActionStore({ url: authUrl, serviceKey: authServiceKey, encryptionKey: key })
+  : new MemoryIntelligenceActionStore();
 
 /*
  * With no auth project configured nothing authenticates, and the gateway
@@ -147,7 +172,18 @@ const authKey = process.env.SEMESTER_AUTH_PUBLIC_KEY || '';
  * unconfigured behaviour: the alternative to checking a token is refusing, not
  * trusting one.
  */
-const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : async () => null;
+const membershipResolver = authUrl && authServiceKey
+  ? createMembershipResolver(
+      supabaseMembershipDirectory(authUrl, authServiceKey),
+      async (event) => console.info(JSON.stringify({ event: 'institution.authorization', ...event })),
+    )
+  : null;
+const authenticate = authUrl && authKey && membershipResolver
+  ? supabaseIdentity(authUrl, authKey, membershipResolver)
+  : async () => null;
+const loadSsoConfig = authUrl && authServiceKey && ssoDomain && ssoLabel
+  ? supabaseSsoConfigLoader(authUrl, authServiceKey, ssoDomain, ssoLabel)
+  : async () => null;
 
 /*
  * The sandbox, when it is asked for.
@@ -159,6 +195,35 @@ const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : a
 const sandboxOn = process.env.SEMESTER_SANDBOX_INSTITUTION === '1';
 const sandboxStore = sandboxOn ? new SandboxStore(sandboxPath()) : null;
 const installed = sandboxStore ? [...adapters, ...sandboxAdapters(sandboxStore)] : adapters;
+const configuredModels = (process.env.SEMESTER_AI_PROVIDERS || '')
+  .split(',')
+  .map((model) => model.trim())
+  .filter(Boolean);
+const maxRequestCents = Number(process.env.SEMESTER_AI_MAX_REQUEST_CENTS || '0');
+const estimatedRequestCents = Number(process.env.SEMESTER_AI_ESTIMATED_REQUEST_CENTS || '0');
+const configuredRuntimeStatus = process.env.SEMESTER_AI_RUNTIME_STATUS === 'production'
+  ? 'configured-production' as const
+  : 'configured-sandbox' as const;
+
+/*
+ * This remains policy-disabled unless every server-only provider requirement
+ * is present. Tenant policy, approved source bodies, budget reservation and
+ * usage settlement are loaded authoritatively from Supabase on every request;
+ * a VITE_ flag or browser-supplied production claim cannot enable it.
+ */
+const intelligence = createInstitutionIntelligenceRuntime({
+  authUrl,
+  authServiceKey,
+  openAIKey: process.env.OPENAI_API_KEY || '',
+  configuredModels,
+  maxRequestCents,
+  estimatedRequestCents,
+  status: configuredRuntimeStatus,
+  audit: journal.auditIntelligence
+    ? (identity, record) => journal.auditIntelligence!(identity, record)
+    : undefined,
+  actionStore: intelligenceActions,
+});
 
 const handler = createGateway({
   origin: appOrigin(),
@@ -167,8 +232,16 @@ const handler = createGateway({
   // the plan's "never a placeholder success state presented as real" names.
   institutionName: sandboxOn ? SANDBOX_NAME : process.env.SEMESTER_INSTITUTION_NAME || 'Your university',
   authenticate,
+  refreshIdentity: async (_identity, token) => authenticate(token),
   adapters: installed,
   journal,
+  rateLimiter,
+  intelligence,
+  loadSsoConfig,
+  // `SEMESTER_READ_ONLY=on` refuses every write (docs/FEATURE-FLAG-REGISTRY.md,
+  // "Read-only mode"). Only the exact word, so a stray value cannot freeze a
+  // gateway by accident; read per request so a restart is not part of ending it.
+  readOnly: () => (process.env.SEMESTER_READ_ONLY || '').trim().toLowerCase() === 'on',
 });
 
 async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -217,14 +290,14 @@ server.listen(port, '127.0.0.1', () => {
 });
 
 // Hourly, and unref'd so a sweep never holds the process open by itself.
-const sweep = setInterval(() => journal.purge(), 3_600_000);
+const sweep = setInterval(() => void journal.purge?.(), 3_600_000);
 sweep.unref();
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
     server.close(() => {
       clearInterval(sweep);
-      journal.close();
+      void journal.close?.();
       sandboxStore?.close();
       process.exit(0);
     });

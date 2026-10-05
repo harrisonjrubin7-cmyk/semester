@@ -3,6 +3,7 @@ import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { isOfficeHours, nextSitting, whenLine } from '../lib/officehours';
 import { Folding } from './Fold';
+import { shownTime } from '../lib/date';
 
 /**
  * A course's office hours, on the course, always.
@@ -62,7 +63,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
             {h.title}
             {h.meta ? <span style={{ color: 'var(--app-dim)' }}> · {h.meta}</span> : null}
           </span>
-          <span style={{ flex: 'none', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{h.time}</span>
+          <span style={{ flex: 'none', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{shownTime(h.time, h.at)}</span>
         </div>
       ))}
       {next ? (

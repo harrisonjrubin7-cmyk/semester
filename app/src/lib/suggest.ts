@@ -24,7 +24,7 @@
 import { FIELDS, PROGRAMMES, YEARS, type Programme, type Year } from '../data/fellowships';
 import { newApplication, type Application } from './apply';
 // The months, said in full, from the one list that holds them.
-import { MONTH_NAMES as MONTHS } from './date';
+import { monthLongOf } from './date';
 
 /** How far ahead a programme's window counts as "about now". */
 export const SOON_MONTHS = 3;
@@ -80,7 +80,7 @@ export function suggest(
  */
 export function whenLine(p: Programme, now: Date): string {
   const sorted = [...p.months].sort((a, b) => monthsUntil(a, now) - monthsUntil(b, now));
-  const names = sorted.slice(0, 3).map((m) => MONTHS[m]);
+  const names = sorted.slice(0, 3).map((m) => monthLongOf(m));
   const list =
     names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
   return `Usually open around ${list} — a rough guide the app has not checked.`;

@@ -1,0 +1,19 @@
+# Semester: how to report a security problem (RFC 9116).
+#
+# The address is the one the owner holds. A company-domain address would be
+# invented, which docs/DECISION-LOG.md D-110 forbids; one arrives with the
+# domain. What happens to a report, the severity model and the clock each
+# severity is held to are in the Policy document. app/src/lib/security.test.ts
+# holds this file to that document and fails once Expires has passed.
+#
+# This file is served under the app's base path (Canonical, below), not at
+# the origin root where RFC 9116 discovery starts, because the app is a
+# project site on a shared origin. A scanner beginning at the origin's own
+# /.well-known/security.txt will not find it until the app is served from a
+# domain the project controls; until then the Canonical URL is published on
+# the site's /security/ page for a person to follow.
+Contact: mailto:harrisonjrubin7@gmail.com
+Expires: 2027-03-31T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://harrisonjrubin7-cmyk.github.io/semester/.well-known/security.txt
+Policy: https://github.com/harrisonjrubin7-cmyk/semester/blob/main/SECURITY.md

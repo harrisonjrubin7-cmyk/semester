@@ -72,7 +72,7 @@ export function sourceName(source: CalSource): string {
     : source === 'classes'
       ? 'classes or anything you have added to a day'
       : source === 'deadlines'
-        ? 'deadlines or your own tasks'
+        ? 'deadlines or your own actions'
         : 'campus events';
 }
 

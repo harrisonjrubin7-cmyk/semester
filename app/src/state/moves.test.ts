@@ -52,7 +52,7 @@ describe('moving one of your own tasks', () => {
     // moment it lands. See the note in `lib/undo.ts`.
     const before = withTask();
     const after = act(before, { type: 'moveTask', id: before.tasks[0].id, date: '2026-09-17' });
-    expect(after.undone?.label).toBe('Task moved');
+    expect(after.undone?.label).toBe('Action moved');
     const back = act(after, { type: 'undo' });
     expect(back.tasks[0].date).toBe('2026-09-10');
   });

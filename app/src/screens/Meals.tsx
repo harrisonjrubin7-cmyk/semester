@@ -1,5 +1,5 @@
 import {CampusDirectory, MealPlanner} from '../components/CampusDirectory';
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -7,6 +7,7 @@ import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import { readTerm } from '../lib/term';
 import { termEnds as lastDayOfTerm } from '../lib/registrar';
@@ -21,6 +22,7 @@ import {
   readSwipes,
   staleLine,
 } from '../lib/meals';
+import { formatDate } from '../lib/locale';
 
 /**
  * Swipes, Commodore Cash, and the week they run out.
@@ -51,7 +53,8 @@ function MealsDetails() {
   const [swipes, setSwipes] = useState('');
   const [cash, setCash] = useState('');
   const [dining, setDining] = useState('');
-  const [bad, setBad] = useState('');
+  const fields = useFieldErrors(['swipes', 'cash', 'dining'] as const);
+  const hint = useId();
 
   const mine = useMemo(() => forTerm(state.balances, state.term), [state.balances, state.term]);
   const latest = mine[0];
@@ -70,18 +73,17 @@ function MealsDetails() {
     const n = readSwipes(swipes);
     const c = readMoney(cash || '0');
     const d = dining.trim() ? readMoney(dining) : -1;
-    if (swipes.trim() && n === null) {
-      setBad('Swipes has to be a whole number, or left blank for a plan without them.');
-      return;
-    }
-    if (c === null || d === null) {
-      setBad('That is not an amount the app can read. Try 42.50, or $42.50.');
-      return;
-    }
-    if (!swipes.trim() && !cash.trim() && !dining.trim()) {
-      setBad('Nothing to log yet.');
-      return;
-    }
+    const empty = !swipes.trim() && !cash.trim() && !dining.trim();
+    const ok = fields.check({
+      swipes: empty
+        ? 'Nothing to log yet.'
+        : swipes.trim() && n === null
+          ? 'Swipes has to be a whole number, or left blank for a plan without them.'
+          : '',
+      cash: c === null ? 'That is not an amount the app can read. Try 42.50, or $42.50.' : '',
+      dining: d === null ? 'That is not an amount the app can read. Try 42.50, or $42.50.' : '',
+    });
+    if (!ok || c === null || d === null) return;
     dispatch({
       type: 'logBalance',
       balance: {
@@ -95,7 +97,7 @@ function MealsDetails() {
     setSwipes('');
     setCash('');
     setDining('');
-    setBad('');
+    fields.clear();
   };
 
   return (
@@ -139,6 +141,18 @@ function MealsDetails() {
         </a>
       ) : null}
 
+      {/* What the card office says, once a school connects it: its own screen
+          (`Dining.tsx`), linked rather than merged — these are your readings,
+          that is the school's figure. */}
+      <button
+        type="button"
+        className="btn btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'dining' })}
+        style={{ height: 42, marginTop: 'var(--sp-4)' }}
+      >
+        Dining from your school’s card office
+      </button>
+
       {/*
         What the school says a plan holds, against what you have left.
         `SchoolData.mealPlanTiers` was in the profile and read by nothing;
@@ -178,7 +192,8 @@ function MealsDetails() {
       )}
 
       <SectionLabel>Log what it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
+      <ErrorSummary {...fields.summary({ swipes: 'Meal swipes left', cash: 'Commodore Cash', dining: 'Meal money' })} />
+      <div id={hint} style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
         Leave a field blank if your plan does not have it. Two readings a few days apart is what
         turns a balance into a rate.
       </div>
@@ -190,7 +205,11 @@ function MealsDetails() {
           aria-label="Meal swipes left"
           placeholder="Swipes"
           inputMode="numeric"
-          onChange={(e) => setSwipes(e.target.value)}
+          {...fields.control('swipes', hint)}
+          onChange={(e) => {
+            setSwipes(e.target.value);
+            fields.clear('swipes');
+          }}
           style={{ flex: 1, minWidth: 0 }}
         />
         <input
@@ -199,7 +218,11 @@ function MealsDetails() {
           aria-label="Commodore Cash"
           placeholder="Cash"
           inputMode="decimal"
-          onChange={(e) => setCash(e.target.value)}
+          {...fields.control('cash', hint)}
+          onChange={(e) => {
+            setCash(e.target.value);
+            fields.clear('cash');
+          }}
           style={{ flex: 1, minWidth: 0 }}
         />
         <input
@@ -208,16 +231,22 @@ function MealsDetails() {
           aria-label="Meal money"
           placeholder="Meal $"
           inputMode="decimal"
-          onChange={(e) => setDining(e.target.value)}
+          {...fields.control('dining', hint)}
+          onChange={(e) => {
+            setDining(e.target.value);
+            fields.clear('dining');
+          }}
           style={{ flex: 1, minWidth: 0 }}
         />
       </div>
 
-      {bad ? (
-        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
-          {bad}
-        </div>
-      ) : null}
+      {/* Under the row rather than under each box: three boxes side by side
+          at 320px leave no width for a sentence under one of them. */}
+      <div style={{ marginBottom: Object.keys(fields.errors).length ? 'var(--sp-4)' : 0 }}>
+        <FieldMessage {...fields.message('swipes')} />
+        <FieldMessage {...fields.message('cash')} />
+        <FieldMessage {...fields.message('dining')} />
+      </div>
 
       <button type="button" className="btn btn-secondary btn-block" onClick={log} style={{ height: 42 }}>
         Log it
@@ -240,7 +269,7 @@ function MealsDetails() {
             <CustomRow key={r.id} pad={9}>
               <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
-                {new Date(r.at).toLocaleDateString()}
+                {formatDate(r.at)}
               </span>
               <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
                 {r.swipes >= 0 ? `${r.swipes} swipes` : '—'}

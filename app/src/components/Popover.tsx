@@ -86,6 +86,10 @@ export function Popover({
   label,
   corner,
   width = 232,
+  open = true,
+  className,
+  id,
+  anchor,
   onClose,
   children,
 }: {
@@ -94,10 +98,17 @@ export function Popover({
   corner: Corner;
   /** Wide enough for its longest row and no wider. */
   width?: number;
+  /** Keep stateful tools mounted while closed (for example, read-aloud). */
+  open?: boolean;
+  className?: string;
+  /** Associates a trigger's `aria-controls` with this panel. */
+  id?: string;
+  /** The opener handles its own toggle; do not dismiss on its pointerdown. */
+  anchor?: HTMLElement | null;
   onClose: () => void;
   children: ReactNode;
 }) {
-  const { ref: box, onKeyDown } = useModal<HTMLDivElement>({ onClose });
+  const { ref: box, onKeyDown } = useModal<HTMLDivElement>({ onClose, on: open });
   /*
    * Where it actually opens, once its height is known.
    *
@@ -106,24 +117,28 @@ export function Popover({
    * Effect` rather than `useEffect` so the correction lands before the paint
    * and the panel does not visibly jump up the screen.
    */
-  const [top, setTop] = useState(corner.y);
+  const [position, setPosition] = useState({ top: corner.y, left: corner.x });
   useLayoutEffect(() => {
     const panel = box.current;
-    if (!panel) return;
+    if (!panel || !open) return;
     const place = () => {
       const tall = panel.offsetHeight;
       const room = window.innerHeight - EDGE;
-      if (corner.y + tall <= room) return setTop(corner.y);
+      const wide = panel.offsetWidth || Math.min(width, window.innerWidth - 2 * EDGE);
+      const left = Math.max(EDGE, Math.min(corner.x, window.innerWidth - wide - EDGE));
+      if (corner.y + tall <= room) return setPosition({ top: Math.max(EDGE, corner.y), left });
       // Above the corner, the way every context menu flips. `corner.y` is the
       // bottom of the control that summoned it, so `GAP` keeps the panel off
       // the control rather than under it.
       const above = corner.y - tall - GAP;
-      setTop(above >= EDGE ? above : Math.max(EDGE, room - tall));
+      setPosition({ top: Math.max(EDGE, Math.min(above, room - tall)), left });
     };
     place();
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
+    resize?.observe(panel);
     window.addEventListener('resize', place);
-    return () => window.removeEventListener('resize', place);
-  }, [box, corner.x, corner.y, children]);
+    return () => { resize?.disconnect(); window.removeEventListener('resize', place); };
+  }, [box, corner.x, corner.y, children, open, width]);
 
   /*
    * A click anywhere else closes it, and it is `pointerdown` rather than
@@ -133,24 +148,35 @@ export function Popover({
    * beneath. Captured, so a control that stops the event still dismisses it.
    */
   useEffect(() => {
+    if (!open) return;
     const away = (e: PointerEvent) => {
-      if (box.current && e.target instanceof Node && !box.current.contains(e.target)) onClose();
+      if (box.current && e.target instanceof Node && !box.current.contains(e.target) && !anchor?.contains(e.target)) onClose();
     };
     window.addEventListener('pointerdown', away, true);
-    return () => window.removeEventListener('pointerdown', away, true);
-  }, [box, onClose]);
+    const scroll = (e: Event) => {
+      if (e.target instanceof Node && !box.current?.contains(e.target)) onClose();
+    };
+    window.addEventListener('scroll', scroll, true);
+    return () => {
+      window.removeEventListener('pointerdown', away, true);
+      window.removeEventListener('scroll', scroll, true);
+    };
+  }, [box, onClose, open, anchor]);
 
   const panel = (
     <div
       ref={box}
+      id={id}
+      className={className}
+      hidden={!open}
       role="dialog"
       aria-modal="false"
       aria-label={label}
       onKeyDown={onKeyDown}
       style={{
         position: 'fixed',
-        left: Math.max(EDGE, Math.min(corner.x, window.innerWidth - width - EDGE)),
-        top,
+        left: position.left,
+        top: position.top,
         zIndex: 90,
         width,
         maxWidth: 'calc(100vw - 16px)',

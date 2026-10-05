@@ -1,0 +1,6 @@
+-- Compatibility marker for the production ledger entry recorded by the
+-- read-only-verified covering-index application on 1 October 2026.
+-- Production already has productivity_workspace_tenant_fk on tenant_id.
+-- The canonical schema implementation is
+-- 20261001171000_productivity_workspace_covering_index.sql.
+-- This timestamp performs no schema or data change and does not mutate history.

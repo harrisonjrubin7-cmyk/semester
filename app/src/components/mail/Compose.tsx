@@ -352,9 +352,8 @@ export function Compose({
                   `Deck`, `Import` and `changes/FromText` draw it. What was
                   here was the other shape: a primary button turned off, and
                   under it a line of `secondLine()` prose naming a third
-                  wording for one destination — "Ask Claude → Settings", where
-                  `Update` said "Connect → Claude" and the settings index calls
-                  it "The assistant". `components/NeedsKey.tsx` was written
+                  wording for one destination — the assistant settings — where
+                  other screens used different provider names. `components/NeedsKey.tsx` was written
                   because that sentence with no button on it is a dead end
                   with directions printed on it.
                 */}

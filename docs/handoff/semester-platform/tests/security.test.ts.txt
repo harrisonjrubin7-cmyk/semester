@@ -1,0 +1,18 @@
+// Proves migration 050. Run against local Supabase: npx supabase start && npx vitest run tests/security.test.ts
+// Each test should FAIL before 050 is applied and PASS after (record both runs in the PR).
+import { describe, it, expect } from 'vitest';
+import { asUser, anon } from './helpers';
+describe('050 security hardening', () => {
+  it('F1 students read only their own institution row', async () => { const c = await asUser('student@campus-a.test'); const { data } = await c.schema('core').from('institutions').select('id'); expect((data ?? []).map(r => r.id)).toEqual([process.env.CAMPUS_A]); });
+  it('F2 tenant users cannot read or insert ops.staff', async () => { const c = await asUser('student@campus-a.test'); const r = await c.schema('ops').from('staff').select('id'); expect(r.data ?? []).toHaveLength(0); const w = await c.schema('ops').from('staff').insert({ id: process.env.STUDENT_A_ID, role: 'ceo' }); expect(w.error).not.toBeNull(); });
+  it('F4 students cannot read other profiles directly', async () => { const c = await asUser('student@campus-a.test'); const { data } = await c.schema('core').from('profiles').select('id').neq('id', process.env.STUDENT_A_ID); expect(data ?? []).toHaveLength(0); });
+  it('F4 directory shows only findable people and visible fields', async () => { const c = await asUser('student@campus-a.test'); const { data } = await c.schema('core').from('directory').select('*'); expect((data ?? []).every(r => !('role' in r) && !('visibility' in r))).toBe(true); });
+  it('F5 users cannot move themselves to another institution', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.schema('core').from('profiles').update({ institution_id: process.env.CAMPUS_B }).eq('id', process.env.STUDENT_A_ID); expect(error).not.toBeNull(); });
+  it('F5 users cannot change their role', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.schema('core').from('profiles').update({ role: 'registrar' }).eq('id', process.env.STUDENT_A_ID); expect(error).not.toBeNull(); });
+  it('F6 clients cannot call audit.log', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.schema('audit').rpc('log', { a: 'fake', t: 'x', b: {}, af: {} }); expect(error).not.toBeNull(); });
+  it('F7 audit rows cannot be deleted', async () => { const c = await asUser('it@campus-a.test'); const { data } = await c.schema('audit').from('events').delete().neq('id', 0).select(); expect(data ?? []).toHaveLength(0); });
+  it('F8 bidders are not visible to other students', async () => { const c = await asUser('student2@campus-a.test'); const { data } = await c.schema('market').from('bids').select('bidder'); expect((data ?? []).every(r => r.bidder === process.env.STUDENT2_ID)).toBe(true); });
+  it('F9 non-members cannot list group members', async () => { const c = await asUser('student2@campus-a.test'); const { data } = await c.schema('community').from('members').select('profile_id').eq('group_id', process.env.PRIVATE_GROUP); expect(data ?? []).toHaveLength(0); });
+  it('F10 cannot RSVP to another campus event', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.schema('community').from('rsvps').insert({ event_id: process.env.CAMPUS_B_EVENT, profile_id: process.env.STUDENT_A_ID }); expect(error).not.toBeNull(); });
+  it('F11 anonymous clients read nothing', async () => { const c = anon(); for (const [s, t] of [['core','profiles'],['community','posts'],['market','listings'],['ops','accounts']]) { const { data } = await c.schema(s).from(t).select('*').limit(1); expect(data ?? []).toHaveLength(0); } });
+});

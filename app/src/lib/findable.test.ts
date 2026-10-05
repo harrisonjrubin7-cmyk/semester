@@ -31,6 +31,9 @@ import type { Screen } from './types';
  * which cards you meant.
  */
 const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
+  activity: 'Your own activity trail. Opened from the control surface under Me, which is its home the way Settings is its pages’ (lib/mecontrols.ts).',
+  whatsnew: 'What changed in the app. Opened from the control surface under Me, which is its home.',
+  recovery: 'Where to start when something went missing. Opened from the control surface under Me, and from Activity.',
   onboarding: 'The first run. It opens itself, once, and Settings → About can replay it.',
   course: 'One course. Opened from Courses, from a deadline, or from a search result.',
   item: 'One deadline. Opened from the course it belongs to, or from Today.',
@@ -47,6 +50,29 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
     'The workspace’s search home — the wordmark, the one field and the shortcuts. ' +
     'What a new tab opens on, and what the Search home row in the sidebar returns to. ' +
     'Not a destination for the same reason a browser’s new-tab page is not a bookmark.',
+  community:
+    'Registered in DESTINATIONS only while its build switches are on (COMMUNITY_DESTINATION in lib/nav.ts); ' +
+    'with them off it is not a place in the app at all.',
+  volunteers:
+    'Managing the volunteer programme. A staff tool opened from the Trust & Safety console, only for a senior reviewer.',
+  agreements:
+    'Escalation agreements. A staff tool opened from the Trust & Safety console, only for an account that holds the agreement capability.',
+  volunteer:
+    'Volunteer moderation. Opened from Community, and only when the build flag and the school’s programme switch are both on.',
+  moderation:
+    'The Trust & Safety review queue. A staff tool, opened from Community by an account the server says holds a reviewer role.',
+  console:
+    'The operations console. A staff tool at #/console for an account the server says holds console:operate at platform scope; ' +
+    'anyone else sees one sentence, and no student surface offers it.',
+  dining:
+    'Dining from the school’s card office, behind module.dining, which no school has on. Opened from Meal plan and at #/dining; ' +
+    'with the module off it says so in one sentence rather than offering a tile that opens onto nothing.',
+  registration:
+    'Enrollment in the school’s own registration ledger, behind writeback.registration_submit and off at every school today. ' +
+    'Opened at #/registration and from the Registration planner, and it says in one sentence whether the school has it on.',
+  gradebook:
+    'The gradebook of record, behind writeback.lms_grade_passback and off at every school today. ' +
+    'Opened at #/gradebook and from the Grades tab, and it says in one sentence whether the school has it on.',
   directory:
     'Every app this student has, as a list or a grid. Opened from All apps in the ' +
     'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +

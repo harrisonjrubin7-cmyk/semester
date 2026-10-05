@@ -44,6 +44,11 @@ export const SECTIONS: FeedSection[] = [
     blurb: 'A day in the next fortnight that will not fit — two exams, a stack at midnight, or more hours than the day holds.',
   },
   {
+    id: 'school',
+    label: 'From your school',
+    blurb: 'Registration readiness, holds, enrollment and degree audit, with where each came from. Only when your school shares them.',
+  },
+  {
     id: 'windows',
     label: 'Time to say something',
     blurb: 'Regrade windows still open on work that has come back. Nothing when none is.',
@@ -80,7 +85,7 @@ export const SECTIONS: FeedSection[] = [
     label: 'A payment due',
     blurb: 'The next tuition instalment, once one is close. Nothing until it is, and nothing at all without a bill entered.',
   },
-  { id: 'tasks', label: 'Your own tasks', blurb: 'Things you added that are not from a syllabus.' },
+  { id: 'tasks', label: 'Your own actions', blurb: 'Things you added that are not from a syllabus.' },
   { id: 'rail', label: 'Today’s rail', blurb: 'The day hour by hour.' },
   {
     id: 'begin',

@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { SourceBadge } from '../components/SourceBadge';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { CloseTerm } from '../components/CloseTerm';
+import { TermTransition } from '../components/TermTransition';
 import { TermSwitch } from '../components/TermSwitch';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -21,6 +24,9 @@ import {
 } from '../lib/registrar';
 import { SEMESTER_YEAR, isoToDate, longLabel } from '../lib/date';
 
+const OfficeActionFeed = lazy(() => import('../components/OfficeActionFeed').then((m) => ({ default: m.OfficeActionFeed })));
+const OfficeActionDesk = lazy(() => import('../components/OfficeActionDesk').then((m) => ({ default: m.OfficeActionDesk })));
+
 /**
  * The dates the university sets, entered once.
  *
@@ -34,8 +40,12 @@ import { SEMESTER_YEAR, isoToDate, longLabel } from '../lib/date';
  * screen too: a wrong withdrawal deadline that looks confident is worse than
  * an empty field that asks.
  */
-export function Registrar() {
-  const { state, dispatch, school } = useStore();
+export function Registrar({
+  // Campus office actions (Phase J): the full feed, and the office desk for
+  // an account the database says may publish.
+  officeActions = moduleOn(MODULE_FLAGS.office_action_feed),
+}: { officeActions?: boolean } = {}) {
+  const { state, dispatch, school, account } = useStore();
   const now = useNow();
   const rowEleven = useRowStyle(11);
   const [tab, setTab] = useState<'dates' | 'paste' | 'school'>('dates');
@@ -223,6 +233,10 @@ export function Registrar() {
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>
+        {/* The app ships none of these dates: each is typed or confirmed by the student, pasted and school-calendar ones included. */}
+        <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)' }}>
+          <SourceBadge label="student_entered" />
+        </div>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           Every other date in this app came off a syllabus. These come from your registrar, and
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
@@ -252,6 +266,13 @@ export function Registrar() {
           ))}
         </Group>
       )}
+
+      {officeActions ? (
+        <Suspense fallback={<p role="status">Loading campus office actions…</p>}>
+          <OfficeActionFeed enabled />
+          <OfficeActionDesk key={account?.id ?? 'signed-out'} signedIn={Boolean(account)} />
+        </Suspense>
+      ) : null}
 
       <Segmented
         options={[
@@ -371,6 +392,7 @@ export function Registrar() {
       <TermSwitch />
       {/* The end-of-term five minutes. See `lib/rollover.ts`. */}
       <CloseTerm />
+      <TermTransition />
 
     </>
     </Page>

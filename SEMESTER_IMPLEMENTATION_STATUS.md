@@ -198,7 +198,7 @@ Organizations and Events: absent entirely. Courses: **Built**.
 | | |
 | --- | --- |
 | Blocking | **Built** — `public.blocks`, RLS-enforced |
-| Reporting | **Built**, stored — §58 |
+| Reporting | **Partly** — messages and Community posts are stored and reviewed; users, organizations and events cannot be reported yet (§58) |
 | Shared courses | **Built** — the room *is* the shared course |
 | Connection requests, accept, decline, remove | **Absent** — no table |
 | Following, followers, mutual connections | **Absent** — no table |
@@ -340,7 +340,21 @@ leaves the device; `screens/Export.tsx` takes it all with you; `screens/Data.tsx
 shows what is running. Controls for who sees your profile, courses,
 organizations and connections are absent because those entities are.
 
-## §58 Moderation standard — **P0. Partly built, and the gap is named in the spec**
+## §58 Moderation standard — **Partly** (the queue P0 closed 28 September 2026)
+
+> **Update.** The P0 — three gaps below — is closed, but §58 is not done.
+> Still missing: **reporting a user, an organization or an event.** Two kinds
+> of report exist: a message report from a course room (`lib/classmates.ts`
+> `report()`, into `public.reports`) and a Community post report
+> (`report_community_post`, into `public.community_reports`,
+> `20260928030000_community.sql`). Neither has an organization or event
+> target, and no screen reports a person directly. Closed: `status` with its four values
+> (`20260921214500`), read and move policies on `report:read` /
+> `moderation:action` (`20260922012000`), an append-only audit of every move
+> (`20260924223000`), and the admin interface — `components/ReportQueue.tsx`
+> on University › Services, gated by `public.my_moderation_access()`
+> (`20260928000000`), showing reason and copy but never reporter or subject.
+> The text below is the finding as it stood, kept for the reasoning.
 
 §58 says: *"Reports must persist and have statuses"*, *"Review reports through
 admin interface"*, and *"Do not implement report buttons that disappear into

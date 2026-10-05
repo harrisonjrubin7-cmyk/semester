@@ -1,0 +1,29 @@
+# Who must review a change before it reaches main.
+#
+# One owner today, and that is the gap this file records rather than hides:
+# with a single code owner, "code owner review" can only be satisfied by that
+# person, and GitHub does not let an author approve their own pull request.
+# docs/BRANCH-PROTECTION.md says what that means for the ruleset in
+# .github/rulesets/main.json and what to do about it. Add a second reviewer
+# here — per path if they own only part of the tree — the day there is one.
+
+*                         @harrisonjrubin7-cmyk
+
+# The paths where a mistake is a security or data incident rather than a bug.
+# Listed separately, though the owner is the same today, so a second reviewer
+# can be added to exactly these without owning everything. Later lines win in
+# CODEOWNERS, so each of these must keep every owner the line above names.
+/supabase/migrations/     @harrisonjrubin7-cmyk
+/supabase/functions/      @harrisonjrubin7-cmyk
+/supabase/scheduler.sql   @harrisonjrubin7-cmyk
+/app/server/              @harrisonjrubin7-cmyk
+/app/api/                 @harrisonjrubin7-cmyk
+/packages/institution/    @harrisonjrubin7-cmyk
+/app/index.html           @harrisonjrubin7-cmyk
+/app/vercel.json          @harrisonjrubin7-cmyk
+/app/public/_headers      @harrisonjrubin7-cmyk
+/.github/                 @harrisonjrubin7-cmyk
+
+# Tenant contracts: a school's signed terms as data. Written by the owner alone and
+# never by the school's own administrator (D-1019).
+/contracts/               @harrisonjrubin7-cmyk

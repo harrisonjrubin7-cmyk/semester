@@ -301,12 +301,16 @@ describe('chime', () => {
 });
 
 describe('WIDE', () => {
-  it('lets an iPad in portrait have the rail', () => {
-    // The 11-inch is 834pt wide, the 10.9-inch 820, the 9.7-inch 768. Below
-    // that — an iPad mini upright at 744, and every phone — the app is the
-    // phone it was drawn as.
+  it('gives the rail to the expanded window class, which an iPad held upright is not', () => {
+    // This asserted the opposite until the breakpoints moved to the
+    // adaptive-device contract's window classes: the boundary sat at 760 so
+    // that every iPad upright — 768 to 834pt — got the rail. The contract
+    // decides by window, and puts a portrait tablet in medium with the tab
+    // bar; the rail is for expanded, 840 and up, which the same iPad on its
+    // side (1024 and up) is.
     const px = Number(/(\d+)/.exec(WIDE)?.[1]);
-    expect(px).toBeLessThanOrEqual(768);
-    expect(px).toBeGreaterThan(744);
+    expect(px).toBe(840);
+    expect(px).toBeGreaterThan(834);
+    expect(px).toBeLessThanOrEqual(1024);
   });
 });

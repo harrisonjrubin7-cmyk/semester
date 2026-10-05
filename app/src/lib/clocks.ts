@@ -1,4 +1,5 @@
-import { DOW, dateToIso } from './date';
+import { dateToIso, localClock, weekdayShort, weekdayShortOf } from './date';
+import { appLocale } from './locale';
 /**
  * Timers and alarms — the ordinary kind, for anything.
  *
@@ -293,6 +294,7 @@ export function gaveUp(a: Alarm, now: Date): boolean {
 
 /** "6:40 AM". */
 export function timeLine(minutes: number): string {
+  if (appLocale()) return localClock(minutes);
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   const hour = h % 12 === 0 ? 12 : h % 12;
@@ -307,7 +309,7 @@ export function daysLine(days: number[]): string {
   if (set.size === 7) return 'Every day';
   if (set.size === 5 && [1, 2, 3, 4, 5].every((d) => set.has(d))) return 'Weekdays';
   if (set.size === 2 && set.has(0) && set.has(6)) return 'Weekends';
-  return [...set].sort().map((d) => DOW[d]).join(', ');
+  return [...set].sort().map((d) => weekdayShortOf(d)).join(', ');
 }
 
 /** "In 7 hours", "In 12 minutes", "Tomorrow, 6:40 AM". */
@@ -327,7 +329,7 @@ export function untilLine(a: Alarm, now: Date): string {
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const when = timeLine(a.at);
   if (dateToIso(next) === dateToIso(tomorrow)) return `Tomorrow, ${when}`;
-  return `${DOW[next.getDay()]}, ${when}`;
+  return `${weekdayShort(next)}, ${when}`;
 }
 
 /** Stop it: rung for today, silent, and off if it was only ever for once. */

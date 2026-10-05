@@ -12,7 +12,7 @@ import {
   rgbOf,
   type Check,
 } from './contrast';
-import { ACCENTS, GROUNDS, readLook, tokensFor, warnFor } from './look';
+import { ACCENTS, CHART_HUES, GROUNDS, chartFor, errorFor, readLook, tokensFor, warnFor } from './look';
 
 describe('the arithmetic', () => {
   it('reads both hex forms', () => {
@@ -74,14 +74,15 @@ describe('a colour blended over its background', () => {
 describe('every combination the app will wear', () => {
   const combos = GROUNDS.flatMap((g) => ACCENTS.map((a) => ({ g, a })));
 
-  it('is a hundred and forty-three of them', () => {
-    // Eleven accents and thirteen grounds. I had written "six grounds" in the
+  it('is a hundred and sixty-eight of them', () => {
+    // Twelve accents and fourteen grounds. I had written "six grounds" in the
     // proposal that led to this test and never counted them, which is why the
     // number is asserted rather than described: adding Industry and Industry
-    // Dark moved it from 100 to 132, and Bone moved it to 143. Each time the
+    // Dark moved it from 100 to 132, Bone moved it to 143, and the Semester
+    // ground with its indigo accent moved it to 168. Each time the
     // arithmetic below is what said so.
-    expect(combos).toHaveLength(143);
-    expect(GROUNDS.length * ACCENTS.length).toBe(143);
+    expect(combos).toHaveLength(168);
+    expect(GROUNDS.length * ACCENTS.length).toBe(168);
   });
 
 /**
@@ -169,6 +170,36 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
           needs: AA_LARGE,
         },
       ]),
+
+      /*
+       * Accent-deep on the two surfaces a journey card paints, not only on
+       * the page and the panel.
+       *
+       * `.journey-reason` is set in `--app-accent-deep`. The card rests on
+       * `--app-hero` and, hovered or focused, moves to `--app-raise`. The
+       * pairs above measure accent-deep on `--app-bg` and `--app-panel` and so
+       * could not see either: the browser sweep found it at 3.96:1 on
+       * Industry Dark, hovered, against the 4.5 that every other place this
+       * token is used is held to. Measured across all accents, the raise also
+       * fails on Graphite. Industry Dark's ramp inverts, so its raise is the
+       * lightest step; Graphite's is the step nearest the accent's own value.
+       */
+      {
+        what: `${where} · accent-deep on hero (a journey card at rest)`,
+        ratio: contrast(t['--app-accent-deep'], t['--app-hero']) ?? 0,
+        needs: AA_TEXT,
+      },
+      // Accent-deep does not reach 4.5 on the raise on Graphite (4.20 to 4.48)
+      // or Industry Dark (3.59 to 3.96), so a hovered or focused card sets its
+      // reason in the ground's full-strength ink instead
+      // (`.journey-card:hover .journey-reason` in app.css). The ink is what this
+      // pins; a hover rule that fell back to accent-deep would be caught by the
+      // browser sweep, not here, because it is a stylesheet fact.
+      {
+        what: `${where} · fg on raise (a journey card's reason, hovered or focused)`,
+        ratio: contrast(g.fg, t['--app-raise']) ?? 0,
+        needs: AA_TEXT,
+      },
 
       /*
        * The accent read against its own wash.
@@ -607,6 +638,152 @@ describe('the warning colour, on every ground', () => {
   });
 });
 
+const hueOf = (hex: string): number => {
+  const [r, g, b] = (rgbOf(hex) ?? [0, 0, 0]).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  if (d === 0) return 0;
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return (h * 60 + 360) % 360;
+};
+const hueGap = (a: string, b: string) => {
+  const d = Math.abs(hueOf(a) - hueOf(b));
+  return Math.min(d, 360 - d);
+};
+const rgbDistance = (a: string, b: string) => {
+  const [x, y] = [rgbOf(a)!, rgbOf(b)!];
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+};
+
+// DD-006. The error ink was the warning ink, so "possible conflict" and "this
+// failed" were one colour. It is a rung above now, and every property that
+// makes it one is held here, on every ground and every surface the ground has.
+describe('the error colour, on every ground', () => {
+  it('is legible as body text on every surface, and higher than the warning is asked to be', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const err = errorFor(g);
+      for (const surface of g.ramp) {
+        const c = contrast(err, surface);
+        if (c === null || c < 6) failures.push(`${g.id}: ${err} on ${surface} is ${c?.toFixed(2)}:1`);
+      }
+    }
+    expect(failures, 'the error rung is held to 6:1, the warning to 4.5:1').toEqual([]);
+  });
+
+  it('is never the warning colour, and is redder than it', () => {
+    for (const g of GROUNDS) {
+      expect(errorFor(g), g.id).not.toBe(warnFor(g));
+      // Hue 350 against 14: the error sits on the crimson side of the warning.
+      const e = hueOf(errorFor(g));
+      const w = hueOf(warnFor(g));
+      const eErr = e > 180 ? e - 360 : e;
+      expect(eErr, `${g.id}: error ${errorFor(g)} should lead warn ${warnFor(g)} into red`).toBeLessThan(w);
+      expect(hueGap(errorFor(g), warnFor(g)), `${g.id}: too near the warning to be a rung`).toBeGreaterThanOrEqual(12);
+    }
+  });
+
+  it('is what the shared status components draw a danger tone with', () => {
+    // A review found `unity.css` grouped `[data-tone='danger']` with attention,
+    // so the token above existed and nothing drew it. Any rule that selects the
+    // danger tone or the error panel must reach for a danger token, never the
+    // attention one.
+    const css = readFileSync(join(__dirname, '../styles/unity.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const rules = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map((m) => ({ sel: m[1].trim(), body: m[2] }));
+    const danger = rules.filter((r) => /data-tone='danger'|\.state-error\b|data-state='failed'/.test(r.sel));
+    // Layout-only rules (`.state-error` shares one with its siblings) set no
+    // status colour and are not the point; a rule that does must use danger's.
+    const painting = danger.filter((r) => /--status-/.test(r.body));
+    expect(painting.length, 'the danger rules that set a colour are there to be checked').toBeGreaterThanOrEqual(3);
+    for (const r of painting) {
+      expect(r.body, r.sel).not.toMatch(/--status-attention/);
+      expect(r.body, r.sel).toMatch(/--status-danger/);
+    }
+    // And the pair that stayed attention did not lose it.
+    const offline = rules.find((r) => r.sel === '.state-offline' && /status-attention/.test(r.body));
+    expect(offline, '.state-offline stays on the attention rung').toBeTruthy();
+  });
+
+  it('is what the danger status paints with', () => {
+    const tokens = readFileSync(join(__dirname, '../styles/tokens.css'), 'utf8');
+    expect(tokens).toMatch(/--status-danger:\s*var\(--app-error\)/);
+    expect(tokens).toMatch(/--status-attention:\s*var\(--app-warn\)/);
+    const t = tokensFor({}, false);
+    expect(t['--app-error']).toBe(errorFor(GROUNDS[0]));
+    expect(t['--app-error']).not.toBe(t['--app-warn']);
+  });
+});
+
+// The chart series. A bar or a line is a graphic, so the bar is WCAG 1.4.11's
+// 3:1 (not 4.5:1), but it is measured the way CLAUDE.md asks the faint rung to
+// be: against every surface the ground has, not the one that flatters it.
+describe('the chart series, on every ground', () => {
+  it('has five, and the stylesheet root carries all five', () => {
+    expect(CHART_HUES).toHaveLength(5);
+    for (const g of GROUNDS) {
+      const series = chartFor(g);
+      expect(series, g.id).toHaveLength(5);
+      const t = tokensFor({ ground: g.id }, false);
+      series.forEach((hex, i) => expect(t[`--chart-${i + 1}`], `${g.id} --chart-${i + 1}`).toBe(hex));
+    }
+  });
+
+  it('clears 3:1 on every surface of every ground', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      chartFor(g).forEach((hex, i) => {
+        for (const surface of g.ramp) {
+          const c = contrast(hex, surface);
+          if (c === null || c < 3) failures.push(`${g.id}: series ${i + 1} ${hex} on ${surface} is ${c?.toFixed(2)}:1`);
+        }
+      });
+    }
+    expect(failures, 'WCAG 1.4.11 asks 3:1 of a graphical object').toEqual([]);
+  });
+
+  it('keeps the five apart from each other, and from the error colour', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const series = chartFor(g);
+      for (let i = 0; i < series.length; i += 1) {
+        for (let j = i + 1; j < series.length; j += 1) {
+          if (rgbDistance(series[i], series[j]) < 60) failures.push(`${g.id}: series ${i + 1} and ${j + 1} are ${rgbDistance(series[i], series[j]).toFixed(0)} apart`);
+        }
+        // Red is the error's. A series in it would read as a failure.
+        if (hueGap(series[i], errorFor(g)) < 40) failures.push(`${g.id}: series ${i + 1} ${series[i]} reads as the error ${errorFor(g)}`);
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('gives neighbouring series different luminance, for the reader who cannot tell the hues apart', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const series = chartFor(g);
+      for (let i = 0; i + 1 < series.length; i += 1) {
+        const c = contrast(series[i], series[i + 1]);
+        if (c === null || c < 1.12) failures.push(`${g.id}: series ${i + 1} and ${i + 2} differ by ${c?.toFixed(2)}:1 in luminance`);
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
+  it('names the source roles from series, so a chart and its badge agree', () => {
+    const css = readFileSync(join(__dirname, '../styles/tokens.css'), 'utf8');
+    const role = (name: string) => new RegExp(`${name}:\\s*var\\((--[a-z0-9-]+)\\)`).exec(css)?.[1];
+    expect(role('--chart-verified')).toBe('--chart-2');
+    expect(role('--chart-estimated')).toBe('--chart-3');
+    expect(role('--chart-stale')).toBe('--app-error');
+    expect(role('--chart-student-entered')).toBe('--chart-4');
+    // Four roles, four colours, on every ground.
+    for (const g of GROUNDS) {
+      const s = chartFor(g);
+      const four = [s[1], s[2], errorFor(g), s[3]];
+      expect(new Set(four).size, g.id).toBe(4);
+    }
+  });
+});
+
 /*
  * The map's attribution link was told apart from the words beside it by
  * colour alone.
@@ -638,5 +815,43 @@ describe('the map credit, which is the licence', () => {
   it('keeps the underline against leaflet’s own rule', () => {
     // Same specificity, loaded later — so this has to win explicitly.
     expect(rule()).toMatch(/text-decoration:\s*underline\s*!important/);
+  });
+});
+
+/**
+ * A journey card's reason, hovered or focused.
+ *
+ * `.journey-reason` is accent-deep, which the audit holds to 4.5:1 on the
+ * page and the panel. A hovered card moves to `--app-raise`, and there
+ * accent-deep fails on Graphite and Industry Dark. The stylesheet answers that
+ * by setting the reason in the ground's own ink on hover and focus. That is a
+ * fact about `app.css`, not about a token, so this reads the stylesheet: it
+ * works out from the palette whether the override is needed, and if it is, the
+ * rule has to be there. If the palette is ever fixed so that accent-deep holds
+ * on the raise everywhere, the override stops being demanded and can go.
+ */
+describe('a journey card hovered or focused', () => {
+  const failing = GROUNDS.flatMap((g) =>
+    ACCENTS.filter((a) => {
+      const t = tokensFor({ accent: a.id, ground: g.id });
+      return (contrast(t['--app-accent-deep'], t['--app-raise']) ?? 0) < AA_TEXT;
+    }).map((a) => `${a.label} on ${g.label}`),
+  );
+  const css = () => readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+
+  it('names the pairings that need the override, so the list is not a belief', () => {
+    expect(failing).toContain('Sterling on Industry Dark');
+    expect(failing.some((f) => f.endsWith('on Graphite'))).toBe(true);
+    expect(failing.every((f) => /on (Graphite|Industry Dark)$/.test(f))).toBe(true);
+  });
+
+  it('sets the reason in full-strength ink when accent-deep does not hold on the raise', () => {
+    const src = css();
+    const at = src.indexOf('.journey-card:hover .journey-reason');
+    expect(failing.length, 'if this is 0 the override is no longer needed').toBeGreaterThan(0);
+    expect(at, 'the hover override for .journey-reason is missing from app.css').toBeGreaterThan(-1);
+    const rule = src.slice(at, src.indexOf('}', at));
+    expect(rule).toContain('.journey-card:focus-visible .journey-reason');
+    expect(rule).toMatch(/color:\s*var\(--app-fg\)/);
   });
 });

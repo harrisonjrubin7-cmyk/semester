@@ -96,6 +96,21 @@ begin
     public.lti_account_untouched(fresh));
 end $$;
 
+-- A saved graduation draft is work too (Phase D,
+-- 20260928300000_untouched_graduation_drafts.sql): an account holding one is
+-- not empty, and account linking must not retire it.
+do $$
+declare drafted uuid;
+begin
+  drafted := pg_temp.make_user('drafted.lti.test@example.edu');
+  perform pg_temp.must('an account with no drafts is untouched',
+    public.lti_account_untouched(drafted));
+  insert into public.graduation_scenarios (user_id, name, inputs, projected_grad_term, source_label)
+  values (drafted, 'Add a minor', '{}'::jsonb, 'Fall 2029', 'estimated');
+  perform pg_temp.must('an account with a saved graduation draft is not',
+    not public.lti_account_untouched(drafted));
+end $$;
+
 -- ── The happy path: a student attaches the account they already had ───────
 
 do $$

@@ -24,6 +24,7 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
+import { SourceBadge } from '../components/SourceBadge';
 import { ActionButton, PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
@@ -42,6 +43,10 @@ import {
   type Taken,
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
+import { GraduationSimulator } from '../components/GraduationSimulator';
+import { AdvisorMeeting } from '../components/AdvisorMeeting';
+import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
+import { PathSnapshotCard } from '../components/PathSnapshotCard';
 import {
   fixFor,
   missingLine,
@@ -54,9 +59,10 @@ import {
   type TermInput,
 } from '../lib/termgpa';
 
-export function Degree() {
-  const { state } = useStore();
-  const [tab, setTab] = useState<'left' | 'taken' | 'rules'>('left');
+/** `advisorMeeting` defaults to the `advisor_meeting_mode` flag; tests choose. */
+export function Degree({ advisorMeeting = moduleOn(MODULE_FLAGS.advisor_meeting_mode) }: { advisorMeeting?: boolean } = {}) {
+  const { state, account } = useStore();
+  const [tab, setTab] = useState<'left' | 'taken' | 'rules' | 'ahead' | 'meeting'>('left');
 
   /*
    * The transcript, which is the one list here that gets long.
@@ -71,6 +77,17 @@ export function Degree() {
       <>
       <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
+        <div className="context-bar-states" style={{ marginTop: 'var(--sp-3)' }}>
+          {/*
+            The app's one trust badge (`lib/source.ts`), not the status
+            chips' "Yours" and "Needs confirmation": the same provenance in a
+            second vocabulary is a second fact to a reader. What you typed in
+            is Student entered; everything below it is worked out from that,
+            which is Estimated — "not an official figure" is its meaning.
+          */}
+          <SourceBadge label="student_entered" />
+          <SourceBadge label="estimated" />
+        </div>
         <div
           style={{
             marginTop: 'var(--sp-3)',
@@ -86,11 +103,16 @@ export function Degree() {
         </div>
       </Blueprint>
 
+      <PathSnapshotCard />
+
       <Segmented
         options={[
           { id: 'left', label: 'What is left' },
           { id: 'taken', label: `Taken${state.taken.length ? ` (${state.taken.length})` : ''}` },
           { id: 'rules', label: 'Requirements' },
+          { id: 'ahead', label: 'Scenarios' },
+          // Advisor Meeting Mode (Phase G), only with its flag on.
+          ...(advisorMeeting ? [{ id: 'meeting' as const, label: 'Advisor meeting' }] : []),
         ]}
         value={tab}
         onChange={setTab}
@@ -100,6 +122,8 @@ export function Degree() {
       {tab === 'left' ? <WhatIsLeft /> : null}
       {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
+      {tab === 'ahead' ? <GraduationSimulator done={hours(state.taken).withThisTerm} accountId={account?.id ?? null} /> : null}
+      {tab === 'meeting' && advisorMeeting ? <AdvisorMeeting key={account?.id ?? 'device'} accountId={account?.id ?? null} /> : null}
       </>
     </Page>
   );
