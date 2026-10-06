@@ -87,7 +87,11 @@ Deployment config lives in the root `vercel.json` plus `app/` and `company-site/
 
 Today, the degree plan, account, and registration-while-off now carry a source badge. A seeded grade is labelled sample. Registration-off and the gradebook can open a support ticket with a category and a fixed origin; the ticket arguments do not carry a score, a hold, or a section.
 
-`origin/main` `706feed4` pins the order of the registration checks. `e0082d91` and `c45114c1` add a readiness view that says preparation is not clearance. A shadow receipt for one synthetic section keeps the SIS as the authority (`REGISTRATION_DUAL_RUN.md`). That does not make any domain ready for a pilot.
+`origin/main` `706feed4` pins the order of the registration checks. `e0082d91` and `c45114c1` add a readiness view that says preparation is not clearance. A shadow receipt for one synthetic section keeps the SIS as the authority (`REGISTRATION_DUAL_RUN.md`).
+
+The last fetched `origin/main` is `7b9ae1c2` (payment-rail registry, D-1324, and the sign-out-devices copy). GitHub was unreachable on the next fetch, so a newer tip was not confirmed. Those commits were merged into the stack. They were not applied with `db push`.
+
+`gradebook_release` and `registrar_decide` refuse a write without the capability, and a grade the scheme says must be moderated is not released until that approval exists. The audit row is written only after that (`REGISTRAR_RELEASE_GATES.md`). That does not make any domain ready for a pilot.
 
 ## Readiness, one sentence
 

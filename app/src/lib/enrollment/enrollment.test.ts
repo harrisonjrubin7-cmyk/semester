@@ -460,9 +460,24 @@ describe('registrar approvals and overrides', () => {
 
   it('refuses a decision from somebody who is not the registrar, one with no reason, and one with nothing pending', () => {
     const p = run(LEDGER, ctx(), enroll('ana', 'art'));
+    const before = p.audit.length;
     refused(p, decide(true, 'ben'), ctx(), 'not_registrar');
+    expect(p.audit).toHaveLength(before);
     refused(p, decide(true, 'reg', '  '), ctx(), 'bad_override');
     refused(LEDGER, decide(true), ctx(), 'not_pending');
+  });
+
+  it('writes an audit row when a registrar approves or denies, and none when the caller is not one', () => {
+    const p = run(LEDGER, ctx(), enroll('ana', 'art'));
+    const before = p.audit.length;
+    refused(p, decide(true, 'ben'), ctx(), 'not_registrar');
+    expect(p.audit).toHaveLength(before);
+    const approved = submit(p, decide(true), ctx());
+    expect(approved.decision.outcome).toBe('enrolled');
+    expect(approved.ledger.audit.at(-1)).toMatchObject({ actor: 'reg', action: 'enrolled', reason: 'ok' });
+    const denied = submit(p, decide(false, 'reg', 'Section is for majors'), ctx());
+    expect(denied.ledger.audit.at(-1)).toMatchObject({ actor: 'reg', action: 'denied', reason: 'ok' });
+    expect(denied.ledger.enrollments[0].state).toBe('denied');
   });
 
   it('re-checks an approval against now: a hold that arrived while it waited still stops it', () => {
