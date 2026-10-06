@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Courses you type stay on this device, and you can put them on a meeting agenda
+
+On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.
+
 ### Signing out other devices says it cannot be undone
 
 On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
