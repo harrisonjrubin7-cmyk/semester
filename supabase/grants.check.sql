@@ -709,7 +709,13 @@ declare
     'start_onboarding(p_journey text, p_entry jsonb, p_channel text)',
     'complete_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_channel text)',
     'skip_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_reason text, p_channel text)',
-    'consume_handoff(p_id uuid, p_nonce text)'
+    'consume_handoff(p_id uuid, p_nonce text)',
+    -- The two in 20261006160000_my_sessions.sql. Each reads the caller from
+    -- auth.uid() and takes no user; `end_my_session` deletes only the caller's
+    -- own other session and says "no such session" for anyone else's.
+    -- `my-sessions.check.sql` attempts each refusal as the account refused.
+    'my_sessions()',
+    'end_my_session(want uuid)'
   ];
   extra text;
   missing text;
