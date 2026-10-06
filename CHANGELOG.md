@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Staff get a way into the operations console
+
+If your account holds the operations console grant (`console:operate` at platform scope), **Me** shows a **Semester Operations** row that opens the console. Nobody else sees it, and typing `#/console` still shows a one-line notice without the grant. Nothing for you to do; granting access is a separate, reviewed step in [`docs/OPERATOR-PROVISIONING.md`](docs/OPERATOR-PROVISIONING.md).
+
 ### Your data says who can see your things
 
 On **Your data**, under a new **Who can see your things** heading, there is one list of everything you have opened to someone else and not yet closed: a support window, an advisor share, an athletic support share, family access and a guardian link your school recorded. Each entry says what they can see, when it ends (or that it has no end date), and which screen to end it on. Ending one is still done on the screen that made it; this list only reads. If one kind could not be read, the list names it and says it may still be open, instead of saying nobody has access. You do not have to do anything.
