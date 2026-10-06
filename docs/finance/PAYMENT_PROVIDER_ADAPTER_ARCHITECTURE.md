@@ -11,6 +11,18 @@
 
 > Not legal, accounting, tax or PCI advice. **[REQUIRES QUALIFIED REVIEW]** marks what needs a named professional.
 
+## 0. Build status
+
+| Action (`NATIVE_FINANCIAL_PLATFORM.md` §14) | State | Where |
+| --- | --- | --- |
+| 2 Canonical types, error taxonomy, idempotency-key builder, card-number guard | **Built**, Deno-free | `supabase/functions/_shared/payments/types.ts` |
+| 3 Contract suite and reference mock rail | **Built**; every clause shown red against a rail built to break it | `app/src/lib/payments/contract.ts`, `contract.test.ts`, `_shared/payments/mock.ts` |
+| 4 Stripe adapter | **Built for verify and normalize only**; every other method answers `unsupported` and its capability flag is `false`. Checkout, cancel and the portal still call Stripe directly, unchanged and held | `_shared/payments/stripeadapter.ts` |
+| 5 Stripe normalizer | **Built**; held to the handler's pre-move behaviour over 25 events (golden record), and shown red against planted bugs | `_shared/payments/normalizestripe.ts`, `app/src/lib/payments/normalize.test.ts` |
+| 8 `billing-webhook` reads through the adapter | **Built for the read-through half** (parking early events and the dead-letter wait on the inbox, actions 6 and 7). The handler keeps its HTTP behaviour, its `WebhookDeps` and its answers; verification and reading are the adapter's, and the handler's own copy of the reading is deleted. Held to what the handler handed the database *before* the move by a golden record (`stripe.golden.json`, 25 events, 31 calls), and by a structural test that the handler names no Stripe event field or signature routine. The existing 14 webhook tests and the activation tests pass unchanged | `_shared/billingwebhook.ts`, `app/src/lib/payments/normalize.test.ts`, `webhookseam.test.ts` |
+
+`billing-webhook` is the one Edge Function that imports the adapter. It is a behaviour-preserving move, not a new capability: no new event is acted on, no refund or dispute effect exists yet (actions 16 and 17), checkout, cancel and the portal are untouched, and both checkout-hold constants stay false.
+
 ## 1. Starting point (FACT)
 
 There is no adapter today. `_shared/stripe.ts` is a Stripe utility module (signature verification, status map, form encoding). The four billing handlers call Stripe endpoints directly and know Stripe identifier prefixes (`cs_`, `sub_`, `cus_`, `bpc_`, `txcd_`) and hosts (`checkout.stripe.com`, `billing.stripe.com`). The SQL layer is already provider-neutral in naming (`provider`, `provider_ref`, `provider_event_id`, `provider_session_id`), with five Stripe-shaped spots: `checkout_sessions.provider` defaults to `'stripe'`; `subscriptions.billing_issue` allows only `address_required`; `payment_events.kind` includes `address_required`; subscription statuses mirror Stripe's; and the invoice-precedence functions (`apply_invoice_payment_event_v3`) are built for Stripe's out-of-order invoice snapshots. A second provider therefore needs no column rename, only a seam in code and those five generalizations.
@@ -56,7 +68,7 @@ interface PaymentRail {
 }
 ```
 
-`requiresKyc`, `requiresKyb` and `externalSettlement` describe the rail; they are information for the console and for counsel, not switches Semester flips.
+`requiresKyc`, `requiresKyb` and `externalSettlement` describe the rail; they are information for the console and for counsel, not switches Semester flips. **`capabilities` says what Semester has wired, not what the provider can do**: the contract suite holds an adapter to it in both directions (a `false` capability must answer `unsupported`; a `true` one must work), so an adapter cannot claim what it has not built.
 
 ## 4. Adapter interface
 
@@ -87,7 +99,7 @@ interface PaymentProviderAdapter {
   calculateTax?(i: TaxInput): Promise<Result<TaxResult>>;
 
   // Inbound
-  verifyWebhook(i: { rawBody: Uint8Array; headers: Headers; now: Date }): Promise<Result<VerifiedProviderEvent>>;
+  verifyWebhook(i: { rawBody: string; headers: Headers; nowSeconds: number }): Promise<VerifyOutcome>;   // rawBody is the exact text received, never re-serialized
   normalize(e: VerifiedProviderEvent): NormalizedPaymentEvent[];         // pure
 }
 ```
@@ -175,6 +187,7 @@ HTTP POST → size limit → origin refused → adapter.verifyWebhook (raw body,
 | `payment.settled` | Appears on a settlement line | Attempt `settled`; reconciliation input (usually derived from `getSettlement`, not a webhook) |
 | `refund.created` / `refund.succeeded` / `refund.failed` | Refund progress | Refund status; journal on success; notice |
 | `dispute.opened` / `dispute.evidence_due` / `dispute.won` / `dispute.lost` / `dispute.closed` | Dispute progress | Dispute case; journal; reminders |
+| `checkout.completed` | A hosted checkout finished and named Semester's checkout id | Existing `complete_checkout` semantics (mode A) |
 | `payment_method.attached` / `detached` / `expiring` | Token lifecycle | `payment_methods` status; renewal-risk flag |
 | `subscription.synced` | Mode A mirror of the rail's subscription | Existing `sync_provider_subscription` semantics |
 | `tax.location_required` | Rail cannot calculate tax without an address | Generalizes `address_required`; no dunning |
@@ -185,7 +198,7 @@ HTTP POST → size limit → origin refused → adapter.verifyWebhook (raw body,
 
 | Stripe event | Canonical |
 | --- | --- |
-| `checkout.session.completed` | `payment_method.attached` + subscription activation (Mode A) |
+| `checkout.session.completed` | `checkout.completed` (Mode A; `other` when it is not a Semester subscription checkout) |
 | `customer.subscription.updated` / `.deleted` | `subscription.synced` (status mapped by the adapter) |
 | `invoice.paid`, `invoice.payment_succeeded` | `payment.captured` |
 | `invoice.payment_failed` | `payment.failed` |

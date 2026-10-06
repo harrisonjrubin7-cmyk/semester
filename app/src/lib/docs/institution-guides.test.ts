@@ -475,8 +475,11 @@ export function tabCompletenessProblems(text: string, ctx: Ctx): string[] {
   const end = screen.indexOf('type Tab =', start);
   const uni = [...screen.slice(start, end).matchAll(/label: '([^']+)'/g)].map((m) => m[1]);
   for (const l of uni) if (!text.includes(`\`${l}\``)) out.push(`University tab ${l} is not on the admin guide`);
-  const con = ctx.read('app/src/screens/Console.tsx');
-  const consoleTabs = [...con.matchAll(/label: '([^']+)'/g)].map((m) => m[1]);
+  const con = ctx.read('app/src/lib/console/workspaces.ts');
+  const consoleTabs = [
+    ...con.matchAll(/label: '([^']+)'/g),
+    ...con.matchAll(/shell\('[^']+', '([^']+)'/g),
+  ].map((m) => m[1]);
   for (const l of consoleTabs) if (!text.includes(`\`${l}\``)) out.push(`Console tab ${l} is not on the admin guide`);
   return out;
 }
@@ -728,6 +731,7 @@ describe('the checkers, shown a page they must pass and a page they must refuse'
     expect(tabCompletenessProblems(full, real)).toEqual([]);
     expect(tabCompletenessProblems(full.replaceAll('`Student accounts`', '`Accounts`'), real).join()).toMatch(/University tab Student accounts/);
     expect(tabCompletenessProblems(full.replaceAll('`Break-glass`', '`Glass`'), real).join()).toMatch(/Console tab Break-glass/);
+    expect(tabCompletenessProblems(full.replaceAll('`Finance model`', '`Ledger`'), real).join()).toMatch(/Console tab Finance model/);
   });
 
   it('migration center: passes the code\'s stages; refuses a reordered list', () => {

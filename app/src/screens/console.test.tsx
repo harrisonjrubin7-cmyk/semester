@@ -4,6 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ACCESS_BASIS, CONTEXT_BAR, FIGURE_PROVENANCE, PRODUCTION_WRITE_NOTICE } from '../lib/ops/console';
 import { EVIDENCE } from '../lib/ops/evidence';
+import { READINESS_GATES } from '../lib/ops/readiness';
+import type { CommandItem } from '../lib/console/client';
 
 /**
  * The operations console, driven against a replaced account service.
@@ -35,6 +37,14 @@ const mock = vi.hoisted(() => ({
   figures: vi.fn(),
   command: vi.fn(),
   customers: vi.fn(),
+  tenantOperations: vi.fn(),
+  integrationHealth: vi.fn(),
+  releaseIncidents: vi.fn(),
+  privacyRequests: vi.fn(),
+  claimPrivacy: vi.fn(),
+  privacyDetail: vi.fn(),
+  verifyPrivacy: vi.fn(),
+  resolvePrivacy: vi.fn(),
   prefs: vi.fn(),
   savePref: vi.fn(),
   mfa: vi.fn(),
@@ -75,6 +85,14 @@ vi.mock('../lib/console/client', async (orig) => ({
   loadFigures: mock.figures,
   loadCommandCenter: mock.command,
   loadCustomers: mock.customers,
+  loadTenantOperations: mock.tenantOperations,
+  loadIntegrationHealth: mock.integrationHealth,
+  loadReleaseIncidents: mock.releaseIncidents,
+  loadPrivacyRequests: mock.privacyRequests,
+  claimPrivacyRequest: mock.claimPrivacy,
+  readPrivacyRequestDetail: mock.privacyDetail,
+  verifyPrivacyRequest: mock.verifyPrivacy,
+  resolvePrivacyRequest: mock.resolvePrivacy,
   loadPreferences: mock.prefs,
   savePreference: mock.savePref,
   mfaLevel: mock.mfa,
@@ -95,6 +113,10 @@ let root: Root;
 
 const PLATFORM = [{ capability: 'console:operate', scopeKind: 'platform', scopeId: '' }];
 const SUPPORT_PLATFORM = [...PLATFORM, { capability: 'support:ticket', scopeKind: 'platform', scopeId: '' }];
+const IMPLEMENTATION_PLATFORM = [...PLATFORM, { capability: 'tenant:implement', scopeKind: 'school', scopeId: 'vu' }];
+const PRIVACY_PLATFORM = [...PLATFORM, { capability: 'data_request:handle', scopeKind: 'school', scopeId: 'vu' }];
+const INTEGRATION_PLATFORM = [...PLATFORM, { capability: 'integration:view', scopeKind: 'school', scopeId: 'vu' }];
+const INCIDENT_PLATFORM = [...PLATFORM, { capability: 'incident:communicate', scopeKind: 'platform', scopeId: '' }];
 const FRESH = { currentLevel: 'aal2', nextLevel: 'aal2', verifiedAt: new Date(Date.now() - 2 * 60_000) };
 const STALE = { currentLevel: 'aal1', nextLevel: 'aal2', verifiedAt: null };
 
@@ -169,6 +191,52 @@ beforeEach(() => {
       contracts: [{ id: 'ct-1', kind: 'pilot-agreement', signedOn: '2026-09-01', startsOn: '2026-09-01', endsOn: '2027-05-31', documentRef: 'VU-PILOT-1' }],
     },
   ]);
+  mock.tenantOperations.mockResolvedValue([{
+    tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+    factKey: 'rollout', category: 'rollout', label: 'Rollout state', value: 'requested',
+    classification: 'internal', provenance: 'public.tenant_rollout', owner: 'implementation',
+    observedAt: '2026-10-03T10:00:00Z', staleAfterDays: 14,
+    limitation: 'State is not approval evidence.',
+    visibilityReason: 'Live tenant:implement grant at exact school scope.',
+  }]);
+  mock.integrationHealth.mockResolvedValue([{
+    connectionId: 'conn-canvas', tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+    connectionName: 'Canvas', providerDomain: 'lms', providerName: 'Canvas', configurationState: 'healthy',
+    healthState: 'healthy', featureState: 'production', lastSuccessfulSyncAt: '2026-10-03T10:00:00Z',
+    freshnessTargetMinutes: 30, minutesSinceSuccess: 10, latestRunStatus: 'success',
+    latestRunAt: '2026-10-03T10:00:00Z', reconciliationState: 'complete', recordsReceived: 20,
+    recordsRejected: 0, openErrors: 0, criticalErrors: 0, openDeadLetters: 0,
+    ownerName: 'Integration owner', backupOwnerName: 'Backup owner', customerImpact: 'No current impact.',
+    nextSafeAction: 'Continue monitoring.', configurationApprovalId: null, configurationApprovalStatus: null,
+    classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
+  }]);
+  mock.releaseIncidents.mockResolvedValue([{
+    itemId: 'release:platform', itemKind: 'release', tenantId: null, tenantName: null, isDemo: false,
+    state: 'deployed_unverified', title: 'Production release', severity: 'critical', owner: 'engineering',
+    affectedWorkflows: ['application'], customerImpact: 'Deployment recorded; behavior unverified.',
+    communicationStatus: 'not_applicable', lastNoticeAt: null, nextUpdateAt: null,
+    rollbackStatus: 'documented', releaseCommit: 'a'.repeat(40), deploymentSource: 'pages', deploymentId: 'deploy-9',
+    observedAt: '2026-10-03T10:00:00Z', expiresAt: '2026-10-17T10:00:00Z', approvalId: null,
+    approvalStatus: null, canRequest: true, evidence: 'production_verification=blocked', nextSafeAction: 'Verify the deployed commit.',
+    classification: 'restricted', provenance: 'server sources', limitation: 'Production behavior remains unverified.',
+  }]);
+  mock.privacyRequests.mockResolvedValue([{
+    requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
+    tenantName: 'Vanderbilt University', isDemo: false, kind: 'export', requestedBy: 'self',
+    status: 'received', receivedAt: '2026-10-01T10:00:00Z', dueAt: '2026-10-31T10:00:00Z',
+    overdue: false, identityState: 'unverified', assignedTo: null, assignedAt: null,
+    assignedToMe: false, holdState: 'clear', affectedStores: ['account-scoped server records'],
+    deletionApprovalId: null, deletionApprovalStatus: null, classification: 'restricted',
+    provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+  }]);
+  mock.claimPrivacy.mockResolvedValue('verifying');
+  mock.privacyDetail.mockResolvedValue({
+    requestRef: 'DSR-1234567890', subjectReference: 'ab'.repeat(32), kind: 'export',
+    requestedBy: 'self', detail: 'Provide my export.', tenantId: 'vu', verifiedAt: null,
+    resolution: '', resolutionEvidence: null, completionCertificateId: null,
+  });
+  mock.verifyPrivacy.mockResolvedValue('in_progress');
+  mock.resolvePrivacy.mockResolvedValue({ status: 'completed', certificateId: 'certificate-1' });
   // Existing view tests exercise Approvals first; production defaults to the
   // Command center when no server-side preference exists.
   mock.prefs.mockResolvedValue({ 'console.tab': 'approvals' });
@@ -211,6 +279,74 @@ describe('support tab capability gate', () => {
     mock.caps.mockResolvedValue(SUPPORT_PLATFORM);
     await render();
     expect(button('Support')).toBeDefined();
+  });
+});
+
+describe('tenant operations capability gate', () => {
+  it('does not offer tenant operations to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Tenant operations')).toBeUndefined();
+  });
+
+  it('offers and loads tenant operations for an exact-school implementation grant', async () => {
+    mock.caps.mockResolvedValue(IMPLEMENTATION_PLATFORM);
+    await render();
+    await press('Tenant operations');
+    expect(mock.tenantOperations).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Vanderbilt University');
+    expect(host.textContent).toContain('Live tenant:implement grant at exact school scope.');
+  });
+});
+
+describe('integration health capability gate', () => {
+  it('does not offer integration health to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Integration health')).toBeUndefined();
+    expect(mock.integrationHealth).not.toHaveBeenCalled();
+  });
+
+  it('offers and loads credential-free health for an exact-school integration grant', async () => {
+    mock.caps.mockResolvedValue(INTEGRATION_PLATFORM);
+    await render();
+    await press('Integration health');
+    expect(mock.integrationHealth).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Canvas');
+    expect(host.textContent).toContain('No credentials returned.');
+    expect(mock.request).not.toHaveBeenCalled();
+  });
+});
+
+describe('release and incident capability gate', () => {
+  it('does not offer or load release operations for a console-shell-only operator', async () => {
+    await render();
+    expect(button('Release & incidents')).toBeUndefined();
+    expect(mock.releaseIncidents).not.toHaveBeenCalled();
+  });
+
+  it('offers the workspace only with the platform incident communication grant', async () => {
+    mock.caps.mockResolvedValue(INCIDENT_PLATFORM);
+    await render();
+    await press('Release & incidents');
+    expect(mock.releaseIncidents).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('Deployment recorded; behavior unverified.');
+    expect(mock.request).not.toHaveBeenCalled();
+  });
+});
+
+describe('privacy request capability gate', () => {
+  it('does not offer privacy requests to a console-shell-only operator', async () => {
+    await render();
+    expect(button('Privacy requests')).toBeUndefined();
+  });
+
+  it('offers and loads the identity-minimized queue for an exact-school data-rights grant', async () => {
+    mock.caps.mockResolvedValue(PRIVACY_PLATFORM);
+    await render();
+    await press('Privacy requests');
+    expect(mock.privacyRequests).toHaveBeenCalledWith(false);
+    expect(host.textContent).toContain('DSR-1234567890');
+    expect(host.textContent).toContain('Metadata only.');
+    expect(mock.privacyDetail).not.toHaveBeenCalled();
   });
 });
 
@@ -298,6 +434,16 @@ describe('the gate', () => {
 });
 
 describe('command center', () => {
+  const exception = (patch: Partial<CommandItem> = {}): CommandItem => ({
+    id: 'gate:production_restore', severity: 'critical', category: 'release gate',
+    title: 'Production restore evidence', tenantId: null, tenantName: null,
+    isDemo: false, owner: 'engineering', dueAt: null, status: 'missing',
+    nextStep: 'Record a dated production result.', route: 'Recovery runbook',
+    source: 'public.platform_release_evidence', evidence: '',
+    limitation: 'A backup listing is not execution evidence.', observedAt: '2026-09-30T16:00:00Z',
+    ...patch,
+  });
+
   it('shows live blockers with their evidence boundary and never turns them green', async () => {
     mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
     mock.command.mockResolvedValue([{
@@ -322,6 +468,105 @@ describe('command center', () => {
     await render();
     expect(host.textContent).toContain('GREEN');
     expect(host.textContent).toContain('no open exception');
+  });
+
+  it('keeps the open count and severity status when a filter hides some or all blockers', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockResolvedValue([
+      exception({ id: 'tenant:vu', severity: 'high', title: 'Tenant approval', tenantId: 'vu' }),
+      exception(),
+    ]);
+    await render();
+    const status = 'NOT GO: 1 critical · 1 high · 0 medium · 0 informational';
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+
+    type(field('Filter this view'), 'Tenant approval');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+    expect(host.textContent).not.toContain('GREEN');
+
+    type(field('Filter this view'), 'nothing matches');
+    expect(host.querySelectorAll('article')).toHaveLength(0);
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).toContain(status);
+    expect(host.textContent).toContain('2 open');
+    expect(host.textContent).not.toContain('GREEN');
+
+    type(field('Filter this view'), '');
+    expect([...host.querySelectorAll('article')].map((row) => row.getAttribute('aria-label')))
+      .toEqual(['critical Production restore evidence', 'high Tenant approval']);
+    expect(host.textContent).not.toContain('No matching exceptions');
+    expect(host.textContent).toContain(status);
+  });
+
+  it('counts only the selected tenant even when its blockers do not match the filter', async () => {
+    mock.command.mockResolvedValue([
+      exception(),
+      exception({ id: 'tenant:other', severity: 'medium', title: 'Other tenant evidence', tenantId: 'other' }),
+      exception({ id: 'tenant:vu', severity: 'high', title: 'Tenant approval', tenantId: 'vu' }),
+    ]);
+    await render();
+    await press('Customers');
+    type(field('Purpose'), 'SUP-4');
+    await submit(host.querySelector('form[aria-label="Purpose of this read"]'));
+    await press('Scope the console to this tenant');
+    await press('Command center');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('NOT GO: 0 critical · 1 high · 0 medium · 0 informational');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+
+    type(field('Filter this view'), 'Other tenant evidence');
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('NOT GO: 0 critical · 1 high · 0 medium · 0 informational');
+    expect(host.textContent).not.toContain('GREEN');
+    expect(host.querySelectorAll('article')).toHaveLength(0);
+
+    await press('Show all tenants');
+    expect(host.textContent).toContain('3 open');
+    expect(host.textContent).toContain('NOT GO: 1 critical · 1 high · 1 medium · 0 informational');
+    expect(host.querySelectorAll('article')).toHaveLength(1);
+  });
+
+  it('can report an empty tenant scope while another scope has blockers', async () => {
+    mock.command.mockResolvedValue([exception()]);
+    await render();
+    await press('Customers');
+    type(field('Purpose'), 'SUP-4');
+    await submit(host.querySelector('form[aria-label="Purpose of this read"]'));
+    await press('Scope the console to this tenant');
+    await press('Command center');
+    type(field('Filter this view'), 'nothing matches');
+    expect(host.textContent).toContain('GREEN');
+    expect(host.textContent).toContain('0 open');
+    expect(host.textContent).not.toContain('No matching exceptions');
+
+    await press('Show all tenants');
+    expect(host.textContent).toContain('NOT GO: 1 critical');
+    expect(host.textContent).toContain('1 open');
+    expect(host.textContent).toContain('No matching exceptions');
+    expect(host.textContent).not.toContain('GREEN');
+  });
+
+  it('never reports green while the live exception reader is pending', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockReturnValue(new Promise(() => {}));
+    await render();
+    expect(host.textContent).toContain('Reading live operational sources');
+    expect(host.textContent).not.toContain('GREEN');
+    expect(host.textContent).not.toContain('No matching exceptions');
+  });
+
+  it('fails closed when the live exception reader cannot be reached', async () => {
+    mock.prefs.mockResolvedValue({ 'console.tab': 'command' });
+    mock.command.mockRejectedValue(new Error('The operational source refused the read.'));
+    await render();
+    expect(host.textContent).toContain('NOT GO');
+    expect(host.textContent).toContain('The operational source refused the read.');
+    expect(host.textContent).toContain('green status cannot be calculated');
+    expect(host.textContent).not.toContain('GREEN');
   });
 });
 
@@ -593,6 +838,11 @@ describe('evidence', () => {
     expect(cards.length).toBe(EVIDENCE.length);
     expect(EVIDENCE.length).toBeGreaterThan(0);
     for (const card of cards) expect(card.textContent).toMatch(/— (current|expiring|expired)/);
+    const readiness = [...host.querySelectorAll('article[aria-label^="Readiness "]')];
+    expect(readiness).toHaveLength(READINESS_GATES.length);
+    expect(host.textContent).toContain('Configuration — missing');
+    expect(host.textContent).toContain('Observed operation — missing');
+    expect(host.textContent).toContain('Highest continuous evidence: repository');
     expect(mock.customers).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ import { Notice, SectionLabel } from '../ui';
 import { ESCALATION } from '../../lib/ops/console';
 import { EVIDENCE, evidenceState } from '../../lib/ops/evidence';
 import { Fields, matches, type ViewProps } from './Fields';
+import { ReadinessEvidence } from './ReadinessEvidence';
 import { useNow } from '../../state/store';
 
 /**
@@ -19,6 +20,7 @@ export function Evidence({ filter, today: suppliedToday }: ViewProps & { today?:
 
   return (
     <div style={{ display: 'grid', gap: 'var(--sp-5)' }}>
+      <ReadinessEvidence today={today} />
       <Notice>
         Escalation: {ESCALATION.map((e) => `${e.daysLeft === 0 ? 'at expiry' : `${e.daysLeft} days before`} — ${e.action}`).join(' · ')}
       </Notice>
