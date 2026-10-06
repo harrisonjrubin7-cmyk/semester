@@ -1,4 +1,11 @@
--- PROPOSED, NOT APPLIED, NOT IN supabase/migrations. Needs owner review and the repo's check suites.
+-- SUPERSEDED by supabase/migrations/20261005200000_anon_keeps_only_its_public_catalog.sql (D-1306).
+-- Do not copy this file into supabase/migrations. The landed migration revokes every public
+-- table from anon and grants back only the public catalog, open forms, the school list, and
+-- form_responses INSERT. This draft is the narrower list the 5 October reading started from.
+-- PROPOSED, NOT APPLIED as its own migration.
+-- 2026-10-05 reading (docs/native-platform/FOUNDATION_EXPOSURE_READING.md): anon TRUNCATE
+-- was already absent on the owner-scoped tables. INSERT, UPDATE and DELETE were still granted
+-- when this draft was written; D-1306 is the revoke that followed.
 -- Why: 24 owner-scoped tables carry the Supabase default full grant to anon (incl. TRUNCATE, TRIGGER).
 -- Row policies key on auth.uid(), which is null for anon, so row reads/writes are already denied.
 -- TRUNCATE is not subject to RLS; PostgREST does not expose it, but the grant is a standing
