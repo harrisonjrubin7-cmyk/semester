@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your data says who can see your things
+
+On **Your data**, under a new **Who can see your things** heading, there is one list of everything you have opened to someone else and not yet closed: a support window, an advisor share, an athletic support share, family access and a guardian link your school recorded. Each entry says what they can see, when it ends (or that it has no end date), and which screen to end it on. Ending one is still done on the screen that made it; this list only reads. If one kind could not be read, the list names it and says it may still be open, instead of saying nobody has access. You do not have to do anything.
+
 ### Advisors open a Caseload of plans students shared
 
 On the degree meeting tab, the folded list that was “For advisors: meetings shared with you” is now Caseload. It still lists only plans a student chose to share, and it says it is not every student at the school. Nothing else about a student is added to it.
