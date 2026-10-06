@@ -210,8 +210,14 @@ describe('the fourteen capabilities', () => {
 
   it('lists the views the screen offers, each once, and each in the map', () => {
     expect(new Set(VIEWS.map((v) => v.id)).size).toBe(VIEWS.length);
-    expect(VIEWS.map((v) => v.view)).toEqual(['Command center', 'Approvals', 'Break-glass', 'Audit', 'Customers', 'Figures', 'Evidence', 'Views']);
-    for (const v of VIEWS) expect(v.shows.length, v.id).toBeGreaterThan(40);
+    expect(VIEWS.map((v) => v.view)).toEqual(['Command center', 'Approvals', 'Break-glass', 'Audit', 'Tenant operations', 'Privacy requests', 'Integration health', 'Release & incidents', 'Customers', 'Figures', 'Evidence', 'Views']);
+    for (const v of VIEWS) {
+      expect(v.shows.length, v.id).toBeGreaterThan(40);
+      if (v.detail) {
+        expect(v.detail.holders.some((holder) => isTest(holder.path)), `${v.id} has no verification holder`).toBe(true);
+        for (const holder of v.detail.holders) expect(existsSync(at(holder.path)), `${v.id} cites ${holder.path}`).toBe(true);
+      }
+    }
   });
 
   it(`is what ${MAP} says`, () => {
@@ -417,6 +423,12 @@ function renderMap(): string {
   };
   for (const v of VIEWS) {
     out.push(`### ${v.view}`, '');
+    if (v.detail) {
+      out.push(`**${v.detail.capability}** (${v.detail.status}) — ${v.detail.replacement}.`, '');
+      for (const holder of v.detail.holders) out.push(`- ${ref(holder.path)} — ${holder.how}.`);
+      out.push('');
+      continue;
+    }
     for (const id of behind[v.id]) {
       const c = holds(id);
       out.push(`**${c.capability}** (${c.status}) — ${c.replacement}.`, '');
