@@ -97,7 +97,7 @@ Each dossier covers the brief's nineteen dimensions in eight lines. Capability n
 - **Workflows/Approvals:** grant, revoke, expire, review. Two-person for platform-scope grants. **Policy:** no single broad "admin" — retire `app_admins`/`is_app_admin()` (F-5).
 - **Audit:** `role_grant_audit_event`. **SAF:** `role_grants` is the sole authority; the TS registers derive from migrations (`rolelaunch.ts`).
 - **Review:** quarterly attestation needs ⊕`access:review` (not created). **SLO/Support:** grant propagation within one request (no cache).
-- **Rollback:** revoke; expiry is default. **Tests/Gate:** `rolegrants`, `capabilities`, `my-capabilities` checks; fix `my_capabilities()` break-glass defect first. Gate T, S.
+- **Rollback:** revoke; expiry is default. **Tests/Gate:** `rolegrants`, `capabilities`, `my-capabilities` checks; the `my_capabilities()` break-glass defect is fixed (#1341). Gate T, S.
 - **Owner:** security seat. **Commercial:** role clarity is a procurement question on every RFP.
 
 ### 4.4 Policy and workflow engine
