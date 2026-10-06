@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Registration readiness opens with one line on where you stand
+
+At the top of the registration readiness list there is now a single status: **Ready**, **Almost ready**, **Getting ready**, **Blocked** or **Information unavailable**, with a sentence saying why. **Blocked** appears only when two courses in your schedule overlap, which the app can see for itself. Holds and prerequisites live in your school's system, so they never produce it. **Information unavailable** appears when no course catalog is loaded, or when a section you selected has no meeting times, so conflicts cannot be checked and the line will not say Ready. The Schedule conflicts step says the same. It is still preparation, not clearance: your registrar and official system decide the result. The steps below are unchanged and you do not have to do anything.
+
 ### Operators see four more console tabs, and only the ones their grant allows
 
 Only an account holding the operator grant sees this, so students and school administrators will notice nothing. The operations console now has **Tenant operations**, **Privacy requests**, **Integration health** and **Release & incidents**. Each of those appears only when the signed-in operator holds that tab's own capability, and Support still appears only when tickets are on and the operator may answer them. A tab the operator cannot use is absent, and a saved view that names one does not open it. The tabs an operator with `console:operate` already had, including **Finance model**, **Releases and flags** and **Launch readiness**, are unchanged. You do not have to do anything.
