@@ -20,15 +20,8 @@
  */
 
 import { cloud } from '../cloud';
-import type { Grant } from '../capabilities';
 
-/** The capability that opens the console, held at platform scope. */
-export const CONSOLE_CAPABILITY = 'console:operate';
-
-/** Whether these grants open the console: the capability, at platform scope, exactly. */
-export function holdsConsole(grants: readonly Grant[]): boolean {
-  return grants.some((g) => g.capability === CONSOLE_CAPABILITY && g.scopeKind === 'platform');
-}
+export { CONSOLE_CAPABILITY, holdsConsole } from './capability';
 
 /** MFA is fresh for a privileged action within this many minutes of verifying (`private.mfa_fresh`). */
 export const MFA_FRESH_MINUTES = 15;
