@@ -485,7 +485,7 @@ const reg = (action: 'registration.readiness.view' | 'registration.override.requ
   if (action === 'registration.override.request') {
     base.resource.attributes = { tenantId: 'school-a', courseId: 'cs201', termId: '2026-fall' };
     base.context.purpose = 'the prerequisite was completed at another school';
-    base.context.idempotencyKey = 'ovr-req-0123456789';
+    base.context.idempotencyKey = 'cmd-ovr-req';
   }
   if (action === 'registration.override.approve') {
     base.actor = { id: 'registrar-1', type: 'user', authenticatedAt: later(-1), mfaLevel: 'fresh' };
@@ -493,7 +493,7 @@ const reg = (action: 'registration.readiness.view' | 'registration.override.requ
     base.resource.attributes = { tenantId: 'school-a', requestState: 'pending_review', requestDigest: 'd1', reviewedDigest: 'd1', resourceVersion: 'v3', reviewedVersion: 'v3' };
     base.context.roleGrants = [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }];
     base.context.purpose = 'the department confirmed the equivalent course';
-    base.context.idempotencyKey = 'ovr-apr-0123456789';
+    base.context.idempotencyKey = 'cmd-ovr-apr';
   }
   return base;
 };

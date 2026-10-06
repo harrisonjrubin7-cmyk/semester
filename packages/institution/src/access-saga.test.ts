@@ -818,7 +818,7 @@ describe('the access-request actions and the policy that decides them', () => {
     context: {
       membershipIds: ['m1'], roleGrants: [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }],
       capabilities: ['registration.override.approve'], consentGrants: [], featureFlags: [], policyVersions: {},
-      purpose: 'prerequisite waived by the department', idempotencyKey: 'idem-0123456789abcdef', correlationId: 'req-0123456789abcdef',
+      purpose: 'prerequisite waived by the department', idempotencyKey: 'cmd-test-idem', correlationId: 'req-0123456789abcdef',
     },
   });
 
