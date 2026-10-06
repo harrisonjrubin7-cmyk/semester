@@ -24,6 +24,12 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your data now shows what the app can use on this device
+
+On **Your data**, under a new **On this device** heading, there is one entry each for **Camera**, **Microphone**, **Location** and **Notifications**. Each says whether it is **Allowed**, **Blocked**, **Not asked yet**, **Not reported** (some browsers say nothing about the camera or microphone until they have been asked) or **Not available here**, what it is used for, and what still works without it. You do not have to do anything, and nothing on this page asks for a permission; the app still asks only when you start something that needs one.
+
+If one is blocked, the entry says how to allow it again. If one is allowed, it says where to take it back: the camera, microphone and location are held by your browser, so the entry points you to your browser's site settings rather than showing a switch that would do nothing. Notifications link to the switch on **Alerts**. The entries update while the page is open if you change a setting in your browser. Searching Settings for "camera", "microphone", "location" or "permissions" now finds **Your data**.
+
 ### Signing out other devices says it cannot be undone
 
 On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
