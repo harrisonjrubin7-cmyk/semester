@@ -167,3 +167,33 @@ Its SQL is not adopted: the tables are scaffolding by its own account (no foreig
 | C-6 | A `Store` implementation for the access saga satisfying the ninth PDF's persistence gate, with the store-side failure rehearsals listed above and the revocation barrier (a late installation at a revoked generation is rejected) | `engineering` | Each unexercised item has a test against the real store |
 
 The access saga has no caller yet: nothing persists a saga row and no route asks for one.
+
+## Sixteenth PDF: "unified enterprise architecture blueprint" (2026-10-06)
+
+A 13 pp Perplexity write-up (read in full): one authorization chain (identity → tenant membership → scoped role → permitted action → validated state transition), a PostgreSQL/Supabase RLS reference (`app.tenants`, `app.memberships`, `private.roles`/`role_assignments`/`has_permission`), a document state machine with nine tables, a transition command with an idempotency key, student and faculty route tables, a company-module map and twelve mandatory access tests. It calls itself "a proposed implementation baseline, not an executed migration". **No new domain.** Its SQL is not adopted, for the reason the fifteenth PDF's was not: main already has the primitive under other names, and a second one would split the decision point.
+
+| Blueprint | On main | Finding |
+| --- | --- | --- |
+| `app.tenants` (`institution`/`company`, `active`/`suspended`/`closed`) | `public.schools` (`20260921170000_schools.sql`); the company is not a tenant row | Different shape; no `kind`, and `schools` has no status column (grep of the migration finds none) |
+| `private.permissions`, `roles`, `role_permissions` | `public.role_capabilities` (`20260922012000_capabilities.sql`) | Same idea, global rather than per-tenant roles |
+| `private.role_assignments` (tenant-wide or section-scoped, `expires_at`) | `public.role_grants` with `scope_kind`/`scope_id`, `revoked_at`, `expires_at` | Equivalent and richer (revocation is a column) |
+| `private.has_permission(tenant, permission, section)` | `private.has_capability(capability, scope_kind, scope_id)`, `security definer`, `search_path = ''`, executable by `anon, authenticated` | **Differs:** the blueprint's helper also requires an *active membership* and an *active tenant*; `has_capability` reads `role_grants` alone, so a suspended membership or school does not stop a live grant. Its access test "membership suspended after login → subsequent protected action denied" is therefore not held by this helper |
+| Student/faculty row access (`enrollments`, `assignments`, `submissions`, `grade_entries`) | `registration_enrollments`, `gradebook_items`, `grade_entries`, `regrade_requests` (`20260929300000`, `20260929310000`) | Registrar and gradebook exist; no `submissions` or `assignments` table was found by grep of `supabase/migrations`. **Assignment submission is not started** |
+| `submit_assignment` as the only student write path | not found | Follows from the line above |
+| Document tables and nine-state version machine (`draft`…`archived`) with `review_tasks`, `approval_decisions`, `signature_*`, `transition_events` | Narrower per-record machines only: contracts (`draft`, `legal_review`, `out_for_signature`, `signed`, `superseded`, `terminated`) and a review state (`draft`, `review`, `published`, `superseded`, `archived`) in `20260929070000_commercial_core.sql` | **No generic document-version workflow.** Not catalogued as a gap before this page |
+| Transition command with `Idempotency-Key`, `expectedState`, nine-step transaction, outbox insert | Idempotency keys exist in gradebook, productivity and dining; `domain_outbox_events` exists with no relay (gap register #1, #4) | Pattern present per domain; no document transition endpoint |
+| `GET /api/v1/me/context` capability projection | `public.my_capabilities` | Exists as an RPC; the blueprint's per-section shape and "no global `isFaculty` flag" rule are not asserted by a test; a grep of `app/src` finds no global `isFaculty` or `isStudent` flag, so nothing currently violates the rule |
+| Twelve mandatory access tests | Spread across `*.check.sql` and `registration`/`gradebook` tests | Not one list; no test file maps all twelve. Cross-tenant, self-assigned role, duplicate transition and suspended-membership rungs would each need confirming |
+
+Everything else (route tables, company module map) restates existing domains and the operations console.
+
+### Proposed backlog additions
+
+| ID | Item | Owner seat | Closed when |
+| --- | --- | --- | --- |
+| B-1 | Decide whether `has_capability` must also require an active school membership and an active school, as the blueprint's helper does | `engineering` | Decision recorded as `docs/decisions/D-<pull request number>.md`; if yes, a `*.check.sql` rung first that fails with a suspended membership holding a live grant |
+| B-2 | A generic versioned-document workflow (immutable versions, review, signature evidence, transitions), or a decision that per-record machines suffice | `product` | Decision recorded; if built, reconciled against `domain_outbox_events` and the contract machine first (C-2) |
+| B-3 | Assignment and submission tables with same-section foreign keys, and one `submit_assignment` command | `engineering` | Tables and command merged with ownership, attempt, deadline and idempotency rungs |
+| B-4 | The twelve access tests as one named list, each pointing at the test that holds it or marked unheld | `engineering` | A test fails when a rung has neither |
+
+Not adopted: the SQL as written (it would add a second grant model beside `role_grants`), and the Mermaid diagrams (nothing here renders or validates them).
