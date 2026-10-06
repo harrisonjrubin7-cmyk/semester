@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Signing out other devices says it cannot be undone
+
+On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
+
 ### Registration readiness opens with one line on where you stand
 
 At the top of the registration readiness list there is now a single status: **Ready**, **Almost ready**, **Getting ready**, **Blocked** or **Information unavailable**, with a sentence saying why. **Blocked** appears only when two courses in your schedule overlap, which the app can see for itself. Holds and prerequisites live in your school's system, so they never produce it. **Information unavailable** appears when no course catalog is loaded, or when a section you selected has no meeting times, so conflicts cannot be checked and the line will not say Ready. The Schedule conflicts step says the same. It is still preparation, not clearance: your registrar and official system decide the result. The steps below are unchanged and you do not have to do anything.
