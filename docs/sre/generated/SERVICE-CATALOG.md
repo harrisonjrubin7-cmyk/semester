@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-68 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+69 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -45,6 +45,7 @@
 | `job:media-scan` | Community media scan (parked) | job | C2 | security | — | `supabase-db` | — | RB-10 |
 | `job:integration-sync` | Integration tick (four times an hour) | job | C2 | integrations | — | `fn:integration-tick` | `kill.integration_sync` | RB-10 |
 | `job:tombstones` | Sweep tombstones (weekly) | job | C3 | data | — | `supabase-db` | — | RB-10 |
+| `job:handoffs` | Sweep spent hand-offs (daily) | job | C3 | security | — | `supabase-db` | — | RB-10 |
 | `job:ai-runtime-metadata` | AI runtime metadata refresh (daily) | job | C3 | ai | — | `supabase-db` | — | RB-10 |
 | `job:institution-gateway-retention` | Purge gateway journal (hourly) | job | C1 | data | — | `supabase-db` | — | RB-10 |
 | `job:community-retention` | Community retention (daily) | job | C1 | data | — | `supabase-db` | — | RB-10 |

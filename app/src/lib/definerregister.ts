@@ -157,6 +157,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['close_my_ticket', 'self-service', ['auth.uid()']],
   ['community_reviewer_standing', 'moderation', ['private.has_capability']],
   ['community_session_counts', 'read-helper', ['private.community_role']],
+  ['complete_onboarding_step', 'self-service', ['auth.uid()']],
   ['connected_with', 'read-helper', ['auth.uid()']],
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
@@ -168,6 +169,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['console_release_incidents', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -314,6 +316,8 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['skip_onboarding_step', 'self-service', ['auth.uid()']],
+  ['start_onboarding', 'self-service', ['auth.uid()']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
@@ -494,6 +498,9 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261003120000_support_notification_consent_boundary.sql',
     functions: ['set_support_email_notice'],
+  },  {
+    file: '20261006000000_onboarding_journeys_and_handoff.sql',
+    functions: ['complete_onboarding_step', 'consume_handoff', 'skip_onboarding_step', 'start_onboarding'],
   },
 ];
 

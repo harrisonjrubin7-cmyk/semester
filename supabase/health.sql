@@ -160,6 +160,7 @@ with expected(jobname, parked) as (values
   ('community-retention',           false),
   ('console-audit-integrity',       false),
   ('escalation-delivery',           true),
+  ('handoffs',                      false),
   ('institution-gateway-retention', false),
   ('integration-retention',         false),
   ('integration-sync',              false),

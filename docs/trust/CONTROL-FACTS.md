@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 194 |
-| Tables created in `public` and not later dropped | 323 |
-| … of which enable row-level security in a migration | 323 |
+| Migration files | 195 |
+| Tables created in `public` and not later dropped | 328 |
+| … of which enable row-level security in a migration | 328 |
 | Tables created in `private` and not later dropped | 31 |
 | … of which enable row-level security in a migration | 31 |
 | Tables with no `enable row level security` statement found | 0 |
-| Tables named by at least one literal `create policy` statement | 272 |
-| Tables with RLS found and no literal policy statement | 82 |
+| Tables named by at least one literal `create policy` statement | 276 |
+| Tables with RLS found and no literal policy statement | 83 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-122 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+123 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -118,6 +118,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/my-capabilities.check.sql` | Who the app is told holds which capability — 'public.my_capabilities()'. |
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
+| `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
 | `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
@@ -261,13 +262,13 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 220 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 220 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 224 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 224 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 60 |
+| Register rows in category `self-service` | 64 |
 | Register rows in category `sharing` | 21 |
 | Register rows in category `admin` | 85 |
 | Register rows in category `integration` | 6 |
