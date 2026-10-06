@@ -66,3 +66,67 @@ Same narrative a third time (12 pp, read in full). **No new domain, no new requi
 | Ten "complete connected behaviour" rows (onboarding, registration, Course Studio, advising, finance, campus, family, career, company operations, developer platform) | E-2; same journey-level readiness idea |
 
 One rule in its connection table is testable today and is worth a test when someone next touches the engine: "payment does not silently override unrelated holds". In `lib/enrollment/service.ts` a hold is a fact on the student and the only thing that clears it is the owning office; nothing in the engine reads a payment. That is the intended behaviour, but no test states it.
+
+## Fourth to eleventh PDFs: the connection and control backbone (2026-10-06)
+
+Eight PDFs, read in full, none a new product domain. Together they specify the machinery that connects the domains: a component registry, a policy enforcement layer, a workflow orchestrator, a reconciliation loop, an evidence registry, and an access saga with its contracts. The ninth (`NIST_Zero_Trust_saga_state_machine…`, 22 pp) is a later, refined version of the eighth's saga and supersedes it wherever they differ; the tenth (`Map_NIST_Zero_Trust_saga_flows…`, 20 pp) is a third phrasing of the same saga; the eleventh (`Build_a_state_machine_runbook_for_NIST_Zero_Trust…`, 17 pp) is a fourth, and the last one read.
+
+| PDF | Content | Disposition |
+| --- | --- | --- |
+| `continue_illsutration_and_depicting_semester_eycos…` (12 pp) | The same ecosystem narrative as the third PDF above | Already recorded; the same file, not re-folded |
+| `continue_further_stregthing_the_eycosystem…` (9 pp) | Nine-registry "backbone", a 12-field component passport, a fact-to-owning-domain table, seven connection states, a failure-cascade table, ten acceptance tests, P0–P2 priorities | Passport is the registry definition below; ten tests and priorities become **C-3, C-4** |
+| `Show_me_the_component_registry_structure…` (14 pp) | Five connected systems with about forty proposed tables | Registry built (below); the other tables are **C-1, C-2** |
+| `Design_a_policy_enforcement_layer_and_workflow_orc…` (13 pp) | Distributed control plane, registration-readiness pilot (states `ready_as_of`, `blocked`, `review_required`, `unknown`, `stale`, `handoff_pending`, `action_completed`), a ten-step first implementation | Pilot ordering is **C-5**; PEP/PDP split already exists as `packages/institution/src/policy.ts` (ADR 0007) |
+| `Build_an_end-to-end_saga_orchestrator_state_machin…` (25 pp, 20 read) | First access saga (`GRANT_PREPARED`, `PEP_INSTALLING`, …), `component.schema.json`, OpenAPI 3.1 and AsyncAPI 3.0 drafts, Rego | Registry schema **built**; saga superseded by the next row; contracts and Rego not adopted |
+| `NIST_Zero_Trust_saga_state_machine…` (22 pp) | Refined saga (`VALIDATING`, `EVALUATING`, `PREPARING`, `INSTALLING`), a `Store`/`Services` interface pair and `AccessSagaRunner`, `access-request.schema.json`, a compensation policy, a production release gate | **Built** as `access-saga.ts` |
+| `Map_NIST_Zero_Trust_saga_flows_into_a_complete_Asy…` (20 pp) | The saga a third time with ten states (`WAITING`, `INSPECTING`, `RECOVERY`, `CLOSED`), a pure `applyResult` reducer apart from the runner, a `revokeRequested` flag, a Command/Result message pair, one `/internal/operations` endpoint, Rego, a failure-recovery tree, a seven-row operator procedure, a safe-replay list, a 14-item release-evidence list | Same machine; the one new invariant is tested (below); the rest not adopted |
+| `Build_a_state_machine_runbook_for_NIST_Zero_Trust…` (17 pp) | The saga a fourth time as a pure `nextInstruction` / `applyResult` runbook, compensation as its own lifecycle with `revoke_pa`, `remove_pep` and `verify_cleanup`, separate PE and PEP Rego packages, one AsyncAPI document each for PE and PEP, a ten-row operator runbook, nine policy tests and eight saga tests | Two real gaps closed in `access-saga.ts` (below); Rego and AsyncAPI not adopted |
+
+> **Claim ceiling.** A grep of `supabase`, `database`, `app/src`, `packages` and `docs` for the proposed table names found none of `registry_components`, `platform_components`, `component_versions`, `workflow_definitions`, `workflow_instances`, `reconciliation_definitions`, `evidence_artifacts` or `authority_assignments`. `reconciliation_runs` appears only in the LMS matrix and the data inventory; `domain_outbox_events` exists and has no relay (gap register #1, #4). Nothing here is a database table. The seven `access_*` tables the ninth PDF lists were not searched for individually and are not created.
+
+### What was built
+
+| Item | File | Held by |
+| --- | --- | --- |
+| Access saga: 15 states, the runner (one move per tick, lease, compare-and-swap through the store, an event with every move, deadline and grant expiry), `operationKey`, jittered backoff, idempotency identity and digest, the access-request validator, `grantAllows`, the compensation policy as data | `packages/institution/src/access-saga.ts` | `access-saga.test.ts`, 50 tests against an in-memory `Store` and `Services`. Twenty-one deliberate breakages each turned red the test written for it: a wait that reaches `PREPARING`, an install that skips verification, an absent install that retries instead of re-evaluating, one that keeps its generation or its old decision, an install error read as failure, an unconfirmed revoke read as `REVOKED`, a stale decision that still grants, a deadline ignored, a grant that expires into `EXPIRED` instead of `REVOKING`, a deadline that stops a revocation, a grant that ignores expiry, an idempotency that ignores the payload, a request that accepts identity claims, a schema enum drifted, a lease never released, an orphaned grant that expires instead of being revoked, a cleanup verified on one side only, a cleanup that skips the enforcement point, a recovery that forgets which side failed, and a terminal saga moved after its deadline (that last one survived the first run, which is why the test now includes it) |
+| `access-request.schema.json`, as proposed | `docs/control-plane/access-request.schema.json` | `access-saga.test.ts` reads it and fails when it and the validator differ |
+| Component definition: validator, `checkRegistry` (unknown dependency, duplicate, two providers, unprovided contract, self-dependency), `authorityOverlaps` | `packages/institution/src/registry.ts` | `registry.test.ts`; `component.schema.json` is held to the validator the same way |
+| `component.schema.json`, as proposed | `docs/control-plane/component.schema.json` | `registry.test.ts` |
+
+What the tests do not show: persistence. The fakes prove the runner honours its contract, not that a database can. Of the ninth PDF's release gate, the runner's side of these is exercised: timeout after install, an expired deadline during provisioning, a stale decision, a failed save, revocation unconfirmed. Not exercised, because they belong to the store: a worker crash before persistence, a duplicate or out-of-order signal, orphaned prepared-grant recovery, atomic saga + audit + outbox writes, and `wake`.
+
+Three readings of the PDFs are decisions, not transcriptions. The ninth PDF's graph is used as written, and its prose "installed, at the right scope" is the adapter's duty (`inspect` compares scope), not the runner's. An install found `absent` goes back to `EVALUATING` at generation + 1, as the ninth PDF has it; the eighth's "retry the same install" is dropped because a decision made before an ambiguous failure may no longer hold. And the idempotency and operation keys are JSON arrays, not the PDF's `join(":")`, because an id containing a colon would collide.
+
+One thing to settle before this has a caller: `ACCESS_REQUEST_ACTIONS` names `registration.readiness.view`, `registration.override.request` and `registration.override.approve`, and none is in `POLICY_ACTIONS`. Under ADR 0007 `decide` denies an action it has no rule for, so the saga could never get an `allow` until each is added with a rule, a refusing test and an audit event type.
+
+The tenth PDF's one invariant that the ninth did not state is that a late install must not resurrect revoked access. In the runner it holds because a save is a compare-and-swap: a revocation that lands during an install makes the install's own move fail, and `a revocation that arrives while an install is in flight` checks that the saga never becomes `ACTIVE`. Its other differences are not adopted: renaming nine states back and forth between PDFs would change the wire enum for nothing; a `revokeRequested` flag duplicates what `REVOKING` already says and a flag can be forgotten where a state cannot; and a pure reducer split from the runner is a refactor the runner's tests already make safe, to do when a store exists. Its operator procedure, safe-replay steps and 14-item release evidence are documentation for **C-6**, not code.
+
+The eleventh PDF's improvement is that compensation has a lifecycle of its own, and two of its points were gaps in the runner as first built, now closed:
+
+- **An orphaned grant.** `prepare` can succeed and the worker die before the saga row records the grant id. The runner used to expire such a saga with nothing to revoke. A saga that leaves `PREPARING`, `INSTALLING`, `VERIFYING`, `RECONCILING` or `ACTIVE` now goes to `REVOKING` whether or not it holds a grant id, and cleanup revokes by saga and generation.
+- **One-sided cleanup.** A single `revoke` that returned `absent` trusted one adapter to have done both halves. Cleanup is now `revokePa`, `removePep`, then `verifyCleanup`, one per tick, each recorded in `compensation`. `REVOKED` needs the verification to find both sides clean; when it disagrees, only the side that failed is reopened. The PDF's reason is kept in the `Services` contract: no grant at the PEP alone does not exclude an installation still in flight.
+
+One piece depends on the adapter and is not tested here: the PDF's barrier, that an installation whose generation is at or below the revoked one is rejected however late it arrives. The runner states it as a duty of `revokePa`; only a real administrator and enforcement point can show it. It is on **C-6**'s list. The PDF's pure `nextInstruction`/`applyResult` split, its `COMPENSATING` state (here `REVOKING`) and its two AsyncAPI documents are not adopted for the reasons given for the tenth.
+
+### Not adopted, and why
+
+| Proposed | Decision |
+| --- | --- |
+| OPA Rego policies (two forms: one package, and separate PE and PEP packages) | ADR 0007 keeps rules in TypeScript until a tenant must author policy without a deploy; a second policy language would split the decision point. Not run here either: no OPA in this environment |
+| OpenAPI 3.1 and AsyncAPI 3.0 drafts (all four versions, including separate PE and PEP documents) | Not committed: nothing in this repository validates either, and an unvalidated contract file reads as a contract. The ninth PDF's own gate asks for validation, reference resolution and a code-to-event mapping test first. Adopt when the transport and credential scopes are chosen |
+| A trust score (0–100) in the decision | Both PDFs say NIST defines no formula; no signal source exists. Not started |
+| The seven `access_*` tables | Wait on C-1 and C-2 |
+| Populating the registry from the 40-domain catalogue | Refused: repository reference and revision must come from verified implementation evidence |
+
+### Proposed backlog additions
+
+| ID | Item | Owner seat | Closed when |
+| --- | --- | --- | --- |
+| C-1 | Decide where the registry lives: tables behind the owner's apply (as the payment-rail registry did, D-1324) or definitions as files checked by `checkRegistry` in CI | `engineering` | Decision recorded as `docs/decisions/D-<pull request number>.md` |
+| C-2 | Workflow, reconciliation, assurance and `access_*` tables reconciled against `domain_outbox_events`, the release evidence register and the existing workflow machines first | `data` | Reconciliation written; no table added that an existing one covers |
+| C-3 | The PDF's ten connection acceptance tests (authorized path, unauthorized role, other tenant, revoked membership, stale input, duplicate, timeout, partial completion, accessibility, lifecycle end) as a shape every cross-domain connection's test file must meet | `engineering` | A test fails when a catalogued connection lacks a rung |
+| C-4 | Seven connection states (`confirmed`, `pending_authoritative_confirmation`, `projection_updating`, `source_stale`, `action_blocked`, `connection_degraded`, `reconciliation_required`) as one shared vocabulary beside `lib/status.ts` | `design` | Decided against the existing status vocabulary before any screen uses one |
+| C-5 | The registration-readiness pilot's outcome states and its ten-step order, reconciled with the registration engine's check order (N-3), the pilot roles, and the three `registration.*` policy actions above | `product` | Decision recorded; first step is the PEP for one readiness read |
+| C-6 | A `Store` implementation for the access saga satisfying the ninth PDF's persistence gate, with the store-side failure rehearsals listed above and the revocation barrier (a late installation at a revoked generation is rejected) | `engineering` | Each unexercised item has a test against the real store |
+
+The access saga has no caller yet: nothing persists a saga row and no route asks for one.
