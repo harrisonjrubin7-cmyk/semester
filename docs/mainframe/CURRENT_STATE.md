@@ -39,7 +39,7 @@ The app is a Vite + React + TypeScript client. Institutional writes go through t
 
 These are already separate. This batch does not merge them.
 
-1. **Device plan.** `FirstRun` can take a term and course codes, store empty courses with source `Added by hand`, and open the Term plan. With no imported catalog, the Term plan lists those codes and says they are not a section, a seat, or an enrollment.
+1. **Device plan.** `FirstRun` can take a term and course codes, store empty courses with source `Added by hand`, and open the Term plan. With no imported catalog, the Term plan lists those codes and says they are not a section, a seat, or an enrollment. The registration-readiness checklist has a separate row, `named`, for those codes. That row stays short of ready. The cart’s primary-schedule row is the only one that can become ready from a selected section.
 2. **Term plan.** `Yes` / `RegistrationPortal` is the student’s cart, conflicts, and saved schedules from an imported catalog. Saving a schedule records “No enrollment was submitted.”
 3. **Official transaction.** `Registration.tsx` is enroll, waitlist, drop, and withdraw. The gate copy says the school has not turned registration on, so those actions still happen in the school’s system. Registrar actions require `registration:administer`. Client navigation does not grant that.
 

@@ -1,10 +1,10 @@
 # Session handoff
 
-**Date** 2026-10-06. **Branch** `audit/semester-mainframe-reconciliation`. **Base** `1ba54a92` (`origin/main` at the time the branch was created). **Push** not done. The execution prompt forbids remote changes, including push, deploy, and remote migrations.
+**Date** 2026-10-06. **Branch** `audit/semester-mainframe-reconciliation`. **Base at branch creation** `1ba54a92`. **Later `origin/main`** moved (operations console and company-site scan commits). The files this batch edits were unchanged on that newer main. **Push** not done.
 
 ## Objective that was completed
 
-Reconcile the mainframe specification with the repository, then ship one local registration-plan increment that cannot be mistaken for an enrollment.
+The connected-ecosystem specification (`docs/specifications/connected-ecosystem.pdf`) extends the mainframe. This batch depicted those connections in `ECOSYSTEM_CONNECTIONS.md` and implemented the next local fact: a course the student named is its own readiness row, and that row is not an enrollment.
 
 ## Working tree at the start
 
@@ -15,10 +15,10 @@ Branch `cursor/role-journeys-3071` at `e01aa230`, nine commits behind `origin/ma
 ## What the next session should read first
 
 1. This file.
-2. `EXECUTION_BACKLOG.md` item 1 (readiness row for named courses).
-3. `READINESS_REGISTER.csv` row `device-registration-plan`.
-4. `app/src/lib/path-readiness.ts` and `app/src/components/RegistrationReadiness.tsx`.
-5. `git diff` against `origin/main`.
+2. `EXECUTION_BACKLOG.md` next item: advisor handoff without a caseload.
+3. `ECOSYSTEM_CONNECTIONS.md` for the four connection types.
+4. `app/src/lib/path-readiness.ts` id `named`.
+5. `git diff` against `origin/main` before editing. Main has moved since `1ba54a92`. Rebase before any push.
 
 ## Do not redo
 
@@ -29,7 +29,7 @@ Branch `cursor/role-journeys-3071` at `e01aa230`, nine commits behind `origin/ma
 
 ## Checks recorded
 
-See `TEST_AND_RELEASE_GATES.md`. Typecheck, lint, design-system audit, and `npm test` passed (23316 tests, 69 skipped).
+See `TEST_AND_RELEASE_GATES.md`. After the named row: `npx tsc -b` exit 0, `npm run lint` exit 0, `npm test` exit 0 (23319 passed, 69 skipped). A 390px browser walk saved a plan, opened My Path, and showed “Courses you named” as Needs attention with “That is not an enrollment.”
 
 ## Unverified
 

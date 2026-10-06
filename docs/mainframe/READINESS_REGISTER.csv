@@ -1,5 +1,6 @@
 component,design_maturity,implementation_maturity,deployment_readiness,record_authority,evidence,blocker
-device-registration-plan,specified,local-tested,not-deployed,device-local,planpreview tests and FirstRun and NamedPlan on 1ba54a92 plus this branch,Catalog sections and seats still require an import; no registrar confirmation
+device-registration-plan,specified,local-tested,not-deployed,device-local,planpreview tests and FirstRun and NamedPlan,Catalog sections and seats still require an import; no registrar confirmation
+named-course-readiness-row,specified,local-tested,not-deployed,device-local,path-readiness id named; namedCoursesFrom; RegistrationReadiness passes device courses,Row stays attention on purpose; it is not clearance and not a cart section
 term-plan,specified,built-unoperated,unverified,device-local,RegistrationPortal and Yes Term plan tab,Imported catalog is a file not a live feed
 registration-readiness-checklist,specified,built-unoperated,unverified,not-authoritative,RegistrationReadiness.tsx path-readiness.ts,Does not yet list the device-named codes as their own row
 official-registration-transaction,specified,built-gated,unverified,external-sis,Registration.tsx OFF copy and registration:administer,School has not turned the gate on; remote schema application unverified

@@ -10,7 +10,7 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 | `npx vitest run src/screens/planpreview.test.tsx src/components/RegistrationPortal.namedplan.test.tsx src/screens/keyless.test.tsx` | `app/` | Exit 0 after the label fix. 3 files, 19 tests passed. |
 | `npx tsc -b` | `app/` | Exit 0. |
 | `npm run lint` | `app/` | Exit 0. Oxlint warnings remained under the ceiling of 25. Styles, labels, and terms passed. |
-| `npm test` | `app/` | Exit 0. 1452 files passed, 1 skipped. 23316 tests passed, 69 skipped. Duration 136.78s. |
+| `npm test` | `app/` | Exit 0 after the named readiness row. 1452 files passed, 1 skipped. 23319 tests passed, 69 skipped. Duration 128.87s. |
 | `node scripts/design-system-audit.mjs` | `app/` | Exit 0. 0 violations. Baseline unchanged at 67 raw-value warnings. |
 
 ## Not run
