@@ -12,8 +12,9 @@ import { loadMyCapabilities, type Grant } from '../lib/capabilities';
 import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } from '../lib/gradebook/client';
 
 /**
- * The gradebook of record: an instructor's official grades for a course, and
- * a student's own released ones.
+ * A working copy of one course's grades: an instructor enters and releases
+ * them here, and a student reads their own released ones. The school's LMS
+ * remains the grade record.
  *
  * `lib/gradebook/` and `20260929310000_gradebook.sql` built it — weighted
  * categories, append-only grade versions, moderation by a second person,
@@ -35,7 +36,7 @@ import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } fr
  * term typed in with no grant behind it would only ever read nothing.
  */
 
-export const BLURB = 'Your course’s official grades: set the scheme, enter and release scores, and answer regrade requests — or read your own released grades.';
+export const BLURB = 'Set the scheme, enter and release scores, and answer regrade requests — or read your own released grades. Your school’s LMS remains the grade record.';
 
 const OFF =
   'Your school has not turned on the gradebook in Semester, so grades are still entered and released in your school’s own system — your own grade arithmetic on the Grades tab is unaffected.';
