@@ -87,7 +87,7 @@ Support tab exists (default off). Flipping it on is itself a controlled action a
 
 ## 9. Operations dossier (nineteen dimensions)
 
-- **Model/Data/Screens:** §2, §4–6. **Roles/Isolation:** `console:operate` + domain capability; RLS and in-body checks; the three INVOKER readers that return all tenants to any `console:operate` holder are fixed first (permission matrix §7).
+- **Model/Data/Screens:** §2, §4–6. **Roles/Isolation:** `console:operate` + domain capability; RLS and in-body checks; of the three INVOKER readers that returned all tenants to any `console:operate` holder, approvals and the break-glass log are now scoped (#1348) and the customers readers are still open (permission matrix §7, [`ROLE_CAPABILITY_MATRIX.md` §5](ROLE_CAPABILITY_MATRIX.md#5-known-defects-to-fix-before-this-matrix-is-relied-on)).
 - **Workflows/Approvals/Policy/Consent:** [`OPERATIONS_WORKFLOW_CATALOG.md`](OPERATIONS_WORKFLOW_CATALOG.md); approvals per the duty table; policy: read-only default; consent: support content only by grant.
 - **Audit/SAF:** [`OPERATIONS_AUDIT_AND_EVIDENCE.md`](OPERATIONS_AUDIT_AND_EVIDENCE.md). **Review:** security review of every `ops_*` RPC; accessibility per [`OPERATIONS_RELEASE_GATES.md`](OPERATIONS_RELEASE_GATES.md).
 - **SLO/Support:** console read p95 and projection lag per the release-gates page; operator support is the owner. **Rollback:** a view is hidden by flag; a producer is disabled by kill switch; projections rebuild from the outbox.
