@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Advisors open a Caseload of plans students shared
+
+On the degree meeting tab, the folded list that was “For advisors: meetings shared with you” is now Caseload. It still lists only plans a student chose to share, and it says it is not every student at the school. Nothing else about a student is added to it.
+
 ### The operations console has a Trust controls tab
 
 For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
