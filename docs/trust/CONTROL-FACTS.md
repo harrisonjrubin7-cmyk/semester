@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 197 |
+| Migration files | 198 |
 | Tables created in `public` and not later dropped | 330 |
 | … of which enable row-level security in a migration | 330 |
 | Tables created in `private` and not later dropped | 31 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-125 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+126 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -62,6 +62,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-no-student-rows.check.sql` | No console function hands an operator a student's data. |
 | `supabase/console-release-incidents.check.sql` | Release and incident console read model. |
 | `supabase/console-scoped-tenant-access.check.sql` | Scoped Operations Console read template (20261005120000). |
+| `supabase/console-security-reads.check.sql` | Who may read the approval and break-glass records — beyond their own. |
 | `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/coursestudio.check.sql` | who may publish for a course, and who reads it. |
 | `supabase/definer-sweep.check.sql` | Every definer function a signed-in account can call, called by one that holds nothing. |
