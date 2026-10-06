@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_MEETINGS, meetingSummary, newMeeting, payloadLines, readMeetings, readSharePayload, sharePayload, type Meeting } from './advisor-meeting';
+import { EMPTY_MEETINGS, meetingSummary, meetingWithNamedAgenda, namedAgendaText, newMeeting, payloadLines, readMeetings, readSharePayload, sharePayload, type Meeting } from './advisor-meeting';
 
 /**
  * Phase G's meeting model: what the device keeps, and — the part that
@@ -132,5 +132,49 @@ describe('the device store', () => {
     expect(() => readMeetings({ version: 1, meetings: [{ ...meeting(), date: '5 Oct' }] })).toThrow();
     expect(() => readMeetings({ version: 1, meetings: [meeting(), meeting()] })).toThrow();
     expect(() => readMeetings({ version: 1, meetings: [{ ...meeting(), agenda: Array.from({ length: 31 }, (_, i) => ({ id: String(i), text: 'x' })) }] })).toThrow();
+  });
+});
+
+describe('named courses on the student agenda', () => {
+  const named = [{ code: 'ECON 1020', term: 'Fall 2026', secret: 'SECRET-GRADE-99' }];
+
+  it('writes only the code and term, and leaves notes and attachments empty', () => {
+    const next = meetingWithNamedAgenda(EMPTY_MEETINGS, named, 10);
+    expect(namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' })).toBe('ECON 1020 (Fall 2026). Named on this device. Not an enrollment.');
+    expect(next.meetings).toHaveLength(1);
+    expect(next.meetings[0].title).toBe('Courses I am considering');
+    expect(next.meetings[0].agenda.map((line) => line.text)).toEqual([namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' })]);
+    expect(next.meetings[0].notes).toBe('');
+    expect(next.meetings[0].questions).toEqual([]);
+    expect(next.meetings[0].attach).toEqual({ scenario: null, courses: [], followUps: false });
+    expect(JSON.stringify(next)).not.toContain('SECRET-GRADE-99');
+    expect(JSON.stringify(next)).not.toContain('worried');
+  });
+
+  it('does not duplicate a line, and does not touch notes or attachments already on the meeting', () => {
+    const existing = meeting({ attach: { scenario: 's1', courses: ['c1'], followUps: true } });
+    const lib = { version: 1 as const, meetings: [existing] };
+    const next = meetingWithNamedAgenda(lib, [{ code: 'ECON 1020', term: 'Fall 2026' }], 50);
+    expect(next.meetings).toHaveLength(1);
+    expect(next.meetings[0].id).toBe(existing.id);
+    expect(next.meetings[0].notes).toBe('I am worried about money this term');
+    expect(next.meetings[0].attach).toEqual(existing.attach);
+    expect(next.meetings[0].agenda.map((line) => line.text)).toEqual([
+      'Spring courses',
+      '  ',
+      namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' }),
+    ]);
+    const again = meetingWithNamedAgenda(next, [{ code: 'ECON 1020', term: 'Fall 2026' }], 60);
+    expect(again).toBe(next);
+  });
+
+  it('opens another meeting when the newest agenda is already full', () => {
+    const full = Array.from({ length: 30 }, (_, i) => ({ id: `a${i}`, text: `line ${i}` }));
+    const kept = meeting({ agenda: full, notes: 'kept' });
+    const next = meetingWithNamedAgenda({ version: 1, meetings: [kept] }, [{ code: 'ECON 1020', term: null }], 2);
+    expect(next.meetings).toHaveLength(2);
+    expect(next.meetings.find((item) => item.id === kept.id)?.agenda).toHaveLength(30);
+    expect(next.meetings.find((item) => item.id === kept.id)?.notes).toBe('kept');
+    expect(next.meetings.some((item) => item.agenda.some((line) => line.text === namedAgendaText({ code: 'ECON 1020', term: null })))).toBe(true);
   });
 });

@@ -17,7 +17,7 @@ import { RegistrationReadiness } from './RegistrationReadiness';
  * Credits in the registration cart count as *planned*, never as registered:
  * the cart is a plan the student has not submitted anywhere.
  */
-export function PathSnapshotCard() {
+export function PathSnapshotCard({ onPrepareMeeting }: { onPrepareMeeting?: () => void } = {}) {
   const { state } = useStore();
   const profile = usePathProfile();
   const registration = useDeviceLibrary('semester.registration.v1', readRegistration, EMPTY_REGISTRATION);
@@ -91,7 +91,7 @@ export function PathSnapshotCard() {
       ) : (
         <button type="button" className="btn btn-ghost" onClick={() => setEditing(true)}>Edit your path details</button>
       )}
-      <RegistrationReadiness />
+      <RegistrationReadiness onPrepareMeeting={onPrepareMeeting} />
     </section>
   );
 }
