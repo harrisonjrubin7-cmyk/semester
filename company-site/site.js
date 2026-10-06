@@ -246,9 +246,15 @@
     document.getElementById("bp-warn").innerHTML=w;
     const px=40,H=(H1-H0)*px;let g=`<div class="wk-h"></div>`+DN.map(d=>`<div class="wk-h">${d}</div>`).join("");
     g+=`<div class="wk-t ${pxClass("height",H)}">`+Array.from({length:H1-H0},(_,k)=>`<span class="${pxClass("top",k*px)}">${k?fmt((H0+k)*60):""}</span>`).join("")+`</div>`;
-    DAYS.forEach(d=>{g+=`<div class="wk-d ${pxClass("height",H)}">`+ok.filter(x=>x.days.includes(d)).map(x=>{const top=(x.st-H0*60)/60*px,h=(x.en-x.st)/60*px,c=x.commit?"ink-faint":COLS[x.i%COLS.length];
-      return `<div class="blkc${badSet.has(x)?" bad":""} ${weekBlockClass(top,h,c,x.commit)}" title="${esc(x.name)}"><b>${esc(x.name.split(" ").slice(0,2).join(" "))}</b><br>${fmt(x.st)}</div>`}).join("")+`</div>`});
-    document.getElementById("bp-week").innerHTML=g;
+    const week=document.getElementById("bp-week");week.innerHTML=g;
+    DAYS.forEach(d=>{const column=document.createElement("div");column.className=`wk-d ${pxClass("height",H)}`;
+      ok.filter(x=>x.days.includes(d)).forEach(x=>{const top=(x.st-H0*60)/60*px,h=(x.en-x.st)/60*px,c=x.commit?"ink-faint":COLS[x.i%COLS.length];
+        const block=document.createElement("div");block.className=`blkc${badSet.has(x)?" bad":""} ${weekBlockClass(top,h,c,x.commit)}`;
+        // Visitor-entered names are data, never part of an HTML attribute string.
+        block.title=x.name;const name=document.createElement("b");name.textContent=x.name.split(" ").slice(0,2).join(" ");
+        block.append(name,document.createElement("br"),document.createTextNode(fmt(x.st)));column.append(block);
+      });week.append(column);
+    });
     const courses=ok.filter(x=>!x.commit);
     document.getElementById("bp-backups").innerHTML=courses.map(x=>`<li>Pick a backup section or course for ${esc(x.name)}</li>`).join("")+`<li>Check prerequisites for every course</li>`;
     const qs=[];conf.forEach(([a,b])=>qs.push(`Which should I prioritise: ${a.name} or ${b.name}?`));if(cr>17)qs.push(`Is ${cr} credits realistic with my commitments?`);if(cr<12)qs.push(`Does ${cr} credits keep me full-time?`);qs.push("Which of these courses count toward my open requirements?");
@@ -1547,6 +1553,40 @@ const exampleRow = (scale = 1) => ({
     a.landing_path=(location.pathname+(location.hash||"")).slice(0,200);if(document.referrer){try{const r=new URL(document.referrer);if(r.origin!==location.origin)a.referrer=(r.hostname+r.pathname).slice(0,200)}catch(e){}}
     sessionStorage.setItem(ATTR_KEY,JSON.stringify(a))}catch(e){}})();
   const attribution=()=>{try{return JSON.parse(sessionStorage.getItem(ATTR_KEY)||"{}")}catch(e){return {}}};
+  // ---------- app links say where the visitor came from ----------
+  // The app reads six short, optional facts from its address (app/src/lib/entrycontext.ts):
+  // src, cid, content, ref, role, continue. A role there is a hint for which welcome to show and
+  // grants nothing; who someone is stays with their signed-in account. This block adds three of
+  // them to the links that open the app: where the click came from (only when the address or the
+  // referrer says so), the campaign, and which part of this page it was on. app/src/lib/companysiteentrylinks.test.ts
+  // runs it against the app's own parser, so what is built here is what the app accepts.
+  // <entry-links>
+  // APP_BASE is the app's address, declared above for the status probes.
+  const ENTRY_ID=/^[A-Za-z0-9_-]{1,64}$/;
+  const entryId=v=>{const t=String(v||"").replace(/[^A-Za-z0-9_-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,64);return ENTRY_ID.test(t)?t:""};
+  const SEARCH_HOSTS=/(^|\.)(google|bing|duckduckgo|yahoo|ecosia)\.[a-z.]+$/i;
+  const SOCIAL_HOSTS=/(^|\.)(instagram|tiktok|facebook|linkedin|twitter|x|reddit|snapchat|threads)\.(com|net|co|app)$/i;
+  const entrySource=a=>{
+    const src=String(a.utm_source||"").toLowerCase(),med=String(a.utm_medium||"").toLowerCase();
+    if(/^(cpc|ppc|paid|paidsocial|paid-social|display)$/.test(med))return"paid_campaign";
+    if(src==="youtube")return"youtube";
+    if(med==="email"||/^(email|newsletter)$/.test(src))return"email";
+    if(med==="social"||/^(instagram|tiktok|facebook|linkedin|twitter|x|reddit|snapchat|threads)$/.test(src))return"social";
+    if(med==="referral"||src==="referral")return"referral";
+    if(src==="partner"||med==="partner")return"partner";
+    if(med==="organic"||/^(google|bing|duckduckgo|yahoo|ecosia)$/.test(src))return"organic_search";
+    const host=String(a.referrer||"").split("/")[0];
+    if(/(^|\.)youtube\.com$|(^|\.)youtu\.be$/i.test(host))return"youtube";
+    if(SEARCH_HOSTS.test(host))return"organic_search";
+    if(SOCIAL_HOSTS.test(host))return"social";
+    return""};
+  const entryParams=(a,place)=>{const p={};const s=entrySource(a||{});if(s)p.src=s;const c=entryId((a||{}).utm_campaign);if(c)p.cid=c;p.content=entryId(place)||"site";p.role="student";return p};
+  const withEntry=(href,a,place)=>{const u=new URL(href);const p=entryParams(a,place);Object.keys(p).forEach(k=>{if(!u.searchParams.has(k))u.searchParams.set(k,p[k])});return u.toString()};
+  // </entry-links>
+  const decorateAppLink=a=>{try{if(a.dataset.entryLink)return;const h=a.getAttribute("href")||"";if(h.indexOf(APP_BASE)!==0)return;const sec=a.closest("[id]");a.setAttribute("href",withEntry(h,attribution(),sec&&sec.id));a.dataset.entryLink="1"}catch(e){}};
+  document.querySelectorAll('a[href^="'+APP_BASE+'"]').forEach(decorateAppLink);
+  // Views drawn by script appear later, so the rest are done as they are reached.
+  ["pointerdown","focusin","click"].forEach(t=>document.addEventListener(t,e=>{const a=e.target&&e.target.closest&&e.target.closest("a[href]");if(a)decorateAppLink(a)},true));
   const LEAD_FORMS=["contact-form","proc-form","ri-form","evt-form","up-form","kit-form","lead-form","st-sub"];
   LEAD_FORMS.forEach(id=>{const f=document.getElementById(id);if(!f||f.querySelector("[data-consent]"))return;const meta=f.querySelector(".formmeta");const html=`<label class="pdrow" for="${id}-consent" data-site-style="sd063db45fb96"><input type="checkbox" id="${id}-consent" data-consent>You may email me occasional Semester updates <span class="opt">optional</span></label>`;(meta||f.querySelector('button[type="submit"]')).insertAdjacentHTML("beforebegin",html)});
   document.querySelectorAll(".formmeta").forEach(m=>{if(!/campaign link/.test(m.innerHTML))m.insertAdjacentHTML("beforeend",` We note which campaign link or site brought you here, from the page address and the address of the site that linked you: no cookies, no trackers.`)});

@@ -163,6 +163,17 @@ select cron.schedule(
   $job$select public.sweep_tombstones('90 days')$job$
 );
 
+-- Spent and stale hand-offs. A hand-off lives fifteen minutes at most and is used
+-- once, so a row that is consumed, expired or revoked is evidence of nothing a week
+-- later. `sweep_handoffs` marks the stale ones expired and deletes anything finished
+-- more than seven days ago. It needs no secret and no endpoint, and is revoked from
+-- every client role (20261006000000_onboarding_journeys_and_handoff.sql).
+select cron.schedule(
+  'handoffs',
+  '31 3 * * *',
+  $job$select public.sweep_handoffs()$job$
+);
+
 -- AI provider reservations expire after five minutes inside the budget
 -- functions, so a crashed request cannot hold a tenant budget indefinitely.
 -- This daily job physically removes expired runtime metadata after each

@@ -51,7 +51,7 @@ const LINKS = [
  */
 export function Yes() {
  const [view,setView]=useState('plan');
- return <div className="portal-workspace registration-workspace"><TabList label="Registration tools" className="portal-tabs" value={view} onChange={setView} tabs={([['plan','Search & plan'],['import','Enrolled schedule & official portal']] as [typeof view,string][]).map(([id,label])=>({id,label}))}/>{view==='plan'?<RegistrationPortal/>:<EnrolledSchedule/>}</div>;
+ return <div className="portal-workspace registration-workspace"><TabList label="Registration tools" className="portal-tabs" value={view} onChange={setView} tabs={([['plan','Term plan'],['import','Enrolled schedule & official portal']] as [typeof view,string][]).map(([id,label])=>({id,label}))}/>{view==='plan'?<RegistrationPortal/>:<EnrolledSchedule/>}</div>;
 }
 function EnrolledSchedule() {
   const { state, dispatch, catalog } = useStore();

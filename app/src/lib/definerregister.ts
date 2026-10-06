@@ -128,6 +128,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['approve_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['archive_school', 'admin', ['private.offboarding_operator']],
   ['authorize_school_purge', 'admin', ['private.offboarding_operator']],
+  ['available_case_supporters', 'read-helper', ['auth.uid()', 'private.subject_has_capability']],
   ['available_supporters', 'read-helper', ['auth.uid()']],
   ['begin_community_image', 'self-service', ['auth.uid()', 'private.community_role']],
   ['beta_add_cohort', 'admin', ['private.beta_manager']],
@@ -149,18 +150,26 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['claim_abandoned_organization', 'self-service', ['auth.uid()', "mine is distinct from 'MEMBER'"]],
   ['claim_community_alias', 'self-service', ['auth.uid()', 'private.community_role']],
   ['claim_family_invite', 'sharing', ['auth.uid()']],
+  ['claim_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['claim_referral', 'self-service', ['auth.uid()']],
   ['claim_school', 'self-service', ['auth.uid()']],
   ['close_break_glass', 'admin', ['auth.uid()', 'g.subject is distinct from me']],
   ['close_my_ticket', 'self-service', ['auth.uid()']],
   ['community_reviewer_standing', 'moderation', ['private.has_capability']],
   ['community_session_counts', 'read-helper', ['private.community_role']],
+  ['complete_onboarding_step', 'self-service', ['auth.uid()']],
   ['connected_with', 'read-helper', ['auth.uid()']],
   ['console_act', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['console_audit_read', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_audit_status', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_command_center', 'admin', ['auth.uid()', 'private.has_capability']],
   ['console_figures', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_integration_health', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_privacy_requests', 'admin', ['auth.uid()', 'private.account_is_held', 'private.has_capability']],
+  ['console_release_incidents', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_tenant_access', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['console_tenant_operations', 'admin', ['auth.uid()', 'private.has_capability']],
+  ['consume_handoff', 'self-service', ['auth.uid()']],
   ['contribute_course_plan', 'self-service', ['auth.uid()', 'private.school_of']],
   ['create_community', 'self-service', ['auth.uid()', 'private.has_capability', 'private.verified_student', 'private.school_of']],
   ['create_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
@@ -243,6 +252,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_entitlements', 'read-helper', ['auth.uid()']],
   ['my_help_destinations', 'read-helper', ['private.has_capability']],
   ['my_moderation_access', 'read-helper', ['private.has_capability']],
+  ['my_privacy_completion_certificates', 'read-helper', ['auth.uid()']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_support_email_notices', 'read-helper', ['auth.uid()']],
@@ -263,7 +273,9 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
   ['read_advisor_share', 'sharing', ['auth.uid()']],
   ['read_family_share', 'sharing', ['auth.uid()']],
+  ['read_privacy_request_detail', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['read_shared_accommodation', 'sharing', ['auth.uid()']],
+  ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
@@ -286,6 +298,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['request_connection', 'self-service', ['auth.uid()']],
   ['request_mentor', 'self-service', ['auth.uid()', 'private.school_of', 'private.in_cohort']],
   ['request_school_membership', 'self-service', ['auth.uid()', 'private.verified_account']],
+  ['resolve_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed', 'private.account_is_held']],
   ['restore_school', 'admin', ['private.offboarding_operator']],
   ['retire_escalation_agreement', 'admin', ['auth.uid()', 'private.has_capability']],
   ['reveal_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -303,11 +316,14 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['set_support_email_notice', 'self-service', ['auth.uid()']],
   ['share_with_advisor', 'sharing', ['auth.uid()']],
   ['share_with_support', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
+  ['skip_onboarding_step', 'self-service', ['auth.uid()']],
+  ['start_onboarding', 'self-service', ['auth.uid()']],
   ['start_organization', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['state_my_age', 'self-service', ['auth.uid()']],
   ['stop_contributing', 'self-service', ['auth.uid()']],
   ['submit_course_review', 'self-service', ['auth.uid()', 'private.verified_student', 'private.school_of']],
   ['support_access_windows', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['support_case_access', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active']],
   ['support_reply', 'admin', ['private.support_agent']],
   ['support_ticket_queue', 'admin', ['private.support_agent']],
   ['support_ticket_thread', 'admin', ['private.support_agent']],
@@ -315,6 +331,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['trust_room_revoke', 'sharing', ['auth.uid()', 'private.has_capability']],
   ['verify_data_subject_request', 'admin', ['auth.uid()', 'private.has_capability', 'req.subject = me']],
   ['verify_offboarding_export', 'admin', ['private.offboarding_operator']],
+  ['verify_privacy_request', 'admin', ['auth.uid()', 'private.assert_fresh_mfa', 'private.privacy_case_allowed']],
   ['volunteer_attest', 'self-service', ['auth.uid()']],
   ['volunteer_decide', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
   ['volunteer_next_tasks', 'moderation', ['auth.uid()', 'private.volunteer_ready']],
@@ -330,7 +347,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
  * Delete an entry when the file is applied, and the next reading's count moves.
  */
 export const NOT_YET_APPLIED: readonly string[] = [
-  '20260930173030_console_command_center.sql',
+  '20261005126000_console_release_incidents.sql',
   '20260930185000_school_membership_enforcement.sql',
   '20260930200000_school_offboarding.sql',
   '20260930234000_data_subject_request_intake.sql',
@@ -355,7 +372,7 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
     functions: ['raise_my_data_subject_request'],
   },
   {
-    file: '20260930173030_console_command_center.sql',
+    file: '20261005126000_console_release_incidents.sql',
     functions: ['console_command_center'],
   },
   {
@@ -443,6 +460,22 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
   {
+    file: '20261005126000_console_release_incidents.sql',
+    functions: ['console_release_incidents'],
+  },
+  {
+    file: '20261005125000_console_integration_health.sql',
+    functions: ['console_integration_health'],
+  },
+  {
+    file: '20261005124000_privacy_case_actions.sql',
+    functions: ['claim_privacy_request', 'my_privacy_completion_certificates', 'read_privacy_request_detail', 'resolve_privacy_request', 'verify_privacy_request'],
+  },
+  {
+    file: '20261005123000_privacy_case_workspace.sql',
+    functions: ['console_privacy_requests'],
+  },
+  {
     file: '20261001153124_productivity_workspace.sql',
     functions: ['productivity_readiness_aggregate'],
   },
@@ -451,8 +484,23 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
     functions: ['my_support_email_notices'],
   },
   {
+    file: '20261005120000_console_scoped_tenant_access.sql',
+    functions: ['console_tenant_access'],
+  },
+  {
+    file: '20261005121000_console_tenant_operations.sql',
+    functions: ['console_tenant_operations'],
+  },
+  {
+    file: '20261005122000_support_case_access.sql',
+    functions: ['available_case_supporters', 'read_support_case_signals', 'support_case_access'],
+  },
+  {
     file: '20261003120000_support_notification_consent_boundary.sql',
     functions: ['set_support_email_notice'],
+  },  {
+    file: '20261006000000_onboarding_journeys_and_handoff.sql',
+    functions: ['complete_onboarding_step', 'consume_handoff', 'skip_onboarding_step', 'start_onboarding'],
   },
 ];
 

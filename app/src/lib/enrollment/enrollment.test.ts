@@ -13,6 +13,7 @@ import {
   submit,
   waitPosition,
   type Context,
+  type Enrollment,
   type Hold,
   type Ledger,
   type Request,
@@ -533,5 +534,105 @@ describe('from the planner’s cart', () => {
   it('will not guess a capacity the catalog does not carry', () => {
     expect(() => sectionFrom(course('x', 'EXAM 101', 3, [], null))).toThrow(/capacity/);
     expect(sectionFrom(course('x', 'EXAM 101', 3, [], null), { capacity: 5 }).capacity).toBe(5);
+  });
+});
+
+// ── The order of the checks ──────────────────────────────────────────────
+
+/**
+ * The first check that says no is the reason a student is given, so the order
+ * is part of the answer (see the module header). Each check is tested alone
+ * above; none of those tests would notice two of them swapped.
+ *
+ * This starts from one request that every check refuses, then repairs one
+ * cause at a time in the registrar's order. At each rung every later cause is
+ * still standing, so the reason shown there is the earlier check beating all
+ * of them. Swap two checks in `submit`, `enroll` or `blocker` and the rung
+ * between them reads the wrong reason. Reaching `enrolled` at the top is the
+ * control: it shows each repair removes exactly its own cause and no other.
+ */
+describe('the order of the checks', () => {
+  // PHYS 300 is taken by ben, then given a prerequisite and made restricted.
+  // GEOL 100 clashes with it; BIOL 200 would put ana over the 12-credit ceiling.
+  const phys = sectionFrom(course('phys', 'PHYS 300', 4, TR10), { capacity: 1 });
+  const geol = sectionFrom(course('geo', 'GEOL 100', 2, TR10));
+  const biol = sectionFrom(course('bio', 'BIOL 200', 10, MWF9));
+  const seated = run(
+    { ...LEDGER, sections: { ...LEDGER.sections, phys, geo: geol, bio: biol } },
+    ctx(),
+    enroll('ana', 'geo'),
+    enroll('ana', 'bio'),
+    enroll('ben', 'phys'),
+  );
+  const STAMP = DURING.toISOString();
+  const pending: Enrollment = { id: 'enr-dup', student: 'ana', section: 'phys', state: 'pending_approval', waitSeq: null, grade: null, version: 1, createdAt: STAMP, updatedAt: STAMP };
+  const waive = (kind: 'approval' | 'capacity') => ({ id: `ovr-${kind}`, student: 'ana', section: 'phys', waives: [kind] as const, reason: 'x', by: 'reg', at: STAMP });
+  const killSwitch = { key: 'kill.writeback', tenantId: null, engaged: true };
+
+  /** Each cause, in the order the module promises, with what the student is told while it stands. */
+  const LADDER = [
+    ['key', 'bad_request'],
+    ['kill', 'kill_switch'],
+    ['flag', 'flag_off'],
+    ['section', 'unknown_section'],
+    ['term', 'unknown_term'],
+    ['student', 'unknown_student'],
+    ['window', 'window_not_open'],
+    ['hold', 'hold'],
+    ['duplicate', 'already_pending'],
+    ['prereq', 'prerequisite_missing'],
+    ['clash', 'time_conflict'],
+    ['credit', 'credit_limit'],
+    ['approval', 'pending_approval'],
+    ['seat', 'full'],
+  ] as const;
+
+  /** The same enroll request in a world where only the causes in `fixed` have been repaired. */
+  function world(fixed: ReadonlySet<string>) {
+    const on = (cause: string) => fixed.has(cause);
+    const ledger: Ledger = {
+      ...seated,
+      sections: { ...seated.sections, phys: { ...phys, prerequisiteCodes: ['PHYS 200'], requiresApproval: true, term: on('term') ? TERM : '2099SP' } },
+      enrollments: [
+        ...seated.enrollments.filter((e) => !(e.student === 'ana' && ((e.section === 'geo' && on('clash')) || (e.section === 'bio' && on('credit'))))),
+        ...(on('duplicate') ? [] : [pending]),
+      ],
+      overrides: [...seated.overrides, ...(on('approval') ? [waive('approval')] : []), ...(on('seat') ? [waive('capacity')] : [])],
+    };
+    const c = ctx({
+      now: on('window') ? DURING : BEFORE,
+      gate: { tenantId: 'u1', flag: on('flag') ? 'production' : 'off', killSwitches: on('kill') ? [] : [killSwitch] },
+      students: {
+        ben: student('ben'),
+        ...(on('student') ? { ana: student('ana', { holds: on('hold') ? [] : [HOLD], completed: on('prereq') ? ['PHYS 200'] : [] }) } : {}),
+      },
+    });
+    const r: Request = { kind: 'enroll', key: on('key') ? key() : 'x', student: 'ana', section: on('section') ? 'phys' : 'nope' };
+    return { ledger, c, r };
+  }
+  const told = (fixed: ReadonlySet<string>) => {
+    const { ledger, c, r } = world(fixed);
+    const d = review(ledger, r, c);
+    return d.outcome === 'refused' ? d.reason : d.outcome;
+  };
+
+  it('starts from a request every check refuses, and the first check in the order speaks', () => {
+    expect(told(new Set())).toBe(LADDER[0][1]);
+  });
+
+  it.each(LADDER.map(([cause, reason], i) => [i, cause, reason] as const))(
+    'rung %i: %s is repaired next, so the answer is %s with every later cause still standing',
+    (i, _cause, reason) => {
+      expect(told(new Set(LADDER.slice(0, i).map(([c]) => c)))).toBe(reason);
+    },
+  );
+
+  it('enrolls once every cause is repaired (the control: no repair was doing another’s work)', () => {
+    expect(told(new Set(LADDER.map(([c]) => c)))).toBe('enrolled');
+  });
+
+  it('refuses a late request for the window before the hold that is also on the account', () => {
+    const { ledger, c, r } = world(new Set(LADDER.slice(0, 6).map(([x]) => x)));
+    refused(ledger, r, { ...c, now: AFTER_ADD_DROP }, 'window_closed');
   });
 });

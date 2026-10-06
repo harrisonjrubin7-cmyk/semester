@@ -3,7 +3,7 @@ import { EMPTY_MEETINGS, meetingKey, readMeetings } from '../lib/advisor-meeting
 import { useDeviceLibrary } from '../lib/device-library';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { hasPathProfile } from '../lib/path-profile';
-import { pathReadiness, readinessCount } from '../lib/path-readiness';
+import { overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from '../lib/path-readiness';
 import { useRegistrationPlan } from '../lib/registration-plan';
 import { useStore } from '../state/store';
 import { usePathProfile } from './PathProfileForm';
@@ -21,7 +21,7 @@ export function RegistrationReadiness() {
   const profile = usePathProfile();
   const plan = useRegistrationPlan();
   const meetings = useDeviceLibrary(meetingKey(account?.id), readMeetings, EMPTY_MEETINGS);
-  const items = useMemo(() => pathReadiness({
+  const input = useMemo<PathReadinessInput>(() => ({
     pathConfigured: hasPathProfile(profile.value),
     requirementTotal: state.requirements.length,
     cart: plan.cart,
@@ -30,7 +30,9 @@ export function RegistrationReadiness() {
     meetings: meetings.value,
     institution: plan.institution,
   }), [meetings.value, plan.cart, plan.catalog, plan.data, plan.institution, profile.value, state.requirements.length]);
+  const items = useMemo(() => pathReadiness(input), [input]);
   const count = readinessCount(items);
+  const overall = overallReadiness(items, readinessFacts(input));
 
   return (
     <section className="path-readiness" aria-labelledby="path-readiness-title">
@@ -38,6 +40,9 @@ export function RegistrationReadiness() {
       <h3 id="path-readiness-title" className="balance-heading">Know what is ready before your window opens</h3>
       <p className="portal-muted">
         This is preparation, not registration clearance. Your registrar, advisor and official system remain the authority.
+      </p>
+      <p className="path-readiness-overall" data-state={overall.state}>
+        <strong>{overall.label}.</strong> {overall.why}
       </p>
       <ol className="path-readiness-list">
         {items.map((item) => (

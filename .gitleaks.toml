@@ -15,7 +15,11 @@
 #     generic-api-key  audio/manifest.json:141,330     b729fa308ce916c1, …
 #
 # With this file: none, on both versions named below. Each regex says which of
-# those it answers and why that string is not a credential.
+# those it answers and why that string is not a credential. A fifth shape was
+# added later: an unsigned three-part fixture (`alg` none, subject `test`,
+# signature `sig`) that company-site scan tests put next to the word `token`.
+# It is not a credential anyone can present. The tests no longer contain it;
+# the history scan still sees the commits that added it.
 #
 # ## Every exception is scoped to a value, and none to a file
 #
@@ -121,12 +125,23 @@ useDefault = true
 #      shortest real secret is a 24-byte calendar token, and the rest are JWTs
 #      and prefixed keys. Length alone is what makes it safe, and it is
 #      checked — the planted Anthropic key in that same file was reported.
+#
+#   5. **An unsigned scan-test bearer.** `scripts/company-site-scan.test.mjs`
+#      once stood a literal `eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln`
+#      next to `token`. Decoded, that is `{"alg":"none"}`, `{"sub":"test"}`
+#      and the three characters `sig`. It satisfies the three-segment shape
+#      the login parser requires and authorizes nothing. The tests now use
+#      `header.payload.signature` instead. This regex is the exact old value,
+#      because the secrets job also scans commits that already added it, and
+#      removing the line does not remove those commits. A longer bearer, or
+#      any other `eyJ` string, does not match.
 [allowlist]
-description = 'Four string shapes this repository contains that are named "key" and are not credentials. See the header.'
+description = 'Five string shapes this repository contains that are named "key" or "token" and are not credentials. See the header.'
 regexTarget = 'secret'
 regexes = [
   '''^sb_publishable_[A-Za-z0-9_-]{8,}$''',
   '''^semester\.[a-z.-]+\.v[0-9]+$''',
   '''^[a-z][a-z0-9-]*/[A-Z]{2,4}$''',
   '''^[0-9a-f]{16}$''',
+  '''^eyJhbGciOiJub25lIn0\.eyJzdWIiOiJ0ZXN0In0\.c2ln$''',
 ]
