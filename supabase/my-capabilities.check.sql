@@ -161,10 +161,21 @@ begin
   perform pg_temp.become(shut);
   select count(*) into n from public.my_capabilities();
   perform pg_temp.counted('a closed break-glass grant tells its holder nothing', n, 0);
+  perform pg_temp.counted('and private.has_capability does not honour a closed grant either',
+    (private.has_capability('tenant:configure', 'school', 'mycap-glass-school'))::int, 0);
 
   perform pg_temp.become(spent);
   select count(*) into n from public.my_capabilities();
   perform pg_temp.counted('a lapsed break-glass grant tells its holder nothing', n, 0);
+  -- Expiry removes access on its own: the grant was never closed, and nothing
+  -- rewrites it when its window ends, so only the predicate stops it counting.
+  perform pg_temp.counted('and private.has_capability does not honour a grant past its expiry, though it was never closed — T-04',
+    (private.has_capability('tenant:configure', 'school', 'mycap-glass-school'))::int, 0);
+
+  -- The control for those two: the open grant is honoured by the same predicate.
+  perform pg_temp.become(glass);
+  perform pg_temp.counted('while private.has_capability honours the open grant — THE CONTROL for the two cases above',
+    (private.has_capability('tenant:configure', 'school', 'mycap-glass-school'))::int, 1);
 
   perform pg_temp.become(student);
   select count(*) into n from public.my_capabilities();
