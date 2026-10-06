@@ -9,4 +9,4 @@ Reference material for the connection and control backbone. Nothing here is depl
 
 The code is `packages/institution/src/access-saga.ts` (the grant provisioning state machine) and `registry.ts` (the definition validator and cross-definition checks). The reasoning, and what was proposed and not adopted, is in [`docs/master/SEMESTER_NATIVE_PDF_DELTA.md`](../master/SEMESTER_NATIVE_PDF_DELTA.md).
 
-No component is registered. A definition's repository reference and revision come from verified implementation evidence, never from a catalogue.
+`components/` is the registry: one `<componentId>.component.json` per component, checked in CI by `registry-files.test.ts` (D-1356). No component is registered. A definition's repository reference and revision come from verified implementation evidence, never from a catalogue.

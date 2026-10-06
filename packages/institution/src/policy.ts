@@ -102,6 +102,21 @@ export const POLICY_ACTIONS = {
     auditEvent: 'calendar_event.updated',
     classificationCeiling: 'student_private',
   },
+  'registration.readiness.view': {
+    description: 'A student, their assigned advisor or an authorized registrar reads a source-aware registration-readiness checklist.',
+    auditEvent: 'registration.readiness_viewed',
+    classificationCeiling: 'education_record',
+  },
+  'registration.override.request': {
+    description: 'A student asks the registrar\'s office to review an exception to a registration condition.',
+    auditEvent: 'registration.override_requested',
+    classificationCeiling: 'education_record',
+  },
+  'registration.override.approve': {
+    description: 'An authorized registrar approves a pending override request, bound to the request and record version they reviewed.',
+    auditEvent: 'registration.override_granted',
+    classificationCeiling: 'education_record',
+  },
 } as const satisfies Record<string, { description: string; auditEvent: string; classificationCeiling: ResourceClassification }>;
 
 export type PolicyAction = keyof typeof POLICY_ACTIONS;
@@ -234,6 +249,88 @@ const RULES: Record<PolicyAction, Rule> = {
   'task.write': (e) => productivityWrite('task')(e),
   'calendar.event.read': (e) => productivityRead('calendar')(e),
   'calendar.event.write': (e) => productivityWrite('calendar')(e),
+
+  /*
+   * Readiness is read by the student, their assigned advisor or a registrar,
+   * for a record that belongs to *this* institution, and every read is audited
+   * with the sources and freshness it rests on. The field list is the
+   * relationship's: an advisor does not see another office's holds.
+   */
+  'registration.readiness.view': ({ request, grants, has }) => {
+    const { actor, tenant, resource } = request;
+    const a = resource.attributes ?? {};
+    if (actor.type !== 'user') return deny('actor_not_person', 'Registration readiness is read by a signed-in person, not by a service.');
+    if (!has('registration.readiness.view')) return deny('capability_missing', 'Your role does not include registration readiness.');
+    if (!resource.ownerId) return deny('owner_missing', 'Whose readiness this is has to be known before it is read.');
+    if (a.tenantId !== tenant.id) return deny('cross_tenant', 'This record belongs to a different institution.');
+    const relationship = registrationRelationship(request, grants);
+    if (!relationship) return deny('relationship_not_permitted', 'You are not this student\'s advisor or a registrar at this institution.');
+    return allow(
+      { type: 'audit', eventType: POLICY_ACTIONS['registration.readiness.view'].auditEvent },
+      { type: 'limit_fields', allowlist: READINESS_FIELDS[relationship] },
+      { type: 'cite_sources' },
+    );
+  },
+
+  /*
+   * Only the student asks for their own exception, with a stated reason and a
+   * command id, for a named course and term. The request opens a review task;
+   * it grants nothing and enrols no one.
+   */
+  'registration.override.request': ({ request, has }) => {
+    const { actor, tenant, resource, context } = request;
+    const a = resource.attributes ?? {};
+    if (actor.type !== 'user') return deny('actor_not_person', 'An override is requested by the student, not by a service.');
+    if (!has('registration.override.request')) return deny('capability_missing', 'Your role cannot request a registration override.');
+    if (!resource.ownerId) return deny('owner_missing', 'Whose registration this is has to be known before an override is requested.');
+    if (a.tenantId !== tenant.id) return deny('cross_tenant', 'This record belongs to a different institution.');
+    if (resource.ownerId !== actor.id) return deny('not_owner', 'Only the student can ask for their own override. An advisor can message the registrar\'s office.');
+    if (!context.idempotencyKey) return deny('idempotency_missing', 'A request needs a command id so a retry cannot file it twice.');
+    if (!context.purpose) return deny('purpose_missing', 'Say why the exception is needed; the reviewer reads it.');
+    if (!nonEmptyString(a.courseId) || !nonEmptyString(a.termId)) return deny('request_incomplete', 'Name the course and the term the override is for.');
+    return allow(
+      { type: 'audit', eventType: POLICY_ACTIONS['registration.override.request'].auditEvent },
+      { type: 'human_review' },
+    );
+  },
+
+  /*
+   * An approval is the reviewer's decision about *one* request in *one* state,
+   * not a standing permission. It needs a registrar of this institution who is
+   * not the student, a request still pending review, a reason, and a binding:
+   * the digest and record version the reviewer saw must be the ones that are
+   * current, or the approval is stale and the request goes back for review.
+   * A reviewer without fresh authentication is allowed *with the obligation* to
+   * re-authenticate. Approving an override is not enrolling: the obligation to
+   * reconcile is the saga waiting for the registration domain's own result.
+   */
+  'registration.override.approve': ({ request, grants, has }) => {
+    const { actor, tenant, resource, context } = request;
+    const a = resource.attributes ?? {};
+    if (actor.type !== 'user') return deny('actor_not_person', 'An override is approved by a person, not by a service.');
+    if (!has('registration.override.approve')) return deny('capability_missing', 'Your role cannot approve a registration override.');
+    if (!resource.ownerId) return deny('owner_missing', 'Whose registration this is has to be known before an override is approved.');
+    if (a.tenantId !== tenant.id) return deny('cross_tenant', 'This record belongs to a different institution.');
+    if (!isRegistrar(request, grants)) return deny('reviewer_not_authorized', 'Only a registrar at this institution can approve an override.');
+    if (resource.ownerId === actor.id) return deny('self_approval', 'You cannot approve your own override.');
+    if (a.requestState !== 'pending_review') return deny('request_not_pending', 'This request is not waiting for review.');
+    if (!nonEmptyString(a.requestDigest) || !nonEmptyString(a.reviewedDigest) || !nonEmptyString(a.resourceVersion) || !nonEmptyString(a.reviewedVersion)) {
+      return deny('approval_unbound', 'An approval has to say which request and which version of the record was reviewed.');
+    }
+    if (a.requestDigest !== a.reviewedDigest || a.resourceVersion !== a.reviewedVersion) {
+      return deny('approval_stale', 'The request or the record changed after you reviewed it. Review it again.');
+    }
+    if (!context.idempotencyKey) return deny('idempotency_missing', 'An approval needs a command id so a retry cannot apply it twice.');
+    if (!context.purpose) return deny('purpose_missing', 'Say why the override is granted; it is recorded.');
+    const obligations: PolicyObligation[] = [
+      { type: 'audit', eventType: POLICY_ACTIONS['registration.override.approve'].auditEvent },
+      { type: 'require_confirmation' },
+      { type: 'reconcile' },
+      { type: 'notify', audience: 'subject' },
+    ];
+    if (actor.mfaLevel !== 'fresh') obligations.unshift({ type: 'require_fresh_mfa' });
+    return allow(...obligations);
+  },
 
   /*
    * A support agent does not get generic student-record access. They get one
@@ -405,6 +502,40 @@ const productivityWrite = (kind: 'task' | 'calendar'): Rule => ({ request, has }
   }
   return allow({ type: 'audit', eventType });
 };
+
+/**
+ * Registration readiness and its exceptions. Three relationships can read a
+ * student's readiness and they are different relationships, not one consent
+ * flag: the student themself, an advisor with an advisee grant for *that*
+ * student, and a registrar with a tenant grant. Seeing the checklist is not
+ * seeing the records behind it; each relationship gets its own field list.
+ *
+ * What these rules do not decide is whether the student is *ready*. A missing
+ * prerequisite record is "unknown", not "eligible", and that is the readiness
+ * evaluator's finding; an authorized reader still gets the answer "unknown".
+ * Authorization failure and missing academic data are different conditions.
+ */
+type RegistrationRelationship = 'student_self' | 'assigned_advisor' | 'authorized_registrar';
+
+const READINESS_FIELDS: Record<RegistrationRelationship, string[]> = {
+  student_self: ['status', 'asOf', 'sources', 'freshness', 'blockers', 'holds', 'prerequisites', 'plannedCourses', 'window'],
+  // An advisor sees what blocks the plan, not the detail of a hold another office placed.
+  assigned_advisor: ['status', 'asOf', 'sources', 'freshness', 'blockers', 'prerequisites', 'plannedCourses', 'window'],
+  authorized_registrar: ['status', 'asOf', 'sources', 'freshness', 'blockers', 'holds', 'prerequisites', 'plannedCourses', 'window'],
+};
+
+const registrationRelationship = (request: AuthorizationRequest, grants: RoleGrant[]): RegistrationRelationship | null => {
+  const { actor, tenant, resource } = request;
+  if (resource.ownerId === actor.id) return 'student_self';
+  if (grants.some((g) => g.role === 'academic_advisor' && g.scopeKind === 'advisee' && g.scopeId === resource.ownerId)) return 'assigned_advisor';
+  if (grants.some((g) => g.role === 'registrar' && g.scopeKind === 'tenant' && g.scopeId === tenant.id)) return 'authorized_registrar';
+  return null;
+};
+
+const nonEmptyString = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
+
+const isRegistrar = (request: AuthorizationRequest, grants: RoleGrant[]): boolean =>
+  grants.some((g) => g.role === 'registrar' && g.scopeKind === 'tenant' && g.scopeId === request.tenant.id);
 
 const isClassification = (value: unknown): value is ResourceClassification =>
   typeof value === 'string' && (RESOURCE_CLASSIFICATIONS as readonly string[]).includes(value);
