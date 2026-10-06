@@ -90,7 +90,7 @@ Everything the brief names with no evidenced demand: alumni network at scale, em
 | --- | --- | --- |
 | 1 | Owner decisions OD-1, OD-9 (and OD-5 scheduled) | — |
 | 2 | Run the gates not run in Phase 0 (`build`, `test:shuffle`, secret scan, `check.sh`, advisor) and record the result in the release-evidence register | — |
-| 3 | Read the 18 sensitive definer functions and anon grants; fix or revoke with a migration test (dev branch first) | 2 |
+| 3 | **Partly landed** ([`SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md`](../master/SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md), #1319 era): 279 definer functions, 0 anon-executable, 7 sensitive RPCs and 4 with no visible gate read by hand, one low lead (`kill_switch_engaged`, R-2). **Open:** R-3 (268 bodies unread, 207 authenticated-executable), R-4 (33 public no-policy tables), and the R-2 fix (migration test on a dev branch first) | 2 |
 | 4 | Fix `my_capabilities()` break-glass defect and scope the three INVOKER readers; add T-04 | 3 |
 | 5 | Executors for the eight duties without one (`tenant-policy`, `release`, `integration-config`, `ai-provider`, `evidence-release`, `data-deletion`, `refund`, `support-access`), one duty at a time, audit-first | 1, 4 |
 | 6 | Revoke the direct write grants those duties bypassed; T-02 green per duty | 5 |
@@ -122,7 +122,7 @@ Names follow the existing sequence where one exists (`SEMESTER_EXECUTION_ROADMAP
 
 | # | Branch | Scope | Actions | Depends on |
 | --- | --- | --- | --- | --- |
-| 1 | `audit/rpc-exposure` | 18 definer functions, anon grants; revoke/fix with migration test | 2–3 | — |
+| 1 | `audit/rpc-exposure` | **Read pass landed**; remaining: R-3 bodies, R-4 tables, R-2 fix with migration test | 2–3 | — |
 | 2 | `fix/ops-capability-defects` | `my_capabilities()` break-glass, INVOKER readers, T-04 | 4 | 1 |
 | 3 | `fix/ops-approval-bypass` | duty executors, grant revocation, `is_app_admin()` retirement, T-02 | 5–7 | 2, OD-9 |
 | 4 | `feat/ops-projection-foundation` (= master `feat/cqrs-projection-foundation`) | projection tables, emit helper, claim/replay, projector, producers | 8–12 | 3 |
