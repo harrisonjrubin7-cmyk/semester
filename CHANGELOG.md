@@ -24,6 +24,8 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+- **The bill says the figures are yours.** Under the total you track yourself, a “Student entered” label now says you typed these numbers in and the school has not confirmed them. Nothing else on the screen changed.
+
 ### Your data now shows what the app can use on this device
 
 On **Your data**, under a new **On this device** heading, there is one entry each for **Camera**, **Microphone**, **Location** and **Notifications**. Each says whether it is **Allowed**, **Blocked**, **Not asked yet**, **Not reported** (some browsers say nothing about the camera or microphone until they have been asked) or **Not available here**, what it is used for, and what still works without it. You do not have to do anything, and nothing on this page asks for a permission; the app still asks only when you start something that needs one.
