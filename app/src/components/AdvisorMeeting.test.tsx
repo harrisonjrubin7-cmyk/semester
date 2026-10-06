@@ -255,6 +255,8 @@ describe('the advisor’s view', () => {
     await mount('u1');
     expect(shares.sharedWithMe).not.toHaveBeenCalled();
     const details = host.querySelector<HTMLDetailsElement>('.advisor-view')!;
+    expect(details.querySelector('summary')?.textContent).toBe('Caseload');
+    expect(text(details)).toContain('not every student at your school');
     await act(async () => {
       details.open = true;
       details.dispatchEvent(new Event('toggle'));

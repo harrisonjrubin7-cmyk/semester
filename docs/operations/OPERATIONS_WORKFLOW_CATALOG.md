@@ -25,7 +25,7 @@ This is the catalog of **operations** workflows: the ones an institution operato
 
 | ID | Workflow | Actors | Approval | Audit events | Rollback | State | Tier |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| W-11 | Register integration; approve connection and credential reference | IT, implementation | 1 (`integration-config` duty: 2P in prod) | `integration.registered`, `connection.approved` | R | Partial (direct DML, F-1) | P0 |
+| W-11 | Register integration; approve connection and credential reference | IT, implementation | 1 (`integration-config` duty: 2P in prod) | `integration.registered`, `connection.approved` | R | Partial (health read built; configuration changes are request-only approvals, `20261005127000`; direct-write path per F-1 not re-read) | P0 |
 | W-12 | Approve field mapping (version) | institution data steward | 1 + steward sign-off | `mapping.approved` | R (versions immutable) | Partial (mapping versions exist) | P0 |
 | W-13 | Handle sync exception; replay dead letter | IT, operator | 1 for replay | `sync.exception_resolved`, `deadletter.replayed` | C | Partial (integration only; domain outbox has no replay) | P0 |
 | W-14 | Reconciliation and dual run | implementation | gate | `reconciliation.run`, `dualrun.started/ended` | R | Partial | P0 visibility |
@@ -41,7 +41,7 @@ This is the catalog of **operations** workflows: the ones an institution operato
 | W-19 | Work item lifecycle (create from event, acknowledge, assign, resolve, dismiss with reason) | any operator | none | `work_item.*` | R | Missing | P0 |
 | W-20 | Support ticket and escalation | support | none; sev ≥ 2 notifies | ticket events (`support_tickets`) | n/a | **Built** (flag off) | P0 |
 | W-21 | Elevated support access to a student's content | support, student | student consent | `support_access_event` | R (grant expires) | **Built** | P0 |
-| W-22 | Declare / escalate / resolve incident; publish notice | incident commander | declare 1; resolve SEV1–2 2P where staffed | `incident.*`, `governance_incident_notices` | n/a | Missing (notices only) | P0 basic |
+| W-22 | Declare / escalate / resolve incident; publish notice | incident commander | declare 1; resolve SEV1–2 2P where staffed | `incident.*`, `governance_incident_notices` | n/a | Partial (`platform_incident` table and read landed; no operator write path) | P0 basic |
 | W-23 | Promote release; rollback | release | gate evidence green | `release.promoted/rolled_back` | R | Partial (`platform_release_evidence`) | P0 |
 | W-24 | Postmortem and corrective action | commander | 1 | `postmortem.published` | n/a | Missing | P1 |
 
@@ -75,4 +75,4 @@ A workflow is data (`workflow_versions`), not code, once it is more than three s
 
 ## 7. Coverage against the P0 sequence
 
-W-01, 02, 04, 05, 06, 07, 09, 11–14, 19–23, 25–27, 31, 32, 34 are the P0 set. Of these, **built**: W-03, 06, 07, 09, 20, 21. **Partial**: W-02, 04, 05, 11–14, 23, 26, 27, 32, 34. **Missing**: W-01, 19, 22, 25, 31. The missing five are the first workflow build targets; four need the work-item and projection foundation ([`OPERATIONS_ROADMAP.md`](OPERATIONS_ROADMAP.md#first-25-implementation-actions)).
+W-01, 02, 04, 05, 06, 07, 09, 11–14, 19–23, 25–27, 31, 32, 34 are the P0 set. Of these, **built**: W-03, 06, 07, 09, 20, 21. **Partial**: W-02, 04, 05, 11–14, 23, 26, 27, 32, 34. **Missing**: W-01, 19, 25, 31 (W-22 is now partial: table and read landed). *Corrected 2026-10-06 against `f48baf6e`.* The missing five are the first workflow build targets; four need the work-item and projection foundation ([`OPERATIONS_ROADMAP.md`](OPERATIONS_ROADMAP.md#first-25-implementation-actions)).

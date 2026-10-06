@@ -40,7 +40,8 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 ## Named screens
 
 - [x] Term Plan — the Registration planner (`yes`). Tab and heading say Term plan. Cart conflicts render before the sections (`RegistrationPortal.conflicts.test.tsx`).
-- [x] Advisor Caseload, Tenant Overview, Operations Inbox, Institutional Pilot page — recorded in `SCREEN-PACKS.md` §4. The caseload list is blocked on institution data and consent. Tenant overview and the inbox exist in part and are not retitled. The pilot page is routed pages on the company site.
+- [x] Advisor Caseload — the folded share list (`AdvisorSharedView`) says Caseload and that it is not every student. A school-wide list stays blocked on institution data and consent (`SCREEN-PACKS.md` §4).
+- [x] Tenant Overview, Operations Inbox, Institutional Pilot page — recorded in `SCREEN-PACKS.md` §4. Tenant overview and the inbox exist in part and are not retitled. The pilot page is routed pages on the company site.
 
 ## Gates for this change
 
