@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 185 |
-| Tables created in `public` and not later dropped | 321 |
-| … of which enable row-level security in a migration | 321 |
+| Migration files | 194 |
+| Tables created in `public` and not later dropped | 323 |
+| … of which enable row-level security in a migration | 323 |
 | Tables created in `private` and not later dropped | 31 |
 | … of which enable row-level security in a migration | 31 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 272 |
-| Tables with RLS found and no literal policy statement | 80 |
+| Tables with RLS found and no literal policy statement | 82 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-115 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+122 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -58,6 +58,10 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-approvals.check.sql` | The operations console's writes: approvals, the fail-closed action, break-glass, and the commercial core (20260929110000). |
 | `supabase/console-command-center.check.sql` | Live command-center read model (20260930180000). |
 | `supabase/console-control-plane.check.sql` | The operations console's control plane: preferences, seats, fresh MFA, the duty matrix, the audit chain, figures with provenance, and the demo flag. |
+| `supabase/console-integration-health.check.sql` | Credential-free, exact-school integration health. |
+| `supabase/console-release-incidents.check.sql` | Release and incident console read model. |
+| `supabase/console-scoped-tenant-access.check.sql` | Scoped Operations Console read template (20261005120000). |
+| `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
 | `supabase/coursestudio.check.sql` | who may publish for a course, and who reads it. |
 | `supabase/definer-sweep.check.sql` | Every definer function a signed-in account can call, called by one that holds nothing. |
 | `supabase/deletion.check.sql` | What "Delete my account" actually empties, walked as the account doing it. |
@@ -116,6 +120,8 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
+| `supabase/privacy-case-actions.check.sql` | Privacy case lifecycle, holds, approvals and certificates. |
+| `supabase/privacy-case-workspace.check.sql` | Scoped, identity-minimized privacy queue. |
 | `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
@@ -138,6 +144,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/student-accounts.check.sql` | Student accounts (D-146): nobody writes the ledger but the approval of someone other than the requester; above the threshold only a high-value approver approves; whoever put a payment on the ledger d… |
 | `supabase/student-payment-plans.check.sql` | Payment plans on student accounts (D-146): a plan is asked for only by the student it concerns or by Student Accounts; the database reads the balance from the ledger and writes the schedule by the sc… |
 | `supabase/support-access.check.sql` | Student-granted, time-boxed and audited support access. |
+| `supabase/support-case-access.check.sql` | Identity-free support-case metadata and consent-bound aggregate reads. |
 | `supabase/support-tickets.check.sql` | Support tickets (20260928210000_support_tickets.sql). |
 | `supabase/supportshares.check.sql` | an athlete's share with academic support. |
 | `supabase/sync.check.sql` | Two devices on one account, without needing two devices. |
@@ -254,19 +261,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 207 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 207 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 220 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 220 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 60 |
-| Register rows in category `sharing` | 19 |
-| Register rows in category `admin` | 76 |
+| Register rows in category `sharing` | 21 |
+| Register rows in category `admin` | 85 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 28 |
+| Register rows in category `read-helper` | 30 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 
