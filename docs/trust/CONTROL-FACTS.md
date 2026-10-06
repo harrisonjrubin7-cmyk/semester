@@ -69,6 +69,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/deletion.check.sql` | What "Delete my account" actually empties, walked as the account doing it. |
 | `supabase/demand.check.sql` | Course demand forecasting (Phase K, D-051): a student contributes only by consenting, only at their own school, and can stop; a count is published only at ten or more and only from live consent; staf… |
 | `supabase/dining.check.sql` | who may order, give, move and read, in dining. |
+| `supabase/emit-domain-event.check.sql` | The outbox's one SQL writer (backlog P1-02): what it refuses, what it makes idempotent, who may call it, and that an event leaves with the transaction that wrote it. |
 | `supabase/erasure-clears-consent-snapshots.check.sql` | Erasing an account must not leave its consent history behind in a copy. |
 | `supabase/evidence-graphs.check.sql` | Learning, skill and capture evidence must stay inside both its tenant and its person boundary. |
 | `supabase/expansion.check.sql` | Expansion roles and features: every new permission walked as the account it is about, and every refusal attempted as the account that should be refused. |
