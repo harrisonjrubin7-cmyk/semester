@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -213,6 +214,17 @@ describe('when the school has not turned it on', () => {
     mock.configured = false;
     await render();
     expect(text()).toContain('has not turned on the gradebook');
+  });
+
+  it('says the school LMS remains the grade record, and never calls this an official transcript', async () => {
+    mock.flag = 'off';
+    await render();
+    expect(text()).toContain('Your school’s LMS remains the grade record');
+    expect(text().toLowerCase()).not.toContain('official transcript');
+    const src = readFileSync('src/screens/Gradebook.tsx', 'utf8');
+    expect(src).toContain('Your school’s LMS remains the grade record');
+    expect(src.toLowerCase()).not.toContain('official transcript');
+    expect(src).not.toContain('replaces your LMS');
   });
 });
 
