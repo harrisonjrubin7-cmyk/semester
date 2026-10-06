@@ -1,0 +1,16 @@
+component,design_maturity,implementation_maturity,deployment_readiness,record_authority,evidence,blocker
+device-registration-plan,specified,local-tested,not-deployed,device-local,planpreview tests and FirstRun and NamedPlan,Catalog sections and seats still require an import; no registrar confirmation
+named-course-readiness-row,specified,local-tested,not-deployed,device-local,path-readiness id named; meetingWithNamedAgenda; AdvisorMeeting Degree tests,Ready only when every named code is an agenda line; a cart section does not do that; nothing is shared
+term-plan,specified,built-unoperated,unverified,device-local,RegistrationPortal and Yes Term plan tab,Imported catalog is a file not a live feed
+registration-readiness-checklist,specified,local-tested,not-deployed,device-local,RegistrationReadiness.tsx path-readiness.ts,Lists device-named codes; agenda handoff is local; not clearance
+official-registration-transaction,specified,built-gated,unverified,external-sis,Registration.tsx OFF copy and registration:administer,School has not turned the gate on; remote schema application unverified
+client-role-journeys,specified,local-tested,not-deployed,none,rolejourney.ts forRole,Choosing a role grants no server capability
+identity-sso-scim,specified,built-unoperated,unverified,unverified,operations roadmap score 2,HTTP SCIM and a named tenant
+authorization-and-audit,specified,built-unoperated,unverified,unverified,operations roadmap; F-1 open,Direct-write bypass; zero production audit rows claimed by the roadmap and not re-queried here
+operations-command-center,specified,built-unoperated,unverified,unverified,#/console eleven tabs per roadmap,Inbox tenant 360 and projection relay
+institution-control-plane,specified,partial,unverified,unverified,University tabs,Registrar readiness console OP-14 not built
+ai-governance,specified,partial,unverified,unverified,operations roadmap score 2,Approved evaluation set unverified
+integration-migration,specified,partial,unverified,external,operations roadmap score 2,No approved cutover
+company-billing,specified,partial,unverified,unverified,Stripe adapter commits on main after e01aa230,Shadow rail; no charge created this session
+student-accounts,specified,partial,unverified,not-authoritative,operations roadmap score 1-2,Separate from company billing; not operated
+infrastructure-and-trust,specified,partial,unverified,unverified,CI scripts migrations RLS files,Hosted backups restore and incident paging unverified
