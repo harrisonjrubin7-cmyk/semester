@@ -32,7 +32,7 @@ This branch now includes main’s `uncheckedSections`, `readinessFacts`, and `ov
 
 ## Checks recorded
 
-See `TEST_AND_RELEASE_GATES.md`. After the rebase onto the #1336 merge: `npx tsc -b` exit 0, and the unmatched set (`planpreview`, `RegistrationPortal.namedplan`, `RegistrationPortal.conflicts`) exit 0 (3 files, 15 tests). The 390px Term plan walk on `#/yes` had an empty `pageerror` list.
+See `TEST_AND_RELEASE_GATES.md`. After the rebase onto the #1336 merge: `npx tsc -b` exit 0, `npm run lint` exit 0, and the unmatched set (`planpreview`, `RegistrationPortal.namedplan`, `RegistrationPortal.conflicts`) exit 0 (3 files, 15 tests). The 390px Term plan walk on `#/yes` had an empty `pageerror` list.
 
 ## Unverified
 
