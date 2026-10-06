@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Sharing a plan with an advisor says you can take it back
+
+On the degree meeting tab, **Preview and share…** still shows exactly what the advisor will see, and it now says nothing else is shared and that you can undo it by revoking the share from this screen. The advisor still sees only what you ticked. Nothing else about sharing changed.
+
 ### Staff get a way into the operations console
 
 If your account holds the operations console grant (`console:operate` at platform scope), **Me** shows a **Semester Operations** row that opens the console. Nobody else sees it, and typing `#/console` still shows a one-line notice without the grant. Nothing for you to do; granting access is a separate, reviewed step in [`docs/OPERATOR-PROVISIONING.md`](docs/OPERATOR-PROVISIONING.md).

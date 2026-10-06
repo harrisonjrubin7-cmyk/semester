@@ -90,7 +90,7 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | Next-action scoring | Existing but incomplete. |
 | Access matrix | Duplicate or superseded as a second matrix. |
 | Break-glass two-person | Existing and verified in SQL. `decide_approval` plus `console-approvals.check.sql`. |
-| Consequence pattern | Existing but incomplete. `ActionPreview` is the preview inside the leave-university and approve-join dialogs (`SchoolClaim.tsx`, `SchoolMembership.test.tsx`) and inside sign-out-other-devices (`AccountSecurity.tsx`, `AccountSecurity.test.tsx`). Other confirmations still write their own sentences. |
+| Consequence pattern | Existing but incomplete. `ActionPreview` is the preview inside leave-university and approve-join (`SchoolClaim.tsx`), sign-out-other-devices (`AccountSecurity.tsx`), and sharing a plan with an advisor (`AdvisorMeeting.tsx`). Other confirmations still write their own sentences. |
 | AI class gate | Existing and verified. Ceiling T2. It does not read prose. |
 | Approvals state machine | Existing and verified in SQL. |
 | Red-team corpus for blocked prompts | Not ported. It depended on the scanner `D-1298` declined. |

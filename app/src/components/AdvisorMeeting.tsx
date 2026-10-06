@@ -40,6 +40,7 @@ import { comparisonText } from '../lib/scenario-compare';
 import { useNow, useStore } from '../state/store';
 import { AdvisorSharedView } from './AdvisorSharedView';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -390,11 +391,14 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
         <ConfirmDialog
           title="Share this with your advisor?"
           preview={
-            <>
-              <p>
-                <strong>{email.trim()}</strong> will see exactly this, as “{payload.sharedAs}”, until {day(expiryFrom(days, now.getTime()))}:
-              </p>
-              {payloadLines(payload).map((s) => (
+            <ActionPreview
+              subject={meeting?.title || 'This meeting'}
+              says={
+                <>
+                  <strong>{email.trim()}</strong> will see exactly this, as “{payload.sharedAs}”, until {day(expiryFrom(days, now.getTime()))}:
+                </>
+              }
+              exactly={payloadLines(payload).map((s) => (
                 <div key={s.heading}>
                   <p>
                     <strong>{s.heading}</strong>
@@ -402,8 +406,9 @@ export function AdvisorMeeting({ accountId }: { accountId: string | null }) {
                   <ul>{s.items.map((i) => <li key={i}>{i}</li>)}</ul>
                 </div>
               ))}
-              <p>Nothing else is shared. You can revoke it at any time, and you will see when it is opened.</p>
-            </>
+              doesNotChange="Nothing else is shared."
+              recovery={{ kind: 'undo', how: 'Revoke it from this screen. You will see when it is opened.' }}
+            />
           }
           confirmLabel="Share"
           onConfirm={() => void doShare()}

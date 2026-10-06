@@ -23,7 +23,7 @@ own school, with no link-based access. The owner decided this on
 | Create agenda | Agenda items, added and removed one at a time |
 | Add questions | Questions, each with a place for the answer given, filled in after the meeting |
 | Attach a plan scenario or course shortlist | At most one graduation scenario (Phase D), as its comparison lines, and any saved courses (Phase F). **Only what is ticked can be shared** |
-| Share with an authorized advisor | Name as the advisor knows them, the advisor's school email, and an expiry of one week, one month, three months or four months (the maximum). **Preview and share…** shows exactly what the advisor will see before anything is sent |
+| Share with an authorized advisor | Name as the advisor knows them, the advisor's school email, and an expiry of one week, one month, three months or four months (the maximum). **Preview and share…** shows exactly what the advisor will see before anything is sent, and says the student can revoke it from this screen |
 | Set access expiration | Required on every share, 120 days at most (a term); enforced by the database |
 | Revoke access | **Revoke…** (confirmed) stops it opening at once. It stays in the list with its log until deleted; the database refuses to un-revoke |
 | Access and revocation log | Each share shows active, expired or revoked (with the date), and "Opened N times, last on …" from the server's read log |

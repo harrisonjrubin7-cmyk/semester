@@ -57,7 +57,7 @@ Marketplace revival. Company roles `ceo`, `cfo`, `comms`, `social`, `people`, `d
 | 1 | Shared design-system mapping | Already in `docs/design-system/`. No token edit |
 | 2 | Company-role student-row sweep | On main. All 64 owner-keyed tables probed (`D-1298`). One read still to narrow |
 | 3 | Free-text scan | Not built. `D-1298` |
-| 4 | Remaining stream 01 list: staff-named owner columns, storage buckets, provenance and consequence ports | Open. Fifteen owner-column names are swept (`D-1303`). A blanket anon revoke of `private` is not done. Leave, approve-join, and sign-out-other-devices use `ActionPreview`. |
+| 4 | Remaining stream 01 list: staff-named owner columns, storage buckets, provenance and consequence ports | Open. Fifteen owner-column names are swept (`D-1303`). A blanket anon revoke of `private` is not done. Leave, approve-join, sign-out-other-devices, and sharing a plan with an advisor use `ActionPreview`. |
 | 5–18 | Student OS through release evidence | Term Plan is the Registration planner (`yes`). The folded advisor list is labeled Caseload and is shared plans only. `SCREEN-PACKS.md` §4 records a school-wide caseload as blocked on data, and the other brief names as partial or already on the company site. |
 
 ## Definition of complete, not met
