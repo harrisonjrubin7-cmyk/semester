@@ -18,6 +18,7 @@ import { MembershipPanel } from '../components/MembershipPanel';
 import { cloudConfigured, signOut } from '../lib/cloud';
 import { formatTime } from '../lib/locale';
 import { ErrorState } from '../components/unity/States';
+import { PilotFactMark } from '../components/PilotFactMark';
 
 /**
  * The account screen.
@@ -54,6 +55,7 @@ export function AccountScreen() {
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Device only</div>
+          <PilotFactMark surface="account" seeded={state.sample} at={state.lastSync?.at ?? null} />
           <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-display-lg)' }}>
             This build has no account service
           </div>
@@ -97,6 +99,7 @@ export function AccountScreen() {
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Signed in</div>
+          <PilotFactMark surface="account" seeded={state.sample} at={state.lastSync?.at ?? null} />
           <div className="account-identity" style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', marginTop: 'var(--sp-3)' }}>
             {account.email}
           </div>

@@ -14,14 +14,14 @@ Nothing here authorises a production migration, a deploy, a billing change, or a
 | 4 | Classify the 207 definer functions: student, staff, operator, or revoke | 1 | Done. Live names match `definerregister.ts` (207, same MD5). No definer was revoked. Anon table DML is a separate change: D-1306 is in the repo and was not pushed |
 | 5 | Re-test F-01 and either fix school isolation or record a compensating control | 4 | Done as a control, not a flip. 0 schools. `nativefoundation.test.ts` holds the default-false acknowledgement gate |
 | 6 | Confirm Semester2 (`kpuulmnicidgdmwgfngv`) table set versus `semester` | 2 | Done. 19 public tables, 2 private tables with RLS off and no client grants. Not this repo's schema |
-| 7 | Put source, authority, and freshness on Today, registration readiness, degree, and account | 5 | A test that a seeded grade cannot render as institution-verified |
-| 8 | Registration readiness copy and empty states: unavailable hold, unavailable window, handoff link | 7 | Screen test. SIS remains the only enrol path a student is told to trust |
+| 7 | Put source, authority, and freshness on Today, registration readiness, degree, and account | 5 | Done. `gradeSource` returns `sample` for a seeded grade, including when a caller also claims an institutional read. `PilotFactMark` is on Today, registration (off), degree, and account. A seeded grade renders “Sample” and “Update time not recorded”, never “Institution verified” |
+| 8 | Registration readiness copy and empty states: unavailable hold, unavailable window, handoff link | 7 | Done for the off gate, which is every school today. Window, hold, and section each say unavailable. The plan button still hands off to `yes`. Enrolment copy stays with the school’s system. Not a live SIS read |
 | 9 | Prove `registration_enroll` refuses a closed window, a hold, and a failed prerequisite | 4, 8 | Tests red against a reverted check |
 | 10 | Attach approval and audit to `gradebook_release` and `registrar_decide` | 4 | A release without the capability and the approval does not write |
 | 11 | State in the gradebook UI that the LMS is the record | 10 | Copy test. No "official transcript" string |
 | 12 | One AI gateway predicate: identity, tenant, classification, consent, allowed tools | 5 | A test call without consent returns a refusal, not a completion |
 | 13 | Citation and uncertainty on `ask` for registration and grade questions | 12 | The answer names its source and says it is not an enrolment or a grade |
-| 14 | Support handoff from readiness and from the gradebook | 8 | A ticket carries category and no extra record payload |
+| 14 | Support handoff from readiness and from the gradebook | 8 | Done. `ticketFromAsk` sends a category and only ticked app-context keys. Registration-off and the gradebook (off, and a student's released grades) note a fixed origin and open Help. A score, hold, section, seat count, or student id on the caller does not appear in the ticket (`supporthandoff.test.ts`) |
 | 15 | Family grant: scope, expiry, revoke, audit, and a test that a revoked grant cannot read | 3, 5 | Unsafe flag stays off until privacy review |
 | 16 | Projection consumer for `domain_outbox_events` with a watermark | 10 | A test event updates one read model and a dead letter stays dead |
 | 17 | Console: tenant list and tenant 360 as a read model, capability-gated | 16 | No generic CRUD browser. No service-role key in the client |

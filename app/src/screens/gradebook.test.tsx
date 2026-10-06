@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ServiceError } from '../lib/attempt';
+import { takeOrigin } from '../lib/tickethandoff';
 import type { LoadedBook } from '../lib/gradebook/client';
 
 /**
@@ -157,6 +158,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  takeOrigin();
 });
 
 async function flush() {
@@ -200,6 +202,11 @@ describe('when the school has not turned it on', () => {
     expect(mock.book).not.toHaveBeenCalled();
     await press('Work out your own grades');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'setCoursesTab', tab: 'grades' });
+    await press('Ask Semester for help with the app');
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'help' });
+    const origin = takeOrigin();
+    expect(origin?.action).toBe('Looking at the gradebook');
+    expect(JSON.stringify(origin)).not.toMatch(/70 of 100|Midterm|score/i);
   });
 
   it('says the same with no account service', async () => {
@@ -370,6 +377,11 @@ describe('a student’s course', () => {
     expect(buttons().some((b) => b.textContent === 'Release grades for Midterm')).toBe(false);
     await press('Work out what you need on the final');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'courses' });
+    await press('Ask Semester for help with the app');
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'help' });
+    const origin = takeOrigin();
+    expect(origin).toEqual({ hash: '#/gradebook', action: 'Looking at the gradebook', reference: null });
+    expect(JSON.stringify(origin)).not.toContain('70 of 100');
   });
 
   it('draws the released grades as one captioned table of item, grade, released and regrade', async () => {

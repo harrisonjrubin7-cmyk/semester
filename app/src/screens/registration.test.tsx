@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ServiceError } from '../lib/attempt';
+import { takeOrigin } from '../lib/tickethandoff';
 
 /**
  * Enrollment, driven against a replaced account service.
@@ -164,6 +165,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  takeOrigin();
 });
 
 async function flush() {
@@ -194,10 +196,24 @@ describe('when the school has not turned it on', () => {
     mock.flag = 'off';
     await render();
     expect(text()).toContain('Your school has not turned on registration in Semester');
+    expect(text()).toContain('Registration window: unavailable');
+    expect(text()).toContain('Hold: unavailable');
+    expect(text()).toContain('Section: unavailable');
+    expect(host.querySelector('[data-source="unavailable_stale"]')).not.toBeNull();
+    expect(host.querySelector('[data-source="institution_verified"]')).toBeNull();
     expect(mock.terms).not.toHaveBeenCalled();
     expect(mock.sections).not.toHaveBeenCalled();
     await press('Open your registration plan');
     expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'yes' });
+    await press('Ask Semester for help with the app');
+    expect(mock.dispatch).toHaveBeenCalledWith({ type: 'go', screen: 'help' });
+    const origin = takeOrigin();
+    expect(origin).toEqual({
+      hash: '#/registration',
+      action: 'Registration is not turned on in Semester',
+      reference: null,
+    });
+    expect(JSON.stringify(origin)).not.toMatch(/Hold|seat|ECON|unavailable/i);
   });
 
   it('says the same with no account service at all — the state every dev build is in', async () => {
