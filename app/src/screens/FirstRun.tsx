@@ -1,6 +1,9 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { faintLine } from '../lib/dim';
+import { coursesForPlan } from '../lib/planpreview';
+import { journeyFor } from '../lib/rolejourney';
 import { useStore } from '../state/store';
+import { PlanPreview } from '../components/PlanPreview';
 import { OperatingRhythm } from '../components/OperatingRhythm';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -106,6 +109,9 @@ export function FirstRun({ where = 'here', children }: { where?: string; childre
    * about whether the upload will work.
    */
   const keyed = configured();
+  const [planning, setPlanning] = useState(false);
+  const journey = journeyFor(state.role);
+  const ownDoor = journey.screen && journey.screen !== 'import' && journey.screen !== 'yes' ? journey : null;
 
   return (
     <Page>
@@ -123,6 +129,26 @@ export function FirstRun({ where = 'here', children }: { where?: string; childre
       </div>
 
       <Door lead title="Add your first course" takes="PDF, Word, or paste the text" onClick={go} />
+
+      <Door
+        title="Build your registration plan"
+        takes="A term and the courses you are considering. No account."
+        onClick={() => setPlanning((open) => !open)}
+      />
+      {planning && (
+        <PlanPreview
+          onAdded={(draft) => {
+            const taken = state.courses.map((course) => course.course.id);
+            for (const module of coursesForPlan(draft, taken)) {
+              dispatch({ type: 'addCourse', module });
+            }
+            dispatch({ type: 'go', screen: 'yes' });
+          }}
+        />
+      )}
+      {ownDoor?.screen && (
+        <Door title={ownDoor.firstAction} takes={ownDoor.enter} onClick={() => dispatch({ type: 'go', screen: ownDoor.screen! })} />
+      )}
 
       {/*
         The door that opens with nothing set up.

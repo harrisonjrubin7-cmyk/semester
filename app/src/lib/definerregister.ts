@@ -193,6 +193,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['disable_school_access', 'admin', ['private.offboarding_operator']],
   ['draft_office_action', 'admin', ['auth.uid()', 'private.may_publish']],
   ['edit_community_post', 'self-service', ['auth.uid()']],
+  ['end_my_session', 'self-service', ['auth.uid()', 'user_id = $2']],
   ['export_my_data', 'self-service', ['auth.uid()']],
   ['follow_organization', 'self-service', ['auth.uid()']],
   ['forget_my_advisor_shares', 'self-service', ['auth.uid()']],
@@ -255,6 +256,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['my_privacy_completion_certificates', 'read-helper', ['auth.uid()']],
   ['my_registration', 'read-helper', ['auth.uid()', 'private.school_of']],
   ['my_registration_hold', 'read-helper', ['auth.uid()', 'private.school_of']],
+  ['my_sessions', 'read-helper', ['auth.uid()']],
   ['my_support_email_notices', 'read-helper', ['auth.uid()']],
   ['my_support_thread', 'read-helper', ['auth.uid()']],
   ['my_support_tickets', 'read-helper', ['auth.uid()']],
@@ -501,6 +503,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   },  {
     file: '20261006000000_onboarding_journeys_and_handoff.sql',
     functions: ['complete_onboarding_step', 'consume_handoff', 'skip_onboarding_step', 'start_onboarding'],
+  },
+  {
+    file: '20261006160000_my_sessions.sql',
+    functions: ['end_my_session', 'my_sessions'],
   },
 ];
 

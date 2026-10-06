@@ -137,6 +137,50 @@ describe('the Degree tab', () => {
     await act(async () => root.render(<StoreProvider><Degree advisorMeeting /></StoreProvider>));
     expect([...host.querySelectorAll('button, [role="tab"], [role="radio"]')].some((b) => b.textContent === 'Advisor meeting')).toBe(true);
   }, 15_000);
+
+  it('puts a named course on the student agenda and opens that meeting, without sharing', async () => {
+    const { blankCourse } = await import('../lib/edit');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      schemaVersion: 6, seenOnboarding: true, sample: false,
+      courses: [blankCourse('ECON 1020', 'Fall 2026')],
+    }));
+    await act(async () => root.render(<StoreProvider><Degree advisorMeeting /></StoreProvider>));
+    expect(text()).toContain('Needs attention');
+    await act(async () => button(/^Add to my meeting$/).click());
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
+    expect(stored.meetings).toHaveLength(1);
+    expect(stored.meetings[0].agenda.map((line: { text: string }) => line.text)).toEqual([
+      'ECON 1020 (Fall 2026). Named on this device. Not an enrollment.',
+    ]);
+    expect(stored.meetings[0].notes).toBe('');
+    expect(stored.meetings[0].attach.courses).toEqual([]);
+    expect(JSON.stringify(stored)).not.toContain('SECRET');
+    expect(sent).toEqual([]);
+    expect(text()).toMatch(/nothing was shared/i);
+    expect(button(/^Show my meeting$/)).toBeTruthy();
+    expect(text()).toContain('Add an agenda item');
+    const agenda = [...host.querySelectorAll<HTMLInputElement>('input')].find((input) => /Agenda item 1/.test(input.closest('label')?.textContent ?? ''));
+    expect(agenda?.value).toBe('ECON 1020 (Fall 2026). Named on this device. Not an enrollment.');
+    const notes = [...host.querySelectorAll<HTMLTextAreaElement>('textarea')].find((input) => /Private notes/.test(input.closest('label')?.textContent ?? ''));
+    expect(notes?.value ?? '').toBe('');
+  }, 15_000);
+
+  it('still writes the agenda when the meeting tab is off, and does not invent the tab', async () => {
+    const { blankCourse } = await import('../lib/edit');
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      schemaVersion: 6, seenOnboarding: true, sample: false,
+      courses: [blankCourse('ECON 1020', 'Fall 2026')],
+    }));
+    await act(async () => root.render(<StoreProvider><Degree advisorMeeting={false} /></StoreProvider>));
+    await act(async () => button(/^Add to my meeting$/).click());
+    const stored = JSON.parse(localStorage.getItem(meetingKey(null))!);
+    expect(stored.meetings[0].agenda[0].text).toContain('ECON 1020');
+    expect(stored.meetings[0].notes).toBe('');
+    expect(text()).not.toContain('Advisor meeting');
+    expect(text()).toMatch(/nothing was shared/i);
+    expect(button(/^On your agenda$/).disabled).toBe(true);
+    expect(sent).toEqual([]);
+  }, 15_000);
 });
 
 describe('preparing and exporting', () => {

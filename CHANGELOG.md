@@ -24,9 +24,17 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Courses you type stay on this device, and you can put them on a meeting agenda
+
+On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.
+
 ### Staff get a way into the operations console
 
 If your account holds the operations console grant (`console:operate` at platform scope), **Me** shows a **Semester Operations** row that opens the console. Nobody else sees it, and typing `#/console` still shows a one-line notice without the grant. Nothing for you to do; granting access is a separate, reviewed step in [`docs/OPERATOR-PROVISIONING.md`](docs/OPERATOR-PROVISIONING.md).
+
+### Account says where you are signed in, and signs one place out
+
+On **Account**, under **Sign-in and security**, a new **Where you are signed in** list shows each browser or phone signed in to your account: what it is (for example “Safari on iPhone”), when it signed in and when it was last active. This device is marked **This device** and has no button. Every other one has **Sign out**, which asks first. Signing one out stops it renewing its sign-in; it can keep working until the sign-in it already holds runs out, up to an hour. Signing out one place no longer means signing out all of them, though **Sign out other devices** is still there. If the list cannot be read it says so and offers to try again; it does not say you are signed in nowhere else. You do not have to do anything.
 
 ### Your data says who can see your things
 

@@ -136,6 +136,70 @@ export function keepNotes(incoming: MeetingLibrary, existing: unknown): MeetingL
   return { version: 1, meetings: incoming.meetings.map((m) => ({ ...m, notes: m.notes || notes.get(m.id) || '' })) };
 }
 
+/** Agenda text for a course the student typed. The code and term are the whole line. */
+export function namedAgendaText(course: { code: string; term: string | null }): string {
+  const code = course.code.trim();
+  const term = course.term?.trim() ?? '';
+  const where = term ? `${code} (${term})` : code;
+  return `${where}. Named on this device. Not an enrollment.`.slice(0, LIMITS.text);
+}
+
+/**
+ * Puts named course codes onto the student's own meeting agenda.
+ *
+ * An empty library gets one meeting titled for that list. A library that
+ * already has a meeting gets the missing lines on the newest one, or on a
+ * new meeting when that agenda is full. Notes, questions and attachments
+ * are left as they were. Nothing here is shared.
+ */
+export function meetingWithNamedAgenda(
+  library: MeetingLibrary,
+  named: readonly { code: string; term: string | null }[],
+  now: number,
+): MeetingLibrary {
+  const wanted: string[] = [];
+  for (const course of named) {
+    if (!course.code.trim()) continue;
+    const text = namedAgendaText(course);
+    if (!wanted.includes(text)) wanted.push(text);
+  }
+  if (!wanted.length) return library;
+  const present = new Set(library.meetings.flatMap((meeting) => meeting.agenda.map((line) => line.text)));
+  const missing = wanted.filter((text) => !present.has(text));
+  if (!missing.length) return library;
+
+  const line = (text: string): Line => ({ id: crypto.randomUUID(), text });
+  if (!library.meetings.length) {
+    return {
+      version: 1,
+      meetings: [{
+        ...newMeeting(now),
+        title: 'Courses I am considering',
+        agenda: missing.slice(0, LIMITS.items).map(line),
+      }],
+    };
+  }
+
+  const newest = library.meetings.reduce((best, item) => (item.created > best.created ? item : best));
+  const room = Math.max(0, LIMITS.items - newest.agenda.length);
+  const fit = missing.slice(0, room);
+  const rest = missing.slice(room);
+  let meetings = library.meetings.map((item) =>
+    item.id === newest.id ? { ...item, agenda: [...item.agenda, ...fit.map(line)] } : item,
+  );
+  if (rest.length > 0 && meetings.length < LIMITS.meetings) {
+    meetings = [
+      {
+        ...newMeeting(now),
+        title: 'Courses I am considering',
+        agenda: rest.slice(0, LIMITS.items).map(line),
+      },
+      ...meetings,
+    ].slice(0, LIMITS.meetings);
+  }
+  return { version: 1, meetings };
+}
+
 export function newMeeting(now: number): Meeting {
   return {
     id: crypto.randomUUID(),

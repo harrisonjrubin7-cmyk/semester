@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 199 |
+| Migration files | 200 |
 | Tables created in `public` and not later dropped | 330 |
 | … of which enable row-level security in a migration | 330 |
 | Tables created in `private` and not later dropped | 35 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-127 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+128 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -118,6 +118,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/moderation-audit.check.sql` | Moderation actions must leave immutable, metadata-minimized evidence. |
 | `supabase/module_mode.check.sql` | The per-school, per-module Connect / Core switch (20260930010000). |
 | `supabase/my-capabilities.check.sql` | Who the app is told holds which capability — 'public.my_capabilities()'. |
+| `supabase/my-sessions.check.sql` | Where a student is signed in (stream 02): 'my_sessions()' lists the caller's own live sessions and 'end_my_session()' ends one of them. |
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
@@ -266,19 +267,19 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 224 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 224 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 226 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 226 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
-| Register rows in category `self-service` | 64 |
+| Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 21 |
 | Register rows in category `admin` | 85 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |
-| Register rows in category `read-helper` | 30 |
+| Register rows in category `read-helper` | 31 |
 
 **How counted.** The register rows are imported from the data module. The derived set repeats the register test's method: the winning `create function` in `public` for each name across migrations in filename order, kept when it says `security definer`, intersected with the names in the allowlist of `supabase/grants.check.sql`.
 
