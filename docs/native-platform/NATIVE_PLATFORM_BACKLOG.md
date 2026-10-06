@@ -21,7 +21,7 @@ Nothing here authorises a production migration, a deploy, a billing change, or a
 | 11 | State in the gradebook UI that the LMS is the record | 10 | Copy test. No "official transcript" string |
 | 12 | One AI gateway predicate: identity, tenant, classification, consent, allowed tools | 5 | A test call without consent returns a refusal, not a completion |
 | 13 | Citation and uncertainty on `ask` for registration and grade questions | 12 | The answer names its source and says it is not an enrolment or a grade |
-| 14 | Support handoff from readiness and from the gradebook | 8 | A ticket carries category and no extra record payload |
+| 14 | Support handoff from readiness and from the gradebook | 8 | Done. `ticketFromAsk` sends a category and only ticked app-context keys. Registration-off and the gradebook (off, and a student's released grades) note a fixed origin and open Help. A score, hold, section, seat count, or student id on the caller does not appear in the ticket (`supporthandoff.test.ts`) |
 | 15 | Family grant: scope, expiry, revoke, audit, and a test that a revoked grant cannot read | 3, 5 | Unsafe flag stays off until privacy review |
 | 16 | Projection consumer for `domain_outbox_events` with a watermark | 10 | A test event updates one read model and a dead letter stays dead |
 | 17 | Console: tenant list and tenant 360 as a read model, capability-gated | 16 | No generic CRUD browser. No service-role key in the client |

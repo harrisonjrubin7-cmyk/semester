@@ -8,6 +8,7 @@ import { settled, useAttempts } from '../../lib/attempt';
 import { formatDate } from '../../lib/locale';
 import { studentView } from '../../lib/gradebook/views';
 import { asGradebook, fileRegrade, loadBook, type LoadedBook } from '../../lib/gradebook/client';
+import { ASK_LABEL, noteSupportAsk } from '../../lib/supporthandoff';
 import type { Mark } from '../../lib/gradebook/model';
 
 /**
@@ -193,6 +194,16 @@ export function StudentGrades({ course, term, me }: { course: string; term: stri
       <Row>
         <button type="button" className="btn" onClick={toGrades}>
           Work out what you need on the final
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => {
+            noteSupportAsk('gradebook');
+            dispatch({ type: 'go', screen: 'help' });
+          }}
+        >
+          {ASK_LABEL}
         </button>
       </Row>
     </>

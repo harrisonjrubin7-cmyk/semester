@@ -7,6 +7,7 @@ import { Field, Row } from '../components/academic/Form';
 import { InstructorBook } from '../components/gradebook/InstructorBook';
 import { StudentGrades } from '../components/gradebook/StudentGrades';
 import { useModuleGate } from '../lib/modulegate';
+import { ASK_LABEL, noteSupportAsk } from '../lib/supporthandoff';
 import { loadMyCapabilities, type Grant } from '../lib/capabilities';
 import { authoredCourses, gradedCourses, offeringKey, termOf, type Offering } from '../lib/gradebook/client';
 
@@ -51,16 +52,28 @@ export function Gradebook() {
       <Page blurb={BLURB}>
         <ModuleGateState gate={gate} what="the gradebook" off={OFF} />
         {gate.status === 'off' && (
-          <button
-            type="button"
-            className="btn"
-            onClick={() => {
-              dispatch({ type: 'setCoursesTab', tab: 'grades' });
-              dispatch({ type: 'go', screen: 'courses' });
-            }}
-          >
-            Work out your own grades
-          </button>
+          <>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                dispatch({ type: 'setCoursesTab', tab: 'grades' });
+                dispatch({ type: 'go', screen: 'courses' });
+              }}
+            >
+              Work out your own grades
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                noteSupportAsk('gradebook');
+                dispatch({ type: 'go', screen: 'help' });
+              }}
+            >
+              {ASK_LABEL}
+            </button>
+          </>
         )}
       </Page>
     );

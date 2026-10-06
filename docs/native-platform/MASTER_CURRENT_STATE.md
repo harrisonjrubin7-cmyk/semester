@@ -85,7 +85,7 @@ Deployment config lives in the root `vercel.json` plus `app/` and `company-site/
 
 `FOUNDATION_EXPOSURE_READING.md` re-read the anon policies, the 207 definer functions, F-01, and Semester2. The function set matches `app/src/lib/definerregister.ts`. Zero schools exist, so enforcement was not switched on. Anon write grants remain; `TRUNCATE` does not.
 
-Today, the degree plan, account, and registration-while-off now carry a source badge. A seeded grade is labelled sample. That does not make any domain ready for a pilot.
+Today, the degree plan, account, and registration-while-off now carry a source badge. A seeded grade is labelled sample. Registration-off and the gradebook can open a support ticket with a category and a fixed origin; the ticket arguments do not carry a score, a hold, or a section. That does not make any domain ready for a pilot.
 
 ## Readiness, one sentence
 

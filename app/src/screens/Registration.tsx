@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { EmptyState, Notice, TabList } from '../components/ui';
 import { ModuleGateState } from '../components/ModuleGateState';
 import { PilotFactMark } from '../components/PilotFactMark';
+import { ASK_LABEL, noteSupportAsk } from '../lib/supporthandoff';
 import { Field } from '../components/academic/Form';
 import { StudentRegistration } from '../components/enrollment/StudentRegistration';
 import { RegistrarDesk } from '../components/enrollment/RegistrarDesk';
@@ -69,6 +70,16 @@ export function Registration() {
             </section>
             <button type="button" className="btn" onClick={() => dispatch({ type: 'go', screen: 'yes' })}>
               Open your registration plan
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => {
+                noteSupportAsk('registration_readiness');
+                dispatch({ type: 'go', screen: 'help' });
+              }}
+            >
+              {ASK_LABEL}
             </button>
           </>
         )}
