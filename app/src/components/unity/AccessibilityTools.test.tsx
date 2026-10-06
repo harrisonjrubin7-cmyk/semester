@@ -56,6 +56,8 @@ describe('global accessibility tools', () => {
       await act(async () => root.render(<AccessibilityTools look={{}} onChange={() => {}} onSettings={() => {}} />));
       const trigger = host.querySelector<HTMLButtonElement>('.system-tool-trigger')!;
       expect(trigger.textContent).toBe('Accessibility');
+      // The panel is not in the document yet. A control that names it anyway is
+      // the broken `aria-controls` the accessibility smoke reports on every journey.
       expect(trigger.hasAttribute('aria-controls')).toBe(false);
       expect(host.querySelector('[role="dialog"]')).toBeNull();
       await openTools(host);
@@ -65,6 +67,9 @@ describe('global accessibility tools', () => {
       const before = cancel.mock.calls.length;
       await act(async () => host.querySelector<HTMLButtonElement>('.system-tool-trigger')!.click());
       expect(cancel.mock.calls.length).toBe(before);
+      // Closing keeps the mounted panel, so the relationship has to stay pointed at it.
+      expect(controls?.hidden).toBe(true);
+      expect(trigger.getAttribute('aria-controls')).toBe(controls?.id);
       await openTools(host);
       expect(host.querySelector('[role="dialog"][aria-label="Accessibility tools"]')).toBe(controls);
       expect(host.querySelector('[role="status"]')?.textContent).toBe('Reading aloud.');
