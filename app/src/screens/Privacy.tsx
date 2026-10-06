@@ -36,7 +36,6 @@ import { record, yours } from '../lib/journal';
 import { Toggle } from '../components/ui';
 import { SupportAccess } from '../components/SupportAccess';
 import { DevicePermissions } from '../components/DevicePermissions';
-import { WhoCanSeeYou } from '../components/WhoCanSeeYou';
 import { DataRightsRequests } from '../components/DataRightsRequests';
 import { SchoolDataPanel } from '../components/SchoolRecords';
 import { DESTINATIONS, offered } from '../lib/nav';
@@ -50,6 +49,9 @@ import {
   usageLine,
   type Counts,
 } from '../lib/usage';
+
+/** Read when the screen is open, not when it loads: it asks the network, so it has its own loading state anyway. */
+const WhoCanSeeYou = lazy(() => import('../components/WhoCanSeeYou').then((m) => ({ default: m.WhoCanSeeYou })));
 
 // The Trust & Data Center (Phase N), at the top of this page.
 const TrustCenter = lazy(() => import('../components/TrustCenter').then((m) => ({ default: m.TrustCenter })));
@@ -155,7 +157,9 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
 
       <SupportAccess account={account} />
 
-      <WhoCanSeeYou account={account} />
+      <Suspense fallback={<p role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>Checking who can see your things…</p>}>
+        <WhoCanSeeYou account={account} />
+      </Suspense>
 
       <DevicePermissions openAlerts={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
 
