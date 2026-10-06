@@ -67,10 +67,13 @@ sequenceDiagram
   Student->>Cart: Add a section from an imported catalog
   Cart-->>Student: Primary schedule can be ready
   Check-->>Student: Named row stays short of ready
+  Student->>Check: Add the named codes to my meeting
+  Check->>Check: agenda lines only, on this device
+  Check-->>Student: Ready as preparation. Nothing was shared
   Note over Check,School: Confirmation of enrollment is the school's, and the registration screen says that gate is off
 ```
 
-`pathReadiness` id `named` is that row. `courses` remains the cart. `namedCoursesFrom` ignores any course whose source is not `Added by hand`, so a syllabus import does not get called a typed code.
+`pathReadiness` id `named` is that row. It becomes ready only when every named code is already an agenda line the student can read. `courses` remains the cart. `namedCoursesFrom` ignores any course whose source is not `Added by hand`, so a syllabus import does not get called a typed code. `meetingWithNamedAgenda` does not set notes, questions, or attachments, and it does not call a share.
 
 ## Journeys the specification asks to judge as wholes
 
@@ -78,7 +81,7 @@ sequenceDiagram
 | --- | --- | --- |
 | Marketing to a saved student action | First-run plan, no account | Marketing CTA and resumed account context were not changed |
 | Registration to roster and schedule | Plan, cart, gated official screen | Authoritative confirmation |
-| Student to advisor to an office | Advisor agenda row, opt-in copy | No referral with minimized context |
+| Student to advisor to an office | Named codes on the student’s own agenda; share stays opt-in | No advisee grant and no office referral |
 | Support to engineering | Specified in the PDF | Not implemented here |
 | Checkout to settlement | Stripe adapter in shadow on main | No charge in this work |
 | Contract to deployment | Operations docs | No tenant was configured |

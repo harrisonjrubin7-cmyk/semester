@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EMPTY_MEETINGS } from './advisor-meeting';
+import { EMPTY_MEETINGS, namedAgendaText, type Meeting } from './advisor-meeting';
 import { CHECKLIST, EMPTY_REGISTRATION_DAY } from './registration-day';
 import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from './path-readiness';
 import type { CatalogCourse } from './registration';
@@ -74,6 +74,51 @@ describe('path registration readiness', () => {
     expect(items.find((item) => item.id === 'courses')?.state).toBe('ready');
   });
 
+  const meetingWith = (text: string, notes = ''): Meeting => ({
+    id: 'm', title: 'Courses I am considering', date: null,
+    agenda: [{ id: 'a', text }], questions: [],
+    attach: { scenario: null, courses: [], followUps: false },
+    followUps: [], notes, created: 1,
+  });
+
+  it('marks a named course ready only once that code is on the student agenda', () => {
+    const line = namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' });
+    const items = pathReadiness({
+      pathConfigured: false,
+      requirementTotal: 0,
+      namedCourses: [{ code: 'ECON 1020', term: 'Fall 2026' }],
+      cart: [],
+      catalog: [],
+      registration: EMPTY_REGISTRATION_DAY,
+      meetings: { version: 1, meetings: [meetingWith(line, 'SECRET-GRADE-99')] },
+      institution: null,
+    });
+    const named = items.find((item) => item.id === 'named');
+    expect(named?.state).toBe('ready');
+    expect(named?.detail).toMatch(/ECON 1020/);
+    expect(named?.detail).toMatch(/not an enrollment/i);
+    expect(named?.detail).toMatch(/nothing was shared/i);
+    expect(named?.detail).not.toMatch(/SECRET-GRADE-99/);
+    expect(named?.detail).not.toMatch(/\benrolled\b|\bregistered\b/i);
+  });
+
+  it('stays at attention when only some named codes are on the agenda', () => {
+    const items = pathReadiness({
+      pathConfigured: false,
+      requirementTotal: 0,
+      namedCourses: [
+        { code: 'ECON 1020', term: 'Fall 2026' },
+        { code: 'PSCI 1104', term: 'Fall 2026' },
+      ],
+      cart: [],
+      catalog: [],
+      registration: EMPTY_REGISTRATION_DAY,
+      meetings: { version: 1, meetings: [meetingWith(namedAgendaText({ code: 'ECON 1020', term: 'Fall 2026' }))] },
+      institution: null,
+    });
+    expect(items.find((item) => item.id === 'named')).toMatchObject({ state: 'attention' });
+  });
+
   it('counts a hand-added course and leaves a syllabus course off the named row', () => {
     expect(namedCoursesFrom([
       { course: { code: 'ECON 1020', source: 'Added by hand', term: 'Fall 2026' } },
@@ -134,7 +179,15 @@ describe('overall readiness', () => {
     };
     expect(pathReadiness(base(done)).find((item) => item.id === 'named')?.state).toBe('not_started');
     expect(overall(done).state).toBe('ready');
-    expect(overall({ ...done, namedCourses: [{ code: 'ECON 1020', term: 'Fall 2026' }] }).state).not.toBe('ready');
+    const named = { code: 'ECON 1020', term: 'Fall 2026' };
+    expect(overall({ ...done, namedCourses: [named] }).state).not.toBe('ready');
+    const onAgenda = {
+      ...done,
+      namedCourses: [named],
+      meetings: { version: 1 as const, meetings: [{ ...done.meetings.meetings[0], agenda: [{ id: 'x', text: 'Review plan' }, { id: 'n', text: namedAgendaText(named) }] }] },
+    };
+    expect(pathReadiness(base(onAgenda)).find((item) => item.id === 'named')?.state).toBe('ready');
+    expect(overall(onAgenda).state).toBe('ready');
   });
 
   it('ready still says the official system decides', () => {

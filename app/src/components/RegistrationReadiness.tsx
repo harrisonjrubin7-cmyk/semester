@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { EMPTY_MEETINGS, meetingKey, readMeetings } from '../lib/advisor-meeting';
+import { EMPTY_MEETINGS, meetingKey, meetingWithNamedAgenda, readMeetings } from '../lib/advisor-meeting';
 import { useDeviceLibrary } from '../lib/device-library';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { hasPathProfile } from '../lib/path-profile';
-import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from '../lib/path-readiness';
+import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput, type PathReadinessItem } from '../lib/path-readiness';
 import { useRegistrationPlan } from '../lib/registration-plan';
 import { useStore } from '../state/store';
 import { usePathProfile } from './PathProfileForm';
@@ -16,7 +16,7 @@ const stateText = { ready: 'Ready', attention: 'Needs attention', not_started: '
  * It routes to the existing My Path and Registration workspaces instead of
  * creating another planner, and it never promotes imported data to official.
  */
-export function RegistrationReadiness() {
+export function RegistrationReadiness({ onPrepareMeeting }: { onPrepareMeeting?: () => void } = {}) {
   const { state, account, dispatch } = useStore();
   const profile = usePathProfile();
   const plan = useRegistrationPlan();
@@ -34,6 +34,27 @@ export function RegistrationReadiness() {
   const items = useMemo(() => pathReadiness(input), [input]);
   const count = readinessCount(items);
   const overall = overallReadiness(items, readinessFacts(input));
+  const action = (item: PathReadinessItem): { label: string; run: () => void; disabled?: boolean } => {
+    if (item.id === 'named' && item.state === 'attention') {
+      return {
+        label: 'Add to my meeting',
+        run: () => {
+          const wrote = meetings.update((lib) => meetingWithNamedAgenda(lib, namedCoursesFrom(state.courses), Date.now()));
+          if (wrote) onPrepareMeeting?.();
+        },
+      };
+    }
+    if (item.id === 'named' && item.state === 'ready' && onPrepareMeeting) {
+      return { label: 'Show my meeting', run: () => onPrepareMeeting() };
+    }
+    if (item.id === 'named' && item.state === 'ready') {
+      return { label: 'On your agenda', disabled: true, run: () => {} };
+    }
+    return {
+      label: item.destination === 'degree' ? 'Open My Path' : 'Open Registration',
+      run: () => dispatch({ type: 'go', screen: item.destination }),
+    };
+  };
 
   return (
     <section className="path-readiness" aria-labelledby="path-readiness-title">
@@ -46,18 +67,21 @@ export function RegistrationReadiness() {
         <strong>{overall.label}.</strong> {overall.why}
       </p>
       <ol className="path-readiness-list">
-        {items.map((item) => (
-          <li key={item.id} data-state={item.state}>
-            <div>
-              <strong>{item.label}</strong>
-              <span className="path-readiness-state">{stateText[item.state]}</span>
-              <p>{item.detail}</p>
-            </div>
-            <button type="button" className="balance-button" onClick={() => dispatch({ type: 'go', screen: item.destination })}>
-              {item.destination === 'degree' ? 'Open My Path' : 'Open Registration'}
-            </button>
-          </li>
-        ))}
+        {items.map((item) => {
+          const next = action(item);
+          return (
+            <li key={item.id} data-state={item.state}>
+              <div>
+                <strong>{item.label}</strong>
+                <span className="path-readiness-state">{stateText[item.state]}</span>
+                <p>{item.detail}</p>
+              </div>
+              <button type="button" className="balance-button" onClick={next.run} disabled={next.disabled}>
+                {next.label}
+              </button>
+            </li>
+          );
+        })}
       </ol>
 
       <details className="path-readiness-systems">

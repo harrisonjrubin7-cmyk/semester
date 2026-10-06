@@ -13,6 +13,17 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 | `npm test` | `app/` | Exit 0 after the named readiness row. 1452 files passed, 1 skipped. 23319 tests passed, 69 skipped. Duration 128.87s. |
 | `node scripts/design-system-audit.mjs` | `app/` | Exit 0. 0 violations. Baseline unchanged at 67 raw-value warnings. |
 
+## Advisor agenda handoff
+
+| Command | Working directory | Result |
+| --- | --- | --- |
+| `npx vitest run src/lib/advisor-meeting.test.ts src/lib/path-readiness.test.ts src/components/AdvisorMeeting.test.tsx src/components/PathSnapshotCard.test.tsx` | `app/` | Exit 0. 4 files, 36 tests passed. The new tests failed first with `namedAgendaText is not a function`. |
+| `npx tsc -b` | `app/` | Exit 0. |
+| `npm run lint` | `app/` | Exit 0. Oxlint warnings remained under the ceiling of 25. Styles, labels, and terms passed. |
+| `npx vitest run src/lib/path-readiness.test.ts src/lib/advisor-meeting.test.ts src/components/AdvisorMeeting.test.tsx` | `app/` | Exit 0 after the rebase onto `7b9ae1c2`. 3 files, 41 tests passed. An empty named row does not stop the headline saying Ready. A named code that is not yet an agenda line does. |
+| Browser, 390×844, `http://127.0.0.1:5173/#/degree` | seeded `ECON 1020`, source `Added by hand` | Flag off: the row moved from Needs attention to a line that says the code is on the meeting agenda, is not an enrollment, and that nothing was shared. The meeting library held one agenda line, empty notes, and no attached courses. The secret planted on the course was not stored. |
+| Browser, same viewport, `VITE_ADVISOR_MEETING_MODE=production` on port 5174 | same seed | The Advisor meeting tab opened. Agenda item 1 was `ECON 1020 (Fall 2026). Named on this device. Not an enrollment.` Private notes stayed empty. |
+
 ## Not run
 
 | Check | Why |
@@ -21,7 +32,7 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 | `npm run check:university` | Gateway not imported. |
 | `npm run build` | Not run. |
 | RLS, cross-tenant, and remote migration tests | No migration. No remote database. |
-| Browser walkthrough | Not run this session. The journey is covered by jsdom tests that click the door, reject a bad code, save, and read the term-plan list. |
+| Browser walkthrough for the earlier plan slice | Recorded in the previous batch. This batch’s walk is in the table above. |
 | Production smoke | Forbidden by the execution prompt. |
 
 ## Release rule

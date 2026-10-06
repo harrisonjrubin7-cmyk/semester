@@ -1,8 +1,8 @@
 component,design_maturity,implementation_maturity,deployment_readiness,record_authority,evidence,blocker
 device-registration-plan,specified,local-tested,not-deployed,device-local,planpreview tests and FirstRun and NamedPlan,Catalog sections and seats still require an import; no registrar confirmation
-named-course-readiness-row,specified,local-tested,not-deployed,device-local,path-readiness id named; namedCoursesFrom; RegistrationReadiness passes device courses,Row stays attention on purpose; it is not clearance and not a cart section
+named-course-readiness-row,specified,local-tested,not-deployed,device-local,path-readiness id named; meetingWithNamedAgenda; AdvisorMeeting Degree tests,Ready only when every named code is an agenda line; a cart section does not do that; nothing is shared
 term-plan,specified,built-unoperated,unverified,device-local,RegistrationPortal and Yes Term plan tab,Imported catalog is a file not a live feed
-registration-readiness-checklist,specified,built-unoperated,unverified,not-authoritative,RegistrationReadiness.tsx path-readiness.ts,Does not yet list the device-named codes as their own row
+registration-readiness-checklist,specified,local-tested,not-deployed,device-local,RegistrationReadiness.tsx path-readiness.ts,Lists device-named codes; agenda handoff is local; not clearance
 official-registration-transaction,specified,built-gated,unverified,external-sis,Registration.tsx OFF copy and registration:administer,School has not turned the gate on; remote schema application unverified
 client-role-journeys,specified,local-tested,not-deployed,none,rolejourney.ts forRole,Choosing a role grants no server capability
 identity-sso-scim,specified,built-unoperated,unverified,unverified,operations roadmap score 2,HTTP SCIM and a named tenant

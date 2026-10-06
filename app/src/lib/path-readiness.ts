@@ -1,4 +1,4 @@
-import type { MeetingLibrary } from './advisor-meeting';
+import { namedAgendaText, type MeetingLibrary } from './advisor-meeting';
 import { CHECKLIST, readiness, type RegistrationDayData } from './registration-day';
 import type { CatalogCourse } from './registration';
 
@@ -41,7 +41,11 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   const plan = readiness(input.registration, input.cart, input.catalog);
   const unchecked = uncheckedSections(input.cart);
   const named = input.namedCourses ?? [];
-  const namedCodes = named.map((course) => course.code).filter(Boolean);
+  const namedCodes = named.map((course) => course.code.trim()).filter(Boolean);
+  const agendaTexts = new Set(input.meetings.meetings.flatMap((meeting) => meeting.agenda.map((line) => line.text)));
+  const namedOnAgenda = namedCodes.length > 0 && named
+    .filter((course) => course.code.trim())
+    .every((course) => agendaTexts.has(namedAgendaText({ code: course.code.trim(), term: course.term })));
   const checked = CHECKLIST.filter((item) => input.registration.checks.includes(item.id)).length;
   const latestMeeting = [...input.meetings.meetings].sort((a, b) => b.created - a.created)[0];
   const hasAgenda = Boolean(latestMeeting && (latestMeeting.agenda.length || latestMeeting.questions.length));
@@ -64,11 +68,13 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
     {
       id: 'named',
       label: 'Courses you named',
-      detail: namedCodes.length
-        ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.`
-        : 'Name the courses you are considering. Naming a course is not an enrollment.',
-      // A typed code is preparation. It stays short of ready until a section is chosen, and even then it is not the school's confirmation.
-      state: namedCodes.length ? 'attention' : 'not_started',
+      detail: !namedCodes.length
+        ? 'Name the courses you are considering. Naming a course is not an enrollment.'
+        : namedOnAgenda
+          ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} on your meeting agenda. That is not an enrollment, a section, or a seat. Nothing else from your record was copied, and nothing was shared.`
+          : `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.`,
+      // A typed code is preparation. It is ready once each code is on the student's own agenda, which is still not the school's confirmation.
+      state: !namedCodes.length ? 'not_started' : namedOnAgenda ? 'ready' : 'attention',
       destination: 'yes',
     },
     {

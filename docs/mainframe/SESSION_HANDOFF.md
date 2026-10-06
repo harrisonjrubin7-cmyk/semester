@@ -1,35 +1,38 @@
 # Session handoff
 
-**Date** 2026-10-06. **Branch** `audit/semester-mainframe-reconciliation`. **Base at branch creation** `1ba54a92`. **Later `origin/main`** moved (operations console and company-site scan commits). The files this batch edits were unchanged on that newer main. **Push** not done.
+**Date** 2026-10-06. **Branch** `audit/semester-mainframe-reconciliation`. **Rebased onto** `origin/main` at `7b9ae1c2`. **Push** follows this commit.
 
 ## Objective that was completed
 
-The connected-ecosystem specification (`docs/specifications/connected-ecosystem.pdf`) extends the mainframe. This batch depicted those connections in `ECOSYSTEM_CONNECTIONS.md` and implemented the next local fact: a course the student named is its own readiness row, and that row is not an enrollment.
+From the readiness checklist, a course the student named can be placed on that student’s own advisor-meeting agenda. The line is the code and the term. Notes, questions, and attachments are not changed. Nothing is shared. No advisee grant is created.
+
+The meeting surface is `AdvisorMeeting` on My Path. It is shown only when `advisor_meeting_mode` is on. Screen `meet` is glossary word-overlap and is not this handoff.
 
 ## Working tree at the start
 
-Branch `cursor/role-journeys-3071` at `e01aa230`, nine commits behind `origin/main`, with uncommitted plan-preview files. Those files were kept. The audit branch was created from `origin/main` so the audit matches current main. Upstream was unset so a plain push cannot fast-forward `main`.
-
-`origin/main` had not already added `planpreview` or `rolejourney`. `FirstRun.tsx` was identical between `e01aa230` and `1ba54a92`, so the local edit applied cleanly. Commit `0b0c7aa4` had already renamed the planner tab to Term plan; the new list uses that screen.
+Clean at `3623c117`. `origin/main` had moved to `7b9ae1c2` and already had `overallReadiness` and `uncheckedSections` in `path-readiness.ts`. It did not have a named-course row or `meetingWithNamedAgenda`.
 
 ## What the next session should read first
 
 1. This file.
-2. `EXECUTION_BACKLOG.md` next item: advisor handoff without a caseload.
-3. `ECOSYSTEM_CONNECTIONS.md` for the four connection types.
-4. `app/src/lib/path-readiness.ts` id `named`.
-5. `git diff` against `origin/main` before editing. Main has moved since `1ba54a92`. Rebase before any push.
+2. `EXECUTION_BACKLOG.md` next item: unmatched named codes stay visible after a catalog import. Do not invent seats.
+3. `app/src/lib/advisor-meeting.ts` `meetingWithNamedAgenda` and `app/src/lib/path-readiness.ts` id `named`.
+
+## Rebase note
+
+This branch now includes main’s `uncheckedSections`, `readinessFacts`, and `overallReadiness`. The headline ignores id `named` while that row is `not_started`, and counts it when it is `attention` or `ready`. A catalog with no named course can still read Ready. A named course that is not yet an agenda line keeps the headline short of Ready. Main’s “no meeting times” unavailable state is unchanged.
 
 ## Do not redo
 
-- Do not add a second registration screen.
-- Do not point a role journey at a screen `forRole` rejects. Payer stays null.
-- Do not wrap official registration as if the school gate were on.
+- Do not navigate this handoff to screen `meet`.
+- Do not copy grades, notes, requirements, or the rest of the record onto the agenda.
+- Do not call `shareWithAdvisor` from the checklist button.
+- Do not create an advisee grant.
 - Do not apply migrations or call Stripe.
 
 ## Checks recorded
 
-See `TEST_AND_RELEASE_GATES.md`. After the named row: `npx tsc -b` exit 0, `npm run lint` exit 0, `npm test` exit 0 (23319 passed, 69 skipped). A 390px browser walk saved a plan, opened My Path, and showed “Courses you named” as Needs attention with “That is not an enrollment.”
+See `TEST_AND_RELEASE_GATES.md`. After this handoff: `npx tsc -b` exit 0, `npm run lint` exit 0, `npm test` exit 0 (23326 passed, 69 skipped). Both browser walks had an empty `pageerror` list.
 
 ## Unverified
 

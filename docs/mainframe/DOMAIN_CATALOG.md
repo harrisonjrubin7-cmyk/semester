@@ -53,7 +53,7 @@ Client navigation is not authorization. A screen in this catalog is not a grant.
 - Support: the details list names SSO, LTI, OneRoster, and official writes.
 - Recovery: not applicable. It does not submit.
 - Readiness: built, unoperated, not authoritative.
-- Blocker: the `named` row is local and short of ready. It does not open an advisor grant. That handoff is the next task.
+- Blocker: the handoff writes agenda text on this device only. It does not open an advisee grant, and sharing stays a separate opt-in preview.
 
 ## Official registration
 
