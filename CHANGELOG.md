@@ -28,9 +28,21 @@ will happily serve you the copy you already had.
 
 For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
 
+### Signing out other devices says it cannot be undone
+
+On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
+
+### Registration readiness opens with one line on where you stand
+
+At the top of the registration readiness list there is now a single status: **Ready**, **Almost ready**, **Getting ready**, **Blocked** or **Information unavailable**, with a sentence saying why. **Blocked** appears only when two courses in your schedule overlap, which the app can see for itself. Holds and prerequisites live in your school's system, so they never produce it. **Information unavailable** appears when no course catalog is loaded, or when a section you selected has no meeting times, so conflicts cannot be checked and the line will not say Ready. The Schedule conflicts step says the same. It is still preparation, not clearance: your registrar and official system decide the result. The steps below are unchanged and you do not have to do anything.
+
 ### Operators see four more console tabs, and only the ones their grant allows
 
 Only an account holding the operator grant sees this, so students and school administrators will notice nothing. The operations console now has **Tenant operations**, **Privacy requests**, **Integration health** and **Release & incidents**. Each of those appears only when the signed-in operator holds that tab's own capability, and Support still appears only when tickets are on and the operator may answer them. A tab the operator cannot use is absent, and a saved view that names one does not open it. The tabs an operator with `console:operate` already had, including **Finance model**, **Releases and flags** and **Launch readiness**, are unchanged. You do not have to do anything.
+
+### Links from the company site into the app say which page they came from
+
+The "Start planning free", "Log in" and demo links on the company site now carry a few short, plain facts into the app's address: which page the click was on, the campaign link that brought you to the site (if there was one), and that the link is for a student. The app uses them to keep your place through first-run setup. They are not stored on a server, and nothing in them says who you are or what you can open; that stays with your account. Nothing about how the site looks or reads has changed, and you do not have to do anything.
 
 ### The operations console has a Launch readiness tab
 

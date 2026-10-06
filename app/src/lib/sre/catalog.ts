@@ -138,6 +138,7 @@ const ROWS: Row[] = [
   ['job:media-scan', 'Community media scan (parked)', 'job', 'C2', 'security', '', 'supabase-db', 'Parked until its function exists.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:integration-sync', 'Integration tick (four times an hour)', 'job', 'C2', 'integrations', '', 'fn:integration-tick', 'Connections go stale and say so.', 'kill.integration_sync', 'RB-10', 'supabase/scheduler.sql'],
   ['job:tombstones', 'Sweep tombstones (weekly)', 'job', 'C3', 'data', '', 'supabase-db', 'Deleted-record markers accumulate; no student-visible effect.', null, 'RB-10', 'supabase/scheduler.sql'],
+  ['job:handoffs', 'Sweep spent hand-offs (daily)', 'job', 'C3', 'security', '', 'supabase-db', 'Finished hand-off rows linger; an unused one still expires at fifteen minutes on its own.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:ai-runtime-metadata', 'AI runtime metadata refresh (daily)', 'job', 'C3', 'ai', '', 'supabase-db', 'Gateway AI status can read stale.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:institution-gateway-retention', 'Purge gateway journal (hourly)', 'job', 'C1', 'data', '', 'supabase-db', 'Journal grows past its retention promise; a legal-hold-aware sweep must not be skipped.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:community-retention', 'Community retention (daily)', 'job', 'C1', 'data', '', 'supabase-db', 'Content outlives its stated retention.', null, 'RB-10', 'supabase/scheduler.sql'],

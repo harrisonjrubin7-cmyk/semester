@@ -699,7 +699,17 @@ declare
     -- requires an active tenant administrator and suppresses cohorts below 10.
     -- `productivity_workspace.sql` exercises both authorization boundaries.
     'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
-    'productivity_readiness_aggregate(p_tenant text)'
+    'productivity_readiness_aggregate(p_tenant text)',
+    -- The four in 20261006000000_onboarding_journeys_and_handoff.sql. Each
+    -- reads the caller from auth.uid() and raises without one; none takes a
+    -- tenant, a role or a user. The three onboarding writers act only on the
+    -- caller's own assignment and check the step against the journey version it
+    -- was made under; `consume_handoff` answers null for every way of failing.
+    -- `onboarding-journeys.check.sql` attempts each refusal.
+    'start_onboarding(p_journey text, p_entry jsonb, p_channel text)',
+    'complete_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_channel text)',
+    'skip_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_reason text, p_channel text)',
+    'consume_handoff(p_id uuid, p_nonce text)'
   ];
   extra text;
   missing text;

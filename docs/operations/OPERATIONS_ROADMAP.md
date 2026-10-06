@@ -25,7 +25,7 @@
 
 ## 0. The state in one paragraph
 
-A company console exists at `#/console` with eleven tabs: command center, approvals (request, decide, act), break-glass, audit, customers, figures, finance model, releases and flags (read-only), evidence, support (flag off), views. The approval and audit database machinery is tested. **But:** the audit chain has never recorded a production row; `console_act` executes three of eleven duties; operator writes bypass approval on several (F-1); the domain outbox has no relay; there is no work item, tenant directory, tenant 360, incident, SLO, access-review or tenant-health table; and the institution side is the `University` screen's tabs with no registrar or command-center operator view. Nearly every operational table has 0 rows. The brief's `/app/ops/*` and `/app/institution/:slug/*` routes cannot be built as written (hash routing, frozen navigation roots), so they are aliases.
+A company console exists at `#/console` with the views in the console map: command center, approvals (request, decide, act), break-glass, audit, tenant operations, privacy requests, integration health, release & incidents, customers, figures, finance model, releases and flags (read-only), launch, readiness evidence, evidence, support (flag off), views. *(Corrected 2026-10-06 against `f48baf6e`: the first version of this page was written against `3bd382d` and omitted the tenant-operations, privacy, integration-health and release-incident views that landed in the meantime.)* The approval and audit database machinery is tested. **But:** the audit chain has never recorded a production row; `console_act` executes three of eleven duties; operator writes bypass approval on several (F-1); the domain outbox has no relay; there is no work-item, SLO, access-review or tenant-health table, no tenant directory or per-tenant 360 page, and no operator incident write path (`platform_incident` and its read exist); and the institution side is the `University` screen's tabs with no registrar or command-center operator view. Nearly every operational table has 0 rows. The brief's `/app/ops/*` and `/app/institution/:slug/*` routes cannot be built as written (hash routing, frozen navigation roots), so they are aliases.
 
 ## 1. Open decisions
 
@@ -61,9 +61,9 @@ Tiers per the brief. Each row either is new work or points at the existing backl
 | OP-08 | Customer 360, Pilot and Implementation tabs over existing tables | Phase 3 / master #8 |
 | OP-09 | Impact-preview component and preview-hash binding in `console_act` | new |
 | OP-10 | Scheduled `console_audit_verify`, alert on failure, external chain-head export | OD-8 |
-| OP-11 | Incident table, ⊕`incident:command`, Incident center basics | Phase 4 |
+| OP-11 | **Table and read landed** (`platform_incident`, `console_release_incidents`). Open: operator declare/update/resolve path behind ⊕`incident:command`, with threat model | Phase 4 |
 | OP-12 | Release/rollout write path through approval; Rollout center | Phase 2 |
-| OP-13 | Integration and migration visibility tabs (reuse University components) | master #8 |
+| OP-13 | **Integration health landed** (`console_integration_health`). Open: Migrations view | master #8 |
 | OP-14 | Registrar registration-readiness console + institution command center | new |
 | OP-15 | Advisor intervention/outreach with per-recipient consent and suppression check | new |
 | OP-16 | Basic billing and entitlement operations (quote record, invoice record, entitlement set/lookup, renewal date); wire entitlement resolution out of shadow only with a decision | new |
@@ -89,8 +89,8 @@ Everything the brief names with no evidenced demand: alumni network at scale, em
 | # | Action | ← |
 | --- | --- | --- |
 | 1 | Owner decisions OD-1, OD-9 (and OD-5 scheduled) | — |
-| 2 | Run the gates not run in Phase 0 (`build`, `test:shuffle`, secret scan, `check.sh`, advisor) and record the result in the release-evidence register | — |
-| 3 | Read the 18 sensitive definer functions and anon grants; fix or revoke with a migration test (dev branch first) | 2 |
+| 2 | Run the gates not run in Phase 0 and record the result in the release-evidence register. **Run 2026-10-06 on `3f70295`:** `npm run build` exit 0; `npm run test:shuffle` (seed `1791246656762`) 1445 files passed, 1 skipped, 23,247 tests passed, 69 skipped, 214 s. One green shuffle run is weak evidence for the timing class of failure (`CLAUDE.md`); `src/rootunmount.test.ts` is the guard. **Still not run:** secret scan, `supabase/check.sh` (needs Postgres 17), advisor re-read | — |
+| 3 | **Partly landed** ([`SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md`](../master/SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md), #1319 era): 279 definer functions, 0 anon-executable, 7 sensitive RPCs and 4 with no visible gate read by hand, one low lead (`kill_switch_engaged`, R-2). **Open:** R-3 (268 bodies unread, 207 authenticated-executable), R-4 (33 public no-policy tables), and the R-2 fix (migration test on a dev branch first) | 2 |
 | 4 | Fix `my_capabilities()` break-glass defect and scope the three INVOKER readers; add T-04 | 3 |
 | 5 | Executors for the eight duties without one (`tenant-policy`, `release`, `integration-config`, `ai-provider`, `evidence-release`, `data-deletion`, `refund`, `support-access`), one duty at a time, audit-first | 1, 4 |
 | 6 | Revoke the direct write grants those duties bypassed; T-02 green per duty | 5 |
@@ -107,9 +107,9 @@ Everything the brief names with no evidenced demand: alumni network at scale, em
 | 17 | Customer 360, Pilot and Implementation tabs over `customer`, `tenant_rollout`, `success_plans` | 16 |
 | 18 | Impact-preview component and server-side preview-hash binding | 5 |
 | 19 | Audit explorer with scoped search, export as controlled read; scheduled chain verification and alert; external chain-head export (OD-8) | 15 |
-| 20 | Incident table, ⊕`incident:command` migration with threat model; Incident center basics | 15 |
+| 20 | ⊕`incident:command` migration with threat model; operator declare/update/resolve path (the `platform_incident` table and read already landed) | 15 |
 | 21 | Release and Rollout center: write path through approval, kill-switch drill recorded as evidence | 6, 15 |
-| 22 | Integration and Migration tabs in Console; institution IT integration visibility | 15 |
+| 22 | Migrations tab in Console (Integration health landed); institution IT integration visibility | 15 |
 | 23 | Institution command center (University tab) on the shared work item; registrar registration-readiness view; load profile run | 14, 22 |
 | 24 | Advisor outreach with per-recipient consent/suppression preview | 18, 23 |
 | 25 | Basic billing and entitlement operations: quote record, invoice record, entitlement set/lookup, renewal date, with W-25..27 and F-gate | 17, 18 |
@@ -122,7 +122,7 @@ Names follow the existing sequence where one exists (`SEMESTER_EXECUTION_ROADMAP
 
 | # | Branch | Scope | Actions | Depends on |
 | --- | --- | --- | --- | --- |
-| 1 | `audit/rpc-exposure` | 18 definer functions, anon grants; revoke/fix with migration test | 2–3 | — |
+| 1 | `audit/rpc-exposure` | **Read pass landed**; remaining: R-3 bodies, R-4 tables, R-2 fix with migration test | 2–3 | — |
 | 2 | `fix/ops-capability-defects` | `my_capabilities()` break-glass, INVOKER readers, T-04 | 4 | 1 |
 | 3 | `fix/ops-approval-bypass` | duty executors, grant revocation, `is_app_admin()` retirement, T-02 | 5–7 | 2, OD-9 |
 | 4 | `feat/ops-projection-foundation` (= master `feat/cqrs-projection-foundation`) | projection tables, emit helper, claim/replay, projector, producers | 8–12 | 3 |
@@ -200,9 +200,9 @@ Scale (evidence, not effort): **0** none · **1** documented only · **2** built
 | Integration/migration factory | 2 | registry, mappings, reconciliation, dead letter | live adapters, authoritative switch |
 | AI governance | 2 | policy, content-free audit, kill switch | approved evaluation |
 | Audit/evidence/risk | 2 | immutable chains, console view | 0 production rows; five registers |
-| Reliability/incident/rollback | 1 | TS playbooks, notices | incident/SLO tables; alerts reach no one |
+| Reliability/incident/rollback | 1–2 | TS playbooks, notices, `platform_incident` + evidence-derived read | SLO tables, operator write path; alerts reach no one |
 | Portability/offboarding | 2 | offboarding + undo, export | legacy admin gate; exercise |
-| Operations Command Center | 2 | eleven tabs, approvals, break-glass, audit | inbox, 360, projections |
+| Operations Command Center | 2 | console views incl. tenant operations, privacy, integration health, release & incidents; approvals, break-glass, audit | inbox, per-tenant 360, projections |
 | Executive (inst.) | 1 | `Operations` tab skeleton | verified metrics |
 | Academic ops | 1–2 | Configuration Studio, workflows | operator surfaces |
 | Registrar | 1 | student side built, operator side missing | readiness console |
