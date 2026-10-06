@@ -116,6 +116,14 @@ begin
   insert into public.break_glass_grant (request_id, subject, tenant_id, ticket, scope, expires_at, review_due)
   values (req, requester, 'sr-check', 'SR-1', 'tenant:configure',
           now() + interval '2 hours', now() + interval '1 day');
+  -- A second grant, on a second tenant, that lapsed three days ago and whose
+  -- review fell due yesterday and never happened: written as operations would,
+  -- not through the function. Its own tenant keeps the counts above unchanged.
+  insert into public.schools (id, name, email_domains, is_demo)
+  values ('sr-check-2', 'Security reads fixture, lapsed', array['sr-check-2.example'], false);
+  insert into public.break_glass_grant (request_id, subject, tenant_id, ticket, scope, opened_at, expires_at, review_due)
+  values (req, requester, 'sr-check-2', 'SR-2', 'tenant:configure',
+          now() - interval '3 days', now() - interval '3 days' + interval '2 hours', now() - interval '1 day');
 
   -- format: requests / decisions / action records / break-glass grants
   -- ── The control: the three that hold console:operate and a security capability
@@ -141,6 +149,14 @@ begin
   perform pg_temp.counted('console_approvals returns the request to platform_admin', n, 1);
   select count(*) into n from public.console_break_glass() where tenant_id = 'sr-check';
   perform pg_temp.counted('console_break_glass returns the grant to platform_admin', n, 1);
+
+  -- T-04: the log says which grants are live and which reviews are overdue.
+  select count(*) into n from public.console_break_glass()
+   where tenant_id = 'sr-check' and active and not review_overdue;
+  perform pg_temp.counted('the open grant reads as active, its review not overdue — THE CONTROL for the next case', n, 1);
+  select count(*) into n from public.console_break_glass()
+   where tenant_id = 'sr-check-2' and not active and review_overdue;
+  perform pg_temp.counted('the lapsed grant reads as not active, with its overdue review surfaced — T-04', n, 1);
 
   perform pg_temp.become(agent);
   select count(*) into n from public.console_approvals() where tenant_id = 'sr-check';

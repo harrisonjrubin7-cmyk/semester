@@ -91,7 +91,7 @@ Everything the brief names with no evidenced demand: alumni network at scale, em
 | 1 | Owner decisions OD-1, OD-9 (and OD-5 scheduled) | — |
 | 2 | Run the gates not run in Phase 0 and record the result in the release-evidence register. **Run 2026-10-06 on `3f70295`:** `npm run build` exit 0; `npm run test:shuffle` (seed `1791246656762`) 1445 files passed, 1 skipped, 23,247 tests passed, 69 skipped, 214 s. One green shuffle run is weak evidence for the timing class of failure (`CLAUDE.md`); `src/rootunmount.test.ts` is the guard. **Still not run:** secret scan, `supabase/check.sh` (needs Postgres 17), advisor re-read | — |
 | 3 | **Partly landed** ([`SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md`](../master/SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md), #1319 era): 279 definer functions, 0 anon-executable, 7 sensitive RPCs and 4 with no visible gate read by hand, one low lead (`kill_switch_engaged`, R-2). **Open:** R-3 (268 bodies unread, 207 authenticated-executable), R-4 (33 public no-policy tables), and the R-2 fix (migration test on a dev branch first) | 2 |
-| 4 | **Done for `my_capabilities()` (#1341) and for approvals/break-glass reads (#1348).** Open: the customers readers (owner decision), and T-04 (break-glass expiry removes access; overdue review surfaced) | 3 |
+| 4 | **Done for `my_capabilities()` (#1341) and for approvals/break-glass reads (#1348).** **T-04 now covered**: `has_capability` does not honour a grant past its expiry that was never closed, and `console_break_glass` surfaces a lapsed grant's overdue review (both proved by mutation: breaking either turns the case red). Open: the customers readers (owner decision) | 3 |
 | 5 | Executors for the eight duties without one (`tenant-policy`, `release`, `integration-config`, `ai-provider`, `evidence-release`, `data-deletion`, `refund`, `support-access`), one duty at a time, audit-first | 1, 4 |
 | 6 | Revoke the direct write grants those duties bypassed; T-02 green per duty | 5 |
 | 7 | Replace `is_app_admin()` in offboarding/`schools_write` with capability checks (F-5) | 4 |
@@ -123,7 +123,7 @@ Names follow the existing sequence where one exists (`SEMESTER_EXECUTION_ROADMAP
 | # | Branch | Scope | Actions | Depends on |
 | --- | --- | --- | --- | --- |
 | 1 | `audit/rpc-exposure` | **Read pass landed**; remaining: R-3 bodies, R-4 tables, R-2 fix with migration test | 2–3 | — |
-| 2 | `fix/ops-capability-defects` | **Landed in two PRs** (#1341, #1348): `my_capabilities()` break-glass; approvals and break-glass reads. Remaining: customers readers, T-04 | 4 | 1 |
+| 2 | `fix/ops-capability-defects` | **Landed in two PRs** (#1341, #1348): `my_capabilities()` break-glass; approvals and break-glass reads. Remaining: customers readers | 4 | 1 |
 | 3 | `fix/ops-approval-bypass` | duty executors, grant revocation, `is_app_admin()` retirement, T-02 | 5–7 | 2, OD-9 |
 | 4 | `feat/ops-projection-foundation` (= master `feat/cqrs-projection-foundation`) | projection tables, emit helper, claim/replay, projector, producers | 8–12 | 3 |
 | 5 | `feat/ops-read-models-and-inbox` | `work_item`, `ops_*` inbox/tenant/projection RPCs | 13–14 | 4 |
