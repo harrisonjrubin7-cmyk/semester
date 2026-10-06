@@ -88,6 +88,12 @@ create table if not exists private.projection_invalidation (
 create index if not exists projection_invalidation_by_namespace
   on private.projection_invalidation (namespace, occurred_at desc);
 
+-- Covers the school key (indexes.check.sql: deleting a school scans a child
+-- table once per row without one) and serves the read that matters, a tenant's
+-- latest invalidations for a namespace.
+create index if not exists projection_invalidation_by_tenant
+  on private.projection_invalidation (tenant_id, namespace, occurred_at desc);
+
 -- ── A rebuild, and whether it matched the live projection ──────────────────
 create table if not exists private.projection_rebuild_run (
   id uuid primary key default gen_random_uuid(),
