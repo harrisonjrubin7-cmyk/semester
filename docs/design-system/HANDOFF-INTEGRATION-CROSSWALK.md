@@ -51,7 +51,7 @@ Developer platform and marketplace (0 / 3 / 13) is a roadmap concept. Incident r
 
 `MASTER-BRIEF-CROSSWALK.md` places the 19 deliverables. Authority stays `app/src/lib/look.ts`, then `app/src/styles/tokens.css`. The handoff palette is offered, not the default (`D-1293`).
 
-`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. These four have no production screen of that name: Advisor Caseload, Tenant Overview, Operations Inbox, Institutional Pilot page. Kit paths are prototype only and are not in the repository. The other thirteen have an app file named in that pack and are existing but incomplete.
+`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. `SCREEN-PACKS.md` §4 records the other four brief names: Advisor Caseload is blocked on institution advisor–student data and consent; Tenant Overview and Operations Inbox exist in part (customer records, and the read-only exception queue) and are not retitled; the Institutional Pilot page is routed pages on the company site. Renaming is a product decision and is not made here. Kit paths are prototype only and are not in the repository.
 
 ## Handoff tree (139 files)
 
@@ -90,7 +90,7 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | Next-action scoring | Existing but incomplete. |
 | Access matrix | Duplicate or superseded as a second matrix. |
 | Break-glass two-person | Existing and verified in SQL. `decide_approval` plus `console-approvals.check.sql`. |
-| Consequence pattern | Existing but incomplete. `ActionPreview` is now the preview inside the leave-university and approve-join dialogs (`SchoolClaim.tsx`, `SchoolMembership.test.tsx`). Other confirmations still write their own sentences. |
+| Consequence pattern | Existing but incomplete. `ActionPreview` is the preview inside the leave-university and approve-join dialogs (`SchoolClaim.tsx`, `SchoolMembership.test.tsx`) and inside sign-out-other-devices (`AccountSecurity.tsx`, `AccountSecurity.test.tsx`). Other confirmations still write their own sentences. |
 | AI class gate | Existing and verified. Ceiling T2. It does not read prose. |
 | Approvals state machine | Existing and verified in SQL. |
 | Red-team corpus for blocked prompts | Not ported. It depended on the scanner `D-1298` declined. |
@@ -108,4 +108,4 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 
 ## Not complete
 
-57 catalog screens and 75 workflow steps are missing. Four named screens have no production route. This page does not say the handoff is integrated.
+57 catalog screens and 75 workflow steps are missing. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. This page does not say the handoff is integrated.
