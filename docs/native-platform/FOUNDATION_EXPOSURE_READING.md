@@ -2,7 +2,7 @@
 
 **Read** 2026-10-05, read-only, on project `semester` (`lzrqvlugnawcgywkhqlz`) and, for the drift check only, `Semester2` (`kpuulmnicidgdmwgfngv`). **Branch** `feat/native-foundation-identity-policy-trust`.
 
-> **Claim ceiling.** Policy text and privilege bits are schema. Row counts are planner estimates or `count(*)` totals. No row contents were copied. Nothing here turns a module on, revokes a grant, or switches school enforcement. `database/proposed/anon_grant_reduction.sql` stays proposed.
+> **Claim ceiling.** Policy text and privilege bits are schema. Row counts are planner estimates or `count(*)` totals. No row contents were copied. Nothing here turns a module on or switches school enforcement. Anon table DML is revoked in the repository by `20261005200000_anon_keeps_only_its_public_catalog.sql` (D-1306). This work did not run `supabase db push`, and it did not re-read `schema_migrations` on the live project, so that version may not be recorded there yet.
 
 ## 1. Security-definer functions
 
@@ -20,7 +20,7 @@ The advisor lists **207** `public` `SECURITY DEFINER` functions executable by `a
 | integration | 6 | Signed workflow, no browser service role |
 | financial | 3 | No client-controlled final state |
 
-Open items already on that register still stand: DR-01 (`kill_switch_engaged` answers for any tenant), DR-02 (gates are structural, not a proof each check is the right one), DR-04 (anon still holds write grants it cannot use through RLS). DR-04's TRUNCATE half is **no longer true** of the 24 owner-scoped tables checked below: `anon` has no `TRUNCATE` on any of them. `INSERT`, `UPDATE`, and `DELETE` remain. The proposed revoke was not applied.
+Open items already on that register still stand: DR-01 (`kill_switch_engaged` answers for any tenant), DR-02 (gates are structural, not a proof each check is the right one). DR-04 (anon write grants the role cannot use through RLS) is closed in the repository by D-1306: `anon` keeps SELECT on the public catalog, open forms and `schools`, and INSERT on `form_responses`, and no other public-table privilege. Whether that migration's version is recorded on `lzrqvlugnawcgywkhqlz` was not re-measured.
 
 ## 2. Anon policies on the 32 GraphQL-visible tables
 
@@ -37,7 +37,7 @@ Open items already on that register still stand: DR-01 (`kill_switch_engaged` an
 
 `published_forms` was on the advisor list and is not a table in `public`.
 
-Write grants that remain for `anon`, all with RLS in front: `INSERT`+`UPDATE`+`DELETE` on the owner-scoped tables listed in the first two outcome rows except `organizations` and `profiles` (`DELETE` only) and `reports` (`INSERT`+`DELETE`). A policy that requires `auth.uid()` does not let those grants create a row. They are still broader than the app needs. Closing them is the proposed SQL, which wants owner review and the check suites before it becomes a migration.
+Those policy outcomes were measured while `anon` still held the default DML grants. In the repository, D-1306 then runs `revoke all on all tables in schema public from anon` and grants back only the SELECT list above plus INSERT on `form_responses`. After that version is recorded on a database, a signed-out request for an owner-scoped table fails on the missing privilege. `schools` stays readable. `nativefoundation.test.ts` fails if the revoke line disappears or if that migration grants UPDATE, DELETE, or TRUNCATE. The older draft `database/proposed/anon_grant_reduction.sql` is superseded and must not be copied in beside it.
 
 ## 3. F-01, re-tested
 
@@ -82,6 +82,6 @@ There is no separate `module.gradebook`, `module.family`, or `module.community` 
 
 ## What this reading does not do
 
-- It does not revoke anon DML. That stays in `database/proposed/anon_grant_reduction.sql` until the owner reviews it. The file's TRUNCATE premise is stale; the DML grants are not.
+- It does not push D-1306. The revoke is in the repository. Applying it to the live project remains the owner's step (D-1306, decision 5).
 - It does not switch `enforce_membership` on.
 - It does not mark any domain ready for a pilot.
