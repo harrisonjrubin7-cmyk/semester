@@ -10,6 +10,7 @@ import {
 import { passwordProblem, PASSWORD_FLOOR } from '../lib/password';
 import { ConfirmDialog } from './ConfirmDialog';
 import { FieldMessage, useFieldErrors } from './FieldMessage';
+import { ActionPreview } from './unity/ActionPreview';
 
 /**
  * What an account can do about its own sign-in, once it has one.
@@ -265,10 +266,12 @@ export function AccountSecurity({ setPassword, changeAddress = changeEmail, sign
         <ConfirmDialog
           title="Sign out other devices?"
           preview={
-            <p>
-              Every other browser and phone signed in to this account will be asked to sign in again. This device stays
-              signed in.
-            </p>
+            <ActionPreview
+              subject="Other devices"
+              says="Every other browser and phone signed in to this account will be asked to sign in again."
+              doesNotChange="This device stays signed in, and nothing is deleted."
+              recovery={{ kind: 'none', how: 'Those devices sign in again themselves.' }}
+            />
           }
           confirmLabel="Sign out other devices"
           onConfirm={() => void others()}
