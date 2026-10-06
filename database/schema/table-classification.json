@@ -148,6 +148,9 @@
   ],
   "service-only": [
    "access_gate",
+   "access_saga_events",
+   "access_saga_signals",
+   "access_sagas",
    "app_admins",
    "beta_cohorts",
    "beta_exit_requests",

@@ -159,12 +159,12 @@ Its SQL is not adopted: the tables are scaffolding by its own account (no foreig
 
 | ID | Item | Owner seat | Closed when |
 | --- | --- | --- | --- |
-| C-1 | Decide where the registry lives: tables behind the owner's apply (as the payment-rail registry did, D-1324) or definitions as files checked by `checkRegistry` in CI | `engineering` | Decision recorded as `docs/decisions/D-<pull request number>.md` |
+| C-1 | Done (D-1356): the registry is `docs/control-plane/components/*.component.json`, checked in CI by `registry-files.test.ts`; nothing is registered yet | `engineering` | Registered definitions come only from code that exists |
 | C-2 | Workflow, reconciliation, assurance and `access_*` tables reconciled against `domain_outbox_events`, the release evidence register and the existing workflow machines first | `data` | Reconciliation written; no table added that an existing one covers |
 | C-3 | The PDF's ten connection acceptance tests (authorized path, unauthorized role, other tenant, revoked membership, stale input, duplicate, timeout, partial completion, accessibility, lifecycle end) as a shape every cross-domain connection's test file must meet | `engineering` | A test fails when a catalogued connection lacks a rung |
 | C-4 | Seven connection states (`confirmed`, `pending_authoritative_confirmation`, `projection_updating`, `source_stale`, `action_blocked`, `connection_degraded`, `reconciliation_required`) as one shared vocabulary beside `lib/status.ts` | `design` | Decided against the existing status vocabulary before any screen uses one |
 | C-5 | Policy rules for the three `registration.*` actions: done. Still open: the pilot's outcome states and ten-step order, reconciled with the registration engine's check order (N-3), and confirming the proposed roles, scopes and field lists | `product` | Rules landed; owner confirms the vocabulary |
-| C-6 | A `Store` implementation for the access saga satisfying the ninth PDF's persistence gate, with the store-side failure rehearsals listed above and the revocation barrier (a late installation at a revoked generation is rejected) | `engineering` | Each unexercised item has a test against the real store |
+| C-6 | Tables and functions for the saga's `Store` are written, inert and service-only (`20261006170000_access_saga_store.sql`, proved by `access-saga-store.check.sql`); merging applies them to the connected project, so the owner decides when. Still open: the TypeScript `Store` adapter over them, the revocation barrier at a real enforcement point, and the store-side crash rehearsals through the adapter | `engineering` | The adapter passes the runner's tests against this database |
 
 The access saga has no caller yet: nothing persists a saga row and no route asks for one.
 
