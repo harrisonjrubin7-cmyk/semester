@@ -18,10 +18,10 @@
 | 2 Canonical types, error taxonomy, idempotency-key builder, card-number guard | **Built**, Deno-free | `supabase/functions/_shared/payments/types.ts` |
 | 3 Contract suite and reference mock rail | **Built**; every clause shown red against a rail built to break it | `app/src/lib/payments/contract.ts`, `contract.test.ts`, `_shared/payments/mock.ts` |
 | 4 Stripe adapter | **Built for verify and normalize only**; every other method answers `unsupported` and its capability flag is `false`. Checkout, cancel and the portal still call Stripe directly, unchanged and held | `_shared/payments/stripeadapter.ts` |
-| 5 Stripe normalizer | **Built**; parity with `billingwebhook.ts` proven over 28 events, and shown red against three planted bugs | `_shared/payments/normalizestripe.ts`, `app/src/lib/payments/normalize.test.ts` |
-| 8 `billing-webhook` reads through the adapter | **Not started.** The handler is unchanged; it still carries its own copy of the helpers the normalizer lifted, and the parity test is what makes removing them safe | |
+| 5 Stripe normalizer | **Built**; held to the handler's pre-move behaviour over 25 events (golden record), and shown red against planted bugs | `_shared/payments/normalizestripe.ts`, `app/src/lib/payments/normalize.test.ts` |
+| 8 `billing-webhook` reads through the adapter | **Built.** The handler keeps its HTTP behaviour, its `WebhookDeps` and its answers; verification and reading are the adapter's, and the handler's own copy of the reading is deleted. Held to what the handler handed the database *before* the move by a golden record (`stripe.golden.json`, 25 events, 31 calls), and by a structural test that the handler names no Stripe event field or signature routine. The existing 14 webhook tests and the activation tests pass unchanged | `_shared/billingwebhook.ts`, `app/src/lib/payments/normalize.test.ts`, `webhookseam.test.ts` |
 
-Nothing here is deployed behaviour: no Edge Function imports the new modules yet.
+`billing-webhook` is the one Edge Function that imports the adapter. It is a behaviour-preserving move, not a new capability: no new event is acted on, no refund or dispute effect exists yet (actions 16 and 17), checkout, cancel and the portal are untouched, and both checkout-hold constants stay false.
 
 ## 1. Starting point (FACT)
 
