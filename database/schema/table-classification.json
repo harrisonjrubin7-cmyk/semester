@@ -216,6 +216,7 @@
    "private.projection_invalidation",
    "private.projection_rebuild_run",
    "private.projection_watermark",
+   "private.read_model_registry",
    "private.roster_current",
    "private.roster_import_batch",
    "private.roster_import_config",
