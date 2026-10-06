@@ -1,0 +1,20 @@
+flowchart TD
+  Company[Company: site, commercial, contracts, operations] --> Adoption[Discovery, evaluation and onboarding]
+  Adoption --> Experience[Shared experience: identity, navigation, accessibility, search]
+  Experience --> Student[Student: today, calendar, tasks, productivity]
+  Experience --> Learning[Education: planning, courses, study, assessment]
+  Experience --> Institution[Institution: registrar, advising, accounts, support]
+  Experience --> Campus[Campus: housing, dining, community, family]
+  Experience --> Opportunity[Opportunity: career, applications, participation]
+  Student --> Backbone[Shared contracts, policy, workflows, sync and reconciliation]
+  Learning --> Backbone
+  Institution --> Backbone
+  Campus --> Backbone
+  Opportunity --> Backbone
+  Backbone --> Backend[Data and execution: database, functions, tenant boundaries]
+  Backend --> Adapters[Approved adapters with explicit source authority]
+  Adapters --> External[Institutional systems, LMS, identity, productivity, payments, AI]
+  Backbone --> Evidence[Audit, evidence and scoped release gates]
+  Evidence --> Operations[Console, privacy, support and recovery]
+  Operations --> Backbone
+  Note[Target connection map grounded in repository areas; arrows are not verified live connections]
