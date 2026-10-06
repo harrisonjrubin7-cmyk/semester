@@ -21,6 +21,8 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 | `npx tsc -b` | `app/` | Exit 0. |
 | `npm run lint` | `app/` | Exit 0. Oxlint warnings remained under the ceiling of 25. Styles, labels, and terms passed. |
 | `npx vitest run src/lib/path-readiness.test.ts src/lib/advisor-meeting.test.ts src/components/AdvisorMeeting.test.tsx` | `app/` | Exit 0 after the rebase onto `7b9ae1c2`. 3 files, 41 tests passed. An empty named row does not stop the headline saying Ready. A named code that is not yet an agenda line does. |
+| `npx tsc -b` and `npm run lint` | `app/` | Exit 0 again after the rebase. |
+| `npm test` | `app/` | Exit 0 after the rebase. 1467 files passed, 1 skipped. 23538 tests passed, 69 skipped. Duration 132.49s. |
 | Browser, 390×844, `http://127.0.0.1:5173/#/degree` | seeded `ECON 1020`, source `Added by hand` | Flag off: the row moved from Needs attention to a line that says the code is on the meeting agenda, is not an enrollment, and that nothing was shared. The meeting library held one agenda line, empty notes, and no attached courses. The secret planted on the course was not stored. |
 | Browser, same viewport, `VITE_ADVISOR_MEETING_MODE=production` on port 5174 | same seed | The Advisor meeting tab opened. Agenda item 1 was `ECON 1020 (Fall 2026). Named on this device. Not an enrollment.` Private notes stayed empty. |
 
