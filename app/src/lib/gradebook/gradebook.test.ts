@@ -188,10 +188,33 @@ describe('release', () => {
     expect(refusal(release(b, REGISTRAR, { itemId: 'ps1', key: 'registrar-releases' }, AT).decision)).toBe('not-authorised');
   });
 
+  it('does not write when the capability and the moderation approval are both absent', () => {
+    const moderated = { ...course(), scheme: { ...SCHEME, moderationRequired: true } };
+    const b = step(enterScore(moderated, TA, score({ key: 'ta-enters-unapproved' }), AT));
+    const entries = b.entries.length;
+    const r = release(b, TA, { itemId: 'ps1', key: 'ta-releases-unapproved' }, AT);
+    expect(refusal(r.decision)).toBe('not-authorised');
+    expect(r.book).toBe(b);
+    expect(r.book.entries).toHaveLength(entries);
+    expect(r.book.operations['ta-releases-unapproved']).toBeUndefined();
+    expect(latestReleased(r.book, 'ps1', ANA.id)).toBeNull();
+  });
+
+  it('does not write a release when moderation is required and none is recorded', () => {
+    const moderated = { ...course(), scheme: { ...SCHEME, moderationRequired: true } };
+    const b = step(enterScore(moderated, PROF, score({ key: 'prof-enters-held' }), AT));
+    const r = release(b, PROF, { itemId: 'ps1', key: 'prof-releases-held' }, AT);
+    expect(refusal(r.decision)).toBe('nothing-to-release');
+    expect(r.book).toBe(b);
+    expect(r.book.operations['prof-releases-held']).toBeUndefined();
+    expect(latestReleased(r.book, 'ps1', ANA.id)).toBeNull();
+  });
+
   it('says when there is nothing to release, and replays rather than releasing twice', () => {
     const b = step(enterScore(course(), TA, score({ key: 'ta-enters-3' }), AT));
     const r = release(b, PROF, { itemId: 'ps1', key: 'release-once' }, AT);
     expect(ok(r.decision)).toEqual({ released: 1, held: 0 });
+    expect(r.book.operations['release-once']).toMatchObject({ actor: PROF.id, kind: 'release' });
     expect(release(r.book, PROF, { itemId: 'ps1', key: 'release-once' }, AT).decision).toMatchObject({ replayed: true });
     expect(refusal(release(r.book, PROF, { itemId: 'ps1', key: 'release-twice' }, AT).decision)).toBe('nothing-to-release');
   });
