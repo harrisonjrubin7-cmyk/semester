@@ -89,7 +89,7 @@ Today, the degree plan, account, and registration-while-off now carry a source b
 
 `origin/main` `706feed4` pins the order of the registration checks. `e0082d91` and `c45114c1` add a readiness view that says preparation is not clearance. A shadow receipt for one synthetic section keeps the SIS as the authority (`REGISTRATION_DUAL_RUN.md`).
 
-The last fetched `origin/main` is `7b9ae1c2` (payment-rail registry, D-1324, and the sign-out-devices copy). GitHub was unreachable on the next fetch, so a newer tip was not confirmed. Those commits were merged into the stack. They were not applied with `db push`.
+`origin/main` at this merge is `c0874892`. That includes the payment-rail registry (D-1324), break-glass on `my_capabilities`, the console guard that returns no student rows, and the advisor list labelled Caseload for plans a student shared (`193b65f2`). None of that was applied with `db push`. The Caseload label is not task 23: a caseload query still has to return nothing without a grant.
 
 `gradebook_release` and `registrar_decide` refuse a write without the capability, and a grade the scheme says must be moderated is not released until that approval exists. The audit row is written only after that (`REGISTRAR_RELEASE_GATES.md`). The gradebook screen says the school’s LMS remains the grade record. That does not make any domain ready for a pilot.
 
