@@ -24,6 +24,12 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your data now shows what the app can use on this device
+
+On **Your data**, under a new **On this device** heading, there is one entry each for **Camera**, **Microphone**, **Location** and **Notifications**. Each says whether it is **Allowed**, **Blocked**, **Not asked yet**, **Not reported** (some browsers say nothing about the camera or microphone until they have been asked) or **Not available here**, what it is used for, and what still works without it. You do not have to do anything, and nothing on this page asks for a permission; the app still asks only when you start something that needs one.
+
+If one is blocked, the entry says how to allow it again. If one is allowed, it says where to take it back: the camera, microphone and location are held by your browser, so the entry points you to your browser's site settings rather than showing a switch that would do nothing. Notifications link to the switch on **Alerts**. The entries update while the page is open if you change a setting in your browser. Searching Settings for "camera", "microphone", "location" or "permissions" now finds **Your data**.
+
 ### Registration readiness opens with one line on where you stand
 
 At the top of the registration readiness list there is now a single status: **Ready**, **Almost ready**, **Getting ready**, **Blocked** or **Information unavailable**, with a sentence saying why. **Blocked** appears only when two courses in your schedule overlap, which the app can see for itself. Holds and prerequisites live in your school's system, so they never produce it. **Information unavailable** appears when no course catalog is loaded, or when a section you selected has no meeting times, so conflicts cannot be checked and the line will not say Ready. The Schedule conflicts step says the same. It is still preparation, not clearance: your registrar and official system decide the result. The steps below are unchanged and you do not have to do anything.
