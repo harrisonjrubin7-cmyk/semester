@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 196 |
+| Migration files | 197 |
 | Tables created in `public` and not later dropped | 330 |
 | … of which enable row-level security in a migration | 330 |
 | Tables created in `private` and not later dropped | 31 |
