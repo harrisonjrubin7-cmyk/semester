@@ -42,7 +42,7 @@ Only what the student explicitly shared:
 - the ticked scenario, courses and (if ticked) follow-up actions;
 - the name the student chose to share as.
 
-The advisor view is folded as "For advisors: meetings shared with you". It
+The advisor view is folded as "Caseload". It is the plans students shared, not every student at the school. It
 asks the server nothing until it is opened. It lists titles and dates, and
 opening one shows the snapshot with "The student can see that you opened it,
 and can revoke it."
