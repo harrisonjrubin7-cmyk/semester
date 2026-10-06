@@ -36,6 +36,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Leave-university and approve-join confirmations use `ActionPreview`, including whether the action can be taken back.
 - [x] `SchoolMembership.test.tsx` requires those sentences.
 - [x] Sign-out-other-devices uses `ActionPreview` and says the sign-out cannot be undone (`AccountSecurity.test.tsx`).
+- [x] Sharing a plan with an advisor uses `ActionPreview` and says the student can revoke it (`AdvisorMeeting.test.tsx`).
 
 ## Named screens
 

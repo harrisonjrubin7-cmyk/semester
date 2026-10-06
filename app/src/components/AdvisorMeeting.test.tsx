@@ -193,6 +193,9 @@ describe('sharing with an advisor', () => {
     await act(async () => button(/^Preview and share…$/).click());
     const preview = text(dialog());
     expect(preview).toContain('advisor@school.edu will see exactly this, as “Sam”');
+    expect(preview).toContain('Nothing else is shared.');
+    expect(preview).toContain('You can undo this.');
+    expect(preview).toContain('Revoke it from this screen.');
     expect(preview).toContain('Spring courses');
     expect(preview).toContain('ECON 3010 · 01 — Game Theory');
     expect(preview).not.toContain('PSCI 1100');
