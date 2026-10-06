@@ -25,6 +25,7 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
+import { SourceBadge } from '../components/SourceBadge';
 import { SectionLabel, Segmented } from '../components/ui';
 import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
@@ -170,6 +171,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
             {s}
           </div>
         ))}
+        <SourceBadge label="student_entered" style={{ marginTop: 'var(--sp-4)' }} />
       </Blueprint>
 
       {charges.length > 0 && (

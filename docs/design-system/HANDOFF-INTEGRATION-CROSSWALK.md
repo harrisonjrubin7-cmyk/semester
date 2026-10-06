@@ -33,7 +33,7 @@ Row-level notes stay in `REPO_AUDIT.md`. Catalog `exists` is existing but incomp
 | A · Public company site (80) | 53 / 26 / 1 | Existing but incomplete. Claims stay inside the approved register. The Pilot page is missing as an app route. |
 | B · Student OS (70) | 60 / 10 / 0 | Existing but incomplete. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. |
 | C · Faculty and Course Studio (36) | 8 / 18 / 10 | Existing but incomplete. |
-| D · Advisor and student success (25) | 3 / 13 / 9 | Existing but incomplete. Advisor Caseload is not a named screen. |
+| D · Advisor and student success (25) | 3 / 13 / 9 | Existing but incomplete. Advisor Caseload is the shared-plan list on the degree meeting tab. It is not a school-wide roster. |
 | E · Registrar (35) | 13 / 19 / 3 | Existing but incomplete. User-entered plans are not SIS data. |
 | F · Accounts, aid, commerce (29) | 20 / 8 / 1 | Existing but incomplete. |
 | G · Campus life (35) | 17 / 13 / 5 | Existing but incomplete. A general events table is not authorized. |
@@ -51,7 +51,7 @@ Developer platform and marketplace (0 / 3 / 13) is a roadmap concept. Incident r
 
 `MASTER-BRIEF-CROSSWALK.md` places the 19 deliverables. Authority stays `app/src/lib/look.ts`, then `app/src/styles/tokens.css`. The handoff palette is offered, not the default (`D-1293`).
 
-`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. `SCREEN-PACKS.md` §4 records the other four brief names: Advisor Caseload is blocked on institution advisor–student data and consent; Tenant Overview and Operations Inbox exist in part (customer records, and the read-only exception queue) and are not retitled; the Institutional Pilot page is routed pages on the company site. Renaming is a product decision and is not made here. Kit paths are prototype only and are not in the repository.
+`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. The folded advisor list on the degree meeting tab is labeled Caseload and lists only plans a student shared. `SCREEN-PACKS.md` §4 records the rest: a school-wide caseload is blocked on institution advisor–student data and consent; Tenant Overview and Operations Inbox exist in part and are not retitled; the Institutional Pilot page is routed pages on the company site. Kit paths are prototype only and are not in the repository.
 
 ## Handoff tree (139 files)
 
@@ -108,4 +108,4 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 
 ## Not complete
 
-57 catalog screens and 75 workflow steps are missing. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. This page does not say the handoff is integrated.
+57 catalog screens and 75 workflow steps are missing. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.

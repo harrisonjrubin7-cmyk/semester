@@ -24,6 +24,22 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Advisors open a Caseload of plans students shared
+
+On the degree meeting tab, the folded list that was “For advisors: meetings shared with you” is now Caseload. It still lists only plans a student chose to share, and it says it is not every student at the school. Nothing else about a student is added to it.
+
+### The operations console has a Trust controls tab
+
+For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
+
+- **The bill says the figures are yours.** Under the total you track yourself, a “Student entered” label now says you typed these numbers in and the school has not confirmed them. Nothing else on the screen changed.
+
+### Your data now shows what the app can use on this device
+
+On **Your data**, under a new **On this device** heading, there is one entry each for **Camera**, **Microphone**, **Location** and **Notifications**. Each says whether it is **Allowed**, **Blocked**, **Not asked yet**, **Not reported** (some browsers say nothing about the camera or microphone until they have been asked) or **Not available here**, what it is used for, and what still works without it. You do not have to do anything, and nothing on this page asks for a permission; the app still asks only when you start something that needs one.
+
+If one is blocked, the entry says how to allow it again. If one is allowed, it says where to take it back: the camera, microphone and location are held by your browser, so the entry points you to your browser's site settings rather than showing a switch that would do nothing. Notifications link to the switch on **Alerts**. The entries update while the page is open if you change a setting in your browser. Searching Settings for "camera", "microphone", "location" or "permissions" now finds **Your data**.
+
 ### Signing out other devices says it cannot be undone
 
 On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
