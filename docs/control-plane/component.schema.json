@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:component:v1",
+  "title": "Semester Component Definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["componentId", "version", "domain", "owner", "lifecycle", "implementation", "contracts", "dependencies", "authority", "controls", "recovery"],
+  "properties": {
+    "componentId": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$" },
+    "version": { "type": "string", "minLength": 1 },
+    "domain": { "type": "string", "minLength": 1 },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["teamId", "supportQueueId"],
+      "properties": {
+        "teamId": { "type": "string", "minLength": 1 },
+        "supportQueueId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "lifecycle": { "enum": ["proposed", "development", "active", "deprecated", "retired"] },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repositoryRef", "revision"],
+      "properties": {
+        "repositoryRef": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 }
+      }
+    },
+    "contracts": { "type": "array", "items": { "$ref": "#/$defs/contract" } },
+    "dependencies": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+    "authority": { "type": "array", "items": { "$ref": "#/$defs/authority" } },
+    "controls": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runbookRef", "failureBehavior"],
+      "properties": {
+        "runbookRef": { "type": "string", "minLength": 1 },
+        "failureBehavior": { "enum": ["deny_protected_action", "degrade_noncritical_feature", "queue_and_reconcile"] }
+      }
+    },
+    "evidenceRefs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+  },
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "version", "kind", "direction", "schemaRef"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["command", "event", "query"] },
+        "direction": { "enum": ["provides", "consumes"] },
+        "schemaRef": { "type": "string", "minLength": 1 }
+      }
+    },
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["componentId", "kind", "failureBehavior"],
+      "properties": {
+        "componentId": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["authorization", "validation", "synchronous", "asynchronous"] },
+        "failureBehavior": { "enum": ["block", "degrade", "retry", "reconcile"] }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenantId", "recordType", "scopeKey", "mode", "effectiveFrom"],
+      "properties": {
+        "tenantId": { "type": "string", "minLength": 1 },
+        "recordType": { "type": "string", "minLength": 1 },
+        "scopeKey": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["planning_only", "read_replica", "transitional", "authoritative"] },
+        "effectiveFrom": { "type": "string", "format": "date-time" },
+        "effectiveUntil": { "type": "string", "format": "date-time" },
+        "approvalRef": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        { "if": { "properties": { "mode": { "const": "authoritative" } }, "required": ["mode"] }, "then": { "required": ["approvalRef"] } }
+      ]
+    }
+  }
+}
