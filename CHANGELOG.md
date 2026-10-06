@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### A course you named stays listed when the catalog file does not contain it
+
+After you import a course catalog, the Term plan still lists a course you typed if that file has no section with the same code. The list names the institution and the day the file was imported, says the code is not in the file, and does not add a section or a seat. A code the file does contain leaves that list; you see the sections from the file, with the seats the file reported. You do not have to do anything.
+
 ### Courses you type stay on this device, and you can put them on a meeting agenda
 
 On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.

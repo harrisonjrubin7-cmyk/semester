@@ -84,4 +84,44 @@ describe('courses named before a catalog', () => {
     expect(list?.textContent).toMatch(/not an enrollment/);
     expect(host.textContent).not.toMatch(/enrollment succeeded|you are enrolled|seat reserved/i);
   });
+
+  it('keeps a named code that the imported file does not contain, and does not invent a seat', () => {
+    localStorage.setItem(
+      'semester.registration.v1',
+      JSON.stringify({
+        catalog: {
+          institution: 'Example University',
+          importedAt: '2026-10-01T15:00:00.000Z',
+          courses: [{
+            id: 'e1', code: 'ECON 1020', section: '01', title: 'Microeconomics', term: 'Fall 2026',
+            department: 'ECON', credits: 3, instructor: '', location: '', description: '',
+            prerequisites: '', seats: 18, meetings: [{ days: [1], start: '09:00', end: '10:15' }],
+          }],
+        },
+        cart: [],
+        plans: [],
+      }),
+    );
+    show(
+      <>
+        <Seed />
+        <RegistrationPortal demandForecasting={false} />
+      </>,
+    );
+    const seed = [...host.querySelectorAll('button')].find((el) => el.textContent === 'seed plan');
+    if (!seed) throw new Error('seed missing');
+    act(() => {
+      (seed as HTMLButtonElement).click();
+    });
+    const list = host.querySelector('[aria-label="Courses you are considering"]');
+    expect(list?.textContent).toMatch(/PSCI 1104/);
+    expect(list?.textContent).toMatch(/Not in this file/);
+    expect(list?.textContent).toMatch(/no seat was invented/i);
+    expect(list?.textContent).toMatch(/Example University/);
+    expect(list?.textContent).not.toMatch(/ECON 1020/);
+    const stored = JSON.parse(localStorage.getItem('semester.registration.v1')!);
+    expect(stored.catalog.courses.map((course: { code: string }) => course.code)).toEqual(['ECON 1020']);
+    expect(stored.cart).toEqual([]);
+    expect(host.textContent).toMatch(/18 reported seats|18 seats/);
+  });
 });

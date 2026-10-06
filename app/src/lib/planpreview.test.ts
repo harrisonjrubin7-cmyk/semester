@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { coursesForPlan, readPlanDraft } from './planpreview';
+import { coursesForPlan, readPlanDraft, unmatchedNamed } from './planpreview';
 
 describe('readPlanDraft', () => {
   it('reads a term and a list of codes', () => {
@@ -43,5 +43,29 @@ describe('coursesForPlan', () => {
     if (!read.ok) throw new Error('draft');
     const made = coursesForPlan(read.draft, ['econ-1020']);
     expect(made.map((m) => m.course.id)).toEqual(['econ-1020-2', 'psci-1104']);
+  });
+});
+
+describe('unmatchedNamed', () => {
+  const named = [
+    { code: 'ECON 1020', term: 'Fall 2026' },
+    { code: 'PSCI 1104', term: 'Fall 2026' },
+  ];
+
+  it('keeps every named code when the catalog file has no section of that code', () => {
+    expect(unmatchedNamed(named, [{ code: 'MATH 1300' }])).toEqual(named);
+  });
+
+  it('drops a code once the file contains a section of it, and does not invent a seat', () => {
+    const file = [{ code: 'econ  1020', seats: 12 }];
+    const left = unmatchedNamed(named, file);
+    expect(left).toEqual([{ code: 'PSCI 1104', term: 'Fall 2026' }]);
+    expect(JSON.stringify(left)).not.toMatch(/seats|section/);
+  });
+
+  it('does not treat a shorter code as the same course', () => {
+    expect(unmatchedNamed([{ code: 'ECON 1020', term: null }], [{ code: 'ECON 102' }])).toEqual([
+      { code: 'ECON 1020', term: null },
+    ]);
   });
 });

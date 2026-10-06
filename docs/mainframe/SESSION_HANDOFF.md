@@ -1,10 +1,10 @@
 # Session handoff
 
-**Date** 2026-10-06. **Branch** `audit/semester-mainframe-reconciliation`. **Rebased onto** `origin/main` at `7b9ae1c2`. **Push** follows this commit.
+**Date** 2026-10-06. **Branch** `cursor/unmatched-named-catalog-3071`, taken from `audit/semester-mainframe-reconciliation` after the agenda handoff. **Rebased onto** `origin/main` at `7b9ae1c2` on the parent branch. The parent pull request is #1336; merging it was requested and is waiting on GitHub being reachable.
 
 ## Objective that was completed
 
-From the readiness checklist, a course the student named can be placed on that student’s own advisor-meeting agenda. The line is the code and the term. Notes, questions, and attachments are not changed. Nothing is shared. No advisee grant is created.
+After a catalog file is imported, a course the student named stays on the Term plan until that file contains a section with the same code. The list names the institution and the import day. It does not add a section or a seat. A code the file does contain leaves the list; the sections on screen are the file’s.
 
 The meeting surface is `AdvisorMeeting` on My Path. It is shown only when `advisor_meeting_mode` is on. Screen `meet` is glossary word-overlap and is not this handoff.
 
@@ -15,8 +15,8 @@ Clean at `3623c117`. `origin/main` had moved to `7b9ae1c2` and already had `over
 ## What the next session should read first
 
 1. This file.
-2. `EXECUTION_BACKLOG.md` next item: unmatched named codes stay visible after a catalog import. Do not invent seats.
-3. `app/src/lib/advisor-meeting.ts` `meetingWithNamedAgenda` and `app/src/lib/path-readiness.ts` id `named`.
+2. `EXECUTION_BACKLOG.md` next item: security closure OP-01, only with an explicit non-production database the operator names.
+3. `app/src/lib/planpreview.ts` `unmatchedNamed` and `RegistrationPortal` `NamedPlan`.
 
 ## Rebase note
 
