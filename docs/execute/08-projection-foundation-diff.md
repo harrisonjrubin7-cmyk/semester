@@ -2,7 +2,7 @@
 
 **As of** 2026-10-06 · **Base** origin/main `7b524eb` · **Asks of this page** `docs/master/SEMESTER_EXECUTION_ROADMAP.md` rows 6–7, `docs/handoff/execute/08-ops-command-center.md`, and the PDFs' Phase 6 ("reconcile existing outbox and event infrastructure before adding new structures").
 
-> **Claim ceiling.** This page changes no migration, code, CI or setting. Everything under "What exists" was read from the tree or, where marked, from a read-only query of the production project (`lzrqvlug…`). The proposal is a proposal: no decision is made here, so no `D-` file is written (a decision takes its pull request's number, and this is not one).
+> **Claim ceiling.** This page itself changes no migration, code, CI or setting; the first slice it proposes (§4) was then built in the same pull request, in separate files (§7). Everything under "What exists" was read from the tree or, where marked, from a read-only query of the production project (`lzrqvlug…`). The proposal is a proposal: no decision is made here, so no `D-` file is written (a decision takes its pull request's number, and this is not one).
 
 ## 1. What exists
 
@@ -52,12 +52,23 @@ Tested the way the last slice was: a migration written and run on a throwaway Po
 3. The staleness budget per contract; the PDFs do not state one and none is invented here.
 4. Whether `docs/handoff/execute/08` task 3 (error tracking, uptime, SSO failures, SIS lag, alert routes) is in this slice. It needs vendors and on-call people the repository cannot supply.
 
-## 6. Not done
+## 6. Not done by this page
 
-No migration, function or test was written for this proposal. The ADR's "no producer writes yet" sentence is stale (three producers do); it is left for whoever owns that ADR. The 17 contracts, a worker, and any producer are untouched.
+This page wrote no migration, function or test; §7 records the slice that followed. The ADR's "no producer writes yet" sentence is stale (three producers do); it is left for whoever owns that ADR. The 17 contracts, a worker, and any producer are untouched.
+
+## 7. The first slice, built (option C chosen by the owner)
+
+The owner chose option C. Built in the same pull request, not applied to any database:
+
+- `supabase/migrations/20261006140000_ops_contract_registry.sql`: `private.ops_contract_registry` (service-only, written by migration) with 13 rows, and `public.ops_projection_dashboard()` (`console:operate` at platform scope). Every staleness budget is null and reads "no budget set".
+- `supabase/ops-read-contracts.check.sql`: 7 checks, shown to fail against three deliberate breaks.
+- Registered in `grants.check.sql`, `app/src/lib/definerregister.ts`, `database/schema/table-classification.json` and `RETENTION.md`.
+
+**Merging the pull request applies the migration to the connected production project** (as `D-1324`'s update records for the payments migration), so it needs the owner's explicit confirmation. Questions 2 and 3 in §5 were answered by default (registry written by migration only; no budget invented); question 4 is not in this slice.
+
 
 ## 8. Collision with the projection foundation, and what changed
 
-While this pull request was open, `20261006130000_projection_foundation.sql` (docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md, backlog P1-01) landed and created its own `private.read_model_registry`, keyed by (name, version) with a required capability and a required freshness SLO. That is a registry of *projections*. This slice registers *live reads* whose budget is deliberately null, so it cannot share that table without loosening its constraints, and `create table if not exists` would have silently skipped and then failed on the first insert.
+While this pull request was open, `20261006130000_projection_foundation.sql` (docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md, backlog P1-01) landed and created its own `private.read_model_registry`, keyed by (name, version) with a required capability and a required freshness SLO. That is a registry of *projections*. This slice registers *live reads* whose budget is deliberately null, so it cannot share that table without loosening its constraints, and `create table if not exists` would have skipped silently and then failed on the first insert.
 
-So this slice's table is `private.ops_contract_registry`, and its migration is `20261006140000_ops_contract_registry.sql`. The projection registry stays the one place a projection is declared; when a contract is moved from live read to projection, its row moves there. Nothing here reads or writes the projection tables.
+So this slice's table is `private.ops_contract_registry`, and its migration is `20261006140000_ops_contract_registry.sql`. The projection registry stays the one place a projection is declared; when a contract moves from live read to projection, its row moves there. Nothing here reads or writes the projection tables.
