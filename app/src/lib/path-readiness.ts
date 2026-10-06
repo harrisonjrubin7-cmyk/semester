@@ -4,9 +4,17 @@ import type { CatalogCourse } from './registration';
 
 export type ReadinessState = 'ready' | 'attention' | 'not_started';
 
+/** A course code the student typed. It is not a section and not an enrollment. */
+export interface NamedCourse {
+  code: string;
+  term: string | null;
+}
+
 export interface PathReadinessInput {
   pathConfigured: boolean;
   requirementTotal: number;
+  /** Codes from the device plan. Absent means the caller has not supplied any. */
+  namedCourses?: readonly NamedCourse[];
   cart: CatalogCourse[];
   catalog: CatalogCourse[];
   registration: RegistrationDayData;
@@ -15,7 +23,7 @@ export interface PathReadinessInput {
 }
 
 export interface PathReadinessItem {
-  id: 'path' | 'requirements' | 'courses' | 'schedule' | 'backups' | 'window' | 'official_checks' | 'advisor';
+  id: 'path' | 'requirements' | 'named' | 'courses' | 'schedule' | 'backups' | 'window' | 'official_checks' | 'advisor';
   label: string;
   detail: string;
   state: ReadinessState;
@@ -32,6 +40,8 @@ export interface PathReadinessItem {
 export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   const plan = readiness(input.registration, input.cart, input.catalog);
   const unchecked = uncheckedSections(input.cart);
+  const named = input.namedCourses ?? [];
+  const namedCodes = named.map((course) => course.code).filter(Boolean);
   const checked = CHECKLIST.filter((item) => input.registration.checks.includes(item.id)).length;
   const latestMeeting = [...input.meetings.meetings].sort((a, b) => b.created - a.created)[0];
   const hasAgenda = Boolean(latestMeeting && (latestMeeting.agenda.length || latestMeeting.questions.length));
@@ -50,6 +60,16 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
       detail: input.requirementTotal > 0 ? `${input.requirementTotal} requirements are in your planning copy.` : 'Copy the requirements from your official degree audit.',
       state: input.requirementTotal > 0 ? 'ready' : 'not_started',
       destination: 'degree',
+    },
+    {
+      id: 'named',
+      label: 'Courses you named',
+      detail: namedCodes.length
+        ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.`
+        : 'Name the courses you are considering. Naming a course is not an enrollment.',
+      // A typed code is preparation. It stays short of ready until a section is chosen, and even then it is not the school's confirmation.
+      state: namedCodes.length ? 'attention' : 'not_started',
+      destination: 'yes',
     },
     {
       id: 'courses',
@@ -102,6 +122,15 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
       destination: 'degree',
     },
   ];
+}
+
+/** Device courses the student typed. A syllabus import is a different source and stays off this row. */
+export function namedCoursesFrom(
+  courses: readonly { course: { code: string; source?: string; term?: string } }[],
+): NamedCourse[] {
+  return courses
+    .filter((module) => module.course.source === 'Added by hand')
+    .map((module) => ({ code: module.course.code, term: module.course.term ?? null }));
 }
 
 export function readinessCount(items: readonly PathReadinessItem[]): { ready: number; total: number } {
@@ -178,7 +207,9 @@ export function overallReadiness(items: readonly PathReadinessItem[], facts: Rea
       why: `${facts.unchecked} selected section${facts.unchecked === 1 ? ' has' : 's have'} no meeting times, so a conflict cannot be ruled out. Check the official listing.`,
     };
   }
-  const left = items.filter((item) => item.state !== 'ready');
+  // A student who has not named a course has not left a step undone. Once they have, that row counts.
+  const steps = items.filter((item) => !(item.id === 'named' && item.state === 'not_started'));
+  const left = steps.filter((item) => item.state !== 'ready');
   if (left.length === 0) {
     return { state: 'ready', label: 'Ready', why: 'Every preparation step is done. Your registrar and official system still decide the result.' };
   }
@@ -186,5 +217,5 @@ export function overallReadiness(items: readonly PathReadinessItem[], facts: Rea
   if (left.length <= 2) {
     return { state: 'almost_ready', label: 'Almost ready', why: `${left.length === 1 ? 'One step' : 'Two steps'} left: ${names}.` };
   }
-  return { state: 'getting_ready', label: 'Getting ready', why: `${items.length - left.length} of ${items.length} steps done. Next: ${left[0]!.label.toLowerCase()}.` };
+  return { state: 'getting_ready', label: 'Getting ready', why: `${steps.length - left.length} of ${steps.length} steps done. Next: ${left[0]!.label.toLowerCase()}.` };
 }

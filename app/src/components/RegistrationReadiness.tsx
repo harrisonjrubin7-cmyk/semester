@@ -3,7 +3,7 @@ import { EMPTY_MEETINGS, meetingKey, readMeetings } from '../lib/advisor-meeting
 import { useDeviceLibrary } from '../lib/device-library';
 import { MODULE_FLAGS, moduleOn } from '../lib/experience-flags';
 import { hasPathProfile } from '../lib/path-profile';
-import { overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from '../lib/path-readiness';
+import { namedCoursesFrom, overallReadiness, pathReadiness, readinessCount, readinessFacts, type PathReadinessInput } from '../lib/path-readiness';
 import { useRegistrationPlan } from '../lib/registration-plan';
 import { useStore } from '../state/store';
 import { usePathProfile } from './PathProfileForm';
@@ -24,12 +24,13 @@ export function RegistrationReadiness() {
   const input = useMemo<PathReadinessInput>(() => ({
     pathConfigured: hasPathProfile(profile.value),
     requirementTotal: state.requirements.length,
+    namedCourses: namedCoursesFrom(state.courses),
     cart: plan.cart,
     catalog: plan.catalog,
     registration: plan.data,
     meetings: meetings.value,
     institution: plan.institution,
-  }), [meetings.value, plan.cart, plan.catalog, plan.data, plan.institution, profile.value, state.requirements.length]);
+  }), [meetings.value, plan.cart, plan.catalog, plan.data, plan.institution, profile.value, state.courses, state.requirements.length]);
   const items = useMemo(() => pathReadiness(input), [input]);
   const count = readinessCount(items);
   const overall = overallReadiness(items, readinessFacts(input));
