@@ -7,6 +7,7 @@ import {
   ENTRY_KEY,
   ENTRY_MS,
   captureEntry,
+  continueOnLanding,
   forgetEntry,
   parseEntry,
   recallEntry,
@@ -125,6 +126,16 @@ describe('remembering for the tab', () => {
     expect(captureEntry('?src=social&cid=a', 1_000)?.campaignId).toBe('a');
     expect(captureEntry('', 2_000)?.campaignId).toBe('a');
     expect(captureEntry('?src=email&cid=b', 3_000)?.campaignId).toBe('b');
+  });
+});
+
+describe('a returning user’s landing', () => {
+  it('follows the address and never the tab’s memory', () => {
+    rememberEntry({ source: 'email', continueTo: 'calendar' }, Date.now());
+    expect(continueOnLanding('?continue=study')).toBe('study');
+    // An auth return or any other query must not resurrect an earlier link.
+    expect(continueOnLanding('?code=abc&state=xyz')).toBeNull();
+    expect(continueOnLanding('')).toBeNull();
   });
 });
 

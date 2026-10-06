@@ -58,7 +58,7 @@ import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { linkedScreen } from '../lib/deeplink';
-import { captureEntry } from '../lib/entrycontext';
+import { captureEntry, continueOnLanding } from '../lib/entrycontext';
 import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
@@ -417,7 +417,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return {
       ...persisted,
       ...ephemeral,
-      screen: screenFromUrl() ?? (window.location.search ? entry?.continueTo : null) ?? firstScreen(persisted.nav),
+      screen: screenFromUrl() ?? continueOnLanding(window.location.search) ?? firstScreen(persisted.nav),
     };
   });
 

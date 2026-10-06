@@ -177,3 +177,13 @@ export function captureEntry(search: string, now = Date.now()): EntryContext | n
   }
   return recallEntry(now);
 }
+
+/**
+ * Where a link asks a returning user to land: what the address says now, and
+ * nothing remembered. The tab's memory exists to carry a first visit through
+ * setup; letting it answer here sent an OAuth return (`?code=`) or any other
+ * query-string landing to a screen a link named earlier in the tab.
+ */
+export function continueOnLanding(search: string): Screen | null {
+  return parseEntry(search)?.continueTo ?? null;
+}
