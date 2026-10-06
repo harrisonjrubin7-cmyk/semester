@@ -34,3 +34,13 @@ $$;
 
 comment on function private.is_app_admin() is
   'Whether the caller is a platform operator: platform:configure at platform scope. Legacy name; no longer reads public.app_admins.';
+
+-- A platform_admin now passes `schools_write`, which previously nobody did in
+-- practice. `schools.is_demo` is set by the service role only (the console
+-- control-plane migration says so and its check holds it), so the policy
+-- refuses any row an operator writes as a demo tenant. The service role
+-- bypasses row-level security and is unaffected.
+drop policy if exists schools_write on public.schools;
+create policy schools_write on public.schools
+  for all using (private.is_app_admin())
+  with check (private.is_app_admin() and not is_demo);
