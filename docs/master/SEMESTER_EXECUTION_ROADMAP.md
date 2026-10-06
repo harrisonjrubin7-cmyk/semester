@@ -18,3 +18,24 @@
 Student P0 screens (Today, Action Center, Path, Plan, Registration, Course, Ask, Support, Privacy) already exist; they are migration targets for the design system, sequenced after 4–5.
 
 Production database changes, deployments, billing and external publishing need the owner's explicit confirmation at each step and are not part of any branch above.
+
+## Reconciliation with the repo's own stream plan (added 2026-10-06)
+
+The repo already carries an execution program: `docs/handoff/execute/00-INDEX.md` and streams 00–13, with reports under `docs/execute/` for streams 00 and 01 (decision `D-1287`). The branch table above is therefore **not a second program**; each row maps onto a stream, and the stream's own rules win (audit before writing, one PR per stream, `design-system:check` passes, a human approves the merge).
+
+| This roadmap | Stream | Note |
+| --- | --- | --- |
+| 2 `audit/rpc-exposure` | 01 platform core, 09 trust and security | Stream 01 slice 2 already probes student-data reads across 64 tables (`D-1298`); the definer-function audit is complementary |
+| 3–5 design mapping and primitives | 00 setup, 12 one place | Open draft PR #1304 holds a handoff-to-repo crosswalk; its counts (589 screens: 260 / 272 / 57; 319 steps: 116 / 128 / 75) agree with `SEMESTER_GAP_REGISTER.md`. It was not merged or edited here |
+| 6–7 projection foundation, ops read models | 08 ops command center | Stream 08 requires "business data only" and a test that every `/ops` query fails against student tables; add that test before any `ops_*` contract |
+| 8–9 console tabs, incident/SLO/access review | 08 | Same stream |
+| 10 company site and trust | 11 company site, 09 | — |
+
+Decisions that bound this roadmap (`D-1287` §4, decided 2026-10-05, reopenable by the founder):
+
+- **Marketplace** is not revived.
+- **Company roles** (`ceo`, `cfo`, `comms`, `social`, `people`, `data`) are not added; stream 08 adds what `/ops` needs as capabilities on the existing role model, never as a text `role` column. The PDFs' investor, employer and partner portals and the Finance/People/Board console areas are therefore **not scheduled** here.
+- Per-field profile visibility and a campus directory, and a campus events table, are not built.
+- The handoff's migrations `010`–`080` are reference only and are not applied.
+
+Count note: `SEMESTER_MASTER_CURRENT_STATE.md` lists the live `public` schema (about 230 tables); `D-1287` cites 353 tables across all schemas. The two were not reconciled.
