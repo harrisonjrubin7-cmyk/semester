@@ -105,6 +105,10 @@ This work extends, and does not replace, the controlled documents below. Where t
 | [`../COMMERCIAL-CORE.md`](../COMMERCIAL-CORE.md) | Plans, subscriptions, entitlements, dunning in the schema | Entitlement and metering mapping for the proposed SKUs |
 | [`../COMPANY-FIRST-YEAR-MEASURES.md`](../COMPANY-FIRST-YEAR-MEASURES.md) | Measures defined; no target set | Financial measures defined here follow it: guardrails are proposals, not targets |
 
+## Native financial platform (proposed design, separate from the planning model)
+
+Fourteen documents design Semester's own financial layer (checkout, ledger, billing, refunds, reconciliation, console) over a replaceable payment-rail adapter. They are a PROPOSED engineering and control design, not part of the planning model above, and carry no prices or forecasts. Start at [`NATIVE_FINANCIAL_PLATFORM.md`](NATIVE_FINANCIAL_PLATFORM.md); its table lists the other thirteen. Their gates (`FRG-nn`) are release gates for moving money and are not the model gates in [`10-GO-NO-GO-GATES.md`](10-GO-NO-GO-GATES.md). Their controls (`NF-nn`) implement and do not renumber FC-01 to FC-25 in document 08.
+
 ## Maintaining the model
 
 - **Change an assumption:** edit the blue cell in `Assumptions` (or `Scenario_Control`, `Headcount`), then confirm `Checks` says ALL PASS.

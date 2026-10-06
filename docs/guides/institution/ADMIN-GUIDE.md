@@ -11,7 +11,7 @@ This guide tells an institution administrator which role does what, where each t
 <!-- capabilities: tenant:configure, tenant:implement, audit:read, integration:approve, integration:view, integration:configure, integration:sync, integration:replay, killswitch:engage, breakglass:request, ai:configure, migration:approve, migration:manage, config:manage, config:publish, config:view, workflow:manage, workflow:publish, record:approve, data_request:handle, console:operate, approval:decide, platform:configure, outcomes:read -->
 <!-- roles: university_admin, implementation_manager, integration_admin, registrar, data_steward, incident_responder, platform_admin -->
 <!-- labels: app/src/screens/University.tsx :: Services, Drafts, Records, Connections, Institutional package, Control, Trust, Modules, Get help, Integrations, Operations, Demand, Campaigns, Migration, Configuration, Workflows, Academic record, Student accounts -->
-<!-- labels: app/src/screens/Console.tsx :: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Evidence, Views -->
+<!-- labels: app/src/screens/Console.tsx :: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Releases and flags, Launch readiness, Evidence, Views -->
 <!-- labels: app/src/components/SchoolClaim.tsx :: For this university's staff -->
 
 ## Before you start
@@ -73,10 +73,12 @@ Production changes made through the control plane are real only when a productio
 
 ## Tour of the Console (Semester staff)
 
-The Console's tabs, in order: `Command center`, `Support` (only when support tickets are on and you may answer them), `Approvals`, `Break-glass`, `Audit`, `Customers`, `Figures`, `Finance model`, `Evidence`, `Views`. A privileged action asks for a second factor that is no more than fifteen minutes old.
+The Console's tabs, in order: `Command center`, `Support` (only when support tickets are on and you may answer them), `Approvals`, `Break-glass`, `Audit`, `Customers`, `Figures`, `Finance model`, `Releases and flags`, `Launch readiness`, `Evidence`, `Views`. A privileged action asks for a second factor that is no more than fifteen minutes old.
 
 - `Approvals` and `Break-glass` run on a duty matrix (`DUTIES` in `app/src/lib/ops/console.ts`): the requester and the approvers are different parties. A break-glass grant to a production tenant is requested by the `engineering` seat and approved by the `security` and `founder` seats.
 - `Audit` shows the audit-chain status and events, newest first.
+- `Releases and flags` is read-only. It lists the feature flags this build was made with, from the experience, module, toolkit and community flag registries and the four standalone flags, each with its state, most live first. A flag is fixed when a build is made and a school's own policy can narrow it further at run time, so nothing on this tab changes either; to change a flag, set its build variable and make a new build.
+- `Launch readiness` is read-only and is the repository's record as of the date it shows, not a live check. It lists the twelve launch gates (met, partial or unmet, with the files that show it and what is still missing), the council seats with who holds each and whether it has signed, and the go / go with conditions / no-go verdict worked out from them. A gate is met only when the files it cites exist and the council has signed, so nothing on the tab can clear one.
 - `Finance model` is Semester's own internal planning tool, for its staff and not a customer feature. It runs on local sample data, reads nothing from a ledger or bank, saves nothing, and labels every figure a forecast on planning assumptions.
 - Saved views and the last-open tab live on the server, not in browser storage.
 
