@@ -619,6 +619,12 @@ declare
     -- keeps subject ids and request content out of its result.
     'console_privacy_requests(include_demo boolean)',
 
+    -- The operations read contracts and how fresh each is. It requires
+    -- console:operate at platform scope and returns registry metadata only:
+    -- no tenant, person or credential. ops-read-contracts.check.sql holds its
+    -- refusals and its output.
+    'ops_projection_dashboard()',
+
     -- The privacy lifecycle in 20261005124000. Claim, sensitive-detail read,
     -- identity verification and resolution all require fresh MFA, the
     -- platform console shell and an exact-school data_request:handle grant.

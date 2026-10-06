@@ -267,6 +267,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['office_desk_actions', 'admin', ['auth.uid()', 'private.may_publish']],
   ['open_help_request', 'self-service', ['auth.uid()', 'private.answers_for']],
   ['open_support_ticket', 'self-service', ['auth.uid()']],
+  ['ops_projection_dashboard', 'admin', ['auth.uid()', 'private.has_capability']],
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
@@ -507,6 +508,10 @@ export const AFTER_SECOND_READING: readonly { file: string; functions: readonly 
   {
     file: '20261006160000_my_sessions.sql',
     functions: ['end_my_session', 'my_sessions'],
+  },
+  {
+    file: '20261006140000_ops_contract_registry.sql',
+    functions: ['ops_projection_dashboard'],
   },
 ];
 

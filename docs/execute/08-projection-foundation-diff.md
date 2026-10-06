@@ -38,7 +38,7 @@ The PDFs ask for projected read models. The repository's console already answers
 
 ## 4. Proposed first slice (if C is chosen)
 
-1. `private.read_model_registry` (name, version, owning capability, source tables or event types, staleness budget in seconds, status), written only by migration. One row per `ops_*` contract that is built, so the registry is the list of what exists, not of what is hoped for.
+1. `private.ops_contract_registry` (name, version, owning capability, source tables or event types, staleness budget in seconds, status), written only by migration. One row per `ops_*` contract that is built, so the registry is the list of what exists, not of what is hoped for.
 2. `ops_projection_dashboard`, a capability-checked definer function (`console:operate`) that reads the registry and returns, per read model, its version, last-computed time and whether it is inside its budget. It is the first contract because it can be tested without any new producer.
 3. A check, `supabase/ops-read-contracts.check.sql`: every registry row names a function that exists; a caller without the capability is refused; no student marker appears in any return (reusing the pattern in `console-no-student-rows.check.sql`); a stale fixture reads as stale.
 4. Nothing from option A until a named contract needs it.
@@ -55,3 +55,9 @@ Tested the way the last slice was: a migration written and run on a throwaway Po
 ## 6. Not done
 
 No migration, function or test was written for this proposal. The ADR's "no producer writes yet" sentence is stale (three producers do); it is left for whoever owns that ADR. The 17 contracts, a worker, and any producer are untouched.
+
+## 8. Collision with the projection foundation, and what changed
+
+While this pull request was open, `20261006130000_projection_foundation.sql` (docs/ops/CQRS_READ_MODEL_ARCHITECTURE.md, backlog P1-01) landed and created its own `private.read_model_registry`, keyed by (name, version) with a required capability and a required freshness SLO. That is a registry of *projections*. This slice registers *live reads* whose budget is deliberately null, so it cannot share that table without loosening its constraints, and `create table if not exists` would have silently skipped and then failed on the first insert.
+
+So this slice's table is `private.ops_contract_registry`, and its migration is `20261006140000_ops_contract_registry.sql`. The projection registry stays the one place a projection is declared; when a contract is moved from live read to projection, its row moves there. Nothing here reads or writes the projection tables.
