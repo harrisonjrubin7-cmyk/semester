@@ -167,3 +167,46 @@ Its SQL is not adopted: the tables are scaffolding by its own account (no foreig
 | C-6 | A `Store` implementation for the access saga satisfying the ninth PDF's persistence gate, with the store-side failure rehearsals listed above and the revocation barrier (a late installation at a revoked generation is rejected) | `engineering` | Each unexercised item has a test against the real store |
 
 The access saga has no caller yet: nothing persists a saga row and no route asks for one.
+
+## Sixteenth PDF: "every document, function, capability, screen, role, scheme" (2026-10-06)
+
+A Perplexity-generated master map (21 pp, read in full) answering "list everything, as one system". It says of itself that it is a target architecture and checklist, not a claim about the repository. **No new domain.** Its eight parts map onto catalogs that already exist:
+
+| PDF part | Where it already lives |
+| --- | --- |
+| 1 Platform structure (public, education, institution, company, application operations, shared services) | `SEMESTER_PLATFORM_ECOSYSTEM.md`, `SEMESTER_COMPANY_OPERATING_SYSTEM.md`, `SEMESTER_COMPLETE_CATALOG.md` |
+| 2 Domain and screen inventory (about 130 rows over five areas) | `SEMESTER_DOMAIN_CATALOG.md` (40 domains), `SEMESTER_SCREEN_CATALOG.md` |
+| 3 Master document register (31 document families), document control rules | `docs/company/` and `SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md`; the control rules are the "document control" entry already listed in `SEMESTER_COMPANY_OPERATING_SYSTEM.md` |
+| 3 Role inventory (19 role families) and the actor + membership + scope + action + policy + approval rule | `SEMESTER_ROLE_CATALOG.md`; the rule is the PEP/PDP split in ADR 0007 |
+| 4 Schema map, command path, twelve end-to-end workflows | `SEMESTER_DATA_AUTHORITY_MATRIX.md`, `SEMESTER_WORKFLOW_CATALOG.md`, `CONTROLLED_ACTION_PATTERNS.md` |
+| 5 Nine readiness gates | The twenty gates in `SEMESTER_DOMAIN_REPLACEMENT_GATES.md` (the nine are a coarser grouping of them) |
+
+> **Claim ceiling.** Counts below come from a grep of `supabase/migrations`, `app/src` and `packages`, not from the live project.
+
+### What main does not cover (the real delta)
+
+| # | Item in the PDF | Finding | Class |
+| --- | --- | --- | --- |
+| R-1 | A **capability registry entry** per capability (`capability_id`, domain, owner, workspace, routes, actors, permissions, records, commands, events, requirements, dependencies, evidence) | `capability_id` appears nowhere. Live `app_capabilities` rows are permission names, not completeness records; none links a capability to its routes, tests and runbook | Designed/documented only; gap |
+| R-2 | Record-level fields: `record_version`, `retention_policy_id`, `workflow_instance_id`, `effective_from/until` | `record_version`, `retention_policy_id` and `workflow_instance_id` appear in no migration; `effective_from` in 3; `classification` in 23 and `legal_hold` in 8. Overlaps N-1 (the 16 graph attributes) and the third PDF's 11-field envelope | Partly native; fold into N-1, do not add a fourth list |
+| R-3 | Twelve linked registries (capability, screen/route, role/permission, schema, API/command, event, workflow, document, integration, service, metric, control/evidence) | Nine of the twelve have a home (screens, roles, data authority, interoperability, workflows, risk, release evidence, component registry from C-1); **no capability registry (R-1), no metric registry, no document registry** | Not started for three |
+| R-4 | Workspace route families `/institution/*`, `/account/*`, `/company/*`, `/ops/*`, `/developers/*` | Proposed, as the PDF says. A grep for those route literals under `app/src` found none; the repo's own route map is the screen catalog, which was not re-derived here | Unverified; do not adopt names before the route map is checked |
+| R-5 | Universal screen requirements (ten items) and the eight screen types (overview, queue, detail, create/edit, review, history, settings, reporting) | The ten items are the existing state and accessibility contract in `CLAUDE.md` plus `RECOVERY-STATE-LIBRARY.md`; the eight screen types are not a field in the screen catalog | Native but incomplete |
+
+### Not adopted
+
+| Proposed | Decision |
+| --- | --- |
+| "One system" as a single shared database | The PDF itself says no; company finance and student education records stay separately scoped (see `SEMESTER_DATA_AUTHORITY_MATRIX.md`) |
+| NIST CSF 2.0 six functions as the security organizing principle | Already the frame in `expansionregister.ts` and `expansiongovernance.ts`; no change |
+| Billing failure should not automatically block all academic access | A policy question, not checked against code here; belongs with the commercial-readiness owner. No change |
+| Citation 10, `projects.semester.operations_console` | Not a URL or a source; a stray token in the PDF's reference list. Nothing to follow up |
+
+### Proposed backlog additions
+
+| ID | Item | Owner seat | Closed when |
+| --- | --- | --- | --- |
+| R-1 | Decide whether a capability registry exists beside `app_capabilities`, and if so its schema (start from the PDF's example `institution.member.invite`) | `engineering` | Decision recorded as `docs/decisions/D-<pull request number>.md` |
+| R-2 | Add `record_version`, `retention_policy_id`, `workflow_instance_id` and effective dating to N-1's matrix as blank-marked columns | `data` | Part of N-1; no separate matrix |
+| R-3 | Decide whether a metric registry and a document registry are needed, or are the outcome-measurement and `docs/company/` indexes | `product` | Decision recorded |
+| R-4 | Check the five proposed route families against the real route map before any are used in a doc as names | `design` | One table of proposed-to-actual routes |
