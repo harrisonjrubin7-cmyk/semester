@@ -6,7 +6,11 @@ import {
   ACCESS_SAGA,
   ACCESS_SAGA_STATES,
   AccessSagaRunner,
+  DEFAULT_TIMEOUT_MS,
   Fault,
+  PersistenceConflict,
+  checkTransition,
+  withTimeout,
   OUTCOME_STATE,
   backoff,
   canonicalJson,
@@ -129,19 +133,27 @@ class FakeStore implements Store {
   saved: AccessSaga;
   released = 0;
   held = false;
-  rejectSave = false;
+  rejectSave: Error | null = null;
+  flagged: string[] = [];
   events: AccessEvent[] = [];
   constructor(initial: AccessSaga) { this.saved = initial; }
-  async claim(): Promise<Lease | null> {
+  async claim(_id: string, _leaseMs: number): Promise<Lease | null> {
     if (this.held) return null;
     this.held = true;
     return { token: 'fence-1', saga: this.saved };
   }
   async save(_l: Lease, expectedRevision: number, next: AccessSaga, event: AccessEvent): Promise<void> {
-    if (this.rejectSave || this.saved.revision !== expectedRevision) throw new Fault('REVISION_CONFLICT', false);
+    if (this.rejectSave) {
+      // One failure, then storage recovers: a runner that retried or denied on it would show as a second save.
+      const failure = this.rejectSave;
+      this.rejectSave = null;
+      throw failure;
+    }
+    if (this.saved.revision !== expectedRevision) throw new PersistenceConflict('REVISION_CONFLICT');
     this.saved = next;
     this.events.push(event);
   }
+  async flagRecovery(_l: Lease, code: string): Promise<void> { this.flagged.push(code); }
   async release(): Promise<void> { this.held = false; this.released += 1; }
   async wake(): Promise<void> {}
 }
@@ -302,12 +314,28 @@ describe('the runner', () => {
     expect(r.store.saved.grantId).toBeUndefined();
   });
 
-  it('propagates a rejected save (a lost compare-and-swap) and still releases the lease', async () => {
-    const r = rig(newSaga());
-    r.store.rejectSave = true;
-    await expect(tick(r)).rejects.toThrow();
+  it('stands down when the saga moved under it: nothing overwritten, nothing retried, lease released', async () => {
+    const r = rig(newSaga({ state: 'VALIDATING' }));
+    r.store.rejectSave = new PersistenceConflict('stale fencing token');
+    await tick(r);
+    expect(r.store.saved.revision).toBe(0);
     expect(r.store.held).toBe(false);
+    expect(r.calls).toEqual(['validate']);
+    expect(r.store.flagged).toEqual([]);
   });
+
+  it('does not take a storage failure for a participant failure: it is raised, not retried, denied or revoked', async () => {
+    const r = rig(newSaga({ state: 'VALIDATING' }));
+    r.store.rejectSave = new Error('connection reset');
+    await expect(tick(r)).rejects.toThrow('connection reset');
+    expect(r.store.saved).toMatchObject({ state: 'VALIDATING', revision: 0, attempts: 0 });
+    expect(r.store.held).toBe(false);
+    // The same failure while installing is not an install of unknown outcome either.
+    const installing = rig(newSaga({ state: 'INSTALLING', grantId: 'g', grantExpiresAt: T0 + HOUR }));
+    installing.store.rejectSave = new Error('connection reset');
+    await expect(tick(installing)).rejects.toThrow('connection reset');
+    expect(installing.store.saved.state).toBe('INSTALLING');
+});
 });
 
 describe('an install of unknown outcome', () => {
@@ -373,7 +401,7 @@ describe('a revocation that arrives while an install is in flight', () => {
       // The wake lands while `install` is still running: the store moves on under the worker.
       install: () => { r.store.saved = { ...r.store.saved, state: 'REVOKING', revision: r.store.saved.revision + 1 }; },
     });
-    await expect(tick(r)).rejects.toThrow();
+    await tick(r); // stands down: the revocation owns the saga now
     expect(r.store.saved.state).toBe('REVOKING');
     expect(r.events.map((e) => e.reasonCode)).not.toContain('RESULT_INSTALL');
     // The next worker finishes the revocation; at no point was the saga ACTIVE.
@@ -605,4 +633,93 @@ describe('the compensation policy', () => {
     }
     expect(ACCESS_COMPENSATION.find((c) => c.operation === 'Install grant')?.failureHandling).toMatch(/never a blind assumption/);
   });
+});
+
+describe('time limits on a participant', () => {
+  it('stops waiting at the operation timeout and reports an unknown outcome, aborting the call', async () => {
+    let aborted = false;
+    const r = rig(newSaga({ state: 'VALIDATING' }));
+    const stuck: Services['validate'] = (_s, _k, signal) => new Promise<void>(() => { signal.addEventListener('abort', () => { aborted = true; }); });
+    const runner = new AccessSagaRunner(r.store, { validate: stuck } as unknown as Services, { now: () => T0, random: () => 0.5, newId: () => 'e', timeouts: { validate: 15 } });
+    await runner.tick('saga-1');
+    expect(aborted).toBe(true);
+    expect(r.store.saved).toMatchObject({ state: 'VALIDATING', attempts: 1, lastError: 'OPERATION_TIMEOUT' });
+  });
+
+  it('a timed-out install is reconciled, not retried blind', async () => {
+    const r = rig(newSaga({ state: 'INSTALLING', grantId: 'g', grantExpiresAt: T0 + HOUR }));
+    const slow = { install: () => new Promise<void>(() => {}) } as unknown as Services;
+    const runner = new AccessSagaRunner(r.store, slow, { now: () => T0, random: () => 0.5, newId: () => 'e', timeouts: { install: 15 } });
+    await runner.tick('saga-1');
+    expect(r.store.saved).toMatchObject({ state: 'RECONCILING', lastError: 'OPERATION_TIMEOUT' });
+  });
+
+  it('withTimeout passes a result through, and clears its timer', async () => {
+    expect(await withTimeout(1_000, async () => 7)).toBe(7);
+    await expect(withTimeout(10, () => new Promise<number>(() => {}))).rejects.toMatchObject({ code: 'OPERATION_TIMEOUT', retryable: true, outcomeUnknown: true });
+  });
+
+  it('names a limit for every operation', () => {
+    expect(Object.keys(DEFAULT_TIMEOUT_MS).sort()).toEqual(['evaluate', 'inspect', 'install', 'prepare', 'remove_pep', 'revoke_pa', 'validate', 'verify_cleanup']);
+    for (const ms of Object.values(DEFAULT_TIMEOUT_MS)) expect(ms).toBeGreaterThan(0);
+  });
+});
+
+describe('escalation', () => {
+  it('tells an operator once the retry budget is spent, and keeps retrying: escalation is not closure', async () => {
+    const r = rig(newSaga({ state: 'RECONCILING', grantId: 'g', grantExpiresAt: T0 + HOUR, attempts: 7 }), { inspect: () => ({ status: 'unknown' }) });
+    const escalating = new AccessSagaRunner(r.store, { inspect: async () => ({ status: 'unknown' as const }) } as unknown as Services, { now: () => T0, random: () => 0.5, newId: () => 'e', escalateAfter: 8 });
+    await escalating.tick('saga-1');
+    expect(r.store.flagged).toEqual(['ENFORCEMENT_UNKNOWN']);
+    expect(r.store.saved).toMatchObject({ state: 'RECONCILING', attempts: 8 });
+    // Below the budget, nothing is flagged.
+    const early = rig(newSaga({ state: 'RECONCILING', grantId: 'g', grantExpiresAt: T0 + HOUR, attempts: 2 }), { inspect: () => ({ status: 'unknown' }) });
+    await tick(early);
+    expect(early.store.flagged).toEqual([]);
+  });
+
+  it('applies to a revocation that will not confirm, which is never given up on', async () => {
+    const r = rig(newSaga({ state: 'REVOKING', grantId: 'g', attempts: 9 }), { revokePa: () => 'unknown' });
+    await tick(r);
+    expect(r.store.flagged).toEqual(['REVOCATION_UNCONFIRMED']);
+    expect(r.store.saved.state).toBe('RECOVERY_REQUIRED');
+  });
+});
+
+describe('the transition guard', () => {
+  const cur = newSaga({ state: 'REVOKING', compensation: { paRevoked: true, pepRemoved: true }, revision: 4 });
+  const nxt = (over: Partial<AccessSaga>): AccessSaga => ({ ...cur, revision: 5, ...over });
+
+  it('passes the moves the runner makes', () => {
+    expect(checkTransition(cur, nxt({ state: 'REVOKED' }))).toBeNull();
+    expect(checkTransition(newSaga({ state: 'RECONCILING', revision: 1 }), newSaga({ state: 'EVALUATING', revision: 2, generation: 2 }))).toBeNull();
+  });
+
+  it('refuses one thing wrong at a time', () => {
+    for (const [what, next, code] of [
+      ['another saga', nxt({ id: 'saga-2' }), 'IDENTITY_CHANGED'],
+      ['another tenant', nxt({ tenantId: 't2' }), 'IDENTITY_CHANGED'],
+      ['another request', nxt({ requestDigest: 'other' }), 'IDENTITY_CHANGED'],
+      ['a stale revision', nxt({ revision: 4 }), 'REVISION_NOT_NEXT'],
+      ['a skipped revision', nxt({ revision: 6 }), 'REVISION_NOT_NEXT'],
+      ['an illegal edge', nxt({ state: 'ACTIVE' }), 'ILLEGAL_EDGE'],
+      ['a generation bumped for no reason', nxt({ generation: 2 }), 'GENERATION_CHANGED'],
+      ['REVOKED with the PA unconfirmed', nxt({ state: 'REVOKED', compensation: { paRevoked: false, pepRemoved: true } }), 'CLEANUP_NOT_CONFIRMED'],
+      ['REVOKED with the PEP unconfirmed', nxt({ state: 'REVOKED', compensation: { paRevoked: true, pepRemoved: false } }), 'CLEANUP_NOT_CONFIRMED'],
+    ] as const) expect(checkTransition(cur, next), what).toMatch(new RegExp(code));
+  });
+
+  it('requires the generation to move when evaluation restarts from reconciliation, and only then', () => {
+    const rec = newSaga({ state: 'RECONCILING', revision: 1 });
+    expect(checkTransition(rec, newSaga({ state: 'EVALUATING', revision: 2, generation: 1 }))).toMatch(/GENERATION_CHANGED/);
+    expect(checkTransition(rec, newSaga({ state: 'VERIFYING', revision: 2, generation: 2 }))).toMatch(/GENERATION_CHANGED/);
+  });
+
+  it('lets an honest cleanup close the saga through it', async () => {
+    // No path in the runner reaches a refusal today, by design: the guard is a second line behind the
+    // runner's own checks, so what is shown here is that the runner's closing move passes it.
+    const r = rig(newSaga({ state: 'REVOKING', compensation: { paRevoked: true, pepRemoved: true } }));
+    await tick(r);
+    expect(r.store.saved.state).toBe('REVOKED');
+});
 });

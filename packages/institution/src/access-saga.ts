@@ -154,17 +154,23 @@ export interface Lease {
 /**
  * What the persistence layer must do for the runner to be safe.
  *
- * - `claim` takes an exclusive, expiring lease with a fencing token, or null.
+ * - `claim` takes an exclusive lease for `leaseMs` with a fencing token, or null.
  * - `save` atomically checks the lease and `expectedRevision`, then writes the
- *   saga, an audit entry and the outbox event in one transaction, rejecting an
- *   expired or stale fencing token.
+ *   saga, an audit entry and the outbox event in one transaction. An expired or
+ *   stale fencing token, or a revision that moved, throws `PersistenceConflict`:
+ *   another owner or a cancellation advanced the saga, and the runner stands
+ *   down without overwriting it. Any other error from the store is a storage
+ *   failure and is never reinterpreted as a participant's.
+ * - `flagRecovery` records and schedules operator recovery. It does not mark
+ *   cleanup complete, and the runner keeps retrying after it.
  * - `wake` authenticates the sender, deduplicates by `eventId` transactionally,
  *   and bumps `generation` when it resumes validation. A wake is a signal; it
  *   carries no claim that anyone is approved or authenticated.
  */
 export interface Store {
-  claim(id: string): Promise<Lease | null>;
+  claim(id: string, leaseMs: number): Promise<Lease | null>;
   save(lease: Lease, expectedRevision: number, next: AccessSaga, event: AccessEvent): Promise<void>;
+  flagRecovery(lease: Lease, code: string): Promise<void>;
   release(lease: Lease): Promise<void>;
   wake(id: string, eventId: string, kind: 'requirements_changed' | 'revoke' | 'recover'): Promise<void>;
 }
@@ -189,26 +195,103 @@ export interface Store {
  * - `verifyCleanup` checks both: the PA will no longer authorize an
  *   installation, and the PEP no longer enforces the grant. Seeing no grant at
  *   the PEP alone does not exclude an installation still in flight.
+ *
+ * Every call gets an `AbortSignal` that fires at the operation's timeout. A
+ * timeout stops the *wait*, not the remote work: participants stay idempotent
+ * and keep their barriers whether or not the signal is honoured.
  */
 export interface Services {
-  validate(saga: AccessSaga, key: string): Promise<void>;
-  evaluate(saga: AccessSaga, key: string): Promise<Decision>;
-  prepare(saga: AccessSaga, key: string): Promise<Grant>;
-  install(saga: AccessSaga, key: string): Promise<void>;
-  inspect(saga: AccessSaga): Promise<Inspection>;
-  revokePa(saga: AccessSaga, key: string): Promise<'confirmed' | 'unknown'>;
-  removePep(saga: AccessSaga, key: string): Promise<'confirmed' | 'unknown'>;
-  verifyCleanup(saga: AccessSaga): Promise<{ paRevoked: boolean; pepAbsent: boolean }>;
+  validate(saga: AccessSaga, key: string, signal: AbortSignal): Promise<void>;
+  evaluate(saga: AccessSaga, key: string, signal: AbortSignal): Promise<Decision>;
+  prepare(saga: AccessSaga, key: string, signal: AbortSignal): Promise<Grant>;
+  install(saga: AccessSaga, key: string, signal: AbortSignal): Promise<void>;
+  inspect(saga: AccessSaga, signal: AbortSignal): Promise<Inspection>;
+  revokePa(saga: AccessSaga, key: string, signal: AbortSignal): Promise<'confirmed' | 'unknown'>;
+  removePep(saga: AccessSaga, key: string, signal: AbortSignal): Promise<'confirmed' | 'unknown'>;
+  verifyCleanup(saga: AccessSaga, signal: AbortSignal): Promise<{ paRevoked: boolean; pepAbsent: boolean }>;
 }
 
+/**
+ * A participant's failure, classified. `retryable`: trying again with the same
+ * key is safe. `outcomeUnknown`: the remote effect may have happened, so the
+ * caller must inspect before assuming either way.
+ */
 export class Fault extends Error {
   code: string;
   retryable: boolean;
-  constructor(code: string, retryable: boolean, message: string = code) {
+  outcomeUnknown: boolean;
+  constructor(code: string, retryable: boolean, outcomeUnknown: boolean = false, message: string = code) {
     super(message);
     this.code = code;
     this.retryable = retryable;
+    this.outcomeUnknown = outcomeUnknown;
   }
+}
+
+/** Thrown by `Store.save` when the saga moved under the worker. Not a participant failure. */
+export class PersistenceConflict extends Error {}
+
+/** A participant call that failed, as opposed to a store or guard failure. Internal to the runner. */
+class OperationFailure extends Error {
+  fault: Fault;
+  constructor(fault: Fault) {
+    super(fault.code);
+    this.fault = fault;
+  }
+}
+
+export type AccessOperation = 'validate' | 'evaluate' | 'prepare' | 'install' | 'inspect' | 'revoke_pa' | 'remove_pep' | 'verify_cleanup';
+
+/** Illustrative starting points, not measured SLOs. */
+export const DEFAULT_TIMEOUT_MS: Readonly<Record<AccessOperation, number>> = {
+  validate: 5_000,
+  evaluate: 5_000,
+  prepare: 8_000,
+  install: 8_000,
+  inspect: 5_000,
+  revoke_pa: 8_000,
+  remove_pep: 8_000,
+  verify_cleanup: 5_000,
+};
+
+/** Run `run`, abort it and report an unknown outcome if it outlasts `timeoutMs`. */
+export async function withTimeout<T>(timeoutMs: number, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      run(controller.signal),
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(new Fault('OPERATION_TIMEOUT', true, true));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/**
+ * A guard on every committed move, independent of the code that built it: the
+ * same identity, one revision on, a legal edge, a generation that changes only
+ * when a new evaluation is started from reconciliation, and no `REVOKED`
+ * without both sides of the cleanup confirmed. Returns the reason it refuses,
+ * or null. A refusal is a bug in the runner or an adapter, so it is raised,
+ * never retried and never turned into a denial.
+ */
+export function checkTransition(current: AccessSaga, next: AccessSaga): string | null {
+  if (next.id !== current.id || next.tenantId !== current.tenantId || next.requestDigest !== current.requestDigest) return 'IDENTITY_CHANGED';
+  if (next.revision !== current.revision + 1) return 'REVISION_NOT_NEXT';
+  if (next.state !== current.state) {
+    const verdict = transition(ACCESS_SAGA, current.state, next.state);
+    if (!verdict.ok) return `ILLEGAL_EDGE: ${verdict.reason}`;
+  }
+  const restartsEvaluation = current.state === 'RECONCILING' && next.state === 'EVALUATING';
+  if (restartsEvaluation ? next.generation !== current.generation + 1 : next.generation !== current.generation) return 'GENERATION_CHANGED';
+  if (next.state === 'REVOKED' && !(next.compensation.paRevoked && next.compensation.pepRemoved)) return 'CLEANUP_NOT_CONFIRMED';
+  return null;
 }
 
 /** One logical step of one saga at one generation: a retry reuses it, a changed operation does not. */
@@ -239,6 +322,12 @@ export const OUTCOME_STATE: Readonly<Record<Decision['outcome'], AccessSagaState
 const MAY_HOLD_GRANT: ReadonlySet<AccessSagaState> = new Set<AccessSagaState>(['PREPARING', 'INSTALLING', 'VERIFYING', 'RECONCILING', 'ACTIVE']);
 
 export interface RunnerOptions {
+  /** Per-operation wait limits; each falls back to `DEFAULT_TIMEOUT_MS`. */
+  timeouts?: Partial<Record<AccessOperation, number>>;
+  /** How long a claimed lease lasts. Default 30 s. */
+  leaseMs?: number;
+  /** Failed attempts in one state before an operator is told. The runner keeps retrying. Default 8. */
+  escalateAfter?: number;
   now?: () => number;
   random?: () => number;
   newId?: () => string;
@@ -255,17 +344,23 @@ export class AccessSagaRunner {
   private now: () => number;
   private random: () => number;
   private newId: () => string;
+  private timeouts: Record<AccessOperation, number>;
+  private leaseMs: number;
+  private escalateAfter: number;
 
   constructor(store: Store, services: Services, options: RunnerOptions = {}) {
     this.store = store;
     this.services = services;
+    this.timeouts = { ...DEFAULT_TIMEOUT_MS, ...options.timeouts };
+    this.leaseMs = options.leaseMs ?? 30_000;
+    this.escalateAfter = options.escalateAfter ?? 8;
     this.now = options.now ?? Date.now;
     this.random = options.random ?? Math.random;
     this.newId = options.newId ?? (() => globalThis.crypto.randomUUID());
   }
 
   async tick(id: string): Promise<void> {
-    const lease = await this.store.claim(id);
+    const lease = await this.store.claim(id, this.leaseMs);
     if (!lease) return;
     const s = lease.saga;
 
@@ -273,11 +368,11 @@ export class AccessSagaRunner {
       if (ACCESS_SAGA.terminal.includes(s.state) || s.nextAttemptAt > this.now()) return;
 
       const move = async (state: AccessSagaState, patch: Partial<AccessSaga> = {}, reasonCode?: string): Promise<void> => {
-        if (state !== s.state) {
-          const verdict = transition(ACCESS_SAGA, s.state, state);
-          if (!verdict.ok) throw new Fault('INVALID_TRANSITION', false, verdict.reason);
-        }
         const next: AccessSaga = { ...s, ...patch, state, revision: s.revision + 1 };
+        const refused = checkTransition(s, next);
+        if (refused) throw new Error(`TRANSITION_REJECTED: ${refused}`);
+        // Repeated failure is an operational event as well as a retry: tell an operator once the budget is spent.
+        if (next.attempts > s.attempts && next.attempts >= this.escalateAfter) await this.store.flagRecovery(lease, reasonCode ?? 'RECOVERY_THRESHOLD_EXCEEDED');
         await this.store.save(lease, s.revision, next, {
           eventId: this.newId(),
           type: 'access.state.changed',
@@ -287,6 +382,15 @@ export class AccessSagaRunner {
           occurredAt: new Date(this.now()).toISOString(),
           reasonCode,
         });
+      };
+
+      /** A participant call: bounded by its timeout, and any failure is classified as the participant's. */
+      const call = async <T>(operation: AccessOperation, run: (signal: AbortSignal) => Promise<T>): Promise<T> => {
+        try {
+          return await withTimeout(this.timeouts[operation], run);
+        } catch (error) {
+          throw new OperationFailure(error instanceof Fault ? error : new Fault('UNCLASSIFIED_OPERATION_FAILURE', true, true));
+        }
       };
 
       const retry = (code: string) =>
@@ -306,12 +410,12 @@ export class AccessSagaRunner {
             return;
 
           case 'VALIDATING':
-            await this.services.validate(s, operationKey(s, 'validate'));
+            await call('validate', (signal) => this.services.validate(s, operationKey(s, 'validate'), signal));
             await move('EVALUATING', { attempts: 0, nextAttemptAt: 0 });
             return;
 
           case 'EVALUATING': {
-            const d = await this.services.evaluate(s, operationKey(s, 'evaluate'));
+            const d = await call('evaluate', (signal) => this.services.evaluate(s, operationKey(s, 'evaluate'), signal));
             await move(OUTCOME_STATE[d.outcome], { decisionId: d.id, attempts: 0, nextAttemptAt: 0 });
             return;
           }
@@ -322,25 +426,25 @@ export class AccessSagaRunner {
             return;
 
           case 'PREPARING': {
-            const grant = await this.services.prepare(s, operationKey(s, 'prepare'));
+            const grant = await call('prepare', (signal) => this.services.prepare(s, operationKey(s, 'prepare'), signal));
             await move('INSTALLING', { grantId: grant.id, grantExpiresAt: grant.expiresAt, attempts: 0, nextAttemptAt: 0 });
             return;
           }
 
           case 'INSTALLING':
-            await this.services.install(s, operationKey(s, 'install'));
+            await call('install', (signal) => this.services.install(s, operationKey(s, 'install'), signal));
             await move('VERIFYING', { attempts: 0, nextAttemptAt: 0 });
             return;
 
           case 'VERIFYING': {
-            const observed = await this.services.inspect(s);
+            const observed = await call('inspect', (signal) => this.services.inspect(s, signal));
             if (observed.status === 'installed') await move('ACTIVE', { attempts: 0, nextAttemptAt: 0 });
             else await move(observed.status === 'conflict' ? 'REVOKING' : 'RECONCILING', { nextAttemptAt: 0 });
             return;
           }
 
           case 'RECONCILING': {
-            const observed = await this.services.inspect(s);
+            const observed = await call('inspect', (signal) => this.services.inspect(s, signal));
             if (observed.status === 'installed') await move('VERIFYING', { nextAttemptAt: 0 });
             else if (observed.status === 'absent') {
               // A new evaluation at a new generation: a stale decision must not be reused.
@@ -369,15 +473,15 @@ export class AccessSagaRunner {
             const unconfirmed = (code: string) =>
               move('RECOVERY_REQUIRED', { attempts: s.attempts + 1, nextAttemptAt: this.now() + backoff(s.attempts + 1, this.random) }, code);
             if (!done.paRevoked) {
-              if ((await this.services.revokePa(s, operationKey(s, 'revoke_pa'))) === 'confirmed') {
+              if ((await call('revoke_pa', (signal) => this.services.revokePa(s, operationKey(s, 'revoke_pa'), signal))) === 'confirmed') {
                 await move('REVOKING', { compensation: { ...done, paRevoked: true }, attempts: 0, nextAttemptAt: 0 });
               } else await unconfirmed('REVOCATION_UNCONFIRMED');
             } else if (!done.pepRemoved) {
-              if ((await this.services.removePep(s, operationKey(s, 'remove_pep'))) === 'confirmed') {
+              if ((await call('remove_pep', (signal) => this.services.removePep(s, operationKey(s, 'remove_pep'), signal))) === 'confirmed') {
                 await move('REVOKING', { compensation: { ...done, pepRemoved: true }, attempts: 0, nextAttemptAt: 0 });
               } else await unconfirmed('REMOVAL_UNCONFIRMED');
             } else {
-              const v = await this.services.verifyCleanup(s);
+              const v = await call('verify_cleanup', (signal) => this.services.verifyCleanup(s, signal));
               if (v.paRevoked && v.pepAbsent) await move('REVOKED', { nextAttemptAt: 0 });
               else {
                 // Verification disagrees with what was confirmed: reopen only the side that failed.
@@ -399,7 +503,9 @@ export class AccessSagaRunner {
             return;
         }
       } catch (error) {
-        const fault = error instanceof Fault ? error : new Fault('UNEXPECTED_FAILURE', true);
+        // Storage and guard failures are not participant failures: raise them, never retry or deny on them.
+        if (!(error instanceof OperationFailure)) throw error;
+        const fault = error.fault;
 
         // An install whose outcome is unknown is never assumed to have failed.
         if (s.state === 'INSTALLING') {
@@ -419,12 +525,16 @@ export class AccessSagaRunner {
           await move('DENIED', { lastError: fault.code }, fault.code);
           return;
         }
-        if (fault.retryable) {
+        if (fault.retryable || fault.outcomeUnknown) {
           await retry(fault.code);
           return;
         }
         await move(s.grantId ? 'REVOKING' : 'DENIED', { lastError: fault.code, nextAttemptAt: 0 }, fault.code);
       }
+    } catch (error) {
+      // A saga that moved under us belongs to whoever moved it: stand down, overwrite nothing.
+      if (error instanceof PersistenceConflict) return;
+      throw error;
     } finally {
       await this.store.release(lease);
     }
