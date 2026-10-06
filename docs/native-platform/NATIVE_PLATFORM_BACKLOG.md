@@ -16,7 +16,7 @@ Nothing here authorises a production migration, a deploy, a billing change, or a
 | 6 | Confirm Semester2 (`kpuulmnicidgdmwgfngv`) table set versus `semester` | 2 | Done. 19 public tables, 2 private tables with RLS off and no client grants. Not this repo's schema |
 | 7 | Put source, authority, and freshness on Today, registration readiness, degree, and account | 5 | Done. `gradeSource` returns `sample` for a seeded grade, including when a caller also claims an institutional read. `PilotFactMark` is on Today, registration (off), degree, and account. A seeded grade renders “Sample” and “Update time not recorded”, never “Institution verified” |
 | 8 | Registration readiness copy and empty states: unavailable hold, unavailable window, handoff link | 7 | Done for the off gate, which is every school today. Window, hold, and section each say unavailable. The plan button still hands off to `yes`. Enrolment copy stays with the school’s system. Not a live SIS read |
-| 9 | Prove `registration_enroll` refuses a closed window, a hold, and a failed prerequisite | 4, 8 | Tests red against a reverted check |
+| 9 | Prove `registration_enroll` refuses a closed window, a hold, and a failed prerequisite | 4, 8 | Done. Already in `blocker` and in `registration_transaction.check.sql`. Removing the three returns failed 9 tests in `enrollment.test.ts`, including the order ladder from `706feed4`. `service.ts` restored |
 | 10 | Attach approval and audit to `gradebook_release` and `registrar_decide` | 4 | A release without the capability and the approval does not write |
 | 11 | State in the gradebook UI that the LMS is the record | 10 | Copy test. No "official transcript" string |
 | 12 | One AI gateway predicate: identity, tenant, classification, consent, allowed tools | 5 | A test call without consent returns a refusal, not a completion |
@@ -29,7 +29,7 @@ Nothing here authorises a production migration, a deploy, a billing change, or a
 | 19 | Design pass on the six pilot screens using existing tokens and unity components | 7 | `design-system:check` clean. No new default palette. D-1293 stands |
 | 20 | Accessibility pass on those six screens: keyboard, names, 320px, reduced motion | 19 | Existing a11y tests extended. Still no conformance claim |
 | 21 | Kill switch and module flag for readiness, gradebook, family, community, dining | 5 | Held already: every flag in `flags.ts` defaults off (`flags.test.ts`). Dining and registration writeback are high-risk flags. No second flag set was added |
-| 22 | Dual-run plan for one section: SIS enrols, Semester records a shadow receipt | 9, 21 | Written plan plus a sandbox script. No production cutover |
+| 22 | Dual-run plan for one section: SIS enrols, Semester records a shadow receipt | 9, 21 | Done as a sandbox. `REGISTRATION_DUAL_RUN.md`, `shadowReceipt`, `node scripts/registration-shadow-receipt.mjs`. Authority stays the SIS. `wroteSeat` is false. No cutover |
 | 23 | Advisor caseload only after a consent share exists for that student | 15 | No caseload query without a grant |
 | 24 | Course assignment builder only after gradebook authority is explicit | 11 | An item is a graded item, not an official assignment, until the gate |
 | 25 | Partner marketplace schema | 4, 21, and the D-1236 gates | Not started. This task is a hold, not a build |

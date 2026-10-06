@@ -83,9 +83,11 @@ Deployment config lives in the root `vercel.json` plus `app/` and `company-site/
 
 ## Foundation reading (same day, later)
 
-`FOUNDATION_EXPOSURE_READING.md` re-read the anon policies, the 207 definer functions, F-01, and Semester2. The function set matches `app/src/lib/definerregister.ts`. Zero schools exist, so enforcement was not switched on. Anon write grants remain; `TRUNCATE` does not.
+`FOUNDATION_EXPOSURE_READING.md` re-read the anon policies, the 207 definer functions, F-01, and Semester2. The function set matches `app/src/lib/definerregister.ts`. Zero schools exist, so enforcement was not switched on. Anon table DML is revoked in the repository by D-1306; that migration was not pushed, and live `schema_migrations` was not re-read.
 
-Today, the degree plan, account, and registration-while-off now carry a source badge. A seeded grade is labelled sample. Registration-off and the gradebook can open a support ticket with a category and a fixed origin; the ticket arguments do not carry a score, a hold, or a section. That does not make any domain ready for a pilot.
+Today, the degree plan, account, and registration-while-off now carry a source badge. A seeded grade is labelled sample. Registration-off and the gradebook can open a support ticket with a category and a fixed origin; the ticket arguments do not carry a score, a hold, or a section.
+
+`origin/main` `706feed4` pins the order of the registration checks. `e0082d91` and `c45114c1` add a readiness view that says preparation is not clearance. A shadow receipt for one synthetic section keeps the SIS as the authority (`REGISTRATION_DUAL_RUN.md`). That does not make any domain ready for a pilot.
 
 ## Readiness, one sentence
 
