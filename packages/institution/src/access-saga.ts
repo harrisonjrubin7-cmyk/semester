@@ -33,7 +33,7 @@
  * `Services` do what theirs say (idempotent by key, `inspect` returning
  * `absent` only when absence is authoritative). Neither exists in this
  * repository; the tests use in-memory fakes and say so. Rego, OpenAPI and
- * AsyncAPI from the PDFs are not adopted: see `docs/decisions/D-1331.md`.
+ * AsyncAPI from the PDFs are not adopted: see `docs/decisions/D-1338.md`.
  */
 
 import { transition, type WorkflowDefinition } from './workflow.ts';
