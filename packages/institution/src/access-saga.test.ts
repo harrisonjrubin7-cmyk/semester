@@ -39,7 +39,7 @@ const HOUR = 3_600_000;
 const newSaga = (over: Partial<AccessSaga> = {}): AccessSaga => ({
   id: 'saga-1', tenantId: 't1', subjectId: 'u1', intent: { resourceId: 'r1', action: 'registration.readiness.view' },
   requestDigest: 'digest', definitionVersion: 'access-saga-1', state: 'RECEIVED', revision: 0, generation: 1,
-  attempts: 0, deadlineAt: T0 + HOUR, nextAttemptAt: 0, compensation: { paRevoked: false, pepRemoved: false },
+  attempts: 0, deadlineAt: T0 + HOUR, nextAttemptAt: 0, compensation: { paRevoked: false, pepRemoved: false }, staleGrantPossible: false,
   ...over,
 });
 
@@ -722,4 +722,79 @@ describe('the transition guard', () => {
     await tick(r);
     expect(r.store.saved.state).toBe('REVOKED');
 });
+});
+
+describe('a grant an earlier generation may have left behind', () => {
+  const absent = () => newSaga({ state: 'RECONCILING', grantId: 'grant-1', grantExpiresAt: T0 + HOUR, decisionId: 'dec-1' });
+
+  it('is remembered when an install is found absent, though the grant id is forgotten', async () => {
+    const r = rig(absent(), { inspect: () => ({ status: 'absent' }) });
+    await tick(r);
+    expect(r.store.saved).toMatchObject({ state: 'EVALUATING', generation: 2, staleGrantPossible: true });
+    expect(r.store.saved.grantId).toBeUndefined();
+  });
+
+  it('is revoked if the new evaluation denies, instead of ending as DENIED', async () => {
+    const r = rig(absent(), { inspect: () => ({ status: 'absent' }), evaluate: () => ({ id: 'dec-2', outcome: 'deny' }) });
+    await tick(r);
+    await tick(r);
+    expect(r.store.saved.state).toBe('REVOKING');
+    await drive(r);
+    expect(r.store.saved.state).toBe('REVOKED');
+    expect(r.calls).toContain('revoke_pa');
+    // The control: the same denial with no earlier generation ends the request as DENIED.
+    const clean = rig(newSaga({ state: 'EVALUATING' }), { evaluate: () => ({ id: 'd', outcome: 'deny' }) });
+    await tick(clean);
+    expect(clean.store.saved.state).toBe('DENIED');
+  });
+
+  it('is revoked, not expired, when the deadline passes in any state after the restart', async () => {
+    for (const state of ['VALIDATING', 'EVALUATING', 'WAITING_STEP_UP', 'WAITING_APPROVAL', 'PREPARING'] as const) {
+      const r = rig(newSaga({ state, generation: 2, staleGrantPossible: true }));
+      r.clock.now = T0 + HOUR;
+      await tick(r);
+      expect(r.store.saved.state, state).toBe('REVOKING');
+    }
+  });
+
+  it('is revoked on a non-retryable fault and on a stale decision after the restart', async () => {
+    const forbidden = rig(newSaga({ state: 'EVALUATING', generation: 2, staleGrantPossible: true }), { evaluate: () => { throw new Fault('FORBIDDEN', false); } });
+    await tick(forbidden);
+    expect(forbidden.store.saved.state).toBe('REVOKING');
+    const stale = rig(newSaga({ state: 'PREPARING', generation: 2, staleGrantPossible: true }), { prepare: () => { throw new Fault('STALE_DECISION', true); } });
+    await tick(stale);
+    expect(stale.store.saved.state).toBe('REVOKING');
+  });
+});
+
+describe('a wake that resumes validation from a wait', () => {
+  it('leaves the saga at the generation the store gave it, and the next evaluation gets a new key', async () => {
+    // The store's wake moved WAITING_APPROVAL -> VALIDATING and bumped the generation; the runner reads that as current.
+    const r = rig(newSaga({ state: 'VALIDATING', generation: 2 }));
+    await drive(r);
+    expect(r.store.saved).toMatchObject({ state: 'ACTIVE', generation: 2 });
+    expect(r.keys.get('evaluate')).toEqual([operationKey(newSaga({ generation: 2 }), 'evaluate')]);
+    expect(operationKey(newSaga({ generation: 2 }), 'evaluate')).not.toBe(operationKey(newSaga({ generation: 1 }), 'evaluate'));
+  });
+});
+
+describe('a call that outlives its timeout', () => {
+  it('does not leave an unhandled rejection behind when it fails after the wait was abandoned', async () => {
+    const seen: unknown[] = [];
+    const listener = (reason: unknown) => { seen.push(reason); };
+    process.on('unhandledRejection', listener);
+    try {
+      await expect(withTimeout(5, (signal) => new Promise<number>((_, reject) => {
+        signal.addEventListener('abort', () => setTimeout(() => reject(new Error('aborted late')), 10));
+      }))).rejects.toMatchObject({ code: 'OPERATION_TIMEOUT' });
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      expect(seen).toEqual([]);
+    } finally {
+      process.off('unhandledRejection', listener);
+    }
+  });
+
+  it('treats a call that throws synchronously as the participant failing, not the worker', async () => {
+    await expect(withTimeout(50, () => { throw new Fault('BOOM', false); })).rejects.toMatchObject({ code: 'BOOM' });
+  });
 });

@@ -59,8 +59,11 @@ export type AccessSagaState = (typeof ACCESS_SAGA_STATES)[number];
 
 /**
  * Every legal move. `EXPIRED` is the end of a request that ran out of time
- * before any grant existed; once a grant exists, running out of time means
- * `REVOKING`, because the enforcement point has to be told.
+ * before any grant existed; once a grant may exist, running out of time means
+ * `REVOKING`, because the enforcement point has to be told. `VALIDATING` and
+ * `EVALUATING` can reach `REVOKING` for one reason: an install found absent
+ * restarts evaluation, and the grant it left behind at the administrator
+ * (`staleGrantPossible`) must still be revoked however the new attempt ends.
  */
 export const ACCESS_SAGA: WorkflowDefinition<AccessSagaState> = {
   type: 'access_saga',
@@ -68,8 +71,8 @@ export const ACCESS_SAGA: WorkflowDefinition<AccessSagaState> = {
   terminal: ['DENIED', 'EXPIRED', 'REVOKED'],
   transitions: {
     RECEIVED: ['VALIDATING', 'EXPIRED'],
-    VALIDATING: ['EVALUATING', 'DENIED', 'EXPIRED'],
-    EVALUATING: ['WAITING_STEP_UP', 'WAITING_APPROVAL', 'PREPARING', 'DENIED', 'EXPIRED'],
+    VALIDATING: ['EVALUATING', 'DENIED', 'EXPIRED', 'REVOKING'],
+    EVALUATING: ['WAITING_STEP_UP', 'WAITING_APPROVAL', 'PREPARING', 'DENIED', 'EXPIRED', 'REVOKING'],
     WAITING_STEP_UP: ['VALIDATING', 'EXPIRED', 'REVOKING'],
     WAITING_APPROVAL: ['VALIDATING', 'EXPIRED', 'REVOKING'],
     PREPARING: ['INSTALLING', 'DENIED', 'EXPIRED', 'REVOKING'],
@@ -117,6 +120,13 @@ export interface AccessSaga {
   decisionId?: string;
   grantId?: string;
   grantExpiresAt?: number;
+  /**
+   * Set when an install was found absent and evaluation restarted: a grant of
+   * an earlier generation may still exist at the administrator even though
+   * `grantId` was cleared. Every way out of the saga then revokes, and
+   * `revokePa` covers every generation up to the current one.
+   */
+  staleGrantPossible: boolean;
   /** Cleanup is two independent sides, each confirmed on its own; neither implies the other. */
   compensation: { paRevoked: boolean; pepRemoved: boolean };
   lastError?: string;
@@ -187,8 +197,8 @@ export interface Store {
  *
  * Cleanup is three calls, not one, so each side is proved on its own:
  *
- * - `revokePa` revokes by saga and generation *even when no grant id is
- *   known*, so a grant prepared before a crash that never reached the saga row
+ * - `revokePa` revokes by saga and generation (every generation up to the
+ *   current one) *even when no grant id is known*, so a grant prepared before a crash that never reached the saga row
  *   cannot survive. It records a barrier: an installation whose generation is
  *   at or below the revoked one is rejected, however late its message arrives.
  * - `removePep` removes enforcement at every required point, by the same key.
@@ -258,9 +268,19 @@ export const DEFAULT_TIMEOUT_MS: Readonly<Record<AccessOperation, number>> = {
 export async function withTimeout<T>(timeoutMs: number, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let running: Promise<T>;
+  try {
+    running = run(controller.signal);
+  } catch (error) {
+    running = Promise.reject(error);
+  }
+  // If the timer wins, the call is still running and may reject later. `Promise.race` already subscribes
+  // to it, so that is not an unhandled rejection today; the explicit no-op keeps it from depending on that.
+  // Its outcome is reconciled through the participant, not here.
+  running.catch(() => {});
   try {
     return await Promise.race([
-      run(controller.signal),
+      running,
       new Promise<T>((_, reject) => {
         timer = setTimeout(() => {
           controller.abort();
@@ -274,7 +294,12 @@ export async function withTimeout<T>(timeoutMs: number, run: (signal: AbortSigna
 }
 
 /**
- * A guard on every committed move, independent of the code that built it: the
+ * A guard on every move the *runner* commits, independent of the code that
+ * built it. `Store.wake` is not a runner move: it is the store's own write, it
+ * bumps `generation` when it resumes validation from a wait, and the runner
+ * then reads that bumped saga as `current` — so the generation rule below
+ * compares against the post-wake value and a wake never meets this guard.
+ * The guard checks: the
  * same identity, one revision on, a legal edge, a generation that changes only
  * when a new evaluation is started from reconciliation, and no `REVOKED`
  * without both sides of the cleanup confirmed. Returns the reason it refuses,
@@ -320,6 +345,11 @@ export const OUTCOME_STATE: Readonly<Record<Decision['outcome'], AccessSagaState
  * save. Leaving any of them means revoking, never merely expiring.
  */
 const MAY_HOLD_GRANT: ReadonlySet<AccessSagaState> = new Set<AccessSagaState>(['PREPARING', 'INSTALLING', 'VERIFYING', 'RECONCILING', 'ACTIVE']);
+
+/** Whether the administrator may hold a grant for this saga that the saga row cannot name. */
+function mayHoldGrant(s: AccessSaga): boolean {
+  return s.grantId !== undefined || s.staleGrantPossible || MAY_HOLD_GRANT.has(s.state);
+}
 
 export interface RunnerOptions {
   /** Per-operation wait limits; each falls back to `DEFAULT_TIMEOUT_MS`. */
@@ -399,7 +429,7 @@ export class AccessSagaRunner {
       const accessExpired = s.grantExpiresAt !== undefined && this.now() >= s.grantExpiresAt;
       const provisioningExpired = s.state !== 'ACTIVE' && this.now() >= s.deadlineAt;
       if (s.state !== 'REVOKING' && s.state !== 'RECOVERY_REQUIRED' && (accessExpired || provisioningExpired)) {
-        await move(s.grantId || MAY_HOLD_GRANT.has(s.state) ? 'REVOKING' : 'EXPIRED', { nextAttemptAt: 0 }, 'DEADLINE_EXCEEDED');
+        await move(mayHoldGrant(s) ? 'REVOKING' : 'EXPIRED', { nextAttemptAt: 0 }, 'DEADLINE_EXCEEDED');
         return;
       }
 
@@ -416,7 +446,9 @@ export class AccessSagaRunner {
 
           case 'EVALUATING': {
             const d = await call('evaluate', (signal) => this.services.evaluate(s, operationKey(s, 'evaluate'), signal));
-            await move(OUTCOME_STATE[d.outcome], { decisionId: d.id, attempts: 0, nextAttemptAt: 0 });
+            // A denial ends the request, but not what an earlier generation may have left at the administrator.
+            const target = d.outcome === 'deny' && s.staleGrantPossible ? 'REVOKING' : OUTCOME_STATE[d.outcome];
+            await move(target, { decisionId: d.id, attempts: 0, nextAttemptAt: 0 });
             return;
           }
 
@@ -450,6 +482,7 @@ export class AccessSagaRunner {
               // A new evaluation at a new generation: a stale decision must not be reused.
               await move('EVALUATING', {
                 generation: s.generation + 1,
+                staleGrantPossible: true,
                 decisionId: undefined,
                 grantId: undefined,
                 grantExpiresAt: undefined,
@@ -522,14 +555,14 @@ export class AccessSagaRunner {
         }
         // A grant must never be cut from a decision that went stale.
         if (fault.code === 'STALE_DECISION' && s.state === 'PREPARING') {
-          await move('DENIED', { lastError: fault.code }, fault.code);
+          await move(s.staleGrantPossible ? 'REVOKING' : 'DENIED', { lastError: fault.code }, fault.code);
           return;
         }
         if (fault.retryable || fault.outcomeUnknown) {
           await retry(fault.code);
           return;
         }
-        await move(s.grantId ? 'REVOKING' : 'DENIED', { lastError: fault.code, nextAttemptAt: 0 }, fault.code);
+        await move(s.grantId || s.staleGrantPossible ? 'REVOKING' : 'DENIED', { lastError: fault.code, nextAttemptAt: 0 }, fault.code);
       }
     } catch (error) {
       // A saga that moved under us belongs to whoever moved it: stand down, overwrite nothing.
