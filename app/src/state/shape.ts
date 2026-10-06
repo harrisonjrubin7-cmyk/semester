@@ -864,6 +864,14 @@ export interface Ephemeral {
   screen: Screen;
   /** Student-selected recovery context carried to the next screen only. */
   recoveryIntent: RecoveryIntent | null;
+  /**
+   * The screen a link asked for, held through first-run setup.
+   *
+   * A new install opens on onboarding before it reads the address, so the
+   * link's destination would be lost; setup ends here instead. See
+   * `lib/entrycontext.ts`. Ephemeral: it is one load's intent, not a setting.
+   */
+  afterSetup: Screen | null;
   /** Back stack, so Back walks history rather than one remembered screen. */
   history: Screen[];
   courseId: CourseId;
@@ -1626,6 +1634,7 @@ export function initialEphemeral(): Ephemeral {
     undone: null,
     screen: 'home',
     recoveryIntent: null,
+    afterSetup: null,
     history: [],
     courseId: 'core',
     itemId: 'bus-ga1',

@@ -456,6 +456,22 @@ export function Onboarding() {
 
       <div style={{ flex: 1, minHeight: 24 }} />
 
+      {/* A link brought them here with somewhere to go; say that setup will
+          not lose it. (`lib/entrycontext.ts`) */}
+      {state.afterSetup && (
+        <p
+          style={{
+            margin: 0,
+            marginBottom: 'calc(12px * var(--density, 1))',
+            fontSize: 'var(--type-sm)',
+            color: 'var(--app-dim)',
+            lineHeight: 'var(--leading-normal)',
+          }}
+        >
+          When you finish, the page you opened will open.
+        </p>
+      )}
+
       {/* Secondary on the account step, where the primary action is the
           form's own button and two primaries would be two answers to one
           question. */}

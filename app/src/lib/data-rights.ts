@@ -17,6 +17,14 @@ export interface DataRightRequest {
   resolution: string;
 }
 
+export interface PrivacyCompletionCertificate {
+  certificateId: string;
+  requestRef: string;
+  kind: DataRightKind;
+  evidenceReference: string;
+  issuedAt: string;
+}
+
 export const DATA_RIGHT_COPY: Record<DataRightKind, { label: string; help: string }> = {
   export: { label: 'Formal access or export request', help: 'Ask for a tracked response about the account data Semester holds.' },
   correction: { label: 'Correct account data', help: 'Name information you believe is inaccurate and what should be checked.' },
@@ -58,6 +66,18 @@ export async function loadDataRightRequests(): Promise<DataRightRequest[]> {
     .order('received_at', { ascending: false });
   if (error) throw failed(error);
   return ((data ?? []) as Record<string, unknown>[]).map(request);
+}
+
+export async function loadPrivacyCompletionCertificates(): Promise<PrivacyCompletionCertificate[]> {
+  const { data, error } = await (await cloud()).rpc('my_privacy_completion_certificates');
+  if (error) throw failed(error);
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+    certificateId: String(row.certificate_id ?? ''),
+    requestRef: String(row.request_ref ?? ''),
+    kind: DATA_RIGHT_KINDS.includes(row.kind as DataRightKind) ? row.kind as DataRightKind : 'restriction',
+    evidenceReference: String(row.evidence_reference ?? ''),
+    issuedAt: String(row.issued_at ?? ''),
+  }));
 }
 
 export async function fileDataRightRequest(

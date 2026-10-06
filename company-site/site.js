@@ -246,9 +246,15 @@
     document.getElementById("bp-warn").innerHTML=w;
     const px=40,H=(H1-H0)*px;let g=`<div class="wk-h"></div>`+DN.map(d=>`<div class="wk-h">${d}</div>`).join("");
     g+=`<div class="wk-t ${pxClass("height",H)}">`+Array.from({length:H1-H0},(_,k)=>`<span class="${pxClass("top",k*px)}">${k?fmt((H0+k)*60):""}</span>`).join("")+`</div>`;
-    DAYS.forEach(d=>{g+=`<div class="wk-d ${pxClass("height",H)}">`+ok.filter(x=>x.days.includes(d)).map(x=>{const top=(x.st-H0*60)/60*px,h=(x.en-x.st)/60*px,c=x.commit?"ink-faint":COLS[x.i%COLS.length];
-      return `<div class="blkc${badSet.has(x)?" bad":""} ${weekBlockClass(top,h,c,x.commit)}" title="${esc(x.name)}"><b>${esc(x.name.split(" ").slice(0,2).join(" "))}</b><br>${fmt(x.st)}</div>`}).join("")+`</div>`});
-    document.getElementById("bp-week").innerHTML=g;
+    const week=document.getElementById("bp-week");week.innerHTML=g;
+    DAYS.forEach(d=>{const column=document.createElement("div");column.className=`wk-d ${pxClass("height",H)}`;
+      ok.filter(x=>x.days.includes(d)).forEach(x=>{const top=(x.st-H0*60)/60*px,h=(x.en-x.st)/60*px,c=x.commit?"ink-faint":COLS[x.i%COLS.length];
+        const block=document.createElement("div");block.className=`blkc${badSet.has(x)?" bad":""} ${weekBlockClass(top,h,c,x.commit)}`;
+        // Visitor-entered names are data, never part of an HTML attribute string.
+        block.title=x.name;const name=document.createElement("b");name.textContent=x.name.split(" ").slice(0,2).join(" ");
+        block.append(name,document.createElement("br"),document.createTextNode(fmt(x.st)));column.append(block);
+      });week.append(column);
+    });
     const courses=ok.filter(x=>!x.commit);
     document.getElementById("bp-backups").innerHTML=courses.map(x=>`<li>Pick a backup section or course for ${esc(x.name)}</li>`).join("")+`<li>Check prerequisites for every course</li>`;
     const qs=[];conf.forEach(([a,b])=>qs.push(`Which should I prioritise: ${a.name} or ${b.name}?`));if(cr>17)qs.push(`Is ${cr} credits realistic with my commitments?`);if(cr<12)qs.push(`Does ${cr} credits keep me full-time?`);qs.push("Which of these courses count toward my open requirements?");

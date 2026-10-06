@@ -11,7 +11,7 @@ This guide tells an institution administrator which role does what, where each t
 <!-- capabilities: tenant:configure, tenant:implement, audit:read, integration:approve, integration:view, integration:configure, integration:sync, integration:replay, killswitch:engage, breakglass:request, ai:configure, migration:approve, migration:manage, config:manage, config:publish, config:view, workflow:manage, workflow:publish, record:approve, data_request:handle, console:operate, approval:decide, platform:configure, outcomes:read -->
 <!-- roles: university_admin, implementation_manager, integration_admin, registrar, data_steward, incident_responder, platform_admin -->
 <!-- labels: app/src/screens/University.tsx :: Services, Drafts, Records, Connections, Institutional package, Control, Trust, Modules, Get help, Integrations, Operations, Demand, Campaigns, Migration, Configuration, Workflows, Academic record, Student accounts -->
-<!-- labels: app/src/screens/Console.tsx :: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Releases and flags, Launch readiness, Evidence, Views -->
+<!-- labels: app/src/lib/console/workspaces.ts :: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Releases and flags, Launch readiness, Evidence, Views -->
 <!-- labels: app/src/components/SchoolClaim.tsx :: For this university's staff -->
 
 ## Before you start
@@ -73,7 +73,7 @@ Production changes made through the control plane are real only when a productio
 
 ## Tour of the Console (Semester staff)
 
-The Console's tabs, in order: `Command center`, `Support` (only when support tickets are on and you may answer them), `Approvals`, `Break-glass`, `Audit`, `Customers`, `Figures`, `Finance model`, `Releases and flags`, `Launch readiness`, `Evidence`, `Views`. A privileged action asks for a second factor that is no more than fifteen minutes old.
+The Console's tabs, in order: `Command center`, `Support` (only when support tickets are on and you may answer them), `Approvals`, `Break-glass`, `Audit`, `Tenant operations`, `Privacy requests`, `Integration health`, `Release & incidents`, `Customers`, `Figures`, `Finance model`, `Releases and flags`, `Launch readiness`, `Evidence`, `Views`. A tab appears only when the signed-in operator holds its capability. A privileged action asks for a second factor that is no more than fifteen minutes old.
 
 - `Approvals` and `Break-glass` run on a duty matrix (`DUTIES` in `app/src/lib/ops/console.ts`): the requester and the approvers are different parties. A break-glass grant to a production tenant is requested by the `engineering` seat and approved by the `security` and `founder` seats.
 - `Audit` shows the audit-chain status and events, newest first.

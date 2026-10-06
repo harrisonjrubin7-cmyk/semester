@@ -51,6 +51,12 @@ notice period, and a contract that asks for more is a change to that number in `
 
 Every audience except scheduled maintenance also notifies the institution's named incident contact.
 
+## Operations-console boundary
+
+The **Release & incidents** workspace shows operational metadata only: affected tenant and workflows, customer-impact wording, owner, lifecycle state, notice cadence and rollback status. It never returns a notice body, recipient, personal detail or security-investigation narrative. Demo incidents are excluded in Production and require explicit inclusion elsewhere.
+
+The workspace can request a release or rollback approval through the `release` duty. A request is not approval, execution or verification. Deployment and rollback happen through the owned external runbook; the operator then records evidence for the exact commit and verifies affected customer workflows before describing recovery. See [`RELEASE-INCIDENT-OPERATOR-RUNBOOK.md`](../RELEASE-INCIDENT-OPERATOR-RUNBOOK.md).
+
 ## Student-facing outage (example)
 
 ```text

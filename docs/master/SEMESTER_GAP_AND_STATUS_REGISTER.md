@@ -40,3 +40,19 @@ These are leads, not confirmed vulnerabilities: grants and function bodies were 
 - Open draft PR #1304 (`cursor/full-semester-system-integration-83d9`) already adds `docs/design-system/HANDOFF-INTEGRATION-CROSSWALK.md` and two task files; the design-doc half of this program overlaps it.
 - `docs/finish-line/*` (17) and most of `docs/master/*` already existed; they were not recreated.
 - Open PRs older than a week: #1005, #1024, #1028, #1033, #1039, #1047–#1049, #1058–#1063 (draft Core prompts), #1080 — candidates for owner triage; not touched here.
+
+## RPC exposure audit — 18 flagged definer functions (2026-10-05, read-only)
+
+Method: `pg_proc` metadata and `pg_get_functiondef` against project `lzrqvlug…`. No data read, nothing changed.
+
+| Check | Result |
+| --- | --- |
+| `SECURITY DEFINER` with `search_path` set to empty | all 18 |
+| `EXECUTE` held by `anon` | none of the 18 |
+| `EXECUTE` held by `authenticated` | all 18 (expected: they authorize in-body) |
+| Body references a caller check (`auth.uid()`, `has_capability`, `holds_role`, `is_app_admin`) | 17 of 18 by pattern match; **presence only, not proof the check is correct** |
+| `authorize_school_purge` (the 18th) | authorizes through `private.offboarding_operator()` → `private.is_app_admin()`; requires neither proposer nor approver, a reason, `school_purge_eligibility` (retention window, no live legal hold) and writes `private.record_audit` |
+
+Functions: `accept_family_grant`, `approve_community_pseudonymity`, `approve_offboarding`, `authorize_school_purge`, `console_act`, `console_audit_read`, `console_audit_status`, `console_command_center`, `console_figures`, `decide_approval`, `delete_community_post`, `integration_approve_connection`, `integration_approve_scope`, `registrar_grant_override`, `request_approval`, `school_purge_eligibility`, `school_requests_for_admin`, `trust_room_grant`.
+
+**Not done:** only `authorize_school_purge`, `school_purge_eligibility` and `offboarding_operator` were read in full. The other 15 were checked by pattern only, so their authorization logic is unreviewed. The other ~189 definer functions flagged by the advisor were not examined. The `anon` GraphQL visibility of `profiles`, `messages`, `notes`, `enrollments`, `push_*`, `family_grants` and the three RLS-no-policy tables is also still open.
