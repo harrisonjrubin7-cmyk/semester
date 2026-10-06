@@ -24,6 +24,10 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The operations console has a Trust controls tab
+
+For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
+
 - **The bill says the figures are yours.** Under the total you track yourself, a “Student entered” label now says you typed these numbers in and the school has not confirmed them. Nothing else on the screen changed.
 
 ### Your data now shows what the app can use on this device
