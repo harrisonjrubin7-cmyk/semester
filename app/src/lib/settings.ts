@@ -130,7 +130,7 @@ export const SETTINGS: SettingsSection[] = [
         label: 'Your data',
         holds: 'What is stored, and what leaves the device',
         keywords:
-          'privacy data policy gdpr delete erase what is stored sent tracking analytics rights api key anthropic security permissions camera microphone location notifications allow block revoke',
+          'privacy data policy gdpr delete erase what is stored sent tracking analytics rights api key anthropic security permissions camera microphone location notifications allow block revoke who can see access shared advisor family guardian support',
       },
       {
         // Not a settings page of its own: the Data screen measures every byte
