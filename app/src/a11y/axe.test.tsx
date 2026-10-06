@@ -63,6 +63,7 @@ const DESKTOP = [
   '#/lesson/econ',
   '#/study',
   '#/settings',
+  '#/privacy',
 ];
 const PHONE = ['#/home', '#/calendar', '#/guide/econ?mode=listen'];
 
