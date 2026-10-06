@@ -255,7 +255,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `disability_services_staff` | `institution_action:publish` | — | — |
 | `study_abroad_advisor` | `institution_action:publish` | — | — |
 | `first_year_staff` | `institution_action:publish` | — | — |
-| `university_admin` | `tenant:configure` | `app/src/components/institutional/ControlPlane.tsx` | `console-approvals.check.sql`<br>`institutional-foundation.check.sql`<br>`offboarding-grants.check.sql`<br>`school-offboarding.check.sql` |
+| `university_admin` | `tenant:configure` | `app/src/components/institutional/ControlPlane.tsx` | `console-approvals.check.sql`<br>`institutional-foundation.check.sql`<br>`my-capabilities.check.sql`<br>`offboarding-grants.check.sql`<br>`school-offboarding.check.sql` |
 | `university_admin` | `ai:configure` | — | — |
 | `university_admin` | `source:approve` | — | — |
 | `university_admin` | `audit:read` | — | `console-approvals.check.sql`<br>`console-control-plane.check.sql` |
