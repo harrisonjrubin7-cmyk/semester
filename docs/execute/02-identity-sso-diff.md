@@ -14,7 +14,7 @@ Audit of `docs/handoff/execute/02-identity-sso.md` against the repository at `d3
 | 2 | mock or staging IdP | **extended in slice 1** | `app/server/institution/mock-idp.ts` | the real staging IdP needs the university's metadata and test accounts |
 | 3a | account switcher | missing | none | build |
 | 3b | sessions list, remote sign-out | partial | `AccountSecurity.tsx`, `signOutOtherDevices()` in `lib/cloud.ts` | no per-session list or single sign-out; Supabase Auth has no list API, so it needs a sessions table with RLS and a check suite |
-| 3c | delegated access with expiry | exists | `support_access`, family, advisor and support shares, K-12 guardians, with check suites | no single "who has access to me" view; expiry confirmed required only on `support_access` |
+| 3c | delegated access with expiry | exists | `support_access`, family, advisor and support shares, K-12 guardians, with check suites | **view added in slice 4** (`lib/access-overview.ts`, `WhoCanSeeYou.tsx`, D-1347): reads, names no one, ends nothing; expiry confirmed required only on `support_access` |
 | 4 | role onboarding | partial, **re-scoped** | one generic flow, `screens/Onboarding.tsx`, `ONB_STEPS = 5`; the server side exists as versioned journeys (D-1330), unapplied, none published | per-role flows are not hard-coded (D-1342); they wait for a published journey and the re-supplied `templates/role-onboarding/` |
 | 5 | Capabilities and Permissions screen | **extended in slice 2** | `app/src/components/DevicePermissions.tsx`, `app/src/lib/permissions.ts`, rendered on the Your data page; D-1335 | a panel, not a settings page, because the settings index is capped at eleven rows; revoking camera, microphone and location is the browser's, so they carry directions |
 | 6a | test login per pilot role | **extended in slice 1** | `app/server/institution/pilot-login.test.ts` | staging half is a human input |
@@ -27,4 +27,4 @@ The university's IdP metadata and signing certificate (secure channel only); its
 ## Next slices, in order
 1. ~~Capabilities and Permissions screen~~ (done, D-1335).
 2. ~~Per-role onboarding~~: not hard-coded; re-scoped to published journeys (D-1342). The existing first run is now audited at every step.
-3. Sessions table, per-session sign-out and an account switcher, with a "who has access to me" view.
+3. ~~"Who has access to me" view~~ done in slice 4. Still to do: sessions table, per-session sign-out and an account switcher.

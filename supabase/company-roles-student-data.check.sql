@@ -116,12 +116,10 @@ declare
   -- Keys are 'table/role'. Every entry is a decision somebody should be able
   -- to defend; an entry nobody can defend is a bug waiting for a migration.
   console_reason constant text :=
-    'Intended, and not student data in practice. console:operate reads every approval request (20260929110000, "operators, requesters and approvers read requests"); `requester` is the company staff member who asked for the approval, so the sweep finding its own fixture student there is a column-name match, not a student record.';
+    'Intended, and not student data in practice. console:operate AND a security capability (approval:decide, breakglass:request or trust:publish) reads every approval request (20261006110000, "operators, requesters and approvers read requests"; before it console:operate alone did, which also let support_agent and data_steward in); `requester` is the company staff member who asked for the approval, so the sweep finding its own fixture student there is a column-name match, not a student record.';
   exceptions jsonb := jsonb_build_object(
-    'approval_request/data_steward', console_reason,
     'approval_request/incident_responder', console_reason,
     'approval_request/platform_admin', console_reason,
-    'approval_request/support_agent', console_reason,
     'approval_request/trust_officer', console_reason,
     'course_review_authors/moderator',
       'Intended read, enforcement open. The policy admits review:moderate to see who wrote a course review, and docs/ROLE-LAUNCH-REGISTER.md says moderators get "author access strictly audited". The read itself writes no audit row, so "strictly audited" is a claim the table does not enforce. Needs the privacy owner: audit each authorship read, or return authorship through a definer function that does.',
