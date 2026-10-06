@@ -32,6 +32,10 @@ At the top of the registration readiness list there is now a single status: **Re
 
 Only an account holding the operator grant sees this, so students and school administrators will notice nothing. The operations console now has **Tenant operations**, **Privacy requests**, **Integration health** and **Release & incidents**. Each of those appears only when the signed-in operator holds that tab's own capability, and Support still appears only when tickets are on and the operator may answer them. A tab the operator cannot use is absent, and a saved view that names one does not open it. The tabs an operator with `console:operate` already had, including **Finance model**, **Releases and flags** and **Launch readiness**, are unchanged. You do not have to do anything.
 
+### Links from the company site into the app say which page they came from
+
+The "Start planning free", "Log in" and demo links on the company site now carry a few short, plain facts into the app's address: which page the click was on, the campaign link that brought you to the site (if there was one), and that the link is for a student. The app uses them to keep your place through first-run setup. They are not stored on a server, and nothing in them says who you are or what you can open; that stays with your account. Nothing about how the site looks or reads has changed, and you do not have to do anything.
+
 ### The operations console has a Launch readiness tab
 
 For operators holding the console grant: a new **Launch readiness** tab, after Releases and flags, shows where the launch go/no-go stands. It lists the twelve launch gates (met, partial or unmet, the files that show it and what is still missing), the council seats with who holds each and whether it has signed, and the verdict worked out from them: go, go with conditions or no-go, with the reasons. It is read-only and says it is the repository's record as of a date, not a live check; nothing on it can mark a gate met. Nothing else in the console moves, and you do not have to do anything.
