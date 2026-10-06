@@ -1,6 +1,6 @@
 # Session handoff
 
-**Date** 2026-10-06. **Branch** `cursor/unmatched-named-catalog-3071`, taken from `audit/semester-mainframe-reconciliation` after the agenda handoff. **Rebased onto** `origin/main` at `7b9ae1c2` on the parent branch. The parent pull request is #1336; merging it was requested and is waiting on GitHub being reachable.
+**Date** 2026-10-06. **Branch** `cursor/unmatched-named-catalog-3071`. **Rebased onto** `origin/main` at `81dcdabf`, the merge of pull request #1336.
 
 ## Objective that was completed
 
@@ -32,7 +32,7 @@ This branch now includes main’s `uncheckedSections`, `readinessFacts`, and `ov
 
 ## Checks recorded
 
-See `TEST_AND_RELEASE_GATES.md`. After this handoff: `npx tsc -b` exit 0, `npm run lint` exit 0, `npm test` exit 0 (23326 passed, 69 skipped). Both browser walks had an empty `pageerror` list.
+See `TEST_AND_RELEASE_GATES.md`. After the rebase onto the #1336 merge: `npx tsc -b` exit 0, and the unmatched set (`planpreview`, `RegistrationPortal.namedplan`, `RegistrationPortal.conflicts`) exit 0 (3 files, 15 tests). The 390px Term plan walk on `#/yes` had an empty `pageerror` list.
 
 ## Unverified
 

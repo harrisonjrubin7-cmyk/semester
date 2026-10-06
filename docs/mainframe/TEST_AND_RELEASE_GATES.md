@@ -35,6 +35,7 @@ Commands run from `app/` unless noted. Discover the script in `app/package.json`
 | `npm run lint` | `app/` | Exit 0. |
 | `npm test` | `app/` | Exit 0. 1467 files passed, 1 skipped. 23542 tests passed, 69 skipped. |
 | Browser, 390×844, `#/yes` | named ECON 1020 and PSCI 1104; catalog file contains only ECON 1020 with 18 seats | PSCI 1104 stayed under Courses you named, with the institution, the import day, and “no seat was invented.” ECON 1020 left that list and appeared as section 01 with 18 reported seats. The stored catalog stayed one course and the cart stayed empty. |
+| Same three vitest files, after rebase onto `81dcdabf` | `app/` | Exit 0. 3 files, 15 tests passed. `npx tsc -b` exit 0. `npm run lint` exit 0. The 390px `#/yes` walk was repeated on that commit and the page error list was empty. |
 
 ## Not run
 
