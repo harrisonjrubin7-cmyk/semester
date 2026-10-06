@@ -59,6 +59,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/console-command-center.check.sql` | Live command-center read model (20260930180000). |
 | `supabase/console-control-plane.check.sql` | The operations console's control plane: preferences, seats, fresh MFA, the duty matrix, the audit chain, figures with provenance, and the demo flag. |
 | `supabase/console-integration-health.check.sql` | Credential-free, exact-school integration health. |
+| `supabase/console-no-student-rows.check.sql` | No console function hands an operator a student's data. |
 | `supabase/console-release-incidents.check.sql` | Release and incident console read model. |
 | `supabase/console-scoped-tenant-access.check.sql` | Scoped Operations Console read template (20261005120000). |
 | `supabase/console-tenant-operations.check.sql` | Tenant/pilot operations workspace (20261005121000). |
