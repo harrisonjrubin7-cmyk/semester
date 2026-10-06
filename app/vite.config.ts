@@ -767,6 +767,8 @@ const MOCKS_MODULES = [
   'src/screens/console.test.tsx',
   'src/components/MfaStep.test.tsx',
   'src/lib/console/client.test.ts',
+  'src/lib/console/workspaces.test.ts',
+  'src/lib/support-case-client.test.ts',
   'src/screens/registration.test.tsx',
   'src/lib/enrollment/client.test.ts',
   'src/screens/gradebook.test.tsx',

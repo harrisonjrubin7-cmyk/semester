@@ -485,6 +485,343 @@ export async function loadCustomers(includeDemo = false): Promise<Customer[]> {
   }));
 }
 
+// ── tenant operations ─────────────────────────────────────────────────────
+
+export interface TenantOperationFact {
+  tenantId: string;
+  tenantName: string;
+  isDemo: boolean;
+  factKey: string;
+  category: string;
+  label: string;
+  value: string;
+  classification: string;
+  provenance: string;
+  owner: string;
+  observedAt: string | null;
+  staleAfterDays: number;
+  limitation: string;
+  visibilityReason: string;
+}
+
+/** Metadata-only facts for the exact schools carried by the caller's live implementation grants. */
+export async function loadTenantOperations(includeDemo = false): Promise<TenantOperationFact[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_tenant_operations', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read tenant operations.'));
+  return rows(data).map((r) => ({
+    tenantId: text(r.tenant_id),
+    tenantName: text(r.tenant_name),
+    isDemo: r.is_demo === true,
+    factKey: text(r.fact_key),
+    category: text(r.category),
+    label: text(r.label),
+    value: text(r.value),
+    classification: text(r.classification),
+    provenance: text(r.provenance),
+    owner: text(r.owner),
+    observedAt: maybe(r.observed_at),
+    staleAfterDays: num(r.stale_after_days),
+    limitation: text(r.limitation),
+    visibilityReason: text(r.visibility_reason),
+  }));
+}
+
+// ── privacy requests ──────────────────────────────────────────────────────
+
+export type IntegrationHealthState = 'healthy' | 'degraded' | 'stale' | 'failed' | 'unconfigured';
+
+export interface IntegrationHealth {
+  connectionId: string;
+  tenantId: string;
+  tenantName: string;
+  isDemo: boolean;
+  connectionName: string;
+  providerDomain: string;
+  providerName: string;
+  configurationState: string;
+  healthState: IntegrationHealthState;
+  featureState: string;
+  lastSuccessfulSyncAt: string | null;
+  freshnessTargetMinutes: number | null;
+  minutesSinceSuccess: number | null;
+  latestRunStatus: string | null;
+  latestRunAt: string | null;
+  reconciliationState: string | null;
+  recordsReceived: number;
+  recordsRejected: number;
+  openErrors: number;
+  criticalErrors: number;
+  openDeadLetters: number;
+  ownerName: string;
+  backupOwnerName: string;
+  customerImpact: string;
+  nextSafeAction: string;
+  configurationApprovalId: string | null;
+  configurationApprovalStatus: string | null;
+  canRequest: boolean;
+  classification: string;
+  provenance: string;
+  limitation: string;
+}
+
+const HEALTH_STATES: IntegrationHealthState[] = ['healthy', 'degraded', 'stale', 'failed', 'unconfigured'];
+
+function readIntegrationHealth(r: Row): IntegrationHealth {
+  if (!HEALTH_STATES.includes(r.health_state as IntegrationHealthState)) {
+    throw new Error('The integration health response contained an unknown health state.');
+  }
+  return {
+    connectionId: text(r.connection_id), tenantId: text(r.tenant_id), tenantName: text(r.tenant_name),
+    isDemo: r.is_demo === true, connectionName: text(r.connection_name), providerDomain: text(r.provider_domain),
+    providerName: text(r.provider_name), configurationState: text(r.configuration_state),
+    healthState: r.health_state as IntegrationHealthState, featureState: text(r.feature_state),
+    lastSuccessfulSyncAt: maybe(r.last_successful_sync_at),
+    freshnessTargetMinutes: r.freshness_target_minutes == null ? null : num(r.freshness_target_minutes),
+    minutesSinceSuccess: r.minutes_since_success == null ? null : num(r.minutes_since_success),
+    latestRunStatus: maybe(r.latest_run_status), latestRunAt: maybe(r.latest_run_at),
+    reconciliationState: maybe(r.reconciliation_state), recordsReceived: num(r.records_received),
+    recordsRejected: num(r.records_rejected), openErrors: num(r.open_errors),
+    criticalErrors: num(r.critical_errors), openDeadLetters: num(r.open_dead_letters),
+    ownerName: text(r.owner_name), backupOwnerName: text(r.backup_owner_name),
+    customerImpact: text(r.customer_impact), nextSafeAction: text(r.next_safe_action),
+    configurationApprovalId: maybe(r.configuration_approval_id),
+    configurationApprovalStatus: maybe(r.configuration_approval_status), classification: text(r.classification),
+    canRequest: r.can_request === true,
+    provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Credential-free health for exact schools derived by the server from live grants. */
+export async function loadIntegrationHealth(includeDemo = false): Promise<IntegrationHealth[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_integration_health', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read integration health.'));
+  return rows(data).map(readIntegrationHealth);
+}
+
+export type ReleaseIncidentState =
+  | 'blocked'
+  | 'release_candidate'
+  | 'deployed_unverified'
+  | 'verified'
+  | 'incident'
+  | 'rollback'
+  | 'recovered';
+
+export interface ReleaseIncident {
+  itemId: string;
+  itemKind: 'release' | 'incident';
+  tenantId: string | null;
+  tenantName: string | null;
+  isDemo: boolean;
+  state: ReleaseIncidentState;
+  title: string;
+  severity: string;
+  owner: string;
+  affectedWorkflows: string[];
+  customerImpact: string;
+  communicationStatus: string;
+  lastNoticeAt: string | null;
+  nextUpdateAt: string | null;
+  rollbackStatus: string;
+  releaseCommit: string | null;
+  deploymentSource: string | null;
+  deploymentId: string | null;
+  observedAt: string | null;
+  expiresAt: string | null;
+  approvalId: string | null;
+  approvalStatus: string | null;
+  canRequest: boolean;
+  evidence: string;
+  nextSafeAction: string;
+  classification: string;
+  provenance: string;
+  limitation: string;
+}
+
+const RELEASE_INCIDENT_STATES: ReleaseIncidentState[] = [
+  'blocked', 'release_candidate', 'deployed_unverified', 'verified', 'incident', 'rollback', 'recovered',
+];
+
+function readReleaseIncident(r: Row): ReleaseIncident {
+  if (r.item_kind !== 'release' && r.item_kind !== 'incident') {
+    throw new Error('The release and incident response contained an unknown item kind.');
+  }
+  if (!RELEASE_INCIDENT_STATES.includes(r.state as ReleaseIncidentState)) {
+    throw new Error('The release and incident response contained an unknown state.');
+  }
+  return {
+    itemId: text(r.item_id), itemKind: r.item_kind, tenantId: maybe(r.tenant_id),
+    tenantName: maybe(r.tenant_name), isDemo: r.is_demo === true,
+    state: r.state as ReleaseIncidentState, title: text(r.title), severity: text(r.severity),
+    owner: text(r.owner), affectedWorkflows: strings(r.affected_workflows),
+    customerImpact: text(r.customer_impact), communicationStatus: text(r.communication_status),
+    lastNoticeAt: maybe(r.last_notice_at), nextUpdateAt: maybe(r.next_update_at),
+    rollbackStatus: text(r.rollback_status), releaseCommit: maybe(r.release_commit),
+    deploymentSource: maybe(r.deployment_source), deploymentId: maybe(r.deployment_id),
+    observedAt: maybe(r.observed_at), expiresAt: maybe(r.expires_at),
+    approvalId: maybe(r.approval_id), approvalStatus: maybe(r.approval_status),
+    canRequest: r.can_request === true,
+    evidence: text(r.evidence), nextSafeAction: text(r.next_safe_action),
+    classification: text(r.classification), provenance: text(r.provenance), limitation: text(r.limitation),
+  };
+}
+
+/** Evidence-derived release and incident summaries at platform scope. No action is executed here. */
+export async function loadReleaseIncidents(includeDemo = false): Promise<ReleaseIncident[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_release_incidents', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read release and incident operations.'));
+  return rows(data).map(readReleaseIncident);
+}
+
+export type PrivacyRequestKind = 'export' | 'erasure' | 'correction' | 'restriction';
+export type PrivacyRequestOutcome = 'completed' | 'refused';
+
+export interface PrivacyRequest {
+  requestId: string;
+  requestRef: string;
+  tenantId: string | null;
+  tenantName: string;
+  isDemo: boolean;
+  kind: PrivacyRequestKind;
+  requestedBy: string;
+  status: string;
+  receivedAt: string;
+  dueAt: string;
+  overdue: boolean;
+  identityState: 'verified' | 'unverified';
+  assignedTo: string | null;
+  assignedAt: string | null;
+  assignedToMe: boolean;
+  holdState: 'clear' | 'live_hold';
+  affectedStores: string[];
+  deletionApprovalId: string | null;
+  deletionApprovalStatus: ApprovalStatus | null;
+  classification: string;
+  provenance: string;
+  limitation: string;
+}
+
+const PRIVACY_KINDS: PrivacyRequestKind[] = ['export', 'erasure', 'correction', 'restriction'];
+
+/** Metadata-only privacy queue, derived by the server from exact-school data steward grants. */
+export async function loadPrivacyRequests(includeDemo = false): Promise<PrivacyRequest[]> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('console_privacy_requests', { include_demo: includeDemo });
+  if (error) throw new Error(message(error, 'Could not read privacy requests.'));
+  return rows(data).map((r) => ({
+    requestId: text(r.request_id),
+    requestRef: text(r.request_ref),
+    tenantId: maybe(r.tenant_id),
+    tenantName: text(r.tenant_name),
+    isDemo: r.is_demo === true,
+    kind: PRIVACY_KINDS.includes(r.kind as PrivacyRequestKind) ? (r.kind as PrivacyRequestKind) : 'restriction',
+    requestedBy: text(r.requested_by),
+    status: text(r.status),
+    receivedAt: text(r.received_at),
+    dueAt: text(r.due_at),
+    overdue: r.overdue === true,
+    identityState: r.identity_state === 'verified' ? 'verified' : 'unverified',
+    assignedTo: maybe(r.assigned_to),
+    assignedAt: maybe(r.assigned_at),
+    assignedToMe: r.assigned_to_me === true,
+    holdState: r.hold_state === 'live_hold' ? 'live_hold' : 'clear',
+    affectedStores: strings(r.affected_stores),
+    deletionApprovalId: maybe(r.deletion_approval_id),
+    deletionApprovalStatus: STATUSES.includes(r.deletion_approval_status as ApprovalStatus)
+      ? (r.deletion_approval_status as ApprovalStatus)
+      : null,
+    classification: text(r.classification),
+    provenance: text(r.provenance),
+    limitation: text(r.limitation),
+  }));
+}
+
+export interface PrivacyRequestDetail {
+  requestRef: string;
+  subjectReference: string;
+  kind: PrivacyRequestKind;
+  requestedBy: string;
+  detail: string;
+  tenantId: string | null;
+  verifiedAt: string | null;
+  resolution: string;
+  resolutionEvidence: string | null;
+  completionCertificateId: string | null;
+}
+
+/** Fresh-MFA claim. The server also requires exact tenant scope and refuses another steward's case. */
+export async function claimPrivacyRequest(requestId: string): Promise<string> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('claim_privacy_request', { want_request: requestId });
+  if (error) throw new Error(message(error, 'Could not claim the privacy request.'));
+  return text(data);
+}
+
+/** A separate, audited, fresh-MFA detail read after the request has been claimed. */
+export async function readPrivacyRequestDetail(requestId: string): Promise<PrivacyRequestDetail> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('read_privacy_request_detail', { want_request: requestId });
+  if (error) throw new Error(message(error, 'Could not read the privacy request detail.'));
+  const r = rows(data)[0] ?? object(data);
+  return {
+    requestRef: text(r.request_ref),
+    subjectReference: text(r.subject_reference),
+    kind: PRIVACY_KINDS.includes(r.kind as PrivacyRequestKind) ? (r.kind as PrivacyRequestKind) : 'restriction',
+    requestedBy: text(r.requested_by),
+    detail: text(r.detail),
+    tenantId: maybe(r.tenant_id),
+    verifiedAt: maybe(r.verified_at),
+    resolution: text(r.resolution),
+    resolutionEvidence: maybe(r.resolution_evidence),
+    completionCertificateId: maybe(r.completion_certificate_id),
+  };
+}
+
+export async function verifyPrivacyRequest(requestId: string, basis: string, evidence: string): Promise<string> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('verify_privacy_request', {
+    want_request: requestId,
+    want_basis: basis,
+    want_evidence: evidence,
+  });
+  if (error) throw new Error(message(error, 'Could not verify identity or authority.'));
+  return text(data);
+}
+
+export interface PrivacyResolution {
+  status: PrivacyRequestOutcome;
+  certificateId: string | null;
+}
+
+export async function resolvePrivacyRequest(
+  requestId: string,
+  outcome: PrivacyRequestOutcome,
+  resolution: string,
+  evidence: string,
+  approvalId: string | null = null,
+): Promise<PrivacyResolution> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('resolve_privacy_request', {
+    want_request: requestId,
+    want_outcome: outcome,
+    want_resolution: resolution,
+    want_evidence: evidence,
+    want_approval: approvalId,
+  });
+  if (error) throw new Error(message(error, 'Could not resolve the privacy request.'));
+  const r = object(data);
+  if (r.status !== 'completed' && r.status !== 'refused') {
+    throw new Error('The privacy request returned an unexpected resolution status.');
+  }
+  return {
+    status: r.status,
+    certificateId: maybe(r.certificate_id),
+  };
+}
+
 // ── preferences ────────────────────────────────────────────────────────────
 
 /**

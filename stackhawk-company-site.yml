@@ -11,6 +11,14 @@ hawk:
   failureThreshold: low
   config:
     - pscans.maxAlertsPerRule=0
+    # Plugin 20012 (Anti-CSRF Tokens Check) stays enabled. Hawk's build raises
+    # it for every HTML form that lacks a changing hidden token, including
+    # forms with no method (the HTML default, GET). These company forms do not
+    # carry an authenticated cookie session: submit is cancelled in site.js and
+    # the lead is a cross-origin JSON POST with no credentials. The ignore list
+    # matches form id exactly and skips only these forms. A form that is not
+    # listed is still scanned. The plugin itself stays enabled.
+    - rules.csrf.ignorelist=hv-form,proc-form,ag-form,contact-form,bp-form,le-form,bc-form,a11y-form,evt-form,st-sub,pr-form,gap-form,ir-form,kit-form,rep-form,lead-form,fb-form,up-form,ri-form,nd-form,yt-req,cm-apply,sc-mail,sec-form
   spider:
     ajax: true
     maxDurationMinutes: 4

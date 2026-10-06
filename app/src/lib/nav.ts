@@ -651,7 +651,7 @@ export const DESTINATIONS: Destination[] = [
     // the bar would read as a bug. `saysFor` names it everywhere with room.
     short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
-    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list',
+    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list term plan conflicts',
     /*
      * Courses, not Campus, and the move came with University arriving.
      *
