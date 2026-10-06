@@ -223,6 +223,10 @@ What the console shows, one line each; [`docs/OPERATIONS-CONSOLE-MAP.md`](../../
 | **Approvals** | Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement |
 | **Break-glass** | Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else |
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
+| **Tenant operations** | Metadata-only rollout, configuration, integration, support-access and operational facts for exact schools covered by live tenant implementation grants; no student records or illustrative production data |
+| **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
+| **Integration health** | Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals |
+| **Release & incidents** | Evidence-derived release, deployment-verification and incident lifecycle states with customer impact, communication cadence, rollback status and request-only approvals; never a self-certified GO decision |
 | **Customers** | Tenants, commitments and contracts, each record with its classification and why the operator can see it |
 | **Figures** | Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing |
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |

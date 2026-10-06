@@ -62,6 +62,7 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | `role_grant_audit_event`, `moderation_audit_event`, `provisioning_audit_event` | **3 years after the event** | `private.sweep_audit_retention()`, same migration | `pg_cron`, daily — the `audit-retention` job, through a narrowly authorized path the immutability triggers allow only for rows past the period |
 | `audit_event` | **3 years after the event**, then removed by the `audit-retention` job | the common audit envelope (`supabase/migrations/20260930000000_audit_and_subject_requests.sql`): a verb, an object kind, an outcome and SHA-256 pseudonyms, never a name, address or content (a 2 KB cap on the details column keeps free text out). Same narrow purge path as the three tables above; ordinary updates and deletes are refused. No school foreign key, so removing a school does not remove the evidence |
 | `data_subject_request` | **with the account** — deleting the account deletes its requests | a person's export, erasure, correction or restriction request, its status and its thirty-day due date. The fact that an erasure was completed is kept without an identity in `data_requests`, as before |
+| `privacy_completion_certificate` | **kept as completion evidence; the direct subject link is cleared when the account is deleted** | an immutable request reference, SHA-256 subject pseudonym, tenant, request kind, evidence pointer, approval reference and issuance metadata. It contains no request detail. The retention period needs institutional and counsel agreement before a production sweep is added; legal holds and audit obligations take precedence |
 | `school_membership_requests` | **with the account** — deleting the account deletes its requests; a school's removal deletes its requests | a person's request to be recognised as a member of a university whose address they do not hold, its status, who decided it and when. Stores no address; the note is capped at 300 characters. Decisions are also kept, pseudonymously, in `audit_event` (three years) |
 | `school_offboarding` | **kept as a record; never deleted, even with the school** — a case is the evidence that a departure was proposed, sized, approved by both sides, disabled, exported, verified and archived. Erasing a staff member's account does not touch it: the people it names are uuids with no foreign key | one school's departure: the reason, who proposed and approved (uuids, no names), the dependency inventory (table names and row counts), the student-notice date, the export's hash and row counts and to whom it went, the retention window, and any purge authorization. Holds no student record. The window's length is a placeholder until counsel sets it |
 | `school_offboarding_undo` | **kept as a record; never edited or deleted** — it is what lets a restoration give back exactly what was revoked | the ids of the role grants and integration connections an offboarding revoked, and what a connection's status and credential pointer were (a pointer such as `vault:…`, never a secret). No student data |
@@ -461,6 +462,14 @@ sweep. It contains a named approver and a reference to evidence, never the
 evidence file or a secret, and clearing the recorder on account deletion leaves
 the institutional proof intact. The command center treats an expired row as a
 blocker rather than deleting it, so the history remains reviewable.
+
+`platform_incident` is the service-written incident timeline metadata: severity,
+owner, affected workflows, customer impact, lifecycle dates and opaque release
+or rollback references. Tenant incidents are kept with the school; platform
+incidents are kept until Semester removes them under an approved
+evidence-retention decision. There is no automatic sweep yet. Account deletion
+clears the recorder reference and leaves the operational record; notice bodies and
+recipients remain in `governance_incident_notices` under that table's policy.
 
 **The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
 `domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)

@@ -7,8 +7,10 @@ import {
   fileDataRightRequest,
   isOpen,
   loadDataRightRequests,
+  loadPrivacyCompletionCertificates,
   type DataRightKind,
   type DataRightRequest,
+  type PrivacyCompletionCertificate,
 } from '../lib/data-rights';
 import { dateFormatter } from '../lib/locale';
 import { ErrorState } from './unity/States';
@@ -18,17 +20,33 @@ const date = (value: string) => dateFormatter({ dateStyle: 'medium' }).format(ne
 
 export function DataRightsRequests({ account }: { account: Account | null }) {
   const [items, setItems] = useState<DataRightRequest[]>([]);
+  const [certificates, setCertificates] = useState<PrivacyCompletionCertificate[]>([]);
   const [kind, setKind] = useState<DataRightKind>('correction');
   const [detail, setDetail] = useState('');
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [certificateError, setCertificateError] = useState('');
   const [notice, setNotice] = useState('');
 
   const refresh = useCallback(async () => {
     if (!account) return;
     setBusy(true);
     try {
-      setItems(await loadDataRightRequests());
+      const [requestResult, certificateResult] = await Promise.allSettled([
+        loadDataRightRequests(),
+        loadPrivacyCompletionCertificates(),
+      ]);
+      if (requestResult.status === 'rejected') throw requestResult.reason;
+      setItems(requestResult.value);
+      if (certificateResult.status === 'fulfilled') {
+        setCertificates(certificateResult.value);
+        setCertificateError('');
+      } else {
+        setCertificates([]);
+        setCertificateError(certificateResult.reason instanceof Error
+          ? certificateResult.reason.message
+          : 'Completion certificates could not be loaded.');
+      }
       setLoadError('');
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load your requests.');
@@ -69,6 +87,7 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
             />
           )}
           {notice && <Notice>{notice}</Notice>}
+          {certificateError && <Notice alert>Your privacy requests are available, but completion certificates could not be loaded. {certificateError}</Notice>}
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -130,6 +149,19 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
                   <strong>{DATA_RIGHT_COPY[item.kind].label}</strong>
                   <p>{DATA_RIGHT_STATUS[item.status]}{item.resolvedAt ? ` · ${date(item.resolvedAt)}` : ''}</p>
                   {item.resolution && <p>{item.resolution}</p>}
+                </article>
+              ))}
+            </details>
+          )}
+
+          {certificates.length > 0 && (
+            <details style={{ marginTop: 'var(--sp-5)' }}>
+              <summary>Completion certificates · {certificates.length}</summary>
+              {certificates.map((certificate) => (
+                <article key={certificate.certificateId} style={{ marginBlock: 'var(--sp-4)' }}>
+                  <strong>{DATA_RIGHT_COPY[certificate.kind].label}</strong>
+                  <p>Certificate {certificate.certificateId} · issued {date(certificate.issuedAt)}</p>
+                  <p style={{ color: 'var(--app-dim)' }}>Request {certificate.requestRef} · evidence {certificate.evidenceReference}</p>
                 </article>
               ))}
             </details>

@@ -180,6 +180,8 @@
    "lti_nonce",
    "lti_platform",
    "payment_events",
+   "platform_incident",
+   "privacy_completion_certificate",
    "private.account_ages",
    "private.ai_usage_month",
    "private.ai_usage_reservation",

@@ -111,6 +111,9 @@ begin
   select count(*) into n from public.data_subject_request
    where id = req and verified_at is not null and verified_rung = 'V0';
   perform pg_temp.counted('control: the data steward records a verification, with the rung', n, 1);
+  select count(*) into n from public.data_subject_request
+   where id = req and verified_by is null and verification_basis is null and verification_evidence is null;
+  perform pg_temp.counted('the pseudonymous verification stores no account id or evidence text', n, 1);
 
   select verified_by_sha256 into hash from public.data_subject_request where id = req;
   perform pg_temp.counted('who verified is a pseudonym, not the operator''s id',
