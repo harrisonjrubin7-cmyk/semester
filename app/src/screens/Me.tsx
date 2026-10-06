@@ -14,7 +14,7 @@ import { ActionButton, Segmented } from '../components/ui';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { ByTask } from '../components/nav/ByTask';
 import { useMyCapabilities } from '../lib/capabilities';
-import { holdsConsole } from '../lib/console/client';
+import { holdsConsole } from '../lib/console/capability';
 
 import type { CourseModule } from '../lib/types';
 import { cardIdentity } from '../lib/review';
