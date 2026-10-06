@@ -13,6 +13,8 @@ import { Blueprint } from '../components/Blueprint';
 import { ActionButton, Segmented } from '../components/ui';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { ByTask } from '../components/nav/ByTask';
+import { useMyCapabilities } from '../lib/capabilities';
+import { holdsConsole } from '../lib/console/client';
 
 import type { CourseModule } from '../lib/types';
 import { cardIdentity } from '../lib/review';
@@ -113,6 +115,8 @@ export function Me({
   trustCenter = moduleOn(MODULE_FLAGS.trust_center),
 }: { semesterWrapped?: boolean; trustCenter?: boolean } = {}) {
   const { state, dispatch } = useStore();
+  // Only offers the way in; `console:operate` is still checked by the database and the screen.
+  const operator = holdsConsole(useMyCapabilities());
 
   const tab = state.meTab;
 
@@ -157,6 +161,13 @@ export function Me({
             label="Trust & data"
             sub="What Semester holds, who can see it, and how to take it back"
             onClick={() => dispatch({ type: 'go', screen: 'privacy' })}
+          />
+        ) : null}
+        {operator ? (
+          <NavRow
+            label="Semester Operations"
+            sub="Support, approvals, audit and customer operations for staff"
+            onClick={() => dispatch({ type: 'go', screen: 'console' })}
           />
         ) : null}
         <NavRow

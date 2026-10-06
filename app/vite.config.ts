@@ -770,6 +770,7 @@ const MOCKS_MODULES = [
   'src/lib/console/workspaces.test.ts',
   'src/lib/support-case-client.test.ts',
   'src/screens/registration.test.tsx',
+  'src/screens/me.operations.test.tsx',
   'src/lib/enrollment/client.test.ts',
   'src/screens/gradebook.test.tsx',
   'src/lib/gradebook/client.test.ts',
