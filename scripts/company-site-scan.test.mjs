@@ -882,7 +882,7 @@ test('alert paging stops once totalCount is in hand instead of following an incr
   const fetchImpl = async url => {
     const parsed = new URL(url);
     calls.push(`${parsed.pathname}?${parsed.searchParams}`);
-    if (parsed.pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln' }) };
+    if (parsed.pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'header.payload.signature' }) };
     const pageToken = parsed.searchParams.get('pageToken');
     if (pageToken === '2') return { ok: true, status: 200, json: async () => ({ applicationScanAlertUris: [], totalCount: 2, nextPageToken: 3 }) };
     const body = pageToken === '0'
@@ -911,7 +911,7 @@ test('alert paging uses alert.uriCount when totalCount is the unset zero default
   const tokens = [];
   const fetchImpl = async url => {
     const parsed = new URL(url);
-    if (parsed.pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln' }) };
+    if (parsed.pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'header.payload.signature' }) };
     const pageToken = parsed.searchParams.get('pageToken');
     tokens.push(pageToken);
     const body = pageToken === '0'
@@ -927,7 +927,7 @@ test('alert paging uses alert.uriCount when totalCount is the unset zero default
     assert.equal(assemblePluginPaths(pages, scan).length, 2);
     await assert.rejects(
       fetchAlertPages(scan, '100009', async url => {
-        if (new URL(url).pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln' }) };
+        if (new URL(url).pathname.endsWith('/auth/login')) return { ok: true, status: 200, json: async () => ({ token: 'header.payload.signature' }) };
         return { ok: true, status: 200, json: async () => ({ applicationScanAlertUris: [{ uri: '/secret-path', requestMethod: 'GET', findingHash: 'ab' }], nextPageToken: 4, alert: { name: 'Information Leak' } }) };
       }),
       error => {
@@ -972,7 +972,8 @@ test('the pages CLI follows the alert URI page token and does not print the API 
   const scan = cleanReport().scan.id;
   const key = 'synthetic-key-value';
   // The findings route rejects X-ApiKey with 401. Login exchanges it for this bearer.
-  const access = 'eyJhbGciOiJub25lIn0.eyJzdWIiOiJ0ZXN0In0.c2ln';
+  // Three low-entropy segments: enough for jwtIdentity, and not a credential.
+  const access = 'header.payload.signature';
   const hash = index => createHash('sha256').update(`page-${index}`).digest('hex');
   const seen = [];
   const server = createServer((request, response) => {
