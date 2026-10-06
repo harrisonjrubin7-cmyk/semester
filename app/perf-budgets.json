@@ -5,7 +5,7 @@
   "route": 49152,
   "routes": {
     "src/ai/Chat.tsx": 118784,
-    "src/screens/Account.tsx": 25600,
+    "src/screens/Account.tsx": 35840,
     "src/screens/Activities.tsx": 21504,
     "src/screens/Activity.tsx": 11264,
     "src/screens/Agreements.tsx": 22528,
@@ -183,7 +183,7 @@
       "src/screens/Runway.tsx": 25549,
       "src/screens/Registrar.tsx": 8751,
       "src/screens/Sources.tsx": 20894,
-      "src/screens/Account.tsx": 16978,
+      "src/screens/Account.tsx": 26945,
       "src/screens/Slides.tsx": 9666,
       "src/screens/Activity.tsx": 2340,
       "src/screens/WhatsNew.tsx": 2611,
