@@ -26,6 +26,7 @@
    "app_capabilities",
    "app_roles",
    "institution_action_offices",
+   "onboarding_journeys",
    "role_capabilities"
   ],
   "person-private": [
@@ -59,6 +60,7 @@
    "message_reactions",
    "messages",
    "notes",
+   "onboarding_events",
    "onboarding_progress",
    "operator_preference",
    "organization_members",
@@ -83,6 +85,7 @@
    "dining_menu_items",
    "dining_order_events",
    "help_request_events",
+   "onboarding_step_progress",
    "student_payment_plan_installments",
    "support_share_events"
   ],
@@ -172,6 +175,7 @@
    "gtm_conversion_events",
    "gtm_prospects",
    "gtm_suppression",
+   "handoff_transactions",
    "integration_connections",
    "invites",
    "lti_identity",
@@ -180,6 +184,8 @@
    "lti_nonce",
    "lti_platform",
    "payment_events",
+   "platform_incident",
+   "privacy_completion_certificate",
    "private.account_ages",
    "private.ai_usage_month",
    "private.ai_usage_reservation",
@@ -322,6 +328,7 @@
    "migration_runs",
    "mistake_evidence",
    "module_mode_request",
+   "onboarding_assignments",
    "opportunities",
    "organizations",
    "outcome_aggregates",

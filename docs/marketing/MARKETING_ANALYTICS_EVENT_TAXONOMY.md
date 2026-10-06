@@ -33,6 +33,11 @@ a build task.
 Until then the correct implementation is the **event contract and a no-op sink**: typed
 event builders, the allow-list and its tests, wired to nothing.
 
+**Built (2026-10-06):** `app/src/lib/marketingevents.ts` and `marketingevents.test.ts` — all 20 events
+below as a typed contract, unknown fields refused, the five server-observed events refused in the
+browser, consent fail-closed, and the only sink a no-op. A test fails if any other file builds a
+tracker, so enabling collection is a deliberate edit. Preconditions 1–6 are still open.
+
 ## 3. Allow-listed fields (nothing else is ever sent)
 
 `event`, `ts`, `page_type`, `page_slug`, `cta_id`, `utm_source`, `utm_medium`,

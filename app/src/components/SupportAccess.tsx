@@ -7,12 +7,14 @@ import {
   readSupportSignals,
   revokeSupportAccess,
   type SupportSignal,
+  type SupportTicketChoice,
   type SupportWindow,
   type SupporterChoice,
 } from '../lib/support-access';
 import { ActionButton, Notice, SectionLabel } from './ui';
 import { dateFormatter } from '../lib/locale';
 import { ErrorState, PermissionNotice } from './unity/States';
+import { ticketReference } from '../lib/supporttickets';
 import { useNow } from '../state/store';
 
 const date = (value: string) => dateFormatter({
@@ -23,8 +25,11 @@ export function SupportAccess({ account }: { account: Account | null }) {
   const now = useNow();
   const [supporters, setSupporters] = useState<SupporterChoice[]>([]);
   const [windows, setWindows] = useState<SupportWindow[]>([]);
+  const [tickets, setTickets] = useState<SupportTicketChoice[]>([]);
+  const [ticketLoadError, setTicketLoadError] = useState('');
   const [signals, setSignals] = useState<Record<string, SupportSignal[]>>({});
   const [supporterId, setSupporterId] = useState('');
+  const [ticketId, setTicketId] = useState('');
   const [reason, setReason] = useState('');
   const [days, setDays] = useState(1);
   const [busy, setBusy] = useState(false);
@@ -40,9 +45,17 @@ export function SupportAccess({ account }: { account: Account | null }) {
     setBusy(true);
     try {
       const next = await loadSupportAccess();
+      const nextTickets = next.tickets ?? [];
       setSupporters(next.supporters);
       setWindows(next.windows);
-      setSupporterId((old) => old || next.supporters[0]?.supporterId || '');
+      setTickets(nextTickets);
+      setTicketLoadError(next.ticketLoadError ?? '');
+      setSupporterId((old) => next.supporters.some((supporter) => supporter.supporterId === old)
+        ? old
+        : next.supporters[0]?.supporterId ?? '');
+      setTicketId((old) => nextTickets.some((ticket) => ticket.ticketId === old)
+        ? old
+        : nextTickets[0]?.ticketId ?? '');
       setNotice('');
       setLoadError('');
     } catch (error) {
@@ -57,7 +70,11 @@ export function SupportAccess({ account }: { account: Account | null }) {
   // oxlint-disable-next-line react/set-state-in-effect
   useEffect(() => { void refresh(); }, [refresh]);
 
-  const active = windows.filter((window) => !window.revokedAt && new Date(window.expiresAt) > now);
+  const active = windows.filter((window) => (
+    !window.revokedAt
+    && window.consentState === 'active'
+    && new Date(window.expiresAt) > now
+  ));
   const history = windows.filter((window) => !active.includes(window));
 
   return (
@@ -85,6 +102,11 @@ export function SupportAccess({ account }: { account: Account | null }) {
             />
           )}
           {notice && <Notice alert>{notice}</Notice>}
+          {ticketLoadError && (
+            <Notice alert>
+              Your existing support windows are still shown, but support questions could not be loaded. Creating a new window is disabled until they are available.
+            </Notice>
+          )}
           {changed && (
             <PermissionNotice
               changed={changed.changed}
@@ -99,12 +121,12 @@ export function SupportAccess({ account }: { account: Account | null }) {
               }
             />
           )}
-          {supporters.length > 0 && (
+          {supporters.length > 0 && tickets.length > 0 && (
             <form
               onSubmit={(event) => {
                 event.preventDefault();
                 setBusy(true);
-                void createSupportAccess(supporterId, reason, days)
+                void createSupportAccess(supporterId, reason, days, ticketId)
                   .then(async () => {
                     record(account?.id ?? null, { kind: 'support-granted', detail: `for ${days} ${days === 1 ? 'day' : 'days'}`, provenance: yours(`Semester support, ${days} ${days === 1 ? 'day' : 'days'}`) });
                     setReason('');
@@ -129,6 +151,19 @@ export function SupportAccess({ account }: { account: Account | null }) {
                 </select>
               </label>
               <label>
+                Support question
+                <select className="input" required value={ticketId} onChange={(event) => setTicketId(event.target.value)}>
+                  {tickets.map((ticket) => (
+                    <option key={ticket.ticketId} value={ticket.ticketId}>
+                      {ticketReference(ticket.ticketId)} · {ticket.subject}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p style={{ color: 'var(--app-dim)', margin: 0 }}>
+                This access applies only to the selected support question and the learning-progress scope.
+              </p>
+              <label>
                 What help do you want?
                 <textarea className="input" required maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} />
               </label>
@@ -138,10 +173,15 @@ export function SupportAccess({ account }: { account: Account | null }) {
                   {[1, 2, 3, 4, 5, 6, 7].map((value) => <option key={value} value={value}>{value} {value === 1 ? 'day' : 'days'}</option>)}
                 </select>
               </label>
-              <button className="btn btn-primary btn-block" disabled={busy || !supporterId || !reason.trim()}>
+              <button className="btn btn-primary btn-block" disabled={busy || !supporterId || !ticketId || !reason.trim()}>
                 {busy ? 'Working…' : 'Grant support access'}
               </button>
             </form>
+          )}
+          {!busy && supporters.length > 0 && tickets.length === 0 && (
+            <p role="status" style={{ color: 'var(--app-dim)' }}>
+              Open a support question in Help before granting access. A support window must be tied to one active case.
+            </p>
           )}
           {!busy && supporters.length === 0 && windows.every((window) => window.side !== 'supporter') && (
             <p role="status" style={{ color: 'var(--app-dim)' }}>
@@ -160,6 +200,10 @@ export function SupportAccess({ account }: { account: Account | null }) {
               <p>{window.reason}</p>
               <p style={{ color: 'var(--app-dim)' }}>
                 {window.side === 'student' ? 'You granted access' : 'A student granted you access'} · expires {date(window.expiresAt)}
+              </p>
+              <p style={{ color: 'var(--app-dim)' }}>
+                {window.ticketId ? `${ticketReference(window.ticketId)} · ` : 'Legacy general window · '}
+                {(window.scopes ?? []).join(', ') || 'No scope'} · consent {window.consentState ?? 'unknown'}
               </p>
               {window.side === 'student' ? (
                 <ActionButton
@@ -184,6 +228,8 @@ export function SupportAccess({ account }: { account: Account | null }) {
                       .finally(() => setBusy(false));
                   }}
                 >Revoke now</ActionButton>
+              ) : window.ticketId ? (
+                <Notice>Case-bound support summaries require fresh MFA. Open this case in the Operations Console to view its aggregate signals.</Notice>
               ) : (
                 <ActionButton
                   disabled={busy}
