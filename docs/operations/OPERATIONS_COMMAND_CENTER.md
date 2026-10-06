@@ -2,7 +2,9 @@
 
 **As of** 2026-10-05 · **Base** `origin/main` `3bd382d` · **Status** proposal; records no decision. It reconciles with, and does not replace, [`docs/OPERATIONS-CONSOLE-MAP.md`](../OPERATIONS-CONSOLE-MAP.md) (rendered from `app/src/lib/ops/console.ts`; wins on any disagreement) and the Phase 0 audit in [`docs/ops/`](../ops/OPERATIONS_CONSOLE_CURRENT_STATE.md).
 
-> **Duplicate check.** A console already exists, at `#/console`, with eleven tabs. The brief's "build the Operations Command Center" therefore means *extend that screen*, not create `/app/ops`. Adopted from [`OPERATIONS_CONSOLE_BACKLOG.md`](../ops/OPERATIONS_CONSOLE_BACKLOG.md) B-00: routes stay `#/console/<view>`; the brief's `/app/ops/<name>` paths are documented aliases. A new navigation root needs portfolio approval (`DO-NOT-BUILD` rule 1) and is not requested.
+> **Correction, 2026-10-06 (base `f48baf6e`).** The first version of this page was written against `3bd382d` and called several views missing that other sessions then landed (migrations `20261005120000`–`126000`). The route table below is corrected from `app/src/screens/Console.tsx` and the rendered [`OPERATIONS-CONSOLE-MAP.md`](../OPERATIONS-CONSOLE-MAP.md), which wins on any disagreement. Still true: no work item, projection, access-review or SLO table exists.
+
+> **Duplicate check.** A console already exists, at `#/console`, with the views in the console map (command, support, approvals, break-glass, audit, tenant operations, privacy requests, integration health, release & incidents, customers, figures, releases, launch, evidence, views). The brief's "build the Operations Command Center" therefore means *extend that screen*, not create `/app/ops`. Adopted from [`OPERATIONS_CONSOLE_BACKLOG.md`](../ops/OPERATIONS_CONSOLE_BACKLOG.md) B-00: routes stay `#/console/<view>`; the brief's `/app/ops/<name>` paths are documented aliases. A new navigation root needs portfolio approval (`DO-NOT-BUILD` rule 1) and is not requested.
 
 ## 1. Purpose
 
@@ -18,19 +20,19 @@ State is what exists in code today (Console tab list at `Console.tsx`; capabilit
 | `inbox` | `inbox` | **Missing** (no work item entity) | P0 |
 | `work` (My Work) | `work` | **Missing** | P0 |
 | `approvals` | `approvals` | **Built** (request, decide, act) | P0 (extend executors) |
-| `tenants`, `tenants/:id` | `tenants`, `tenants/<id>` | **Missing** (Customers tab lists customers only) | P0 |
+| `tenants`, `tenants/:id` | `tenant-operations` | **Partial**: metadata-only rollout, configuration, integration, support-access and operational facts for exact schools under live `tenant:implement` grants (`console_tenant_operations`); no tenant directory, no per-tenant 360 page | P0 (directory + 360 remain) |
 | `customers`, `customers/:id` | `customers`, `customers/<id>` | List built; **360 missing** | P0 |
-| `pilots`, `implementations` | `pilots`, `implementation` | **Missing** (tables exist) | P0 |
+| `pilots`, `implementations` | `tenant-operations`, `launch` | **Partial**: rollout and launch facts are in those views; no pilot or success-plan screen | P0 |
 | `customer-health` | `health` | **Missing** (`account_health_snapshots` table only) | P1 |
 | `renewals` | `renewals` | **Missing** | P1 (date only in P0 billing) |
 | `billing`, `reconciliation` | `billing`, `reconciliation` | **Missing** operator screens (Stripe functions + tables exist) | P0 basic / P1 |
 | `support` | `support` | **Built** (flag default off; `support:ticket`) | P0 (turn on after staffing statement) |
-| `releases`, `feature-flags`, `rollouts` | `releases` | **Read-only** report; no write path | P0 write path |
-| `integrations`, `migrations` | `integrations`, `migrations` | **Missing** in Console (components exist in University) | P0 visibility |
-| `security`, `privacy`, `trust` | `security`, `privacy`, `trust` | **Missing** in Console; trust room is a separate screen | P1 (P0 evidence view exists: **Evidence**) |
+| `releases`, `feature-flags`, `rollouts` | `releases`, `launch`, `release-incidents` | **Read-only** reports (flags) plus evidence-derived release state with request-only approvals; no rollout write path | P0 write path |
+| `integrations`, `migrations` | `integration-health` | **Built (read)** for integrations: credential-free configuration, freshness, runs, reconciliation, exceptions, ownership and customer impact (`console_integration_health`); configuration changes are request-only approvals. **Migrations view missing** | P0 (migrations remain) |
+| `security`, `privacy`, `trust` | `privacy`, `evidence` | **Privacy built**: identity-minimised, exact-school queue; detail reads and lifecycle writes are separate, fresh-MFA, audited actions (`console_privacy_requests`, `claim/verify/resolve_privacy_request`). **Security and trust views missing**; trust room is a separate screen; **Evidence** exists | P1 |
 | `access-reviews` | `access-reviews` | **Missing**; ⊕`access:review` | P1 |
 | `break-glass` | `break-glass` | **Built** | — |
-| `incidents`, `reliability` | `incidents`, `slo` | **Missing**; no tables | P0 basic / P1 |
+| `incidents`, `reliability` | `release-incidents` | **Incidents partial**: `platform_incident` table and an evidence-derived read (`console_release_incidents`, needs `console:operate` + `incident:communicate`); no operator write path, no ⊕`incident:command`. **SLO view and tables missing** | P0 (declare/resolve) / P1 |
 | `audit` | `audit` | **Built** (chain status + recent events); explorer missing | P0 (explorer) |
 | `risks` | `risks` | **Missing**; registers are docs | P1 |
 | `vendors` | `vendors` | **Missing** | P1 |
@@ -85,7 +87,7 @@ Support tab exists (default off). Flipping it on is itself a controlled action a
 
 ## 9. Operations dossier (nineteen dimensions)
 
-- **Model/Data/Screens:** §2, §4–6. **Roles/Isolation:** `console:operate` + domain capability; RLS and in-body checks; the three INVOKER readers that return all tenants to any `console:operate` holder are fixed first (permission matrix §7).
+- **Model/Data/Screens:** §2, §4–6. **Roles/Isolation:** `console:operate` + domain capability; RLS and in-body checks; of the three INVOKER readers that returned all tenants to any `console:operate` holder, approvals and the break-glass log are now scoped (#1348) and the customers readers are still open (permission matrix §7, [`ROLE_CAPABILITY_MATRIX.md` §5](ROLE_CAPABILITY_MATRIX.md#5-known-defects-to-fix-before-this-matrix-is-relied-on)).
 - **Workflows/Approvals/Policy/Consent:** [`OPERATIONS_WORKFLOW_CATALOG.md`](OPERATIONS_WORKFLOW_CATALOG.md); approvals per the duty table; policy: read-only default; consent: support content only by grant.
 - **Audit/SAF:** [`OPERATIONS_AUDIT_AND_EVIDENCE.md`](OPERATIONS_AUDIT_AND_EVIDENCE.md). **Review:** security review of every `ops_*` RPC; accessibility per [`OPERATIONS_RELEASE_GATES.md`](OPERATIONS_RELEASE_GATES.md).
 - **SLO/Support:** console read p95 and projection lag per the release-gates page; operator support is the owner. **Rollback:** a view is hidden by flag; a producer is disabled by kill switch; projections rebuild from the outbox.

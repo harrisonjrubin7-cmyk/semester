@@ -64,6 +64,7 @@ import {
 const Releases = lazy(() => import('../components/console/Releases').then((m) => ({ default: m.Releases })));
 // Its own chunk, for the same reason: twelve gates' worth of evidence text the rest of the console never reads.
 const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
+const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
 const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 
 const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
@@ -272,6 +273,11 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
         {tab === 'launch' && (
           <Suspense fallback={<p role="status">Loading the launch gates…</p>}>
             <Launch filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'controls' && (
+          <Suspense fallback={<p role="status">Loading the control register…</p>}>
+            <Controls filter={filter} />
           </Suspense>
         )}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}

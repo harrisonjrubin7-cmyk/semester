@@ -86,8 +86,8 @@ R = read, A = start an action (request), D = decide, — = none. A cell lists th
 
 ## 5. Known defects to fix before this matrix is relied on
 
-1. `my_capabilities()` ignores break-glass grants, so the UI under-offers.
-2. Three INVOKER readers return all tenants to any `console:operate` holder.
+1. ~~`my_capabilities()` ignores break-glass grants, so the UI under-offers.~~ **Fixed** by `20261006100000` (merged in #1341): one school-scope row per capability in an open grant, held row-for-row to `has_capability` by `my-capabilities.check.sql` (15 checks).
+2. Three INVOKER readers return all tenants to any `console:operate` holder. **Partly fixed** by `20261006110000` (#1348): `console_approvals` and `console_break_glass` now need `console:operate` AND `approval:decide`, `breakglass:request` or `trust:publish` (so `support_agent`, `implementation_manager` and `data_steward` lose the all-tenant queue; requesters, approvers, actors and subjects keep their own rows). **Still open:** `console_customers` and the `customer*` tables, pending an owner decision, because `account_executive` and `customer_success` hold no `console:operate` and granting it would also open the audit-chain read, command center, release evidence, council seats and duty matrix to them.
 3. `private.is_app_admin()` still gates school offboarding and `schools_write` (F-5).
 4. Two role vocabularies: 69 database roles versus the gateway's 10 `UNIVERSITY_ROLES` (ADR-0002 open). New institution consoles use the database roles.
 5. Tenant-bound assignment for implementation and support staff is by convention, not by a table (OD-7).

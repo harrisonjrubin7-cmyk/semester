@@ -19,7 +19,7 @@ The control plane is the one layer both operating systems stand on. The [Institu
 | Integration/migration | `integration_*` connections, mappings (+versions), sync runs/errors, reconciliation, dead letter; `source_records`/`source_snapshots`/`source_freshness_events`; Migration Center component | `docs/INTEGRATION-CONTROL-PLANE.md`, `docs/master/SEMESTER_MIGRATION_FACTORY.md` | Live adapters, credentials, UAT; domain-event replay path |
 | AI governance | `ai_policy`, provider registry, content-free AI audit tables, budget and kill-switch patterns | `docs/ai-governance/`, `supabase/ai-audit-content-free.check.sql` | Approved evaluations; production cost and incident data |
 | Audit/evidence/risk | `public.audit_event` (immutable trigger); `private.console_audit_event` (hash chain, HMAC daily seals, verify); `private.ledger_chain*`; `support_access_event`; many per-domain audit tables | `docs/OPERATIONS-CONSOLE-MAP.md` | **0 production rows in the console chain**; no cross-domain audit explorer; five risk registers |
-| Reliability/incident/rollback | Incident playbooks and war room as TS registers; `governance_incident_notices` | `app/src/lib/ops/incidentplaybooks.ts`, `docs/sre/` | **No incident, SLO, access-review or tenant-health tables; no alert reaches a person** |
+| Reliability/incident/rollback | Incident playbooks and war room as TS registers; `governance_incident_notices` | `app/src/lib/ops/incidentplaybooks.ts`, `docs/sre/` | **`platform_incident` and an evidence-derived read now exist (`20261005126000`, `console_release_incidents`); still no SLO, access-review or tenant-health tables, no operator incident write path, and no alert reaches a person** |
 | Portability/offboarding | `school_offboarding` (+undo), export RPCs, `docs/SCHOOL-OFFBOARDING.md` | `supabase/school-offboarding.check.sql` | `is_app_admin()` still gates offboarding (F-5); live exercise |
 
 ## 2. Canonical data and authority map
@@ -53,7 +53,7 @@ From the brief's sixteen attributes, mapped to what exists, so no console invent
 | Policy | `tenant_feature_policy`, `school_config_versions`, `ai_policy` | Built, separate stores |
 | Audit event | `audit_event`, `console_audit_event` | Built, two chains |
 | Risk | `docs/*RISK-REGISTER.md` (five), `lib/ops/riskreview.ts` | **Docs only, not rows** |
-| Incident | `governance_incident_notices` + TS playbooks | **Notices only** |
+| Incident | `platform_incident`, `governance_incident_notices` + TS playbooks | Table and read built; **no operator write path** |
 | Release | `platform_release_evidence`, `tenant_rollout` | Built |
 | Integration, migration | `integration_*`, `source_*` | Built (observation) |
 | Customer, contract, commitment | `customer`, `customer_contract`, `customer_commitment` | Built, service-key writes, 0 customers |
@@ -97,7 +97,7 @@ Each dossier covers the brief's nineteen dimensions in eight lines. Capability n
 - **Workflows/Approvals:** grant, revoke, expire, review. Two-person for platform-scope grants. **Policy:** no single broad "admin" — retire `app_admins`/`is_app_admin()` (F-5).
 - **Audit:** `role_grant_audit_event`. **SAF:** `role_grants` is the sole authority; the TS registers derive from migrations (`rolelaunch.ts`).
 - **Review:** quarterly attestation needs ⊕`access:review` (not created). **SLO/Support:** grant propagation within one request (no cache).
-- **Rollback:** revoke; expiry is default. **Tests/Gate:** `rolegrants`, `capabilities`, `my-capabilities` checks; fix `my_capabilities()` break-glass defect first. Gate T, S.
+- **Rollback:** revoke; expiry is default. **Tests/Gate:** `rolegrants`, `capabilities`, `my-capabilities` checks; the `my_capabilities()` break-glass defect is fixed (#1341). Gate T, S.
 - **Owner:** security seat. **Commercial:** role clarity is a procurement question on every RFP.
 
 ### 4.4 Policy and workflow engine
@@ -174,7 +174,7 @@ Everything below is additive and **proposed**; nothing is applied to production 
 | 4 | `private.work_item` (+ `work_item_event`) | The one inbox/My Work entity: kind, source ref, tenant, assignee, state, due, severity | RLS: assignee, or `console:operate` + domain capability |
 | 5 | `private.tenant_health_projection`, `private.inbox_projection` | Read models | no client grant; read via `ops_*` |
 | 6 | `public.ops_*` read RPCs, standard envelope `{data, freshness, authority, warnings, request_id}` | The only way a console reads | definer, in-body `console:operate` **and** the domain capability; forbidden vs empty distinguished; redaction deny-list |
-| 7 | `private.incident`, `incident_update`; ⊕`incident:command` | Incident command | capability + threat model |
+| 7 | `public.platform_incident` **exists** (`20261005126000`); still needed: an operator write path (declare, update, resolve) behind ⊕`incident:command`, and `incident_update` | Incident command | capability + threat model |
 | 8 | `private.access_review`, `access_review_item`; ⊕`access:review` | Attestation | same |
 | 9 | `private.org_unit` | Hierarchy | RLS on `tenant_id` |
 | 10 | `console_act` executors for the eight duties that have none (`tenant-policy`, `integration-config`, `release`, `data-deletion`, `ai-provider`, `evidence-release`, `refund`, `support-access`) **and** revoking the direct-write paths | Closes F-1 | per duty |
