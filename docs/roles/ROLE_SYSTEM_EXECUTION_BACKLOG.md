@@ -43,8 +43,8 @@
 | 21 | Registrar readiness desk: holds, time tickets, drop on behalf, outbox-backed receipts | 20 | registration gaps | Registrar completes the readiness path without direct database access |
 | 22 | Advisor P0: caseload, appointment, referral, notes with consent-aware sharing | 12, 17 | RG-27 | Caseload scoped by assignment; reads audited; referral reaches a named office |
 | 23 | Institution control plane P0: real consent and audit counts, SSO policy and SCIM screens, rollout and offboarding views | 5, 6, 17 | RG-17, RG-37 | Control plane shows measured values; SSO policy change goes through approval |
-| 24 | Operations P0 views over existing tables: Inbox, My Work, Tenant directory and 360, Customer 360, pilot, implementation, support | 14, 17 | RG-28 | Each view reads a real table; capability-gated; no student rows |
-| 25 | Console controls for rollout, kill switch and release pause; incident declaration and commander; role release gates and test matrix documents | 8, 9, 24 | RG-29, RG-30, RG-23 | Kill switch flipped from the Console with audit; `docs/finish-line/ROLE_SYSTEM_*` written from real evidence |
+| 24 | Operations P0 views over existing tables: Inbox, My Work, full Tenant and Customer 360, implementation and success-plan views (a metadata-only tenant and pilot operations read already exists on main; extend it, do not rebuild it) | 14, 17 | RG-28 | Each view reads a real table; capability-gated; no student rows |
+| 25 | Console controls for rollout, kill switch and release pause; operator incident declaration and commander (a `platform_incident` table and read view exist on main); role release gates and test matrix documents | 8, 9, 24 | RG-29, RG-30, RG-23 | Kill switch flipped from the Console with audit; `docs/finish-line/ROLE_SYSTEM_*` written from real evidence |
 
 ## First ten branches with acceptance criteria
 

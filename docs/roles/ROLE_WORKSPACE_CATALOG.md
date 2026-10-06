@@ -26,9 +26,9 @@ Do not read a row below as "the workspace exists for that role". Read the *Where
 
 ## Operations Command Center today
 
-Tabs: Command center, Support (needs `support:ticket` and the support flag), Approvals, Break-glass, Audit, Customers, Figures, Finance model, Releases and flags, Launch readiness (read-only record of the twelve launch gates and council seats, added on main after this audit began; it cannot clear a gate), Evidence, Views. Gated by `console:operate` read from `my_capabilities()`; the database enforces.
+Workspaces (`app/src/lib/console/workspaces.ts`, sixteen on main as of `d6179af6`): Command center, Support (needs `support:ticket`), Approvals, Break-glass, Audit, Tenant operations, Integration health, Release and incidents, Privacy, Customers, Figures, Finance, Releases and flags, Launch readiness (read-only record of the twelve launch gates and council seats), Evidence, Views. The list controls discoverability only; each reader authorizes at the server. Tenant operations, Integration health and Privacy derive tenants from live exact-school grants (`tenant:implement`, `integration:view`, `data_request:handle`) plus the platform console shell, and return metadata only. Gated by `console:operate` read from `my_capabilities()`; the database enforces.
 
-Not present: Inbox, My Work, Tenant directory and Tenant 360, Pilot workspace, Implementation, Customer health, Integration operations, Security, Privacy, Access reviews, Incidents, Vendors, People, Board, Partners, Developers. Tables exist for pilots (`gtm_pilots`, `gtm_pilot_metrics`), implementation (`implementation_projects`, `implementation_milestones`) and customer success (`success_plans`, `qbrs`, `renewal_opportunities`, `account_health_snapshots`) with no console view reading them.
+Not found: Inbox, My Work, a full Tenant 360, Implementation project views, Customer health, Security, Access reviews, an operator action to declare an incident, Vendors, People, Board, Partners, Developers. Tables exist for pilots (`gtm_pilots`, `gtm_pilot_metrics`), implementation (`implementation_projects`, `implementation_milestones`) and customer success (`success_plans`, `qbrs`, `renewal_opportunities`, `account_health_snapshots`) with no console view reading them.
 
 ## Staff tab gating
 

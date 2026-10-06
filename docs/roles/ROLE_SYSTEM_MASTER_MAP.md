@@ -1,6 +1,6 @@
 # Role system master map
 
-**As of** 2026-10-05 · **Base** `origin/main` `9a6d57e` (audit began at `3bd382d`; five commits landed meanwhile, reconciled in the gap register) · **Phase** 0, `audit/role-system-reconciliation` · **Status** audit evidence; nothing here is a release claim.
+**As of** 2026-10-05 · **Base** `origin/main` `d6179af6` (audit began at `3bd382d`; main moved twice meanwhile, reconciled in the gap register) · **Phase** 0, `audit/role-system-reconciliation` · **Status** audit evidence; nothing here is a release claim.
 
 > **Claim ceiling.** This audit was read from source, migrations, documents and a read-only look at the live Supabase project `lzrqvlugnawcgywkhqlz` (advisors and catalog queries only; no data rows read, nothing written). **No test, build or migration was run in this pass.** "A check exists" means a file exists that targets the behaviour, not that it passed. Anything not observed is marked UNVERIFIED. The live domain `www.semesterintel.tech` is served from a different Supabase project, so database findings describe `lzrqvlug…`, not what that domain serves ([`SEMESTER_SOURCE_OF_TRUTH.md`](../master/SEMESTER_SOURCE_OF_TRUTH.md)).
 
@@ -64,7 +64,7 @@ The numbered gaps are in [`ROLE_SYSTEM_GAP_REGISTER.md`](ROLE_SYSTEM_GAP_REGISTE
 6. **Offboarding leaves grants behind.** Deprovisioning revokes school-scoped grants only; organization, course, department and office grants survive. (RG-03)
 7. **There is no role-aware production shell and no tenant URL.** Routing is a hash router with no tenant or role in the URL; role workspaces exist only as a synthetic preview. Route boundaries check neither capability nor entitlement. (RG-12, RG-25)
 8. **Onboarding is student-only and unversioned.** No `onboarding_journeys` or `activation_*` table exists. (RG-26, RG-31)
-9. **P0 pilot workflows are uneven.** Registration transaction and student share-with-advisor are the most complete. Advisor caseload, referrals, Ops Inbox, My Work, Tenant 360, pilot and implementation views are not started. No adapter exists, so holds and completions cannot sync. (RG-24, RG-27, RG-28)
+9. **P0 pilot workflows are uneven.** Registration transaction and student share-with-advisor are the most complete. Advisor caseload and referrals are not started. In the Console, Ops Inbox, My Work, a full Tenant 360 and implementation views were not found; a metadata-only tenant and pilot operations read now exists. No adapter exists, so holds and completions cannot sync. (RG-24, RG-27, RG-28)
 10. **Operational single points.** One named owner for every seat, no backups, no production restore ever performed, branch ruleset not confirmed applied. (RG-16)
 
 ## Reusable pieces found (do not rebuild)

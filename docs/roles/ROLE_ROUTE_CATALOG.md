@@ -36,7 +36,7 @@ A role-blocked route redirects to home with no explanation; there is no shared f
 | `/app/t/:tenantSlug/advisor/*` (6) | None. `degree` carries the student side of advisor meeting mode |
 | `/app/t/:tenantSlug/registrar/*` (11) | `registration` Registrar tab covers terms, sections, requests and overrides; holds, records, degree-audit, graduation and reconciliation have no screen |
 | `/app/t/:tenantSlug/institution/*` (14) | `university` tabs; no overview, student-success, community-safety, career, identity, governance or portability screen |
-| `/app/ops/*` (about 38) | `console` tabs: Command center, Support, Approvals, Break-glass, Audit, Customers, Figures, Finance model, Releases and flags, Evidence, Views |
+| `/app/ops/*` (about 38) | `console` workspaces (sixteen on main): Command center, Support, Approvals, Break-glass, Audit, Tenant operations, Integration health, Release and incidents, Privacy, Customers, Figures, Finance, Releases and flags, Launch readiness, Evidence, Views |
 
 ## Public site
 

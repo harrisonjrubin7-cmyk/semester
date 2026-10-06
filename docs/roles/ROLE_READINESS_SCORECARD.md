@@ -15,7 +15,7 @@ The classification names are the brief's. "Native and verified" requires a migra
 | C. Student success and services | Mixed: native but incomplete (dining, support, moderation, listings); not started (advisor caseload) | Share-with-advisor is the only advisor flow | RG-27 |
 | D. Academic and institutional administration | Native but incomplete | Registration transaction and control-plane backends exist; SSO, SCIM, rollout and offboarding have no screens | RG-24, RG-01, RG-37 |
 | E. Commercial, partner, developer | Planned (developer, partner); native but incomplete (buyer intake, trust room) | No developer or partner principal | RG-22 |
-| F. Semester company | Native but incomplete | Console approvals, audit, support, break-glass exist and have not run in production; most console views not started | RG-05, RG-06, RG-28 |
+| F. Semester company | Native but incomplete | Console approvals, audit, support, break-glass exist and have not run in production; several console views not started; tenant, integration, privacy and release workspaces are read models | RG-05, RG-06, RG-28 |
 
 ## P0 workflows
 
@@ -31,9 +31,9 @@ The classification names are the brief's. "Native and verified" requires a migra
 | 8 | Advisor basics | Not started (caseload); native (student share) | | RG-27 |
 | 9 | Registrar registration readiness | Native but incomplete; integrated-only for official handoff | transaction, desk; no feed | RG-24 |
 | 10 | Institution admin configuration | Native but incomplete | Modules, Configuration Studio, membership | RG-17, RG-37 |
-| 11 | Ops Inbox, My Work, Approvals, Tenant and Customer 360, pilot, support | Mixed: support and approvals native; rest not started | | RG-28, RG-05 |
+| 11 | Ops Inbox, My Work, Approvals, Tenant and Customer 360, pilot, support | Mixed: support, approvals and a tenant and pilot operations read are native but incomplete; Inbox and My Work not found | tenant operations read on main | RG-28, RG-05 |
 | 12 | Integration registry, source and freshness, health, reconciliation | Native but incomplete; no adapter | `IntegrationDashboard`, `lib/integration/*` | RG-24 |
-| 13 | Rollout, flags, kill switch, incident runbook | Native but incomplete; static runbook | `tenant_rollout`, `feature_kill_switch` | RG-29, RG-30 |
+| 13 | Rollout, flags, kill switch, incident runbook | Native but incomplete; static runbook plus an incident table and read view | `tenant_rollout`, `feature_kill_switch`, `platform_incident` | RG-29, RG-30 |
 | 14 | Activation analytics without record content | Designed or documented only | | RG-31 |
 | 15 | Docs, tests, release gates, support procedures | Native but incomplete | 115 SQL checks; ruleset unconfirmed | RG-16 |
 

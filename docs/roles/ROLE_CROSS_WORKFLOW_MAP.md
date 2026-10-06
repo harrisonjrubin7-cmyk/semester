@@ -27,8 +27,8 @@ Step-level status for 17 workflows and 319 steps is in [`SEMESTER_WORKFLOW_CATAL
 | Break-glass | Request, close, review; four-hour cap; honoured by `has_capability` on a school | Never used in production |
 | Support | Student tickets, operator queue, reply with notification outbox and dead-letter, time-limited student-approved access | Support lead, SLA view |
 | Rollout and kill switch | `feature_kill_switch`, `tenant_feature_policy`, `tenant_rollout`; honoured by registration, dining, integration paths | Console control; release-level pause; engaged by table write today (RG-29) |
-| Incident | Static playbooks | Declaration, commander, comms, postmortem (RG-30) |
-| Pilot and implementation | Tables only | Views and workflows (RG-28) |
+| Incident | Static playbooks; `platform_incident` table with a read summary in the Console | Operator declaration, commander, comms, postmortem (RG-30) |
+| Pilot and implementation | Metadata-only Tenant and pilot operations read; implementation and pilot tables | Implementation project and success-plan views, workflows (RG-28) |
 
 ## Operator bypass to close first
 
