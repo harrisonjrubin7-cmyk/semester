@@ -35,14 +35,12 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 - [x] Leave-university and approve-join confirmations use `ActionPreview`, including whether the action can be taken back.
 - [x] `SchoolMembership.test.tsx` requires those sentences.
+- [x] Sign-out-other-devices uses `ActionPreview` and says the sign-out cannot be undone (`AccountSecurity.test.tsx`).
 
-## Named screens still absent
+## Named screens
 
 - [x] Term Plan — the Registration planner (`yes`). Tab and heading say Term plan. Cart conflicts render before the sections (`RegistrationPortal.conflicts.test.tsx`).
-- [ ] Advisor Caseload
-- [ ] Tenant Overview
-- [ ] Operations Inbox
-- [ ] Institutional Pilot page (claims register applies)
+- [x] Advisor Caseload, Tenant Overview, Operations Inbox, Institutional Pilot page — recorded in `SCREEN-PACKS.md` §4. The caseload list is blocked on institution data and consent. Tenant overview and the inbox exist in part and are not retitled. The pilot page is routed pages on the company site.
 
 ## Gates for this change
 
