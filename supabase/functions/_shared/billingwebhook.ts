@@ -44,7 +44,7 @@
  */
 import type { PaymentKind, SubscriptionStatus } from './stripe.ts';
 import { stripeMode } from './billingmode.ts';
-import { createStripeAdapter, MAX_EVENT_BYTES } from './payments/stripeadapter.ts';
+import { createStripeAdapter } from './payments/stripeadapter.ts';
 import type { NormalizedPaymentEvent, WebhookRefusal } from './payments/types.ts';
 
 export interface WebhookDeps {
@@ -70,7 +70,7 @@ export interface WebhookDeps {
 }
 
 /** Stripe events are a few kilobytes; this is generous and bounded. */
-export const MAX_WEBHOOK_BYTES = MAX_EVENT_BYTES;
+export const MAX_WEBHOOK_BYTES = 256 * 1024;
 
 const HEADERS = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } as const;
 

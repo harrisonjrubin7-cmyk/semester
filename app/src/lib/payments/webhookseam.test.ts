@@ -2,6 +2,8 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { MAX_WEBHOOK_BYTES } from '../../../../supabase/functions/_shared/billingwebhook';
+import { MAX_EVENT_BYTES } from '../../../../supabase/functions/_shared/payments/stripeadapter';
 
 const SRC = readFileSync(join(__dirname, '../../../../supabase/functions/_shared/billingwebhook.ts'), 'utf8');
 
@@ -26,6 +28,14 @@ describe('the billing webhook handler, as a file', () => {
   it('answers each refusal in the sentence it always used', () => {
     // The three signature failures stay one sentence: the endpoint never says why.
     expect(SRC).toMatch(/missing: 'Invalid signature\.', stale: 'Invalid signature\.', mismatch: 'Invalid signature\.'/);
+  });
+
+  it('keeps the size bound the handler checks first equal to the bound the adapter checks itself', () => {
+    // The handler refuses an oversized body with a 413 before the adapter sees it, and
+    // EDGE-FUNCTIONS.md quotes the handler's literal. Two bounds that drifted apart would
+    // mean the adapter refused what the handler let through, or the reverse.
+    expect(MAX_WEBHOOK_BYTES).toBe(MAX_EVENT_BYTES);
+    expect(MAX_WEBHOOK_BYTES).toBe(256 * 1024);
   });
 
   it('control: the scan finds a planted reading of Stripe’s event shape', () => {
