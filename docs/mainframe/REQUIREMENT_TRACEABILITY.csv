@@ -1,0 +1,27 @@
+id,layer,requirement,spec_source,repository_evidence,status,notes
+MF-A1,A,Signup login SSO invitations recovery,semester-mainframe.pdf p1,gateway and account screens exist in app/server and app/src,partial,Live IdP and production session config unverified
+MF-A2,A,Role-aware onboarding and safe return,semester-mainframe.pdf p3; web-vs-native PDFs,FirstRun doors; rolejourney.ts; entry link commits on main,partial,Server-authoritative journey versions not proven for this plan
+MF-A3,A,First value without an account or app install,web-vs-native-bottom-line.pdf,FirstRun registration plan and by-hand course need no key,present,Device-local only
+MF-A4,A,No tokens in marketing URLs,web-vs-native-onboarding.pdf,Yes.tsx comment strips student id query params from copied YES links,partial,Full marketing-link audit not re-run this session
+MF-B1,B,Explicit workspace per role without merged privileges,semester-mainframe.pdf p3; role-flow.pdf,lib/role.ts forRole and screenForRole; rolejourney closedJourneys,partial,Client addressing is not server authorization
+MF-B2,B,Payer has no invented workspace,role-flow.pdf,rolejourney payer screen null,present,Bill sharing still requires a grant that this screen does not create
+MF-B3,B,Employees do not inherit student records,semester-mainframe.pdf p4,lib/rolelaunch.ts OPERATIONS_ONLY vs STUDENT_RECORD,present,Repository test only; production access review unverified
+MF-C1,C,Registration readiness checklist with authority boundary,semester-mainframe.pdf p5,components/RegistrationReadiness.tsx and lib/path-readiness.ts,partial,Checklist is preparation not clearance
+MF-C2,C,Device plan of course codes before a catalog,semester-mainframe.pdf p5,planpreview.ts PlanPreview FirstRun NamedPlan,present,This batch; not an enrollment
+MF-C3,C,Official enroll drop withdraw,semester-mainframe.pdf p5,screens/Registration.tsx behind module gate,partial,Copy says the school has not turned it on
+MF-C4,C,Learning assessment advising campus career family,semester-mainframe.pdf p3-4,matching screens under app/src/screens,partial,Presence of a screen is not record authority
+MF-D1,D,Shared authorization policy approval audit,semester-mainframe.pdf p4-5,docs/operations/SHARED_CONTROL_PLANE.md,partial,Roadmap: direct-write bypass F-1 still open
+MF-D2,D,Idempotent command with audit and outbox,semester-mainframe.pdf p5,approval machinery described in operations docs,partial,Outbox relay and production rows unverified
+MF-E1,E,Canonical records with source freshness authority,semester-mainframe.pdf p6,course.source Added by hand; portal importedAt; RegistrationReadiness institution line,partial,Graph metadata is not one queryable store
+MF-E2,E,Separate commercial billing and student accounts,semester-mainframe.pdf p7,operations roadmap finance vs student accounts rows,partial,No raw card storage observed in this change
+MF-F1,F,AI cannot enroll grade or move money alone,semester-mainframe.pdf p7,AI_BOUNDARIES.md; registration plan does not call a model,partial,Provider registry behavior not re-executed this session
+MF-G1,G,Institution control plane distinct from company command center,semester-mainframe.pdf p8,University screen vs #/console,partial,Institution command center operator view still a roadmap gap OP-14
+MF-G2,G,Founder dashboard is not unrestricted student access,semester-mainframe.pdf p8,rolelaunch.ts,present,Same limit as MF-B3
+MF-H1,H,Show SIS boundary and do not claim enrollment,semester-mainframe.pdf p6,Registration.tsx OFF copy; Term plan notice; NamedPlan sentence,present,Authoritative handoff still the school's system
+MF-H2,H,Mapping sync dual-run cutover rollback,semester-mainframe.pdf p9,docs/operations integration rows; migration files,partial,No cutover approved
+MF-X1,C,Four connection types stay explicit,connected-ecosystem.pdf p2,ECOSYSTEM_CONNECTIONS.md,partial,Experience and data lines exist for the device plan; workflow referral and operational routing are not built
+MF-X2,C,A planning choice is not enrollment,connected-ecosystem.pdf p4-5,path-readiness id named; Term plan NamedPlan,present,Named row stays attention even when a cart section exists
+MF-X3,C,Separate financial effect from enrollment,connected-ecosystem.pdf p5,operations roadmap keeps student accounts off company billing,partial,No payment workflow in this batch
+MF-X4,A,One account several memberships without merged records,connected-ecosystem.pdf p10,role.ts screenForRole; rolelaunch student-record boundary,partial,Cross-institution membership switching is not a tested server flow here
+MF-I1,I,Tenant isolation privacy accessibility retention,semester-mainframe.pdf p9,RLS in migrations; a11y label gate; design tokens,partial,Restore test and production isolation unverified
+MF-I2,I,Documented stack is not a live infrastructure audit,semester-mainframe.pdf p7,vercel.json app/server supabase/migrations,unverified,No hosted project was queried
