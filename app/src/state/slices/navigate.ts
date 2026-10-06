@@ -45,6 +45,9 @@ import { rememberOpened } from '../../lib/opened';
  * opposite of what was asked.
  */
 function doneScreen(state: State): Screen {
+  // A link that brought somebody here named where it was going: setup does not
+  // get to take that away. (`lib/entrycontext.ts`.)
+  if (state.afterSetup) return state.afterSetup;
   return state.courses.length === 0 ? 'import' : firstScreen(state.nav);
 }
 
@@ -283,14 +286,21 @@ export function navigate(state: State, action: Action): State | null {
      */
     case 'onbNext':
       return state.onb >= ONB_STEPS - 1
-        ? { ...state, screen: doneScreen(state), history: [], seenOnboarding: true, onb: 0 }
+        ? { ...state, screen: doneScreen(state), history: [], seenOnboarding: true, onb: 0, afterSetup: null }
         : { ...state, onb: state.onb + 1 };
 
     case 'restartOnboarding':
       return { ...state, screen: 'onboarding', history: [], onb: 0 };
 
     case 'finishOnboarding':
-      return { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 };
+      return {
+        ...state,
+        screen: state.afterSetup ?? firstScreen(state.nav),
+        history: [],
+        seenOnboarding: true,
+        onb: 0,
+        afterSetup: null,
+      };
 
     case 'openLesson':
       return push({ ...state, lessonUnit: action.unit }, 'lesson');

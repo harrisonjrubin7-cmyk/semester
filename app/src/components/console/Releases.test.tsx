@@ -120,3 +120,10 @@ it('filters by name or state, and says when nothing matches', async () => {
   expect(host.querySelectorAll('tbody tr')).toHaveLength(0);
   expect(host.textContent).toContain('No flags match.');
 });
+
+it('wraps every sentence-length cell in Prose, since the shared table keeps cells on one line and a sentence would overflow the window', async () => {
+  await mount();
+  const long = [...host.querySelectorAll('td')].filter((td) => (td.textContent ?? '').length > 60);
+  expect(long.length).toBeGreaterThan(0);
+  for (const td of long) expect(td.querySelector('[data-prose]'), (td.textContent ?? '').slice(0, 40)).not.toBeNull();
+});

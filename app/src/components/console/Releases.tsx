@@ -15,7 +15,7 @@ import { LANGUAGE_FLAG } from '../../lib/locale';
 import { LIFE_EVENTS_FLAG } from '../../lib/lifeevents';
 import { MOMENT_FEEDBACK_FLAG } from '../../lib/momentfeedback';
 import { LEARNER_PATHWAYS_FLAG } from '../../lib/learner-pathways';
-import { matches, type ViewProps } from './Fields';
+import { Prose, matches, type ViewProps } from './Fields';
 
 /**
  * What this build ships: the feature flags it was built with, from the four
@@ -212,7 +212,7 @@ const COLUMNS: Column<Row>[] = [
   { id: 'flag', header: 'Flag', rowHeader: true, cell: (r) => r.label },
   { id: 'state', header: 'State in this build', cell: (r) => <strong>{STATE_WORD[r.state]}</strong> },
   { id: 'group', header: 'Kind', cell: (r) => r.group },
-  { id: 'about', header: 'What it controls', cell: (r) => r.about ?? <span style={{ color: 'var(--app-dim)' }}>{UNDESCRIBED}</span> },
+  { id: 'about', header: 'What it controls', cell: (r) => <Prose>{r.about ?? <span style={{ color: 'var(--app-dim)' }}>{UNDESCRIBED}</span>}</Prose> },
 ];
 
 export function Releases({
