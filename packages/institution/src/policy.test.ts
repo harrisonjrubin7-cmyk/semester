@@ -468,3 +468,190 @@ describe('tasks and calendar', () => {
     expect(decide(read({ actor: { id: OWNER, type: 'user', authenticatedAt: later(-5) }, context: { ...read().context, consentGrants: [], purpose: undefined } }), NOW)).toEqual({ allow: true, obligations: [] });
   });
 });
+
+// ── Registration readiness and overrides ──────────────────────────────────
+
+const reg = (action: 'registration.readiness.view' | 'registration.override.request' | 'registration.override.approve') => {
+  const base: AuthorizationRequest = {
+    actor: { id: 'student-a', type: 'user', authenticatedAt: later(-5), mfaLevel: 'standard' },
+    tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+    action,
+    resource: { type: 'registration', id: 'reg-1', ownerId: 'student-a', classification: 'education_record', attributes: { tenantId: 'school-a' } },
+    context: {
+      membershipIds: ['m-student-a'], roleGrants: [], capabilities: [action], consentGrants: [], featureFlags: [],
+      policyVersions: { registration: '1' }, correlationId,
+    },
+  };
+  if (action === 'registration.override.request') {
+    base.resource.attributes = { tenantId: 'school-a', courseId: 'cs201', termId: '2026-fall' };
+    base.context.purpose = 'the prerequisite was completed at another school';
+    base.context.idempotencyKey = 'cmd-ovr-req';
+  }
+  if (action === 'registration.override.approve') {
+    base.actor = { id: 'registrar-1', type: 'user', authenticatedAt: later(-1), mfaLevel: 'fresh' };
+    base.resource.ownerId = 'student-a';
+    base.resource.attributes = { tenantId: 'school-a', requestState: 'pending_review', requestDigest: 'd1', reviewedDigest: 'd1', resourceVersion: 'v3', reviewedVersion: 'v3' };
+    base.context.roleGrants = [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }];
+    base.context.purpose = 'the department confirmed the equivalent course';
+    base.context.idempotencyKey = 'cmd-ovr-apr';
+  }
+  return base;
+};
+
+const withAttrs = (r: AuthorizationRequest, patch: Record<string, unknown>): AuthorizationRequest =>
+  ({ ...r, resource: { ...r.resource, attributes: { ...r.resource.attributes, ...patch } } });
+
+describe('registration.readiness.view', () => {
+  const advisor = (): AuthorizationRequest => {
+    const r = reg('registration.readiness.view');
+    r.actor = { id: 'advisor-1', type: 'user', authenticatedAt: later(-5) };
+    r.context.roleGrants = [{ role: 'academic_advisor', scopeKind: 'advisee', scopeId: 'student-a' }];
+    return r;
+  };
+  const registrar = (): AuthorizationRequest => {
+    const r = reg('registration.readiness.view');
+    r.actor = { id: 'registrar-1', type: 'user', authenticatedAt: later(-5) };
+    r.context.roleGrants = [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }];
+    return r;
+  };
+
+  it('allows the student, their assigned advisor and a registrar: the controls', () => {
+    for (const r of [reg('registration.readiness.view'), advisor(), registrar()]) expect(decide(r, NOW).allow).toBe(true);
+  });
+
+  it('refuses one thing changed at a time', () => {
+    const own = reg('registration.readiness.view');
+    refused({ ...own, actor: { ...own.actor, type: 'service' } }, 'actor_not_person');
+    refused({ ...own, context: { ...own.context, capabilities: [] } }, 'capability_missing');
+    refused({ ...own, resource: { ...own.resource, ownerId: undefined } }, 'owner_missing');
+    refused(withAttrs(own, { tenantId: 'school-b' }), 'cross_tenant');
+    refused(withAttrs(own, { tenantId: undefined }), 'cross_tenant');
+    // Someone else's record, with no relationship to the student.
+    refused({ ...own, resource: { ...own.resource, ownerId: 'student-b' } }, 'relationship_not_permitted');
+    // An advisor of a different student, and a registrar of a different institution.
+    const other = advisor();
+    other.resource.ownerId = 'student-b';
+    refused(other, 'relationship_not_permitted');
+    const away = registrar();
+    away.context.roleGrants = [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-b' }];
+    refused(away, 'relationship_not_permitted');
+    // An expired role grant is not a relationship.
+    const lapsed = advisor();
+    lapsed.context.roleGrants = [{ role: 'academic_advisor', scopeKind: 'advisee', scopeId: 'student-a', expiresAt: later(-1) }];
+    refused(lapsed, 'relationship_not_permitted');
+  });
+
+  it('is audited with its sources and freshness, and each relationship gets its own field list', () => {
+    const fields = (r: AuthorizationRequest) => {
+      const d = decide(r, NOW);
+      expect(d.allow && d.obligations.map((o) => o.type)).toEqual(['audit', 'limit_fields', 'cite_sources']);
+      const limit = d.allow ? d.obligations.find((o) => o.type === 'limit_fields') : undefined;
+      return limit && limit.type === 'limit_fields' ? limit.allowlist : [];
+    };
+    const audit = decide(reg('registration.readiness.view'), NOW);
+    expect(audit.allow && audit.obligations[0]).toEqual({ type: 'audit', eventType: 'registration.readiness_viewed' });
+    expect(fields(reg('registration.readiness.view'))).toContain('holds');
+    expect(fields(registrar())).toContain('holds');
+    expect(fields(advisor())).not.toContain('holds');
+    for (const r of [reg('registration.readiness.view'), advisor(), registrar()]) {
+      expect(fields(r)).toEqual(expect.arrayContaining(['status', 'asOf', 'sources', 'freshness']));
+    }
+  });
+
+  it('authorizes a reader whose data is missing: unknown is the evaluator\'s finding, not a refusal', () => {
+    const r = reg('registration.readiness.view');
+    expect(r.resource.attributes).toEqual({ tenantId: 'school-a' });
+    expect(decide(r, NOW).allow).toBe(true);
+  });
+});
+
+describe('registration.override.request', () => {
+  it('allows the student to ask, with an audit and a human review: the control', () => {
+    const d = decide(reg('registration.override.request'), NOW);
+    expect(d.allow && d.obligations).toEqual([{ type: 'audit', eventType: 'registration.override_requested' }, { type: 'human_review' }]);
+  });
+
+  it('refuses one thing changed at a time', () => {
+    const r = reg('registration.override.request');
+    refused({ ...r, actor: { ...r.actor, type: 'service' } }, 'actor_not_person');
+    refused({ ...r, context: { ...r.context, capabilities: [] } }, 'capability_missing');
+    refused(withAttrs(r, { tenantId: 'school-b' }), 'cross_tenant');
+    refused({ ...r, resource: { ...r.resource, ownerId: 'student-b' } }, 'not_owner');
+    refused({ ...r, context: { ...r.context, idempotencyKey: undefined } }, 'idempotency_missing');
+    refused({ ...r, context: { ...r.context, purpose: undefined } }, 'purpose_missing');
+    refused(withAttrs(r, { courseId: '' }), 'request_incomplete');
+    refused(withAttrs(r, { termId: undefined }), 'request_incomplete');
+  });
+
+  it('is not made by an advisor or a registrar on the student\'s behalf', () => {
+    const r = reg('registration.override.request');
+    r.actor = { id: 'registrar-1', type: 'user', authenticatedAt: later(-1) };
+    r.context.roleGrants = [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }];
+    refused(r, 'not_owner');
+  });
+});
+
+describe('registration.override.approve', () => {
+  it('allows a registrar with fresh authentication, audited, confirmed, reconciled and notified: the control', () => {
+    const d = decide(reg('registration.override.approve'), NOW);
+    expect(d.allow && d.obligations.map((o) => o.type)).toEqual(['audit', 'require_confirmation', 'reconcile', 'notify']);
+    expect(d.allow && d.obligations[0]).toEqual({ type: 'audit', eventType: 'registration.override_granted' });
+  });
+
+  it('refuses one thing changed at a time', () => {
+    const r = reg('registration.override.approve');
+    refused({ ...r, actor: { ...r.actor, type: 'integration' } }, 'actor_not_person');
+    refused({ ...r, context: { ...r.context, capabilities: [] } }, 'capability_missing');
+    refused({ ...r, resource: { ...r.resource, ownerId: undefined } }, 'owner_missing');
+    refused(withAttrs(r, { tenantId: 'school-b' }), 'cross_tenant');
+    refused({ ...r, context: { ...r.context, roleGrants: [] } }, 'reviewer_not_authorized');
+    refused({ ...r, context: { ...r.context, roleGrants: [{ role: 'academic_advisor', scopeKind: 'advisee', scopeId: 'student-a' }] } }, 'reviewer_not_authorized');
+    refused({ ...r, context: { ...r.context, roleGrants: [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-b' }] } }, 'reviewer_not_authorized');
+    refused({ ...r, context: { ...r.context, roleGrants: [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a', expiresAt: later(-1) }] } }, 'reviewer_not_authorized');
+    refused({ ...r, resource: { ...r.resource, ownerId: 'registrar-1' } }, 'self_approval');
+    refused(withAttrs(r, { requestState: 'approved' }), 'request_not_pending');
+    refused({ ...r, context: { ...r.context, idempotencyKey: undefined } }, 'idempotency_missing');
+    refused({ ...r, context: { ...r.context, purpose: undefined } }, 'purpose_missing');
+  });
+
+  it('refuses an approval that is not bound to what was reviewed, or that has gone stale', () => {
+    const r = reg('registration.override.approve');
+    for (const key of ['requestDigest', 'reviewedDigest', 'resourceVersion', 'reviewedVersion']) refused(withAttrs(r, { [key]: undefined }), 'approval_unbound');
+    refused(withAttrs(r, { reviewedDigest: 'seen-earlier' }), 'approval_stale');
+    refused(withAttrs(r, { reviewedVersion: 'v2' }), 'approval_stale');
+    refused(withAttrs(r, { requestDigest: '' }), 'approval_unbound');
+  });
+
+  it('allows a reviewer without fresh authentication with the obligation to re-authenticate, and only after every refusal above', () => {
+    const r = reg('registration.override.approve');
+    for (const mfaLevel of ['none', 'standard', undefined] as const) {
+      const d = decide({ ...r, actor: { ...r.actor, mfaLevel } }, NOW);
+      expect(obligationTypes(d)[0], String(mfaLevel)).toBe('require_fresh_mfa');
+    }
+    // A reviewer who would be refused is refused, not asked to authenticate first.
+    refused({ ...r, actor: { ...r.actor, mfaLevel: 'none' }, context: { ...r.context, roleGrants: [] } }, 'reviewer_not_authorized');
+    refused({ ...withAttrs(r, { reviewedDigest: 'old' }), actor: { ...r.actor, mfaLevel: 'none' } }, 'approval_stale');
+  });
+
+  it('the student\'s own approval is refused even with every other fact in order', () => {
+    const r = reg('registration.override.approve');
+    r.actor = { id: 'student-a', type: 'user', authenticatedAt: later(-1), mfaLevel: 'fresh' };
+    r.context.roleGrants = [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }];
+    refused(r, 'self_approval');
+  });
+});
+
+describe('the three registration actions in the vocabulary', () => {
+  it('each names an audit event the event vocabulary knows, and sits at the education-record ceiling', async () => {
+    const { isEventType } = await import('./events.ts');
+    for (const action of ['registration.readiness.view', 'registration.override.request', 'registration.override.approve'] as const) {
+      expect(isEventType(POLICY_ACTIONS[action].auditEvent), action).toBe(true);
+      expect(POLICY_ACTIONS[action].classificationCeiling).toBe('education_record');
+    }
+  });
+
+  it('the demo cannot touch the records these read, and a record above the ceiling is refused', () => {
+    const r = reg('registration.readiness.view');
+    refused({ ...r, tenant: { ...r.tenant, environment: 'demo' } }, 'demo_cannot_touch_records');
+  });
+});

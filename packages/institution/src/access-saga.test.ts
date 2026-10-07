@@ -20,6 +20,7 @@ import {
   operationKey,
   requestDigest,
   validIdempotencyKey,
+  sagaOutcomeOf,
   validateAccessRequest,
   type AccessEvent,
   type AccessSaga,
@@ -31,6 +32,7 @@ import {
   type Services,
   type Store,
 } from './access-saga.ts';
+import { decide, isPolicyAction, type AuthorizationRequest } from './policy.ts';
 import { transition, walk } from './workflow.ts';
 
 const T0 = Date.parse('2026-10-06T12:00:00Z');
@@ -796,5 +798,51 @@ describe('a call that outlives its timeout', () => {
 
   it('treats a call that throws synchronously as the participant failing, not the worker', async () => {
     await expect(withTimeout(50, () => { throw new Fault('BOOM', false); })).rejects.toMatchObject({ code: 'BOOM' });
+  });
+});
+
+describe('the access-request actions and the policy that decides them', () => {
+  it('every action the request schema names is an action `decide` has a rule for', () => {
+    for (const action of ACCESS_REQUEST_ACTIONS) expect(isPolicyAction(action), action).toBe(true);
+  });
+
+  const NOW_ISO = '2026-10-06T12:00:00Z';
+  const readiness = (over: Partial<AuthorizationRequest['actor']> = {}): AuthorizationRequest => ({
+    actor: { id: 'student-1', type: 'user', authenticatedAt: '2026-10-06T11:55:00Z', ...over },
+    tenant: { id: 'school-a', environment: 'production', verifiedBy: 'membership' },
+    action: 'registration.override.approve',
+    resource: {
+      type: 'override_request', id: 'ovr-1', ownerId: 'student-2', classification: 'education_record',
+      attributes: { tenantId: 'school-a', requestState: 'pending_review', requestDigest: 'd1', reviewedDigest: 'd1', resourceVersion: 'v3', reviewedVersion: 'v3' },
+    },
+    context: {
+      membershipIds: ['m1'], roleGrants: [{ role: 'registrar', scopeKind: 'tenant', scopeId: 'school-a' }],
+      capabilities: ['registration.override.approve'], consentGrants: [], featureFlags: [], policyVersions: {},
+      purpose: 'prerequisite waived by the department', idempotencyKey: 'cmd-test-idem', correlationId: 'req-0123456789abcdef',
+    },
+  });
+
+  it('maps a denial to deny, a step-up obligation to require_step_up, and a plain allow to allow', () => {
+    const now = Date.parse(NOW_ISO);
+    expect(sagaOutcomeOf(decide(readiness({ mfaLevel: 'fresh' }), now))).toBe('allow');
+    expect(sagaOutcomeOf(decide(readiness({ mfaLevel: 'standard' }), now))).toBe('require_step_up');
+    expect(sagaOutcomeOf(decide(readiness({ mfaLevel: 'none' }), now))).toBe('require_step_up');
+    const denied = readiness({ mfaLevel: 'fresh' });
+    denied.context.capabilities = [];
+    expect(sagaOutcomeOf(decide(denied, now))).toBe('deny');
+  });
+
+  it('never asks a request that would be refused anyway to step up first', () => {
+    const now = Date.parse(NOW_ISO);
+    for (const [what, mutate] of [
+      ['another institution', (r: AuthorizationRequest) => { r.resource.attributes = { ...r.resource.attributes, tenantId: 'school-b' }; }],
+      ['no registrar grant', (r: AuthorizationRequest) => { r.context.roleGrants = []; }],
+      ['approving their own', (r: AuthorizationRequest) => { r.resource.ownerId = 'student-1'; }],
+      ['a stale review', (r: AuthorizationRequest) => { r.resource.attributes = { ...r.resource.attributes, reviewedDigest: 'old' }; }],
+    ] as const) {
+      const r = readiness({ mfaLevel: 'none' });
+      mutate(r);
+      expect(sagaOutcomeOf(decide(r, now)), what).toBe('deny');
+    }
   });
 });
