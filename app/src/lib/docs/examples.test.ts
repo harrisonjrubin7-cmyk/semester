@@ -786,6 +786,8 @@ describe('examples/event-consumer', () => {
       'supabase/migrations/20261004180000_productivity_reads.sql',
       // Defines the same commit function again, with the app's task fields; the later definition is the one that applies.
       'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
+      // The helper a SQL producer will call (P1-02), not a producer: nothing calls it yet. Its check calls the helper, so it is not listed.
+      'supabase/migrations/20261006170000_emit_domain_event.sql',
       'supabase/outbox.check.sql',
       'supabase/productivity-commands.check.sql',
       // Writes one row of its own to prove the old columns still default after the claim columns were added; it is a check, not a producer.
