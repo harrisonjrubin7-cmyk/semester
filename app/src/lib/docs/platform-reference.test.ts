@@ -1226,12 +1226,12 @@ describe('EVENTS.md and its schemas (generated)', () => {
   const source = read(EVENTS_SRC);
   const groups = eventGroups(source);
 
-  it('the catalog reads as 9 groups holding every type exactly once', () => {
-    expect(groups.map((g) => g.name)).toEqual(['Identity', 'Student and action', 'Tasks and calendar', 'LMS', 'Integration', 'AI', 'Support and security', 'Commercial', 'Credential']);
+  it('the catalog reads as 10 groups holding every type exactly once', () => {
+    expect(groups.map((g) => g.name)).toEqual(['Identity', 'Student and action', 'Tasks and calendar', 'LMS', 'Integration', 'AI', 'Registration', 'Support and security', 'Commercial', 'Credential']);
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(58);
+    expect(all.length).toBe(61);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {

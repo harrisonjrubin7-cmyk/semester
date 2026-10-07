@@ -116,6 +116,10 @@ export const EVENT_TYPES = {
   'ai.feedback_submitted': spec(1, 'student_private', 'operational'),
   'ai.incident_detected': spec(1, 'internal', 'audit'),
   'ai.kill_switch_changed': spec(1, 'internal', 'audit'),
+  // Registration. Payloads carry ids and versions, not the checklist or the reason.
+  'registration.readiness_viewed': spec(1, 'education_record', 'audit'),
+  'registration.override_requested': spec(1, 'education_record', 'audit'),
+  'registration.override_granted': spec(1, 'education_record', 'audit'),
   // Support and security
   'support.ticket_created': spec(1, 'student_private', 'operational'),
   'support.access_granted': spec(1, 'student_private', 'audit'),

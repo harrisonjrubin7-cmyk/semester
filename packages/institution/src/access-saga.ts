@@ -36,6 +36,7 @@
  * AsyncAPI from the PDFs are not adopted: see `docs/decisions/D-1338.md`.
  */
 
+import type { AuthorizationDecision } from './policy.ts';
 import { transition, type WorkflowDefinition } from './workflow.ts';
 
 export const ACCESS_SAGA_STATES = [
@@ -135,6 +136,24 @@ export interface AccessSaga {
 export interface Decision {
   id: string;
   outcome: 'allow' | 'deny' | 'require_step_up' | 'require_approval';
+}
+
+/**
+ * The saga's word for what `decide` returned. A denial is `deny`. An allow
+ * that carries `require_fresh_mfa` is `require_step_up`: `decide` expresses
+ * step-up as an obligation on an allow, not as an outcome of its own, and the
+ * saga waits for the stronger authentication before it prepares anything. Any
+ * other allow is `allow`. `require_approval` is not produced here: an approval
+ * is its own action (`registration.override.approve`) decided for a different
+ * person, not a precondition `decide` attaches to the first.
+ *
+ * Because `decide` refuses a wrong institution, a missing relationship or a
+ * missing capability before any rule returns an allow, a request that would be
+ * refused anyway is never asked to step up.
+ */
+export function sagaOutcomeOf(decision: AuthorizationDecision): Decision['outcome'] {
+  if (!decision.allow) return 'deny';
+  return decision.obligations.some((o) => o.type === 'require_fresh_mfa') ? 'require_step_up' : 'allow';
 }
 
 export interface Grant {
@@ -576,7 +595,7 @@ export class AccessSagaRunner {
 
 // ── The request body and idempotency ──────────────────────────────────────
 
-/** The actions the access-request schema names. Each needs a rule in `policy.ts` before `decide` will allow it. */
+/** The actions the access-request schema names. Each has a rule in `policy.ts`; `access-saga.test.ts` fails if one loses it. */
 export const ACCESS_REQUEST_ACTIONS = ['registration.readiness.view', 'registration.override.request', 'registration.override.approve'] as const;
 
 /**

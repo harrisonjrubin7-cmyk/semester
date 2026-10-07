@@ -23,6 +23,9 @@
       "$ref": "urn:semester:events:ai"
     },
     {
+      "$ref": "urn:semester:events:registration"
+    },
+    {
       "$ref": "urn:semester:events:support-and-security"
     },
     {
