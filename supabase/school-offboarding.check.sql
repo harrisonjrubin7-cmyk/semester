@@ -98,7 +98,10 @@ begin
   op1 := pg_temp.newuser('op1@ops.example', null);
   op2 := pg_temp.newuser('op2@ops.example', null);
   op3 := pg_temp.newuser('op3@ops.example', null);
-  insert into public.app_admins (user_id) values (op1), (op2), (op3);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
+    (op1, 'platform_admin', 'platform', '', 'platform'),
+    (op2, 'platform_admin', 'platform', '', 'platform'),
+    (op3, 'platform_admin', 'platform', '', 'platform');
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (n_admin,  'university_admin', 'school', 'north-off', 'institution'),
     (n_admin2, 'university_admin', 'school', 'north-off', 'institution'),
