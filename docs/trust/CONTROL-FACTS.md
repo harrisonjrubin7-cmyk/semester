@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 201 |
+| Migration files | 202 |
 | Tables created in `public` and not later dropped | 333 |
 | … of which enable row-level security in a migration | 333 |
 | Tables created in `private` and not later dropped | 35 |
@@ -33,7 +33,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
 | `supabase/academic-record.check.sql` | The academic-record ledger (D-145): who may propose, decide and read; that nobody writes the ledger but the approval of someone other than the proposer; that each entry names the entry and value it r… |
-| `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006170000_access_saga_store). |
+| `supabase/access-saga-store.check.sql` | The access saga's durable store (20261006180000_access_saga_store). |
 | `supabase/access.check.sql` | The log of who read your rows, which is only worth anything if it is yours. |
 | `supabase/activity.check.sql` | The pilot's three figures: what the ping may write, and what it may not. |
 | `supabase/admins.check.sql` | The admin list, and the account_role column that is deliberately not it. |

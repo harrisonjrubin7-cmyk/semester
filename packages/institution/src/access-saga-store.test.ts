@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ACCESS_REQUEST_ACTIONS, ACCESS_SAGA, ACCESS_SAGA_STATES } from './access-saga.ts';
 
-const sql = readFileSync(new URL('../../../supabase/migrations/20261006170000_access_saga_store.sql', import.meta.url), 'utf8');
+const sql = readFileSync(new URL('../../../supabase/migrations/20261006180000_access_saga_store.sql', import.meta.url), 'utf8');
 
 const quoted = (text: string): string[] => [...text.matchAll(/'([A-Za-z_.]+)'/g)].map((m) => m[1]);
 

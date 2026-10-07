@@ -164,7 +164,7 @@ Its SQL is not adopted: the tables are scaffolding by its own account (no foreig
 | C-3 | The PDF's ten connection acceptance tests (authorized path, unauthorized role, other tenant, revoked membership, stale input, duplicate, timeout, partial completion, accessibility, lifecycle end) as a shape every cross-domain connection's test file must meet | `engineering` | A test fails when a catalogued connection lacks a rung |
 | C-4 | Seven connection states (`confirmed`, `pending_authoritative_confirmation`, `projection_updating`, `source_stale`, `action_blocked`, `connection_degraded`, `reconciliation_required`) as one shared vocabulary beside `lib/status.ts` | `design` | Decided against the existing status vocabulary before any screen uses one |
 | C-5 | Policy rules for the three `registration.*` actions: done. Still open: the pilot's outcome states and ten-step order, reconciled with the registration engine's check order (N-3), and confirming the proposed roles, scopes and field lists | `product` | Rules landed; owner confirms the vocabulary |
-| C-6 | Tables and functions for the saga's `Store` are written, inert and service-only (`20261006170000_access_saga_store.sql`, proved by `access-saga-store.check.sql`); merging applies them to the connected project, so the owner decides when. Still open: the TypeScript `Store` adapter over them, the revocation barrier at a real enforcement point, and the store-side crash rehearsals through the adapter | `engineering` | The adapter passes the runner's tests against this database |
+| C-6 | Tables and functions for the saga's `Store` are written, inert and service-only (`20261006180000_access_saga_store.sql`, proved by `access-saga-store.check.sql`); merging applies them to the connected project, so the owner decides when. Still open: the TypeScript `Store` adapter over them, the revocation barrier at a real enforcement point, and the store-side crash rehearsals through the adapter | `engineering` | The adapter passes the runner's tests against this database |
 
 The access saga has no caller yet: nothing persists a saga row and no route asks for one.
 
@@ -197,3 +197,105 @@ Everything else (route tables, company module map) restates existing domains and
 | B-4 | The twelve access tests as one named list, each pointing at the test that holds it or marked unheld | `engineering` | A test fails when a rung has neither |
 
 Not adopted: the SQL as written (it would add a second grant model beside `role_grants`), and the Mermaid diagrams (nothing here renders or validates them).
+
+## Seventeenth PDF: "every document, function, capability, screen, role, scheme" (2026-10-06)
+
+A Perplexity-generated master map (21 pp, read in full) answering "list everything, as one system". It says of itself that it is a target architecture and checklist, not a claim about the repository. **No new domain.** Its eight parts map onto catalogs that already exist:
+
+| PDF part | Where it already lives |
+| --- | --- |
+| 1 Platform structure (public, education, institution, company, application operations, shared services) | `SEMESTER_PLATFORM_ECOSYSTEM.md`, `SEMESTER_COMPANY_OPERATING_SYSTEM.md`, `SEMESTER_COMPLETE_CATALOG.md` |
+| 2 Domain and screen inventory (about 130 rows over five areas) | `SEMESTER_DOMAIN_CATALOG.md` (40 domains), `SEMESTER_SCREEN_CATALOG.md` |
+| 3 Master document register (31 document families), document control rules | `docs/company/` and `SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md`; the control rules are the "document control" entry already listed in `SEMESTER_COMPANY_OPERATING_SYSTEM.md` |
+| 3 Role inventory (19 role families) and the actor + membership + scope + action + policy + approval rule | `SEMESTER_ROLE_CATALOG.md`; the rule is the PEP/PDP split in ADR 0007 |
+| 4 Schema map, command path, twelve end-to-end workflows | `SEMESTER_DATA_AUTHORITY_MATRIX.md`, `SEMESTER_WORKFLOW_CATALOG.md`, `CONTROLLED_ACTION_PATTERNS.md` |
+| 5 Nine readiness gates | The twenty gates in `SEMESTER_DOMAIN_REPLACEMENT_GATES.md` (the nine are a coarser grouping of them) |
+
+> **Claim ceiling.** Counts below come from a grep of `supabase/migrations`, `app/src` and `packages`, not from the live project.
+
+### What main does not cover (the real delta)
+
+| # | Item in the PDF | Finding | Class |
+| --- | --- | --- | --- |
+| R-1 | A **capability registry entry** per capability (`capability_id`, domain, owner, workspace, routes, actors, permissions, records, commands, events, requirements, dependencies, evidence) | `capability_id` appears nowhere. Live `app_capabilities` rows are permission names, not completeness records; none links a capability to its routes, tests and runbook | Designed/documented only; gap |
+| R-2 | Record-level fields: `record_version`, `retention_policy_id`, `workflow_instance_id`, `effective_from/until` | `record_version`, `retention_policy_id` and `workflow_instance_id` appear in no migration; `effective_from` in 3; `classification` in 23 and `legal_hold` in 8. Overlaps N-1 (the 16 graph attributes) and the third PDF's 11-field envelope | Partly native; fold into N-1, do not add a fourth list |
+| R-3 | Twelve linked registries (capability, screen/route, role/permission, schema, API/command, event, workflow, document, integration, service, metric, control/evidence) | Nine of the twelve have a home (screens, roles, data authority, interoperability, workflows, risk, release evidence, component registry from C-1); **no capability registry (R-1), no metric registry, no document registry** | Not started for three |
+| R-4 | Workspace route families `/institution/*`, `/account/*`, `/company/*`, `/ops/*`, `/developers/*` | Proposed, as the PDF says. A grep for those route literals under `app/src` found none; the repo's own route map is the screen catalog, which was not re-derived here | Unverified; do not adopt names before the route map is checked |
+| R-5 | Universal screen requirements (ten items) and the eight screen types (overview, queue, detail, create/edit, review, history, settings, reporting) | The ten items are the existing state and accessibility contract in `CLAUDE.md` plus `RECOVERY-STATE-LIBRARY.md`; the eight screen types are not a field in the screen catalog | Native but incomplete |
+
+### Not adopted
+
+| Proposed | Decision |
+| --- | --- |
+| "One system" as a single shared database | The PDF itself says no; company finance and student education records stay separately scoped (see `SEMESTER_DATA_AUTHORITY_MATRIX.md`) |
+| NIST CSF 2.0 six functions as the security organizing principle | Already the frame in `expansionregister.ts` and `expansiongovernance.ts`; no change |
+| Billing failure should not automatically block all academic access | A policy question, not checked against code here; belongs with the commercial-readiness owner. No change |
+| Citation 10, `projects.semester.operations_console` | Not a URL or a source; a stray token in the PDF's reference list. Nothing to follow up |
+
+### Proposed backlog additions
+
+| ID | Item | Owner seat | Closed when |
+| --- | --- | --- | --- |
+| R-1 | Decide whether a capability registry exists beside `app_capabilities`, and if so its schema (start from the PDF's example `institution.member.invite`) | `engineering` | Decision recorded as `docs/decisions/D-<pull request number>.md` |
+| R-2 | Add `record_version`, `retention_policy_id`, `workflow_instance_id` and effective dating to N-1's matrix as blank-marked columns | `data` | Part of N-1; no separate matrix |
+| R-3 | Decide whether a metric registry and a document registry are needed, or are the outcome-measurement and `docs/company/` indexes | `product` | Decision recorded |
+| R-4 | Check the five proposed route families against the real route map before any are used in a doc as names | `design` | One table of proposed-to-actual routes |
+
+## Eighteenth PDF: "Unified enterprise architecture map" (2026-10-06)
+
+`Unified_enterprise_architecture_map__semester_busi…` (17 pp, read in full). It calls itself "a proposed implementation design — not an audit of your current code or database" and asks to "extend existing working modules rather than replacing them simply to match these names." Its step 1 is "map existing routes, tables, APIs, and policies against this blueprint"; this is that step. **No new domain.** Its thesis (one governed platform, role-specific frontends, company operations that do not gain unrestricted access to education records) is the doctrine of `SEMESTER_TRUST_AND_GOVERNANCE_MODEL.md` and `SEMESTER_COMPANY_OPERATING_SYSTEM.md`. Nothing was built from it, and no migration was written or applied. It is a different PDF from the sixteenth (13 pp, RLS and document state machine) and the seventeenth (21 pp, the all-in-one map); the two overlap on documents and assignments, noted against U-2 and U-3 below.
+
+> **Claim ceiling.** "Not found" is a grep of `supabase/migrations` (199 files, 331 distinct `create table` names, all in `public` except a `private` schema) for the PDF's table name and for obvious equivalents, plus `app/src` and `docs` where stated. A table that exists under a name this grep did not try would be missed. Nothing was run against a database.
+
+### Blueprint concept → what main has
+
+| Blueprint | On main | Class |
+| --- | --- | --- |
+| Three record scopes (personal / institution / company); "a missing tenant must not mean everyone can access this" | Tenancy is `tenant_id text` (and `school_id` on `profiles`) `references public.schools`. By a grep of declarations, about 150 are `not null` or a primary key and about 25 are nullable (some of the 25 are columns returned by a view or function, not stored). Nullable ones include `profiles.school_id` (`20260921170000_schools.sql:79`), where null means "claimed nothing" and `private.same_school` is written so `null = null` is not a match, with a comment saying why; `onboarding_assignments.tenant_id`, which the uniqueness index handles with `coalesce(tenant_id, '')`; and several audit, governance and console tables where null plausibly means a platform-level row. I read how `profiles.school_id` is handled and no other | Native in part. The concern is real for the rest and is not audited (**U-7**) |
+| `core.workspaces` (`kind`, `organization_id` nullable only for personal, `owner_user_id` only for personal, with constraints) | No such table. Context is carried by `schools`, `organizations`, `organization_members`, `institution_membership`, `billing_account_tenants` | Not started; whether it is wanted is **U-1** |
+| Identity and authorization tables (`memberships`, `roles`, `permissions`, `role_assignments`, `access_grants`, `access_reviews`) | `app_roles`, `app_capabilities`, `role_capabilities`, `role_grants` (+ `role_grant_audit_event`), `institution_membership`, `break_glass_grant`, `support_access_grant`, `approval_request`/`approval_decision`, `trust_room_grants`, `family_grants`, `advisor_shares` | Native; different names, finer-grained than the PDF's six |
+| "Course access requires course-specific relationships, not just an institution-wide faculty role" | `registration_*` and `enrollments` are tenant-keyed; no `teaching_assignments` table | Student side native; faculty-per-section authority not found (**U-3**) |
+| Composite tenant-aware foreign keys ("a section in one institution must not reference an enrollment in another") | Present where it was needed: `registration_transaction.sql:129` (`(tenant_id, term)`), `roster_import_staging.sql` (`(batch_id, tenant_id)`, three places) | Native in the newer tables; not audited across the older ones |
+| `account_organization_links` ("one customer agreement can cover multiple institutions") | `billing_account_tenants` | Native under another name; whether it is many-to-many was not read |
+| Contracts: draft → review → signature → activation, "each signature must refer to the exact document version reviewed" | `contracts` has `version`, a status ladder `draft`/`legal_review`/`out_for_signature`/`signed`/`superseded`/…, `signed_at`, and `document_ref` ("metadata only; never the file"); `quotes`, `quote_lines`, `implementation_projects`, `implementation_milestones` exist | Native but incomplete: a signature points at a contract row, not at an immutable document version with a checksum (no `document_versions`, `signature_evidence` found) (**U-2**) |
+| Commerce: subscriptions, entitlements, invoices, payments, credits | `subscriptions`, `subscription_entitlements`, `entitlement_definitions`, `plan_entitlements`, `invoices`, `invoice_lines`, `payment_events`, `payment_rails`, `dunning_cases`, `renewal_opportunities`, `account_health_snapshots`, `student_account_*` | Native |
+| Support: case, affected resource, "authorized diagnostic session … does not automatically grant access to submissions, grades" | `support_tickets`, `support_ticket_messages`, `support_shares`, `support_access_grant`, `support_access_event`, `break_glass_grant`; the `console:operate` boundary is in recent history | Native; the PDF's company-to-product table is a good test fixture (**U-5**) |
+| Learning: `modules`, `content_items`, `assignments`, `rubrics`, `submissions`, `submission_files`, `assessments`, `grade_entries`, `grade_revisions`, `feedback`, `announcements` | `grade_entries`, `gradebook_items`, `gradebook_schemes`, `gradebook_operations`, `grade_passbacks`, `regrade_requests`/`regrade_resolutions`, `lti_link_ticket` exist. **No `assignments`, `submissions`, `rubrics`, `modules`, `announcements` table.** `grade_revisions` is not a table either, though regrades are recorded | Not started server-side; whether Semester owns these or the LMS does is **U-3** |
+| "Separate working grades from institution-authoritative final grades; define an approval or synchronization workflow" | `grade_passbacks` is the synchronization record; `SEMESTER_DATA_AUTHORITY_MATRIX.md` assigns authority | Native in part |
+| Company finance: `journal_entries`, `journal_lines`, `ledger_accounts`, `bank_transactions`, `reconciliations`, `expenses` | None found. `docs/DO-NOT-BUILD.md` names none of them either | Not started and not ruled out (**U-4**) |
+| Procurement (`vendors`, `purchase_orders`) and People (`employees`, `candidates`, `training_records`) | None found. `onboarding_assignments` is customer onboarding, not employee onboarding | Not started; same decision (**U-4**) |
+| Documents: `docs.documents`, `templates`, `files`, `document_links`, `retention_rules`, `legal_holds` | Retention and holds exist for privacy cases (`hold_gated_sweeps`, `privacy_case_workspace`); no general document service | Native for one use; the general form is **U-2** |
+| Workflow: `definitions`, `instances`, `step_instances`, `approvals`, `transition_history` | `workflow_versions`, `approval_request`/`approval_decision`, `module_mode_request`/`module_mode_approval`, `institution_actions` and `_progress`, `migration_approvals`; no instance/step/transition-history tables | Native for specific flows; no generic engine; the same finding as **C-2** |
+| Events: outbox with processing receipts | `domain_outbox_events`; no relay | Same as gap register #1 and **E-1** |
+| `api` schema separating client-facing objects from internal tables | One `private` schema holds helpers; client-facing objects are `public` with row-level security and grants | Differs by design; `SEMESTER_RPC_EXPOSURE_CLASSIFICATION.md` is the repository's record of what is exposed |
+| The PDF's student and faculty route tables (`/app/student`, `/app/teaching/:id/gradebook`, …) | The app navigates by a `Screen` union (89 ids at last count in the traceability matrix), not by URL path; the only path-shaped strings found in `app/src` are `/account/`, `/careers/`, `/students/` on the public site | Mapping, not rebuild. Renaming screens to match the PDF's paths would break `screens.test.ts` and the width and design contracts for no gain |
+| "The central deliverable is a live capability registry" linking screen, command, records, permissions, documents, workflow, evidence | Three exist: `rollout-capabilities.ts` (`CAP-001`–`060`), `governance/capability-governance.ts` (L0–L9, rendered to `docs/CAPABILITY-ACTIVATION-REGISTER.md`), and `docs/program/CAPABILITY_TRACEABILITY_MATRIX.md` (user → UI → state → server → DB → policy/audit → tests → ops evidence). That matrix is a document with no test reading it | Native but incomplete; see **U-6** |
+| Required interaction behaviour (loading, empty, draft/pending/published/failed/synchronized, confirmation, receipts, accessible status, safe retry) | The design system's states, `lib/status.ts`, `RECOVERY-STATE-LIBRARY.md`, `registration_time_tickets` and idempotency keys in the enrollment service | Native |
+| "AI may suggest feedback, but faculty must review before it affects an assessed outcome" | `course_ai_rules`, the `ai` tree, and the `aioptional.test.ts` guard | Native in principle; the faculty grading screen it describes is not built |
+
+### What is new
+
+Seven items, none a product domain. They are decisions, one audit and two test shapes, not work I started.
+
+| ID | Item | Owner seat | Closed when |
+| --- | --- | --- | --- |
+| U-1 | Decide whether a single constrained workspace record (`kind`, owner rules) is wanted beside `schools`/`organizations`, or whether the existing tenant and membership tables already carry it. U-7 is the part of the PDF's concern that is a defect risk; this table is a convenience, not a fix for it | `engineering` | Decision recorded as `docs/decisions/D-<pull request number>.md`; if no, this row closes |
+| U-2 | (Overlaps **B-2**; this adds the narrower ask.) Bind signatures and approvals to an immutable document version with a checksum. `contracts.version` and `document_ref` are the seam; the PDF's rule is "each signature and approval must refer to the exact document version reviewed" | `legal` and `data` | A signed contract can be shown to point at one frozen version; a test fails when a version changes after signature |
+| U-3 | (Precedes **B-3**, which assumes the answer is "owns".) Decide whether Semester owns assignments, submissions, rubrics and per-section teaching authority server-side, or integrates them from an LMS (gradebook and LTI passback exist). Check against `SEMESTER_DATA_AUTHORITY_MATRIX.md` first; the PDF's build-order step 4 assumes ownership | `product` | Decision recorded; the PDF's student–faculty–publication journey is only worth building if the answer is "owns" |
+| U-4 | Decide whether company finance (journals, bank reconciliation), procurement and employee records are inside this product, or bought. `docs/DO-NOT-BUILD.md` is silent; a silent list invites the build | `product` | Each named in `docs/DO-NOT-BUILD.md` or taken into a domain in the 40-domain catalogue |
+| U-5 | Use the PDF's company-to-product table (Sales/Success/Support/Finance/People/Executives/Technical operations against what each may not read automatically) as the fixture for a test that each console capability's data reach stays inside its row | `security` and `engineering` | A test fails when a company role's capability can read grades, submissions or wellbeing records |
+| U-6 | The traceability matrix lacks five of the PDF's thirteen capability fields: workflow definition and version, required documents and approvals, emitted events and jobs, accessibility and failure states, metrics and alerts. Fold them into N-1/C-3 rather than starting a fourth register | `engineering` | One register, with a test that reads it, and the five fields present or marked blank |
+| U-7 | Audit every nullable `tenant_id`/`school_id` column for what its row-level policy does with null: a platform-level row readable only by platform roles is fine; a null that a policy reads as "visible to everyone" is the PDF's failure. List each column, the meaning of null, the policy, and whether a test pins it | `security` | A list with one row per nullable column; a test fails when a policy on such a table grants a null-tenant row to a tenant user |
+
+### Not adopted, and why
+
+| Proposed | Decision |
+| --- | --- |
+| The 15-schema layout (`core`, `authz`, `academic`, `learning`, …) | The repository's tables live in `public` under row-level security with a `private` helper schema, and 331 tables are already named. Moving or duplicating them to match the PDF's names would be a rewrite whose only output is renamed tables. The PDF itself says to extend rather than replace |
+| `apps/web/{public,student,faculty,institution,company,operations,account}` and the ten-package `packages/` list | The PDF says these are organizational boundaries, not seven deployables. The repository's boundaries are `app/src/{screens,domains,kernel,lib}`, `packages/institution` and the company site; a directory restructure is not asked for by anything else |
+| Route names under `/app/…` | Screens are ids, not paths (above) |
+| Any migration | A migration is the owner's to apply, and none of U-1 to U-4 is decided |
+
+### Why nothing was built
+
+The PDF's build order is eight steps; step 1 is this mapping, and step 2 ("ownership scopes, memberships, resource permissions, tenant-safe relationships") is largely the work already on main. Steps 4 and 5 (a student–faculty grading journey and a lead-to-support journey) each need a decision above first (U-3 for the first; U-2 and the existing commercial tables for the second). Starting either without that decision is how the same table gets built under two names.
