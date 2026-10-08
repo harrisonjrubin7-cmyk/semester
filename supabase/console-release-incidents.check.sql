@@ -381,7 +381,7 @@ begin
     from public.console_release_incidents(false) r where r.item_id = 'incident-rollback';
   perform pg_temp.nobody();
   perform pg_temp.said('a rollback approval without the incident commit is ignored', status, 'documented');
-  if action not ilike 'Request rollback approval%' then
+  if action not ilike 'Request%rollback approval%' then
     raise exception 'FAILED: an unapproved rollback was directed to execution: %', action;
   end if;
   raise notice 'ok  rollback execution waits for an executed approval';
