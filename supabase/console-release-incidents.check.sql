@@ -160,7 +160,7 @@ values
   ('production_deployment', 'pass', 'Engineering owner', 'DEPLOY-STALE', 'expired production deployment', repeat('b', 40), 'deployment-stale', 'RUNBOOK-STALE', now() - interval '30 days', now() - interval '1 day');
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text; commit text; made uuid;
+declare operator uuid := (select v from ids where k = 'operator'); state text; commit text; duplicate_blocked boolean := false;
 begin
   perform pg_temp.become(operator);
   select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
@@ -173,14 +173,17 @@ begin
   perform pg_temp.said('an expired deployment cannot replace the current migration commit', commit, repeat('a', 40));
 
   perform pg_temp.become(operator);
-  made := public.request_approval(
-    'release', null, 'platform',
-    jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
-    'CI, golden path and rollback rehearsal references.', 'REL-BOUND', null
-  );
+  begin
+    perform public.request_approval(
+      'release', null, 'platform',
+      jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+      'CI, golden path and rollback rehearsal references.', 'REL-DUPLICATE', null
+    );
+  exception when unique_violation then duplicate_blocked := true;
+  end;
   perform pg_temp.nobody();
-  if made is null then raise exception 'FAILED: current exact-commit release request was not created'; end if;
-  raise notice 'ok  current prerequisites permit an exact-commit approval request';
+  if not duplicate_blocked then raise exception 'FAILED: duplicate current exact-commit release request was created'; end if;
+  raise notice 'ok  a current exact-commit release request cannot be duplicated';
 end $$;
 
 delete from public.approval_request
@@ -188,6 +191,22 @@ delete from public.approval_request
    and tenant_id is null
    and target = 'platform'
    and detail ->> 'action' = 'release';
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); made uuid;
+begin
+  perform pg_temp.become(operator);
+  made := public.request_approval(
+    'release', null, 'platform',
+    jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+    'CI, golden path and rollback rehearsal references.', 'REL-BOUND', null
+  );
+  perform pg_temp.nobody();
+  if made is null then raise exception 'FAILED: current exact-commit release request was not created'; end if;
+  raise notice 'ok  current prerequisites permit one exact-commit approval request';
+end $$;
+
+delete from public.approval_request where ticket = 'REL-BOUND';
 
 insert into public.approval_request
   (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, expires_at)
@@ -265,13 +284,16 @@ values
   ('production_verification', 'pass', 'Operations owner', 'VERIFY-WRONG-DEPLOYMENT', 'production browser verification', repeat('a', 40), 'deployment-0', now() - interval '1 minute');
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text; action text;
+declare operator uuid := (select v from ids where k = 'operator'); state text; action text; n bigint;
 begin
   perform pg_temp.become(operator);
   select r.state, r.next_safe_action into state, action
     from public.console_release_incidents(false) r where item_kind = 'release';
+  select count(*) into n from public.console_command_center(false) c
+    where c.id = 'gate:production_verification' and c.status = 'mismatched_deployment';
   perform pg_temp.nobody();
   perform pg_temp.said('verification for a different deployment cannot clear the release', state, 'deployed_unverified');
+  perform pg_temp.counted('the command center reports the same deployment mismatch', n, 1);
   if action not ilike 'Run the production smoke%' then
     raise exception 'FAILED: mismatched verification did not direct a new production check: %', action;
   end if;
@@ -282,6 +304,53 @@ insert into public.platform_release_evidence
   (gate, status, approved_by, evidence, source, commit_sha, deployment_id, observed_at)
 values
   ('production_verification', 'pass', 'Operations owner', 'VERIFY-EXACT', 'production browser verification', repeat('a', 40), 'deployment-1', now());
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); request_id uuid; blocked boolean := false;
+begin
+  insert into public.approval_request
+    (duty_id, requester, tenant_id, target, detail, evidence, ticket, status)
+  values
+    ('release', operator, null, 'platform',
+     jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+     'Approval that will outlive one prerequisite.', 'REL-REVALIDATE', 'approved')
+  returning id into request_id;
+
+  insert into public.platform_release_evidence
+    (gate, status, approved_by, evidence, source, observed_at)
+  values
+    ('legal_approval', 'fail', 'Legal owner', 'LEGAL-REVOKED', 'superseding legal record', now() + interval '1 second');
+
+  begin
+    update public.approval_request set status = 'executed', executed_at = now() where id = request_id;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then
+    raise exception 'FAILED: release execution survived a superseded prerequisite';
+  end if;
+  delete from public.platform_release_evidence where evidence = 'LEGAL-REVOKED';
+  delete from public.approval_request where id = request_id;
+  raise notice 'ok  release prerequisites are revalidated at execution';
+end $$;
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint;
+begin
+  perform pg_temp.become(operator);
+  select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
+  select count(*) into n from public.console_command_center(false) c
+    where c.id = 'gate:release_approval' and c.status = 'missing_exact_approval';
+  perform pg_temp.nobody();
+  perform pg_temp.said('matching deployment evidence without an executed approval stays unverified', state, 'deployed_unverified');
+  perform pg_temp.counted('the command center reports the exact-approval gap', n, 1);
+end $$;
+
+insert into public.approval_request
+  (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, executed_at)
+select 'release', v, null, 'platform',
+       jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+       'Executed exact-commit release authorization.', 'REL-EXECUTED', 'executed', now()
+from ids where k = 'operator';
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); state text; n bigint; incident_count bigint; global_notice_count bigint; leaked text;
@@ -304,7 +373,26 @@ begin
   raise notice 'ok  incident notice bodies are not returned';
 end $$;
 
-delete from public.approval_request where ticket = 'INC-100';
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); action text; status text;
+begin
+  perform pg_temp.become(operator);
+  select r.next_safe_action, r.rollback_status into action, status
+    from public.console_release_incidents(false) r where r.item_id = 'incident-rollback';
+  perform pg_temp.nobody();
+  perform pg_temp.said('a rollback approval without the incident commit is ignored', status, 'documented');
+  if action not ilike 'Request%rollback approval%' then
+    raise exception 'FAILED: an unapproved rollback was directed to execution: %', action;
+  end if;
+  raise notice 'ok  rollback execution waits for an executed approval';
+end $$;
+
+insert into public.approval_request
+  (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, executed_at)
+select 'release', v, null, 'incident-rollback',
+       jsonb_build_object('action', 'rollback', 'incident_ref', 'incident-rollback', 'release_commit', repeat('a', 40)),
+       'Executed exact-commit rollback authorization.', 'INC-EXACT', 'executed', now()
+from ids where k = 'operator';
 
 do $$
 declare operator uuid := (select v from ids where k = 'operator'); action text; status text;
@@ -313,11 +401,11 @@ begin
   select r.next_safe_action, r.rollback_status into action, status
     from public.console_release_incidents(false) r where r.item_id = 'incident-rollback';
   perform pg_temp.nobody();
-  perform pg_temp.said('a rollback without approval is not presented as approved', status, 'documented');
-  if action not ilike 'Request rollback approval%' then
-    raise exception 'FAILED: an unapproved rollback was directed to execution: %', action;
+  perform pg_temp.said('an exact rollback approval is surfaced', status, 'executed');
+  if action not ilike 'Use the executed exact-commit rollback authorization%' then
+    raise exception 'FAILED: exact rollback authorization was not selected: %', action;
   end if;
-  raise notice 'ok  rollback execution waits for an executed approval';
+  raise notice 'ok  rollback authorization is bound to the incident commit';
 end $$;
 
 do $$
