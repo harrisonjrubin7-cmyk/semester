@@ -1,6 +1,5 @@
-import { ClerkProvider } from '@clerk/react';
 import { retainIncomingCapture } from './lib/productivity-arrival';
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 // The typefaces both sheets below name, declared once and served from this
@@ -37,6 +36,7 @@ import { warm } from './lib/warm';
 retainIncomingCapture();
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const ClerkProviderBoundary = lazy(() => import('./components/ClerkProviderBoundary'));
 
 /**
  * Clerk is being introduced alongside the existing account system. Keep the
@@ -50,9 +50,9 @@ const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 function ClerkBoundary({ children }: { children: ReactNode }) {
   if (!clerkPublishableKey) return <>{children}</>;
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey} afterSignOutUrl="/">
-      {children}
-    </ClerkProvider>
+    <Suspense fallback={null}>
+      <ClerkProviderBoundary publishableKey={clerkPublishableKey}>{children}</ClerkProviderBoundary>
+    </Suspense>
   );
 }
 
