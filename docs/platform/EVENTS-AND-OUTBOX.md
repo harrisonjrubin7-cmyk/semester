@@ -88,7 +88,9 @@ which is how "which audit row proves this event" is answered.
 ## Not done
 
 - The production-gated productivity command path and the tenant feature-policy
-  trigger write bounded events, but no publisher or projector runs them.
+  trigger write bounded events. One manually invoked projector endpoint can
+  apply `entitlement.changed` in batches of at most 25, but it is dormant
+  without its dedicated secret and has no scheduler. No publisher runs.
 - A **retention sweep** for `private.domain_outbox_events` and
   `domain_event_receipts` is owed before any producer writes to them in
   production (`RETENTION.md`).

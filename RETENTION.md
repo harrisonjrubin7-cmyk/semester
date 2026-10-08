@@ -487,8 +487,9 @@ recipients remain in `governance_incident_notices` under that table's policy.
 are service-role only. The feature-policy audit trigger now writes one bounded
 `entitlement.changed` event in the same transaction as its source and audit;
 the private tenant-entitlement apply function can settle that event into a private read
-model, receipt, watermark and invalidation in one transaction. No worker or
-schedule invokes the projector yet, and no production operation is inferred.
+model, receipt, watermark and invalidation in one transaction. A bounded manual
+worker endpoint now exists, but its dedicated secret is intentionally absent
+and no schedule invokes it; no production operation is inferred.
 
 Each event row declares a retention class so a future sweep can apply this
 file's policy without reading its payload. The sweep is still not written, so

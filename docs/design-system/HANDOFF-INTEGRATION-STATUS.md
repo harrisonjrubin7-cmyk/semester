@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 3 of 120 · **Integration slice** 11 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `32dd8241`
+**Automation pass** 4 of 120 · **Integration slice** 12 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `523091e9`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer. Runner pass 3 adds the first registered projector transaction and private read model, with atomic receipt/watermark/invalidation and stale-event suppression. The worker, scheduler, public query surface and UI remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer. Runner pass 3 adds the first registered projector transaction and private read model. Runner pass 4 adds a bounded projector endpoint that is dormant without its dedicated secret and has no scheduler. The retention sweep, activation, public query surface and UI remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in runner pass 4 / slice 12
+
+- The pre-slice fetch observed `origin/main` at `32dd8241`; the final fetch advanced to `523091e9`. It contains no equivalent worker endpoint, dispatch migration or focused suite. Its new `20261008190000_console_postmerge_safety.sql` conflicted with the earlier branch-local migration version, so projection operations now use unused version `20261008190500`; the dirty branch was not rebased or merged.
+- `20261008210000_ops_projector_worker.sql` adds a service-role-only batch capped at 25. It claims only `entitlement.changed` version 1 events and dispatches only the active `ops_tenant_entitlements` handler; unrelated event types remain untouched.
+- Invalid envelopes use the existing terminal transition with a generic bounded reason. Retryable errors use the existing delayed retry path. The underlying handler still commits effect, receipt, monotonic watermark and invalidation atomically.
+- The `ops-projector` function is POST-only, checks a dedicated bearer secret, returns 503 when the secret or service credentials are absent and exposes counts only. No secret was provisioned and no scheduler entry was added.
+- `supabase/check.sh ops-projector-worker` applied all 207 migrations on PostgreSQL 17 and passed all four focused checks: service-only/batch bound, selective dispatch, malformed-event terminal handling without partial state, and inactive-registration refusal before claim. The adjacent reapply run left 369 table fingerprints unchanged and passed 40/40 grants/foundation/outbox/producer/handler/worker checks.
+- Focused HTTP, edge-guard, deployment/configuration, secret and generated-reference suites are green. The broader focused run passed 316/317; its only failure is the known runner-mounted `.semester-reference` repository-map refusal, while the other 115 developer-document tests pass.
+- TypeScript, lint, university typecheck and the production build pass. Repository-local pnpm/Node equivalents pass token export, design audits, 69 design contract tests and all eight report contract files; the package script's nested `npm` binary is unavailable in this shell. Deno is also unavailable, so no `deno check` is claimed.
+- HawkScan cannot run (`hawk runtime=false`, `HAWK_API_KEY=false`). No DAST pass is claimed and that release gate remains open.
 
 ## Evidence locked in runner pass 3 / slice 11
 
@@ -34,7 +45,7 @@ Phase 0 reconciliation is complete for the currently identified archive populati
 ## Evidence locked in pass 9
 
 - `origin/main` advanced during the pass from `e53128a6` to `d9640e45`; the intervening Phase A, HawkScan-source-tag and developer-tooling commits contain no equivalent P1-03 migration, function, focused check or migration-version collision. The dirty branch was not merged or rebased.
-- `20261008190000_projection_outbox_operations.sql` adds service-role-only claim, complete and fail transitions with a five-minute recoverable lease, 100-row batch limit, deterministic jitter under a fifteen-minute retry cap, dead-letter at attempt eight and idempotent per-consumer receipts.
+- `20261008190500_projection_outbox_operations.sql` adds service-role-only claim, complete and fail transitions with a five-minute recoverable lease, 100-row batch limit, deterministic jitter under a fifteen-minute retry cap, dead-letter at attempt eight and idempotent per-consumer receipts.
 - The dedicated `projection-replay` duty requires an engineering requester, two distinct data/security approvals and evidence binding one event, consumer, projector version and rollback plan. Execution also requires `console:operate`, fresh MFA, a current exact approval and a fail-closed console audit append.
 - `projection-outbox-operations.check.sql` covers privilege refusal, due ordering, stale recovery, claim identity, atomic/idempotent completion, retry/dead-letter state, approval binding, capability/MFA checks, replay idempotency and audit failure rollback.
 - Repository-owned console/event/role/control registers were regenerated. Focused guards passed 39/39, 54/54 and 57/57. TypeScript build, lint, university gateway typecheck and production build passed.
@@ -135,7 +146,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The focused PostgreSQL 17 proof, migration reapply/idempotency gate, 53 adjacent SQL checks, focused repository guards, generated-register guards, TypeScript, lint, university typecheck, production build and design-system gates are green. The full-suite mounted-directory refusal, shuffle and HawkScan remain explicitly open. Commit the coherent slice without claiming those gates. Worker/cron/public-read/additional-projector/UI work remains separate.
+The focused PostgreSQL 17 proof, reapply gate, 40 adjacent SQL checks, repository/generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. The full-suite mounted-directory refusal, shuffle, Deno check and HawkScan remain explicitly open. Secret provisioning, scheduler activation, retention, public-read, additional-projector and UI work remain separate.
 
 ## External gates kept open
 
@@ -143,4 +154,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add a bounded, unmounted `ops-projector` worker endpoint that dispatches only registered event handlers and cannot enable cron. Keep retention sweep design, scheduler activation, deployment and operational evidence as separate later gates.
+Add the hold-aware retention sweep for published outbox events, terminal receipts and projection invalidations. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.

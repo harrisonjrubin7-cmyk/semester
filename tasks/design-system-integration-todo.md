@@ -186,6 +186,29 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] `pnpm run test:shuffle` — not run after the ordered gate remained non-green for the recorded mounted-directory refusal.
 - [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
 
+## 2026-10-08 bounded dormant projector endpoint — runner pass 4, slice 12
+
+- [x] Fetch `origin/main` before and after work; final `523091e9` contains no equivalent worker endpoint, dispatch migration or focused suite. Its new `20261008190000_console_postmerge_safety.sql` collision is reconciled by renumbering the branch-local projection migration to unused version `20261008190500`.
+- [x] Add a service-role-only database batch capped at 25 events.
+- [x] Claim only `entitlement.changed` version 1 rows and dispatch only the active registered entitlement handler; leave other outbox types untouched.
+- [x] Preserve atomic effect/receipt/watermark/invalidation behavior and use the existing bounded retry/dead-letter transitions.
+- [x] Dead-letter invalid envelopes with a generic bounded reason and no partial materialized state.
+- [x] Add a POST-only Edge Function guarded by a dedicated bearer secret; fail closed while the secret or service credentials are absent.
+- [x] Keep the endpoint unmounted from `scheduler.sql`; do not provision a secret, deploy, activate cron, expose a read API or add UI.
+- [x] Register the function in the guard, config, deployment snapshot, secret inventory and generated function/configuration references.
+- [x] Reconcile generated roadmap and definer registers, including the prior replay RPC's exact callable-definer classification.
+- [x] Apply all 207 migrations on PostgreSQL 17 and pass the four focused worker checks.
+
+### Verification for runner pass 4 / slice 12
+
+- [x] Focused HTTP, edge-guard, deploy/config snapshot, secret and generated-register suites pass; the broader focused run is 316/317, with only the known runner-mounted `.semester-reference` repository-map refusal and all other 115 developer-document tests green.
+- [x] PostgreSQL 17 reapply gate: all 207 migrations applied twice with 369 table fingerprints unchanged; grants, foundation, outbox, producer, handler and worker suites passed 40/40 checks.
+- [x] `pnpm exec tsc -b`, lint, `check:university` and the production build pass with only existing warning baselines.
+- [x] Design-system check/report equivalents pass through repository-local pnpm/Node: token export 9/9, five contract files 69/69, audits within the existing warning ledgers, and all eight report contract files pass. The package script's nested `npm` command is unavailable in this shell, so no direct `npm run` invocation is claimed.
+- [ ] `pnpm test` and `pnpm run test:shuffle` — not rerun after the exact known mounted-directory guard remained red in the broader focused run; no slice-focused test failed.
+- [ ] `deno check` — Deno is unavailable in this shell; the pure handler is imported by Vitest and the Edge Function source/config/import/RPC contracts pass repository guards.
+- [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
+
 ### Verification for pass 4
 
 - [x] Generator validation: exactly 281 archive routes, 589 current catalog rows and 122 reconciled capability rows; 281 unique emitted route keys.

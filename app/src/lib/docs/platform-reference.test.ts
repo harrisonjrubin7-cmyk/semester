@@ -913,9 +913,9 @@ describe('EDGE-FUNCTIONS.md', () => {
   const rows = edgeRows(md);
   const dirs = functionDirs();
 
-  it('has 16 functions to be right or wrong about, and the parser reads every row (control)', () => {
-    expect(dirs).toHaveLength(16);
-    expect(rows).toHaveLength(16);
+  it('has 17 functions to be right or wrong about, and the parser reads every row (control)', () => {
+    expect(dirs).toHaveLength(17);
+    expect(rows).toHaveLength(17);
     for (const r of rows) {
       expect(r.env.length, r.fn).toBeGreaterThan(0);
       expect(r.methods.length, r.fn).toBeGreaterThan(0);
@@ -926,7 +926,7 @@ describe('EDGE-FUNCTIONS.md', () => {
     expect(diff(rows.map((r) => r.fn), dirs)).toEqual(NONE);
     const sections = [...md.matchAll(/^## `([a-z-]+)`$/gm)].map((m) => m[1]);
     expect(diff(sections, dirs)).toEqual(NONE);
-    expect(md).toContain('16 Supabase edge functions');
+    expect(md).toContain('17 Supabase edge functions');
   });
 
   it('gives every function a status word from the vocabulary', () => {
@@ -1374,7 +1374,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // so the claims above (one producer, nothing published) still hold; the page lists it because it inserts.
       'supabase/migrations/20261008183934_emit_domain_event.sql',
       // Not a producer: P1-03 writes only consumer receipts while settling or dead-lettering an existing event.
-      'supabase/migrations/20261008190000_projection_outbox_operations.sql',
+      'supabase/migrations/20261008190500_projection_outbox_operations.sql',
       // The first SQL-native caller of the helper: one feature-policy audit fact emits one bounded event.
       'supabase/migrations/20261008193000_tenant_feature_policy_events.sql',
     ]);
