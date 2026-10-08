@@ -1,0 +1,2 @@
+import {AuthLaunch} from "@/components/auth-launch";
+export default function Home(){return <main className="grid min-h-screen place-items-center p-8"><div className="card w-full max-w-2xl p-10"><p className="eyebrow">Course Engine</p><h1 className="mt-4 text-4xl font-semibold">Upload once. Study from evidence.</h1><p className="muted mt-4">Every deadline and study claim stays linked to its original source. Uncertainty waits for you in Review.</p><AuthLaunch/></div></main>}

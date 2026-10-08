@@ -274,7 +274,7 @@ export const ITEMS: readonly Item[] = [
   {
     id: 'TR-24', before: 'pilot', owner: 'privacy', effort: 'M',
     title: 'Complete the owed privacy assessments',
-    finding: 'Seven surfaces are assessed and six are owed; sharing records no purpose or basis.',
+    finding: 'Seven surfaces are assessed and seven are owed; sharing records no purpose or basis. The standalone Course Engine assessment is owed before activation.',
     sources: ['app/src/lib/governance/pia.ts', 'docs/trust/FERPA-CONSENT-WORKFLOW.md'],
     fix: 'Assess the owed surfaces, add purpose, basis and revocation reason columns to shares, and make revocation undeletable by the student.',
     moves: ['TC-PRV-05', 'TC-PRV-07'],
