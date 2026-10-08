@@ -1,6 +1,7 @@
 import { dateToIso, isoToDate } from '../../../lib/date';
-import { appointmentLength, appointmentsOn } from '../../../lib/select';
-import type { Appointment, Block, DatedItem } from '../../../lib/types';
+import { readDue } from '../../../lib/duetime';
+import { appointmentLength, appointmentsOn, tasksOn } from '../../../lib/select';
+import type { Appointment, Block, DatedItem, PersonalTask } from '../../../lib/types';
 import type { Entry } from '../domain/agenda';
 import type { CalendarSource } from '../application/get-agenda';
 
@@ -89,5 +90,35 @@ export function classSource(read: (date: Date) => readonly ClassMeeting[]): Cale
           provenance: 'imported',
           done: false,
         })),
+  };
+}
+
+/**
+ * The student's own tasks, as things on a day.
+ *
+ * The day's agenda deliberately does not carry these: Today reads tasks from
+ * the tasks slice (`dueToday`, `overdue`) and a task in both places would be
+ * counted twice. The ten-day commitments list is a different question, "what is
+ * on each of the next days, in time order", and there a task is an entry like any
+ * other, so the composition root adds this source for that read alone.
+ *
+ * `tasksOn` is the day's tasks, finished ones included, and `done` says which.
+ * The time is `readDue`'s reading of the free text ("6:30 PM"); wording with no
+ * clock in it is an all-day entry, which the legacy rows draw last in the day.
+ */
+export function taskSource(read: () => PersonalTask[]): CalendarSource {
+  return {
+    name: 'Your actions',
+    entriesOn: async (on) =>
+      tasksOn(read(), isoToDate(on)).map((t): Entry => ({
+        id: `task:${t.id}`,
+        title: t.title,
+        kind: 'task',
+        on,
+        startMin: readDue(t.time),
+        durationMin: 0,
+        provenance: 'student_entered',
+        done: t.done,
+      })),
   };
 }

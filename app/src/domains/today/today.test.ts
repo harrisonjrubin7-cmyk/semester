@@ -209,3 +209,78 @@ describe('today: registration and office actions in the ranking', () => {
     expect(got.mostImportant?.id).not.toBe(top);
   });
 });
+
+// ── the look-ahead ─────────────────────────────────────────────────────────
+
+import { MAX_HORIZON_DAYS, addDays, daysFrom, getCommitments } from './index';
+
+describe('today: counting days', () => {
+  it('moves across month ends, year ends and leap days, in both directions', () => {
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2024-02-28', 1)).toBe('2024-02-29');
+    expect(addDays('2025-02-28', 1)).toBe('2025-03-01');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+    expect(addDays('2026-10-08', 0)).toBe('2026-10-08');
+  });
+
+  it('lists the day itself and the days after it, in order, with no day twice', () => {
+    expect(daysFrom('2026-10-29', 5)).toEqual(['2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']);
+    expect(new Set(daysFrom('2026-01-01', MAX_HORIZON_DAYS)).size).toBe(MAX_HORIZON_DAYS);
+  });
+
+  it('counts the same days whatever the clock zone does on the way: it never goes through a local time', () => {
+    // 2026-11-01 is the day clocks go back in the US; a local-time walk is the classic way to see it twice.
+    expect(daysFrom('2026-10-30', 4)).toEqual(['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']);
+    expect(daysFrom('2026-03-07', 4)).toEqual(['2026-03-07', '2026-03-08', '2026-03-09', '2026-03-10']);
+  });
+
+  it('refuses a string that is not a day rather than counting from nothing', () => {
+    expect(() => addDays('tomorrow', 1)).toThrow();
+  });
+});
+
+describe('today: the look-ahead use case', () => {
+  const entry = (id: string, on: string, over: Partial<import('../calendar').Entry> = {}) => ({ id, title: id, kind: 'deadline' as const, on, startMin: null, durationMin: 0, provenance: 'imported' as const, done: false, ...over });
+  const agendaOf = (by: Record<string, import('../calendar').Entry[]>, unavailable: Record<string, string[]> = {}) =>
+    async (on: string) => ok({ on, entries: by[on] ?? [], conflicts: [], unavailable: unavailable[on] ?? [] });
+
+  it('reads today and the days after it, each from the calendar, and keeps finished entries marked', async () => {
+    const asked: string[] = [];
+    const agenda = async (on: string) => { asked.push(on); return agendaOf({ '2026-10-08': [entry('a', '2026-10-08', { done: true })], '2026-10-10': [entry('b', '2026-10-10')] })(on); };
+    const r = await getCommitments({ guard: allow, clock, agenda })(3);
+    expect(asked.sort()).toEqual(['2026-10-08', '2026-10-09', '2026-10-10']);
+    expect(r.ok && r.value.map((d) => [d.on, d.entries.map((e) => [e.id, e.done])])).toEqual([
+      ['2026-10-08', [['a', true]]],
+      ['2026-10-09', []],
+      ['2026-10-10', [['b', false]]],
+    ]);
+  });
+
+  it('says which calendars could not be read on which day, and still returns the day', async () => {
+    const r = await getCommitments({ guard: allow, clock, agenda: agendaOf({}, { '2026-10-09': ['Your classes'] }) })(2);
+    expect(r.ok && r.value.map((d) => d.unavailable)).toEqual([[], ['Your classes']]);
+  });
+
+  it('fails the whole look-ahead when one day cannot be read at all, rather than returning a list with a hole', async () => {
+    const agenda = async (on: string) => (on === '2026-10-09' ? fail('forbidden', 'calendar.refused', 'no') : agendaOf({})(on));
+    const r = await getCommitments({ guard: allow, clock, agenda })(3);
+    expect(r.ok || r.error.code).toBe('calendar.refused');
+  });
+
+  it('asks the guard first, and reads nothing for a refusal', async () => {
+    let read = 0;
+    const refuse: Guard = () => fail('forbidden', 'policy.not_owner', 'no');
+    const r = await getCommitments({ guard: refuse, clock, agenda: async (on) => { read += 1; return agendaOf({})(on); } })(3);
+    expect(r.ok || r.error.code).toBe('policy.not_owner');
+    expect(read).toBe(0);
+  });
+
+  it('refuses a horizon of nothing, a fraction, a negative, or more than a month', async () => {
+    for (const bad of [0, -1, 1.5, MAX_HORIZON_DAYS + 1, Number.NaN]) {
+      const r = await getCommitments({ guard: allow, clock, agenda: agendaOf({}) })(bad);
+      expect(r.ok || r.error, String(bad)).toMatchObject({ kind: 'validation', code: 'today.bad_horizon' });
+    }
+    expect((await getCommitments({ guard: allow, clock, agenda: agendaOf({}) })(MAX_HORIZON_DAYS)).ok).toBe(true);
+  });
+});

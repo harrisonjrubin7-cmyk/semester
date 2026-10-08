@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { appointmentsOn } from '../../lib/select';
+import { appointmentsOn, tasksOn } from '../../lib/select';
+import { readDue } from '../../lib/duetime';
 import { isoToDate } from '../../lib/date';
-import type { Appointment, DatedItem } from '../../lib/types';
+import type { Appointment, DatedItem, PersonalTask } from '../../lib/types';
 import { fail, ok } from '../../kernel';
 import { agendaFor, conflictsIn, getAgenda, isRealDay, type CalendarSource, type Entry, type Guard } from './index';
-import { appointmentSource, classSource, deadlineSource } from './adapters';
+import { appointmentSource, classSource, deadlineSource, taskSource } from './adapters';
 import { buildCatalog, blocksFor } from '../../data/catalog';
 import { loadSeed } from '../../data/seed';
 import { lengthOf } from '../../lib/select';
@@ -168,5 +169,44 @@ describe('calendar: class meetings over the legacy timetable', () => {
     const got = await classSource((d) => blocksFor(cat, d).map((b) => ({ block: b, minutes: lengthOf(cat, b) }))).entriesOn('2026-09-29');
     expect(got.map((e) => e.id)).toEqual(legacy.map((b) => `class:2026-09-29:${b.c}:${b.at}`));
     expect(got.map((e) => e.durationMin)).toEqual(legacy.map((b) => lengthOf(cat, b)));
+  });
+});
+
+describe('calendar: tasks over lib/select.tasksOn', () => {
+  const ptask = (over: Partial<PersonalTask>): PersonalTask => ({ id: 't', title: 'T', date: '2026-10-08', time: '', note: '', done: false, created: 0, courseId: null, ...over });
+
+  it('is exactly the tasks the legacy selector finds for the day, finished ones included and marked', async () => {
+    const list = [ptask({ id: 'a' }), ptask({ id: 'b', done: true }), ptask({ id: 'c', date: '2026-10-09' }), ptask({ id: 'd', date: null })];
+    const entries = await taskSource(() => list).entriesOn('2026-10-08');
+    expect(entries.map((e) => [e.id, e.done])).toEqual([['task:a', false], ['task:b', true]]);
+    expect(entries.map((e) => e.id)).toEqual(tasksOn(list, isoToDate('2026-10-08')).map((t) => `task:${t.id}`));
+  });
+
+  it('reads the time the way the rest of the app does, and calls wording with no clock all-day', async () => {
+    const list = [ptask({ id: 'a', time: '6:30 PM' }), ptask({ id: 'b', time: '9 AM' }), ptask({ id: 'c', time: 'before work' }), ptask({ id: 'd', time: '' })];
+    const entries = await taskSource(() => list).entriesOn('2026-10-08');
+    expect(entries.map((e) => e.startMin)).toEqual(list.map((t) => readDue(t.time)));
+    expect(entries.find((e) => e.id === 'task:a')?.startMin).toBe(18 * 60 + 30);
+    expect(entries.filter((e) => e.startMin === null).map((e) => e.id)).toEqual(['task:c', 'task:d']);
+  });
+
+  it('is an instant that belongs to the student, so it occupies no minutes and says who made it', async () => {
+    const [e] = await taskSource(() => [ptask({ time: '4 PM' })]).entriesOn('2026-10-08');
+    expect(e).toMatchObject({ kind: 'task', durationMin: 0, provenance: 'student_entered', on: '2026-10-08' });
+    expect(conflictsIn([e, { ...e, id: 'task:x' }])).toEqual([]);
+  });
+
+  it('puts a repeating task on its one stored day and no other: ticking is what moves it', async () => {
+    const weekly = ptask({ id: 'w', repeat: { every: 'weekly', until: '2026-12-31' } });
+    expect((await taskSource(() => [weekly]).entriesOn('2026-10-08')).map((e) => e.id)).toEqual(['task:w']);
+    expect(await taskSource(() => [weekly]).entriesOn('2026-10-15')).toEqual([]);
+  });
+
+  it('reads the list afresh each call, as the other sources do', async () => {
+    let list = [ptask({ id: 'a' })];
+    const source = taskSource(() => list);
+    expect((await source.entriesOn('2026-10-08')).length).toBe(1);
+    list = [];
+    expect((await source.entriesOn('2026-10-08')).length).toBe(0);
   });
 });

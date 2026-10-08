@@ -69,6 +69,19 @@ export interface ExperienceFlags {
    * institutional preview: it is a developer's instrument.
    */
   domainTasks: FeatureState;
+  /**
+   * The Action Center's commitment rows through `src/domains/today` (phase 3 of
+   * docs/architecture/modularization/03-refactoring-sequence.md, D-1261).
+   *
+   * `preview` and `sandbox` build the rows from the domain beside the screen's own
+   * and say in the console where they differ; **nothing on screen changes**.
+   * `production` draws the domain's rows, and only while they are current and
+   * complete: one still being fetched, built from older state, or missing a record
+   * it needs to draw an entry is replaced by the screen's own, which parity
+   * (`composition/commitments.test.ts`) holds identical. Never inherited from an
+   * institutional preview: it is a developer's instrument.
+   */
+  domainToday: FeatureState;
 }
 
 const STATES: readonly FeatureState[] = ['off', 'preview', 'sandbox', 'production'];
@@ -104,6 +117,7 @@ export function experienceFlags(env: PreviewEnv): ExperienceFlags {
     recordLedger: featureState(env, 'VITE_RECORD_LEDGER', preview),
     studentAccounts: featureState(env, 'VITE_STUDENT_ACCOUNTS', preview),
     domainTasks: featureState(env, 'VITE_DOMAIN_TASKS', false),
+    domainToday: featureState(env, 'VITE_DOMAIN_TODAY', false),
   };
 }
 

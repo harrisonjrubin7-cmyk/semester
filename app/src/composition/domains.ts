@@ -1,12 +1,12 @@
 import { nullSink, systemClock, systemIds, type Clock, type EventSink, type IdSource } from '../kernel';
 import { getAgenda } from '../domains/calendar';
-import { appointmentSource, classSource, deadlineSource, type ClassMeeting } from '../domains/calendar/adapters';
+import { appointmentSource, classSource, deadlineSource, taskSource, type ClassMeeting } from '../domains/calendar/adapters';
 import { currentSubject } from '../domains/identity';
 import { legacyIdentity, type LegacyIdentity } from '../domains/identity/adapters';
 import { createAuthorizer, type InstitutionalContext } from '../domains/policy';
 import { addTask, completeTask, listTasks, removeTask, reopenTask, rescheduleTask, toggleTask } from '../domains/tasks';
 import { legacyTaskRepository, type Settled, type StateAccess, type TaskCommands } from '../domains/tasks/adapters';
-import { getToday } from '../domains/today';
+import { getCommitments, getToday } from '../domains/today';
 import { legacyRanking, type LegacyRankingInput } from '../domains/today/adapters';
 import type { Appointment, DatedItem, PersonalTask } from '../lib/types';
 
@@ -74,8 +74,16 @@ export function composeDomains(host: LegacyHost, platform: Platform = defaultPla
     reschedule: rescheduleTask(taskDeps),
     remove: removeTask(taskDeps),
   };
-  const calendar = { agenda: getAgenda({ sources, guard }) };
-  const today = { view: getToday({ guard, clock, tasks: tasks.list, agenda: calendar.agenda, ranking: legacyRanking(host.ranking) }) };
+  // The day's own agenda has no tasks in it: Today reads those from the tasks slice, and would count them twice.
+  // The look-ahead is the other question, "what is on each of the next days", where a task is an entry like any other.
+  const calendar = {
+    agenda: getAgenda({ sources, guard }),
+    horizon: getAgenda({ sources: [...sources, taskSource(host.tasks.read)], guard }),
+  };
+  const today = {
+    view: getToday({ guard, clock, tasks: tasks.list, agenda: calendar.agenda, ranking: legacyRanking(host.ranking) }),
+    commitments: getCommitments({ guard, clock, agenda: calendar.horizon }),
+  };
 
   return { subject, tasks, calendar, today, settled };
 }
