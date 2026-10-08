@@ -13,11 +13,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Recount the current repository's screen registry, navigation, screen/component/test files, migrations, functions, handlers, roles, capabilities and catalog totals.
 - [x] Refresh the existing plan and crosswalk and add a status page for resumable automation.
 - [ ] Reconcile each of the 281 prototype routes to the 589-row repository screen catalog and production owner paths.
-- [ ] Reconcile each of the 122 archive registry capabilities and 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
+- [x] Reconcile each of the 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
+- [ ] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
 - [ ] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes.
 - [ ] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
 - [ ] Give every meaningful archive item exactly one allowed disposition; file-family dispositions alone do not complete this gate.
 - [ ] Identify the earliest buildable dependency-ready vertical slice only after the preceding row-level controls are complete.
+
+## 2026-10-08 meaningful-item seed — pass 2
+
+- [x] Fetch and rebase the clean branch onto current `origin/main` `ca0cc9ad`; inspect the migration-version repair and confirm it does not duplicate this slice.
+- [x] Give all 20 `SEM-01`–`SEM-20` blueprint capabilities exactly one disposition.
+- [x] Record the applicable production owner path, role/route, capability and permission, tenant/data authority, server operation, audit/recovery/states, tests, dependencies and release boundary for each blueprint row.
+- [x] Reconcile six meaningful Stream 00 items without executing archive scripts or creating a parallel audit authority.
+- [x] Reconcile all sixteen Stream 18 audit deliverables to the existing `docs/roles/*` authorities and separately disposition seven underlying role-platform decisions.
+- [x] Reconcile all eighteen Stream 25 completion packages, all seven ecosystem rules and all three named open decisions.
+- [x] Preserve the current eight-group navigation authority, strict AI student-record rule and single master/finish-line readiness system.
+- [x] Classify P11 graduate/research education as missing and in scope, but not dependency-ready until its owner, authority/data contract, role map and acceptance path are established.
+- [ ] Reconcile the 122-row archive capability registry; this is the next dependency-ready Phase 0 slice.
+
+### Verification for pass 2
+
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/` — 1 file, 22 tests passed. (`npx` is unavailable in this shell.)
+- [x] Register structure check: 20 blueprint ids and 18 package ids occur once; all 77 meaningful-item data rows contain exactly one allowed disposition.
+- [ ] Full application gates — not required for this documentation-only slice; no production code, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this documentation-only slice; runtime and `HAWK_API_KEY` remain unavailable, and no production code or scan configuration changed.
 
 ### Verification for pass 1
 

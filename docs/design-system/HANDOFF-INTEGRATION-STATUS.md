@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 1 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `7b7603e105847e4ac62aeba0097e0f6e0600d6d1`
+**Automation pass** 2 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `ca0cc9ad`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive has been authenticated and inventoried; no production code, schema, policy, token output, deployment or external system changed in this pass.
+Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 2 adds the first meaningful-item reconciliation seed; no production code, schema, policy, dependency, token output, deployment or external system changed.
+
+## Evidence locked in pass 2
+
+- The clean branch was rebased onto `origin/main` `ca0cc9ad`; the intervening migration-version repair does not duplicate this work and does not change the pass-1 census.
+- [`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md) dispositions all 20 capability-blueprint rows.
+- Six Stream 00 items, all sixteen Stream 18 audit deliverables plus seven role-platform decisions, and all eighteen Stream 25 packages plus seven ecosystem rules and three open decisions have exactly one disposition.
+- Existing role-system documents are treated as audit authorities, not proof that the underlying capability is complete.
+- Existing master/finish-line registers remain the one readiness authority; the archive completion register is not imported in parallel.
+- P11 graduate/research education is missing and in scope, but is not implementation-ready until its domain owner, authority/data contract, role mapping and acceptance path exist.
+- Structural validation found 20 unique blueprint ids, 18 unique package ids and 77 meaningful-item rows with exactly one allowed disposition. `src/lib/designtooling.test.ts` passed 22 of 22 tests through the repository-local Vitest binary.
 
 ## Evidence locked in pass 1
 
@@ -25,7 +35,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 ## Open Phase 0 gates
 
 1. Map all 281 prototype routes to repository catalog rows, routes, navigation and tests.
-2. Reconcile all 122 registry capabilities and the 20-capability blueprint against repository capability, data-authority, permission, tenant, audit and recovery contracts.
+2. Reconcile all 122 registry capabilities against repository capability, data-authority, permission, tenant, audit and recovery contracts. The separate 20-capability blueprint is complete at this reconciliation layer.
 3. Reconcile the archive's 673 screen rows and 319 workflow steps with the repository's 589 and 319 row populations.
 4. Assign one allowed disposition to every meaningful catalog row and execution-stream item, including owner path, dependencies and acceptance evidence for buildable work.
 5. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
@@ -36,4 +46,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the row-level reconciliation seed: archive streams 00, 18 and 25 plus the 20-capability blueprint, followed by the 122-row registry and 281-route prototype inventory. This is the earliest safe slice; production implementation remains gated by those dispositions.
+Continue Phase 0 with the 122-row archive capability registry, then the 281-route prototype inventory and 673-screen archive catalog. This is the earliest safe slice because route permissions and dependencies need the capability map first; production implementation remains gated by those dispositions.

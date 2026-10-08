@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `7b7603e1` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `ca0cc9ad` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -24,10 +24,23 @@ These are dispositions of files as evidence artifacts. They do not pre-judge the
 | --- | ---: | --- |
 | `handoff/prototype/screens.json` | 281 unique routes in 26 workspaces; generated 2026-10-06 | Prototype only pending route-by-route repository mapping. |
 | `handoff/registry/capabilities.json` | 122 rows; all say implemented/tested/deployed false; 55 claim backend true and all 122 claim data true | Documentation or roadmap only pending capability-by-capability verification. Archive status is not repository evidence. |
-| `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established | Documentation or roadmap only pending repository mapping. |
+| `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established in the archive | Reconciled in [`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md): 16 existing but incomplete, 2 documentation or roadmap only, 1 blocked externally and 1 intentionally excluded. Repository evidence, not archive status, sets each result. |
 | `handoff/capability-blueprint/tenant-isolation-proof-manifest.json` | Zero objects; explicitly illustrative | Documentation or roadmap only; do not treat as tenant-isolation proof. |
 | `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Documentation or roadmap only pending row-level reconciliation. The archive's generated `docs/master/SEMESTER_SCREEN_CATALOG.md` still has 589 rows, so neither archive population silently replaces the other or the repository audit. |
 | Streams `00`–`30` | 31 numbered streams plus index; later files override earlier ordering inside the archive | Documentation or roadmap only; mapped into the user's Phases 0–12, not executed as instructions. |
+
+## Pass 2 meaningful-item coverage
+
+The first capability-level register now covers every meaningful item selected for the Phase 0 seed:
+
+| Population | Rows dispositioned | Result |
+| --- | ---: | --- |
+| Capability blueprint | 20 / 20 | Production owner, authority, tenant/data boundary, recovery/test evidence, dependency and release ceiling recorded. |
+| Stream 00 | 6 / 6 | Current audit/design authorities retained; archive executable procedure excluded. |
+| Stream 18 | 23 / 23 | Sixteen requested documents map to current `docs/roles/*`; seven underlying product decisions remain separately honest. |
+| Stream 25 | 28 / 28 | Eighteen packages, seven “one” rules and three open decisions map to current authorities. |
+
+The seed identifies no production implementation that is safe to start ahead of the remaining capability mapping. P11 graduate/research education is missing and in scope, but its authority/data contract and role ownership are not defined. The next row-level population is the 122-row archive capability registry, followed by 281 prototype routes and 673 archive catalog screens.
 
 ## Current repository mapping baseline
 

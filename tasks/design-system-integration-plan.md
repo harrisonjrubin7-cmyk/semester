@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `7b7603e1` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `ca0cc9ad` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -50,10 +50,24 @@ The file-artifact dispositions do not decide whether the capability described by
 
 No production implementation is selected in pass 1 because Phase 0 cannot yet identify every candidate's disposition and dependency. The next dependency-ready slice is the generated row-level prototype/capability reconciliation, beginning with archive streams 00, 18, 25 and the 20-capability blueprint.
 
+## Meaningful-item seed — automation pass 2
+
+[`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](../docs/design-system/REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md) gives exactly one disposition to all 20 capability-blueprint rows, six Stream 00 items, all sixteen Stream 18 audit deliverables plus seven role-platform decisions, and all eighteen Stream 25 completion packages plus its seven ecosystem rules and three open decisions.
+
+The seed preserves three boundaries that control subsequent work:
+
+1. Stream 18's requested `docs/roles/*` deliverables are duplicate or superseded by current repository authorities; the role platform they audit is still existing but incomplete.
+2. Stream 25's proposed readiness register is duplicate or superseded by current master and finish-line registers; its domain packages are coverage prompts, not a second status system.
+3. Of the seed items, P11 graduate/research education is the only row classified missing and in scope. It is not dependency-ready: a domain owner, authority/data contract, role mapping and acceptance path must be reconciled before production work.
+
+`origin/main` advanced after pass 1 only through the migration-version collision repair in `ca0cc9ad`; the current census remains 97 screen-registry keys, 62 navigation destinations, 120 non-test screen files, 407 non-test component files, 1,393 tests, 203 migrations, 17 edge-function directories and 51 non-test gateway handlers. No equivalent blueprint/stream reconciliation landed, so this slice is not duplicate work.
+
+The next Phase 0 slice is the 122-row archive capability registry. It precedes route/catalog mapping because its capability and backend/data claims supply the permission and dependency vocabulary needed to disposition the 281 prototype routes and 673 archive catalog screens.
+
 ## What was read
 
 - Root `CLAUDE.md`.
-- `origin/main` through `7b7603e1`; fetch on 2026-10-08 confirmed the branch and `origin/main` still match the supplied `INITIAL_MAIN_SHA`.
+- `origin/main` through `ca0cc9ad`; pass 1 began at the supplied `INITIAL_MAIN_SHA` `7b7603e1`, and pass 2 rebased the clean branch after the migration-version collision repair landed.
 - Committed handoff: `docs/handoff/` (139 files). `docs/handoff/IN-THIS-REPO.md` and `docs/decisions/D-1287.md` say `ui_kits/`, `templates/`, and fonts are not in the repository.
 - Mounted archive entry maps: `readme.md`, `NEXT-SESSION.md`, `handoff/manifest.json`, `START-HERE.md`, `BUILD.md`, `README.md`, the prototype screen inventory/JSON, capability registry, 20-capability blueprint, and execute streams `00` through `30`.
 - Archive master-catalog data was parsed as data rather than executed: 49 role rows, 673 screen rows, 319 workflow steps, 88 systems, 82 documents and 84 added screen rows. Its prose also claims 51 roles; both remain archive claims pending row-level mapping.
