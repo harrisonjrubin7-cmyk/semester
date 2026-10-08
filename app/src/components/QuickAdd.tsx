@@ -47,6 +47,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useModal } from '../a11y/modal';
 import { useModernShell } from './shell-context';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { capture, enough, readBack, type Caught } from '../lib/capture';
 import { heardLine, readAloud } from '../lib/aloud';
 import { dictate, dictationSupported } from '../lib/mic';
@@ -67,7 +68,8 @@ import { KeepItAs } from './unity/UnityLayer';
 const COLUMN = 620;
 
 export function QuickAdd({ onClose }: { onClose: () => void }) {
-  const { catalog, dispatch, account } = useStore();
+  const { catalog, account } = useStore();
+  const taskActions = useTaskActions();
   const productivity = useDeviceLibrary(`semester.productivity.v1:${account?.id || 'device'}`, readProductivity, EMPTY_PRODUCTIVITY);
   const now = useNow();
   // Opens on what was typed into the search field when that was an add —
@@ -107,15 +109,12 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
 
   /** File one reading. The one place a task is written, whichever view called. */
   const file = (c: Caught) => {
-    dispatch({
-      type: 'addTask',
-      task: {
-        title: c.title,
-        date: c.date || null,
-        time: c.time,
-        note: c.kind ? `${c.kind}, captured` : 'Captured',
-        courseId: c.courseId,
-      },
+    taskActions.add({
+      title: c.title,
+      date: c.date || null,
+      time: c.time,
+      note: c.kind ? `${c.kind}, captured` : 'Captured',
+      courseId: c.courseId,
     });
   };
 

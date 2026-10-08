@@ -7,7 +7,7 @@
 
 ## Purpose and evidence ceiling
 
-This document indexes where Semester data is described and who must reconcile it. The generated structural source currently reports 301 `public` tables with row-level security enabled. That can establish schema structure at the generated revision; it cannot establish production contents, lawful basis, institutional approval, field-level classification, complete non-database stores, or operation of every lifecycle control.
+This document indexes where Semester data is described and who must reconcile it. The generated structural source (`docs/DATA-INVENTORY-AND-LINEAGE.md`, rendered from the migrations; the count is read there, not copied here) reports the `public` tables and whether row-level security is enabled on each. That can establish schema structure at the generated revision; it cannot establish production contents, lawful basis, institutional approval, field-level classification, complete non-database stores, or operation of every lifecycle control.
 
 ## Authoritative inventories
 

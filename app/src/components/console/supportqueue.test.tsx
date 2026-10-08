@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mock = vi.hoisted(() => ({
   queue: vi.fn(),
   thread: vi.fn(),
+  access: vi.fn(),
+  signals: vi.fn(),
   reply: vi.fn(),
   status: vi.fn(),
 }));
@@ -16,6 +18,8 @@ vi.mock('../../lib/supporttickets', async (original) => ({
   ...(await original<object>()),
   supportQueue: mock.queue,
   supportThread: mock.thread,
+  supportCaseAccess: mock.access,
+  readSupportCaseSignals: mock.signals,
   supportReply: mock.reply,
 }));
 
@@ -44,6 +48,17 @@ beforeEach(() => {
     at: '2026-10-01T10:00:00Z',
     context: { device_class: 'tablet', screen: '#/drill' },
   }]);
+  mock.access.mockResolvedValue({
+    ticketId: '123e4567-e89b-12d3-a456-426614174000',
+    grantId: null,
+    scope: null,
+    reason: null,
+    expiresAt: null,
+    consentState: 'not_granted',
+    active: false,
+    lastSensitiveReadAt: null,
+  });
+  mock.signals.mockResolvedValue([]);
   mock.reply.mockResolvedValue('accepted');
   host = document.createElement('div');
   document.body.append(host);
@@ -90,6 +105,58 @@ describe('the support operations queue', () => {
     expect(host.textContent).toContain('Kind of device');
     expect(host.textContent).toContain('tablet');
     expect(mock.thread).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000');
+    expect(host.textContent).toContain('Private access · metadata only');
+    expect(host.textContent).toContain('No case-bound access was granted');
+    expect(mock.signals).not.toHaveBeenCalled();
+  });
+
+  it('shows case metadata separately and reads aggregates only through the privileged gate', async () => {
+    mock.access.mockResolvedValue({
+      ticketId: '123e4567-e89b-12d3-a456-426614174000',
+      grantId: 'grant-1',
+      scope: 'learning-progress',
+      reason: 'Diagnose this accessibility case.',
+      expiresAt: '2099-01-02T00:00:00Z',
+      consentState: 'active',
+      active: true,
+      lastSensitiveReadAt: null,
+    });
+    mock.signals.mockResolvedValue([{
+      courseId: 'ECON', evidenceCount: 4, averageScore: 0.75,
+      mistakeCount: 2, lastObservedAt: '2099-01-01T00:00:00Z',
+    }]);
+    let approved: (() => Promise<void>) | undefined;
+    const privileged = vi.fn((run: () => Promise<void>) => { approved = run; });
+    await draw('', privileged);
+    await click(button('Open conversation'));
+
+    expect(host.textContent).toContain('learning-progress');
+    expect(host.textContent).toContain('Diagnose this accessibility case.');
+    expect(host.textContent).toContain('Consentactive');
+    expect(host.textContent).toContain('Last sensitive readNever');
+    expect(host.textContent).not.toContain('4 evidence items');
+    expect(mock.signals).not.toHaveBeenCalled();
+
+    await click(button('View consented aggregate signals'));
+    expect(privileged).toHaveBeenCalledTimes(1);
+    expect(mock.signals).not.toHaveBeenCalled();
+    await act(async () => { await approved?.(); });
+    expect(mock.signals).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000');
+    expect(host.textContent).toContain('4 evidence items');
+    expect(host.textContent).toContain('2 mistakes');
+    expect(host.textContent).not.toContain('Private mistake detail');
+    expect(mock.status).toHaveBeenLastCalledWith(
+      'Consented aggregate signals read for SUP-123E-4567-E89B-12D3. The read was audited.',
+    );
+  });
+
+  it('fails closed when consent metadata cannot be read', async () => {
+    mock.access.mockRejectedValueOnce(new Error('metadata unavailable'));
+    await draw();
+    await click(button('Open conversation'));
+    expect(host.textContent).toContain('Case access metadata is unavailable');
+    expect(button('View consented aggregate signals')).toBeUndefined();
+    expect(mock.signals).not.toHaveBeenCalled();
   });
 
   it('records a reply with the selected next state and refreshes the queue', async () => {

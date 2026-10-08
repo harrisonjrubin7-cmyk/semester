@@ -30,6 +30,12 @@ export * from './identity.ts';
 export * from './intelligence.ts';
 export * from './agents.ts';
 export * from './provisioning.ts';
+export * from './policy.ts';
+export * from './workflow.ts';
+export * from './events.ts';
+export * from './pilot.ts';
+export * from './access-saga.ts';
+export * from './registry.ts';
 
 /**
  * The thirty-seven service areas, each with the name a student would read.

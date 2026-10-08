@@ -291,6 +291,7 @@ export const STRATEGY: Record<string, Strategy> = {
   // not one on a phone, and tab labels are height a small screen wants back
   // and a large one does not.
   lineHeight: 'mine',
+  textSpacing: 'mine',
   readingWidth: 'mine',
   labels: 'mine',
   // An arrangement rather than a list you add to — merging two orderings

@@ -651,6 +651,14 @@ under *Push notifications* below (`supabase secrets set CRON_SECRET=…`), and
 then step 3 to unpark the job. Until then `cron.job_run_details` is empty for
 `push`, which is what parked looks like and is correct.
 
+### The hand-off sweep — written, not yet applied
+
+`scheduler.sql` schedules a job `handoffs`, daily at `31 3 * * *`, calling `public.sweep_handoffs()`. It
+marks hand-offs past their fifteen minutes expired and deletes those finished more than seven days ago. It is
+active on apply, needs no secret and no endpoint, and does nothing until the onboarding migration
+(`20261006000000`) has been applied, because the function does not exist before it. Applying the scheduler
+before the migration fails on that job alone. Nothing here has been run against the live project.
+
 ### The tombstone sweep — on the project, measured 22 September
 
 `scheduler.sql` now also schedules a second job, `tombstones`, weekly at

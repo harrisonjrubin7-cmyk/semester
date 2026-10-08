@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, TabList } from '../components/ui';
@@ -28,8 +28,16 @@ import { Evidence } from '../components/console/Evidence';
 import { Views, readViews, type SavedView } from '../components/console/Views';
 import { CommandCenter } from '../components/console/CommandCenter';
 import { SupportQueue } from '../components/console/SupportQueue';
+import { TenantOperations } from '../components/console/TenantOperations';
+import { PrivacyRequests } from '../components/console/PrivacyRequests';
+import { IntegrationHealth } from '../components/console/IntegrationHealth';
+import { ReleaseIncidents } from '../components/console/ReleaseIncidents';
 import { said, when } from '../components/console/Fields';
-import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
+import {
+  isConsoleWorkspaceId,
+  visibleConsoleWorkspaces,
+  type ConsoleWorkspaceId,
+} from '../lib/console/workspaces';
 
 /**
  * The operations console.
@@ -52,22 +60,14 @@ import { EXPERIENCE_FLAGS } from '../lib/experience-flags';
  * browser storage; `console.test.tsx` asserts it.
  */
 
-const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures and evidence — for operators holding console:operate.';
+// Its own chunk: it reads six flag modules the rest of the console never needs, and the console's opening cost is budgeted.
+const Releases = lazy(() => import('../components/console/Releases').then((m) => ({ default: m.Releases })));
+// Its own chunk, for the same reason: twelve gates' worth of evidence text the rest of the console never reads.
+const Launch = lazy(() => import('../components/console/Launch').then((m) => ({ default: m.Launch })));
+const Controls = lazy(() => import('../components/console/Controls').then((m) => ({ default: m.Controls })));
+const FinancialModel = lazy(() => import('../finance/FinancialModel').then((m) => ({ default: m.FinancialModel })));
 
-type Tab = 'command' | 'support' | 'approvals' | 'breakglass' | 'audit' | 'customers' | 'figures' | 'evidence' | 'views';
-
-const CORE_TABS: readonly { id: Tab; label: string }[] = [
-  { id: 'command', label: 'Command center' },
-  { id: 'approvals', label: 'Approvals' },
-  { id: 'breakglass', label: 'Break-glass' },
-  { id: 'audit', label: 'Audit' },
-  { id: 'customers', label: 'Customers' },
-  { id: 'figures', label: 'Figures' },
-  { id: 'evidence', label: 'Evidence' },
-  { id: 'views', label: 'Views' },
-];
-
-const isTab = (tabs: readonly { id: Tab }[], v: unknown): v is Tab => typeof v === 'string' && tabs.some((t) => t.id === v);
+const BLURB = 'Live operational exceptions, approvals, break-glass, the audit chain, customers, figures, release flags and evidence — for operators holding console:operate.';
 
 /** Preference keys, under `operator_preference`. */
 const PREF_TAB = 'console.tab';
@@ -120,13 +120,8 @@ export function Console() {
 
 function Operations({ operator, grants }: { operator: string; grants: Grant[] }) {
   const env = environment();
-  const mayAnswerSupport = grants.some((grant) => grant.capability === 'support:ticket' && grant.scopeKind === 'platform');
-  const tabs = useMemo<readonly { id: Tab; label: string }[]>(() => [
-    CORE_TABS[0],
-    ...(EXPERIENCE_FLAGS.supportTickets !== 'off' && mayAnswerSupport ? [{ id: 'support' as const, label: 'Support' }] : []),
-    ...CORE_TABS.slice(1),
-  ], [mayAnswerSupport]);
-  const [tab, setTab] = useState<Tab>('command');
+  const workspaces = useMemo(() => visibleConsoleWorkspaces(grants), [grants]);
+  const [tab, setTab] = useState<ConsoleWorkspaceId>('command');
   const [filter, setFilter] = useState('');
   const [scope, setScope] = useState('All');
   const [views, setViews] = useState<SavedView[]>([]);
@@ -171,7 +166,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
     loadPreferences().then(
       (p) => {
         if (!live) return;
-        if (isTab(tabs, p[PREF_TAB])) setTab(p[PREF_TAB]);
+        if (isConsoleWorkspaceId(p[PREF_TAB], workspaces)) setTab(p[PREF_TAB]);
         setViews(readViews(p[PREF_VIEWS]));
       },
       (e: unknown) => { if (live) setStatus(said(e, 'Could not load your preferences.')); },
@@ -181,9 +176,9 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
       live = false;
       clearInterval(tick);
     };
-  }, [tabs]);
+  }, [workspaces]);
 
-  const choose = (next: Tab) => {
+  const choose = (next: ConsoleWorkspaceId) => {
     setTab(next);
     savePreference(PREF_TAB, next).catch((e: unknown) => setStatus(said(e, 'The last-open tab was not saved.')));
   };
@@ -252,15 +247,39 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
           </button>
         )}
       </div>
-      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={tabs} />
+      <TabList label="Console views" className="portal-tabs" value={tab} onChange={choose} tabs={workspaces} />
       <div style={{ marginTop: 'var(--sp-5)' }}>
         {tab === 'command' && <CommandCenter {...viewProps} />}
         {tab === 'support' && <SupportQueue {...viewProps} />}
         {tab === 'approvals' && <Approvals {...viewProps} />}
         {tab === 'breakglass' && <BreakGlass {...viewProps} />}
         {tab === 'audit' && <Audit {...viewProps} />}
+        {tab === 'tenant-operations' && <TenantOperations {...viewProps} now={now} />}
+        {tab === 'privacy' && <PrivacyRequests {...viewProps} />}
+        {tab === 'integration-health' && <IntegrationHealth {...viewProps} />}
+        {tab === 'release-incidents' && <ReleaseIncidents {...viewProps} />}
         {tab === 'customers' && <Customers {...viewProps} sessionEnds={sessionEnds} onFocus={setScope} />}
         {tab === 'figures' && <Figures {...viewProps} />}
+        {tab === 'finance' && (
+          <Suspense fallback={<p role="status">Loading the finance model…</p>}>
+            <FinancialModel />
+          </Suspense>
+        )}
+        {tab === 'releases' && (
+          <Suspense fallback={<p role="status">Loading the release flags…</p>}>
+            <Releases env={env} filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'launch' && (
+          <Suspense fallback={<p role="status">Loading the launch gates…</p>}>
+            <Launch filter={filter} />
+          </Suspense>
+        )}
+        {tab === 'controls' && (
+          <Suspense fallback={<p role="status">Loading the control register…</p>}>
+            <Controls filter={filter} />
+          </Suspense>
+        )}
         {tab === 'evidence' && <><Evidence {...viewProps} /><StandardsCrosswalk /></>}
         {tab === 'views' && (
           <Views
@@ -270,7 +289,7 @@ function Operations({ operator, grants }: { operator: string; grants: Grant[] })
             onSave={(v) => keepViews([...views.filter((x) => x.name !== v.name), v], `Saved the view “${v.name}”.`)}
             onApply={(v) => {
               setFilter(v.filter);
-              if (isTab(tabs, v.tab)) choose(v.tab);
+              if (isConsoleWorkspaceId(v.tab, workspaces)) choose(v.tab);
             }}
             onDelete={(name) => keepViews(views.filter((x) => x.name !== name), `Deleted the view “${name}”.`)}
           />

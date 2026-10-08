@@ -7,6 +7,7 @@ import type {
   UniversityIdentity,
   UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
+import type { RequestContext } from '../../../packages/platform/src/index.ts';
 
 /**
  * What a school has to write to connect one of its systems.
@@ -39,6 +40,13 @@ export interface AdapterContext {
   identity: UniversityIdentity;
   /** Aborts at the gateway's timeout. Pass it to every upstream call. */
   signal: AbortSignal;
+  /**
+   * The platform's request context for this request: the verified tenant, actor,
+   * correlation and request ids, in the shape every platform primitive takes.
+   * Optional while adapters are migrated onto it (`docs/platform/MIGRATION.md`,
+   * phase 4); the gateway always sets it.
+   */
+  request?: RequestContext;
 }
 
 export interface InstitutionAdapter {

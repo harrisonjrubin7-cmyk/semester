@@ -78,6 +78,16 @@ export const EVENT_TYPES = {
   'action.updated': spec(1, 'student_private', 'student_record'),
   'action.completed': spec(1, 'student_private', 'student_record'),
   'plan.updated': spec(1, 'student_private', 'student_record'),
+  // Tasks and calendar. Payloads carry ids, versions and the names of the
+  // fields that changed, never what they were changed to.
+  'task.created': spec(1, 'student_private', 'student_record'),
+  'task.updated': spec(1, 'student_private', 'student_record'),
+  'task.completed': spec(1, 'student_private', 'student_record'),
+  'task.deleted': spec(1, 'student_private', 'student_record'),
+  'calendar_event.created': spec(1, 'student_private', 'student_record'),
+  'calendar_event.updated': spec(1, 'student_private', 'student_record'),
+  'calendar_event.deleted': spec(1, 'student_private', 'student_record'),
+  'productivity.shared_read': spec(1, 'student_private', 'audit'),
   'agenda.shared': spec(1, 'student_private', 'audit'),
   'share.revoked': spec(1, 'student_private', 'audit'),
   // LMS
@@ -106,6 +116,10 @@ export const EVENT_TYPES = {
   'ai.feedback_submitted': spec(1, 'student_private', 'operational'),
   'ai.incident_detected': spec(1, 'internal', 'audit'),
   'ai.kill_switch_changed': spec(1, 'internal', 'audit'),
+  // Registration. Payloads carry ids and versions, not the checklist or the reason.
+  'registration.readiness_viewed': spec(1, 'education_record', 'audit'),
+  'registration.override_requested': spec(1, 'education_record', 'audit'),
+  'registration.override_granted': spec(1, 'education_record', 'audit'),
   // Support and security
   'support.ticket_created': spec(1, 'student_private', 'operational'),
   'support.access_granted': spec(1, 'student_private', 'audit'),

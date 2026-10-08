@@ -298,6 +298,16 @@ begin
   -- ── Notices and appeals ────────────────────────────────────────────────
   perform pg_temp.counted('the author is told, and can appeal', pg_temp.seen(alice,
     'select 1 from public.my_community_notices() where appealable'), 1);
+  -- The filing window is thirty days from the decision. A decision older than
+  -- that is neither offered for appeal nor accepted; one inside it still is.
+  update public.community_decisions set decided_at = now() - interval '31 days' where case_id = k;
+  perform pg_temp.counted('a decision past the window is not offered for appeal', pg_temp.seen(alice,
+    'select 1 from public.my_community_notices() where appealable'), 0);
+  perform pg_temp.expect_refused('and the author cannot appeal it', alice,
+    format('select public.appeal_community_decision(%L)', p3));
+  update public.community_decisions set decided_at = now() - interval '29 days' where case_id = k;
+  perform pg_temp.counted('a decision inside the window is offered for appeal', pg_temp.seen(alice,
+    'select 1 from public.my_community_notices() where appealable'), 1);
   perform pg_temp.expect_refused('somebody else appeals alice''s decision', bob,
     format('select public.appeal_community_decision(%L)', p3));
   perform pg_temp.expect_allowed('alice appeals', alice, format('select public.appeal_community_decision(%L)', p3));

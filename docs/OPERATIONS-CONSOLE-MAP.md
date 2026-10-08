@@ -35,6 +35,10 @@ Under any production write: *Production change. This will affect a live customer
 | **Approvals** | Requests against the duties matrix: raise one, decide one as a different person, and act on an approved one — the fail-closed write — with the production notice and the duty’s evidence requirement |
 | **Break-glass** | Open grants with their ticket, expiry and review due; close one as its subject, review one as somebody else |
 | **Audit** | The chain’s status (rows, head hash, last seal, last verification) and recent events; every read is itself an audit event, and the view says so |
+| **Tenant operations** | Metadata-only rollout, configuration, integration, support-access and operational facts for exact schools covered by live tenant implementation grants; no student records or illustrative production data |
+| **Privacy requests** | An identity-minimized, exact-school queue for access, export, correction, restriction and erasure; detail reads and lifecycle writes are separate, fresh-MFA, audited actions |
+| **Integration health** | Credential-free configuration, freshness, run, reconciliation, exception, ownership and customer-impact summaries for exact-school integration grants; configuration changes are request-only approvals |
+| **Release & incidents** | Evidence-derived release, deployment-verification and incident lifecycle states with customer impact, communication cadence, rollback status and request-only approvals; never a self-certified GO decision |
 | **Customers** | Tenants, commitments and contracts, each record with its classification and why the operator can see it |
 | **Figures** | Every figure with its source, time window, environment, owner, last refresh, evidence and known limitation; billing says there is no billing |
 | **Evidence** | Every evidence record with its expiry, its escalation step and the claims resting on it |
@@ -87,6 +91,49 @@ The capability behind each view, and its holders, from the same file.
 - [`supabase/scheduler.sql`](../supabase/scheduler.sql) — The console-audit-integrity job at 03:23 seals yesterday and verifies the chain.
 - [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadAudit and auditStatus.
 - [`app/src/screens/Console.tsx`](../app/src/screens/Console.tsx) — The Audit view shows the chain status and says that every read is itself logged.
+
+### Tenant operations
+
+**Tenant operations** (done) — a server-derived, exact-school operational summary available only when the operator has both the platform console shell and a live `tenant:implement` grant. Production excludes demo tenants and the browser supplies no tenant identifier.
+
+- [`supabase/migrations/20261005121000_console_tenant_operations.sql`](../supabase/migrations/20261005121000_console_tenant_operations.sql) — Metadata-only fact union, server-derived exact-school scope, demo separation and restricted provenance fields.
+- [`supabase/console-tenant-operations.check.sql`](../supabase/console-tenant-operations.check.sql) — Shell-plus-domain authorization, wrong-tenant and expired-grant denial, demo separation and metadata-only response checks.
+- [`app/src/lib/console/client.ts`](../app/src/lib/console/client.ts) — loadTenantOperations calls the scoped RPC without accepting a tenant identifier or caching rows.
+- [`app/src/components/console/TenantOperations.tsx`](../app/src/components/console/TenantOperations.tsx) — Grouped facts with provenance, classification, owner, freshness, visibility reason and limitation.
+- [`app/src/components/console/TenantOperations.test.tsx`](../app/src/components/console/TenantOperations.test.tsx) — Loading, denial, empty, stale, future-date, scope and filter behavior.
+
+### Privacy requests
+
+**Privacy and data-rights operations** (done) — an identity-minimized queue over `public.data_subject_request`, available only when the operator has both the platform console shell and a live `data_request:handle` grant for an exact school. Sensitive detail is never loaded with the queue.
+
+- [`supabase/migrations/20261005123000_privacy_case_workspace.sql`](../supabase/migrations/20261005123000_privacy_case_workspace.sql) — Metadata-only queue, exact-school authorization, demo separation, assignment fields, legal-hold state and deletion-approval state.
+- [`supabase/migrations/20261005124000_privacy_case_actions.sql`](../supabase/migrations/20261005124000_privacy_case_actions.sql) — Fresh-MFA claim, audited detail read, identity verification, resolution, live-hold and exact executed-approval enforcement, and immutable completion certificates.
+- [`supabase/privacy-case-workspace.check.sql`](../supabase/privacy-case-workspace.check.sql) — Wrong-role, expired-grant, wrong-tenant, demo, assignment and identity-minimization checks.
+- [`supabase/privacy-case-actions.check.sql`](../supabase/privacy-case-actions.check.sql) — Stale-MFA, ownership, failed-audit, live-hold, approval, certificate and audit-first paths.
+- [`app/src/components/console/PrivacyRequests.tsx`](../app/src/components/console/PrivacyRequests.tsx) — Metadata queue, explicit claim/detail/verification/approval/resolution controls, overdue and hold states, and fail-closed loading, denial and error behavior.
+- [`app/src/components/console/PrivacyRequests.test.tsx`](../app/src/components/console/PrivacyRequests.test.tsx) — Metadata-only rendering, overdue routing, denial, claim, detail, verification, deletion approval, held refusal, completed erasure and terminal read-only states.
+- [`docs/DATA-RIGHTS-REQUEST-RUNBOOK.md`](DATA-RIGHTS-REQUEST-RUNBOOK.md) — The operated procedure and quarterly rehearsal boundary.
+
+### Integration health
+
+**Integration health operations** (done) — a credential-free summary over connector configuration, sync freshness, data quality, failures, ownership and customer impact, available only with both the platform console shell and a live `integration:view` grant for an exact school. The browser cannot submit a tenant id to the reader.
+
+- [`supabase/migrations/20261005125000_console_integration_health.sql`](../supabase/migrations/20261005125000_console_integration_health.sql) — Server-derived tenant scope, explicit demo gate, allowlisted fields, computed five-state health and exact configuration-approval status.
+- [`supabase/console-integration-health.check.sql`](../supabase/console-integration-health.check.sql) — Exact-school, demo, shell/domain denial, five-state, pending-approval and planted-secret redaction checks.
+- [`app/src/components/console/IntegrationHealth.tsx`](../app/src/components/console/IntegrationHealth.tsx) — Health evidence, cautious impact, next safe action and a structured request-only `integration-config` approval; no configuration mutation or credential field.
+- [`app/src/components/console/IntegrationHealth.test.tsx`](../app/src/components/console/IntegrationHealth.test.tsx) — Healthy, degraded, stale, failed, unconfigured, denial, demo and exact approval-request coverage.
+- [`docs/INTEGRATION-OPERATOR-RUNBOOK.md`](INTEGRATION-OPERATOR-RUNBOOK.md) — Actual monitoring, approval, verification and rollback procedure.
+
+### Release & incidents
+
+**Release and incident operations** (done) — a platform-scoped, restricted summary over current release evidence, exact deployment and verification commits, incident impact and communication cadence. It requires both the console shell and `incident:communicate` at platform scope, and exposes approval requests rather than deployment or rollback execution.
+
+- [`supabase/migrations/20261005126000_console_release_incidents.sql`](../supabase/migrations/20261005126000_console_release_incidents.sql) — Conservative seven-gate release state, exact-commit deployment verification, service-recorded incidents, server-derived scope and allowlisted metadata.
+- [`supabase/console-release-incidents.check.sql`](../supabase/console-release-incidents.check.sql) — Missing and mismatched evidence, release candidate, deployment, verification, incident, rollback, recovery, demo, role and planted-notice redaction checks.
+- [`app/src/components/console/ReleaseIncidents.tsx`](../app/src/components/console/ReleaseIncidents.tsx) — Six required lifecycle states plus verified evidence, customer impact, communication cadence and structured request-only release or rollback approvals.
+- [`app/src/components/console/ReleaseIncidents.test.tsx`](../app/src/components/console/ReleaseIncidents.test.tsx) — Lifecycle, denial, empty, demo, no-direct-execution and exact approval-request coverage.
+- [`docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md`](RELEASE-INCIDENT-OPERATOR-RUNBOOK.md) — Evidence capture, approval, external execution, exact-commit verification, incident communication, rollback and recovery procedure.
+- [`docs/operating-model/INCIDENT-COMMUNICATIONS.md`](operating-model/INCIDENT-COMMUNICATIONS.md) — Audience, cadence and message-quality requirements; notice bodies remain outside the console summary.
 
 ### Customers
 

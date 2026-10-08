@@ -1,0 +1,10 @@
+import { PLATFORM_LABEL, type Platform, type Weights } from '@/lib/benchmark/benchmark.config';
+import { persistenceCeiling } from '@/lib/benchmark/probes/persistence';
+import { GradingForm } from './grading-form';
+export function BenchmarkRunDetail({ run, weights, requiresPersistence }: { run: any; weights?: Weights; requiresPersistence: boolean }) {
+  const ceiling = persistenceCeiling({ tested: run.persistence_tested, survivedReload: run.persistence_survived_reload, mode: run.persistence_mode, evidence: run.persistence_evidence ?? undefined }, requiresPersistence);
+  return (<article className="grid gap-4 rounded border bg-white p-5"><h3 className="text-lg font-semibold">{PLATFORM_LABEL[run.platform as Platform]} · {run.status}</h3>
+    <dl className="grid grid-cols-[160px_1fr] gap-2 text-sm"><dt>Model</dt><dd>{run.model_name ?? '—'}</dd><dt>Output</dt><dd>{run.output_url ? <a href={run.output_url} className="underline">{run.output_url}</a> : '—'}</dd><dt>Duration</dt><dd className="tabular-nums">{run.duration_ms ?? '—'} ms</dd><dt>Persistence</dt><dd>{run.persistence_tested ? (run.persistence_survived_reload ? 'Survived reload' : 'Lost on reload') + ' · ' + run.persistence_mode : 'Not tested'}</dd><dt>Status reason</dt><dd>{run.status_reason ?? '—'}</dd></dl>
+    <details><summary className="cursor-pointer text-sm">Exact prompt</summary><pre className="whitespace-pre-wrap font-mono text-xs">{run.executed_prompt}</pre></details>
+    <GradingForm runId={run.id} weights={weights} persistenceCeiling={ceiling} /></article>);
+}

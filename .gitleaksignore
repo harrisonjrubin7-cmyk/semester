@@ -3,3 +3,10 @@
 # and is already absent from the branch tip. Keep the exception pinned to the
 # exact commit, path, rule, and line so every other finding remains blocking.
 7aefea8f9e42f8d6469e1c19343d6ecbbbe35617:docs/legal-drafts/INFORMATION-SECURITY-ADDENDUM-DRAFT.md:generic-api-key:15
+
+# Test fixtures in the registration policy tests: a made-up command id beside
+# the word "key". Not credentials; the values are replaced in the next commit,
+# and each exception stays pinned to commit, path, rule and line.
+5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/access-saga.test.ts:generic-api-key:821
+5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:488
+5eb8e6eddae35d8b7d986bfc9e893c5b9bd96a7d:packages/institution/src/policy.test.ts:generic-api-key:496

@@ -1093,7 +1093,7 @@ export function Study({
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
-                    color: on ? 'var(--on-chrome)' : undefined,
+                    color: on ? 'var(--chrome-ink)' : undefined,
                     borderLeft: choice.id ? `3px solid ${tint(choice.id).edge}` : undefined,
                   }}
                 >
