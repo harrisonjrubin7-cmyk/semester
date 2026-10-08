@@ -11,7 +11,7 @@ They do not rename repository completion as deployment, participant or tenant ap
 
 | Profile | Technical candidate | Rollout | Still required |
 | --- | --- | --- | --- |
-| individual-scale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, broad-individual-rollout-approval, prerequisite:invitation-only-individual-validation, prerequisite:invitation-only-individual-validation |
+| individual-scale | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, broad-individual-rollout-approval, dependency:CAP-003, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037, prerequisite:invitation-only-individual-validation |
 | invitation-only-individual-validation | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, participant-terms-and-consent, qualified-legal-public-policy-approval, representative-user-acceptance, target-account-lifecycle-acceptance, validation-support-roster, validation-outcome-agreed, qualified-accessibility-conformance, validation-launch-decision, dependency:CAP-003, dependency:CAP-034, dependency:CAP-035, dependency:CAP-036, dependency:CAP-037 |
 | institutional-manual-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision |
 | institutional-pilot | not-ready | held | build-and-regression, real-account-lifecycle, tenant-isolation-negative-authorization, critical-accessibility-journeys, source-freshness-and-fallback, privacy-export-deletion, observability-and-support, rollback-and-restore-rehearsal, kill-switch-and-degraded-mode, claim-and-scope-review, deployed-exact-sha, production-smoke, support-route-live, rollback-current, kill-switch-clear, named-tenant-agreement, named-data-owner, tenant-accessibility-review, tenant-security-privacy-review, approved-data-scope, pilot-cohort-consent, pilot-support-roster, pilot-outcome-agreed, canonical-launch-decision, dependency:CAP-013, dependency:CAP-043, dependency:external:approved catalog and degree-audit data, dependency:external:approved read-only SIS registration-readiness adapter, dependency:external:authoritative registrar calendar feed, dependency:external:institution agreement and approved service adapters, dependency:external:provider credentials and institution approval |
@@ -33,13 +33,15 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 
 **Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
 
-**Unsatisfied capability dependencies:** none
+**Unsatisfied capability dependencies:** `CAP-003`, `CAP-034`, `CAP-035`, `CAP-036`, `CAP-037`
+
+**Prerequisite completion evidence:** `validation-cohort-closeout-accepted`
 
 **Allowed:** personal planning; source-aware course organization; study and creation; export; account deletion
 
 **Forbidden:** official registration; official grading; institutional record writes; financial aid; payments; payroll; general ledger
 
-**Claim boundary:** Broad individual rollout remains held until the invitation-validation controls and a separate broad-rollout approval are current; no institutional connection, certification, or system-of-record claim.
+**Claim boundary:** Broad individual rollout remains held until a same-artifact invitation cohort is authorized and has an accepted closeout, public-target dependencies are current, and a separate broad-rollout approval is current; no institutional connection, certification, or system-of-record claim.
 
 **Fallback:** Continue device-first use, preserve export, and disable unavailable cloud or provider-dependent surfaces.
 
@@ -52,6 +54,8 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 **Capabilities:** `CAP-001`, `CAP-004`, `CAP-005`, `CAP-006`, `CAP-007`, `CAP-008`, `CAP-009`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-025`, `CAP-028`, `CAP-031`, `CAP-040`, `CAP-049`, `CAP-053`, `CAP-054`, `CAP-055`
 
 **Unsatisfied capability dependencies:** `CAP-003`, `CAP-034`, `CAP-035`, `CAP-036`, `CAP-037`
+
+**Prerequisite completion evidence:** none
 
 **Allowed:** invitation-only unpaid validation; personal planning; source-aware course organization; export; account deletion
 
@@ -71,6 +75,8 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 
 **Unsatisfied capability dependencies:** none
 
+**Prerequisite completion evidence:** none
+
 **Allowed:** student-confirmed manual import; manual course and deadline correction; personal planning; export; account deletion
 
 **Forbidden:** institutional reads; institutional writes; SSO or provisioning claims; official registration; official grading; degree certification; financial aid; payments; act as system of record
@@ -88,6 +94,8 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 **Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
 
 **Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved catalog and degree-audit data`, `external:approved read-only SIS registration-readiness adapter`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
+
+**Prerequisite completion evidence:** none
 
 **Allowed:** Path planning; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff
 
@@ -107,6 +115,8 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 
 **Unsatisfied capability dependencies:** none
 
+**Prerequisite completion evidence:** none
+
 **Allowed:** contracted manual-data pilot; student-confirmed manual import; manual course and deadline correction; personal planning; export; account deletion; authorized billing
 
 **Forbidden:** unapproved charge; institutional reads; institutional writes; SSO or provisioning claims; official registration; official grading; degree certification; act as system of record
@@ -125,6 +135,8 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 
 **Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved catalog and degree-audit data`, `external:approved read-only SIS registration-readiness adapter`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
 
+**Prerequisite completion evidence:** none
+
 **Allowed:** contracted planning-only pilot; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff; authorized billing
 
 **Forbidden:** unapproved charge; enroll; waitlist; drop; withdraw; write to SIS; certify degree progress; act as system of record
@@ -142,6 +154,8 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 **Capabilities:** `CAP-001`, `CAP-003`, `CAP-010`, `CAP-011`, `CAP-014`, `CAP-015`, `CAP-016`, `CAP-017`, `CAP-019`, `CAP-020`, `CAP-021`, `CAP-022`, `CAP-023`, `CAP-024`, `CAP-044`, `CAP-045`, `CAP-050`
 
 **Unsatisfied capability dependencies:** `CAP-013`, `CAP-043`, `external:approved catalog and degree-audit data`, `external:approved read-only SIS registration-readiness adapter`, `external:authoritative registrar calendar feed`, `external:institution agreement and approved service adapters`, `external:provider credentials and institution approval`
+
+**Prerequisite completion evidence:** none
 
 **Allowed:** contracted enterprise planning deployment; repeatable implementation; term planning; schedule comparison; conflict validation; advisor agenda; official-system handoff; authorized billing
 
@@ -169,7 +183,7 @@ requires deployment and the profile-specific participant, tenant, commercial, as
 ## Activation boundary
 
 - This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.
-- Broad individual rollout requires an independently authorized invitation-only validation profile plus a separate broad-rollout decision; the current product checkout hold independently disables new paid acquisition.
+- Broad individual rollout requires an independently authorized invitation-only validation profile for the same deployed SHA, an accepted cohort closeout, current public-target capability dependencies, and a separate broad-rollout decision; the current product checkout hold independently disables new paid acquisition.
 - Invitation-only unpaid validation requires one named cohort, participant terms and consent, qualified legal/public-policy approval, representative-user acceptance, target account-lifecycle acceptance, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.
 - Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.
 - A paid pilot additionally requires an approved design-partner activation and measured closeout; target-bound DAST, restore, incident/alert, data-rights, access-revocation and offboarding exercises; independent security assurance; qualified accessibility conformance; approved production providers; counsel-approved commercial paper; pricing and signing authority; tax/accounting/payment controls; a current insurance decision; and customer-side purchase and billing authorization.
