@@ -208,6 +208,21 @@ begin
   begin
     perform public.request_approval(
       'integration-config', 'health-north',
+      (select c.public_id from public.integration_connections c where c.id = other_connection),
+      jsonb_build_object('requested_change', 'configure', 'credential_expiry', (current_date + 30)::text),
+      'Institution approval and rollback references.', 'INT-WRONG-TARGET', null
+    );
+  exception when check_violation then denied := true;
+  end;
+  reset role;
+  if not denied then raise exception 'FAILED: a school-scoped request accepted another school''s target'; end if;
+  raise notice 'ok  the integration target is bound to the authorized school';
+
+  denied := false;
+  perform pg_temp.become(operator);
+  begin
+    perform public.request_approval(
+      'integration-config', 'health-north',
       (select c.public_id from public.integration_connections c where c.id = healthy),
       jsonb_build_object('requested_change', 'arbitrary-operation', 'credential_expiry', (current_date + 30)::text),
       'Institution approval and rollback references.', 'INT-UNSUPPORTED', null

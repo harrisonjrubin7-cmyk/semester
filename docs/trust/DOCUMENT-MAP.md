@@ -114,6 +114,7 @@ How to read the **Status** column: it is the status the document gives itself, s
 | [ferpa-risk-and-permission-matrix.md](../security/ferpa-risk-and-permission-matrix.md) | Risk and permission matrix for education records. | Engineering and privacy baseline; no FERPA claim |
 | [guardian-data-model.md](../security/guardian-data-model.md) | The guardian and family data model. | Target projection model |
 | [operations-console-access-model.md](../security/operations-console-access-model.md) | What an operator may see and do, for how long. | Access model |
+| [security-assurance-roadmap.md](../security/security-assurance-roadmap.md) | Evidence-gated security assurance priorities and the proof required to exit each stage. | Roadmap; not a certification or compliance claim |
 | [SECURITY-PROGRAM.md](../security/SECURITY-PROGRAM.md) | The security program: claim ceiling, domain threat map, identity, SDLC, data, vendor, evidence and calendar controls, owners, 30/60/90 plan. | Program; no certification claimed |
 | [FINDINGS-REGISTER.md](../security/FINDINGS-REGISTER.md) | Open security findings with evidence, closing condition, due date and owner seat, and the evidence still owed. | Proposed severities; no clock started |
 | [TENANT-ISOLATION-VERIFICATION.md](../security/TENANT-ISOLATION-VERIFICATION.md) | The tenant-isolation architecture and the twelve verification cases, each marked exists, partial or to add. | Specification; not all cases built |
