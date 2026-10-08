@@ -26,7 +26,7 @@ These are dispositions of files as evidence artifacts. They do not pre-judge the
 | `handoff/registry/capabilities.json` | 122 rows; all say implemented/tested/deployed false; 55 claim backend true and all 122 claim data true | Reconciled row by row in [`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md): 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded. Archive status is not repository evidence. |
 | `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established in the archive | Reconciled in [`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md): 16 existing but incomplete, 2 documentation or roadmap only, 1 blocked externally and 1 intentionally excluded. Repository evidence, not archive status, sets each result. |
 | `handoff/capability-blueprint/tenant-isolation-proof-manifest.json` | Zero objects; explicitly illustrative | Documentation or roadmap only; do not treat as tenant-isolation proof. |
-| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Screen rows are reconciled in [`REFERENCE-CATALOG-SCREEN-RECONCILIATION.md`](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md); workflow rows in [`REFERENCE-WORKFLOW-RECONCILIATION.md`](REFERENCE-WORKFLOW-RECONCILIATION.md). Role, system and document populations remain separate. |
+| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Screens, workflows, roles, systems and documents are reconciled row by row. [`REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md`](REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md) closes the latter three populations without adopting archive roles, services or document authorities. |
 | Streams `00`–`30` | 31 numbered streams plus index; later files override earlier ordering inside the archive | Documentation or roadmap only; mapped into the user's Phases 0–12, not executed as instructions. |
 
 ## Pass 2 meaningful-item coverage
@@ -40,7 +40,13 @@ The first capability-level register now covers every meaningful item selected fo
 | Stream 18 | 23 / 23 | Sixteen requested documents map to current `docs/roles/*`; seven underlying product decisions remain separately honest. |
 | Stream 25 | 28 / 28 | Eighteen packages, seven “one” rules and three open decisions map to current authorities. |
 
-The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, pass 4 mapped all 281 prototype routes without adopting archive URLs, pass 5 reconciled all 673 catalog-screen rows, and pass 6 reconciled all 319 canonical workflow steps. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level populations are the role, system and document catalogs plus remaining stream-owned decisions.
+The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, pass 4 mapped all 281 prototype routes without adopting archive URLs, pass 5 reconciled all 673 catalog-screen rows, pass 6 reconciled all 319 canonical workflow steps, and pass 7 reconciled all 49 roles, 88 systems and 82 documents. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. Projection/read models are also missing and in scope, but remaining stream-owned dependencies must establish the implementation order.
+
+## Pass 7 role, system and document coverage
+
+The 219-row register classifies roles as 36 existing incomplete, 9 duplicate/superseded and 4 roadmap-only; systems as 84 existing incomplete, 1 missing/in-scope, 2 roadmap-only and 1 excluded; and all 82 document requirements as duplicate or superseded by current repository authorities. No row is existing and verified.
+
+The role mapping validates every grantable analogue against `ROLE-LAUNCH-REGISTER.md` and preserves student-controlled delegated access instead of creating a family role. The system mapping keeps marketplace excluded under `D-1287`, retains developer platform and board reporting as roadmap concepts, and names projection/read models as the sole new system-level buildable gap. The document mapping prevents archive drafts and catalogs from becoming competing sources of truth or implied external approval.
 
 ## Current repository mapping baseline
 
@@ -62,7 +68,7 @@ All 673 archive catalog-screen rows now have one disposition, owner/evidence pro
 
 ## Pass 6 workflow coverage
 
-All 319 canonical archive workflow steps now have one disposition, owner/evidence profile, dependency and acceptance boundary. Structural comparison proves exact ordered equality with the repository workflow audit across all 17 flows. The 84 screen projections resolve to exact workflow indices and remain aliases, not additional obligations. Fifty-four rows are missing and in scope; they overlap the screen candidates and remain unselected until role, system, document and remaining execution-stream dependencies are reconciled. No row is called existing and verified.
+All 319 canonical archive workflow steps now have one disposition, owner/evidence profile, dependency and acceptance boundary. Structural comparison proves exact ordered equality with the repository workflow audit across all 17 flows. The 84 screen projections resolve to exact workflow indices and remain aliases, not additional obligations. Fifty-four rows are missing and in scope; they overlap the screen candidates. Pass 7 closes the role, system and document catalogs, while remaining execution-stream dependencies still prevent selection. No row is called existing and verified.
 
 ## How a row was classed
 

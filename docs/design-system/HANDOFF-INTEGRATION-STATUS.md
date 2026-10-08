@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 6 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
+**Automation pass** 7 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 6 completes the 319-row canonical workflow reconciliation; no production route, schema, policy, dependency, token output, deployment or external system changed.
+Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 7 completes the 49-role, 88-system and 82-document catalog reconciliation; no production route, schema, role, permission, policy, dependency, token output, deployment or external system changed.
+
+## Evidence locked in pass 7
+
+- Current `origin/main` remains `e53128a6`, is already an ancestor of the branch and contains no equivalent catalog reconciliation.
+- [`REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md`](REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md) and its generated CSV cover 219 unique rows.
+- The generated CSV SHA-256 is `bd3d790ae54cb114accd53657707509801df165ff3d00d398337ee8f6dcf28a3`.
+- Role results: 36 existing but incomplete, 9 duplicate or superseded and 4 documentation or roadmap only. Every named role analogue resolves to the current 69-role launch register; no archive text role was added.
+- System results: 84 existing but incomplete, 1 missing and in scope, 2 documentation or roadmap only and 1 intentionally excluded. Projection/read models are the single buildable system gap; marketplace remains excluded.
+- Document results: all 82 are duplicate or superseded by current repository authorities. The classification does not imply legal approval, external assurance, deployment, operation or live restore evidence.
+- P11 graduate/research education remains missing independently of the existing `graduate_student` role. Projection/read models remain behind current outbox/domain-event and remaining stream dependencies rather than being selected prematurely.
 
 ## Evidence locked in pass 6
 
@@ -15,7 +25,7 @@ Phase 0 is in progress. The exact mounted archive remains authenticated and full
 - All 84 catalog-screen projections resolve to exact archive workflow indices and labels; they remain aliases of canonical workflow rows.
 - Results: 241 existing but incomplete, 54 missing and in scope, 18 documentation or roadmap only, 2 externally blocked and 4 intentionally excluded.
 - Every row names a P3/P5/P6/P7/P8/P9 authorization/data-boundary profile, current evidence or planned owner, dependencies and acceptance contract, and release boundary.
-- The 54 buildable rows overlap the 44 buildable screen rows; they are not additive totals. Remaining role, system, document and execution-stream dependencies still prevent an evidence-based production selection.
+- The 54 buildable rows overlap the 44 buildable screen rows; they are not additive totals. Pass 7 now closes the role, system and document catalogs; remaining execution-stream dependencies still prevent an evidence-based production selection.
 
 ## Evidence locked in pass 5
 
@@ -78,8 +88,8 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Open Phase 0 gates
 
-1. Reconcile remaining streams 00–30 and the 49-role, 88-system and 82-document catalog populations at meaningful-item level, including owner path, dependencies and acceptance evidence for buildable work.
-2. Resolve cross-stream dependencies for the overlapping screen/workflow candidates and P11 graduate/research education.
+1. Reconcile the remaining streams 00–30 at meaningful-item level, including owner path, dependencies and acceptance evidence for buildable work.
+2. Resolve cross-stream dependencies for the overlapping screen/workflow candidates, P11 graduate/research education and projection/read models.
 3. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
 
 ## External gates kept open
@@ -88,4 +98,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the remaining Stream 00–30 meaningful items, beginning with the 49-role, 88-system and 82-document catalog populations and their cross-stream dependencies. Production selection follows only when those controls establish an unambiguous dependency-ready slice.
+Continue Phase 0 with the remaining Stream 00–30 meaningful items and their cross-stream dependency graph. Production selection follows only when those controls establish an unambiguous dependency-ready slice among projection/read-model infrastructure, Course Studio foundations and the other overlapping candidates.

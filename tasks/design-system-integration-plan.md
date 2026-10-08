@@ -94,7 +94,19 @@ The 44 buildable rows are candidates, not a flat queue. Course Studio foundation
 
 Results are 241 existing but incomplete, 54 missing and in scope, 18 documentation or roadmap only, 2 externally blocked and 4 intentionally excluded. No row is inflated to existing and verified. The developer-platform/marketplace flow remains roadmap-only under `D-1287`; marketplace-commerce steps remain excluded; accommodation approval and a signed sponsor measures sheet remain externally controlled. Buildable advising escalation is bounded to a visible, appealable, relationship-scoped human process with no hidden score or broad roster.
 
-The 54 buildable workflow rows and 44 buildable screen rows are candidates, not additive totals or a flat queue: many describe the same vertical slice. Course Studio remains the earliest apparent cluster, but its course-shell, assignment, roster and official-record dependencies still cross unreconciled execution streams and role/system/document catalogs. The next Phase 0 slice is the remaining Stream 00–30 meaningful-item reconciliation, beginning with those catalog populations and dependencies; production selection remains premature.
+The 54 buildable workflow rows and 44 buildable screen rows are candidates, not additive totals or a flat queue: many describe the same vertical slice. At pass 6, Course Studio was the earliest apparent cluster, but its course-shell, assignment, roster and official-record dependencies still crossed unreconciled execution streams and role/system/document catalogs. Pass 7 closes those three catalog populations; remaining execution-stream dependencies still make production selection premature.
+
+## Role, system and document reconciliation — automation pass 7
+
+[`REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md`](../docs/design-system/REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md) and its generated CSV now cover all 49 archive roles, 88 systems and 82 documents. Every row has one disposition, current owner or evidence path, dependency/acceptance contract and release boundary.
+
+Role results are 36 existing but incomplete, 9 duplicate or superseded persona/organization aliases and 4 documentation or roadmap only. No archive label becomes a new authorization role. The existing `graduate_student` role does not complete the separately missing P11 research lifecycle, family access remains a student-created delegated grant, and developer/partner remains roadmap-only under `D-1287`.
+
+System results are 84 existing but incomplete, 1 missing and in scope, 2 documentation or roadmap only and 1 intentionally excluded. Projection/read models are the one newly explicit buildable system gap; current-state evidence records no worker, watermark, registry or rebuild path. It must follow current domain-event/outbox contracts and the remaining stream dependency sequence. Marketplace stays excluded, while developer platform and board/investor reporting remain roadmap-only.
+
+All 82 archive document requirements map to current repository authorities and are duplicate or superseded. That prevents a second document system and does not turn a draft, plan, template or runbook into legal approval, live operation, deployment, assurance or restore evidence.
+
+The next Phase 0 slice is the remaining Stream 00–30 meaningful-item reconciliation and cross-stream dependency graph. It must determine whether projection infrastructure, Course Studio foundations or another shared prerequisite is the earliest safe production slice without treating the 44 screen, 54 workflow and other buildable rows as additive queues.
 
 ## What was read
 
@@ -102,7 +114,7 @@ The 54 buildable workflow rows and 44 buildable screen rows are candidates, not 
 - `origin/main` through `e53128a6`; pass 1 began at the supplied `INITIAL_MAIN_SHA` `7b7603e1`, pass 2 reconciled after the migration-version collision repair, and pass 5 merged the clean branch with the current capability-exposure/assistant-safety changes before work.
 - Committed handoff: `docs/handoff/` (139 files). `docs/handoff/IN-THIS-REPO.md` and `docs/decisions/D-1287.md` say `ui_kits/`, `templates/`, and fonts are not in the repository.
 - Mounted archive entry maps: `readme.md`, `NEXT-SESSION.md`, `handoff/manifest.json`, `START-HERE.md`, `BUILD.md`, `README.md`, the prototype screen inventory/JSON, capability registry, 20-capability blueprint, and execute streams `00` through `30`.
-- Archive master-catalog data was parsed as data rather than executed: 49 role rows, 673 screen rows, 319 workflow steps, 88 systems, 82 documents and 84 added screen rows. Its prose also claims 51 roles. All 673 screen rows and all 319 workflow rows are now reconciled; the role, system and document populations remain separate.
+- Archive master-catalog data was parsed as data rather than executed: 49 role rows, 673 screen rows, 319 workflow steps, 88 systems, 82 documents and 84 added screen rows. Its prose also claims 51 roles. All six catalog populations are now reconciled; remaining execution-stream items and cross-stream dependencies stay open.
 - Current repository integration controls, merged decisions, `docs/master/REPO_AUDIT.md`, the generated role-permission matrix, route/navigation authorities and current filesystem census.
 
 ## Preserved decision: a scanner was drafted and not kept

@@ -16,6 +16,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Reconcile each of the 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
 - [x] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
 - [x] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes and the 589 current catalog rows.
+- [x] Reconcile all 49 archive roles, 88 systems and 82 documents without creating parallel roles, services or document authorities.
 - [ ] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
 - [ ] Give every meaningful archive item exactly one allowed disposition; file-family dispositions alone do not complete this gate.
 - [ ] Identify the earliest buildable dependency-ready vertical slice only after the preceding row-level controls are complete.
@@ -81,12 +82,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Give all 319 canonical rows one disposition, evidence profile, current evidence or planned owner, dependency/acceptance contract and release boundary.
 - [x] Identify 54 missing-and-in-scope workflow candidates without treating them as additive to the 44 screen candidates or selecting production work early.
 - [x] Preserve the developer-platform/marketplace roadmap boundary, marketplace exclusions, external accommodation/signature authority and student-controlled advising boundary.
-- [ ] Reconcile the remaining Stream 00–30 items, beginning with the 49-role, 88-system and 82-document catalog populations and cross-stream dependencies.
+- [x] Reconcile the 49-role, 88-system and 82-document catalog populations with current owners, dependency contracts and release boundaries.
+- [ ] Reconcile the remaining Stream 00–30 meaningful items and resolve cross-stream dependencies for the buildable candidates.
 
 ### Verification for pass 6
 
 - [x] Generator validation: exactly 319 archive rows, 319 unique repository rows, exact ordered labels, 84 exact screen aliases and 319 unique emitted keys.
 - [x] Structural validation: one allowed disposition and one evidence profile per CSV row; computed disposition/workflow totals match the summary.
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
+- [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.
+
+## 2026-10-08 role/system/document reconciliation — pass 7
+
+- [x] Fetch current `origin/main` `e53128a6`, confirm it is already an ancestor and inspect the capability-state/assistant-safety change for overlap.
+- [x] Parse the archive catalog as JSON data without evaluating its JavaScript.
+- [x] Give all 49 archive role rows one disposition, current role/grant evidence or roadmap owner, dependency contract and release boundary.
+- [x] Validate every named current role against the migration-rendered 69-role launch register; do not create archive text-role aliases.
+- [x] Give all 88 system rows one disposition and current owner profile; keep marketplace excluded, developer platform and board reporting roadmap-only, and projection/read models missing and in scope.
+- [x] Map all 82 archive document requirements to current repository authorities and classify the archive copies as duplicate or superseded without implying approval or operation.
+- [x] Keep the graduate/research lifecycle gap separate from the existing `graduate_student` role and keep projection/read models behind the remaining stream dependency pass.
+
+### Verification for pass 7
+
+- [x] Generator validation: exactly 49 roles, 88 systems, 82 documents and 219 unique emitted keys.
+- [x] Structural validation: every row has one allowed disposition, evidence profile, current owner/evidence, dependency/acceptance contract and release boundary; mapped roles and document evidence paths resolve.
 - [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
 - [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
 - [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.
