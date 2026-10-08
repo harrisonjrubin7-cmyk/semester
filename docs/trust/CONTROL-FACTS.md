@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 203 |
+| Migration files | 204 |
 | Tables created in `public` and not later dropped | 333 |
 | … of which enable row-level security in a migration | 333 |
 | Tables created in `private` and not later dropped | 35 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-130 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+131 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -132,6 +132,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
 | `supabase/projection-foundation.check.sql` | The projection tables and the outbox's claim columns (backlog P1-01). |
+| `supabase/projection-outbox-operations.check.sql` | Projection outbox operations (P1-03): claim, settle, bounded failure and approval-bound replay. |
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
 | `supabase/referrals.check.sql` | Referral links: what an ambassador may learn, and what they may not. |

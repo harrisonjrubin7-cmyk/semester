@@ -1371,6 +1371,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
       // Not a producer: private.emit_domain_event is the helper a SQL producer will call (backlog P1-02). Nothing calls it,
       // so the claims above (one producer, nothing published) still hold; the page lists it because it inserts.
       'supabase/migrations/20261008183934_emit_domain_event.sql',
+      // Not a producer: P1-03 writes only consumer receipts while settling or dead-lettering an existing event.
+      'supabase/migrations/20261008190000_projection_outbox_operations.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

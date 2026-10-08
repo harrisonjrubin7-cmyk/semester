@@ -74,7 +74,7 @@ All 319 canonical archive workflow steps now have one disposition, owner/evidenc
 
 All remaining novel task, behavior, late-addendum, gate and implementation-pattern bundles in Streams 00–30 now have one disposition in `REFERENCE-EXECUTION-STREAM-RECONCILIATION.md`. Exact route, screen, workflow, capability, role, system and document tables keep their canonical row-level registers, so repeated archive screen tables and shared rules are linked rather than double-counted.
 
-Current repository evidence resolves the first shared dependency. Projection P1-01 (private registry/watermark/invalidation/rebuild tables and outbox claim columns) and P1-02 (the sanitized event-emission helper) have landed and are existing but incomplete. P1-03 claim/complete/fail/approval-gated replay operations are the earliest missing-and-in-scope slice. A worker, cron, domain producers, projected views and Console UI follow in separate slices. Course Studio is the first domain cluster after that foundation; P11 remains non-ready pending owner and authority contracts.
+Current repository evidence resolves the first shared dependency. Projection P1-01 (private registry/watermark/invalidation/rebuild tables and outbox claim columns) and P1-02 (the sanitized event-emission helper) have landed and are existing but incomplete. Pass 9 implements and verifies P1-03 claim/complete/fail/approval-gated replay operations on the branch, so that slice is **existing and verified locally**. A worker, cron, domain producers, projected views and Console UI remain separate missing-and-in-scope slices. Course Studio remains the first domain cluster after the projection foundation; P11 remains non-ready pending owner and authority contracts.
 
 ## How a row was classed
 

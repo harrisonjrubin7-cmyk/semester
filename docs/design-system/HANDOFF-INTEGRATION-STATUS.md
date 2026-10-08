@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 8 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
+**Automation pass** 9 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `d9640e45`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 8 closes the remaining Stream 00–30 dependency layer and selects P1-03 outbox claim/settle/replay operations as the earliest dependency-ready production slice. No production route, schema, role, permission, policy, dependency, token output, deployment or external system changed in this pass.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies the selected P1-03 outbox claim/settle/replay slice on the branch, without the worker, scheduler, producers, projected models or UI. No deployment, production data or external system changed.
+
+## Evidence locked in pass 9
+
+- `origin/main` advanced during the pass from `e53128a6` to `d9640e45`; the intervening Phase A, HawkScan-source-tag and developer-tooling commits contain no equivalent P1-03 migration, function, focused check or migration-version collision. The dirty branch was not merged or rebased.
+- `20261008190000_projection_outbox_operations.sql` adds service-role-only claim, complete and fail transitions with a five-minute recoverable lease, 100-row batch limit, deterministic jitter under a fifteen-minute retry cap, dead-letter at attempt eight and idempotent per-consumer receipts.
+- The dedicated `projection-replay` duty requires an engineering requester, two distinct data/security approvals and evidence binding one event, consumer, projector version and rollback plan. Execution also requires `console:operate`, fresh MFA, a current exact approval and a fail-closed console audit append.
+- `projection-outbox-operations.check.sql` covers privilege refusal, due ordering, stale recovery, claim identity, atomic/idempotent completion, retry/dead-letter state, approval binding, capability/MFA checks, replay idempotency and audit failure rollback.
+- Repository-owned console/event/role/control registers were regenerated. Focused guards passed 39/39, 54/54 and 57/57. TypeScript build, lint, university gateway typecheck and production build passed.
+- The full application suite was not green: the mounted `.semester-reference` directory remains absent from the repository map; affected generated registers were then refreshed; unrelated late `softtop`/`localask` timing failures and a worker SIGTERM occurred after about 25 minutes. No slice-focused TypeScript test failed.
+- `supabase/check.sh projection-outbox-operations` ran on PostgreSQL 17: all 204 migrations applied and all six focused P1-03 checks passed. With `SEMESTER_CHECK_REAPPLY=1`, a second application left the schema and all 368 table fingerprints unchanged and the six checks passed again. P1-03 therefore moves from missing and in scope to existing and verified locally; deployment remains unverified.
+- Six focused TypeScript/register files passed 196/196 tests. `tsc -b`, lint and the university gateway typecheck also passed; lint retained only the existing warning baseline.
+- HawkScan cannot run (`hawk runtime=false`, `HAWK_API_KEY=false`). No DAST pass is claimed and that release gate remains open.
 
 ## Evidence locked in pass 8
 
@@ -96,14 +108,14 @@ Phase 0 reconciliation is complete for the currently identified archive populati
 
 The archive is design and product evidence. Its prototype checks, code, migrations, prompt files, completion labels, pilot statements, customer claims, dates and approval claims are not repository, deployment, institutional or GA evidence. Current repository controls and merged decisions win every conflict.
 
-## Open Phase 0 gate
+## Completed local slice gate
 
-Immediately before implementation, fetch `origin/main` and inspect P1-03 symbols and migration versions for concurrent equivalent work. If none landed, record the exact coherent slice and implement it without bundling the worker, producers, read models or UI.
+The focused PostgreSQL 17 proof is green. Re-run the focused policy/reference guards after this evidence update, then commit the coherent P1-03 slice. P1-04 worker/cron/producers/read-model/UI work remains a separate slice.
 
 ## External gates kept open
 
-HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review, DPA/HECVAT/insurance, institutional approval, UAT, accessibility conformance, staffing, live restore evidence and production activation remain unverified. The local HawkScan runtime and `HAWK_API_KEY` are unavailable; no scan is claimed.
+HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review, DPA/HECVAT/insurance, institutional approval, UAT, accessibility conformance, staffing, live restore evidence and production activation remain unverified. The HawkScan runtime and `HAWK_API_KEY` are unavailable; no DAST pass is claimed.
 
 ## Next dependency-ready work
 
-Implement projection backlog P1-03 as one coherent server-side slice: claim, complete, fail and approved replay operations over the existing outbox/receipt schema, with stale-claim recovery, bounded backoff/dead-letter behavior, capability/audit enforcement and focused SQL red/green checks. Re-check current main first; do not duplicate equivalent concurrent work.
+After the verified P1-03 slice is committed, select the earliest dependency-ready P1-04 worker/producer increment without bundling the projected reads or Console UI.

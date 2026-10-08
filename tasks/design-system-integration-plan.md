@@ -118,6 +118,14 @@ The earliest dependency-ready production slice is now P1-03: server-only claim, 
 
 Phase 0 row reconciliation is complete for the currently identified archive populations and stream bundles. Phase 0 itself remains open until the selected P1-03 slice is checked against new `origin/main` immediately before implementation and its exact acceptance slice is recorded without colliding with concurrent work.
 
+## Projection outbox operations — automation pass 9
+
+`origin/main` advanced during this pass from `e53128a6` to `d9640e45`. The intervening Phase A, HawkScan-source-tag and developer-tooling commits contain no P1-03 functions or migration-version collision. The dirty branch was not rebased or merged. The branch now carries the bounded P1-03 implementation in `20261008190000_projection_outbox_operations.sql`: service-role-only claim, complete and fail transitions; five-minute stale-claim recovery; a 100-row claim cap; deterministic jitter under a fifteen-minute retry ceiling; terminal dead-lettering at attempt eight; idempotent per-consumer receipts; and a dedicated two-person `projection-replay` duty whose execution requires `console:operate`, fresh MFA, an exact event/consumer binding and a fail-closed console audit append. The worker, scheduler, producers, projections, read models and Console UI remain outside this slice.
+
+The focused SQL suite `projection-outbox-operations.check.sql` covers client refusal, service access, due ordering, stale recovery, claim identity, atomic/idempotent completion, bounded retry, dead-letter receipts, approval binding, capability/MFA enforcement, replay idempotency and audit failure rollback. Repository-owned policy/reference registers were regenerated and their focused tests pass. TypeScript build, lint, university gateway typecheck and production build also pass; the full application suite progressed through the repository but ended with unrelated generated-map and timing/worker failures, which are recorded in the status page.
+
+P1-03 is **implemented, database-verified and committed locally**. A disposable PostgreSQL 17 runtime applied all 204 migrations and `supabase/check.sh projection-outbox-operations` passed all six focused checks. An idempotency run reapplied the migration set without changing the schema or any of 368 table fingerprints, then passed the focused checks again. Six focused TypeScript/register files passed 196/196 tests; `tsc -b`, lint and the university gateway typecheck passed, with only the existing lint warning baseline. HawkScan remains unavailable (`hawk runtime=false`, `HAWK_API_KEY=false`), so no DAST result is claimed. P1-04 remains a separate follow-up.
+
 ## What was read
 
 - Root `CLAUDE.md`.

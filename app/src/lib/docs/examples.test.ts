@@ -792,6 +792,8 @@ describe('examples/event-consumer', () => {
       'supabase/productivity-commands.check.sql',
       // Writes one row of its own to prove the old columns still default after the claim columns were added; it is a check, not a producer.
       'supabase/projection-foundation.check.sql',
+      // Writes synthetic rows only inside its rolled-back P1-03 transition check; it is not a production producer.
+      'supabase/projection-outbox-operations.check.sql',
     ]);
     expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('**no\nproducer writes to the outbox yet**');
   });

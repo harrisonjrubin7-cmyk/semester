@@ -128,6 +128,27 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Full application gates — not required for this documentation-only reconciliation slice; no production code, schema, policy, dependency or generated token changed.
 - [x] HawkScan — not applicable to this documentation-only slice; the runtime and `HAWK_API_KEY` are unavailable and no production code or scan configuration changed.
 
+## 2026-10-08 projection outbox operations — pass 9
+
+- [x] Fetch `origin/main` before work and again after it advanced to `d9640e45`; confirm no equivalent P1-03 migration, function, focused check or migration-version collision landed. Do not merge or rebase the dirty branch.
+- [x] Add service-only, bounded claim/complete/fail operations over the existing outbox and receipt tables without adding a worker, scheduler, producer, projection, read model or UI.
+- [x] Recover claims older than five minutes, cap claim batches at 100, delay retryable failures with deterministic jitter under fifteen minutes and dead-letter at attempt eight.
+- [x] Preserve one receipt key per consumer/event; repeated completion and replay are idempotent and replay does not erase the failed receipt.
+- [x] Add a dedicated `projection-replay` console duty with engineering request, independent data/security approvals and evidence naming the event, consumer, projector version and rollback.
+- [x] Require `console:operate`, fresh MFA, an exact current approval and a fail-closed immutable audit append before replay resets delivery state.
+- [x] Add focused SQL proof for grants, claim ordering/bounds/recovery, claim identity, completion, retry/dead letter, replay authorization/idempotency and audit failure rollback.
+- [x] Regenerate the console, event, role-launch and control-facts registers affected by the new migration and duty.
+- [x] Run `supabase/check.sh projection-outbox-operations` on PostgreSQL 17 — all 204 migrations applied and all six focused checks passed; the idempotency run left the schema and all 368 table fingerprints unchanged and passed the six checks again.
+- [x] Commit the coherent P1-03 slice after the focused generated-register guards are rerun.
+
+### Verification for pass 9
+
+- [x] Focused policy/reference tests: six files and 196 tests passed after the final evidence update.
+- [x] `pnpm exec tsc -b`, `pnpm run lint`, `pnpm run check:university`, and `pnpm run build` passed. Lint retained only the existing warning baseline.
+- [ ] `pnpm test` — ran, but not green: the mounted `.semester-reference` directory is absent from the repository map; generated registers were then refreshed; late unrelated `softtop`/`localask` timing failures and a worker SIGTERM occurred after roughly 25 minutes. Slice-focused tests remain green.
+- [ ] `npm run test:shuffle`, `npm run design-system:check`, and `npm run design-system:report` — not run in this backend-only slice; the prior full ordered suite also remains non-green for the recorded unrelated failures.
+- [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
+
 ### Verification for pass 4
 
 - [x] Generator validation: exactly 281 archive routes, 589 current catalog rows and 122 reconciled capability rows; 281 unique emitted route keys.
