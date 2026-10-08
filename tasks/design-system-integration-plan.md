@@ -72,6 +72,14 @@ The result is 91 existing but incomplete, 10 prototype only, 2 duplicate or supe
 
 The next dependency-ready Phase 0 slice is the 281-row prototype route inventory. It must map every archive route to the current hash-route registry, navigation, role/capability evidence, repository catalog row and test or else identify the exact authority gap. Production work is still gated because the 673 archive catalog screens and remaining streams have not yet been reconciled.
 
+## Prototype-route reconciliation — automation pass 4
+
+[`REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md`](../docs/design-system/REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md) and its generated CSV now cover all 281 unique prototype routes across 26 workspaces. Each row records one disposition, the current P1–P11 evidence profile and owner path, exact app-screen/navigation evidence where applicable, exact normalized repository-catalog matches, capability-register matches and the release boundary.
+
+Results are 62 existing but incomplete, 201 prototype only, 13 documentation or roadmap only and 5 intentionally excluded. No archive route is called existing and verified or missing and in scope merely from design evidence. The five exclusions are the three marketplace-workspace routes plus the two student aliases explicitly labeled campus marketplace/buy-and-sell under `D-1287`. The generator deliberately rejects fuzzy label matches and validates the 281/589/122 source populations before writing the register.
+
+The next Phase 0 slice is the 673-row archive master-catalog screen population. It must preserve the distinction between the archive catalog, the 281 prototype routes and the repository's 589-row audit while mapping exact equivalents, owner/dependency evidence and any currently authorized missing item. The 319 archive workflow steps and remaining streams still follow before production selection.
+
 ## What was read
 
 - Root `CLAUDE.md`.

@@ -18,6 +18,7 @@
 - [SCREEN-PACKS.md](SCREEN-PACKS.md) — the 18 named screens against the seven questions, with app and prototype locations.
 - [HANDOFF-INTEGRATION-CROSSWALK.md](HANDOFF-INTEGRATION-CROSSWALK.md) — the design export mapped onto this repository. A merged decision is kept; the free-text scanner is not built.
 - [REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md) — all 122 mounted-archive capability rows dispositioned against current permission, tenant, data, operation, recovery and test authorities.
+- [REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md](REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md) — all 281 archive prototype routes mapped to current screens, navigation, catalog/capability evidence and one bounded disposition.
 - [HANDOFF-INTEGRATION-STATUS.md](HANDOFF-INTEGRATION-STATUS.md) — resumable automation status, open gates and the next dependency-ready reconciliation slice.
 
 ## Skills

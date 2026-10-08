@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 3 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `ca0cc9ad`
+**Automation pass** 4 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `ca0cc9ad`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 3 completes the 122-row capability-registry reconciliation; no production code, schema, policy, dependency, token output, deployment or external system changed.
+Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 4 completes the 281-row prototype-route reconciliation; no production route, schema, policy, dependency, token output, deployment or external system changed.
+
+## Evidence locked in pass 4
+
+- Current `origin/main` remains `ca0cc9ad`; no equivalent route reconciliation landed.
+- [`REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md`](REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md) and its generated CSV preserve and disposition all 281 unique routes across 26 workspaces.
+- The generated CSV SHA-256 is `5b57fdb108ef876f5cc75d004c2ef3bd3e595bc7ef42d40cdedd8fd47e30bee4`.
+- Results: 62 existing but incomplete, 201 prototype only, 13 documentation or roadmap only and 5 intentionally excluded. No route is inflated to existing and verified or missing and in scope from archive evidence alone.
+- Every row names one P1–P11 evidence profile, a current owner/evidence path, exact current app-screen/navigation evidence where applicable, exact normalized repository-catalog rows, capability-register rows and a release-boundary rationale.
+- Matching is fail-conservative: no fuzzy label match, repeated workspace keys do not imply global route equivalence, and an archive URL is never adopted as a production route.
+- The five exclusions are the three marketplace-workspace routes and two student marketplace/buy-and-sell aliases under `D-1287`.
+- The generator validates exactly 281 source routes, 589 current repository catalog rows, 122 reconciled capability rows and 281 unique output routes before writing the CSV.
 
 ## Evidence locked in pass 3
 
@@ -45,10 +56,9 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Open Phase 0 gates
 
-1. Map all 281 prototype routes to repository catalog rows, routes, navigation and tests.
-2. Reconcile the archive's 673 screen rows and 319 workflow steps with the repository's 589 and 319 row populations.
-3. Assign one allowed disposition to every meaningful catalog row and execution-stream item, including owner path, dependencies and acceptance evidence for buildable work.
-4. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
+1. Reconcile the archive's 673 screen rows and 319 workflow steps with the repository's 589 and 319 row populations.
+2. Assign one allowed disposition to every meaningful catalog row and execution-stream item, including owner path, dependencies and acceptance evidence for buildable work.
+3. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
 
 ## External gates kept open
 
@@ -56,4 +66,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the 281-route prototype inventory, then the 673-screen archive catalog. The capability map is now available, so route ownership, discoverability, authorization, catalog equivalence and test evidence can be dispositioned without inventing a second permission model. Production implementation remains gated by the unfinished route/catalog/stream populations.
+Continue Phase 0 with the 673-screen archive catalog, preserving it as a separate population from the completed 281-route register and the repository's 589-row audit. Then reconcile the 319 workflow steps and remaining streams. Production implementation remains gated until those controls identify an authorized, dependency-ready slice without ambiguity.

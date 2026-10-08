@@ -22,7 +22,7 @@ These are dispositions of files as evidence artifacts. They do not pre-judge the
 
 | Archive authority claimed | Measured content | Current disposition |
 | --- | ---: | --- |
-| `handoff/prototype/screens.json` | 281 unique routes in 26 workspaces; generated 2026-10-06 | Prototype only pending route-by-route repository mapping. |
+| `handoff/prototype/screens.json` | 281 unique routes in 26 workspaces; generated 2026-10-06 | Reconciled row by row in [`REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md`](REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md): 62 existing but incomplete, 201 prototype only, 13 documentation or roadmap only and 5 intentionally excluded. Archive URLs are not imported. |
 | `handoff/registry/capabilities.json` | 122 rows; all say implemented/tested/deployed false; 55 claim backend true and all 122 claim data true | Reconciled row by row in [`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md): 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded. Archive status is not repository evidence. |
 | `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established in the archive | Reconciled in [`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md): 16 existing but incomplete, 2 documentation or roadmap only, 1 blocked externally and 1 intentionally excluded. Repository evidence, not archive status, sets each result. |
 | `handoff/capability-blueprint/tenant-isolation-proof-manifest.json` | Zero objects; explicitly illustrative | Documentation or roadmap only; do not treat as tenant-isolation proof. |
@@ -40,7 +40,7 @@ The first capability-level register now covers every meaningful item selected fo
 | Stream 18 | 23 / 23 | Sixteen requested documents map to current `docs/roles/*`; seven underlying product decisions remain separately honest. |
 | Stream 25 | 28 / 28 | Eighteen packages, seven “one” rules and three open decisions map to current authorities. |
 
-The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level population is the 281 prototype routes, followed by 673 archive catalog screens.
+The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, and pass 4 mapped all 281 prototype routes without adopting archive URLs. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level population is the 673 archive catalog screens.
 
 ## Current repository mapping baseline
 
@@ -51,6 +51,10 @@ The verified base has 97 app screen-registry keys including `home` and `onboardi
 All 122 archive registry ids now have one row-level disposition and an evidence profile covering the current owner, role/route/capability boundary, tenant/data authority, operation, audit/recovery/state expectations, tests, dependencies and release ceiling. No full archive row qualifies as existing and verified because the rows combine broad experiences and archive-specific route/data/action claims; verified repository subcontracts remain named without inflating the whole row. The route inventory can now reuse those profiles instead of inventing a second permission model.
 
 The repository catalog remains 589 screens (260 exists / 272 partial / 57 missing) and 319 workflow steps (116 exists / 128 partial / 75 missing) until row-level evidence is refreshed. The archive's 281 prototype routes and 673 catalog screens are separate populations and will not be merged by label alone.
+
+## Pass 4 prototype-route coverage
+
+All 281 archive prototype routes now have one row-level disposition plus a current owner/profile, screen/navigation evidence, exact catalog matches and capability-register matches. The result deliberately leaves 201 rows prototype-only: one prototype may split a current bounded surface into multiple demonstration, lab or control views, and fuzzy naming does not establish equivalence. Five marketplace routes remain excluded under `D-1287`. The generated route CSV is traceability evidence, not a production route registry or implementation backlog.
 
 ## How a row was classed
 

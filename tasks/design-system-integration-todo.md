@@ -12,7 +12,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Record contradictions instead of adopting the loudest archive count.
 - [x] Recount the current repository's screen registry, navigation, screen/component/test files, migrations, functions, handlers, roles, capabilities and catalog totals.
 - [x] Refresh the existing plan and crosswalk and add a status page for resumable automation.
-- [ ] Reconcile each of the 281 prototype routes to the 589-row repository screen catalog and production owner paths.
+- [x] Reconcile each of the 281 prototype routes to the 589-row repository screen catalog and production owner paths.
 - [x] Reconcile each of the 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
 - [x] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
 - [ ] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes.
@@ -40,7 +40,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Assign exactly one allowed disposition to all 122 rows: 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded.
 - [x] Correct the current authorization census to the migration-rendered 69 roles, 96 capabilities and 185 role-capability rows; retain the older 84/157 permission page as a named stale snapshot.
 - [x] Keep marketplace excluded while treating developer apps, keys and sandboxes as roadmap-only concepts pending separate authority.
-- [ ] Reconcile the 281 prototype routes; this is the next dependency-ready Phase 0 slice.
+- [x] Reconcile the 281 prototype routes; each row now has one disposition, an owner/profile, route/navigation evidence and exact catalog/capability matches.
+
+## 2026-10-08 prototype-route reconciliation — pass 4
+
+- [x] Fetch current `origin/main` `ca0cc9ad` and confirm no equivalent route reconciliation landed.
+- [x] Preserve all 281 unique archive route strings, workspaces, labels, streams and prototype components without importing archive routes or source.
+- [x] Map every row to a P1–P11 evidence profile and current owner/evidence path.
+- [x] Record exact current app-screen and discoverable-navigation evidence separately; do not treat repeated workspace keys such as `home` as global route equivalence.
+- [x] Record exact normalized matches to the 589-row repository audit and exact/same-domain matches to the 122-row capability register; reject fuzzy similarity.
+- [x] Assign exactly one disposition: 62 existing but incomplete, 201 prototype only, 13 documentation or roadmap only and 5 intentionally excluded.
+- [x] Keep all unmatched designs out of `missing and in scope` until current authority, data ownership and vertical-slice acceptance evidence exist.
+- [ ] Reconcile the 673 archive master-catalog screen rows; this is the next dependency-ready Phase 0 slice.
+
+### Verification for pass 4
+
+- [x] Generator validation: exactly 281 archive routes, 589 current catalog rows and 122 reconciled capability rows; 281 unique emitted route keys.
+- [x] Structural validation: 281 CSV rows, one allowed disposition and one P1–P11 profile per row; computed disposition totals match the summary.
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
+- [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.
 
 ### Verification for pass 3
 
