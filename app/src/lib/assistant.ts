@@ -34,6 +34,7 @@
  */
 
 import { sessionToken } from './token';
+import { modelOnSharedKey } from './sharedmodels';
 /**
  * The OpenAI models this app offers, and the one it starts on.
  *
@@ -409,7 +410,9 @@ export function modelLabel(s = settings()): string {
   if (s.provider === 'openai') {
     return OPENAI_MODELS.find((m) => m.id === s.openaiModel)?.label ?? s.openaiModel;
   }
-  return MODELS.find((m) => m.id === s.model)?.label ?? s.model;
+  // On the shared key, the model that will actually answer — see `sharedmodels.ts`.
+  const id = route(s) === 'shared' ? modelOnSharedKey(s.model) : s.model;
+  return MODELS.find((m) => m.id === id)?.label ?? id;
 }
 
 /**

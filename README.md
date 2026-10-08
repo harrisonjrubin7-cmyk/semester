@@ -42,6 +42,8 @@ root, which is why nothing in the app reads a leading-slash path directly — se
 | `pipeline/` | Syllabus → course, and everything generated from a course: lessons, decks, handouts. See [`pipeline/README.md`](pipeline/README.md). |
 | `project/` | The original Claude Design handoff — HTML prototypes, the Industry design system, the syllabus PDFs. Kept as the reference the app was built from. |
 | `chats/` | The design conversation that produced it. |
+| `docs/business/` | The go-to-market operating system: GTM playbook, sales and outreach, customer success, compliance views, templates and the PDF reports. Start at [`docs/business/README.md`](docs/business/README.md). The internal finance model lives in `app/src/finance/` and opens from the operations console. |
+| `output/` | PDF reports built from `docs/business/` by `npm run generate:gtm-pdf` (from `app/`). Generated files. |
 
 `project/` and `chats/` are the source material and are not built or imported by
 the app. The one thing the app does take from `project/` is the Industry

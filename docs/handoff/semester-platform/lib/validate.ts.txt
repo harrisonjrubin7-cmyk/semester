@@ -1,0 +1,10 @@
+import { z } from 'zod';
+export const Listing = z.object({ title: z.string().min(3).max(120), category: z.enum(['textbooks','gear','housing','services','tickets']), priceCents: z.number().int().min(0).max(1_000_000) });
+export const Offer = z.object({ listingId: z.string().uuid(), amountCents: z.number().int().positive() });
+export const Post = z.object({ groupId: z.string().uuid().nullable(), body: z.string().min(1).max(5000) });
+export const Report = z.object({ targetType: z.enum(['post','message','listing','profile']), targetId: z.string().uuid(), reason: z.enum(['harassment','spam','integrity','unsafe','other']), note: z.string().max(2000).optional() });
+const BANNED = [/answer\s*key/i, /exam\s*\d*\s*(answers|solutions)/i, /graded\s*(essay|paper|work)/i, /write\s*your\s*(essay|paper)/i];
+export function integrityPrecheck(title: string): { hold: boolean; reason?: string } {
+  const hit = BANNED.find(r => r.test(title));
+  return hit ? { hold: true, reason: 'Possible academic integrity violation' } : { hold: false };
+}

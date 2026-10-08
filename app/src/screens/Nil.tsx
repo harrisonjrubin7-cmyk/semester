@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { ActionButton, Notice, SectionLabel, Segmented } from '../components/ui';
 import { NotOfficial } from '../components/NotOfficial';
@@ -84,7 +85,8 @@ const ASSOCIATED: { id: Associated; label: string }[] = [
 
 function Workspace({ storageKey }: { storageKey: string }) {
   const now = useNow();
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
+  const taskActions = useTaskActions();
   const lib = useDeviceLibrary(storageKey, readNil, EMPTY_NIL);
 
   const [tab, setTab] = useState<Tab>('log');
@@ -158,20 +160,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
       setSaid('That reminder is already on your list. Its date is editable under Actions.');
       return;
     }
-    dispatch({
-      type: 'addTask',
-      task: {
-        title: `Report ${c.counterparty} NIL deal to your compliance office`,
-        date: c.due,
-        time: '',
-        note: [
-          `Your record shows ${money(c.cents)} from ${c.counterparty} in ${c.year}, at or above the $600 threshold.`,
-          `${DISCLOSURE_DAYS} business days from ${c.deal.date} is ${c.due}, counting weekdays only — a holiday could make the real date earlier, so treat this as the latest it could be.`,
-          'Submission happens at NIL Go, not in this app. Your compliance office is the place to confirm what and when.',
-        ].join('\n\n'),
-        courseId: null,
-        from,
-      },
+    taskActions.add({
+      title: `Report ${c.counterparty} NIL deal to your compliance office`,
+      date: c.due,
+      time: '',
+      note: [
+        `Your record shows ${money(c.cents)} from ${c.counterparty} in ${c.year}, at or above the $600 threshold.`,
+        `${DISCLOSURE_DAYS} business days from ${c.deal.date} is ${c.due}, counting weekdays only — a holiday could make the real date earlier, so treat this as the latest it could be.`,
+        'Submission happens at NIL Go, not in this app. Your compliance office is the place to confirm what and when.',
+      ].join('\n\n'),
+      courseId: null,
+      from,
     });
     setSaid('Added to your actions, so it shows up on Today like everything else you owe.');
   };

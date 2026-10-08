@@ -90,6 +90,9 @@ const TEST_APPROVERS: Record<(typeof ACTIVATION_GATES)[number], readonly Release
     'executive-owner', 'legal-owner', 'product-owner', 'security-owner',
     'privacy-owner', 'accessibility-owner', 'support-owner', 'operations-owner',
   ],
+  'validation-cohort-closeout-accepted': [
+    'participant-representative', 'product-owner', 'trust-owner',
+  ],
   'counsel-approved-commercial-paper': ['executive-owner', 'legal-owner', 'privacy-owner'],
   'pricing-and-signing-authority': ['executive-owner', 'finance-owner'],
   'tax-accounting-and-payment-controls': ['finance-owner', 'operations-owner'],
@@ -395,6 +398,75 @@ describe('pilot and individual release profiles', () => {
     });
   });
 
+  it('requires an authorized named validation cohort before broad individual rollout', () => {
+    const broad = RELEASE_PROFILES['individual-scale'];
+    const broadTarget = TARGETS[broad.id];
+    const validation = RELEASE_PROFILES['invitation-only-individual-validation'];
+    const validationTarget = TARGETS[validation.id];
+    const broadEvidence = [
+      ...technical(broadTarget),
+      ...broad.requiredActivationGates.map((gate) => runtime(gate, broadTarget)),
+      ...broad.requiredDependencies.map((item) => dependency(item, broadTarget)),
+    ];
+
+    expect(broad.requiredActivationGates).not.toContain('validation-launch-decision');
+    expect(broad.requiredPrerequisiteProfiles).toEqual(['invitation-only-individual-validation']);
+    expect(evaluateReleaseProfile(broad.id, broadEvidence, AS_OF, broadTarget)).toMatchObject({
+      rolloutStatus: 'held',
+      missingPrerequisites: ['invitation-only-individual-validation'],
+    });
+
+    const completedValidation = [
+      ...technical(validationTarget),
+      ...validation.requiredActivationGates.map((gate) => runtime(gate, validationTarget)),
+      ...validation.requiredDependencies.map((item) => dependency(item, validationTarget)),
+    ];
+    expect(evaluateReleaseProfile(
+      broad.id,
+      [...broadEvidence, ...completedValidation],
+      AS_OF,
+      broadTarget,
+    )).toMatchObject({
+      rolloutStatus: 'held',
+      missingPrerequisites: ['invitation-only-individual-validation'],
+    });
+    const completedAndClosedValidation = [
+      ...completedValidation,
+      ...broad.requiredPrerequisiteCompletionGates.map((gate) => runtime(gate, validationTarget)),
+    ];
+    expect(evaluateReleaseProfile(
+      broad.id,
+      [...broadEvidence, ...completedAndClosedValidation],
+      AS_OF,
+      broadTarget,
+    )).toMatchObject({
+      rolloutStatus: 'authorized',
+      missingPrerequisites: [],
+    });
+
+    const differentArtifact = {
+      ...validationTarget,
+      deployedSha: 'def456def456def456def456def456def456defa',
+    };
+    const mismatchedValidation = completedAndClosedValidation.map((item) => ({
+      ...item,
+      sourceSha: item.sourceSha ? differentArtifact.deployedSha : item.sourceSha,
+      target: item.target ? differentArtifact : item.target,
+      reference: item.sourceSha
+        ? item.reference.replace(SOURCE_SHA, differentArtifact.deployedSha)
+        : item.reference,
+    }));
+    expect(evaluateReleaseProfile(
+      broad.id,
+      [...broadEvidence, ...mismatchedValidation],
+      AS_OF,
+      broadTarget,
+    )).toMatchObject({
+      rolloutStatus: 'held',
+      missingPrerequisites: ['invitation-only-individual-validation'],
+    });
+  });
+
   it.each([MANUAL_PROFILE, 'institutional-pilot'] as const)(
     'requires every technical and activation gate for %s',
     (profileId) => {
@@ -546,13 +618,24 @@ describe('pilot and individual release profiles', () => {
   it('requires every profile-specific activation record before rollout', () => {
     for (const profile of Object.values(RELEASE_PROFILES)) {
       const target = TARGETS[profile.id];
+      const prerequisiteEvidence = profile.requiredPrerequisiteProfiles.flatMap((prerequisiteId) => {
+        const prerequisite = RELEASE_PROFILES[prerequisiteId];
+        const prerequisiteTarget = TARGETS[prerequisiteId];
+        return [
+          ...technical(prerequisiteTarget),
+          ...prerequisite.requiredActivationGates.map((gate) => runtime(gate, prerequisiteTarget)),
+          ...prerequisite.requiredDependencies.map((item) => dependency(item, prerequisiteTarget)),
+          ...profile.requiredPrerequisiteCompletionGates.map((gate) => runtime(gate, prerequisiteTarget)),
+        ];
+      });
       const evidence = [
         ...technical(target),
         ...profile.requiredActivationGates.map((gate) => runtime(gate, target)),
         ...profile.requiredDependencies.map((item) => dependency(item, target)),
+        ...prerequisiteEvidence,
       ];
       const authorized = evaluateReleaseProfile(profile.id, evidence, AS_OF, target);
-      expect(authorized).toMatchObject({ technicalStatus: 'ready', rolloutStatus: 'authorized', targetBound: true });
+      expect(authorized, profile.id).toMatchObject({ technicalStatus: 'ready', rolloutStatus: 'authorized', targetBound: true });
       expect(authorized.claim).toBe(profile.authorizedClaim);
       expect(authorized.claim).not.toMatch(/still requires/i);
       expect(evaluateReleaseProfile(profile.id, evidence.slice(0, -1), AS_OF, target).rolloutStatus).toBe('held');
@@ -893,6 +976,7 @@ function render(): string {
         ...decision.missingTechnical,
         ...decision.missingActivation,
         ...decision.missingDependencies.map((item) => `dependency:${item}`),
+        ...decision.missingPrerequisites.map((item) => `prerequisite:${item}`),
       ].join(', '),
     ])), '',
     'This historical source snapshot lists the technical evidence contract, but source references are not exact-SHA run records.',
@@ -905,6 +989,7 @@ function render(): string {
       `**Default:** ${profile.defaultOff ? 'off' : 'available after production release gates'}`, '',
       `**Capabilities:** ${profile.capabilityIds.map((id) => `\`${id}\``).join(', ')}`, '',
       `**Unsatisfied capability dependencies:** ${profile.requiredDependencies.length > 0 ? profile.requiredDependencies.map((item) => `\`${item}\``).join(', ') : 'none'}`, '',
+      `**Prerequisite completion evidence:** ${profile.requiredPrerequisiteCompletionGates.length > 0 ? profile.requiredPrerequisiteCompletionGates.map((item) => `\`${item}\``).join(', ') : 'none'}`, '',
       `**Allowed:** ${profile.allowedOperations.join('; ')}`, '',
       `**Forbidden:** ${profile.forbiddenOperations.join('; ')}`, '',
       `**Claim boundary:** ${profile.claimBoundary}`, '',
@@ -919,7 +1004,7 @@ function render(): string {
     ])), '',
     '## Activation boundary', '',
     '- This is a release-evidence evaluator, not runtime entitlement enforcement. The manual profile does not itself hide or block shared Account, Courses or Import surfaces; a deployment must separately enforce its configured entitlements.',
-    '- Broad individual rollout remains held behind every invitation-validation gate plus a separate broad-rollout decision; the current product checkout hold independently disables new paid acquisition.',
+    '- Broad individual rollout requires an independently authorized invitation-only validation profile for the same deployed SHA, an accepted cohort closeout, current public-target capability dependencies, and a separate broad-rollout decision; the current product checkout hold independently disables new paid acquisition.',
     '- Invitation-only unpaid validation requires one named cohort, participant terms and consent, qualified legal/public-policy approval, representative-user acceptance, target account-lifecycle acceptance, qualified accessibility conformance, a staffed validation support roster, agreed outcomes and stop criteria, and a current non-institutional launch decision.',
     '- Either institutional pilot additionally needs a named agreement, data owner, approved data scope, cohort consent, tenant accessibility/security/privacy reviews, a live support route, a staffed support roster, agreed baseline, success, review, expansion and exit criteria, and a current target-bound `go` or `go-with-conditions` record re-derived from the canonical launch-readiness council evaluator.',
     '- A paid pilot additionally requires an approved design-partner activation and measured closeout; target-bound DAST, restore, incident/alert, data-rights, access-revocation and offboarding exercises; independent security assurance; qualified accessibility conformance; approved production providers; counsel-approved commercial paper; pricing and signing authority; tax/accounting/payment controls; a current insurance decision; and customer-side purchase and billing authorization.',

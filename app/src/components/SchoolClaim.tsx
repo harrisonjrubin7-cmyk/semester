@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActionButton, Notice, SectionLabel } from './ui';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 import { FieldMessage, useFieldErrors } from './FieldMessage';
 import { useStore } from '../state/store';
 import {
@@ -372,11 +373,15 @@ export function SchoolClaim({
         <ConfirmDialog
           title="Leave this university?"
           preview={
-            <p>
-              You will no longer be recorded as being at {school ? school.name : 'this university'}. If its course rooms
-              are members-only you will lose access to them until you claim again or are approved. Nothing you made is
-              deleted, and we will not claim it for you again on this device.
-            </p>
+            <ActionPreview
+              subject={school ? school.name : 'This university'}
+              says="You will no longer be recorded as being here. If its course rooms are members-only, you lose access until you claim again or are approved."
+              doesNotChange="Nothing you made is deleted."
+              recovery={{
+                kind: 'undo',
+                how: 'Claim this university again from this screen. We will not claim it for you on this device.',
+              }}
+            />
           }
           confirmLabel="Leave"
           onConfirm={() => void leave()}
@@ -387,11 +392,12 @@ export function SchoolClaim({
         <ConfirmDialog
           title={`Approve ${confirming.request.handle}?`}
           preview={
-            <p>
-              {confirming.request.handle} will be recorded as being at {school ? school.name : 'this university'}, and
-              will be able to join its course rooms if they are members-only. They wrote: “{confirming.request.note}”.
-              You can remove them later.
-            </p>
+            <ActionPreview
+              subject={confirming.request.handle}
+              says={`They will be recorded as being at ${school ? school.name : 'this university'}, and can join its course rooms if those are members-only.`}
+              exactly={confirming.request.note ? `They wrote: “${confirming.request.note}”.` : undefined}
+              recovery={{ kind: 'undo', how: 'You can remove them later from this screen.' }}
+            />
           }
           confirmLabel="Approve"
           onConfirm={() => void decide(confirming.request, true)}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semester:events:registration",
+  "title": "Semester events: Registration",
+  "description": "The 3 Registration event types. Each branch fixes the type name and version and allows the classifications at or above the type's floor. Generated from EVENT_TYPES in packages/institution/src/events.ts.",
+  "allOf": [
+    {
+      "$ref": "urn:semester:events:envelope"
+    }
+  ],
+  "oneOf": [
+    {
+      "title": "registration.readiness_viewed",
+      "properties": {
+        "eventType": {
+          "const": "registration.readiness_viewed"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "registration.override_requested",
+      "properties": {
+        "eventType": {
+          "const": "registration.override_requested"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    },
+    {
+      "title": "registration.override_granted",
+      "properties": {
+        "eventType": {
+          "const": "registration.override_granted"
+        },
+        "eventVersion": {
+          "const": 1
+        },
+        "dataClassification": {
+          "enum": [
+            "education_record"
+          ]
+        },
+        "retentionClass": {
+          "description": "The catalog declares audit for this type. validateEvent does not compare it.",
+          "x-semesterCatalogRetention": "audit"
+        }
+      }
+    }
+  ]
+}

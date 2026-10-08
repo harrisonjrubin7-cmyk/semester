@@ -197,9 +197,12 @@ declare
     -- creates consent and its bounded grant atomically, and lists only windows
     -- in which the caller is the student or the still-authorized supporter.
     'available_supporters()',
-    'create_support_access(want_supporter uuid, want_reason text, want_days integer)',
+    'available_case_supporters()',
+    'create_support_access(want_supporter uuid, want_reason text, want_days integer, want_ticket uuid)',
+    'read_support_case_signals(want_ticket uuid)',
     'revoke_support_access(want_grant uuid)',
     'support_access_windows()',
+    'support_case_access(want_ticket uuid)',
     -- Sets `profiles.school_id` from the address the server confirmed. The
     -- column's own UPDATE privilege is revoked from both API roles, so this
     -- function is the only way in and has to be callable by a signed-in
@@ -561,6 +564,13 @@ declare
     -- `audit-and-subject-requests.check.sql` proves the caller and tenant
     -- boundaries and that anon cannot execute it.
     'raise_my_data_subject_request(requested_kind text, requested_detail text)',
+    -- 20261004200000_answer_data_subject_requests.sql: the two ways a rights
+    -- request is answered. Each refuses 42501 unless the caller holds
+    -- `data_request:handle` (the data_steward role) and is not the requester,
+    -- and each refuses an illegal move with 23514.
+    -- `answer-rights-requests.check.sql` attempts every refusal by code.
+    'verify_data_subject_request(request_id uuid, rung text)',
+    'answer_data_subject_request(request_id uuid, new_status text, resolution_text text)',
 
     -- The three in 20260929100000_console_control_plane.sql. Each checks
     -- `console:operate` itself and raises 42501 without it (never
@@ -580,6 +590,46 @@ declare
     -- demo tenants by default, and is negatively tested in
     -- console-command-center.check.sql.
     'console_command_center(include_demo boolean)',
+
+    -- The bounded tenant access inventory in 20261005120000. The tenant and
+    -- optional subject are filters, not authority: the function checks a live
+    -- platform or exact-tenant capability before reading. Demo inclusion has
+    -- the separate tenant:implement gate. Its feature suite attempts no grant,
+    -- wrong tenant, expired grant, cross-tenant subject and demo escalation.
+    'console_tenant_access(want_tenant text, want_subject uuid, after_granted_at timestamp with time zone, after_id uuid, want_limit integer, include_demo boolean)',
+
+    -- Metadata-only tenant operations. It requires the platform console shell,
+    -- derives rows from live exact-school tenant:implement grants, excludes
+    -- demos by default and never accepts a tenant id from the caller.
+    'console_tenant_operations(include_demo boolean)',
+
+    -- Credential-free connector health. It requires the platform console
+    -- shell, derives tenants from exact-school integration:view grants,
+    -- excludes demos by default, and returns no credential, cursor, payload,
+    -- external-record or provider-message field.
+    'console_integration_health(include_demo boolean)',
+
+    -- Evidence-derived release and incident operations. It requires both the
+    -- platform console shell and platform incident:communicate, excludes demo
+    -- tenants without exact implementation scope, and performs no mutation.
+    'console_release_incidents(include_demo boolean)',
+
+    -- Identity-minimized privacy queue. It requires the platform console
+    -- shell, derives tenants from exact-school data_request:handle grants and
+    -- keeps subject ids and request content out of its result.
+    'console_privacy_requests(include_demo boolean)',
+
+    -- The privacy lifecycle in 20261005124000. Claim, sensitive-detail read,
+    -- identity verification and resolution all require fresh MFA, the
+    -- platform console shell and an exact-school data_request:handle grant.
+    -- Completed erasure additionally requires no legal hold and an executed
+    -- data-deletion approval for the exact tenant and request. The final
+    -- reader exposes only the signed-in subject's immutable certificates.
+    'claim_privacy_request(want_request uuid)',
+    'read_privacy_request_detail(want_request uuid)',
+    'verify_privacy_request(want_request uuid, want_basis text, want_evidence text)',
+    'resolve_privacy_request(want_request uuid, want_outcome text, want_resolution text, want_evidence text, want_approval uuid)',
+    'my_privacy_completion_certificates()',
 
     -- The eight in 20260929110000_console_approvals_and_break_glass.sql.
     -- Three writers on the approval path: requesting checks the duty's
@@ -649,7 +699,23 @@ declare
     -- requires an active tenant administrator and suppresses cohorts below 10.
     -- `productivity_workspace.sql` exercises both authorization boundaries.
     'save_productivity_workspace(p_expected bigint, p_data jsonb, p_tenant text, p_aggregate boolean)',
-    'productivity_readiness_aggregate(p_tenant text)'
+    'productivity_readiness_aggregate(p_tenant text)',
+    -- The four in 20261006000000_onboarding_journeys_and_handoff.sql. Each
+    -- reads the caller from auth.uid() and raises without one; none takes a
+    -- tenant, a role or a user. The three onboarding writers act only on the
+    -- caller's own assignment and check the step against the journey version it
+    -- was made under; `consume_handoff` answers null for every way of failing.
+    -- `onboarding-journeys.check.sql` attempts each refusal.
+    'start_onboarding(p_journey text, p_entry jsonb, p_channel text)',
+    'complete_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_channel text)',
+    'skip_onboarding_step(p_assignment uuid, p_step text, p_step_version integer, p_reason text, p_channel text)',
+    'consume_handoff(p_id uuid, p_nonce text)',
+    -- The two in 20261006160000_my_sessions.sql. Each reads the caller from
+    -- auth.uid() and takes no user; `end_my_session` deletes only the caller's
+    -- own other session and says "no such session" for anyone else's.
+    -- `my-sessions.check.sql` attempts each refusal as the account refused.
+    'my_sessions()',
+    'end_my_session(want uuid)'
   ];
   extra text;
   missing text;

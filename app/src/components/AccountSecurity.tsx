@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useModal } from '../a11y/modal';
 import {
@@ -10,6 +10,10 @@ import {
 import { passwordProblem, PASSWORD_FLOOR } from '../lib/password';
 import { ConfirmDialog } from './ConfirmDialog';
 import { FieldMessage, useFieldErrors } from './FieldMessage';
+import { ActionPreview } from './unity/ActionPreview';
+
+/** Read when the section is open: it asks the network and has its own loading state. */
+const SignedInDevices = lazy(() => import('./SignedInDevices').then((m) => ({ default: m.SignedInDevices })));
 
 /**
  * What an account can do about its own sign-in, once it has one.
@@ -247,6 +251,10 @@ export function AccountSecurity({ setPassword, changeAddress = changeEmail, sign
         {emailFailure && <p role="alert">{emailFailure}</p>}
       </form>
 
+      <Suspense fallback={<p role="status">Checking where you are signed in…</p>}>
+        <SignedInDevices />
+      </Suspense>
+
       <h4 style={{ marginTop: 'var(--sp-6)' }}>Other devices</h4>
       <p style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
         Lost a phone or left yourself signed in on a shared computer? This signs every other device out. This one stays
@@ -265,10 +273,12 @@ export function AccountSecurity({ setPassword, changeAddress = changeEmail, sign
         <ConfirmDialog
           title="Sign out other devices?"
           preview={
-            <p>
-              Every other browser and phone signed in to this account will be asked to sign in again. This device stays
-              signed in.
-            </p>
+            <ActionPreview
+              subject="Other devices"
+              says="Every other browser and phone signed in to this account will be asked to sign in again."
+              doesNotChange="This device stays signed in, and nothing is deleted."
+              recovery={{ kind: 'none', how: 'Those devices sign in again themselves.' }}
+            />
           }
           confirmLabel="Sign out other devices"
           onConfirm={() => void others()}

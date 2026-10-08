@@ -107,6 +107,7 @@ export const ACCENTS: Accent[] = [
   { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#b69291', shade: '#6f3f3f' },
   { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#98a380', shade: '#4f5a37' },
   { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#969bbd', shade: '#454a72' },
+  { id: 'semester', label: 'Semester indigo', base: '#a5b4fc', bright: '#c7d2fe', deep: '#8f9cf0', shade: '#4338ca' },
   { id: 'gold', label: 'Old gold', base: '#d6c089', bright: '#efe1bc', deep: '#b19d72', shade: '#695a2f' },
 ];
 
@@ -448,6 +449,17 @@ export const GROUNDS: Ground[] = [
     // As Parchment above: 0.52 is the floor a faint label needs here.
     faintAlpha: 0.52,
   },
+  {
+    id: 'semester',
+    label: 'Semester',
+    blurb: 'Cool slate and white, with indigo for the one action that matters.',
+    light: true,
+    // Muted surface, page, then the white surface every card and field sits on.
+    ramp: ['#f1f5f9', '#f8fafc', '#ffffff', '#ffffff', '#ffffff'],
+    fg: '#0f172a',
+    dimAlpha: 0.8,
+    faintAlpha: 0.62,
+  },
 ];
 
 export function ground(id: string | undefined): Ground {
@@ -753,6 +765,25 @@ export const LINE_HEIGHTS = [
 
 export function lineHeightOf(id: string | undefined): number {
   return LINE_HEIGHTS.find((l) => l.id === id)?.value ?? 1.55;
+}
+
+/**
+ * How far apart the letters and the words sit.
+ *
+ * Its own setting, not part of line spacing: crowding between letters is a
+ * different complaint from crowding between lines, and it is the one people
+ * with dyslexia most often name. The steps are deliberately below the
+ * 0.12em / 0.16em that WCAG 1.4.12 asks a layout to survive, so anything
+ * offered here is inside what `npm run sweep:spacing` measures.
+ */
+export const TEXT_SPACINGS = [
+  { id: 'normal', label: 'Normal', tracking: 0, word: 0, blurb: 'The default.' },
+  { id: 'open', label: 'Open', tracking: 0.02, word: 0.08, blurb: 'A little room between letters and words.' },
+  { id: 'wide', label: 'Wide', tracking: 0.05, word: 0.16, blurb: 'As open as it goes. Long words wrap sooner.' },
+];
+
+export function textSpacingOf(id: string | undefined) {
+  return TEXT_SPACINGS.find((t) => t.id === id) ?? TEXT_SPACINGS[0];
 }
 
 /**
@@ -1366,6 +1397,8 @@ export interface Look {
   typeface?: string;
   bodyface?: string;
   lineHeight?: string;
+  /** `normal`, `open` or `wide` — letter and word spacing. See `TEXT_SPACINGS`. */
+  textSpacing?: string;
   readingWidth?: string;
   iconShape?: string;
   /**
@@ -1696,6 +1729,8 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     // the body text hard to read had nothing to change.
     '--font-body': bodyfaceOf(look.bodyface).body,
     '--line-height': String(lineHeightOf(look.lineHeight)),
+    '--tracking-body': `${textSpacingOf(look.textSpacing).tracking}em`,
+    '--word-space': `${textSpacingOf(look.textSpacing).word}em`,
     // Zero means no cap. Used only by the long-form screens.
     '--reading-width': readingWidthOf(look.readingWidth)
       ? `${readingWidthOf(look.readingWidth)}ch`
@@ -1764,6 +1799,7 @@ export function readLook(saved: Look | undefined): Required<Look> {
     typeface: typefaceOf(saved?.typeface).id,
     bodyface: bodyfaceOf(saved?.bodyface).id,
     lineHeight: LINE_HEIGHTS.find((l) => l.id === saved?.lineHeight)?.id ?? 'normal',
+    textSpacing: textSpacingOf(saved?.textSpacing).id,
     readingWidth: READING_WIDTHS.find((w) => w.id === saved?.readingWidth)?.id ?? 'normal',
     iconShape: iconShapeOf(saved?.iconShape).id,
     // Unrecognised falls to `device`, which is the value that defers to the

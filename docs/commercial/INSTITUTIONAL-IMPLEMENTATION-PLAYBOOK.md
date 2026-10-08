@@ -7,6 +7,8 @@
 | Evidence date | 2026-10-03 at repository revision `a86b3376` |
 | Source | [`../market-readiness/IMPLEMENTATION_PLAYBOOK.md`](../market-readiness/IMPLEMENTATION_PLAYBOOK.md) |
 
+The ten-phase method that sits on these stages — seats, cadence, artifacts, acceptance, the configuration, integration and migration workbooks, cutover, rollback and hypercare — is in [`../institutional-implementation/`](../institutional-implementation/README.md). This playbook remains the authority for the stored stage names and the delivery rules.
+
 ## Phases and gates
 
 | Phase | Required decision and evidence |

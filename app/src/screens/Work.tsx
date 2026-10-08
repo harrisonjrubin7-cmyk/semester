@@ -2,6 +2,7 @@ import { StudentOperating } from '../components/StudentOperating';
 import { useMemo, useRef, useState } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
@@ -67,6 +68,7 @@ const TABS: { id: Tab; label: string }[] = [
  */
 export function Work() {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);
@@ -135,15 +137,12 @@ export function Work() {
   const keepSteps = () => {
     if (!plan) return;
     for (const s of plan.steps) {
-      dispatch({
-        type: 'addTask',
-        task: {
-          title: s.do,
-          date: s.by || plan.due || null,
-          time: s.minutes ? `${s.minutes} min` : '',
-          note: s.why,
-          courseId,
-        },
+      taskActions.add({
+        title: s.do,
+        date: s.by || plan.due || null,
+        time: s.minutes ? `${s.minutes} min` : '',
+        note: s.why,
+        courseId,
       });
     }
     setSaved(plan.steps.length);

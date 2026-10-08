@@ -9,7 +9,7 @@ import { SEED_SUMMARY } from '../../data/seed';
 import { CourseRow } from '../Me';
 import { DESTINATIONS } from '../../lib/nav';
 import { hiddenFor } from '../../lib/school';
-import { hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
+import { denserLayoutFor, hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
 
 /**
  * Who you are to the app, and what it is holding.
@@ -61,6 +61,23 @@ export function SettingsCourses() {
                   </option>
                 ))}
               </select>
+
+              {denserLayoutFor(state.role) && state.density === 'comfortable' && (
+                // An offer, not a default: the app never changes a layout because of a role.
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                  Screens for this role are mostly rows and columns. A snugger layout fits more of them on
+                  screen. You can change it back under Look.
+                  <div style={{ marginTop: 'var(--sp-3)' }}>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      onClick={() => dispatch({ type: 'setLook', look: { density: 'snug' } })}
+                    >
+                      Use the snug layout
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {byRole.length > 0 && (
                 // Named rather than counted, for the same reason as the

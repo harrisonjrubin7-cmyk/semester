@@ -58,6 +58,31 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* A fact's provenance: origin first, then at most two cues (lib/factprovenance.ts).
+   The chip itself is .status-chip; these only add the second, non-colour carrier
+   of origin — solid for an institution's, dashed for a sample. */
+.prov,
+.prov-visible {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.prov-chip[data-fill='solid'] {
+  background: var(--surface-quiet);
+  border-color: var(--border-strong);
+}
+
+.prov-chip[data-fill='dashed'] {
+  border-style: dashed;
+}
+
+.prov-age {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
 /* ── Persistent system context ─────────────────────────────────────────── */
 
 .system-context {
@@ -1218,6 +1243,92 @@
   backdrop-filter: none;
 }
 
+/* ActionPreview (components/unity/ActionPreview.tsx): what happens, before it does. */
+.action-preview {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.action-preview-subject,
+.action-preview-caveat {
+  margin: 0;
+}
+
+.action-preview-caveat {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+.action-preview-facts {
+  display: grid;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+}
+
+.action-preview-facts dt {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+.action-preview-facts dd {
+  margin: 0 0 var(--sp-3);
+}
+
+/* Combobox (components/unity/Combobox.tsx): a text box with a list under it. */
+.combo {
+  position: relative;
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.combo-label {
+  font-size: var(--type-sm);
+  color: var(--text-secondary);
+}
+
+.combo-hint {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+}
+
+.combo-list {
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  z-index: var(--layer-menu);
+  margin: var(--sp-2) 0 0;
+  padding: var(--sp-2);
+  list-style: none;
+  max-height: 40vh;
+  overflow-y: auto;
+  background: var(--surface-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--shape-surface);
+  box-shadow: var(--elevation-floating);
+}
+
+.combo-option {
+  display: grid;
+  gap: var(--sp-1);
+  min-height: var(--target-primary);
+  padding: var(--sp-3) var(--sp-4);
+  border-inline-start: 3px solid transparent;
+  cursor: pointer;
+}
+
+/* The row the arrow keys are on: an edge and a weight, not a colour alone. */
+.combo-option[aria-selected='true'] {
+  border-inline-start-color: var(--focus-color);
+  background: var(--surface-quiet);
+  font-weight: 600;
+}
+
+.combo-detail {
+  font-size: var(--type-xs);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
 @media (forced-colors: active) {
   .status-chip,
   .context-bar,
@@ -1227,6 +1338,20 @@
   .command-widget-open,
   .focus-bar {
     border: 1px solid CanvasText;
+  }
+
+  .combo-list {
+    border: 1px solid CanvasText;
+  }
+
+  .combo-option[aria-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  /* Forced colours drop the solid chip's fill; a heavier edge keeps origin readable. */
+  .prov-chip[data-fill='solid'] {
+    border-width: 3px;
   }
 }
 

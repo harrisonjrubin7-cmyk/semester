@@ -1,5 +1,7 @@
 # Analytics plan
 
+> **Status: a plan, not sent.** This page describes what the company would like to measure. It is not what the app sends: the app's student activity marks are exactly three (`opened`, `course`, `studied`; see [`/ANALYTICS.md`](../../ANALYTICS.md) and [`../ANALYTICS-EVENTS.md`](../ANALYTICS-EVENTS.md)). Separately, the go-to-market tables (`gtm_*`) and `site_leads` record prospect and lead activity for the company site; those are governed by `docs/privacy-operations/04-PRIVACY-BY-DESIGN-REVIEW.md`, not by this plan. Do not read any funnel step below as collected today.
+
 Semester measures meaningful workflow completion, reliability, support burden, and trust—not surveillance or raw login volume. Collection is purpose-limited, disclosed, access-controlled, retained only as approved, and aggregated for institutional reporting at the approved threshold.
 
 ## Individual funnel
