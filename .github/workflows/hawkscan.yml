@@ -61,7 +61,7 @@ jobs:
         working-directory: app
         run: |
           npm run preview -- --host 0.0.0.0 --port 4173 --strictPort > "$RUNNER_TEMP/semester-preview.log" 2>&1 &
-          for attempt in $(seq 1 30); do
+          for _attempt in $(seq 1 30); do
             if curl --fail --silent --show-error http://127.0.0.1:4173/ > /dev/null; then
               exit 0
             fi
@@ -110,7 +110,7 @@ jobs:
             -keyout "$COMPANY_SCAN_KEY" -out "$COMPANY_SCAN_CERT" -days 1 \
             -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'
           node scripts/company-site-scan-server.mjs > "$RUNNER_TEMP/company-site-target.log" 2>&1 &
-          for attempt in $(seq 1 30); do
+          for _attempt in $(seq 1 30); do
             if curl --fail --silent --cacert "$COMPANY_SCAN_CERT" https://localhost:4186/product > /dev/null; then
               exit 0
             fi

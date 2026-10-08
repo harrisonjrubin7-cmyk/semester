@@ -646,7 +646,8 @@ jobs:
         working-directory: app
         run: |
           export VITE_SUPABASE_URL=http://127.0.0.1:54321
-          export VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          export VITE_SUPABASE_KEY
           npx vite build --outDir /tmp/sync-dist
           npx vite preview --outDir /tmp/sync-dist --port 4174 > /tmp/preview.log 2>&1 &
           timeout 120 bash -c "until curl -sf http://localhost:4174/ >/dev/null; do sleep 1; done"
@@ -669,7 +670,8 @@ jobs:
         run: |
           # This key belongs only to the ephemeral loopback stack. The smoke
           # refuses to send it to any non-loopback origin and never prints it.
-          export SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          export SMOKE_SUPABASE_SERVICE_KEY
           npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────
