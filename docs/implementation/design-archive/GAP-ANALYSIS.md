@@ -25,7 +25,7 @@ The archive is broader than the production surface, but much of that breadth is 
 3. **Workflow proof:** approval, reconciliation, cutover, launch, and retirement need server transitions, retries, audit evidence, and owners.
 4. **Token conflicts:** 222 archive token rows do not map exactly to `tokens.css`; they need explicit mapping, not copying.
 5. **Document authority:** overlaps lack consistent owner, approval, effective date, and implementation evidence.
-6. **Role activation:** names do not prove memberships, grants, RLS, provisioning, access review, or revocation.
+6. **Authority classification:** archive labels do not prove memberships or grants; private student segments belong in `student_context`, family access belongs in consent-scoped `family_grants`, and actual roles still require RLS, provisioning, access review, and revocation evidence.
 7. **Asset provenance:** fonts have OFL evidence; many images, icons, screenshots, and maps do not.
 8. **Test evidence:** the app build/test/browser matrix was not run; the bundled runtime exposed Node but no npm executable.
 
