@@ -303,6 +303,9 @@ $$;
 revoke all on function public.console_release_incidents(boolean) from public, anon;
 grant execute on function public.console_release_incidents(boolean) to authenticated;
 
+comment on function public.console_release_incidents(boolean) is
+  'Evidence-derived release and incident summary for platform incident operators; no deployment or incident mutation is performed.';
+
 do $$
 begin
   if to_regprocedure('private.console_command_center_release_unbound(boolean)') is null
@@ -403,3 +406,6 @@ $$;
 
 revoke all on function public.console_command_center(boolean) from public, anon;
 grant execute on function public.console_command_center(boolean) to authenticated;
+
+comment on function public.console_command_center(boolean) is
+  'Exception queue whose release gates use the same exact-commit, source, deployment, rollback and freshness contract as console_release_incidents.';
