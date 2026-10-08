@@ -169,12 +169,34 @@ export function Groupwork() {
   );
 
   useEffect(() => {
-    void loadGroups();
-  }, [loadGroups]);
+    if (!account || !room) return;
+    let live = true;
+    void groupsIn(term, room)
+      .then((found) => {
+        if (live) setGroups(found);
+      })
+      .catch((e: unknown) => {
+        if (live) setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      live = false;
+    };
+  }, [account, term, room]);
 
   useEffect(() => {
-    void loadOne(openId);
-  }, [openId, loadOne]);
+    if (!account || !openId) return;
+    let live = true;
+    void Promise.all([membersOf(openId), partsOf(openId)])
+      .then(([members, parts]) => {
+        if (live) setRoster({ id: openId, members, parts });
+      })
+      .catch((e: unknown) => {
+        if (live) setError(e instanceof Error ? e.message : String(e));
+      });
+    return () => {
+      live = false;
+    };
+  }, [account, openId]);
 
   const guard = async (fn: () => Promise<void>) => {
     setBusy(true);

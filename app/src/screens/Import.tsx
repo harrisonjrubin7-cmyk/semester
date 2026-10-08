@@ -1127,8 +1127,9 @@ function Preview({
 }) {
   const rowTen = useRowStyle(10);
   const now = useNow();
-  const [confirmed, setConfirmed] = useState(false);
-  useEffect(() => setConfirmed(false), [result, dropped]);
+  const [approval, setApproval] = useState({ result, dropped, confirmed: false });
+  const confirmed =
+    approval.result === result && approval.dropped === dropped && approval.confirmed;
   const { module: m, notes } = result;
   const ready = reviewReady(m.items, dropped, confirmed, now.getFullYear());
   const [summary, ...warnings] = notes;
@@ -1265,7 +1266,7 @@ function Preview({
         </div>
       ))}
 
-      <label className="import-confirmation"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>I checked the course information and selected dates against my syllabus. Add only the dates I approved.</span></label>
+      <label className="import-confirmation"><input type="checkbox" checked={confirmed} onChange={e=>setApproval({ result, dropped, confirmed: e.target.checked })}/><span>I checked the course information and selected dates against my syllabus. Add only the dates I approved.</span></label>
       <p className="import-evidence-note" role="status">{ready ? 'Verified dates are ready to add.' : 'Review the dates above before adding this course. Reminders begin only after you approve and save.'}</p>
       <ActionButton
         onClick={() => { if (ready) onSave(); }}
