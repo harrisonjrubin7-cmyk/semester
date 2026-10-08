@@ -163,6 +163,7 @@ export type ReleaseProfileId =
   | 'paid-institutional-manual-pilot'
   | 'paid-institutional-pilot'
   | 'broad-enterprise-sale';
+type ReleasePrerequisiteProfileId = 'invitation-only-individual-validation';
 
 type ReleaseTargetKind = 'public-individual' | 'invitation-validation' | 'manual-pilot' | 'connected-pilot' | 'enterprise';
 
@@ -186,7 +187,7 @@ export interface ReleaseProfile {
   readonly requiredTechnicalGates: readonly TechnicalReleaseGate[];
   readonly requiredActivationGates: readonly ActivationGate[];
   readonly requiredDependencies: readonly string[];
-  readonly requiredPrerequisiteProfiles: readonly ReleaseProfileId[];
+  readonly requiredPrerequisiteProfiles: readonly ReleasePrerequisiteProfileId[];
   readonly defaultOff: boolean;
   readonly allowedOperations: readonly string[];
   readonly forbiddenOperations: readonly string[];
@@ -409,7 +410,7 @@ export interface ReleaseProfileDecision {
   missingTechnical: readonly TechnicalReleaseGate[];
   missingActivation: readonly ActivationGate[];
   missingDependencies: readonly string[];
-  missingPrerequisites: readonly ReleaseProfileId[];
+  missingPrerequisites: readonly ReleasePrerequisiteProfileId[];
   targetBound: boolean;
   launchVerdict: 'not-applicable' | 'go' | 'go-with-conditions' | null;
   launchConditions: readonly Condition[];
@@ -668,11 +669,12 @@ export function evaluateReleaseProfile(
     || !counts(evidenceRecords, gate, asOf, target));
   const missingDependencies = profile.requiredDependencies.filter((dependency) => !targetBound
     || !counts(evidenceRecords, `dependency:${dependency}`, asOf, target));
-  const evidenceTargets = evidenceRecords
+  const validationTargets = evidenceRecords
+    .filter((item) => item.gate === 'validation-launch-decision')
     .map((item) => item.target)
     .filter((candidate): candidate is ReleaseTarget => Boolean(candidate));
   const missingPrerequisites = profile.requiredPrerequisiteProfiles.filter((prerequisiteId) =>
-    !evidenceTargets.some((candidate) =>
+    !validationTargets.some((candidate) =>
       evaluateReleaseProfile(prerequisiteId, evidenceRecords, asOf, candidate).rolloutStatus === 'authorized'));
   const technicalStatus = missingTechnical.length === 0 ? 'ready' : 'not-ready';
   const rolloutStatus = technicalStatus === 'ready'
