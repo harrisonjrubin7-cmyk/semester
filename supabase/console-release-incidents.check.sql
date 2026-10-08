@@ -160,7 +160,7 @@ values
   ('production_deployment', 'pass', 'Engineering owner', 'DEPLOY-STALE', 'expired production deployment', repeat('b', 40), 'deployment-stale', 'RUNBOOK-STALE', now() - interval '30 days', now() - interval '1 day');
 
 do $$
-declare operator uuid := (select v from ids where k = 'operator'); state text; commit text; made uuid;
+declare operator uuid := (select v from ids where k = 'operator'); state text; commit text; duplicate_blocked boolean := false;
 begin
   perform pg_temp.become(operator);
   select r.state into state from public.console_release_incidents(false) r where item_kind = 'release';
@@ -173,14 +173,17 @@ begin
   perform pg_temp.said('an expired deployment cannot replace the current migration commit', commit, repeat('a', 40));
 
   perform pg_temp.become(operator);
-  made := public.request_approval(
-    'release', null, 'platform',
-    jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
-    'CI, golden path and rollback rehearsal references.', 'REL-BOUND', null
-  );
+  begin
+    perform public.request_approval(
+      'release', null, 'platform',
+      jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+      'CI, golden path and rollback rehearsal references.', 'REL-DUPLICATE', null
+    );
+  exception when unique_violation then duplicate_blocked := true;
+  end;
   perform pg_temp.nobody();
-  if made is null then raise exception 'FAILED: current exact-commit release request was not created'; end if;
-  raise notice 'ok  current prerequisites permit an exact-commit approval request';
+  if not duplicate_blocked then raise exception 'FAILED: duplicate current exact-commit release request was created'; end if;
+  raise notice 'ok  a current exact-commit release request cannot be duplicated';
 end $$;
 
 delete from public.approval_request
@@ -188,6 +191,22 @@ delete from public.approval_request
    and tenant_id is null
    and target = 'platform'
    and detail ->> 'action' = 'release';
+
+do $$
+declare operator uuid := (select v from ids where k = 'operator'); made uuid;
+begin
+  perform pg_temp.become(operator);
+  made := public.request_approval(
+    'release', null, 'platform',
+    jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+    'CI, golden path and rollback rehearsal references.', 'REL-BOUND', null
+  );
+  perform pg_temp.nobody();
+  if made is null then raise exception 'FAILED: current exact-commit release request was not created'; end if;
+  raise notice 'ok  current prerequisites permit one exact-commit approval request';
+end $$;
+
+delete from public.approval_request where ticket = 'REL-BOUND';
 
 insert into public.approval_request
   (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, expires_at)
