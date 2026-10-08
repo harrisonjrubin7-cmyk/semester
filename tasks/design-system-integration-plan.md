@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `523091e9` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `7d93d31b` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -155,6 +155,12 @@ The new `ops-projector` Edge Function accepts only POST with a dedicated bearer 
 `ops-projector-worker.check.sql` proves service-only access, the batch bound, selective registered dispatch, atomic materialization, malformed-event dead-lettering without partial state or leaked database detail, and inactive-registration refusal before claim. All 207 migrations apply on disposable PostgreSQL 17 and the four focused checks pass. Repository guards cover the endpoint credential, deployment/config inventory, function/environment reference, generated roadmap/definer registers and the earlier replay RPC's exact callable-definer classification.
 
 The next dependency-ready projection slice is the hold-aware retention sweep for published outbox events, terminal receipts and projection invalidations. Scheduler activation remains later and still requires the sweep, a provisioned secret, deployment evidence, an operational runbook, monitoring and an explicit activation decision.
+
+## Hold-aware projection retention — automation runner pass 5, slice 13
+
+The pre-slice fetch observed `origin/main` at `523091e9`; the final fetch advanced it to `7d93d31b`. The intervening Phase B, Clerk, policy-evidence and console work does not add or alter projection retention and introduces no migration-version collision. `20261008220000_projection_history_retention.sql` adds one service-role-only, manually invoked retention operation. It scrubs payloads only from successfully published events after 30 days, expires published envelopes and their receipts by the repository's class windows (operational 90 days, student record and commercial 400 days, audit 3 years), and expires projection invalidations after 90 days. Pending and dead-lettered rows remain intact for delivery, diagnosis and approved replay. Tenant holds preserve tenant rows and a platform hold visibly skips the whole operation.
+
+This slice adds no scheduler entry, secret, deployment, production run, public read API or UI. `projection-history-retention.check.sql` proves all four class boundaries, payload scrubbing, receipt co-deletion, pending/dead-letter preservation, invalidation aging, tenant and platform holds, and the service-only grant. PostgreSQL 17 applies all 208 migrations twice with 369 unchanged table fingerprints; the focused suite passes 10 checks and the adjacent outbox, hold, hold-blind-delete, grant, RLS and index suites pass 145. TypeScript, lint, university typecheck, production build and the design-system constituent gates pass; lint retains three existing warnings. The HawkScan preflight cannot start because the `hawk` executable is absent, so DAST remains open. The next dependency-ready local slice is P1-06: add one current-authority producer with its first justified consumer, while activation of the existing worker remains externally gated by secret provisioning, deployment, monitoring, an operating runbook and an explicit activation decision.
 
 ## What was read
 

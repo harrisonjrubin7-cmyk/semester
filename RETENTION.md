@@ -48,10 +48,10 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | `gateway_review` | **Unconfirmed reviews: one day after expiry; completed/refused reviews: ninety days after expiry; unresolved processing/pending/uncertain reviews: until reconciliation** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; encrypted bodies remain inaccessible to browser roles |
 | `gateway_audit`, `gateway_intelligence_audit` | **180 days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; metadata only, never source text, prompts or model prose |
 | `gateway_audit.correlation_id` | **With the row — 180 days** | `private.gateway_purge_journal()` as above; the column is added by `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | An opaque request id, held to the gateway's own pattern by a check constraint; never a session token or a name |
-| `domain_outbox_events`, `domain_event_receipts` | **No sweep yet — stated below** | `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | Every event row declares its retention class (operational, student record, audit or commercial); the sweep that reads it is owed before the first producer writes in production (ADR 0008) |
+| `domain_outbox_events`, `domain_event_receipts` | **Published payloads scrubbed after 30 days; terminal envelopes and receipts expire by class: operational 90 days, student record and commercial 400 days, audit 3 years** | `private.prune_projection_history()` in `supabase/migrations/20261008220000_projection_history_retention.sql` | Manual service-role operation only; pending and dead-lettered work is never touched, and tenant/platform legal holds preserve covered history. No scheduler is enabled |
 | `read_model_registry`, `projection_watermark`, `projection_rebuild_run` | **Kept while the projection or read model exists; no sweep, and none needed yet** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per read model version, per projection version and per rebuild. They hold names, versions, timestamps and a sanitized error of at most 500 characters, no person's content. The tenant-entitlement projector now advances one watermark; no worker is enabled |
 | `ops_tenant_entitlement_projection` | **Current row kept while the school exists; replaced in place by newer events** | `supabase/migrations/20261008200000_tenant_entitlement_projection.sql` | One bounded policy id, capability, state/tombstone and source event cursor per school capability. No person, role/cohort list, reason or source prose. The school foreign key cascades on removal |
-| `projection_invalidation` | **No sweep yet — stated below** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per namespace refresh a projection asks for; ids and a reason only. It grows with every applied projection write, so a sweep is owed before the projector worker is enabled |
+| `projection_invalidation` | **90 days** | `private.prune_projection_history()` in `supabase/migrations/20261008220000_projection_history_retention.sql` | One transient refetch signal per applied projection write; the manual service-role operation honors tenant and platform legal holds. No scheduler is enabled |
 | `gateway_rate_limit` | **One day** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep of fixed-window counters |
 | `direct_rate_limit` | **The limit's own window — at most one day; with the account, by foreign key** | `private.take_direct_rate_limit()` in `supabase/migrations/20260928230000_direct_rate_limits.sql` | On write: each call deletes that account's expired hits for the bucket, plus up to 200 day-old hits from anybody. Holds an account id, a table name and a time — never what was written |
 | `gateway_intelligence_action` | **Unconfirmed actions: one day after expiry; claimed actions: ninety days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; action bodies are encrypted and single-use |
@@ -482,7 +482,7 @@ evidence-retention decision. There is no automatic sweep yet. Account deletion
 clears the recorder reference and leaves the operational record; notice bodies and
 recipients remain in `governance_incident_notices` under that table's policy.
 
-**The outbox, receipts and invalidations: no sweep yet.**
+**The outbox, receipts and invalidations: retention exists but is not scheduled.**
 `domain_outbox_events`, `domain_event_receipts` and `projection_invalidation`
 are service-role only. The feature-policy audit trigger now writes one bounded
 `entitlement.changed` event in the same transaction as its source and audit;
@@ -491,12 +491,17 @@ model, receipt, watermark and invalidation in one transaction. A bounded manual
 worker endpoint now exists, but its dedicated secret is intentionally absent
 and no schedule invokes it; no production operation is inferred.
 
-Each event row declares a retention class so a future sweep can apply this
-file's policy without reading its payload. The sweep is still not written, so
-published events, receipts and invalidations are kept indefinitely. Claim,
-bounded retry, dead-letter and approved replay operations exist, but the sweep
-is owed before the projector worker is enabled. `docs/API-PLATFORM.md` §4.4
-and ADR 0008 remain the operating boundary.
+Each event row declares a retention class so
+`private.prune_projection_history()` can apply this file's policy without
+reading its payload. Published payloads are scrubbed after 30 days. Published
+terminal envelopes and their receipts expire after 90 days for operational
+events, 400 days for student-record and commercial events, and three years for
+audit events. Invalidations expire after 90 days. Pending and dead-lettered
+events are never scrubbed or expired, and a tenant or platform legal hold keeps
+the rows it covers. The function is service-role only and intentionally has no
+scheduler entry; deployment, activation and a live retention run remain
+unverified. `docs/API-PLATFORM.md` §4.4 and ADR 0008 remain the operating
+boundary.
 
 ## Legal holds
 
@@ -529,6 +534,11 @@ on both sides of its line.
   an account in a held school: restrictions, safety entries, posts, reports,
   hosted sessions, volunteer tasks and uploaded images, and a case while its
   post's author or a reporter is held.
+- **What projection retention keeps.** `private.prune_projection_history()`
+  never touches pending or dead-lettered events. It preserves published event
+  envelopes, receipts and invalidations for a held school, and a platform hold
+  visibly skips the whole operation. The function is manual and service-role
+  only; no retention schedule is activated by its migration.
 - **What it also keeps, in the last three sweeps.**
   20261004150000_holds_reach_the_last_three_sweeps.sql added the clause to three
   functions that deleted without asking, found by reading every function that says

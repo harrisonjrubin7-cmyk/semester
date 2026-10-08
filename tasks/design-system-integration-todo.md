@@ -238,6 +238,23 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Full application gates — not required for this documentation/inventory-only slice; no production code, schema, policy or generated token changed.
 - [ ] HawkScan — not applicable to this documentation/inventory-only slice; the runtime and `HAWK_API_KEY` are also unavailable.
 
+## 2026-10-08 hold-aware projection retention — runner pass 5, slice 13
+
+- [x] Fetch `origin/main` before and after the slice; it advanced from `523091e9` to `7d93d31b`, with no equivalent projection-retention migration/check or version collision.
+- [x] Add a service-role-only manual retention operation; do not add or activate a scheduler.
+- [x] Scrub only published payloads after 30 days and preserve pending and dead-lettered events for delivery, diagnosis and approved replay.
+- [x] Expire terminal event envelopes and receipts by retention class: operational 90 days, student record/commercial 400 days and audit 3 years.
+- [x] Expire projection invalidations after 90 days.
+- [x] Preserve tenant-scoped history under a tenant hold and skip the entire operation visibly under a platform hold.
+- [x] Prove all retention branches, receipt co-deletion, hold boundaries and client/service grants in disposable PostgreSQL 17.
+- [x] Reapply all 208 migrations; schema and 369 table fingerprints remain unchanged; rerun 10 focused checks.
+- [x] Run adjacent SQL guards — 145 checks across retention, outbox operations/foundation, outbox, legal holds, hold-blind sweeps, grants, RLS and indexes.
+- [x] Run focused repository guards — 72 tests for retention, scheduler, definer and design tooling.
+- [x] Run TypeScript, lint, university typecheck and production build; lint retains only three existing warnings. The first build hit a generated-output cleanup race and the immediate rerun passed.
+- [x] Run the design-system check constituents and report contracts through the available pnpm runtime — 9 token tests, 69 check tests and 96 report-contract tests passed; zero audit violations and the existing 86 warnings remain within ledgers. The wrapper cannot invoke its nested `npm`/`npx` commands because this runner has neither binary.
+- [ ] Scheduler activation — remains separate and requires a provisioned secret, deployment evidence, monitoring, an operating runbook and explicit activation authority.
+- [ ] HawkScan DAST — preflight cannot start because the `hawk` executable is absent. `HAWK_API_KEY` is unset, although a local Hawk properties file exists and was not read. No scan or pass is claimed.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

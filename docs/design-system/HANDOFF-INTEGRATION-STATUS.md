@@ -1,10 +1,10 @@
 # Handoff integration status
 
-**Automation pass** 4 of 120 · **Integration slice** 12 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `523091e9`
+**Automation pass** 5 of 120 · **Integration slice** 13 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `7d93d31b`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer. Runner pass 3 adds the first registered projector transaction and private read model. Runner pass 4 adds a bounded projector endpoint that is dormant without its dedicated secret and has no scheduler. The retention sweep, activation, public query surface and UI remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer. Runner pass 3 adds the first registered projector transaction and private read model. Runner pass 4 adds a bounded projector endpoint that is dormant without its dedicated secret and has no scheduler. Runner pass 5 adds manual, hold-aware projection-history retention. Activation, public query surfaces and UI remain absent. No deployment, production data or external system changed.
 
 ## Evidence locked in runner pass 4 / slice 12
 
@@ -154,4 +154,12 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add the hold-aware retention sweep for published outbox events, terminal receipts and projection invalidations. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
+Add the next current-authority P1-06 producer only with its first justified consumer and focused atomicity proof. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
+
+## Hold-aware projection-history retention — automation runner pass 5, slice 13
+
+The pre-slice fetch observed `origin/main` at `523091e9`; the final fetch advanced it to `7d93d31b`. The intervening Phase B, Clerk, policy-evidence and console changes contain no equivalent retention function, migration or check and introduce no version collision. `20261008220000_projection_history_retention.sql` adds `private.prune_projection_history()`, a manually invoked, service-role-only operation. It scrubs published payloads after 30 days, expires published envelopes and their receipts by retention class, and removes projection invalidations after 90 days. It never touches pending or dead-lettered work. Tenant holds preserve covered rows, and a platform hold returns a visible `legal_hold` skip without mutating anything.
+
+The operation has no cron entry and was not deployed or run against production. `projection-history-retention.check.sql` covers the four event-class windows, payload scrubbing, receipt co-deletion, pending/dead-letter preservation, invalidation aging, tenant and platform holds, and client/service grants. PostgreSQL 17 applies all 208 migrations twice with 369 unchanged table fingerprints; 10 focused and 145 adjacent SQL checks pass, including the repository's hold-blind deletion suite. The retention/scheduler/definer/design-tooling guards pass 72 tests; TypeScript, lint, university typecheck, the production build and design-system constituent/report contracts pass. HawkScan cannot start because the `hawk` executable is absent, so the DAST gate remains open.
+
+P1-05 is now locally implemented and verified, not activated. The next dependency-ready local increment is P1-06: one repository-authorized producer with its first justified consumer. Worker activation still requires secret provisioning, deployment evidence, monitoring, an operating runbook and explicit authority.
