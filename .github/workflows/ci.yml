@@ -543,7 +543,20 @@ jobs:
       - name: Check the database policies
         env:
           SEMESTER_CHECK_REAPPLY: '1'
-        run: supabase/check.sh
+        run: supabase/policy-evidence.sh
+
+      # Keep the result for this exact commit even when the gate fails. The
+      # JSON records the configured PostgreSQL major, clean/reapply posture,
+      # per-suite outcomes and the hash of the unresolved-policy register. It
+      # is evidence of this ephemeral run, not a production-isolation claim.
+      - name: Keep the PostgreSQL policy evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pg17-policy-evidence-${{ github.sha }}
+          path: artifacts/database/pg17-policy-evidence.json
+          if-no-files-found: error
+          retention-days: 30
 
       # The same database, many sessions at once. The suites above each walk
       # one or two accounts through a policy; a race needs two sessions at the
