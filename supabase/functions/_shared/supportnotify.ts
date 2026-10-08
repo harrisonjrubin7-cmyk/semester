@@ -28,6 +28,13 @@ export interface SupportNoticeTarget {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UTC_RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+
+/** Fail closed unless the activation boundary is an explicit UTC RFC 3339 instant. */
+export function normalizeUtcActivationInstant(raw: string): string | undefined {
+  if (!UTC_RFC3339.test(raw) || !Number.isFinite(Date.parse(raw))) return undefined;
+  return new Date(raw).toISOString();
+}
 
 function reference(ticketId: string): string {
   const token = ticketId.replace(/[^a-f0-9]/gi, '').slice(0, 16).toUpperCase();

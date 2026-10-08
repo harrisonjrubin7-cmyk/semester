@@ -1,5 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { handleSupportNotice } from '../_shared/supportnotify.ts';
+import { handleSupportNotice, normalizeUtcActivationInstant } from '../_shared/supportnotify.ts';
 
 const url = Deno.env.get('SUPABASE_URL') ?? '';
 const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -11,9 +11,7 @@ const supportSender = Deno.env.get('SUPPORT_NOTIFY_FROM') ?? Deno.env.get('LEAD_
 // decision are recorded, then enable this explicit deployed-function switch.
 const supportVendorApproved = Deno.env.get('SUPPORT_NOTIFY_VENDOR_APPROVED') === 'true';
 const supportActivatedAtRaw = Deno.env.get('SUPPORT_NOTIFY_ACTIVATED_AT') ?? '';
-const supportActivatedAt = Number.isFinite(Date.parse(supportActivatedAtRaw))
-  ? new Date(supportActivatedAtRaw).toISOString()
-  : undefined;
+const supportActivatedAt = normalizeUtcActivationInstant(supportActivatedAtRaw);
 const cronSecret = Deno.env.get('CRON_SECRET');
 
 interface OutboxRow { message_id: string; ticket_id: string; attempts: number; claim_id: string }

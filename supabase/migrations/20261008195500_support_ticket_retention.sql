@@ -316,6 +316,14 @@ begin
    where t.student_id = old.id
      and not t.retention_classified
      and o.ticket_id = t.id;
+  -- Ticket-bound support access has a composite FK without ON UPDATE. Revoke
+  -- and audit those grants before detaching the preserved legacy ticket, or
+  -- the student_id update would strand the whole account deletion.
+  delete from public.support_access_grant g
+   using public.support_tickets t
+   where t.student_id = old.id
+     and not t.retention_classified
+     and g.ticket_id = t.id;
   update public.support_tickets
      set retention_subject_id = student_id,
          student_id = null,

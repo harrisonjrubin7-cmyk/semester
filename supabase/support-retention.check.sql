@@ -270,6 +270,61 @@ begin
     ));
 end $$;
 
+-- Regression: direct auth-user deletion must revoke a ticket-bound grant
+-- before detaching a pre-classifier ticket. The grant's composite FK has no
+-- ON UPDATE action, so the reverse order would reject the account deletion.
+do $$
+declare
+  school text := 'support-retention-school';
+  student uuid := gen_random_uuid();
+  supporter uuid := gen_random_uuid();
+  ticket uuid := gen_random_uuid();
+  consent uuid := gen_random_uuid();
+  grant_id uuid := gen_random_uuid();
+begin
+  insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at, created_at, updated_at)
+  values
+    (student, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'legacy-grant-student@example.test', now(), now(), now()),
+    (supporter, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'legacy-grant-supporter@example.test', now(), now(), now());
+  insert into public.consent_record
+    (id, tenant_id, subject_user_id, capability, status, policy_version,
+     recorded_by, expires_at)
+  values
+    (consent, school, student, 'support:read', 'consented',
+     'support-retention-direct-delete', student, now() + interval '1 day');
+  insert into public.support_tickets
+    (id, student_id, tenant_id, retention_classified, category, subject, body,
+     priority, status, first_response_due)
+  values
+    (ticket, student, null, false, 'privacy', 'Legacy ticket with grant',
+     'Preserve the ticket, revoke the access window.', 'high', 'resolved',
+     now() + interval '1 day');
+  insert into public.support_access_grant
+    (id, tenant_id, student_id, supporter_id, consent_id, ticket_id, scopes,
+     reason, expires_at)
+  values
+    (grant_id, school, student, supporter, consent, ticket,
+     array['learning-progress'], 'Diagnose this support case.',
+     now() + interval '1 day');
+
+  delete from auth.users where id = student;
+
+  perform pg_temp.must('direct auth deletion removes the account with a ticket-bound grant',
+    not exists (select 1 from auth.users where id = student));
+  perform pg_temp.must('direct auth deletion revokes the ticket-bound grant before detachment',
+    not exists (select 1 from public.support_access_grant where id = grant_id));
+  perform pg_temp.must('direct auth deletion preserves and detaches the legacy ticket',
+    exists (
+      select 1 from public.support_tickets
+       where id = ticket
+         and student_id is null
+         and retention_subject_id = student
+         and status = 'closed'
+    ));
+end $$;
+
 set local role authenticated;
 select pg_temp.must('a signed-in client cannot run the retention sweep',
   not has_function_privilege('authenticated', 'private.sweep_support_ticket_retention()', 'EXECUTE'));

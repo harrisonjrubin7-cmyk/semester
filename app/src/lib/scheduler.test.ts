@@ -220,7 +220,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/guard_preserved_support_ticket_message[\s\S]*?t\.student_id is null[\s\S]*?errcode = '55000'/);
     expect(migration).toMatch(/drop function if exists public\.claim_support_notifications\(uuid, integer\)/);
     expect(migration).toMatch(/claim_support_notifications\([\s\S]*?want_not_before timestamptz[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?o\.queued_at < want_not_before[\s\S]*?o\.queued_at >= want_not_before/);
-    expect(migration).toMatch(/create or replace function private\.refuse_delete_while_held\(\)[\s\S]*?lock table public\.legal_holds in share mode[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?student_id = null/);
+    expect(migration).toMatch(/create or replace function private\.refuse_delete_while_held\(\)[\s\S]*?lock table public\.legal_holds in share mode[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?delete from public\.support_access_grant[\s\S]*?student_id = null/);
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {
