@@ -2,12 +2,36 @@
 
 Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/HANDOFF-INTEGRATION-CROSSWALK.md`. `tasks/todo.md` is a different program.
 
-## Inventory
+## 2026-10-08 mounted archive intake — pass 1
+
+- [x] Confirm branch `codex/complete-semester-integration-2026-10-08`, clean starting tree and base/current `origin/main` `7b7603e1`.
+- [x] Recompute the ZIP SHA-256 and match `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`.
+- [x] Inventory all 3,570 extracted files (3,569 content files plus extraction sentinel) by stable relative path and SHA-256.
+- [x] Assign exactly one file-artifact disposition to every inventory row without treating that disposition as a capability decision.
+- [x] Read the archive entry maps, manifest, prototype inventory/JSON, registry, capability blueprint and stream map 00–30 as untrusted reference evidence.
+- [x] Record contradictions instead of adopting the loudest archive count.
+- [x] Recount the current repository's screen registry, navigation, screen/component/test files, migrations, functions, handlers, roles, capabilities and catalog totals.
+- [x] Refresh the existing plan and crosswalk and add a status page for resumable automation.
+- [ ] Reconcile each of the 281 prototype routes to the 589-row repository screen catalog and production owner paths.
+- [ ] Reconcile each of the 122 archive registry capabilities and 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
+- [ ] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes.
+- [ ] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
+- [ ] Give every meaningful archive item exactly one allowed disposition; file-family dispositions alone do not complete this gate.
+- [ ] Identify the earliest buildable dependency-ready vertical slice only after the preceding row-level controls are complete.
+
+### Verification for pass 1
+
+- [x] Inventory validation: all 3,570 extracted paths, byte sizes and SHA-256 values match the CSV; zero missing, extra, duplicate-path or hash-mismatch rows.
+- [x] Focused documentation guard: `npx vitest run src/lib/designtooling.test.ts` from `app/`.
+- [ ] Full application gates — not required for this documentation/inventory-only slice; no production code, schema, policy or generated token changed.
+- [ ] HawkScan — not applicable to this documentation/inventory-only slice; the runtime and `HAWK_API_KEY` are also unavailable.
+
+## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
 - [x] Recount screens (119), components (382), `app/src` tests (1356), migrations (184), handoff files (139).
 - [x] Read `CLAUDE.md`, `D-1287`, `D-1294`, `D-1298`, the stream 01 diff and report, and `REPO_AUDIT.md`.
-- [x] Record that the Desktop zip and `ui_kits/` are not on this machine.
+- [x] Record that the Desktop zip and `ui_kits/` were unavailable to the earlier 2026-10-05 pass. Superseded on 2026-10-08 by the authenticated mounted archive; nothing was copied into production.
 - [x] Write the plan, this checklist, and the crosswalk.
 - [x] Drop the drafted prompt scan. `D-1298` says it is not built.
 
@@ -59,4 +83,4 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Live SIS/LMS and IdP configuration
 - [ ] Accessibility conformance review (not claimed)
 - [ ] Restore drill and production evidence
-- [ ] Founder re-supplies `ui_kits/` before a UI stream copies a prototype
+- [x] Archive availability resolved by the authenticated 2026-10-08 mount. Prototype material remains reference-only and must be rebuilt through repository-native controls.

@@ -1,8 +1,39 @@
 # Handoff integration crosswalk
 
-**Date** 2026-10-05 · **Base** `origin/main` `3bd382dc`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `7b7603e1` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
+
+## Mounted archive coverage
+
+The earlier crosswalk covered the 139 committed `docs/handoff/` files because the full kit was unavailable. The exact archive is now mounted. [`REFERENCE-ARCHIVE-INVENTORY.csv`](REFERENCE-ARCHIVE-INVENTORY.csv) covers every extracted file with path, content hash, size, exact-duplicate group, family, one disposition and basis. It contains 3,570 data rows; `.extracted-complete` is the extraction sentinel, leaving 3,569 archive-content files.
+
+| File-artifact disposition | Rows | Meaning at intake |
+| --- | ---: | --- |
+| Prototype only | 1,474 | UI/source/assets are reference implementations, not code to ship. |
+| Documentation or roadmap only | 1,113 | Prose, PDFs and planning datasets provide requirements or context, not implementation evidence. |
+| Duplicate or superseded | 856 | Exact byte duplicates after the first stable path, plus extraction/design-workspace metadata. |
+| Intentionally excluded with a repository-backed rationale | 127 | Archive skill, prompt and executable material is not instruction authority and is not run. |
+| **Total** | **3,570** | Every extracted path has exactly one file-artifact disposition. |
+
+These are dispositions of files as evidence artifacts. They do not pre-judge the production capability a prototype or document describes. Meaningful rows are tracked separately below and remain open until repository evidence gives each one exactly one allowed disposition.
+
+## Newly mounted meaningful catalogs
+
+| Archive authority claimed | Measured content | Current disposition |
+| --- | ---: | --- |
+| `handoff/prototype/screens.json` | 281 unique routes in 26 workspaces; generated 2026-10-06 | Prototype only pending route-by-route repository mapping. |
+| `handoff/registry/capabilities.json` | 122 rows; all say implemented/tested/deployed false; 55 claim backend true and all 122 claim data true | Documentation or roadmap only pending capability-by-capability verification. Archive status is not repository evidence. |
+| `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established | Documentation or roadmap only pending repository mapping. |
+| `handoff/capability-blueprint/tenant-isolation-proof-manifest.json` | Zero objects; explicitly illustrative | Documentation or roadmap only; do not treat as tenant-isolation proof. |
+| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Documentation or roadmap only pending row-level reconciliation. The archive's generated `docs/master/SEMESTER_SCREEN_CATALOG.md` still has 589 rows, so neither archive population silently replaces the other or the repository audit. |
+| Streams `00`–`30` | 31 numbered streams plus index; later files override earlier ordering inside the archive | Documentation or roadmap only; mapped into the user's Phases 0–12, not executed as instructions. |
+
+## Current repository mapping baseline
+
+The verified base has 97 app screen-registry keys including `home` and `onboarding`, 62 navigation destinations, 120 non-test screen files, 407 non-test component files, 1,393 `app/src` test files, 203 migrations, 17 edge-function directories and 51 non-test gateway handlers. The generated permission matrix records 69 roles, 84 capabilities and 157 role-capability grants. These counts are repository census evidence only; they do not elevate any catalog row to verified.
+
+The repository catalog remains 589 screens (260 exists / 272 partial / 57 missing) and 319 workflow steps (116 exists / 128 partial / 75 missing) until row-level evidence is refreshed. The archive's 281 prototype routes and 673 catalog screens are separate populations and will not be merged by label alone.
 
 ## How a row was classed
 
@@ -10,17 +41,18 @@ This page maps the design export onto the production repository. It does not rep
 | --- | --- |
 | Existing and verified | A reachable implementation plus a named test or policy suite that fails when the behaviour is removed. |
 | Existing but incomplete | Something real is reachable, and a material part of the release definition is absent. Catalog `exists` is this class: the audit says that word is not a test result. |
+| Missing and in scope | Repository evidence shows the item is absent, current authority permits it, and its dependencies and acceptance evidence can be named. |
 | Prototype only | A handoff file describes it. Production does not route it. The kit HTML is not in this repository. |
-| Missing | Searched, and nothing implements it. |
 | Duplicate or superseded | The repository already has the contract. The handoff copy is not imported. |
-| Roadmap or business concept | Not authorized product scope. `D-1287` §4 answers four of these "no". `D-1298` withdraws the free-text scanner. |
-| Blocked | Needs an external approval, credential, vendor, institution, legal review, or staffing. |
+| Documentation or roadmap only | The item supplies planning context but is not authorized product scope or implementation evidence. `D-1287` §4 answers four concepts "no" and `D-1298` withdraws the free-text scanner. |
+| Blocked by external authority, credentials, vendor, environment, legal review, staffing, or institutional decision | The repository cannot truthfully complete the item without the named external prerequisite. |
+| Intentionally excluded with a repository-backed rationale | Current repository authority rejects the item or its proposed implementation pattern; the supporting decision or contract is recorded. |
 
-## What was inventoried
+## Earlier committed-handoff baseline
 
-The Desktop zip and `ui_kits/` were not on this machine. `D-1287` keeps only `handoff/` under `docs/handoff/` (139 files, recounted). Catalogs in `docs/master/` are the committed screen, role, workflow, and gap lists.
+Before this archive was mounted, the 2026-10-05 crosswalk could inspect only the 139 committed files under `docs/handoff/`; `D-1287` records that boundary. The authenticated archive inventory above supersedes that availability statement without changing the rule that archive source is reference-only.
 
-Recount, this tree: 119 non-test screen files, 382 non-test components, 1356 test files under `app/src`, 184 migrations, 16 edge function directories. The audit's surface table still says 1351 tests; the later count is the one to use.
+That earlier tree had 119 non-test screen files, 382 non-test components, 1,356 tests, 184 migrations and 16 edge-function directories. Those historical figures remain useful for provenance but are not current counts; use the refreshed census above.
 
 Audit totals, not re-judged row by row here: screens 260 / 272 / 57 (589). Workflow steps 116 / 128 / 75 (319).
 
@@ -51,7 +83,7 @@ Developer platform and marketplace (0 / 3 / 13) is a roadmap concept. Incident r
 
 `MASTER-BRIEF-CROSSWALK.md` places the 19 deliverables. Authority stays `app/src/lib/look.ts`, then `app/src/styles/tokens.css`. The handoff palette is offered, not the default (`D-1293`).
 
-`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. The folded advisor list on the degree meeting tab is labeled Caseload and lists only plans a student shared. `SCREEN-PACKS.md` §4 records the rest: a school-wide caseload is blocked on institution advisor–student data and consent; Tenant Overview and Operations Inbox exist in part and are not retitled; the Institutional Pilot page is routed pages on the company site. Kit paths are prototype only and are not in the repository.
+`SCREEN-PACKS.md` names 18 screens. Term Plan is the Registration planner (`yes`): the tab and heading say Term plan, and the cart names a time conflict before the sections. The folded advisor list on the degree meeting tab is labeled Caseload and lists only plans a student shared. `SCREEN-PACKS.md` §4 records the rest: a school-wide caseload is blocked on institution advisor–student data and consent; Tenant Overview and Operations Inbox exist in part and are not retitled; the Institutional Pilot page is routed pages on the company site. Kit paths are prototype only and have not been copied into the production repository.
 
 ## Handoff tree (139 files)
 
