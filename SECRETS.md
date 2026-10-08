@@ -79,6 +79,7 @@ secret second, so either works.
 | --- | --- | --- |
 | `VITE_SUPABASE_KEY` | `app/.env.production` (committed), overridable by an Actions variable or secret | The publishable key. Public by design; the row-level policies are what make that safe. Allowlisted in [`.gitleaks.toml`](.gitleaks.toml) for that reason, by prefix — `sb_secret_…` and a JWT are not |
 | `VITE_SUPABASE_URL` | Same | In the JavaScript every visitor downloads |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Actions variable or secret | Clerk's publishable browser key. Public by design; when absent, the Clerk provider boundary stays disabled and the existing account flow remains unchanged |
 | `VITE_VAPID_PUBLIC_KEY` | Actions variable or secret | The public half. **Rotating the VAPID pair is not finished until this is set and the site rebuilt** — the step that gets forgotten |
 | `VITE_TURN_USER`, `VITE_TURN_PASS`, `VITE_TURN_URL` | Actions | A TURN credential, carried in the page regardless. A secret here only keeps it out of the log |
 | `VITE_MS_CLIENT_ID`, `VITE_GOOGLE_CLIENT_ID`, `VITE_ZOOM_CLIENT_ID`, `VITE_APPLE_CLIENT_ID` | Actions | OAuth **client** IDs. Public by the standard's design; the secret half never reaches the browser |

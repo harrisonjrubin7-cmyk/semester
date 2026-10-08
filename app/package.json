@@ -69,6 +69,7 @@
     "generate:gtm-pdf": "node scripts/generate-gtm-pdf.mjs"
   },
   "dependencies": {
+    "@clerk/react": "^6.17.5",
     "@supabase/supabase-js": "^2.117.2",
     "@types/leaflet": "^1.9.22",
     "fflate": "^0.8.3",
