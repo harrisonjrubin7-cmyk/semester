@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 4 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `ca0cc9ad`
+**Automation pass** 5 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 4 completes the 281-row prototype-route reconciliation; no production route, schema, policy, dependency, token output, deployment or external system changed.
+Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 5 completes the 673-row catalog-screen reconciliation; no production route, schema, policy, dependency, token output, deployment or external system changed.
+
+## Evidence locked in pass 5
+
+- The clean branch merged current `origin/main` `e53128a6`; its capability-exposure and assistant-safety changes do not duplicate or alter this reconciliation population.
+- [`REFERENCE-CATALOG-SCREEN-RECONCILIATION.md`](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md) and its generated CSV preserve and disposition all 673 archive screen-catalog rows.
+- The generated CSV SHA-256 is `989d65402940915083ceea8d33237dc8cfe7e0b5d68ca02fe2e0c9d4f0cbf8e1`.
+- Structural proof shows 589 base rows exactly equal the repository catalog labels group by group and in order; the other 84 exactly equal the archive's declared `addedScreens` workflow aliases.
+- Results: 534 existing but incomplete, 44 missing and in scope, 84 duplicate or superseded, 1 documentation or roadmap only, 4 externally blocked and 6 intentionally excluded.
+- Every row names a P1–P7 current authorization/data-boundary profile, current evidence or planned owner, dependencies and acceptance contract, and release boundary.
+- The 84 aliases stay owned by the canonical workflow population. No route or screen is created merely because a workflow step was projected into the archive screen array.
+- The 44 buildable rows remain candidates until the 319 workflow rows and remaining execution streams establish dependency order; no production slice is prematurely selected.
 
 ## Evidence locked in pass 4
 
@@ -56,8 +67,8 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Open Phase 0 gates
 
-1. Reconcile the archive's 673 screen rows and 319 workflow steps with the repository's 589 and 319 row populations.
-2. Assign one allowed disposition to every meaningful catalog row and execution-stream item, including owner path, dependencies and acceptance evidence for buildable work.
+1. Reconcile the archive's 319 canonical workflow steps with the repository's 319 workflow rows, including the 84 screen aliases identified in pass 5.
+2. Reconcile remaining streams 00–30 and the role/system/document catalog populations at meaningful-item level, including owner path, dependencies and acceptance evidence for buildable work.
 3. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
 
 ## External gates kept open
@@ -66,4 +77,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the 673-screen archive catalog, preserving it as a separate population from the completed 281-route register and the repository's 589-row audit. Then reconcile the 319 workflow steps and remaining streams. Production implementation remains gated until those controls identify an authorized, dependency-ready slice without ambiguity.
+Continue Phase 0 with the 319 canonical workflow steps. Map each archive flow/step to the repository workflow audit, preserve the 84 screen aliases as non-independent projections, and record the exact owner, dependency and acceptance evidence. Remaining execution streams follow before production selection.

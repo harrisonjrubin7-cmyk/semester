@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `ca0cc9ad` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `e53128a6` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -80,13 +80,21 @@ Results are 62 existing but incomplete, 201 prototype only, 13 documentation or 
 
 The next Phase 0 slice is the 673-row archive master-catalog screen population. It must preserve the distinction between the archive catalog, the 281 prototype routes and the repository's 589-row audit while mapping exact equivalents, owner/dependency evidence and any currently authorized missing item. The 319 archive workflow steps and remaining streams still follow before production selection.
 
+## Catalog-screen reconciliation — automation pass 5
+
+[`REFERENCE-CATALOG-SCREEN-RECONCILIATION.md`](../docs/design-system/REFERENCE-CATALOG-SCREEN-RECONCILIATION.md) and its generated CSV now cover all 673 archive screen-catalog rows. The archive structure resolves the 673-versus-589 contradiction: each group's first rows exactly equal the current repository catalog in label and order (589 total), while the archive's own `addedScreens` field identifies the remaining 84 as selected workflow-step aliases.
+
+Results are 534 existing but incomplete, 44 missing and in scope, 84 duplicate or superseded workflow aliases, 1 documentation or roadmap only, 4 blocked externally and 6 intentionally excluded. No row is inflated to existing and verified. The two advisor rows previously labeled missing are bounded to the existing student-consented shared-plan analogues; they do not authorize an institution-wide roster or general student profile. The excluded rows preserve current anti-surveillance, academic-authority, community-data, marketplace/directory and employer-isolation boundaries.
+
+The 44 buildable rows are candidates, not a flat queue. Course Studio foundations appear earliest, but the canonical 319 workflow rows and remaining execution streams must still establish cross-row dependencies and acceptance paths before production selection. The next Phase 0 slice is the 319-row workflow reconciliation, including the 84 aliases identified here.
+
 ## What was read
 
 - Root `CLAUDE.md`.
-- `origin/main` through `ca0cc9ad`; pass 1 began at the supplied `INITIAL_MAIN_SHA` `7b7603e1`, and pass 2 rebased the clean branch after the migration-version collision repair landed.
+- `origin/main` through `e53128a6`; pass 1 began at the supplied `INITIAL_MAIN_SHA` `7b7603e1`, pass 2 reconciled after the migration-version collision repair, and pass 5 merged the clean branch with the current capability-exposure/assistant-safety changes before work.
 - Committed handoff: `docs/handoff/` (139 files). `docs/handoff/IN-THIS-REPO.md` and `docs/decisions/D-1287.md` say `ui_kits/`, `templates/`, and fonts are not in the repository.
 - Mounted archive entry maps: `readme.md`, `NEXT-SESSION.md`, `handoff/manifest.json`, `START-HERE.md`, `BUILD.md`, `README.md`, the prototype screen inventory/JSON, capability registry, 20-capability blueprint, and execute streams `00` through `30`.
-- Archive master-catalog data was parsed as data rather than executed: 49 role rows, 673 screen rows, 319 workflow steps, 88 systems, 82 documents and 84 added screen rows. Its prose also claims 51 roles; both remain archive claims pending row-level mapping.
+- Archive master-catalog data was parsed as data rather than executed: 49 role rows, 673 screen rows, 319 workflow steps, 88 systems, 82 documents and 84 added screen rows. Its prose also claims 51 roles. All 673 screen rows are now reconciled; the workflow, role, system and document populations remain separate.
 - Current repository integration controls, merged decisions, `docs/master/REPO_AUDIT.md`, the generated role-permission matrix, route/navigation authorities and current filesystem census.
 
 ## Preserved decision: a scanner was drafted and not kept
@@ -122,4 +130,4 @@ Main already contains the company-role student-row sweeps, the deliberate decisi
 
 ## Definition of complete, not met
 
-57 catalog screens and 75 workflow steps are missing. External gates (institutional UAT, legal review, live connectors, staffing, restore drills, HawkScan) stay open. This document does not say the system is integrated.
+The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions those screen rows as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues; it does not rewrite the source audit. Workflow dispositions remain open. External gates (institutional UAT, legal review, live connectors, staffing, restore drills, HawkScan) stay open. This document does not say the system is integrated.

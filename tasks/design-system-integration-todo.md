@@ -15,7 +15,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Reconcile each of the 281 prototype routes to the 589-row repository screen catalog and production owner paths.
 - [x] Reconcile each of the 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
 - [x] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
-- [ ] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes.
+- [x] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes and the 589 current catalog rows.
 - [ ] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
 - [ ] Give every meaningful archive item exactly one allowed disposition; file-family dispositions alone do not complete this gate.
 - [ ] Identify the earliest buildable dependency-ready vertical slice only after the preceding row-level controls are complete.
@@ -51,7 +51,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Record exact normalized matches to the 589-row repository audit and exact/same-domain matches to the 122-row capability register; reject fuzzy similarity.
 - [x] Assign exactly one disposition: 62 existing but incomplete, 201 prototype only, 13 documentation or roadmap only and 5 intentionally excluded.
 - [x] Keep all unmatched designs out of `missing and in scope` until current authority, data ownership and vertical-slice acceptance evidence exist.
-- [ ] Reconcile the 673 archive master-catalog screen rows; this is the next dependency-ready Phase 0 slice.
+- [x] Reconcile the 673 archive master-catalog screen rows; all 589 base rows and 84 workflow aliases now have one bounded disposition.
+
+## 2026-10-08 catalog-screen reconciliation — pass 5
+
+- [x] Fetch and merge current `origin/main` `e53128a6`; confirm its capability-exposure and assistant-safety changes do not duplicate this slice.
+- [x] Parse `catalog-data.js` as JSON data without evaluating archive JavaScript.
+- [x] Prove that the 673 rows consist of the exact 589-row repository catalog plus 84 appended rows declared by the archive as workflow-step aliases.
+- [x] Give all 673 rows exactly one disposition and a P1–P7 owner/boundary profile, current evidence or planned owner, dependencies, acceptance contract and release boundary.
+- [x] Classify the 84 workflow projections as duplicate or superseded screen aliases; retain their canonical ownership in the upcoming 319-row workflow pass.
+- [x] Identify 44 missing-and-in-scope candidates without selecting a production slice before workflow and stream dependencies are reconciled.
+- [x] Preserve anti-surveillance, academic-authority, community-data, marketplace/directory and employer-isolation exclusions and keep four actual external prerequisites open.
+- [ ] Reconcile all 319 canonical workflow rows; this is the next dependency-ready Phase 0 slice.
+
+### Verification for pass 5
+
+- [x] Generator validation: exactly 673 archive rows, 589 exact ordered base rows, 84 exact declared workflow aliases and 673 unique emitted keys.
+- [x] Structural validation: one allowed disposition and one evidence profile per CSV row; computed disposition/group totals match the summary.
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
+- [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.
 
 ### Verification for pass 4
 

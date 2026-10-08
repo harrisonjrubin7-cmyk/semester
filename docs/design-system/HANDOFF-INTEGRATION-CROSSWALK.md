@@ -1,6 +1,6 @@
 # Handoff integration crosswalk
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `ca0cc9ad` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `e53128a6` · **Archive SHA-256** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This page maps the design export onto the production repository. It does not replace `docs/design-system/MASTER-BRIEF-CROSSWALK.md` (the 19 visual deliverables) or `docs/master/REPO_AUDIT.md` (one row per catalogued screen and workflow step).
 
@@ -26,7 +26,7 @@ These are dispositions of files as evidence artifacts. They do not pre-judge the
 | `handoff/registry/capabilities.json` | 122 rows; all say implemented/tested/deployed false; 55 claim backend true and all 122 claim data true | Reconciled row by row in [`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md): 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded. Archive status is not repository evidence. |
 | `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established in the archive | Reconciled in [`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md): 16 existing but incomplete, 2 documentation or roadmap only, 1 blocked externally and 1 intentionally excluded. Repository evidence, not archive status, sets each result. |
 | `handoff/capability-blueprint/tenant-isolation-proof-manifest.json` | Zero objects; explicitly illustrative | Documentation or roadmap only; do not treat as tenant-isolation proof. |
-| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Documentation or roadmap only pending row-level reconciliation. The archive's generated `docs/master/SEMESTER_SCREEN_CATALOG.md` still has 589 rows, so neither archive population silently replaces the other or the repository audit. |
+| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Screen rows reconciled in [`REFERENCE-CATALOG-SCREEN-RECONCILIATION.md`](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md): 589 exact base rows plus 84 workflow aliases, with one disposition each. Workflow and other populations remain separate. |
 | Streams `00`–`30` | 31 numbered streams plus index; later files override earlier ordering inside the archive | Documentation or roadmap only; mapped into the user's Phases 0–12, not executed as instructions. |
 
 ## Pass 2 meaningful-item coverage
@@ -40,21 +40,25 @@ The first capability-level register now covers every meaningful item selected fo
 | Stream 18 | 23 / 23 | Sixteen requested documents map to current `docs/roles/*`; seven underlying product decisions remain separately honest. |
 | Stream 25 | 28 / 28 | Eighteen packages, seven “one” rules and three open decisions map to current authorities. |
 
-The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, and pass 4 mapped all 281 prototype routes without adopting archive URLs. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level population is the 673 archive catalog screens.
+The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, pass 4 mapped all 281 prototype routes without adopting archive URLs, and pass 5 reconciled all 673 catalog-screen rows. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level population is the 319 canonical workflow steps.
 
 ## Current repository mapping baseline
 
-The verified base has 97 app screen-registry keys including `home` and `onboarding`, 62 navigation destinations, 120 non-test screen files, 407 non-test component files, 1,393 `app/src` test files, 203 migrations, 17 edge-function directories and 51 non-test gateway handlers. The migration-rendered role launch register records 69 roles, 96 capabilities and 185 role-capability rows; the older permission matrix's 84/157 heading is stale. These counts are repository census evidence only; they do not elevate any catalog row to verified.
+The last full census has 97 app screen-registry keys including `home` and `onboarding`, 62 navigation destinations, 120 non-test screen files, 407 non-test component files, 1,393 `app/src` test files, 203 migrations, 17 edge-function directories and 51 non-test gateway handlers. The migration-rendered role launch register records 69 roles, 96 capabilities and 185 role-capability rows; the older permission matrix's 84/157 heading is stale. Pass 5 merged `origin/main` `e53128a6`, whose changed files do not alter these counted populations. These counts are repository census evidence only; they do not elevate any catalog row to verified.
 
 ## Pass 3 capability-registry coverage
 
 All 122 archive registry ids now have one row-level disposition and an evidence profile covering the current owner, role/route/capability boundary, tenant/data authority, operation, audit/recovery/state expectations, tests, dependencies and release ceiling. No full archive row qualifies as existing and verified because the rows combine broad experiences and archive-specific route/data/action claims; verified repository subcontracts remain named without inflating the whole row. The route inventory can now reuse those profiles instead of inventing a second permission model.
 
-The repository catalog remains 589 screens (260 exists / 272 partial / 57 missing) and 319 workflow steps (116 exists / 128 partial / 75 missing) until row-level evidence is refreshed. The archive's 281 prototype routes and 673 catalog screens are separate populations and will not be merged by label alone.
+The repository catalog remains 589 screens (260 exists / 272 partial / 57 missing) and 319 workflow steps (116 exists / 128 partial / 75 missing). Pass 5 reclassifies screen rows against the stricter integration contract without rewriting the source audit: 534 existing but incomplete (including two consent-bounded advisor analogues), 44 missing and in scope, 1 roadmap-only, 4 externally blocked and 6 excluded. The archive's 281 prototype routes and 673 catalog screens remain separate populations.
 
 ## Pass 4 prototype-route coverage
 
 All 281 archive prototype routes now have one row-level disposition plus a current owner/profile, screen/navigation evidence, exact catalog matches and capability-register matches. The result deliberately leaves 201 rows prototype-only: one prototype may split a current bounded surface into multiple demonstration, lab or control views, and fuzzy naming does not establish equivalence. Five marketplace routes remain excluded under `D-1287`. The generated route CSV is traceability evidence, not a production route registry or implementation backlog.
+
+## Pass 5 catalog-screen coverage
+
+All 673 archive catalog-screen rows now have one disposition, owner/evidence profile, dependency and acceptance boundary. Structural comparison proves that 589 are exact current-catalog rows and 84 are workflow-step projections declared by the archive itself. Those projections are not independent screen obligations. Forty-four rows are missing and in scope, but remain candidates until the canonical workflow and execution-stream passes determine dependency order. No row is called existing and verified.
 
 ## How a row was classed
 
@@ -161,4 +165,4 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 
 ## Not complete
 
-57 catalog screens and 75 workflow steps are missing. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
+The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues; workflow reconciliation remains open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
