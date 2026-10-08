@@ -113,7 +113,7 @@ The current register also includes 23 callable definers whose current definition
 | `registration_enroll` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `registration_withdraw` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `remove_connection` | `auth.uid()` | `20260922003000_connections.sql` |
-| `reply_to_my_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
+| `reply_to_my_ticket` | `auth.uid()` | `20261008195500_support_ticket_retention.sql` |
 | `report_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `request_connection` | `auth.uid()` | `20260922003000_connections.sql` |
 | `request_mentor` | `auth.uid()`, `private.school_of`, `private.in_cohort` | `20260928021700_mentor_rosters.sql` |
