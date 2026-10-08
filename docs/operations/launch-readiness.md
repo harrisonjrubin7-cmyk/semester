@@ -61,7 +61,7 @@ Every capability must pass product, data, trust, operations, commercial, adoptio
 - Longitudinal alumni/credential portability after issuer agreements.
 - Deeper localization, cognitive-load modes, and independent usability research.
 
-## First ten PR-sized milestones
+## First 15 PR-sized milestones
 
 1. Canonical capability-state resolver and claim gate: join the existing capability register, maturity definitions, audience release profiles, DB entitlements and evidence records into one runtime decision; add required exposure status, eight-test evidence, platforms, source, classification, owners, expiry, support and rollback metadata; map all current capabilities and routes.
 2. Restore green baseline: fix the 50 lint warnings and exact-commit full-suite failures without weakening checks or increasing timeouts as a substitute for diagnosis.
@@ -73,6 +73,11 @@ Every capability must pass product, data, trust, operations, commercial, adoptio
 8. Classified offline storage policy: central allow/deny classifier, purge hooks and tests proving grades/transcripts/aid/guardian data never persist offline.
 9. Notification/inbox foundation: category/channel preferences, quiet hours, delivery state, generic sensitive previews, retry and audit model.
 10. Support and recovery evidence: contextual help, JIT support workflow, current escalation roster, synthetic checks, restore drill artifact and release gate integration.
+11. Universal state contract: typed states, accessible shared renderers, route mapping, recovery actions and state/claim parity tests.
+12. Data quality control plane: provider-scoped contracts, lineage/freshness, discrepancy ownership, safe replay and user correction workflow.
+13. Workflow runtime slice: versioned instances and receipts for one reversible internal approval flow before any high-risk migration.
+14. Accessibility/content/community assurance: manual assistive-technology matrix, file trust boundary, moderation/safety tabletop and remediation register.
+15. Company launch simulation harness: machine-readable run records for all 17 journeys, severity/owner/due-date enforcement and independent retest closure.
 
 ## Exact recommended first PR
 
