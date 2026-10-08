@@ -263,6 +263,16 @@ begin
                       'privacy.identity_verified', 'privacy.request_resolved');
   perform pg_temp.counted('sensitive reads and lifecycle writes are audit-first', n, 9);
 
+  delete from auth.users where id = steward;
+  select count(*) into n from public.data_subject_request r
+   where r.id = export_request
+     and r.status = 'completed'
+     and r.verified_by is null
+     and r.verified_at is not null
+     and r.verification_basis = 'signed-in account holder'
+     and r.verification_evidence = 'case://export-1';
+  perform pg_temp.counted('verifier deletion preserves non-identifying verification evidence', n, 1);
+
   raise notice 'privacy case actions: every check passed';
 end $$;
 

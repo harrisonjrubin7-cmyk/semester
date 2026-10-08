@@ -113,7 +113,9 @@ export function ReleaseIncidents({
 
       {shown.map((item) => {
         const expanded = openId === item.itemId;
-        const approvalOpen = item.approvalStatus === 'pending' || item.approvalStatus === 'approved';
+        const approvalOpen = item.approvalStatus === 'pending'
+          || item.approvalStatus === 'approved'
+          || item.approvalStatus === 'executed';
         const hasBoundCommit = /^[0-9a-f]{40}$/.test(item.releaseCommit ?? '');
         const canRequest = item.canRequest && hasBoundCommit && (item.itemKind === 'incident'
           ? item.state === 'incident' || item.state === 'rollback'
