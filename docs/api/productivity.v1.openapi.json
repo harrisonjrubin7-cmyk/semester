@@ -1,0 +1,2214 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Semester productivity API",
+    "version": "1.0.0",
+    "description": "Tasks and calendar events, tenant-scoped and owner-private. Writes are commands that are idempotent and safe to replay from an offline queue; reads are paged. Every operation is authorized by the policy decision point (docs/architecture/0007) and every response carries X-Request-Id and X-Correlation-Id. See docs/API-PLATFORM.md for the conventions this document instantiates."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Mount point is deployment configuration (`basePath`)."
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "paths": {
+    "/v1/productivity/commands": {
+      "post": {
+        "operationId": "applyCommands",
+        "summary": "Apply up to 50 commands, in order, each atomically and idempotently.",
+        "description": "Not one transaction: each command commits or fails alone, so one refused command does not strand the rest. The request as a whole is safe to send again after any failure. On the first infrastructure failure the remaining commands are reported `not_attempted`.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/Purpose"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One result per command, in order.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "results"
+                  ],
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CommandResult"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/productivity/changes": {
+      "get": {
+        "operationId": "listChanges",
+        "summary": "The sync pull: every change after a position, tombstones included, in sequence order.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The `next_cursor` of the previous page."
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of changes. `seq` is gapless per owner; a jump means a change was missed.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Change"
+                      }
+                    },
+                    "page": {
+                      "$ref": "#/components/schemas/PageInfo"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/tasks": {
+      "get": {
+        "operationId": "listTasks",
+        "summary": "Tasks ordered by due date, undated last.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          },
+          {
+            "$ref": "#/components/parameters/Purpose"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "open",
+                "done"
+              ]
+            }
+          },
+          {
+            "name": "due_before",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "due_after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of tasks. For another person's list, only the fields their share allows.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Task"
+                      }
+                    },
+                    "page": {
+                      "$ref": "#/components/schemas/PageInfo"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/tasks/{id}": {
+      "get": {
+        "operationId": "getTask",
+        "summary": "One of the caller's own tasks.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/EntityId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The task.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              },
+              "ETag": {
+                "description": "\"v<version>\". Revalidate with If-None-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Unchanged since the ETag in If-None-Match."
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/calendar/events": {
+      "get": {
+        "operationId": "listEvents",
+        "summary": "Events overlapping a window, ordered by start.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/OwnerId"
+          },
+          {
+            "$ref": "#/components/parameters/Purpose"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "At most 366 days after `from`."
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/Cursor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of events. For another person's calendar, only the fields their share allows.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "page"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CalendarEvent"
+                      }
+                    },
+                    "page": {
+                      "$ref": "#/components/schemas/PageInfo"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/calendar/events/{id}": {
+      "get": {
+        "operationId": "getEvent",
+        "summary": "One of the caller's own events.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "$ref": "#/components/parameters/EntityId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The event.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              },
+              "ETag": {
+                "description": "\"v<version>\". Revalidate with If-None-Match.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarEvent"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Unchanged since the ETag in If-None-Match."
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    },
+    "/v1/agenda": {
+      "get": {
+        "operationId": "getAgenda",
+        "summary": "The caller's open tasks due and events happening in a window, as one time-ordered list.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CorrelationId"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "At most 62 days after `from`."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Time-ordered items; `truncated` is true when a cap cut the list.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              },
+              "X-Correlation-Id": {
+                "$ref": "#/components/headers/CorrelationId"
+              },
+              "Semester-API-Version": {
+                "$ref": "#/components/headers/ApiVersion"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "truncated"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "$ref": "#/components/schemas/Task"
+                          },
+                          {
+                            "$ref": "#/components/schemas/CalendarEvent"
+                          }
+                        ]
+                      }
+                    },
+                    "truncated": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationFailed"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "503": {
+            "$ref": "#/components/responses/Unavailable"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A session the server validates on every request; the tenant, roles and memberships come from the server's records, never the token's claims."
+      }
+    },
+    "headers": {
+      "RequestId": {
+        "description": "Minted per request; never anything a client sent.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "CorrelationId": {
+        "description": "The client's X-Correlation-Id if well formed (8-100 of A-Z a-z 0-9 . _ : -), otherwise minted. Written to every audit row and event the request causes.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{8,100}$"
+        }
+      },
+      "ApiVersion": {
+        "description": "The API major version that served the request.",
+        "schema": {
+          "const": "1"
+        }
+      }
+    },
+    "parameters": {
+      "CorrelationId": {
+        "name": "X-Correlation-Id",
+        "in": "header",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._:-]{8,100}$"
+        }
+      },
+      "Purpose": {
+        "name": "X-Semester-Purpose",
+        "in": "header",
+        "schema": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "description": "Required to read somebody else's data; recorded with the read."
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 50
+        }
+      },
+      "Cursor": {
+        "name": "cursor",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        },
+        "description": "The `next_cursor` of the previous page. Opaque; a position, never a permission."
+      },
+      "OwnerId": {
+        "name": "owner_id",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "description": "Whose data. Defaults to the caller; anyone else's needs a live share grant and X-Semester-Purpose."
+      },
+      "EntityId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "responses": {
+      "ValidationFailed": {
+        "description": "The request is not valid. `details` names each field.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unauthenticated": {
+        "description": "No valid session.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The policy decision point refused; `code` is its reason code and `user_action` says what the person can do.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "No such record of the caller's. Another person's record is also not found.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "Body over 256,000 bytes.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Send application/json.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Retry after the time in Retry-After.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "Unavailable": {
+        "description": "A dependency is down. Reads are safe to retry.",
+        "headers": {
+          "X-Request-Id": {
+            "$ref": "#/components/headers/RequestId"
+          },
+          "X-Correlation-Id": {
+            "$ref": "#/components/headers/CorrelationId"
+          }
+        },
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error",
+          "message"
+        ],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Kept for clients written before the envelope."
+          },
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "message",
+              "correlation_id",
+              "request_id",
+              "retryable"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Stable; a client may switch on it. See x-error-codes."
+              },
+              "message": {
+                "type": "string"
+              },
+              "correlation_id": {
+                "type": "string"
+              },
+              "request_id": {
+                "type": "string"
+              },
+              "retryable": {
+                "type": "boolean",
+                "description": "True only for 429 and 503."
+              },
+              "outcome_known": {
+                "const": false,
+                "description": "Present only when it is not known whether a change was made."
+              },
+              "user_action": {
+                "type": "object",
+                "required": [
+                  "label",
+                  "kind"
+                ],
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "enum": [
+                      "external_link",
+                      "open_screen",
+                      "retry_later",
+                      "contact_support"
+                    ]
+                  },
+                  "href": {
+                    "type": "string"
+                  }
+                }
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "issue"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "issue": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "retry_after_seconds": {
+                "type": "integer",
+                "description": "On a 429: seconds to wait. The same number the Retry-After header carries."
+              }
+            }
+          }
+        }
+      },
+      "PageInfo": {
+        "type": "object",
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "properties": {
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Source": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "student_entered",
+              "imported",
+              "institution_verified"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "ownerId",
+          "title",
+          "status",
+          "priority",
+          "version",
+          "seq",
+          "source",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "type": {
+            "const": "task"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "status": {
+            "enum": [
+              "open",
+              "done"
+            ]
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dueOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "A calendar day with no time and no zone: what a student means by 'due Friday'."
+          },
+          "whenText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40,
+            "description": "Free text such as '6:30 PM' or 'before work'. Kept and shown, never parsed."
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "normal",
+              "high"
+            ]
+          },
+          "courseId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "repeat": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "every",
+                  "until"
+                ],
+                "properties": {
+                  "every": {
+                    "enum": [
+                      "daily",
+                      "weekdays",
+                      "weekly",
+                      "fortnightly",
+                      "monthly"
+                    ]
+                  },
+                  "until": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "The last day an occurrence may fall on, inclusive. Required: a repeating task says when it stops."
+                  },
+                  "except": {
+                    "type": "array",
+                    "maxItems": 400,
+                    "items": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "description": "Days the rule skips."
+                  }
+                }
+              }
+            ],
+            "description": "The rule that brings the task back. Null is once."
+          },
+          "steps": {
+            "type": "array",
+            "maxItems": 50,
+            "description": "The pieces the task breaks into, in order, one level deep. Replaced as a whole.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "text",
+                "done"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "plannedFrom": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "description": "What the task was made in service of (a deadline's id), so a planner can tell it has already been used."
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CalendarEvent": {
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "ownerId",
+          "title",
+          "startsAt",
+          "endsAt",
+          "timezone",
+          "version",
+          "seq",
+          "source"
+        ],
+        "properties": {
+          "type": {
+            "const": "calendar_event"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ownerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "allDay": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "IANA zone name."
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
+          },
+          "kind": {
+            "enum": [
+              "event",
+              "focus_block"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "seq": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "source": {
+            "$ref": "#/components/schemas/Source"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "Change": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Task"
+          },
+          {
+            "$ref": "#/components/schemas/CalendarEvent"
+          },
+          {
+            "type": "object",
+            "required": [
+              "type",
+              "id",
+              "deleted",
+              "version",
+              "seq",
+              "deletedAt"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "task",
+                  "calendar_event"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "deleted": {
+                "const": true
+              },
+              "version": {
+                "type": "integer"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "deletedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        ]
+      },
+      "CommandBatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "commands"
+        ],
+        "properties": {
+          "commands": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/Command"
+            }
+          }
+        }
+      },
+      "CommandBase": {
+        "type": "object",
+        "required": [
+          "commandId",
+          "deviceId",
+          "clock",
+          "createdAt",
+          "type",
+          "id"
+        ],
+        "properties": {
+          "commandId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Minted on the device when the intent was made. The idempotency key."
+          },
+          "deviceId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+          },
+          "clock": {
+            "type": "string",
+            "pattern": "^[0-9]{13}\\.[0-9]{4}\\.[A-Za-z0-9_-]{1,64}$",
+            "description": "Hybrid logical clock: wall ms, counter, deviceId (which must equal this command's deviceId). A wall time more than 5 minutes ahead of the server is pulled back."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the intent was queued. A command older than 30 days is refused."
+          },
+          "type": {
+            "enum": [
+              "task.create",
+              "task.update",
+              "task.complete",
+              "task.reopen",
+              "task.delete",
+              "calendar_event.create",
+              "calendar_event.update",
+              "calendar_event.delete"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Chosen by the client, so a create can be replayed."
+          }
+        }
+      },
+      "Command": {
+        "description": "Unknown properties are refused, not ignored: owner, tenant, version and source are not the body's to say.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CommandBase"
+          }
+        ],
+        "oneOf": [
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "task.create"
+                ]
+              },
+              "fields": {
+                "$ref": "#/components/schemas/TaskFields"
+              }
+            },
+            "required": [
+              "fields"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "task.update"
+                ]
+              },
+              "changes": {
+                "$ref": "#/components/schemas/TaskChanges"
+              }
+            },
+            "required": [
+              "changes"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "task.complete",
+                  "task.reopen",
+                  "task.delete",
+                  "calendar_event.delete"
+                ]
+              }
+            }
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "calendar_event.create"
+                ]
+              },
+              "fields": {
+                "$ref": "#/components/schemas/EventFields"
+              },
+              "source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "ref"
+                ],
+                "properties": {
+                  "ref": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "description": "Only an import may say where an event came from."
+              }
+            },
+            "required": [
+              "fields"
+            ]
+          },
+          {
+            "properties": {
+              "type": {
+                "enum": [
+                  "calendar_event.update"
+                ]
+              },
+              "changes": {
+                "$ref": "#/components/schemas/EventChanges"
+              }
+            },
+            "required": [
+              "changes"
+            ]
+          }
+        ]
+      },
+      "TaskFields": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dueOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "A calendar day with no time and no zone: what a student means by 'due Friday'."
+          },
+          "whenText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40,
+            "description": "Free text such as '6:30 PM' or 'before work'. Kept and shown, never parsed."
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "normal",
+              "high"
+            ]
+          },
+          "courseId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "repeat": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "every",
+                  "until"
+                ],
+                "properties": {
+                  "every": {
+                    "enum": [
+                      "daily",
+                      "weekdays",
+                      "weekly",
+                      "fortnightly",
+                      "monthly"
+                    ]
+                  },
+                  "until": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "The last day an occurrence may fall on, inclusive. Required: a repeating task says when it stops."
+                  },
+                  "except": {
+                    "type": "array",
+                    "maxItems": 400,
+                    "items": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "description": "Days the rule skips."
+                  }
+                }
+              }
+            ],
+            "description": "The rule that brings the task back. Null is once."
+          },
+          "steps": {
+            "type": "array",
+            "maxItems": 50,
+            "description": "The pieces the task breaks into, in order, one level deep. Replaced as a whole.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "text",
+                "done"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "plannedFrom": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "description": "What the task was made in service of (a deadline's id), so a planner can tell it has already been used."
+          }
+        }
+      },
+      "TaskChanges": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "dueAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "dueOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "A calendar day with no time and no zone: what a student means by 'due Friday'."
+          },
+          "whenText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40,
+            "description": "Free text such as '6:30 PM' or 'before work'. Kept and shown, never parsed."
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "normal",
+              "high"
+            ]
+          },
+          "courseId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 64
+          },
+          "repeat": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "every",
+                  "until"
+                ],
+                "properties": {
+                  "every": {
+                    "enum": [
+                      "daily",
+                      "weekdays",
+                      "weekly",
+                      "fortnightly",
+                      "monthly"
+                    ]
+                  },
+                  "until": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "The last day an occurrence may fall on, inclusive. Required: a repeating task says when it stops."
+                  },
+                  "except": {
+                    "type": "array",
+                    "maxItems": 400,
+                    "items": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "description": "Days the rule skips."
+                  }
+                }
+              }
+            ],
+            "description": "The rule that brings the task back. Null is once."
+          },
+          "steps": {
+            "type": "array",
+            "maxItems": 50,
+            "description": "The pieces the task breaks into, in order, one level deep. Replaced as a whole.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "text",
+                "done"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "done": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "plannedFrom": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "description": "What the task was made in service of (a deadline's id), so a planner can tell it has already been used."
+          }
+        }
+      },
+      "EventFields": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "startsAt",
+          "endsAt",
+          "timezone"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "allDay": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
+          },
+          "kind": {
+            "enum": [
+              "event",
+              "focus_block"
+            ]
+          }
+        }
+      },
+      "EventChanges": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 4000
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "allDay": {
+            "type": "boolean"
+          },
+          "timezone": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200
+          },
+          "kind": {
+            "enum": [
+              "event",
+              "focus_block"
+            ]
+          }
+        }
+      },
+      "EntityRef": {
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "version"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "task",
+              "calendar_event"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "CommandResult": {
+        "description": "What happened to one command. `applied`, `superseded` and `duplicate` are all success for the client's queue: remove the command. `rejected` is permanent for this command as sent. `failed` and `not_attempted` mean send it again.",
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "commandId",
+              "status",
+              "entity",
+              "seq",
+              "appliedFields",
+              "supersededFields",
+              "clockClamped"
+            ],
+            "properties": {
+              "commandId": {
+                "type": "string"
+              },
+              "status": {
+                "const": "applied"
+              },
+              "entity": {
+                "$ref": "#/components/schemas/EntityRef"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "appliedFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "supersededFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Fields a later edit already held; reported, not dropped silently."
+              },
+              "clockClamped": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "commandId",
+              "status",
+              "entity",
+              "supersededFields",
+              "reason"
+            ],
+            "properties": {
+              "commandId": {
+                "type": "string"
+              },
+              "status": {
+                "const": "superseded"
+              },
+              "entity": {
+                "$ref": "#/components/schemas/EntityRef"
+              },
+              "supersededFields": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "reason": {
+                "enum": [
+                  "newer_edit",
+                  "no_change",
+                  "already_deleted"
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "commandId",
+              "status",
+              "original"
+            ],
+            "properties": {
+              "commandId": {
+                "type": "string"
+              },
+              "status": {
+                "const": "duplicate"
+              },
+              "original": {
+                "type": "object",
+                "description": "The first outcome, repeated."
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "commandId",
+              "status",
+              "code",
+              "message"
+            ],
+            "properties": {
+              "commandId": {
+                "type": "string"
+              },
+              "status": {
+                "const": "rejected"
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "userAction": {
+                "type": "object"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "commandId",
+              "status",
+              "code",
+              "message",
+              "retryable"
+            ],
+            "properties": {
+              "commandId": {
+                "type": "string"
+              },
+              "status": {
+                "const": "failed"
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "retryable": {
+                "const": true
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "commandId",
+              "status",
+              "retryable"
+            ],
+            "properties": {
+              "commandId": {
+                "type": "string"
+              },
+              "status": {
+                "const": "not_attempted"
+              },
+              "retryable": {
+                "const": true
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "x-error-codes": {
+    "route_not_found": {
+      "status": 404,
+      "retryable": false,
+      "meaning": "No such path."
+    },
+    "method_not_allowed": {
+      "status": 405,
+      "retryable": false,
+      "meaning": "Wrong method; see Allow."
+    },
+    "unauthenticated": {
+      "status": 401,
+      "retryable": false,
+      "meaning": "No valid session."
+    },
+    "rate_limited": {
+      "status": 429,
+      "retryable": true,
+      "meaning": "Over the identity's budget."
+    },
+    "validation_failed": {
+      "status": 400,
+      "retryable": false,
+      "meaning": "Not valid; see details."
+    },
+    "unsupported_media_type": {
+      "status": 415,
+      "retryable": false,
+      "meaning": "Not application/json."
+    },
+    "invalid_json": {
+      "status": 400,
+      "retryable": false,
+      "meaning": "Body is not JSON."
+    },
+    "payload_too_large": {
+      "status": 413,
+      "retryable": false,
+      "meaning": "Body over 256,000 bytes."
+    },
+    "not_found": {
+      "status": 404,
+      "retryable": false,
+      "meaning": "No such record of the caller's."
+    },
+    "unavailable": {
+      "status": 503,
+      "retryable": true,
+      "meaning": "A dependency is down."
+    },
+    "internal": {
+      "status": 500,
+      "retryable": false,
+      "meaning": "Unexpected; outcome_known is false for a write."
+    },
+    "command_expired": {
+      "status": 200,
+      "retryable": false,
+      "meaning": "Command queued more than 30 days ago."
+    },
+    "source_forbidden": {
+      "status": 200,
+      "retryable": false,
+      "meaning": "A person may not name a source."
+    },
+    "source_required": {
+      "status": 200,
+      "retryable": false,
+      "meaning": "An import must name its source."
+    },
+    "idempotency_key_reused": {
+      "status": 200,
+      "retryable": false,
+      "meaning": "Command id reused with a different body. As a command result it is `rejected` inside a 200; a single-command endpoint answers 422."
+    },
+    "id_in_use": {
+      "status": 200,
+      "retryable": false,
+      "meaning": "Create over an existing id."
+    },
+    "gone": {
+      "status": 200,
+      "retryable": false,
+      "meaning": "The record was deleted."
+    },
+    "obligation_unsupported": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "The decision carried an obligation this service cannot perform, so nothing was shown or changed. On a read it is a 403; on a command it is a `rejected` result inside a 200."
+    },
+    "action_unknown": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "No rule for the action."
+    },
+    "correlation_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "No traceable correlation id."
+    },
+    "actor_unknown": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Unknown actor."
+    },
+    "authentication_unverified": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Authentication time not verified."
+    },
+    "tenant_unknown": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "No verified tenant."
+    },
+    "tenant_unverified": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "The server did not verify the tenant."
+    },
+    "membership_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "No active membership."
+    },
+    "demo_cannot_touch_records": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Demo tenants cannot touch education records."
+    },
+    "classification_exceeds_action": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Data more sensitive than the action may touch."
+    },
+    "actor_not_person": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Only a signed-in person may read."
+    },
+    "capability_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "The role lacks the capability."
+    },
+    "owner_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Whose data is unknown."
+    },
+    "purpose_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "A purpose is required."
+    },
+    "grant_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "No share grant from the owner for this scope."
+    },
+    "grant_not_live": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "The grant is expired or revoked."
+    },
+    "command_unknown": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Not a verb this entity has."
+    },
+    "idempotency_missing": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "No command id."
+    },
+    "actor_not_permitted": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "This kind of actor may not do this."
+    },
+    "service_unbound": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "The job is not bound to the tenant."
+    },
+    "source_mismatch": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "An import may only write imported entries."
+    },
+    "not_owner": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "Only the owner may change this."
+    },
+    "source_authoritative": {
+      "status": 403,
+      "retryable": false,
+      "meaning": "The source owns that field."
+    }
+  }
+}

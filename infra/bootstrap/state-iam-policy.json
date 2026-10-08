@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListTheStateBucketOnly",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetBucketVersioning"],
+      "Resource": "arn:aws:s3:::BUCKET_NAME"
+    },
+    {
+      "Sid": "ReadWriteStateAndLockObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": [
+        "arn:aws:s3:::BUCKET_NAME/platform/terraform.tfstate*",
+        "arn:aws:s3:::BUCKET_NAME/staging/terraform.tfstate*",
+        "arn:aws:s3:::BUCKET_NAME/production/terraform.tfstate*"
+      ]
+    }
+  ]
+}

@@ -9,6 +9,7 @@ import App from '../App';
 import { StoreProvider } from '../state/store';
 import { AIProvider } from '../ai/store';
 import { loadSeed } from '../data/seed';
+import { ONB_STEPS } from '../data/misc';
 
 /**
  * axe-core over the whole app, rendered, on the screens a student lives in.
@@ -63,6 +64,7 @@ const DESKTOP = [
   '#/lesson/econ',
   '#/study',
   '#/settings',
+  '#/privacy',
 ];
 const PHONE = ['#/home', '#/calendar', '#/guide/econ?mode=listen'];
 
@@ -353,4 +355,42 @@ describe('no serious or critical axe violations', () => {
     const { findings } = await serious();
     expect(findings).toEqual([]);
   }, 30_000);
+
+  /*
+   * Every step of the first run, not only the first.
+   *
+   * The case above opens first run once, at step 0 of `ONB_STEPS`, so four of
+   * the five screens a new student walks through were never audited at all:
+   * every other case here sets `seenOnboarding` and skips them.
+   *
+   * They are reached the way a student reaches them, by pressing the primary
+   * button, because the step is not restored from storage: a stored `onb` is
+   * ignored and the screen opens on step 0, so seeding one audits the first
+   * screen five times and passes. The step shown is asserted to be the step
+   * being audited, which is what catches that.
+   */
+  async function advanceTo(step: number) {
+    for (let i = 0; i < step; i++) {
+      const buttons = [...host!.querySelectorAll('main button')];
+      // The primary action, then Skip: the last two buttons on every step.
+      await act(async () => (buttons[buttons.length - 2] as HTMLButtonElement).click());
+    }
+  }
+
+  for (const step of Array.from({ length: ONB_STEPS - 1 }, (_, i) => i + 1)) {
+    for (const [px, label] of [[1280, 'desktop'], [390, 'phone']] as const) {
+      it(`first run, step ${step + 1} of ${ONB_STEPS}, ${label}`, async () => {
+        width(px);
+        await show('#/home', {});
+        await advanceTo(step);
+        expect(host!.textContent, 'the screen is the step being audited').toContain(`Step ${step + 1} of ${ONB_STEPS}`);
+        expect(host!.querySelectorAll('h1'), 'one page heading').toHaveLength(1);
+        const { findings, passed } = await serious();
+        // Fewer than a full screen's rules apply: a step is a heading, a
+        // sentence and two buttons. Five still says axe looked at something.
+        expect(passed, `step ${step + 1}: axe passed only ${passed} rules`).toBeGreaterThan(5);
+        expect(findings, `step ${step + 1}`).toEqual([]);
+      }, 30_000);
+    }
+  }
 });

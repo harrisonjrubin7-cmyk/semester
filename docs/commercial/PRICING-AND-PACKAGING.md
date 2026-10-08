@@ -12,12 +12,14 @@
 | Package | Price status | Activation boundary |
 | --- | --- | --- |
 | individual free | **[PRICE/LIMITS TO BE APPROVED]** | define safe useful core, support and rights before publishing limits |
-| individual paid | **[PRICE TO BE APPROVED]** | no payment until billing, tax, cancellation/refund/renewal, support and rights operations pass |
+| individual paid | **[PRICE TO BE APPROVED]** — Plus is recorded at $7.99/month or $59/year (D-134), unpublished | no payment until billing, tax, cancellation/refund/renewal, support and rights operations pass |
 | institutional design partner/pilot | **[APPROVED FEE OR NO-FEE TERM REQUIRED]** plus **[IMPLEMENTATION FEE REQUIRED]** | conditional scope only; order and launch gates apply separately |
 | annual institutional license | **[PLATFORM MINIMUM AND BANDS TO BE APPROVED]** | no enterprise/annual sale without delivery, support, security and customer acceptance |
 | integrations/professional services | **[PRICE TO BE APPROVED]** | only after feasibility, data/security, staffing, cost and acceptance are defined |
 
 Any price embedded in code, tests, a mock page, historic decision or planning document is not the approved current price book. Resolve conflicts through a dated decision by authorized commercial, finance, tax and legal reviewers before publication or quote.
+
+**Reconciliation (2026-10-04).** Owner decision D-134 records Plus at $7.99 a month or $59 a year, and the monthly lifecycle was live-accepted on 2026-10-03 (`docs/evidence/BILLING-LIVE-ACCEPTANCE-2026-10-03.md`; annual charge, refund, failed renewal and dispute not exercised). That is a recorded product fact, not an approved price book and not a publishable price: CLM-015 in `PUBLIC-CLAIMS-APPROVAL-REGISTER.md` stays PROHIBITED until finance, tax, counsel and the claims owner approve the exact wording. A price may exist in a quote or signed order for one account (the `annualPriceAgreed` field of `pilotReadiness` means exactly that) without being a public price.
 
 ## Packaging logic
 

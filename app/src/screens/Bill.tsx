@@ -25,8 +25,9 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
+import { SourceBadge } from '../components/SourceBadge';
 import { SectionLabel, Segmented } from '../components/ui';
-import { FieldMessage, useFieldErrors } from '../components/FieldMessage';
+import { ErrorSummary, FieldMessage, useFieldErrors } from '../components/FieldMessage';
 import { CAMPUS_LINKS } from '../data/campus';
 import {
   AID_KINDS,
@@ -170,6 +171,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
             {s}
           </div>
         ))}
+        <SourceBadge label="student_entered" style={{ marginTop: 'var(--sp-4)' }} />
       </Blueprint>
 
       {charges.length > 0 && (
@@ -393,6 +395,7 @@ export function Bill({ schoolAccount = EXPERIENCE_FLAGS.studentAccounts !== 'off
       )}
 
       <SectionLabel>Add a line</SectionLabel>
+      <ErrorSummary {...fields.summary({ what: 'What it is', amount: 'How much', on: 'When you paid it' })} />
       {/* The shared control rather than a fourth hand-rolled row of pills, and
           named "An award" rather than "Aid" on purpose: the section above is
           already a foldable group called Aid, and two buttons with the same

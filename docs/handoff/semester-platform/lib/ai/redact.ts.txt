@@ -1,0 +1,21 @@
+// Content scan that runs AFTER gate() and BEFORE any provider call. gate() trusts scope labels; this catches records typed or pasted into the prompt.
+// Patterns are deliberately conservative: a false positive costs a rephrase, a false negative costs a FERPA incident.
+export interface Finding { kind: string; match: string }
+export interface Scan { text: string; findings: Finding[]; block: boolean }
+export interface TenantPatterns { studentId?: RegExp; extra?: { kind: string; re: RegExp }[] }
+const BASE: { kind: string; re: RegExp; block?: boolean }[] = [
+  { kind: 'ssn', re: /\b\d{3}-\d{2}-\d{4}\b/g, block: true },
+  { kind: 'email', re: /\b[\w.+-]+@[\w-]+\.[\w.]+\b/g },
+  { kind: 'phone', re: /\b(?:\+?1[ .-]?)?\(?\d{3}\)?[ .-]?\d{3}[ .-]?\d{4}\b/g },
+  { kind: 'dob', re: /\b(?:born|dob|date of birth)[:\s]+\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}\b/gi, block: true },
+  { kind: 'gpa', re: /\bgpa\s*(?:of|is|:)?\s*[0-4]\.\d{1,2}\b/gi, block: true },
+  { kind: 'grade-record', re: /\b(?:got|received|earned|my grade (?:is|was))\s+(?:an?\s+)?[A-F][+-]?\s+(?:in|on)\b/gi, block: true },
+  { kind: 'transcript', re: /\b(?:transcript|academic record|disciplinary|accommodation (?:letter|plan)|financial aid award)\b/gi, block: true },
+  { kind: 'card', re: /\b(?:\d[ -]?){13,16}\b/g, block: true },
+];
+export function scan(input: string, t: TenantPatterns = {}): Scan {
+  const rules = [...BASE, ...(t.studentId ? [{ kind: 'student-id', re: new RegExp(t.studentId.source, 'g'), block: true }] : []), ...(t.extra ?? []).map((e) => ({ ...e, block: true }))];
+  const findings: Finding[] = []; let text = input; let block = false;
+  for (const r of rules) { text = text.replace(r.re, (m) => { findings.push({ kind: r.kind, match: m }); if (r.block) block = true; return '[' + r.kind + ' removed]'; }); }
+  return { text, findings, block };
+}

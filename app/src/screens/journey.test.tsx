@@ -85,6 +85,14 @@ describe('Support', () => {
     expect(host.textContent).toContain('Semester does not monitor anyone');
   });
 
+  it('says where to go when no door obviously fits, on every tab', () => {
+    draw(<Support />);
+    for (const tab of [null, 'Care']) {
+      if (tab) click(button(tab));
+      expect([...host.querySelectorAll('button')].some((b) => b.textContent?.includes('See who can help with what'))).toBe(true);
+    }
+  });
+
   it('draws what happens to what you say before the door to the office', () => {
     draw(<Support />);
     click(button('Care'));

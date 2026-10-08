@@ -32,10 +32,12 @@ another is treated as the most severe kind until it is disproved.
 ## 3. When we tell you
 
 - **If your data may have been seen by someone who should not have seen it:**
-  within **72 hours** of confirming it, we email every affected account and,
-  for a school deployment, the school's named contact, saying what happened,
-  what data, and what we are doing. Where the law or a school's contract sets
-  a shorter time, that applies.
+  we aim to email every affected account and, for a school deployment, the
+  school's named contact, saying what happened, what data, and what we are
+  doing. **[COUNSEL REQUIRED]** The internal target is 72 hours from
+  confirming it, but no notice deadline has been approved (P-02) and this
+  draft does not promise one. Where the law or a school's contract sets a
+  time, that applies.
 - **Outages:** on the status page. It checks the service live from your
   browser; it does not yet send notifications or keep an uptime history.
 

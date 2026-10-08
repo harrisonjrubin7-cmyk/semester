@@ -1,0 +1,79 @@
+-- 050 · Security hardening from the Oct 2026 review of migrations 010–040.
+-- Each block names the finding it closes (see docs/secure/Platform Security Review.html). Not yet run: apply in staging and prove with tests/security.test.ts.
+
+-- F1 core.institutions had no RLS: any signed-in user could read every tenant's feature flags.
+alter table core.institutions enable row level security;
+create policy inst_own_read on core.institutions for select using (id = core.my_institution());
+
+-- F2 CRITICAL ops.staff had no RLS: a tenant user could read company staff or insert themselves as 'ceo' and gain every ops policy.
+alter table ops.staff enable row level security;
+create policy staff_self_read on ops.staff for select using (id = auth.uid());
+revoke insert, update, delete on ops.staff from anon, authenticated;
+-- staff rows are created only by the service role from the company IdP.
+
+-- F3 Helper functions read RLS-protected tables from inside RLS policies (recursion risk, planner surprises). Make them definer functions with a fixed search_path.
+create or replace function core.my_institution() returns uuid language sql stable security definer set search_path = '' as $$ select institution_id from core.profiles where id = auth.uid() $$;
+create or replace function core.my_role() returns text language sql stable security definer set search_path = '' as $$ select role from core.profiles where id = auth.uid() $$;
+create or replace function core.feature_on(f text) returns boolean language sql stable security definer set search_path = '' as $$ select coalesce((i.features->>f)::boolean, false) from core.institutions i where i.id = core.my_institution() $$;
+create or replace function ops.my_role() returns text language sql stable security definer set search_path = '' as $$ select role from ops.staff where id = auth.uid() $$;
+revoke all on function core.my_institution(), core.my_role(), core.feature_on(text), ops.my_role() from anon;
+
+-- F4 profiles_same_campus exposed every column (role, visibility settings) of every profile on campus, ignoring per-field visibility.
+drop policy if exists profiles_same_campus on core.profiles;
+create policy profiles_self_read on core.profiles for select using (id = auth.uid());
+create policy profiles_staff_read on core.profiles for select using (institution_id = core.my_institution() and core.my_role() in ('advisor','registrar','student_affairs','it_admin','support','moderator'));
+-- Directory for everyone else: only display name and fields the person made visible.
+create or replace view core.directory with (security_barrier = true) as
+  select p.id, p.display_name,
+         case when (p.visibility->>'major')::boolean then p.visibility->>'major_value' end as major,
+         case when (p.visibility->>'class_year')::boolean then p.visibility->>'class_year_value' end as class_year
+  from core.profiles p
+  where p.institution_id = core.my_institution() and coalesce((p.visibility->>'findable')::boolean, false);
+grant select on core.directory to authenticated;
+
+-- F5 HIGH profiles_self_update let a user move themselves to another institution_id (cross-tenant escalation). Freeze identity columns.
+create or replace function core.freeze_profile_identity() returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if new.id <> old.id or new.institution_id <> old.institution_id or new.role <> old.role then
+    raise exception 'identity columns are managed by SSO provisioning';
+  end if;
+  return new;
+end $$;
+drop trigger if exists profiles_freeze on core.profiles;
+create trigger profiles_freeze before update on core.profiles for each row execute function core.freeze_profile_identity();
+
+-- F6 audit.log was executable by any user, so clients could write arbitrary audit rows.
+revoke execute on function audit.log(text, text, jsonb, jsonb) from anon, authenticated;
+-- server command functions (security definer) call audit.log; grant to the role that owns them:
+-- grant execute on function audit.log(text, text, jsonb, jsonb) to service_role;
+
+-- F7 Audit must be append-only.
+revoke update, delete, truncate on audit.events from anon, authenticated;
+
+-- F8 market.bids exposed every bidder's identity to the whole campus.
+drop policy if exists b_read on market.bids;
+create policy b_own on market.bids for select using (bidder = auth.uid());
+create or replace view market.drop_bid_summary with (security_barrier = true) as
+  select b.drop_id, count(*) as bids, max(b.amount_cents) as top_bid_cents
+  from market.bids b join market.drops d on d.id = b.drop_id
+  where d.institution_id = core.my_institution()
+  group by b.drop_id;
+grant select on market.drop_bid_summary to authenticated;
+
+-- F9 community.members exposed membership of every group (including sensitive ones) campus-wide.
+-- A policy on members cannot query members itself (infinite recursion), so membership is checked in a definer function.
+create or replace function community.is_member(g uuid) returns boolean language sql stable security definer set search_path = '' as $ select exists(select 1 from community.members m where m.group_id = g and m.profile_id = auth.uid()) $;
+revoke all on function community.is_member(uuid) from anon;
+drop policy if exists m_read on community.members;
+create policy m_read_same_group on community.members for select using (
+  profile_id = auth.uid() or community.is_member(group_id) or (core.my_role() in ('moderator','student_affairs') and exists (select 1 from community.groups g where g.id = group_id and g.institution_id = core.my_institution())));
+
+-- F10 rsvps 'all' policy checked only profile_id, so a user could RSVP to another institution's event by id.
+drop policy if exists rs_self on community.rsvps;
+create policy rs_self_read on community.rsvps for select using (profile_id = auth.uid());
+create policy rs_self_write on community.rsvps for insert with check (profile_id = auth.uid() and exists (select 1 from community.events e where e.id = event_id and e.institution_id = core.my_institution()));
+create policy rs_self_delete on community.rsvps for delete using (profile_id = auth.uid());
+
+-- F11 Default-deny for anonymous users on every schema.
+revoke all on all tables in schema core, audit, community, market, ops from anon;
+alter default privileges in schema core, audit, community, market, ops revoke all on tables from anon;

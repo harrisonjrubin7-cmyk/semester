@@ -4,10 +4,11 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataRightsRequests } from './DataRightsRequests';
 
-const mock = vi.hoisted(() => ({ load: vi.fn(), file: vi.fn() }));
+const mock = vi.hoisted(() => ({ load: vi.fn(), certificates: vi.fn(), file: vi.fn() }));
 vi.mock('../lib/data-rights', async (original) => ({
   ...(await original<typeof import('../lib/data-rights')>()),
   loadDataRightRequests: mock.load,
+  loadPrivacyCompletionCertificates: mock.certificates,
   fileDataRightRequest: mock.file,
 }));
 
@@ -17,6 +18,7 @@ let root: Root;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mock.certificates.mockResolvedValue([]);
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -81,5 +83,27 @@ describe('data-rights request surface', () => {
     await act(async () => { root.render(<DataRightsRequests account={account} />); });
     await act(async () => { host.querySelector('form')?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); });
     expect(host.textContent).toContain('No duplicate was filed');
+  });
+
+  it('shows completion certificates owned by the signed-in student', async () => {
+    mock.load.mockResolvedValue([]);
+    mock.certificates.mockResolvedValue([{
+      certificateId: 'certificate-1', requestRef: 'DSR-101', kind: 'export',
+      evidenceReference: 'delivery://export-1', issuedAt: '2026-10-03T12:00:00Z',
+    }]);
+    await act(async () => { root.render(<DataRightsRequests account={account} />); });
+    expect(host.textContent).toContain('Completion certificates · 1');
+    expect(host.textContent).toContain('certificate-1');
+    expect(host.textContent).toContain('delivery://export-1');
+  });
+
+  it('keeps request history visible when certificate retrieval fails', async () => {
+    mock.load.mockResolvedValue([open]);
+    mock.certificates.mockRejectedValue(new Error('Certificate reader unavailable.'));
+    await act(async () => { root.render(<DataRightsRequests account={account} />); });
+    expect(host.textContent).toContain('My program is wrong.');
+    expect(host.textContent).toContain('privacy requests are available');
+    expect(host.textContent).toContain('Certificate reader unavailable.');
+    expect(host.textContent).not.toContain('Could not load privacy requests');
   });
 });

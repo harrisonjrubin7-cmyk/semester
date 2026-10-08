@@ -27,7 +27,10 @@ interface Entry {
 const entries = (lockfile: Lockfile): Entry[] => {
   const lock = JSON.parse(read(LOCKFILES[lockfile].path)) as { packages: Record<string, Omit<Entry, 'name'> & { license?: unknown }> };
   return Object.entries(lock.packages)
-    .filter(([key]) => key !== '')
+    // The root entry, the workspace members (`app`, `packages/*`) and the links
+    // that point at them are this repository's own code, not third-party
+    // packages; only a non-link `node_modules/…` entry is.
+    .filter(([key, v]) => key.startsWith('node_modules/') && !v.link)
     .map(([key, v]) => ({
       ...v,
       name: key.slice(key.lastIndexOf('node_modules/') + 'node_modules/'.length),

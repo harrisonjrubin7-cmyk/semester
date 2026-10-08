@@ -7,7 +7,6 @@
  * localStorage save, the reminders and the account sync.
  */
 
-import { storedWindow } from '../lib/registration-window';
 import {
   createContext,
   useCallback,
@@ -41,12 +40,8 @@ import {
 import { READ_ONLY } from '../lib/readonly';
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
-import { nextPayment } from '../lib/bill';
-import { classesToNudge, dueReminders, fire } from '../lib/notify';
-import { atRiskToday } from '../lib/atrisk';
-import { beginNow, planFrom } from '../lib/start';
-import { myReminders } from '../lib/myrules';
-import { datedItems, railFor } from '../lib/select';
+import { fire } from '../lib/notify';
+import { remindersFor } from './reminders';
 import { save, trouble } from '../lib/keep';
 import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
@@ -63,6 +58,7 @@ import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { linkedScreen } from '../lib/deeplink';
+import { captureEntry, continueOnLanding } from '../lib/entrycontext';
 import { NAMED, fromHash, opensAccount, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
@@ -97,6 +93,9 @@ import {
   type Conflict,
 } from '../lib/conflicts';
 import { coursesDeletedHere, settleDeletions } from '../lib/deletions';
+import { baseForLegacy, forLegacy } from '../lib/sync/engine/ownership';
+import { withEngine } from '../lib/sync/engine/tasks';
+import { useTaskEngine } from './useTaskEngine';
 import {
   STORAGE_KEY,
   initialEphemeral,
@@ -205,6 +204,12 @@ interface Store {
   tint: (id: string | null | undefined) => CourseTint;
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
+  /**
+   * The sample course is still arriving. An empty catalogue now means "not
+   * yet", not "nothing there"; a screen that reads the second while this is
+   * true draws its first-run for a moment it should have drawn a loading state.
+   */
+  loading: boolean;
   /**
    * What went wrong saving to this device, in a sentence, or empty.
    *
@@ -364,8 +369,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const ephemeral = initialEphemeral();
     // A "Log in" link is the exception: it came for the form, not the tour,
     // and onboarding still opens on the next visit until it is finished.
+    // A link from outside may say where it was going. A first visit still
+    // opens on setup, but setup now ends there (`lib/entrycontext.ts`).
+    const entry = captureEntry(window.location.search);
     if (!persisted.seenOnboarding && !opensAccount(window.location.hash)) {
-      return { ...persisted, ...ephemeral, screen: 'onboarding' as Screen };
+      return {
+        ...persisted,
+        ...ephemeral,
+        screen: 'onboarding' as Screen,
+        afterSetup: entry?.continueTo ?? null,
+      };
     }
     /*
      * A refresh, a bookmark, or a link somebody sent.
@@ -401,7 +414,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * on a new tab. `lib/chrome.ts` holds the rule, beside the rest of what a
      * navigation decides.
      */
-    return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? firstScreen(persisted.nav) };
+    return {
+      ...persisted,
+      ...ephemeral,
+      screen: screenFromUrl() ?? continueOnLanding(window.location.search) ?? firstScreen(persisted.nav),
+    };
   });
 
   // Re-render on the minute so "in 1 hr 19 min" and "Today" stay correct
@@ -954,8 +971,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
          * keeps one of each pair; the other is written down so the student
          * can choose it instead. See `lib/conflicts.ts`.
          */
-        const here = pickPersisted(latest.current) as unknown as Record<string, unknown>;
-        const agreedOn = readBase();
+        const here = forLegacy(pickPersisted(latest.current) as unknown as Record<string, unknown>);
+        const agreedOn = baseForLegacy(readBase());
         /*
          * What was deleted, on either side, since the two agreed — the one
          * thing the merge below cannot see, because a union cannot express a
@@ -1009,7 +1026,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // and for what this device deleted, which the account still holds
         // until the push that follows tells it. The untrimmed copy, so that
         // deletion is still a deletion if that push has to wait.
-        writeBase(baseOf(theirsAll as Record<string, unknown>));
+        writeBase(baseOf(forLegacy(theirsAll as Record<string, unknown>)));
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -1219,7 +1236,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           inFlight.current = false;
           markSeen(seen);
           // And the account now holds what was sent.
-          writeBase(baseOf({ ...rest, courses } as Record<string, unknown>));
+          writeBase(baseOf(forLegacy({ ...rest, courses } as Record<string, unknown>)));
           // Only if nothing changed while it was on its way: an edit made
           // after this push left is still waiting, and says so.
           if (editNow.current === sentAt) markUnpushed(false);
@@ -1452,66 +1469,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (catalog.empty) return;
     const check = () => {
       const at = new Date();
-      const items = datedItems(catalog, at);
-      fire(
-        dueReminders(at, state.notifs, {
-          items,
-          done: state.done,
-          classes: classesToNudge(railFor(catalog, at, state.appointments)),
-          muted: state.mutedCourses,
-          registrar: state.registrar,
-          registrationOpens: storedWindow(),
-          /*
-           * The four lists `nextPayment` reads, named rather than passed as
-           * the whole store. `Held` in `lib/bill.ts` is structural, so this
-           * satisfies it — and it is the difference between a dependency
-           * array that can be checked and one that says `state` and so
-           * re-creates this interval on every keystroke anywhere in the app.
-           */
-          bill: nextPayment(
-            {
-              charges: state.charges,
-              aid: state.aid,
-              payments: state.payments,
-              plans: state.plans,
-            },
-            state.term,
-            at,
-          ),
-          quiet: state.quiet,
-          atRisk: atRiskToday(
-            railFor(catalog, at, state.appointments),
-            state.attendance,
-            state.attendPolicy,
-            courseCode,
-          ),
-          // What has to begin, worked out here for the same reason `atRisk`
-          // and `bill` are: `lib/notify.ts` decides when to say a thing and
-          // never what is true. `planFrom` is the one calibration, so the
-          // reminder and the card on Today cannot disagree about the date.
-          starts: beginNow(
-            planFrom({
-              items,
-              done: state.done,
-              spent: state.spent,
-              windows: state.windows,
-              now: at,
-            }),
-          ),
-        }),
+      // Two calls, as before: the built-in rules and the student's own are
+      // capped separately by `fire`, and merging them would change that.
+      const { rules, mine } = remindersFor(
+        {
+          notifs: state.notifs, mutedCourses: state.mutedCourses, appointments: state.appointments,
+          registrar: state.registrar, myRules: state.myRules, attendance: state.attendance,
+          attendPolicy: state.attendPolicy, done: state.done, quiet: state.quiet, term: state.term,
+          charges: state.charges, aid: state.aid, payments: state.payments, plans: state.plans,
+          spent: state.spent, windows: state.windows,
+        },
+        catalog,
+        at,
+        courseCode,
       );
-      // The student's own rules, fired through the same `fire` — which keeps
-      // the seen list, so a custom reminder is subject to the same "once" as
-      // every built-in one. They add and never subtract: see `lib/myrules.ts`.
-      fire(
-        myReminders(at, state.myRules, items, state.done).map((f) => ({
-          id: f.id,
-          rule: 'today' as const,
-          title: f.title,
-          body: f.body,
-          why: 'Why: you set this up yourself, under “Your own reminders” in Settings.',
-        })),
-      );
+      fire(rules);
+      fire(mine);
     };
     check();
     const id = setInterval(check, 60_000);
@@ -1750,7 +1723,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'hydrate', persisted: theirs });
         markSeen(remote.seen);
         // The first version this device and the account agree on.
-        writeBase(baseOf(theirs as Record<string, unknown>));
+        writeBase(baseOf(forLegacy(theirs as Record<string, unknown>)));
       }
       setAsking(null);
     },
@@ -1859,14 +1832,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * "Synced" — which would be true of the account and not of the student's
    * work. Anything worse (offline, an error) still says the worse thing.
    */
+  const taskEngine = useTaskEngine({
+    accountId: account?.id ?? null,
+    online,
+    tasks: state.tasks,
+    apply: (tasks, known, adopted) => dispatch({ type: 'tasksFromEngine', tasks, known, adopted }),
+  });
   const shownSync = useMemo(
-    () => (review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync),
-    [sync, review.length],
+    () => withEngine(review.length > 0 && sync.status === 'synced' ? { ...sync, status: 'review' as SyncStatus } : sync, taskEngine.summary),
+    [sync, review.length, taskEngine.summary],
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
-    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync: shownSync, loading: awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve }),
+    [state, catalog, terms, courseCode, allItems, tint, account, shownSync, awaitingSample, saveTrouble, refresh, pushNow, say, school, facts, asking, settle, adopt, review, resolve],
   );
   /*
    * The clock is published beside the store, not inside it.

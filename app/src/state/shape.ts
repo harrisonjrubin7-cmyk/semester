@@ -599,6 +599,7 @@ export interface Persisted {
   typeface: string;
   bodyface: string;
   lineHeight: string;
+  textSpacing: string;
   readingWidth: string;
   iconShape: string;
   /** `device`, `still` or `calm` — see `CALMS` in `lib/look.ts`. */
@@ -863,6 +864,14 @@ export interface Ephemeral {
   screen: Screen;
   /** Student-selected recovery context carried to the next screen only. */
   recoveryIntent: RecoveryIntent | null;
+  /**
+   * The screen a link asked for, held through first-run setup.
+   *
+   * A new install opens on onboarding before it reads the address, so the
+   * link's destination would be lost; setup ends here instead. See
+   * `lib/entrycontext.ts`. Ephemeral: it is one load's intent, not a setting.
+   */
+  afterSetup: Screen | null;
   /** Back stack, so Back walks history rather than one remembered screen. */
   history: Screen[];
   courseId: CourseId;
@@ -1549,6 +1558,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   typeface: 'condensed',
   bodyface: 'barlow',
   lineHeight: 'normal',
+  textSpacing: 'normal',
   readingWidth: 'normal',
   iconShape: 'none',
   calm: 'device',
@@ -1586,6 +1596,7 @@ export function currentLook(state: Persisted): Look {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -1623,6 +1634,7 @@ export function initialEphemeral(): Ephemeral {
     undone: null,
     screen: 'home',
     recoveryIntent: null,
+    afterSetup: null,
     history: [],
     courseId: 'core',
     itemId: 'bus-ga1',
@@ -2196,6 +2208,7 @@ export function pickPersisted(state: State): Persisted {
     typeface: state.typeface,
     bodyface: state.bodyface,
     lineHeight: state.lineHeight,
+    textSpacing: state.textSpacing,
     readingWidth: state.readingWidth,
     iconShape: state.iconShape,
     calm: state.calm,
@@ -2643,6 +2656,8 @@ export type Action =
   | { type: 'addStep'; id: string; text: string }
   | { type: 'dropStep'; id: string; stepId: string }
   | { type: 'deleteTask'; id: string }
+  /** The engine's tasks, woven into the list (`lib/sync/engine/tasks.ts` `weave`). Never from a screen. */
+  | { type: 'tasksFromEngine'; tasks: PersonalTask[]; known: string[]; adopted: Record<string, string> }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   /*
    * The same shape as `editTask`, and here for the same reason it is.

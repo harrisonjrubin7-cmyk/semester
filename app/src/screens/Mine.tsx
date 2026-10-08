@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useNow, useStore } from '../state/store';
+import { useTaskActions } from '../composition/taskactions';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -34,6 +35,10 @@ import { PrintButton } from '../components/PrintButton';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
 import { SaveState } from '../components/unity/Status';
+import { ReadState } from '../components/unity/ReadState';
+import { useOnline } from '../lib/offline-mode';
+import { countSources, tasksEnvelope } from '../lib/read/surfaces';
+import type { SourceLabel } from '../lib/source';
 
 /**
  * Everything you added yourself.
@@ -96,6 +101,7 @@ const submitOnEnter =
  */
 function TaskRow({ task: t }: { task: PersonalTask }) {
   const { state, dispatch, courseCode } = useStore();
+  const taskActions = useTaskActions();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(t.title);
   const [date, setDate] = useState(t.date ?? '');
@@ -281,7 +287,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           <button
             type="button"
             className="bare"
-            onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
+            onClick={() => taskActions.remove(t.id)}
             aria-label={`Delete ${t.title}`}
             /* Marked so the assistant's floating button lifts clear of it at
                any overlap rather than at half of it — see `tappable` in
@@ -316,7 +322,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
       <button
         type="button"
         className="bare"
-        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        onClick={() => taskActions.toggle(t.id)}
         /* On a repeating task the tick moves it rather than finishing it, and
            a checkbox that does something other than tick has to say so before
            it is pressed — `tickSays` is the sentence. */
@@ -388,9 +394,21 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 }
 
 function Tasks({ rows }: { rows?: PersonalTask[] }) {
-  const { state, dispatch } = useStore();
+  const { state, loading } = useStore();
+  const taskActions = useTaskActions();
   const now = useNow();
+  const online = useOnline();
   const [open, setOpen] = useState(false);
+  // The list region's own rule, unchanged: empty means no tasks and no form
+  // open, because an open form is somebody about to fill it.
+  const env = tasksEnvelope({
+    loading,
+    empty: state.tasks.length === 0 && !open,
+    count: state.tasks.length,
+    sources: countSources(state.tasks.map((): SourceLabel => 'student_entered')),
+    online,
+    now: now.getTime(),
+  });
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
   const [time, setTime] = useState('');
@@ -401,17 +419,14 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
 
   const add = () => {
     if (!title.trim()) return;
-    dispatch({
-      type: 'addTask',
-      task: {
-        title: title.trim(),
-        date: date || null,
-        time: time.trim(),
-        note: '',
-        courseId,
-        // A rule counts from a first day; without one there is no series.
-        ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
-      },
+    taskActions.add({
+      title: title.trim(),
+      date: date || null,
+      time: time.trim(),
+      note: '',
+      courseId,
+      // A rule counts from a first day; without one there is no series.
+      ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
     });
     setTitle('');
     setTime('');
@@ -525,13 +540,17 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
         </ActionButton>
       )}
 
-      {state.tasks.length === 0 && !open && (
-        <EmptyState
-          title="Nothing of your own yet."
-          body="Actions you add here are yours — they sit alongside coursework on Today without pretending to be it."
-        />
-      )}
-
+      <ReadState
+        env={env}
+        now={now.getTime()}
+        what="your actions"
+        empty={{
+          title: 'Nothing of your own yet.',
+          body: 'Actions you add here are yours — they sit alongside coursework on Today without pretending to be it.',
+        }}
+      >
+        {() => (
+      <>
       {groups.map((g) =>
         g.tasks.length === 0 ? null : (
           <div key={g.label}>
@@ -546,6 +565,9 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
           </div>
         ),
       )}
+      </>
+        )}
+      </ReadState>
       <div style={{ height: 22 }} />
     </div>
   );

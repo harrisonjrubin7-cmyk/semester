@@ -1,0 +1,26 @@
+// Security headers + session refresh for every request. Copy to the app root as middleware.ts (merge with existing auth middleware).
+import { NextResponse, type NextRequest } from 'next/server';
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://*.supabase.co",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "font-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "upgrade-insecure-requests",
+].join('; ');
+export function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  res.headers.set('Content-Security-Policy', CSP);
+  res.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=(self), payment=(), usb=()');
+  res.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  if (req.nextUrl.pathname.startsWith('/api/')) res.headers.set('Cache-Control', 'no-store');
+  return res;
+}
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] };

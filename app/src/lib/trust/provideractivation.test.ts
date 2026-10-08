@@ -175,7 +175,7 @@ describe('the claude function', () => {
     const gate = at('activation(SHARED_PROVIDER, Deno.env.get(SWITCH))');
     const refusal = at('if (!gate.active)');
     expect(gate).toBeLessThan(refusal);
-    for (const later of ["Deno.env.get('ANTHROPIC_API_KEY')", 'auth.getUser(', "rpc('count_call'", 'fetch(ANTHROPIC']) {
+    for (const later of ["Deno.env.get('AI_GATEWAY_API_KEY')", "Deno.env.get('ANTHROPIC_API_KEY')", 'auth.getUser(', "rpc('count_call'", 'fetch(upstreamTo.url']) {
       expect(refusal, later).toBeLessThan(at(later));
     }
   });
@@ -196,7 +196,7 @@ describe('the claude function', () => {
         return statSync(full).isDirectory() ? walk(full) : f.endsWith('.ts') ? [full] : [];
       });
     const spenders = walk(join(root, 'supabase', 'functions'))
-      .filter((f) => /Deno\.env\.get\(\s*['"](ANTHROPIC|OPENAI)_API_KEY/.test(readFileSync(f, 'utf8')))
+      .filter((f) => /Deno\.env\.get\(\s*['"](ANTHROPIC|OPENAI|AI_GATEWAY)_API_KEY/.test(readFileSync(f, 'utf8')))
       .map((f) => f.slice(root.length + 1));
     expect(spenders).toEqual([FUNCTION]);
   });

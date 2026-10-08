@@ -1,12 +1,20 @@
-import type { MeetingLibrary } from './advisor-meeting';
+import { namedAgendaText, type MeetingLibrary } from './advisor-meeting';
 import { CHECKLIST, readiness, type RegistrationDayData } from './registration-day';
 import type { CatalogCourse } from './registration';
 
 export type ReadinessState = 'ready' | 'attention' | 'not_started';
 
+/** A course code the student typed. It is not a section and not an enrollment. */
+export interface NamedCourse {
+  code: string;
+  term: string | null;
+}
+
 export interface PathReadinessInput {
   pathConfigured: boolean;
   requirementTotal: number;
+  /** Codes from the device plan. Absent means the caller has not supplied any. */
+  namedCourses?: readonly NamedCourse[];
   cart: CatalogCourse[];
   catalog: CatalogCourse[];
   registration: RegistrationDayData;
@@ -15,7 +23,7 @@ export interface PathReadinessInput {
 }
 
 export interface PathReadinessItem {
-  id: 'path' | 'requirements' | 'courses' | 'schedule' | 'backups' | 'window' | 'official_checks' | 'advisor';
+  id: 'path' | 'requirements' | 'named' | 'courses' | 'schedule' | 'backups' | 'window' | 'official_checks' | 'advisor';
   label: string;
   detail: string;
   state: ReadinessState;
@@ -31,6 +39,13 @@ export interface PathReadinessItem {
  */
 export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   const plan = readiness(input.registration, input.cart, input.catalog);
+  const unchecked = uncheckedSections(input.cart);
+  const named = input.namedCourses ?? [];
+  const namedCodes = named.map((course) => course.code.trim()).filter(Boolean);
+  const agendaTexts = new Set(input.meetings.meetings.flatMap((meeting) => meeting.agenda.map((line) => line.text)));
+  const namedOnAgenda = namedCodes.length > 0 && named
+    .filter((course) => course.code.trim())
+    .every((course) => agendaTexts.has(namedAgendaText({ code: course.code.trim(), term: course.term })));
   const checked = CHECKLIST.filter((item) => input.registration.checks.includes(item.id)).length;
   const latestMeeting = [...input.meetings.meetings].sort((a, b) => b.created - a.created)[0];
   const hasAgenda = Boolean(latestMeeting && (latestMeeting.agenda.length || latestMeeting.questions.length));
@@ -51,6 +66,18 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
       destination: 'degree',
     },
     {
+      id: 'named',
+      label: 'Courses you named',
+      detail: !namedCodes.length
+        ? 'Name the courses you are considering. Naming a course is not an enrollment.'
+        : namedOnAgenda
+          ? `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} on your meeting agenda. That is not an enrollment, a section, or a seat. Nothing else from your record was copied, and nothing was shared.`
+          : `${namedCodes.join(', ')} ${namedCodes.length === 1 ? 'is' : 'are'} typed on this device. That is not an enrollment, a section, or a seat.`,
+      // A typed code is preparation. It is ready once each code is on the student's own agenda, which is still not the school's confirmation.
+      state: !namedCodes.length ? 'not_started' : namedOnAgenda ? 'ready' : 'attention',
+      destination: 'yes',
+    },
+    {
       id: 'courses',
       label: 'Primary schedule',
       detail: input.cart.length
@@ -62,8 +89,14 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
     {
       id: 'schedule',
       label: 'Schedule conflicts',
-      detail: !input.cart.length ? 'Add courses before checking the schedule.' : plan.conflicts ? `${plan.conflicts} conflict${plan.conflicts === 1 ? '' : 's'} need attention.` : 'No meeting-time conflicts found in the imported schedule.',
-      state: !input.cart.length ? 'not_started' : plan.conflicts ? 'attention' : 'ready',
+      detail: !input.cart.length
+        ? 'Add courses before checking the schedule.'
+        : plan.conflicts
+          ? `${plan.conflicts} conflict${plan.conflicts === 1 ? '' : 's'} need attention.`
+          : unchecked
+            ? `${unchecked} selected section${unchecked === 1 ? ' has' : 's have'} no meeting times, so conflicts cannot be checked for ${unchecked === 1 ? 'it' : 'them'}.`
+            : 'No meeting-time conflicts found in the imported schedule.',
+      state: !input.cart.length ? 'not_started' : plan.conflicts || unchecked ? 'attention' : 'ready',
       destination: 'yes',
     },
     {
@@ -97,6 +130,98 @@ export function pathReadiness(input: PathReadinessInput): PathReadinessItem[] {
   ];
 }
 
+/** Device courses the student typed. A syllabus import is a different source and stays off this row. */
+export function namedCoursesFrom(
+  courses: readonly { course: { code: string; source?: string; term?: string } }[],
+): NamedCourse[] {
+  return courses
+    .filter((module) => module.course.source === 'Added by hand')
+    .map((module) => ({ code: module.course.code, term: module.course.term ?? null }));
+}
+
 export function readinessCount(items: readonly PathReadinessItem[]): { ready: number; total: number } {
   return { ready: items.filter((item) => item.state === 'ready').length, total: items.length };
+}
+
+/** Selected sections with no meeting times: they cannot be conflict-checked, whatever else is true. */
+export function uncheckedSections(cart: readonly CatalogCourse[]): number {
+  return cart.filter((course) => !course.meetings.length).length;
+}
+
+/**
+ * The one line above the steps: where the student stands as a whole.
+ *
+ * Five answers, and each is read off something the app really holds. There is
+ * deliberately no "needs advisor review": nothing Semester stores says an
+ * advisor must review a plan, so offering it would be a claim with no source.
+ * It can join this list when a source (an advising hold, a program rule) exists.
+ *
+ * - `blocked`: a meeting-time conflict in the chosen schedule. Computed, not
+ *   assumed. Holds and prerequisites live in the official system and are not
+ *   known here, so they can never produce this state.
+ * - `unavailable`: no course catalog is loaded, or a selected section has no
+ *   meeting times, so conflicts cannot be checked (the planner itself warns
+ *   "Conflicts cannot be checked for those sections"). That is a gap in what
+ *   Semester knows, not in what the student has done, and it must stop the
+ *   headline from saying Ready.
+ * - `ready`, `almost_ready`, `getting_ready`: by how many of the steps are done.
+ *
+ * Preparation only. None of these says the registration will succeed.
+ */
+export type OverallState = 'ready' | 'almost_ready' | 'getting_ready' | 'blocked' | 'unavailable';
+
+export interface OverallReadiness {
+  state: OverallState;
+  label: string;
+  why: string;
+}
+
+/** What the overall status is read from, besides the steps themselves. */
+export interface ReadinessFacts {
+  /** Sections in the loaded catalog. Zero means nothing can be selected or checked. */
+  catalogSize: number;
+  /** Meeting-time overlaps the app computed in the chosen schedule. */
+  conflicts: number;
+  /** Selected sections with no meeting times (see `uncheckedSections`). */
+  unchecked: number;
+}
+
+export function readinessFacts(input: PathReadinessInput): ReadinessFacts {
+  return {
+    catalogSize: input.catalog.length,
+    conflicts: readiness(input.registration, input.cart, input.catalog).conflicts,
+    unchecked: uncheckedSections(input.cart),
+  };
+}
+
+export function overallReadiness(items: readonly PathReadinessItem[], facts: ReadinessFacts): OverallReadiness {
+  if (facts.conflicts > 0) {
+    const schedule = items.find((item) => item.id === 'schedule');
+    return { state: 'blocked', label: 'Blocked', why: `${schedule?.detail ?? 'Two selected sections overlap.'} Fix it before you register.` };
+  }
+  if (facts.catalogSize === 0) {
+    return {
+      state: 'unavailable',
+      label: 'Information unavailable',
+      why: 'No course catalog is loaded, so sections, conflicts and backups cannot be checked here.',
+    };
+  }
+  if (facts.unchecked > 0) {
+    return {
+      state: 'unavailable',
+      label: 'Information unavailable',
+      why: `${facts.unchecked} selected section${facts.unchecked === 1 ? ' has' : 's have'} no meeting times, so a conflict cannot be ruled out. Check the official listing.`,
+    };
+  }
+  // A student who has not named a course has not left a step undone. Once they have, that row counts.
+  const steps = items.filter((item) => !(item.id === 'named' && item.state === 'not_started'));
+  const left = steps.filter((item) => item.state !== 'ready');
+  if (left.length === 0) {
+    return { state: 'ready', label: 'Ready', why: 'Every preparation step is done. Your registrar and official system still decide the result.' };
+  }
+  const names = left.map((item) => item.label.toLowerCase()).join(' and ');
+  if (left.length <= 2) {
+    return { state: 'almost_ready', label: 'Almost ready', why: `${left.length === 1 ? 'One step' : 'Two steps'} left: ${names}.` };
+  }
+  return { state: 'getting_ready', label: 'Getting ready', why: `${steps.length - left.length} of ${steps.length} steps done. Next: ${left[0]!.label.toLowerCase()}.` };
 }

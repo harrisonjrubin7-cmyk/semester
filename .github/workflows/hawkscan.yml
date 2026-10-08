@@ -45,11 +45,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install
         if: steps.config.outputs.enabled == 'true'
-        working-directory: app
         run: npm ci
 
       - name: Build scan target
@@ -77,6 +76,9 @@ jobs:
         env:
           STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
           APP_HOST: http://localhost:4173
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          HAWK_AGENT: Codex
         with:
           apiKey: ${{ secrets.HAWK_API_KEY }}
 
@@ -174,6 +176,13 @@ jobs:
           scan_id=$(node scripts/company-site-scan-report.mjs id "$RUNNER_TEMP/company-site-scan.json")
           echo "StackHawk | Scan id: $scan_id"
           "$RUNNER_TEMP/hawkop" scan get "$scan_id" --detail full --format json > "$RUNNER_TEMP/company-site-findings.json"
-          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings.json"
+          evidence_status=0
+          # hawkop 0.11.0 --detail full requests the alert-URI API at its default
+          # page size of 10 and reports that page as the whole finding. Walk
+          # pageSize=100 until nextPageToken is empty before reconciliation.
+          node scripts/company-site-scan-report.mjs pages "$scan_id" "$RUNNER_TEMP/company-site-findings.json" > "$RUNNER_TEMP/company-site-findings-complete.json" || evidence_status=1
+          node scripts/company-site-scan-report.mjs hashes "$RUNNER_TEMP/company-site-findings-complete.json" || evidence_status=1
+          node scripts/company-site-scan-report.mjs reconcile "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-findings-complete.json" || evidence_status=1
           API_KEY="$HAWK_API_KEY" hawk op scan uris "$scan_id" --format json > "$RUNNER_TEMP/company-site-uris.json"
-          node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl"
+          node scripts/company-site-scan-report.mjs verify "$RUNNER_TEMP/company-site-scan.json" "$RUNNER_TEMP/company-site-uris.json" "$RUNNER_TEMP/company-site-responses.jsonl" || evidence_status=1
+          exit "$evidence_status"

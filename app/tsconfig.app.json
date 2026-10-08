@@ -40,8 +40,21 @@
        * must agree on it exactly — the browser, `server/institution`, and the
        * tests between them — so it is aliased in rather than copied.
        */
-      "@semester/institution": ["../packages/institution/src/index.ts"]
+      "@semester/institution": ["../packages/institution/src/index.ts"],
+      /*
+       * The offline and sync core: queue, protocol, conflict rules, device
+       * lease, key hierarchy, attachment cache and CRDT. Platform-neutral and
+       * dependency-free, so a phone, the PWA and the tests all run the same code.
+       */
+      "@semester/offline-sync": ["../packages/offline-sync/src/index.ts"],
+      /*
+       * The platform primitives: tenancy, policy evaluation, the command
+       * pipeline, and the engines every domain shares. Imported through this
+       * alias by the app and the gateway so there is one copy of the
+       * tenant boundary, not one per caller.
+       */
+      "@semester/platform": ["../packages/platform/src/index.ts"]
     }
   },
-  "include": ["src", "../packages/contract/src", "../packages/institution/src"]
+  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src"]
 }

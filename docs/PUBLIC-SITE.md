@@ -141,8 +141,13 @@ solicitation, and holds the graduate page's "today" list free of giving.
   time it cannot keep. Pricing states currency, billing period, tax,
   cancellation and refunds before anything is for sale. `/legal/` lists every
   policy with its status; none is in force, and the page says so.
-- The site sets no cookie, has no form (`form-action 'none'`), and stores
-  nothing anyone types.
+- **This describes the app's public pages** (`app/src/site/`, prerendered into
+  `app/dist-site/`): they set no cookie, have no form (`form-action 'none'`),
+  and store nothing anyone types. **It does not describe `company-site/`**, a
+  separate static site with lead forms that post to the `lead-intake` function
+  and are stored in `site_leads` (name, work email, organization, role,
+  message; no IP address). `site_leads` has no time-based purge and no retention
+  period is decided (`RETENTION.md`; **[COUNSEL REQUIRED]** for the period).
 - The site's colours equal the app's `:root` tokens.
 - Only tool pages have a script: exactly one, `tools/tools.js`, same-origin,
   nothing inline. Their policy is `script-src 'self'` and `connect-src 'none'`,

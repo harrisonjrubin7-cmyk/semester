@@ -235,6 +235,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <input
                 className="input"
                 type="email"
+                autoComplete="off"
                 maxLength={FAMILY_LIMITS.email}
                 value={member.email}
                 onChange={(e) => setMember((m) => ({ ...m, email: e.target.value }))}
