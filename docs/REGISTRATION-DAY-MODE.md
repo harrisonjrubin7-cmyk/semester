@@ -6,7 +6,7 @@ default (D-012).
 **Destinations:**
 
 - **Today**, as a card above whichever Today is showing.
-- **My Path**, in Registration (`yes`) › Search & plan › Registration day.
+- **My Path**, in Registration (`yes`) › Term plan › Registration day.
 
 **Builds on:**
 

@@ -130,7 +130,7 @@ None is open. The four this register found — the Plus price, the pilot length,
 | IMP-005 | Guided tenant setup and an SSO wizard | designed | `docs/SSO-TENANT-ONBOARDING.md` — a checklist<br>`supabase/tenant-sso-policy.check.sql` — the policy the wizard would write | No wizard; the SSO tables have no screen. | M8, L9, E | `oneos:ic-tenant` |
 | IMP-006 | Every pilot runs 26 weeks: the Registration and Path Pilot length | tested | `app/src/lib/gtm/pilot.ts` — PILOT_WEEKS<br>`app/src/lib/gtm/pilot.test.ts` — exactly 182 days, or refused | The owner set it (D-134). The offer itself — 25–100 students, the explicit exclusions, the price sheet — is not packaged as one document. | E, P, V | — |
 | IMP-007 | Pilot dashboard | building | `app/src/lib/gtm/pilot.ts` — readiness and verdict | No screen reads the pilot tables. | M8, L9 | — |
-| IMP-008 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — customer data migration does not exist | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
+| IMP-008 | Institution data migration: plans, catalog, directories, events | not-started | `docs/market-readiness/MIGRATION_PLAYBOOK.md` — no production load path; evidence path and roster staging only | Student-side import only; no SIS, ERP, Google or Microsoft mapping template. | R22 | — |
 | IMP-009 | Parallel-run mode | not-started | — | Named once in docs/INSTITUTIONAL_REQUIREMENTS.md; nothing designs it. | R22 | — |
 
 ### PKG

@@ -9,6 +9,10 @@ import { describe, expect, it } from 'vitest';
 import { MOCK_SIS, SIS_FIXTURES } from '../../src/lib/integration/mock-sis.ts';
 import { mockBatch } from '../../src/lib/integration/mock-adapter.ts';
 import type { AdapterDeclaration } from '../../src/lib/integration/adapter.ts';
+import { LeaseBroker, memoryBackend, type VaultAuditEvent } from '../../src/lib/integration/vault.ts';
+import { OAuthError, type TokenRecord, type TokenStore } from '../../src/lib/integration/oauth.ts';
+import { GuardRefusal, ProviderHttpError, providerRuntime, type CredentialServices } from '../../src/lib/integration/provider-client.ts';
+import type { CallAuth } from './tick.ts';
 import { fakeDb, type Row, type Tables } from './fakedb.ts';
 import { TICK_MINUTES, adapterFor, cadenceMinutes, intervalMinutes, isDue, tick, type PullRequest, type RegisteredAdapter } from './tick.ts';
 
@@ -49,8 +53,11 @@ function sis(pulls: PullRequest[], fail = false): RegisteredAdapter {
   };
 }
 
-const run = (t: Tables, adapters: RegisteredAdapter[], extra = {}) =>
-  tick(fakeDb(t), { adapters, now: () => NOW, allowMock: true, ...extra });
+/** The tick as the Edge Function composes it, with whatever credential services a test supplies. */
+const run = (t: Tables, adapters: RegisteredAdapter[], extra: { credentials?: CredentialServices } & Record<string, unknown> = {}) => {
+  const { credentials, ...rest } = extra;
+  return tick(fakeDb(t), { adapters, now: () => NOW, allowMock: true, runtime: providerRuntime({ credentials }), ...rest });
+};
 
 describe('when a connection is due', () => {
   it('half its freshness target, never more often than a tick, and every tick while it is failing', () => {
@@ -122,7 +129,7 @@ describe('the tick', () => {
         then: (ok: (v: unknown) => unknown) => Promise.resolve({ data: null, error: { message: 'timeout' } }).then(ok) };
       return q;
     } } as unknown as typeof db;
-    expect(await tick(unreadable, { adapters: [sis(pulls)], now: () => NOW, allowMock: true })).toMatchObject({ outcome: 'stopped' });
+    expect(await tick(unreadable, { runtime: providerRuntime(), adapters: [sis(pulls)], now: () => NOW, allowMock: true })).toMatchObject({ outcome: 'stopped' });
     expect(pulls).toEqual([]);
   });
 
@@ -215,7 +222,7 @@ describe('the tick', () => {
       return mockBatch([SIS_FIXTURES.term], `evt-${r.connectionPublicId}`);
     } };
     const slow = world([connection('a'), connection('b')]);
-    const out = await tick(fakeDb(slow), { adapters: [slowSis], allowMock: true, budgetMs: 1_000, now: () => new Date(clock) });
+    const out = await tick(fakeDb(slow), { runtime: providerRuntime(), adapters: [slowSis], allowMock: true, budgetMs: 1_000, now: () => new Date(clock) });
     expect(out).toMatchObject({ ran: 1, deferred: true });
   });
 
@@ -227,7 +234,7 @@ describe('the tick', () => {
       if (name === 'integration_webhook_events' && !thrown) { thrown = true; throw new Error('socket hang up'); }
       return db.from(name);
     } } as unknown as typeof db;
-    const s = await tick(flaky, { adapters: [sis([])], now: () => NOW, allowMock: true });
+    const s = await tick(flaky, { runtime: providerRuntime(), adapters: [sis([])], now: () => NOW, allowMock: true });
     expect(thrown).toBe(true);
     expect(s).toMatchObject({ ran: 2, failed: 1, succeeded: 1 });
   });
@@ -271,7 +278,7 @@ describe('found by the Codex review of #811', () => {
       integration_dead_letter_events: [{ id: 'd1', tenant_id: 'vu', connection_id: 'a', resolved_at: null, replay_requested_at: null }],
     });
     const s = await tick(unreadable(t, 'integration_dead_letter_events', 'connection_id'),
-      { adapters: [sis(pulls)], now: () => NOW, allowMock: true });
+      { runtime: providerRuntime(), adapters: [sis(pulls)], now: () => NOW, allowMock: true });
     expect(pulls).toEqual([]);
     expect(s).toMatchObject({ ran: 0, deferred: true, skipped: { 'hold unreadable': 1 } });
   });
@@ -342,5 +349,156 @@ describe('the job that calls it', () => {
     const root = join(process.cwd(), '..', 'supabase');
     expect(readFileSync(join(root, 'functions', 'integration-tick', 'index.ts'), 'utf8')).toContain('serveTick');
     expect(readFileSync(join(root, 'config.toml'), 'utf8')).toMatch(/\[functions\.integration-tick\]\s*verify_jwt = false/);
+  });
+});
+
+describe('provider calls through the tick', () => {
+  const SECRET = 'sandbox-client-secret-must-not-print';
+  const rotatedAt = new Date('2026-09-01T00:00:00Z');
+
+  function services(over: { token?: TokenRecord | null; audit?: (e: VaultAuditEvent) => void } = {}) {
+    const events: VaultAuditEvent[] = [];
+    const flagged: string[] = [];
+    let record: TokenRecord | null = over.token === undefined
+      ? { accessToken: 'access-1', refreshToken: 'refresh-1', expiresAt: new Date(NOW.getTime() + 3_600_000), needsReauth: false }
+      : over.token;
+    const tokens: TokenStore = {
+      async load() { return record ? { ...record } : null; },
+      async save(_id, next, expected) {
+        if ((record?.refreshToken ?? null) !== expected) return false;
+        record = next;
+        return true;
+      },
+      async markNeedsReauth(_id, reason) { flagged.push(reason); if (record) record = { ...record, needsReauth: true }; },
+    };
+    const broker = new LeaseBroker({
+      backend: memoryBackend({ 'vault:sandbox/mock-sis': { value: SECRET, version: 'v1', rotatedAt } }),
+      now: () => NOW, allowSandbox: true, audit: over.audit ?? ((e) => { events.push(e); }),
+    });
+    const credentials: CredentialServices = { broker, tokens };
+    return { credentials, events, flagged };
+  }
+
+  /** A registered mock whose pull makes the given provider calls, in order, through the client. */
+  function calling(calls: ((auth: CallAuth) => Promise<unknown>)[], seen: unknown[] = [], declaration: AdapterDeclaration = MOCK_SIS): RegisteredAdapter {
+    return {
+      declaration,
+      oauth: { refresh: async () => ({ accessToken: 'access-2', expiresInSeconds: 3600 }) },
+      async pull(request, client) {
+        for (const fn of calls) seen.push(await client.call(fn));
+        return mockBatch([SIS_FIXTURES.term], `evt-${request.connectionPublicId}-${seen.length}`);
+      },
+    };
+  }
+
+  const errorsOf = (t: Tables) => t.integration_sync_errors as Row[];
+
+  it('gives a pull its credential from the vault and the token store, and leases it once', async () => {
+    const svc = services();
+    const seen: unknown[] = [];
+    const t = world([connection('a')]);
+    const s = await run(t, [calling([async (auth) => auth.accessToken, async (auth) => auth.accessToken], seen)], { credentials: svc.credentials });
+    expect(s).toMatchObject({ ran: 1, succeeded: 1, failed: 0 });
+    expect(seen).toEqual(['access-1', 'access-1']);
+    expect(svc.events).toEqual([expect.objectContaining({ event: 'credential.leased', tenantId: 'vu', reference: 'vault:sandbox/mock-sis' })]);
+    expect(JSON.stringify(t)).not.toContain(SECRET);
+  });
+
+  it('fails closed with no credential services: dead-letters at once as authentication, never calls the provider, and is then held', async () => {
+    let reached = false;
+    const adapter = calling([async () => { reached = true; }]);
+    const t = world([connection('a')]);
+    const s = await run(t, [adapter]);
+    expect(s).toMatchObject({ ran: 1, failed: 1 });
+    expect(reached).toBe(false);
+    expect(errorsOf(t)[0]).toMatchObject({ error_category: 'authentication', error_code: 'credential_not_configured', retryable: false });
+    expect(t.integration_dead_letter_events).toHaveLength(1);
+    expect(t.integration_dead_letter_events[0]).toMatchObject({ attempts: 1 });
+    // Next tick: held for an operator, not pulled and dead-lettered again.
+    t.integration_connections[0].last_attempt_at = ago(24 * 60);
+    const again = await run(t, [adapter]);
+    expect(again.skipped['dead letter awaiting an operator']).toBe(1);
+    expect(reached).toBe(false);
+  });
+
+  it('dead-letters a refused credential at once, without a provider call, and with the reason in the error code', async () => {
+    const foreign: AdapterDeclaration = { ...MOCK_SIS, credentialsReference: 'vault:tenants/another-school/sis' };
+    const t = world([connection('a')]);
+    let reached = false;
+    await run(t, [calling([async () => { reached = true; }], [], foreign)], { credentials: services().credentials });
+    expect(reached).toBe(false);
+    expect(errorsOf(t)[0]).toMatchObject({ error_category: 'authentication', error_code: 'credential_wrong_tenant' });
+    expect(t.integration_dead_letter_events).toHaveLength(1);
+  });
+
+  it('retries, and does not dead-letter, when the lease could not be audited', async () => {
+    const t = world([connection('a')]);
+    await run(t, [calling([async () => undefined])], { credentials: services({ audit: () => { throw new Error('audit down'); } }).credentials });
+    expect(errorsOf(t)[0]).toMatchObject({ error_category: 'provider_unavailable', error_code: 'audit_unavailable', retryable: true });
+    expect(t.integration_dead_letter_events).toHaveLength(0);
+  });
+
+  it('dead-letters a dead OAuth grant at once and marks the token, so nothing retries it', async () => {
+    const svc = services({ token: { accessToken: 'old', refreshToken: 'refresh-1', expiresAt: new Date(NOW.getTime() + 1_000), needsReauth: false } });
+    const adapter: RegisteredAdapter = { ...calling([async () => undefined]), oauth: { refresh: async () => { throw new OAuthError('invalid_grant'); } } };
+    const t = world([connection('a')]);
+    await run(t, [adapter], { credentials: svc.credentials });
+    expect(errorsOf(t)[0]).toMatchObject({ error_category: 'authentication', error_code: 'reauthorization_required', retryable: false });
+    expect(t.integration_dead_letter_events).toHaveLength(1);
+    expect(svc.flagged).toEqual(['invalid_grant']);
+  });
+
+  it('dead-letters a 401 from the provider at once, but treats a 429 as a wait', async () => {
+    const unauthorized = world([connection('a')]);
+    await run(unauthorized, [calling([async () => { throw new ProviderHttpError(401); }])], { credentials: services().credentials });
+    expect(errorsOf(unauthorized)[0]).toMatchObject({ error_category: 'authentication', error_code: 'http_401', retryable: false });
+    expect(unauthorized.integration_dead_letter_events).toHaveLength(1);
+
+    const throttled = world([connection('a')]);
+    await run(throttled, [calling([async () => { throw new ProviderHttpError(429, 90_000); }])], { credentials: services().credentials });
+    expect(errorsOf(throttled)[0]).toMatchObject({ error_category: 'rate_limit', error_code: 'http_429', retryable: true });
+    expect(throttled.integration_dead_letter_events).toHaveLength(0);
+    expect(throttled.integration_sync_runs[0]).toMatchObject({ status: 'failed' });
+  });
+
+  it('holds a pull that makes more calls than the connection\u2019s allowance, as a wait', async () => {
+    const limited: AdapterDeclaration = { ...MOCK_SIS, rateLimitPerMinute: 2 };
+    const seen: unknown[] = [];
+    const t = world([connection('a')]);
+    const calls = [async () => 1, async () => 2, async () => 3];
+    await run(t, [calling(calls, seen, limited)], { credentials: services().credentials });
+    expect(seen).toEqual([1, 2]);
+    expect(errorsOf(t)[0]).toMatchObject({ error_category: 'rate_limit', error_code: 'rate_limited', retryable: true });
+    expect(t.integration_dead_letter_events).toHaveLength(0);
+  });
+
+  it('stops a pull whose provider keeps failing, after the breaker threshold, instead of walking every page', async () => {
+    let attempts = 0;
+    const adapter: RegisteredAdapter = {
+      declaration: MOCK_SIS,
+      oauth: { refresh: async () => ({ accessToken: 'access-2', expiresInSeconds: 3600 }) },
+      async pull(request, client) {
+        // An adapter that walks fifty pages and shrugs off each failed one.
+        for (let page = 0; page < 50; page++) {
+          try {
+            await client.call(async () => { attempts++; throw new ProviderHttpError(503); });
+          } catch (e) {
+            if (e instanceof GuardRefusal) throw e;
+          }
+        }
+        return mockBatch([], `evt-${request.connectionPublicId}`);
+      },
+    };
+    const t = world([connection('a')]);
+    await run(t, [adapter], { credentials: services().credentials });
+    expect(attempts).toBe(5);
+    expect(errorsOf(t)[0]).toMatchObject({ error_category: 'provider_unavailable', error_code: 'circuit_open', retryable: true });
+  });
+
+  it('leaves an adapter that makes no credentialed call, and an anonymous one, working as before', async () => {
+    const open: AdapterDeclaration = { ...MOCK_SIS, credentialsReference: null, authentication: 'none' };
+    const t = world([connection('a')]);
+    const s = await run(t, [calling([async (auth) => auth], [], open)]);
+    expect(s).toMatchObject({ ran: 1, succeeded: 1 });
   });
 });

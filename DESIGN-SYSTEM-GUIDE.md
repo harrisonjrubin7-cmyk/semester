@@ -34,6 +34,21 @@ The company site and app share six cross-surface role names:
 literal value: the application follows the selected accessible ground/accent,
 while the public site uses the fixed Graphite/Brass editorial palette.
 
+**The Semester ground and the Semester indigo accent** (`semester` in `GROUNDS`
+and `ACCENTS`, `lib/look.ts`) are the cool slate-and-white look from the master
+design brief: page `#F8FAFC`, surface `#FFFFFF`, muted surface `#F1F5F9`, text
+`#0F172A`, indigo as the action colour. They are one more ground and one more
+accent in the existing token layer, so every `--app-*`, `--surface-*` and
+`--action-*` variable resolves under them with no stylesheet change, and
+`lib/contrast.test.ts` measures them against every surface like the rest. The
+accent's text shade is `#4338CA`, not the brief's `#4F46E5`: the latter is
+4.20:1 as tag text on Fog's accent wash and the test refused it. It is a
+choice in Settings → Look, not the default; the handoff's own system (Ink,
+Parchment, sterling) is what the app ships with, and `look.ts` stays the
+authority for colour. There is no `--semester-*` token namespace: a second
+vocabulary beside `--surface-*`/`--text-*` would be the second system this
+guide exists to prevent.
+
 Use the finite surface family before inventing a feature-specific card:
 canvas, plain, standard/base, quiet/inset, feature/raised, modal/overlay, and
 critical. Critical surfaces still require explicit text and an icon or label;

@@ -26,19 +26,19 @@ Production (`lzrqvlugnawcgywkhqlz`), 2026-09-29, read-only, through the advisor 
 - all 151 functions: not executable by `anon` or PUBLIC, `search_path` pinned, no dynamic `execute`;
 - two bodies named neither `auth.uid()` nor a `private.` gate. `gtm_pilot_problems` answered any signed-in caller about any pilot — a student could read whether a pilot's price was agreed, who sponsored it and whether its dates fit. It is fixed in `supabase/migrations/20260929120000_gtm_pilot_problems_visibility.sql` and held by `supabase/gtm.check.sql`. `kill_switch_engaged` is a deliberate one-boolean read, kept open as DR-01.
 
-Since the reading, 51 more, from migrations not applied to production, each with a row below: `20260930234000_data_subject_request_intake.sql` (`raise_my_data_subject_request`); `20260930173030_console_command_center.sql` (`console_command_center`); `20260930200000_school_offboarding.sql` (`approve_offboarding`, `archive_school`, `authorize_school_purge`, `cancel_offboarding`, `disable_school_access`, `offboarding_preflight`, `propose_offboarding`, `record_offboarding_export`, `record_offboarding_notice`, `restore_school`, `school_purge_eligibility`, `verify_offboarding_export`); `20260930185000_school_membership_enforcement.sql` (`decide_school_request`, `leave_school`, `request_school_membership`, `revoke_school_membership`, `school_enforcement_readiness`, `school_requests_for_admin`, `set_school_enforcement`, `withdraw_school_request`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
+Since the reading, 53 more, from migrations not applied to production, each with a row below: `20261004200000_answer_data_subject_requests.sql` (`answer_data_subject_request`, `verify_data_subject_request`); `20260930234000_data_subject_request_intake.sql` (`raise_my_data_subject_request`); `20261005126000_console_release_incidents.sql` (`console_command_center`); `20260930200000_school_offboarding.sql` (`approve_offboarding`, `archive_school`, `authorize_school_purge`, `cancel_offboarding`, `disable_school_access`, `offboarding_preflight`, `propose_offboarding`, `record_offboarding_export`, `record_offboarding_notice`, `restore_school`, `school_purge_eligibility`, `verify_offboarding_export`); `20260930185000_school_membership_enforcement.sql` (`decide_school_request`, `leave_school`, `request_school_membership`, `revoke_school_membership`, `school_enforcement_readiness`, `school_requests_for_admin`, `set_school_enforcement`, `withdraw_school_request`); `20260929150000_minimum_age.sql` (`my_age_status`, `state_my_age`); `20260929330000_dining.sql` (`dining_advance_order`, `dining_cancel_order`, `dining_disconnect_partner`, `dining_donate_swipes`, `dining_order_queue`, `dining_place_order`, `dining_pool_summary`, `dining_set_ordering`, `my_dining_balances`); `20260929310000_gradebook.sql` (`gradebook_add_item`, `gradebook_enter`, `gradebook_export`, `gradebook_file_regrade`, `gradebook_moderate`, `gradebook_queue_passback`, `gradebook_release`, `gradebook_resolve_regrade`, `gradebook_set_scheme`); `20260929300000_registration_transaction.sql` (`my_registration`, `my_registration_hold`, `registrar_decide`, `registrar_grant_override`, `registrar_put_section`, `registrar_put_term`, `registration_drop`, `registration_enroll`, `registration_withdraw`).
 
 ## The second reading
 
 Production (`lzrqvlugnawcgywkhqlz`), 2026-09-30, read-only, through the advisor and `pg_catalog`. Against the register above: **49 policy-less tables** and **180 `security definer` functions** a signed-in account can call, which is the first reading's 45 and 151 plus what arrived since.
 
-- the 180 functions are exactly the register's rows below, less the 4 migration not yet applied (20260930173030_console_command_center.sql, 20260930185000_school_membership_enforcement.sql, 20260930200000_school_offboarding.sql, 20260930234000_data_subject_request_intake.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
+- the 180 functions are exactly the register's rows below, less the 5 migration not yet applied (20261005126000_console_release_incidents.sql, 20260930185000_school_membership_enforcement.sql, 20260930200000_school_offboarding.sql, 20260930234000_data_subject_request_intake.sql, 20261004200000_answer_data_subject_requests.sql); none unlisted and none listed that production has; none is executable by `anon` or PUBLIC; every `search_path` is pinned; none uses dynamic `execute`. 179 name `auth.uid()` or a `private.` gate; the one that names neither is `kill_switch_engaged` (DR-01);
 - all 49 policy-less tables hold no privilege of any kind for `anon` or `authenticated`, table or column. The 4 that were not in the first reading (`private.account_ages`, `public.registration_completions`, `public.registration_holds`, `public.registration_requests`) now have a disposition below. No policy was added to any of the 49, and none should be;
 - the rest of that day's advisor findings, what was fixed and what was left, with the before and after: [`ADVISOR-RECONCILIATION-2026-09-30.md`](ADVISOR-RECONCILIATION-2026-09-30.md).
 
 ### After the second reading
 
-The current register also includes 3 callable definers added after that dated catalogue snapshot: `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
+The current register also includes 22 callable definers added after that dated catalogue snapshot: `20261005126000_console_release_incidents.sql` (`console_release_incidents`); `20261005125000_console_integration_health.sql` (`console_integration_health`); `20261005124000_privacy_case_actions.sql` (`claim_privacy_request`, `my_privacy_completion_certificates`, `read_privacy_request_detail`, `resolve_privacy_request`, `verify_privacy_request`); `20261005123000_privacy_case_workspace.sql` (`console_privacy_requests`); `20261001153124_productivity_workspace.sql` (`productivity_readiness_aggregate`); `20261002003000_support_notification_outbox.sql` (`my_support_email_notices`); `20261005120000_console_scoped_tenant_access.sql` (`console_tenant_access`); `20261005121000_console_tenant_operations.sql` (`console_tenant_operations`); `20261005122000_support_case_access.sql` (`available_case_supporters`, `read_support_case_signals`, `support_case_access`); `20261003120000_support_notification_consent_boundary.sql` (`set_support_email_notice`); `20261006000000_onboarding_journeys_and_handoff.sql` (`complete_onboarding_step`, `consume_handoff`, `skip_onboarding_step`, `start_onboarding`); `20261006160000_my_sessions.sql` (`end_my_session`, `my_sessions`). They are held to their migration bodies and grant declarations below and are not retroactively counted in the 30 September reading.
 
 ## How this page is held
 
@@ -51,21 +51,21 @@ The current register also includes 3 callable definers added after that dated ca
 
 | Category | Functions | Controls the audit requires |
 | --- | --- | --- |
-| self-service | 60 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
-| sharing | 19 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
-| admin | 74 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
+| self-service | 65 | Verify auth.uid(), tenant scope, object ownership, input validation, rate limits, audit event. |
+| sharing | 21 | Explicit consent, narrow scope, short expiry, revocation, view audit. |
+| admin | 85 | Capability check, MFA or fresh auth for high risk, dual control where needed, immutable audit. |
 | integration | 6 | Server-only preferred; signed workflow; replay protection; no browser service-role access. |
 | financial | 3 | Provider webhook verification, idempotency, no client-controlled final state. |
 | moderation | 15 | Capability check, reason required, appeals, audit trail. |
-| read-helper | 28 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
-| **total** | 205 | |
+| read-helper | 31 | Minimal fields, no hidden cross-tenant aggregation, pagination limit. |
+| **total** | 226 | |
 
-### self-service (60)
+### self-service (65)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `accept_connection` | `auth.uid()` | `20260922003000_connections.sql` |
-| `appeal_community_decision` | `auth.uid()` | `20260928032000_community.sql` |
+| `appeal_community_decision` | `auth.uid()` | `20261004130000_community_appeal_window.sql` |
 | `apply_to_organization` | `auth.uid()`, `private.verified_student` | `20260921230000_organizations.sql` |
 | `apply_to_volunteer` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `begin_community_image` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
@@ -76,12 +76,15 @@ The current register also includes 3 callable definers added after that dated ca
 | `claim_referral` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `claim_school` | `auth.uid()` | `20260930185000_school_membership_enforcement.sql` |
 | `close_my_ticket` | `auth.uid()` | `20260928210000_support_tickets.sql` |
+| `complete_onboarding_step` | `auth.uid()` | `20261006000000_onboarding_journeys_and_handoff.sql` |
+| `consume_handoff` | `auth.uid()` | `20261006000000_onboarding_journeys_and_handoff.sql` |
 | `contribute_course_plan` | `auth.uid()`, `private.school_of` | `20261002091500_set_based_course_plan_contribution.sql` |
 | `create_community` | `auth.uid()`, `private.has_capability`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
 | `create_community_post` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `create_study_session` | `auth.uid()`, `private.community_role` | `20260928032000_community.sql` |
 | `delete_community_post` | `auth.uid()` | `20260928032000_community.sql` |
 | `edit_community_post` | `auth.uid()` | `20260928032000_community.sql` |
+| `end_my_session` | `auth.uid()`, `user_id = $2` | `20261006160000_my_sessions.sql` |
 | `export_my_data` | `auth.uid()` | `20260930000000_audit_and_subject_requests.sql` |
 | `follow_organization` | `auth.uid()` | `20260921230000_organizations.sql` |
 | `forget_my_advisor_shares` | `auth.uid()` | `20260928310000_expansion_review_fixes.sql` |
@@ -117,6 +120,8 @@ The current register also includes 3 callable definers added after that dated ca
 | `request_school_membership` | `auth.uid()`, `private.verified_account` | `20260930185000_school_membership_enforcement.sql` |
 | `send_help_request` | `auth.uid()`, `private.school_of` | `20260927233000_help_request_review_fixes.sql` |
 | `set_support_email_notice` | `auth.uid()` | `20261003120000_support_notification_consent_boundary.sql` |
+| `skip_onboarding_step` | `auth.uid()` | `20261006000000_onboarding_journeys_and_handoff.sql` |
+| `start_onboarding` | `auth.uid()` | `20261006000000_onboarding_journeys_and_handoff.sql` |
 | `start_organization` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260921230000_organizations.sql` |
 | `state_my_age` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `stop_contributing` | `auth.uid()` | `20260929350000_plan_save_serialized.sql` |
@@ -125,13 +130,13 @@ The current register also includes 3 callable definers added after that dated ca
 | `withdraw_help_request` | `auth.uid()` | `20260927233000_help_request_review_fixes.sql` |
 | `withdraw_school_request` | `auth.uid()` | `20260930185000_school_membership_enforcement.sql` |
 
-### sharing (19)
+### sharing (21)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `accept_family_grant` | `auth.uid()` | `20260921161500_roles.sql` |
 | `claim_family_invite` | `auth.uid()` | `20260928306000_family_invites.sql` |
-| `create_support_access` | `auth.uid()`, `private.subject_has_capability` | `20260925160000_support_access_ui.sql` |
+| `create_support_access` | `auth.uid()`, `private.subject_has_capability` | `20261005122000_support_case_access.sql` |
 | `dining_donate_swipes` | `auth.uid()`, `private.dining_caller_school`, `private.dining_charge_gate` | `20260929330000_dining.sql` |
 | `list_advisor_shares` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `list_support_shares` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
@@ -140,20 +145,23 @@ The current register also includes 3 callable definers added after that dated ca
 | `read_advisor_share` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `read_family_share` | `auth.uid()` | `20260928307000_family_shared_items.sql` |
 | `read_shared_accommodation` | `auth.uid()` | `20260926150000_expansion_roles_and_features.sql` |
+| `read_support_case_signals` | `auth.uid()`, `private.assert_fresh_mfa`, `private.subject_has_capability`, `private.support_agent`, `private.support_consent_active`, `public.read_support_signals` | `20261005122000_support_case_access.sql` |
 | `read_support_share` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
-| `read_support_signals` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20260925103000_support_access.sql` |
+| `read_support_signals` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20261005122000_support_case_access.sql` |
 | `revoke_support_access` | `auth.uid()` | `20260925160000_support_access_ui.sql` |
 | `share_with_advisor` | `auth.uid()` | `20260928301000_advisor_shares.sql` |
 | `share_with_support` | `auth.uid()`, `private.may_receive_support_share` | `20260928308000_support_shares.sql` |
-| `support_access_windows` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20260925160000_support_access_ui.sql` |
+| `support_access_windows` | `auth.uid()`, `private.subject_has_capability`, `private.support_consent_active` | `20261005122000_support_case_access.sql` |
+| `support_case_access` | `auth.uid()`, `private.subject_has_capability`, `private.support_agent`, `private.support_consent_active` | `20261005122000_support_case_access.sql` |
 | `trust_room_grant` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 | `trust_room_revoke` | `auth.uid()`, `private.has_capability` | `20260928100000_trust_room.sql` |
 
-### admin (74)
+### admin (85)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
 | `activate_escalation_agreement` | `auth.uid()`, `private.has_capability` | `20260928032000_community.sql` |
+| `answer_data_subject_request` | `auth.uid()`, `private.has_capability`, `req.subject = me` | `20261004200000_answer_data_subject_requests.sql` |
 | `answer_help_request` | `auth.uid()`, `private.answers_for` | `20260927230000_help_requests.sql` |
 | `answer_mentor_request` | `auth.uid()`, `private.subject_has_capability` | `20260928110700_consent_and_moderation_narrowing.sql` |
 | `approve_offboarding` | `auth.uid()`, `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
@@ -170,12 +178,18 @@ The current register also includes 3 callable definers added after that dated ca
 | `beta_triage_feedback` | `private.beta_triager` | `20260928220000_private_beta.sql` |
 | `can_manage_escalation_agreements` | `private.has_capability` | `20260928032000_community.sql` |
 | `cancel_offboarding` | `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
+| `claim_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261005124000_privacy_case_actions.sql` |
 | `close_break_glass` | `auth.uid()`, `g.subject is distinct from me` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_act` | `auth.uid()`, `private.has_capability`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `console_audit_read` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
 | `console_audit_status` | `auth.uid()`, `private.has_capability` | `20260929100000_console_control_plane.sql` |
-| `console_command_center` | `auth.uid()`, `private.has_capability` | `20260930173030_console_command_center.sql` |
+| `console_command_center` | `auth.uid()`, `private.has_capability` | `20261005126000_console_release_incidents.sql` |
 | `console_figures` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
+| `console_integration_health` | `auth.uid()`, `private.has_capability` | `20261005125000_console_integration_health.sql` |
+| `console_privacy_requests` | `auth.uid()`, `private.account_is_held`, `private.has_capability` | `20261005123000_privacy_case_workspace.sql` |
+| `console_release_incidents` | `auth.uid()`, `private.has_capability` | `20261005126000_console_release_incidents.sql` |
+| `console_tenant_access` | `auth.uid()`, `private.has_capability` | `20261005120000_console_scoped_tenant_access.sql` |
+| `console_tenant_operations` | `auth.uid()`, `private.has_capability` | `20261005121000_console_tenant_operations.sql` |
 | `decide_approval` | `auth.uid()`, `private.approver_party`, `private.assert_fresh_mfa` | `20260929110000_console_approvals_and_break_glass.sql` |
 | `decide_school_request` | `private.has_capability` | `20260930185000_school_membership_enforcement.sql` |
 | `dining_advance_order` | `auth.uid()`, `private.dining_caller_school`, `private.has_capability` | `20260929330000_dining.sql` |
@@ -205,6 +219,7 @@ The current register also includes 3 callable definers added after that dated ca
 | `publish_course_guidance` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_course_rules` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
 | `publish_study_pack` | `auth.uid()`, `private.course_publisher` | `20260928309000_course_studio.sql` |
+| `read_privacy_request_detail` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261005124000_privacy_case_actions.sql` |
 | `record_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `record_offboarding_notice` | `private.is_app_admin`, `private.has_capability` | `20260930200000_school_offboarding.sql` |
 | `registrar_decide` | `auth.uid()`, `private.registration_registrar`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
@@ -212,6 +227,7 @@ The current register also includes 3 callable definers added after that dated ca
 | `registrar_put_section` | `auth.uid()`, `private.registration_registrar` | `20260929300000_registration_transaction.sql` |
 | `registrar_put_term` | `auth.uid()`, `private.registration_registrar` | `20260929300000_registration_transaction.sql` |
 | `request_approval` | `auth.uid()`, `private.has_capability` | `20260929110000_console_approvals_and_break_glass.sql` |
+| `resolve_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed`, `private.account_is_held` | `20261005124000_privacy_case_actions.sql` |
 | `restore_school` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `retire_escalation_agreement` | `auth.uid()`, `private.has_capability` | `20260928032000_community.sql` |
 | `review_break_glass` | `auth.uid()`, `private.holds_seat` | `20260929110000_console_approvals_and_break_glass.sql` |
@@ -226,7 +242,9 @@ The current register also includes 3 callable definers added after that dated ca
 | `support_reply` | `private.support_agent` | `20261003120000_support_notification_consent_boundary.sql` |
 | `support_ticket_queue` | `private.support_agent` | `20260928210000_support_tickets.sql` |
 | `support_ticket_thread` | `private.support_agent` | `20260928210000_support_tickets.sql` |
+| `verify_data_subject_request` | `auth.uid()`, `private.has_capability`, `req.subject = me` | `20261004200000_answer_data_subject_requests.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
+| `verify_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261005124000_privacy_case_actions.sql` |
 
 ### integration (6)
 
@@ -267,10 +285,11 @@ The current register also includes 3 callable definers added after that dated ca
 | `volunteer_next_tasks` | `auth.uid()`, `private.volunteer_ready` | `20260928032000_community.sql` |
 | `volunteer_roster` | `private.has_capability` | `20260928032000_community.sql` |
 
-### read-helper (28)
+### read-helper (31)
 
 | Function | Gates in its body | Defined in |
 | --- | --- | --- |
+| `available_case_supporters` | `auth.uid()`, `private.subject_has_capability` | `20261005122000_support_case_access.sql` |
 | `available_supporters` | `auth.uid()` | `20260925160000_support_access_ui.sql` |
 | `beta_invitation_for_me` | `auth.uid()`, `private.beta_confirmed_email` | `20260928220000_private_beta.sql` |
 | `beta_known_issues_for_me` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
@@ -281,8 +300,8 @@ The current register also includes 3 callable definers added after that dated ca
 | `my_action_publish_scopes` | `auth.uid()` | `20260928302000_office_action_feed.sql` |
 | `my_age_status` | `auth.uid()` | `20260929150000_minimum_age.sql` |
 | `my_beta` | `private.beta_my_membership` | `20260928220000_private_beta.sql` |
-| `my_capabilities` | `auth.uid()` | `20260928010000_my_capabilities.sql` |
-| `my_community_notices` | `auth.uid()` | `20260928032000_community.sql` |
+| `my_capabilities` | `auth.uid()` | `20261006100000_my_capabilities_includes_break_glass.sql` |
+| `my_community_notices` | `auth.uid()` | `20261004130000_community_appeal_window.sql` |
 | `my_community_refs` | `auth.uid()` | `20260928032000_community.sql` |
 | `my_community_standing` | `auth.uid()` | `20260928032000_community.sql` |
 | `my_course_studio_courses` | `auth.uid()` | `20260928309000_course_studio.sql` |
@@ -291,8 +310,10 @@ The current register also includes 3 callable definers added after that dated ca
 | `my_entitlements` | `auth.uid()` | `20260929070000_commercial_core.sql` |
 | `my_help_destinations` | `private.has_capability` | `20260928030000_help_inbox_closed_history.sql` |
 | `my_moderation_access` | `private.has_capability` | `20260928000000_moderation_queue_access.sql` |
+| `my_privacy_completion_certificates` | `auth.uid()` | `20261005124000_privacy_case_actions.sql` |
 | `my_registration` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
 | `my_registration_hold` | `auth.uid()`, `private.school_of` | `20260929300000_registration_transaction.sql` |
+| `my_sessions` | `auth.uid()` | `20261006160000_my_sessions.sql` |
 | `my_support_email_notices` | `auth.uid()` | `20261002003000_support_notification_outbox.sql` |
 | `my_support_thread` | `auth.uid()` | `20260928210000_support_tickets.sql` |
 | `my_support_tickets` | `auth.uid()` | `20260928210000_support_tickets.sql` |

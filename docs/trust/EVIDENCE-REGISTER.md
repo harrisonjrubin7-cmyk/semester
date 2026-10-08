@@ -51,7 +51,7 @@ The fields the documents ask every row to carry, and where each is on this page.
 | System or process in scope | What the tree holds |
 | Control frequency | Frequency |
 | Evidence description, type and collection method | Evidence |
-| Evidence location, date, review and expiry date, reviewer, hash | Under docs/evidence/ when produced; none is |
+| Evidence location, date, review and expiry date, reviewer, hash | Under docs/evidence/ when produced; a few dated files are there, but this register does not yet index them by control |
 | Result or status | Status |
 | Exception, remediation owner and target date | The risk register’s exception record, which is empty |
 | Customer visibility and sensitivity | Visibility |
@@ -147,7 +147,7 @@ is true. Nothing computes the gate yet; each line says what would hold it today.
 | Condition | Held today by | How |
 | --- | --- | --- |
 | A P0 or P1 release-blocking finding is open. | [`app/src/lib/governance/release-readiness.ts`](../../app/src/lib/governance/release-readiness.ts) | A promotion needs the readiness total above the stage threshold and no dimension under the floor; a finding is not yet an object the score reads. |
-| A required control has no current evidence. | **nothing** | Nothing reads evidence freshness, because no evidence exists to be fresh; the operations-console controls define the freshness ladder a console would apply. |
+| A required control has no current evidence. | **nothing** | Nothing reads evidence freshness: the few dated files under docs/evidence/ carry no expiry that anything checks; the operations-console controls define the freshness ladder a console would apply. |
 | A data-flow change lacks privacy approval. | [`app/src/lib/governance/config-tiers.ts`](../../app/src/lib/governance/config-tiers.ts) | A configuration request is classified by tier and the privacy reviewer is required at the tiers that touch data; a code change to a data flow is reviewed by the pull-request template’s questions, not a gate. |
 | An AI, provider, model or tool change lacks evaluation approval. | [`app/src/lib/governance/ai-lifecycle.ts`](../../app/src/lib/governance/ai-lifecycle.ts) | G3 requires every AI_RELEASE_GATE item; the gate is data a reviewer reads, not a check CI runs. |
 | A critical accessibility regression is unresolved. | [`app/src/a11y/axe.test.tsx`](../../app/src/a11y/axe.test.tsx) | axe-core and the accessibility smoke fail the build on a regression they can see; a manual finding has no register to block from. |

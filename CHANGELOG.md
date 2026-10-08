@@ -24,6 +24,96 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Courses you type stay on this device, and you can put them on a meeting agenda
+
+On first run, **Build your registration plan** takes a term and course codes. They stay on this device. While no catalog is imported, the Term plan lists them and says each one is not a section, a seat, or an enrollment. On My Path, registration readiness has a **Courses you named** row. **Add to my meeting** puts each code and term on your own advisor-meeting agenda. Nothing else from your record is copied, and nothing is sent to an advisor. If this build has advisor meetings turned on, that opens the Advisor meeting tab; otherwise the row says the codes are on your agenda. Naming a course does not register you, and you do not have to do anything if you have not named one.
+
+### Staff get a way into the operations console
+
+If your account holds the operations console grant (`console:operate` at platform scope), **Me** shows a **Semester Operations** row that opens the console. Nobody else sees it, and typing `#/console` still shows a one-line notice without the grant. Nothing for you to do; granting access is a separate, reviewed step in [`docs/OPERATOR-PROVISIONING.md`](docs/OPERATOR-PROVISIONING.md).
+
+### Account says where you are signed in, and signs one place out
+
+On **Account**, under **Sign-in and security**, a new **Where you are signed in** list shows each browser or phone signed in to your account: what it is (for example “Safari on iPhone”), when it signed in and when it was last active. This device is marked **This device** and has no button. Every other one has **Sign out**, which asks first. Signing one out stops it renewing its sign-in; it can keep working until the sign-in it already holds runs out, up to an hour. Signing out one place no longer means signing out all of them, though **Sign out other devices** is still there. If the list cannot be read it says so and offers to try again; it does not say you are signed in nowhere else. You do not have to do anything.
+
+### Your data says who can see your things
+
+On **Your data**, under a new **Who can see your things** heading, there is one list of everything you have opened to someone else and not yet closed: a support window, an advisor share, an athletic support share, family access and a guardian link your school recorded. Each entry says what they can see, when it ends (or that it has no end date), and which screen to end it on. Ending one is still done on the screen that made it; this list only reads. If one kind could not be read, the list names it and says it may still be open, instead of saying nobody has access. You do not have to do anything.
+
+### Advisors open a Caseload of plans students shared
+
+On the degree meeting tab, the folded list that was “For advisors: meetings shared with you” is now Caseload. It still lists only plans a student chose to share, and it says it is not every student at the school. Nothing else about a student is added to it.
+
+### The operations console has a Trust controls tab
+
+For operators holding the console grant: a new **Trust controls** tab, after Launch readiness, lists the integrated controls that protect students and institutions: its family, whether it is enforced, partial, documented only or absent, the files that fail the build if the control is removed, and what is still missing. It is read-only and says it is a claim about the repository and its automated checks, not about production; nothing on it can change a state. Nothing else in the console moves, and you do not have to do anything.
+
+- **The bill says the figures are yours.** Under the total you track yourself, a “Student entered” label now says you typed these numbers in and the school has not confirmed them. Nothing else on the screen changed.
+
+### Your data now shows what the app can use on this device
+
+On **Your data**, under a new **On this device** heading, there is one entry each for **Camera**, **Microphone**, **Location** and **Notifications**. Each says whether it is **Allowed**, **Blocked**, **Not asked yet**, **Not reported** (some browsers say nothing about the camera or microphone until they have been asked) or **Not available here**, what it is used for, and what still works without it. You do not have to do anything, and nothing on this page asks for a permission; the app still asks only when you start something that needs one.
+
+If one is blocked, the entry says how to allow it again. If one is allowed, it says where to take it back: the camera, microphone and location are held by your browser, so the entry points you to your browser's site settings rather than showing a switch that would do nothing. Notifications link to the switch on **Alerts**. The entries update while the page is open if you change a setting in your browser. Searching Settings for "camera", "microphone", "location" or "permissions" now finds **Your data**.
+
+### Signing out other devices says it cannot be undone
+
+On Account, under Sign-in and security, the confirmation before **Sign out other devices** now says those devices will be asked to sign in again, that this device stays signed in and nothing is deleted, and that the sign-out cannot be undone — those devices sign in again themselves. The button still asks before it does it. Nothing else about the account changed.
+
+### Registration readiness opens with one line on where you stand
+
+At the top of the registration readiness list there is now a single status: **Ready**, **Almost ready**, **Getting ready**, **Blocked** or **Information unavailable**, with a sentence saying why. **Blocked** appears only when two courses in your schedule overlap, which the app can see for itself. Holds and prerequisites live in your school's system, so they never produce it. **Information unavailable** appears when no course catalog is loaded, or when a section you selected has no meeting times, so conflicts cannot be checked and the line will not say Ready. The Schedule conflicts step says the same. It is still preparation, not clearance: your registrar and official system decide the result. The steps below are unchanged and you do not have to do anything.
+
+### Operators see four more console tabs, and only the ones their grant allows
+
+Only an account holding the operator grant sees this, so students and school administrators will notice nothing. The operations console now has **Tenant operations**, **Privacy requests**, **Integration health** and **Release & incidents**. Each of those appears only when the signed-in operator holds that tab's own capability, and Support still appears only when tickets are on and the operator may answer them. A tab the operator cannot use is absent, and a saved view that names one does not open it. The tabs an operator with `console:operate` already had, including **Finance model**, **Releases and flags** and **Launch readiness**, are unchanged. You do not have to do anything.
+
+### Links from the company site into the app say which page they came from
+
+The "Start planning free", "Log in" and demo links on the company site now carry a few short, plain facts into the app's address: which page the click was on, the campaign link that brought you to the site (if there was one), and that the link is for a student. The app uses them to keep your place through first-run setup. They are not stored on a server, and nothing in them says who you are or what you can open; that stays with your account. Nothing about how the site looks or reads has changed, and you do not have to do anything.
+
+### The operations console has a Launch readiness tab
+
+For operators holding the console grant: a new **Launch readiness** tab, after Releases and flags, shows where the launch go/no-go stands. It lists the twelve launch gates (met, partial or unmet, the files that show it and what is still missing), the council seats with who holds each and whether it has signed, and the verdict worked out from them: go, go with conditions or no-go, with the reasons. It is read-only and says it is the repository's record as of a date, not a live check; nothing on it can mark a gate met. Nothing else in the console moves, and you do not have to do anything.
+
+### A link that names a screen keeps it through first-run setup
+
+If a link sends someone who has never used Semester to a particular screen (`?continue=calendar`), setting up no longer drops them on the import screen instead: the run, or Skip, ends on the screen the link named. Only the screens a `?screen=` link may already open are accepted, and a link can say where to go but cannot say who somebody is or what they may open. Nothing changes for anyone arriving without such a link, and you do not have to do anything.
+
+### Registration’s planner is named Term plan, and a clash is the first thing in the cart
+
+On Registration, the planning tab is now Term plan. In the cart, a time conflict is listed before the sections. A cart whose meetings do not overlap still has no conflict line. Official enrollment is unchanged, and it is still the Enrollment screen.
+
+### Leaving a university, and approving someone, says whether you can take it back
+
+The confirmation before you leave a university, and the one before staff approve a join request, now says what happens, what stays, and that you can undo it (claim the university again, or remove the person later). Nothing else about claiming a university changed.
+
+### Your browser stops filling your own details into other people's boxes
+
+Fields that take someone else's email address (an email's To, Cc and Bcc, a contact's, a family member's) now tell the browser not to autofill them, so your own address no longer appears in them. The two assistant key boxes in Settings tell it not to offer to save a key as a login. The two name boxes about you (on Profile, and what a call shows as your name) now say what they are for, so a browser or screen reader can help. Nothing was removed and you do not have to do anything.
+
+### The operations console has a Releases and flags tab
+
+For operators holding the console grant: a new **Releases and flags** tab, between Finance model and Evidence, lists the feature flags this build was made with (the experience, module, toolkit and community flags, and the four standalone ones) and the state of each — Off, Preview, Sandbox or On in production — most live first, with a filter box. It is read-only: a flag is fixed when a build is made, so there is nothing to switch here, and the tab says so. A flag the registry does not describe says that instead of guessing. Nothing else in the console moves, and you do not have to do anything.
+
+### Forms that find several problems now list them together
+
+On **Costs** (the bill and the out-of-pocket form), **Meals** and **Housing**, pressing the add button with more than one thing wrong now shows a short list above the form — "2 things need fixing" — with one line per problem. Each line is a link that takes you to that box. The message under each box and the move to the first wrong box are unchanged, and with only one problem nothing new appears. You do not have to do anything.
+
+### Support and the assistant now point you to a person
+
+On **Support**, each tab has a line under its introduction: "Not sure which door fits? See who can help with what". It opens Help, where the offices and what to bring are listed. In the assistant, under the sources of an answer, there is a new "Not sure it's right? See who can help" link to the same place, because an assistant answer is not an official answer. Nothing was removed and you do not have to do anything.
+
+### Semester staff get a finance planning tool in the operations console
+
+Only people holding the operator grant see this, so students and school administrators will notice nothing. The console has a new **Finance model** tab: a 36-month planning model with twelve scenarios, editable assumptions, two sensitivity grids, warnings for runway, margin, delivery capacity and AI cost, and downloads as CSV, JSON and Markdown. Every figure on it says it is a forecast on planning assumptions, it works on sample data only, and it saves nothing. No price, target or result in it is approved. You do not have to do anything.
+
+New business planning documents, a report build (`npm run generate:gtm-pdf` from `app/`) and four PDFs came with it; they are in `docs/business/` and `output/`, not in the app.
+
+### Moving an action to another day on the month calendar now offers Undo
+
+Tap the day-shift button on an action in the month view and you get "Action moved" with Undo for a few seconds, the way dragging it to another day already did. It used to move silently. Nothing else about adding, ticking, moving or deleting an action changes, and you do not have to do anything. Behind the scenes these now go through one place in the code, which a build can switch to the new rules with `VITE_DOMAIN_TASKS`; it is off, and with it off everything behaves exactly as before.
+
 ### Deleting something offline now sticks, and you can keep two sends for later
 
 A note, course, action, appointment, document, sheet or deck you delete on one

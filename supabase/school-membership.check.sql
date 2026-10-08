@@ -77,7 +77,8 @@ begin
   insert into public.role_grants (subject, role, scope_kind, scope_id, provenance) values
     (n_admin, 'university_admin', 'school', 'north-mem', 'institution'),
     (s_admin, 'university_admin', 'school', 'south-mem', 'institution');
-  insert into public.app_admins (user_id) values (operator);
+  insert into public.role_grants (subject, role, scope_kind, scope_id, provenance)
+  values (operator, 'platform_admin', 'platform', '', 'platform');
 
   -- ── DEFAULT OFF: the control ─────────────────────────────────────────────
   -- Everyone joins north's room, whatever school they are at, as they always could.

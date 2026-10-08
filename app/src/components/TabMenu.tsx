@@ -311,7 +311,7 @@ function GroupRows({
                 background: tint.fill,
                 // The ring says which one is on. Drawn outside the swatch so
                 // the twelve stay the same size as each other.
-                boxShadow: on ? '0 0 0 2px var(--app-panel), 0 0 0 3px var(--app-ink)' : 'none',
+                boxShadow: on ? '0 0 0 2px var(--app-panel), 0 0 0 3px var(--app-fg)' : 'none',
               }}
             />
           );

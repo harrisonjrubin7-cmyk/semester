@@ -639,7 +639,7 @@ describe('readBackup', () => {
 describe('a backup carries the semester, not the look', () => {
   const LOOK = [
     'accent', 'textSize', 'ground', 'density', 'corners', 'typeface', 'bodyface',
-    'lineHeight', 'readingWidth', 'iconShape', 'calm', 'labels', 'badges', 'feed', 'shell',
+    'lineHeight', 'textSpacing', 'readingWidth', 'iconShape', 'calm', 'labels', 'badges', 'feed', 'shell',
     'groupOrder', 'boardOrder', 'hue', 'workspaceMode', 'pinned', 'goal',
   ];
 

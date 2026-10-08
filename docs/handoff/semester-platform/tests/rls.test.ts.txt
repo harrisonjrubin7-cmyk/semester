@@ -1,0 +1,11 @@
+// Run against local Supabase: npx supabase start && npx vitest run tests/rls.test.ts
+import { describe, it, expect } from 'vitest';
+import { asUser } from './helpers'; // signs in seeded users and returns a scoped client
+describe('RLS boundaries', () => {
+  it('ops staff read zero community posts', async () => { const c = await asUser('cfo@semester.test'); const { data } = await c.schema('community').from('posts').select('id'); expect(data ?? []).toHaveLength(0); });
+  it('students cannot read another campus', async () => { const c = await asUser('student@campus-a.test'); const { data } = await c.schema('market').from('listings').select('institution_id'); expect((data ?? []).every(r => r.institution_id === process.env.CAMPUS_A)).toBe(true); });
+  it('new listings cannot skip the check', async () => { const c = await asUser('student@campus-a.test'); const { error } = await c.schema('market').from('listings').insert({ title: 'Lamp', category: 'gear', price_cents: 500, status: 'live' }); expect(error).not.toBeNull(); });
+  it('sellers cannot offer on their own listing', async () => { const c = await asUser('seller@campus-a.test'); const { error } = await c.schema('market').from('offers').insert({ listing_id: process.env.SELLER_LISTING, amount_cents: 100 }); expect(error).not.toBeNull(); });
+  it('RSVPs hidden from non-leaders', async () => { const c = await asUser('student2@campus-a.test'); const { data } = await c.schema('community').from('rsvps').select('*').neq('profile_id', process.env.STUDENT2_ID); expect(data ?? []).toHaveLength(0); });
+  it('social manager cannot approve posts', async () => { const c = await asUser('social@semester.test'); const { data } = await c.schema('ops').from('social_posts').update({ status: 'approved' }).eq('status','needs_approval').select(); expect(data ?? []).toHaveLength(0); });
+});

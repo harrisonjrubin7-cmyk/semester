@@ -205,6 +205,8 @@ describe('being at a university', () => {
     expect(api.leaveSchool).not.toHaveBeenCalled();
     const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.textContent).toContain('Nothing you made is deleted');
+    expect(dialog.textContent).toContain('You can undo this.');
+    expect(dialog.textContent).toContain('Claim this university again from this screen.');
     await click(button(/^Leave$/, dialog));
     expect(api.leaveSchool).toHaveBeenCalledTimes(1);
     expect(autoClaimDeclined('acct-1')).toBe(true);
@@ -240,6 +242,9 @@ describe('for a university\'s staff', () => {
     await click(button(/^Approve visitor7$/));
     expect(api.decideRequest).not.toHaveBeenCalled();
     const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('You can undo this.');
+    expect(dialog.textContent).toContain('You can remove them later from this screen.');
+    expect(dialog.textContent).toContain('exchange student in ECON 1020');
     await click(button(/^Approve$/, dialog));
     expect(api.decideRequest).toHaveBeenCalledWith('w1', true);
   });

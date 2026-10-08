@@ -1,0 +1,21 @@
+-- 070 · AI gateway support: per-tenant policy, context of approved sources only, usage log. Not yet run.
+create table if not exists core.ai_policy(institution_id uuid primary key references core.institutions, ai_on boolean not null default false, weekly_budget int not null default 50, student_id_pattern text, provider text not null default 'approved-default', model text not null);
+alter table core.ai_policy enable row level security;
+create policy aip_admin on core.ai_policy for select using (institution_id = core.my_institution() and core.my_role() = 'it_admin');
+create table if not exists core.course_ai_rules(course_id uuid primary key, institution_id uuid not null references core.institutions, allows text[] not null default '{}');
+alter table core.course_ai_rules enable row level security;
+create policy car_read on core.course_ai_rules for select using (institution_id = core.my_institution());
+create table if not exists audit.ai_usage(id bigserial primary key, at timestamptz default now(), actor uuid, institution_id uuid, task text, outcome text check (outcome in ('answered','refused','blocked','provider_error')), reason text, tokens int);
+alter table audit.ai_usage enable row level security;
+create policy aiu_admin on audit.ai_usage for select using (institution_id = core.my_institution() and core.my_role() = 'it_admin');
+revoke update, delete, truncate on audit.ai_usage from anon, authenticated;
+-- Note: ai_usage stores task, outcome and reason codes only. Never the prompt or the answer.
+create or replace function api.ai_policy(p_course uuid) returns jsonb language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('institutionAiOn', p.ai_on, 'courseAllows', coalesce(r.allows, '{}'), 'model', p.model, 'studentIdPattern', p.student_id_pattern,
+    'budgetLeft', p.weekly_budget - (select count(*) from audit.ai_usage u where u.actor = auth.uid() and u.outcome = 'answered' and u.at > now() - interval '7 days'))
+  from core.ai_policy p left join core.course_ai_rules r on r.course_id = p_course and r.institution_id = p.institution_id
+  where p.institution_id = core.my_institution() $$;
+create or replace function api.ai_log(p_task text, p_outcome text, p_reason text, p_tokens int) returns void language sql security definer set search_path = '' as $$
+  insert into audit.ai_usage(actor, institution_id, task, outcome, reason, tokens) values (auth.uid(), core.my_institution(), p_task, p_outcome, left(p_reason, 200), p_tokens) $$;
+grant execute on function api.ai_policy(uuid), api.ai_log(text, text, text, int) to authenticated;
+-- api.ai_context(p_ids) returns approved course/public sources by id with titles for citation; implement against the course resource tables in stream 06.
