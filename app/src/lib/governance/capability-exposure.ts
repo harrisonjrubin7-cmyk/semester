@@ -20,8 +20,7 @@ export const CAPABILITY_EXPOSURE_STATES = [
   'pilot',
   'early_access',
   'institution_controlled',
-  'hidden',
-  'retired',
+  'planned_but_not_exposed',
 ] as const;
 
 export const OPERATIONAL_READINESS_CHECKS = [
@@ -78,7 +77,7 @@ export interface CapabilityExposureIndexEntry {
   rollback: string;
   evidenceRefs: readonly CapabilityDefinition['sources'][number][];
   platforms: readonly ['web', 'pwa'];
-  nativeMobile: 'hidden';
+  nativeMobile: 'planned_but_not_exposed';
 }
 
 export interface RouteExposureIndexEntry {
@@ -105,7 +104,7 @@ export const CAPABILITY_EXPOSURE_INDEX: readonly CapabilityExposureIndexEntry[] 
     rollback: capability.fallback,
     evidenceRefs: Object.freeze([...capability.sources]),
     platforms: Object.freeze(['web', 'pwa'] as const),
-    nativeMobile: 'hidden' as const,
+    nativeMobile: 'planned_but_not_exposed' as const,
   })),
 );
 
@@ -155,7 +154,7 @@ function surfaceVisible(
   capability: CapabilityDefinition | undefined,
   context: CapabilityExposureContext,
 ): boolean {
-  if (!capability || status === 'hidden' || status === 'retired') return false;
+  if (!capability || status === 'planned_but_not_exposed') return false;
   if (status === 'institution_controlled') return surface === 'tenant-control';
   if (surface === 'marketing') return status === 'live' || status === 'connected';
   if (surface === 'ai') return context.aiAvailable;
@@ -227,34 +226,34 @@ export function resolveCapabilityExposure(
   context: CapabilityExposureContext,
 ): CapabilityExposureDecision {
   const capability = capabilityDefinition(capabilityId);
-  if (!capability) return decision(capabilityId, capability, context, 'hidden', 'unknown-capability');
-  if (context.retired) return decision(capabilityId, capability, context, 'retired', 'capability-retired');
+  if (!capability) return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'unknown-capability');
+  if (context.retired) return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'capability-retired');
   if (context.release.profileId !== context.profileId) {
-    return decision(capabilityId, capability, context, 'hidden', 'release-profile-mismatch');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'release-profile-mismatch');
   }
   if (!context.target || !sameReleaseTarget(context.release.target, context.target)) {
-    return decision(capabilityId, capability, context, 'hidden', 'release-target-mismatch');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'release-target-mismatch');
   }
   if (context.killSwitchActive) {
-    return decision(capabilityId, capability, context, 'hidden', 'kill-switch-active');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'kill-switch-active');
   }
   if (!context.tenantEntitled || !context.cohortAuthorized) {
-    return decision(capabilityId, capability, context, 'hidden', 'scope-not-authorized');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'scope-not-authorized');
   }
   if (MATURITY_LEVELS.indexOf(capability.maturity) < MATURITY_LEVELS.indexOf('L2')) {
-    return decision(capabilityId, capability, context, 'hidden', 'capability-not-built');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'capability-not-built');
   }
 
   const profile = RELEASE_PROFILES[context.profileId];
   const included = profile.capabilityIds.includes(capability.id);
   if (!included) {
     const status = capability.activationClass === 'standard'
-      ? 'hidden'
+      ? 'planned_but_not_exposed'
       : 'institution_controlled';
     return decision(capabilityId, capability, context, status, 'capability-not-in-release-profile');
   }
   if (context.release.technicalStatus !== 'ready') {
-    return decision(capabilityId, capability, context, 'hidden', 'technical-release-not-ready');
+    return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'technical-release-not-ready');
   }
   if (context.release.rolloutStatus !== 'authorized' || !context.release.targetBound) {
     const status = capability.activationClass === 'standard' && context.nativeBaselineAvailable
@@ -271,21 +270,21 @@ export function resolveCapabilityExposure(
 
   if (profile.targetKind === 'public-individual') {
     if (context.target?.environment !== 'production') {
-      return decision(capabilityId, capability, context, 'hidden', 'production-target-required');
+      return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'production-target-required');
     }
     return decision(capabilityId, capability, context, 'live', 'production-release-authorized');
   }
 
   if (profile.targetKind === 'invitation-validation') {
     if (context.target?.environment !== 'production' || !context.target.cohortId) {
-      return decision(capabilityId, capability, context, 'hidden', 'bounded-target-required');
+      return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'bounded-target-required');
     }
     return decision(capabilityId, capability, context, 'pilot', 'bounded-pilot-authorized');
   }
 
   if (profile.targetKind === 'manual-pilot' || profile.targetKind === 'connected-pilot') {
     if (context.target?.environment !== 'pilot' || !context.target.tenantId || !context.target.cohortId) {
-      return decision(capabilityId, capability, context, 'hidden', 'bounded-target-required');
+      return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'bounded-target-required');
     }
     if (profile.targetKind === 'connected-pilot' && !context.connectionHealthy) {
       return decision(capabilityId, capability, context, 'institution_controlled', 'connection-not-healthy');
@@ -303,5 +302,5 @@ export function resolveCapabilityExposure(
     return decision(capabilityId, capability, context, 'connected', 'connected-target-authorized');
   }
 
-  return decision(capabilityId, capability, context, 'hidden', 'unsupported-release-target');
+  return decision(capabilityId, capability, context, 'planned_but_not_exposed', 'unsupported-release-target');
 }
