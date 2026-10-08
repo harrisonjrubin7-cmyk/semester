@@ -8,7 +8,7 @@ The complete 60-row operational inventory is in [capability-inventory.md](capabi
 
 ## Required operational schema
 
-Each capability must expose: ID/name/plane, roles, routes, native baseline, connected mode, repository maturity, runtime exposure (`live`, `connected`, `pilot`, `early_access`, `institution_controlled`, `hidden`, `retired`), entitlement, tenant/cohort configuration, authority/source/provenance, classification, web/PWA/native/offline/AI support, analytics, support/SLO, owner seats, rollback/offboarding, sign-offs, evidence references and expiry.
+Each capability must expose: ID/name/plane, roles, routes, native baseline, connected mode, repository maturity, runtime exposure (`live`, `connected`, `pilot`, `early_access`, `institution_controlled`, `planned_but_not_exposed`), entitlement, tenant/cohort configuration, authority/source/provenance, classification, web/PWA/native/offline/AI support, analytics, support/SLO, owner seats, rollback/offboarding, sign-offs, evidence references and expiry.
 
 Runtime exposure is independent from repository maturity. `L4` source can remain unexposed; `live` requires current evidence and real human owners.
 

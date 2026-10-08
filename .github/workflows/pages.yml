@@ -388,8 +388,10 @@ jobs:
 
           # And the whole picture in one line, because the interesting question
           # after a deploy is usually "which of these did this build get?".
-          offered=$(set -- $names; echo $#)
-          count=$(set -- $carried; echo $#)
+          read -r -a offered_names <<< "$names"
+          read -r -a carried_names <<< "$carried"
+          offered=${#offered_names[@]}
+          count=${#carried_names[@]}
           echo "::notice title=Build inputs::$count of $offered carried into this build:${carried:- none}"
 
       # The product: real accounts, the student's own work, no demo chrome.

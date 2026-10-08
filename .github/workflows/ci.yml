@@ -63,6 +63,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      # Two repository-only tools, downloaded to a temporary directory with
+      # pinned versions and SHA-256 hashes. They never enter node_modules or
+      # the deployed bundle. actionlint validates all workflow expressions and
+      # embedded shell; OSV-Scanner covers every supported lockfile, including
+      # video/ and pipeline/, which the app-only npm audit below does not see.
+      - name: Verify workflows and all lockfiles
+        run: ./scripts/developer-tools.sh
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
@@ -638,7 +646,8 @@ jobs:
         working-directory: app
         run: |
           export VITE_SUPABASE_URL=http://127.0.0.1:54321
-          export VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          VITE_SUPABASE_KEY="$(supabase status -o json --workdir .. | jq -r .PUBLISHABLE_KEY)"
+          export VITE_SUPABASE_KEY
           npx vite build --outDir /tmp/sync-dist
           npx vite preview --outDir /tmp/sync-dist --port 4174 > /tmp/preview.log 2>&1 &
           timeout 120 bash -c "until curl -sf http://localhost:4174/ >/dev/null; do sleep 1; done"
@@ -661,7 +670,8 @@ jobs:
         run: |
           # This key belongs only to the ephemeral loopback stack. The smoke
           # refuses to send it to any non-loopback origin and never prints it.
-          export SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          SMOKE_SUPABASE_SERVICE_KEY="$(supabase status -o json --workdir .. | jq -er '.SECRET_KEY // .SERVICE_ROLE_KEY')"
+          export SMOKE_SUPABASE_SERVICE_KEY
           npm run smoke:sync
 
   # ── A key that got committed ────────────────────────────────────────────

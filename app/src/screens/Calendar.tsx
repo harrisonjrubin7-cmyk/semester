@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
+import { lazy, Suspense, useMemo, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { useTaskActions } from '../composition/taskactions';
@@ -2058,18 +2058,13 @@ function SemesterView() {
    * landing it on the Monday of that week because the row could not say which
    * day would be the view inventing a precision it does not have.
    *
-   * Declared here, above the empty-state return below it: a hook that runs
-   * only on some renders is a hook that runs in a different order on the next
-   * one. `weeks` is read out of a ref rather than closed over for the same
-   * reason — it is built after this point.
+   * The drop target carries the week's ISO date, so the handler does not need
+   * a render-time ref to a list that is built further down this component.
    */
-  const weeksRef = useRef<{ start: Date }[]>([]);
   const drag = useDragToMove<Movable & { weekday: number }>({
     onDrop: ({ payload, target }) => {
-      const w = Number(target?.replace('w:', ''));
-      const week = weeksRef.current[w];
-      if (!week) return;
-      const to = new Date(week.start);
+      if (!target?.startsWith('w:')) return;
+      const to = isoToDate(target.slice(2));
       to.setDate(to.getDate() + payload.weekday);
       moving.move(payload, { date: dateToIso(to) });
     },
@@ -2278,8 +2273,6 @@ function SemesterView() {
     ? weeks.map((w) => w.classes).sort((a, b) => b - a)[Math.floor(weeks.length / 2)]
     : 0;
   const teachingVaries = weeks.some((w) => w.classes !== usualWeek);
-  weeksRef.current = weeks;
-
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
@@ -2321,10 +2314,11 @@ function SemesterView() {
         {weeks.map((w, i) => {
           const isNow = now >= w.start && now < w.end;
           const exams = w.items.filter((it) => it.kind === 'Exam');
+          const weekKey = `w:${dateToIso(w.start)}`;
           return (
             <div
-              key={i}
-              data-drop={`w:${i}`}
+              key={weekKey}
+              data-drop={weekKey}
               /* Two taps on a week is "put something in this week". There is no
                  day in a bar, so it opens on the Monday and says so. */
               onDoubleClick={(e) => {
@@ -2339,7 +2333,7 @@ function SemesterView() {
                 alignItems: 'flex-start',
                 ...weekRow,
                 background: isNow ? 'var(--app-panel)' : 'transparent',
-                outline: drag.over === `w:${i}` ? '2px solid var(--app-accent)' : undefined,
+                outline: drag.over === weekKey ? '2px solid var(--app-accent)' : undefined,
                 outlineOffset: -2,
               }}
             >

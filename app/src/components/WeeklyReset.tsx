@@ -67,8 +67,14 @@ export function WeeklyReset({
   const week = dateToIso(weekStart(now));
   const lib = useDeviceLibrary(RESET_KEY, readResets, EMPTY_RESETS);
   const record = lib.value.resets.find((r) => r.weekStart === week) ?? startReset(week);
-  const [draft, setDraft] = useState<Picks>(record.picks);
-  const [accepted, setAccepted] = useState<ReadonlySet<string>>(new Set());
+  const [draftState, setDraftState] = useState<{ week: string; picks: Picks }>({ week, picks: record.picks });
+  const [acceptedState, setAcceptedState] = useState<{ week: string; blocks: ReadonlySet<string> }>({
+    week,
+    blocks: new Set(),
+  });
+  const draft = draftState.week === week ? draftState.picks : record.picks;
+  const accepted = acceptedState.week === week ? acceptedState.blocks : new Set<string>();
+  const setDraft = (picks: Picks) => setDraftState({ week, picks });
 
   const save = (next: ResetRecord) =>
     lib.update((old) => ({ ...old, resets: [...old.resets.filter((r) => r.weekStart !== week), next].slice(-60) }));
@@ -83,7 +89,7 @@ export function WeeklyReset({
     const next = new Set(accepted);
     if (on) next.add(blockKey(b));
     else next.delete(blockKey(b));
-    setAccepted(next);
+    setAcceptedState({ week, blocks: next });
     onAcceptBlock?.(b, on);
   };
 
