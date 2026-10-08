@@ -92,6 +92,10 @@ begin
     from public.profiles p
    where p.user_id = who
      for update of p;
+  -- Contract activation and tenant attachment write these tables. Hold them
+  -- stable through classification and insert so a newly signed deployment
+  -- cannot race this ticket into the individual-beta retention class.
+  lock table public.billing_account_tenants, public.contracts in share mode;
   select membership_tenant into ticket_tenant
    where membership_tenant is not null
      and exists (
@@ -116,6 +120,40 @@ begin
   ) returning id into made;
   return made;
 end $$;
+
+-- A student reply and account erasure both change the ticket's lifecycle.
+-- Lock and recheck the ticket before inserting the reply so legacy detachment
+-- cannot be followed by an unconditional reopen of preserved evidence.
+create or replace function public.reply_to_my_ticket(want_ticket uuid, want_body text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare who uuid := (select auth.uid());
+begin
+  if who is null then
+    raise exception 'sign in first' using errcode = 'insufficient_privilege';
+  end if;
+  perform 1
+    from public.support_tickets t
+   where t.id = want_ticket
+     and t.student_id = who
+     and t.status <> 'closed'
+     for update of t;
+  if not found then
+    raise exception 'no open ticket of yours with that id' using errcode = 'insufficient_privilege';
+  end if;
+  insert into public.support_ticket_messages (ticket_id, from_side, body)
+  values (want_ticket, 'student', want_body);
+  update public.support_tickets
+     set status = 'open', updated_at = now()
+   where id = want_ticket
+     and student_id = who
+     and status <> 'closed';
+  if not found then
+    raise exception 'support ticket changed before the reply was saved' using errcode = 'serialization_failure';
+  end if;
+end $$;
+
+revoke all on function public.reply_to_my_ticket(uuid, text) from public, anon;
+grant execute on function public.reply_to_my_ticket(uuid, text) to authenticated;
 
 -- The delivery mechanics passed UAT, but Resend's vendor review and executed
 -- terms/DPA are not on file. Park the production worker until that gate is
@@ -290,6 +328,12 @@ set search_path = ''
 as $$
 declare ticket record;
 begin
+  -- claim_school/leave_school update this row. Hold membership stable through
+  -- the hold decision and the auth deletion's cascading ticket effects.
+  perform 1
+    from public.profiles p
+   where p.user_id = old.id
+     for update of p;
   lock table public.legal_holds in share mode;
   if private.account_is_held(old.id)
      or exists (

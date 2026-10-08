@@ -276,7 +276,7 @@ One row per row of `public.role_capabilities`. A capability's checks are the SQL
 | `university_admin` | `workflow:publish` | — | — |
 | `university_admin` | `workflow:view` | — | — |
 | `university_admin` | `guardians:manage` | — | — |
-| `university_staff` | `support:read` | — | `support-access.check.sql` |
+| `university_staff` | `support:read` | — | `support-access.check.sql`<br>`support-retention.check.sql` |
 | `university_staff` | `help_request:respond` | `app/src/components/HelpInbox.tsx` | — |
 | `university_staff` | `guardians:manage` | — | — |
 | `integration_admin` | `integration:view` | `app/src/components/institutional/IntegrationDashboard.tsx` | `console-approvals.check.sql` |

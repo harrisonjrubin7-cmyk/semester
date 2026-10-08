@@ -38,6 +38,7 @@ describe('support reply notification', () => {
     expect(normalizeUtcActivationInstant('2026-10-08T21:00:00.123456Z')).toBe('2026-10-08T21:00:00.123Z');
     expect(normalizeUtcActivationInstant('1')).toBeUndefined();
     expect(normalizeUtcActivationInstant('2026-10-08T21:00:00-05:00')).toBeUndefined();
+    expect(normalizeUtcActivationInstant('2026-02-30T00:00:00Z')).toBeUndefined();
     expect(normalizeUtcActivationInstant('2026-13-40T21:00:00Z')).toBeUndefined();
   });
 

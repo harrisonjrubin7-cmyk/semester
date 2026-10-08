@@ -204,6 +204,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/support_ticket_live_or_preserved_subject check/);
     expect(migration).toMatch(/insert into public\.support_tickets[\s\S]*?\(student_id, tenant_id, retention_classified,/);
     expect(migration).toMatch(/from public\.profiles p[\s\S]*?for update of p/);
+    expect(migration).toMatch(/lock table public\.billing_account_tenants, public\.contracts in share mode/);
     expect(migration).toMatch(/public\.billing_account_tenants bt/);
     expect(migration).toMatch(/join public\.contracts c/);
     expect(migration).toMatch(/c\.kind = 'order_form'/);
@@ -220,7 +221,8 @@ describe('the probes read the files rather than reporting an empty tree', () => 
     expect(migration).toMatch(/guard_preserved_support_ticket_message[\s\S]*?t\.student_id is null[\s\S]*?errcode = '55000'/);
     expect(migration).toMatch(/drop function if exists public\.claim_support_notifications\(uuid, integer\)/);
     expect(migration).toMatch(/claim_support_notifications\([\s\S]*?want_not_before timestamptz[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?o\.queued_at < want_not_before[\s\S]*?o\.queued_at >= want_not_before/);
-    expect(migration).toMatch(/create or replace function private\.refuse_delete_while_held\(\)[\s\S]*?lock table public\.legal_holds in share mode[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?delete from public\.support_access_grant[\s\S]*?student_id = null/);
+    expect(migration).toMatch(/create or replace function private\.refuse_delete_while_held\(\)[\s\S]*?from public\.profiles p[\s\S]*?for update of p[\s\S]*?lock table public\.legal_holds in share mode[\s\S]*?private\.tenant_is_held\(t\.tenant_id\)[\s\S]*?delete from public\.support_notification_outbox[\s\S]*?delete from public\.support_access_grant[\s\S]*?student_id = null/);
+    expect(migration).toMatch(/create or replace function public\.reply_to_my_ticket\(want_ticket uuid, want_body text\)[\s\S]*?student_id = who[\s\S]*?status <> 'closed'[\s\S]*?for update of t[\s\S]*?update public\.support_tickets[\s\S]*?student_id = who[\s\S]*?status <> 'closed'/);
   });
 
   it('finds sweep functions in the migrations, including one scheduled from the start', () => {

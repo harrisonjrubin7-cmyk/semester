@@ -323,6 +323,11 @@ begin
          and retention_subject_id = student
          and status = 'closed'
     ));
+  perform pg_temp.must('a detached legacy ticket cannot be reopened by a late student reply',
+    pg_temp.error_as(
+      student,
+      format('select public.reply_to_my_ticket(%L, %L)', ticket, 'late reply')
+    ) like '42501 %no open ticket of yours%');
 end $$;
 
 set local role authenticated;
