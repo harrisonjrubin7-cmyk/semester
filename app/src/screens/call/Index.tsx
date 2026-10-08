@@ -31,21 +31,49 @@ import { Stage } from './Stage';
 export function Call() {
   const { state, dispatch } = useStore();
   const code = state.callCode;
+  const [title, setTitle] = useState('');
+  const [wantShare, setWantShare] = useState(false);
 
+  if (!code) {
+    return (
+      <Lobby
+        onOpen={(call) => {
+          setTitle(call.title);
+          setWantShare(Boolean(call.share));
+          dispatch({ type: 'openCall', code: call.code });
+        }}
+      />
+    );
+  }
+
+  return (
+    <ActiveCall
+      key={code}
+      code={code}
+      title={title}
+      wantShare={wantShare}
+      onClose={() => dispatch({ type: 'openCall', code: '' })}
+    />
+  );
+}
+
+function ActiveCall({
+  code,
+  title,
+  wantShare,
+  onClose,
+}: {
+  code: string;
+  title: string;
+  wantShare: boolean;
+  onClose: () => void;
+}) {
   /** What the green room was left with, once somebody presses Join. */
   const [live, setLive] = useState<{
     stream: MediaStream;
     name: string;
     flags: { muted: boolean; camera: boolean };
   } | null>(null);
-  const [title, setTitle] = useState('');
-  const [wantShare, setWantShare] = useState(false);
-
-  /* A different call is a different everything. Leaving drops the code, and
-     the stream stops with it — by way of the effect below, which owns that. */
-  useEffect(() => {
-    if (!code && live) setLive(null);
-  }, [code, live]);
 
   /*
    * One owner for the camera, and it is this screen's lifetime.
@@ -54,8 +82,7 @@ export function Call() {
    * running where you cannot see it. Half of it was true: `Stage`'s cleanup
    * calls `session.leave()`, which closes every peer connection and the
    * channel. None of that touches the `MediaStream` — `leave` tears down
-   * connections, and `shut` was only ever reached from the Leave button and
-   * from the code-dropped effect above.
+   * connections, and `shut` was only ever reached from the Leave button.
    *
    * This screen is a `switch` arm in `App.tsx`, so tapping any other
    * destination unmounts it without either of those running. The camera light
@@ -73,25 +100,13 @@ export function Call() {
     return () => shut(live.stream);
   }, [live]);
 
-  if (!code) {
-    return (
-      <Lobby
-        onOpen={(call) => {
-          setTitle(call.title);
-          setWantShare(Boolean(call.share));
-          dispatch({ type: 'openCall', code: call.code });
-        }}
-      />
-    );
-  }
-
   if (!live) {
     return (
       <Green
         code={code}
         title={title}
         onJoin={(stream, flags, name) => setLive({ stream, flags, name })}
-        onBack={() => dispatch({ type: 'openCall', code: '' })}
+        onBack={onClose}
       />
     );
   }
@@ -101,7 +116,6 @@ export function Call() {
       // Rebuilt from scratch for a new call rather than reconciled into one:
       // every connection, every tile and the session itself belong to one
       // code, and reusing them across two would be the subtlest bug in here.
-      key={code}
       code={code}
       title={title}
       local={live.stream}
@@ -112,7 +126,7 @@ export function Call() {
       // one place the stream is stopped however the screen is left.
       onLeave={() => {
         setLive(null);
-        dispatch({ type: 'openCall', code: '' });
+        onClose();
       }}
     />
   );
