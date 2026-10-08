@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { record, yours } from '../lib/journal';
 import type { Account } from '../lib/cloud';
 import {
@@ -39,12 +39,31 @@ export function SupportAccess({ account }: { account: Account | null }) {
   const [loadError, setLoadError] = useState('');
   /** What the last grant or revoke changed, said as a permission change. */
   const [changed, setChanged] = useState<{ changed: string; why: string; control: boolean } | null>(null);
+  const accountId = account?.id ?? null;
+  const currentAccount = useRef(accountId);
+  const refreshRequest = useRef(0);
+  currentAccount.current = accountId;
 
   const refresh = useCallback(async () => {
-    if (!account) return;
+    const sequence = ++refreshRequest.current;
+    if (!accountId) {
+      setSupporters([]);
+      setWindows([]);
+      setTickets([]);
+      setSignals({});
+      setSupporterId('');
+      setTicketId('');
+      setTicketLoadError('');
+      setNotice('');
+      setLoadError('');
+      setChanged(null);
+      setBusy(false);
+      return;
+    }
     setBusy(true);
     try {
       const next = await loadSupportAccess();
+      if (sequence !== refreshRequest.current || currentAccount.current !== accountId) return;
       const nextTickets = next.tickets ?? [];
       setSupporters(next.supporters);
       setWindows(next.windows);
@@ -59,12 +78,13 @@ export function SupportAccess({ account }: { account: Account | null }) {
       setNotice('');
       setLoadError('');
     } catch (error) {
+      if (sequence !== refreshRequest.current || currentAccount.current !== accountId) return;
       setChanged(null);
       setLoadError(error instanceof Error ? error.message : 'Could not load support access.');
     } finally {
-      setBusy(false);
+      if (sequence === refreshRequest.current && currentAccount.current === accountId) setBusy(false);
     }
-  }, [account]);
+  }, [accountId]);
 
   // This is an external account-backed resource, not render-derived state.
   // oxlint-disable-next-line react/set-state-in-effect

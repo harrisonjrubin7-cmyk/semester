@@ -150,6 +150,33 @@ describe('the support operations queue', () => {
     );
   });
 
+  it('purges cached aggregates when refreshed case access is inactive', async () => {
+    mock.access.mockResolvedValueOnce({
+      ticketId: '123e4567-e89b-12d3-a456-426614174000', grantId: 'grant-1',
+      scope: 'learning-progress', reason: 'Diagnose this case.', expiresAt: '2099-01-02T00:00:00Z',
+      consentState: 'active', active: true, lastSensitiveReadAt: null,
+    }).mockResolvedValueOnce({
+      ticketId: '123e4567-e89b-12d3-a456-426614174000', grantId: 'grant-1',
+      scope: 'learning-progress', reason: 'Diagnose this case.', expiresAt: '2099-01-02T00:00:00Z',
+      consentState: 'active', active: true, lastSensitiveReadAt: null,
+    }).mockResolvedValue({
+      ticketId: '123e4567-e89b-12d3-a456-426614174000', grantId: 'grant-1',
+      scope: 'learning-progress', reason: 'Diagnose this case.', expiresAt: '2099-01-02T00:00:00Z',
+      consentState: 'revoked', active: false, lastSensitiveReadAt: null,
+    });
+    mock.signals.mockResolvedValue([{
+      courseId: 'ECON', evidenceCount: 4, averageScore: 0.75,
+      mistakeCount: 2, lastObservedAt: '2099-01-01T00:00:00Z',
+    }]);
+    await draw();
+    await click(button('Open conversation'));
+    await click(button('View consented aggregate signals'));
+    expect(host.textContent).toContain('4 evidence items');
+    await click(button('Refresh support queue'));
+    expect(host.textContent).toContain('This grant is inactive');
+    expect(host.textContent).not.toContain('4 evidence items');
+  });
+
   it('fails closed when consent metadata cannot be read', async () => {
     mock.access.mockRejectedValueOnce(new Error('metadata unavailable'));
     await draw();
