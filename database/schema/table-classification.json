@@ -213,6 +213,8 @@
    "private.ledger_chain_manifest",
    "private.ledger_chain_start",
    "private.ledger_chain_verification",
+   "private.ops_tenant_entitlement_projection",
+   "private.ops_tenant_rollout_projection",
    "private.productivity_command",
    "private.productivity_owner_seq",
    "private.projection_invalidation",

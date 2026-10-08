@@ -78,6 +78,7 @@
         "security.alert_opened",
         "incident.declared",
         "incident.resolved",
+        "tenant_rollout.changed",
         "subscription.activated",
         "entitlement.changed",
         "invoice.paid",

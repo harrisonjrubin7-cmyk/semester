@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 5 of 120 · **Integration slice** 13 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `7d93d31b`
+**Automation pass** 6 of 120 · **Integration slice** 14 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `a2c9a4d0`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer. Runner pass 3 adds the first registered projector transaction and private read model. Runner pass 4 adds a bounded projector endpoint that is dormant without its dedicated secret and has no scheduler. Runner pass 5 adds manual, hold-aware projection-history retention. Activation, public query surfaces and UI remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. P1-01 through P1-06 are now locally implemented in bounded slices: outbox controls, a feature-policy producer/projector, the dormant worker, hold-aware history retention, and a tenant-rollout producer/projector. Activation, public query surfaces and UI remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 6 / slice 14
+
+- Merged `origin/main` `7d93d31b` before implementation; its Clerk, policy-evidence and hardened console changes contain no equivalent rollout event or projector. The final fetch observed `a2c9a4d0`; its only changed file is `docs/DEVELOPER-TOOLS.md`, with no overlap or equivalent work.
+- Accepted tenant-rollout creation/transitions now write immutable history and one `tenant_rollout.changed` version-1 event atomically. Correlation/idempotency bind to the history UUID; payloads exclude the reason and actor.
+- `ops_tenant_rollout` version 1 is private and school-scoped. Effect, receipt, watermark and invalidation are one transaction, delayed events cannot regress state, and malformed events dead-letter with a fixed message.
+- The dormant worker keeps its 25-row bound and now dispatches only `entitlement.changed` and `tenant_rollout.changed`; no public read, schedule, secret, deployment or production run was added.
+- PostgreSQL 17 applied all 210 migrations twice with 370 unchanged table fingerprints. The focused suite passed 5/5 and eight adjacent suites passed 73/73. Event/reference guards passed 66/66.
+- TypeScript, lint, university typecheck, production build and the design-system check/report contracts pass; lint retains three existing warnings. Ordered and shuffled full suites each finish with 23,771 passing and 69 skipped tests. Their only failure is the repository-map guard detecting the runner-mounted `.semester-reference` directory; shuffle seed `1791502868214` adds no order-dependent failure.
+- HawkScan remains unavailable because both the executable and API key are absent. No DAST pass is claimed.
 
 ## Evidence locked in runner pass 4 / slice 12
 
@@ -146,7 +156,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The focused PostgreSQL 17 proof, reapply gate, 40 adjacent SQL checks, repository/generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. The full-suite mounted-directory refusal, shuffle, Deno check and HawkScan remain explicitly open. Secret provisioning, scheduler activation, retention, public-read, additional-projector and UI work remain separate.
+The focused PostgreSQL 17 proof, reapply gate, 73 adjacent SQL checks, repository/generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. Ordered and shuffled full suites both complete with no slice regression and only the exact runner-mounted-directory refusal. Deno and HawkScan remain explicitly open. Secret provisioning, scheduler activation, public-read, additional-projector and UI work remain separate.
 
 ## External gates kept open
 
@@ -154,7 +164,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add the next current-authority P1-06 producer only with its first justified consumer and focused atomicity proof. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
+Add the first permissioned, freshness-labeled read contract over the private tenant entitlement and rollout projections before any Console UI consumes them. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 
@@ -162,4 +172,4 @@ The pre-slice fetch observed `origin/main` at `523091e9`; the final fetch advanc
 
 The operation has no cron entry and was not deployed or run against production. `projection-history-retention.check.sql` covers the four event-class windows, payload scrubbing, receipt co-deletion, pending/dead-letter preservation, invalidation aging, tenant and platform holds, and client/service grants. PostgreSQL 17 applies all 208 migrations twice with 369 unchanged table fingerprints; 10 focused and 145 adjacent SQL checks pass, including the repository's hold-blind deletion suite. The retention/scheduler/definer/design-tooling guards pass 72 tests; TypeScript, lint, university typecheck, the production build and design-system constituent/report contracts pass. HawkScan cannot start because the `hawk` executable is absent, so the DAST gate remains open.
 
-P1-05 is now locally implemented and verified, not activated. The next dependency-ready local increment is P1-06: one repository-authorized producer with its first justified consumer. Worker activation still requires secret provisioning, deployment evidence, monitoring, an operating runbook and explicit authority.
+At the end of slice 13, P1-05 was locally implemented and verified, not activated, and P1-06 was selected next. Slice 14 now closes that local producer/consumer increment. Worker activation still requires secret provisioning, deployment evidence, monitoring, an operating runbook and explicit authority.

@@ -129,6 +129,7 @@ export const EVENT_TYPES = {
   'incident.declared': spec(1, 'internal', 'audit'),
   'incident.resolved': spec(1, 'internal', 'audit'),
   // Commercial
+  'tenant_rollout.changed': spec(1, 'internal', 'audit'),
   'subscription.activated': spec(1, 'internal', 'commercial'),
   'entitlement.changed': spec(1, 'internal', 'commercial'),
   'invoice.paid': spec(1, 'internal', 'commercial'),

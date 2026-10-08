@@ -1232,7 +1232,7 @@ describe('EVENTS.md and its schemas (generated)', () => {
     const all = groups.flatMap((g) => g.types);
     expect(new Set(all).size).toBe(all.length);
     expect(diff(all, Object.keys(EVENT_TYPES))).toEqual(NONE);
-    expect(all.length).toBe(61);
+    expect(all.length).toBe(62);
   });
 
   it('every extracted rejection reason has a stated rule, and no rule is orphaned', () => {
@@ -1377,6 +1377,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261008190500_projection_outbox_operations.sql',
       // The first SQL-native caller of the helper: one feature-policy audit fact emits one bounded event.
       'supabase/migrations/20261008193000_tenant_feature_policy_events.sql',
+      // P1-06 binds immutable tenant-rollout history to one bounded event and private projector.
+      'supabase/migrations/20261008230000_tenant_rollout_projection.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

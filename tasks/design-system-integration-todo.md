@@ -255,6 +255,22 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Scheduler activation — remains separate and requires a provisioned secret, deployment evidence, monitoring, an operating runbook and explicit activation authority.
 - [ ] HawkScan DAST — preflight cannot start because the `hawk` executable is absent. `HAWK_API_KEY` is unset, although a local Hawk properties file exists and was not read. No scan or pass is claimed.
 
+## 2026-10-08 tenant-rollout producer and projection — automation pass 6, slice 14
+
+- [x] Merge current `origin/main` `7d93d31b` into the clean build branch; preserve both the projection replay entry and newer hardened console definitions in generated security registers.
+- [x] Select tenant rollout as the next documented P1 producer after feature policy and bind it to the first justified consumer; do not add a parallel rollout command path.
+- [x] Add cataloged `tenant_rollout.changed` version 1 events atomically with immutable rollout history, bound by that history UUID and stripped of reason/actor data.
+- [x] Register one private school-scoped `ops_tenant_rollout` version-1 read model using the current `tenant:configure` capability vocabulary.
+- [x] Apply effect, receipt, monotonic watermark and invalidation in one transaction; skip delayed events and isolate malformed input.
+- [x] Extend the dormant 25-row worker to dispatch only the two exact registered handlers; keep unrelated event types untouched.
+- [x] Keep client reads, UI, scheduler, secret provisioning, deployment and production execution outside the slice.
+- [x] PostgreSQL 17 focused suite: 5/5 checks passed; reapply left all 370 table fingerprints unchanged.
+- [x] Adjacent tenant-rollout, feature-policy producer, entitlement projector, worker, retention, grants, RLS and indexes suites: 73/73 checks passed.
+- [x] Event catalog and generated reference guards: 66/66 tests passed.
+- [x] TypeScript, lint, university typecheck, production build and design-system check/report contracts passed; lint retains three existing warnings.
+- [x] Ordered and shuffled full suites completed with 23,771 passing and 69 skipped tests. Each has one environment-only failure because the repository-map guard sees the runner-mounted `.semester-reference`; shuffle seed `1791502868214` added no order-dependent failure.
+- [ ] HawkScan DAST — `hawk` is absent and `HAWK_API_KEY` is unset; no scan or pass is claimed.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
