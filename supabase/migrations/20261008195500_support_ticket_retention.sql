@@ -138,7 +138,7 @@ end $$;
 -- claim. This transaction deletes older, still-pending intents before it can
 -- claim any newer work; a missing activation instant has no callable overload.
 drop function if exists public.claim_support_notifications(uuid, integer);
-create function public.claim_support_notifications(
+create or replace function public.claim_support_notifications(
   want_message uuid, want_limit integer, want_not_before timestamptz
 )
 returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
