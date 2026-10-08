@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 2 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `ca0cc9ad`
+**Automation pass** 3 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `ca0cc9ad`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 2 adds the first meaningful-item reconciliation seed; no production code, schema, policy, dependency, token output, deployment or external system changed.
+Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 3 completes the 122-row capability-registry reconciliation; no production code, schema, policy, dependency, token output, deployment or external system changed.
+
+## Evidence locked in pass 3
+
+- Current `origin/main` remains `ca0cc9ad`; no equivalent registry reconciliation landed.
+- [`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md) preserves and dispositions all 122 unique registry ids.
+- Results: 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded. No row is inflated to existing and verified or missing and in scope from archive design evidence alone.
+- Eleven evidence profiles name the current owner, role/route/capability boundary, tenant/data authority, server behavior, audit/recovery/states, tests, dependencies and release ceiling for every row.
+- The archive's dotted permissions and parallel schema names are identification evidence only. Current capability/RLS contracts remain authoritative.
+- Marketplace remains excluded by `D-1287`; developer API/app/sandbox concepts remain roadmap-only and require separate authority.
+- The current migration-rendered authorization census is 69 roles, 96 capabilities and 185 role-capability rows. The older `ROLE-PERMISSION-MATRIX.md` 84/157 heading is retained as a named stale snapshot, not used as current authority.
+- Structural validation found 122 archive ids and 122 unique register rows with zero missing, extra or duplicate ids; every row has one allowed disposition and one P1–P11 profile. The repository-local `src/lib/designtooling.test.ts` passed 22 of 22 tests.
 
 ## Evidence locked in pass 2
 
@@ -26,7 +37,7 @@ Phase 0 is in progress. The exact mounted archive remains authenticated and full
 - Archive prototype: 281 unique routes, 26 workspaces; no duplicate route key.
 - Archive capability registry: 122 rows; it claims zero implemented, tested or deployed rows.
 - Archive execution blueprint: 20 proposed capabilities with implementation, test, deployment, authorization and enablement unverified.
-- Repository census: 97 screen-registry keys including two shell states; 62 navigation destinations; 120 screen files; 407 component files; 1,393 tests; 203 migrations; 17 edge functions; 51 gateway handlers; 69 roles; 84 capabilities; 157 role-capability grants.
+- Repository census: 97 screen-registry keys including two shell states; 62 navigation destinations; 120 screen files; 407 component files; 1,393 tests; 203 migrations; 17 edge functions; 51 gateway handlers; 69 roles; 96 capabilities; 185 role-capability rows.
 
 ## Truth boundary
 
@@ -35,10 +46,9 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 ## Open Phase 0 gates
 
 1. Map all 281 prototype routes to repository catalog rows, routes, navigation and tests.
-2. Reconcile all 122 registry capabilities against repository capability, data-authority, permission, tenant, audit and recovery contracts. The separate 20-capability blueprint is complete at this reconciliation layer.
-3. Reconcile the archive's 673 screen rows and 319 workflow steps with the repository's 589 and 319 row populations.
-4. Assign one allowed disposition to every meaningful catalog row and execution-stream item, including owner path, dependencies and acceptance evidence for buildable work.
-5. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
+2. Reconcile the archive's 673 screen rows and 319 workflow steps with the repository's 589 and 319 row populations.
+3. Assign one allowed disposition to every meaningful catalog row and execution-stream item, including owner path, dependencies and acceptance evidence for buildable work.
+4. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
 
 ## External gates kept open
 
@@ -46,4 +56,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the 122-row archive capability registry, then the 281-route prototype inventory and 673-screen archive catalog. This is the earliest safe slice because route permissions and dependencies need the capability map first; production implementation remains gated by those dispositions.
+Continue Phase 0 with the 281-route prototype inventory, then the 673-screen archive catalog. The capability map is now available, so route ownership, discoverability, authorization, catalog equivalence and test evidence can be dispositioned without inventing a second permission model. Production implementation remains gated by the unfinished route/catalog/stream populations.

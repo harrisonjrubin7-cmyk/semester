@@ -14,7 +14,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Refresh the existing plan and crosswalk and add a status page for resumable automation.
 - [ ] Reconcile each of the 281 prototype routes to the 589-row repository screen catalog and production owner paths.
 - [x] Reconcile each of the 20 blueprint capabilities to repository capabilities, routes, data authority, policy and tests.
-- [ ] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
+- [x] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
 - [ ] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes.
 - [ ] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
 - [ ] Give every meaningful archive item exactly one allowed disposition; file-family dispositions alone do not complete this gate.
@@ -30,7 +30,24 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Reconcile all eighteen Stream 25 completion packages, all seven ecosystem rules and all three named open decisions.
 - [x] Preserve the current eight-group navigation authority, strict AI student-record rule and single master/finish-line readiness system.
 - [x] Classify P11 graduate/research education as missing and in scope, but not dependency-ready until its owner, authority/data contract, role map and acceptance path are established.
-- [ ] Reconcile the 122-row archive capability registry; this is the next dependency-ready Phase 0 slice.
+- [x] Reconcile the 122-row archive capability registry; all rows now have one disposition and one current evidence profile.
+
+## 2026-10-08 capability-registry reconciliation — pass 3
+
+- [x] Fetch current `origin/main` `ca0cc9ad` and confirm no equivalent registry reconciliation landed.
+- [x] Preserve the archive's 122 ids, actors, routes and permissions as identification evidence without adopting its schemas or dotted permission vocabulary.
+- [x] Map every row to a repository owner/evidence profile covering current permission, tenant/data authority, server behavior, audit/recovery/states, tests, dependencies and release ceiling.
+- [x] Assign exactly one allowed disposition to all 122 rows: 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded.
+- [x] Correct the current authorization census to the migration-rendered 69 roles, 96 capabilities and 185 role-capability rows; retain the older 84/157 permission page as a named stale snapshot.
+- [x] Keep marketplace excluded while treating developer apps, keys and sandboxes as roadmap-only concepts pending separate authority.
+- [ ] Reconcile the 281 prototype routes; this is the next dependency-ready Phase 0 slice.
+
+### Verification for pass 3
+
+- [x] Structural validation: 122 archive ids, 122 unique register rows, zero missing/extra/duplicate ids, one allowed disposition and one P1–P11 evidence profile per row; computed counts match the register summary.
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/` — 1 file, 22 tests passed.
+- [ ] Full application gates — not required for this documentation-only slice; no production code, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this documentation-only slice; runtime and `HAWK_API_KEY` are unavailable, and no production code or scan configuration changed.
 
 ### Verification for pass 2
 

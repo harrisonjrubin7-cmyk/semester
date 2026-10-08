@@ -36,7 +36,7 @@ The file-artifact dispositions do not decide whether the capability described by
 | Edge-function directories | 17 | `supabase/functions/*/` |
 | Gateway handlers, non-test | 51 | `app/api/`, `app/server/` |
 | Markdown documents | 1,718 | `docs/**/*.md`, including the new integration status page |
-| Roles / capabilities / grants | 69 / 84 / 157 | generated `docs/ROLE-PERMISSION-MATRIX.md` |
+| Roles / capabilities / grants | 69 / 96 / 185 | migration-rendered `docs/ROLE-LAUNCH-REGISTER.md`; `docs/ROLE-PERMISSION-MATRIX.md` is the older 84/157 snapshot |
 | Repository screen catalog | 589: 260 exists / 272 partial / 57 missing | `docs/master/REPO_AUDIT.md`; status is not re-proved by this file count |
 | Repository workflow catalog | 319: 116 exists / 128 partial / 75 missing | `docs/master/REPO_AUDIT.md`; status is not re-proved by this file count |
 
@@ -60,9 +60,17 @@ The seed preserves three boundaries that control subsequent work:
 2. Stream 25's proposed readiness register is duplicate or superseded by current master and finish-line registers; its domain packages are coverage prompts, not a second status system.
 3. Of the seed items, P11 graduate/research education is the only row classified missing and in scope. It is not dependency-ready: a domain owner, authority/data contract, role mapping and acceptance path must be reconciled before production work.
 
-`origin/main` advanced after pass 1 only through the migration-version collision repair in `ca0cc9ad`; the current census remains 97 screen-registry keys, 62 navigation destinations, 120 non-test screen files, 407 non-test component files, 1,393 tests, 203 migrations, 17 edge-function directories and 51 non-test gateway handlers. No equivalent blueprint/stream reconciliation landed, so this slice is not duplicate work.
+`origin/main` advanced after pass 1 only through the migration-version collision repair in `ca0cc9ad`; the current census remains 97 screen-registry keys, 62 navigation destinations, 120 non-test screen files, 407 non-test component files, 1,393 tests, 203 migrations, 17 edge-function directories and 51 non-test gateway handlers. The current migration-rendered role register has 69 roles, 96 capabilities and 185 role-capability rows; the older permission matrix's 84/157 headline is stale. No equivalent blueprint/stream reconciliation landed, so this slice is not duplicate work.
 
 The next Phase 0 slice is the 122-row archive capability registry. It precedes route/catalog mapping because its capability and backend/data claims supply the permission and dependency vocabulary needed to disposition the 281 prototype routes and 673 archive catalog screens.
+
+## Capability-registry reconciliation — automation pass 3
+
+[`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](../docs/design-system/REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md) now covers all 122 registry rows with exactly one disposition and one of eleven evidence profiles. The profiles bind each row to current role/route/capability authority, tenant and data scope, server operation, audit/recovery/state expectations, tests, dependencies and a release ceiling without adopting the archive's dotted permissions or parallel schemas.
+
+The result is 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded. No row is called existing and verified at the archive row's full combined breadth, and no absent registry row is promoted to missing and in scope from design evidence alone. `edu.marketplace` remains excluded by `D-1287`; developer API concepts remain roadmap-only rather than being silently bundled into that decision.
+
+The next dependency-ready Phase 0 slice is the 281-row prototype route inventory. It must map every archive route to the current hash-route registry, navigation, role/capability evidence, repository catalog row and test or else identify the exact authority gap. Production work is still gated because the 673 archive catalog screens and remaining streams have not yet been reconciled.
 
 ## What was read
 

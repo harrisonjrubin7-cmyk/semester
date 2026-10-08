@@ -133,7 +133,7 @@ Stream 25's independent readiness stages and “one readiness register” rule a
 - Stream 00: 6 meaningful items have one disposition.
 - Stream 18: all 16 requested audit deliverables and 7 product decisions have one disposition.
 - Stream 25: all 18 packages, 7 ecosystem rules and 3 open decisions have one disposition.
-- No production slice is dependency-ready solely because of this seed. The next Phase 0 work is the 122-row archive capability registry, then the 281 prototype routes and 673 archive catalog screens. The first newly identified missing product item is graduate/research education (P11), but it lacks a domain owner and authority/data contract and is not yet safe to implement.
+- No production slice was dependency-ready solely because of this seed. Pass 3 has now completed the separate 122-row registry in [`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md). The next Phase 0 work is the 281 prototype routes, then the 673 archive catalog screens. The first newly identified missing product item remains graduate/research education (P11), but it lacks a domain owner and authority/data contract and is not yet safe to implement.
 
 ## Truth boundary
 
