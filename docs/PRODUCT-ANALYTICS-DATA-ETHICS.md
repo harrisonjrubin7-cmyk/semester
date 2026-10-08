@@ -71,7 +71,7 @@ email address.
   while whole-account erasure detaches and preserves them with an opaque
   former-account review key so classification cannot strand the account or
   destroy potentially held evidence. Account, ticket-tenant and platform legal holds still
-  require preservation; `20261003130000_support_ticket_retention.sql`
+  require preservation; `20261008195500_support_ticket_retention.sql`
   enforces those boundaries.
 - **Pilot outcome measures** (the GTM work in #817) will need their own row in
   the first table before any is reported to a university; the cohort floor

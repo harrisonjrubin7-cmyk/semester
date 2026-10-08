@@ -39,7 +39,7 @@ links to the Support screen so nobody asks the app about financial aid.
 | Accessibility and privacy come first: high priority, 24-hour first-response target; everything else 72 | Computed in SQL from the category, not chosen by a person |
 | Only the student closes a ticket; support may leave it open, waiting, or resolved | `support_reply` refuses `closed` |
 | Five tickets per account per day | `open_support_ticket`; the check opens five, then fails the sixth |
-| Deleting the account deletes classified tickets; a pre-classifier legacy record is detached, delivery-disabled and preserved for evidence-backed retention review | `forget_my_support_tickets`, named in `OWNED_TABLES`; `20261003130000_support_ticket_retention.sql` |
+| Deleting the account deletes classified tickets; a pre-classifier legacy record is detached, delivery-disabled and preserved for evidence-backed retention review | `forget_my_support_tickets`, named in `OWNED_TABLES`; `20261008195500_support_ticket_retention.sql` |
 
 **Who answers.** An account holding `support_agent` at platform scope, which
 already existed (`20260926150000_expansion_roles_and_features.sql`) with the

@@ -83,7 +83,7 @@ either direction, that is a bug: report it the same way.
 
 **What to do instead.** If the ticket panel is available, use it and keep the SUP reference. Otherwise write to the address below. For “is it down?”, open the status page from Help; Up means your browser reached it just now.
 
-*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/launch-readiness/2026-10-03-support-production-uat.md`, `docs/trust/VENDOR-RISK-REGISTER.md`, `supabase/migrations/20261003130000_support_ticket_retention.sql`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
+*Stated in:* `app/src/lib/supporttickets.ts`, `app/src/components/console/SupportQueue.tsx`, `docs/launch-readiness/2026-10-03-support-production-uat.md`, `docs/trust/VENDOR-RISK-REGISTER.md`, `supabase/migrations/20261008195500_support_ticket_retention.sql`, `docs/GO-NO-GO-CHECKLIST.md`, `app/public/status.html`
 
 ### Your own backup is the one that has been rehearsed.
 

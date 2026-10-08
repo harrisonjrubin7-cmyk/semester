@@ -150,7 +150,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
   });
 
   it('installs the credential-free support retention job with its migration', () => {
-    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    const migration = read(join(MIGRATIONS, '20261008195500_support_ticket_retention.sql'));
     expect(migration).toMatch(/cron\.schedule\([\s\S]*?'support-ticket-retention'/);
     expect(migration).toMatch(/cron\.alter_job\([\s\S]*?jobname\s*=\s*'support-ticket-retention'[\s\S]*?active\s*:=\s*true/);
     expect(migration).toMatch(/create index if not exists support_tickets_retention_due[\s\S]*?where retention_classified[\s\S]*?tenant_id is null/);
@@ -158,7 +158,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
   });
 
   it('serializes support-ticket deletion with legal-hold writes', () => {
-    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    const migration = read(join(MIGRATIONS, '20261008195500_support_ticket_retention.sql'));
     const functions = [
       'create or replace function private.sweep_support_ticket_retention()',
       'create or replace function public.forget_my_support_tickets()',
@@ -196,7 +196,7 @@ describe('the probes read the files rather than reporting an empty tree', () => 
   });
 
   it('snapshots only a signed deployment tenant and locks membership through ticket creation', () => {
-    const migration = read(join(MIGRATIONS, '20261003130000_support_ticket_retention.sql'));
+    const migration = read(join(MIGRATIONS, '20261008195500_support_ticket_retention.sql'));
     expect(migration).toMatch(/add column if not exists tenant_id text/);
     expect(migration).toMatch(/add column if not exists retention_classified boolean not null default false/);
     expect(migration).toMatch(/add column if not exists retention_subject_id uuid/);

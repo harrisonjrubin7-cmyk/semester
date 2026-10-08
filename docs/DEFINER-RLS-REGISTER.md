@@ -96,7 +96,7 @@ The current register also includes 22 callable definers added after that dated c
 | `forget_my_organizations` | `auth.uid()` | `20260921234500_organization_succession.sql` |
 | `forget_my_support_access` | `auth.uid()` | `20260925103000_support_access.sql` |
 | `forget_my_support_shares` | `auth.uid()` | `20260928308000_support_shares.sql` |
-| `forget_my_support_tickets` | `auth.uid()` | `20261003130000_support_ticket_retention.sql` |
+| `forget_my_support_tickets` | `auth.uid()` | `20261008195500_support_ticket_retention.sql` |
 | `gradebook_file_regrade` | `auth.uid()`, `private.gradebook_school`, `g.student_id = me and g.status = 'released'` | `20260929310000_gradebook.sql` |
 | `join_beta` | `auth.uid()`, `private.beta_my_membership`, `private.beta_confirmed_email` | `20260928220000_private_beta.sql` |
 | `join_community` | `auth.uid()`, `private.verified_student`, `private.school_of` | `20260928032000_community.sql` |
@@ -107,7 +107,7 @@ The current register also includes 22 callable definers added after that dated c
 | `make_referral_code` | `auth.uid()` | `20260921002623_referrals.sql` |
 | `note_activity` | `auth.uid()` | `20260921151000_activity.sql` |
 | `open_help_request` | `auth.uid()`, `private.answers_for` | `20260927234000_help_request_reply_on_open.sql` |
-| `open_support_ticket` | `auth.uid()` | `20261003130000_support_ticket_retention.sql` |
+| `open_support_ticket` | `auth.uid()` | `20261008195500_support_ticket_retention.sql` |
 | `raise_my_data_subject_request` | `auth.uid()` | `20260930234000_data_subject_request_intake.sql` |
 | `registration_drop` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
 | `registration_enroll` | `auth.uid()`, `private.registration_school`, `private.registration_gate`, `private.registration_key` | `20260929300000_registration_transaction.sql` |
@@ -240,8 +240,8 @@ The current register also includes 22 callable definers added after that dated c
 | `set_member_standing` | `auth.uid()`, `private.org_can` | `20260921230000_organizations.sql` |
 | `set_school_enforcement` | `private.is_app_admin` | `20260930185000_school_membership_enforcement.sql` |
 | `support_reply` | `private.support_agent` | `20261003120000_support_notification_consent_boundary.sql` |
-| `support_ticket_queue` | `private.support_agent` | `20261003130000_support_ticket_retention.sql` |
-| `support_ticket_thread` | `private.support_agent` | `20261003130000_support_ticket_retention.sql` |
+| `support_ticket_queue` | `private.support_agent` | `20261008195500_support_ticket_retention.sql` |
+| `support_ticket_thread` | `private.support_agent` | `20261008195500_support_ticket_retention.sql` |
 | `verify_data_subject_request` | `auth.uid()`, `private.has_capability`, `req.subject = me` | `20261004200000_answer_data_subject_requests.sql` |
 | `verify_offboarding_export` | `private.offboarding_operator` | `20260930200000_school_offboarding.sql` |
 | `verify_privacy_request` | `auth.uid()`, `private.assert_fresh_mfa`, `private.privacy_case_allowed` | `20261005124000_privacy_case_actions.sql` |
