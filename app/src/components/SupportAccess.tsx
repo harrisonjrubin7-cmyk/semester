@@ -40,9 +40,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
   /** What the last grant or revoke changed, said as a permission change. */
   const [changed, setChanged] = useState<{ changed: string; why: string; control: boolean } | null>(null);
   const accountId = account?.id ?? null;
-  const currentAccount = useRef(accountId);
   const refreshRequest = useRef(0);
-  currentAccount.current = accountId;
 
   const refresh = useCallback(async () => {
     const sequence = ++refreshRequest.current;
@@ -63,7 +61,7 @@ export function SupportAccess({ account }: { account: Account | null }) {
     setBusy(true);
     try {
       const next = await loadSupportAccess();
-      if (sequence !== refreshRequest.current || currentAccount.current !== accountId) return;
+      if (sequence !== refreshRequest.current) return;
       const nextTickets = next.tickets ?? [];
       setSupporters(next.supporters);
       setWindows(next.windows);
@@ -78,17 +76,21 @@ export function SupportAccess({ account }: { account: Account | null }) {
       setNotice('');
       setLoadError('');
     } catch (error) {
-      if (sequence !== refreshRequest.current || currentAccount.current !== accountId) return;
+      if (sequence !== refreshRequest.current) return;
       setChanged(null);
       setLoadError(error instanceof Error ? error.message : 'Could not load support access.');
     } finally {
-      if (sequence === refreshRequest.current && currentAccount.current === accountId) setBusy(false);
+      if (sequence === refreshRequest.current) setBusy(false);
     }
   }, [accountId]);
 
   // This is an external account-backed resource, not render-derived state.
-  // oxlint-disable-next-line react/set-state-in-effect
-  useEffect(() => { void refresh(); }, [refresh]);
+  // oxlint-disable react/set-state-in-effect
+  useEffect(() => {
+    void refresh();
+    return () => { refreshRequest.current += 1; };
+  }, [refresh]);
+  // oxlint-enable react/set-state-in-effect
 
   const active = windows.filter((window) => (
     !window.revokedAt

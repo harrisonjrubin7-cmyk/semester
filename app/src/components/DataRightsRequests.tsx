@@ -28,9 +28,7 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
   const [certificateError, setCertificateError] = useState('');
   const [notice, setNotice] = useState('');
   const accountId = account?.id ?? null;
-  const currentAccount = useRef(accountId);
   const refreshRequest = useRef(0);
-  currentAccount.current = accountId;
 
   const refresh = useCallback(async () => {
     const sequence = ++refreshRequest.current;
@@ -49,7 +47,7 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
         loadDataRightRequests(),
         loadPrivacyCompletionCertificates(),
       ]);
-      if (sequence !== refreshRequest.current || currentAccount.current !== accountId) return;
+      if (sequence !== refreshRequest.current) return;
       if (requestResult.status === 'rejected') throw requestResult.reason;
       setItems(requestResult.value);
       if (certificateResult.status === 'fulfilled') {
@@ -63,16 +61,20 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
       }
       setLoadError('');
     } catch (error) {
-      if (sequence !== refreshRequest.current || currentAccount.current !== accountId) return;
+      if (sequence !== refreshRequest.current) return;
       setLoadError(error instanceof Error ? error.message : 'Could not load your requests.');
     } finally {
-      if (sequence === refreshRequest.current && currentAccount.current === accountId) setBusy(false);
+      if (sequence === refreshRequest.current) setBusy(false);
     }
   }, [accountId]);
 
   // This is an account-backed queue, not render-derived state.
-  // oxlint-disable-next-line react/set-state-in-effect
-  useEffect(() => { void refresh(); }, [refresh]);
+  // oxlint-disable react/set-state-in-effect
+  useEffect(() => {
+    void refresh();
+    return () => { refreshRequest.current += 1; };
+  }, [refresh]);
+  // oxlint-enable react/set-state-in-effect
 
   const open = items.filter(isOpen);
   const closed = items.filter((item) => !isOpen(item));
