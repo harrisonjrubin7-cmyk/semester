@@ -58,6 +58,15 @@ describe('consented support access surface', () => {
     expect(mock.load).not.toHaveBeenCalled();
   });
 
+  it('does not mislabel a load failure as an empty support-access state', async () => {
+    mock.load.mockRejectedValue(new Error('Support access is temporarily unavailable.'));
+    await renderSignedIn();
+    expect(host.textContent).toContain('Could not load support access');
+    expect(host.textContent).toContain('Support access is temporarily unavailable.');
+    expect(host.textContent).not.toContain('Open a support question in Help');
+    expect(host.textContent).not.toContain('has not provisioned a verified support recipient');
+  });
+
   it('lets a student see and immediately revoke only their named window', async () => {
     mock.load.mockResolvedValue({
       supporters: [{ supporterId: 'staff', label: 'Advisor Rivera' }],
