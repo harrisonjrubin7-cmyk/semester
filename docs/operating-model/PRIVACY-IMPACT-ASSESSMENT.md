@@ -10,7 +10,7 @@ surfaces that have answered them, and the ones that owe an answer. R-15 in
 surface is asked the question before it ships; the eighth maturity system on the
 same page said no template, register or gate existed. This is the three.
 
-**7 surfaces have answered; 6 owe an answer.** Of the 77 answers written,
+**7 surfaces have answered; 7 owe an answer.** Of the 77 answers written,
 46 cite a test that runs on every change and 31 cite code or a document only,
 which is a weaker thing and is marked *written* below. No assessment has been
 reviewed by the privacy seat, which is vacant: these are the founder’s reading of
@@ -224,6 +224,7 @@ design or model that already answers some of the questions.
 
 | Surface | State | Starts from | Why it is owed |
 | --- | --- | --- | --- |
+| Standalone Course Engine workspace | built | `course-engine/docs/architecture.md` | The isolated MVP can hold identity, uploaded course files, extracted evidence, calendar facts, generated study assets and learner progress. It is not wired into the deployed app; its full assessment, retention schedule, account export/deletion proof and production access model are required before activation. |
 | Community rooms and media | built | `docs/COMMUNITY-PRIVACY-MODEL.md` | Three identities, an allowlisted peer payload and a leak tripwire exist (app/src/community/identity.test.ts); the eleven questions have not been answered in one place. |
 | School records from an institution’s systems | built | `docs/FIELD-LINEAGE-AND-SOURCE-FRESHNESS.md` | Classification tiers and freshness exist behind a flag that is off until a connection is live; the reader, retention and deletion answers wait on a real source. |
 | Course Studio, what faculty publish to students | built | `docs/FACULTY-COURSE-STUDIO-DESIGN.md` | Published versions are immutable under a live grant (supabase/coursestudio.check.sql); what a faculty member learns about a student who reads them is unanswered. |
