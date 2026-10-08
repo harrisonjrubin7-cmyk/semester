@@ -105,8 +105,8 @@ security definer
 set search_path = ''
 as $$
 declare
-  detail jsonb := coalesce(new.detail, '{}'::jsonb);
-  action text := coalesce(detail ->> 'action', '');
+  request_detail jsonb := coalesce(new.detail, '{}'::jsonb);
+  action text := coalesce(request_detail ->> 'action', '');
 begin
   -- Administrative fixtures and restore tooling may insert with no user
   -- claim. Execution transitions are always revalidated, including service
@@ -128,15 +128,15 @@ begin
     ) then
       raise exception 'The integration target must belong to the authorized school.' using errcode = '23514';
     end if;
-    if coalesce(detail ->> 'requested_change', '') not in (
+    if coalesce(request_detail ->> 'requested_change', '') not in (
       'configure', 'rotate-credential-reference', 'disable'
     ) then
       raise exception 'requested_change must be configure, rotate-credential-reference or disable.'
         using errcode = '22023';
     end if;
-    if detail ->> 'requested_change' <> 'disable' then
-      if coalesce(detail ->> 'credential_expiry', '') !~ '^\d{4}-\d{2}-\d{2}$'
-         or (detail ->> 'credential_expiry')::date <= current_date then
+    if request_detail ->> 'requested_change' <> 'disable' then
+      if coalesce(request_detail ->> 'credential_expiry', '') !~ '^\d{4}-\d{2}-\d{2}$'
+         or (request_detail ->> 'credential_expiry')::date <= current_date then
         raise exception 'A future credential expiry date is required.' using errcode = '22023';
       end if;
     end if;
@@ -162,15 +162,15 @@ begin
       if new.tenant_id is not null or new.target is distinct from 'platform' then
         raise exception 'A platform release request must target platform.' using errcode = '22023';
       end if;
-      perform private.assert_current_release_request(detail);
+      perform private.assert_current_release_request(request_detail);
     else
-      if coalesce(detail ->> 'incident_ref', '') is distinct from new.target
-         or coalesce(detail ->> 'release_commit', '') !~ '^[0-9a-f]{40}$'
+      if coalesce(request_detail ->> 'incident_ref', '') is distinct from new.target
+         or coalesce(request_detail ->> 'release_commit', '') !~ '^[0-9a-f]{40}$'
          or not exists (
            select 1 from public.platform_incident i
             where i.public_id = new.target
               and i.tenant_id is not distinct from new.tenant_id
-              and i.release_commit = detail ->> 'release_commit'
+              and i.release_commit = request_detail ->> 'release_commit'
          ) then
         raise exception 'A rollback approval must match the incident tenant and exact release commit.' using errcode = '23514';
       end if;
@@ -182,7 +182,7 @@ begin
          and r.tenant_id is not distinct from new.tenant_id
          and r.target = new.target
          and r.detail ->> 'action' = action
-         and r.detail ->> 'release_commit' = detail ->> 'release_commit'
+         and r.detail ->> 'release_commit' = request_detail ->> 'release_commit'
          and (r.status = 'executed'
            or (r.status in ('pending', 'approved') and r.expires_at > now()))
     ) then
