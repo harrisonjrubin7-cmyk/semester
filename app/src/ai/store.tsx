@@ -145,7 +145,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [screen, setScreen] = useState<Screen>('home');
   /** What a caller asked to start with — a long-press, a suggestion chip. */
-  const [seeded, setSeeded] = useState('');
+  const [seeded, setSeeded] = useState({ id: 0, text: '' });
   /** What had focus when the sheet was opened. See `cameFrom` on the type. */
   const cameFrom = useRef<HTMLElement | null>(null);
   /** Context registered by components that are mounted right now. */
@@ -208,11 +208,16 @@ export function AIProvider({ children }: { children: ReactNode }) {
         // Before the state change, because the state change is what unmounts
         // the button that is usually the answer.
         cameFrom.current = document.activeElement as HTMLElement | null;
-        if (seed !== undefined) setSeeded(seed);
+        setSeeded((current) =>
+          seed === undefined
+            ? { ...current, text: '' }
+            : { id: current.id + 1, text: seed },
+        );
         setOpen(true);
       },
       hide: () => {
         forgetAbout();
+        setSeeded((current) => ({ ...current, text: '' }));
         setOpen(false);
       },
       forgetAbout,
@@ -228,13 +233,13 @@ export function AIProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={value}>
       <Bridge onLive={onLive} onScreen={onScreen} onScope={onScope} />
-      <Seed.Provider value={{ seeded, clear: () => setSeeded('') }}>{children}</Seed.Provider>
+      <Seed.Provider value={seeded}>{children}</Seed.Provider>
     </Ctx.Provider>
   );
 }
 
 /** The seed is its own context so taking it does not re-render the whole tree. */
-const Seed = createContext<{ seeded: string; clear: () => void }>({ seeded: '', clear: () => {} });
+const Seed = createContext({ id: 0, text: '' });
 
 export function useSeed() {
   return useContext(Seed);

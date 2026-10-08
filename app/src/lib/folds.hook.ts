@@ -154,6 +154,7 @@ export function useFoldAll(scope: string): {
 } {
   const at = useSyncExternalStore(subscribe, stamp, () => 0);
   return useMemo(() => {
+    void at;
     const keys = [...shown.keys()].filter((key) => inScope(key, scope));
     const next = nextForAll(folds(), keys);
     return {
