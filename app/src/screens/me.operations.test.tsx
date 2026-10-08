@@ -19,6 +19,9 @@ const mock = vi.hoisted(() => ({ caps: vi.fn<() => Promise<Grant[]>>() }));
 // `useMyCapabilities` calls its own module's loader, so the seam is the cloud client beneath it.
 vi.mock('../lib/cloud', () => ({
   cloudConfigured: true,
+  accountOf: () => null,
+  currentSession: async () => null,
+  onAuthChange: () => () => {},
   cloud: async () => ({
     auth: { getUser: async () => ({ data: { user: { id: 'u1' } } }) },
     rpc: async (name: string) => {
