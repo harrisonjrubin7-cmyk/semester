@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `7d93d31b` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `a2c9a4d0` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -174,6 +174,18 @@ PostgreSQL 17 applied all 210 migrations twice with 370 unchanged table fingerpr
 
 P1-06 is locally implemented and verified, not activated. The next dependency-ready slice is the first permissioned, freshness-labeled read contract over the existing private tenant entitlement and rollout projections, before any Console UI uses them. Scheduler activation remains externally gated.
 
+## Permissioned tenant projection read — automation pass 7, slice 15
+
+The clean branch merged current `origin/main` `a2c9a4d0` before implementation. That commit changes only `docs/DEVELOPER-TOOLS.md`; it contains no equivalent projection reader or migration collision. The final fetch observed `origin/main` advance to `b190f96a` with the citation-first Course Engine MVP. That commit adds no Supabase migration or projection reader and does not duplicate this slice; its new Course Engine surface must be reconciled before a later Course Studio/domain slice. The dirty branch was not rebased or merged. `20261008233000_tenant_projection_read.sql` adds one bounded `read_tenant_projection` query contract without granting either private projection table to a client role.
+
+The RPC accepts one tenant, a closed capability cursor and a 1–100 row limit. It requires either `console:operate` at platform scope or `tenant:configure` over the exact requested school, rejects forbidden access instead of returning an empty success, and returns the repository's query envelope: minimal projection data, computed metadata, explicit non-export permissions and warnings. Entitlement rows exclude policy and event identifiers; rollout exposes only bounded lifecycle state. Pagination cannot cross a tenant boundary.
+
+Freshness is computed at read time from each active registry row, watermark and five-minute SLO. A missing watermark is `unknown`, a failed worker is `failed`, rebuilding and expired watermarks are `stale`, and only a current idle/running watermark is `fresh`. Degraded data remains readable with an authoritative-source warning; private worker errors are not returned. This is a local read contract, not evidence that the dormant worker is deployed, scheduled or current in production.
+
+The focused PostgreSQL 17 suite covers no-grant and wrong-tenant refusal, platform and exact-school access, bounded pagination, cross-tenant non-disclosure, fresh/stale/failed/unknown labels, minimal output, callable-function grants and continued table privacy. All 211 migrations reapply with 370 table fingerprints unchanged; seven focused/adjacent SQL suites pass 52/52 checks. The whole-schema grant allowlist and security-definer register include the new RPC, and focused repository guards pass 35/35 tests. TypeScript, lint, university typecheck and the production build pass with the existing three lint warnings; design-system equivalents pass 9 token tests, 69 check tests and 96 report-contract tests with zero violations and the existing 86 warnings. HawkScan preflight stopped because the `hawk` executable is absent; configured local credentials were not read and no DAST result is claimed.
+
+The next dependency-ready slice is the repository-native tenant overview consumer: add a typed client boundary and connect the existing Console tenant detail experience to this envelope with loading, empty, permission, stale/failed/unknown and recovery states. It must not add mutation controls or imply worker activation.
+
 ## What was read
 
 - Root `CLAUDE.md`.
@@ -216,4 +228,4 @@ Main already contains the company-role student-row sweeps, the deliberate decisi
 
 ## Definition of complete, not met
 
-The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen rows as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions all workflow rows as 241 existing incomplete, 54 missing and in scope, 18 roadmap-only, 2 externally blocked and 4 excluded. Neither pass rewrites the source audit. Role, system, document and remaining stream reconciliation stays open. External gates (institutional UAT, legal review, live connectors, staffing, restore drills, HawkScan) stay open. This document does not say the system is integrated.
+The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen rows as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions all workflow rows as 241 existing incomplete, 54 missing and in scope, 18 roadmap-only, 2 externally blocked and 4 excluded. Neither pass rewrites the source audit. Role, system, document and execution-stream reconciliation are closed for the identified populations; implementation, UI consumption and release evidence remain open. External gates (institutional UAT, legal review, live connectors, staffing, restore drills, HawkScan) stay open. This document does not say the system is integrated.

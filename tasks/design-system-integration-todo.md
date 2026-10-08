@@ -271,6 +271,24 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Ordered and shuffled full suites completed with 23,771 passing and 69 skipped tests. Each has one environment-only failure because the repository-map guard sees the runner-mounted `.semester-reference`; shuffle seed `1791502868214` added no order-dependent failure.
 - [ ] HawkScan DAST — `hawk` is absent and `HAWK_API_KEY` is unset; no scan or pass is claimed.
 
+## 2026-10-08 permissioned tenant projection read — automation pass 7, slice 15
+
+- [x] Merge current `origin/main` `a2c9a4d0` into the clean build branch and confirm its developer-tools documentation change does not duplicate or collide with the selected read contract.
+- [x] Inspect final `origin/main` `b190f96a`; its Course Engine MVP adds no Supabase migration or equivalent projection reader. Keep its domain coverage for reconciliation before a later Course Studio slice; do not rebase or merge the dirty branch.
+- [x] Add one exact-tenant `read_tenant_projection` RPC over the existing private entitlement and rollout projections; do not expose their tables.
+- [x] Require live platform `console:operate` or exact-school `tenant:configure` authority and make forbidden access an explicit `42501` error.
+- [x] Bound entitlement pages to 1–100 rows with a closed capability cursor and keep tenant, policy and event identifiers out of row payloads except the requested tenant envelope key.
+- [x] Return the repository query envelope with projection authority, source/computation times, coverage, model version, correlation id, non-export permissions and warnings.
+- [x] Compute `fresh`, `stale`, `failed` and `unknown` from each active registry row, watermark and SLO; never call a missing watermark fresh and never return private worker errors.
+- [x] Prove no-grant/wrong-tenant refusal, platform and school access, pagination, cross-tenant non-disclosure, all freshness branches, minimal output, execute grants and continued table privacy on PostgreSQL 17.
+- [x] Add the RPC to the whole-schema callable-function allowlist and security-definer register; regenerate the register document and rerun its guard.
+- [x] Reapply all 211 migrations with 370 table fingerprints unchanged; pass 52/52 checks across the reader, grants, RLS, foundation, both projectors and worker.
+- [x] Pass 35/35 focused repository/register tests, TypeScript, lint, university typecheck and the production build; lint retains only three existing warnings.
+- [x] Pass design-system equivalents: 9 token tests, 69 check tests and 96 report-contract tests; zero violations and 86 existing ledgered warnings.
+- [ ] Connect this envelope to Console UI — intentionally deferred to the next vertical slice so this server contract remains independently reviewable.
+- [ ] Scheduler/secret/deployment/monitoring activation — remains external and separately authorized; no production operation is claimed.
+- [ ] HawkScan DAST — preflight stopped because the `hawk` executable is absent. Local configured credentials were detected but not read; no scan or pass is claimed.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

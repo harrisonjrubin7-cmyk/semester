@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 6 of 120 · **Integration slice** 14 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `a2c9a4d0`
+**Automation pass** 7 of 120 · **Integration slice** 15 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `b190f96a`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. P1-01 through P1-06 are now locally implemented in bounded slices: outbox controls, a feature-policy producer/projector, the dormant worker, hold-aware history retention, and a tenant-rollout producer/projector. Activation, public query surfaces and UI remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. P1-01 through P1-07 are now locally implemented in bounded slices: outbox controls, two producers/projectors, the dormant worker, hold-aware history retention, and the first permissioned query envelope. Scheduler activation and UI consumption remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 7 / slice 15
+
+- The clean branch merged `origin/main` `a2c9a4d0` before implementation. The final fetch observed `b190f96a`, whose citation-first Course Engine MVP adds no Supabase migration or equivalent projection reader. The dirty branch was not rebased or merged; that upstream domain surface remains a required input to the later Course Studio reconciliation.
+- `20261008233000_tenant_projection_read.sql` adds one bounded `read_tenant_projection` RPC. The entitlement and rollout materializations retain no client table grants.
+- A caller needs live platform `console:operate` or exact-school `tenant:configure`. Wrong-tenant and absent authority raise `42501`; the tenant filter is enforced inside every private projection query.
+- The result follows the current query envelope: bounded data, generated/source/computation times, projection authority, coverage, version/correlation metadata, non-export permissions and warnings. Policy ids, source event ids and private worker diagnostics are excluded.
+- Freshness is computed from the active registry row and watermark against each five-minute SLO: missing is `unknown`, failed is `failed`, rebuilding or expired is `stale`, and current is `fresh`. Degraded snapshots remain usable only with explicit authoritative-source warnings.
+- PostgreSQL 17 applies all 211 migrations twice with 370 table fingerprints unchanged. Seven focused/adjacent suites pass 52/52 checks across the reader, grants, RLS coverage, foundation, both projectors and worker. Focused repository/register guards pass 35/35 tests.
+- TypeScript, lint, university typecheck and the production build pass; lint retains three existing warnings. Design-system equivalents pass 9 token tests, 69 check tests and 96 report-contract tests with zero violations and the existing 86 warnings. The package wrappers cannot invoke their nested `npm`/`npx` binaries in this runner, so those exact wrapper invocations are not claimed.
+- No Console consumer, action control, worker schedule, secret, deployment or production execution was added.
+- HawkScan preflight detected configured local credentials but stopped because the `hawk` executable is absent. No scan or security pass is claimed.
 
 ## Evidence locked in automation pass 6 / slice 14
 
@@ -164,7 +176,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Add the first permissioned, freshness-labeled read contract over the private tenant entitlement and rollout projections before any Console UI consumes them. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
+Add the typed client boundary and repository-native Console tenant detail consumer for `read_tenant_projection`, covering loading, empty, permission, stale/failed/unknown, recovery and narrow-layout states without adding mutations. Keep scheduler activation, secret provisioning, deployment, monitoring and operational evidence as separate later gates.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

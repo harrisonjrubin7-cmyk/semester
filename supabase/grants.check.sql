@@ -603,6 +603,12 @@ declare
     -- demos by default and never accepts a tenant id from the caller.
     'console_tenant_operations(include_demo boolean)',
 
+    -- The first query-side contract over the private tenant projections. It
+    -- checks platform console or exact-school tenant configuration authority,
+    -- bounds entitlement pagination, and computes freshness from private
+    -- watermarks without exposing either projection table.
+    'read_tenant_projection(want_tenant text, after_capability text, want_limit integer)',
+
     -- Credential-free connector health. It requires the platform console
     -- shell, derives tenants from exact-school integration:view grants,
     -- excludes demos by default, and returns no credential, cursor, payload,

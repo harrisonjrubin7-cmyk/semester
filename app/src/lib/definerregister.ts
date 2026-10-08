@@ -280,6 +280,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['read_tenant_projection', 'admin', ['auth.uid()', 'private.has_capability']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['record_offboarding_notice', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
@@ -457,6 +458,10 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261008233000_tenant_projection_read.sql',
+    functions: ['read_tenant_projection'],
+  },
   {
     file: '20261008190500_projection_outbox_operations.sql',
     functions: ['replay_domain_event'],
