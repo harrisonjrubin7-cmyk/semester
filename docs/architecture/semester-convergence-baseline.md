@@ -4,9 +4,11 @@ Status: Phase A factual baseline
 
 Assessed: 2026-10-03
 
+Release verification refreshed: 2026-10-08
+
 Repository commit: `8ccf55afd5dc84a1465acd17e4c200a85db6df22` (`main`, 3,031 commits)
 
-Scope: repository and public GitHub evidence only; no production mutation, deployment, or tenant activation
+Scope: architecture findings are based on repository and public GitHub evidence. The release refresh records CI, security-scan and public Pages deployment evidence only; it does not establish tenant activation, institutional approval or GA.
 
 ## Decision
 
@@ -39,16 +41,19 @@ The correct release posture is therefore capability-by-capability activation. No
 
 | Check | Result | Interpretation |
 | --- | --- | --- |
-| TypeScript project build check | Pass | `tsc -b` completed successfully. |
-| Production build | Pass | Vite built 4,060 modules. It emitted large-chunk warnings, including bundles above 500 kB. |
-| Lint | Fail | 50 warnings exceed the configured maximum of 25: 31 purity, 12 state-in-effect, 4 manual-memoization, 2 ref-access, and 1 exhaustive-dependency warning. |
-| Full Vitest suite, run 1 | Fail | 19,727 passed, 48 skipped, and 8 failed across 8 files. Six failures timed out. The two institutional-package failures did not reproduce when rerun alone (2 files, 5 tests passed), and the current source uses bounded “student action layer” / “without replacing systems of record” language. |
-| Full Vitest suite, repeated | Fail/unstable | 19,718 passed, 48 skipped, and 18 failed across 5 files after 30 minutes. Four were timeouts; 14 were in `axe.test.tsx` after its render degraded to a minimal shell. The failure set changed between full runs, indicating suite-order/resource-isolation instability in addition to any product defect. jsdom also reported unsupported canvas/navigation behavior. |
-| Targeted accessibility suite | Pass | `axe.test.tsx`: 24/24 passed alone in 53.47 seconds; the 14 failures in the repeated full run did not reproduce. |
-| Targeted rerun of the six timeout files | Fail | 5 files passed and `DemandContribution.test.tsx` failed: 4 failed and 28 passed across the six files. The remaining failures include a 15-second timeout, overlapping React `act()` calls, a detached/null host, and missing rendered controls/content. |
-| PostgreSQL/RLS harness | Not run | The harness correctly refused to test against the wrong major because PostgreSQL 17 is unavailable locally. No local claim about migration/RLS correctness is made. |
-| Secret-backed/live checks | Not run | No live provider credentials or production mutations were used. |
-| HawkScan | Not rerun | This Phase A change is documentation-only. Existing workflow configuration is present; scan history is separate evidence. |
+| Phase A merge and public deployment refresh | Pass | PR #1139 merged as `1b167374`; main CI, CodeQL, supply-chain, infrastructure and both HawkScan targets passed. Pages deployed that exact SHA and returned HTTP 200. The Edge Functions workflow passed but skipped its deploy step because no function directories changed. This is release evidence, not tenant activation or GA approval. |
+| TypeScript project build check (original local assessment) | Pass | `tsc -b` completed successfully. |
+| Production build (original local assessment) | Pass | Vite built 4,060 modules. It emitted large-chunk warnings, including bundles above 500 kB. |
+| Lint (original local assessment) | Fail | 50 warnings exceeded the configured maximum of 25. Subsequent remediation and the exact-merge CI gate passed; this row preserves the original assessment rather than describing the release SHA. |
+| Full Vitest suite, run 1 (original local assessment) | Fail | 19,727 passed, 48 skipped, and 8 failed across 8 files. Six failures timed out. The two institutional-package failures did not reproduce when rerun alone (2 files, 5 tests passed), and the current source uses bounded “student action layer” / “without replacing systems of record” language. |
+| Full Vitest suite, repeated (original local assessment) | Fail/unstable | 19,718 passed, 48 skipped, and 18 failed across 5 files after 30 minutes. Four were timeouts; 14 were in `axe.test.tsx` after its render degraded to a minimal shell. The failure set changed between full runs, indicating suite-order/resource-isolation instability in addition to any product defect. jsdom also reported unsupported canvas/navigation behavior. |
+| Targeted accessibility suite (original local assessment) | Pass | `axe.test.tsx`: 24/24 passed alone in 53.47 seconds; the 14 failures in the repeated full run did not reproduce. |
+| Targeted rerun of the six timeout files (original local assessment) | Fail | 5 files passed and `DemandContribution.test.tsx` failed: 4 failed and 28 passed across the six files. The remaining failures include a 15-second timeout, overlapping React `act()` calls, a detached/null host, and missing rendered controls/content. |
+| PostgreSQL/RLS harness (original local assessment) | Not run | The harness correctly refused to test against the wrong major because PostgreSQL 17 was unavailable locally. No local claim about migration/RLS correctness is made. |
+| Secret-backed/live checks | Not run | No live provider credentials or production mutations were used in this documentation assessment. |
+| HawkScan on Phase A release | Pass | GitHub Actions completed the product and company-site HawkScan jobs for the exact PR and main release heads. Scan success remains point-in-time DAST evidence, not a compliance or institutional-approval claim. |
+
+During the original local assessment the dependency tree was already present and the environment did not expose npm, so `npm ci` and a fresh local `npm audit` were not rerun. The later exact-SHA GitHub CI result and the October 2 Gitleaks artifact are point-in-time evidence, not substitutes for a future release-candidate refresh.
 
 ## Confirmed architecture facts
 
@@ -126,9 +131,9 @@ At assessment time there were 36 open PRs, including long-lived overlapping inst
 - Keep small current fixes (#1131, #1119, #1104, #1080) independently reviewable; do not use them as proof of institution activation.
 - Label superseded PRs only after diff/evidence review, then close them in a separately approved cleanup action. This Phase A branch changes documentation only and does not mutate PR state.
 
-## Phase A changes
+## Assessment artifacts
 
-No runtime code, migration, deployment, external system, pull request, capability activation or production data was changed. Phase A adds these canonical assessment artifacts:
+The original assessment added the first canonical artifacts below. This documentation follow-up expands the operating contracts without changing runtime code, migrations, external systems, capability activation or production data:
 
 - `docs/architecture/semester-convergence-baseline.md`
 - `docs/architecture/unified-education-graph.md`
@@ -137,6 +142,12 @@ No runtime code, migration, deployment, external system, pull request, capabilit
 - `docs/architecture/multi-tenant-isolation.md`
 - `docs/product/capability-inventory.md` (supporting inventory)
 - `docs/operations/launch-readiness.md` (supporting risk, approval and milestone register)
+- `docs/architecture/data-quality-and-reconciliation.md`
+- `docs/architecture/workflow-engine.md`
+- `docs/operations/company-completion-model.md`
+- `docs/operations/full-company-launch-simulations.md`
+- `docs/product/accessibility-integrity-content-community.md`
+- `docs/security/security-assurance-roadmap.md`
 
 Database migrations added: none. The reason for the change is to create a single evidence-gated baseline for the complete founding thesis before implementation slices begin.
 
@@ -144,4 +155,4 @@ Database migrations added: none. The reason for the change is to create a single
 
 No broad GA or named-institution go-live is supported by this assessment. The repository supports a credible, governed pilot architecture. Activation should proceed only after the specific capability's evidence record is current and all external approvals are attached. The first implementation work should strengthen the canonical capability registry and claim gate before adding breadth.
 
-Proposed next phase: implement only the focused capability-state resolver described in `docs/operations/launch-readiness.md`, restore the existing quality baseline in a separate PR, and then run the PostgreSQL 17 evidence suite before changing tenant policy or activating an integration.
+The focused capability-state resolver and release-profile work described in `docs/operations/launch-readiness.md` merged in PR #1139. The next implementation slices are the evidence-gated milestones 11–15 in that document; PostgreSQL 17 policy evidence remains required before changing tenant policy or activating an integration.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Account } from '../lib/cloud';
 import {
   DATA_RIGHT_COPY,
@@ -27,15 +27,27 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
   const [loadError, setLoadError] = useState('');
   const [certificateError, setCertificateError] = useState('');
   const [notice, setNotice] = useState('');
+  const accountId = account?.id ?? null;
+  const refreshRequest = useRef(0);
 
   const refresh = useCallback(async () => {
-    if (!account) return;
+    const sequence = ++refreshRequest.current;
+    if (!accountId) {
+      setItems([]);
+      setCertificates([]);
+      setLoadError('');
+      setCertificateError('');
+      setNotice('');
+      setBusy(false);
+      return;
+    }
     setBusy(true);
     try {
       const [requestResult, certificateResult] = await Promise.allSettled([
         loadDataRightRequests(),
         loadPrivacyCompletionCertificates(),
       ]);
+      if (sequence !== refreshRequest.current) return;
       if (requestResult.status === 'rejected') throw requestResult.reason;
       setItems(requestResult.value);
       if (certificateResult.status === 'fulfilled') {
@@ -49,15 +61,20 @@ export function DataRightsRequests({ account }: { account: Account | null }) {
       }
       setLoadError('');
     } catch (error) {
+      if (sequence !== refreshRequest.current) return;
       setLoadError(error instanceof Error ? error.message : 'Could not load your requests.');
     } finally {
-      setBusy(false);
+      if (sequence === refreshRequest.current) setBusy(false);
     }
-  }, [account]);
+  }, [accountId]);
 
   // This is an account-backed queue, not render-derived state.
-  // oxlint-disable-next-line react/set-state-in-effect
-  useEffect(() => { void refresh(); }, [refresh]);
+  // oxlint-disable react/set-state-in-effect
+  useEffect(() => {
+    void refresh();
+    return () => { refreshRequest.current += 1; };
+  }, [refresh]);
+  // oxlint-enable react/set-state-in-effect
 
   const open = items.filter(isOpen);
   const closed = items.filter((item) => !isOpen(item));

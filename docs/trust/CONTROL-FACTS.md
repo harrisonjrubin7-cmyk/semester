@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 206 |
+| Migration files | 209 |
 | Tables created in `public` and not later dropped | 333 |
 | … of which enable row-level security in a migration | 333 |
 | Tables created in `private` and not later dropped | 36 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-133 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+135 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -124,6 +124,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/offboarding-grants.check.sql` | A person deprovisioned by their school stops holding that school's authority. |
 | `supabase/officeactions.check.sql` | The campus office action feed (Phase J, D-048): who may publish as which office, the draft → review → published workflow, who a published action reaches, and that an office learns a completion count… |
 | `supabase/onboarding-journeys.check.sql` | Onboarding journeys and the one-use hand-off (20261006000000_onboarding_journeys_and_handoff). |
+| `supabase/ops-projector-worker.check.sql` | Bounded, manually invoked ops-projector worker boundary (P1-04). |
 | `supabase/organizations.check.sql` | Who may say what about whom, in an organization. |
 | `supabase/outbox.check.sql` | The transactional outbox and the consumer receipts: service-role only, and the constraints that make a mislabelled or a duplicated event fail in the transaction that tried to write it. |
 | `supabase/payment-inbox.check.sql` | The payment-rail registry and the verified-event inbox (20261006090000_payment_rails_and_event_inbox, D-1319). |
@@ -132,6 +133,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/productivity-commands.check.sql` | The storage half of the productivity command API: that the commit function is atomic, idempotent, gapless and refuses a stale writer; that row-level security lets a person read their own live rows in… |
 | `supabase/productivity.check.sql` | Include owner isolation, optimistic revisions, tenant membership, aggregate suppression, and account-link preservation in the standard policy harness. |
 | `supabase/projection-foundation.check.sql` | The projection tables and the outbox's claim columns (backlog P1-01). |
+| `supabase/projection-history-retention.check.sql` | Hold-aware projection history retention. |
 | `supabase/projection-outbox-operations.check.sql` | Projection outbox operations (P1-03): claim, settle, bounded failure and approval-bound replay. |
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
@@ -257,12 +259,13 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 | `integration-tick` | false | no | (none) |
 | `lead-intake` | false | no | The company site's visitors have no Semester account. The site's own origins are built in; SITE_ORIGINS only adds. See DEPLOY.md → lead-intake. |
 | `lti` | false | yes | (none) |
+| `ops-projector` | false | no | Manually invoked only. There is no scheduler entry, and the handler returns 503 until its dedicated OPS_PROJECTOR_SECRET is explicitly provisioned. |
 | `productivity-sourcecheck` | false | yes | CORS preflight is unauthenticated; the function validates every POST with auth.getUser. |
 | `push` | false | no | (none) |
 | `support-reply-notify` | false | yes | A support agent's browser records the in-app reply first, then this function sends a generic email hint. It checks the caller's token and support gra… |
 | `trust-room` | false | no | The caller is a reviewer at a university with no Semester account; the link token in the POST body is the credential. See DEPLOY.md → trust-room. |
 
-16 function directories; 16 set `verify_jwt = false`; 0 set it to true.
+17 function directories; 17 set `verify_jwt = false`; 0 set it to true.
 
 **How counted.** Directories of `supabase/functions/` other than `_shared`, joined to the `[functions.<name>]` blocks of `supabase/config.toml`. The comment is the lines directly above the block.
 
@@ -272,15 +275,15 @@ Data classifications (`RESOURCE_CLASSIFICATIONS` in `packages/institution/src/po
 
 | Measure | Count |
 | --- | --- |
-| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 226 |
-| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 226 |
+| Rows in `app/src/lib/definerregister.ts` (the data behind `docs/DEFINER-RLS-REGISTER.md`) | 227 |
+| Callable `security definer` functions derived from migrations ∩ `supabase/grants.check.sql` allowlist | 227 |
 | Derived set equals the register's names | yes |
 | Policy-less tables pinned in the register (production reading of 2026-09-30: 49) | 49 |
 | Functions in the first production reading / the second (2026-09-30) | 151 / 180 |
 | Tables in the first production reading | 45 |
 | Register rows in category `self-service` | 65 |
 | Register rows in category `sharing` | 21 |
-| Register rows in category `admin` | 85 |
+| Register rows in category `admin` | 86 |
 | Register rows in category `integration` | 6 |
 | Register rows in category `financial` | 3 |
 | Register rows in category `moderation` | 15 |

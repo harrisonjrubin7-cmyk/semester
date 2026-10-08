@@ -24,4 +24,4 @@ Both views are `security_invoker=true`, so they evaluate the caller's RLS. Stora
 1. ~~Classify all tables into a checked-in register that a test compares to the catalog.~~ Done: `DATA_CLASSIFICATION_REGISTER.md` and `app/src/lib/tableclassification.test.ts`. The classes are rule-derived and unreviewed (see that page); next is the negative suite per class.
 2. Read the 16 tables in query 6.
 3. Decide on `FORCE ROW LEVEL SECURITY`.
-4. Run the existing suites on PostgreSQL 17 (CI does).
+4. Inspect the exact-commit `pg17-policy-evidence-<sha>` CI artifact. It proves the clean/reapply policy run only; the open items remain machine-readable in `UNRESOLVED_POLICY_REGISTER.json`.

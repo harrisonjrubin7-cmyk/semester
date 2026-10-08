@@ -166,4 +166,28 @@ describe('consented support access surface', () => {
     expect(host.textContent).not.toContain('View aggregate signals');
     expect(mock.read).not.toHaveBeenCalled();
   });
+
+  it('discards support windows and tickets loaded for a previous account', async () => {
+    let finishOld!: (value: {
+      supporters: Array<{ supporterId: string; label: string }>;
+      tickets: Array<{ ticketId: string; subject: string }>;
+      windows: Array<never>;
+    }) => void;
+    mock.load
+      .mockImplementationOnce(() => new Promise((resolve) => { finishOld = resolve; }))
+      .mockResolvedValueOnce({ supporters: [], tickets: [], windows: [] });
+    await act(async () => {
+      root.render(<SupportAccess account={{ id: 'first', email: 'first@example.edu', via: 'email' }} />);
+    });
+    await act(async () => {
+      root.render(<SupportAccess account={{ id: 'second', email: 'second@example.edu', via: 'email' }} />);
+    });
+    await act(async () => finishOld({
+      supporters: [{ supporterId: 'old-staff', label: 'Old account advisor' }],
+      tickets: [{ ticketId: '123e4567-e89b-12d3-a456-426614174000', subject: 'Old account ticket' }],
+      windows: [],
+    }));
+    expect(host.textContent).not.toContain('Old account advisor');
+    expect(host.textContent).not.toContain('Old account ticket');
+  });
 });
