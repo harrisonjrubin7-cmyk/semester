@@ -8,8 +8,8 @@ The archive is broader than the production surface, but much of that breadth is 
 | --- | ---: |
 | existing/verified | 475 |
 | existing/defective | 0 |
-| partial | 578 |
-| absent | 186 |
+| partial | 579 |
+| absent | 185 |
 | ambiguous | 0 |
 | conflict | 336 |
 | externally blocked | 20 |
