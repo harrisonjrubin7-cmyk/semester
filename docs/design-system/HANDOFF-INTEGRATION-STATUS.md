@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 5 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
+**Automation pass** 6 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 5 completes the 673-row catalog-screen reconciliation; no production route, schema, policy, dependency, token output, deployment or external system changed.
+Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 6 completes the 319-row canonical workflow reconciliation; no production route, schema, policy, dependency, token output, deployment or external system changed.
+
+## Evidence locked in pass 6
+
+- Current `origin/main` remains `e53128a6`; no equivalent workflow reconciliation landed.
+- [`REFERENCE-WORKFLOW-RECONCILIATION.md`](REFERENCE-WORKFLOW-RECONCILIATION.md) and its generated CSV preserve and disposition all 319 canonical archive workflow steps.
+- The generated CSV SHA-256 is `bea99779e050238555b02a358bc13fae98e30b49df2795209af6a30efffc0c8e`.
+- Structural proof shows exact group length, ordered-label and key equality across all 17 archive and repository workflows.
+- All 84 catalog-screen projections resolve to exact archive workflow indices and labels; they remain aliases of canonical workflow rows.
+- Results: 241 existing but incomplete, 54 missing and in scope, 18 documentation or roadmap only, 2 externally blocked and 4 intentionally excluded.
+- Every row names a P3/P5/P6/P7/P8/P9 authorization/data-boundary profile, current evidence or planned owner, dependencies and acceptance contract, and release boundary.
+- The 54 buildable rows overlap the 44 buildable screen rows; they are not additive totals. Remaining role, system, document and execution-stream dependencies still prevent an evidence-based production selection.
 
 ## Evidence locked in pass 5
 
@@ -15,7 +26,7 @@ Phase 0 is in progress. The exact mounted archive remains authenticated and full
 - Results: 534 existing but incomplete, 44 missing and in scope, 84 duplicate or superseded, 1 documentation or roadmap only, 4 externally blocked and 6 intentionally excluded.
 - Every row names a P1–P7 current authorization/data-boundary profile, current evidence or planned owner, dependencies and acceptance contract, and release boundary.
 - The 84 aliases stay owned by the canonical workflow population. No route or screen is created merely because a workflow step was projected into the archive screen array.
-- The 44 buildable rows remain candidates until the 319 workflow rows and remaining execution streams establish dependency order; no production slice is prematurely selected.
+- The 44 buildable rows remain candidates and are now cross-bounded by the canonical workflow register; remaining execution streams and catalog populations still establish dependency order.
 
 ## Evidence locked in pass 4
 
@@ -67,8 +78,8 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Open Phase 0 gates
 
-1. Reconcile the archive's 319 canonical workflow steps with the repository's 319 workflow rows, including the 84 screen aliases identified in pass 5.
-2. Reconcile remaining streams 00–30 and the role/system/document catalog populations at meaningful-item level, including owner path, dependencies and acceptance evidence for buildable work.
+1. Reconcile remaining streams 00–30 and the 49-role, 88-system and 82-document catalog populations at meaningful-item level, including owner path, dependencies and acceptance evidence for buildable work.
+2. Resolve cross-stream dependencies for the overlapping screen/workflow candidates and P11 graduate/research education.
 3. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
 
 ## External gates kept open
@@ -77,4 +88,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the 319 canonical workflow steps. Map each archive flow/step to the repository workflow audit, preserve the 84 screen aliases as non-independent projections, and record the exact owner, dependency and acceptance evidence. Remaining execution streams follow before production selection.
+Continue Phase 0 with the remaining Stream 00–30 meaningful items, beginning with the 49-role, 88-system and 82-document catalog populations and their cross-stream dependencies. Production selection follows only when those controls establish an unambiguous dependency-ready slice.

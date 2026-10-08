@@ -62,12 +62,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Classify the 84 workflow projections as duplicate or superseded screen aliases; retain their canonical ownership in the upcoming 319-row workflow pass.
 - [x] Identify 44 missing-and-in-scope candidates without selecting a production slice before workflow and stream dependencies are reconciled.
 - [x] Preserve anti-surveillance, academic-authority, community-data, marketplace/directory and employer-isolation exclusions and keep four actual external prerequisites open.
-- [ ] Reconcile all 319 canonical workflow rows; this is the next dependency-ready Phase 0 slice.
+- [x] Reconcile all 319 canonical workflow rows; all rows now have one bounded disposition and the 84 screen aliases point to their canonical owner.
 
 ### Verification for pass 5
 
 - [x] Generator validation: exactly 673 archive rows, 589 exact ordered base rows, 84 exact declared workflow aliases and 673 unique emitted keys.
 - [x] Structural validation: one allowed disposition and one evidence profile per CSV row; computed disposition/group totals match the summary.
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
+- [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.
+
+## 2026-10-08 workflow reconciliation — pass 6
+
+- [x] Fetch current `origin/main` `e53128a6` and confirm no equivalent workflow reconciliation landed.
+- [x] Parse the archive catalog as JSON data without evaluating its JavaScript.
+- [x] Prove exact group length, order and label equality between all 17 archive workflows and all 319 unique repository workflow keys.
+- [x] Validate all 84 catalog-screen aliases against their exact workflow and zero-based step index; keep them non-independent.
+- [x] Give all 319 canonical rows one disposition, evidence profile, current evidence or planned owner, dependency/acceptance contract and release boundary.
+- [x] Identify 54 missing-and-in-scope workflow candidates without treating them as additive to the 44 screen candidates or selecting production work early.
+- [x] Preserve the developer-platform/marketplace roadmap boundary, marketplace exclusions, external accommodation/signature authority and student-controlled advising boundary.
+- [ ] Reconcile the remaining Stream 00–30 items, beginning with the 49-role, 88-system and 82-document catalog populations and cross-stream dependencies.
+
+### Verification for pass 6
+
+- [x] Generator validation: exactly 319 archive rows, 319 unique repository rows, exact ordered labels, 84 exact screen aliases and 319 unique emitted keys.
+- [x] Structural validation: one allowed disposition and one evidence profile per CSV row; computed disposition/workflow totals match the summary.
 - [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
 - [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
 - [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.

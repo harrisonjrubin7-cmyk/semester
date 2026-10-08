@@ -20,6 +20,7 @@
 - [REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md) — all 122 mounted-archive capability rows dispositioned against current permission, tenant, data, operation, recovery and test authorities.
 - [REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md](REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md) — all 281 archive prototype routes mapped to current screens, navigation, catalog/capability evidence and one bounded disposition.
 - [REFERENCE-CATALOG-SCREEN-RECONCILIATION.md](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md) — all 673 archive catalog rows reconciled to the exact 589-row repository baseline and 84 workflow-step aliases.
+- [REFERENCE-WORKFLOW-RECONCILIATION.md](REFERENCE-WORKFLOW-RECONCILIATION.md) — all 319 canonical workflow steps reconciled to the exact repository workflow audit and the 84 non-independent screen aliases.
 - [HANDOFF-INTEGRATION-STATUS.md](HANDOFF-INTEGRATION-STATUS.md) — resumable automation status, open gates and the next dependency-ready reconciliation slice.
 
 ## Skills

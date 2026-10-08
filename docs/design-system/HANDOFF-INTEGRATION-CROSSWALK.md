@@ -26,7 +26,7 @@ These are dispositions of files as evidence artifacts. They do not pre-judge the
 | `handoff/registry/capabilities.json` | 122 rows; all say implemented/tested/deployed false; 55 claim backend true and all 122 claim data true | Reconciled row by row in [`REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md`](REFERENCE-CAPABILITY-REGISTRY-RECONCILIATION.md): 91 existing but incomplete, 10 prototype only, 2 duplicate or superseded, 18 documentation or roadmap only and 1 intentionally excluded. Archive status is not repository evidence. |
 | `handoff/capability-blueprint/SEM-01.md`–`SEM-20.md` and CSV | 20 proposed capabilities; all implementation/test/deployment/authorization/enabled fields unverified or not established in the archive | Reconciled in [`REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md`](REFERENCE-MEANINGFUL-ITEM-RECONCILIATION.md): 16 existing but incomplete, 2 documentation or roadmap only, 1 blocked externally and 1 intentionally excluded. Repository evidence, not archive status, sets each result. |
 | `handoff/capability-blueprint/tenant-isolation-proof-manifest.json` | Zero objects; explicitly illustrative | Documentation or roadmap only; do not treat as tenant-isolation proof. |
-| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Screen rows reconciled in [`REFERENCE-CATALOG-SCREEN-RECONCILIATION.md`](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md): 589 exact base rows plus 84 workflow aliases, with one disposition each. Workflow and other populations remain separate. |
+| `ui_kits/master-catalog/catalog-data.js` | 673 screen rows, 319 workflow steps, 49 role rows, 88 systems, 82 documents and 84 added-screen rows; prose claims 51 roles | Screen rows are reconciled in [`REFERENCE-CATALOG-SCREEN-RECONCILIATION.md`](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md); workflow rows in [`REFERENCE-WORKFLOW-RECONCILIATION.md`](REFERENCE-WORKFLOW-RECONCILIATION.md). Role, system and document populations remain separate. |
 | Streams `00`–`30` | 31 numbered streams plus index; later files override earlier ordering inside the archive | Documentation or roadmap only; mapped into the user's Phases 0–12, not executed as instructions. |
 
 ## Pass 2 meaningful-item coverage
@@ -40,7 +40,7 @@ The first capability-level register now covers every meaningful item selected fo
 | Stream 18 | 23 / 23 | Sixteen requested documents map to current `docs/roles/*`; seven underlying product decisions remain separately honest. |
 | Stream 25 | 28 / 28 | Eighteen packages, seven “one” rules and three open decisions map to current authorities. |
 
-The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, pass 4 mapped all 281 prototype routes without adopting archive URLs, and pass 5 reconciled all 673 catalog-screen rows. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level population is the 319 canonical workflow steps.
+The seed identified no production implementation safe to start ahead of capability mapping. Pass 3 completed that 122-row mapping without importing the archive permission vocabulary, pass 4 mapped all 281 prototype routes without adopting archive URLs, pass 5 reconciled all 673 catalog-screen rows, and pass 6 reconciled all 319 canonical workflow steps. P11 graduate/research education remains missing and in scope but lacks authority/data ownership. The next row-level populations are the role, system and document catalogs plus remaining stream-owned decisions.
 
 ## Current repository mapping baseline
 
@@ -50,7 +50,7 @@ The last full census has 97 app screen-registry keys including `home` and `onboa
 
 All 122 archive registry ids now have one row-level disposition and an evidence profile covering the current owner, role/route/capability boundary, tenant/data authority, operation, audit/recovery/state expectations, tests, dependencies and release ceiling. No full archive row qualifies as existing and verified because the rows combine broad experiences and archive-specific route/data/action claims; verified repository subcontracts remain named without inflating the whole row. The route inventory can now reuse those profiles instead of inventing a second permission model.
 
-The repository catalog remains 589 screens (260 exists / 272 partial / 57 missing) and 319 workflow steps (116 exists / 128 partial / 75 missing). Pass 5 reclassifies screen rows against the stricter integration contract without rewriting the source audit: 534 existing but incomplete (including two consent-bounded advisor analogues), 44 missing and in scope, 1 roadmap-only, 4 externally blocked and 6 excluded. The archive's 281 prototype routes and 673 catalog screens remain separate populations.
+The repository catalog remains 589 screens (260 exists / 272 partial / 57 missing) and 319 workflow steps (116 exists / 128 partial / 75 missing). Pass 5 reclassifies screen rows against the stricter integration contract without rewriting the source audit: 534 existing but incomplete (including two consent-bounded advisor analogues), 44 missing and in scope, 1 roadmap-only, 4 externally blocked and 6 excluded. Pass 6 likewise reclassifies workflows as 241 existing incomplete, 54 missing and in scope, 18 roadmap-only, 2 externally blocked and 4 excluded. The archive's prototype routes, catalog screens and canonical workflows remain separate populations.
 
 ## Pass 4 prototype-route coverage
 
@@ -59,6 +59,10 @@ All 281 archive prototype routes now have one row-level disposition plus a curre
 ## Pass 5 catalog-screen coverage
 
 All 673 archive catalog-screen rows now have one disposition, owner/evidence profile, dependency and acceptance boundary. Structural comparison proves that 589 are exact current-catalog rows and 84 are workflow-step projections declared by the archive itself. Those projections are not independent screen obligations. Forty-four rows are missing and in scope, but remain candidates until the canonical workflow and execution-stream passes determine dependency order. No row is called existing and verified.
+
+## Pass 6 workflow coverage
+
+All 319 canonical archive workflow steps now have one disposition, owner/evidence profile, dependency and acceptance boundary. Structural comparison proves exact ordered equality with the repository workflow audit across all 17 flows. The 84 screen projections resolve to exact workflow indices and remain aliases, not additional obligations. Fifty-four rows are missing and in scope; they overlap the screen candidates and remain unselected until role, system, document and remaining execution-stream dependencies are reconciled. No row is called existing and verified.
 
 ## How a row was classed
 
@@ -165,4 +169,4 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 
 ## Not complete
 
-The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues; workflow reconciliation remains open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
+The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions the workflow set as 54 missing and in scope, 18 roadmap-only, 2 externally blocked, 4 excluded and 241 existing incomplete. Role, system, document and remaining execution-stream decisions are still open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
