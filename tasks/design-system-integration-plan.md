@@ -108,6 +108,16 @@ All 82 archive document requirements map to current repository authorities and a
 
 The next Phase 0 slice is the remaining Stream 00–30 meaningful-item reconciliation and cross-stream dependency graph. It must determine whether projection infrastructure, Course Studio foundations or another shared prerequisite is the earliest safe production slice without treating the 44 screen, 54 workflow and other buildable rows as additive queues.
 
+## Execution-stream reconciliation — automation pass 8
+
+[`REFERENCE-EXECUTION-STREAM-RECONCILIATION.md`](../docs/design-system/REFERENCE-EXECUTION-STREAM-RECONCILIATION.md) now dispositions the remaining novel task, behavior, addendum, gate and implementation-pattern bundles in Streams 00–30. Exact route, screen, workflow, capability, role, system, document and seeded Stream 00/18/25 populations retain their existing row-level registers; repeated archive rules and screen tables are linked rather than counted again.
+
+The cross-stream result also corrects an important timing drift. Projection backlog P1-01 is no longer missing: `20261006130000_projection_foundation.sql` supplies the service-only registry, watermark, invalidation and rebuild tables plus outbox claim columns. P1-02 is also present: `20261008183934_emit_domain_event.sql` supplies the sanitized, idempotent SQL event writer. Both remain incomplete operating paths.
+
+The earliest dependency-ready production slice is now P1-03: server-only claim, complete, fail and approval-gated replay operations over the current outbox and receipt tables, with stale-claim recovery, bounded retry/dead letter, idempotent receipts, audit/capability enforcement and focused SQL red/green proof. It precedes the projector worker, cron, producers, projected tenant/inbox models and operations UI. Course Studio remains the earliest domain cluster after that shared prerequisite; P11 graduate/research education remains non-ready pending an authorized owner and source-of-truth contract.
+
+Phase 0 row reconciliation is complete for the currently identified archive populations and stream bundles. Phase 0 itself remains open until the selected P1-03 slice is checked against new `origin/main` immediately before implementation and its exact acceptance slice is recorded without colliding with concurrent work.
+
 ## What was read
 
 - Root `CLAUDE.md`.

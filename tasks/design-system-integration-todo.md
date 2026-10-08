@@ -17,9 +17,9 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Reconcile each of the 122 archive registry capabilities to repository capabilities, routes, data authority, policy and tests.
 - [x] Reconcile all 673 archive master-catalog screen rows; preserve the distinction from the 281 prototype routes and the 589 current catalog rows.
 - [x] Reconcile all 49 archive roles, 88 systems and 82 documents without creating parallel roles, services or document authorities.
-- [ ] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
-- [ ] Give every meaningful archive item exactly one allowed disposition; file-family dispositions alone do not complete this gate.
-- [ ] Identify the earliest buildable dependency-ready vertical slice only after the preceding row-level controls are complete.
+- [x] Reconcile streams 00–30 into Phases 0–12 at meaningful-item level, including dependencies and acceptance criteria.
+- [x] Give every currently identified meaningful archive item exactly one allowed disposition; exact catalog populations retain their canonical row register and novel stream bundles are dispositioned once.
+- [x] Identify P1-03 outbox claim/settle/replay operations as the earliest buildable dependency-ready slice after verifying P1-01 and P1-02 already landed.
 
 ## 2026-10-08 meaningful-item seed — pass 2
 
@@ -83,7 +83,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Identify 54 missing-and-in-scope workflow candidates without treating them as additive to the 44 screen candidates or selecting production work early.
 - [x] Preserve the developer-platform/marketplace roadmap boundary, marketplace exclusions, external accommodation/signature authority and student-controlled advising boundary.
 - [x] Reconcile the 49-role, 88-system and 82-document catalog populations with current owners, dependency contracts and release boundaries.
-- [ ] Reconcile the remaining Stream 00–30 meaningful items and resolve cross-stream dependencies for the buildable candidates.
+- [x] Reconcile the remaining Stream 00–30 meaningful items and resolve cross-stream dependencies for the buildable candidates.
 
 ### Verification for pass 6
 
@@ -110,6 +110,23 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/`.
 - [ ] Full application gates — not required for this documentation/reconciliation-tooling slice; no production route, schema, policy, dependency or generated token changed.
 - [x] HawkScan — not applicable to this non-production slice; runtime and `HAWK_API_KEY` remain unavailable.
+
+## 2026-10-08 execution-stream reconciliation — pass 8
+
+- [x] Fetch current `origin/main` `e53128a6` and verify no equivalent full Stream 00–30 reconciliation landed.
+- [x] Link repeated route, screen, workflow, capability, role, system, document and Stream 00/18/25 rows to their canonical register instead of assigning duplicate statuses.
+- [x] Give each remaining novel execution bundle exactly one allowed disposition, current owner/evidence, dependency/acceptance boundary and release ceiling.
+- [x] Preserve current decisions: no archive migrations/scripts, no second app or navigation system, no marketplace/directory revival, no free-text scanner and no fabricated provider/institution readiness.
+- [x] Correct the dependency graph for landed repository evidence: P1-01 projection tables/claim columns and P1-02 event writer exist but are incomplete operating paths.
+- [x] Select P1-03 claim/complete/fail/approved-replay operations as the earliest dependency-ready production slice; keep worker/cron/producers/read models/UI out of that slice.
+- [x] Keep Course Studio next at the domain-cluster level and keep P11 graduate/research education non-ready pending owner and authority contracts.
+
+### Verification for pass 8
+
+- [x] Structural validation: 53 unique stream-bundle ids, one allowed disposition per row, all named repository evidence paths resolve, and computed disposition totals match the register.
+- [x] Focused documentation guard: repository-local `vitest run src/lib/designtooling.test.ts` from `app/` — 1 file, 22 tests passed.
+- [ ] Full application gates — not required for this documentation-only reconciliation slice; no production code, schema, policy, dependency or generated token changed.
+- [x] HawkScan — not applicable to this documentation-only slice; the runtime and `HAWK_API_KEY` are unavailable and no production code or scan configuration changed.
 
 ### Verification for pass 4
 

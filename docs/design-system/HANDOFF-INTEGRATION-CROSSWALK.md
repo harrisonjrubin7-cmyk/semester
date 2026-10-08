@@ -70,6 +70,12 @@ All 673 archive catalog-screen rows now have one disposition, owner/evidence pro
 
 All 319 canonical archive workflow steps now have one disposition, owner/evidence profile, dependency and acceptance boundary. Structural comparison proves exact ordered equality with the repository workflow audit across all 17 flows. The 84 screen projections resolve to exact workflow indices and remain aliases, not additional obligations. Fifty-four rows are missing and in scope; they overlap the screen candidates. Pass 7 closes the role, system and document catalogs, while remaining execution-stream dependencies still prevent selection. No row is called existing and verified.
 
+## Pass 8 execution-stream coverage
+
+All remaining novel task, behavior, late-addendum, gate and implementation-pattern bundles in Streams 00–30 now have one disposition in `REFERENCE-EXECUTION-STREAM-RECONCILIATION.md`. Exact route, screen, workflow, capability, role, system and document tables keep their canonical row-level registers, so repeated archive screen tables and shared rules are linked rather than double-counted.
+
+Current repository evidence resolves the first shared dependency. Projection P1-01 (private registry/watermark/invalidation/rebuild tables and outbox claim columns) and P1-02 (the sanitized event-emission helper) have landed and are existing but incomplete. P1-03 claim/complete/fail/approval-gated replay operations are the earliest missing-and-in-scope slice. A worker, cron, domain producers, projected views and Console UI follow in separate slices. Course Studio is the first domain cluster after that foundation; P11 remains non-ready pending owner and authority contracts.
+
 ## How a row was classed
 
 | Disposition | Meaning here |
@@ -131,7 +137,7 @@ Developer platform and marketplace (0 / 3 / 13) is a roadmap concept. Incident r
 | `docs/handoff/claude-code-toolkit/` | 17 | Duplicate of instructions already in `.claude/skills/` and `docs/design-system/`. |
 | `install.sh`, `BUILD.md` | — | Not run as shipped (`D-1287`). |
 
-`docs/master/*` business, launch, and 12-month documents are roadmap or business concepts unless a row in `REPO_AUDIT.md` points at code.
+`docs/master/*` business, launch, and 12-month documents are roadmap or business concepts unless a row in `REPO_AUDIT.md` points at code. The 2026-10-08 projection migration and emit helper also supersede the older master-current-state sentence that says all registry/watermark infrastructure is absent; the worker and operating projections are still absent.
 
 ## Stream 01 work list
 
@@ -175,4 +181,4 @@ Legal review, DPA, insurance, HECVAT, named institutional contacts, live IdP, li
 
 ## Not complete
 
-The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions the workflow set as 54 missing and in scope, 18 roadmap-only, 2 externally blocked, 4 excluded and 241 existing incomplete. Role, system, document and remaining execution-stream decisions are still open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.
+The source audit still records 57 missing screen rows and 75 missing workflow steps. Pass 5 dispositions the screen set as 44 missing and in scope, 4 externally blocked, 6 excluded, 1 roadmap-only and 2 consent-bounded existing analogues. Pass 6 dispositions the workflow set as 54 missing and in scope, 18 roadmap-only, 2 externally blocked, 4 excluded and 241 existing incomplete. Role, system, document and execution-stream reconciliation are now closed for the identified populations, but implementation is not: P1-03 is merely the next selected slice and the buildable screen/workflow candidates remain open. The five brief names that looked absent are recorded in `SCREEN-PACKS.md` §4. The folded advisor list is labeled Caseload and is shared plans only. This page does not say the handoff is integrated.

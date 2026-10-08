@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 7 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
+**Automation pass** 8 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Base/current `origin/main`** `e53128a6`
 
 ## State
 
-Phase 0 is in progress. The exact mounted archive remains authenticated and fully inventoried. Pass 7 completes the 49-role, 88-system and 82-document catalog reconciliation; no production route, schema, role, permission, policy, dependency, token output, deployment or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 8 closes the remaining Stream 00–30 dependency layer and selects P1-03 outbox claim/settle/replay operations as the earliest dependency-ready production slice. No production route, schema, role, permission, policy, dependency, token output, deployment or external system changed in this pass.
+
+## Evidence locked in pass 8
+
+- Current `origin/main` is `e53128a6`; no equivalent full Stream 00–30 reconciliation landed.
+- [`REFERENCE-EXECUTION-STREAM-RECONCILIATION.md`](REFERENCE-EXECUTION-STREAM-RECONCILIATION.md) dispositions 53 remaining novel task, behavior, addendum, gate and implementation-pattern bundles while linking exact catalog populations to their canonical row registers. Its SHA-256 is `1620824dc241dc7c32382b9716e88e8b26e551d68b9d7a5c04cd621f1fec2d58`.
+- Repeated archive screen tables and shared rules are not counted as new product obligations. Archive scripts, migrations, source trees, branch instructions and completion claims remain non-authoritative.
+- Projection P1-01 is now existing but incomplete: `20261006130000_projection_foundation.sql` provides private registry, watermark, invalidation and rebuild tables plus outbox claim columns, with `projection-foundation.check.sql`.
+- Projection P1-02 is existing but incomplete: `20261008183934_emit_domain_event.sql` provides the sanitized idempotent writer, with `emit-domain-event.check.sql`; no production domain producer calls it yet.
+- P1-03 is the earliest missing-and-in-scope shared slice: server-only claim, complete, fail and capability/audit-gated replay operations with stale-claim recovery, bounded retry/dead letter, idempotent receipts and focused SQL proof.
+- P1-04 worker/cron, producers, projected tenant/inbox models and Console UI remain later slices. Course Studio follows as the earliest domain cluster. P11 graduate/research education remains non-ready pending owner and source-of-truth authority.
 
 ## Evidence locked in pass 7
 
@@ -86,11 +96,9 @@ Phase 0 is in progress. The exact mounted archive remains authenticated and full
 
 The archive is design and product evidence. Its prototype checks, code, migrations, prompt files, completion labels, pilot statements, customer claims, dates and approval claims are not repository, deployment, institutional or GA evidence. Current repository controls and merged decisions win every conflict.
 
-## Open Phase 0 gates
+## Open Phase 0 gate
 
-1. Reconcile the remaining streams 00–30 at meaningful-item level, including owner path, dependencies and acceptance evidence for buildable work.
-2. Resolve cross-stream dependencies for the overlapping screen/workflow candidates, P11 graduate/research education and projection/read models.
-3. Select the earliest dependency-ready production slice only after the control files identify it without ambiguity.
+Immediately before implementation, fetch `origin/main` and inspect P1-03 symbols and migration versions for concurrent equivalent work. If none landed, record the exact coherent slice and implement it without bundling the worker, producers, read models or UI.
 
 ## External gates kept open
 
@@ -98,4 +106,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Continue Phase 0 with the remaining Stream 00–30 meaningful items and their cross-stream dependency graph. Production selection follows only when those controls establish an unambiguous dependency-ready slice among projection/read-model infrastructure, Course Studio foundations and the other overlapping candidates.
+Implement projection backlog P1-03 as one coherent server-side slice: claim, complete, fail and approved replay operations over the existing outbox/receipt schema, with stale-claim recovery, bounded backoff/dead-letter behavior, capability/audit enforcement and focused SQL red/green checks. Re-check current main first; do not duplicate equivalent concurrent work.

@@ -22,6 +22,7 @@
 - [REFERENCE-CATALOG-SCREEN-RECONCILIATION.md](REFERENCE-CATALOG-SCREEN-RECONCILIATION.md) — all 673 archive catalog rows reconciled to the exact 589-row repository baseline and 84 workflow-step aliases.
 - [REFERENCE-WORKFLOW-RECONCILIATION.md](REFERENCE-WORKFLOW-RECONCILIATION.md) — all 319 canonical workflow steps reconciled to the exact repository workflow audit and the 84 non-independent screen aliases.
 - [REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md](REFERENCE-ROLE-SYSTEM-DOCUMENT-RECONCILIATION.md) — all 49 archive roles, 88 systems and 82 documents mapped to current authorities, dependencies and release boundaries.
+- [REFERENCE-EXECUTION-STREAM-RECONCILIATION.md](REFERENCE-EXECUTION-STREAM-RECONCILIATION.md) — the remaining novel bundles in streams 00–30 mapped into the current phases, dispositions and cross-stream dependency order.
 - [HANDOFF-INTEGRATION-STATUS.md](HANDOFF-INTEGRATION-STATUS.md) — resumable automation status, open gates and the next dependency-ready reconciliation slice.
 
 ## Skills
