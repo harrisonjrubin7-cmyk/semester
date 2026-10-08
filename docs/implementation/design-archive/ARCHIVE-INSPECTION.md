@@ -29,7 +29,7 @@ The ZIP is safe to inspect and has been exhaustively inventoried at the file lev
 | Spreadsheets | 10 XLSX files, 52 sheets parsed |
 | Word documents | 5 DOCX files, 141 paragraphs parsed |
 | Text/code/web | HTML, Markdown, JS/JSX/TS/TSX, CSS, JSON, CSV, SQL, YAML, Rego, shell, and text decoded and indexed |
-| Raster images | 248 images reviewed through four contact sheets; 86 low-information images recorded in [RASTER-LOW-INFORMATION.md](RASTER-LOW-INFORMATION.md) with reproducible variance scores |
+| Raster images | 248 images reviewed during isolated archive inspection; 86 low-information paths and provisional, non-reproducible scores are preserved in [RASTER-LOW-INFORMATION.md](RASTER-LOW-INFORMATION.md); public contact sheets were removed pending provenance clearance |
 | Fonts/binary | Type, size, and hash inspected; font license reviewed separately |
 
 The parsed corpus contains 47,863,844 text characters. No PDF required OCR by the low-text threshold; no video or nested archive was present. Raster evidence is under [`evidence/`](evidence/).

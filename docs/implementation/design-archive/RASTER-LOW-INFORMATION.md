@@ -8,7 +8,7 @@ This ledger preserves the archive raster triage output. It records the 86 lowest
 - Each image was decoded, converted to RGB, normalized to 64 × 64 pixels, and scored by the mean population variance of its red, green, and blue channels.
 - The original one-off scoring environment did not retain its decoder/library version, resize filter, alpha-compositing rule, color-profile handling, or intermediate rounding behavior. These recorded values are therefore preserved triage evidence, not a reproducible deterministic result.
 - Within that original output, paths were sorted ascending by variance and then by archive path to break ties; the first 86 entries were retained.
-- Low variance is only a triage signal. Human review through the committed contact sheets remains authoritative for context.
+- Low variance is only a triage signal. Human review occurred in the isolated archive workspace; contact sheets are not retained in the public repository because redistribution rights are unresolved.
 - Reproduction blocker: regenerate this ledger with a committed scoring tool that pins the decoder version, resampling filter, alpha background, color-profile policy, numeric precision, and display rounding before treating the cutoff as repeatable evidence.
 
 | Rank | Archive path | Mean RGB variance |

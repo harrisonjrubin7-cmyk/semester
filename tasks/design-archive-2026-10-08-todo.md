@@ -5,7 +5,8 @@
 - [x] Record archive SHA-256 and safe-extraction results.
 - [x] Inventory all 3,569 paths with type, size, hash, detail, duplicate group, and status.
 - [x] Parse every PDF page, presentation slide, spreadsheet sheet, Word paragraph, and decodable text/code file.
-- [x] Review raster assets through contact sheets and persist the 86 low-information flags with reproducible variance scores.
+- [x] Review raster assets in the isolated workspace and persist the 86 provisional low-information path/score records.
+- [ ] Regenerate raster scores with a committed, fully pinned normalization tool before treating the cutoff as reproducible evidence.
 - [x] Inspect archive index, Student Today, and All Screens atlas in an isolated browser session.
 - [x] Audit current route, design, persistence, policy, database, function, CI, and deployment authorities.
 - [x] Record the starting repository audit snapshot at `docs/implementation/design-archive/REPOSITORY-AUDIT.md`.

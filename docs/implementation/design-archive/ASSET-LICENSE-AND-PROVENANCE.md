@@ -11,4 +11,4 @@ Only assets with clear provenance may move into production. Presence in the arch
 | OpenStreetMap-derived material | Archive mentions OpenStreetMap; per-file attribution and downstream terms were not verified | Blocked pending attribution/license review |
 | Prototypes, charts, templates, code snippets | Third-party incorporation is not fully documented | Requirements/reference only; reimplement against repository authority |
 
-Before production use, record archive path/hash, creator/source/date, ownership or license, attribution/modification duties, approved surface/review date, and privacy review. No archive asset was copied into application or public-site output. Contact sheets under `evidence/` are audit artifacts only.
+Before production use, record archive path/hash, creator/source/date, ownership or license, attribution/modification duties, approved surface/review date, and privacy review. No archive asset was copied into application or public-site output. Raster contact sheets are not retained in the public repository; the original ZIP remains read-only outside tracked paths pending provenance clearance.
