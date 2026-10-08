@@ -223,11 +223,20 @@ returns table (
   can_request boolean, evidence text, next_safe_action text,
   classification text, provenance text, limitation text
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
+begin
+  if auth.uid() is null
+     or not private.has_capability('console:operate', 'platform', '')
+     or not private.has_capability('incident:communicate', 'platform', '') then
+    raise exception using errcode = '42501',
+      message = 'console:operate and incident:communicate at platform scope are required.';
+  end if;
+
+  return query
   with legacy as (
     select * from private.console_release_incidents_unbound(include_demo)
   ), bound as (
@@ -287,7 +296,8 @@ as $$
       else b.next_safe_action
     end,
     b.classification, b.provenance, b.limitation
-  from bound b
+  from bound b;
+end;
 $$;
 
 revoke all on function public.console_release_incidents(boolean) from public, anon;
@@ -311,11 +321,17 @@ returns table (
   owner text, due_at timestamptz, status text, next_step text, route text,
   source text, evidence text, limitation text, observed_at timestamptz
 )
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
+begin
+  if auth.uid() is null or not private.has_capability('console:operate', 'platform', '') then
+    raise exception using errcode = '42501', message = 'console:operate at platform scope is required.';
+  end if;
+
+  return query
   with latest as (
     select distinct on (e.gate) e.gate, e.status, e.evidence, e.source,
            e.commit_sha, e.deployment_id, e.rollback_ref, e.observed_at, e.expires_at
@@ -381,7 +397,8 @@ as $$
   )
   select * from private.console_command_center_release_unbound(include_demo)
   union all select * from mismatch
-  union all select * from authorization_gap
+  union all select * from authorization_gap;
+end;
 $$;
 
 revoke all on function public.console_command_center(boolean) from public, anon;
