@@ -36,7 +36,9 @@ describe('support reply notification', () => {
   it('keeps Resend unavailable until the explicit vendor-approval switch is true', () => {
     const entry = readFileSync(join(process.cwd(), '../supabase/functions/support-reply-notify/index.ts'), 'utf8');
     expect(entry).toMatch(/SUPPORT_NOTIFY_VENDOR_APPROVED'\) === 'true'/);
-    expect(entry).toMatch(/resendKey: supportVendorApproved && resendKey && supportSender \? resendKey : undefined/);
+    expect(entry).toMatch(/SUPPORT_NOTIFY_ACTIVATED_AT/);
+    expect(entry).toMatch(/want_not_before: supportActivatedAt/);
+    expect(entry).toMatch(/resendKey: supportVendorApproved && supportActivatedAt && resendKey && supportSender \? resendKey : undefined/);
   });
   it('sends a generic, idempotent hint without the reply body', async () => {
     const d = deps();

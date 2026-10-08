@@ -25,7 +25,7 @@ reading:
     billing-portal    PENDING THIS GATED RELEASE, verify_jwt off
     billing-webhook   ACTIVE, v32, verify_jwt off   platform
     lead-intake       ACTIVE, v32, verify_jwt off   platform
-    support-reply-notify ACTIVE, v5, verify_jwt off, delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending
+    support-reply-notify ACTIVE, v5, verify_jwt off, delivery PARKED by SUPPORT_NOTIFY_VENDOR_APPROVED and SUPPORT_NOTIFY_ACTIVATED_AT pending Resend vendor approval and executed terms/DPA; provider acceptance was reached in the 3 October 2026 UAT, but that historical exercise is not current activation and Outlook inbox receipt remains pending. A future approved release must record a fresh UTC activation instant so parked-period intents are cancelled rather than delivered as backlog
 
 The same release defines `support-ticket-retention`, daily at 05:43 UTC, to
 remove resolved or closed tickets after 180 days unless a legal hold applies.

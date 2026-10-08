@@ -182,6 +182,16 @@ begin
     pg_temp.error_as(tenant_who, 'select public.forget_my_support_tickets()')
       like '55006 %active legal hold%');
 
+  begin
+    delete from auth.users where id = tenant_who;
+    raise exception 'FAILED: direct auth-user deletion bypassed a snapshotted support tenant hold';
+  exception when sqlstate '55006' then
+    raise notice 'ok  direct auth-user deletion obeys the snapshotted support tenant hold';
+  end;
+  perform pg_temp.must('the blocked auth deletion preserves both account and support evidence',
+    exists (select 1 from auth.users where id = tenant_who)
+    and exists (select 1 from public.support_tickets where id = snapshot_ticket));
+
   perform set_config('request.jwt.claims', '{}'::text, true);
   update public.legal_holds
      set released_by = gen_random_uuid(), release_reason = 'Test release.'

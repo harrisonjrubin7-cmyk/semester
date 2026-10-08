@@ -133,6 +133,52 @@ begin
   end if;
 end $$;
 
+-- Activating a vendor must not release notices accumulated while delivery was
+-- parked. The Edge Function supplies the recorded activation instant on every
+-- claim. This transaction deletes older, still-pending intents before it can
+-- claim any newer work; a missing activation instant has no callable overload.
+drop function if exists public.claim_support_notifications(uuid, integer);
+create function public.claim_support_notifications(
+  want_message uuid, want_limit integer, want_not_before timestamptz
+)
+returns table (message_id uuid, ticket_id uuid, attempts integer, claim_id uuid)
+language sql volatile security invoker set search_path = '' as $$
+  with expired as (
+    delete from public.support_notification_outbox o
+     where want_not_before is not null
+       and o.queued_at < want_not_before
+       and o.accepted_at is null
+       and o.dead_lettered_at is null
+       and o.claim_id is null
+    returning o.message_id
+  ), due as (
+    select o.message_id
+      from public.support_notification_outbox o
+      join public.support_tickets t on t.id = o.ticket_id
+     where want_not_before is not null
+       and o.queued_at >= want_not_before
+       and t.email_notice_enabled
+       and o.accepted_at is null
+       and o.dead_lettered_at is null
+       and o.next_attempt_at <= now()
+       and (o.claimed_at is null or o.claimed_at < now() - interval '5 minutes')
+       and (want_message is null or o.message_id = want_message)
+     order by o.queued_at
+     limit greatest(1, least(coalesce(want_limit, 100), 100))
+     for update of o skip locked
+  ), claimed as (
+    update public.support_notification_outbox o
+       set claim_id = pg_catalog.gen_random_uuid(), claimed_at = now()
+      from due
+     where o.message_id = due.message_id
+    returning o.message_id, o.ticket_id, o.attempts, o.claim_id
+  )
+  select c.message_id, c.ticket_id, c.attempts, c.claim_id from claimed c;
+$$;
+
+revoke all on function public.claim_support_notifications(uuid, integer, timestamptz) from public, anon, authenticated;
+grant execute on function public.claim_support_notifications(uuid, integer, timestamptz) to service_role;
+
 revoke all on function public.open_support_ticket(text, text, text, jsonb, boolean) from public, anon;
 grant execute on function public.open_support_ticket(text, text, text, jsonb, boolean) to authenticated;
 
@@ -229,6 +275,58 @@ grant execute on function public.forget_my_support_tickets() to authenticated;
 
 comment on function public.forget_my_support_tickets() is
   'Deletes the caller''s classified support tickets unless a legal hold requires preservation; narrow deletion of legacy tickets needs evidence-backed classification, while whole-account erasure detaches and preserves them without retaining the auth account.';
+
+-- Every account-removal path eventually deletes auth.users, including paths
+-- that do not call erase_account. Strengthen the existing universal delete
+-- trigger so a snapshotted support-ticket tenant hold cannot be bypassed by a
+-- later membership change. Ambiguous pre-classifier evidence is detached
+-- before the foreign-key cascade; classified, unheld rows keep normal cascade
+-- semantics.
+create or replace function private.refuse_delete_while_held()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare ticket record;
+begin
+  lock table public.legal_holds in share mode;
+  if private.account_is_held(old.id)
+     or exists (
+       select 1 from public.support_tickets t
+        where t.student_id = old.id
+          and t.tenant_id is not null
+          and private.tenant_is_held(t.tenant_id)
+     ) then
+    raise exception 'This account or its support evidence is under a legal hold and cannot be deleted until the hold is released.'
+      using errcode = '55006';
+  end if;
+
+  for ticket in
+    select t.id from public.support_tickets t
+     where t.student_id = old.id and not t.retention_classified
+     order by t.id
+  loop
+    perform pg_catalog.pg_advisory_xact_lock(
+      pg_catalog.hashtextextended('support_notice:' || ticket.id::text, 0));
+  end loop;
+
+  delete from public.support_notification_outbox o
+   using public.support_tickets t
+   where t.student_id = old.id
+     and not t.retention_classified
+     and o.ticket_id = t.id;
+  update public.support_tickets
+     set retention_subject_id = student_id,
+         student_id = null,
+         email_notice_enabled = false,
+         status = 'closed'
+   where student_id = old.id
+     and not retention_classified;
+  return old;
+end $$;
+
+revoke all on function private.refuse_delete_while_held() from public, anon, authenticated;
 
 -- Preserved legacy evidence is not an active support conversation. Keep it
 -- out of the ordinary staff queue and thread reader, even for a staff member
