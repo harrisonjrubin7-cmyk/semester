@@ -8,7 +8,7 @@
 ## Coverage
 
 - 3,569 entries; 2,750 unique hashes.
-- 819 duplicate file instances in 568 duplicate groups.
+- 819 redundant copies after retaining one representative for each unique hash; 1,387 entries participate in 568 multi-file duplicate groups.
 - 0 parser errors; every entry has a type/hash inspection record.
 - ZIP safety checks found no absolute paths, traversal paths, symlinks, nested archives, or compression-bomb indicators.
 

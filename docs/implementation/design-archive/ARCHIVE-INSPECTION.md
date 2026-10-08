@@ -10,7 +10,7 @@ The ZIP is safe to inspect and has been exhaustively inventoried at the file lev
 | SHA-256 | `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086` |
 | Compressed / expanded | 290,435,515 / 468,325,459 bytes |
 | Entries / unique hashes | 3,569 / 2,750 |
-| Duplicate instances / groups | 819 / 568 |
+| Redundant copies / duplicate groups | 819 / 568 |
 | Parser failures | 0 |
 
 ## Safety and handling
