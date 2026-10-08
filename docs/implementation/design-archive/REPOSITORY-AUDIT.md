@@ -32,7 +32,7 @@ This source/configuration audit does not prove a deployed SHA, named-institution
 | Supabase policy declarations detected | 547 |
 | Edge Function directories excluding `_shared` | 16 |
 | GitHub workflow files | 13 |
-| Markdown files under `docs` before this evidence set | 1,725 |
+| Markdown files under `docs` at base `7b7603e105847e4ac62aeba0097e0f6e0600d6d1` | 1,717 |
 
 Counts describe files/declarations, not completed capabilities. One file can expose several routes, and catalog items can be states or outcomes.
 

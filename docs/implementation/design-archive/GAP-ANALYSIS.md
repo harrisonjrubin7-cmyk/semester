@@ -6,12 +6,12 @@ The archive is broader than the production surface, but much of that breadth is 
 
 | Status | Count |
 | --- | ---: |
-| existing/verified | 569 |
+| existing/verified | 564 |
 | existing/defective | 0 |
-| partial | 601 |
-| absent | 189 |
+| partial | 597 |
+| absent | 193 |
 | ambiguous | 0 |
-| conflict | 222 |
+| conflict | 227 |
 | externally blocked | 14 |
 | not applicable | 0 |
 | **Total** | **1,595** |
@@ -23,7 +23,7 @@ The archive is broader than the production surface, but much of that breadth is 
 1. **Catalog coherence:** 281, 362, and 673 screen totals are not normalized by identity, ownership, state, or reachability.
 2. **Staff/institutional surfaces:** prior row evidence concentrates gaps in administration, integrations, trust/privacy/security operations, and `/ops`.
 3. **Workflow proof:** approval, reconciliation, cutover, launch, and retirement need server transitions, retries, audit evidence, and owners.
-4. **Token conflicts:** 222 archive token rows do not map exactly to `tokens.css`; they need explicit mapping, not copying.
+4. **Token conflicts:** 227 archive token rows do not map exactly to `tokens.css`; they need explicit selector/value mapping, not copying.
 5. **Document authority:** overlaps lack consistent owner, approval, effective date, and implementation evidence.
 6. **Authority classification:** archive labels do not prove memberships or grants; private student segments belong in `student_context`, family access belongs in consent-scoped `family_grants`, and actual roles still require RLS, provisioning, access review, and revocation evidence.
 7. **Asset provenance:** fonts have OFL evidence; many images, icons, screenshots, and maps do not.
