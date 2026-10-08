@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 20868)
-Total output lines: 1408
-
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -661,7 +658,74 @@ function renderSchemas(): Record<string, string> {
   return Object.fromEntries(Object.entries(files).map(([p, s]) => [p, `${JSON.stringify(s, null, 2)}\n`]));
 }
 
-const ANNOTATIONS = new Set(['$sche…868 tokens truncated…(`${path}: matches ${hits} of oneOf, needs exactly 1`);
+const ANNOTATIONS = new Set(['$schema', '$id', 'title', 'description', '$comment']);
+const DATE_TIME = /^\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$/;
+
+const jsonType = (v: unknown): string => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
+
+/**
+ * The part of JSON Schema these files use, and nothing else. A keyword it
+ * does not know throws, so a schema cannot gain a constraint that this
+ * checker silently ignores.
+ */
+function schemaErrors(schema: Schema, value: unknown, registry: Map<string, Schema>, path = '$'): string[] {
+  const errs: string[] = [];
+  for (const [keyword, arg] of Object.entries(schema)) {
+    if (ANNOTATIONS.has(keyword) || keyword.startsWith('x-')) continue;
+    switch (keyword) {
+      case '$ref': {
+        const target = registry.get(arg as string);
+        if (!target) throw new Error(`unresolved $ref ${String(arg)}`);
+        errs.push(...schemaErrors(target, value, registry, path));
+        break;
+      }
+      case 'type': {
+        const t = jsonType(value);
+        const ok = arg === 'integer' ? Number.isInteger(value) : arg === 'number' ? t === 'number' : arg === t;
+        if (!ok) errs.push(`${path}: expected ${String(arg)}, got ${t}`);
+        break;
+      }
+      case 'const':
+        if (JSON.stringify(value) !== JSON.stringify(arg)) errs.push(`${path}: not the constant ${JSON.stringify(arg)}`);
+        break;
+      case 'enum':
+        if (!(arg as unknown[]).some((x) => JSON.stringify(x) === JSON.stringify(value))) errs.push(`${path}: not in the enum`);
+        break;
+      case 'pattern':
+        if (typeof value === 'string' && !new RegExp(arg as string).test(value)) errs.push(`${path}: does not match ${String(arg)}`);
+        break;
+      case 'minLength':
+        if (typeof value === 'string' && [...value].length < (arg as number)) errs.push(`${path}: shorter than ${String(arg)}`);
+        break;
+      case 'maxLength':
+        if (typeof value === 'string' && [...value].length > (arg as number)) errs.push(`${path}: longer than ${String(arg)}`);
+        break;
+      case 'minimum':
+        if (typeof value === 'number' && value < (arg as number)) errs.push(`${path}: below ${String(arg)}`);
+        break;
+      case 'format':
+        if (arg !== 'date-time') throw new Error(`unsupported format ${String(arg)}`);
+        if (typeof value === 'string' && !(DATE_TIME.test(value) && Number.isFinite(Date.parse(value)))) errs.push(`${path}: not an RFC 3339 date-time`);
+        break;
+      case 'required':
+        if (jsonType(value) === 'object') for (const k of arg as string[]) if (!(k in (value as object))) errs.push(`${path}: missing ${k}`);
+        break;
+      case 'properties':
+        if (jsonType(value) === 'object') {
+          for (const [k, sub] of Object.entries(arg as Record<string, Schema>)) {
+            if (k in (value as object)) errs.push(...schemaErrors(sub, (value as Record<string, unknown>)[k], registry, `${path}.${k}`));
+          }
+        }
+        break;
+      case 'allOf':
+        for (const sub of arg as Schema[]) errs.push(...schemaErrors(sub, value, registry, path));
+        break;
+      case 'anyOf':
+        if (!(arg as Schema[]).some((sub) => schemaErrors(sub, value, registry, path).length === 0)) errs.push(`${path}: matches none of anyOf`);
+        break;
+      case 'oneOf': {
+        const hits = (arg as Schema[]).filter((sub) => schemaErrors(sub, value, registry, path).length === 0).length;
+        if (hits !== 1) errs.push(`${path}: matches ${hits} of oneOf, needs exactly 1`);
         break;
       }
       default:
