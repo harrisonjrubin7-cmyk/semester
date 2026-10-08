@@ -652,6 +652,14 @@ declare
     'console_break_glass(include_demo boolean)',
     'console_customers(include_demo boolean)',
 
+    -- The approval-bound dead-letter operation in 20261008190000. It requires
+    -- console:operate, fresh MFA and a current two-person projection-replay
+    -- approval bound to the exact tenant, event and consumer. Its focused
+    -- suite proves wrong tenant/consumer, stale MFA and audit failure refuse
+    -- the reset. This is the human control path; worker transitions stay in
+    -- `private` and service-role only.
+    'replay_domain_event(want_event uuid, want_consumer text, want_approval uuid, want_correlation text)',
+
     -- The nine in 20260929300000_registration_transaction.sql. The three
     -- student writers act only on the caller's own enrollment at the
     -- caller's own school, behind writeback.registration_submit and

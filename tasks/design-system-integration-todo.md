@@ -164,6 +164,28 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Run `tsc -b`, lint, `check:university` and the production build; all pass with only existing warning baselines.
 - [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
 
+## 2026-10-08 first registered projector transaction — runner pass 3, slice 11
+
+- [x] Fetch `origin/main` and confirm `32dd8241` contains no equivalent projector transaction, read model, focused suite or migration-version collision.
+- [x] Register one active, school-scoped `ops_tenant_entitlements` version-1 read model using the existing `tenant:configure` capability vocabulary.
+- [x] Keep the materialized state private and service-only; store only policy id, capability, bounded state/tombstone, revision and source cursor.
+- [x] Validate the exact existing `entitlement.changed` version-1 envelope and payload before any effect is written.
+- [x] Apply effect, existing consumer receipt, monotonic watermark and invalidation in one transaction.
+- [x] Settle delayed earlier events as `skipped` so they cannot regress a newer state, tombstone, watermark or invalidation stream.
+- [x] Preserve repeat safety and rollback the whole transaction on malformed input.
+- [x] Keep worker, cron, public read API, UI and additional producers/projectors outside this slice.
+- [x] Add the read model and current outbox/projection behavior to `RETENTION.md`; keep the sweep and activation gate open.
+- [x] Run the focused PostgreSQL 17 suite with migration reapply: 206 migrations, 369 unchanged table fingerprints and 4/4 checks passed.
+- [x] Run adjacent grants, RLS, indexes, projection-foundation, outbox and producer suites; add the already guarded replay RPC to the deliberate authenticated-function allowlist; final combined run passed 53/53 checks.
+
+### Verification for runner pass 3 / slice 11
+
+- [x] Focused migration, retention, privacy, platform-reference, role-launch and control-facts guards passed: 208/208 plus 57/57 generated-register tests.
+- [x] `pnpm exec tsc -b`, lint, `check:university`, production build, `design-system:check` and `design-system:report` passed; lint/design retained only their existing warning baselines.
+- [ ] `pnpm test` — not green: before the long run was stopped it found the known mounted `.semester-reference` repository-map refusal and two generated-register drifts. The two registers were regenerated and their focused tests pass; `developers.test.ts` still fails only because the uncommitted runner mount is intentionally absent from the repository map. No slice-focused test failed.
+- [ ] `pnpm run test:shuffle` — not run after the ordered gate remained non-green for the recorded mounted-directory refusal.
+- [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
+
 ### Verification for pass 4
 
 - [x] Generator validation: exactly 281 archive routes, 589 current catalog rows and 122 reconciled capability rows; 281 unique emitted route keys.

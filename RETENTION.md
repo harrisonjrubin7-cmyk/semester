@@ -49,8 +49,9 @@ What was missing is the sentence saying so, and the list of the exceptions.
 | `gateway_audit`, `gateway_intelligence_audit` | **180 days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; metadata only, never source text, prompts or model prose |
 | `gateway_audit.correlation_id` | **With the row — 180 days** | `private.gateway_purge_journal()` as above; the column is added by `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | An opaque request id, held to the gateway's own pattern by a check constraint; never a session token or a name |
 | `domain_outbox_events`, `domain_event_receipts` | **No sweep yet — stated below** | `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | Every event row declares its retention class (operational, student record, audit or commercial); the sweep that reads it is owed before the first producer writes in production (ADR 0008) |
-| `read_model_registry`, `projection_watermark`, `projection_rebuild_run` | **Kept while the projection or read model exists; no sweep, and none needed yet** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per read model version, per projection version and per rebuild. They hold names, versions, timestamps and a sanitized error of at most 500 characters, no person's content. Nothing writes them yet |
-| `projection_invalidation` | **No sweep yet — stated below** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per namespace refresh a projection asks for; ids and a reason only. It grows with every projection write, so a sweep is owed with the worker (backlog P1-03), before anything writes it |
+| `read_model_registry`, `projection_watermark`, `projection_rebuild_run` | **Kept while the projection or read model exists; no sweep, and none needed yet** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per read model version, per projection version and per rebuild. They hold names, versions, timestamps and a sanitized error of at most 500 characters, no person's content. The tenant-entitlement projector now advances one watermark; no worker is enabled |
+| `ops_tenant_entitlement_projection` | **Current row kept while the school exists; replaced in place by newer events** | `supabase/migrations/20261008200000_tenant_entitlement_projection.sql` | One bounded policy id, capability, state/tombstone and source event cursor per school capability. No person, role/cohort list, reason or source prose. The school foreign key cascades on removal |
+| `projection_invalidation` | **No sweep yet — stated below** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per namespace refresh a projection asks for; ids and a reason only. It grows with every applied projection write, so a sweep is owed before the projector worker is enabled |
 | `gateway_rate_limit` | **One day** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep of fixed-window counters |
 | `direct_rate_limit` | **The limit's own window — at most one day; with the account, by foreign key** | `private.take_direct_rate_limit()` in `supabase/migrations/20260928230000_direct_rate_limits.sql` | On write: each call deletes that account's expired hits for the bucket, plus up to 200 day-old hits from anybody. Holds an account id, a table name and a time — never what was written |
 | `gateway_intelligence_action` | **Unconfirmed actions: one day after expiry; claimed actions: ninety days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; action bodies are encrypted and single-use |
@@ -481,24 +482,20 @@ evidence-retention decision. There is no automatic sweep yet. Account deletion
 clears the recorder reference and leaves the operational record; notice bodies and
 recipients remain in `governance_incident_notices` under that table's policy.
 
-**The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
-`domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
-are service-role only and, as of that migration, empty: no producer writes to
-them yet. Each event row declares a retention class precisely so that a sweep
-can apply this file's policy without reading the payload — but the sweep is
-not written, and a published row is kept until it is. It is owed before the
-first producer lands, and ADR 0008 says so; this entry is so that the producer
-cannot land without somebody reading this.
+**The outbox, receipts and invalidations: no sweep yet.**
+`domain_outbox_events`, `domain_event_receipts` and `projection_invalidation`
+are service-role only. The feature-policy audit trigger now writes one bounded
+`entitlement.changed` event in the same transaction as its source and audit;
+the private tenant-entitlement apply function can settle that event into a private read
+model, receipt, watermark and invalidation in one transaction. No worker or
+schedule invokes the projector yet, and no production operation is inferred.
 
-The first producer has now been written — the productivity command service,
-which appends an event in the same transaction as every change
-(`app/server/productivity/`, `private.productivity_commit`) — but it is not
-mounted, so the tables are still empty. **The sweep is owed before it is.** It
-also wants a retry delay (next_attempt_at) and SKIP LOCKED before a
-publisher runs against a real bus; `docs/API-PLATFORM.md` §4.4 says what.
-`20261006130000_projection_foundation.sql` has since added the columns for it (claim_id,
-claimed_at, next_attempt_at) and four projection tables, all service-role only; nothing
-reads or writes them yet, so the sweep and the claim are still owed (P1-03).
+Each event row declares a retention class so a future sweep can apply this
+file's policy without reading its payload. The sweep is still not written, so
+published events, receipts and invalidations are kept indefinitely. Claim,
+bounded retry, dead-letter and approved replay operations exist, but the sweep
+is owed before the projector worker is enabled. `docs/API-PLATFORM.md` §4.4
+and ADR 0008 remain the operating boundary.
 
 ## Legal holds
 

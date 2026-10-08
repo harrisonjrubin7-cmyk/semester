@@ -12,14 +12,14 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 204 |
+| Migration files | 206 |
 | Tables created in `public` and not later dropped | 333 |
 | … of which enable row-level security in a migration | 333 |
-| Tables created in `private` and not later dropped | 35 |
-| … of which enable row-level security in a migration | 35 |
+| Tables created in `private` and not later dropped | 36 |
+| … of which enable row-level security in a migration | 36 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 92 |
+| Tables with RLS found and no literal policy statement | 93 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-131 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+133 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -158,6 +158,8 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/supportshares.check.sql` | an athlete's share with academic support. |
 | `supabase/sync.check.sql` | Two devices on one account, without needing two devices. |
 | `supabase/tenancy.check.sql` | Which university the server believes you belong to. |
+| `supabase/tenant-entitlement-projection.check.sql` | First registered projector transaction (P1-04). |
+| `supabase/tenant-feature-policy-events.check.sql` | The first SQL-native producer: feature-policy audit and outbox facts are one atomic, bounded and tenant-scoped change. |
 | `supabase/tenant-plan.check.sql` | The plan a school is on (tenant_plan) and its history. |
 | `supabase/tenant-rollout.check.sql` | Where a school stands in the pilot-to-production lifecycle (tenant_rollout), the evidence behind each move, and the history. |
 | `supabase/tenant-sso-policy.check.sql` | Whether a school requires campus SSO (tenant_sso_policy), its history, and the launch facts that read it. |

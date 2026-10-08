@@ -1,10 +1,24 @@
 # Handoff integration status
 
-**Automation pass** 2 of 120 · **Integration slice** 10 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `32dd8241`
+**Automation pass** 3 of 120 · **Integration slice** 11 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `32dd8241`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer through the P1-02 helper: feature-policy changes now emit one bounded event atomically with the existing audit row. The worker, scheduler, projected models and UI remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer. Runner pass 3 adds the first registered projector transaction and private read model, with atomic receipt/watermark/invalidation and stale-event suppression. The worker, scheduler, public query surface and UI remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in runner pass 3 / slice 11
+
+- The pre-slice fetch observed `origin/main` unchanged at `32dd8241`; it contains no equivalent projector transaction, read model, focused suite or migration version.
+- `20261008200000_tenant_entitlement_projection.sql` registers `ops_tenant_entitlements` version 1 and adds a private, school-scoped, service-only materialization of the bounded `entitlement.changed` event. It stores no reason, actor, role/cohort list or source prose.
+- `private.apply_tenant_entitlement_event` validates the exact producer contract, applies current state or a tombstone, writes the existing consumer receipt, advances but never regresses the watermark and writes an invalidation only for a material change, all in one transaction.
+- The source timestamp plus event UUID orders deliveries. An earlier delayed event is settled as `skipped`, cannot overwrite a newer state and does not create a spurious invalidation.
+- `supabase/check.sh tenant-entitlement-projection` passed 4/4 focused checks on PostgreSQL 17. With `SEMESTER_CHECK_REAPPLY=1`, all 206 migrations reapplied with the schema and all 369 table fingerprints unchanged before the four checks passed again.
+- The adjacent grant, RLS, index, foundation, outbox and producer suites passed with the projector suite, 53/53 checks. The first run identified that the already guarded replay RPC was absent from the authenticated-function allowlist; the allowlist now documents that exact capability/MFA/two-person-approval path and the grant suite passes.
+- `RETENTION.md` now covers the new read model and corrects the old empty-outbox language. Event, receipt and invalidation sweeps remain absent and are a gate before worker activation.
+- Focused repository guards passed 208/208; generated role-launch/control-facts guards passed 57/57 after their repository-owned outputs were refreshed.
+- TypeScript, lint, university typecheck, production build, design-system check and design-system report pass. Existing lint/design warning baselines remain unchanged.
+- The ordered full suite was not green: it first found the known `.semester-reference` repository-map refusal plus the two now-refreshed registers and was stopped during its long tail. The focused register reruns are green; `developers.test.ts` still fails only on the runner mount. Shuffle was not run after that unresolved repository-local gate. No slice-focused test failed.
+- HawkScan cannot run (`hawk runtime=false`, `HAWK_API_KEY=false`). No DAST pass is claimed and that release gate remains open.
 
 ## Evidence locked in runner pass 2 / slice 10
 
@@ -121,7 +135,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The focused PostgreSQL 17 proof, reapply/idempotency gate, ordered/shuffled focused guards, type checks, lint and production build are green. Commit the coherent producer slice. P1-04 worker/cron/additional-producer/read-model/UI work remains separate.
+The focused PostgreSQL 17 proof, migration reapply/idempotency gate, 53 adjacent SQL checks, focused repository guards, generated-register guards, TypeScript, lint, university typecheck, production build and design-system gates are green. The full-suite mounted-directory refusal, shuffle and HawkScan remain explicitly open. Commit the coherent slice without claiming those gates. Worker/cron/public-read/additional-projector/UI work remains separate.
 
 ## External gates kept open
 
@@ -129,4 +143,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Define and verify one registered projector's atomic effect/receipt/watermark/invalidation transaction before exposing an `ops-projector` worker endpoint or enabling cron. Do not let a worker claim events it cannot safely apply.
+Add a bounded, unmounted `ops-projector` worker endpoint that dispatches only registered event handlers and cannot enable cron. Keep retention sweep design, scheduler activation, deployment and operational evidence as separate later gates.

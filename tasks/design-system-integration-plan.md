@@ -136,6 +136,16 @@ The event carries only the policy id, capability, action, bounded state and chan
 
 `tenant-feature-policy-events.check.sql` proves the envelope and payload boundary, one event per audit fact, unchanged behavior for other policy tables, client refusal and atomic rollback across policy/audit/outbox. This slice does not enable cron, a worker, a projected model, a read API or UI. The next dependency-ready increment is the projector registry/handler transaction contract required before an `ops-projector` endpoint can claim and settle events safely.
 
+## First registered projector transaction — automation runner pass 3, slice 11
+
+`origin/main` remains `32dd8241`; no equivalent projector transaction, read model, check suite or migration version landed. `20261008200000_tenant_entitlement_projection.sql` now registers `ops_tenant_entitlements` version 1 and adds one private, school-scoped operational read model for the existing `entitlement.changed` event. It does not expose the model to a client role and does not add a worker, cron, public read API or UI.
+
+`private.apply_tenant_entitlement_event` accepts only a currently claimed version-1 event with the exact bounded producer envelope. In one transaction it applies the current state or tombstone, writes the existing per-consumer receipt, advances but never regresses the watermark, and writes an invalidation only when materialized state changed. The event timestamp plus UUID is the ordering key, so a delayed earlier event settles as `skipped` instead of resurrecting or overwriting newer tenant policy. Free-text reason, actor, role and cohort data remain absent from the read model.
+
+`tenant-entitlement-projection.check.sql` proves service-only access, active registration, atomic effect/receipt/watermark/invalidation, repeated-delivery idempotency, delayed-event suppression and rollback on malformed state. PostgreSQL 17 applied all 206 migrations; the reapply gate left the schema and all 369 table fingerprints unchanged; all four focused checks passed. The adjacent grant, RLS, index, foundation, outbox and producer suites pass 53/53 checks. That run also exposed the earlier replay RPC's missing deliberate entry in the authenticated-function allowlist; `grants.check.sql` now names the already capability/MFA/approval-gated operation instead of leaving its grant unexplained. The retention register covers the read model and states that event, receipt and invalidation sweeps remain owed before a projector worker is enabled.
+
+This closes the handler-transaction prerequisite, not P1-04 as a whole. An `ops-projector` worker, authentication/dispatch boundary, scheduler, retention sweep, additional producers/projectors, read API and UI remain separate. The next dependency-ready slice is a bounded, unmounted worker endpoint that dispatches only registered handlers and cannot enable cron; retention and operational evidence remain prerequisites to activation.
+
 ## What was read
 
 - Root `CLAUDE.md`.
