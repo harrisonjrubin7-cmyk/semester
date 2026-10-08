@@ -90,7 +90,7 @@ replaced, before Semester is a company above that threshold.
 | Licence, security and provenance review | supplychain.test.ts (licence, registry, integrity) |
 | Approved, or rejected | supplychain.ts NAMED / ACTIONS — a diff a reviewer must approve |
 | Locked version added | package-lock.json, installed by npm ci |
-| CI scan and test | ci.yml — npm audit --audit-level=high, the suite |
+| CI scan and test | ci.yml — pinned OSV-Scanner over every lockfile, npm audit --audit-level=high, actionlint, the suite |
 | SBOM updated | pages.yml — npm run sbom on every deploy |
 | Release artifact and provenance retained | supply-chain.yml — signed build provenance and SBOM attestation for the main bundle (not yet the Pages bytes: infra/README.md R-3) |
 | Advisory monitoring | .github/dependabot.yml |
