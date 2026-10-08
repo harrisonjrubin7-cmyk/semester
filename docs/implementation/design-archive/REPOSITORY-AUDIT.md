@@ -1,4 +1,4 @@
-# Current repository audit
+# Repository audit snapshot
 
 ## Identity and claim ceiling
 
@@ -18,7 +18,9 @@ This source/configuration audit does not prove a deployed SHA, named-institution
 - Preserved unrelated active task files and older integration plans.
 - Inspected the latest 30 commits. The tip includes access-saga storage, domain-event/outbox writing, policy changes, component registration, and architecture reconciliation. These are foundations, not permission to duplicate them.
 
-## Current source inventory
+## Snapshot source inventory
+
+The following counts describe the recorded starting SHA, not the later pull-request head. The branch subsequently incorporated `origin/main@32dd82410700680a4759174def31d0c5069f01eb`; a fresh inventory and classification pass against the reviewed tree is required before Phase 1.
 
 | Surface | Count |
 | --- | ---: |
@@ -51,4 +53,4 @@ Archive concepts do not establish credentials, approval, or activation. AI/provi
 
 `docs/master/REPO_AUDIT.md` supplies row-level evidence for 589 screens and 319 workflow steps at its older base. The new matrix reuses citations conservatively and adds 84 archive screens without promoting the audit into runtime proof.
 
-The prescribed build/test suite and a current production-screen browser baseline remain unrun; archive route inventories are not normalized; external approvals, providers, UAT, and tenant operation remain separate gates. The bundled runtime supplied Node but no npm executable, so no dependency install was performed in this documentation-only phase.
+The prescribed build/test suite and a current production-screen browser baseline remain unrun; archive route inventories are not normalized; external approvals, providers, UAT, and tenant operation remain separate gates. The bundled runtime supplied Node but no npm executable, so no dependency install was performed in this documentation-only phase. Because the repository advanced after the snapshot, this audit must also be refreshed before its classifications are used for implementation planning.

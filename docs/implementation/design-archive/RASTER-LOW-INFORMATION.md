@@ -1,13 +1,15 @@
 # Low-information raster review ledger
 
-This ledger makes the archive raster triage reproducible. It records the 86 lowest-information raster entries used for follow-up review; it does not assert that an image is unusable or unlicensed.
+This ledger preserves the archive raster triage output. It records the 86 lowest-information raster entries used for follow-up review; it does not assert that an image is unusable or unlicensed.
 
 ## Method
 
 - Source: the 248 raster entries in `The Main Semester design system (2) copy 4.zip` at SHA-256 `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`.
 - Each image was decoded, converted to RGB, normalized to 64 × 64 pixels, and scored by the mean population variance of its red, green, and blue channels.
-- The flag is deterministic: sort ascending by variance, then by archive path to break ties, and retain the first 86 entries.
+- The original one-off scoring environment did not retain its decoder/library version, resize filter, alpha-compositing rule, color-profile handling, or intermediate rounding behavior. These recorded values are therefore preserved triage evidence, not a reproducible deterministic result.
+- Within that original output, paths were sorted ascending by variance and then by archive path to break ties; the first 86 entries were retained.
 - Low variance is only a triage signal. Human review through the committed contact sheets remains authoritative for context.
+- Reproduction blocker: regenerate this ledger with a committed scoring tool that pins the decoder version, resampling filter, alpha background, color-profile policy, numeric precision, and display rounding before treating the cutoff as repeatable evidence.
 
 | Rank | Archive path | Mean RGB variance |
 | ---: | --- | ---: |

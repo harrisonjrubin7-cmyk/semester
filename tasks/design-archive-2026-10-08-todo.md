@@ -8,8 +8,9 @@
 - [x] Review raster assets through contact sheets and persist the 86 low-information flags with reproducible variance scores.
 - [x] Inspect archive index, Student Today, and All Screens atlas in an isolated browser session.
 - [x] Audit current route, design, persistence, policy, database, function, CI, and deployment authorities.
-- [x] Record the current repository audit at `docs/implementation/design-archive/REPOSITORY-AUDIT.md`.
-- [x] Reconcile the 673 screen and 319 workflow catalog against the current repository audit.
+- [x] Record the starting repository audit snapshot at `docs/implementation/design-archive/REPOSITORY-AUDIT.md`.
+- [x] Reconcile the 673 screen and 319 workflow catalog against the starting audit snapshot.
+- [ ] Refresh repository inventory and matrix classifications against the reviewed tree before Phase 1.
 - [x] Create the 1,595-row canonical requirements ledger.
 - [x] Record architecture, provenance, decisions, conflicts, gaps, and roadmap.
 - [ ] Reconcile every route identity across the 281-route handoff, 362-route atlas, and 673-screen catalog.
