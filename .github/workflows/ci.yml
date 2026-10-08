@@ -541,6 +541,7 @@ jobs:
       # nine files that could not run twice, and one whose partial re-run left
       # an older function behind that help-requests.check.sql then caught.
       - name: Check the database policies
+        if: always()
         env:
           SEMESTER_CHECK_REAPPLY: '1'
         run: supabase/policy-evidence.sh

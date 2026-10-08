@@ -101,7 +101,7 @@ describe('PostgreSQL policy evidence', () => {
 
   it('uploads the report even when the policy gate fails', () => {
     const workflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
-    expect(workflow).toContain('run: supabase/policy-evidence.sh');
+    expect(workflow).toMatch(/name: Check the database policies[\s\S]*?if: always\(\)[\s\S]*?run: supabase\/policy-evidence\.sh/);
     expect(workflow).toMatch(/name: Keep the PostgreSQL policy evidence[\s\S]*if: always\(\)/);
     expect(workflow).toContain('pg17-policy-evidence-${{ github.sha }}');
     expect(workflow).toContain('if-no-files-found: error');
