@@ -6,24 +6,26 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "apps/api"))
-
-from app.core.database import Base, SessionLocal, engine
-from app.core.security import hash_password
-from app.models.entities import (
-    CalendarEvent,
-    Citation,
-    Course,
-    ReviewStatus,
-    SourceChunk,
-    SourceDocument,
-    StudyAsset,
-    User,
-)
-from sqlalchemy import select
 
 
 def main() -> None:
+    sys.path.insert(0, str(ROOT / "apps/api"))
+
+    from sqlalchemy import select
+
+    from app.core.database import Base, SessionLocal, engine
+    from app.core.security import hash_password
+    from app.models.entities import (
+        CalendarEvent,
+        Citation,
+        Course,
+        ReviewStatus,
+        SourceChunk,
+        SourceDocument,
+        StudyAsset,
+        User,
+    )
+
     Base.metadata.create_all(engine)
     db = SessionLocal()
     email = os.getenv("DEMO_EMAIL", "student@example.com")
