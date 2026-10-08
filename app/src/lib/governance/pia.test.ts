@@ -92,7 +92,7 @@ describe('the privacy impact assessment', () => {
     const c = coverage();
     expect(c.assessed + c.owed).toBe(ASSESSMENTS.length + OWED.length);
     expect(c.heldAnswers + c.writtenAnswers).toBe(ASSESSMENTS.length * QUESTION_IDS.length);
-    expect(c).toEqual({ assessed: 7, owed: 6, heldAnswers: 46, writtenAnswers: 31 });
+    expect(c).toEqual({ assessed: 7, owed: 7, heldAnswers: 46, writtenAnswers: 31 });
   });
 
   it('would count an unheld answer as written, and a held one as held (control)', () => {

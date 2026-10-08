@@ -25,7 +25,7 @@ Semester already has a large privacy document set. This pack does **not** restat
 | Guardian/minor | `docs/security/guardian-data-model.md`, `docs/SUPPORTER-FAMILY-PRIVACY-MODEL.md` | Under-13 and dual-enrollment open |
 | DSR | `docs/DATA-RIGHTS-REQUEST-RUNBOOK.md`, `data_subject_request` table | No screen, no owner |
 | Subprocessors | `docs/SUBPROCESSORS.md` (generated from `app/src/lib/trust/subprocessors.ts`) | No DPAs signed |
-| PIA | `docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md` (generated from `app/src/lib/governance/pia.ts`) | 6 surfaces owed |
+| PIA | `docs/operating-model/PRIVACY-IMPACT-ASSESSMENT.md` (generated from `app/src/lib/governance/pia.ts`) | 7 surfaces owed |
 | Incident | `SECURITY.md`, `docs/trust/INCIDENT-RESPONSE-PLAN.md` | Statutory notification not verified |
 | Counsel queue | `LEGAL-REVIEW-QUEUE.md`, `docs/COUNSEL-BRIEF.md` | Privacy-operations rows added with this pack |
 
