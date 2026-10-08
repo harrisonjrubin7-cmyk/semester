@@ -287,7 +287,7 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [x] Pass design-system equivalents: 9 token tests, 69 check tests and 96 report-contract tests; zero violations and 86 existing ledgered warnings.
 - [ ] Connect this envelope to Console UI — intentionally deferred to the next vertical slice so this server contract remains independently reviewable.
 - [ ] Scheduler/secret/deployment/monitoring activation — remains external and separately authorized; no production operation is claimed.
-- [ ] HawkScan DAST — preflight stopped because the `hawk` executable is absent. Local configured credentials were detected but not read; no scan or pass is claimed.
+- [ ] HawkScan DAST — post-commit preflight stopped because the `hawk` executable is absent and `HAWK_API_KEY` is unset for the headless scan. No credential file was read; no scan or pass is claimed.
 
 ## Earlier integration baseline preserved
 

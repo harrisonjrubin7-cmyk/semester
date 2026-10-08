@@ -16,7 +16,7 @@ Phase 0 reconciliation is complete for the currently identified archive populati
 - PostgreSQL 17 applies all 211 migrations twice with 370 table fingerprints unchanged. Seven focused/adjacent suites pass 52/52 checks across the reader, grants, RLS coverage, foundation, both projectors and worker. Focused repository/register guards pass 35/35 tests.
 - TypeScript, lint, university typecheck and the production build pass; lint retains three existing warnings. Design-system equivalents pass 9 token tests, 69 check tests and 96 report-contract tests with zero violations and the existing 86 warnings. The package wrappers cannot invoke their nested `npm`/`npx` binaries in this runner, so those exact wrapper invocations are not claimed.
 - No Console consumer, action control, worker schedule, secret, deployment or production execution was added.
-- HawkScan preflight detected configured local credentials but stopped because the `hawk` executable is absent. No scan or security pass is claimed.
+- Post-commit HawkScan preflight stopped because the `hawk` executable is absent and `HAWK_API_KEY` is unset for the headless scan. No credential file was read; no scan or security pass is claimed.
 
 ## Evidence locked in automation pass 6 / slice 14
 
