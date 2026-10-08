@@ -277,8 +277,13 @@ begin
       then 'A deployment is recorded, but no executed approval is bound to its exact commit.'
       else b.customer_impact end,
     b.communication_status, b.last_notice_at, b.next_update_at,
-    case when b.item_kind = 'incident' and b.exact_approval_status is not null
-      then b.exact_approval_status else b.rollback_status end,
+    case
+      when b.item_kind = 'incident' and b.exact_approval_status is not null
+        then b.exact_approval_status
+      when b.item_kind = 'incident' and b.rollback_status in ('pending', 'approved', 'executed', 'expired', 'rejected')
+        then case when b.state = 'rollback' then 'documented' else 'not_requested' end
+      else b.rollback_status
+    end,
     b.release_commit, b.deployment_source, b.deployment_id, b.observed_at, b.expires_at,
     b.exact_approval_id, b.exact_approval_status, b.can_request, b.evidence,
     case
