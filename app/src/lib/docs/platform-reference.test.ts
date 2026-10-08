@@ -371,6 +371,7 @@ function findEventUses(files: readonly { path: string; text: string }[]): EventU
     if (/\bimplements\s+(?:OutboxStore|ReceiptLedger)\b/.test(text)) why.push('implements a store');
     if (/from\s+['"][^'"]*institution\/src\/events(?:\.ts)?['"]/.test(text) || (path.startsWith('packages/institution/src/') && /from\s+['"]\.\/events(?:\.ts)?['"]/.test(text) && !path.endsWith('/index.ts'))) why.push('imports events.ts');
     if (/insert\s+into\s+private\.domain_(?:outbox_events|event_receipts)/i.test(text)) why.push('inserts into the outbox tables');
+    if (/(?:perform|select)\s+private\.emit_domain_event\s*\(/i.test(text)) why.push('emits through the SQL helper');
     if (why.length) out.push({ file: path, why: why.join(', ') });
   }
   return out;
@@ -1345,15 +1346,16 @@ describe('EVENTS.md and its schemas (generated)', () => {
     expect(findEventUses([{ path: 'a.ts', text: 'const e = makeEvent({})' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'b.ts', text: "import { x } from '../../packages/institution/src/events.ts'" }])).toHaveLength(1);
     expect(findEventUses([{ path: 'c.sql', text: 'insert into private.domain_outbox_events (id) values (1)' }])).toHaveLength(1);
+    expect(findEventUses([{ path: 'producer.sql', text: 'perform private.emit_domain_event(' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'd.ts', text: 'class A implements OutboxStore {}' }])).toHaveLength(1);
     expect(findEventUses([{ path: 'e.ts', text: 'the domain outbox and drainOutbox exist, and makeEvent is a function' }])).toEqual([]);
     expect(findEventUses([{ path: 'packages/institution/src/index.ts', text: "export * from './events.ts'" }])).toEqual([]);
   });
 
   it('the repository has exactly the producers the page lists, none mounted and none published', () => {
-    // The productivity command service (PR 1175) is the one producer: it builds events, and a migration function
-    // writes them to the outbox in the command's transaction. One route imports it, switched off unless a deployment
-    // sets SEMESTER_PRODUCTIVITY=on, and nothing calls drainOutbox.
+    // The productivity command service (PR 1175) builds events, and migration functions write those plus the
+    // feature-policy producer's bounded events to the outbox in each command's transaction. One route imports the
+    // productivity producer, switched off unless a deployment sets SEMESTER_PRODUCTIVITY=on; nothing calls drainOutbox.
     // When that changes this goes red, and the page's status, the event-consumer guide and the example's README
     // (all of which say "no running code writes to the outbox") are revisited in the same change.
     const uses = repoEventUses();
@@ -1373,6 +1375,8 @@ describe('EVENTS.md and its schemas (generated)', () => {
       'supabase/migrations/20261008183934_emit_domain_event.sql',
       // Not a producer: P1-03 writes only consumer receipts while settling or dead-lettering an existing event.
       'supabase/migrations/20261008190000_projection_outbox_operations.sql',
+      // The first SQL-native caller of the helper: one feature-policy audit fact emits one bounded event.
+      'supabase/migrations/20261008193000_tenant_feature_policy_events.sql',
     ]);
     const facts = producerFactsOf(uses, repoCodeFiles());
     expect(facts.dirs).toEqual(['app/server/productivity', 'packages/platform']);

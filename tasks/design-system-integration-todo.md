@@ -149,6 +149,21 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] `npm run test:shuffle`, `npm run design-system:check`, and `npm run design-system:report` — not run in this backend-only slice; the prior full ordered suite also remains non-green for the recorded unrelated failures.
 - [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
 
+## 2026-10-08 first SQL-native domain producer — runner pass 2, slice 10
+
+- [x] Fetch `origin/main` before and after work; final `32dd8241` changes seventeen non-overlapping app/vite files and contains no equivalent producer.
+- [x] Keep the projector worker disabled until a registered handler can apply an effect, receipt, watermark and invalidation atomically.
+- [x] Extend the existing feature-policy audit trigger rather than creating a second command path or audit table.
+- [x] Emit one existing-catalog `entitlement.changed` event per committed feature-policy audit fact, bound by audit UUID correlation and idempotency keys.
+- [x] Keep free-text reason, permitted roles/cohorts and actor details out of the payload; delete emits a bounded tombstone.
+- [x] Preserve audit-only behavior for AI policy, approved-source and consent rows.
+- [x] Prove insert/update/delete, bounded payload, one-to-one audit binding, client refusal and policy/audit/outbox rollback in PostgreSQL 17.
+- [x] Reapply all 205 migrations without schema or data-fingerprint drift; rerun the five producer checks.
+- [x] Run adjacent intelligence-policy, feature-cohort and governance suites — 149/149 checks passed in addition to the producer suite.
+- [x] Regenerate the event, roadmap and definer registers; ordered and shuffled focused guards each pass 104/104 tests.
+- [x] Run `tsc -b`, lint, `check:university` and the production build; all pass with only existing warning baselines.
+- [ ] HawkScan DAST — unavailable because the HawkScan runtime and `HAWK_API_KEY` are both absent; no scan is claimed and the release gate remains open.
+
 ### Verification for pass 4
 
 - [x] Generator validation: exactly 281 archive routes, 589 current catalog rows and 122 reconciled capability rows; 281 unique emitted route keys.

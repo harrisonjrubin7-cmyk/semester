@@ -87,7 +87,8 @@ which is how "which audit row proves this event" is answered.
 
 ## Not done
 
-- No producer writes to the production outbox yet (ADR 0008's own status).
+- The production-gated productivity command path and the tenant feature-policy
+  trigger write bounded events, but no publisher or projector runs them.
 - A **retention sweep** for `private.domain_outbox_events` and
   `domain_event_receipts` is owed before any producer writes to them in
   production (`RETENTION.md`).

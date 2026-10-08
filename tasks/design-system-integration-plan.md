@@ -1,6 +1,6 @@
 # Design-system integration plan
 
-**Refreshed** 2026-10-08 · **Base** `origin/main` `e53128a6` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
+**Refreshed** 2026-10-08 · **Base** `origin/main` `32dd8241` · **Branch** `codex/complete-semester-integration-2026-10-08` · **Archive** `12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`
 
 This plan integrates the Semester design export into the existing product. It does not replace the app, the shell, the token system, or the component library. `tasks/plan.md` and `tasks/todo.md` are the finalization program and are left alone.
 
@@ -125,6 +125,16 @@ Phase 0 row reconciliation is complete for the currently identified archive popu
 The focused SQL suite `projection-outbox-operations.check.sql` covers client refusal, service access, due ordering, stale recovery, claim identity, atomic/idempotent completion, bounded retry, dead-letter receipts, approval binding, capability/MFA enforcement, replay idempotency and audit failure rollback. Repository-owned policy/reference registers were regenerated and their focused tests pass. TypeScript build, lint, university gateway typecheck and production build also pass; the full application suite progressed through the repository but ended with unrelated generated-map and timing/worker failures, which are recorded in the status page.
 
 P1-03 is **implemented, database-verified and committed locally**. A disposable PostgreSQL 17 runtime applied all 204 migrations and `supabase/check.sh projection-outbox-operations` passed all six focused checks. An idempotency run reapplied the migration set without changing the schema or any of 368 table fingerprints, then passed the focused checks again. Six focused TypeScript/register files passed 196/196 tests; `tsc -b`, lint and the university gateway typecheck passed, with only the existing lint warning baseline. HawkScan remains unavailable (`hawk runtime=false`, `HAWK_API_KEY=false`), so no DAST result is claimed. P1-04 remains a separate follow-up.
+
+## First SQL-native domain producer — automation runner pass 2, slice 10
+
+The worker side of P1-04 is not dependency-ready because no registered projector can safely settle a claimed event. The dependency-safe increment is therefore the first producer through `private.emit_domain_event`: `20261008193000_tenant_feature_policy_events.sql` extends the existing feature-policy audit trigger so one committed audit fact produces one bounded `entitlement.changed` outbox fact in the same transaction.
+
+The final collision check observed `origin/main` advance from `d9640e45` to `32dd8241`; its seventeen changed app/vite files do not overlap this migration, SQL check, event scan or integration-control evidence, and contain no equivalent producer.
+
+The event carries only the policy id, capability, action, bounded state and changed-field names. Free-text reason, role/cohort scope and actor details remain out of the payload. Its correlation and idempotency keys bind to the append-only audit-row UUID. Insert, update and delete are independently traceable; a delete is a bounded tombstone; other policy tables remain audit-only.
+
+`tenant-feature-policy-events.check.sql` proves the envelope and payload boundary, one event per audit fact, unchanged behavior for other policy tables, client refusal and atomic rollback across policy/audit/outbox. This slice does not enable cron, a worker, a projected model, a read API or UI. The next dependency-ready increment is the projector registry/handler transaction contract required before an `ops-projector` endpoint can claim and settle events safely.
 
 ## What was read
 

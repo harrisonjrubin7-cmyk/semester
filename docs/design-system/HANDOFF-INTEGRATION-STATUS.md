@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 9 of 120 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `d9640e45`
+**Automation pass** 2 of 120 · **Integration slice** 10 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `32dd8241`
 
 ## State
 
-Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies the selected P1-03 outbox claim/settle/replay slice on the branch, without the worker, scheduler, producers, projected models or UI. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the currently identified archive populations and execution bundles. Pass 9 implements and locally verifies P1-03 outbox claim/settle/replay. Runner pass 2 adds the first SQL-native producer through the P1-02 helper: feature-policy changes now emit one bounded event atomically with the existing audit row. The worker, scheduler, projected models and UI remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in runner pass 2 / slice 10
+
+- The final fetch observed `origin/main` advance from `d9640e45` to `32dd8241`. Its seventeen changed app/vite files do not overlap this slice and contain no equivalent feature-policy producer or P1-04 worker/producer increment.
+- `20261008193000_tenant_feature_policy_events.sql` extends the current audit trigger instead of creating a second command/audit path. Each feature-policy insert, update or delete writes one existing-catalog `entitlement.changed` event whose correlation and idempotency keys bind it to the append-only audit UUID.
+- The event payload contains only policy id, capability, action, bounded state and changed-field names. It excludes free-text reason, role/cohort scope and actor details; deletion emits a tombstone without the prior state.
+- Other policy tables remain audit-only. The producer is not client-callable, and policy, audit and event commit or roll back together.
+- `supabase/check.sh tenant-feature-policy-events` applied all 205 migrations on disposable PostgreSQL 17 and passed all five focused checks. With `SEMESTER_CHECK_REAPPLY=1`, a second application left the schema and all 368 table fingerprints unchanged before the five checks passed again. The adjacent intelligence-policy, feature-cohort and governance suites also passed 149 checks, for 154/154 SQL checks in the final focused run.
+- The generated event scan was extended to recognize callers of the SQL emission helper, then the event, roadmap and definer registers were regenerated. Ordered and shuffled focused runs each passed 104/104 tests; the earlier 197/198 repository-local run had only the pre-existing repository-map refusal to treat mounted `.semester-reference` as a committed top-level directory.
+- `tsc -b`, lint, the university gateway typecheck and the production build passed. Lint retained the existing warning baseline and the build retained its existing chunk-size warnings.
+- HawkScan cannot run (`hawk runtime=false`, `HAWK_API_KEY=false`). No DAST pass is claimed and that release gate remains open.
 
 ## Evidence locked in pass 9
 
@@ -110,7 +121,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The focused PostgreSQL 17 proof is green. Re-run the focused policy/reference guards after this evidence update, then commit the coherent P1-03 slice. P1-04 worker/cron/producers/read-model/UI work remains a separate slice.
+The focused PostgreSQL 17 proof, reapply/idempotency gate, ordered/shuffled focused guards, type checks, lint and production build are green. Commit the coherent producer slice. P1-04 worker/cron/additional-producer/read-model/UI work remains separate.
 
 ## External gates kept open
 
@@ -118,4 +129,4 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-After the verified P1-03 slice is committed, select the earliest dependency-ready P1-04 worker/producer increment without bundling the projected reads or Console UI.
+Define and verify one registered projector's atomic effect/receipt/watermark/invalidation transaction before exposing an `ops-projector` worker endpoint or enabling cron. Do not let a worker claim events it cannot safely apply.
