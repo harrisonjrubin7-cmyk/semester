@@ -17,7 +17,7 @@
 | Path | Type | Bytes | SHA-256 | Inspection detail | Duplicate note | Status |
 | --- | --- | ---: | --- | --- | --- | --- |
 | .thumbnail | application/octet-stream | 10108 | `632fec789623f087ac8fea9f4c0838d85af76971307b4b4a80945124ef1823b5` | binary inspected by hash/type | unique hash | inspected |
-| .vercelignore | application/octet-stream | 39 | `b8044b330b1045eb10e8632885762f0f351e608b436a384c743ffb0b0ba32f52` | binary inspected by hash/type | unique hash | inspected |
+| .vercelignore | text/plain | 39 | `b8044b330b1045eb10e8632885762f0f351e608b436a384c743ffb0b0ba32f52` | text_chars=39; lines=6; encoding=utf-8 | unique hash | inspected |
 | Canvas-2.dc.html | text/html | 206 | `d3a65cc8ce0e759849eaa1ca985d0fbc49bafb3212f9029731ca08d1bda42293` | title=''; text_chars=0; encoding=utf-8 | 3-file duplicate group d3a65cc8ce0e | inspected |
 | Canvas-3.dc.html | text/html | 206 | `d3a65cc8ce0e759849eaa1ca985d0fbc49bafb3212f9029731ca08d1bda42293` | title=''; text_chars=0; encoding=utf-8 | 3-file duplicate group d3a65cc8ce0e | inspected |
 | Canvas.dc.html | text/html | 206 | `d3a65cc8ce0e759849eaa1ca985d0fbc49bafb3212f9029731ca08d1bda42293` | title=''; text_chars=0; encoding=utf-8 | 3-file duplicate group d3a65cc8ce0e | inspected |
@@ -3242,7 +3242,7 @@
 | uploads/g01_review_script.pdf | application/pdf | 97618 | `32e1db7bae2e758332cbe4862a95d5210b2f7564ae005a245c974dc7a026c174` | pages=2; text_chars=2436 | 2-file duplicate group 32e1db7bae2e | inspected |
 | uploads/g02_authorization (1).csv | text/csv | 2279 | `e2f28ea1ab060b2d75f8a50f2b82115f800e8c108cdfe20e4228d78c8455bc6f` | text_chars=2279; lines=16; encoding=utf-8 | 4-file duplicate group e2f28ea1ab06 | inspected |
 | uploads/g02_authorization.csv | text/csv | 2683 | `5d5dd1a30fac41073df870bd4320127b9fcd948404e75fa6ae4b2b47d2ac0ada` | text_chars=2683; lines=16; encoding=utf-8 | 2-file duplicate group 5d5dd1a30fac | inspected |
-| uploads/gitignore | application/octet-stream | 30 | `bf077bab6e6e6c9b858baf07569b93ea7006b79c69c3248f68b9e80bfb9b042f` | binary inspected by hash/type | 2-file duplicate group bf077bab6e6e | inspected |
+| uploads/gitignore | text/plain | 30 | `bf077bab6e6e6c9b858baf07569b93ea7006b79c69c3248f68b9e80bfb9b042f` | text_chars=30; lines=4; encoding=utf-8 | 2-file duplicate group bf077bab6e6e | inspected |
 | uploads/gtm-launch.pdf | application/pdf | 772415 | `b3b875c97dc9b5bfb3be55524a39142ae1ad2043a79807f446cd027b9674a82f` | pages=15; text_chars=22421 | 3-file duplicate group b3b875c97dc9 | inspected |
 | uploads/gtm.pdf | application/pdf | 21733 | `6d9e619ee67b3dde48d2e4416d5616542ab6c679a1ed42619057d10450c6bf4c` | pages=6; text_chars=16198 | 4-file duplicate group 6d9e619ee67b | inspected |
 | uploads/gtm2.pdf | application/pdf | 21733 | `6d9e619ee67b3dde48d2e4416d5616542ab6c679a1ed42619057d10450c6bf4c` | pages=6; text_chars=16198 | 4-file duplicate group 6d9e619ee67b | inspected |
