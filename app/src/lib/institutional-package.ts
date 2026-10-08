@@ -39,7 +39,7 @@ export const ROLLOUT_PHASES = [
     id: 'integrate',
     name: 'Integrate',
     outcome: 'Only implemented and approved connections pass tenant-scoped conformance, reconciliation and customer acceptance before use; OneRoster remains planned, not included today.',
-    requiredEvidence: ['sso_verified', 'lti_verified', 'oneroster_verified', 'source_mapping_approved'],
+    requiredEvidence: ['sso_verified', 'lti_verified', 'source_mapping_approved'],
   },
   {
     id: 'parallel',

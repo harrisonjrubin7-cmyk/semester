@@ -23,6 +23,12 @@ describe('Semester Institutional', () => {
     ]);
   });
 
+  it('does not gate integration on the planned OneRoster connection', () => {
+    const integrate = ROLLOUT_PHASES.find((phase) => phase.id === 'integrate');
+    expect(integrate?.outcome).toMatch(/OneRoster remains planned, not included today/);
+    expect(integrate?.requiredEvidence).not.toContain('oneroster_verified');
+  });
+
   it('never advances a phase when required evidence is missing', () => {
     const first = ROLLOUT_PHASES[0];
     const partial = new Set(first.requiredEvidence.slice(0, -1));

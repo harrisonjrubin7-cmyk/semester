@@ -76,6 +76,24 @@ describe('WeeklyReset', () => {
     });
   });
 
+  it('starts a fresh draft and proposal selection when the mounted week changes', async () => {
+    const accepted = vi.fn();
+    await render(<WeeklyReset now={NOW} onAcceptBlock={accepted} />);
+    await click(button('Next'));
+    await type(field('Academic priority'), 'Old week priority');
+    await blur(field('Academic priority'));
+    await click(button('Next'));
+    await click(host.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+
+    const nextWeek = new Date(2026, 9, 14, 10, 0);
+    await render(<WeeklyReset now={nextWeek} onAcceptBlock={accepted} />);
+    await click(button('Next'));
+    expect(field('Academic priority').value).toBe('');
+    await click(button('Next'));
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')].every((box) => !box.checked)).toBe(true);
+    expect(stored().resets.find((record) => record.weekStart === '2026-10-11')?.picks.academic).toBe('');
+  });
+
   it('skips from the middle without losing picks or saying what it costs, and can be picked up again', async () => {
     await render(<WeeklyReset now={NOW} />);
     await click(button('Next'));

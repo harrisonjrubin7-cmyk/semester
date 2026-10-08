@@ -48,6 +48,7 @@ const release = (
   missingTechnical: [],
   missingActivation: [],
   missingDependencies: [],
+  missingPrerequisites: [],
   targetBound: true,
   launchVerdict: 'go',
   launchConditions: [],

@@ -76,6 +76,9 @@ jobs:
         env:
           STACKHAWK_APPLICATION_ID: ${{ vars.STACKHAWK_APPLICATION_ID }}
           APP_HOST: http://localhost:4173
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          HAWK_AGENT: Codex
         with:
           apiKey: ${{ secrets.HAWK_API_KEY }}
 
