@@ -50,6 +50,7 @@ vi.mock('../lib/course-demand-remote', async (importOriginal) => {
 const { DemandContribution } = await import('./DemandContribution');
 const { DemandDesk } = await import('./DemandDesk');
 const { RegistrationPortal } = await import('./RegistrationPortal');
+const { University } = await import('../screens/University');
 
 const section = (id: string, code: string, extra: Record<string, unknown> = {}) => ({
   id, code, section: 'S07', title: `${code} title`, term: '2027SP', department: code.split(' ')[0], credits: 3,
@@ -132,7 +133,6 @@ describe('with demand_forecasting off', () => {
   }, 15_000);
 
   it('University has no Demand tab', async () => {
-    const { University } = await import('../screens/University');
     await render(<University />);
     expect(() => button(/^Demand$/)).toThrow();
   }, 15_000);

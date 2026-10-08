@@ -157,7 +157,6 @@ describe('cleaning, preview and validation', () => {
     expect(transform('  Ada  Lovelace ', 'collapse_spaces').value).toBe('Ada Lovelace');
     expect(transform(' Ada@Example.EDU ', 'email')).toEqual({ value: 'ada@example.edu' });
     expect(transform('ada at example', 'email').error).toBe('not an email address');
-    expect(transform('3/7/2026', 'date_iso')).toEqual({ value: '2026-03-07' });
     expect(transform('2026-3-7', 'date_iso')).toEqual({ value: '2026-03-07' });
     expect(transform('7 Mar 2026', 'date_iso')).toEqual({ value: '2026-03-07' });
     expect(transform('2026-02-30', 'date_iso').error, 'no 30 February').toBe('not a date');
@@ -237,3 +236,52 @@ describe('the evidence', () => {
 });
 
 const FILE_FOR_HASH = 'Student ID\n900001\n';
+
+describe('slash dates', () => {
+  const AMBIGUOUS = 'could be day-first or month-first; say which, or use YYYY-MM-DD';
+
+  it('refuses a slash date that could be either order unless the order is given', () => {
+    expect(transform('3/7/2026', 'date_iso').error).toBe(AMBIGUOUS);
+    expect(transform('03/04/2025', 'date_iso').error).toBe(AMBIGUOUS);
+  });
+
+  it('reads it the way it is told, and the two readings are different days', () => {
+    expect(transform('3/7/2026', 'date_iso', 'month_first')).toEqual({ value: '2026-03-07' });
+    expect(transform('3/7/2026', 'date_iso', 'day_first')).toEqual({ value: '2026-07-03' });
+  });
+
+  it('reads a slash date that cannot mean the other thing, and a day that equals its month', () => {
+    expect(transform('13/4/2026', 'date_iso')).toEqual({ value: '2026-04-13' });
+    expect(transform('4/13/2026', 'date_iso')).toEqual({ value: '2026-04-13' });
+    expect(transform('5/5/2026', 'date_iso')).toEqual({ value: '2026-05-05' });
+  });
+
+  it('holds a declared order to it: a date that does not exist that way is not a date', () => {
+    expect(transform('13/4/2026', 'date_iso', 'month_first').error).toBe('not a date');
+    expect(transform('4/13/2026', 'date_iso', 'day_first').error).toBe('not a date');
+    expect(transform('2/30/2026', 'date_iso').error).toBe('not a date');
+  });
+
+  it('does not touch the other date forms, whatever the order', () => {
+    for (const order of [undefined, 'month_first', 'day_first'] as const) {
+      expect(transform('2026-3-7', 'date_iso', order)).toEqual({ value: '2026-03-07' });
+      expect(transform('7 Mar 2026', 'date_iso', order)).toEqual({ value: '2026-03-07' });
+    }
+  });
+
+  it('fails the row in a preview, and the order the user gives fixes it', () => {
+    const maps: FieldMap[] = [
+      { source_field: 'Id', target_field: 'ref', transform: 'trim', required: true, is_key: true },
+      { source_field: 'Posted', target_field: 'posted_on', transform: 'date_iso', required: false, is_key: false },
+    ];
+    const file = parseTable('Id,Posted\n1,3/7/2026\n2,2026-01-05\n3,13/7/2026');
+    const without = preview(file, maps, 'reject');
+    expect(without.counts).toMatchObject({ rows_in: 3, rows_ok: 2, rows_failed: 1 });
+    expect(without.issues).toEqual([{ row: 1, field: 'posted_on', problem: AMBIGUOUS }]);
+    const dayFirst = preview(file, maps, 'reject', 'day_first');
+    expect(dayFirst.counts).toMatchObject({ rows_ok: 3, rows_failed: 0 });
+    expect(dayFirst.rows.map((r) => r.posted_on)).toEqual(['2026-07-03', '2026-01-05', '2026-07-13']);
+    const monthFirst = preview(file, maps, 'reject', 'month_first');
+    expect(monthFirst.counts).toMatchObject({ rows_ok: 2, rows_failed: 1 });
+  });
+});

@@ -154,6 +154,22 @@ export function pickable(): RoleInfo[] {
 }
 
 /**
+ * A denser layout worth *offering* to roles whose screens are mostly rows and
+ * columns, or null when the default is right.
+ *
+ * An offer and never a default: the role is self-chosen and "has not chosen a
+ * density" is not representable (`density` is always one of three), so nothing
+ * here may change a layout on its own. The settings page shows the offer beside
+ * the role and the person accepts it or does not. See the design-system spec,
+ * section 3.5.
+ */
+export function denserLayoutFor(role: Role): 'snug' | null {
+  return role === 'faculty' || role === 'teaching_assistant' || role === 'advisor' || role === 'admin' || role === 'staff'
+    ? 'snug'
+    : null;
+}
+
+/**
  * Screens that only make sense to somebody taking the courses.
  *
  * Deliberately short, and conservative about what goes on it. The test is not

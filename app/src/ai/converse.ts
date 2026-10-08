@@ -665,7 +665,7 @@ export function useConversation(): Conversation {
           const courseBound = agent === 'tutor' || agent === 'course-guide';
           const found = courseBound && !catalog.byId[state.guideId]
             ? { results: wants.map((call) => ({ id: call.id, text: 'Select a course before reading course material or deadlines.', error: true })), used: [] as string[], saying: [] as string[] }
-            : runLookups(wants, { state, catalog, now });
+            : runLookups(wants, { state, catalog, now, off: school.capabilities.aiOff });
           for (const u of found.used) drew.add(u);
           setUsed([...drew]);
           sending = [

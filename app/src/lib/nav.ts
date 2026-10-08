@@ -157,6 +157,18 @@ export interface Destination {
 }
 
 /**
+ * A trusted, pre-resolved visibility decision for a registered route.
+ *
+ * Navigation deliberately knows nothing about release evidence, tenant
+ * entitlements, cohorts, or kill switches. Those inputs belong at the
+ * governance boundary; this callback is the narrow seam through which that
+ * boundary can remove a route without teaching the directory to recreate the
+ * policy. Callers that do not yet have an authoritative decision may omit it
+ * and retain the existing school-and-role behavior.
+ */
+export type NavigationExposureGate = (screen: Screen) => boolean;
+
+/**
  * The intentions, in the order they are shown.
  *
  * Nine rather than the eight the brief suggested: every one of `help`,
@@ -639,7 +651,7 @@ export const DESTINATIONS: Destination[] = [
     // the bar would read as a bug. `saysFor` names it everywhere with room.
     short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
-    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list',
+    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section registration day time ticket window opens countdown backup backups plan b full section waitlist checklist crn crns copy section list term plan conflicts',
     /*
      * Courses, not Campus, and the move came with University arriving.
      *
@@ -1199,13 +1211,26 @@ export function destinationsFor(
   group: Group,
   c: Capabilities,
   role: Role = DEFAULT_ROLE,
+  exposure?: NavigationExposureGate,
 ): Destination[] {
-  return destinationsIn(group).filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
+  return destinationsIn(group).filter((d) => (
+    allowed(d.screen, c)
+    && forRole(d.screen, role)
+    && (exposure?.(d.screen) ?? true)
+  ));
 }
 
 /** Every destination the app can offer this person, across all groups. */
-export function offered(c: Capabilities, role: Role = DEFAULT_ROLE): Destination[] {
-  return DESTINATIONS.filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
+export function offered(
+  c: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  exposure?: NavigationExposureGate,
+): Destination[] {
+  return DESTINATIONS.filter((d) => (
+    allowed(d.screen, c)
+    && forRole(d.screen, role)
+    && (exposure?.(d.screen) ?? true)
+  ));
 }
 
 /*

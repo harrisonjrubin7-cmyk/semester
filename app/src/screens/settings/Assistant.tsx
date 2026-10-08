@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
@@ -62,6 +62,7 @@ import { GuideOperatingContract } from '../../components/GuideOperatingContract'
  * that hunt now ends on this page rather than on a screen about calendars.
  */
 export function SettingsAssistant() {
+  const now = useNow();
   const [config, setConfig] = useState(settings());
   const [saved, setSaved] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -101,7 +102,7 @@ export function SettingsAssistant() {
     setChecking(false);
   };
   const spend = readSpend();
-  const month = total(since(spend, monthStart(new Date())));
+  const month = total(since(spend, monthStart(now)));
   const courses = byCourse(spend);
   const askers = byAsker(spend);
   const { courseCode, account, dispatch } = useStore();
@@ -192,6 +193,7 @@ export function SettingsAssistant() {
                 <input
                   className="input"
                   type="password"
+                  autoComplete="off"
                   placeholder="sk-…"
                   value={config.openaiKey}
                   onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
@@ -247,6 +249,7 @@ export function SettingsAssistant() {
                 <input
                   className="input"
                   type="password"
+                  autoComplete="off"
                   placeholder="sk-ant-…"
                   value={config.apiKey}
                   onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}

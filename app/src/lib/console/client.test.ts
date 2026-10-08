@@ -65,6 +65,14 @@ import {
   loadDuties,
   loadFigures,
   loadCommandCenter,
+  loadTenantOperations,
+  loadIntegrationHealth,
+  loadReleaseIncidents,
+  loadPrivacyRequests,
+  claimPrivacyRequest,
+  readPrivacyRequestDetail,
+  verifyPrivacyRequest,
+  resolvePrivacyRequest,
   loadPreferences,
   mfaFresh,
   mfaLevel,
@@ -80,6 +88,30 @@ import {
   verifyTotp,
   totpFactors,
 } from './client';
+
+const HEALTH_ROW = {
+  connection_id: 'conn-canvas', tenant_id: 'vu', tenant_name: 'Vanderbilt University', is_demo: false,
+  connection_name: 'Canvas', provider_domain: 'lms', provider_name: 'Canvas', configuration_state: 'healthy',
+  health_state: 'degraded', feature_state: 'production', last_successful_sync_at: '2026-10-03T10:00:00Z',
+  freshness_target_minutes: 30, minutes_since_success: 45, latest_run_status: 'partial',
+  latest_run_at: '2026-10-03T10:00:00Z', reconciliation_state: 'warning', records_received: 20,
+  records_rejected: 2, open_errors: 1, critical_errors: 0, open_dead_letters: 1,
+  owner_name: 'Integration owner', backup_owner_name: 'Backup owner', customer_impact: 'Assignments may be delayed.',
+  next_safe_action: 'Review reconciliation.', configuration_approval_id: null, configuration_approval_status: null, can_request: true,
+  classification: 'restricted', provenance: 'server sources', limitation: 'No credentials returned.',
+};
+
+const RELEASE_INCIDENT_ROW = {
+  item_id: 'release:platform', item_kind: 'release', tenant_id: null, tenant_name: null, is_demo: false,
+  state: 'deployed_unverified', title: 'Production release', severity: 'critical', owner: 'engineering',
+  affected_workflows: ['application', 'database'], customer_impact: 'Post-deploy behavior is not verified.',
+  communication_status: 'not_applicable', last_notice_at: null, next_update_at: null,
+  rollback_status: 'documented', release_commit: 'a'.repeat(40), deployment_source: 'pages',
+  deployment_id: 'deploy-17', observed_at: '2026-10-03T10:00:00Z', expires_at: '2026-10-17T10:00:00Z',
+  approval_id: null, approval_status: null, can_request: true, evidence: 'production_verification=blocked',
+  next_safe_action: 'Verify the exact commit.', classification: 'restricted',
+  provenance: 'server sources', limitation: 'No institutional activation claim.',
+};
 
 const last = () => calls[calls.length - 1];
 
@@ -197,6 +229,48 @@ describe('duties and approvals', () => {
   });
 });
 
+describe('integration health', () => {
+  it('maps the credential-free health contract and forwards explicit demo inclusion', async () => {
+    replies.set('rpc:console_integration_health', { data: [HEALTH_ROW] });
+    const [row] = await loadIntegrationHealth(true);
+    expect(row).toMatchObject({
+      connectionId: 'conn-canvas', tenantId: 'vu', healthState: 'degraded', featureState: 'production',
+      freshnessTargetMinutes: 30, minutesSinceSuccess: 45, openDeadLetters: 1,
+      configurationApprovalId: null, classification: 'restricted',
+    });
+    expect(last()).toMatchObject({ name: 'console_integration_health', args: { include_demo: true } });
+  });
+
+  it('preserves server refusals and fails closed on an unknown health state', async () => {
+    replies.set('rpc:console_integration_health', { error: { message: 'integration:view over an exact school is required.' } });
+    await expect(loadIntegrationHealth()).rejects.toThrow('integration:view over an exact school is required.');
+
+    replies.set('rpc:console_integration_health', { data: [{ ...HEALTH_ROW, health_state: 'maybe' }] });
+    await expect(loadIntegrationHealth()).rejects.toThrow('unknown health state');
+  });
+});
+
+describe('release and incident operations', () => {
+  it('maps the allowlisted response and forwards explicit demo inclusion', async () => {
+    replies.set('rpc:console_release_incidents', { data: [RELEASE_INCIDENT_ROW] });
+    const [row] = await loadReleaseIncidents(true);
+    expect(row).toMatchObject({
+      itemId: 'release:platform', itemKind: 'release', state: 'deployed_unverified',
+      releaseCommit: 'a'.repeat(40), deploymentSource: 'pages', affectedWorkflows: ['application', 'database'],
+    });
+    expect(last()).toMatchObject({ name: 'console_release_incidents', args: { include_demo: true } });
+  });
+
+  it('preserves server refusals and fails closed on unknown item kinds or states', async () => {
+    replies.set('rpc:console_release_incidents', { error: { message: 'incident:communicate at platform scope is required.' } });
+    await expect(loadReleaseIncidents()).rejects.toThrow('incident:communicate at platform scope is required.');
+    replies.set('rpc:console_release_incidents', { data: [{ ...RELEASE_INCIDENT_ROW, item_kind: 'secret' }] });
+    await expect(loadReleaseIncidents()).rejects.toThrow('unknown item kind');
+    replies.set('rpc:console_release_incidents', { data: [{ ...RELEASE_INCIDENT_ROW, state: 'green' }] });
+    await expect(loadReleaseIncidents()).rejects.toThrow('unknown state');
+  });
+});
+
 describe('break-glass', () => {
   it('reads grants through the demo-aware reader, with the server’s active and overdue flags', async () => {
     replies.set('rpc:console_break_glass', {
@@ -300,6 +374,115 @@ describe('figures and customers', () => {
     replies.set('rpc:console_customers', { data: [{ id: 'c-2', tenant_id: 'x', school_name: 'X', is_demo: true, legal_name: null, status: 'prospect', owner_seat: null, commitments: [], contracts: null }] });
     const [c] = await loadCustomers(true);
     expect(c).toMatchObject({ isDemo: true, legalName: '', commitments: [], contracts: [] });
+  });
+});
+
+describe('tenant operations', () => {
+  it('maps the metadata-only RPC contract without inventing freshness', async () => {
+    replies.set('rpc:console_tenant_operations', {
+      data: [{
+        tenant_id: 'vu', tenant_name: 'Vanderbilt University', is_demo: false,
+        fact_key: 'integration', category: 'integration', label: 'Integration connections',
+        value: '2 configured; 1 healthy; 1 degraded or error', classification: 'restricted',
+        provenance: 'public.integration_connections', owner: 'integration',
+        observed_at: null, stale_after_days: 7, limitation: 'Counts only.',
+        visibility_reason: 'Live tenant:implement grant at exact school scope.',
+      }],
+    });
+
+    const [fact] = await loadTenantOperations();
+    expect(fact).toEqual({
+      tenantId: 'vu', tenantName: 'Vanderbilt University', isDemo: false,
+      factKey: 'integration', category: 'integration', label: 'Integration connections',
+      value: '2 configured; 1 healthy; 1 degraded or error', classification: 'restricted',
+      provenance: 'public.integration_connections', owner: 'integration',
+      observedAt: null, staleAfterDays: 7, limitation: 'Counts only.',
+      visibilityReason: 'Live tenant:implement grant at exact school scope.',
+    });
+    expect(last()).toMatchObject({
+      kind: 'rpc', name: 'console_tenant_operations', args: { include_demo: false },
+    });
+  });
+
+  it('passes explicit demo intent and surfaces server refusals', async () => {
+    replies.set('rpc:console_tenant_operations', { data: [] });
+    await loadTenantOperations(true);
+    expect(last()).toMatchObject({ args: { include_demo: true } });
+
+    replies.set('rpc:console_tenant_operations', { error: { message: 'console:operate at platform scope is required.' } });
+    await expect(loadTenantOperations()).rejects.toThrow('console:operate at platform scope is required.');
+  });
+});
+
+describe('privacy request workspace', () => {
+  it('maps the metadata-only queue without inventing an approval or owner', async () => {
+    replies.set('rpc:console_privacy_requests', {
+      data: [{
+        request_id: 'request-1', request_ref: 'DSR-1234567890', tenant_id: 'vu',
+        tenant_name: 'Vanderbilt University', is_demo: false, kind: 'erasure',
+        requested_by: 'self', status: 'received', received_at: '2026-10-01T10:00:00Z',
+        due_at: '2026-10-31T10:00:00Z', overdue: false, identity_state: 'unverified',
+        assigned_to: null, assigned_at: null, assigned_to_me: false, hold_state: 'clear',
+        affected_stores: ['account records', 'audit history'], deletion_approval_id: null,
+        deletion_approval_status: null, classification: 'restricted',
+        provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+      }],
+    });
+
+    const [request] = await loadPrivacyRequests();
+    expect(request).toEqual({
+      requestId: 'request-1', requestRef: 'DSR-1234567890', tenantId: 'vu',
+      tenantName: 'Vanderbilt University', isDemo: false, kind: 'erasure',
+      requestedBy: 'self', status: 'received', receivedAt: '2026-10-01T10:00:00Z',
+      dueAt: '2026-10-31T10:00:00Z', overdue: false, identityState: 'unverified',
+      assignedTo: null, assignedAt: null, assignedToMe: false, holdState: 'clear',
+      affectedStores: ['account records', 'audit history'], deletionApprovalId: null,
+      deletionApprovalStatus: null, classification: 'restricted',
+      provenance: 'public.data_subject_request', limitation: 'Metadata only.',
+    });
+    expect(last()).toMatchObject({ kind: 'rpc', name: 'console_privacy_requests', args: { include_demo: false } });
+  });
+
+  it('passes explicit demo intent and preserves a server refusal', async () => {
+    replies.set('rpc:console_privacy_requests', { data: [] });
+    await loadPrivacyRequests(true);
+    expect(last()).toMatchObject({ args: { include_demo: true } });
+    replies.set('rpc:console_privacy_requests', { error: { message: 'data_request:handle over an exact school is required.' } });
+    await expect(loadPrivacyRequests()).rejects.toThrow('data_request:handle over an exact school is required.');
+  });
+
+  it('uses the exact audited lifecycle RPC contracts', async () => {
+    replies.set('rpc:claim_privacy_request', { data: 'verifying' });
+    await expect(claimPrivacyRequest('request-1')).resolves.toBe('verifying');
+    expect(last()).toMatchObject({ name: 'claim_privacy_request', args: { want_request: 'request-1' } });
+
+    replies.set('rpc:read_privacy_request_detail', { data: [{
+      request_ref: 'DSR-1234567890', subject_reference: 'ab'.repeat(32), kind: 'export',
+      requested_by: 'self', detail: 'Send my export.', tenant_id: 'vu', verified_at: null,
+      resolution: '', resolution_evidence: null, completion_certificate_id: null,
+    }] });
+    await expect(readPrivacyRequestDetail('request-1')).resolves.toMatchObject({
+      requestRef: 'DSR-1234567890', subjectReference: 'ab'.repeat(32), detail: 'Send my export.',
+    });
+    expect(last()).toMatchObject({ name: 'read_privacy_request_detail', args: { want_request: 'request-1' } });
+
+    replies.set('rpc:verify_privacy_request', { data: 'in_progress' });
+    await expect(verifyPrivacyRequest('request-1', 'signed-in account holder', 'case://verify-1')).resolves.toBe('in_progress');
+    expect(last()).toMatchObject({ name: 'verify_privacy_request', args: {
+      want_request: 'request-1', want_basis: 'signed-in account holder', want_evidence: 'case://verify-1',
+    } });
+
+    replies.set('rpc:resolve_privacy_request', { data: { status: 'completed', certificate_id: 'certificate-1' } });
+    await expect(resolvePrivacyRequest('request-1', 'completed', 'Export delivered.', 'case://export-1', null))
+      .resolves.toEqual({ status: 'completed', certificateId: 'certificate-1' });
+    expect(last()).toMatchObject({ name: 'resolve_privacy_request', args: {
+      want_request: 'request-1', want_outcome: 'completed', want_resolution: 'Export delivered.',
+      want_evidence: 'case://export-1', want_approval: null,
+    } });
+
+    replies.set('rpc:resolve_privacy_request', { data: { status: 'unknown', certificate_id: null } });
+    await expect(resolvePrivacyRequest('request-1', 'refused', 'Request refused.', 'case://refusal-1', null))
+      .rejects.toThrow('unexpected resolution status');
   });
 });
 

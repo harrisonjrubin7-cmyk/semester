@@ -628,8 +628,12 @@ begin
   perform pg_temp.counted('a school is not a demo unless flagged', n, 1);
 
   perform pg_temp.become(operator);
-  update public.schools set is_demo = true where id = 'console-check';
-  get diagnostics n = row_count;
+  -- Refused either way: no row reached, or the policy's check raises.
+  begin
+    update public.schools set is_demo = true where id = 'console-check';
+    get diagnostics n = row_count;
+  exception when insufficient_privilege then n := 0;
+  end;
   reset role;
   perform pg_temp.counted('the demo flag cannot be set through the API (rows a client''s update reaches)', n, 0);
 

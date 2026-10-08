@@ -23,7 +23,8 @@ how you use Semester, and information whose job is done.
 | --- | --- |
 | Your courses, deadlines, notes, plans, files and settings | Until you delete them or your account |
 | Files you attach to notes | Never leave your device |
-| Assistant conversations | On your device only, until you delete them |
+| Assistant conversations (the transcript) | On your device only, until you delete them |
+| Assistant "memories" (a short goal, preference, decision, focus area or context note, in the `ai_memories` table) | Until you delete them or your account. The table exists and syncs if used; no part of the app writes to it today. [DECIDE: keep it, or remove it before publication] |
 | Three daily usage facts (opened, added a course, answered a study card) | 400 days |
 | Log of who read your rows (e.g. a calendar feed was fetched) | 90 days |
 | Queued reminders | Until sent; all of them when you switch reminders off |

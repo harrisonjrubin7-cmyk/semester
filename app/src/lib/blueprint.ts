@@ -244,7 +244,7 @@ export const POINTS: readonly Item[] = [
     rows: ['SRE-001', 'SRE-002', 'SRE-005', 'SRE-007', 'SRE-009', 'SRE-010'],
     standing: 'partial',
     evidence: [
-      { path: 'app/src/lib/governance/error-budgets.ts', shows: 'Eight journey SLOs and error budgets as code' },
+      { path: 'app/src/lib/governance/error-budgets.ts', shows: 'Fifteen journey SLOs and error budgets as code: eight adopted, seven proposed' },
       { path: '.github/workflows/production-smoke.yml', shows: 'Hourly synthetic probes' },
       { path: 'app/public/status.html', shows: 'A status page that checks from the reader\'s browser (#902)' },
       { path: 'RESTORE.md', shows: 'The restore drill, rehearsed in CI' },

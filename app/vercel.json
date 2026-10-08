@@ -6,6 +6,9 @@
   "functions": {
     "api/institution/[...path].ts": {
       "maxDuration": 30
+    },
+    "api/productivity/[...path].ts": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -21,6 +24,14 @@
     },
     {
       "source": "/api/institution/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" }
+      ]
+    },
+    {
+      "source": "/api/productivity/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "no-store" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },

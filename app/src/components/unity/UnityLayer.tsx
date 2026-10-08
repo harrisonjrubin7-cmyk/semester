@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react';
 import { FixThis } from '../FixThis';
-import { useModal } from '../../a11y/modal';
+import { useModal, useScrim } from '../../a11y/modal';
 import { DESKTOP, useMedia } from '../../lib/media';
 import { statusOf } from '../../lib/status';
 import { SESSION_MINUTES, closeOverlay, showCapture, useOverlay, type SourceDetail } from '../../lib/unity';
 import { FocusBar } from './modes';
 import { useStore } from '../../state/store';
+import { useTaskActions } from '../../composition/taskactions';
 import { courseFieldFor } from '../../lib/parent';
 import { useModernShell } from '../shell-context';
 import { SaveState, StatusChip } from './Status';
@@ -43,8 +44,9 @@ function Sheet({ label, children, initial }: { label: string; children: React.Re
   const wide = useMedia(DESKTOP);
   const modern = useModernShell();
   const { ref, onKeyDown } = useModal<HTMLDivElement>({ onClose: closeOverlay, initial });
+  const scrim = useScrim(closeOverlay);
   return (
-    <div className={`unity-scrim ${wide || modern ? 'is-window' : 'is-pane'}`} onClick={closeOverlay}>
+    <div className={`unity-scrim ${wide || modern ? 'is-window' : 'is-pane'}`} {...scrim}>
       <div
         role="dialog"
         aria-modal="true"
@@ -251,6 +253,7 @@ export function KeepItAs({ text, onLeave }: { text: string; onLeave: () => void 
  */
 export function QuickCapture({ context, as, text: carried = '' }: { context?: string; as?: string; text?: string }) {
   const { state, dispatch, catalog } = useStore();
+  const taskActions = useTaskActions();
   const field = useRef<HTMLInputElement>(null);
   const [text, setText] = useState(carried);
   const [kind, setKind] = useState<CaptureKind>(
@@ -271,7 +274,7 @@ export function QuickCapture({ context, as, text: carried = '' }: { context?: st
     const course = courseId || null;
     const said = CAPTURE_KINDS.find((k) => k.id === kind)!.label;
     if (kind === 'task') {
-      dispatch({ type: 'addTask', task: { title, date: null, time: '', note: '', courseId: course } });
+      taskActions.add({ title, date: null, time: '', note: '', courseId: course });
     } else if (kind === 'session') {
       dispatch({ type: 'addTimer', label: `Study: ${title}`, seconds: SESSION_MINUTES * 60, at: Date.now() });
     } else {

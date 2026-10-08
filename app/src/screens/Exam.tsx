@@ -1013,7 +1013,7 @@ export function Exam() {
             here; the written ones you mark yourself against the key, which is the part that
             teaches.
           </div>
-          <div role={kept_ ? undefined : 'status'} style={{ fontSize: 'var(--type-xs-plus)', color: kept_ ? 'var(--app-dim)' : 'var(--app-ink)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div role={kept_ ? undefined : 'status'} style={{ fontSize: 'var(--type-xs-plus)', color: kept_ ? 'var(--app-dim)' : 'var(--app-fg)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             {kept_ ? KEPT_LINE : NOT_KEPT_LINE}
           </div>
         </>

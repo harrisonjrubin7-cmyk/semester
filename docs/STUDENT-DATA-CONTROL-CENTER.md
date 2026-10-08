@@ -1,7 +1,9 @@
 # Student data control centre
 
-Part 3 of the expansion command. Phase 2. Nothing here is built yet, and most
-of it already exists as separate screens.
+Part 3 of the expansion command. Phase 2. The single gathered screen is not
+built; most of what it would gather already exists as separate screens, and a
+student intake and tracking screen for rights requests exists on the Privacy
+screen.
 
 ## What exists on main
 
@@ -23,8 +25,21 @@ This is the part where `main` has the most, spread across the `me` shelf:
   only for calendar-feed reads in `app/src/components/Subscribe.tsx`.
 - AI transparency: `app/src/intelligence/Disclosure.tsx` shows what an answer
   used; `app/src/lib/aiflags.ts` lets a school switch categories off.
-- Requests: `public.data_requests` (export, delete, correct, restrict), worked by
-  `data_request:handle`.
+- Requests: a student files and follows a rights request (export, erase,
+  correct, restrict) in `app/src/components/DataRightsRequests.tsx` on the
+  Privacy screen, over `app/src/lib/data-rights.ts` and `public.data_subject_request`
+  (`received · verifying · in_progress · completed · refused`). **No answering
+  surface exists and no one is named to answer** (see
+  `DATA-RIGHTS-REQUEST-RUNBOOK.md`, a target procedure).
+  `public.data_requests` (`received · in_progress · completed · rejected`) is the
+  older table: it is written as the receipt of an erasure or export that
+  already happened (`erase_account`, `export_my_data`), and the migration that
+  added `data_subject_request` describes it as the queue `data_requests` never
+  was. Its `data_steward` working policy and the `data_request:handle`
+  capability remain in the schema with no screen. Which table is the queue and
+  which is the receipt ledger is recorded in that migration's comments; a
+  decision to retire or repurpose the older queue is open (Engineering and
+  Privacy).
 
 **So the build is one screen that gathers these, not new machinery.** The My
 Data screen the command sketches is the `privacy` screen reorganized under the
@@ -45,14 +60,15 @@ headings Connected systems, What Semester uses, Not used, and the five actions.
 | `student_data_access_summaries` | **View** over `access_log` + `support_access_event` + `accommodation_access_events` + `talent_profile_views` | These already record reads; the summary translates them |
 | `student_privacy_preferences`, `student_recommendation_preferences`, `student_notification_preferences` | **One preferences object** in the synced state, plus `aiflags` | Three tables for one screen of toggles would be three things to keep consistent |
 | `student_privacy_reset_requests` | **Not a table** | A reset is a local operation over preferences and derived data; it is recorded in the access summary |
-| `student_data_exports`, `student_deletion_requests`, `student_correction_requests` | **Reuse** `data_requests` | It already has all three kinds |
+| `student_data_exports`, `student_deletion_requests`, `student_correction_requests` | **Reuse** `data_subject_request` for requests; `data_requests` stays the receipt of completed erasures and exports | `data_subject_request` has the four kinds and the intake screen exists; answering is not built |
 | `ai_feature_transparency_records` | **Static data** in the repository, one entry per AI feature | Provider category, data class allowed, grounding, retention, training posture, limits. It changes with code, so it lives with code |
 | `privacy_commitments` | **Extend** `privacy.ts` `CLAIMS` | That is what `CLAIMS` is |
 
 ## Capabilities and flags
 
-- Students need no capability for their own data. `data_request:handle`
-  (exists) works requests.
+- Students need no capability for their own data. Working a request is not
+  built: `data_request:handle` exists in the schema for the older
+  `data_requests` table and no screen uses it.
 - Flag `me.data_center`, `off` until the screen is built; the existing screens
   stay reachable throughout.
 
@@ -76,7 +92,8 @@ headings Connected systems, What Semester uses, Not used, and the five actions.
 - Revoke a connection → its data stops refreshing and is labelled with its last
   update, and the revocation appears in the access summary.
 - The access summary for a fixture log contains no IP, no user agent, no uuid.
-- Export, delete and correct requests create `data_requests` rows the student
-  can read and nobody else at another school can (`.check.sql`).
+- Export, delete, correct and restrict requests create `data_subject_request`
+  rows the student can read and nobody else at another school can
+  (`supabase/audit-and-subject-requests.check.sql`).
 - Privacy reset clears preferences and derived suggestions and leaves
   `institution_actions` untouched.

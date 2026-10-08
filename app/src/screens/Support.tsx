@@ -50,6 +50,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
     <Page blurb="Where to go for care, basic needs, access, safety and the campus itself — and what happens to what you say there.">
       <TabList label="Support" className="portal-tabs" value={tab} onChange={setTab} tabs={SECTIONS.map((s) => ({ id: s.id, label: s.label }))} />
       <p className="jx-lead">{section.intro}</p>
+      <p className="jx-muted">
+        Not sure which door fits? <GoTo screen="help">See who can help with what</GoTo>
+      </p>
       {lib.error ? <p className="jx-warn" role="alert">{lib.error}</p> : null}
 
       {section.groups.map((g) => (

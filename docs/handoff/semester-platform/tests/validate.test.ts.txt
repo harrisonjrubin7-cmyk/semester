@@ -1,0 +1,7 @@
+import { describe, it, expect } from 'vitest';
+import { integrityPrecheck, Listing } from '../lib/validate';
+describe('integrity precheck', () => {
+  it('holds answer keys', () => expect(integrityPrecheck('CHEM 210 exam 2 answers').hold).toBe(true));
+  it('allows textbooks', () => expect(integrityPrecheck('Organic Chemistry 9th ed').hold).toBe(false));
+});
+describe('Listing schema', () => { it('rejects negative price', () => expect(Listing.safeParse({ title: 'Lamp', category: 'gear', priceCents: -1 }).success).toBe(false)); });

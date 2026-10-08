@@ -72,10 +72,10 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Anthropic (Semester’s key)', kind: 'subprocessor',
-    purpose: 'AI features for signed-in students who have not supplied their own key, metered per account.',
+    purpose: 'AI features for signed-in students who have not supplied their own key, metered per account. When the owner sets AI_GATEWAY_API_KEY the request reaches Anthropic through Vercel AI Gateway.',
     receives: 'The text of the AI request the student made (for example a syllabus to turn into a course).',
     when: 'signed-in', hosts: [], functions: ['claude'],
-    evidence: ['supabase/functions/claude/index.ts', 'app/src/lib/privacy.ts'],
+    evidence: ['supabase/functions/claude/index.ts', 'supabase/functions/_shared/upstream.ts', 'app/src/lib/privacy.ts'],
   },
   {
     name: 'Stripe', kind: 'subprocessor',

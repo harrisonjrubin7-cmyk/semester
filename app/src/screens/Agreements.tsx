@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Notice, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
@@ -86,6 +86,7 @@ export function Agreements() {
 }
 
 function Manager({ accountId }: { accountId: string }) {
+  const now = useNow();
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [agreements, setAgreements] = useState<Agreement[]>([]);
@@ -128,7 +129,7 @@ function Manager({ accountId }: { accountId: string }) {
     );
   }
 
-  const today = isoDay(new Date());
+  const today = isoDay(now);
   const name = (id: string) => schools.find((s) => s.id === id)?.name ?? id;
   const without = schools.filter((s) => !agreements.some((a) => a.tenantId === s.id));
 

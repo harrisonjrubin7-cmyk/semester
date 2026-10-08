@@ -62,7 +62,14 @@ export const SOURCE_MEANING: Record<SourceLabel, string> = {
  * `source.test.ts` holds it to the migration; an AI answer or a web page is
  * never stored as a `source_label`, so it never needs to be one.
  */
-export const TRUST_KINDS = [...SOURCE_LABELS, 'ai_assisted', 'external', 'unavailable_stale'] as const;
+export const TRUST_KINDS = [
+  ...SOURCE_LABELS,
+  'ai_assisted',
+  'external',
+  'unavailable_stale',
+  'connected',
+  'sample',
+] as const;
 
 export type TrustKind = (typeof TRUST_KINDS)[number];
 
@@ -71,6 +78,8 @@ export const TRUST_TEXT: Record<TrustKind, string> = {
   ai_assisted: 'AI-assisted',
   external: 'External',
   unavailable_stale: 'Unavailable or stale',
+  connected: 'Connected',
+  sample: 'Sample',
 };
 
 export const TRUST_MEANING: Record<TrustKind, string> = {
@@ -78,6 +87,30 @@ export const TRUST_MEANING: Record<TrustKind, string> = {
   ai_assisted: 'Written with Semester’s assistant. It is not an official answer — check anything you act on.',
   external: 'From a source outside your institution and outside Semester, such as a web page.',
   unavailable_stale: 'Semester cannot confirm that this information is current. Refresh it or use the official source before relying on it.',
+  connected: 'Synced from a connected account or feed. Semester has not checked it with your institution.',
+  sample: 'Illustrative data, not live.',
+};
+
+/**
+ * The glyph that goes with each word, so a source is never said by colour or
+ * by a word alone that a reader skims past. The badge draws it `aria-hidden`
+ * beside the word; the word and the meaning sentence are what assistive
+ * technology reads. These are the ten glyphs of the design-system adoption
+ * brief (`docs/design/STATUS_AND_PROVENANCE_AUDIT.md` §1, ADR-0032); the other
+ * glyph tables (`status.ts`, `factprovenance.ts`) still differ and are the
+ * next step in that audit, not this file's business.
+ */
+export const TRUST_GLYPH: Record<TrustKind, string> = {
+  institution_verified: '◆',
+  connected: '⇄',
+  imported: '↓',
+  student_entered: '○',
+  ai_assisted: '✦',
+  estimated: '≈',
+  needs_review: '?',
+  unavailable_stale: '!',
+  external: '↗',
+  sample: '◌',
 };
 
 /**

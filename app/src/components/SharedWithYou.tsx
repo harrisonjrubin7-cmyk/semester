@@ -6,7 +6,7 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { FAMILY_LABELS } from '../lib/family';
 import { SEEN_PREFIX, endedShares, readSeen, readShares, type ShareFrom } from '../lib/familyshare';
 import { recipientLine } from '../lib/sharing';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 
 const NOBODY: Record<string, string> = {};
@@ -21,7 +21,9 @@ const NOBODY: Record<string, string> = {};
  * copy each student confirmed, exactly; nothing is summarised, counted across
  * categories or dated by activity (design §7).
  */
-export function SharedWithYou({ today = dateToIso(new Date()) }: { today?: string }) {
+export function SharedWithYou({ today: suppliedToday }: { today?: string }) {
+  const currentTime = useNow();
+  const today = suppliedToday ?? dateToIso(currentTime);
   const { account } = useStore();
   const seen = useDeviceLibrary(`${SEEN_PREFIX}:${account?.id || 'device'}`, readSeen, NOBODY);
   const [shares, setShares] = useState<ShareFrom[] | null>(null);
