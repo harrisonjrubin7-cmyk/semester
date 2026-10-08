@@ -14,5 +14,9 @@
 | DAC-010 | Asset ownership is incomplete | OFL-backed fonts may be reviewed; uncertain assets remain reference-only |
 | DAC-011 | Existing task files predate the archive | Preserve them; use the dated checklist |
 | DAC-012 | Whether Phase 0 permits app changes | No; the gate is not passed, so no app/schema/deployment/config changed |
+| DAC-013 | Same-named design tokens differ by selector or value | Treat as conflicts until selector and value equivalence are both proven; production token authority remains controlling |
+| DAC-014 | Agreement, institutional approval, provider activation, UAT, launch, and certification rows have partial repository seams | Operational completion remains externally blocked; code and schema evidence cannot substitute for named, dated institution/provider/legal evidence |
+| DAC-015 | Archive document names differ from repository authorities | Match semantically before classifying; preserve current source-of-truth documents and reconcile content rather than duplicating filenames |
+| DAC-016 | Archive role catalog includes public acquisition personas | Public personas do not receive tenant membership or RBAC grants; authorization begins only at controlled follow-on actions |
 
 Open decisions: canonical route inventory, commitment-versus-illustration boundaries, external owners/evidence, token dispositions, and narrative documents needing decomposition beyond the 1,595 catalog entries.

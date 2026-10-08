@@ -29,7 +29,7 @@ The ZIP is safe to inspect and has been exhaustively inventoried at the file lev
 | Spreadsheets | 10 XLSX files, 52 sheets parsed |
 | Word documents | 5 DOCX files, 141 paragraphs parsed |
 | Text/code/web | HTML, Markdown, JS/JSX/TS/TSX, CSS, JSON, CSV, SQL, YAML, Rego, shell, and text decoded and indexed |
-| Raster images | 248 images reviewed through four contact sheets; 86 low-information images flagged by variance |
+| Raster images | 248 images reviewed through four contact sheets; 86 low-information images recorded in [RASTER-LOW-INFORMATION.md](RASTER-LOW-INFORMATION.md) with reproducible variance scores |
 | Fonts/binary | Type, size, and hash inspected; font license reviewed separately |
 
 The parsed corpus contains 47,863,844 text characters. No PDF required OCR by the low-text threshold; no video or nested archive was present. Raster evidence is under [`evidence/`](evidence/).
@@ -47,4 +47,4 @@ The three screen totals describe different and partly stale layers. None is “t
 
 The archive index, Student “Today,” and “All Screens” atlas rendered in a local isolated browser. The atlas exposes default, loading, empty, error, no-permission, and offline states, but timed out during a whole-page capture. Static parsing and image review are complete; exhaustive interactive-state verification of all 362 routes is not.
 
-Parsed text does not prove every narrative sentence is an atomic matrix requirement. A prototype does not prove production reachability, authoritative data, permissions, accessibility, security, or release readiness. Duplicate bytes can have different path context, and low-information `scraps/` captures are evidence rather than requirements.
+Parsed text does not prove every narrative sentence is an atomic matrix requirement. A prototype does not prove production reachability, authoritative data, permissions, accessibility, security, or release readiness. Duplicate bytes can have different path context, and low-information `scraps/` captures are evidence rather than requirements. Low-information flags are triage signals, not quality or licensing decisions.
