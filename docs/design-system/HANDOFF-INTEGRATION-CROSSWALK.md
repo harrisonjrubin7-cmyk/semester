@@ -213,7 +213,7 @@ The diff is `docs/execute/01-platform-core-diff.md` §4. Section 8 corrects thre
 | Next-action scoring | Existing but incomplete. |
 | Access matrix | Duplicate or superseded as a second matrix. |
 | Break-glass two-person | Existing and verified in SQL. `decide_approval` plus `console-approvals.check.sql`. |
-| Consequence pattern | Existing but incomplete. `ActionPreview` is used inside leave-university, approve-join and sign-out-other-devices dialogs, all three AI Toolkit irreversible local deletions, device-only filed-feedback deletion, device-only assistant-conversation deletion, whole Student Operating workspace deletion and, in pass 35, single-plan plus whole-rhythm Operating Rhythm deletion. Other confirmations still write their own sentences; permanent file purge needs separate retention/recovery reconciliation before it can be selected. |
+| Consequence pattern | Existing but incomplete. `ActionPreview` is used inside leave-university, approve-join and sign-out-other-devices dialogs, all three AI Toolkit irreversible local deletions, device-only filed-feedback deletion, device-only assistant-conversation deletion, whole Student Operating workspace deletion, single-plan plus whole-rhythm Operating Rhythm deletion and, in pass 36, the reachable Today daily-plan deletion. Other confirmations still write their own sentences; permanent file purge and the same-origin demo reset need separate retention/isolation/recovery reconciliation before selection. |
 | AI class gate | Existing and verified. Ceiling T2. It does not read prose. |
 | Approvals state machine | Existing and verified in SQL. |
 | Red-team corpus for blocked prompts | Not ported. It depended on the scanner `D-1298` declined. |

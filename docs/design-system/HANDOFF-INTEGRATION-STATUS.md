@@ -1,10 +1,21 @@
 # Handoff integration status
 
-**Automation pass** 35 of 120 · **Integration slice** 43 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 36 of 120 · **Integration slice** 44 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 36 / slice 44
+
+- Current `origin/main` remains `0d8f70b2`, already merged into the branch; no equivalent Today daily-plan deletion preview landed.
+- The reachable Today `DailyRhythm` single-plan deletion now uses `ConfirmDialog` plus `ActionPreview`. It names the selected date and the private plan fields removed, preserves other account plans, downloaded exports, workspace backups and official course/calendar records, and identifies recovery only from a prior export or backup.
+- Cancel is the safe initial focus and leaves storage unchanged. Explicit confirmation calls the existing account-scoped device-library filter; no route, shared component, dependency, schema, server operation, provider, deployment or official record changed.
+- The focused guard was proved red against the old inline question; 25/25 related Daily Rhythm, Operating Rhythm, backup, modal and accessibility tests then pass.
+- TypeScript, lint, university typecheck and production build pass. Existing baselines remain four lint warnings and the chunk-size warning. All 78 token/design tests pass; design audit remains at zero violations with 86 existing warnings and CSS stays within its ledger.
+- The design report regenerates, then its wrapper exits after invoking unavailable `npm`; no aggregate report pass is claimed. Ordered and shuffled full suites were not rerun after pass 30's green 23,872-test baseline.
+- The active HawkScan skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. The detected local properties file was not read; no target, DAST result or security pass is claimed.
+- Permanent file purge and the same-origin demo reset remain separate because their erase, isolation and recovery semantics are broader. Scanner/extractor-backed Import remains externally gated.
 
 ## Evidence locked in automation pass 35 / slice 43
 

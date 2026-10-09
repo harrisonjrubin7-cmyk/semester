@@ -903,6 +903,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Today daily-plan deletion preview — automation pass 36, slice 44
+
+- [x] Fetch current `origin/main` `0d8f70b2`, confirm it is already merged into the clean branch and find no equivalent Today daily-plan deletion-preview work.
+- [x] Re-rank the remaining consequence paths and select only the reachable legacy Today daily-plan deletion: one account-scoped device record with existing per-plan export and workspace-backup recovery.
+- [x] Replace the hand-written inline question with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema or server operation.
+- [x] Name the selected date and private outcome, Daily Three, fallback, support, check-in, reflection and support-audit fields removed; preserve other account plans, downloads, backups and official course/calendar records.
+- [x] State that recovery requires an export or device workspace backup created before deletion; preserve safe cancel-first focus and explicit-confirmation-only device-library mutation.
+- [x] Prove the focused guard red against the old inline question, then pass 25/25 related Daily Rhythm, Operating Rhythm, backup, modal and accessibility tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contract tests, design audit with zero violations and 86 existing warnings, and CSS ledger checks.
+- [ ] Aggregate design report wrapper — regenerates the report, then exits after invoking unavailable `npm`; no aggregate report pass is claimed.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this bounded client slice.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining consequence-pattern gaps and choose only a bounded action with explicit ownership, external effects and recovery.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

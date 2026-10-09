@@ -430,6 +430,16 @@ The focused guard was proved red against the missing action previews, then the O
 
 The active HawkScan skill stopped at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, server-backed revocation and scanner/extractor-backed Import remain separate. Another fresh consequence-path ranking is required for the next local slice.
 
+## Governed Today daily-plan deletion preview — automation pass 36, slice 44
+
+Current `origin/main` remains `0d8f70b2`, already merged into the clean pre-slice branch; it contains no equivalent Today daily-plan consequence preview. Re-ranking selected the older but still reachable Today `DailyRhythm` deletion because it removes one dated plan from the current account's device library, provides both a per-plan export and device workspace backup path, and has no server or official-record effect. Permanent file purge and the demo's same-origin whole-device reset remain outside this bounded slice because their erase and recovery surfaces are materially broader.
+
+The hand-written inline question now uses the existing `ConfirmDialog` and `ActionPreview`. It names the selected date and private outcome, Daily Three, fallback, support, check-in, reflection and support-audit fields; preserves other daily plans for the account, downloads, backups and official course/calendar records; and says recovery requires an export or workspace backup created before deletion. Cancel is the shared modal's initial focus and does not mutate storage. Confirmation invokes the unchanged account-scoped device-library filter. No route, shared component, dependency, schema, server operation, provider or external system changed.
+
+The focused guard was proved red on the missing `.action-preview`, then 25 related Daily Rhythm, Operating Rhythm, backup, modal and accessibility tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. All 78 named token/design tests pass, design audit remains at zero violations with 86 existing warnings and CSS remains within its ledger. The design report regenerates before its wrapper exits because `npm` is unavailable; no aggregate report pass is claimed. Ordered/shuffled full suites were not rerun after pass 30's green baseline.
+
+The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. The next local slice requires another fresh ranking; scanner/extractor-backed Import remains externally gated.
+
 ## What was read
 
 - Root `CLAUDE.md`.
