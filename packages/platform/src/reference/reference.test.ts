@@ -190,11 +190,11 @@ describe('reference slice: tasks', () => {
       for (const raw of await queue.receive({ tenantId: t }, 10)) await handle(t)(raw);
     }
 
-    const aScope = scopeFor(h.context(TENANT_A, 'stu'), []);
-    const bScope = scopeFor(h.context(TENANT_B, 'stu'), []);
+    const aScope = scopeFor(h.context(TENANT_A, 'stu', { purpose: 'search' }), [], { purpose: 'search' });
+    const bScope = scopeFor(h.context(TENANT_B, 'stu', { purpose: 'search' }), [], { purpose: 'search' });
     expect((await index.query(aScope, 'calculus', 10)).map((x) => x.id)).toEqual([uuid(1)]);
     expect((await index.query(bScope, 'calculus', 10)).map((x) => x.id)).toEqual([uuid(2)]);
-    expect(await index.query(scopeFor(h.context(TENANT_A, 'someone-else'), []), 'calculus', 10)).toEqual([]);
+    expect(await index.query(scopeFor(h.context(TENANT_A, 'someone-else', { purpose: 'search' }), [], { purpose: 'search' }), 'calculus', 10)).toEqual([]);
   });
 
   it('a message in the wrong tenant\'s partition is dead-lettered and never handled', async () => {
@@ -211,7 +211,7 @@ describe('reference slice: tasks', () => {
     });
     expect(out).toEqual({ processed: 0, deadLettered: 1 });
     expect((await queue.deadLetters({ tenantId: TENANT_A }))[0].reason).toBe('wrong_tenant');
-    expect(await index.query(scopeFor(h.context(TENANT_A, 'stu'), []), 'secret', 10)).toEqual([]);
+    expect(await index.query(scopeFor(h.context(TENANT_A, 'stu', { purpose: 'search' }), [], { purpose: 'search' }), 'secret', 10)).toEqual([]);
   });
 
   it('the outbox bound to a transaction refuses another tenant\'s event and an invalid one', async () => {

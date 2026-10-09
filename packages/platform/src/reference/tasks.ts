@@ -148,6 +148,10 @@ export async function indexTask(
       title: task.title,
       excerpt: task.dueAt ? `Due ${task.dueAt.slice(0, 10)}` : '',
       acl: [`person:${task.ownerId}`],
+      purposes: ['search', 'ai_context'],
+      roles: [],
+      source: { id: task.id, kind: 'student_entered' },
+      freshness: { state: 'current', observedAt: task.createdAt },
     });
   });
 }

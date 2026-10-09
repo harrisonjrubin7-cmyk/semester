@@ -400,6 +400,10 @@ const PLATFORM_NON_EVENT_IMPORTERS = [
   'app/server/institution/adapter.ts',
   'app/server/institution/context.ts',
   'app/server/institution/gateway.ts',
+  // These import only the platform retrieval/context contract. Neither calls
+  // the event API or mounts the productivity producer.
+  'app/server/institution/intelligence-repository.ts',
+  'app/server/institution/intelligence.ts',
   'app/server/productivity/http.ts',
   'app/server/productivity/service.ts',
 ];
