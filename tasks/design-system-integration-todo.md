@@ -474,6 +474,28 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep browser upload/download routes and Import/Study Studio wiring closed until session-derived tenant authority, shared rate limiting, signed-object policy and scanner runtime are all available.
 - [ ] Do not add client object policies, a Course Engine route, a parallel course model or a client-readable material table.
 
+## 2026-10-08 student-controlled re-import date conflicts — automation pass 16, slice 24
+
+- [x] Begin from merged `origin/main` `aac5da38`, then inspect final `27be630d`; confirm its Education OS governance/documentation update has no equivalent Import conflict-choice behavior or overlapping production/control file. Do not merge or rebase the dirty branch.
+- [x] Verify the repository still has no document-malware scanner, configured scanner provider, scanner credential or runtime; do not reuse the image-only community scanner or synthesize a receipt.
+- [x] Reuse the current Import/Rediff course-replacement path; add no route, second course model, server authority or provider claim.
+- [x] Treat every moved or disappearing deadline as an unresolved source conflict with no preselected winner.
+- [x] Require one explicit “Keep current” or imported-syllabus choice per conflict before save; independently refuse incomplete decision maps in the merge helper.
+- [x] Preserve current dates/reminders when chosen, preserve stable item/course ids and ticks, and include newly dropped imported dates in the live conflict set.
+- [x] Use each item's actual year for cross-year moves rather than silently applying the displayed term year to both sides.
+- [x] Cover radio groups with native fieldsets/legends, keyboard-operable controls, 44px targets, semantic tokens, narrow wrapping and a live unresolved-count message.
+- [x] Prove the guard red by temporarily bypassing unresolved-conflict detection, observe the focused test fail, restore it and pass 67/67 focused logic/UI/design/responsive tests.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains the existing four-warning baseline and the build retains existing chunk warnings.
+- [x] Token export, design audit, CSS budget and 69/69 design-system contracts pass; audit retains zero violations and the existing 86-warning ledger.
+- [ ] HawkScan DAST — required for this production UI change, but `hawk`, `HAWK_API_KEY` and `HAWK_APP_HOST` remain absent; no scan or security pass is claimed.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+
+### Next implementation boundary
+
+- [ ] Extend explicit conflict choices to changed course metadata and grading rows so re-import never silently chooses those conflicting values either.
+- [ ] Keep server ingestion, signed reads and current-screen server wiring closed until a real document-malware scanner and private runtime can generate trustworthy receipts.
+- [ ] Keep archive/provider/institution/deployment evidence separate; this local client merge behavior does not make imported dates official.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

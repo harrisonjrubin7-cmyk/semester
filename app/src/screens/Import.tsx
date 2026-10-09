@@ -23,11 +23,15 @@ import { packSummary, provenance, readPack } from '../lib/handoff';
 import { configured } from '../lib/assistant';
 import { readTerm } from '../lib/term';
 import {
+  applyDateConflictChoices,
+  dateConflicts,
   diff,
-  keepIds,
   movedLine,
   summary as rediffSummary,
   ticksKept,
+  unresolvedDateConflictIds,
+  type DateConflictChoice,
+  type DateConflictChoices,
   type Diff,
 } from '../lib/rediff';
 import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
@@ -151,6 +155,7 @@ export function Import() {
    * whenever a new result arrives and the default is always "take all of it".
    */
   const [dropped, setDropped] = useState<Set<string>>(new Set());
+  const [dateChoices, setDateChoices] = useState<Record<string, DateConflictChoice>>({});
   const abort = useRef<AbortController | null>(null);
   /** Whether a file is being dragged over the screen right now. */
   const [over, setOver] = useState(false);
@@ -348,6 +353,7 @@ export function Import() {
     trouble.clear();
     setResult(null);
     setDropped(new Set());
+    setDateChoices({});
     setBusy('Opening it…');
     try {
       const opened = readPack(await file.text());
@@ -359,6 +365,7 @@ export function Import() {
       // generated course gets. The provenance is prose and belongs in the
       // list under it.
       setDropped(new Set());
+      setDateChoices({});
       setResult({
         module: opened.module,
         notes: [packSummary(opened), provenance(opened)],
@@ -380,6 +387,7 @@ export function Import() {
     trouble.clear();
     setResult(null);
     setDropped(new Set());
+    setDateChoices({});
     setBusy('Reading the syllabus…');
     abort.current = new AbortController();
     try {
@@ -388,6 +396,7 @@ export function Import() {
         abort.current.signal,
       );
       setDropped(new Set());
+      setDateChoices({});
       setResult(built);
     } catch (e) {
       // The extracted text is still held, so a second run costs the upload
@@ -413,10 +422,17 @@ export function Import() {
       )
     : undefined;
 
-  const changes = useMemo(
-    () => (existing && result ? diff(existing, result.module, term.year) : null),
-    [existing, result, term.year],
+  const reviewedModule = useMemo(
+    () => result ? { ...result.module, items: result.module.items.filter((i) => !dropped.has(i.id)) } : null,
+    [dropped, result],
   );
+  const changes = useMemo(
+    () => (existing && reviewedModule ? diff(existing, reviewedModule, term.year) : null),
+    [existing, reviewedModule, term.year],
+  );
+  const unresolvedDateConflicts = changes
+    ? unresolvedDateConflictIds(changes, dateChoices).length
+    : 0;
 
   const save = () => {
     if (!result) return;
@@ -428,10 +444,8 @@ export function Import() {
     void takeSnapshot('import', backupOf(state) as unknown as Record<string, unknown>);
     // What the person actually approved. Dropping a date here drops it before
     // it is ever a row in the course, so nothing has to be tidied up after.
-    const reviewed = {
-      ...result.module,
-      items: result.module.items.filter((i) => !dropped.has(i.id)),
-    };
+    const reviewed = reviewedModule;
+    if (!reviewed) return;
     // Replacing rather than adding, when it is the same course, and with the
     // surviving items keeping the ids their ticks are filed under — otherwise
     // a re-import silently un-ticks everything already done.
@@ -465,7 +479,7 @@ export function Import() {
     const keep = (courseId: string) => void keepSources(files, courseId).catch(() => {});
 
     if (existing) {
-      const merged = keepIds(existing, reviewed);
+      const merged = applyDateConflictChoices(existing, reviewed, term.year, dateChoices);
       dispatch({ type: 'replaceCourse', module: merged });
       fileAttendance(merged.course.id);
       keep(merged.course.id);
@@ -830,16 +844,22 @@ export function Import() {
       {result && changes && existing ? (
         <Rediff
           changes={changes}
-          kept={ticksKept(existing, result.module, state.done)}
+          kept={ticksKept(existing, reviewedModule ?? result.module, state.done)}
           code={result.module.course.code}
+          choices={dateChoices}
+          onChoose={(id, choice) => setDateChoices((was) => ({ ...was, [id]: choice }))}
         />
       ) : null}
       {result && (
         <Preview
           result={result}
           onSave={save}
-          onRevise={setResult}
+          onRevise={(next) => {
+            setDateChoices({});
+            setResult(next);
+          }}
           replacing={Boolean(existing)}
+          unresolvedDateConflicts={unresolvedDateConflicts}
           dropped={dropped}
           onToggle={(id) =>
             setDropped((was) => {
@@ -1013,14 +1033,18 @@ function ByHand() {
  * and a course updated mid-term stayed wrong on purpose. Removals are listed
  * first because they are what a person actually loses.
  */
-function Rediff({
+export function Rediff({
   changes,
   kept,
   code,
+  choices,
+  onChoose,
 }: {
   changes: Diff;
   kept: { kept: number; lost: number };
   code: string;
+  choices: DateConflictChoices;
+  onChoose: (id: string, choice: DateConflictChoice) => void;
 }) {
   const line = (label: string, right: string) => (
     <div
@@ -1037,6 +1061,20 @@ function Rediff({
       <span style={{ flex: 'none', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>{right}</span>
     </div>
   );
+  const choose = (id: string, current: string, imported: string) => (
+    <fieldset className="import-conflict-choice" key={id}>
+      <legend>{current}</legend>
+      <label>
+        <input type="radio" name={id} checked={choices[id] === 'keep_current'} onChange={() => onChoose(id, 'keep_current')} />
+        Keep current
+      </label>
+      <label>
+        <input type="radio" name={id} checked={choices[id] === 'use_imported'} onChange={() => onChoose(id, 'use_imported')} />
+        {imported}
+      </label>
+    </fieldset>
+  );
+  const conflicts = dateConflicts(changes);
 
   return (
     <Folding name="Rediff">
@@ -1055,21 +1093,28 @@ function Rediff({
             : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
           {' '}Cards and drill history are keyed to the question text and are untouched.
         </div>
+        {conflicts.length > 0 && (
+          <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+            Choose what to keep for every moved or missing date. Semester will not decide a source conflict for you.
+          </div>
+        )}
       </Blueprint>
 
       {changes.removed.length > 0 && (
         <>
           <SectionLabel>Gone from the new syllabus</SectionLabel>
-          {changes.removed.map((i) => line(i.title, `${i.month + 1}/${i.day}`))}
+          {changes.removed.map((i) => choose(`removed:${i.id}`, `${i.title} · ${i.month + 1}/${i.day}`, 'Use imported syllabus — remove it'))}
         </>
       )}
 
       {changes.moved.length > 0 && (
         <>
           <SectionLabel>Moved</SectionLabel>
-          {changes.moved.map((m) =>
-            line(m.after.title, `${m.before.month + 1}/${m.before.day} → ${m.after.month + 1}/${m.after.day} · ${movedLine(m)}`),
-          )}
+          {changes.moved.map((m) => choose(
+            `moved:${m.before.id}`,
+            `${m.after.title} · ${m.before.month + 1}/${m.before.day} → ${m.after.month + 1}/${m.after.day} · ${movedLine(m)}`,
+            `Use imported date — ${m.after.month + 1}/${m.after.day}`,
+          ))}
         </>
       )}
 
@@ -1114,6 +1159,7 @@ function Preview({
   onSave,
   onRevise,
   replacing = false,
+  unresolvedDateConflicts = 0,
   dropped,
   onToggle,
 }: {
@@ -1121,6 +1167,7 @@ function Preview({
   onSave: () => void;
   onRevise: (result: GenerationResult) => void;
   replacing?: boolean;
+  unresolvedDateConflicts?: number;
   /** Dates taken off the import. See the state in `Import`. */
   dropped: Set<string>;
   onToggle: (id: string) => void;
@@ -1131,7 +1178,8 @@ function Preview({
   const confirmed =
     approval.result === result && approval.dropped === dropped && approval.confirmed;
   const { module: m, notes } = result;
-  const ready = reviewReady(m.items, dropped, confirmed, now.getFullYear());
+  const datesReviewed = reviewReady(m.items, dropped, confirmed, now.getFullYear());
+  const ready = datesReviewed && unresolvedDateConflicts === 0;
   const [summary, ...warnings] = notes;
   const keeping = m.items.filter((i) => !dropped.has(i.id)).length;
 
@@ -1267,7 +1315,13 @@ function Preview({
       ))}
 
       <label className="import-confirmation"><input type="checkbox" checked={confirmed} onChange={e=>setApproval({ result, dropped, confirmed: e.target.checked })}/><span>I checked the course information and selected dates against my syllabus. Add only the dates I approved.</span></label>
-      <p className="import-evidence-note" role="status">{ready ? 'Verified dates are ready to add.' : 'Review the dates above before adding this course. Reminders begin only after you approve and save.'}</p>
+      <p className="import-evidence-note" role="status">
+        {ready
+          ? 'Verified dates are ready to add.'
+          : unresolvedDateConflicts > 0
+            ? `${unresolvedDateConflicts} source ${unresolvedDateConflicts === 1 ? 'conflict needs' : 'conflicts need'} a choice above before you can save.`
+            : 'Review the dates above before adding this course. Reminders begin only after you approve and save.'}
+      </p>
       <ActionButton
         onClick={() => { if (ready) onSave(); }}
         disabled={!ready}

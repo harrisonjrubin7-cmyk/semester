@@ -69,11 +69,21 @@ export interface Diff {
   identical: boolean;
 }
 
+export type DateConflictChoice = 'keep_current' | 'use_imported';
+export type DateConflictChoices = Readonly<Record<string, DateConflictChoice>>;
+
+export interface DateConflict {
+  id: string;
+  kind: 'moved' | 'removed';
+  before: Item;
+  after?: Item;
+}
+
 const DAY = 86_400_000;
 
 function daysApart(a: Item, b: Item, year: number): number {
-  const left = new Date(year, a.month, a.day).getTime();
-  const right = new Date(year, b.month, b.day).getTime();
+  const left = new Date(a.year ?? year, a.month, a.day).getTime();
+  const right = new Date(b.year ?? year, b.month, b.day).getTime();
   return Math.round((right - left) / DAY);
 }
 
@@ -203,6 +213,75 @@ export function keepIds(before: CourseModule, after: CourseModule): CourseModule
       return kept ? { ...item, id: kept, c: before.course.id } : { ...item, c: before.course.id };
     }),
   };
+}
+
+/**
+ * Consequential date differences that a person must resolve before a
+ * re-import can replace their current course copy.
+ *
+ * New dates are already individually selectable in Import's review list.
+ * A moved date or one that disappeared is different: accepting the import
+ * would otherwise overwrite or remove an existing reminder. Stable ids keep
+ * choices attached to the current row instead of to array order.
+ */
+export function dateConflicts(d: Diff): DateConflict[] {
+  return [
+    ...d.removed.map((before) => ({
+      id: `removed:${before.id}`,
+      kind: 'removed' as const,
+      before,
+    })),
+    ...d.moved.map(({ before, after }) => ({
+      id: `moved:${before.id}`,
+      kind: 'moved' as const,
+      before,
+      after,
+    })),
+  ];
+}
+
+export function unresolvedDateConflictIds(d: Diff, choices: DateConflictChoices): string[] {
+  return dateConflicts(d).map((conflict) => conflict.id).filter((id) => {
+    const choice = choices[id];
+    return choice !== 'keep_current' && choice !== 'use_imported';
+  });
+}
+
+/**
+ * Apply explicit date-conflict choices while preserving the existing course
+ * and item ids. The function refuses an incomplete decision map so a future
+ * caller cannot accidentally restore the old replace-everything behaviour.
+ */
+export function applyDateConflictChoices(
+  before: CourseModule,
+  after: CourseModule,
+  year: number,
+  choices: DateConflictChoices,
+): CourseModule {
+  const changes = diff(before, after, year);
+  const unresolved = unresolvedDateConflictIds(changes, choices);
+  if (unresolved.length > 0) throw new Error('Every moved or removed date must be resolved before re-import.');
+
+  const merged = keepIds(before, after);
+  const currentById = new Map(before.items.map((item) => [item.id, item]));
+  const movedById = new Map(changes.moved.map((move) => [move.before.id, move]));
+
+  const items = merged.items.map((item) => {
+    const move = movedById.get(item.id);
+    if (!move || choices[`moved:${item.id}`] !== 'keep_current') return item;
+    const current = currentById.get(item.id);
+    return current
+      ? { ...item, year: current.year, month: current.month, day: current.day, dueTime: current.dueTime }
+      : item;
+  });
+
+  for (const removed of changes.removed) {
+    if (choices[`removed:${removed.id}`] === 'keep_current') {
+      items.push({ ...removed, c: before.course.id });
+    }
+  }
+
+  return { ...merged, items };
 }
 
 /** How many ticks survive a re-import, so the screen can promise it. */

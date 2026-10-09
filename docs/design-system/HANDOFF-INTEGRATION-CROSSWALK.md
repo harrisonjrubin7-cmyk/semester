@@ -94,6 +94,8 @@ Automation pass 14 adds that bounded shared-material metadata/lifecycle layer in
 
 Automation pass 15 adds the deny-by-default Storage boundary in `20261009004500_course_source_storage_buckets.sql`. The two bucket definitions are **existing and verified locally**: both are private, repair configuration drift idempotently, use the current classification caps and exact five-type course-document allowlist, expose no repair function to runtime roles and grant no browser object policy. CE-05 remains **existing but incomplete** because no byte, trustworthy adapter/scanner receipt, extraction, signed read, route/rate-limit boundary, current-screen wiring, deployment or operating evidence exists. Local bucket definitions are not production bucket evidence.
 
+Automation pass 16 advances CE-08's current re-import behavior without claiming server ingestion. `Import.tsx` and `rediff.ts` now treat moved and disappearing deadlines as explicit source conflicts: each requires an un-defaulted keep-current/use-imported choice, unresolved conflicts disable save and the pure merge guard refuses incomplete decision maps. Chosen current reminders survive, imported moves preserve stable ids/ticks, dropped dates participate in the recalculated conflict set and cross-year moves use actual item years. This bounded date-conflict path is **existing and verified locally**; course metadata/grading conflict choices, server-authoritative conflict records, external reconciliation and safe ICS publication remain incomplete. The absent document-malware scanner remains an external gate and no receipt is synthesized.
+
 ## How a row was classed
 
 | Disposition | Meaning here |

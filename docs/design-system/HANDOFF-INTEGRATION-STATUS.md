@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 15 of 120 · **Integration slice** 23 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `aac5da38`
+**Automation pass** 16 of 120 · **Integration slice** 24 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `27be630d`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, and deny-by-default private bucket definitions are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, routes and current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the first student-controlled re-import conflict path are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 16 / slice 24
+
+- The pass began clean at `8653a50f`, whose history includes `origin/main` `aac5da38`. A final dirty-tree fetch observed `27be630d`; its Education OS governance/documentation update changes no Import, Rediff, form-style or integration-control file and contains no equivalent conflict-choice behavior, so the dirty branch was not merged or rebased before the coherent slice commit.
+- The planned private storage/scanner runtime is not dependency-ready: `hawk` and document-antivirus tooling are absent, no document scanner/provider credential is configured, and the existing community scanner handles images only, is undeployed and is explicitly not a malware scanner. It was not reused and no storage or scan receipt was synthesized.
+- The current Import/Rediff path now classifies every moved or disappearing deadline as an explicit source conflict. Native radio groups offer “Keep current” or the specific imported-syllabus effect with no preselected winner; the final save remains disabled until all conflicts have choices.
+- The pure merge boundary separately refuses incomplete decision maps. Keep-current preserves the existing date or restores the removed reminder; use-imported preserves the stable existing item id and its tick. The conflict set is recomputed after a student drops an imported date, and cross-year moves use actual item years.
+- The UI reuses the existing `Folding`, `Blueprint`, `SectionLabel` and `ActionButton` patterns. Native fieldsets/legends, keyboard radio controls, semantic tokens, 44px targets, wrapping and the existing status message cover accessibility and 320px behavior without a new shared component.
+- The focused regression guard was proved red by temporarily bypassing unresolved-conflict detection; the named test failed, the implementation was restored and 67/67 focused logic, rendered conflict-control, Import-review, design-tooling and responsive contract tests pass.
+- TypeScript, lint, university typecheck and production build pass. Lint retains the existing four-warning baseline and the build retains existing chunk-size warnings. Token export passes 9/9; design audit has zero violations within the existing 86-warning ledger; CSS stays within its ledger; 69/69 design-system contracts pass.
+- Ordered and shuffled full suites were not run for this bounded client slice. Course metadata/grading conflict choices, a durable server conflict record, external reconciliation and safe ICS publication remain incomplete.
+- HawkScan DAST is required for this production UI change but cannot start: the `hawk` executable, `HAWK_API_KEY` and `HAWK_APP_HOST` target are absent. No DAST result or security pass is claimed.
 
 ## Evidence locked in automation pass 15 / slice 23
 
@@ -275,7 +287,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Define the repository adapter/private runtime only when it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
+Extend the same explicit, no-default conflict choice model to changed course metadata and grading rows in the existing re-import path. The repository adapter/private runtime remains externally gated until it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire server ingestion into Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

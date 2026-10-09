@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { diff, keepIds, movedLine, summary, ticksKept } from './rediff';
+import {
+  applyDateConflictChoices,
+  dateConflicts,
+  diff,
+  keepIds,
+  movedLine,
+  summary,
+  ticksKept,
+  unresolvedDateConflictIds,
+} from './rediff';
 import type { CourseModule, GradeRow, Item } from './types';
 
 const YEAR = 2026;
@@ -161,6 +170,57 @@ describe('keepIds', () => {
   it('files every item against the course that is being replaced', () => {
     const after = module([item('x', 'Quiz', 8, 1)], [], { id: 'econ-abc123' });
     for (const i of keepIds(module([]), after).items) expect(i.c).toBe('econ');
+  });
+});
+
+describe('date conflict choices', () => {
+  const before = module([
+    item('move-me', 'Problem Set 3', 8, 10),
+    item('keep-me', 'Quiz 7', 9, 1),
+  ]);
+  const after = module([item('fresh-id', 'Problem Set 3', 8, 17)]);
+
+  it('names every moved or removed deadline and refuses an incomplete decision map', () => {
+    const changes = diff(before, after, YEAR);
+    expect(dateConflicts(changes).map(({ id, kind }) => ({ id, kind }))).toEqual([
+      { id: 'removed:keep-me', kind: 'removed' },
+      { id: 'moved:move-me', kind: 'moved' },
+    ]);
+    expect(unresolvedDateConflictIds(changes, { 'moved:move-me': 'use_imported' })).toEqual([
+      'removed:keep-me',
+    ]);
+    expect(unresolvedDateConflictIds(changes, { 'moved:move-me': 'unexpected' } as never)).toEqual([
+      'removed:keep-me',
+      'moved:move-me',
+    ]);
+    expect(() => applyDateConflictChoices(before, after, YEAR, {})).toThrow(/Every moved or removed date/);
+  });
+
+  it('keeps a current moved date and restores a removed reminder when explicitly chosen', () => {
+    const merged = applyDateConflictChoices(before, after, YEAR, {
+      'moved:move-me': 'keep_current',
+      'removed:keep-me': 'keep_current',
+    });
+    expect(merged.items.map(({ id, month, day }) => ({ id, month, day }))).toEqual([
+      { id: 'move-me', month: 8, day: 10 },
+      { id: 'keep-me', month: 9, day: 1 },
+    ]);
+  });
+
+  it('uses the imported move and accepts removal only after explicit choices', () => {
+    const merged = applyDateConflictChoices(before, after, YEAR, {
+      'moved:move-me': 'use_imported',
+      'removed:keep-me': 'use_imported',
+    });
+    expect(merged.items.map(({ id, month, day }) => ({ id, month, day }))).toEqual([
+      { id: 'move-me', month: 8, day: 17 },
+    ]);
+  });
+
+  it('uses each item year when a re-import crosses a calendar year', () => {
+    const current = module([{ ...item('a', 'Final exam', 11, 15), year: 2026 }]);
+    const imported = module([{ ...item('b', 'Final exam', 0, 15), year: 2027 }]);
+    expect(diff(current, imported, YEAR).moved[0].days).toBe(31);
   });
 });
 
