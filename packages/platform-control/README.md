@@ -2,6 +2,8 @@
 
 This package is the repository-owned implementation control plane. It turns a bounded slice of the ecosystem catalog into machine-checkable records for capabilities, systems, roles, screens, workflows, integrations, controls, documents, and tenants.
 
+The generated `execution-board.json` is the dependency-ordered P0 delivery board. Every item links to registry keys, names an owner, and keeps missing external or operational proof in explicit blockers.
+
 It deliberately separates repository implementation evidence from deployment, activation, and observed operation. A stage may be `true` only when that exact stage has evidence, and stages cannot skip an earlier false gate.
 
 Run from the repository root:
