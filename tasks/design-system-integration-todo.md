@@ -322,10 +322,35 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Define and test the current-repository course-source authority contract before adding server storage or ingestion.
+- [x] Define and test the current-repository course-source authority contract before adding server storage or ingestion.
 - [ ] Extend the existing Import/Study Studio path with the first bounded server-backed source slice; do not add a Course Engine route or parallel course model.
 - [ ] Keep extracted dates/assignments uncommitted until explicit student confirmation, retain source links and propagate confirmed corrections.
 - [ ] Keep faculty-published/official LMS course data behind exact teaching capability and institutional authority rather than treating a student's source as official.
+
+## 2026-10-08 course-source authority contract — automation pass 10, slice 18
+
+- [x] Fetch and inspect current `origin/main` `55adab11`; confirm no equivalent course-source authority or storage contract landed.
+- [x] Reuse `packages/platform/src/engines/files.ts` for tenant-prefixed keys, classifications, size caps, quarantine lifecycle, signed-download limits and legal-hold deletion refusal.
+- [x] Bind student sources to exact current course-row ownership and exact tenant membership; bind published course material to `course:publish` at exact `<tenant>/<CODE>` scope.
+- [x] Require a current versioned institution retention policy for shared material; preserve the current 30-day student Drive recovery rule and legal-hold precedence.
+- [x] Require request-context idempotency and a successful shared rate-limit decision before an upload can be planned.
+- [x] Accept only bounded document formats; keep server archive ingestion refused until a sandboxed bounded expander exists.
+- [x] Require a tenant-bound service context for storage receipt and scan settlement; keep ordinary users and cross-tenant services out.
+- [x] Keep bytes quarantined until clean scan, exact detected/declared type, SHA-256 and scanner version agree; reject every mismatch and scanner failure.
+- [x] Define immutable source/correction lineage and content-free audit facts without filename, excerpt, extracted text or old/new value content.
+- [x] Document the authority, retention, provenance, recovery and remaining persistence/deployment gates in `docs/COURSE-SOURCE-AUTHORITY.md`.
+- [x] Authority and generic file-engine tests pass 66/66 in ordered and shuffled runs; authority/architecture/generated-reference guards pass 144/144 together.
+- [x] TypeScript, lint, university typecheck and production build pass; only the existing three lint warnings remain.
+- [x] Design-system constituents/report pass: 9 token tests, zero audit violations with the existing 86 warnings, CSS within its ledger and 69 contract tests.
+- [ ] Ordered full suite — 23,786 pass and 69 skip; only the runner-mounted `.semester-reference` repository-map refusal and an unrelated 30-second waiting-row timeout fail.
+- [ ] Full shuffled suite — seed `1791508834946` finishes with 23,787 pass and 69 skip; only the runner-mounted `.semester-reference` repository-map refusal fails.
+- [ ] HawkScan DAST — preflight cannot start because `hawk` is absent and `HAWK_API_KEY` is unset. No scan or pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Add repository-native source metadata, correction and deletion/recovery persistence with deny-by-default RLS and exact server-side relationship resolution.
+- [ ] Append content-free audit and source state atomically; prove idempotency and tenant isolation in focused PostgreSQL checks.
+- [ ] Keep bucket provisioning, deployed scanning, extraction, public upload/download routes and Import/Study Studio UI wiring outside that schema slice unless their prerequisites are actually available.
 
 ## Earlier integration baseline preserved
 

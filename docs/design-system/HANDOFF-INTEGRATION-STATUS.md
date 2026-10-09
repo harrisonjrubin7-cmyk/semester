@@ -1,10 +1,24 @@
 # Handoff integration status
 
-**Automation pass** 9 of 120 · **Integration slice** 17 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `55adab11`
+**Automation pass** 10 of 120 · **Integration slice** 18 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Current `origin/main`** `55adab11`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and now includes the newly landed Course Engine MVP as current-repository evidence. P1-01 through P1-07 and the first repository-native Console consumer are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app; its useful behaviors are mapped to current Import, Study Studio, Course Studio, storage and authorization owners. Scheduler activation, production freshness, server-backed course-source authority and production Course Engine operation remain absent. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer and the pre-ingestion course-source authority contract are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Server course-source persistence, private buckets, scanning, extraction, routes and current-screen wiring remain absent. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 10 / slice 18
+
+- The clean branch fetched `origin/main` `55adab11`; no newer equivalent course-source authority or storage contract landed.
+- `app/server/course-sources/contract.ts` reuses the existing platform file engine and adds only course-specific authority. Student sources require exact current course-row ownership and tenant membership; shared material requires exact `<tenant>/<CODE>` `course:publish` evidence and a current versioned retention policy.
+- Upload planning requires the request context's idempotency key plus a successful shared rate-limit decision. The server contract accepts PDF, Word, PowerPoint, plain text and Markdown; ZIP and other archives remain refused until a sandboxed bounded expander exists.
+- Only a tenant-bound service context can accept the storage receipt or settle scanning. Bytes remain quarantined until clean verdict, exact declared/detected type, SHA-256 and scanner version agree; mismatches, blocked verdicts and scanner errors reject the source.
+- Student-source deletion preserves the existing 30-day Drive recovery rule; shared material uses the named institution retention policy; legal hold always wins. Confirmed corrections are append-only hash-linked revisions over an immutable available source.
+- Audit facts contain bounded identity/outcome metadata only and exclude filename, excerpts, extracted text, prompts and old/new correction values. [`COURSE-SOURCE-AUTHORITY.md`](../COURSE-SOURCE-AUTHORITY.md) records the authority and every remaining persistence, scanner, route, deployment and approval gate.
+- Authority/file tests pass 66/66 in ordered and shuffled runs. The authority, architecture, platform-reference and event-example guards pass 144/144 together. The broad suite caught and the slice fixed an audit discriminator that resembled a domain event plus a relative package import that bypassed the `@semester/platform` public boundary; the final producer/reference guards remain unchanged in meaning and green.
+- TypeScript, lint, university typecheck and production build pass; lint retains only the existing three warnings. Design-system constituents/report pass with 9 token tests, zero violations and the existing 86-warning ledger, CSS within budget and 69 contract tests.
+- The ordered full suite finishes with 23,786 passing and 69 skipped. Its two failures are unrelated to this slice: the runner-mounted `.semester-reference` repository-map refusal and a 30-second timeout in `waitingrow.test.tsx`. Full shuffle seed `1791508834946` finishes with 23,787 passing and 69 skipped; only the mounted-reference map guard fails.
+- HawkScan preflight cannot start because the `hawk` executable is absent and `HAWK_API_KEY` is unset. No DAST result or security pass is claimed; the release gate remains open.
+- No schema, bucket, storage object, scanner, route, UI, deployment, production data or external system changed.
 
 ## Evidence locked in automation pass 9 / slice 17
 
@@ -190,7 +204,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. For slice 16, 43 focused tests in both normal and shuffled order, generated-reference guards, TypeScript, lint, university typecheck, production build and design-system equivalents are green. Slice 17 is documentation/reconciliation only: its 16-row structural check and 22/22 design-tooling guard are green, so application-wide gates were not rerun. The ordered full suite has no slice-16 regression; the full shuffled suite is not green because of the recorded unrelated timing/order cascade and exit 130. Deno and HawkScan remain explicitly open for production changes. Secret provisioning, scheduler activation, additional projectors and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green. Slice 18 passes 66/66 ordered and shuffled authority/file tests, 144/144 combined architecture/reference guards, TypeScript, lint, university typecheck, production build and the design-system constituents/report. The ordered full suite is not wholly green only for the mounted-reference map refusal and an unrelated waiting-row timeout; full shuffle is not wholly green only for the mounted-reference map refusal. Deno and HawkScan remain explicitly open where applicable. Secret provisioning, scheduler activation, additional projectors, course-source persistence/storage/scanning and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -198,7 +212,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Define and test the repository-native `student-files` / `course-materials` authority contract before adding server storage or ingestion. The contract must bind canonical course identity, exact tenant/course relationship, storage path, validation and quarantine, retention/deletion, provenance and confirmed-correction propagation, idempotency, rate limits, audit and recovery. Then extend the existing Import and Study Studio path in one bounded slice; do not add a Course Engine route or parallel course model.
+Add the repository-native course-source metadata, correction and deletion/recovery schema with deny-by-default RLS, exact server-side relationship resolution and atomic content-free audit. Prove tenant isolation, idempotency, legal-hold/recovery behavior and relationship revocation in focused PostgreSQL checks. Do not provision buckets, expose upload/download routes or wire Import/Study Studio until the private storage and deployed scanner prerequisites are actually available; do not add a Course Engine route or parallel course model.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 
