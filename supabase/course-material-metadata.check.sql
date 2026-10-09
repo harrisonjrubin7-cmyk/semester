@@ -168,7 +168,7 @@ begin
   perform pg_temp.refused('policy withdrawal blocking restore', 'service_role',
     jsonb_build_object('role', 'service_role'),
     format($q$select public.change_course_material_state(%L,%L,'restore',
-      'material-restore-key-01','corr-material-restore')$q$, material, faculty));
+      'material-restore-idem-01','corr-material-restore')$q$, material, faculty));
 
   insert into private.course_material_retention_policy
     (id, tenant_id, version, state, days_after_withdrawal, approval_request_id,
@@ -176,7 +176,7 @@ begin
   values (policy3, 'material-u', 3, 'active', 180, gen_random_uuid(),
     'MAT-1003', 'corr-material-policy-3', faculty, now());
   changed := pg_temp.service_call(format($q$select public.change_course_material_state(
-    %L,%L,'restore','material-restore-key-01','corr-material-restore')$q$, material, faculty));
+    %L,%L,'restore','material-restore-idem-01','corr-material-restore')$q$, material, faculty));
   perform pg_temp.counted('restore under a newly active policy preserves the original binding',
     (select count(*) from public.course_materials where id = material
       and lifecycle_state = 'pending_upload' and retention_policy_id = policy1
