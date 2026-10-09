@@ -68,6 +68,16 @@ describe('PrivilegedMfaBoundary', () => {
     expect(host.textContent).toContain('Protected app');
   });
 
+  it('uses session and focus events without polling every signed-in account', async () => {
+    const interval = vi.spyOn(window, 'setInterval');
+    mock.required.mockResolvedValue(false);
+    await render('student-1');
+    expect(interval).not.toHaveBeenCalled();
+    await act(async () => { window.dispatchEvent(new Event('focus')); await Promise.resolve(); });
+    expect(mock.required).toHaveBeenCalledTimes(2);
+    interval.mockRestore();
+  });
+
   it('rechecks when Auth replaces the same account’s session', async () => {
     let changed: (() => void) | undefined;
     mock.watch.mockImplementation(async (callback: () => void) => {

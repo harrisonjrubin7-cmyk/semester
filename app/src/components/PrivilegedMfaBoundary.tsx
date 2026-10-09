@@ -40,17 +40,15 @@ export function PrivilegedMfaBoundary({ subject, children }: { subject: string |
       else stop();
     }).catch(() => {
       // A device-only build has no Auth client to subscribe to. The initial
-      // status read owns the user-facing error, while focus and polling still
-      // provide recovery if the account service becomes available.
+      // status read owns the user-facing error, while a later focus still
+      // provides recovery if the account service becomes available.
     });
     const recheck = () => void read();
-    const timer = window.setInterval(recheck, 60_000);
     window.addEventListener('focus', recheck);
     return () => {
       live = false;
       request.current += 1;
       stopAuth();
-      window.clearInterval(timer);
       window.removeEventListener('focus', recheck);
     };
   }, [read]);
