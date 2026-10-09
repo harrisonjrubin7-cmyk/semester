@@ -138,14 +138,14 @@ before_body=$(psql -At -d live -c "
   select md5(string_agg(data::text, '|' order by data::text))
     from (select data from public.state union all select data from public.courses) x")
 before_fp=$(psql -At -d live -f "$here/fingerprint.sql")
-before_constraints=$(psql -At -d live -c "
+psql -At -d live -c "
   select n.nspname || '.' || rel.relname || '.' || con.conname || ' ' ||
          pg_get_constraintdef(con.oid)
     from pg_constraint con
     join pg_class rel on rel.oid = con.conrelid
     join pg_namespace n on n.oid = rel.relnamespace
    where n.nspname in ('public', 'private')
-   order by 1")
+   order by 1" > "$work/constraints.before"
 
 # ── The dump ──────────────────────────────────────────────────────────────
 
@@ -179,22 +179,22 @@ after_body=$(psql -At -d restored -c "
   select md5(string_agg(data::text, '|' order by data::text))
     from (select data from public.state union all select data from public.courses) x")
 after_fp=$(psql -At -d restored -f "$here/fingerprint.sql")
-after_constraints=$(psql -At -d restored -c "
+psql -At -d restored -c "
   select n.nspname || '.' || rel.relname || '.' || con.conname || ' ' ||
          pg_get_constraintdef(con.oid)
     from pg_constraint con
     join pg_class rel on rel.oid = con.conrelid
     join pg_namespace n on n.oid = rel.relnamespace
    where n.nspname in ('public', 'private')
-   order by 1")
+   order by 1" > "$work/constraints.after"
 
 fail=0
 say() { if [ "$2" = "$3" ]; then echo "  ✓ $1"; else echo "  ✗ $1"; echo "      before: $2"; echo "      after:  $3"; fail=1; fi; }
 
 say "schema fingerprints" "$before_fp" "$after_fp"
-if [ "$before_constraints" != "$after_constraints" ]; then
-  echo "      constraint differences:"
-  diff -u <(printf '%s\n' "$before_constraints") <(printf '%s\n' "$after_constraints") || true
+if [ "$before_fp" != "$after_fp" ]; then
+  echo "      constraint definition differences:"
+  diff -u "$work/constraints.before" "$work/constraints.after" || true
 fi
 say "row counts" "$before_rows" "$after_rows"
 say "the contents of what was seeded" "$before_body" "$after_body"
