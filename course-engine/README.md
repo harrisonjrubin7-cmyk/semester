@@ -43,4 +43,4 @@ uvicorn app.main:app --reload
 - Original files and generated assets can be deleted; asset edits increment versions.
 - pgvector is reserved for source retrieval. It is not the record of truth.
 
-See [architecture.md](docs/architecture.md), [api.md](docs/api.md), [local-development.md](docs/local-development.md), [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [VERIFICATION_REPORT.md](VERIFICATION_REPORT.md), and the repository-level [implementation audit](../docs/audit/CURRENT_STATE.md).
+See [architecture.md](docs/architecture.md), [api.md](docs/api.md), [local-development.md](docs/local-development.md), [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md), [VERIFICATION_REPORT.md](VERIFICATION_REPORT.md), and the repository-level [Course Engine implementation audit](../docs/audit/course-engine/CURRENT_STATE.md).

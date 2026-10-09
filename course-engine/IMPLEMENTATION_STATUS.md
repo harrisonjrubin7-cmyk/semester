@@ -21,4 +21,4 @@
 - Replace the metadata-driven initial Alembic revision with explicit generated operations if the organization requires fully inspectable DDL diffs.
 - Add worker job polling/cancellation UI, cloud upload providers, a focus-managed source sheet with exact PDF bounding boxes/OCR overlays, and external-calendar reconciliation.
 
-See `docs/audit/` at the repository root for the factual current-state inventory, gaps, test coverage, and phased roadmap.
+See `docs/audit/course-engine/` at the repository root for the factual current-state inventory, gaps, test coverage, and phased roadmap.

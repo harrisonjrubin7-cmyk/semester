@@ -1,10 +1,14 @@
 # Semester Education OS current-state audit
 
+> **Type:** explanation · **Audience:** contributors, implementers · **Owner:** `engineering` · **Truth:** reviewed · **Reviewed:** 2026-10-08 · **Held by:** —
+
 Assessed: 2026-10-08
 
 Repository baseline: `55adab11` (`origin/main`)
 
 Scope: the two supplied Education OS outline PDFs, reconciled against the current repository rather than treated as implementation authority.
+
+This is a revision-bound audit snapshot, not a new source of planning authority. The canonical dependency order remains [`docs/product/EDUCATION_OS_BACKLOG.md`](../product/EDUCATION_OS_BACKLOG.md); the current launch verdict remains [`docs/LAUNCH-READINESS-COUNCIL.md`](../LAUNCH-READINESS-COUNCIL.md).
 
 ## Executive finding
 
@@ -59,7 +63,8 @@ Keep the current modular monolith. Do not create the PDF's proposed parallel `ap
 
 ## Immediate implementation sequence
 
-1. Define one server-issued registration-readiness projection contract that carries tenant, subject, term, authority, source references, freshness, version and field-level visibility.
+1. **Implemented in repository source:** define one server-issued registration-readiness projection contract that carries tenant, subject, term, authority, source references, freshness, version and field-level visibility.
+   The evaluation aggregate now also defines legal transitions, optimistic versions, idempotent receipts, reconciliation generations/tasks, and minimal outbox descriptors; production Postgres persistence remains pending.
 2. Route student, assigned-advisor and authorized-registrar reads through `packages/institution` policy evaluation and apply returned obligations before serialization.
 3. Persist a durable readiness evaluation/request workflow with idempotency, audit event, receipt, stale/unknown states and a reconciliation task.
 4. Replace only the readiness component's data seam—not its Semester UI—with the governed projection behind a feature flag; retain local planning as an explicit fallback.

@@ -62,6 +62,7 @@ export function contextFor(
   identity: UniversityIdentity,
   ids: { requestId: string; correlationId: string },
   environment: PolicyEnvironment = 'production',
+  purpose?: string,
 ): RequestContext {
   const now = systemClock.now();
   const tenantHint = request.headers.get('x-tenant-id');
@@ -71,6 +72,7 @@ export function contextFor(
         'x-correlation-id': ids.correlationId,
         ...(tenantHint !== null ? { 'x-tenant-id': tenantHint } : {}),
       },
+      purpose,
     },
     trustedIdentityFor(identity, { environment, authenticatedAt: now.toISOString() }),
     { clock: systemClock, ids: { next: () => ids.correlationId }, requestId: ids.requestId },

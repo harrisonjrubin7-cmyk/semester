@@ -28,10 +28,9 @@ Locally generated artifacts (intentionally ignored by Git):
 ## Environment-blocked checks
 
 - Docker Compose execution: blocked because the `docker` executable is not installed on the verification host. Compose configuration therefore remains source-reviewed, not runtime-verified.
-- HawkScan DAST: blocked at mandatory preflight because `hawk` 6+ is not installed and `HAWK_API_KEY` is unset. Per the HawkScan workflow, no scan or security-pass claim was made. Install/upgrade with the method documented by StackHawk, initialize credentials, start the stack, then run the HawkScan loop.
+- Local HawkScan DAST: blocked at mandatory preflight because `hawk` 6+ is not installed and `HAWK_API_KEY` is unset on this host. Hosted HawkScan remains a required merge gate; a hosted pass applies only to the exact commit it scanned, and no security-pass claim is made here.
 
 ## UI implementation pass
 
 The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. Automated axe runs exclude color contrast because jsdom has no layout/color engine; real-browser WCAG 2.2 AA contrast verification remains open.
-
 The upload workspace now opens an owner-scoped, focus-managed source sheet. Extracted chunks retain page, slide, sheet/cell, or media timestamp labels and confidence; exact PDF bounding-box overlays and correction actions remain open.

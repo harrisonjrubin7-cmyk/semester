@@ -766,7 +766,13 @@ describe('examples/event-consumer', () => {
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
     // The institution gateway takes the error envelope, correlation ids and request context from the platform package
     // (MIGRATION phase 1). Those three files may import it; none of them may import the productivity service.
-    const gatewayFiles = ['app/server/institution/adapter.ts', 'app/server/institution/context.ts', 'app/server/institution/gateway.ts'];
+    const gatewayFiles = [
+      'app/server/institution/adapter.ts',
+      'app/server/institution/context.ts',
+      'app/server/institution/gateway.ts',
+      'app/server/institution/intelligence-repository.ts',
+      'app/server/institution/intelligence.ts',
+    ];
     const mounts = code
       .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
       .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))

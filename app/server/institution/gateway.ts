@@ -332,7 +332,12 @@ export function createGateway(config: Config) {
        * a request that names another one is a bug or an attack worth hearing about.
        */
       const ids = { requestId, correlationId };
-      const context: AdapterContext = { identity: who, signal: AbortSignal.timeout(20_000), request: contextFor(request, who, ids, config.environment) };
+      const intelligencePurpose = path === '/v1/intelligence/respond' ? 'ai_context' : undefined;
+      const context: AdapterContext = {
+        identity: who,
+        signal: AbortSignal.timeout(20_000),
+        request: contextFor(request, who, ids, config.environment, intelligencePurpose),
+      };
 
       const intelligenceConfirm = /^\/v1\/intelligence\/actions\/([^/]+)\/confirm$/.exec(path);
       if (request.method === 'GET' && path === '/v1/intelligence/policy') {
@@ -366,7 +371,7 @@ export function createGateway(config: Config) {
           context.request = contextFor(request, current, ids, config.environment);
         }
         const response = path === '/v1/intelligence/respond'
-          ? await config.intelligence.respond(who, value)
+          ? await config.intelligence.respond(context.request!, who, value)
           : await config.intelligence.confirm(who, decodeURIComponent(intelligenceConfirm![1]), value);
         return Response.json(response.body, { status: response.status, headers });
       }

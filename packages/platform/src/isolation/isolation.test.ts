@@ -125,7 +125,10 @@ describe('isolation conformance: the suite goes red against deliberately leaky a
       index: async (d) => void docs.push(d),
       remove: async (_t, id) => void docs.splice(0, docs.length, ...docs.filter((d) => d.id !== id)),
       query: async (scope, text) =>
-        docs.filter((d) => d.acl.some((t) => scope.acl.includes(t)) && d.title.toLowerCase().includes(text.toLowerCase())).map((d) => ({ id: d.id, kind: d.kind, title: d.title, excerpt: d.excerpt, score: 1 })),
+        docs.filter((d) => d.acl.some((t) => scope.acl.includes(t)) && d.title.toLowerCase().includes(text.toLowerCase())).map((d) => ({
+          id: d.id, kind: d.kind, title: d.title, excerpt: d.excerpt, score: 1,
+          labels: { tenantId: d.tenantId, purpose: scope.purpose, source: d.source, freshness: d.freshness },
+        })),
     };
     const out = await failures({ search: leaky });
     expect(out).toContain('search');
