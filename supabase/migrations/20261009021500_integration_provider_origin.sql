@@ -7,11 +7,10 @@ alter table public.integration_connections
   drop constraint if exists integration_provider_base_url_shape;
 alter table public.integration_connections
   add constraint integration_provider_base_url_shape check (
-    provider_base_url is null or (
-      length(provider_base_url) between 12 and 300
+    provider_base_url is null
+    or length(provider_base_url) between 12 and 300
       and provider_base_url ~ '^https://[A-Za-z0-9.-]+(:443)?$'
       and provider_base_url !~ '@'
-    )
   );
 
 grant select (provider_base_url) on public.integration_connections to authenticated;
