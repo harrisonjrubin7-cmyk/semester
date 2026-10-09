@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-69 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+70 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -41,6 +41,7 @@
 | `queue:community_escalation_deliveries` | Community escalation deliveries | queue | C2 | support | — | `supabase-db` | — | RB-07 |
 | `job:push` | Send due reminders (every 15 min) | job | C1 | platform | — | `fn:push` | — | RB-10 |
 | `job:support-reply-notify` | Drain support outbox (every minute) | job | C2 | support | — | `fn:support-reply-notify` | — | RB-10 |
+| `job:support-ticket-retention` | Purge eligible support tickets (daily) | job | C1 | support | — | `supabase-db` | — | RB-10 |
 | `job:escalation-delivery` | Community escalation delivery (parked) | job | C2 | support | — | `queue:community_escalation_deliveries` | — | RB-10 |
 | `job:media-scan` | Community media scan (parked) | job | C2 | security | — | `supabase-db` | — | RB-10 |
 | `job:integration-sync` | Integration tick (four times an hour) | job | C2 | integrations | — | `fn:integration-tick` | `kill.integration_sync` | RB-10 |

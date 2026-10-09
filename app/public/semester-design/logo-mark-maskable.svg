@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+
+  <defs>
+    <linearGradient id="face" x1="0.08" y1="0" x2="0.42" y2="1">
+      <stop offset="0%" stop-color="#ffffff"></stop>
+      <stop offset="20%" stop-color="#eef1f6"></stop>
+      <stop offset="40%" stop-color="#a7aeba"></stop>
+      <stop offset="50%" stop-color="#7f8693"></stop>
+      <stop offset="58%" stop-color="#b9c0cb"></stop>
+      <stop offset="80%" stop-color="#f4f6fa"></stop>
+      <stop offset="100%" stop-color="#a3aab6"></stop>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#b9c0cb"></stop>
+      <stop offset="40%" stop-color="#666c77"></stop>
+      <stop offset="72%" stop-color="#868d9a"></stop>
+      <stop offset="100%" stop-color="#555b65"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0a0b0e"></rect>
+  <g transform="translate(256 256) scale(0.82) translate(-256 -256)">
+    <path d="M128 176L185 200L185 412L128 388Z" fill="url(#face)"></path>
+    <path d="M185 200L204 208L204 420L185 412Z" fill="url(#edge)"></path>
+    <path d="M218 65L275 89L275 396L218 372Z" fill="url(#face)"></path>
+    <path d="M275 89L294 97L294 404L275 396Z" fill="url(#edge)"></path>
+    <path d="M308 147L365 171L365 439L308 415Z" fill="url(#face)"></path>
+    <path d="M365 171L384 179L384 447L365 439Z" fill="url(#edge)"></path>
+  </g>
+</svg>

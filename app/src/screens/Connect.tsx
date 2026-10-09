@@ -33,6 +33,10 @@ import { formatDateTime } from '../lib/locale';
 import type { FeedSource } from '../lib/types';
 import { AiHandoffReview } from '../components/AiHandoffReview';
 import {
+  ConnectionState,
+  SemesterDesignSurface,
+} from '../components/semester-design';
+import {
   EXTERNAL_AI,
   EXTERNAL_AI_ORDER,
   clearHandoffs,
@@ -938,7 +942,16 @@ export function Connect() {
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{spec.name}</div>
-                {token && <span className="tag tag-accent">Connected</span>}
+                {token && (
+                  <SemesterDesignSurface label={`${spec.name} connection state`}>
+                    <ConnectionState
+                      state="confirmed"
+                      label="Connected"
+                      detail={token.account || 'This account'}
+                      source={spec.name}
+                    />
+                  </SemesterDesignSurface>
+                )}
               </div>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
                 {spec.blurb}

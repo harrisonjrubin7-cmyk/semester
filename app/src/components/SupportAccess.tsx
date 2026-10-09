@@ -200,12 +200,12 @@ export function SupportAccess({ account }: { account: Account | null }) {
               </button>
             </form>
           )}
-          {!busy && supporters.length > 0 && tickets.length === 0 && (
+          {!busy && !loadError && supporters.length > 0 && tickets.length === 0 && (
             <p role="status" style={{ color: 'var(--app-dim)' }}>
               Open a support question in Help before granting access. A support window must be tied to one active case.
             </p>
           )}
-          {!busy && supporters.length === 0 && windows.every((window) => window.side !== 'supporter') && (
+          {!busy && !loadError && supporters.length === 0 && windows.every((window) => window.side !== 'supporter') && (
             <p role="status" style={{ color: 'var(--app-dim)' }}>
               Your university has not provisioned a verified support recipient yet. No access can be granted.
             </p>
