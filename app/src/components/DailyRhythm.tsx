@@ -4,6 +4,8 @@ import { useDeviceLibrary } from '../lib/device-library';
 import { download } from '../lib/deliver';
 import { AUDIT, EMPTY_RHYTHM, FIELDS, HELP_SCRIPTS, PROGRESS, RESPONSES, RHYTHM_KEY, TIMEBOXES, exportDay, helpDraft, newDay, readRhythm, saveDay, type DailyPlan, type Field } from '../lib/daily-rhythm';
 import { useNow } from '../state/store';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ActionPreview } from './unity/ActionPreview';
 
 export function DailyRhythm({ accountId, now: suppliedNow }: { accountId: string | null; now?: Date }) {
   const currentTime = useNow();
@@ -86,14 +88,30 @@ function DailyRhythmBody({ accountId, today }: { accountId: string | null; today
     </fieldset>
     <button type="button" className="btn" onClick={() => download({ name: `daily-plan-${date}.md`, body: exportDay(plan), mime: 'text/markdown' })}>Export this daily plan</button>
     <p>Export includes your private notes and reflection. Review the file before sharing it. Device workspace backups also include these plans.</p>
-    {!confirmDelete ? <button type="button" className="btn workspace-text-button" disabled={library.blocked} onClick={() => setConfirmDelete(true)}>Delete this daily plan</button> : <div>
-      <p>Delete the plan for {date} from this device? Export first if you want to keep it.</p>
-      <button type="button" className="btn" onClick={() => {
-        const ok = library.update(old => ({ ...old, days: old.days.filter(d => d.date !== date) }));
-        setMessage(ok ? 'Daily plan deleted from this device.' : 'The plan could not be deleted.');
-        if (ok) setConfirmDelete(false);
-      }}>Confirm delete daily plan</button>
-      <button type="button" className="btn" onClick={() => setConfirmDelete(false)}>Keep this plan</button>
-    </div>}
+    <button type="button" className="btn workspace-text-button" disabled={library.blocked} onClick={() => setConfirmDelete(true)}>Delete this daily plan</button>
+    {confirmDelete ? (
+      <ConfirmDialog
+        title={`Delete the daily plan for ${date}?`}
+        preview={
+          <ActionPreview
+            subject={`Daily plan for ${date}`}
+            says={`Semester will delete the daily plan for ${date} from this device.`}
+            exactly="The private outcome, Daily Three, fallback, support, check-in, reflection, and support-audit fields saved for this date."
+            doesNotChange="Other daily plans for this account stay saved. Downloaded exports, workspace backups, and official course or calendar records do not change."
+            recovery={{
+              kind: 'none',
+              how: 'Restore only from an exported plan or device workspace backup created before deletion.',
+            }}
+          />
+        }
+        confirmLabel="Delete plan"
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          const ok = library.update(old => ({ ...old, days: old.days.filter(d => d.date !== date) }));
+          setMessage(ok ? 'Daily plan deleted from this device.' : 'The plan could not be deleted.');
+          if (ok) setConfirmDelete(false);
+        }}
+      />
+    ) : null}
   </section>;
 }

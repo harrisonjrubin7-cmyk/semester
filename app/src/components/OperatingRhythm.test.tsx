@@ -78,9 +78,28 @@ describe('operating rhythm integration', () => {
     localStorage.setItem('test:daily', JSON.stringify(savePlan(EMPTY_RHYTHM, p)));
     await draw();
     await click('Delete this plan');
+    expect(host.querySelector('.action-preview')?.textContent).toContain('Daily plan for 2026-10-01');
+    expect(host.querySelector('.action-preview')?.textContent).toContain('Other daily plans and your daily rhythm preferences stay saved');
+    expect(host.querySelector('.action-preview')?.textContent).toContain('This can’t be undone. Restore only from a private backup you exported before deletion.');
     expect(readRhythm(JSON.parse(localStorage.getItem('test:daily')!)).plans).toHaveLength(1);
-    await click('Confirm delete');
+    await click('Cancel');
+    expect(readRhythm(JSON.parse(localStorage.getItem('test:daily')!)).plans).toHaveLength(1);
+    await click('Delete this plan');
+    await click('Delete plan');
     expect(readRhythm(JSON.parse(localStorage.getItem('test:daily')!)).plans).toHaveLength(0);
+  });
+  it('previews the whole rhythm payload before deleting plans and preferences', async () => {
+    const first = newPlan('2026-10-01');
+    const second = newPlan('2026-10-02');
+    const saved = savePlan(savePlan(EMPTY_RHYTHM, first), second);
+    localStorage.setItem('test:daily', JSON.stringify({ ...saved, preferences: { ...saved.preferences, reflection: true } }));
+    await draw();
+    await click('Delete this rhythm’s plans and preferences');
+    expect(host.querySelector('.action-preview')?.textContent).toContain('2 daily plans and the daily working preferences');
+    expect(host.querySelector('.action-preview')?.textContent).toContain('Weekly rhythm data, downloaded exports, and official course or calendar records do not change');
+    expect(readRhythm(JSON.parse(localStorage.getItem('test:daily')!)).plans).toHaveLength(2);
+    await click('Delete rhythm');
+    expect(readRhythm(JSON.parse(localStorage.getItem('test:daily')!))).toEqual(EMPTY_RHYTHM);
   });
   it('does not silently replace an existing carry-forward plan', async () => {
     const p = newPlan('2026-10-01');

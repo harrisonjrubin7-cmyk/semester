@@ -20,6 +20,8 @@ import {
   type Style,
 } from '../../lib/toolkit/research';
 import { Notice } from '../ui';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 import { newId, type useToolkit } from './store';
 
 type Library = ReturnType<typeof useToolkit>;
@@ -59,6 +61,7 @@ export function ResearchPanel({ library }: { library: Library }) {
   const [message, setMessage] = useState('');
   const [style, setStyle] = useState<Style>('apa');
   const [claimText, setClaimText] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const project = projects.find((p) => p.id === openId);
 
   const save = (next: Project) => library.update((s) => ({ ...s, research: s.research.map((p) => (p.id === next.id ? next : p)) }));
@@ -324,17 +327,33 @@ export function ResearchPanel({ library }: { library: Library }) {
           <button onClick={() => download({ name: 'references.ris', mime: 'application/x-research-info-systems', body: ris(project.evidence.filter((e) => e.screening !== 'exclude')) })}>Download RIS</button>
           <button onClick={() => download({ name: 'references.bib', mime: 'application/x-bibtex', body: bibtex(project.evidence.filter((e) => e.screening !== 'exclude')) })}>Download BibTeX</button>
           <button
-            onClick={() => {
-              if (!window.confirm('Delete this research project from this device? This cannot be undone.')) return;
-              library.update((s) => ({ ...s, research: s.research.filter((p) => p.id !== project.id) }));
-              setOpenId(null);
-            }}
+            onClick={() => setDeleting(true)}
           >
             Delete project
           </button>
           <button onClick={start}>Start another project</button>
         </div>
       </section>
+      {deleting ? (
+        <ConfirmDialog
+          title="Delete research project?"
+          preview={(
+            <ActionPreview
+              subject={project.question || 'Untitled research project'}
+              says="Deletes this project, its evidence matrix, claims and search plan from this device."
+              doesNotChange="Original sources and files outside Semester stay where they are."
+              recovery={{ kind: 'none' }}
+            />
+          )}
+          confirmLabel="Delete it"
+          onCancel={() => setDeleting(false)}
+          onConfirm={() => {
+            library.update((s) => ({ ...s, research: s.research.filter((p) => p.id !== project.id) }));
+            setDeleting(false);
+            setOpenId(null);
+          }}
+        />
+      ) : null}
       {message && <Notice>{message}</Notice>}
     </>
   );

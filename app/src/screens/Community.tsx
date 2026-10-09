@@ -39,6 +39,8 @@ import {
 } from '../community/client';
 import { Trouble } from '../components/Trouble';
 import { formatDateTime } from '../lib/locale';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 
 const KIND_TEXT: Record<CommunityRow['kind'], string> = {
   course: 'Course',
@@ -384,6 +386,7 @@ function CommunityView({
   const [status, setStatus] = useState('');
   const [reporting, setReporting] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<PostRow | null>(null);
   const [why, setWhy] = useState<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const [alias, setAlias] = useState<string | null>(null);
@@ -501,7 +504,7 @@ function CommunityView({
                     Edit
                   </button>
                 )}
-                <button type="button" className="btn btn-secondary" onClick={() => run(() => deletePost(p.id), 'Post deleted.')}>
+                <button type="button" className="btn btn-secondary" onClick={() => setDeleting(p)}>
                   Delete
                 </button>
               </div>
@@ -621,6 +624,28 @@ function CommunityView({
           Leave {community.name}
         </ActionButton>
       </div>
+
+      {deleting ? (
+        <ConfirmDialog
+          title="Delete this post?"
+          preview={
+            <ActionPreview
+              subject={deleting.body}
+              says="This post will be removed from Community immediately. If it has an active review, it is withdrawn from Community and its review evidence stays available to authorized reviewers; otherwise the post record is permanently deleted."
+              exactly="The post text and any attached image stop appearing in your Community view and other members’ feeds."
+              doesNotChange="Your other posts, Community membership, account, and any review already required by your school stay unchanged."
+              recovery={{ kind: 'none', how: 'The post cannot be restored to Community after you confirm.' }}
+            />
+          }
+          confirmLabel="Delete post"
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => {
+            const id = deleting.id;
+            setDeleting(null);
+            run(() => deletePost(id), 'Post deleted.');
+          }}
+        />
+      ) : null}
     </article>
   );
 }
