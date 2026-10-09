@@ -135,6 +135,7 @@ const ROWS: Row[] = [
   // ── Scheduled jobs (one row per cron.schedule in supabase/scheduler.sql) ──
   ['job:push', 'Send due reminders (every 15 min)', 'job', 'C1', 'platform', '', 'fn:push', 'Reminders stop being sent until it runs again.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:support-reply-notify', 'Drain support outbox (every minute)', 'job', 'C2', 'support', '', 'fn:support-reply-notify', 'Support email nudges are delayed.', null, 'RB-10', 'supabase/scheduler.sql'],
+  ['job:support-ticket-retention', 'Purge eligible support tickets (daily)', 'job', 'C1', 'support', '', 'supabase-db', 'Resolved individual-beta support records outlive their retention rule.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:escalation-delivery', 'Community escalation delivery (parked)', 'job', 'C2', 'support', '', 'queue:community_escalation_deliveries', 'Parked until its function exists; the table keeps the rows.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:media-scan', 'Community media scan (parked)', 'job', 'C2', 'security', '', 'supabase-db', 'Parked until its function exists.', null, 'RB-10', 'supabase/scheduler.sql'],
   ['job:integration-sync', 'Integration tick (four times an hour)', 'job', 'C2', 'integrations', '', 'fn:integration-tick', 'Connections go stale and say so.', 'kill.integration_sync', 'RB-10', 'supabase/scheduler.sql'],

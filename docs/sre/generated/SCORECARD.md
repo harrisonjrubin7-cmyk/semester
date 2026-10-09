@@ -7,11 +7,11 @@ Satisfied of applicable. This is the baseline; the only direction a cell may mov
 | Class | Components | owner | backup | runbook | alert | measured | drilled |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | C0 | 4 | 4/4 | 0/4 | 4/4 | 0/4 | 0/3 | 1/4 |
-| C1 | 18 | 18/18 | 0/18 | 18/18 | 2/18 | 0/2 | 0/18 |
+| C1 | 19 | 19/19 | 0/19 | 19/19 | 2/19 | 0/2 | 0/19 |
 | C2 | 29 | 29/29 | 0/29 | 29/29 | 2/29 | 0/4 | — |
 | C3 | 19 | 19/19 | 0/19 | 19/19 | — | — | — |
 
-Open cells: 147 (owner 0 · backup 70 · runbook 0 · alert 47 · measured 9 · drilled 21).
+Open cells: 150 (owner 0 · backup 71 · runbook 0 · alert 48 · measured 9 · drilled 22).
 
 Single points of failure: platform, data, security, billing, ai, integrations, support.
 
@@ -32,6 +32,7 @@ Single points of failure: platform, data, security, billing, ai, integrations, s
 | `fn:delete-account` | C0 | yes | **no** | yes | **no** | **no** | **no** |
 | `queue:push_queue` | C1 | yes | **no** | yes | **no** | — | **no** |
 | `job:push` | C1 | yes | **no** | yes | **no** | — | **no** |
+| `job:support-ticket-retention` | C1 | yes | **no** | yes | **no** | — | **no** |
 | `job:institution-gateway-retention` | C1 | yes | **no** | yes | **no** | — | **no** |
 | `job:community-retention` | C1 | yes | **no** | yes | **no** | — | **no** |
 | `job:integration-retention` | C1 | yes | **no** | yes | **no** | — | **no** |

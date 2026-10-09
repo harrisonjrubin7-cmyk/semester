@@ -12,7 +12,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 | Measure | Count |
 | --- | --- |
-| Migration files | 212 |
+| Migration files | 213 |
 | Tables created in `public` and not later dropped | 336 |
 | … of which enable row-level security in a migration | 336 |
 | Tables created in `private` and not later dropped | 37 |
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-138 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+139 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -157,6 +157,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/student-payment-plans.check.sql` | Payment plans on student accounts (D-146): a plan is asked for only by the student it concerns or by Student Accounts; the database reads the balance from the ledger and writes the schedule by the sc… |
 | `supabase/support-access.check.sql` | Student-granted, time-boxed and audited support access. |
 | `supabase/support-case-access.check.sql` | Identity-free support-case metadata and consent-bound aggregate reads. |
+| `supabase/support-retention.check.sql` | The support retention clock: terminal tickets age out, active work stays, and a legal hold suspends deletion. |
 | `supabase/support-tickets.check.sql` | Support tickets (20260928210000_support_tickets.sql). |
 | `supabase/supportshares.check.sql` | an athlete's share with academic support. |
 | `supabase/sync.check.sql` | Two devices on one account, without needing two devices. |

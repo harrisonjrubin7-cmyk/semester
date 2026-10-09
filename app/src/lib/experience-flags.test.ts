@@ -21,6 +21,10 @@ describe('experience feature states', () => {
   it('never lets an institutional preview send a real support ticket', () => {
     expect(experienceFlags({ VITE_INSTITUTIONAL_PREVIEW: 'true' }).supportTickets).toBe('off');
     expect(experienceFlags({ VITE_SUPPORT_TICKETS: 'sandbox' }).supportTickets).toBe('sandbox');
+    expect(experienceFlags({}).supportEmailNotices).toBe('off');
+    expect(experienceFlags({ VITE_SUPPORT_EMAIL_NOTICES: 'true' }).supportEmailNotices).toBe('production');
+    expect(experienceFlags({ VITE_SUPPORT_EMAIL_NOTICES: 'production' }).supportEmailNotices).toBe('off');
+    expect(experienceFlags({ VITE_SUPPORT_EMAIL_NOTICES: 'TRUE' }).supportEmailNotices).toBe('off');
   });
 });
 

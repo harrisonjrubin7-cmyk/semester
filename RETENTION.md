@@ -23,21 +23,27 @@ the day somebody needs it.
 
 `app/src/lib/privacy.ts` tells every student, on a screen in the app:
 
-> **How long anything is kept.** Until you delete it. There is no retention
-> schedule that quietly removes your work, and no archive kept after you delete
-> your account. Nothing is used to train anything. The one thing that does age
-> out is not your work but a record about it: the log of who has read your rows,
-> described below, keeps ninety days and drops what is older.
+> **How long anything is kept.** Your courses, deadlines, notes, plans and other
+> study work stay until you delete them, and no archive is kept after you delete
+> your account. Nothing is used to train anything. Individual-beta support
+> questions not associated with a school deployment are the one content
+> exception: a resolved or closed ticket and its replies are deleted 180 days
+> after the last activity unless a legal hold requires preservation. A ticket
+> associated with a school deployment follows that school's contract instead;
+> no automatic school-ticket purge runs until that rule is configured. The
+> access log and daily activity records also age out on the clocks below.
 
 That is a commitment, not a default, and it decides the shape of everything
-below. **A retention schedule here may age out records _about_ a student's work.
-It may not age out the work.** Adding a clock to `notes`, `tasks`, `courses`,
-`state` or anything else a student typed would make that paragraph false, and
-the paragraph is load-bearing — `VANDERBILT-AUDIT.md` and the competitive
-review both rest the product's honest-privacy claim on it.
+below. **A retention schedule here may age out records _about_ a student's work
+and the disclosed support-ticket exception. It may not age out study work.**
+Adding a clock to `notes`, `tasks`, `courses`, `state` or other study content
+would make that paragraph false, and the paragraph is load-bearing —
+`VANDERBILT-AUDIT.md` and the competitive review both rest the product's
+honest-privacy claim on it.
 
-So "no retention schedule" is not a gap in this project. It is the decision.
-What was missing is the sentence saying so, and the list of the exceptions.
+So the absence of a study-work retention clock is not a gap in this project.
+It is the decision. What was missing is the sentence saying so, and the list
+of the disclosed exceptions.
 
 ## The clocks that run
 
@@ -309,7 +315,7 @@ behind and a client that believes it succeeded.
 | `course_demand_snapshots`, `outcome_aggregates` | **replaced on every refresh; removed with the school** | aggregates of ten or more students, enforced by a check constraint, counting only students who opted in (since D-051, only while their `demand_consents` row is live). No row names a person, so no account's deletion takes one — the next refresh simply counts one fewer |
 | `help_destinations` | **kept until an implementer retires it or the school is removed** | which offices a university chose to reach through Semester, their official link and hours. Institutional configuration, not a student's data |
 | `help_requests`, `help_request_events` | account deletion (through its own function, since no API role may delete these rows), or the destination's or school's removal; events go with their request | a question the student wrote, the named context fields they ticked, and the display name and confirmed email shown to them when they sent it (requests from before that snapshot existed were filled from the identity they would have shown). Withdrawal — at any status, closed included — empties all of those at once and leaves only the fact and dates; the events are the student's record of every open and answer. **No time-based purge of closed requests exists yet** — a university that needs one must set the period before production |
-| `support_tickets`, `support_ticket_messages`, `support_notification_outbox` | account deletion (through forget_my_support_tickets(), since no API role holds any grant on these rows); messages and their delivery intents go with their ticket | a question the student wrote to Semester's own support, the app details they ticked from a closed list of six (version, device class, screen name, signed in, sync state, offline), the replies, and the retry/acceptance state for each generic email notice. The outbox stores no email address or message body. Support staff read tickets through functions that return no account id, name or address. **No time-based purge of closed tickets exists yet** — the period must be set before a production launch opens them |
+| `support_tickets`, `support_ticket_messages`, `support_notification_outbox` | classified individual-beta tickets with no signed deployment association: resolved or student-closed tickets are kept **180 days after last activity**, enforced daily by `private.sweep_support_ticket_retention()`. A school-domain claim alone remains individual beta. Tickets opened under a currently effective signed institutional order form are excluded until an institution-specific contract rule is configured. Tickets created before the durable creation-time classifier remain unclassified and outside both the automated sweep and narrow ticket-only deletion until an operator verifies the historical membership and contract evidence; the migration never infers that history from today's profile or from an unbounded terminated contract. Whole-account erasure deletes classified tickets but detaches a legacy ticket from `auth.users`, disables its email delivery, closes the now-inactive conversation, and preserves it with only the former account UUID as an opaque review key, so the account can be erased without destroying potentially held evidence. Preserved rows are excluded from ordinary support queue/thread and command-center worklists. Messages and delivery intents stay with that preserved ticket; any active account, signed-deployment-ticket or platform legal hold pauses ordinary deletion. Both deletion paths hold a shared lock on the legal-hold table from the hold check through deletion, so concurrent hold placement cannot enter between them | a question the student wrote to Semester's own support, the app details they ticked from a closed list of six (version, device class, screen name, signed in, sync state, offline), the replies, the signed deployment tenant id at the time the ticket was opened solely so a legal hold continues after membership changes and the institutional clock is not guessed, the creation-time retention-classification marker, the opaque former account UUID used only after legacy preservation, and the retry/acceptance state for each generic email notice. The outbox stores no email address or message body. Ordinary support staff read active tickets through functions that return no account id, tenant id, name or address. Open and waiting classified tickets are retained while support work is active; resolving or closing a classified individual-beta ticket starts the 180-day clock |
 | `integration_connections`, `integration_scopes`, `integration_mappings` | **kept until an integration administrator removes it or the school is removed** | institutional configuration. The owner's or approver's account deletion clears owner_account_id / approved_by and leaves the row. No credential is stored — credentials_reference is a pointer into a secret manager, and revoking there is the disconnect |
 | `integration_sync_runs`, `integration_sync_errors`, `integration_webhook_events`, `integration_dead_letter_events` | **runs and errors 180 days; events 30 days after processing; dead letters 90 days after resolution — by the integration retention sweep, skipped for a connection on legal hold; all go with the connection or the school** | operational logs: counts, categories, sanitized messages, payload *hashes and references* — never a payload, never an external id in the clear. The sweep runs daily at 03:29 UTC as the integration-retention job in supabase/scheduler.sql (INTEGRATION-OPERATOR-RUNBOOK.md §8) |
 | `source_records`, `source_freshness_events` | **kept until the school is removed** | where an institutional fact comes from and how fresh it was. Classified T0–T3 only; nothing T4+ can be stored |

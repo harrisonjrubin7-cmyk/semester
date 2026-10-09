@@ -16,6 +16,9 @@ import './styles/features.css';
 // components built on it — see `styles/tokens.css` and `styles/unity.css`.
 import './styles/tokens.css';
 import './styles/unity.css';
+import './styles/semester-design/integration.css';
+import './styles/semester-design/components.css';
+import './styles/semester-design/components-2.css';
 import './styles/form-usability.css';
 import App from './App';
 import { Splash } from './components/Splash';
