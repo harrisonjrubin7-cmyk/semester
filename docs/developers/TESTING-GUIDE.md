@@ -18,7 +18,7 @@ The test that holds this page checks that every script, test file and CI step na
 | Production build and budgets | `npm run build`, `npm run budgets` | Node only. `budgets` reads the build. |
 | Browser smoke tests | `npm run smoke:cold`, `smoke:a11y`, `smoke:golden`, `smoke:pilot`, `smoke:sync` | A built app being served, and Playwright with a Chromium. `SMOKE_URL` and `SMOKE_PLAYWRIGHT` say where. `smoke:sync` also needs a local Supabase and a service key. |
 | Gateway boot | `npm run smoke:gateway` | Node only. Binds a port. |
-| Database policies | `supabase/check.sh`, from the repository root | A PostgreSQL server of the major version in `supabase/config.toml`. |
+| Database policies | `supabase/policy-evidence.sh`, from the repository root. Use `supabase/check.sh` directly only for local suite iteration. | A PostgreSQL server of the major version in `supabase/config.toml`. The wrapper preserves the harness exit status and writes `artifacts/database/pg17-policy-evidence.json`. |
 | Course data | `node pipeline/validate.mjs`, from the repository root | Node only. |
 | Scheduled and operational probes | `npm run smoke:production`, `smoke:public-production`, `sweep:contrast`, `eval:model-quality` | Deployed URLs (`smoke:*production`), a browser and a running dev server (`sweep:contrast`), or a model key or proxy (`eval:model-quality`). Not part of a pull request. |
 
@@ -91,7 +91,7 @@ Workflows are in [`.github/workflows/`](../../.github/workflows/). On a pull req
 
 | Job | What it does, in order |
 | --- | --- |
-| `build` | an npm ci install, which is a step named only Install; the dependency audit (non-blocking); `Typecheck`; `Lint`; `Typecheck the university server`; the video package install and typecheck; `Test`; `Test in other timezones`; `Test in a different order`; `Build`; `Performance budgets`; installs Playwright; serves the build the way Pages serves it; `Open every address cold`; `Audit critical accessibility journeys`; `Walk the golden student path`; `Walk it again with human help on`; `Validate the course data`; installs the PostgreSQL major the live project runs; `Check the database policies`; `Load and concurrency scenarios`; `Rehearse the deploy against production's shape`; `Rehearse a backup and restore`. |
+| `build` | an npm ci install, which is a step named only Install; the dependency audit (non-blocking); `Typecheck`; `Lint`; `Typecheck the university server`; the video package install and typecheck; `Test`; `Test in other timezones`; `Test in a different order`; `Build`; `Performance budgets`; installs Playwright; serves the build the way Pages serves it; `Open every address cold`; `Audit critical accessibility journeys`; `Walk the golden student path`; `Walk it again with human help on`; `Validate the course data`; installs the PostgreSQL major the live project runs; `Check the database policies`; always retains the pg17-policy-evidence-<sha> artifact with the exact-commit clean/reapply and per-suite result; `Load and concurrency scenarios`; `Rehearse the deploy against production's shape`; `Rehearse a backup and restore`. |
 | `account-sync` | Starts a local Supabase from this repository, builds the app against it, and walks the real account lifecycle across two devices with `npm run smoke:sync`. |
 | `secrets` | gitleaks over what the branch changed, then over every file the branch carries. |
 | `notify` | On push only. Opens or comments on an issue titled "main is red" when a job failed. It is not a required check. |
@@ -117,7 +117,7 @@ Other workflows:
 
 ## Where the policy tests live
 
-- Database: `supabase/*.check.sql`, run by `supabase/check.sh`. Add a suite for any new table, with a second account.
+- Database: `supabase/*.check.sql`, run in CI by `supabase/policy-evidence.sh`, which delegates to `supabase/check.sh`. Add a suite for any new table, with a second account. A green report proves that ephemeral PostgreSQL 17 run only; open review and coverage gaps remain in `database/UNRESOLVED_POLICY_REGISTER.json`.
 - Gateway: `app/server/institution/*.test.ts`, run by `npm test` and typechecked by `npm run check:university`.
 - Shared vocabulary: `packages/institution/src/*.test.ts`, in the `shared` project.
 - Whole-tree scans: the `*.test.ts` files directly under `app/src/`, such as `donotbuild.test.ts`, `aioptional.test.ts` and `pageframe.test.ts`.

@@ -1,5 +1,6 @@
 import { retainIncomingCapture } from './lib/productivity-arrival';
-import { StrictMode } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 // The typefaces both sheets below name, declared once and served from this
 // origin rather than from Google — see `styles/typefaces.css` for why.
@@ -36,6 +37,27 @@ import { primePersisted } from './state/shape';
 import { warm } from './lib/warm';
 
 retainIncomingCapture();
+
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const ClerkProviderBoundary = lazy(() => import('./components/ClerkProviderBoundary'));
+
+/**
+ * Clerk is being introduced alongside the existing account system. Keep the
+ * app runnable in builds that have not received a Clerk key yet, while making
+ * Clerk's session context available everywhere inside the signed-in product
+ * once the deployment is configured.
+ *
+ * Public form and procurement-room links intentionally bypass this boundary:
+ * those links are designed for respondents and reviewers without accounts.
+ */
+function ClerkBoundary({ children }: { children: ReactNode }) {
+  if (!clerkPublishableKey) return <>{children}</>;
+  return (
+    <Suspense fallback={null}>
+      <ClerkProviderBoundary publishableKey={clerkPublishableKey}>{children}</ClerkProviderBoundary>
+    </Suspense>
+  );
+}
 
 /**
  * A sign-in comes back as a redirect to this same page. Redeem the code before
@@ -242,19 +264,21 @@ finishAnyLaunch()
 
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <StoreProvider>
-          {/* The assistant's own state sits above the router, so it is one
-              thing across all sixty screens rather than a thing each screen
-              mounts. See `ai/store.tsx`. */}
-          <AIProvider>
-            {/* The curtain over the first half-second, mounted beside the app
-                rather than inside it: it belongs to opening the app, not to
-                any screen, and out here it cannot become a child of the desk's
-                grid on a wide window. See `components/Splash.tsx`. */}
-            <Splash />
-            <App />
-          </AIProvider>
-        </StoreProvider>
+        <ClerkBoundary>
+          <StoreProvider>
+            {/* The assistant's own state sits above the router, so it is one
+                thing across all sixty screens rather than a thing each screen
+                mounts. See `ai/store.tsx`. */}
+            <AIProvider>
+              {/* The curtain over the first half-second, mounted beside the app
+                  rather than inside it: it belongs to opening the app, not to
+                  any screen, and out here it cannot become a child of the desk's
+                  grid on a wide window. See `components/Splash.tsx`. */}
+              <Splash />
+              <App />
+            </AIProvider>
+          </StoreProvider>
+        </ClerkBoundary>
       </StrictMode>,
     );
   });

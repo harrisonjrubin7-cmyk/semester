@@ -95,7 +95,7 @@ declare n bigint;
 begin
   perform pg_temp.become((select v from ids where k = 'operator'));
   select count(*) into n from public.console_command_center(false) where category = 'release gate';
-  perform pg_temp.counted('missing post-deploy verification remains a command-center exception', n, 1);
+  perform pg_temp.counted('missing verification and exact approval remain command-center exceptions', n, 2);
   perform pg_temp.nobody();
 end $$;
 
@@ -109,7 +109,23 @@ declare n bigint;
 begin
   perform pg_temp.become((select v from ids where k = 'operator'));
   select count(*) into n from public.console_command_center(false) where category = 'release gate';
-  perform pg_temp.counted('exact current production verification clears the final release gate', n, 0);
+  perform pg_temp.counted('verification alone cannot clear the exact approval gate', n, 1);
+  perform pg_temp.nobody();
+end $$;
+
+insert into public.approval_request
+  (duty_id, requester, tenant_id, target, detail, evidence, ticket, status, executed_at)
+select 'release', v, null, 'platform',
+       jsonb_build_object('action', 'release', 'release_commit', repeat('a', 40)),
+       'Executed exact-commit release authorization.', 'COMMAND-EXECUTED', 'executed', now()
+from ids where k = 'operator';
+
+do $$
+declare n bigint;
+begin
+  perform pg_temp.become((select v from ids where k = 'operator'));
+  select count(*) into n from public.console_command_center(false) where category = 'release gate';
+  perform pg_temp.counted('verification plus executed exact-commit approval clears the final release gate', n, 0);
   perform pg_temp.nobody();
 end $$;
 

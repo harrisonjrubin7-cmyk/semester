@@ -276,6 +276,9 @@ export function PrivacyRequests({
         const unresolved = request.status !== 'completed' && request.status !== 'refused';
         const owner = request.assignedToMe ? 'You' : request.assignedTo ? 'Another data steward' : 'Unassigned';
         const approvalStatus = request.deletionApprovalStatus ?? 'not requested';
+        const canRequestDeletionApproval = request.deletionApprovalStatus === null
+          || request.deletionApprovalStatus === 'rejected'
+          || request.deletionApprovalStatus === 'expired';
         const completedErasureBlocked = request.kind === 'erasure'
           && resolution.outcome === 'completed'
           && (request.holdState === 'live_hold' || request.deletionApprovalStatus !== 'executed');
@@ -374,7 +377,7 @@ export function PrivacyRequests({
                   </form>
                 )}
 
-                {request.assignedToMe && unresolved && request.kind === 'erasure' && request.identityState === 'verified' && request.deletionApprovalStatus !== 'executed' && (
+                {request.assignedToMe && unresolved && request.kind === 'erasure' && request.identityState === 'verified' && canRequestDeletionApproval && (
                   <form
                     aria-label={`Deletion approval ${request.requestRef}`}
                     onSubmit={(event) => { event.preventDefault(); void askForDeletionApproval(request); }}

@@ -39,6 +39,7 @@ root, which is why nothing in the app reads a leading-slash path directly — se
 | --- | --- |
 | `app/` | The application. Vite + React + TypeScript. See [`app/README.md`](app/README.md). |
 | `audio/` | Podcast scripts and the synthesiser that renders them. See [`audio/README.md`](audio/README.md). |
+| `course-engine/` | An isolated, citation-first Next.js/FastAPI MVP for upload, review, calendar, study generation, export, and renderer benchmarking. It is not wired into the deployed `app/`; see [`course-engine/README.md`](course-engine/README.md). |
 | `pipeline/` | Syllabus → course, and everything generated from a course: lessons, decks, handouts. See [`pipeline/README.md`](pipeline/README.md). |
 | `project/` | The original Claude Design handoff — HTML prototypes, the Industry design system, the syllabus PDFs. Kept as the reference the app was built from. |
 | `chats/` | The design conversation that produced it. |
