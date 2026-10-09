@@ -67,6 +67,10 @@ const FLAG_LABELS: Record<keyof ExperienceFlags, { label: string; about?: string
   },
   privateBeta: { label: 'Private beta', about: 'Whether Help offers a private-beta invitation. Never on in an institutional preview.' },
   supportTickets: { label: 'Support tickets', about: 'Asking Semester’s own support about the app, on Help. Never on in an institutional preview.' },
+  supportEmailNotices: {
+    label: 'Support email notices',
+    about: 'Whether Help offers the per-ticket email opt-in. Server-side vendor approval remains a separate fail-closed gate.',
+  },
   campaignManager: { label: 'Campaign manager', about: 'The staff campaign manager. Row-level security decides what each account sees.' },
   migrationCenter: { label: 'Migration center', about: 'The staff Migration Center. Row-level security and the stage gate decide what each account may do.' },
   workflowBuilder: { label: 'Workflow builder', about: 'The staff Workflow Builder. The second-person publish rule applies.' },

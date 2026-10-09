@@ -171,6 +171,7 @@ with expected(jobname, parked) as (values
   ('media-scan',                    true),
   ('push',                          true),
   ('support-reply-notify',          true),
+  ('support-ticket-retention',      false),
   ('tombstones',                    false)
 )
 select coalesce(e.jobname, j.jobname) as jobname,

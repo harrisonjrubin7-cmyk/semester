@@ -86,7 +86,7 @@ export const PARTIES: readonly Party[] = [
   },
   {
     name: 'Resend', kind: 'subprocessor',
-    purpose: 'Emails each company-site form submission to the Semester owner and, when a student opts in, sends a generic hint through the configured support sender. Each path stays inactive until its key and sender are set.',
+    purpose: 'Emails each company-site form submission to the Semester owner. The built support-notice path can send a generic hint after student opt-in, but remains inactive until vendor review, executed terms/DPA, ownership and activation approval are recorded in addition to its key and sender.',
     receives: 'For site forms: the visitor’s submitted contact fields and reference. For opted-in support notices: the student’s email address, a support reference and app link, but never the reply body or approved diagnostic context. No IP address.',
     when: 'form-sent-or-opted-in-support-reply', hosts: [], functions: ['lead-intake', 'support-reply-notify'],
     evidence: ['supabase/functions/lead-intake/index.ts', 'supabase/functions/support-reply-notify/index.ts', 'docs/COMMERCIAL-CORE.md'],
