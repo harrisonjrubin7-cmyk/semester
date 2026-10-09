@@ -1,13 +1,26 @@
 from __future__ import annotations
+
 import tempfile
 from pathlib import Path
 from uuid import UUID
+
 from celery import Celery
 from sqlalchemy import delete, select
+
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.extractors.files import extractor_for, safe_zip_members
-from app.models.entities import BackgroundJob, Citation, JobStatus, ReviewItem, ReviewStatus, SourceChunk, SourceDocument, StudyAsset, StudyAssetCitation
+from app.models.entities import (
+    BackgroundJob,
+    Citation,
+    JobStatus,
+    ReviewItem,
+    ReviewStatus,
+    SourceChunk,
+    SourceDocument,
+    StudyAsset,
+    StudyAssetCitation,
+)
 from app.services.malware import DevelopmentMalwareScanner
 from app.services.storage import ObjectStorage, sha256_file, validate_actual_mime
 
