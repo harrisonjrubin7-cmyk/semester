@@ -2,7 +2,7 @@
 
 ## Purpose and boundary
 
-This artifact reconciles three route and screen identity sources in the 2026-10-08 design archive (`SHA-256 12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`). It is Phase 0 evidence only. It does not activate routes, adopt archive assets, establish authorization, or prove production behavior.
+This artifact reconciles three route and screen identity sources in the 2026-10-08 design archive (`SHA-256 12edfe6ad1c1c02e7c4f0512f1ca4233b0b9f3943b30adde822bd67062867086`). It is supplemental Phase 0 evidence only. The current disposition authority is [`../../design-system/REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md`](../../design-system/REFERENCE-PROTOTYPE-ROUTE-RECONCILIATION.md), and the current program gate is [`../../design-system/HANDOFF-INTEGRATION-STATUS.md`](../../design-system/HANDOFF-INTEGRATION-STATUS.md). This artifact does not override either one, activate routes, adopt archive assets, establish authorization, or prove production behavior.
 
 The sources are:
 
@@ -119,6 +119,6 @@ These collisions require domain-qualified stable IDs. Display labels must not be
 5. For rendered-only routes, classify each as a new requirement, a prototype-only variant, a duplicate, or an explicit rejection.
 6. Do not copy icons, media, fonts, or other archive assets until provenance and license evidence is complete.
 
-## Phase gate
+## Gate relationship
 
-Route identity reconciliation is **not passed**. Inventory coverage is complete across the 379-route union, but Phase 0 remains blocked on explicit resolution of the 17 Operations route misses, the 98 rendered-only routes, ambiguous label collisions, and the broader provenance and production-evidence gates recorded in the archive requirements matrix.
+This supplemental route-source reconciliation is **not a standalone program gate**. Inventory coverage is complete across the 379-route union. The canonical reconciliation separately gives every one of the 281 handoff routes a repository-relative disposition and the current integration status records Phase 0 archive-population reconciliation as complete. The 17 handoff-only identities, 98 rendered-only variants, and label collisions here remain explicit archive-drift inputs for later owner decisions; they do not automatically create production requirements or reopen the canonical Phase 0 gate.

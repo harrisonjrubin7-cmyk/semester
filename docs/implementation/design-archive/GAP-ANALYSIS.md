@@ -2,7 +2,7 @@
 
 ## Executive finding
 
-The archive is broader than the production surface, but much of that breadth is catalog, prototype, policy, or future operating-model material. The repository has substantial foundations; the safe path is incremental reconciliation, not replacement.
+The archive is broader than the production surface, but much of that breadth is catalog, prototype, policy, or future operating-model material. The repository has substantial foundations; the safe path is incremental reconciliation, not replacement. This is a legacy audit view; current dispositions and gate status live in [`../../design-system/HANDOFF-INTEGRATION-STATUS.md`](../../design-system/HANDOFF-INTEGRATION-STATUS.md) and its linked generated reconciliation registers.
 
 | Status | Count |
 | --- | ---: |
@@ -33,6 +33,6 @@ The archive is broader than the production surface, but much of that breadth is 
 
 Preserve route/navigation authorities and history; `semester-store`, collection stores, `semester.v1` rollback, and unknown fields; semantic tokens and saved appearances; feature flags, server capabilities, RLS, and audit boundaries. Never convert a designed state into fabricated institutional readiness.
 
-## Phase 0 gate
+## Gate relationship
 
-**NOT PASSED.** File inspection, the canonical 1,595-row ledger, and the route-identity crosswalk are complete. Route dispositions, narrative requirements, and interactive states still need reconciliation. The unresolved 17/98 route deltas, incomplete 362-route state walkthrough, unmapped narrative requirements, provenance gaps, and absent current test baseline block implementation.
+**SUPERSEDED AS THE CURRENT GATE.** File inspection, the 1,595-row legacy ledger, and the supplemental route-identity crosswalk are complete. The current design-system status records Phase 0 archive-population reconciliation as complete and owns the active implementation boundary. The 17/98 route-source deltas, incomplete rendered-state walkthrough, narrative requirements, provenance gaps, and test evidence listed here remain follow-up evidence needs; they are not a competing Phase 0 verdict or proof of production readiness.

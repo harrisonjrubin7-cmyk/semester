@@ -4,7 +4,7 @@ Phases are evidence gates, not calendar promises.
 
 ## Phase 0 — inspection and reconciliation
 
-**Blocked / not passed.** The 379-route union of the 281 handoff and 362 rendered identities has row-level coverage against 673 catalog labels, with exact and normalized-only matches distinguished. The 17 handoff-only routes, 98 rendered-only routes, and label collisions still need explicit dispositions. Atomize narrative requirements beyond the 1,595-row catalog; review every retained route/state; establish a current build/test/browser baseline; assign external owners.
+**Current status owned by the canonical design-system program.** [`../../design-system/HANDOFF-INTEGRATION-STATUS.md`](../../design-system/HANDOFF-INTEGRATION-STATUS.md) records the archive-population reconciliation gate as complete; this legacy roadmap does not reopen it. The supplemental 379-route union of the 281 handoff and 362 rendered identities has row-level coverage against 673 catalog labels, with exact, normalized-only, and normalized-collision matches distinguished. The 17 handoff-only routes, 98 rendered-only routes, and label collisions remain owner-decision inputs before any adoption, while narrative, state, provenance, test, activation, and production evidence remain separate gates.
 
 ## Phase 1 — authority maps and foundations
 
