@@ -3,8 +3,7 @@
   "services": {
     "api": {
       "root": "app",
-      "entrypoint": "server/institution/vercel-service.ts",
-      "installCommand": "npm install --no-save typescript@6.0.3",
+      "entrypoint": "server/institution/vercel-entrypoint.js",
       "headers": [
         {
           "source": "/(.*)",
@@ -67,7 +66,7 @@
         }
       ],
       "functions": {
-        "server/institution/vercel-service.ts": {
+        "server/institution/vercel-entrypoint.js": {
           "maxDuration": 30
         }
       }

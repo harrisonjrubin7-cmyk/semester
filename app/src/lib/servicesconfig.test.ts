@@ -15,7 +15,8 @@ import { join } from 'node:path';
  * and this test is what keeps them one.
  */
 const repo = join(__dirname, '..', '..', '..');
-const read = (path: string) => JSON.parse(readFileSync(join(repo, path), 'utf8'));
+const readText = (path: string) => readFileSync(join(repo, path), 'utf8');
+const read = (path: string) => JSON.parse(readText(path));
 
 const root = read('vercel.json');
 const app = read('app/vercel.json');
@@ -24,12 +25,14 @@ const company = read('company-site/vercel.json');
 describe('root vercel.json services carry what each folder file says', () => {
   it('routes both API prefixes to an explicit Node service before the app catch-all', () => {
     expect(root.services.api.root).toBe('app');
-    expect(root.services.api.entrypoint).toBe('server/institution/vercel-service.ts');
-    expect(root.services.api.installCommand).toBe('npm install --no-save typescript@6.0.3');
+    expect(root.services.api.entrypoint).toBe('server/institution/vercel-entrypoint.js');
     expect(root.services.api.headers).toEqual(app.headers);
     expect(root.services.api.functions).toEqual({
-      'server/institution/vercel-service.ts': { maxDuration: 30 },
+      'server/institution/vercel-entrypoint.js': { maxDuration: 30 },
     });
+    expect(readText('app/server/institution/vercel-entrypoint.js')).toBe(
+      "export { default } from './vercel-service.ts';\n",
+    );
     expect(root.rewrites.slice(1, 3)).toEqual([
       { source: '/api/institution/(.*)', destination: { service: 'api' } },
       { source: '/api/productivity/(.*)', destination: { service: 'api' } },

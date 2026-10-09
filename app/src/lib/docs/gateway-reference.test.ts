@@ -1329,7 +1329,7 @@ describe('the constants a reader would copy', () => {
     const vercel = JSON.parse(read(SRC.vercel)) as {
       services: { api: { functions: Record<string, { maxDuration: number }> } };
     };
-    expect(auth).toContain(`${vercel.services.api.functions['server/institution/vercel-service.ts'].maxDuration} seconds`);
+    expect(auth).toContain(`${vercel.services.api.functions['server/institution/vercel-entrypoint.js'].maxDuration} seconds`);
     expect(/requestTimeout = ([\d_]+)/.exec(src(SRC.start))?.[1].replace(/_/g, '')).toBe('30000');
     expect(/headersTimeout = ([\d_]+)/.exec(src(SRC.start))?.[1].replace(/_/g, '')).toBe('10000');
     expect(auth).toContain('requestTimeout');
