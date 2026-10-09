@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 24 of 120 · **Integration slice** 32 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
+**Automation pass** 25 of 120 · **Integration slice** 33 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, and private durable evidence for one complete conflict decision map are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. The durable record is not yet a server-side course apply command. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 25 / slice 33
+
+- The slice began with `origin/main` `4a01b4a0` already merged. A final fetch observed `0d8f70b2`; its registration-readiness workflow has no overlapping course-source, Import/Rediff, migration or integration-control change and no equivalent tenant-bound re-import resolution ledger.
+- `20261009010000_course_source_conflict_resolutions.sql` adds private resolution-batch and append-only choice tables. A batch binds one current/imported pair, the owner, tenant, membership, local course record, both derived snapshot hashes and 1–256 stable conflict keys. It stores only keep-current/use-imported choices; compared values, quotations and extracted text are absent.
+- Both sources must be distinct, available, hash-settled, owned by the same active student relationship and bound to the same tenant, membership, course record, course code and term. Browser roles have no table policy or function grant. Only the service role can record or withdraw through controlled functions, and direct service-role table mutation remains revoked.
+- Recording and withdrawal are idempotent and audit-bound. Choice rows are append-only; withdrawal preserves the batch and choices as voided evidence. A replay after withdrawal reports the current voided state rather than implying the decision is active. Audit failure rolls back the batch, choices and operation receipt atomically.
+- PostgreSQL 17 applies all 218 migrations twice with the schema and 378 table fingerprints unchanged. The focused suite passes 24 checks; 179 adjacent persistence, scan, bucket, material, grant, RLS, index and legal-hold checks also pass, 203/203 total.
+- Retention and data classification now cover both resolution tables. Foreign-key paths have covering indexes, and the owner-only withdrawal actor follows the batch's existing account-erasure cascade.
+- Focused repository guards pass 64/64. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings. Token export passes 9/9, design audit remains at zero violations with 86 ledgered warnings, CSS stays within its ledger and 69/69 design contracts pass.
+- Ordered and shuffled full application suites were not run for this database-only slice. The current Import screen still applies its merge only to the local course store; no server-backed apply, external reconciliation, ICS publication, ingestion, signed read or production operation is claimed.
+- HawkScan DAST cannot start because the Hawk CLI, Docker fallback, `HAWK_API_KEY` and `HAWK_APP_HOST` are absent. No scan or security pass is claimed; the release gate remains open.
 
 ## Evidence locked in automation pass 24 / slice 32
 

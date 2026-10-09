@@ -672,9 +672,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile durable re-import conflict records to the current tenant, authorization, audit, idempotency and recovery contracts before moving this local decision map server-side.
+- [x] Reconcile durable re-import conflict records to the current tenant, authorization, audit, idempotency and recovery contracts before moving this local decision map server-side. Completed in automation pass 25 / slice 33.
 - [ ] Keep external reconciliation and safe ICS publication separate until each has a named authority and acceptance contract.
 - [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
+
+## 2026-10-08 durable re-import conflict evidence — automation pass 25, slice 33
+
+- [x] Begin from merged `origin/main` `4a01b4a0`; final-fetch `0d8f70b2`, inspect its registration-readiness workflow and confirm no overlapping course-source/migration/control file or equivalent source-pair conflict ledger.
+- [x] Bind one resolution batch to two distinct available/hash-settled sources, both derived snapshot hashes, the owner, active membership, tenant, local course record, course code and term.
+- [x] Store only 1–256 validated stable conflict keys and explicit keep-current/use-imported choices; keep compared values, quotations and extracted text out of the ledger and audit event.
+- [x] Deny browser table/function access and require the service-only functions to revalidate the current student relationship independently.
+- [x] Make recording and withdrawal idempotent, atomic and audit-bound; preserve choice rows append-only and represent recovery as a voided batch rather than erased evidence.
+- [x] Return the current voided state when the original recording idempotency key is replayed after withdrawal.
+- [x] Prove audit failure rolls back the batch, choices and operation receipt; prove cross-tenant/course refusal, invalid-key/choice refusal, direct-mutation refusal, relationship revocation and idempotent replay.
+- [x] Add retention, classification, covering-index and account-erasure evidence for the two new private tables.
+- [x] Apply all 218 migrations twice on PostgreSQL 17 with 378 unchanged table fingerprints; pass 24 focused and 179 adjacent checks, 203/203 total.
+- [x] Pass 64/64 focused repository guards, TypeScript, lint, university typecheck and production build; lint retains four existing warnings.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts.
+- [ ] Ordered and shuffled full application suites — not run for this database-only slice; focused, adjacent security and phase gates are green.
+- [ ] HawkScan DAST — unavailable because the Hawk CLI, Docker fallback, `HAWK_API_KEY` and `HAWK_APP_HOST` are absent; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Define an atomic server-side apply command that consumes only an active resolution batch, rechecks source/snapshot hashes and current relationship, preserves course/item ids and completion state, and has an audited idempotent rollback path.
+- [ ] Do not wire Import to the service until the command and a private server adapter exist; the current save remains local-only.
+- [ ] Keep external reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads separate.
 
 ## Earlier integration baseline preserved
 

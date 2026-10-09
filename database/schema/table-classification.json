@@ -177,6 +177,8 @@
    "course_materials",
    "course_source_corrections",
    "course_source_operations",
+   "course_source_resolution_batches",
+   "course_source_resolution_choices",
    "course_sources",
    "gtm_communication_events",
    "gtm_consent",
