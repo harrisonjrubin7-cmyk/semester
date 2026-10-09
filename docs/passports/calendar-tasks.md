@@ -1,4 +1,4 @@
-# Calendar and Tasks system passport
+# Calendar and Actions system passport
 
 <!-- Rendered from app/src/lib/systempassports.ts by systempassports.test.ts. Edit the registry, then run npm run registers from app/. -->
 
@@ -19,7 +19,7 @@ Unify personal plans with source-aware imported dates while preserving correctio
 Semester owns:
 
 - Personal calendar overlays
-- tasks
+- actions
 - reminders
 - local drafts and sync queue
 
@@ -75,7 +75,7 @@ External authority remains:
 
 - Today
 - Calendar
-- Task detail
+- Action detail
 - Week ahead
 - Behind plan
 

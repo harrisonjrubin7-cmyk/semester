@@ -22,7 +22,7 @@ Semester owns:
 - Readiness projection
 - proposed schedule
 - request workflow
-- receipts and reconciliation tasks
+- receipts and reconciliation actions
 
 External authority remains:
 

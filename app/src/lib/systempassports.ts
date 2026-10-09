@@ -178,7 +178,7 @@ export const SYSTEM_PASSPORTS: readonly SystemPassport[] = [
   passport({
     id: 'registration', name: 'Registration', purpose: 'Evaluate readiness and coordinate bounded enrollment requests without claiming success before the authoritative SIS reconciles.',
     relationships: ['connected', 'orchestrated', 'embedded', 'linked'],
-    semesterOwns: ['Readiness projection', 'proposed schedule', 'request workflow', 'receipts and reconciliation tasks'],
+    semesterOwns: ['Readiness projection', 'proposed schedule', 'request workflow', 'receipts and reconciliation actions'],
     externalAuthorities: ['SIS enrollment, holds, prerequisites, time tickets and seat state'],
     authority: ['Students prepare and confirm requests.', 'Advisors review permitted exceptions.', 'Registrars approve overrides and reconcile outcomes.', 'The SIS decides official enrollment.'],
     records: ['readiness_evaluation', 'registration_request', 'readiness_fact', 'override', 'registration_receipt'],
@@ -261,9 +261,9 @@ export const SYSTEM_PASSPORTS: readonly SystemPassport[] = [
     operations: { owner: 'Student success' },
   }),
   passport({
-    id: 'calendar-tasks', name: 'Calendar and Tasks', purpose: 'Unify personal plans with source-aware imported dates while preserving correction, offline and confirmation boundaries.',
+    id: 'calendar-tasks', name: 'Calendar and Actions', purpose: 'Unify personal plans with source-aware imported dates while preserving correction, offline and confirmation boundaries.',
     relationships: ['native', 'connected', 'orchestrated'],
-    semesterOwns: ['Personal calendar overlays', 'tasks', 'reminders', 'local drafts and sync queue'],
+    semesterOwns: ['Personal calendar overlays', 'actions', 'reminders', 'local drafts and sync queue'],
     externalAuthorities: ['LMS assignments', 'institution deadlines', 'connected calendar events'],
     authority: ['Students manage personal items.', 'Connected sources own imported facts.', 'External writes require preview and explicit confirmation.'],
     records: ['calendar_item', 'task', 'reminder', 'sync_intent', 'conflict'],
@@ -271,7 +271,7 @@ export const SYSTEM_PASSPORTS: readonly SystemPassport[] = [
     events: ['task.changed', 'date.confirmed', 'calendar_write.requested', 'calendar_write.reconciled'],
     integrations: ['Google Calendar', 'Microsoft Calendar', 'LMS', 'Academic'],
     workflows: ['Date extraction review', 'Reminder delivery', 'External write preview and confirmation', 'Offline reconciliation'],
-    screens: ['Today', 'Calendar', 'Task detail', 'Week ahead', 'Behind plan'],
+    screens: ['Today', 'Calendar', 'Action detail', 'Week ahead', 'Behind plan'],
     auditEvidence: ['Original source and extracted value', 'Student confirmation or correction', 'External-write diff', 'Delivery and reconciliation state'],
     dependencies: ['identity', 'academic', 'integrations'], capabilityIds: ['CAP-001', 'CAP-002', 'CAP-003', 'CAP-005', 'CAP-007', 'CAP-008', 'CAP-018', 'CAP-021'],
     externalGates: ['Provider-scoped authorization', 'Write preview and idempotency', 'Honest offline and delivery status'],
@@ -433,7 +433,7 @@ export const SYSTEM_PASSPORTS: readonly SystemPassport[] = [
   passport({
     id: 'integrations', name: 'Integrations', purpose: 'Connect external authorities through tenant-scoped, versioned mappings with freshness, retries and reconciliation.',
     relationships: ['connected', 'orchestrated', 'embedded', 'linked'],
-    semesterOwns: ['Connector configuration references', 'mapping versions', 'sync state', 'reconciliation tasks'],
+    semesterOwns: ['Connector configuration references', 'mapping versions', 'sync state', 'reconciliation actions'],
     externalAuthorities: ['SIS, LMS, identity, calendar, file, finance and campus providers'],
     authority: ['Tenant administrators approve scopes.', 'Integration operators manage health without unrestricted record access.', 'Source systems retain declared authority.'],
     records: ['connection', 'credential_reference', 'mapping_version', 'sync_cursor', 'reconciliation_task'],

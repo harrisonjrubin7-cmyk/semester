@@ -25,7 +25,7 @@ The permitted relationship vocabulary is `native`, `connected`, `orchestrated`, 
 | [Learning](./learning.md) | native, connected | Learning experience and AI governance | 6 |
 | [Grades](./grades.md) | native, connected, orchestrated | Academic operations | 1 |
 | [Advising](./advising.md) | native, connected, orchestrated | Student success | 2 |
-| [Calendar and Tasks](./calendar-tasks.md) | native, connected, orchestrated | Academic experience | 8 |
+| [Calendar and Actions](./calendar-tasks.md) | native, connected, orchestrated | Academic experience | 8 |
 | [Documents and Sources](./documents.md) | native, connected | Workspace platform and privacy | 10 |
 | [Finance and Billing](./finance.md) | connected, orchestrated, embedded, linked | Finance operations | 1 |
 | [Financial Aid](./financial-aid.md) | connected, orchestrated, embedded, linked | Financial-aid operations | 0 |

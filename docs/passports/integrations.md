@@ -22,7 +22,7 @@ Semester owns:
 - Connector configuration references
 - mapping versions
 - sync state
-- reconciliation tasks
+- reconciliation actions
 
 External authority remains:
 
