@@ -13,8 +13,8 @@ export function formatSourceLocation(chunk: SourceChunk) {
   if (chunk.slide_number) locations.push(`Slide ${chunk.slide_number}`);
   if (chunk.sheet_name) locations.push(chunk.sheet_name);
   if (chunk.cell_range) locations.push(chunk.cell_range);
-  if (chunk.start_seconds !== undefined) {
-    const end = chunk.end_seconds !== undefined ? `–${formatTimestamp(chunk.end_seconds)}` : "";
+  if (typeof chunk.start_seconds === "number") {
+    const end = typeof chunk.end_seconds === "number" ? `–${formatTimestamp(chunk.end_seconds)}` : "";
     locations.push(`${formatTimestamp(chunk.start_seconds)}${end}`);
   }
   return locations.join(" · ") || `Extract ${chunk.chunk_index + 1}`;

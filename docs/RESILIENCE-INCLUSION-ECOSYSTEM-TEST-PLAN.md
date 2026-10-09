@@ -8,7 +8,7 @@ proof here.
 
 ## The gates every phase runs
 
-From `app/` — the repository root exposes platform-control orchestration only, not these app gates:
+From `app/` — the repository root exposes only named platform-control scripts, not the app test suite:
 
 ```bash
 npx tsc -b
