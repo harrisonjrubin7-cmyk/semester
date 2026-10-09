@@ -27,6 +27,7 @@ import {
   type RemoteFile,
 } from '../lib/connect';
 import { MANAGE, disconnect, lastRevocation, saidAboutDisconnect } from '../lib/revoke';
+import { providerConnectionPresentation } from '../lib/provider-connection-state';
 import { datedItems, railFor } from '../lib/select';
 import { dateToIso } from '../lib/date';
 import { formatDateTime } from '../lib/locale';
@@ -936,22 +937,24 @@ export function Connect() {
           const spec = PROVIDERS[id];
           const token = live[id];
           const feed = state.feeds.find((f) => f.kind === (id === 'microsoft' ? 'microsoft' : 'ics') && f.url === id);
+          const last = token ? undefined : lastRevocation(id);
+          const connection = providerConnectionPresentation({
+            provider: spec.name,
+            account: token?.account,
+            connected: Boolean(token),
+            busy: busy === id,
+            ready: signInReady(spec),
+            revocation: last?.status,
+          });
           return (
             <Blueprint plain key={id} style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{spec.name}</div>
-                {token && (
-                  <SemesterDesignSurface label={`${spec.name} connection state`}>
-                    <ConnectionState
-                      state="confirmed"
-                      label="Connected"
-                      detail={token.account || 'This account'}
-                      source={spec.name}
-                    />
-                  </SemesterDesignSurface>
-                )}
+                <SemesterDesignSurface label={`${spec.name} connection state`}>
+                  <ConnectionState {...connection} source={spec.name} />
+                </SemesterDesignSurface>
               </div>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
                 {spec.blurb}
@@ -983,7 +986,6 @@ export function Connect() {
                   the card until the student connects again: the permission
                   may still be live there, and this is where to remove it.
                 */
-                const last = token ? undefined : lastRevocation(id);
                 if (!last || last.status === 'revoked') return null;
                 return (
                   <div
