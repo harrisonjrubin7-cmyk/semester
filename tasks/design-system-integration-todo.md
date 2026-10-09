@@ -493,9 +493,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Extend explicit conflict choices to changed course metadata and grading rows so re-import never silently chooses those conflicting values either.
+- [x] Extend explicit conflict choices to changed course metadata and grading rows so re-import never silently chooses those conflicting values either. Completed in automation pass 17 / slice 25.
 - [ ] Keep server ingestion, signed reads and current-screen server wiring closed until a real document-malware scanner and private runtime can generate trustworthy receipts.
 - [ ] Keep archive/provider/institution/deployment evidence separate; this local client merge behavior does not make imported dates official.
+
+## 2026-10-08 student-controlled metadata and grading conflicts — automation pass 17, slice 25
+
+- [x] Confirm current `origin/main` remains `27be630d`, is already merged and contains no equivalent metadata/grading conflict-choice work.
+- [x] Reuse the existing Import/Rediff route, radio-control pattern and semantic form styles; add no route, shared component, dependency or parallel data model.
+- [x] Require an unselected keep-current/use-imported choice for every changed course field, course-site URL, reweighted row, removed grading row and added grading row.
+- [x] Keep the save action disabled while any current source conflict lacks a choice, and independently reject incomplete or invalid decision maps in the pure merge boundary.
+- [x] Apply mixed decisions per field/row instead of making the whole imported or current grading table win.
+- [x] Preserve the current term and student-recorded course AI policy because neither is controlled by syllabus extraction.
+- [x] Cover stable conflict ids, no-default rendered radio groups, mixed merges, all-imported merges and local-control preservation.
+- [x] Prove the regression guard red by temporarily bypassing unresolved-conflict detection, observe the named five-decision test fail, restore the guard and pass the focused suites.
+- [x] Directly changed tests pass 31/31; broader course/import/document contracts pass 60/60.
+- [x] TypeScript, lint, university typecheck and production build pass; lint retains the existing four-warning baseline and the build retains existing chunk warnings.
+- [x] Token export passes 9/9; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; design/style contracts pass 138/138 and the report regenerates without drift.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because `hawk` is absent; `HAWK_API_KEY` and `HAWK_APP_HOST` are unset for a headless scan. No scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Extend the same explicit review to reworded deadline titles before re-import replaces student-visible task wording; retain stable ids and the existing date-choice behavior.
+- [ ] Keep server-authoritative conflict records, external reconciliation and safe ICS publication separate from this local client merge slice.
+- [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
 
 ## Earlier integration baseline preserved
 

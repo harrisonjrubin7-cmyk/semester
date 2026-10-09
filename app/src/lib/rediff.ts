@@ -71,6 +71,8 @@ export interface Diff {
 
 export type DateConflictChoice = 'keep_current' | 'use_imported';
 export type DateConflictChoices = Readonly<Record<string, DateConflictChoice>>;
+export type ReimportConflictChoice = DateConflictChoice;
+export type ReimportConflictChoices = DateConflictChoices;
 
 export interface DateConflict {
   id: string;
@@ -79,7 +81,22 @@ export interface DateConflict {
   after?: Item;
 }
 
+export interface ReimportConflict {
+  id: string;
+  kind: 'moved' | 'removed' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
+}
+
 const DAY = 86_400_000;
+const COURSE_FIELDS = [
+  { field: 'code', label: 'Code' },
+  { field: 'name', label: 'Name' },
+  { field: 'prof', label: 'Professor' },
+  { field: 'email', label: 'Their email' },
+  { field: 'meets', label: 'Meets' },
+  { field: 'room', label: 'Room' },
+  { field: 'credits', label: 'Credits' },
+  { field: 'lms', label: 'Course site' },
+] as const;
 
 function daysApart(a: Item, b: Item, year: number): number {
   const left = new Date(a.year ?? year, a.month, a.day).getTime();
@@ -148,16 +165,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
     }
   }
 
-  const FIELDS: { field: keyof CourseModule['course']; label: string }[] = [
-    { field: 'code', label: 'Code' },
-    { field: 'name', label: 'Name' },
-    { field: 'prof', label: 'Professor' },
-    { field: 'email', label: 'Their email' },
-    { field: 'meets', label: 'Meets' },
-    { field: 'room', label: 'Room' },
-    { field: 'credits', label: 'Credits' },
-  ];
-  const fields = FIELDS.map(({ field, label }) => ({
+  const fields = COURSE_FIELDS.map(({ field, label }) => ({
     field: label,
     before: String(before.course[field] ?? ''),
     after: String(after.course[field] ?? ''),
@@ -207,7 +215,15 @@ export function keepIds(before: CourseModule, after: CourseModule): CourseModule
     ...after,
     // The course id too, or the new copy would sit beside the old one rather
     // than replacing it, and every note filed against the course would orphan.
-    course: { ...after.course, id: before.course.id },
+    course: {
+      ...after.course,
+      id: before.course.id,
+      // These are local controls, not extracted syllabus fields. Re-importing
+      // a document must not silently clear the term or the policy the student
+      // recorded for AI use.
+      term: before.course.term,
+      ai: before.course.ai,
+    },
     items: after.items.map((item, i) => {
       const kept = oldId.get(i);
       return kept ? { ...item, id: kept, c: before.course.id } : { ...item, c: before.course.id };
@@ -248,6 +264,32 @@ export function unresolvedDateConflictIds(d: Diff, choices: DateConflictChoices)
 }
 
 /**
+ * Every imported value that would overwrite or remove current course data.
+ *
+ * New dates remain individually selectable in Import's source review. Course
+ * metadata and grading rows have no equivalent per-value review, so all of
+ * their differences belong here alongside moved and removed dates. IDs use
+ * the current field/row identity, not array order, so choices survive render
+ * changes and can be checked again by the pure merge guard.
+ */
+export function reimportConflicts(d: Diff): ReimportConflict[] {
+  return [
+    ...dateConflicts(d),
+    ...d.fields.map((change) => ({ id: `field:${change.field}`, kind: 'field' as const })),
+    ...d.reweighted.map((row) => ({ id: `grading:reweighted:${row.what}`, kind: 'reweighted' as const })),
+    ...d.gradingRemoved.map((row) => ({ id: `grading:removed:${row.what}`, kind: 'grading_removed' as const })),
+    ...d.gradingAdded.map((row) => ({ id: `grading:added:${row.what}`, kind: 'grading_added' as const })),
+  ];
+}
+
+export function unresolvedReimportConflictIds(d: Diff, choices: ReimportConflictChoices): string[] {
+  return reimportConflicts(d).map((conflict) => conflict.id).filter((id) => {
+    const choice = choices[id];
+    return choice !== 'keep_current' && choice !== 'use_imported';
+  });
+}
+
+/**
  * Apply explicit date-conflict choices while preserving the existing course
  * and item ids. The function refuses an incomplete decision map so a future
  * caller cannot accidentally restore the old replace-everything behaviour.
@@ -282,6 +324,54 @@ export function applyDateConflictChoices(
   }
 
   return { ...merged, items };
+}
+
+/**
+ * Apply every explicit re-import choice after independently proving that the
+ * decision map covers all current differences. No caller can silently accept
+ * changed course metadata or grading rows by bypassing the Import screen.
+ */
+export function applyReimportConflictChoices(
+  before: CourseModule,
+  after: CourseModule,
+  year: number,
+  choices: ReimportConflictChoices,
+): CourseModule {
+  const changes = diff(before, after, year);
+  const unresolved = unresolvedReimportConflictIds(changes, choices);
+  if (unresolved.length > 0) {
+    throw new Error('Every re-import source conflict must be resolved before replacing the course.');
+  }
+
+  const merged = applyDateConflictChoices(before, after, year, choices);
+  const course = { ...merged.course };
+  for (const change of changes.fields) {
+    if (choices[`field:${change.field}`] === 'keep_current') {
+      const field = COURSE_FIELDS.find((candidate) => candidate.label === change.field);
+      if (field) Object.assign(course, { [field.field]: before.course[field.field] });
+    }
+  }
+
+  let grading = course.grading.map((row) => ({ ...row }));
+  for (const change of changes.reweighted) {
+    if (choices[`grading:reweighted:${change.what}`] === 'keep_current') {
+      grading = grading.map((row) => row.what === change.what ? { ...row, pct: change.before } : row);
+    }
+  }
+  const rejectedAdded = new Set(
+    changes.gradingAdded
+      .filter((row) => choices[`grading:added:${row.what}`] === 'keep_current')
+      .map((row) => row.what),
+  );
+  grading = grading.filter((row) => !rejectedAdded.has(row.what));
+  for (const row of changes.gradingRemoved) {
+    if (choices[`grading:removed:${row.what}`] === 'keep_current') {
+      const currentIndex = before.course.grading.findIndex((candidate) => candidate.what === row.what);
+      grading.splice(Math.min(currentIndex, grading.length), 0, { ...row });
+    }
+  }
+
+  return { ...merged, course: { ...course, grading } };
 }
 
 /** How many ticks survive a re-import, so the screen can promise it. */

@@ -91,4 +91,39 @@ describe('Import re-import conflict controls', () => {
     act(() => imported!.click());
     expect(choose).toHaveBeenCalledWith('moved:moved', 'use_imported');
   });
+
+  it('renders unselected choices for metadata and every grading change', () => {
+    const current = course([]);
+    current.course.room = 'Buttrick 101';
+    current.course.grading = [
+      { what: 'Exams', pct: '40%' },
+      { what: 'Essays', pct: '30%' },
+    ];
+    const imported = course([]);
+    imported.course.room = 'Wilson 103';
+    imported.course.grading = [
+      { what: 'Exams', pct: '45%' },
+      { what: 'Projects', pct: '20%' },
+    ];
+    const choose = vi.fn();
+    act(() => {
+      root.render(<StoreProvider><Rediff changes={diff(current, imported, 2026)} kept={{ kept: 0, lost: 0 }} code="ECON 1020" choices={{}} onChoose={choose} /></StoreProvider>);
+    });
+
+    const groups = [...host.querySelectorAll('fieldset.import-conflict-choice')];
+    expect(groups).toHaveLength(4);
+    expect(groups.map((group) => group.querySelector('legend')?.textContent)).toEqual([
+      'Exams · 40% → 45%',
+      'Essays · 30%',
+      'Projects · not in your current grading table',
+      'Room · Buttrick 101 → Wilson 103',
+    ]);
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
+    expect(host.textContent).toContain('changed date, course detail, or grading row');
+
+    const importedRoom = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+      .find((radio) => radio.parentElement?.textContent?.includes('Use imported room'));
+    act(() => importedRoom!.click());
+    expect(choose).toHaveBeenCalledWith('field:Room', 'use_imported');
+  });
 });

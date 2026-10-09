@@ -23,15 +23,15 @@ import { packSummary, provenance, readPack } from '../lib/handoff';
 import { configured } from '../lib/assistant';
 import { readTerm } from '../lib/term';
 import {
-  applyDateConflictChoices,
-  dateConflicts,
+  applyReimportConflictChoices,
   diff,
   movedLine,
+  reimportConflicts,
   summary as rediffSummary,
   ticksKept,
-  unresolvedDateConflictIds,
-  type DateConflictChoice,
-  type DateConflictChoices,
+  unresolvedReimportConflictIds,
+  type ReimportConflictChoice,
+  type ReimportConflictChoices,
   type Diff,
 } from '../lib/rediff';
 import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
@@ -155,7 +155,7 @@ export function Import() {
    * whenever a new result arrives and the default is always "take all of it".
    */
   const [dropped, setDropped] = useState<Set<string>>(new Set());
-  const [dateChoices, setDateChoices] = useState<Record<string, DateConflictChoice>>({});
+  const [conflictChoices, setConflictChoices] = useState<Record<string, ReimportConflictChoice>>({});
   const abort = useRef<AbortController | null>(null);
   /** Whether a file is being dragged over the screen right now. */
   const [over, setOver] = useState(false);
@@ -353,7 +353,7 @@ export function Import() {
     trouble.clear();
     setResult(null);
     setDropped(new Set());
-    setDateChoices({});
+    setConflictChoices({});
     setBusy('Opening it…');
     try {
       const opened = readPack(await file.text());
@@ -365,7 +365,7 @@ export function Import() {
       // generated course gets. The provenance is prose and belongs in the
       // list under it.
       setDropped(new Set());
-      setDateChoices({});
+      setConflictChoices({});
       setResult({
         module: opened.module,
         notes: [packSummary(opened), provenance(opened)],
@@ -387,7 +387,7 @@ export function Import() {
     trouble.clear();
     setResult(null);
     setDropped(new Set());
-    setDateChoices({});
+    setConflictChoices({});
     setBusy('Reading the syllabus…');
     abort.current = new AbortController();
     try {
@@ -396,7 +396,7 @@ export function Import() {
         abort.current.signal,
       );
       setDropped(new Set());
-      setDateChoices({});
+      setConflictChoices({});
       setResult(built);
     } catch (e) {
       // The extracted text is still held, so a second run costs the upload
@@ -430,8 +430,8 @@ export function Import() {
     () => (existing && reviewedModule ? diff(existing, reviewedModule, term.year) : null),
     [existing, reviewedModule, term.year],
   );
-  const unresolvedDateConflicts = changes
-    ? unresolvedDateConflictIds(changes, dateChoices).length
+  const unresolvedConflicts = changes
+    ? unresolvedReimportConflictIds(changes, conflictChoices).length
     : 0;
 
   const save = () => {
@@ -479,7 +479,7 @@ export function Import() {
     const keep = (courseId: string) => void keepSources(files, courseId).catch(() => {});
 
     if (existing) {
-      const merged = applyDateConflictChoices(existing, reviewed, term.year, dateChoices);
+      const merged = applyReimportConflictChoices(existing, reviewed, term.year, conflictChoices);
       dispatch({ type: 'replaceCourse', module: merged });
       fileAttendance(merged.course.id);
       keep(merged.course.id);
@@ -846,8 +846,8 @@ export function Import() {
           changes={changes}
           kept={ticksKept(existing, reviewedModule ?? result.module, state.done)}
           code={result.module.course.code}
-          choices={dateChoices}
-          onChoose={(id, choice) => setDateChoices((was) => ({ ...was, [id]: choice }))}
+          choices={conflictChoices}
+          onChoose={(id, choice) => setConflictChoices((was) => ({ ...was, [id]: choice }))}
         />
       ) : null}
       {result && (
@@ -855,11 +855,11 @@ export function Import() {
           result={result}
           onSave={save}
           onRevise={(next) => {
-            setDateChoices({});
+            setConflictChoices({});
             setResult(next);
           }}
           replacing={Boolean(existing)}
-          unresolvedDateConflicts={unresolvedDateConflicts}
+          unresolvedConflicts={unresolvedConflicts}
           dropped={dropped}
           onToggle={(id) =>
             setDropped((was) => {
@@ -1043,8 +1043,8 @@ export function Rediff({
   changes: Diff;
   kept: { kept: number; lost: number };
   code: string;
-  choices: DateConflictChoices;
-  onChoose: (id: string, choice: DateConflictChoice) => void;
+  choices: ReimportConflictChoices;
+  onChoose: (id: string, choice: ReimportConflictChoice) => void;
 }) {
   const line = (label: string, right: string) => (
     <div
@@ -1074,7 +1074,7 @@ export function Rediff({
       </label>
     </fieldset>
   );
-  const conflicts = dateConflicts(changes);
+  const conflicts = reimportConflicts(changes);
 
   return (
     <Folding name="Rediff">
@@ -1095,7 +1095,7 @@ export function Rediff({
         </div>
         {conflicts.length > 0 && (
           <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            Choose what to keep for every moved or missing date. Semester will not decide a source conflict for you.
+            Choose what to keep for every changed date, course detail, or grading row. Semester will not decide a source conflict for you.
           </div>
         )}
       </Blueprint>
@@ -1137,16 +1137,32 @@ export function Rediff({
         changes.gradingRemoved.length > 0) && (
         <>
           <SectionLabel>How the grade is built</SectionLabel>
-          {changes.reweighted.map((r) => line(r.what, `${r.before} → ${r.after}`))}
-          {changes.gradingRemoved.map((r) => line(r.what, `${r.pct} · gone`))}
-          {changes.gradingAdded.map((r) => line(r.what, `${r.pct} · new`))}
+          {changes.reweighted.map((r) => choose(
+            `grading:reweighted:${r.what}`,
+            `${r.what} · ${r.before} → ${r.after}`,
+            `Use imported weight — ${r.after}`,
+          ))}
+          {changes.gradingRemoved.map((r) => choose(
+            `grading:removed:${r.what}`,
+            `${r.what} · ${r.pct}`,
+            'Use imported syllabus — remove this row',
+          ))}
+          {changes.gradingAdded.map((r) => choose(
+            `grading:added:${r.what}`,
+            `${r.what} · not in your current grading table`,
+            `Use imported row — ${r.pct}`,
+          ))}
         </>
       )}
 
       {changes.fields.length > 0 && (
         <>
           <SectionLabel>The course itself</SectionLabel>
-          {changes.fields.map((f) => line(f.field, `${f.before || '—'} → ${f.after || '—'}`))}
+          {changes.fields.map((f) => choose(
+            `field:${f.field}`,
+            `${f.field} · ${f.before || 'blank'} → ${f.after || 'blank'}`,
+            `Use imported ${f.field.toLocaleLowerCase()} — ${f.after || 'blank'}`,
+          ))}
         </>
       )}
     </Folding>
@@ -1159,7 +1175,7 @@ function Preview({
   onSave,
   onRevise,
   replacing = false,
-  unresolvedDateConflicts = 0,
+  unresolvedConflicts = 0,
   dropped,
   onToggle,
 }: {
@@ -1167,7 +1183,7 @@ function Preview({
   onSave: () => void;
   onRevise: (result: GenerationResult) => void;
   replacing?: boolean;
-  unresolvedDateConflicts?: number;
+  unresolvedConflicts?: number;
   /** Dates taken off the import. See the state in `Import`. */
   dropped: Set<string>;
   onToggle: (id: string) => void;
@@ -1179,7 +1195,7 @@ function Preview({
     approval.result === result && approval.dropped === dropped && approval.confirmed;
   const { module: m, notes } = result;
   const datesReviewed = reviewReady(m.items, dropped, confirmed, now.getFullYear());
-  const ready = datesReviewed && unresolvedDateConflicts === 0;
+  const ready = datesReviewed && unresolvedConflicts === 0;
   const [summary, ...warnings] = notes;
   const keeping = m.items.filter((i) => !dropped.has(i.id)).length;
 
@@ -1318,8 +1334,8 @@ function Preview({
       <p className="import-evidence-note" role="status">
         {ready
           ? 'Verified dates are ready to add.'
-          : unresolvedDateConflicts > 0
-            ? `${unresolvedDateConflicts} source ${unresolvedDateConflicts === 1 ? 'conflict needs' : 'conflicts need'} a choice above before you can save.`
+          : unresolvedConflicts > 0
+            ? `${unresolvedConflicts} source ${unresolvedConflicts === 1 ? 'conflict needs' : 'conflicts need'} a choice above before you can save.`
             : 'Review the dates above before adding this course. Reminders begin only after you approve and save.'}
       </p>
       <ActionButton

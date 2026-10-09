@@ -268,6 +268,14 @@ The earliest safe repository-native slice was therefore CE-08's current Import r
 
 This changes only the current `Import`/`rediff` path and shared form styling. It adds no route, parallel course model, server claim, official-record authority or provider. The focused guard was proved red by temporarily bypassing unresolved-conflict detection, then restored; 67 focused logic/UI/design/responsive tests pass. TypeScript, lint, university typecheck, production build, token export, design audit, CSS budgets and 69 design-system contracts pass with only the existing four lint and 86 design warnings. Course metadata and grading conflicts still use the overall review confirmation and are the next safe extension of this fail-closed choice model. Server ingestion remains closed on the external document-scanner prerequisite.
 
+## Student-controlled metadata and grading conflicts — automation pass 17, slice 25
+
+Current `origin/main` remains `27be630d`, already merged into the branch; no equivalent re-import work or overlapping newer commit exists. The existing Import/Rediff path now treats all extracted course-field changes, including the course-site URL, and every reweighted, added or removed grading row as explicit source conflicts. Each uses the same native, unselected keep-current/use-imported radio pattern as date conflicts, and the final save plus the pure merge boundary both fail closed until every current conflict has a valid choice.
+
+The merge applies choices per value: it can preserve or replace one course field, keep or accept one changed weight, retain or remove a disappeared grading row, and reject or add a newly extracted row without forcing one source to win the whole table. Re-import also preserves the current term and student-recorded course AI policy because neither is an extracted syllabus field. No route, schema, server authority, provider, dependency or parallel course model was added.
+
+The new regression guard was proved red by temporarily bypassing unresolved-conflict detection; the named test failed on all five missing decisions and passed after restoration. Focused course/import/document contracts pass 60/60; the directly changed logic/rendered-control files pass 31/31. TypeScript, lint, university typecheck and production build pass with the existing four-warning lint and chunk-size baselines. Token export passes 9/9; design audit remains at zero violations and 86 ledgered warnings; CSS stays within its ledger; 138/138 design/style contracts pass and the report regenerates without drift. HawkScan preflight stops because `hawk` is absent; headless `HAWK_API_KEY` and `HAWK_APP_HOST` are also unset, so no DAST result is claimed.
+
 ## What was read
 
 - Root `CLAUDE.md`.

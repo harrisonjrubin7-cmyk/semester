@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyDateConflictChoices,
+  applyReimportConflictChoices,
   dateConflicts,
   diff,
   keepIds,
@@ -8,6 +9,7 @@ import {
   summary,
   ticksKept,
   unresolvedDateConflictIds,
+  unresolvedReimportConflictIds,
 } from './rediff';
 import type { CourseModule, GradeRow, Item } from './types';
 
@@ -167,6 +169,16 @@ describe('keepIds', () => {
     expect(keepIds(before, after).course.id).toBe('econ');
   });
 
+  it('preserves local term and AI-policy controls that are not extracted fields', () => {
+    const before = module([], [], {
+      term: '2026FA',
+      ai: { stance: 'limited', note: 'Brainstorming only' },
+    });
+    const kept = keepIds(before, module([]));
+    expect(kept.course.term).toBe('2026FA');
+    expect(kept.course.ai).toEqual({ stance: 'limited', note: 'Brainstorming only' });
+  });
+
   it('files every item against the course that is being replaced', () => {
     const after = module([item('x', 'Quiz', 8, 1)], [], { id: 'econ-abc123' });
     for (const i of keepIds(module([]), after).items) expect(i.c).toBe('econ');
@@ -221,6 +233,63 @@ describe('date conflict choices', () => {
     const current = module([{ ...item('a', 'Final exam', 11, 15), year: 2026 }]);
     const imported = module([{ ...item('b', 'Final exam', 0, 15), year: 2027 }]);
     expect(diff(current, imported, YEAR).moved[0].days).toBe(31);
+  });
+});
+
+describe('course and grading conflict choices', () => {
+  const before = module([], [
+    { what: 'Exams', pct: '40%' },
+    { what: 'Essays', pct: '30%' },
+  ]);
+  const after = module([], [
+    { what: 'Exams', pct: '45%' },
+    { what: 'Projects', pct: '20%' },
+  ], { room: 'Wilson 103', lms: 'https://canvas.example.edu/courses/1020' });
+
+  it('requires a choice for every changed field and grading row', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual([
+      'field:Room',
+      'field:Course site',
+      'grading:reweighted:Exams',
+      'grading:removed:Essays',
+      'grading:added:Projects',
+    ]);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {
+      'field:Room': 'use_imported',
+      'field:Course site': 'use_imported',
+      'grading:reweighted:Exams': 'use_imported',
+      'grading:removed:Essays': 'use_imported',
+    })).toThrow(/Every re-import source conflict/);
+  });
+
+  it('applies mixed explicit choices without silently accepting another source', () => {
+    const merged = applyReimportConflictChoices(before, after, YEAR, {
+      'field:Room': 'keep_current',
+      'field:Course site': 'keep_current',
+      'grading:reweighted:Exams': 'use_imported',
+      'grading:removed:Essays': 'keep_current',
+      'grading:added:Projects': 'keep_current',
+    });
+    expect(merged.course.room).toBe('Buttrick 101');
+    expect(merged.course.lms).toBeUndefined();
+    expect(merged.course.grading).toEqual([
+      { what: 'Exams', pct: '45%' },
+      { what: 'Essays', pct: '30%' },
+    ]);
+  });
+
+  it('uses all imported metadata and grading only after explicit choices', () => {
+    const merged = applyReimportConflictChoices(before, after, YEAR, {
+      'field:Room': 'use_imported',
+      'field:Course site': 'use_imported',
+      'grading:reweighted:Exams': 'use_imported',
+      'grading:removed:Essays': 'use_imported',
+      'grading:added:Projects': 'use_imported',
+    });
+    expect(merged.course.room).toBe('Wilson 103');
+    expect(merged.course.lms).toBe('https://canvas.example.edu/courses/1020');
+    expect(merged.course.grading).toEqual(after.course.grading);
   });
 });
 
