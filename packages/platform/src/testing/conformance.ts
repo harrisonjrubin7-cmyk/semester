@@ -157,16 +157,16 @@ export function isolationCases(s: IsolationSubject): IsolationCase[] {
 
   // ── search ──
   add('search', 'B\'s query for A\'s words returns nothing, even with A\'s person token', async () => {
-    await s.search.index({ id: 'doc-1', tenantId: scopeA.tenantId, kind: 'note', classification: 'student_private', title: 'Zebra migration', excerpt: 'notes', acl: [`person:${s.a.actor.personId}`] });
-    const own = await s.search.query(scopeFor(s.a, []), 'zebra', 10);
+    await s.search.index({ id: 'doc-1', tenantId: scopeA.tenantId, kind: 'note', classification: 'student_private', title: 'Zebra migration', excerpt: 'notes', acl: [`person:${s.a.actor.personId}`], purposes: ['search'], roles: [], source: { id: 'doc-1', kind: 'student_entered' }, freshness: { state: 'current', observedAt: s.clock.now().toISOString() } });
+    const own = await s.search.query(scopeFor({ ...s.a, purpose: 'search' }, [], { purpose: 'search' }), 'zebra', 10);
     must('search', own.length === 1, 'control: A cannot find its own document');
-    must('search', (await s.search.query(scopeFor(s.b, []), 'zebra', 10)).length === 0, 'B found A\'s document');
-    must('search', (await s.search.query(scopeFor(s.b, [`person:${s.a.actor.personId}`]), 'zebra', 10)).length === 0, 'B found A\'s document using A\'s ACL token');
+    must('search', (await s.search.query(scopeFor({ ...s.b, purpose: 'search' }, [], { purpose: 'search' }), 'zebra', 10)).length === 0, 'B found A\'s document');
+    must('search', (await s.search.query(scopeFor({ ...s.b, purpose: 'search' }, [`person:${s.a.actor.personId}`], { purpose: 'search' }), 'zebra', 10)).length === 0, 'B found A\'s document using A\'s ACL token');
   });
   add('search', 'removing a document in B does not remove A\'s document with the same id', async () => {
-    await s.search.index({ id: 'doc-2', tenantId: scopeA.tenantId, kind: 'note', classification: 'internal', title: 'Quokka', excerpt: '', acl: ['public'] });
+    await s.search.index({ id: 'doc-2', tenantId: scopeA.tenantId, kind: 'note', classification: 'internal', title: 'Quokka', excerpt: '', acl: ['public'], purposes: ['search'], roles: [], source: { id: 'doc-2', kind: 'institution_verified' }, freshness: { state: 'current', observedAt: s.clock.now().toISOString() } });
     await s.search.remove(scopeB.tenantId, 'doc-2');
-    must('search', (await s.search.query(scopeFor(s.a, []), 'quokka', 10)).length === 1, 'A\'s document was removed by B');
+    must('search', (await s.search.query(scopeFor({ ...s.a, purpose: 'search' }, [], { purpose: 'search' }), 'quokka', 10)).length === 1, 'A\'s document was removed by B');
   });
 
   // ── analytics ──
@@ -222,17 +222,18 @@ export function isolationCases(s: IsolationSubject): IsolationCase[] {
   // The AI is the actor "on behalf of" the student; for retrieval the student consents to their own sources.
   const selfAi = (ctx: RequestContext, ids: string[], over: Partial<ConsentRecord> = {}) => ({ ...aiConsent(ctx, ids, over), subjectPersonId: 'student-self' });
   add('ai_retrieval', 'retrieval returns only consented, same-tenant sources, with provenance', async () => {
-    await s.search.index({ id: 'ai-a-1', tenantId: scopeA.tenantId, kind: 'course_note', classification: 'student_private', title: 'Photosynthesis notes', excerpt: 'light reactions', acl: [`person:${s.a.actor.personId}`] });
-    await s.search.index({ id: 'ai-b-1', tenantId: scopeB.tenantId, kind: 'course_note', classification: 'student_private', title: 'Photosynthesis notes', excerpt: 'light reactions', acl: [`person:${s.b.actor.personId}`] });
-    const got = await retrieveForAi(s.search, s.a, [], [selfAi(s.a, ['ai-a-1'])], s.clock, 'photosynthesis');
+    await s.search.index({ id: 'ai-a-1', tenantId: scopeA.tenantId, kind: 'course_note', classification: 'student_private', title: 'Photosynthesis notes', excerpt: 'light reactions', acl: [`person:${s.a.actor.personId}`], purposes: ['ai_context'], roles: [], source: { id: 'ai-a-1', kind: 'student_entered' }, freshness: { state: 'current', observedAt: s.clock.now().toISOString() } });
+    await s.search.index({ id: 'ai-b-1', tenantId: scopeB.tenantId, kind: 'course_note', classification: 'student_private', title: 'Photosynthesis notes', excerpt: 'light reactions', acl: [`person:${s.b.actor.personId}`], purposes: ['ai_context'], roles: [], source: { id: 'ai-b-1', kind: 'student_entered' }, freshness: { state: 'current', observedAt: s.clock.now().toISOString() } });
+    const aiA = { ...s.a, purpose: 'ai_context' } as RequestContext;
+    const got = await retrieveForAi(s.search, aiA, [], [selfAi(s.a, ['ai-a-1'])], s.clock, 'photosynthesis');
     must('ai_retrieval', got.length === 1 && got[0].id === 'ai-a-1' && got[0].provenance.sourceId === 'ai-a-1', 'control: the consented own source was not retrieved with provenance');
-    must('ai_retrieval', (await retrieveForAi(s.search, s.a, [], [selfAi(s.a, ['ai-b-1'])], s.clock, 'photosynthesis')).length === 0, 'retrieval returned the other tenant\'s source');
-    must('ai_retrieval', (await retrieveForAi(s.search, s.a, [], [selfAi(s.b, ['ai-a-1'])], s.clock, 'photosynthesis')).length === 0, 'a consent from the other tenant opened a source');
+    must('ai_retrieval', (await retrieveForAi(s.search, aiA, [], [selfAi(s.a, ['ai-b-1'])], s.clock, 'photosynthesis')).length === 0, 'retrieval returned the other tenant\'s source');
+    must('ai_retrieval', (await retrieveForAi(s.search, aiA, [], [selfAi(s.b, ['ai-a-1'])], s.clock, 'photosynthesis')).length === 0, 'a consent from the other tenant opened a source');
   });
   add('ai_retrieval', 'an unconsented, withdrawn or expired source is not retrieved; education records need consent too', async () => {
-    await s.search.index({ id: 'ai-rec-1', tenantId: scopeA.tenantId, kind: 'grade', classification: 'education_record', title: 'Chemistry grade', excerpt: 'B+', acl: [`person:${s.a.actor.personId}`] });
-    await s.search.index({ id: 'ai-a-2', tenantId: scopeA.tenantId, kind: 'course_note', classification: 'student_private', title: 'Chemistry notes', excerpt: 'moles', acl: [`person:${s.a.actor.personId}`] });
-    const q = (consents: ConsentRecord[]) => retrieveForAi(s.search, s.a, [], consents, s.clock, 'chemistry');
+    await s.search.index({ id: 'ai-rec-1', tenantId: scopeA.tenantId, kind: 'grade', classification: 'education_record', title: 'Chemistry grade', excerpt: 'B+', acl: [`person:${s.a.actor.personId}`], purposes: ['ai_context'], roles: [], source: { id: 'ai-rec-1', kind: 'institution_verified' }, freshness: { state: 'current', observedAt: s.clock.now().toISOString() } });
+    await s.search.index({ id: 'ai-a-2', tenantId: scopeA.tenantId, kind: 'course_note', classification: 'student_private', title: 'Chemistry notes', excerpt: 'moles', acl: [`person:${s.a.actor.personId}`], purposes: ['ai_context'], roles: [], source: { id: 'ai-a-2', kind: 'student_entered' }, freshness: { state: 'current', observedAt: s.clock.now().toISOString() } });
+    const q = (consents: ConsentRecord[]) => retrieveForAi(s.search, { ...s.a, purpose: 'ai_context' }, [], consents, s.clock, 'chemistry');
     must('ai_retrieval', (await q([])).length === 0, 'retrieval without any consent returned passages');
     must('ai_retrieval', (await q([selfAi(s.a, ['ai-a-2'], { withdrawnAt: s.clock.now().toISOString() })])).length === 0, 'a withdrawn consent still opened a source');
     must('ai_retrieval', (await q([selfAi(s.a, ['ai-a-2'], { expiresAt: new Date(s.clock.now().getTime() - 1).toISOString() })])).length === 0, 'an expired consent still opened a source');

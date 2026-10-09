@@ -48,6 +48,11 @@ describe('the gateway identity as a request context', () => {
     expect(trustedIdentityFor(who, { environment: 'demo', authenticatedAt: '2026-10-04T12:00:00Z' }).tenant.environment).toBe('demo');
   });
 
+  it('carries a server-selected retrieval purpose instead of reading one from a client header', () => {
+    expect(contextFor(req({ 'x-purpose': 'search' }), who, IDS, 'production', 'ai_context').purpose).toBe('ai_context');
+    expect(contextFor(req({ 'x-purpose': 'ai_context' }), who, IDS).purpose).toBe('service_delivery');
+  });
+
   it('every tenant and user id the repository\'s own fixtures use fits the alphabet', () => {
     for (const id of ['northstar', 'vanderbilt', 'school-a', 'school-b', 'vu', 'cedar', 'eastfield', 's', 'another-school', '8d4a2c1e-7b0f-4c3a-9a55-1f2e3d4c5b6a']) {
       expect(code(() => contextFor(req(), { ...who, institutionId: id }, IDS)), id).toBe('none');

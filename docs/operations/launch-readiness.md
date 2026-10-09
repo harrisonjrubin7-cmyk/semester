@@ -67,7 +67,7 @@ Every capability must pass product, data, trust, operations, commercial, adoptio
 2. Restore green baseline: fix the 50 lint warnings and exact-commit full-suite failures without weakening checks or increasing timeouts as a substitute for diagnosis.
 3. PG17 policy evidence: run clean/reapply migration suites; add a machine-readable report and unresolved-policy register.
 4. Authorization context contract: inventory existing helpers, normalize server-derived tenant/person/membership/purpose/request context, and add cross-tenant negative tests.
-5. Search/AI authorization parity: one policy-filtered result contract with tenant, purpose, source and freshness labels; negative tests for every role.
+5. Search/AI authorization parity: repository contract implemented with tenant, purpose, source and freshness labels plus every-role negative tests. Production server search, deployment and tenant activation remain unverified; see `docs/architecture/tenancy/search-ai-authorization-parity.md`.
 6. Read-only integration registry vertical slice: one approved provider adapter behind tenant activation, with credential reference, reconciliation, health, kill switch and no writeback.
 7. Guardian projection foundation: verified relationship interface, scoped consent, minimized expiring projection, immediate invalidation and audit; no raw table grants.
 8. Classified offline storage policy: central allow/deny classifier, purge hooks and tests proving grades/transcripts/aid/guardian data never persist offline.
