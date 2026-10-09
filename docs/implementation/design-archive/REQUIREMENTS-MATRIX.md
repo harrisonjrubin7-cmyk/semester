@@ -14,13 +14,13 @@ This ledger contains 1,595 canonical requirements: 673 screens, 319 workflow ste
 
 | Status | Count |
 | --- | ---: |
-| existing/verified | 481 |
+| existing/verified | 466 |
 | existing/defective | 0 |
-| partial | 590 |
-| absent | 168 |
+| partial | 608 |
+| absent | 166 |
 | ambiguous | 0 |
 | conflict | 336 |
-| externally blocked | 20 |
+| externally blocked | 19 |
 | not applicable | 0 |
 | **Total requirements / scheduled requirement work items** | **1595** |
 
