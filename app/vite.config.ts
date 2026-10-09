@@ -745,7 +745,6 @@ const MOCKS_MODULES = [
   'src/components/Drawing.test.tsx',
   'src/components/SemesterWrapped.test.tsx',
   'src/components/TrustCenter.test.tsx',
-  'src/components/creation/Publishing.test.tsx',
   'src/components/rework.test.tsx',
   'src/components/room/Talk.test.tsx',
   'src/components/GraduationSimulator.phase-d.test.tsx',
