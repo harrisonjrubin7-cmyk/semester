@@ -283,6 +283,7 @@ export interface Owed {
 
 /** Surfaces that touch student data and have not answered. A new module joins this list or `ASSESSMENTS`, never neither. */
 export const OWED: readonly Owed[] = [
+  { surface: 'Standalone Course Engine workspace', state: 'built', start: 'course-engine/docs/architecture.md', why: 'The isolated MVP can hold identity, uploaded course files, extracted evidence, calendar facts, generated study assets and learner progress. It is not wired into the deployed app; its full assessment, retention schedule, account export/deletion proof and production access model are required before activation.' },
   { surface: 'Community rooms and media', state: 'built', start: 'docs/COMMUNITY-PRIVACY-MODEL.md', why: 'Three identities, an allowlisted peer payload and a leak tripwire exist (app/src/community/identity.test.ts); the eleven questions have not been answered in one place.' },
   { surface: 'School records from an institution’s systems', state: 'built', start: 'docs/FIELD-LINEAGE-AND-SOURCE-FRESHNESS.md', why: 'Classification tiers and freshness exist behind a flag that is off until a connection is live; the reader, retention and deletion answers wait on a real source.' },
   { surface: 'Course Studio, what faculty publish to students', state: 'built', start: 'docs/FACULTY-COURSE-STUDIO-DESIGN.md', why: 'Published versions are immutable under a live grant (supabase/coursestudio.check.sql); what a faculty member learns about a student who reads them is unanswered.' },
