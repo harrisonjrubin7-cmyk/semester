@@ -39,6 +39,8 @@ import {
   type Stage,
 } from '../lib/apply';
 import { Folding } from '../components/Fold';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { ActionPreview } from '../components/unity/ActionPreview';
 
 export function Applying() {
   const { state } = useStore();
@@ -140,6 +142,7 @@ function Row({ a }: { a: Application }) {
   const { dispatch } = useStore();
   const now = useNow();
   const [open, setOpen] = useState(false);
+  const [remove, setRemove] = useState(false);
   const url = safeUrl(a.url);
 
   return (
@@ -274,7 +277,7 @@ function Row({ a }: { a: Application }) {
             <button
               type="button"
               className="bare tappable"
-              onClick={() => dispatch({ type: 'removeApplication', id: a.id })}
+              onClick={() => setRemove(true)}
               style={{
                 width: 'auto',
                 paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
@@ -286,6 +289,26 @@ function Row({ a }: { a: Application }) {
             </button>
           </div>
         </div>
+      ) : null}
+      {remove ? (
+        <ConfirmDialog
+          title="Delete this application?"
+          preview={
+            <ActionPreview
+              subject={title(a)}
+              says="Semester will delete this application tracker record from this device."
+              exactly="Its organisation, role, posting link, deadline, stage history, next action, dates, location, and private note will be removed."
+              doesNotChange="Other applications, downloaded exports, device workspace backups, and anything on the employer or careers site stay unchanged."
+              recovery={{ kind: 'none', how: 'Restore only from a device workspace backup or export created before deletion.' }}
+            />
+          }
+          confirmLabel="Delete application"
+          onCancel={() => setRemove(false)}
+          onConfirm={() => {
+            setRemove(false);
+            dispatch({ type: 'removeApplication', id: a.id });
+          }}
+        />
       ) : null}
     </Blueprint>
   );

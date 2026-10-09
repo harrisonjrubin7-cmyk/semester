@@ -2,7 +2,7 @@
 
 # Service catalog (generated)
 
-70 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
+71 components. Criticality classes: C0 data loss or exposure, or the emergency path; C1 a core daily journey or the only monitor; C2 can wait hours; C3 deferrable.
 
 | Id | Name | Kind | Class | Role | Journeys | Depends on | Kill switch | Runbook |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -31,6 +31,7 @@
 | `fn:push` | Web Push sender | edge_function | C1 | platform | — | `supabase-edge-runtime`, `supabase-db`, `web-push`, `queue:push_queue` | — | RB-07 |
 | `fn:support-reply-notify` | Support reply email | edge_function | C2 | support | — | `supabase-edge-runtime`, `supabase-db`, `resend`, `queue:support_notification_outbox` | — | RB-07 |
 | `fn:integration-tick` | Integration sync tick | edge_function | C2 | integrations | — | `supabase-edge-runtime`, `supabase-db` | `kill.integration_sync` | RB-14 |
+| `fn:ops-projector` | Operations projector batch | edge_function | C3 | data | — | `supabase-edge-runtime`, `supabase-db` | — | RB-10 |
 | `fn:lead-intake` | Company-site lead intake | edge_function | C3 | support | — | `supabase-edge-runtime`, `supabase-db` | — | RB-04 |
 | `fn:trust-room` | Procurement trust-room links | edge_function | C3 | security | — | `supabase-edge-runtime`, `supabase-db` | — | RB-04 |
 | `fn:delete-account` | Account erasure | edge_function | C0 | data | privacy_request_intake | `supabase-edge-runtime`, `supabase-db`, `supabase-auth` | — | RB-04 |

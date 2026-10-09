@@ -270,6 +270,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['productivity_readiness_aggregate', 'admin', ['auth.uid()', "'admin'=any(m.roles)", 'if owners<10']],
   ['propose_offboarding', 'admin', ['auth.uid()', 'private.is_app_admin', 'private.has_capability']],
   ['publish_course_guidance', 'admin', ['auth.uid()', 'private.course_publisher']],
+  ['publish_course_material_retention_policy', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['publish_course_rules', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['publish_study_pack', 'admin', ['auth.uid()', 'private.course_publisher']],
   ['raise_my_data_subject_request', 'self-service', ['auth.uid()']],
@@ -280,6 +281,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['read_support_case_signals', 'sharing', ['auth.uid()', 'private.assert_fresh_mfa', 'private.subject_has_capability', 'private.support_agent', 'private.support_consent_active', 'public.read_support_signals']],
   ['read_support_share', 'sharing', ['auth.uid()', 'private.may_receive_support_share']],
   ['read_support_signals', 'sharing', ['auth.uid()', 'private.subject_has_capability', 'private.support_consent_active']],
+  ['read_tenant_projection', 'admin', ['auth.uid()', 'private.has_capability']],
   ['record_offboarding_export', 'admin', ['private.offboarding_operator']],
   ['record_offboarding_notice', 'admin', ['private.is_app_admin', 'private.has_capability']],
   ['referral_standing', 'read-helper', ['auth.uid()']],
@@ -291,6 +293,7 @@ export const FUNCTIONS: readonly (readonly [name: string, category: Category, ga
   ['registration_enroll', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['registration_withdraw', 'self-service', ['auth.uid()', 'private.registration_school', 'private.registration_gate', 'private.registration_key']],
   ['remove_connection', 'self-service', ['auth.uid()']],
+  ['replay_domain_event', 'admin', ['auth.uid()', 'private.has_capability', 'private.assert_fresh_mfa']],
   ['reply_to_my_ticket', 'self-service', ['auth.uid()']],
   ['report_community_post', 'self-service', ['auth.uid()', 'private.community_role']],
   ['request_alias_identity', 'moderation', ['auth.uid()', 'private.has_capability']],
@@ -456,6 +459,18 @@ export const SINCE_READING: readonly { file: string; functions: readonly string[
  * historical snapshot.
  */
 export const AFTER_SECOND_READING: readonly { file: string; functions: readonly string[] }[] = [
+  {
+    file: '20261009001500_course_material_retention_policy.sql',
+    functions: ['publish_course_material_retention_policy'],
+  },
+  {
+    file: '20261008233000_tenant_projection_read.sql',
+    functions: ['read_tenant_projection'],
+  },
+  {
+    file: '20261008190500_projection_outbox_operations.sql',
+    functions: ['replay_domain_event'],
+  },
   {
     file: '20261008190000_console_postmerge_safety.sql',
     functions: ['console_command_center', 'console_release_incidents'],
@@ -627,7 +642,7 @@ export const BRIEF: readonly { id: string; item: string; status: BriefStatus; pa
   { id: 'A12', item: 'Service objectives', status: 'partial', paths: ['app/src/lib/governance/error-budgets.ts', 'app/src/lib/governance/error-budgets.test.ts', 'docs/operating-model/SLOS-AND-ERROR-BUDGETS.md'], gap: 'Journey SLOs and error budgets are defined and held; no indicator is measured against them.' },
   { id: 'A13', item: 'Resilience: queues, idempotency, dead letters, circuit breakers, rate limits, kill switches, offline', status: 'partial', paths: ['app/src/lib/integration/retry.ts', 'supabase/functions/_shared/killswitch.ts', 'app/src/lib/aikillswitch.test.ts', 'app/src/lib/offline-mode.test.ts'], gap: 'No circuit breaker, no general job queue or retry console.' },
   { id: 'A14', item: 'A design-system package with accessibility and visual regression tests', status: 'partial', paths: ['app/src/styles/tokens.css', 'app/src/styles/tokens.test.ts', 'app/src/a11y/axe.test.tsx'], gap: 'Tokens and axe tests exist; no separate package, component catalogue or visual regression.' },
-  { id: 'A15', item: 'A platform event bus with a standard envelope', status: 'partial', paths: ['packages/institution/src/events.ts', 'packages/institution/src/events.test.ts', 'supabase/outbox.check.sql', 'docs/architecture/0008-event-envelope-and-outbox.md'], gap: 'The envelope and outbox are tested; no producer writes to the outbox and no publisher runs.' },
+  { id: 'A15', item: 'A platform event bus with a standard envelope', status: 'partial', paths: ['packages/institution/src/events.ts', 'packages/institution/src/events.test.ts', 'supabase/outbox.check.sql', 'supabase/ops-projector-worker.check.sql'], gap: 'The envelope, outbox, one SQL-native producer and one bounded projector endpoint are tested; the endpoint is dormant and unscheduled, and no publisher runs.' },
   { id: 'A16', item: 'First-class feature flags', status: 'partial', paths: ['app/src/lib/flags.ts', 'app/src/lib/flags.test.ts', 'docs/FEATURE-FLAG-REGISTRY.md'], gap: 'Owner, review date, expiry, kill switch, tenant and role scope exist; no cohort scope, and evaluation is client-side.' },
   { id: 'A17', item: 'Tests by risk: tenant isolation, contracts, critical journeys, accessibility, visual, load', status: 'partial', paths: ['supabase/integration-rls-matrix.check.sql', 'supabase/tenancy.check.sql', 'app/scripts/golden-path.mjs', 'app/src/a11y/axe.test.tsx'], gap: 'No visual regression or load tests.' },
   { id: 'A18', item: 'Performance budgets', status: 'partial', paths: ['app/src/lib/perfbudget.ts', 'app/src/lib/perfbudget.test.ts', 'app/perf-budgets.json', 'docs/PERFORMANCE-AND-LOW-END-DEVICE-PLAN.md'], gap: 'Bundle budgets are a CI gate: first load, each of 90 screens and the largest file, in gzip bytes, set from a measurement. The first load they were set from is 395 KB, well above common mobile guidance, and nothing measures Core Web Vitals in the field yet.' },

@@ -2,11 +2,13 @@
 
 ## Passed
 
-- `python -m pytest -q`: 10 passed. Coverage includes authorization/ownership isolation, unsafe ZIP rejection, citation rejection, conflicting dates, missing time/year behavior, ICS publication filtering, flashcard deduplication, and PDF/DOCX/card export logic.
+- `python -m pytest -q`: 11 passed. Coverage includes authorization/ownership isolation for source inspection and review resolution, bounded correction payloads, unsafe ZIP rejection, citation rejection, conflicting dates, missing time/year behavior, ICS publication filtering, flashcard deduplication, and PDF/DOCX/card export logic.
 - `python -m ruff check app tests`: passed.
 - `python -m compileall`: API, worker, scripts, and benchmark modules compile.
 - `pnpm run typecheck`: passed.
 - `pnpm run build`: passed; all 15 course workspace routes compiled.
+- `pnpm test`: 15 frontend tests passed across seven files, including the shell, command-palette focus, source/status vocabulary and locations, review correction validation, operational states, semantic token contracts, and an axe ready-state scan.
+- Rendered smoke check: the built landing route rendered at the default desktop viewport and at 320 px without visible horizontal overflow.
 - `alembic upgrade head`: passed against a clean SQLite verification database.
 - `scripts/seed_demo_course.py`: passed and produced an authenticated demo course.
 - Live smoke test: API `/health` returned 200; web `/` returned 200; seeded login returned a bearer token; authenticated course listing returned the seeded course.
@@ -26,4 +28,11 @@ Locally generated artifacts (intentionally ignored by Git):
 ## Environment-blocked checks
 
 - Docker Compose execution: blocked because the `docker` executable is not installed on the verification host. Compose configuration therefore remains source-reviewed, not runtime-verified.
-- HawkScan DAST: blocked at mandatory preflight because `hawk` 6+ is not installed and `HAWK_API_KEY` is unset. Per the HawkScan workflow, no scan or security-pass claim was made. Install/upgrade with the method documented by StackHawk, initialize credentials, start the stack, then run the HawkScan loop.
+- Local HawkScan DAST: blocked at mandatory preflight because `hawk` 6+ is not installed and `HAWK_API_KEY` is unset on this host. Hosted HawkScan remains a required merge gate; a hosted pass applies only to the exact commit it scanned, and no security-pass claim is made here.
+
+## UI implementation pass
+
+The responsive shell uses the Semester Ink/Parchment/blue system without gradients or decorative AI imagery. Desktop navigation, labeled mobile tabs, context continuity, command search, reduced motion, forced colors, explicit source statuses, and loading/error/empty/offline states are implemented as reusable components. Automated axe runs exclude color contrast because jsdom has no layout/color engine; real-browser WCAG 2.2 AA contrast verification remains open.
+The upload workspace now opens an owner-scoped, focus-managed source sheet. Extracted chunks retain page, slide, sheet/cell, or media timestamp labels and confidence; exact PDF bounding-box overlays and correction actions remain open.
+
+The Review workspace can now confirm, reject, or correct extracted payloads, records an optional decision note, refreshes course counts, and blocks malformed correction JSON before sending it. Calendar consequence previews and undo remain open.

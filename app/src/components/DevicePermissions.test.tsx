@@ -85,7 +85,7 @@ describe('the panel', () => {
     await render();
     expect(host.querySelector('section')?.getAttribute('aria-labelledby')).toBe('device-permissions-heading');
     expect(document.getElementById('device-permissions-heading')?.textContent).toBe('On this device');
-    expect(items().map((li) => li.querySelector('strong')?.textContent)).toEqual(['Camera', 'Microphone', 'Location', 'Notifications']);
+    expect(items().map((li) => li.querySelector('.perm-row-name')?.textContent)).toEqual(['Camera', 'Microphone', 'Location', 'Notifications']);
     for (const li of items()) {
       expect(li.textContent).toMatch(/Used for\./);
       expect(li.textContent).toMatch(/Without it\./);
@@ -95,8 +95,8 @@ describe('the panel', () => {
   it('shows a word with every state, never colour alone', async () => {
     browser({ camera: 'granted', microphone: 'denied', geolocation: 'prompt' });
     await render();
-    const chips = [...host.querySelectorAll('.status-chip')].map((c) => c.textContent);
-    expect(chips).toEqual(['✓Allowed', '×Blocked', '·Not asked yet', '·Not asked yet']);
+    const states = [...host.querySelectorAll('.perm-state')].map((c) => c.textContent?.replace(/\s+/g, ' ').trim());
+    expect(states).toEqual(['✓ Allowed', '⊘ Blocked', '· Not asked yet', '· Not asked yet']);
   });
 
   it('says nothing has been allowed when nothing has, and stops saying it once something is', async () => {

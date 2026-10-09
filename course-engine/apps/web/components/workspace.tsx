@@ -1,40 +1,62 @@
 "use client";
-import Link from "next/link";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle,BookOpen,CalendarDays,ChevronRight,FileCheck2,Files,FlaskConical,Layers3,LoaderCircle,ShieldCheck,Sparkles } from "lucide-react";
-import { api, API, token } from "@/lib/api";
-import { useRef, useState } from "react";
 
-type Course={id:string;title:string;term?:string;timezone:string;counts:{files:number;review_items:number;study_assets:number;calendar_events:number}};
-type Asset={id:string;asset_type:string;title:string;status:string;content:Record<string,unknown>;updated_at:string};
-type Event={id:string;title:string;event_type:string;event_date?:string;start_at?:string;status:string;time_unspecified:boolean};
-type Review={id:string;title:string;item_type:string;status:string;payload:Record<string,unknown>};
-type SourceFile={id:string;filename:string;classification:string;status:string;size_bytes:number};
-const modes=["overview","uploads","review","calendar","cards","read","field-guide","slides","doc","quiz","cases","cram","listen","progress","benchmarks"];
-const studyMap:Record<string,string[]>={cards:["flashcards"],read:["comprehensive_guide","weekly_summary","reading_brief"],"field-guide":["concept_map","glossary"],slides:["lecture_outline"],doc:["assignment_planner","comprehensive_guide"],quiz:["practice_quiz","practice_exam"],cases:["reading_brief"],cram:["formula_sheet","final_exam_pack"],listen:["weekly_summary","reading_brief"]};
-function Empty({title,detail}:{title:string;detail:string}){return <div className="card flex min-h-56 flex-col items-center justify-center p-8 text-center"><Layers3 className="mb-4 text-gold"/><h3 className="text-lg font-semibold">{title}</h3><p className="muted mt-2 max-w-md text-sm">{detail}</p></div>}
-function Metric({label,value,icon}:{label:string;value:number;icon:React.ReactNode}){return <div className="card p-5"><div className="flex items-center justify-between"><span className="eyebrow">{label}</span><span className="text-gold">{icon}</span></div><div className="mt-4 text-3xl font-semibold">{value}</div></div>}
-export function Workspace({courseId,mode}:{courseId:string;mode:string}){
- const course=useQuery({queryKey:["course",courseId],queryFn:()=>api<Course>(`/courses/${courseId}`)});
- const assets=useQuery({queryKey:["assets",courseId],queryFn:()=>api<Asset[]>(`/courses/${courseId}/study-assets`)});
- const events=useQuery({queryKey:["events",courseId],queryFn:()=>api<Event[]>(`/courses/${courseId}/calendar-events`)});
- const reviews=useQuery({queryKey:["reviews",courseId],queryFn:()=>api<Review[]>(`/courses/${courseId}/review-items`)});
- const files=useQuery({queryKey:["files",courseId],queryFn:()=>api<SourceFile[]>(`/courses/${courseId}/files`),refetchInterval:mode==="uploads"?3000:false});
- const loading=course.isLoading||assets.isLoading||events.isLoading||reviews.isLoading;
- const error=course.error||assets.error||events.error||reviews.error;
- const selected=(assets.data??[]).filter(a=>(studyMap[mode]??[]).includes(a.asset_type));
- return <div className="min-h-screen md:grid md:grid-cols-[250px_1fr]">
-  <aside className="border-r border-zinc-800 bg-black/25 p-5"><div className="mb-8 flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl border border-gold/40 bg-gold/10"><Sparkles size={18} className="text-gold"/></div><div><div className="font-semibold">Course Engine</div><div className="text-xs text-zinc-500">Evidence, then output.</div></div></div><nav className="space-y-1">{modes.map(item=><Link key={item} href={`/courses/${courseId}/${item}`} className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm capitalize ${mode===item?"bg-zinc-800 text-white":"text-zinc-400 hover:bg-zinc-900"}`}><span>{item.replace("-"," ")}</span>{mode===item&&<ChevronRight size={14}/>}</Link>)}</nav></aside>
-  <main className="p-5 md:p-9"><header className="mb-8 flex flex-col justify-between gap-4 lg:flex-row lg:items-end"><div><p className="eyebrow">{mode.replace("-"," ")}</p><h1 className="mt-2 text-3xl font-semibold tracking-tight">{course.data?.title??"Course workspace"}</h1><p className="muted mt-2 text-sm">{course.data?.term??"Term not set"} · {course.data?.timezone??"Timezone loading"}</p></div><div className="flex items-center gap-2"><span className="pill flex items-center gap-2"><ShieldCheck size={14} className="text-emerald-400"/>Citation-first</span><span className="pill">Verified sources only</span></div></header>
-  {loading&&<div className="grid gap-4 md:grid-cols-4">{[1,2,3,4].map(x=><div key={x} className="skeleton h-28"/>)}</div>}
-  {error&&<div className="card border-red-900 p-6 text-red-300"><AlertTriangle className="mb-3"/>Unable to load this workspace. Sign in and verify the API is running.<div className="mt-2 text-xs text-red-400">{String(error)}</div></div>}
-  {!loading&&!error&&mode==="overview"&&<><section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"><Metric label="Original files" value={course.data?.counts.files??0} icon={<Files/>}/><Metric label="Needs review" value={course.data?.counts.review_items??0} icon={<AlertTriangle/>}/><Metric label="Study assets" value={course.data?.counts.study_assets??0} icon={<BookOpen/>}/><Metric label="Calendar items" value={course.data?.counts.calendar_events??0} icon={<CalendarDays/>}/></section><section className="mt-6 grid gap-5 lg:grid-cols-2"><div className="card p-6"><p className="eyebrow">Upcoming</p><h2 className="mt-2 text-xl font-semibold">Course calendar</h2><div className="mt-5 space-y-3">{(events.data??[]).slice(0,5).map(e=><div key={e.id} className="flex items-center justify-between border-b border-zinc-800 pb-3"><div><div className="text-sm font-medium">{e.title}</div><div className="muted text-xs">{e.event_date??e.start_at??"Date needs review"}{e.time_unspecified?" · Time unspecified":""}</div></div><span className="pill">{e.status}</span></div>)}{!events.data?.length&&<p className="muted text-sm">No published events yet.</p>}</div></div><div className="card p-6"><p className="eyebrow">Trust queue</p><h2 className="mt-2 text-xl font-semibold">Review before relying</h2><div className="mt-5 space-y-3">{(reviews.data??[]).slice(0,5).map(r=><div key={r.id} className="flex items-center gap-3 border-b border-zinc-800 pb-3"><FileCheck2 className="text-gold" size={18}/><div><div className="text-sm font-medium">{r.title}</div><div className="muted text-xs">{r.item_type.replaceAll("_"," ")}</div></div></div>)}{!reviews.data?.length&&<p className="muted text-sm">Nothing is waiting for review.</p>}</div></div></section></>}
-  {!loading&&!error&&mode==="calendar"&&<section className="card overflow-hidden"><div className="border-b border-zinc-800 p-6"><p className="eyebrow">Semester · Month · Week · Agenda</p><h2 className="mt-2 text-xl font-semibold">Editable calendar</h2></div><div className="divide-y divide-zinc-800">{(events.data??[]).map(e=><article key={e.id} className="grid gap-3 p-5 md:grid-cols-[150px_1fr_auto]"><div className="text-sm text-gold">{e.event_date??e.start_at?.slice(0,10)??"Unscheduled"}</div><div><h3 className="font-medium">{e.title}</h3><p className="muted text-xs">{e.event_type}{e.time_unspecified?" · Time unspecified":""}</p></div><span className="pill h-fit">{e.status}</span></article>)}{!events.data?.length&&<Empty title="No calendar events" detail="Confirmed dates appear here; ambiguous dates remain in Review."/>}</div></section>}
-  {!loading&&!error&&mode==="review"&&<section className="grid gap-4">{(reviews.data??[]).map(r=><article key={r.id} className="card p-5"><div className="flex justify-between"><div><span className="eyebrow">{r.item_type.replaceAll("_"," ")}</span><h3 className="mt-2 font-semibold">{r.title}</h3></div><span className="pill h-fit">{r.status}</span></div><pre className="mt-4 overflow-auto rounded-xl bg-black/40 p-4 text-xs text-zinc-400">{JSON.stringify(r.payload,null,2)}</pre></article>)}{!reviews.data?.length&&<Empty title="Review queue is clear" detail="Low-confidence OCR, conflicts, and unsupported files will appear here."/>}</section>}
-  {!loading&&!error&&mode==="uploads"&&<UploadPanel courseId={courseId} files={files.data??[]}/>}
-  {!loading&&!error&&mode==="benchmarks"&&<Benchmark courseId={courseId}/>}
-  {!loading&&!error&&!['overview','calendar','review','uploads','benchmarks'].includes(mode)&&<section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{selected.map(a=><article key={a.id} className="card p-5"><div className="flex items-center justify-between"><span className="eyebrow">{a.asset_type.replaceAll("_"," ")}</span><span className="pill">{a.status}</span></div><h2 className="mt-4 text-lg font-semibold">{a.title}</h2><p className="muted mt-2 text-sm">Versioned source-linked record · updated {new Date(a.updated_at).toLocaleDateString()}</p></article>)}{!selected.length&&<Empty title={`No ${mode.replace('-',' ')} assets yet`} detail="Generate this format after verified source evidence is available. Counts appear only when records exist."/>}</section>}
-  </main></div>
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { AppShell } from "./app-shell";
+import { BenchmarkPanel } from "./benchmark-panel";
+import { CalendarPanel } from "./calendar-panel";
+import { navigation } from "./navigation";
+import { OverviewPanel } from "./overview-panel";
+import { ProgressPanel } from "./progress-panel";
+import { ReviewPanel } from "./review-panel";
+import { SourceStatusBadge } from "./source-status";
+import { StudyModePanel } from "./study-mode-panel";
+import { UploadPanel } from "./upload-panel";
+import { ErrorState, LoadingState } from "./workspace-states";
+import type { Asset, Course, Event, Progress, Review, SourceFile } from "./workspace-types";
+
+function useOnlineStatus() {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => { window.removeEventListener("online", update); window.removeEventListener("offline", update); };
+  }, []);
+  return online;
 }
-function UploadPanel({courseId,files}:{courseId:string;files:SourceFile[]}){const input=useRef<HTMLInputElement>(null);const client=useQueryClient();const [state,setState]=useState<{name:string;status:string}[]>([]);async function upload(selected:FileList|null){if(!selected)return;for(const file of Array.from(selected)){setState(s=>[...s,{name:file.name,status:"Hashing"}]);try{const digest=await crypto.subtle.digest("SHA-256",await file.arrayBuffer());const sha=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");setState(s=>s.map(x=>x.name===file.name?{...x,status:"Uploading"}:x));const init=await api<{document_id:string;upload_url:string;upload_headers:Record<string,string>}>(`/courses/${courseId}/uploads/initiate`,{method:"POST",body:JSON.stringify({filename:file.name,size_bytes:file.size,mime_type:file.type||"application/octet-stream",sha256:sha})});const target=init.upload_url.startsWith("http")?init.upload_url:`${new URL(API).origin}${init.upload_url}`;const sent=await fetch(target,{method:"PUT",body:file,headers:{Authorization:`Bearer ${token()}`,...init.upload_headers}});if(!sent.ok)throw new Error(await sent.text());await api(`/courses/${courseId}/uploads/complete`,{method:"POST",body:JSON.stringify({document_id:init.document_id})});setState(s=>s.map(x=>x.name===file.name?{...x,status:"Queued"}:x))}catch(error){setState(s=>s.map(x=>x.name===file.name?{...x,status:error instanceof Error?error.message:"Upload failed"}:x))}}await client.invalidateQueries({queryKey:["files",courseId]})}return <section className="grid gap-5 lg:grid-cols-[1.4fr_1fr]"><div><div onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();void upload(e.dataTransfer.files)}} className="card grid min-h-72 place-items-center border-dashed p-8 text-center"><div><Files className="mx-auto text-gold" size={34}/><h2 className="mt-4 text-xl font-semibold">Drop course materials here</h2><p className="muted mt-2 max-w-lg text-sm">PDF, Office files, text, spreadsheets, images, EPUB, ZIP, audio, and video. Unsupported or protected files are never silently ignored.</p><input ref={input} type="file" multiple className="hidden" onChange={e=>void upload(e.target.files)}/><button onClick={()=>input.current?.click()} className="mt-5 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black">Choose files</button></div></div><div className="mt-4 space-y-2">{state.map((x,i)=><div key={`${x.name}-${i}`} className="card flex items-center justify-between p-3 text-sm"><span>{x.name}</span><span className="muted">{x.status}</span></div>)}{files.map(file=><div key={file.id} className="card flex items-center justify-between p-3 text-sm"><div><span>{file.filename}</span><span className="muted ml-2 text-xs">{file.classification}</span></div><span className="pill">{file.status}</span></div>)}</div></div><div className="card h-fit p-6"><p className="eyebrow">Processing contract</p><ol className="mt-4 space-y-3 text-sm text-zinc-300">{["Validate real type, size, checksum","Scan and preserve the original","Extract page, slide, cell, or timestamp chunks","Create citations and review items","Publish only verified knowledge"].map((x,i)=><li key={x} className="flex gap-3"><span className="text-gold">0{i+1}</span>{x}</li>)}</ol></div></section>}
-function Benchmark({courseId}:{courseId:string}){const q=useQuery({queryKey:["benchmarks"],queryFn:()=>api<{summary:Array<Record<string,number|string>>}>("/benchmarks/latest")});if(q.isLoading)return <div className="skeleton h-64"/>;const rows=q.data?.summary??[];return <section><div className="card p-6"><div className="flex items-center gap-3"><FlaskConical className="text-gold"/><div><p className="eyebrow">Document rendering lab</p><h2 className="mt-1 text-xl font-semibold">100-page benchmark</h2></div></div>{!rows.length?<div className="muted mt-8 text-sm">No benchmark has run. The dashboard intentionally does not invent measurements.</div>:<div className="mt-6 grid gap-4 md:grid-cols-3">{rows.map((row,i)=><div key={i} className="rounded-xl border border-zinc-800 p-4"><div className="font-semibold">{String(row.renderer)}</div><dl className="muted mt-3 space-y-2 text-sm"><div className="flex justify-between"><dt>Median time</dt><dd>{row.median_render_ms} ms</dd></div><div className="flex justify-between"><dt>Peak RSS</dt><dd>{row.median_peak_rss_mb} MB</dd></div><div className="flex justify-between"><dt>Success</dt><dd>{row.success_rate}%</dd></div></dl></div>)}</div>}</div></section>}
+
+function PageHeader({ mode, course }: { mode: string; course?: Course }) {
+  const destination = navigation.find((item) => item.id === mode);
+  return <header className="mb-7 flex flex-col justify-between gap-5 border-b border-[color:var(--border-default)] pb-6 lg:flex-row lg:items-end"><div><p className="eyebrow">{destination?.label ?? mode.replaceAll("-", " ")}</p><h1 className="mt-2 font-[family-name:var(--font-heading)] text-4xl font-semibold tracking-tight">{course?.title ?? "Course workspace"}</h1><p className="muted mt-2 text-sm">{destination?.detail ?? "Course study workspace"} · <span className="mono">{course?.timezone ?? "Timezone loading"}</span></p></div><div className="flex flex-wrap items-center gap-2"><SourceStatusBadge detail="This course workspace was created by the signed-in student. Individual records retain their own source status." status="student_entered" /><span className="status-chip" data-tone="neutral">Citations required</span></div></header>;
+}
+
+export function Workspace({ courseId, mode }: { courseId: string; mode: string }) {
+  const online = useOnlineStatus();
+  const course = useQuery({ queryKey: ["course", courseId], queryFn: () => api<Course>(`/courses/${courseId}`) });
+  const assets = useQuery({ queryKey: ["assets", courseId], queryFn: () => api<Asset[]>(`/courses/${courseId}/study-assets`) });
+  const events = useQuery({ queryKey: ["events", courseId], queryFn: () => api<Event[]>(`/courses/${courseId}/calendar-events`) });
+  const reviews = useQuery({ queryKey: ["reviews", courseId], queryFn: () => api<Review[]>(`/courses/${courseId}/review-items`) });
+  const files = useQuery({ queryKey: ["files", courseId], queryFn: () => api<SourceFile[]>(`/courses/${courseId}/files`), refetchInterval: mode === "uploads" ? 3000 : false });
+  const progress = useQuery({ queryKey: ["progress", courseId], queryFn: () => api<Progress>(`/courses/${courseId}/progress`), enabled: mode === "progress" });
+  const queries = [course, assets, events, reviews, files];
+  const loading = queries.some((query) => query.isLoading) || (mode === "progress" && progress.isLoading);
+  const error = queries.map((query) => query.error).find(Boolean) ?? progress.error;
+  const retry = () => { for (const query of queries) void query.refetch(); if (mode === "progress") void progress.refetch(); };
+
+  function content() {
+    if (loading) return <LoadingState />;
+    if (error || !course.data) return <ErrorState error={error ?? "Course data unavailable"} retry={retry} />;
+    if (mode === "overview") return <OverviewPanel course={course.data} events={events.data ?? []} reviews={reviews.data ?? []} />;
+    if (mode === "calendar") return <CalendarPanel events={events.data ?? []} />;
+    if (mode === "review") return <ReviewPanel courseId={courseId} reviews={reviews.data ?? []} />;
+    if (mode === "uploads") return <UploadPanel courseId={courseId} files={files.data ?? []} offline={!online} />;
+    if (mode === "progress") return <ProgressPanel progress={progress.data} />;
+    if (mode === "benchmarks") return <BenchmarkPanel />;
+    return <StudyModePanel assets={assets.data ?? []} courseId={courseId} mode={mode} />;
+  }
+
+  return <AppShell courseId={courseId} courseTitle={course.data?.title ?? "Course workspace"} mode={mode} offline={!online} term={course.data?.term}><PageHeader course={course.data} mode={mode} />{content()}</AppShell>;
+}

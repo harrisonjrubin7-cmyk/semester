@@ -54,9 +54,14 @@ of the disclosed exceptions.
 | `gateway_review` | **Unconfirmed reviews: one day after expiry; completed/refused reviews: ninety days after expiry; unresolved processing/pending/uncertain reviews: until reconciliation** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; encrypted bodies remain inaccessible to browser roles |
 | `gateway_audit`, `gateway_intelligence_audit` | **180 days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; metadata only, never source text, prompts or model prose |
 | `gateway_audit.correlation_id` | **With the row — 180 days** | `private.gateway_purge_journal()` as above; the column is added by `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | An opaque request id, held to the gateway's own pattern by a check constraint; never a session token or a name |
-| `domain_outbox_events`, `domain_event_receipts` | **No sweep yet — stated below** | `supabase/migrations/20260928320000_audit_correlation_and_outbox.sql` | Every event row declares its retention class (operational, student record, audit or commercial); the sweep that reads it is owed before the first producer writes in production (ADR 0008) |
-| `read_model_registry`, `projection_watermark`, `projection_rebuild_run` | **Kept while the projection or read model exists; no sweep, and none needed yet** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per read model version, per projection version and per rebuild. They hold names, versions, timestamps and a sanitized error of at most 500 characters, no person's content. Nothing writes them yet |
-| `projection_invalidation` | **No sweep yet — stated below** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per namespace refresh a projection asks for; ids and a reason only. It grows with every projection write, so a sweep is owed with the worker (backlog P1-03), before anything writes it |
+| `domain_outbox_events`, `domain_event_receipts` | **Published payloads scrubbed after 30 days; terminal envelopes and receipts expire by class: operational 90 days, student record and commercial 400 days, audit 3 years** | `private.prune_projection_history()` in `supabase/migrations/20261008220000_projection_history_retention.sql` | Manual service-role operation only; pending and dead-lettered work is never touched, and tenant/platform legal holds preserve covered history. No scheduler is enabled |
+| `read_model_registry`, `projection_watermark`, `projection_rebuild_run` | **Kept while the projection or read model exists; no sweep, and none needed yet** | `supabase/migrations/20261006130000_projection_foundation.sql` | One row per read model version, per projection version and per rebuild. They hold names, versions, timestamps and a sanitized error of at most 500 characters, no person's content. The entitlement and rollout projectors advance separate watermarks; the bounded worker remains dormant and unscheduled |
+| `ops_tenant_entitlement_projection` | **Current row kept while the school exists; replaced in place by newer events** | `supabase/migrations/20261008200000_tenant_entitlement_projection.sql` | One bounded policy id, capability, state/tombstone and source event cursor per school capability. No person, role/cohort list, reason or source prose. The school foreign key cascades on removal |
+| `ops_tenant_rollout_projection` | **Current row kept while the school exists; replaced in place by newer events** | `supabase/migrations/20261008230000_tenant_rollout_projection.sql` | One bounded lifecycle state, optional resume state and source event cursor per school. It excludes the transition reason and actor. The school foreign key cascades on removal |
+| `projection_invalidation` | **90 days** | `private.prune_projection_history()` in `supabase/migrations/20261008220000_projection_history_retention.sql` | One transient refetch signal per applied projection write; the manual service-role operation honors tenant and platform legal holds. No scheduler is enabled |
+| `course_material_retention_policy` | **Version history is kept while the school exists; withdrawal appends a version instead of rewriting or deleting one** | `supabase/migrations/20261009001500_course_material_retention_policy.sql` | Private policy metadata only: tenant, version, active/withdrawn state, retention days, approval/evidence references, actor, correlation and timestamps. One approved `tenant-policy` request is consumed per version with fresh MFA and fail-closed console audit. The table contains no course material or student content; legal hold still governs any material retained under a version |
+| `course_materials` | metadata remains while no hold-aware object/metadata purge exists; policy withdrawal blocks new intake but never rewrites an existing row's bound policy version | `supabase/migrations/20261009003000_course_material_metadata.sql` | private institution-published material metadata only: exact tenant/course/term, pseudonymous publisher, planned internal object key, bounded filename/type/size, lifecycle and the exact retention-policy id/version/duration in force at intake. No bucket, object, scan receipt, extracted content or read URL exists in this slice. Rows cannot be physically deleted; a later purge must implement the recorded duration and make tenant/platform legal holds win |
+| `course_material_operations` | retained with its course-material metadata; append-only and not physically purged in this slice | `supabase/migrations/20261009003000_course_material_metadata.sql` | bounded idempotency/provenance receipts for plan, withdrawal and restore. Actor identity is pseudonymized and the direct reference clears on account deletion; result metadata contains no filename, key or content. A future hold-aware purge must preserve covered history |
 | `gateway_rate_limit` | **One day** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep of fixed-window counters |
 | `direct_rate_limit` | **The limit's own window — at most one day; with the account, by foreign key** | `private.take_direct_rate_limit()` in `supabase/migrations/20260928230000_direct_rate_limits.sql` | On write: each call deletes that account's expired hits for the bucket, plus up to 200 day-old hits from anybody. Holds an account id, a table name and a time — never what was written |
 | `gateway_intelligence_action` | **Unconfirmed actions: one day after expiry; claimed actions: ninety days** | `private.gateway_purge_journal()` in `supabase/migrations/20260924184500_gateway_action_journal.sql` | Server-only hourly sweep; action bodies are encrypted and single-use |
@@ -200,6 +205,13 @@ behind and a client that believes it succeeded.
 | --- | --- | --- |
 | `state` | account deletion | the sync payload |
 | `courses` | account deletion | soft-deleted rows leave a tombstone — see above |
+| `course_sources` | active sources: account deletion; explicit source deletion: metadata remains through a **30-day recovery window** and, today, after that window until a hold-aware purge is implemented | private student-source metadata only, including the display filename and object key but no bytes or extracted text. The owner foreign key cascades on account deletion; an account/tenant/platform legal hold blocks the account delete or the source deletion request. The 30-day tombstone is recoverable and preserves the prior lifecycle state. No purge or bucket exists in this slice, so expiry of the window does **not** claim physical removal |
+| `course_source_corrections` | with its `course_sources` row or the confirming account's deletion | append-only source/derived-value hashes and revision links, never the corrected value. Cascades with the source and with the confirming owner |
+| `course_source_derived_snapshots` | with its `course_sources` row or the owning account's deletion | append-only hash-only receipts that bind a named extractor version and derived-snapshot hash to the exact scanned source hash. No extracted course text is stored. Cascades with the source and owner |
+| `course_source_operations` | with its `course_sources` row or the acting account's deletion | append-only idempotency receipts for plan, scan, derived snapshot, correction, conflict recording/withdrawal, delete and restore. Contains bounded result metadata, not filename, source text, compared values or correction values; cascades with the source and actor |
+| `course_source_resolution_batches` | with either referenced `course_sources` row or the owning account's deletion | private source-pair and derived-snapshot hashes for one explicit re-import decision map. A withdrawal marks the batch voided but preserves the evidence; no source values or extracted text are stored |
+| `course_source_resolution_choices` | with its `course_source_resolution_batches` row | append-only stable conflict keys and keep-current / use-imported choices. Cascades with the resolution batch; no compared values, quotations or source content are stored |
+| `course_source_resolution_applications` | rollback copy: **30 days** from apply; evidence row: with the resolution batch or owning account | private, service-only recovery state for one atomic re-import. The exact prior `courses.data` document is cleared immediately after rollback or by the manual hold-aware `private.prune_course_source_resolution_recovery()` operation after the deadline. Account, tenant and platform holds preserve the copy. No schedule, deployment or production run is claimed. Account deletion cascades the evidence row |
 | `usage` | account deletion | which screens have been opened, and the day each last was |
 | `notes`, `tasks`, `appointments`, `sittings` | account deletion | soft-deleted rows leave a tombstone — see above |
 | `profiles`, `enrollments` | account deletion | |
@@ -487,24 +499,26 @@ evidence-retention decision. There is no automatic sweep yet. Account deletion
 clears the recorder reference and leaves the operational record; notice bodies and
 recipients remain in `governance_incident_notices` under that table's policy.
 
-**The outbox and its receipts: no sweep yet.** `domain_outbox_events` and
-`domain_event_receipts` (`20260928320000_audit_correlation_and_outbox.sql`)
-are service-role only and, as of that migration, empty: no producer writes to
-them yet. Each event row declares a retention class precisely so that a sweep
-can apply this file's policy without reading the payload — but the sweep is
-not written, and a published row is kept until it is. It is owed before the
-first producer lands, and ADR 0008 says so; this entry is so that the producer
-cannot land without somebody reading this.
+**The outbox, receipts and invalidations: retention exists but is not scheduled.**
+`domain_outbox_events`, `domain_event_receipts` and `projection_invalidation`
+are service-role only. The feature-policy audit trigger now writes one bounded
+`entitlement.changed` event in the same transaction as its source and audit;
+the private tenant-entitlement apply function can settle that event into a private read
+model, receipt, watermark and invalidation in one transaction. A bounded manual
+worker endpoint now exists, but its dedicated secret is intentionally absent
+and no schedule invokes it; no production operation is inferred.
 
-The first producer has now been written — the productivity command service,
-which appends an event in the same transaction as every change
-(`app/server/productivity/`, `private.productivity_commit`) — but it is not
-mounted, so the tables are still empty. **The sweep is owed before it is.** It
-also wants a retry delay (next_attempt_at) and SKIP LOCKED before a
-publisher runs against a real bus; `docs/API-PLATFORM.md` §4.4 says what.
-`20261006130000_projection_foundation.sql` has since added the columns for it (claim_id,
-claimed_at, next_attempt_at) and four projection tables, all service-role only; nothing
-reads or writes them yet, so the sweep and the claim are still owed (P1-03).
+Each event row declares a retention class so
+`private.prune_projection_history()` can apply this file's policy without
+reading its payload. Published payloads are scrubbed after 30 days. Published
+terminal envelopes and their receipts expire after 90 days for operational
+events, 400 days for student-record and commercial events, and three years for
+audit events. Invalidations expire after 90 days. Pending and dead-lettered
+events are never scrubbed or expired, and a tenant or platform legal hold keeps
+the rows it covers. The function is service-role only and intentionally has no
+scheduler entry; deployment, activation and a live retention run remain
+unverified. `docs/API-PLATFORM.md` §4.4 and ADR 0008 remain the operating
+boundary.
 
 ## Legal holds
 
@@ -537,6 +551,11 @@ on both sides of its line.
   an account in a held school: restrictions, safety entries, posts, reports,
   hosted sessions, volunteer tasks and uploaded images, and a case while its
   post's author or a reporter is held.
+- **What projection retention keeps.** `private.prune_projection_history()`
+  never touches pending or dead-lettered events. It preserves published event
+  envelopes, receipts and invalidations for a held school, and a platform hold
+  visibly skips the whole operation. The function is manual and service-role
+  only; no retention schedule is activated by its migration.
 - **What it also keeps, in the last three sweeps.**
   20261004150000_holds_reach_the_last_three_sweeps.sql added the clause to three
   functions that deleted without asking, found by reading every function that says

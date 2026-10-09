@@ -739,7 +739,7 @@ describe('examples/event-consumer', () => {
     expect(Object.keys(EVENT_TYPES).every((t) => /^[a-z_]+\.[a-z_]+$/.test(t))).toBe(true);
   });
 
-  it('has one producer, the productivity command service, which one route mounts behind a flag that is off, and nothing publishes', () => {
+  it('tracks the bounded producers, the one flagged route, and the absence of a publisher', () => {
     // The guide says the outbox runs in memory only in these examples, and that the one producer in the repository
     // is reachable from exactly one route, switched off unless a deployment sets SEMESTER_PRODUCTIVITY=on, and
     // that nothing publishes what it writes. This fails when any of that stops being true, so that someone
@@ -764,13 +764,16 @@ describe('examples/event-consumer', () => {
     ]);
     // Nothing outside the producers' own folders imports them, so no entry point runs them. (packages/platform is the
     // tenancy kernel: it builds events and checks the tenant on a store; only build configuration names it.)
-    // The institution gateway takes the error envelope, correlation ids and request context from the platform package
-    // (MIGRATION phase 1). These listed infrastructure files may import it; none may import the productivity service.
-    const gatewayFiles = [
+    // These exact consumers take non-event primitives from the platform package. The institution gateway and
+    // intelligence path use the error envelope, correlation ids, request context and retrieval contract; the
+    // course-source contract and integration runtime import only their bounded infrastructure primitives. None
+    // imports events/emit or the productivity service.
+    const nonEventPlatformFiles = [
       'app/server/integration/registry.ts',
       'app/server/institution/adapter.ts',
       'app/server/institution/context.ts',
       'app/server/institution/gateway.ts',
+      'app/server/course-sources/contract.ts',
       'app/server/institution/intelligence-repository.ts',
       'app/server/institution/intelligence.ts',
       'app/src/lib/integration/provider-client.ts',
@@ -778,7 +781,7 @@ describe('examples/event-consumer', () => {
     const mounts = code
       .filter((c) => !c.file.startsWith('app/server/productivity/') && !c.file.startsWith('packages/platform/'))
       .filter((c) => /from\s+['"][^'"]*\/(?:productivity|platform)\/[^'"]*['"]/.test(c.text))
-      .filter((c) => !(gatewayFiles.includes(c.file) && !/from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)))
+      .filter((c) => !(nonEventPlatformFiles.includes(c.file) && !/from\s+['"][^'"]*\/productivity\/[^'"]*['"]/.test(c.text)))
       .map((c) => c.file);
     expect(mounts, 'something else now imports the productivity service or the platform package').toEqual(['app/api/productivity/[...path].ts']);
     // The route is off unless the deployment says on: the one entry point that mounts the producer must check the switch first.
@@ -786,9 +789,9 @@ describe('examples/event-consumer', () => {
     // Nothing publishes: drainOutbox has no caller outside the library.
     expect(code.filter((c) => /\bdrainOutbox\s*\(/.test(c.text)).map((c) => c.file), 'something now calls drainOutbox').toEqual([]);
     const inserts = walk('supabase').filter((f) => f.endsWith('.sql') && /insert\s+into\s+private\.domain_outbox_events/i.test(read(f))).sort();
-    // Still one producer: `private.productivity_commit`. It is defined in the commands migration and redefined, same
-    // signature, in the reads migration (which adds the sequence prediction), so both files carry the insert. The
-    // productivity check script inserts a row of its own to prove the outbox counts.
+    // Direct inserts belong to the productivity producer, the shared helper,
+    // consumer-transition code, and rolled-back checks. SQL-native producers
+    // call the helper and therefore do not appear in this direct-insert scan.
     expect(inserts, 'the producer\'s migration function and the check scripts insert into the outbox').toEqual([
       'supabase/migrations/20261004123000_productivity_commands.sql',
       'supabase/migrations/20261004180000_productivity_reads.sql',
@@ -796,12 +799,18 @@ describe('examples/event-consumer', () => {
       'supabase/migrations/20261004191000_productivity_task_carries_the_apps_task.sql',
       // The helper a SQL producer will call (P1-02), not a producer: nothing calls it yet. Its check calls the helper, so it is not listed.
       'supabase/migrations/20261008183934_emit_domain_event.sql',
+      // Rolled-back checks for selective dispatch.
+      'supabase/ops-projector-worker.check.sql',
       'supabase/outbox.check.sql',
       'supabase/productivity-commands.check.sql',
       // Writes one row of its own to prove the old columns still default after the claim columns were added; it is a check, not a producer.
       'supabase/projection-foundation.check.sql',
+      // Rolled-back checks for history retention.
+      'supabase/projection-history-retention.check.sql',
+      // Writes synthetic rows only inside its rolled-back P1-03 transition check; it is not a production producer.
+      'supabase/projection-outbox-operations.check.sql',
     ]);
-    expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('**no\nproducer writes to the outbox yet**');
+    expect(read('docs/architecture/0008-event-envelope-and-outbox.md')).toContain('No publisher or scheduler is\nactive');
   });
 });
 

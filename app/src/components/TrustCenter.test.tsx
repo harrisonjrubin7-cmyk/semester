@@ -179,7 +179,12 @@ describe('with trust_center on', () => {
     expect(text(remembered)).toContain('Your conversations with Semester: 2 conversations, 3 messages, saved on this device.');
     await act(async () => button(/^Delete it…$/, remembered).click());
     expect(localStorage.getItem('semester.threads.v1')).not.toBeNull();
-    expect(text(dialog()!)).toContain('archived ones included. Nothing else is');
+    const preview = dialog()!.querySelector('.action-preview');
+    expect(preview).not.toBeNull();
+    expect(text(preview!)).toContain('Every conversation saved on this device is deleted, archived ones included.');
+    expect(text(preview!)).toContain('What stays the same');
+    expect(text(preview!)).toContain('What you told Semester about yourself, your notes and your plans stay.');
+    expect(text(preview!)).toContain('This can’t be undone.');
     await act(async () => button(/^Delete$/, dialog()!).click());
     expect(localStorage.getItem('semester.threads.v1')).toBeNull();
     expect(localStorage.getItem('semester.threads.archive.v1')).toBeNull();

@@ -13,6 +13,7 @@ import { EMPTY_LOCKER, LOCKER_KEY, readLocker } from '../lib/source-locker';
 import { useNow, useStore } from '../state/store';
 import { ConfirmDialog } from './ConfirmDialog';
 import { SourceBadge } from './SourceBadge';
+import { ActionPreview } from './unity/ActionPreview';
 
 const when = (at: number) => formatDateTime(new Date(at), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const day = (iso: string) => formatDate(new Date(iso), { month: 'short', day: 'numeric', year: 'numeric' });
@@ -290,10 +291,12 @@ export function TrustCenter({ accountId }: { accountId?: string | null } = {}) {
         <ConfirmDialog
           title="Delete your conversations with Semester?"
           preview={
-            <p>
-              Every conversation saved on this device is deleted, archived ones included. Nothing else is: what you told
-              Semester about yourself, your notes and your plans stay.
-            </p>
+            <ActionPreview
+              subject={conversation ? `${conversation.threads} conversation${conversation.threads === 1 ? '' : 's'} · ${conversation.messages} message${conversation.messages === 1 ? '' : 's'}` : undefined}
+              says="Every conversation saved on this device is deleted, archived ones included."
+              doesNotChange="What you told Semester about yourself, your notes and your plans stay."
+              recovery={{ kind: 'none' }}
+            />
           }
           confirmLabel="Delete"
           onConfirm={() => void confirmed()}

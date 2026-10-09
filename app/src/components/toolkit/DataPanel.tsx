@@ -23,6 +23,8 @@ import {
 } from '../../lib/toolkit/data';
 import { permits, resolve, type PolicySource } from '../../lib/toolkit/policy';
 import { FilePick, Notice } from '../ui';
+import { ConfirmDialog } from '../ConfirmDialog';
+import { ActionPreview } from '../unity/ActionPreview';
 import { newId, type useToolkitData } from './store';
 
 type DataLibrary = ReturnType<typeof useToolkitData>;
@@ -52,6 +54,7 @@ export function DataPanel({ library, uploadOn, layers, now, onOpen }: { library:
   const [comparison, setComparison] = useState<Comparison>('two-groups');
   const [paired, setPaired] = useState(false);
   const [step, setStep] = useState<{ kind: TransformKind; column: string; from: string; to: string; note: string }>({ kind: 'drop-missing', column: '', from: '', to: '', note: '' });
+  const [deleting, setDeleting] = useState(false);
   const project = projects.find((p) => p.id === openId);
   const save = (p: DataProject) => library.update((all) => all.map((x) => (x.id === p.id ? p : x)));
   const aiAllowed = permits(resolve('data-cleaning', layers).state);
@@ -181,11 +184,27 @@ export function DataPanel({ library, uploadOn, layers, now, onOpen }: { library:
         )}
       </section>
 
-      {project && <ProjectView project={project} save={save} col={col} setCol={setCol} step={step} setStep={setStep} setMessage={setMessage} onOpen={onOpen} onDelete={() => {
-        if (!window.confirm(`Delete ${project.name} and its log from this device? This cannot be undone.`)) return;
-        library.update((all) => all.filter((p) => p.id !== project.id));
-        setOpenId(null);
-      }} />}
+      {project && <ProjectView project={project} save={save} col={col} setCol={setCol} step={step} setStep={setStep} setMessage={setMessage} onOpen={onOpen} onDelete={() => setDeleting(true)} />}
+      {project && deleting ? (
+        <ConfirmDialog
+          title="Delete dataset?"
+          preview={(
+            <ActionPreview
+              subject={project.name}
+              says="Deletes this dataset, its cleaning log and interpretation notes from this device."
+              doesNotChange="The original file outside Semester stays where it is."
+              recovery={{ kind: 'none' }}
+            />
+          )}
+          confirmLabel="Delete it"
+          onCancel={() => setDeleting(false)}
+          onConfirm={() => {
+            library.update((all) => all.filter((p) => p.id !== project.id));
+            setDeleting(false);
+            setOpenId(null);
+          }}
+        />
+      ) : null}
       {guide}
       {message && <Notice>{message}</Notice>}
     </>

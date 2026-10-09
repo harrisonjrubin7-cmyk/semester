@@ -4,7 +4,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -21,6 +21,7 @@ from app.models.entities import (
     LearnerProgress,
     ReviewItem,
     ReviewStatus,
+    SourceChunk,
     SourceDocument,
     StudyAsset,
     StudyExport,
@@ -189,6 +190,37 @@ def get_file(file_id: UUID, user: User = Depends(get_current_user), db: Session 
     if not doc: raise HTTPException(404)
     owned_course(db, user, doc.course_id)
     return serialize(doc)
+
+
+@router.get("/files/{file_id}/source-view")
+def source_view(
+    file_id: UUID,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    doc = db.get(SourceDocument, file_id)
+    if not doc or doc.deleted_at:
+        raise HTTPException(404)
+    owned_course(db, user, doc.course_id)
+    chunk_filter = SourceChunk.document_id == doc.id
+    total = db.scalar(select(func.count()).select_from(SourceChunk).where(chunk_filter)) or 0
+    chunks = db.scalars(
+        select(SourceChunk)
+        .where(chunk_filter)
+        .order_by(SourceChunk.chunk_index)
+        .offset(offset)
+        .limit(limit)
+    ).all()
+    return {
+        "document": serialize(doc),
+        "chunks": [serialize(chunk) for chunk in chunks],
+        "total": total,
+        "offset": offset,
+        "limit": limit,
+        "has_more": offset + len(chunks) < total,
+    }
 
 
 @router.get("/files/{file_id}/download")

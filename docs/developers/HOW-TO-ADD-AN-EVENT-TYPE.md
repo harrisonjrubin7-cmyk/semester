@@ -4,7 +4,7 @@
 
 This page is for adding a type to the domain event catalogue in `packages/institution/src/events.ts`; stop reading if you want analytics events, which are a different thing documented in [`docs/ANALYTICS-EVENTS.md`](../ANALYTICS-EVENTS.md).
 
-**Status:** PARTIAL. The catalogue, envelope, outbox and receipt ledger are implemented and tested. Per [`docs/architecture/0008-event-envelope-and-outbox.md`](../architecture/0008-event-envelope-and-outbox.md), no producer writes to the outbox yet.
+**Status:** PARTIAL. The catalogue, envelope, outbox and receipt ledger are implemented and tested. The productivity command path and tenant feature-policy trigger produce bounded events. One manually invoked, 25-event projector endpoint exists for `entitlement.changed`, but it is dormant without its dedicated secret and has no scheduler; no publisher runs. [`docs/architecture/0008-event-envelope-and-outbox.md`](../architecture/0008-event-envelope-and-outbox.md) is the accepted design record, while [`docs/reference/EVENTS.md`](../reference/EVENTS.md) is the generated current-state scan.
 
 Every domain event type is a key of `EVENT_TYPES` in [`packages/institution/src/events.ts`](../../packages/institution/src/events.ts). The file's own comment is the rule: a producer that wants a new type adds it in the same change as the first consumer, and a consumer refuses a type that is not listed.
 

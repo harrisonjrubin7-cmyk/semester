@@ -1379,6 +1379,7 @@ export function Connect() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removeFeed', id: f.id })}
+                aria-label={`Remove ${f.name} and its calendar events`}
                 style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
