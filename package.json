@@ -2,7 +2,7 @@
   "name": "semester",
   "version": "0.0.0",
   "private": true,
-  "description": "Workspace root. Holds app/ and packages/* as npm workspaces with one lockfile; video/ and pipeline/ keep their own manifests and lockfiles (see docs/target-architecture/09-CONVERSION-PLAN.md, wave C0). App scripts run from app/; root scripts orchestrate platform-control checks.",
+  "description": "Workspace root. Holds app/ and packages/* as npm workspaces with one lockfile; video/ and pipeline/ keep their own manifests and lockfiles (see docs/target-architecture/09-CONVERSION-PLAN.md, wave C0). Product scripts run from app/; platform-control scripts run here.",
   "workspaces": [
     "app",
     "packages/*"

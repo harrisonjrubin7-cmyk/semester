@@ -13,5 +13,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "validators", "scripts", "tests", "types.ts"]
+  "include": ["validators", "scripts", "tests", "types.ts"]
 }
