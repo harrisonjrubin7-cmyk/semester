@@ -267,6 +267,8 @@ describe('in a real store, against the legacy reducer', () => {
   let root: Root;
   let actions: TaskActions;
   let tasks: PersonalTask[] = [];
+  let firstProductionActions: TaskActions | null = null;
+  let domainActionsReady: (() => void) | null = null;
 
   function Probe({ flag }: { flag: 'off' | 'production' }) {
     const a = useTaskActions(flag);
@@ -274,12 +276,19 @@ describe('in a real store, against the legacy reducer', () => {
     useEffect(() => {
       actions = a;
       tasks = state.tasks;
+      if (flag === 'production') {
+        if (firstProductionActions === null) firstProductionActions = a;
+        else if (a !== firstProductionActions) domainActionsReady?.();
+      }
     });
     return null;
   }
 
   beforeAll(async () => {
     await loadSeed();
+    // Keep the integration assertions deterministic: the hook still performs its dynamic imports, but the modules
+    // are warm before each mount so React can commit the domain-backed actions inside the render's `act` scope.
+    await Promise.all([import('./domains'), import('./react')]);
   });
 
   beforeEach(async () => {
@@ -301,6 +310,10 @@ describe('in a real store, against the legacy reducer', () => {
     rows.map((r, i) => ({ id: `t${i}`, title: `T${i}`, date: '2026-09-10', time: '', note: '', done: false, created: i, courseId: null, ...r }));
 
   async function mount(flag: 'off' | 'production', saved: PersonalTask[]) {
+    firstProductionActions = null;
+    const ready = flag === 'production'
+      ? new Promise<void>((resolve) => { domainActionsReady = resolve; })
+      : Promise.resolve();
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 6, tasks: saved }));
     await act(async () => {
       root.render(
@@ -310,8 +323,10 @@ describe('in a real store, against the legacy reducer', () => {
       );
     });
     // A production build fetches the domains lazily, and a press before they arrive takes the legacy path,
-    // which would make every comparison below pass for the wrong reason. Wait for them.
-    if (flag === 'production') await act(async () => void (await new Promise((r) => setTimeout(r, 400))));
+    // which would make every comparison below pass for the wrong reason. Wait for the hook to replace its
+    // first legacy action object with the domain-backed one; a fixed sleep flakes when the shuffled suite is busy.
+    if (flag === 'production') await act(async () => void (await ready));
+    domainActionsReady = null;
   }
   /** Let queued presses run: each waits for a commit, and a commit needs the `act` scope to close. */
   async function flush() {
