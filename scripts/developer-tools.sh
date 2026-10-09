@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-# Reproducible, temporary developer-tool checks. Neither binary is an app
-# dependency and neither is shipped to students. Versions and release hashes
+# Reproducible, temporary developer-tool checks. None is an app dependency and
+# none is shipped to students. Versions and release hashes
 # are pinned so a moved tag or changed download cannot silently alter CI.
 
 set -euo pipefail
 
 readonly ACTIONLINT_VERSION='1.7.12'
 readonly OSV_SCANNER_VERSION='2.6.0'
+readonly SHELLCHECK_VERSION='0.11.0'
 
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64)
@@ -15,12 +16,16 @@ case "$(uname -s)-$(uname -m)" in
     readonly ACTIONLINT_SHA256='aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f'
     readonly OSV_TARGET='darwin_arm64'
     readonly OSV_SHA256='98c460dcd37de25819babd757d04542045b6243113e209edcd4d89fedb0256b4'
+    readonly SHELLCHECK_TARGET='darwin.aarch64'
+    readonly SHELLCHECK_SHA256='339b930feb1ea764467013cc1f72d09cd6b869ebf1013296ba9055ab2ffbd26f'
     ;;
   Linux-x86_64)
     readonly ACTIONLINT_TARGET='linux_amd64'
     readonly ACTIONLINT_SHA256='8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8'
     readonly OSV_TARGET='linux_amd64'
     readonly OSV_SHA256='ca69b3d3cd08f889a49dc0a383122f71cc528b83803671df5fd874d97485b108'
+    readonly SHELLCHECK_TARGET='linux.x86_64'
+    readonly SHELLCHECK_SHA256='b7af85e41cc99489dcc21d66c6d5f3685138f06d34651e6d34b42ec6d54fe6f6'
     ;;
   *)
     echo "Unsupported developer-tool platform: $(uname -s)/$(uname -m)" >&2
@@ -28,7 +33,8 @@ case "$(uname -s)-$(uname -m)" in
     ;;
 esac
 
-readonly TOOL_DIR="$(mktemp -d /tmp/semester-developer-tools.XXXXXX)"
+TOOL_DIR="$(mktemp -d /tmp/semester-developer-tools.XXXXXX)"
+readonly TOOL_DIR
 
 cleanup() {
   case "$TOOL_DIR" in
@@ -72,6 +78,17 @@ tar -xzf "$ACTIONLINT_ARCHIVE" -C "$TOOL_DIR" actionlint
 
 echo "actionlint v${ACTIONLINT_VERSION}: checking GitHub Actions workflows"
 "$TOOL_DIR/actionlint" -color .github/workflows/*.yml
+
+readonly SHELLCHECK_ARCHIVE="$TOOL_DIR/shellcheck.tar.gz"
+readonly SHELLCHECK_URL="https://github.com/koalaman/shellcheck/releases/download/v${SHELLCHECK_VERSION}/shellcheck-v${SHELLCHECK_VERSION}.${SHELLCHECK_TARGET}.tar.gz"
+readonly SHELLCHECK="$TOOL_DIR/shellcheck-v${SHELLCHECK_VERSION}/shellcheck"
+
+download "$SHELLCHECK_URL" "$SHELLCHECK_ARCHIVE"
+verify_sha256 "$SHELLCHECK_SHA256" "$SHELLCHECK_ARCHIVE"
+tar -xzf "$SHELLCHECK_ARCHIVE" -C "$TOOL_DIR"
+
+echo "ShellCheck v${SHELLCHECK_VERSION}: checking tracked shell scripts"
+git ls-files -z '*.sh' | xargs -0 "$SHELLCHECK" --severity=warning --
 
 readonly OSV_SCANNER="$TOOL_DIR/osv-scanner"
 readonly OSV_URL="https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_${OSV_TARGET}"

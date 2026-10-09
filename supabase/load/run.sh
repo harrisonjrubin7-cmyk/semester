@@ -3,6 +3,8 @@
 # Not run directly: `supabase/load.sh` is the command. By the time this runs,
 # check.sh has a throwaway Postgres with every migration applied, and hands
 # over `psql`, `$bindir`, `$work` and `$port`.
+# shellcheck shell=bash
+# shellcheck disable=SC2154 # check.sh supplies bindir, work and port.
 
 # check.sh runs under `set -e`; this script reads exit codes and reports each
 # failure itself, so a scenario that fails must not end the run unexplained.
