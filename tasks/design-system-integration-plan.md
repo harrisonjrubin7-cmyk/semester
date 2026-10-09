@@ -384,6 +384,14 @@ The mounted `.semester-reference/` directory is now explicitly ignored as untrus
 
 The complete ordered and shuffled application suites each pass 23,872 tests with 69 skipped across 1,490 passing files and one skipped file; shuffle seed `1791526111475` is recorded. TypeScript, the university gateway typecheck, lint, production build, 147 design contracts, design audit/CSS and report generation pass with the existing four lint, 86 design-audit and chunk-size warning baselines. HawkScan cannot start because the Hawk CLI and Docker runtime are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so DAST remains open. No server adapter, extractor, route, deployment or external state changed.
 
+## Governed AI Toolkit deletion previews — automation pass 31, slice 39
+
+Current `origin/main` remains `0d8f70b2`; no equivalent change touches the three Toolkit panels or their test. The scanner/extractor path remains externally gated, so this pass takes the earliest independent Phase 1 shared-experience gap recorded by Stream 01: the incomplete consequence pattern. Assignment workspaces, research projects and datasets previously used native `window.confirm` prompts that named irreversibility but did not state the exact local payload, what remains outside Semester or the governed focus/cancel behavior.
+
+The three panels now reuse the existing `ConfirmDialog` and `ActionPreview`. Each preview names the local records removed, says that the external assignment/source/file is unchanged and states that deletion cannot be undone. Cancel remains the initial safe choice through the shared modal contract; the write still occurs only after explicit confirmation and remains device-local. No route, component, dependency, schema, server operation, provider or authority claim was added. A structural guard holds all three panels off `window.confirm`; it was demonstrated red with a temporary recurrence probe and restored.
+
+The focused Toolkit and ActionPreview suites pass 31/31. TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings. Token export passes 9/9; design audit remains at zero violations with 86 ledgered warnings; CSS stays within its ledger; 69/69 design contracts pass; and the design report regenerates. The aggregate `design-system:check` launcher cannot start because it hardcodes unavailable `npm`, so only its exact constituents are claimed. Ordered/shuffled full suites were not rerun after pass 30's green baseline. HawkScan preflight reports no Hawk CLI, Docker, `HAWK_API_KEY` or `HAWK_APP_HOST`; the local properties file was not read and no DAST pass is claimed. The next safe consequence-pattern candidate is the device-only feedback deletion; permanent file purge has separate restore/retention semantics and remains a later slice.
+
 ## What was read
 
 - Root `CLAUDE.md`.

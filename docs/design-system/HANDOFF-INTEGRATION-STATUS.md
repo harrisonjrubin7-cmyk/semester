@@ -1,10 +1,20 @@
 # Handoff integration status
 
-**Automation pass** 30 of 120 · **Integration slice** 38 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
+**Automation pass** 31 of 120 · **Integration slice** 39 · **Date** 2026-10-09 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `0d8f70b2`
 
 ## State
 
 Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, the student-controlled date/time/title/type/weight/location/detail/provenance/metadata/grading re-import paths, durable conflict evidence, atomic apply/rollback, hold-aware recovery-copy expiry and correction-current hash-only derived-snapshot receipts are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Import remains local-only because the private authenticated/rate-limited adapter and actual trustworthy storage/scanner/extractor runtime are absent. Extraction, signed reads, server-backed current-screen wiring, scheduling, deployment and production operation remain unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 31 / slice 39
+
+- Current `origin/main` remains `0d8f70b2`; no equivalent change touches the three AI Toolkit panels or their focused test.
+- Assignment-workspace, research-project and dataset deletion now use the existing governed `ConfirmDialog` and `ActionPreview` rather than browser-native confirmation. Each preview names the local records removed, the external assignment/source/file that remains unchanged and the lack of recovery.
+- Cancel remains the shared modal's initial focus and confirmation remains explicit. The mutations and persistence boundary are unchanged and device-local; no route, shared component, schema, server action, provider or deployment was added.
+- A structural guard refuses `window.confirm` in the three panels. It was demonstrated red with a temporary recurrence probe and then restored. The focused Toolkit/ActionPreview suites pass 31/31.
+- TypeScript, lint, university typecheck and production build pass. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS remains within its ledger, 69/69 design contracts pass and the report regenerates. Existing baselines remain four lint warnings and the build chunk warning. The aggregate design launcher alone cannot start because it hardcodes unavailable `npm`.
+- Ordered and shuffled full suites were not rerun after pass 30's green baseline. HawkScan preflight reports no Hawk CLI, Docker, `HAWK_API_KEY` or `HAWK_APP_HOST`; a local properties file exists but was not read, so no DAST result or security pass is claimed.
+- The next safe consequence-pattern candidate is device-only feedback deletion. Permanent file purge remains separate because its trash/retention/recovery contract must be reconciled first. The scanner/extractor adapter and Import wiring remain closed.
 
 ## Evidence locked in automation pass 30 / slice 38
 

@@ -804,6 +804,26 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 - [ ] Keep external reconciliation, safe ICS publication, signed reads, scheduling, deployment and production operation separate.
 
+## 2026-10-09 governed AI Toolkit deletion previews — automation pass 31, slice 39
+
+- [x] Fetch current `origin/main` `0d8f70b2` before and after the slice and confirm no equivalent Toolkit consequence-preview work landed.
+- [x] Select the independent Phase 1 consequence-pattern gap while the authenticated scanner/extractor adapter remains externally gated.
+- [x] Replace native browser confirms for assignment-workspace, research-project and dataset deletion with the existing `ConfirmDialog` plus `ActionPreview` contract.
+- [x] State the exact device-local records removed, what external assignment/source/file stays unchanged and that the deletion cannot be undone.
+- [x] Preserve explicit confirmation, safe cancel-first modal behavior and device-local persistence; add no route, shared component, dependency, schema, server operation or provider claim.
+- [x] Add a structural recurrence guard for all three panels and prove it red with a temporary `window.confirm` probe before restoring the implementation.
+- [x] Pass 31/31 focused Toolkit/ActionPreview tests, TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 69/69 design contracts and design-report generation.
+- [ ] Aggregate `design-system:check` launcher — cannot start because it hardcodes unavailable `npm`; its exact constituents pass.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this slice.
+- [ ] HawkScan DAST — required for this production UI change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; a local properties file exists but was not read. No scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Apply the governed consequence preview to the device-only feedback deletion as the next bounded safe candidate after a fresh mainline check.
+- [ ] Keep permanent file purge separate until its trash, retention and recovery semantics are reconciled; do not imply that all irreversible actions are covered.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
