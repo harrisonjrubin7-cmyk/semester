@@ -1,5 +1,5 @@
 import { DESTINATIONS } from '../nav';
-import { SEATS, type Seat } from '../launchreadiness';
+import type { Seat } from '../launchreadiness';
 import { NON_DESTINATION_FLOWS } from '../rollout-capabilities';
 import {
   CAPABILITY_DEFINITIONS,
@@ -258,6 +258,19 @@ export function validateCapabilityExposureIndex(
     }
     if (!entry.audiences.length) errors.push(`Missing audiences: ${entry.capabilityId}.`);
     if (canonicalCapability) {
+      const canonicalAuthorities = [...new Set(canonicalCapability.data.map((rule) => rule.authority))];
+      const canonicalClassifications = [...new Set(canonicalCapability.data.map((rule) => rule.classification))];
+      if (entry.dataAuthorities.length !== canonicalAuthorities.length
+        || canonicalAuthorities.some((authority) => !entry.dataAuthorities.includes(authority))) {
+        errors.push(`Invalid data authorities: ${entry.capabilityId}.`);
+      }
+      if (entry.securityClassifications.length !== canonicalClassifications.length
+        || canonicalClassifications.some((classification) => !entry.securityClassifications.includes(classification))) {
+        errors.push(`Invalid security classifications: ${entry.capabilityId}.`);
+      }
+      if (entry.productOwner !== canonicalCapability.owner) {
+        errors.push(`Invalid product owner: ${entry.capabilityId}.`);
+      }
       const requiredAudiences = audiencesFor(canonicalCapability);
       if (entry.audiences.length !== requiredAudiences.length
         || requiredAudiences.some((audience) => !entry.audiences.includes(audience))) {
@@ -277,10 +290,12 @@ export function validateCapabilityExposureIndex(
       errors.push(`Incomplete value measures: ${entry.capabilityId}.`);
     }
     if (!entry.rollback.trim()) errors.push(`Missing fallback: ${entry.capabilityId}.`);
+    if (entry.entitlement !== 'profile-tenant-cohort') errors.push(`Invalid entitlement: ${entry.capabilityId}.`);
+    if (entry.evidenceExpiry !== 'release-profile-controlled') errors.push(`Invalid evidence expiry: ${entry.capabilityId}.`);
     if (!entry.mobileExperience.acceptance.trim()) errors.push(`Missing mobile acceptance: ${entry.capabilityId}.`);
     if (Object.values(entry.governance).some((value) => !value.trim())) errors.push(`Incomplete governance: ${entry.capabilityId}.`);
     if (Object.values(entry.operations).some((value) => !value.trim())) errors.push(`Incomplete operations: ${entry.capabilityId}.`);
-    if (!SEATS.includes(entry.operations.auditOwner)) errors.push(`Invalid audit owner: ${entry.capabilityId}.`);
+    if (entry.operations.auditOwner !== 'privacy') errors.push(`Invalid audit owner: ${entry.capabilityId}.`);
   }
 
   for (const destination of DESTINATIONS) {

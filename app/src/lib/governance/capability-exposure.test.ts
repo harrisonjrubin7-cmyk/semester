@@ -184,6 +184,36 @@ describe('capability exposure resolver', () => {
     expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid audit owner: ${invalid.capabilityId}.`);
   });
 
+  it('rejects derived summaries that contradict the canonical governed entities', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      dataAuthorities: [],
+      securityClassifications: [],
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Invalid data authorities: ${invalid.capabilityId}.`,
+      `Invalid security classifications: ${invalid.capabilityId}.`,
+    ]));
+  });
+
+  it('rejects product accountability or release controls that differ from the canonical contract', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      productOwner: 'unregistered-owner',
+      entitlement: 'not-canonical' as CapabilityExposureIndexEntry['entitlement'],
+      evidenceExpiry: 'not-canonical' as CapabilityExposureIndexEntry['evidenceExpiry'],
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toEqual(expect.arrayContaining([
+      `Invalid product owner: ${invalid.capabilityId}.`,
+      `Invalid entitlement: ${invalid.capabilityId}.`,
+      `Invalid evidence expiry: ${invalid.capabilityId}.`,
+    ]));
+  });
+
   it('authorizes live only for an exact production release of an included standard capability', () => {
     expect(resolveCapabilityExposure('CAP-001', context({ surface: 'marketing' }))).toMatchObject({
       status: 'live',
