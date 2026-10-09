@@ -440,6 +440,16 @@ The focused guard was proved red on the missing `.action-preview`, then 25 relat
 
 The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. The next local slice requires another fresh ranking; scanner/extractor-backed Import remains externally gated.
 
+## Governed Applications-tracker deletion preview — automation pass 37, slice 45
+
+Current `origin/main` remains `0d8f70b2`; no equivalent Applications-tracker deletion preview landed. Re-ranking selected the existing single-application deletion because it is bounded to one student-owned device record, changes no employer or careers-system record, and the current Export/device-workspace backup paths already define its only recovery option.
+
+The prior immediate reducer dispatch now opens the existing `ConfirmDialog` and `ActionPreview`. The preview names the application; the organisation, role, posting link, deadline, stage history, next action, dates, location and private note removed; other applications and outside-Semester non-effects; and the lack of in-app undo. Cancel preserves rendered and persisted state, while explicit confirmation invokes the unchanged `removeApplication` reducer for the selected id. No route, shared component, dependency, schema, server operation, provider or external system changed.
+
+The focused guard was proved red against the missing action preview, then 26 Applications deletion, cold-entry and ActionPreview tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. Token export passes 9/9, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger, 69/69 design contracts pass and the design report regenerates. Ordered/shuffled full suites were not rerun after pass 30's green baseline.
+
+The active HawkScan skill stops at preflight: Hawk v6 and Docker are absent, `HAWK_API_KEY` and `HAWK_APP_HOST` are unset, and the detected local properties file was not read. No target, DAST result or security pass is claimed. Permanent file purge, same-origin demo reset and scanner/extractor-backed Import remain separate; the next local slice requires another fresh ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.

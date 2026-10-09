@@ -923,6 +923,25 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 governed Applications-tracker deletion preview — automation pass 37, slice 45
+
+- [x] Fetch current `origin/main` `0d8f70b2` and confirm no equivalent Applications-tracker deletion preview landed.
+- [x] Re-rank the remaining consequence paths and select only one student-owned device-local application record; keep external applications, permanent file purge and the demo reset separate.
+- [x] Replace immediate deletion with the existing `ConfirmDialog` and `ActionPreview`; add no route, shared component, dependency, schema or server operation.
+- [x] Name the application and its organisation, role, posting link, deadline, stage history, next action, dates, location and private note; preserve other applications, exports, backups and employer/careers-system state.
+- [x] State that recovery requires an earlier device workspace backup or export; verify cancel preserves persistence and explicit confirmation removes only the selected local record.
+- [x] Prove the focused guard red against the absent preview, then pass 26/26 Applications deletion, dead-end and ActionPreview tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks, 69/69 design contracts and design-report generation.
+- [ ] Ordered and shuffled full suites — not rerun after pass 30's green 23,872-test baseline; no full-suite result is claimed for this bounded client slice.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset. A local properties file exists but was not read; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining consequence-pattern gaps and choose only a bounded action with explicit ownership, external effects and recovery.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.
