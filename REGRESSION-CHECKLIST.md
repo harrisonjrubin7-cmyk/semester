@@ -78,6 +78,9 @@ times in the run logs below while the other sat still.
       A dropped test counts as a regression, not as a cleanup. Relative rather
       than a fixed number on purpose: see *Why a stale baseline is worse than
       none* above.
+      A new or renamed test that calls `vi.mock` must also appear in
+      `vite.config.ts`'s `MOCKS_MODULES`; `src/isolation.test.ts` enforces exact
+      parity so shared workers cannot make module-mock behavior order-dependent.
 - [ ] **A2** `cd app && npm run test:zones` — the suite passes under both
       `America/Chicago` and `Pacific/Kiritimati`.
 - [ ] **A3** `cd app && npm run lint` — oxlint clean, `scripts/styles.mjs` clean (no raw
