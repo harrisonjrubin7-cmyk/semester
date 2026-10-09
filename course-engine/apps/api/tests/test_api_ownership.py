@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.database import Base, get_db
 from app.main import app
-from app.models.entities import SourceChunk, SourceDocument
+from app.models.entities import ReviewItem, SourceChunk, SourceDocument
 
 
 def test_course_ownership_boundary_returns_not_found_for_other_user():
@@ -80,5 +80,29 @@ def test_course_ownership_boundary_returns_not_found_for_other_user():
         assert source.json()["has_more"] is False
         assert client.get(f"/api/v1/files/{document_id}/source-view", headers=second_headers).status_code == 404
         assert client.get(f"/api/v1/files/{document_id}/source-view").status_code == 401
+
+        with testing_session() as session:
+            review = ReviewItem(
+                course_id=UUID(course_id),
+                document_id=document_id,
+                item_type="date_conflict",
+                title="Confirm assignment date",
+                payload={"due_date": "2026-10-20"},
+            )
+            session.add(review)
+            session.commit()
+            review_id = review.id
+
+        correction = {
+            "status": "confirmed",
+            "resolution_note": "Checked against page 4",
+            "corrected_payload": {"due_date": "2026-10-22"},
+        }
+        assert client.patch(f"/api/v1/review-items/{review_id}", json=correction, headers=second_headers).status_code == 404
+        resolved = client.patch(f"/api/v1/review-items/{review_id}", json=correction, headers=first_headers)
+        assert resolved.status_code == 200
+        assert resolved.json()["status"] == "confirmed"
+        assert resolved.json()["payload"] == {"due_date": "2026-10-22"}
+        assert resolved.json()["resolution_note"] == "Checked against page 4"
     finally:
         app.dependency_overrides.clear()
