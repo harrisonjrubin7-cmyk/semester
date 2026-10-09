@@ -133,7 +133,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Gateway error codes](../reference/ERRORS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Event catalog and outbox](../reference/EVENTS.md) | reference | generated | `data` | 2026-10-04 |
 | [Reference](../reference/README.md) | reference | held | `engineering` | 2026-10-04 |
-| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-08 |
+| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-09 |
 | [Semester Education OS P0–P3 implementation plan](../roadmap/P0-P3-IMPLEMENTATION_PLAN.md) | explanation | reviewed | `product` | 2026-10-08 |
 | [Example: event consumer](../../examples/event-consumer/README.md) | reference | held | `engineering` | 2026-10-04 |
 | [Example: gateway client](../../examples/gateway-client/README.md) | reference | held | `engineering` | 2026-10-04 |
@@ -310,7 +310,7 @@ Pages elsewhere in `docs/` (about three hundred, mostly older) are not governed 
 | [Gateway error codes](../reference/ERRORS.md) | reference | held | `engineering` | 2026-10-04 |
 | [Event catalog and outbox](../reference/EVENTS.md) | reference | generated | `data` | 2026-10-04 |
 | [Reference](../reference/README.md) | reference | held | `engineering` | 2026-10-04 |
-| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-08 |
+| [Registration-readiness evaluation workflow](../reference/registration-readiness-workflow.md) | reference | held | `data` | 2026-10-09 |
 | [SCIM provisioning API](../reference/SCIM-API.md) | reference | held | `engineering` | 2026-10-04 |
 | [Change communication](../releases/CHANGE-COMMUNICATION.md) | reference | held | `success` | 2026-10-04 |
 | [Support documentation](../support/README.md) | reference | held | `success` | 2026-10-04 |

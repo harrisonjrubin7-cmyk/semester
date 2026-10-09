@@ -1,10 +1,18 @@
 # Registration-readiness evaluation workflow
 
-> **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-08 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
+> **Type:** reference · **Audience:** implementers · **Owner:** `data` · **Truth:** held · **Reviewed:** 2026-10-09 · **Held by:** `packages/institution/src/readiness-workflow.test.ts`
 
-Status: repository contract. No production persistence adapter, live SIS connection, or official registration write is activated by this module.
+Status: repository contract, service-only Postgres persistence adapter, and server orchestration service. No HTTP route or worker calls the service yet, and no live SIS connection or official registration write is activated by these modules.
 
-`packages/institution/src/readiness-workflow.ts` defines the aggregate rules that a durable readiness repository must preserve. It sits between the source-aware projection and the future Postgres adapter so HTTP handlers, workers, and SQL cannot each invent different retry behavior.
+`packages/institution/src/readiness-workflow.ts` defines the aggregate rules that the durable readiness repository preserves. `app/server/institution/readiness-service.ts` loads the tenant-bound aggregate and applies those rules, `app/server/institution/readiness-repository.ts` is the service-only persistence adapter, and `supabase/migrations/20261009160000_registration_readiness_store.sql` is its transactional store. They sit between the source-aware projection and future HTTP or worker adoption so callers and SQL cannot each invent different retry behavior.
+
+## Server orchestration boundary
+
+The service accepts tenant, subject, requester, correlation, and idempotency values explicitly. A future route must derive them from verified server context; the service does not accept a browser session or authorize a person. A future evaluator worker may use the same boundary with its own verified service identity.
+
+For transitions, the service loads by tenant plus evaluation id before it applies the pure state machine. A missing record and a record owned by another tenant therefore have the same result. Invalid or stale transitions fail before `save`; accepted transitions are still protected by the database compare-and-swap in case two callers raced after the load.
+
+This layer intentionally does not expose the workflow record as the student-facing checklist. The workflow aggregate records evaluation state and delivery receipts; `packages/institution/src/readiness.ts` defines the source-aware projection governed by `registration.readiness.view`. An HTTP read route needs that projection store and policy decision, not an accidental serialization of the orchestration aggregate.
 
 ## State path
 
@@ -36,15 +44,15 @@ The aggregate returns minimal outbox descriptors for:
 
 Payloads contain only evaluation id, term id, and aggregate version. They do not carry holds, prerequisite details, student-entered plan content, or source payloads. The event catalog classifies all three as education records; the request and reconciliation events use audit retention, while evaluated projections use student-record retention.
 
-## Required persistence adapter behavior
+## Persistence adapter behavior
 
-The next storage slice must:
+The store now:
 
 1. tenant-bind every evaluation, task, receipt, and query;
 2. make `(evaluation_id, aggregate_version)` and tenant-scoped idempotency uniqueness enforceable in Postgres;
 3. save the aggregate, receipt, audit evidence, and outbox row in one transaction;
 4. encrypt or minimize stored source facts rather than copying institutional payloads into command or event ledgers;
-5. expose reconciliation work only to an authorized assigned advisor or registrar relationship;
-6. retain rollback SQL and database-negative tests for cross-tenant reads and writes.
+5. keeps reconciliation work service-only; a later query surface must authorize an assigned advisor or registrar relationship before exposing it;
+6. documents forward rollback order and has database-negative tests for cross-tenant reads and writes.
 
-Until that adapter is merged and configured, this contract is implementation evidence for workflow rules only—not evidence of durable production operation.
+The adapter is repository implementation evidence only. It has not been configured in a deployed runtime, called by an HTTP route or worker, exercised against a live institution, or used for an official registration write. Those remain separate gates.

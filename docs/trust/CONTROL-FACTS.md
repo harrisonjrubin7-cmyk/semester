@@ -15,11 +15,11 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | Migration files | 223 |
 | Tables created in `public` and not later dropped | 342 |
 | … of which enable row-level security in a migration | 342 |
-| Tables created in `private` and not later dropped | 38 |
-| … of which enable row-level security in a migration | 38 |
+| Tables created in `private` and not later dropped | 41 |
+| … of which enable row-level security in a migration | 41 |
 | Tables with no `enable row level security` statement found | 0 |
 | Tables named by at least one literal `create policy` statement | 276 |
-| Tables with RLS found and no literal policy statement | 104 |
+| Tables with RLS found and no literal policy statement | 107 |
 | Migration installs the `ensure_rls` event trigger (`rls_auto_enable`) | yes |
 
 **How counted.** Each migration is read in filename order with SQL comments removed. A table counts when `create table` names it (schema defaults to `public`) and no later `drop table` removes it. It has RLS when an `alter table … enable row level security` names it. The name `as` is skipped because it is the SQL phrase `create table as`. Policies count only as literal `create policy … on <table>` statements.
@@ -28,7 +28,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 
 ## Policy and invariant suites (`supabase/*.check.sql`)
 
-147 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
+148 files. `supabase/check.sh` runs every `*.check.sql` file by glob, and `.github/workflows/ci.yml` runs it as the step "Check the database policies".
 
 | Suite | What it proves (first sentence of its opening comment, verbatim) |
 | --- | --- |
@@ -147,6 +147,7 @@ Every table is a measurement of text in the tree. A count here says a file, row 
 | `supabase/rate-limits.check.sql` | Rate limits on the browser's direct writes, and what they must not touch. |
 | `supabase/records.check.sql` | Does 'records.sql' do what it says? |
 | `supabase/referrals.check.sql` | Referral links: what an ambassador may learn, and what they may not. |
+| `supabase/registration-readiness-store.check.sql` | The registration-readiness durable store (20261009160000). |
 | `supabase/registration_transaction.check.sql` | the official registration transaction. |
 | `supabase/reports.check.sql` | Who may read a report, and the four states one can be in. |
 | `supabase/retention-sweeps.check.sql` | The three retention sweeps from 20260929030000_retention_sweeps.sql. |
