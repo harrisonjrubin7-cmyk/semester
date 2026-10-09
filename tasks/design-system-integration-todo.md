@@ -1292,3 +1292,22 @@ Documentation only. Application code was not changed after the reset onto `d577a
 - [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
+## 2026-10-09 recoverable registrar-date clearing — automation pass 10, integration slice 61
+
+- [x] Re-fetch current `origin/main` `e128a526`; confirm it remains an ancestor and contains no equivalent `dropTermDate` Undo registration or row-specific Clear name.
+- [x] Re-rank remaining consequence paths and select only the student-managed Registrar sheet; keep official institutional calendars, registration records, permanent purge, broad demo reset and scanner-backed Import outside the mutation.
+- [x] Add `dropTermDate` to the shared eight-second Undo contract with only `registrar` and `onChange`, covering both removal of a student-added row and same-length clearing of a built-in landmark.
+- [x] Give each repeated Clear control an accessible name containing its exact date label; add no route, component, dependency, schema, server operation or provider behavior.
+- [x] Prove the registry guard red, then pass 184/184 focused Undo, reducer, registrar and rendered Registrar tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and unchanged design-report generation.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`/`npx`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded state-contract slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — the active skill stops at preflight because Hawk v6 and Docker are absent and no target host is set; a local credential properties file exists but was not read. No target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge, folder-tree deletion and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.

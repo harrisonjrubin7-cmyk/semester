@@ -125,6 +125,8 @@ export const UNDOABLE: Record<string, Undoable> = {
   dropCharge: { label: 'Charge removed', fields: ['charges'] },
   dropAid: { label: 'Aid entry removed', fields: ['aid'] },
   dropPayment: { label: 'Payment record removed', fields: ['payments'] },
+  // Clearing a landmark edits its row; clearing a date of your own removes it.
+  dropTermDate: { label: 'Registrar date cleared', fields: ['registrar'], onChange: true },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*

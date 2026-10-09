@@ -67,6 +67,11 @@ describe('which actions can be taken back', () => {
       label: 'Payment record removed',
       fields: ['payments'],
     });
+    expect(undoableFor('dropTermDate')).toEqual({
+      label: 'Registrar date cleared',
+      fields: ['registrar'],
+      onChange: true,
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -138,6 +143,12 @@ describe('the snapshot', () => {
     expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropCharge, AT).was)).toEqual(['charges']);
     expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropAid, AT).was)).toEqual(['aid']);
     expect(Object.keys(snapshot(DEFAULT_PERSISTED, UNDOABLE.dropPayment, AT).was)).toEqual(['payments']);
+  });
+
+  it('keeps only the student-managed registrar sheet', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.dropTermDate, AT);
+    expect(Object.keys(took.was)).toEqual(['registrar']);
+    expect(UNDOABLE.dropTermDate.onChange).toBe(true);
   });
 
   it('carries the label and the moment', () => {

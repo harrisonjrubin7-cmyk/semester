@@ -279,3 +279,12 @@ This mapping adds no archive route, role, capability, schema or provider claim. 
 | Official finance and payment boundary | `app/src/lib/bill.ts`, `app/src/screens/Bill.tsx`, `app/src/lib/export.ts` | Existing and unchanged. These rows are student-entered planning data, carry the `student_entered` provenance label and are covered by the core export. They do not edit a university ledger, determine official aid, process a payment or claim provider reconciliation. |
 
 This mapping adds no archive route, role, capability, schema, server operation or provider claim. Deployment, HawkScan, official finance integration, external approvals and institutional readiness remain unverified.
+
+## Pass 10 current-product consequence mapping — integration slice 61
+
+| Reference concern | Current repository owner | Disposition and evidence |
+| --- | --- | --- |
+| Stream 01 consequence pattern for clearing one student-managed Registrar date | `app/src/screens/Registrar.tsx`, `app/src/state/slices/library.ts`, `app/src/lib/undo.ts` | Existing but incomplete is narrowed: `dropTermDate` now uses the shared eight-second Undo path and snapshots only `registrar`. `onChange` covers the built-in landmark case where the row remains but both dates are blanked; the same contract restores a removed student-added row and its original order. The repeated Clear controls expose row-specific accessible names. The red-before-green registry guard and reducer integration are included in 184 focused passing tests. |
+| Official academic-calendar and registration-record boundary | `app/src/lib/registrar.ts`, `app/src/lib/governance/capability-governance.ts` | Existing and unchanged. The landmarks and student-entered dates are a private planning sheet; clearing or restoring one does not alter the institution's authoritative calendar, enrollment, add/drop status or registration record. |
+
+This mapping adds no archive route, role, capability, schema, policy, server operation or provider claim. Deployment, HawkScan, official registrar integration, external approvals and institutional readiness remain unverified.

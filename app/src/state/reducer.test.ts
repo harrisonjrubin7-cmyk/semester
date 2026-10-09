@@ -1016,6 +1016,25 @@ describe('taking it back', () => {
     expect(back.undone).toBeNull();
   });
 
+  it('restores a cleared registrar landmark without reverting unrelated work', () => {
+    const s = reducer(blank(), {
+      type: 'setTermDate',
+      id: 'classes-begin',
+      iso: '2026-08-24',
+      until: '',
+    });
+
+    const gone = reducer(s, { type: 'dropTermDate', id: 'classes-begin' });
+    expect(gone.registrar.find((date) => date.id === 'classes-begin')?.iso).toBe('');
+    expect(gone.undone?.label).toBe('Registrar date cleared');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.registrar).toEqual(s.registrar);
+    expect(back.done['deadline-1']).toBe(true);
+    expect(back.undone).toBeNull();
+  });
+
   it('offers nothing for an action that only edits', () => {
     // An edit leaves the thing there to edit back.
     const s = twoNotes();
