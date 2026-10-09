@@ -99,23 +99,15 @@ describe('the workspace aliases', () => {
    */
   const packages = readdirSync(join(root, 'packages'))
     .filter((d) => statSync(join(root, 'packages', d)).isDirectory())
-    .map((dir) => ({
-      dir,
-      name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name,
-      source: statSync(join(root, 'packages', dir)).isDirectory() && existsSync(join(root, 'packages', dir, 'src/index.ts')),
-    }));
-  const sourcePackages = packages.filter((p) => p.source);
+    .filter((d) => existsSync(join(root, 'packages', d, 'src/index.ts')))
+    .map((dir) => ({ dir, name: (JSON.parse(readFileSync(join(root, 'packages', dir, 'package.json'), 'utf8')) as { name: string }).name }));
   const tsconfig = readFileSync(join(root, 'app/tsconfig.app.json'), 'utf8');
   const vite = readFileSync(join(root, 'app/vite.config.ts'), 'utf8');
 
-  it('names every source workspace package, at its source entry', () => {
-    for (const { dir, name } of sourcePackages) {
+  it('names every workspace package, at its source entry', () => {
+    for (const { dir, name } of packages) {
       expect(WORKSPACE_ALIASES[name], `${name} (packages/${dir}) has no entry in WORKSPACE_ALIASES in lib/importgraph.ts`).toBe(`packages/${dir}/src/index.ts`);
     }
-  });
-
-  it('does not expose tool-only workspaces as browser source aliases', () => {
-    for (const { name } of packages.filter((p) => !p.source)) expect(WORKSPACE_ALIASES[name]).toBeUndefined();
   });
 
   it('names nothing that is not a workspace package', () => {
@@ -124,7 +116,7 @@ describe('the workspace aliases', () => {
   });
 
   it('agrees with the app’s tsconfig and vite aliases', () => {
-    for (const { dir, name } of sourcePackages) {
+    for (const { dir, name } of packages) {
       expect(tsconfig, `${name} is not in tsconfig.app.json paths`).toContain(`"${name}": ["../packages/${dir}/src/index.ts"]`);
       expect(vite, `${name} is not aliased in vite.config.ts`).toContain(`'${name}'`);
     }

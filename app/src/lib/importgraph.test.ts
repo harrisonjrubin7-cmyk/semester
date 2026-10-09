@@ -136,9 +136,9 @@ describe('where an import lands', () => {
   });
 
   it('puts a path in its zone', () => {
-    expect(zoneOf('packages/platform-control/scripts/validation.ts')).toBe('package-tools');
-    expect(zoneOf('packages/platform-control/tests/validators.test.ts')).toBe('package-tools');
     expect(zoneOf('packages/contract/src/index.ts')).toBe('packages');
+    expect(zoneOf('packages/platform-control/scripts/build-atlas.ts')).toBe('package-tool');
+    expect(zoneOf('packages/platform-control/tests/validators.test.ts')).toBe('package-tool');
     expect(zoneOf('supabase/functions/_shared/cors.ts')).toBe('functions');
     expect(zoneOf('app/src/main.tsx')).toBe('app-src');
     expect(zoneOf('app/server/institution/gateway.ts')).toBe('app-server');

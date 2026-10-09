@@ -8,7 +8,7 @@ proof here.
 
 ## The gates every phase runs
 
-From `app/` — the repository root scripts are reserved for platform-control tooling:
+From `app/` — the repository root defines no scripts:
 
 ```bash
 npx tsc -b
