@@ -52,7 +52,7 @@ import {
 /** Read when the screen is open, not when it loads: it asks the network, so it has its own loading state anyway. */
 const WhoCanSeeYou = lazy(() => import('../components/WhoCanSeeYou').then((m) => ({ default: m.WhoCanSeeYou })));
 
-/** Browser permission probes are needed only after this screen opens. */
+/** Device APIs are checked only when this screen is open; keep their state machine out of the route's initial chunk. */
 const DevicePermissions = lazy(() => import('../components/DevicePermissions').then((m) => ({ default: m.DevicePermissions })));
 
 // The Trust & Data Center (Phase N), at the top of this page.
@@ -163,7 +163,7 @@ export function Privacy({ trustCenter = moduleOn(MODULE_FLAGS.trust_center) }: {
         <WhoCanSeeYou account={account} />
       </Suspense>
 
-      <Suspense fallback={<p role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>Checking this device’s permissions…</p>}>
+      <Suspense fallback={<p role="status" style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>Checking device permissions…</p>}>
         <DevicePermissions openAlerts={() => dispatch({ type: 'go', screen: 'setAlerts' })} />
       </Suspense>
 

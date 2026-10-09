@@ -145,7 +145,7 @@ psql -At -d live -c "
     join pg_class rel on rel.oid = con.conrelid
     join pg_namespace n on n.oid = rel.relnamespace
    where n.nspname in ('public', 'private')
-   order by 1" > "$work/constraints.before"
+   order by 1" > "$work/before-constraints"
 
 # ── The dump ──────────────────────────────────────────────────────────────
 
@@ -186,15 +186,15 @@ psql -At -d restored -c "
     join pg_class rel on rel.oid = con.conrelid
     join pg_namespace n on n.oid = rel.relnamespace
    where n.nspname in ('public', 'private')
-   order by 1" > "$work/constraints.after"
+   order by 1" > "$work/after-constraints"
 
 fail=0
 say() { if [ "$2" = "$3" ]; then echo "  ✓ $1"; else echo "  ✗ $1"; echo "      before: $2"; echo "      after:  $3"; fail=1; fi; }
 
 say "schema fingerprints" "$before_fp" "$after_fp"
 if [ "$before_fp" != "$after_fp" ]; then
-  echo "      constraint definition differences:"
-  diff -u "$work/constraints.before" "$work/constraints.after" || true
+  echo "      constraint definition diff:"
+  diff -u "$work/before-constraints" "$work/after-constraints" | sed -n '3,80p' || true
 fi
 say "row counts" "$before_rows" "$after_rows"
 say "the contents of what was seeded" "$before_body" "$after_body"

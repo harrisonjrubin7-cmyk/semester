@@ -53,9 +53,8 @@
        * alias by the app and the gateway so there is one copy of the
        * tenant boundary, not one per caller.
        */
-      "@semester/platform": ["../packages/platform/src/index.ts"],
-      "@semester/platform-control": ["../packages/platform-control/src/index.ts"]
+      "@semester/platform": ["../packages/platform/src/index.ts"]
     }
   },
-  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src", "../packages/platform-control/src"]
+  "include": ["src", "../packages/contract/src", "../packages/institution/src", "../packages/offline-sync/src", "../packages/platform/src"]
 }
