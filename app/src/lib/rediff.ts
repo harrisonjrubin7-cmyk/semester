@@ -61,6 +61,11 @@ export interface ReweightedItem {
   after: Item;
 }
 
+export interface RelocatedItem {
+  before: Item;
+  after: Item;
+}
+
 export interface Reweighted {
   what: string;
   before: string;
@@ -76,9 +81,11 @@ export interface Diff {
   rekinded: Rekinded[];
   /** Paired items whose deadline-level worth changed, separate from course grading rows. */
   reweightedItems: ReweightedItem[];
+  /** Paired items whose deadline location changed, separate from the course room. */
+  relocatedItems: RelocatedItem[];
   added: Item[];
   removed: Item[];
-  /** Items in both, unchanged in date, title, due time, category and weight. */
+  /** Items in both, unchanged in date, title, due time, category, weight and location. */
   same: number;
   /** Grading rows whose weight changed, and rows added or dropped. */
   reweighted: Reweighted[];
@@ -104,7 +111,7 @@ export interface DateConflict {
 
 export interface ReimportConflict {
   id: string;
-  kind: 'moved' | 'removed' | 'renamed' | 'retimed' | 'rekinded' | 'item_weight' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
+  kind: 'moved' | 'removed' | 'renamed' | 'retimed' | 'rekinded' | 'item_weight' | 'item_where' | 'field' | 'reweighted' | 'grading_added' | 'grading_removed';
 }
 
 const DAY = 86_400_000;
@@ -165,6 +172,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
   const retimed: Retimed[] = [];
   const rekinded: Rekinded[] = [];
   const reweightedItems: ReweightedItem[] = [];
+  const relocatedItems: RelocatedItem[] = [];
   let same = 0;
 
   for (const p of pairs) {
@@ -176,7 +184,8 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
     if (b.dueTime !== a.dueTime) retimed.push({ before: b, after: a });
     if (b.kind !== a.kind) rekinded.push({ before: b, after: a });
     if (b.weight !== a.weight) reweightedItems.push({ before: b, after: a });
-    if (days === 0 && b.title === a.title && b.dueTime === a.dueTime && b.kind === a.kind && b.weight === a.weight) same++;
+    if (b.where !== a.where) relocatedItems.push({ before: b, after: a });
+    if (days === 0 && b.title === a.title && b.dueTime === a.dueTime && b.kind === a.kind && b.weight === a.weight && b.where === a.where) same++;
   }
 
   // Grading is matched on the row's own wording, which is how a syllabus
@@ -209,6 +218,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
     retimed,
     rekinded,
     reweightedItems,
+    relocatedItems,
     added,
     removed,
     same,
@@ -222,6 +232,7 @@ export function diff(before: CourseModule, after: CourseModule, year: number): D
       retimed.length === 0 &&
       rekinded.length === 0 &&
       reweightedItems.length === 0 &&
+      relocatedItems.length === 0 &&
       added.length === 0 &&
       removed.length === 0 &&
       reweighted.length === 0 &&
@@ -300,7 +311,7 @@ export function unresolvedDateConflictIds(d: Diff, choices: DateConflictChoices)
  * Every imported value that would overwrite or remove current course data.
  *
  * New dates remain individually selectable in Import's source review. Course
- * metadata, reworded titles, changed due times, item kinds, item weights and grading rows have no
+ * metadata, reworded titles, changed due times, item kinds, item weights, item locations and grading rows have no
  * equivalent per-value review, so all of their differences belong here
  * alongside moved and removed dates. IDs use the current item/field/row
  * identity, not array order, so choices survive render changes and can be
@@ -313,6 +324,7 @@ export function reimportConflicts(d: Diff): ReimportConflict[] {
     ...d.retimed.map(({ before }) => ({ id: `time:${before.id}`, kind: 'retimed' as const })),
     ...d.rekinded.map(({ before }) => ({ id: `kind:${before.id}`, kind: 'rekinded' as const })),
     ...d.reweightedItems.map(({ before }) => ({ id: `weight:${before.id}`, kind: 'item_weight' as const })),
+    ...d.relocatedItems.map(({ before }) => ({ id: `where:${before.id}`, kind: 'item_where' as const })),
     ...d.fields.map((change) => ({ id: `field:${change.field}`, kind: 'field' as const })),
     ...d.reweighted.map((row) => ({ id: `grading:reweighted:${row.what}`, kind: 'reweighted' as const })),
     ...d.gradingRemoved.map((row) => ({ id: `grading:removed:${row.what}`, kind: 'grading_removed' as const })),
@@ -386,6 +398,7 @@ export function applyReimportConflictChoices(
   const currentTimes = new Map(changes.retimed.map(({ before }) => [before.id, before.dueTime]));
   const currentKinds = new Map(changes.rekinded.map(({ before }) => [before.id, before.kind]));
   const currentWeights = new Map(changes.reweightedItems.map(({ before }) => [before.id, before.weight]));
+  const currentLocations = new Map(changes.relocatedItems.map(({ before }) => [before.id, before.where]));
   const items = merged.items.map((item) => {
     const currentTitle = currentTitles.get(item.id);
     const titled = currentTitle !== undefined && choices[`title:${item.id}`] === 'keep_current'
@@ -400,9 +413,13 @@ export function applyReimportConflictChoices(
       ? { ...timed, kind: currentKind }
       : timed;
     const currentWeight = currentWeights.get(item.id);
-    return currentWeight !== undefined && choices[`weight:${item.id}`] === 'keep_current'
+    const weighted = currentWeight !== undefined && choices[`weight:${item.id}`] === 'keep_current'
       ? { ...kinded, weight: currentWeight }
       : kinded;
+    const currentLocation = currentLocations.get(item.id);
+    return currentLocation !== undefined && choices[`where:${item.id}`] === 'keep_current'
+      ? { ...weighted, where: currentLocation }
+      : weighted;
   });
   const course = { ...merged.course };
   for (const change of changes.fields) {
@@ -460,6 +477,7 @@ export function summary(d: Diff): string {
   if (d.retimed.length) bits.push(`${d.retimed.length} ${d.retimed.length === 1 ? 'time changed' : 'times changed'}`);
   if (d.rekinded.length) bits.push(`${d.rekinded.length} ${d.rekinded.length === 1 ? 'type changed' : 'types changed'}`);
   if (d.reweightedItems.length) bits.push(`${d.reweightedItems.length} ${d.reweightedItems.length === 1 ? 'deadline weight changed' : 'deadline weights changed'}`);
+  if (d.relocatedItems.length) bits.push(`${d.relocatedItems.length} ${d.relocatedItems.length === 1 ? 'deadline location changed' : 'deadline locations changed'}`);
   const weights = d.reweighted.length + d.gradingAdded.length + d.gradingRemoved.length;
   if (weights) bits.push(`${weights} to the grading`);
   return `${bits.join(', ')}.`;

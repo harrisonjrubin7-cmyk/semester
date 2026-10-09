@@ -440,6 +440,31 @@ describe('deadline-weight conflict choices', () => {
   });
 });
 
+describe('deadline-location conflict choices', () => {
+  const beforeItem = { ...item('current-id', 'Midterm', 9, 8), where: 'Buttrick 101' };
+  const afterItem = { ...item('fresh-id', 'Midterm', 9, 8), where: 'Wilson 103' };
+  const before = module([beforeItem]);
+  const after = module([afterItem]);
+
+  it('requires a stable explicit choice separate from course room metadata', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual(['where:current-id']);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {})).toThrow(/Every re-import source conflict/);
+  });
+
+  it('applies either source only after a choice and preserves the stable item id', () => {
+    const kept = applyReimportConflictChoices(before, after, YEAR, {
+      'where:current-id': 'keep_current',
+    });
+    expect(kept.items[0]).toMatchObject({ id: 'current-id', where: 'Buttrick 101' });
+
+    const imported = applyReimportConflictChoices(before, after, YEAR, {
+      'where:current-id': 'use_imported',
+    });
+    expect(imported.items[0]).toMatchObject({ id: 'current-id', where: 'Wilson 103' });
+  });
+});
+
 describe('ticksKept', () => {
   it('counts what survives and what does not', () => {
     const before = module([

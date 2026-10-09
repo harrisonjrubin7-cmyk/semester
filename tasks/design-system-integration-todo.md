@@ -605,8 +605,31 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile paired deadline `where` to named ownership and acceptance behavior before implementing a conflict choice; keep location changes independent from deadline weight and course room metadata.
+- [x] Reconcile paired deadline `where` to named ownership and acceptance behavior before implementing a conflict choice; keep location changes independent from deadline weight and course room metadata. Completed in automation pass 22 / slice 30.
 - [ ] Keep free-form detail and quote/source provenance separate until each has an explicit authority and integrity contract.
+- [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
+
+## 2026-10-08 student-controlled deadline-location conflicts — automation pass 22, slice 30
+
+- [x] Fetch current `origin/main` `4a01b4a0`, confirm it is already an ancestor and find no equivalent paired-deadline location choice.
+- [x] Name the student-approved current item location as the authority until the student explicitly accepts newly extracted syllabus text; keep this deadline value separate from course room metadata.
+- [x] Reuse the existing Import/Rediff route, native fieldset/radio pattern and semantic form styles; add no route, component, dependency, schema, raw design value or parallel course model.
+- [x] Treat every changed location on a confidently paired deadline as an unresolved source conflict and stop counting it as unchanged.
+- [x] Use a stable `where:<current-item-id>` decision key with no preselected winner; reject incomplete or invalid maps in the pure merge boundary.
+- [x] Apply the location choice independently from date, title, due time, type, weight and course metadata while preserving the current item id and completion-tick relationship.
+- [x] Render the comparison in the existing keyboard-operable native radio group and extend live conflict guidance to name deadline location.
+- [x] Prove the guard red before implementation: three focused failures showed the absent stable decision, missing control and ineffective keep-current merge while 44 controls passed.
+- [x] Directly changed logic/render tests pass 47/47; the broader focused Import/course/document boundary passes 221/221.
+- [x] TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings.
+- [x] The 78 token/design constituents pass; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; the design report regenerates without drift.
+- [ ] Aggregate `design-system:check` launcher — not run because it requires unavailable `npm`; the exact constituent commands above are green.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because `hawk`, Docker and `HAWK_APP_HOST` are absent. A local credential file exists but was not read; no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Reconcile paired deadline free-form `detail` to named ownership and acceptance behavior before implementing a conflict choice; keep it independent from source quotes and provenance.
+- [ ] Keep quote/source provenance separate until its integrity and checked-citation behavior have an explicit acceptance contract.
 - [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
 
 ## Earlier integration baseline preserved

@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 21 of 120 · **Integration slice** 29 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
+**Automation pass** 22 of 120 · **Integration slice** 30 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/type/weight/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/type/weight/location/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 22 / slice 30
+
+- Current `origin/main` remains `4a01b4a0`, already an ancestor of the branch; no equivalent paired-deadline location conflict behavior has landed.
+- A paired deadline's `where` value is deadline-level planning data, separate from the course's room metadata. The student's approved current copy remains authoritative until they explicitly accept the newly extracted location. Every changed item location now creates an unselected stable `where:<current-item-id>` conflict and is no longer counted as unchanged.
+- The unresolved count disables save and the pure merge boundary independently rejects incomplete or invalid maps. Keep-current restores the current deadline location, use-imported retains the extracted location, and both preserve the current item id and completion-tick relationship without affecting date, title, due-time, type, weight or course-room choices.
+- The UI reuses `Folding`, `Blueprint`, `SectionLabel` and the existing native fieldset/radio pattern. Existing semantic styles retain keyboard operation, focus, 44px targets, wrapping and narrow-layout behavior; no route, shared component, raw design value, schema, dependency or parallel course model was added.
+- The guard was proved red before implementation: three focused failures showed the absent `where:current-id` decision, missing radio group and ineffective keep-current merge while 44 controls passed. After implementation, directly changed logic/render tests pass 47/47 and the broader Import/course/document boundary passes 221/221.
+- TypeScript, lint, university typecheck and production build pass. Lint retains four existing warnings and the build retains existing chunk warnings. The 78 token/design constituents pass; design audit has zero violations within the existing 86-warning ledger; CSS remains within its ledger; and the design report regenerates without drift.
+- The aggregate `design-system:check` launcher and ordered/shuffled full suites were not run for this bounded client slice. The launcher requires the unavailable `npm` binary; its exact constituent commands are green. No full-suite claim is made.
+- HawkScan preflight cannot start because `hawk`, Docker and `HAWK_APP_HOST` are absent. A local credential file exists but was not read. No DAST result or security pass is claimed.
+- Remaining paired-item free-form detail and quote/source provenance, durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads remain incomplete.
 
 ## Evidence locked in automation pass 21 / slice 29
 
@@ -338,7 +350,7 @@ The archive is design and product evidence. Its prototype checks, code, migratio
 
 ## Completed local slice gate
 
-The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 retains its shared-metadata proof. Slice 23 applies all 217 migrations twice with 376 unchanged table fingerprints and passes its focused gates. Slices 24–27 retain green focused date, metadata/grading, title and time-conflict guards; slice 27 passes 109/109 broader focused Import/course contracts plus TypeScript/lint/university/build and all named design constituents. Ordered/shuffled full-suite caveats and HawkScan remain explicitly open. Stored bytes, trusted runtime/receipts, extraction, routes, current-screen wiring, production bucket state and operating deployment remain separate.
+The projection database proof and reapply evidence remain green from slice 15. Slice 16's 43 focused tests, generated-reference guards and phase gates remain green; slice 17's 16-row structural and 22/22 design-tooling checks remain green; slice 18's authority contract remains green. Slice 19 and slice 20 retain their student-source persistence/settlement proof. Slice 21 retains its versioned policy proof. Slice 22 retains its shared-metadata proof. Slice 23 applies all 217 migrations twice with 376 unchanged table fingerprints and passes its focused gates. Slices 24–30 retain green focused date, metadata/grading, title, time, type, weight and location-conflict guards; slice 30 passes 47/47 directly changed and 221/221 broader focused Import/course/document contracts plus TypeScript/lint/university/build and all 78 named design constituents. Ordered/shuffled full-suite caveats and HawkScan remain explicitly open. Stored bytes, trusted runtime/receipts, extraction, routes, current-screen wiring, production bucket state and operating deployment remain separate.
 
 ## External gates kept open
 
@@ -346,7 +358,7 @@ HawkScan DAST, deployment, live provider credentials, IdP metadata, legal review
 
 ## Next dependency-ready work
 
-Reconcile the remaining paired-item fields (`kind`, `weight`, `where`, `detail`, quote and source provenance) to named ownership and acceptance behavior before adding further conflict choices; do not silently treat the imported source as authoritative. The repository adapter/private runtime remains externally gated until it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire server ingestion into Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
+Reconcile paired-item free-form `detail` next, keeping it separate from quote/source provenance until each has named ownership and acceptance behavior; do not silently treat the imported source as authoritative. The repository adapter/private runtime remains externally gated until it can create the exact planned tenant-bound object and produce genuine storage plus named-scanner receipts. Do not synthesize either receipt, expose browser upload/download routes, wire server ingestion into Import/Study Studio or add a Course Engine route/parallel course model before trusted runtime, session-derived authorization and shared rate-limit evidence exist.
 
 ## Hold-aware projection-history retention — automation runner pass 5, slice 13
 

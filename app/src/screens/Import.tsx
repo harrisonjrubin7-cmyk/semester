@@ -1095,7 +1095,7 @@ export function Rediff({
         </div>
         {conflicts.length > 0 && (
           <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            Choose what to keep for every changed date, due time, title, deadline type, deadline weight, course detail, or grading row. Semester will not decide a source conflict for you.
+            Choose what to keep for every changed date, due time, title, deadline type, deadline weight, deadline location, course detail, or grading row. Semester will not decide a source conflict for you.
           </div>
         )}
       </Blueprint>
@@ -1165,6 +1165,17 @@ export function Rediff({
             `weight:${r.before.id}`,
             `Weight · ${r.before.weight || 'not stated'} → ${r.after.weight || 'not stated'}`,
             `Use imported deadline weight — ${r.after.weight || 'not stated'}`,
+          ))}
+        </>
+      )}
+
+      {changes.relocatedItems.length > 0 && (
+        <>
+          <SectionLabel>Changed deadline location</SectionLabel>
+          {changes.relocatedItems.map((r) => choose(
+            `where:${r.before.id}`,
+            `Location · ${r.before.where || 'not stated'} → ${r.after.where || 'not stated'}`,
+            `Use imported deadline location — ${r.after.where || 'not stated'}`,
           ))}
         </>
       )}

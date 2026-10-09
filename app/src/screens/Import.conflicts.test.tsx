@@ -119,7 +119,7 @@ describe('Import re-import conflict controls', () => {
       'Room · Buttrick 101 → Wilson 103',
     ]);
     expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
-    expect(host.textContent).toContain('changed date, due time, title, deadline type, deadline weight, course detail, or grading row');
+    expect(host.textContent).toContain('changed date, due time, title, deadline type, deadline weight, deadline location, course detail, or grading row');
 
     const importedRoom = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported room'));
@@ -212,5 +212,25 @@ describe('Import re-import conflict controls', () => {
       .find((radio) => radio.parentElement?.textContent?.includes('Use imported deadline weight'));
     act(() => importedWeight!.click());
     expect(choose).toHaveBeenCalledWith('weight:current-id', 'use_imported');
+  });
+
+  it('renders an unselected deadline-location choice with the stable item id', () => {
+    const current = { ...item('current-id', 'Midterm', 9, 8), where: 'Buttrick 101' };
+    const imported = { ...item('fresh-id', 'Midterm', 9, 8), where: 'Wilson 103' };
+    const choose = vi.fn();
+    act(() => {
+      root.render(<StoreProvider><Rediff changes={diff(course([current]), course([imported]), 2026)} kept={{ kept: 0, lost: 0 }} code="ECON 1020" choices={{}} onChoose={choose} /></StoreProvider>);
+    });
+
+    const groups = [...host.querySelectorAll('fieldset.import-conflict-choice')];
+    expect(groups.map((group) => group.querySelector('legend')?.textContent)).toEqual([
+      'Location · Buttrick 101 → Wilson 103',
+    ]);
+    expect([...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')].every((radio) => !radio.checked)).toBe(true);
+
+    const importedLocation = [...host.querySelectorAll<HTMLInputElement>('input[type="radio"]')]
+      .find((radio) => radio.parentElement?.textContent?.includes('Use imported deadline location'));
+    act(() => importedLocation!.click());
+    expect(choose).toHaveBeenCalledWith('where:current-id', 'use_imported');
   });
 });
