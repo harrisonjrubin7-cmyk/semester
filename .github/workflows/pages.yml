@@ -120,6 +120,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY || secrets.VITE_VAPID_PUBLIC_KEY }}
           VITE_UNIVERSITY_GATEWAY_URL: ${{ vars.VITE_UNIVERSITY_GATEWAY_URL || secrets.VITE_UNIVERSITY_GATEWAY_URL }}
           VITE_INSTITUTIONAL_PREVIEW: ${{ vars.VITE_INSTITUTIONAL_PREVIEW || secrets.VITE_INSTITUTIONAL_PREVIEW }}
@@ -212,7 +213,7 @@ jobs:
           # Lengths, never values: "url: 0 chars" is the whole diagnosis when
           # the deployed app claims it has no account service, and it gives
           # away nothing that the page does not already carry.
-          names="VITE_SUPABASE_URL VITE_SUPABASE_KEY VITE_VAPID_PUBLIC_KEY
+          names="VITE_SUPABASE_URL VITE_SUPABASE_KEY VITE_CLERK_PUBLISHABLE_KEY VITE_VAPID_PUBLIC_KEY
                  VITE_UNIVERSITY_GATEWAY_URL VITE_INSTITUTIONAL_PREVIEW
                  VITE_SEMESTER_INTELLIGENCE VITE_JOURNEY_NAVIGATION
                  VITE_ADAPTIVE_LEARNING VITE_CAREER_SKILLS_GRAPH
