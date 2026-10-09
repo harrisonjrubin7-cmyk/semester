@@ -4,11 +4,11 @@
 
 begin;
 
-create or replace function pg_temp.become(who uuid)
+create or replace function pg_temp.become(who uuid, assurance text default 'aal1')
 returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims',
-    json_build_object('sub', who::text, 'role', 'authenticated')::text, true);
+    json_build_object('sub', who::text, 'role', 'authenticated', 'aal', assurance)::text, true);
   execute 'set local role authenticated';
 end $$;
 
@@ -153,7 +153,7 @@ begin
      set status = 'failed', last_error = 'private diagnostic'
    where projection = 'ops_tenant_rollout' and version = 1;
 
-  perform pg_temp.become((select v from ids where k = 'platform_operator'));
+  perform pg_temp.become((select v from ids where k = 'platform_operator'), 'aal2');
   result := public.read_tenant_projection('projection-read-a');
   perform pg_temp.nobody();
 
