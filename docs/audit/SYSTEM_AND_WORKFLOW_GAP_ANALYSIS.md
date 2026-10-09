@@ -1,6 +1,10 @@
 # System and workflow gap analysis
 
+> **Type:** explanation · **Audience:** contributors, implementers · **Owner:** `engineering` · **Truth:** reviewed · **Reviewed:** 2026-10-08 · **Held by:** —
+
 Assessed against `origin/main` at `55adab11` on 2026-10-08.
+
+This revision-bound snapshot informs, but does not replace, the canonical build order in [`docs/product/EDUCATION_OS_BACKLOG.md`](../product/EDUCATION_OS_BACKLOG.md).
 
 ## System disposition
 
