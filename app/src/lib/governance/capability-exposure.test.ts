@@ -112,7 +112,7 @@ describe('capability exposure resolver', () => {
       });
       expect(item.mobileExperience.acceptance.trim()).not.toBe('');
       expect(item.operations.supportOwner).toBe(item.supportOwner);
-      expect(item.operations.auditOwner).toBe('privacy-security');
+      expect(item.operations.auditOwner).toBe('privacy');
       expect(item.operations.incidentOwner).toBe('operations');
       for (const reference of [item.operations.audit, item.operations.support, item.operations.incident]) {
         expect(existsSync(join(root, reference))).toBe(true);
@@ -169,6 +169,19 @@ describe('capability exposure resolver', () => {
       permittedExposureStates: [...item.permittedExposureStates] as typeof CAPABILITY_EXPOSURE_STATES,
     }));
     expect(validateCapabilityExposureIndex(cloned)).toEqual([]);
+  });
+
+  it('rejects an audit owner outside the canonical accountability seats', () => {
+    const original = CAPABILITY_EXPOSURE_INDEX[0]!;
+    const invalid: CapabilityExposureIndexEntry = {
+      ...original,
+      operations: {
+        ...original.operations,
+        auditOwner: 'privacy-security' as CapabilityExposureIndexEntry['operations']['auditOwner'],
+      },
+    };
+    const mutated = [invalid, ...CAPABILITY_EXPOSURE_INDEX.slice(1)];
+    expect(validateCapabilityExposureIndex(mutated)).toContain(`Invalid audit owner: ${invalid.capabilityId}.`);
   });
 
   it('authorizes live only for an exact production release of an included standard capability', () => {

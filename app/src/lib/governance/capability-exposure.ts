@@ -1,4 +1,5 @@
 import { DESTINATIONS } from '../nav';
+import { SEATS, type Seat } from '../launchreadiness';
 import { NON_DESTINATION_FLOWS } from '../rollout-capabilities';
 import {
   CAPABILITY_DEFINITIONS,
@@ -114,7 +115,7 @@ export interface CapabilityExposureIndexEntry {
     audit: 'docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md';
     support: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md';
     incident: 'docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md';
-    auditOwner: 'privacy-security';
+    auditOwner: Seat;
     supportOwner: CapabilityDefinition['supportOwner'];
     incidentOwner: 'operations';
   };
@@ -205,7 +206,7 @@ export const CAPABILITY_EXPOSURE_INDEX: readonly CapabilityExposureIndexEntry[] 
       audit: 'docs/institutional-readiness/AUDIT-LOGGING-EVIDENCE.md' as const,
       support: 'docs/SERVICE-RELIABILITY-AND-SUPPORT-OPERATIONS.md' as const,
       incident: 'docs/RELEASE-INCIDENT-OPERATOR-RUNBOOK.md' as const,
-      auditOwner: 'privacy-security' as const,
+      auditOwner: 'privacy' as const,
       supportOwner: capability.supportOwner,
       incidentOwner: 'operations' as const,
     }),
@@ -279,6 +280,7 @@ export function validateCapabilityExposureIndex(
     if (!entry.mobileExperience.acceptance.trim()) errors.push(`Missing mobile acceptance: ${entry.capabilityId}.`);
     if (Object.values(entry.governance).some((value) => !value.trim())) errors.push(`Incomplete governance: ${entry.capabilityId}.`);
     if (Object.values(entry.operations).some((value) => !value.trim())) errors.push(`Incomplete operations: ${entry.capabilityId}.`);
+    if (!SEATS.includes(entry.operations.auditOwner)) errors.push(`Invalid audit owner: ${entry.capabilityId}.`);
   }
 
   for (const destination of DESTINATIONS) {
