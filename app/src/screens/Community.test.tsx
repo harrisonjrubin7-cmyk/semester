@@ -14,6 +14,7 @@ const mock = vi.hoisted(() => ({
   loadPosts: vi.fn(),
   loadSessions: vi.fn(),
   createPost: vi.fn(),
+  deletePost: vi.fn(),
   reportPost: vi.fn(),
   appeal: vi.fn(),
   blockAuthor: vi.fn(),
@@ -53,7 +54,7 @@ vi.mock('../community/client', () => ({
   claimAlias: mock.claimAlias,
   dropAlias: mock.dropAlias,
   createStudyGroup: vi.fn(),
-  deletePost: vi.fn(),
+  deletePost: mock.deletePost,
   editPost: vi.fn(),
   joinCommunity: vi.fn(),
   leaveCommunity: vi.fn(),
@@ -105,6 +106,7 @@ beforeEach(() => {
   mock.loadPosts.mockResolvedValue({ posts: [post('a'), post('mine', { mine: true, status: 'held' })], muted: [] });
   mock.loadSessions.mockResolvedValue({ sessions: [], venues: [] });
   mock.createPost.mockResolvedValue('new');
+  mock.deletePost.mockResolvedValue(undefined);
   mock.reportPost.mockResolvedValue(undefined);
   mock.appeal.mockResolvedValue(undefined);
   mock.standing.mockResolvedValue('none');
@@ -195,6 +197,29 @@ describe('Community', () => {
     const yours = host.querySelector('[aria-label="Your posts"]');
     expect(yours?.textContent).toContain('Body mine');
     expect(yours?.textContent).toContain('Hidden while a reviewer looks at a report');
+  });
+
+  it('previews the server-owned post deletion before changing Community', async () => {
+    await openCourse();
+    const yours = host.querySelector('[aria-label="Your posts"]') as HTMLElement;
+    const remove = [...yours.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Delete');
+    act(() => remove?.click());
+
+    const preview = host.querySelector('.action-preview')?.textContent ?? '';
+    expect(preview).toContain('Body mine');
+    expect(preview).toContain('withdrawn from Community');
+    expect(preview).toContain('review evidence stays available to authorized reviewers');
+    expect(preview).toContain('cannot be restored');
+    expect(mock.deletePost).not.toHaveBeenCalled();
+
+    click('Cancel');
+    expect(mock.deletePost).not.toHaveBeenCalled();
+
+    act(() => remove?.click());
+    click('Delete post');
+    await settle();
+    expect(mock.deletePost).toHaveBeenCalledOnce();
+    expect(mock.deletePost).toHaveBeenCalledWith('mine');
   });
 
   it('stops a post with a phone number and offers to remove it', async () => {

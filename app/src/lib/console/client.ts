@@ -520,6 +520,175 @@ export async function loadTenantOperations(includeDemo = false): Promise<TenantO
   }));
 }
 
+export type ProjectionFreshness = 'fresh' | 'stale' | 'failed' | 'unknown';
+
+export interface TenantProjectionEntitlement {
+  capability: string;
+  state: string;
+  deleted: boolean;
+  revision: number;
+  sourceOccurredAt: string | null;
+  projectedAt: string | null;
+}
+
+export interface TenantProjectionCoverage {
+  freshness: ProjectionFreshness;
+  modelVersion: number;
+  freshnessSloSeconds: number;
+  workerStatus: string;
+}
+
+export interface TenantProjectionEnvelope {
+  data: {
+    tenantId: string;
+    entitlements: TenantProjectionEntitlement[];
+    rollout: null | {
+      state: string;
+      resumeState: string | null;
+      revision: number;
+      sourceOccurredAt: string | null;
+      projectedAt: string | null;
+    };
+  };
+  meta: {
+    generatedAt: string;
+    sourceUpdatedAt: string | null;
+    computedAt: string;
+    freshness: ProjectionFreshness;
+    authority: 'projection';
+    modelVersion: number;
+    correlationId: string;
+    coverage: {
+      entitlements: TenantProjectionCoverage & { hasMore: boolean; nextCursor: string | null };
+      rollout: TenantProjectionCoverage & { present: boolean };
+    };
+  };
+  permissions: { canView: true; canExport: false; allowedActions: string[] };
+  warnings: string[];
+}
+
+const PROJECTION_FRESHNESS: ProjectionFreshness[] = ['fresh', 'stale', 'failed', 'unknown'];
+
+function projectionFreshness(value: unknown): ProjectionFreshness {
+  if (!PROJECTION_FRESHNESS.includes(value as ProjectionFreshness)) {
+    throw new Error('The tenant projection returned an unknown freshness state.');
+  }
+  return value as ProjectionFreshness;
+}
+
+function finiteNumber(value: unknown, field: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`The tenant projection returned an invalid ${field}.`);
+  }
+  return value;
+}
+
+function projectionCoverage(value: unknown): TenantProjectionCoverage {
+  const record = object(value);
+  return {
+    freshness: projectionFreshness(record.freshness),
+    modelVersion: finiteNumber(record.modelVersion, 'model version'),
+    freshnessSloSeconds: finiteNumber(record.freshnessSloSeconds, 'freshness target'),
+    workerStatus: text(record.workerStatus),
+  };
+}
+
+/** Fail closed when the bounded projection envelope drifts from its database contract. */
+export function readTenantProjection(value: unknown): TenantProjectionEnvelope {
+  const envelope = object(value);
+  const data = object(envelope.data);
+  const meta = object(envelope.meta);
+  const coverage = object(meta.coverage);
+  const entitlementCoverage = object(coverage.entitlements);
+  const rolloutCoverage = object(coverage.rollout);
+  const permissions = object(envelope.permissions);
+  const rollout = data.rollout == null ? null : object(data.rollout);
+
+  if (meta.authority !== 'projection'
+      || permissions.canView !== true
+      || permissions.canExport !== false
+      || !Array.isArray(permissions.allowedActions)
+      || permissions.allowedActions.some((action) => typeof action !== 'string')
+      || !Array.isArray(data.entitlements)
+      || !Array.isArray(envelope.warnings)
+      || envelope.warnings.some((warning) => typeof warning !== 'string')) {
+    throw new Error('The tenant projection returned an invalid read envelope.');
+  }
+
+  return {
+    data: {
+      tenantId: text(data.tenantId),
+      entitlements: data.entitlements.map((entry) => {
+        const row = object(entry);
+        if (typeof row.deleted !== 'boolean') {
+          throw new Error('The tenant projection returned an invalid entitlement state.');
+        }
+        return {
+          capability: text(row.capability),
+          state: text(row.state),
+          deleted: row.deleted,
+          revision: finiteNumber(row.revision, 'entitlement revision'),
+          sourceOccurredAt: maybe(row.sourceOccurredAt),
+          projectedAt: maybe(row.projectedAt),
+        };
+      }),
+      rollout: rollout && {
+        state: text(rollout.state),
+        resumeState: maybe(rollout.resumeState),
+        revision: finiteNumber(rollout.revision, 'rollout revision'),
+        sourceOccurredAt: maybe(rollout.sourceOccurredAt),
+        projectedAt: maybe(rollout.projectedAt),
+      },
+    },
+    meta: {
+      generatedAt: text(meta.generatedAt),
+      sourceUpdatedAt: maybe(meta.sourceUpdatedAt),
+      computedAt: text(meta.computedAt),
+      freshness: projectionFreshness(meta.freshness),
+      authority: 'projection',
+      modelVersion: finiteNumber(meta.modelVersion, 'envelope model version'),
+      correlationId: text(meta.correlationId),
+      coverage: {
+        entitlements: {
+          ...projectionCoverage(entitlementCoverage),
+          hasMore: entitlementCoverage.hasMore === true,
+          nextCursor: maybe(entitlementCoverage.nextCursor),
+        },
+        rollout: {
+          ...projectionCoverage(rolloutCoverage),
+          present: rolloutCoverage.present === true,
+        },
+      },
+    },
+    permissions: {
+      canView: true,
+      canExport: false,
+      allowedActions: permissions.allowedActions as string[],
+    },
+    warnings: envelope.warnings as string[],
+  };
+}
+
+/** One exact-tenant, non-exportable read over the private operational projections. */
+export async function loadTenantProjection(
+  tenantId: string,
+  afterCapability: string | null = null,
+  limit = 50,
+): Promise<TenantProjectionEnvelope> {
+  const db = await cloud();
+  const { data, error } = await db.rpc('read_tenant_projection', {
+    want_tenant: tenantId,
+    after_capability: afterCapability,
+    want_limit: limit,
+  });
+  if (error) throw new Error(message(error, 'Could not read the tenant projection.'));
+  const projection = readTenantProjection(data);
+  if (projection.data.tenantId !== tenantId) {
+    throw new Error('The tenant projection did not match the requested tenant.');
+  }
+  return projection;
+}
+
 // ── privacy requests ──────────────────────────────────────────────────────
 
 export type IntegrationHealthState = 'healthy' | 'degraded' | 'stale' | 'failed' | 'unconfigured';

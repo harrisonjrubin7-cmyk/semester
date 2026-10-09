@@ -87,9 +87,13 @@ which is how "which audit row proves this event" is answered.
 
 ## Not done
 
-- No producer writes to the production outbox yet (ADR 0008's own status).
-- A **retention sweep** for `private.domain_outbox_events` and
-  `domain_event_receipts` is owed before any producer writes to them in
-  production (`RETENTION.md`).
+- The production-gated productivity command path and the tenant feature-policy
+  and tenant-rollout triggers write bounded events. One manually invoked
+  projector endpoint can apply `entitlement.changed` and
+  `tenant_rollout.changed` in combined batches of at most 25, but it is dormant
+  without its dedicated secret and has no scheduler. No publisher runs.
+- A manual, hold-aware retention operation covers published payloads, terminal
+  envelopes, receipts and invalidations. It has no scheduler and has not been
+  run against production (`RETENTION.md`).
 - No broker. The outbox is what makes one safe to add; revisit at the first tenant
   whose event rate makes polling the bottleneck, **with the measurement**.

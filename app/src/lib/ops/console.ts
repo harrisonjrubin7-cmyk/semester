@@ -153,6 +153,16 @@ export const DUTIES: readonly Duty[] = [
     note: 'A rollback needs no second approval, because waiting for one costs more than the rollback can. It is audited the same.',
   },
   {
+    id: 'projection-replay',
+    action: 'Replay one dead-lettered domain event',
+    requester: 'engineering',
+    approvers: ['data', 'security'],
+    twoPerson: true,
+    evidence: 'The failed event, the repaired cause, the consumer and projector version, the replay scope, and the rollback plan',
+    rows: ['SRE-008'],
+    note: 'Approval binds one dead-lettered event to one consumer. The replay resets delivery state; it does not bypass the projector receipt or its idempotency guard.',
+  },
+  {
     id: 'data-deletion',
     action: 'Delete an institution’s data, or a student’s on their behalf',
     requester: 'role:data_steward',

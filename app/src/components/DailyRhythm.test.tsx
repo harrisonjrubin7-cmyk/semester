@@ -44,8 +44,17 @@ describe('daily planning on Today', () => {
     for (const who of ['alice', 'bob']) localStorage.setItem(`${RHYTHM_KEY}:${who}`, JSON.stringify({ version: 1, days: [{ ...newDay('2026-10-01'), outcome: who }] }));
     await render('alice');
     await click('Delete this daily plan');
+    const preview = host.querySelector('.action-preview')?.textContent ?? '';
+    expect(preview).toContain('Daily plan for 2026-10-01');
+    expect(preview).toContain('private outcome, Daily Three, fallback, support, check-in, reflection, and support-audit fields');
+    expect(preview).toContain('Other daily plans for this account stay saved');
+    expect(preview).toContain('Downloaded exports, workspace backups, and official course or calendar records do not change');
+    expect(preview).toContain('This can’t be undone. Restore only from an exported plan or device workspace backup created before deletion.');
     expect(readRhythm(JSON.parse(localStorage.getItem(`${RHYTHM_KEY}:alice`)!)).days).toHaveLength(1);
-    await click('Confirm delete daily plan');
+    await click('Cancel');
+    expect(readRhythm(JSON.parse(localStorage.getItem(`${RHYTHM_KEY}:alice`)!)).days).toHaveLength(1);
+    await click('Delete this daily plan');
+    await click('Delete plan');
     expect(readRhythm(JSON.parse(localStorage.getItem(`${RHYTHM_KEY}:alice`)!)).days).toHaveLength(0);
     expect(readRhythm(JSON.parse(localStorage.getItem(`${RHYTHM_KEY}:bob`)!)).days).toHaveLength(1);
   });
