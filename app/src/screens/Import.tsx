@@ -1095,7 +1095,7 @@ export function Rediff({
         </div>
         {conflicts.length > 0 && (
           <div role="status" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            Choose what to keep for every changed date, due time, title, course detail, or grading row. Semester will not decide a source conflict for you.
+            Choose what to keep for every changed date, due time, title, deadline type, course detail, or grading row. Semester will not decide a source conflict for you.
           </div>
         )}
       </Blueprint>
@@ -1143,6 +1143,17 @@ export function Rediff({
             `time:${r.before.id}`,
             `Due time · ${r.before.dueTime || 'not stated'} → ${r.after.dueTime || 'not stated'}`,
             `Use imported time — ${r.after.dueTime || 'not stated'}`,
+          ))}
+        </>
+      )}
+
+      {changes.rekinded.length > 0 && (
+        <>
+          <SectionLabel>Changed deadline type</SectionLabel>
+          {changes.rekinded.map((r) => choose(
+            `kind:${r.before.id}`,
+            `Type · ${r.before.kind || 'not stated'} → ${r.after.kind || 'not stated'}`,
+            `Use imported type — ${r.after.kind || 'not stated'}`,
           ))}
         </>
       )}

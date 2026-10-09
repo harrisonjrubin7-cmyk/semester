@@ -558,9 +558,33 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 ### Next implementation boundary
 
-- [ ] Reconcile the remaining paired-item fields (`kind`, `weight`, `where`, `detail`, quote and source provenance) to named ownership and acceptance behavior before adding any further conflict choices.
+- [x] Reconcile the paired deadline category (`kind`) to the student-approved current copy versus newly extracted syllabus source, and require an explicit stable-id choice. Completed in automation pass 20 / slice 28.
+- [ ] Reconcile the remaining paired-item fields (`weight`, `where`, `detail`, quote and source provenance) to named ownership and acceptance behavior before adding further conflict choices.
 - [ ] Keep durable server conflict records, external reconciliation and safe ICS publication separate from this local client merge slice.
 - [ ] Keep server ingestion and signed reads closed until a trustworthy private adapter/scanner runtime can produce genuine receipts.
+
+## 2026-10-08 student-controlled deadline-type conflicts — automation pass 20, slice 28
+
+- [x] Fetch current `origin/main` `4a01b4a0` and confirm no equivalent current-product Import/Rediff deadline-type choice landed.
+- [x] Name the student-approved current course copy as the authority until the student explicitly accepts the newly extracted syllabus category.
+- [x] Reuse the existing Import/Rediff route, native fieldset/radio pattern and semantic form styles; add no route, component, dependency, schema, raw design value or parallel course model.
+- [x] Treat every changed kind on a confidently paired deadline as an unresolved source conflict and stop counting it as unchanged.
+- [x] Use a stable `kind:<current-item-id>` decision key with no preselected winner and reject incomplete or invalid maps in the pure merge boundary.
+- [x] Apply the kind choice independently from date, title and due time while preserving the current item id and completion-tick relationship.
+- [x] Render the comparison in the existing keyboard-operable native radio group and extend the live conflict guidance to name deadline type.
+- [x] Prove the guard red before implementation: three focused failures showed the absent stable decision, missing control and ineffective keep-current merge.
+- [x] Directly changed logic/render tests pass 41/41; the broader focused Import/course set passes 178/178.
+- [x] TypeScript, lint, university typecheck and production build pass with the existing four lint and chunk warnings.
+- [x] The 78 token/design constituents pass; design audit has zero violations with 86 existing warnings; CSS remains within its ledger; the design report regenerates without drift.
+- [ ] Aggregate design report wrapper — writes the unchanged report, then exits 1 because it invokes unavailable `npm`; constituent checks are green and no wrapper pass is claimed.
+- [ ] Ordered and shuffled full suites — not run for this bounded client slice; focused regression and phase gates are green.
+- [ ] HawkScan DAST — preflight stops because `hawk`, `HAWK_API_KEY`, `HAWK_APP_HOST` and Docker are absent. No live target was started and no DAST result or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Reconcile paired deadline `weight` to named ownership and acceptance behavior before implementing a conflict choice; do not conflate it with course-level grading rows.
+- [ ] Keep location/detail and quote/source provenance separate until each has an explicit authority and integrity contract.
+- [ ] Keep durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads outside this local client merge slice.
 
 ## Earlier integration baseline preserved
 

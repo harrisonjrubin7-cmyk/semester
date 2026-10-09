@@ -390,6 +390,31 @@ describe('due-time conflict choices', () => {
   });
 });
 
+describe('deadline-kind conflict choices', () => {
+  const beforeItem = { ...item('current-id', 'Midterm', 9, 8), kind: 'Paper' };
+  const afterItem = { ...item('fresh-id', 'Midterm', 9, 8), kind: 'Exam' };
+  const before = module([beforeItem]);
+  const after = module([afterItem]);
+
+  it('requires a stable explicit choice when the imported deadline kind changes', () => {
+    const changes = diff(before, after, YEAR);
+    expect(unresolvedReimportConflictIds(changes, {})).toEqual(['kind:current-id']);
+    expect(() => applyReimportConflictChoices(before, after, YEAR, {})).toThrow(/Every re-import source conflict/);
+  });
+
+  it('applies either source only after a choice and preserves the stable item id', () => {
+    const kept = applyReimportConflictChoices(before, after, YEAR, {
+      'kind:current-id': 'keep_current',
+    });
+    expect(kept.items[0]).toMatchObject({ id: 'current-id', kind: 'Paper' });
+
+    const imported = applyReimportConflictChoices(before, after, YEAR, {
+      'kind:current-id': 'use_imported',
+    });
+    expect(imported.items[0]).toMatchObject({ id: 'current-id', kind: 'Exam' });
+  });
+});
+
 describe('ticksKept', () => {
   it('counts what survives and what does not', () => {
     const before = module([

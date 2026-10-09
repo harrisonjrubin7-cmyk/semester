@@ -1,10 +1,22 @@
 # Handoff integration status
 
-**Automation pass** 19 of 120 · **Integration slice** 27 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
+**Automation pass** 20 of 120 · **Integration slice** 28 · **Date** 2026-10-08 · **Branch** `codex/complete-semester-integration-2026-10-08` · **Latest observed `origin/main`** `4a01b4a0`
 
 ## State
 
-Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+Phase 0 reconciliation is complete for the archive populations and includes the Course Engine MVP as current-repository evidence. P1-01 through P1-07, the first repository-native Console consumer, the pre-ingestion course-source authority contract, private student/shared metadata and controlled lifecycle, deny-by-default private bucket definitions, and the student-controlled date/time/title/type/metadata/grading re-import conflict paths are locally implemented in bounded slices. Course Engine remains a disconnected MVP, not an integrated second app. Stored bytes, a trustworthy adapter/scanner runtime, extraction, server routes and server-backed current-screen wiring remain absent; production bucket/deployment state is unverified. No deployment, production data or external system changed.
+
+## Evidence locked in automation pass 20 / slice 28
+
+- Current `origin/main` remains `4a01b4a0`; no equivalent current-product Import/Rediff deadline-type choice has landed.
+- A paired deadline's syllabus category (`kind`) is owned by the student's approved current course copy until they explicitly accept the newly extracted value. Every changed kind now creates an unselected stable `kind:<current-item-id>` conflict; it is no longer counted as unchanged.
+- The unresolved count disables save and the pure merge boundary independently rejects incomplete or invalid maps. Keep-current restores the current kind, use-imported retains the extracted kind, and both preserve the current item id and completion-tick relationship without affecting the independent date, title or due-time choices.
+- The UI reuses `Folding`, `Blueprint`, `SectionLabel` and the existing native fieldset/radio pattern. Existing semantic styles retain keyboard operation, focus, 44px targets, wrapping and narrow-layout behavior; no route, shared component, raw design value, schema, dependency or parallel course model was added.
+- The guard was proved red before implementation: the focused run failed on the absent `kind:current-id` decision, missing deadline-type radio group and ineffective keep-current merge. After implementation, directly changed logic/render tests pass 41/41 and the broader focused Import/course set passes 178/178.
+- TypeScript, lint, university typecheck and production build pass. Lint retains four existing warnings and the build retains existing chunk warnings. The 78 token/design constituents pass; design audit has zero violations within the existing 86-warning ledger; CSS remains within its ledger; and the design report regenerates without drift.
+- Ordered and shuffled full suites were not run for this bounded client slice. The aggregate design report wrapper writes the unchanged report but exits 1 because it invokes unavailable `npm`; its named constituents are green, so no aggregate wrapper pass is claimed.
+- HawkScan preflight cannot start because `hawk`, `HAWK_API_KEY`, `HAWK_APP_HOST` and the Docker fallback are absent. No DAST result or security pass is claimed.
+- Remaining paired-item weight/location/detail and quote/source provenance, durable server conflict records, external reconciliation, safe ICS publication, server ingestion and signed reads remain incomplete.
 
 ## Evidence locked in automation pass 19 / slice 27
 
