@@ -350,6 +350,14 @@ The database derives the replacement itself from the append-only choices. It ref
 
 The focused PostgreSQL 17 guard passes 17 checks. It proved a first implementation bug—later choices on the same item erased earlier date/provenance choices—then passed after derivation was made cumulative. The guard covers browser refusal, audit-atomic rollback, imported-hash refusal, independent field/item/grading choices, stable ids, untouched completion state, apply/rollback receipts, later-edit refusal, idempotent recovery and truthful apply replay after rollback. The server contract is now locally implemented, but the current Import route remains local-only: a private authenticated/rate-limited adapter, trusted snapshot creation, deployment and operating evidence are still prerequisites to wiring it.
 
+## Hold-aware re-import recovery expiry — automation pass 27, slice 35
+
+Current `origin/main` remains `0d8f70b2`; its registration-readiness work contains no course-source recovery expiry operation or equivalent hold-aware proof. `20261009013000_course_source_resolution_recovery_expiry.sql` closes the local retention gap without exposing the workflow or enabling a schedule. After the exact 30-day rollback window, the manually invoked service-only operation clears the prior course document, marks the private application evidence `expired` and leaves the resolution batch, application hashes and transition evidence intact.
+
+The operation locks the legal-hold register through its decision. A platform hold visibly skips the whole run; exact stored tenant and owner-account holds preserve their covered copies. A concurrent rollback and expiry serialize on the application row, so either rollback restores first or expiry makes the copy irrecoverable; neither can overwrite the other. Browser roles have no execute grant, direct application-table mutation remains revoked and a repeated run is a no-op.
+
+The guard was first proved red against the absent function. PostgreSQL 17 applies all 220 migrations twice with all 379 table fingerprints unchanged. The focused expiry suite passes 9 checks and 135 adjacent apply/recovery, legal-hold, hold-blind, index, RLS, definer and grant checks pass. This is local implementation evidence only: the operation has no cron entry, deployment or production run, and the private authenticated/rate-limited adapter remains gated on trustworthy session, snapshot, storage and scanner evidence.
+
 ## What was read
 
 - Root `CLAUDE.md`.

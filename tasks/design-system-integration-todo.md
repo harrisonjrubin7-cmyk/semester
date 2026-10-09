@@ -722,7 +722,27 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 
 - [ ] Add the private server adapter only when session-derived actor/tenant authority, shared rate limiting and trustworthy canonical snapshot creation can call the service-only record/apply contracts without exposing `service_role`.
 - [ ] Do not wire Import or call the workflow server-backed until that adapter, deployment and operating evidence exist.
-- [ ] Add a hold-aware expiry operation before claiming the 30-day recovery copy is physically scrubbed after its deadline.
+- [x] Add a hold-aware expiry operation before claiming the 30-day recovery copy is physically scrubbed after its deadline. Completed locally in automation pass 27 / slice 35 below; no schedule, deployment or production run is claimed.
+- [ ] Keep external reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads separate.
+
+## 2026-10-09 hold-aware re-import recovery expiry — automation pass 27, slice 35
+
+- [x] Fetch `origin/main` `0d8f70b2` and confirm its registration-readiness changes contain no equivalent course-source recovery expiry operation or guard.
+- [x] Prove the new guard red against the absent operation before implementation.
+- [x] Clear only the exact prior course document after the 30-day rollback deadline; retain the application row, hashes, tenant/owner binding and resolution batch as bounded evidence.
+- [x] Add an explicit `expired` state and timestamp so a scrubbed copy cannot be mistaken for an applied or rolled-back recovery.
+- [x] Serialize against legal-hold placement/release; visibly skip on a platform hold and preserve rows covered by exact tenant or account holds.
+- [x] Keep the operation private, service-only, manually invoked and idempotent; preserve browser refusal and direct table-mutation revocation.
+- [x] Apply all 220 migrations twice on PostgreSQL 17 with 379 unchanged table fingerprints; pass 9 focused and 135 adjacent apply, hold, grant, RLS, index and definer checks.
+- [x] Pass 127/127 retention, scheduler, classification, privacy, migration, definer and design-tooling guards; TypeScript, lint, university typecheck and production build pass with four existing lint warnings and the existing chunk-size warning.
+- [x] Pass token export 9/9, design audit with zero violations and 86 existing warnings, CSS ledger checks and 69/69 design contracts. The design report file regenerates unchanged, but its wrapper exits 1 because it invokes unavailable `npm`; no aggregate report pass is claimed.
+- [ ] Ordered and shuffled full application suites — not yet run for this database-only slice.
+- [ ] HawkScan DAST — preflight stopped because `hawk` v6+, Docker, `HAWK_API_KEY` and `HAWK_APP_HOST` are unavailable. A local properties file exists but was not read; no scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Add the private server adapter only when session-derived actor/tenant authority, shared rate limiting and trustworthy canonical snapshot creation can call the service-only record/apply contracts without exposing `service_role`.
+- [ ] Do not wire Import or call the workflow server-backed until that adapter, deployment and operating evidence exist.
 - [ ] Keep external reconciliation, safe ICS publication, trustworthy ingestion/scanning and signed reads separate.
 
 ## Earlier integration baseline preserved
