@@ -110,6 +110,7 @@ export function checkBoundaries(tree: Tree, options: Options = {}): Violation[] 
   for (const [file, specs] of tree.imports) {
     const zone = zoneOf(file);
     const test = isTestFile(file);
+    const packageScript = zone === 'packages' && file.split('/').includes('scripts');
     for (const spec of specs) {
       const r = resolveImport(file, spec, tree.files);
       const target = r.kind === 'file' ? zoneOf(r.path) : null;
@@ -119,7 +120,7 @@ export function checkBoundaries(tree: Tree, options: Options = {}): Violation[] 
           out.push({ rule: 'packages-are-a-leaf', file, spec, fix: `packages/ is imported by the app, the gateway and the tests, so it imports none of them. Move what ${spec} provides into packages/, or take the import out.` });
         } else if (r.kind === 'external' && !(test && spec === 'vitest')) {
           out.push({ rule: 'packages-are-a-leaf', file, spec, fix: 'A package declares no third-party dependency: its manifest has none, and `check:university` compiles it with none. Only a test may import vitest.' });
-        } else if (r.kind === 'builtin' && !test) {
+        } else if (r.kind === 'builtin' && !test && !packageScript) {
           out.push({ rule: 'packages-are-a-leaf', file, spec, fix: 'A package that imports a Node built-in cannot be bundled into the browser. Take it out of the package, or into a test.' });
         } else if (r.kind === 'unresolved') {
           out.push({ rule: 'packages-are-a-leaf', file, spec, fix: 'This import resolves to no file, so nothing can say where it lands.' });
