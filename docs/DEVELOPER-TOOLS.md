@@ -28,10 +28,12 @@ the directory on exit.
 
 The public [developer-tools topic](https://github.com/topics/developer-tools)
 is volatile, so coverage is recorded against a dated snapshot rather than
-implied to be permanent. On 2026-10-08, the first two topic pages displayed 40
-repositories. Every displayed repository is accounted for below. ShellCheck
-closed the standalone-script lint gap; the other page-two repositories did not
-supply a new Semester product or CI requirement.
+implied to be permanent. On 2026-10-09, the first three topic pages displayed
+60 repository cards covering 59 unique repositories (`voideditor/void`
+appeared on two pages). Every displayed repository is accounted for below.
+ShellCheck closed the standalone-script lint gap; the other page-two and
+page-three repositories did not supply a new Semester product or CI
+requirement.
 
 ## Evaluated but not installed
 
@@ -60,6 +62,15 @@ supply a new Semester product or CI requirement.
 | [DeepSeek Reasonix](https://github.com/esengine/DeepSeek-Reasonix) | A model-reasoning research project is not a deterministic repository tool or application dependency. |
 | [SurrealDB](https://github.com/surrealdb/surrealdb) | A second database would conflict with the governed Supabase/PostgreSQL architecture and its tested policies. |
 | [Lighthouse](https://github.com/GoogleChrome/lighthouse) | Semester already enforces performance budgets, accessibility journeys and cold-route browser checks with its reviewed Playwright stack. Revisit only if a Lighthouse-specific metric becomes a release requirement. |
+| [Repomix](https://github.com/yamadashy/repomix) and [GitDiagram](https://github.com/ahmedkhaleel2004/gitdiagram) | Both produce derived representations of a codebase for AI-assisted analysis. Semester already has repository-native inventories and diagrams; introducing either would require a separate review of generated-content retention, exclusions, access and any external processing. |
+| [Qwen Code](https://github.com/QwenLM/qwen-code), [Archon](https://github.com/coleam00/Archon), [SWE-agent](https://github.com/SWE-agent/SWE-agent) and [Paseo](https://github.com/getpaseo/paseo) | Coding-agent and orchestration platforms overlap the existing reviewed development environment and would expand its execution, credential or data-sharing boundary without a repository requirement. |
+| [claude-skills](https://github.com/alirezarezvani/claude-skills), [khazix-skills](https://github.com/KKKKhazix/khazix-skills) and [Vibe Coding CN](https://github.com/tradecatlabs/vibe-coding-cn) | Skill catalogues and tutorial collections are discovery material, not auditable application dependencies. Any underlying workflow must be reviewed individually before use. |
+| [D2](https://github.com/d2lang/d2) | A second diagram language would duplicate the repository's existing Mermaid-based diagrams and add another binary/rendering toolchain without a missing diagram requirement. |
+| [Responsively](https://github.com/responsively-org/responsively-app) and [Eruda](https://github.com/liriliri/eruda) | Responsive and mobile debugging are already exercised through the reviewed browser-development and Playwright paths. A separate browser or an embedded production console would not improve the current release evidence. |
+| [marimo](https://github.com/marimo-team/marimo), [Taipy](https://github.com/Avaiga/taipy) and [iii](https://github.com/iii-hq/iii) | Notebook, Python application and service-composition frameworks would introduce parallel runtime and deployment architectures rather than strengthen Semester's React/Vite, Supabase and Vercel stack. |
+| [Wave Terminal](https://github.com/wavetermdev/waveterm) and [nnn](https://github.com/jarun/nnn) | Terminal and file-manager applications are personal workstation choices, not repository, CI or student-facing dependencies. |
+| [daily.dev](https://github.com/dailydotdev/daily) | A developer news feed is an optional personal information source and has no deterministic build, test or product role. |
+| [Hack](https://github.com/source-foundry/Hack) | A source-code typeface is a workstation preference. Semester's product typography is governed by its design system, so the font does not close a repository or product gap. |
 
 Revisit a deferred tool only when a concrete product or engineering requirement
 exists, and repeat the ownership, licence, provenance, permissions, maintenance,
