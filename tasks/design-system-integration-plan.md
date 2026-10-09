@@ -540,6 +540,16 @@ The focused regression was proved red against the prior behavior, then 142 Undo,
 
 The required HawkScan loop stops at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
 
+## Recoverable committed Study-plan removal — automation pass 4, integration slice 55
+
+Current `origin/main` remains `34ac2e1d`; no equivalent `clearPlan`, shared-Undo or Study-plan recovery work landed. Re-ranking selected the existing **Drop the plan** action because it removes only the student's committed device-local sittings and current live-session pointer, has no course-record or external effect, and both fields are already owned by the persisted Study state.
+
+`clearPlan` now snapshots only `sessions` and `liveSession` through the existing eight-second Undo contract. Undo restores the exact sitting schedule, progress and live-session association without rolling back deadline completion or any unrelated state. The existing Study route and **Drop the plan** control remain unchanged; no new component, dependency, schema, server operation, provider behavior or external system was added.
+
+The guard was proved red against the missing registration, then 152 Undo, reducer, plan and root-unmount tests passed. TypeScript, lint, university typecheck and production build pass with the existing four lint warnings and chunk-size warning. The exact token/design suite passes 78/78, design audit remains at zero violations with 86 existing warnings, CSS stays within its ledger and the design report regenerates. Its aggregate wrapper exits after generation because this shell has no `npm`; ordered and shuffled full suites were not rerun for this bounded recovery slice.
+
+The required HawkScan loop stops at preflight: Hawk and Docker are absent and `HAWK_API_KEY` / `HAWK_APP_HOST` are unset, so no target, DAST result or security pass is claimed. Permanent file purge, the same-origin demo reset and scanner/extractor-backed Import remain separate; the next slice requires another fresh dependency/consequence ranking.
+
 ## What was read
 
 - Root `CLAUDE.md`.

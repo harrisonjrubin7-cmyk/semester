@@ -1118,6 +1118,25 @@ Companion to `tasks/design-system-integration-plan.md` and `docs/design-system/H
 - [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
 - [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
 
+## 2026-10-09 recoverable committed Study-plan removal — automation pass 4, integration slice 55
+
+- [x] Start from and re-fetch current `origin/main` `34ac2e1d`; confirm no equivalent `clearPlan`, Undo or Study-plan recovery work landed.
+- [x] Re-rank the remaining consequence paths and select bounded committed Study-plan removal; keep permanent file purge, broad demo reset and scanner-backed Import separate.
+- [x] Add `clearPlan` to the existing eight-second Undo contract with only `sessions` and `liveSession`, restoring the exact sitting schedule, progress and live association without reverting unrelated work.
+- [x] Preserve the existing Study route and **Drop the plan** control; add no component, dependency, schema, server operation or provider behavior.
+- [x] Prove the focused guard red against the missing Undo registration, then pass 152/152 Undo, reducer, plan and root-unmount tests.
+- [x] Pass TypeScript, lint, university typecheck and production build; retain four existing lint warnings and the existing chunk-size warning.
+- [x] Pass 78/78 token/design contracts, design audit with zero violations and 86 existing warnings, CSS ledger checks and design-report generation.
+- [ ] Aggregate npm design-system launchers — unavailable because this shell has no `npm`; exact constituents pass and the report regenerates before its wrapper exits.
+- [ ] Ordered and shuffled full suites — not rerun for this bounded device-only recovery slice; the last recorded full-suite baseline remains pass 30's green 23,872 tests.
+- [ ] HawkScan DAST — required after this production change, but preflight confirms `hawk runtime=false`, `docker runtime=false`, `HAWK_API_KEY=false` and `HAWK_APP_HOST=false`; no target, scan or security pass is claimed.
+
+### Next implementation boundary
+
+- [ ] Re-rank the remaining dependency-ready gaps and consequence paths against current repository authority before choosing another bounded slice.
+- [ ] Keep permanent file purge and same-origin demo reset separate until their broader erase, isolation and recovery semantics are reconciled.
+- [ ] Keep the authenticated adapter and Import wiring closed until a deployed private scanner/extractor can produce genuine storage, scan and correction-current derived-snapshot receipts under session-derived authority and shared rate limits.
+
 ## Earlier integration baseline preserved
 
 - [x] Fetch `origin/main` (`3bd382dc`) and read what landed after the inventory commit.

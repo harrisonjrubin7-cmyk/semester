@@ -42,6 +42,10 @@ describe('which actions can be taken back', () => {
       label: 'Equation removed',
       fields: ['equations'],
     });
+    expect(undoableFor('clearPlan')).toEqual({
+      label: 'Study plan dropped',
+      fields: ['sessions', 'liveSession'],
+    });
   });
 
   it('has none for an action that changes nothing away', () => {
@@ -91,6 +95,11 @@ describe('the snapshot', () => {
   it('keeps only the saved equation library', () => {
     const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.deleteEquation, AT);
     expect(Object.keys(took.was)).toEqual(['equations']);
+  });
+
+  it('keeps only the committed study plan and its live pointer', () => {
+    const took = snapshot(DEFAULT_PERSISTED, UNDOABLE.clearPlan, AT);
+    expect(Object.keys(took.was)).toEqual(['sessions', 'liveSession']);
   });
 
   it('carries the label and the moment', () => {

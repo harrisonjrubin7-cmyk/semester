@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { reducer } from './reducer';
 import { DEFAULT_PERSISTED, initialEphemeral, type QuizQuestion, type State } from './shape';
 import { directoryOf } from '../lib/look';
+import type { Session } from '../lib/sessions';
 
 /**
  * The reducer, tested at last.
@@ -836,6 +837,36 @@ describe('taking it back', () => {
     const back = reducer(edited, { type: 'undo' });
     expect(back.equations).toEqual(s.equations);
     expect(back.mathWorking).toBe('2+2');
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores a dropped study plan without reverting unrelated work', () => {
+    const sessions: Session[] = [
+      {
+        id: 'study-econ',
+        courseId: 'econ',
+        index: 1,
+        name: 'Elasticity',
+        code: 'ECON 1020',
+        minutes: 30,
+        on: '2026-10-09',
+        startedAt: 10,
+        answered: 2,
+        cards: 8,
+      },
+    ];
+    const s: State = { ...blank(), sessions, liveSession: 'study-econ' };
+
+    const gone = reducer(s, { type: 'clearPlan' });
+    expect(gone.sessions).toEqual([]);
+    expect(gone.liveSession).toBeNull();
+    expect(gone.undone?.label).toBe('Study plan dropped');
+
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'deadline-1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.sessions).toEqual(s.sessions);
+    expect(back.liveSession).toBe('study-econ');
+    expect(back.done['deadline-1']).toBe(true);
     expect(back.undone).toBeNull();
   });
 
